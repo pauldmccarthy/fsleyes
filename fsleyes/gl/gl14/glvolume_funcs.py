@@ -76,6 +76,7 @@ def compileShaders(self):
 
     if self.threedee:
         constants['numSteps']        = self.opts.numInnerSteps
+        constants['numClipPlanes']   = self.opts.numClipPlanes
         texes[    'startingTexture'] = 4
         texes[    'depthTexture']    = 5
 
@@ -92,13 +93,11 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts    = self.opts
-    display = self.display
-    canvas  = self.canvas
-
+    opts   = self.opts
+    shader = self.shader
 
     # enable the vertex and fragment programs
-    self.shader.load()
+    shader.load()
 
     # The voxValXform transformation turns
     # an image texture value into a raw
@@ -129,9 +128,22 @@ def updateShaderState(self):
     negCmap  = [useNegCmap, texZero, 0, 0]
 
     changed  = False
-    changed |= self.shader.setFragParam('voxValXform', voxValXform)
-    changed |= self.shader.setFragParam('clipping',    clipping)
-    changed |= self.shader.setFragParam('negCmap',     negCmap)
+    changed |= shader.setFragParam('voxValXform', voxValXform)
+    changed |= shader.setFragParam('clipping',    clipping)
+    changed |= shader.setFragParam('negCmap',     negCmap)
+
+
+    if self.threedee:
+        clipPlanes  = np.zeros((10, 4), dtype=np.float32)
+        d2tmat      = opts.getTransform('display', 'texture')
+
+        for i in range(opts.numClipPlanes):
+            origin, normal   = self.get3DClipPlane(i)
+            origin           = transform.transform(origin, d2tmat)
+            normal           = transform.transformNormal(normal, d2tmat)
+            clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
+
+        changed |= shader.setFragParam('clipPlanes', clipPlanes)
 
     self.shader.unload()
 

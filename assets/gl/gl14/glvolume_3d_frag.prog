@@ -37,6 +37,8 @@ OPTION ARB_precision_hint_nicest;
 #        z: +1 if the output transparency should be clobbered, -1 otherwise.
 #        w: Output transparency to use if y == +1
 #
+#   {{ param10_clipPlanes }} -
+#
 #
 # Input varyings:
 #   {{ varying_texCoord }}
@@ -57,6 +59,7 @@ OPTION ARB_precision_hint_nicest;
 #
 # Constants:
 #   numSteps             - Number of ray-casting iterations
+#   numClipPlanes        - Number of active clipping planes
 #   kill_fragments_early - must be set to False
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
@@ -66,6 +69,8 @@ OPTION ARB_precision_hint_nicest;
 {{ arb_include('texture_border.prog')  }}
 {{ arb_include('glvolume_common.prog') }}
 
+
+PARAM clipPlanes[10] = {{ param10_clipPlanes }};
 
 TEMP  depth;
 TEMP  skipTest;
@@ -143,6 +148,26 @@ arb_call('glvolume_common.prog',
          out_colour='colour')
 }}
 
+
+# Check to see if this area is
+# clipped by any clip plane
+MOV tempVar.x, 0;
+{% for j in range(numClipPlanes) %}
+
+DP3 tempVar.y, clipPlanes[{{ j }}], texCoord;
+ADD tempVar.y, tempVar.y,           clipPlanes[{{ j }}].w;
+CMP tempVar.y, tempVar.y, 1, 0;
+ADD tempVar.x, tempVar.x, tempVar.y;
+
+{% endfor %}
+
+
+SLT tempVar.x,     tempVar.x,      {{ numClipPlanes }};
+MAD tempVar.x,     tempVar.x,         2, -1;
+
+MOV tempVar.y,  -{{ numClipPlanes }};
+SGE tempVar.x,      tempVar.y,         0;
+MIN skipTest.x,     skipTest.x,        tempVar.x;
 
 
 # Check whether the

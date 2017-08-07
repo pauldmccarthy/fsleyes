@@ -863,7 +863,7 @@ def _findDeclaredVariables(source):
     ast   = env.parse(source)
     svars = j2meta.find_undeclared_variables(ast)
 
-    pExpr = re.compile('^param([1-9]*)_(.+)$')
+    pExpr = re.compile('^param([0-9]*)_(.+)$')
     tExpr = re.compile('^texture_(.+)$')
     aExpr = re.compile('^attr_(.+)$')
     vExpr = re.compile('^varying_(.+)$')

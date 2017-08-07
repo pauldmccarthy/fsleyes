@@ -12,16 +12,17 @@ encapsulates the data and logic required to render 2D slice of an
 
 import logging
 
-import numpy               as np
-import OpenGL.GL           as gl
+import numpy                              as np
+import OpenGL.GL                          as gl
 
-import fsl.utils.async     as async
-import fsl.utils.transform as transform
-import fsleyes.gl          as fslgl
-import fsleyes.gl.routines as glroutines
-from . import                 textures
-from . import                 glimageobject
-from . import resources    as glresources
+from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.async                    as async
+import fsl.utils.transform                as transform
+import fsleyes.gl                         as fslgl
+import fsleyes.gl.routines                as glroutines
+from . import                                textures
+from . import                                glimageobject
+from . import resources                   as glresources
 
 
 log = logging.getLogger(__name__)
@@ -357,7 +358,9 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('blendFactor',     name, self._blendFactorChanged)
             opts.addListener('showClipPlanes',  name,
                              self._showClipPlanesChanged)
-            opts.addListener('numClipPlanes',   name, self._clipping3DChanged)
+            opts.addListener('numClipPlanes',
+                             name,
+                             self._numClipPlanesChanged)
             opts.addListener('clipPosition',    name, self._clipping3DChanged)
             opts.addListener('clipAzimuth',     name, self._clipping3DChanged)
             opts.addListener('clipInclination', name, self._clipping3DChanged)
@@ -921,11 +924,21 @@ class GLVolume(glimageobject.GLImageObject):
         self.notify()
 
 
-    def _clipping3DChanged(self, *a):
-        """Called when any of the :attr:`.Volume3DOpts.numClipPlanes`,
-        :attr:`.Volume3DOpts.clipPosition`, :attr:`.Volume3DOpts.clipAzimuth`,
-        or :attr:`.Volume3DOpts.clipInclination` properties change.
+    def _numClipPlanesChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.numClipPlanes` property
+        changes.
         """
+        if float(fslplatform.glVersion) == 1.4:
+            fslgl.glvolume_funcs.compileShaders(self)
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def _clipping3DChanged(self, *a):
+        """Called when any of the :attr:`.Volume3DOpts.clipPosition`,
+        :attr:`.Volume3DOpts.clipAzimuth`, or
+        :attr:`.Volume3DOpts.clipInclination` properties change.
+        """
+
         self.updateShaderState(alwaysNotify=True)
 
 
