@@ -203,3 +203,7 @@ TEX {{ negColour  }}, {{ voxValue }}.x, {{ negColourTexture }}, 1D;
 # negative colour map should be
 # used, positive otherwise.
 CMP {{ out_colour }}, {{ useNegCmap }}.x, {{ negColour }}, {{ out_colour }};
+
+# Normalise out_kill
+# to either -1 or +1
+CMP {{ out_kill }}.x, {{ out_kill }}.x, -1, 1;

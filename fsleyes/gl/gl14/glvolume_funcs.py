@@ -76,7 +76,8 @@ def compileShaders(self):
 
     if self.threedee:
         constants['numSteps']        = self.opts.numInnerSteps
-        texes[    'startingTexture'] =  4
+        texes[    'startingTexture'] = 4
+        texes[    'depthTexture']    = 5
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
@@ -213,7 +214,7 @@ def draw3D(self, xform=None, bbox=None):
     outerLoop = self.opts.getNumOuterSteps()
 
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
-         glroutines.disabled((gl.GL_BLEND, gl.GL_DEPTH_TEST)):
+         glroutines.disabled((gl.GL_BLEND)):
 
         for i in range(outerLoop):
 
@@ -225,10 +226,12 @@ def draw3D(self, xform=None, bbox=None):
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
             src.bindTexture(gl.GL_TEXTURE4)
+            src.getDepthTexture().bindTexture(gl.GL_TEXTURE5)
 
             gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
             src.unbindTexture()
+            src.getDepthTexture().unbindTexture()
             dest.unbindAsRenderTarget()
 
             dest, src = src, dest

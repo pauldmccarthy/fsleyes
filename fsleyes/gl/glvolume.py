@@ -691,7 +691,11 @@ class GLVolume(glimageobject.GLImageObject):
         if opts.resolution != 100:
             gl.glViewport(0, 0, w, h)
 
-        # Do the render
+        # Do the render. Even though we're
+        # drawing off-screen,  we need to
+        # enable depth-testing, otherwise
+        # depth values will not get written
+        # to the depth buffer!
         with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
@@ -913,7 +917,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.Volume3DOpts.numInnerSteps` property
         changes.
         """
-        self.compileShaders()
+        fslgl.glvolume_funcs.compileShaders(self)
         self.updateShaderState(alwaysNotify=True)
 
 

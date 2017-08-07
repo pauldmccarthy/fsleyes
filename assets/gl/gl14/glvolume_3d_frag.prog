@@ -39,6 +39,7 @@ OPTION ARB_precision_hint_nicest;
 #
 # Input textures:
 #   {{ texture_startingTexture }}
+#   {{ texture_depthTexture    }}
 #   {{ texture_imageTexture }}
 #   {{ texture_clipTexture }}
 #   {{ texture_colourTexture }}
@@ -92,15 +93,24 @@ ADD texCoord.xyz,     texCoord,           tempVar;
 ADD clipTexCoord.xyz, clipTexCoord,       tempVar;
 
 
-# Retrieve the starting colour
+# Retrieve the starting colour and depth
 MUL tempVar.xy,     fragment.position, {{ param_screenSize        }};
 TEX startingColour, tempVar,           {{ texture_startingTexture }}, 2D;
+TEX depth,          tempVar,           {{ texture_depthTexture    }}, 2D;
 
 
-MOV depth,       0;
 MOV texCoord.w,  1;
 MOV skipTest,    1;
 MOV finalColour, startingColour;
+
+
+# Set depth.w > 0 if depth has
+# not been set, < 0 otherwise.
+# If depth has already been set,
+# we want to pass through its
+# initial value.
+SUB depth.w, 0, finalColour.a;
+CMP depth.w, depth.w, -1, 1;
 
 
 # Start the ray-casting loop
@@ -132,13 +142,11 @@ arb_call('glvolume_common.prog',
 MIN skipTest.x, skipTest.x, tempVar.x;
 
 
-
 # Check whether the accumulated
 # colour alpha is already high enough
 SLT tempVar.x,  finalColour.a, 0.95;
-SUB tempVar.x,  tempVar.x,     0.5;
+MAD tempVar.x,  tempVar.x,     2.0, -1;
 MIN skipTest.x, skipTest.x,    tempVar.x;
-
 
 
 # Blend the sample into the
@@ -153,6 +161,33 @@ MAD tempColour.rgb, tempVar.x,   colour, finalColour;
 ADD tempColour.a,   tempVar.x,           finalColour.a;
 
 
+# Calculate the screen depth of
+# the current ray position. If we
+# have just taken our first sample,
+# save the depth, as we will use
+# it for the final fragment depth.
+
+
+# Figure out if this is the first
+# sample taken by testing whether
+# skipTest.x > 0, and depth.w > 0
+# (the latter is true if the
+# startingColour.a == 0).
+ADD depth.y, depth.w,  skipTest.x;
+MUL depth.y, depth.y, -1;
+
+DP4 depth.z, {{ param_tex2ScreenXform }}, texCoord;
+CMP depth.x, depth.y,  depth.z, depth.x;
+
+# If we have just set the depth,
+# set depth.w to < 0 so that we
+# don't overwrite the depth on a
+# subsequent sample.
+SUB depth.y, depth.w,  skipTest.x;
+MAD depth.y, depth.y, -1,   0.5;
+CMP depth.w, depth.y,  1,  -1;
+
+
 # Only update the accumulated colour
 # buffer if:
 #   - the voxel value was not nan
@@ -163,8 +198,6 @@ ADD tempColour.a,   tempVar.x,           finalColour.a;
 # All of these conditions have been
 # accumulated into skipTest.x
 CMP finalColour, skipTest.x, finalColour, tempColour;
-
-
 
 # Shift the ray position
 ADD texCoord.xyz,     texCoord,     {{ param_rayStep }};
@@ -178,15 +211,16 @@ ADD clipTexCoord.xyz, clipTexCoord, {{ param_rayStep }};
 
 # If startingColour.a == 0 and
 #    finalColour.a    == 0,
-# kill the fragment.
+#
+# it means we've taken no samples,
+# so kill the fragment.
 
 ADD tempVar.x, startingColour.a, finalColour.a;
 MUL tempVar.x, tempVar.x, -1;
 CMP tempVar.x, tempVar.x,  1, -1;
 KIL tempVar.x;
 
-
 MOV result.color, finalColour;
-
+MOV result.depth, depth.x;
 
 END
