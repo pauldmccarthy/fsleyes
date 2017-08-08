@@ -1018,8 +1018,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             sels.append(annotations.VoxelSelection(
                 c.getAnnotations(),
-                c.xax,
-                c.yax,
                 editor.getSelection(),
                 opts.getTransform('display', 'voxel'),
                 opts.getTransform('voxel',   'display'),
@@ -1028,8 +1026,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             curs.append(annotations.Rect(
                 c.getAnnotations(),
-                c.xax,
-                c.yax,
                 (0, 0), 0, 0,
                 **cursorKwargs))
 
