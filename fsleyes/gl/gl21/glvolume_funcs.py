@@ -51,11 +51,11 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    if self.threedee: frag = 'glvolume_3d'
-    else:             frag = 'glvolume'
+    if self.threedee: prefix = 'glvolume_3d'
+    else:             prefix = 'glvolume'
 
-    vertSrc = shaders.getVertexShader(  'glvolume')
-    fragSrc = shaders.getFragmentShader(frag)
+    vertSrc = shaders.getVertexShader(  prefix)
+    fragSrc = shaders.getFragmentShader(prefix)
 
     self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
@@ -207,7 +207,6 @@ def draw3D(self, xform=None, bbox=None):
     self.shader.set(   'rayStep',         rayStep)
     self.shader.set(   'ditherDir',       ditherDir)
     self.shader.setAtt('vertex',          vertices)
-    self.shader.setAtt('voxCoord',        voxCoords)
     self.shader.setAtt('texCoord',        texCoords)
 
     self.shader.loadAtts()

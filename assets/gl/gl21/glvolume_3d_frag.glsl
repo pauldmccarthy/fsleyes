@@ -151,12 +151,6 @@ uniform float alpha;
  */
 uniform mat4 tex2ScreenXform;
 
-
-/*
- * Image voxel coordinates.
- */
-varying vec3 fragVoxCoord;
-
 /*
  * Corresponding image texture coordinates.
  */
