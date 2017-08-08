@@ -10,9 +10,9 @@ TEMP colour;
 TEMP depth;
 
 TEX colour,  fragment.texcoord[0], texture[0], 2D;
-TEX depth.x, fragment.texcoord[1], texture[1], 2D;
+TEX depth.x, fragment.texcoord[0], texture[1], 2D;
 
 MOV result.color, colour;
-MOV result.depth, depth;
+MOV result.depth, depth.x;
 
 END

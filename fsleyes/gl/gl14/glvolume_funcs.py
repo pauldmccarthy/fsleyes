@@ -12,10 +12,6 @@ programs.
 """
 
 
-import os.path as op
-import matplotlib.image as mplimg
-
-
 import logging
 
 import numpy               as np
@@ -25,7 +21,6 @@ import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
 import fsleyes.gl.routines as glroutines
 import fsleyes.gl.glvolume as glvolume
-import fsleyes.gl.textures as textures
 
 
 log = logging.getLogger(__name__)
@@ -228,6 +223,9 @@ def draw3D(self, xform=None, bbox=None):
     shader.setFragParam('screenSize',      screenSize)
     shader.setFragParam('tex2ScreenXform', texform)
 
+    # Disable blending - we want each
+    # loop to replace the contents of
+    # the texture, not blend into it!
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND)):
 
@@ -299,4 +297,4 @@ def postDraw(self, xform=None, bbox=None):
     self.shader.unload()
 
     if self.threedee:
-        self.drawClipPlanes()
+        self.drawClipPlanes(xform=xform)

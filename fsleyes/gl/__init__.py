@@ -678,7 +678,7 @@ class GLContext(object):
         attribs = [wxgl.WX_GL_RGBA,
                    wxgl.WX_GL_DOUBLEBUFFER,
                    wxgl.WX_GL_STENCIL_SIZE, 4,
-                   wxgl.WX_GL_DEPTH_SIZE,   8,
+                   wxgl.WX_GL_DEPTH_SIZE,   24,
                    0,
                    0]
 

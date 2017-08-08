@@ -312,7 +312,6 @@ class GLVolume(glimageobject.GLImageObject):
         display properties are changed.
         """
 
-        canvas  = self.canvas
         display = self.display
         opts    = self.opts
         name    = self.name

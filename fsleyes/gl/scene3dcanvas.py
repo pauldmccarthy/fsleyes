@@ -326,7 +326,8 @@ class Scene3DCanvas(props.HasProperties):
         depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
         xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
 
-        if self.showCursor: self.__drawCursor()
+        if self.showCursor:
+            self.__drawCursor()
 
         for ovl, globj in zip(overlays, globjs):
 
@@ -346,9 +347,6 @@ class Scene3DCanvas(props.HasProperties):
             globj.draw3D(  xform=xform)
             globj.postDraw(xform=xform)
 
-        self.__drawBoundingBox()
-
-        self.__drawLight()
         if self.showLegend:
             self.__drawLegend()
 
