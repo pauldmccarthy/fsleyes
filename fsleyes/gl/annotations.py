@@ -400,8 +400,9 @@ class Line(AnnotationObject):
         verts[0, [xax, yax]] = self.xy1
         verts[1, [xax, yax]] = self.xy2
         verts[:, zax]        = zpos
+        verts                = verts.ravel('C')
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
@@ -494,11 +495,12 @@ class Rect(AnnotationObject):
         verts[2, [xax, yax]] = tl
         verts[3, [xax, yax]] = tr
         verts[:,  zax]       = zpos
+        verts                = verts.ravel('C')
 
         # I'm assuming that glPolygonMode
         # is already set to GL_FILL
         gl.glColor4f(*fillColour)
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
@@ -513,8 +515,9 @@ class Rect(AnnotationObject):
         verts[2, [xax, yax]] = tl
         verts[3, [xax, yax]] = tr
         verts[:,  zax]       = zpos
+        verts                = verts.ravel('C')
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
@@ -598,8 +601,9 @@ class VoxelGrid(AnnotationObject):
             voxels[:, ax] += off + self.offsets[ax]
 
         verts, idxs = glroutines.voxelGrid(voxels, xax, yax, 1, 1)
+        verts = verts.ravel('C')
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts.ravel('C'))
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 

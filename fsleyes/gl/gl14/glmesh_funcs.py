@@ -152,11 +152,14 @@ def draw(self,
 
     shader.loadAtts()
 
+    nvertices = vertices.shape[0]
+    vertices  = vertices.ravel('C')
+
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
 
         if indices is None:
-            gl.glDrawArrays(glType, 0, vertices.shape[0])
+            gl.glDrawArrays(glType, 0, nvertices)
         else:
             gl.glDrawElements(glType,
                               indices.shape[0],

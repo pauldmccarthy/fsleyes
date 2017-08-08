@@ -549,6 +549,7 @@ class GLMesh(globject.GLObject):
         vdata     = self.getVertexData(faces, dists)
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
+        nvertices = vertices.shape[0]
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
@@ -558,10 +559,11 @@ class GLMesh(globject.GLObject):
 
         # Constant colour
         if not useShader:
+            vertices = vertices.ravel('C')
             gl.glColor(*opts.getConstantColour())
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
-            gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            gl.glDrawArrays(gl.GL_LINES, 0, nvertices)
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
         # Coloured from vertex data
@@ -639,7 +641,7 @@ class GLMesh(globject.GLObject):
         ymin     = lo[yax]
         xmax     = hi[xax]
         ymax     = hi[yax]
-        vertices = self.vertices
+        vertices = self.vertices.ravel('C')
         indices  = self.indices
 
         dest.bindAsRenderTarget()
@@ -701,7 +703,7 @@ class GLMesh(globject.GLObject):
             gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
             gl.glCullFace(face)
 
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
             gl.glDrawElements(gl.GL_TRIANGLES,
                               len(indices),
                               gl.GL_UNSIGNED_INT,
