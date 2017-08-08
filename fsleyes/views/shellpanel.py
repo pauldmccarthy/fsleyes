@@ -9,12 +9,9 @@ which contains an interactive Python shell.
 """
 
 
-import os
 import sys
-import string
 import textwrap
 
-import                      wx
 import wx.py.shell       as wxshell
 import wx.py.interpreter as wxinterpreter
 
@@ -123,53 +120,11 @@ class ShellPanel(viewpanel.ViewPanel):
 
 # The wx.Shell code was written many years ago,
 # and there are loads of things wrong with it.
-
-# The Shell_* functions are monkey-patched into
-# the wx.py.shell.Shell class, as the originals
-# do not correctly decode pasted text under OSX.
-# Without these patches, pasting text from the
-# clipboard into the shell will result in random
-# unicode characters appearing.
-
+#
 # The Interpreter_* function is monkey-patched
 # into the wx.py.interpreter.Interpreter class,
 # because the original version is unable to
 # execute multi-line statements.
-
-
-def Shell_Paste(self):
-    if self.CanPaste() and wx.TheClipboard.Open():
-        ps2 = str(sys.ps2)
-        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-            data = wx.TextDataObject()
-            data.SetFormat(wx.DataFormat(wx.DF_TEXT))
-            if wx.TheClipboard.GetData(data):
-                self.ReplaceSelection('')
-                command = data.GetText()
-                command = command.encode('unicode_internal')
-                command = [x for x in command if x in string.printable]
-                command = command.rstrip()
-                command = self.fixLineEndings(command)
-                command = self.lstripPrompt(text=command)
-                command = command.replace(os.linesep + ps2, '\n')
-                command = command.replace(os.linesep, '\n')
-                command = command.replace('\n', os.linesep + ps2)
-                self.write(command)
-        wx.TheClipboard.Close()
-
-
-def Shell_PasteAndRun(self):
-    text = ''
-    if wx.TheClipboard.Open():
-        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-            data = wx.TextDataObject()
-            if wx.TheClipboard.GetData(data):
-                text = data.GetText()
-                text = text.encode('unicode_internal')
-                text = [x for x in text if x in string.printable]
-        wx.TheClipboard.Close()
-    if text:
-        self.Execute(text)
 
 
 def Interpreter_runsource(self, source):
@@ -210,5 +165,3 @@ def Interpreter_runsource(self, source):
 
 
 wxinterpreter.Interpreter.runsource = Interpreter_runsource
-wxshell.Shell.Paste                 = Shell_Paste
-wxshell.Shell.PasteAndRun           = Shell_PasteAndRun
