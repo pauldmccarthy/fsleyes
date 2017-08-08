@@ -17,6 +17,8 @@ import OpenGL.GL as gl
 
 import fsleyes_props as props
 
+import fsl.data.mesh       as fslmesh
+import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 
 import fsleyes.gl.routines as glroutines
@@ -100,23 +102,57 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def getGLObject(self, overlay):
+        """Returns the :class:`.GLObject` associated with the given overlay,
+        or ``None`` if there is not one.
+        """
         return self.__glObjects.get(overlay, None)
 
 
     def getGLObjects(self):
+        """Returns two lists:
 
-        from fsl.data.mesh  import TriangleMesh
-        from fsl.data.image import Image
+         - A list of overlays to be drawn
+         - A list of corresponding :class:`GLObject` instances
+
+        The lists are in the order that they should be drawn.
+
+        This method also creates ``GLObject`` instances for any overlays
+        in the :class:`.OverlayList` that do not have one.
+        """
 
         overlays  = self.__displayCtx.getOrderedOverlays()
 
-        surfs = [o for o in overlays if isinstance(o, TriangleMesh)]
-        vols  = [o for o in overlays if isinstance(o, Image)]
+        surfs = [o for o in overlays if isinstance(o, fslmesh.TriangleMesh)]
+        vols  = [o for o in overlays if isinstance(o, fslimage.Image)]
         other = [o for o in overlays if o not in surfs and o not in vols]
 
         overlays = []
         globjs   = []
-        for ovl in surfs + vols + other:
+
+        # If occlusion is on, we draw all surfaces first,
+        # so they are on the scene regardless of volume
+        # opacity.
+        #
+        # If occlusion is off, we draw all volumes
+        # (without depth testing) first, and draw all
+        # surfaces (with depth testing) afterwards.
+        # In this way, the surfaces will be occluded
+        # by the last drawn volume. I figure that this
+        # is better than being occluded by *all* volumes,
+        # regardless of depth or camera orientation.
+        #
+        # The one downside to this is that if a
+        # transparent volume is in front of a surface,
+        # the surface won't be shown.
+        #
+        # The only way to overcome this would be to
+        # sort by depth on every render which, given
+        # the possibility of volume clipping planes,
+        # is a bit too complicated for my liking.
+        if self.occlusion: ovlOrder = surfs + vols + other
+        else:              ovlOrder = vols + surfs + other
+
+        for ovl in ovlOrder:
             globj = self.getGLObject(ovl)
 
             if globj is None:
@@ -172,12 +208,13 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def _initGL(self):
+        """Called when the canvas is ready to be drawn on. """
         self.__overlayListChanged()
         self.__displayBoundsChanged()
 
 
     def __overlayListChanged(self, *a):
-        """
+        """Called when the :class:`.OverlayList` changes.
         """
 
         # Destroy any GL objects for overlays
@@ -301,16 +338,15 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def _draw(self):
-        """
-        """
+        """Draws the scene to the canvas. """
 
         if not self._setGLContext():
             return
 
+        glroutines.clear(self.bgColour)
+
         if not self.__setViewport():
             return
-
-        glroutines.clear(self.bgColour)
 
         overlays, globjs = self.getGLObjects()
 
@@ -321,7 +357,8 @@ class Scene3DCanvas(props.HasProperties):
         # depth of each overlay so that, where
         # a depth collision occurs, overlays
         # which are higher in the list will get
-        # drawn above lower ones.
+        # drawn above (closer to the screen)
+        # than lower ones.
         depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
         depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
         xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
@@ -340,7 +377,7 @@ class Scene3DCanvas(props.HasProperties):
 
             if self.occlusion:
                 xform = transform.concat(depthOffset, xform)
-            else:
+            elif isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
             globj.preDraw( xform=xform)
@@ -352,6 +389,8 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __drawCursor(self):
+        """Draws three lines at the current :attr:`.DisplayContext.location`.
+        """
 
         b   = self.__displayCtx.bounds
         pos = self.pos
@@ -373,77 +412,6 @@ class Scene3DCanvas(props.HasProperties):
         gl.glBegin(gl.GL_LINES)
         for p in points:
             gl.glVertex3f(*p)
-        gl.glEnd()
-
-
-    def __drawLight(self):
-
-        lightPos  = np.array(self.lightPos)
-        lightPos *= (self.zoom / 100.0)
-
-        gl.glColor4f(1, 1, 1, 1)
-        gl.glPointSize(10)
-        gl.glBegin(gl.GL_POINTS)
-        gl.glVertex3f(*lightPos)
-        gl.glEnd()
-
-        b = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-
-        centre = transform.transform(centre, self.__viewMat)
-
-        gl.glColor4f(1, 0, 1, 1)
-        gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*lightPos)
-        gl.glVertex3f(*centre)
-        gl.glEnd()
-
-
-    def __drawBoundingBox(self):
-        b = self.__displayCtx.bounds
-        xlo, xhi = b.x
-        ylo, yhi = b.y
-        zlo, zhi = b.z
-        xlo += 0.1
-        xhi -= 0.1
-        vertices = np.array([
-            [xlo, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zlo],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zlo],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xlo, yhi, zlo],
-            [xhi, ylo, zlo],
-            [xhi, yhi, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xhi, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xhi, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xhi, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, yhi, zhi],
-        ])
-        vertices = transform.transform(vertices, self.__viewMat)
-
-
-        gl.glLineWidth(2)
-        gl.glColor3f(0.5, 0, 0)
-        gl.glBegin(gl.GL_LINES)
-        for v in vertices:
-            gl.glVertex3f(*v)
         gl.glEnd()
 
 
@@ -533,3 +501,74 @@ class Scene3DCanvas(props.HasProperties):
             xx -= 0.5 * tw
             xy -= 0.5 * th
             glroutines.text2D(labels[i], (xx, xy), 10, (w, h))
+
+
+    def __drawLight(self):
+
+        lightPos  = np.array(self.lightPos)
+        lightPos *= (self.zoom / 100.0)
+
+        gl.glColor4f(1, 1, 1, 1)
+        gl.glPointSize(10)
+        gl.glBegin(gl.GL_POINTS)
+        gl.glVertex3f(*lightPos)
+        gl.glEnd()
+
+        b = self.__displayCtx.bounds
+        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                           b.ylo + 0.5 * (b.yhi - b.ylo),
+                           b.zlo + 0.5 * (b.zhi - b.zlo)])
+
+        centre = transform.transform(centre, self.__viewMat)
+
+        gl.glColor4f(1, 0, 1, 1)
+        gl.glBegin(gl.GL_LINES)
+        gl.glVertex3f(*lightPos)
+        gl.glVertex3f(*centre)
+        gl.glEnd()
+
+
+    def __drawBoundingBox(self):
+        b = self.__displayCtx.bounds
+        xlo, xhi = b.x
+        ylo, yhi = b.y
+        zlo, zhi = b.z
+        xlo += 0.1
+        xhi -= 0.1
+        vertices = np.array([
+            [xlo, ylo, zlo],
+            [xlo, ylo, zhi],
+            [xlo, yhi, zlo],
+            [xlo, yhi, zhi],
+            [xhi, ylo, zlo],
+            [xhi, ylo, zhi],
+            [xhi, yhi, zlo],
+            [xhi, yhi, zhi],
+
+            [xlo, ylo, zlo],
+            [xlo, yhi, zlo],
+            [xhi, ylo, zlo],
+            [xhi, yhi, zlo],
+            [xlo, ylo, zhi],
+            [xlo, yhi, zhi],
+            [xhi, ylo, zhi],
+            [xhi, yhi, zhi],
+
+            [xlo, ylo, zlo],
+            [xhi, ylo, zlo],
+            [xlo, ylo, zhi],
+            [xhi, ylo, zhi],
+            [xlo, yhi, zlo],
+            [xhi, yhi, zlo],
+            [xlo, yhi, zhi],
+            [xhi, yhi, zhi],
+        ])
+        vertices = transform.transform(vertices, self.__viewMat)
+
+
+        gl.glLineWidth(2)
+        gl.glColor3f(0.5, 0, 0)
+        gl.glBegin(gl.GL_LINES)
+        for v in vertices:
+            gl.glVertex3f(*v)
+        gl.glEnd()
