@@ -70,7 +70,6 @@ def updateShaderState(self):
 
     opts    = self.opts
     display = self.display
-    canvas  = self.canvas
     shader  = self.shader
 
     # The clipping range options are in the voxel value
