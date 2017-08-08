@@ -97,6 +97,12 @@ stages:
 #   - TWINE_PASSWORD:                - Password to use when uploading to pypi
 #
 #   - TWINE_REPOSITORY_URL:          - Pypi repository to upload to
+#
+#   - WXPYTHON_UBUNTU1404_URL:       - URL to location of wxPython wheel for
+#                                      Ubuntu 14.04
+#
+#   - WXPYTHON_UBUNTU1604_URL:       - URL to location of wxPython wheel for
+#                                      Ubuntu 16.04
 ###############################################################################
 
 
@@ -403,9 +409,9 @@ build-pypi-dist:
     # for ubuntu, but not for centos, where it needs
     # to be compiled from source.
     - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f https://wxpython.org/Phoenix/snapshot-builds/linux/gtk3/ubuntu-14.04/ wxpython;
+        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1404_URL wxpython;
       elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f https://wxpython.org/Phoenix/snapshot-builds/linux/gtk3/ubuntu-16.04/ wxpython;
+        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython;
       else
         pip install --pre "wxpython>=3.0.2.0,<4.1";
       fi
