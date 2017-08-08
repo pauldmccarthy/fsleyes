@@ -116,8 +116,17 @@ class Volume3DOpts(object):
 
 
     def __init__(self):
+        """Create a :class:`Volume3DOpts` instance.
         """
-        """
+
+        # If we're in an X11/SSh session,
+        # step down the quality so it's
+        # a bit faster.
+        if fslplatform.inSSHSession:
+            self.numSteps    = 40
+            self.resolution  = 40
+            self.dithering   = 0.02
+            self.blendFactor = 0.4
 
         self.clipPosition[:]    = 10 * [50]
         self.clipAzimuth[:]     = 10 * [0]

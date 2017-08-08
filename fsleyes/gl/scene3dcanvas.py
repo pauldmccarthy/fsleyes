@@ -19,14 +19,17 @@ import fsleyes_props as props
 
 import fsl.data.mesh       as fslmesh
 import fsl.data.image      as fslimage
+import fsl.utils.async     as async
 import fsl.utils.transform as transform
 
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.globject as globject
+import fsleyes.gl.routines               as glroutines
+import fsleyes.gl.globject               as globject
+import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
 
 
 log = logging.getLogger(__name__)
+
 
 class Scene3DCanvas(props.HasProperties):
 
@@ -73,8 +76,23 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def destroy(self):
+        """
+        """
         self.__overlayList.removeListener('overlays', self.__name)
         self.__displayCtx .removeListener('bounds',   self.__name)
+
+        for ovl in list(self.__glObjects.keys()):
+            self.__deregisterOverlay(ovl)
+
+        self.__displayCtx  = None
+        self.__overlayList = None
+        self.__glObjects   = None
+
+
+    def destroyed(self):
+        """
+        """
+        return self.__overlayList is None
 
 
     def getViewMatrix(self):
@@ -99,6 +117,43 @@ class Scene3DCanvas(props.HasProperties):
 
     def getProjectionMatrix(self):
         return self.__projMat
+
+
+    def canvasToWorld(self, xpos, ypos):
+        """Transform the given x/y canvas coordinates into the display
+        coordinate system.
+        """
+
+        b             = self.__displayCtx.bounds
+        width, height = self.GetSize()
+
+        # The first step is to invert the mouse
+        # coordinates w.r.t. the viewport.
+        #
+        # The canvas x axis corresponds to
+        # (-xhalf, xhalf), and the canvas y
+        # corresponds to (-yhalf, yhalf) -
+        # see routines.show3D.
+        xlen, ylen = glroutines.adjust(b.xlen, b.ylen, width, height)
+        xhalf      = 0.5 * xlen
+        yhalf      = 0.5 * ylen
+
+        # Pixels to viewport coordinates
+        xpos = xlen * (xpos / float(width))  - xhalf
+        ypos = ylen * (ypos / float(height)) - yhalf
+
+        # The second step is to transform from
+        # viewport coords into model-view coords.
+        # This is easy - transform by the inverse
+        # MV matrix.
+        #
+        # z=-1 because the camera is offset by 1
+        # on the depth axis (see __setViewport).
+        pos   = np.array([xpos, ypos, -1])
+        xform = transform.invert(self.__viewMat)
+        pos   = transform.transform(pos, xform)
+
+        return pos
 
 
     def getGLObject(self, overlay):
@@ -155,56 +210,23 @@ class Scene3DCanvas(props.HasProperties):
         for ovl in ovlOrder:
             globj = self.getGLObject(ovl)
 
+            # If there is no GLObject for this
+            # overlay, create one, but don't
+            # add it to the list (as creation
+            # is done asynchronously).
             if globj is None:
-                globj = globject.createGLObject(ovl,
-                                                self.__displayCtx,
-                                                self,
-                                                True)
-                globj.register(self.__name, self.Refresh)
-                self.__glObjects[ovl] = globj
+                self.__registerOverlay(ovl)
 
-            else:
+            # Otherwise, if the value for this
+            # overlay evaluates to False, that
+            # means that it has been scheduled
+            # for creation, but is not ready
+            # yet.
+            elif globj:
                 overlays.append(ovl)
                 globjs  .append(globj)
 
         return overlays, globjs
-
-
-    def canvasToWorld(self, xpos, ypos):
-        """Transform the given x/y canvas coordinates into the display
-        coordinate system.
-        """
-
-        b             = self.__displayCtx.bounds
-        width, height = self.GetSize()
-
-        # The first step is to invert the mouse
-        # coordinates w.r.t. the viewport.
-        #
-        # The canvas x axis corresponds to
-        # (-xhalf, xhalf), and the canvas y
-        # corresponds to (-yhalf, yhalf) -
-        # see routines.show3D.
-        xlen, ylen = glroutines.adjust(b.xlen, b.ylen, width, height)
-        xhalf      = 0.5 * xlen
-        yhalf      = 0.5 * ylen
-
-        # Pixels to viewport coordinates
-        xpos = xlen * (xpos / float(width))  - xhalf
-        ypos = ylen * (ypos / float(height)) - yhalf
-
-        # The second step is to transform from
-        # viewport coords into model-view coords.
-        # This is easy - transform by the inverse
-        # MV matrix.
-        #
-        # z=-1 because the camera is offset by 1
-        # on the depth axis (see __setViewport).
-        pos   = np.array([xpos, ypos, -1])
-        xform = transform.invert(self.__viewMat)
-        pos   = transform.transform(pos, xform)
-
-        return pos
 
 
     def _initGL(self):
@@ -214,28 +236,131 @@ class Scene3DCanvas(props.HasProperties):
 
 
     def __overlayListChanged(self, *a):
-        """Called when the :class:`.OverlayList` changes.
+        """Called when the :class:`.OverlayList` changes. Destroys/creates
+        :class:`.GLObject` instances as necessary.
         """
 
         # Destroy any GL objects for overlays
         # which are no longer in the list
         for ovl, globj in list(self.__glObjects.items()):
             if ovl not in self.__overlayList:
-                self.__glObjects.pop(ovl)
-                if globj:
-                    globj.deregister(self.__name)
-                    globj.destroy()
+                self.__deregisterOverlay(ovl)
+
+        # Create GLObjects for any
+        # newly added overlays
+        for ovl in self.__overlayList:
+            if ovl not in self.__glObjects:
+                self.__registerOverlay(ovl)
 
 
     def __displayBoundsChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.bounds` change. Resets
+        the :attr:`lightPos` property.
+        """
 
-        b        = self.__displayCtx.bounds
+        b      = self.__displayCtx.bounds
         centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
                            b.ylo + 0.5 * (b.yhi - b.ylo),
                            b.zlo + 0.5 * (b.zhi - b.zlo)])
 
         self.lightPos = centre + [b.xlen, b.ylen, 0]
 
+        self.Refresh()
+
+
+    def __registerOverlay(self, overlay):
+        """
+        """
+
+        if not isinstance(overlay, (fslmesh.TriangleMesh, fslimage.Image)):
+            return
+
+        log.debug('Registering overlay {}'.format(overlay))
+
+        display = self.__displayCtx.getDisplay(overlay)
+
+        if not self.__genGLObject(overlay):
+            return
+
+        display.addListener('enabled', self.__name, self.Refresh)
+        display.addListener('overlayType',
+                            self.__name,
+                            self.__overlayTypeChanged)
+
+
+    def __deregisterOverlay(self, overlay):
+        """
+        """
+
+        log.debug('Deregistering overlay {}'.format(overlay))
+
+        try:
+            display = self.__displayCtx.getDisplay(overlay)
+            display.removeListener('overlayType', self.__name)
+            display.removeListener('enabled',     self.__name)
+        except fsldisplay.InvalidOverlayError:
+            pass
+
+        globj = self.__glObjects.pop(overlay, None)
+
+        if globj is not None:
+            globj.deregister(self.__name)
+            globj.destroy()
+
+
+    def __genGLObject(self, overlay):
+        """
+        """
+
+        if overlay in self.__glObjects:
+            return False
+
+        display = self.__displayCtx.getDisplay(overlay)
+
+        if display.overlayType not in ('volume', 'mesh', 'giftimesh'):
+            return False
+
+        self.__glObjects[overlay] = False
+
+        def create():
+
+            if not self or self.destroyed():
+                return
+
+            if overlay not in self.__glObjects:
+                return
+
+            if not self._setGLContext():
+                self.__glObjects.pop(overlay)
+                return
+
+            log.debug('Creating GLObject for {}'.format(overlay))
+
+            globj = globject.createGLObject(overlay,
+                                            self.__displayCtx,
+                                            self,
+                                            True)
+
+            if globj is not None:
+                globj.register(self.__name, self.Refresh)
+                self.__glObjects[overlay] = globj
+
+        async.idle(create)
+        return True
+
+
+    def __overlayTypeChanged(self, value, valid, display, name):
+        """
+        """
+
+        overlay = display.getOverlay()
+        globj   = self.__glObjects.pop(overlay, None)
+
+        if globj is not None:
+            globj.deregister(self.__name)
+            globj.destroy()
+
+        self.__genGLObject(overlay)
         self.Refresh()
 
 
@@ -379,6 +504,8 @@ class Scene3DCanvas(props.HasProperties):
                 xform = transform.concat(depthOffset, xform)
             elif isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
+
+            log.debug('Drawing {} [{}]'.format(ovl, globj))
 
             globj.preDraw( xform=xform)
             globj.draw3D(  xform=xform)

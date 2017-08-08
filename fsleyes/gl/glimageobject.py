@@ -118,9 +118,11 @@ class GLImageObject(globject.GLObject):
         opts.removeListener('transform',       name)
         opts.removeListener('customXform',     name)
         opts.removeListener('displayXform',    name)
-        opts.removeListener('clipPosition',    name)
-        opts.removeListener('clipAzimuth',     name)
-        opts.removeListener('clipInclination', name)
+
+        if self.threedee and isinstance(opts, volume3dopts.Volume3DOpts):
+            opts.removeListener('clipPosition',    name)
+            opts.removeListener('clipAzimuth',     name)
+            opts.removeListener('clipInclination', name)
 
         globject.GLObject.destroy(self)
 

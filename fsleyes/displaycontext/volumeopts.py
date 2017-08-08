@@ -109,9 +109,10 @@ import logging
 
 import numpy as np
 
-import fsl.data.image       as fslimage
-import fsl.utils.transform  as transform
-import fsleyes_props        as props
+import fsl.data.image                     as fslimage
+import fsl.utils.transform                as transform
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
 
 import fsleyes.colourmaps   as fslcm
 from . import display       as fsldisplay
@@ -784,6 +785,13 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         All arguments are passed through to the :class:`.DisplayOpts`
         constructor.
         """
+
+        # We need GL >= 2.1 for
+        # spline interpolation
+        if float(fslplatform.glVersion) < 2.1:
+            interp = self.getProp('interpolation')
+            interp.removeChoice('spline', instance=self)
+            interp.updateChoice('linear', instance=self, newAlt=['spline'])
 
         # Interpolation cannot be unbound
         # between VolumeOpts instances. This is
