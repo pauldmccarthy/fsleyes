@@ -13,7 +13,6 @@ import os.path as op
 import            sys
 import            logging
 import            textwrap
-import            argparse
 
 import fsleyes_props                         as props
 import fsleyes_widgets.utils.layout          as fsllayout
@@ -90,7 +89,7 @@ def parseArgs(argv):
               arguments.
     """
 
-    mainParser = argparse.ArgumentParser(
+    mainParser = parseargs.ArgumentParser(
         add_help=False,
         formatter_class=parseargs.FSLeyesHelpFormatter)
 
