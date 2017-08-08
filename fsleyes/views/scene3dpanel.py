@@ -13,7 +13,8 @@ import wx
 
 import fsleyes.displaycontext.scene3dopts as scene3dopts
 import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
-from . import canvaspanel
+import fsleyes.actions                    as actions
+from . import                                canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -32,7 +33,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
-        name         = self.getName()
         contentPanel = self.getContentPanel()
 
         self.__canvas = scene3dcanvas.WXGLScene3DCanvas(contentPanel,
@@ -73,3 +73,51 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         within this ``Scene3DPanel``.
         """
         return [self.__canvas]
+
+
+    def getActions(self):
+        """
+        """
+        actionz = [self.screenshot,
+                   self.showCommandLineArgs,
+                   self.applyCommandLineArgs,
+                   None,
+                   self.toggleDisplaySync,
+                   self.resetDisplay,
+                   None,
+                   self.toggleOverlayList,
+                   self.toggleLocationPanel,
+                   self.toggleOverlayInfo,
+                   self.toggleDisplayPanel,
+                   self.toggleCanvasSettingsPanel,
+                   self.toggleAtlasPanel,
+                   self.toggleDisplayToolBar,
+                   self.toggleLookupTablePanel,
+                   self.toggleClusterPanel,
+                   self.toggleClassificationPanel,
+                   self.removeAllPanels]
+
+        def makeTuples(actionz):
+
+            tuples = []
+
+            for a in actionz:
+                if isinstance(a, actions.Action):
+                    tuples.append((a.__name__, a))
+
+                elif isinstance(a, tuple):
+                    tuples.append((a[0], makeTuples(a[1])))
+
+                elif a is None:
+                    tuples.append((None, None))
+
+            return tuples
+
+        return makeTuples(actionz)
+
+
+    @actions.action
+    def resetDisplay(self):
+        """
+        """
+        self.getCurrentProfile().resetDisplay()

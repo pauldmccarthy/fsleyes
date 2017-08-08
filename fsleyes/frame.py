@@ -484,6 +484,7 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.scene3dpanel       import Scene3DPanel
         from fsleyes.views.timeseriespanel    import TimeSeriesPanel
         from fsleyes.views.histogrampanel     import HistogramPanel
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -516,6 +517,9 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleLightBoxToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.toggleLocationPanel()
+
+        elif isinstance(viewPanel, Scene3DPanel):
+            viewPanel.toggleDisplayPanel()
 
 
     def refreshPerspectiveMenu(self):
@@ -1409,10 +1413,10 @@ class FSLeyesFrame(wx.Frame):
         # Shortcuts to open a new view panel
         vpActions = [self.addOrthoPanel,
                      self.addLightBoxPanel,
-                     self.addScene3DPanel,
                      self.addTimeSeriesPanel,
                      self.addHistogramPanel,
                      self.addPowerSpectrumPanel,
+                     self.addScene3DPanel,
                      self.addShellPanel]
 
         for action in vpActions:
