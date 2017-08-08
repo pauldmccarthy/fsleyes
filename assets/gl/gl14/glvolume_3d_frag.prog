@@ -149,8 +149,10 @@ arb_call('glvolume_common.prog',
 }}
 
 
-# Check to see if this area is
-# clipped by any clip plane
+# Check to see if this area is clipped
+# by any clip plane. We increment
+# tempVar.x for every clip plane that
+# the texCoord is on the wrong side of.
 MOV tempVar.x, 0;
 {% for j in range(numClipPlanes) %}
 
@@ -162,12 +164,14 @@ ADD tempVar.x, tempVar.x, tempVar.y;
 {% endfor %}
 
 
-SLT tempVar.x,     tempVar.x,      {{ numClipPlanes }};
-MAD tempVar.x,     tempVar.x,         2, -1;
-
-MOV tempVar.y,  -{{ numClipPlanes }};
-SGE tempVar.x,      tempVar.y,         0;
-MIN skipTest.x,     skipTest.x,        tempVar.x;
+# If there is at least one clip plane,
+# and the texCoord is on the wrong side
+# of all clip planes, skip this position.
+SLT tempVar.x,     tempVar.x,        {{ numClipPlanes }};
+SGE tempVar.y, -{{ numClipPlanes }},    0;
+MAX tempVar.x,     tempVar.x,           tempVar.y;
+MAD tempVar.x,     tempVar.x,           2, -1;
+MIN skipTest.x,    skipTest.x,          tempVar.x;
 
 
 # Check whether the
@@ -201,7 +205,6 @@ ADD tempColour.a,   tempVar.x,           finalColour.a;
 # save the depth, as we will use
 # it for the final fragment depth.
 
-
 # Figure out if this is the first
 # sample taken by testing whether
 # skipTest.x > 0, and depth.w > 0
@@ -212,6 +215,7 @@ MUL depth.y, depth.y, -1;
 
 DP4 depth.z, {{ param_tex2ScreenXform }}, texCoord;
 CMP depth.x, depth.y,  depth.z, depth.x;
+
 
 # If we have just set the depth,
 # set depth.w to < 0 so that we
@@ -233,10 +237,10 @@ CMP depth.w, depth.y,  1,  -1;
 # accumulated into skipTest.x
 CMP finalColour, skipTest.x, finalColour, tempColour;
 
+
 # Shift the ray position
 ADD texCoord.xyz,     texCoord,     {{ param_rayStep }};
 ADD clipTexCoord.xyz, clipTexCoord, {{ param_rayStep }};
-
 
 
 {% endfor %}

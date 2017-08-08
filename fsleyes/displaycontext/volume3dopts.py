@@ -8,6 +8,7 @@
 use with :class:`.DisplayOpts` classes.
 """
 
+
 import numpy as np
 
 from   fsl.utils.platform import platform as fslplatform
@@ -22,7 +23,8 @@ class Volume3DOpts(object):
 
 
     The properties in this class are tightly coupled to the ray-casting
-    implementation used by the :class:`.GLVolume` class.
+    implementation used by the :class:`.GLVolume` class - see its documentation
+    for details.
     """
 
 
@@ -54,11 +56,16 @@ class Volume3DOpts(object):
     """
 
 
-    numInnerSteps = props.Choice((1, 2, 5, 10, 20, 30, 40, 50), default=5)
+    numInnerSteps = props.Int(minval=1, maxval=100, default=10, clamped=True)
     """Only used in low performance environments. Specifies the number of
     ray-casting steps to execute in a single iteration on the GPU, as part
     of an outer loop which is running on the CPU. See the :class:`.GLVolume`
     class documentation for more details on the rendering process.
+
+    .. warning:: The maximum number of iterations that can be performed within
+                 an ARB fragment program is implementation-dependent. Too high
+                 a value may result in errors or a corrupted view. See the
+                 :class:`.GLVolume` class for details.
     """
 
 
