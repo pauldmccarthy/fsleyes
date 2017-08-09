@@ -488,9 +488,6 @@ class Scene3DCanvas(props.HasProperties):
         depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
         xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
 
-        if self.showCursor:
-            self.__drawCursor()
-
         for ovl, globj in zip(overlays, globjs):
 
             display = self.__displayCtx.getDisplay(ovl)
@@ -510,6 +507,10 @@ class Scene3DCanvas(props.HasProperties):
             globj.preDraw( xform=xform)
             globj.draw3D(  xform=xform)
             globj.postDraw(xform=xform)
+
+        if self.showCursor:
+            with glroutines.enabled((gl.GL_DEPTH_TEST)):
+                self.__drawCursor()
 
         if self.showLegend:
             self.__drawLegend()
