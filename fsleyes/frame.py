@@ -519,7 +519,7 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleLocationPanel()
 
         elif isinstance(viewPanel, Scene3DPanel):
-            viewPanel.toggleDisplayPanel()
+            pass
 
 
     def refreshPerspectiveMenu(self):

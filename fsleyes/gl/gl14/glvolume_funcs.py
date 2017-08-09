@@ -42,12 +42,6 @@ def destroy(self):
         self.shader.destroy()
         self.shader = None
 
-    if self.threedee:
-        self.renderTexture1.destroy()
-        self.renderTexture2.destroy()
-        self.renderTexture1 = None
-        self.renderTexture2 = None
-
 
 def compileShaders(self):
     """Creates a :class:`.ARBPShader` instance. """

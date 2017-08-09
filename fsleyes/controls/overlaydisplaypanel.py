@@ -170,7 +170,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         for g, l, t in zip(groups, labels, targets):
 
             widgetList.AddGroup(g, l)
-            self.__widgets[g] = self.updateWidgets(t, g)
+            self.__widgets[g] = self.__updateWidgets(t, g)
             widgetList.Expand(g, keepExpanded[g])
 
         self.setNavOrder()
@@ -195,18 +195,26 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         opts       = self._displayCtx.getOpts(self.__currentOverlay)
         widgetList = self.getWidgetList()
 
-        self.__widgets[opts] = self.updateWidgets(opts, 'opts')
+        self.__widgets[opts] = self.__updateWidgets(opts, 'opts')
 
         widgetList.RenameGroup('opts', strings.labels[self, opts])
 
         if '3d' in self.__widgets:
-            self.__widgets['3d'] = self.updateWidgets(opts, '3d')
+            self.__widgets['3d'] = self.__updateWidgets(opts, '3d')
 
         self.setNavOrder()
         self.Layout()
 
 
     def updateWidgets(self, target, groupName):
+        """Re-generates the widgets for the given target/group. """
+
+        self.__widgets[target] = self.__updateWidgets(target, groupName)
+        self.setNavOrder()
+        self.Layout()
+
+
+    def __updateWidgets(self, target, groupName):
         """Called by the :meth:`__selectedOverlayChanged` and
         :meth:`__ovlTypeChanged` methods. Re-creates the controls on this
         ``OverlayDisplayPanel`` for the specified group.
@@ -294,7 +302,5 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                 label,
                 tooltip=tooltip,
                 groupName=groupName)
-
-        self.Layout()
 
         return allWidgets
