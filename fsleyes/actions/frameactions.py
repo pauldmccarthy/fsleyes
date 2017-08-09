@@ -41,6 +41,7 @@ def addLightBoxPanel(self, *args, **kwargs):
 def addScene3DPanel(self, *args, **kwargs):
     """Adds a new :class:`.Scene3DPanel`."""
     from fsleyes.views.scene3dpanel import Scene3DPanel
+    self.getDisplayContext().displaySpace = 'world'
     addViewPanel(self, Scene3DPanel, *args, **kwargs)
 
 
