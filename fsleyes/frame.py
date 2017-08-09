@@ -197,6 +197,8 @@ class FSLeyesFrame(wx.Frame):
                       aui.AUI_MGR_AERO_DOCKING_GUIDES     |
                       aui.AUI_MGR_LIVE_RESIZE))
 
+        self.__auiManager.SetDockSizeConstraint(0.5, 0.5)
+
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.__sizer.Add(self.__mainPanel, flag=wx.EXPAND, proportion=1)
         self.__sizer.Add(self.__statusBar, flag=wx.EXPAND)
@@ -453,12 +455,12 @@ class FSLeyesFrame(wx.Frame):
             # initially placed along the
             # bottom
             if isinstance(panel, (plotpanel.PlotPanel, shellpanel.ShellPanel)):
-                paneInfo.Bottom().BestSize(width // 4, height // 3)
+                paneInfo.Bottom().BestSize(width, height // 3)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
             else:
-                paneInfo.Right().BestSize(width // 3, height // 4)
+                paneInfo.Right().BestSize(width // 2, height)
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC

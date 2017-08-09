@@ -127,6 +127,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                       aui.AUI_MGR_AERO_DOCKING_GUIDES     |
                       aui.AUI_MGR_LIVE_RESIZE))
 
+        self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
 
         # Use a different listener name so that subclasses
