@@ -58,6 +58,7 @@ canvases are defined in the ``gl`` package:
 
    ~fsleyes.gl.slicecanvas.SliceCanvas
    ~fsleyes.gl.lightboxcanvas.LightBoxCanvas
+   ~fsleyes.gl.scene3dcanvas.Scene3DCanvas
    ~fsleyes.gl.colourbarcanvas.ColourBarCanvas
 
 
@@ -90,9 +91,11 @@ implementations for each of the available canvases:
 
    ~fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
    ~fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
+   ~fsleyes.gl.wxglscene3dcanvas.WXGLScene3DCanvas
    ~fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
    ~fsleyes.gl.offscreenslicecanvas.OffScreenSliceCanvas
    ~fsleyes.gl.offscreenlightboxcanvas.OffScreenLightBoxCanvas
+   ~fsleyes.gl.offscreenscene3dcanvas.OffScreenScene3DCanvas
    ~fsleyes.gl.offscreencolourbarcanvas.OffScreenColourBarCanvas
 
 
@@ -108,10 +111,10 @@ and used by application code.
 With the exception of the :class:`.ColourBarCanvas`, everything that is drawn
 on a canvas derives from the :class:`.GLObject` base class. A ``GLObject``
 manages the underlying data structures, GL resources (e.g. shaders and
-textures), and rendering routines required to draw an object to a canvas.  The
-following ``GLObject`` sub-classes correspond to each of the possible types
-(the :attr:`.Display.overlayType` property) that an overlay can be displayed
-as:
+textures), and rendering routines required to draw an object, in 2D or 3D, to a
+canvas.  The following ``GLObject`` sub-classes correspond to each of the
+possible types (the :attr:`.Display.overlayType` property) that an overlay can
+be displayed as:
 
 .. autosummary::
 
@@ -125,7 +128,8 @@ as:
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
 
-These objects are created and destroyed automatically by :class:`.SliceCanvas`
+
+These objects are created and destroyed automatically by the canvas classes
 instances, so application code does not need to worry about them too much.
 
 
@@ -134,12 +138,11 @@ Annotations
 ===========
 
 
-:class:`.SliceCanvas` canvases can be *annotated* in a few ways, by use of the
-:class:`.Annotations` class. An ``Annotations`` object allows lines,
-rectangles, and other simple shapes to be rendered on top of the ``GLObject``
-renderings which represent the overlays in the :class:`.OverlayList`.  The
-``Annotations`` object for a ``SliceCanvas`` instance can be accessed through
-its :meth:`.SliceCanvas.getAnnotations` method.
+Canvases can be *annotated* in a few ways, by use of the :class:`.Annotations`
+class. An ``Annotations`` object allows lines, rectangles, and other simple
+shapes to be rendered on top of the ``GLObject`` renderings which represent
+the overlays in the :class:`.OverlayList`.  The ``Annotations`` object for a
+canvas instance can be accessed through its ``getAnnotations`` method.
 
 
 ---------------------------------
@@ -347,17 +350,8 @@ def bootstrap(glVersion=None):
                                'cannot run on the available graphics '
                                'hardware.'.format(', '.join(exts)))
 
-        # Spline interpolation is not currently
-        # available in the GL14 implementation
-        import fsleyes.displaycontext         as dc
-        dc.VolumeOpts   .interpolation.removeChoice('spline')
-        dc.RGBVectorOpts.interpolation.removeChoice('spline')
-        dc.VolumeOpts   .interpolation.updateChoice('linear',
-                                                    newAlt=['spline'])
-        dc.RGBVectorOpts.interpolation.updateChoice('linear',
-                                                    newAlt=['spline'])
-
         # Tensor/SH overlays are not available in GL14
+        import fsleyes.displaycontext as dc
         dc.ALL_OVERLAY_TYPES            .remove('tensor')
         dc.ALL_OVERLAY_TYPES            .remove('sh')
         dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
@@ -370,6 +364,16 @@ def bootstrap(glVersion=None):
 
     # If on linux, we need to call glutInit.
     # If on OSX, we don't need to bother.
+    #
+    # note: GLUT is only required for text
+    #       rendering. The GLUT requirement
+    #       means that true off-screen (i.e.
+    #       headless) rendering is not
+    #       currently possible, although
+    #       would be if we removed GLUT
+    #       as a requirement. Off-screen
+    #       rendering is possible via other
+    #       means (e.g. xvfb-run).
     if fslplatform.os == 'Linux':
         import OpenGL.GLUT as GLUT
         GLUT.glutInit()
@@ -404,7 +408,6 @@ def bootstrap(glVersion=None):
 
         import fsleyes.displaycontext as dc
         dc.SceneOpts.performance.setConstraint(None, 'default', 1)
-
 
 
 def getGLContext(*args, **kwargs):
@@ -666,7 +669,7 @@ class GLContext(object):
         attribs = [wxgl.WX_GL_RGBA,
                    wxgl.WX_GL_DOUBLEBUFFER,
                    wxgl.WX_GL_STENCIL_SIZE, 4,
-                   wxgl.WX_GL_DEPTH_SIZE,   8,
+                   wxgl.WX_GL_DEPTH_SIZE,   24,
                    0,
                    0]
 
@@ -770,11 +773,6 @@ class OffScreenCanvasTarget(object):
                 id(self)))
 
 
-    def _getSize(self):
-        """Returns a tuple containing the canvas width and height."""
-        return self.__width, self.__height
-
-
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
         getGLContext().setTarget(self)
@@ -784,6 +782,16 @@ class OffScreenCanvasTarget(object):
     def _draw(self, *a):
         """Must be provided by subclasses."""
         raise NotImplementedError()
+
+
+    def getAnnotations(self):
+        """Must be provided by subclasses."""
+        raise NotImplementedError()
+
+
+    def GetSize(self):
+        """Returns a tuple containing the canvas width and height."""
+        return self.__width, self.__height
 
 
     def Refresh(self, *a):
@@ -940,6 +948,11 @@ class WXGLCanvasTarget(object):
         raise NotImplementedError()
 
 
+    def getAnnotations(self):
+        """Must be provided by subclasses."""
+        raise NotImplementedError()
+
+
     def _draw(self, *a):
         """This method should implement the OpenGL drawing logic - it must be
         implemented by subclasses.
@@ -1019,11 +1032,6 @@ class WXGLCanvasTarget(object):
             wx.CallAfter(doInit)
 
 
-    def _getSize(self):
-        """Returns the current canvas size. """
-        return self.GetClientSize().Get()
-
-
     def _setGLContext(self):
         """Configures the GL context for drawing to this canvas.
 
@@ -1037,6 +1045,11 @@ class WXGLCanvasTarget(object):
 
         self.__context.setTarget(self)
         return True
+
+
+    def GetSize(self):
+        """Returns the current canvas size. """
+        return self.GetClientSize().Get()
 
 
     def Refresh(self, *a):
@@ -1086,7 +1099,7 @@ class WXGLCanvasTarget(object):
 
         self._setGLContext()
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
 
         # Make sure we're reading
         # from the front buffer

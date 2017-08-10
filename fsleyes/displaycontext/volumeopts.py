@@ -109,13 +109,15 @@ import logging
 
 import numpy as np
 
-import fsl.data.image       as fslimage
-import fsl.utils.transform  as transform
-import fsleyes_props        as props
+import fsl.data.image                     as fslimage
+import fsl.utils.transform                as transform
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props                      as props
 
 import fsleyes.colourmaps   as fslcm
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts
+from . import volume3dopts  as vol3dopts
 
 
 log = logging.getLogger(__name__)
@@ -747,7 +749,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return self.transformCoords(coords, 'world', 'display')
 
 
-class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
+class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
     """
@@ -784,6 +786,13 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
         constructor.
         """
 
+        # We need GL >= 2.1 for
+        # spline interpolation
+        if float(fslplatform.glVersion) < 2.1:
+            interp = self.getProp('interpolation')
+            interp.removeChoice('spline', instance=self)
+            interp.updateChoice('linear', instance=self, newAlt=['spline'])
+
         # Interpolation cannot be unbound
         # between VolumeOpts instances. This is
         # primarily to reduce memory requirement
@@ -815,7 +824,8 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
                            overlayList,
                            displayCtx,
                            **kwargs)
-        cmapopts.ColourMapOpts.__init__(self)
+        cmapopts .ColourMapOpts.__init__(self)
+        vol3dopts.Volume3DOpts .__init__(self)
 
         # Both parent and child VolumeOpts instances
         # listen for Image dataRange changes. The data
@@ -887,8 +897,9 @@ class VolumeOpts(cmapopts.ColourMapOpts, NiftiOpts):
             self       .removeListener('enableOverrideDataRange', self.name)
             self       .removeListener('overrideDataRange',       self.name)
 
-        cmapopts.ColourMapOpts.destroy(self)
-        NiftiOpts             .destroy(self)
+        cmapopts .ColourMapOpts.destroy(self)
+        vol3dopts.Volume3DOpts .destroy(self)
+        NiftiOpts              .destroy(self)
 
 
     def getDataRange(self):

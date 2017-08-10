@@ -1,35 +1,40 @@
 # This routine replaces the value from a texture lookup if the texture
-# coordinates were out of bounds (less than 0 or greater than 1). 
-# 
+# coordinates were out of bounds (less than 0 or greater than 1).
+#
 # Inputs:
-#   - tb_texcoord  - 3D texture coordinates
-#   - tb_origval   - Value that was retrieved from the texture lookup.
-#   - tb_borderval - Value to use if the coordinates are out of bounds.
-# 
+#   texCoord   - 3D texture coordinates
+#   origval    - X component contains the value that was retrieved
+#                from the texture lookup.
+#   borderval  - X component contains the value to use if the coordinates
+#                are out of bounds.
+#
 # Result:
-#   - tb_result    - tb_origval if the texture coords are in bounds,
-#                    or tb_borderval if they're out of bounds.
+#   out_result - X component will contain the origval if the texture coords
+#                are in bounds, or borderval if they're out of bounds.
+
+# Throughout the routine, we use
+# result.xyz to process texture
+# coordinates, and result.w to
+# store the output value. At the
+# end, the final result will be
+# accumulated into result.x.
 
 
-# Take a copy of origval - after this,
-# tb_origval is used as a temp variable
-# to store the texture coordinates.
-MOV tb_result.x, tb_origval.x;
-MOV tb_origval,  tb_texcoord;
+MOV {{ out_result }}.w,   {{ origval  }}.x;
+MOV {{ out_result }}.xyz, {{ texCoord }};
 
 # Clobber the texture value if the tex
-# coords on any dimension are less than 0
-SUB tb_origval, tb_origval, {0.0000001, 0.0000001, 0.0000001, 0};
+# coords on any dimension are less than 0.
+CMP {{ out_result }}.w, {{ texCoord }}.x, {{ borderval }}.x, {{ out_result }}.w;
+CMP {{ out_result }}.w, {{ texCoord }}.y, {{ borderval }}.x, {{ out_result }}.w;
+CMP {{ out_result }}.w, {{ texCoord }}.z, {{ borderval }}.x, {{ out_result }}.w;
 
-CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
-
-# Or if the tex coords on any
+# Test if the tex coords on any
 # dimension are greater than 1
-MOV tb_origval, 1;
-SUB tb_origval, tb_origval, tb_texcoord;
+SUB {{ out_result }}.xyz, 1, {{ texCoord }};
 
-CMP tb_result.x, tb_origval.x, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.y, tb_borderval.x, tb_result.x;
-CMP tb_result.x, tb_origval.z, tb_borderval.x, tb_result.x;
+# Put the final result from
+# both tests into result.x
+CMP {{ out_result }}.w, {{ out_result }}.x, {{ borderval }}.x, {{ out_result }}.w;
+CMP {{ out_result }}.w, {{ out_result }}.y, {{ borderval }}.x, {{ out_result }}.w;
+CMP {{ out_result }}.x, {{ out_result }}.z, {{ borderval }}.x, {{ out_result }}.w;

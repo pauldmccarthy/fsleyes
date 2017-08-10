@@ -157,8 +157,9 @@ class RenderTextureStack(object):
         self.__destroyTextures()
 
         for i in range(numTextures):
-            self.__textures.append(
-                rendertexture.RenderTexture('{}_{}'.format(self.name, i)))
+            rt = rendertexture.RenderTexture(
+                '{}_{}'.format(self.name, i), rttype='c')
+            self.__textures.append(rt)
 
         self.onGLObjectUpdate()
 
@@ -263,6 +264,7 @@ class RenderTextureStack(object):
         zpos  = self.__indexToZpos(idx)
         xax   = self.__xax
         yax   = self.__yax
+        axes  = (self.__xax, self.__yax, self.__zax)
 
         if not globj.ready():
             return
@@ -296,7 +298,7 @@ class RenderTextureStack(object):
 
         with glroutines.disabled(gl.GL_BLEND):
             globj.preDraw()
-            globj.draw(zpos)
+            globj.draw2D(zpos, axes)
             globj.postDraw()
 
         tex.unbindAsRenderTarget()

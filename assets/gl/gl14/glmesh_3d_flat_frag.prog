@@ -1,0 +1,36 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLMesh instances in 3D, in a flat colour.
+#
+# Input parameters:
+#
+#   {{ param_colour   }}   - The mesh colour
+#
+#   {{ param_lighting }}   - The xyz components contain the light position
+#                            in display coordinates. The w component contains a
+#                            1 if lighting should be applied, or a -1 if
+#                            lighting should not be applied.
+#
+#
+# Input varyings:
+#   - {{ varying_vertex }} - Vertex position in display coordinates
+#   - {{ varying_normal }} - Vertex normal
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+{{ arb_include('glmesh_3d_lighting.prog') }}
+
+TEMP colour;
+
+{{ arb_call('glmesh_3d_lighting.prog',
+            vertex='{{ varying_vertex }}',
+            normal='{{ varying_normal }}',
+            lightPos='{{ param_lighting }}',
+            colour='{{ param_colour }}',
+            out_colour='colour')
+}}
+
+CMP result.color, {{ param_lighting }}.w, {{ param_colour }}, colour;
+
+END

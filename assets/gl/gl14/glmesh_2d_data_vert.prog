@@ -1,14 +1,14 @@
 !!ARBvp1.0
 #
-# Vertex program for rendering GLMesh instances.
+# Vertex program for rendering GLMesh instances in 2D.
 #
 # Input attributes:
-#    vertexData - Data associated with the current vertex
+#    {{ attr_vertexData }} - Data associated with the current vertex
 #
 # Outputs:
-#    vertexData - As above, passed through to fragment shader.
+#    {{ varying_vertexData}}  - As above, passed through to fragment shader.
 #
-# Author: Paul McCarthy <pauldmccarthy@gmail.com> 
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
 # Transform the vertex position into display coordinates

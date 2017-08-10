@@ -1,0 +1,40 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLMesh instances in 2D.
+#
+# See the glmesh_data_common.prog routine for documentation on all of the
+# inputs.
+#
+# Input parameters:
+#
+#   - {{ param_settings }}
+#   - {{ param_clipping }}
+#   - {{ param_flatColour }}
+#   - {{ param4_cmapXform }}
+#
+# Input textures:
+#   - {{ texture_cmap }}
+#   - {{ texture_negCmap }}
+#
+# Input varyings:
+#   - {{ varying_vertexData }}
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+{{ arb_include('glmesh_data_common.prog') }}
+
+PARAM cmapXform[4] = {{ param4_cmapXform }};
+
+{{ arb_call('glmesh_data_common.prog',
+            settings='{{ param_settings }}',
+            clipping='{{ param_clipping }}',
+            flatColour='{{ param_flatColour }}',
+            cmapXform='cmapXform',
+            cmap='{{ texture_cmap }}',
+            negCmap='{{ texture_negCmap }}',
+            vertexData='{{ varying_vertexData }}',
+            out_colour='result.color')
+}}
+
+END

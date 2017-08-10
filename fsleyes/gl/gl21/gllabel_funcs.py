@@ -56,18 +56,15 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
 
     imageShape      = np.array(self.image.shape[:3])
     vvx             = self.imageTexture.voxValXform
     outlineOffsets  = opts.outlineWidth / imageShape
 
-    if opts.transform == 'affine':
-        minOffset = outlineOffsets.min()
-        outlineOffsets = np.array([minOffset] * 3)
-    else:
-        outlineOffsets[self.zax] = -1
+    minOffset      = outlineOffsets.min()
+    outlineOffsets = np.array([minOffset] * 3)
 
     shader.load()
 
@@ -87,6 +84,7 @@ def updateShaderState(self):
 
 
 preDraw  = glvolume_funcs.preDraw
-draw     = glvolume_funcs.draw
+draw2D   = glvolume_funcs.draw2D
+draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

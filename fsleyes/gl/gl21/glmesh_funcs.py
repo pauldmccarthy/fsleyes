@@ -15,89 +15,110 @@ shader programs.
 
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
-import fsleyes.gl.shaders  as shaders
+import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
-    """Loads the ``glmesh`` vertex/fragment shader source and creates a
-    :class:`.GLSLShader` instance.
+    """Loads the ``glmesh`` vertex/fragment shader source and creates
+    :class:`.GLSLShader` instance(s).
     """
 
-    if self.shader is not None:
-        self.shader.destroy()
+    if self.threedee:
 
-    vertSrc = shaders.getVertexShader(  'glmesh')
-    fragSrc = shaders.getFragmentShader('glmesh')
+        flatVertSrc = shaders.getVertexShader(  'glmesh_3d_flat')
+        flatFragSrc = shaders.getFragmentShader('glmesh_3d_flat')
+        dataVertSrc = shaders.getVertexShader(  'glmesh_3d_data')
+        dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
+        self.flatShader = shaders.GLSLShader(flatVertSrc, flatFragSrc)
+        self.dataShader = shaders.GLSLShader(dataVertSrc, dataFragSrc)
 
+    else:
 
-def destroy(self):
-    """Deletes the vertex/fragment shaders that were compiled by
-    :func:`compileShaders`.
-    """
+        vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
+        fragSrc = shaders.getFragmentShader('glmesh_2d_data')
 
-    if self.shader is not None:
-        self.shader.destroy()
-
-    self.shader = None
+        self.dataShader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
-def updateShaderState(self):
+def updateShaderState(self, **kwargs):
     """Updates the shader program according to the current :class:`.MeshOpts``
     configuration.
     """
-    self.shader.load()
 
-    opts       = self.opts
-    useNegCmap = (not opts.useLut) and opts.useNegativeCmap
+    opts    = self.opts
+    canvas  = self.canvas
+    dshader = self.dataShader
+    fshader = self.flatShader
 
-    if opts.useLut:
-        delta     = 1.0 / (opts.lut.max() + 1)
-        cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
-    else:
-        cmapXform = self.cmapTexture.getCoordinateTransform()
+    dshader.load()
+    dshader.set('cmap',           0)
+    dshader.set('negCmap',        1)
+    dshader.set('useNegCmap',     kwargs['useNegCmap'])
+    dshader.set('cmapXform',      kwargs['cmapXform'])
+    dshader.set('flatColour',     kwargs['flatColour'])
+    dshader.set('invertClip',     opts.invertClipping)
+    dshader.set('discardClipped', opts.discardClipped)
+    dshader.set('clipLow',        opts.clippingRange.xlo)
+    dshader.set('clipHigh',       opts.clippingRange.xhi)
 
-    self.shader.set('cmap',          0)
-    self.shader.set('negCmap',       1)
-    self.shader.set('useNegCmap',    useNegCmap)
-    self.shader.set('cmapXform',     cmapXform)
-    self.shader.set('invertClip',    opts.invertClipping)
-    self.shader.set('clipLow',       self.opts.clippingRange.xlo)
-    self.shader.set('clipHigh',      self.opts.clippingRange.xhi)
+    if self.threedee:
+        dshader.set('lighting', canvas.light)
+        dshader.set('lightPos', kwargs['lightPos'])
 
-    self.shader.unload()
+    dshader.unload()
+
+    if self.threedee:
+        fshader.load()
+        fshader.set('lighting', canvas.light)
+        fshader.set('lightPos', kwargs['lightPos'])
+        fshader.set('colour',   kwargs['flatColour'])
+        fshader.unload()
 
 
-def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
-    """Called when :attr:`.MeshOpts.outline` is ``True``, and
-    :attr:`.MeshOpts.vertexData` is not ``None``. Loads and runs the
-    shader program.
-
-    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
-    :arg vdata:    ``(n, )`` array containing data for each vertex.
-    :arg indices:  Indices into the ``vertices`` array. If not provided,
-                   ``glDrawArrays`` is used.
-    :arg glType:   The OpenGL primitive type. If not provided, ``GL_LINES``
-                   is assumed.
+def preDraw(self):
+    """Must be called before :func:`draw`. Loads the appropriate shader
+    program.
     """
 
-    if glType is None:
-        glType = gl.GL_LINES
+    flat = self.opts.vertexData is None
 
-    self.shader.load()
+    if flat: shader = self.flatShader
+    else:    shader = self.dataShader
 
-    self.shader.setAtt('vertexData', vdata)
-    self.shader.setAtt('vertex',     vertices)
+    self.activeShader = shader
+    shader.load()
 
-    self.shader.loadAtts()
 
-    if self.opts.useLut:
-        self.lutTexture.bindTexture(gl.GL_TEXTURE0)
-    else:
-        self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-        self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+def draw(self,
+         glType,
+         vertices,
+         indices=None,
+         normals=None,
+         vdata=None):
+    """Called for 3D meshes, and when :attr:`.MeshOpts.vertexData` is not
+    ``None``. Loads and runs the shader program.
+
+    :arg glType:   The OpenGL primitive type.
+
+    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
+
+    :arg indices:  Indices into the ``vertices`` array. If not provided,
+                   ``glDrawArrays`` is used.
+
+    :arg normals:  Vertex normals.
+
+    :arg vdata:    ``(n, )`` array containing data for each vertex.
+    """
+
+    shader = self.activeShader
+
+    shader.setAtt('vertex', vertices)
+
+    if normals is not None: shader.setAtt('normal',     normals)
+    if vdata   is not None: shader.setAtt('vertexData', vdata)
+
+    shader.loadAtts()
 
     if indices is None:
         gl.glDrawArrays(glType, 0, vertices.shape[0])
@@ -107,11 +128,13 @@ def drawColouredOutline(self, vertices, vdata, indices=None, glType=None):
                           gl.GL_UNSIGNED_INT,
                           indices.ravel('C'))
 
-    self.shader.unloadAtts()
-    self.shader.unload()
 
-    if self.opts.useLut:
-        self.lutTexture.unbindTexture()
-    else:
-        self.cmapTexture   .unbindTexture()
-        self.negCmapTexture.unbindTexture()
+def postDraw(self):
+    """Must be called after :func:`draw`. Unloads shaders, and unbinds
+    textures.
+    """
+
+    shader = self.activeShader
+    shader.unloadAtts()
+    shader.unload()
+    self.activeShader = None

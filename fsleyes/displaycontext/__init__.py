@@ -74,6 +74,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 
    ~fsleyes.displaycontext.volumeopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
+   ~fsleyes.displaycontext.volumeopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
@@ -114,9 +115,11 @@ define *scene* options:
 
    ~fsleyes.displaycontext.canvasopts.SliceCanvasOpts
    ~fsleyes.displaycontext.canvasopts.LightBoxCanvasOpts
+   ~fsleyes.displaycontext.canvasopts.Scene3DCanvasOpts
    ~fsleyes.displaycontext.sceneopts.SceneOpts
    ~fsleyes.displaycontext.orthoopts.OrthoOpts
    ~fsleyes.displaycontext.lightboxopts.LightBoxOpts
+   ~fsleyes.displaycontext.orthoopts.Scene3DOpts
 
 
 .. note:: Aside from an increase in code modularity and cleanliness, another
@@ -124,10 +127,10 @@ define *scene* options:
           the things that use them is so they can be imported, queried, and
           set without having to import the modules that use them.
 
-          For example, the :mod:`.fsleyes_parseargs` module needs to be able
+          For example, the :mod:`.parseargs` module needs to be able
           to access all of the display settings in order to print out the
           corresponding help documentation. This process would take much
-          longer if ``fsleyes_parseargs`` had to import, e.g.
+          longer if ``parseargs`` had to import, e.g.
           :class:`.OrthoPanel`, which would result in importing both :mod:`wx`
           and :mod:`.OpenGL`.
 
@@ -148,9 +151,11 @@ from .group          import OverlayGroup
 from .sceneopts      import SceneOpts
 from .orthoopts      import OrthoOpts
 from .lightboxopts   import LightBoxOpts
+from .scene3dopts    import Scene3DOpts
 from .colourmapopts  import ColourMapOpts
 from .volumeopts     import NiftiOpts
 from .volumeopts     import VolumeOpts
+from .volume3dopts   import Volume3DOpts
 from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts
 from .vectoropts     import RGBVectorOpts

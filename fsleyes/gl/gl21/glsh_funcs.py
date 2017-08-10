@@ -54,7 +54,7 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    opts                     = self.displayOpts
+    opts                     = self.opts
     self.useVolumeFragShader = opts.colourImage is not None
 
     if self.useVolumeFragShader:
@@ -75,7 +75,7 @@ def updateShaderState(self):
 
     shader  = self.shader
     image   = self.image
-    opts    = self.displayOpts
+    opts    = self.opts
 
     if shader is None:
         return
@@ -162,7 +162,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Called by :meth:`.GLSH.preDraw`. Loads the shader program, and updates
     some shader attributes.
     """
@@ -174,7 +174,7 @@ def preDraw(self):
     # normal vectors - T(I(MV matrix))
     # We transpose mvMat because OpenGL is column-major
     mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
-    v2dMat       = self.displayOpts.getTransform('voxel', 'display')[:3, :3]
+    v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = transform.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
@@ -187,17 +187,17 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw(self, zpos, xform=None, bbox=None):
-    """Called by :meth:`.GLSH.draw`. Draws the scene. """
+def draw2D(self, zpos, axes, xform=None, bbox=None):
+    """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
     v2dMat = opts.getTransform('voxel',   'display')
 
     if xform is None: xform = v2dMat
     else:             xform = transform.concat(v2dMat, xform)
 
-    voxels              = self.generateVoxelCoordinates(zpos, bbox)
+    voxels              = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
 
     if len(voxels) == 0:
@@ -217,7 +217,11 @@ def draw(self, zpos, xform=None, bbox=None):
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 
-def postDraw(self):
+def draw3D(self, xform=None, bbox=None):
+    pass
+
+
+def postDraw(self, xform=None, bbox=None):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """

@@ -1,0 +1,46 @@
+!!ARBvp1.0
+#
+# Vertex program for rendering GLMesh instances in 3D, colouring them
+# according to vertex data.
+#
+# Input parameters:
+#
+#    {{ param4_normalMatrix }} - Matrix to transform normal vectors into
+#                                display coordinates.
+#
+# Input attributes:
+#    {{ attr_vertexData }} - Data associated with the current vertex
+#    {{ attr_normal }}     - Vertex normal vector
+#
+# Outputs:
+#    {{ varying_vertexData }} - As above, passed through to fragment shader.
+#    {{ varying_vertex }}     - The vertex position in display coordinates.
+#    {{ varying_normal }}     - As above, passed through to fragment shader.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+PARAM normalMatrix[4] = {{ param4_normalMatrix }};
+
+# Transform the vertex position into clip coordinates
+DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
+DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
+DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
+DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
+
+# Transform the vertex position into display coordinates
+DP4 {{ varying_vertex }}.x, state.matrix.modelview[0].row[0], vertex.position;
+DP4 {{ varying_vertex }}.y, state.matrix.modelview[0].row[1], vertex.position;
+DP4 {{ varying_vertex }}.z, state.matrix.modelview[0].row[2], vertex.position;
+DP4 {{ varying_vertex }}.w, state.matrix.modelview[0].row[3], vertex.position;
+
+# Transform the normal vector
+DP4 {{ varying_normal }}.x, normalMatrix[0], {{ attr_normal }};
+DP4 {{ varying_normal }}.y, normalMatrix[1], {{ attr_normal }};
+DP4 {{ varying_normal }}.z, normalMatrix[2], {{ attr_normal }};
+DP4 {{ varying_normal }}.w, normalMatrix[3], {{ attr_normal }};
+
+# Copy the vertex data
+MOV {{ varying_vertexData }}, {{ attr_vertexData }};
+
+END

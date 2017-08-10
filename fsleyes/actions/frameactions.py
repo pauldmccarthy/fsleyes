@@ -38,6 +38,13 @@ def addLightBoxPanel(self, *args, **kwargs):
     addViewPanel(self, LightBoxPanel, *args, **kwargs)
 
 
+def addScene3DPanel(self, *args, **kwargs):
+    """Adds a new :class:`.Scene3DPanel`."""
+    from fsleyes.views.scene3dpanel import Scene3DPanel
+    self.getDisplayContext().displaySpace = 'world'
+    addViewPanel(self, Scene3DPanel, *args, **kwargs)
+
+
 def addTimeSeriesPanel(self, *args, **kwargs):
     """Adds a new :class:`.TimeSeriesPanel`."""
     from fsleyes.views.timeseriespanel import TimeSeriesPanel
@@ -145,6 +152,7 @@ def closeFSLeyes(self, *args, **kwargs):
 
 frame.FSLeyesFrame.addOrthoPanel           = actions.action(addOrthoPanel)
 frame.FSLeyesFrame.addLightBoxPanel        = actions.action(addLightBoxPanel)
+frame.FSLeyesFrame.addScene3DPanel         = actions.action(addScene3DPanel)
 frame.FSLeyesFrame.addTimeSeriesPanel      = actions.action(addTimeSeriesPanel)
 frame.FSLeyesFrame.addHistogramPanel       = actions.action(addHistogramPanel)
 frame.FSLeyesFrame.addPowerSpectrumPanel   = actions.action(addPowerSpectrumPanel)

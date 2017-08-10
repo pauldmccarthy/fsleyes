@@ -9,29 +9,35 @@
 sub-classes intended to be used as targets for off-screen rendering.
 
 These classes are used by the :class:`.SliceCanvas` and
-:class:`.LightBoxCanvas` classes for off-screen rendering. See also the
+:class:`.LightBoxCanvas` classes for off-screen rendering, and in various
+other situations throughout FSLeyes. See also the
 :class:`.RenderTextureStack`, which uses :class:`RenderTexture` instances.
 """
 
 
 import logging
 
-import OpenGL.GL                        as gl
-import OpenGL.raw.GL._types             as gltypes
-import OpenGL.GL.EXT.framebuffer_object as glfbo
+import OpenGL.GL                         as gl
+import OpenGL.raw.GL._types              as gltypes
+import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-import fsleyes.gl.routines as glroutines
-from . import                 texture
+from  fsl.utils.platform import platform as fslplatform
+import fsleyes.gl.routines               as glroutines
+import fsleyes.gl.shaders                as shaders
+from . import                               texture
 
 
 log = logging.getLogger(__name__)
 
 
 class RenderTexture(texture.Texture2D):
-    """The ``RenderTexture`` class encapsulates a 2D texture, a frame buffer,
-    and a render buffer, intended to be used as a target for off-screen
-    rendering. Using a ``RenderTexture`` (``tex`` in the example below)
-    as the rendering target is easy::
+    """The ``RenderTexture`` class is a 2D RGBA texture which manages
+    a frame buffer and a render buffer or another ``Texture2D`` which
+    is used as the depth+stencil, or depth attachment.
+
+    A ``RenderTexture`` is intended to be used as a target for off-screen
+    rendering. Using a ``RenderTexture`` (``tex`` in the example below) as the
+    rendering target is easy::
 
         # Set the texture size in pixels
         tex.setSize(1024, 768)
@@ -56,15 +62,47 @@ class RenderTexture(texture.Texture2D):
     The contents of the ``RenderTexture`` can later be drawn to the screen
     via the :meth:`.Texture2D.draw` or :meth:`.Texture2D.drawOnBounds`
     methods.
+
+
+    A ``RenderTexture`` can be configured in one of three ways:
+
+      1. Using a ``RGBA8`` :class:`Texture2d` (the ``RenderTexture`` itself)
+         as the colour attachment, and no depth or stencil attachments.
+
+      2. As above for the colour attachment, and a ``DEPTH_COMPONENT24``
+         ``Texture2D`` as the depth attachment.
+
+      3. As above for the colour attachment, and a ``DEPTH24_STENCIL8``
+         renderbuffer as the combined depth+stencil attachment.
+
+
+    These are the only available options due to limitations in different GL
+    implementations. You can choose which option you wish to use via the
+    ``rttype`` argument to ``__init__``.
+
+    If you choose option #2, a second ``Texture2D`` instance will be used
+    as the depth attachment. The resulting depth values created after
+    drawing to the ``RenderTexture`` may be used in subsequent processing.
+    You can either access the depth texture directly via the
+    :meth:`getDepthTexture` method, or you can draw the contents of the
+    ``RenderTexture``, with depth information, by passing the ``useDepth``
+    flag to either the :meth:`draw` or :meth:`drawOnBounds` methods.
     """
 
-    def __init__(self, name, interp=gl.GL_NEAREST):
-        """Create a ``RenderTexture``.
 
-        :arg name:   A unique name for this ``RenderTexture``.
+    def __init__(self, *args, **kwargs):
+        """Create a ``RenderTexture``. All argumenst are passed through
+        to the :meth:`.Texture2D.__init__` method.
 
-        :arg interp: Texture interpolation - either ``GL_NEAREST`` (the
-                     default) or ``GL_LINEAR``.
+
+        :arg rttype: ``RenderTexture`` configuration. If provided, must be
+                     passed as a keyword argument. Valid values are:
+
+                       - ``'c'``:    Only a colour attachment is configured
+                       - ``'cd'``:   Colour and depth attachments are
+                                     configured
+                       - ``'cds'`` : Colour, depth, and stencil attachments
+                                     are configured. This is the default.
 
         .. note:: A rendering target must have been set for the GL context
                   before a frame buffer can be created ... in other words,
@@ -72,19 +110,70 @@ class RenderTexture(texture.Texture2D):
                   ``RenderTexture``.
         """
 
-        texture.Texture2D.__init__(self, name, interp)
+        rttype = kwargs.pop('rttype', 'cds')
 
-        self.__frameBuffer  = glfbo.glGenFramebuffersEXT(1)
-        self.__renderBuffer = glfbo.glGenRenderbuffersEXT(1)
+        if rttype not in ('c', 'cd', 'cds'):
+            raise ValueError('Invalid rttype: {}'.format(rttype))
 
-        log.debug('Created fbo {} and render buffer {}'.format(
-            self.__frameBuffer, self.__renderBuffer))
+        texture.Texture2D.__init__(self, *args, **kwargs)
 
+        self.__frameBuffer     = glfbo.glGenFramebuffersEXT(1)
+        self.__rttype          = rttype
+        self.__renderBuffer    = None
+        self.__depthTexture    = None
         self.__oldSize         = None
         self.__oldProjMat      = None
         self.__oldMVMat        = None
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
+
+        # Use a single renderbuffer as
+        # the depth+stencil attachment
+        if rttype == 'cds':
+            self.__renderBuffer = glfbo.glGenRenderbuffersEXT(1)
+
+        # Or use a texture as the depth
+        # attachment (with no stencil attachment)
+        elif rttype == 'cd':
+            self.__depthTexture = texture.Texture2D(
+                '{}_depth'.format(self.getTextureName()),
+                dtype=gl.GL_DEPTH_COMPONENT24)
+
+            # We also need a shader program in
+            # case the creator is intending to
+            # use the depth information in draws.
+            self.__initShader()
+
+        log.debug('Created fbo {} [{}]'.format(self.__frameBuffer, rttype))
+
+
+    def __initShader(self):
+        """Called by :meth:`__init__` if this ``RenderTexture`` was
+        configured to use a colour and depth texture. Compiles
+        vertex/fragment shader programs which pass the colour and depth
+        values through.
+
+        These shaders are used if the :meth:`draw` or
+        :meth:`.Texture2D.drawOnBounds` methods are used with the
+        ``useDepth=True`` argument.
+        """
+
+        self.__shader = None
+
+        vertSrc   = shaders.getVertexShader(  'rendertexture')
+        fragSrc   = shaders.getFragmentShader('rendertexture')
+        shaderDir = shaders.getShaderDir()
+
+        if float(fslplatform.glVersion) < 2.1:
+            self.__shader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
+
+        else:
+            self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
+
+            self.__shader.load()
+            self.__shader.set('colourTexture', 0)
+            self.__shader.set('depthTexture',  1)
+            self.__shader.unload()
 
 
     def destroy(self):
@@ -95,11 +184,23 @@ class RenderTexture(texture.Texture2D):
 
         texture.Texture2D.destroy(self)
 
-        log.debug('Deleting RB{}/FBO{}'.format(
-            self.__renderBuffer,
-            self.__frameBuffer))
-        glfbo.glDeleteFramebuffersEXT(    gltypes.GLuint(self.__frameBuffer))
-        glfbo.glDeleteRenderbuffersEXT(1, gltypes.GLuint(self.__renderBuffer))
+        log.debug('Deleting FBO{} [{}]'.format(
+            self.__frameBuffer, self.__rttype))
+
+        glfbo.glDeleteFramebuffersEXT(gltypes.GLuint(self.__frameBuffer))
+
+        if self.__renderBuffer is not None:
+            rb = gltypes.GLuint(self.__renderBuffer)
+            glfbo.glDeleteRenderbuffersEXT(1, rb)
+
+        if self.__depthTexture is not None:
+            self.__depthTexture.destroy()
+
+        self.__frameBuffer     = None
+        self.__renderBuffer    = None
+        self.__depthTexture    = None
+        self.__oldFrameBuffer  = None
+        self.__oldRenderBuffer = None
 
 
     def setData(self, data):
@@ -109,6 +210,29 @@ class RenderTexture(texture.Texture2D):
         """
         raise NotImplementedError('Texture data cannot be set for {} '
                                   'instances'.format(type(self).__name__))
+
+
+    def getDepthTexture(self):
+        """Returns the ``Texture2D`` instance used as the depth buffer. Returns
+        ``None`` if this ``RenderTexture`` was not configured with ``'cd'``
+        (see :meth:`__init__`).
+        """
+        return self.__depthTexture
+
+
+    def setSize(self, width, height):
+        """Overrides :meth:`.Texture2D.setSize`. Calls that method, and
+        also calls it on the depth texture if it exists.
+        """
+
+        # We have to size the depth texture first,
+        # because calling setSize on ourselves will
+        # result in refresh being called, whcih
+        # expects the depth texture to be ready to go.
+        if self.__depthTexture is not None:
+            self.__depthTexture.setSize(width, height)
+
+        texture.Texture2D.setSize(self, width, height)
 
 
     def setRenderViewport(self, xax, yax, lo, hi):
@@ -188,25 +312,25 @@ class RenderTexture(texture.Texture2D):
         restored via the :meth:`unbindAsRenderTarget` method.
         """
 
-        if self.__oldFrameBuffer  is not None or \
-           self.__oldRenderBuffer is not None:
-            raise RuntimeError('RenderTexture RB{}/FBO{} is not bound'.format(
-                self.__renderBuffer,
-                self.__frameBuffer))
+        if self.__oldFrameBuffer is not None:
+            raise RuntimeError('RenderTexture FBO{} is already '
+                               'bound'.format(self.__frameBuffer))
 
         self.__oldFrameBuffer  = gl.glGetIntegerv(
             glfbo.GL_FRAMEBUFFER_BINDING_EXT)
-        self.__oldRenderBuffer = gl.glGetIntegerv(
-            glfbo.GL_RENDERBUFFER_BINDING_EXT)
 
-        log.debug('Setting RB{}/FBO{} as render target'.format(
-            self.__renderBuffer,
-            self.__frameBuffer))
+        if self.__renderBuffer is not None:
+            self.__oldRenderBuffer = gl.glGetIntegerv(
+                glfbo.GL_RENDERBUFFER_BINDING_EXT)
 
-        glfbo.glBindFramebufferEXT( glfbo.GL_FRAMEBUFFER_EXT,
-                                    self.__frameBuffer)
-        glfbo.glBindRenderbufferEXT(glfbo.GL_RENDERBUFFER_EXT,
-                                    self.__renderBuffer)
+        log.debug('Setting FBO{} as render target'.format(self.__frameBuffer))
+
+        glfbo.glBindFramebufferEXT(
+            glfbo.GL_FRAMEBUFFER_EXT, self.__frameBuffer)
+
+        if self.__renderBuffer is not None:
+            glfbo.glBindRenderbufferEXT(
+                glfbo.GL_RENDERBUFFER_EXT, self.__renderBuffer)
 
 
     def unbindAsRenderTarget(self):
@@ -214,24 +338,21 @@ class RenderTexture(texture.Texture2D):
         prior call to :meth:`bindAsRenderTarget`.
         """
 
-        if self.__oldFrameBuffer  is None or \
-           self.__oldRenderBuffer is None:
-            raise RuntimeError('RenderTexture RB{}/FBO{} '
-                               'has not been bound'.format(
-                                   self.__renderBuffer,
-                                   self.__frameBuffer))
+        if self.__oldFrameBuffer is None:
+            raise RuntimeError('RenderTexture FBO{} has not been '
+                               'bound'.format(self.__frameBuffer))
 
-        log.debug('Restoring render target to RB{}/FBO{} '
-                  '(from RB{}/FBO{})'.format(
-                      self.__oldRenderBuffer,
+        log.debug('Restoring render target to FBO{} '
+                  '(from FBO{})'.format(
                       self.__oldFrameBuffer,
-                      self.__renderBuffer,
                       self.__frameBuffer))
 
-        glfbo.glBindFramebufferEXT( glfbo.GL_FRAMEBUFFER_EXT,
-                                    self.__oldFrameBuffer)
-        glfbo.glBindRenderbufferEXT(glfbo.GL_RENDERBUFFER_EXT,
-                                    self.__oldRenderBuffer)
+        glfbo.glBindFramebufferEXT(
+            glfbo.GL_FRAMEBUFFER_EXT, self.__oldFrameBuffer)
+
+        if self.__renderBuffer is not None:
+            glfbo.glBindRenderbufferEXT(
+                glfbo.GL_RENDERBUFFER_EXT, self.__oldRenderBuffer)
 
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
@@ -246,8 +367,7 @@ class RenderTexture(texture.Texture2D):
 
         width, height = self.getSize()
 
-        # Configure the frame buffer
-        self.bindTexture()
+        # Bind the colour buffer
         self.bindAsRenderTarget()
         glfbo.glFramebufferTexture2DEXT(
             glfbo.GL_FRAMEBUFFER_EXT,
@@ -256,18 +376,32 @@ class RenderTexture(texture.Texture2D):
             self.getTextureHandle(),
             0)
 
-        # and the render buffer
-        glfbo.glRenderbufferStorageEXT(
-            glfbo.GL_RENDERBUFFER_EXT,
-            gl.GL_DEPTH24_STENCIL8,
-            width,
-            height)
+        # Combined depth/stencil attachment
+        if self.__rttype == 'cds':
 
-        glfbo.glFramebufferRenderbufferEXT(
-            glfbo.GL_FRAMEBUFFER_EXT,
-            gl.GL_DEPTH_STENCIL_ATTACHMENT,
-            glfbo.GL_RENDERBUFFER_EXT,
-            self.__renderBuffer)
+            # Configure the render buffer
+            glfbo.glRenderbufferStorageEXT(
+                glfbo.GL_RENDERBUFFER_EXT,
+                gl.GL_DEPTH24_STENCIL8,
+                width,
+                height)
+
+            # Bind the render buffer
+            glfbo.glFramebufferRenderbufferEXT(
+                glfbo.GL_FRAMEBUFFER_EXT,
+                gl.GL_DEPTH_STENCIL_ATTACHMENT,
+                glfbo.GL_RENDERBUFFER_EXT,
+                self.__renderBuffer)
+
+        # Or a depth texture
+        elif self.__rttype == 'cd':
+
+            glfbo.glFramebufferTexture2DEXT(
+                glfbo.GL_FRAMEBUFFER_EXT,
+                glfbo.GL_DEPTH_ATTACHMENT_EXT,
+                gl   .GL_TEXTURE_2D,
+                self.__depthTexture.getTextureHandle(),
+                0)
 
         # Get the FBO status before unbinding it -
         # the Apple software renderer will return
@@ -275,12 +409,45 @@ class RenderTexture(texture.Texture2D):
         status = glfbo.glCheckFramebufferStatusEXT(glfbo.GL_FRAMEBUFFER_EXT)
 
         self.unbindAsRenderTarget()
-        self.unbindTexture()
 
         # Complain if something is not right
         if status != glfbo.GL_FRAMEBUFFER_COMPLETE_EXT:
-            raise RuntimeError('An error has occurred while '
-                               'configuring the frame buffer')
+            raise RuntimeError('An error has occurred while configuring '
+                               'the frame buffer [{}]'.format(status))
+
+
+    def draw(self, *args, **kwargs):
+        """Overrides :meth:`.Texture2D.draw`. Calls that method, optionally
+        using the information in the depth texture.
+
+
+        :arg useDepth: Must be passed as a keyword argument. Defaults to
+                       ``False``. If ``True``, and this ``RenderTexture``
+                       was configured to use a depth texture, the texture
+                       is rendered with depth information using a fragment
+                       program
+
+
+        A ``RuntimeError`` will be raised if ``useDepth is True``, but this
+        ``RenderTexture`` was not configured appropriately (the ``'cd'``
+        setting in :meth:`__init__`).
+        """
+
+        useDepth = kwargs.pop('useDepth', False)
+
+        if useDepth and self.__depthTexture is None:
+            raise RuntimeError('useDepth is True but I don\'t '
+                               'have a depth texture!')
+
+        if useDepth:
+            self.__depthTexture.bindTexture(gl.GL_TEXTURE1)
+            self.__shader.load()
+
+        texture.Texture2D.draw(self, *args, **kwargs)
+
+        if useDepth:
+            self.__shader.unload()
+            self.__depthTexture.unbindTexture()
 
 
 class GLObjectRenderTexture(RenderTexture):

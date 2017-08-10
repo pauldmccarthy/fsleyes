@@ -86,7 +86,7 @@ class GLSH(glvector.GLVectorBase):
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLSH`` object.
 
 
@@ -95,10 +95,10 @@ class GLSH(glvector.GLVectorBase):
         instances, and sets up shaders.
 
 
-        :arg image:   The :class:`.Image` instance
-        :arg display: The associated :class:`.Display` instance.
-        :arg xax:     Horizontal display axis
-        :arg yax:     Vertical display axis
+        :arg image:      The :class:`.Image` instance
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
+        :arg threedee:   Set up for 2D or 3D rendering.
         """
 
         self.shader     = None
@@ -118,9 +118,9 @@ class GLSH(glvector.GLVectorBase):
         glvector.GLVectorBase.__init__(
             self,
             image,
-            display,
-            xax,
-            yax,
+            displayCtx,
+            canvas,
+            threedee,
             preinit=self.compileShaders,
             init=self.__shStateChanged)
 
@@ -152,7 +152,7 @@ class GLSH(glvector.GLVectorBase):
 
         glvector.GLVectorBase.addListeners(self)
 
-        opts = self.displayOpts
+        opts = self.opts
         name = self.name
 
         opts.addListener('shResolution' ,   name, self.__shStateChanged,
@@ -173,7 +173,7 @@ class GLSH(glvector.GLVectorBase):
 
         glvector.GLVectorBase.removeListeners(self)
 
-        opts = self.displayOpts
+        opts = self.opts
         name = self.name
 
         opts.removeListener('shResolution',    name)
@@ -210,9 +210,9 @@ class GLSH(glvector.GLVectorBase):
         attribute called ``__shParams``.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
-        self.__shParams = self.displayOpts.getSHParameters()
+        self.__shParams = opts.getSHParameters()
         self.vertices   = opts.getVertices()
         self.indices    = opts.getIndices()
         self.nVertices  = len(self.indices)
@@ -285,7 +285,7 @@ class GLSH(glvector.GLVectorBase):
         ...     ...            ...
         ======  =============  =====
         """
-        opts      = self.displayOpts
+        opts      = self.opts
         maxOrder  = opts.maxOrder
         dispOrder = opts.shOrder
         shType    = opts.shType
@@ -325,7 +325,7 @@ class GLSH(glvector.GLVectorBase):
           - The adjusted shape of the radius texture.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         # Remove out-of-bounds voxels
         shape   = self.image.shape[:3]
@@ -432,7 +432,7 @@ class GLSH(glvector.GLVectorBase):
                 glvector.GLVectorBase.texturesReady(self))
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVectorBase.preDraw`.  Binds textures, and calls
         :func:`.glsh_funcs.preDraw`.
         """
@@ -442,21 +442,27 @@ class GLSH(glvector.GLVectorBase):
         # be called through draw, and if radTexture
         # is not the most recently bound texture,
         # the update will fail.
-        glvector.GLVectorBase.preDraw(self)
+        glvector.GLVectorBase.preDraw(self, xform, bbox)
         self.radTexture.bindTexture(gl.GL_TEXTURE4)
-        fslgl.glsh_funcs.preDraw(self)
+        fslgl.glsh_funcs.preDraw(self, xform, bbox)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
+    def draw2D(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
         """
-        fslgl.glsh_funcs.draw(self, zpos, xform, bbox)
+        fslgl.glsh_funcs.draw2D(self, *args, **kwargs)
 
 
-    def postDraw(self):
+    def draw3D(self, *args, **kwargs):
+        """Overrides :meth:`.GLObject.draw`. Calls :func:`.glsh_funcs.draw`.
+        """
+        fslgl.glsh_funcs.draw3D(self, *args, **kwargs)
+
+
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVectorBase.postDraw`.  Unbinds textures, and
         calls :func:`.glsh_funcs.postDraw`.
         """
-        glvector.GLVectorBase.postDraw(self)
+        glvector.GLVectorBase.postDraw(self, xform, bbox)
         self.radTexture.unbindTexture()
-        fslgl.glsh_funcs.postDraw(self)
+        fslgl.glsh_funcs.postDraw(self, xform, bbox)

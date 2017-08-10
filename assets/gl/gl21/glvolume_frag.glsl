@@ -1,5 +1,5 @@
 /*
- * OpenGL fragment shader used for rendering GLVolume instances.
+ * OpenGL fragment shader used for rendering 2D slices of GLVolume instances.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -113,96 +113,23 @@ varying vec3 fragClipTexCoord;
 varying vec4 fragColourFactor;
 
 
+#pragma include glvolume_common.glsl
+
+
 void main(void) {
 
-    float voxValue;
-    float clipValue;
-    vec4  normVoxValue;
-    vec4  colour;
-    bool  negCmap  = false;
-    vec3  voxCoord = fragVoxCoord;
+    vec4 colour;
 
     /*
      * Skip voxels that are out of the image bounds
      */
-    if (!test_in_bounds(voxCoord, imageShape)) {
+    if (!test_in_bounds(fragVoxCoord, imageShape)) {
         discard;
     }
 
-    /*
-     * Look up the voxel value
-     */
-    if (useSpline) voxValue = spline_interp(imageTexture,
-                                            fragTexCoord,
-                                            imageShape,
-                                            0);
-    else           voxValue = texture3D(    imageTexture,
-                                            fragTexCoord).r;
-
-    /* Skip nan values */
-    if (voxValue != voxValue) {
-      discard;
-    }
-
-
-    /*
-     * Look up the clipping value
-     */
-
-    if (imageIsClip)
-      clipValue = voxValue;
-
-    /*
-     * Out of bounds of the clipping texture
-     */
-    else if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
-             any(greaterThan(fragClipTexCoord, vec3(1)))) {
-      clipValue = clipLow + 0.5 * (clipHigh - clipLow);
-    }
-
-    else if (useSpline)   clipValue = spline_interp(clipTexture,
-                                                    fragClipTexCoord,
-                                                    clipImageShape,
-                                                    0);
-    else                  clipValue = texture3D(    clipTexture,
-                                                    fragClipTexCoord).r;
-
-    /*
-     * If we are using a negative colour map,
-     * and the voxel value is below the negative
-     * threshold (texZero) invert the voxel
-     * value, and set a flag telling the code
-     * below to use the neagtive colour map.
-     */
-    if (useNegCmap && voxValue <= texZero) {
-
-        negCmap  = true;
-        voxValue = texZero + (texZero - voxValue);
-
-        // Invert the clip value as well, if the
-        // image and clip textures are the same
-        if (imageIsClip) {
-          clipValue = texZero + (texZero - clipValue);
-        }
-    }
-
-    /*
-     * Clip out of range voxel values
-     */
-
-    if ((!invertClip && (clipValue <= clipLow || clipValue >= clipHigh)) ||
-        ( invertClip && (clipValue >= clipLow && clipValue <= clipHigh))) {
+    if (!sample_volume(fragTexCoord, fragClipTexCoord, colour)) {
         discard;
     }
-
-    /*
-     * Transform the voxel value to a colour map texture
-     * coordinate, and look up the colour for the voxel value
-     */
-    normVoxValue = img2CmapXform * vec4(voxValue, 0, 0, 1);
-
-    if (negCmap) colour = texture1D(negColourTexture, normVoxValue.x);
-    else         colour = texture1D(colourTexture,    normVoxValue.x);
 
     gl_FragColor = colour * fragColourFactor;
 

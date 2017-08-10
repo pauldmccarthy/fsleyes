@@ -197,6 +197,8 @@ class FSLeyesFrame(wx.Frame):
                       aui.AUI_MGR_AERO_DOCKING_GUIDES     |
                       aui.AUI_MGR_LIVE_RESIZE))
 
+        self.__auiManager.SetDockSizeConstraint(0.5, 0.5)
+
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.__sizer.Add(self.__mainPanel, flag=wx.EXPAND, proportion=1)
         self.__sizer.Add(self.__statusBar, flag=wx.EXPAND)
@@ -453,12 +455,12 @@ class FSLeyesFrame(wx.Frame):
             # initially placed along the
             # bottom
             if isinstance(panel, (plotpanel.PlotPanel, shellpanel.ShellPanel)):
-                paneInfo.Bottom().BestSize(width // 4, height // 3)
+                paneInfo.Bottom().BestSize(width, height // 3)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
             else:
-                paneInfo.Right().BestSize(width // 3, height // 4)
+                paneInfo.Right().BestSize(width // 2, height)
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC
@@ -484,6 +486,7 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.scene3dpanel       import Scene3DPanel
         from fsleyes.views.timeseriespanel    import TimeSeriesPanel
         from fsleyes.views.histogrampanel     import HistogramPanel
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -516,6 +519,9 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleLightBoxToolBar()
             viewPanel.toggleOverlayList()
             viewPanel.toggleLocationPanel()
+
+        elif isinstance(viewPanel, Scene3DPanel):
+            pass
 
 
     def refreshPerspectiveMenu(self):
@@ -1412,6 +1418,7 @@ class FSLeyesFrame(wx.Frame):
                      self.addTimeSeriesPanel,
                      self.addHistogramPanel,
                      self.addPowerSpectrumPanel,
+                     self.addScene3DPanel,
                      self.addShellPanel]
 
         for action in vpActions:
@@ -1582,6 +1589,7 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
+        from fsleyes.views.scene3dpanel       import Scene3DPanel
         from fsleyes.views.timeseriespanel    import TimeSeriesPanel
         from fsleyes.views.histogrampanel     import HistogramPanel
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -1603,6 +1611,7 @@ class FSLeyesFrame(wx.Frame):
         panels  = self.getViewPanels()
         vpOrder = [OrthoPanel,
                    LightBoxPanel,
+                   Scene3DPanel,
                    TimeSeriesPanel,
                    HistogramPanel,
                    PowerSpectrumPanel,

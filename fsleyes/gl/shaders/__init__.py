@@ -27,6 +27,7 @@ shader source code:
      :nosignatures:
 
      getShaderDir
+     getShaderSuffix
      getVertexShader
      getFragmentShader
 
@@ -57,11 +58,24 @@ ARBPShader = arbpprogram.ARBPShader
 
 
 def getShaderDir():
-    """Returns the irectory in which the ``ARB`` and ``glsl`` source files
-    can be found.  ``ARB`` files are assumed to be in a sub-directory called
-    ``gl14``, and ``glsl`` files in a sub-directory called ``gl21``.
+    """Returns the directory in which the ``ARB`` and ``glsl`` shader program
+    source files can be found. A different directory will be returned depending
+    on which OpenGL version is in use.
     """
-    return op.join(fsleyes.assetDir, 'assets', 'gl')
+
+    if   fslgl.GL_VERSION == '2.1': subdir = 'gl21'
+    elif fslgl.GL_VERSION == '1.4': subdir = 'gl14'
+
+    return op.join(fsleyes.assetDir, 'assets', 'gl', subdir)
+
+
+def getShaderSuffix():
+    """Returns the shader program file suffix to use. A different suffix will be
+    returned depending on which OpenGL version is in use.
+    """
+
+    if   fslgl.GL_VERSION == '2.1': return 'glsl'
+    elif fslgl.GL_VERSION == '1.4': return 'prog'
 
 
 def getVertexShader(prefix):
@@ -92,17 +106,12 @@ def _getFileName(prefix, shaderType):
     and shader type.
     """
 
-    if   fslgl.GL_VERSION == '2.1':
-        subdir = 'gl21'
-        suffix = 'glsl'
-    elif fslgl.GL_VERSION == '1.4':
-        subdir = 'gl14'
-        suffix = 'prog'
+    suffix = getShaderSuffix()
 
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    return op.join(getShaderDir(), subdir, '{}_{}.{}'.format(
+    return op.join(getShaderDir(), '{}_{}.{}'.format(
         prefix, shaderType, suffix))
 
 
@@ -112,9 +121,6 @@ def preprocess(src):
     This amounts to searching for lines containing '#pragma include filename',
     and replacing those lines with the contents of the specified files.
     """
-
-    if   fslgl.GL_VERSION == '2.1': subdir = 'gl21'
-    elif fslgl.GL_VERSION == '1.4': subdir = 'gl14'
 
     lines    = src.split('\n')
     lines    = [l.strip() for l in lines]
@@ -135,7 +141,7 @@ def preprocess(src):
         includes.append((linei, line[2]))
 
     for linei, fname in includes:
-        fname = op.join(getShaderDir(), subdir, fname)
+        fname = op.join(getShaderDir(), fname)
         with open(fname, 'rt', encoding='utf-8') as f:
             lines[linei] = f.read()
 

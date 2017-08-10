@@ -62,25 +62,25 @@ def init(self):
     # the display<->voxel transformation
     # matrices whenever the transform
     # changes.
-    self.displayOpts.addListener('orientFlip',  name, update, weak=False)
-    self.displayOpts.addListener('directed',    name, update, weak=False)
-    self.displayOpts.addListener('unitLength',  name, update, weak=False)
-    self.displayOpts.addListener('lengthScale', name, update, weak=False)
-    self.displayOpts.addListener('transform',
-                                 name,
-                                 update,
-                                 overwrite=True,
-                                 weak=False)
+    self.opts.addListener('orientFlip',  name, update, weak=False)
+    self.opts.addListener('directed',    name, update, weak=False)
+    self.opts.addListener('unitLength',  name, update, weak=False)
+    self.opts.addListener('lengthScale', name, update, weak=False)
+    self.opts.addListener('transform',
+                          name,
+                          update,
+                          overwrite=True,
+                          weak=False)
 
 
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
-    self.displayOpts.removeListener('orientFlip',  self.name)
-    self.displayOpts.removeListener('directed',    self.name)
-    self.displayOpts.removeListener('unitLength',  self.name)
-    self.displayOpts.removeListener('lengthScale', self.name)
-    self.displayOpts.removeListener('transform',   self.name)
+    self.opts.removeListener('orientFlip',  self.name)
+    self.opts.removeListener('directed',    self.name)
+    self.opts.removeListener('unitLength',  self.name)
+    self.opts.removeListener('lengthScale', self.name)
+    self.opts.removeListener('transform',   self.name)
 
     self.shader.destroy()
 
@@ -104,7 +104,7 @@ def updateShaderState(self):
 
     changed     = glvector_funcs.updateShaderState(self)
     image       = self.vectorImage
-    opts        = self.displayOpts
+    opts        = self.opts
 
     vvxMat      = self.imageTexture.voxValXform
     directed    = opts.directed
@@ -130,24 +130,24 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Prepares the GL state for drawing. This amounts to loading the
     vertex/fragment shader programs.
     """
     self.shader.load()
 
 
-def draw(self, zpos, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
     """
 
-    opts   = self.displayOpts
+    opts   = self.opts
     shader = self.shader
     v2dMat = opts.getTransform('voxel', 'display')
 
-    voxels  = self.generateVoxelCoordinates(zpos, bbox)
+    voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
     voxels  = np.repeat(voxels, 2, 0)
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
@@ -165,13 +165,18 @@ def draw(self, zpos, xform=None, bbox=None):
     shader.unloadAtts()
 
 
-def drawAll(self, zposes, xforms):
+def draw3D(self, xform=None, bbox=None):
+    """Draws the line vectors in 3D space. """
+    pass
+
+
+def drawAll(self, axes, zposes, xforms):
     """Draws the line vectors at every slice specified by the Z locations. """
 
     for zpos, xform in zip(zposes, xforms):
-        self.draw(zpos, xform)
+        self.draw2D(zpos, axes, xform)
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Clears the GL state after drawing. """
     self.shader.unload()

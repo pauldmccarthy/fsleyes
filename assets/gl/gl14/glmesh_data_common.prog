@@ -1,0 +1,122 @@
+# This routine is used by the 2D and 3D GLMesh data fragment shader programs.
+# It determines the colour to use for the fragment.
+#
+# Inputs:
+#   {{ settings   }} - Vector containing three settings:
+#                        1. -1 to use the negCmap texture for negative
+#                            values, or +1 to only use the cmap texture.
+#                        2. -1 to invert clipping, +1 for normal clipping
+#                        3. -1 to colour clipped fragments by the
+#                           flatColour, +1 to discard them.
+#
+#   {{ clipping   }} - Vector containing two settings:
+#                        1. Low clipping value
+#                        2. High clipping value
+#
+#   {{ flatColour }} - Vector containing a RGBA colour to use when
+#                      colouring clipped fragments.
+#
+#   {{ cmapXform  }} - Transformation matrix which transforms vertex
+#                      data into colour map texture coordinates.
+#
+#   {{ cmap       }} - 1D texture for vertex colouring
+#   {{ negCmap    }} - 1D texture for colouring vertices with negative
+#                      values, if the negative colour map is enabled.
+#   {{ vertexData }} - Data value associated with the vertex
+#
+# Outputs:
+#   {{ out_colour }} - Output colour
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+# x will contain -1 if we should
+# use the negative colour map
+# (useNegCmap is true, *and* the
+# vertex value is negative), or
+# +1 otherwise.
+TEMP useNegCmap;
+
+# Used to store the results of
+# the clipping test - x will
+# contain a negative value if
+# the vertex data is below the
+# low clipping range, and y
+# will contain a negative value
+# if the vertex data is above
+# the high clipping range.
+TEMP clip;
+
+# x is used to store and
+# manipulate the vertex data
+TEMP vertexData;
+
+# Used to store the
+# cmap/negCmap colours
+TEMP colour;
+TEMP negColour;
+
+
+MOV vertexData.x, {{ vertexData }}.x;
+
+# Set the useNegCmap.x flag to -1
+# if negCmap is on (settings.x)
+# and the vertex value is negative,
+# +1 otherwise.
+MOV useNegCmap.x, {{ settings }}.x;
+CMP useNegCmap.y, vertexData.x, -1, 1;
+ADD useNegCmap.x, useNegCmap.x, useNegCmap.y;
+CMP useNegCmap.x, useNegCmap.x, -1, 1;
+
+# If useNegCmap is true, make
+# the vertex data positive
+MUL vertexData.x, vertexData.x, useNegCmap.x;
+
+# Clipping - test the vertex value against
+# the low/high clipping ranges. Multiply
+# the results of the two clipping tests -
+# clip.x will be positive if the value is
+# inside the clipping range, and negative
+# if it is out.
+SUB clip.x, vertexData.x, {{ clipping }}.x;
+SUB clip.y, {{ clipping }}.y, vertexData.x;
+MUL clip.x, clip.x, clip.y;
+
+# If invert clipping is active
+# (settings.y), invert the sign
+# of the above clip tests.
+MUL clip.x, clip.x, {{ settings }}.y;
+
+# Copy the clipping value over
+# to clip.y - we'll use clip.y
+# to determine whether the fragment
+# should be killed or not.
+MOV clip.y, clip.x;
+
+# If discardClipped is not active
+# (settings.z == -1), override
+# clip.y so the fragment stays
+# alive regardless of clipping.
+CMP clip.y, {{ settings }}.z, 1, clip.y;
+
+# Kill the fragment if either
+# of the clip tests fail (but only
+# if discardClipped is active)
+KIL clip.y;
+
+# Transform the vertex data
+# into cmap coordinates
+MAD vertexData, vertexData, {{ cmapXform }}[0].x, {{ cmapXform }}[0].w;
+
+# Retrieve the normal/negative colours.
+TEX colour,    vertexData, {{ cmap    }}, 1D;
+TEX negColour, vertexData, {{ negCmap }}, 1D;
+
+# Store the final (pos or neg) colour
+# in the "colour" variable.
+CMP colour, useNegCmap.x, negColour, colour;
+
+# If the value has been clipped but
+# not killed, overwrite the final
+# colour with the flat colour.
+CMP {{ out_colour }}, clip.x, {{ flatColour }}, colour;

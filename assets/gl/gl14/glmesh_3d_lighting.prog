@@ -1,0 +1,67 @@
+# Simple Phong lighting model used by 3D GLMesh fragment programs.
+#
+# Inputs:
+#   {{ vertex     }} - Vertex position in display coordinates
+#   {{ normal     }} - Vertex normal
+#   {{ lightPos   }} - Light position in display coordinates
+#   {{ colour     }} - Colour
+#
+# Outputs:
+#   {{ out_colour }} - Colour with lighting applied
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+TEMP lightDir;
+TEMP viewDir;
+TEMP angle;
+TEMP ambient;
+TEMP diffuse;
+TEMP specular;
+
+# Calculate the direction towards the
+# light and normalise it to unit length
+SUB lightDir.xyz, {{ lightPos }}, {{ vertex }};
+DP3 lightDir.w,      lightDir,       lightDir;
+RSQ lightDir.w,      lightDir.w;
+MUL lightDir.xyz,    lightDir,       lightDir.w;
+
+
+# Normalised camera direction
+MUL viewDir,     {{ vertex }},   -1;
+DP3 viewDir.w,      viewDir,   viewDir;
+RSQ viewDir.w,      viewDir.w;
+MUL viewDir.xyz,    viewDir,   viewDir.w;
+
+
+# Normalised reflection angle from
+# the light off the surface
+DP3 angle.xyz, lightDir, {{ normal }};
+MUL angle.xyz, angle,    {{ normal }};
+MUL angle.xyz, angle,       2;
+SUB angle.xyz, lightDir,    angle;
+DP3 angle.w,   angle,       angle;
+RSQ angle.w,   angle.w;
+MUL angle.xyz, angle,       angle.w;
+
+# Ambient component
+MOV ambient.x, 0.5;
+
+# Diffuse component, clamped to [0, 1]
+DP3_SAT diffuse.x, {{ normal }}, lightDir;
+
+# Specular component, clamped to [0, 1]
+DP3     specular.x, angle, viewDir;
+MAX     specular.x, specular.x, 0.0;
+
+# I get weird compile errors on
+# some platforms when i try to
+# pass a constant to POW or POW_SAT.
+MOV     specular.y, 64.0;
+POW_SAT specular.x, specular.x, specular.y;
+
+# Combine the final colour
+ADD {{ out_colour }}.rgb,    ambient.x,        diffuse.x;
+ADD {{ out_colour }}.rgb, {{ out_colour }},    specular.x;
+MUL {{ out_colour }}.rgb, {{ out_colour }}, {{ colour }};
+MOV {{ out_colour }}.a,   {{ colour     }}.a;

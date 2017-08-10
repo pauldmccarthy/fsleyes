@@ -12,6 +12,8 @@ These functions are used by the :mod:`.gl14.glrgbvector_funcs` and
 """
 
 
+import numpy as np
+
 import fsleyes.gl.shaders  as shaders
 import fsl.utils.transform as transform
 
@@ -34,7 +36,7 @@ def compileShaders(self, vertShader):
     if self.shader is not None:
         self.shader.destroy()
 
-    opts                = self.displayOpts
+    opts                = self.opts
     useVolumeFragShader = opts.colourImage is not None
 
     if useVolumeFragShader: fragShader = 'glvolume'
@@ -58,7 +60,10 @@ def compileShaders(self, vertShader):
             'vectorTexture'   : 4,
         }
 
-    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
+    self.shader = shaders.ARBPShader(vertSrc,
+                                     fragSrc,
+                                     shaders.getShaderDir(),
+                                     textures)
 
 
 def updateShaderState(self):
@@ -67,19 +72,21 @@ def updateShaderState(self):
     shader.
     """
 
-    opts                = self.displayOpts
+    opts                = self.opts
     useVolumeFragShader = opts.colourImage is not None
-    shape               = list(self.vectorImage.shape[:3])
     modLow,  modHigh    = self.getModulateRange()
     clipLow, clipHigh   = self.getClippingRange()
 
-    clipping = [clipLow, clipHigh, -1,                        -1]
-    mod      = [modLow,  modHigh,   1.0 / (modHigh - modLow), -1]
+    clipping = [clipLow, clipHigh, -1, -1]
+
+    if np.isclose(modHigh, modLow):
+        mod = [0,  0,  0, -1]
+    else:
+        mod = [modLow,  modHigh, 1.0 / (modHigh - modLow), -1]
 
     # Inputs which are required by both the
     # glvolume and glvetor fragment shaders
-    self.shader.setFragParam('imageShape', shape + [0])
-    self.shader.setFragParam('clipping',   clipping)
+    self.shader.setFragParam('clipping', clipping)
 
     clipCoordXform   = self.getAuxTextureXform('clip')
     colourCoordXform = self.getAuxTextureXform('colour')
@@ -94,13 +101,15 @@ def updateShaderState(self):
         voxValXform = self.colourTexture.voxValXform
         cmapXform   = self.cmapTexture.getCoordinateTransform()
         voxValXform = transform.concat(cmapXform, voxValXform)
+        voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
         self.shader.setFragParam('voxValXform', voxValXform)
 
     else:
 
-        voxValXform          = self.imageTexture.voxValXform
         colours, colourXform = self.getVectorColours()
+        voxValXform          = self.imageTexture.voxValXform
+        voxValXform          = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
         self.shader.setFragParam('voxValXform',      voxValXform)
         self.shader.setFragParam('mod',              mod)

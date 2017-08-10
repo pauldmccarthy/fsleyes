@@ -404,7 +404,7 @@ class FSLeyesSettingsPanel(FSLeyesPanel):
 
         self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
 
-        self.SetMinSize((80, 80))
+        self.SetMinSize((300, 80))
 
         self.__widgets.Bind(widgetlist.EVT_WL_CHANGE_EVENT,
                             self.__widgetListChange)

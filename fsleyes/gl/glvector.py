@@ -21,10 +21,10 @@ import fsl.utils.transform as transform
 import fsleyes.colourmaps  as fslcm
 from . import resources    as glresources
 from . import                 textures
-from . import                 globject
+from . import                 glimageobject
 
 
-class GLVectorBase(globject.GLImageObject):
+class GLVectorBase(glimageobject.GLImageObject):
     """The :class:`GLVectorBase` class encapsulates the logic for rendering
     :class:`.Nifti` overlay types which represent directional data (and which
     are described by a :class:`.VectorOpts` instance).  The ``GLVectorBase``
@@ -84,7 +84,13 @@ class GLVectorBase(globject.GLImageObject):
     """
 
 
-    def __init__(self, overlay, display, xax, yax, init=None, preinit=None):
+    def __init__(self,
+                 overlay,
+                 displayCtx,
+                 canvas,
+                 threedee,
+                 init=None,
+                 preinit=None):
         """Create a ``GLVectorBase`` object bound to the given overlay and
         display.
 
@@ -99,12 +105,12 @@ class GLVectorBase(globject.GLImageObject):
 
         :arg overlay:        A :class:`.Nifti` object.
 
-        :arg display:        A :class:`.Display` object which describes how the
-                             overlay is to be displayed.
+        :arg displayCtx:     A :class:`.DisplayContext` object which describes
+                             how the overlay is to be displayed.
 
-        :arg xax:            Initial display X axis
+        :arg canvas:         The canvas doing the drawing.
 
-        :arg yax:            Initial display Y axis
+        :arg threedee:       2D or 3D rendering.
 
         :arg init:           An optional function to be called when all of the
                              :class:`.ImageTexture` instances associated with
@@ -116,7 +122,11 @@ class GLVectorBase(globject.GLImageObject):
                              :class:`GLVector`.
         """
 
-        globject.GLImageObject.__init__(self, overlay, display, xax, yax)
+        glimageobject.GLImageObject.__init__(self,
+                                             overlay,
+                                             displayCtx,
+                                             canvas,
+                                             threedee)
 
         name = self.name
 
@@ -135,7 +145,7 @@ class GLVectorBase(globject.GLImageObject):
 
         # Make sure we are registered with the
         # auxillary images if any of them are set.
-        opts = self.displayOpts
+        opts = self.opts
 
         if opts.colourImage   is not None: self.registerAuxImage('colour')
         if opts.modulateImage is not None: self.registerAuxImage('modulate')
@@ -188,7 +198,7 @@ class GLVectorBase(globject.GLImageObject):
         self.clipOpts        = None
         self.colourOpts      = None
 
-        globject.GLImageObject.destroy(self)
+        glimageobject.GLImageObject.destroy(self)
 
 
     def ready(self):
@@ -217,7 +227,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.addListener('alpha',         name, self.__cmapPropChanged)
@@ -245,7 +255,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         name    = self.name
 
         display.removeListener('alpha',         name)
@@ -318,8 +328,8 @@ class GLVectorBase(globject.GLImageObject):
         optsAttr  = '{}Opts'   .format(which)
         texAttr   = '{}Texture'.format(which)
 
-        image = getattr(self.displayOpts, imageAttr)
-        tex   = getattr(self,             texAttr)
+        image = getattr(self.opts, imageAttr)
+        tex   = getattr(self,      texAttr)
 
         if image is None or image == 'none':
             image = None
@@ -330,7 +340,7 @@ class GLVectorBase(globject.GLImageObject):
         if image is None:
             return
 
-        opts = self.displayOpts.displayCtx.getOpts(image)
+        opts = self.opts.displayCtx.getOpts(image)
 
         setattr(self, optsAttr, opts)
 
@@ -442,7 +452,7 @@ class GLVectorBase(globject.GLImageObject):
         """
 
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
 
         if self.colourImage is not None:
             dmin, dmax = self.colourImage.dataRange
@@ -475,7 +485,7 @@ class GLVectorBase(globject.GLImageObject):
             brightness and contrast settings.
         """
         display = self.display
-        opts    = self.displayOpts
+        opts    = self.opts
         bri     = display.brightness / 100.0
         con     = display.contrast   / 100.0
         alpha   = display.alpha      / 100.0
@@ -514,7 +524,7 @@ class GLVectorBase(globject.GLImageObject):
         values directly to it.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         clipLow, clipHigh = opts.clippingRange
         xform             = self.clipTexture.invVoxValXform
@@ -536,7 +546,7 @@ class GLVectorBase(globject.GLImageObject):
         directly to it.
         """
 
-        opts = self.displayOpts
+        opts = self.opts
 
         modLow, modHigh = opts.modulateRange
         xform           = self.modulateTexture.invVoxValXform
@@ -556,7 +566,7 @@ class GLVectorBase(globject.GLImageObject):
         to transform texture coordinates from the vector image to the specified
         auxillary image (``'clip'``, ``'modulate'`` or ``'colour'``).
         """
-        opts     = self.displayOpts
+        opts     = self.opts
         auxImage = getattr(self, '{}Image'.format(which), None)
         auxOpts  = getattr(self, '{}Opts' .format(which), None)
 
@@ -568,7 +578,7 @@ class GLVectorBase(globject.GLImageObject):
                 opts   .getTransform('texture', 'display'))
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Must be called by subclass implementations.
 
         Ensures that all of the textures managed by this ``GLVectorBase`` are
@@ -581,7 +591,7 @@ class GLVectorBase(globject.GLImageObject):
         self.cmapTexture    .bindTexture(gl.GL_TEXTURE3)
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Must be called by subclass implementations.
 
         Unbinds all of the textures managed by this ``GLVectorBase``.
@@ -695,7 +705,6 @@ class GLVector(GLVectorBase):
                              range.
         """
 
-
         def defaultPrefilter(d):
             return d
 
@@ -800,17 +809,17 @@ class GLVector(GLVectorBase):
         self.imageTexture.register(self.name, self.__textureChanged)
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`GLVectorBase`. Binds the vector image texture.
         """
-        GLVectorBase.preDraw(self)
+        GLVectorBase.preDraw(self, xform, bbox)
         self.imageTexture.bindTexture(gl.GL_TEXTURE4)
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`GLVectorBase`. Unbinds the vector image texture.
         """
-        GLVectorBase.postDraw(self)
+        GLVectorBase.postDraw(self, xform, bbox)
         self.imageTexture.unbindTexture()
 
 

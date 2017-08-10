@@ -18,6 +18,7 @@ import numpy               as np
 import OpenGL.GL           as gl
 
 import fsl.utils.transform as transform
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.shaders  as shaders
 import fsleyes.gl.glvolume as glvolume
 
@@ -50,8 +51,11 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
-    vertSrc = shaders.getVertexShader(  'glvolume')
-    fragSrc = shaders.getFragmentShader('glvolume')
+    if self.threedee: prefix = 'glvolume_3d'
+    else:             prefix = 'glvolume'
+
+    vertSrc = shaders.getVertexShader(  prefix)
+    fragSrc = shaders.getFragmentShader(prefix)
 
     self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
@@ -64,8 +68,9 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    opts   = self.displayOpts
-    shader = self.shader
+    opts    = self.opts
+    display = self.display
+    shader  = self.shader
 
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
@@ -112,37 +117,49 @@ def updateShaderState(self):
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
 
+    if self.threedee:
+
+        blendFactor = (1 - opts.blendFactor) ** 2
+        clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
+        d2tmat      = opts.getTransform('display', 'texture')
+
+        for i in range(opts.numClipPlanes):
+            origin, normal   = self.get3DClipPlane(i)
+            origin           = transform.transform(origin, d2tmat)
+            normal           = transform.transformNormal(normal, d2tmat)
+            clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
+
+        changed |= shader.set('numClipPlanes', opts.numClipPlanes)
+        changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
+        changed |= shader.set('blendFactor',   blendFactor)
+        changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())
+        changed |= shader.set('alpha',         display.alpha / 100.0)
+
     shader.unload()
 
     return changed
 
 
-def preDraw(self):
+def preDraw(self, xform=None, bbox=None):
     """Sets up the GL state to draw a slice from the given :class:`.GLVolume`
     instance.
     """
     self.shader.load()
 
-    opts = self.displayOpts
-
     if isinstance(self, glvolume.GLVolume):
-        if opts.clipImage is None:
-            clipCoordXform = np.eye(4)
-        else:
-            clipCoordXform = transform.concat(
-                self.clipOpts.getTransform('display', 'texture'),
-                opts         .getTransform('texture', 'display'))
-
+        clipCoordXform = self.calculateClipCoordTransform()
         self.shader.set('clipCoordXform', clipCoordXform)
 
 
-def draw(self, zpos, xform=None, bbox=None):
-    """Draws the specified slice from the specified image on the canvas.
+def draw2D(self, zpos, axes, xform=None, bbox=None):
+    """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
                   to be drawn.
 
     :arg zpos:    World Z position of slice to be drawn.
+
+    :arg axes:    x, y, z axis indices.
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
@@ -150,7 +167,11 @@ def draw(self, zpos, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
-    vertices, voxCoords, texCoords = self.generateVertices(zpos, xform, bbox)
+    vertices, voxCoords, texCoords = self.generateVertices2D(
+        zpos, axes, bbox=bbox)
+
+    if xform is not None:
+        vertices = transform.transform(vertices)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -161,7 +182,44 @@ def draw(self, zpos, xform=None, bbox=None):
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def drawAll(self, zposes, xforms):
+def draw3D(self, xform=None, bbox=None):
+    """Draws the image in 3D on the canvas.
+
+    :arg self:    The :class:`.GLVolume` object which is managing the image
+                  to be drawn.
+
+    :arg xform:   A 4*4 transformation matrix to be applied to the vertex
+                  data.
+
+    :arg bbox:    An optional bounding box.
+    """
+
+    opts                           = self.opts
+    tex                            = self.renderTexture1
+    proj                           = self.canvas.getProjectionMatrix()
+    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
+    rayStep , ditherDir, texform   = opts.calculateRayCastSettings(xform, proj)
+
+    if xform is not None:
+        vertices = transform.transform(vertices, xform)
+
+    self.shader.set(   'tex2ScreenXform', texform)
+    self.shader.set(   'rayStep',         rayStep)
+    self.shader.set(   'ditherDir',       ditherDir)
+    self.shader.setAtt('vertex',          vertices)
+    self.shader.setAtt('texCoord',        texCoords)
+
+    self.shader.loadAtts()
+
+    tex.bindAsRenderTarget()
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    tex.unbindAsRenderTarget()
+
+    self.shader.unloadAtts()
+    self.shader.unload()
+
+
+def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
@@ -171,8 +229,8 @@ def drawAll(self, zposes, xforms):
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices(zpos, xform)
-        vertices[ i * 6: i * 6 + 6, :] = v
+        v, vc, tc = self.generateVertices2D(zpos, axes)
+        vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 
@@ -185,9 +243,12 @@ def drawAll(self, zposes, xforms):
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
 
-def postDraw(self):
+def postDraw(self, xform=None, bbox=None):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
     self.shader.unloadAtts()
     self.shader.unload()
+
+    if self.threedee:
+        self.drawClipPlanes(xform=xform)

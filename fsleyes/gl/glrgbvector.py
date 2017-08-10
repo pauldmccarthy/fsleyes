@@ -41,30 +41,35 @@ class GLRGBVector(glvector.GLVector):
     to manage the vertex/fragment shader programs that are used in rendering.
     These modules are assumed to provide the following functions:
 
-    ======================================== =================================
-    ``init(GLRGBVector)``                    Perform any necessary
-                                             initialisation.
-    ``destroy(GLRGBVector)``                 Perform any necessary clean up.
-    ``compileShaders(GLRGBVector)``          Compiles vertex/fragment shaders.
-    ``updateShaderState(GLRGBVector)``       Updates vertex/fragment shaders.
-    ``preDraw(GLRGBVector)``                 Prepare the GL state for drawing.
-    ``draw(GLRGBVector, zpos, xform)``       Draw the slice specified by
+
+    ========================================== ===============================
+    ``init(GLRGBVector)``                      Perform any necessary
+                                               initialisation.
+    ``destroy(GLRGBVector)``                   Perform any necessary clean up.
+    ``compileShaders(GLRGBVector)``            Compiles vertex/fragment
+                                               shaders.
+    ``updateShaderState(GLRGBVector)``         Updates vertex/fragment
+                                               shaders.
+    ``preDraw(GLRGBVector, xform, bbox)``      Prepare the GL state for
+                                               drawing.
+    ``draw2D(GLRGBVector, zpos, xform, bbox)`` Draw the slice specified by
                                              ``zpos``.
-    ``drawAll(GLRGBVector, zposes, xforms)`` Draw all slices specified by
-                                             ``zposes``.
-    ``postDraw(GLRGBVector)``                Clean up the GL state after
-                                             drawing.
-    ======================================== =================================
+    ``draw3D(GLRGBVector, zpos, xform)``       Draw the volume in 3D
+    ``drawAll(GLRGBVector, zposes, xforms)``   Draw all slices specified by
+                                               ``zposes``.
+    ``postDraw(GLRGBVector, xform, bbox)``     Clean up the GL state after
+                                               drawing.
+    ========================================== ===============================
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLRGBVector``.
 
-        :arg image:   An :class:`.Image` or :class:`.DTIFitTensor` instance.
-        :arg display: The associated :class:`.Display` instance.
-        :arg xax:     Initial display X axis
-        :arg yax:     Initial display Y axis
+        :arg image:      An :class:`.Image` or :class:`.DTIFitTensor` instance.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
+        :arg threedee:   2D or 3D rendering
         """
 
         # If the overlay is a DTIFitTensor, use the
@@ -80,18 +85,18 @@ class GLRGBVector(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
-                                   display,
-                                   xax,
-                                   yax,
+                                   displayCtx,
+                                   canvas,
+                                   threedee,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.glrgbvector_funcs.init(
                                        self))
 
-        self.displayOpts.addListener('interpolation',
-                                     self.name,
-                                     self.__interpChanged)
+        self.opts.addListener('interpolation',
+                              self.name,
+                              self.__interpChanged)
 
 
     def destroy(self):
@@ -100,7 +105,7 @@ class GLRGBVector(glvector.GLVector):
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
         """
-        self.displayOpts.removeListener('interpolation', self.name)
+        self.opts.removeListener('interpolation', self.name)
         fslgl.glrgbvector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -109,7 +114,7 @@ class GLRGBVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.refreshImageTexture`. Calls the base
         class implementation.
         """
-        opts = self.displayOpts
+        opts = self.opts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
@@ -121,7 +126,7 @@ class GLRGBVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.refreshAuxTexture`. Calls the base
         class implementation.
         """
-        opts = self.displayOpts
+        opts = self.opts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
@@ -133,7 +138,7 @@ class GLRGBVector(glvector.GLVector):
         """Called when the :attr:`.RGBVectorOpts.interpolation` property
         changes. Updates the :class:`.ImageTexture` interpolation.
         """
-        opts = self.displayOpts
+        opts = self.opts
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
@@ -159,32 +164,39 @@ class GLRGBVector(glvector.GLVector):
         return fslgl.glrgbvector_funcs.updateShaderState(self)
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and the OpenGL version-specific ``preDraw`` function.
         """
-        glvector.GLVector.preDraw(self)
-        fslgl.glrgbvector_funcs.preDraw(self)
+        glvector.GLVector.preDraw(self, xform, bbox)
+        fslgl.glrgbvector_funcs.preDraw(self, xform, bbox)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Overrides :meth:`.GLVector.draw`. Calls the OpenGL version-specific
-        ``draw`` function.
+    def draw2D(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.draw2D`. Calls the OpenGL
+        version-specific ``draw2D`` function.
         """
-        fslgl.glrgbvector_funcs.draw(self, zpos, xform, bbox)
+        fslgl.glrgbvector_funcs.draw2D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, xforms):
+    def draw3D(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.draw3D`. Calls the OpenGL
+        version-specific ``draw3D`` function.
+        """
+        fslgl.glrgbvector_funcs.draw3D(self, *args, **kwargs)
+
+
+    def drawAll(self, *args, **kwargs):
         """Overrides :meth:`.GLVector.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
         """
-        fslgl.glrgbvector_funcs.drawAll(self, zposes, xforms)
+        fslgl.glrgbvector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self)
-        fslgl.glrgbvector_funcs.postDraw(self)
+        glvector.GLVector.postDraw(self, xform, bbox)
+        fslgl.glrgbvector_funcs.postDraw(self, xform, bbox)

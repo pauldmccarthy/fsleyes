@@ -5,10 +5,10 @@
 #
 # Input parameters:
 #
-#   voxValXform          - Matrix which transforms image texture
-#                          data into the original data range.
-#
-#   imageShape           - Image shape
+#   voxValXform          - Vector with x component defining a scale, and y
+#                          component defining an offset, with which image
+#                          texture values can be transformed into the range
+#                          [0, 1], for use as a colour map texture coordinate.
 #
 #   invNumLabels         - 1.0 / (number of labels in the lookup table)
 #
@@ -19,7 +19,6 @@
 # Input varyings:
 #
 #   texCoord - Fragment texture coordinates
-#   voxCoord - Fragment voxel coordinates
 #
 # Input textures:
 #
@@ -29,21 +28,26 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-TEMP  voxCoord;
+
+{{ arb_include('textest.prog') }}
+
+
 TEMP  lutCoord;
 TEMP  invNumLabels;
 TEMP  voxValue;
 
-PARAM imageShape     = {{ param_imageShape   }};
-MOV   invNumLabels,    {{ param_invNumLabels }};
-PARAM outline        = {{ param_outline      }};
-PARAM voxValXform[4] = {{ param4_voxValXform }};
+MOV   invNumLabels,   {{ param_invNumLabels }};
+PARAM outline       = {{ param_outline      }};
+PARAM voxValXform   = {{ param_voxValXform  }};
 
-# retrieve the voxel coordinates,
-# bail if they are are out of bounds  
-MOV voxCoord, {{ varying_voxCoord }};
-
-#pragma include test_in_bounds.prog
+# bail if texture coordinates are out of bounds
+# we use voxValue here out of convenience
+{{
+arb_call('textest.prog',
+         texCoord='{{ varying_texCoord }}',
+         out_result='voxValue')
+}}
+KIL voxValue.x;
 
 # look up image voxel value
 # from 3D image texture
@@ -52,7 +56,7 @@ TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
 # Scale the texture value
 # to its original voxel value
 MOV lutCoord, voxValue;
-MAD lutCoord, lutCoord, voxValXform[0].x, voxValXform[3].x;
+MAD lutCoord, lutCoord, voxValXform.x, voxValXform.y;
 
 # Scale the voxel value to
 # a lut texture coordinate
@@ -64,7 +68,7 @@ MUL lutCoord, lutCoord, invNumLabels;
 TEX result.color, lutCoord.x, {{ texture_lutTexture }}, 1D;
 
 
-# Test whether this fragment lies 
+# Test whether this fragment lies
 # on an edge between label regions.
 
 TEMP coord;
@@ -79,6 +83,7 @@ MUL tol,   tol, 0.001;
 
 MOV offsets, outline.yzww;
 
+
 #pragma include edge3D.prog
 
 
@@ -86,23 +91,23 @@ MOV offsets, outline.yzww;
 # fragment, or kill the fragment.
 TEMP fill;
 
-# Set fill to 1 if there is an edge 
+# Set fill to 1 if there is an edge
 # along any dimension, 0 otherwise
 MAX fill, isEdge.x, isEdge.y;
 MAX fill, fill,     isEdge.z;
 
-# 
+#
 # If outlines are enabled, and
 # this fragment is not on an edge,
 # kill the fragment.
-# 
+#
 # Simiarly, if outlines are disabled
 # and this fragment is on an edge,
 # kill the fragment.
 #
 # This boils down to testing whether
 # isEdge == outline.x
-# 
+#
 SUB fill, fill, outline.x;
 ABS fill, fill;
 
@@ -112,5 +117,5 @@ ABS fill, fill;
 MAD fill, fill, -1, 0.5;
 KIL fill;
 
-  
+
 END

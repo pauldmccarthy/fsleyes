@@ -13,7 +13,6 @@ import os.path as op
 import            sys
 import            logging
 import            textwrap
-import            argparse
 
 import fsleyes_props                         as props
 import fsleyes_widgets.utils.layout          as fsllayout
@@ -28,10 +27,13 @@ import fsleyes.parseargs                     as parseargs
 import fsleyes.displaycontext                as displaycontext
 import fsleyes.displaycontext.orthoopts      as orthoopts
 import fsleyes.displaycontext.lightboxopts   as lightboxopts
+import fsleyes.displaycontext.scene3dopts    as scene3dopts
 import fsleyes.gl                            as fslgl
 import fsleyes.gl.ortholabels                as ortholabels
 import fsleyes.gl.offscreenslicecanvas       as slicecanvas
 import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
+import fsleyes.gl.offscreenscene3dcanvas     as scene3dcanvas
+
 
 
 log = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ def parseArgs(argv):
               arguments.
     """
 
-    mainParser = argparse.ArgumentParser(
+    mainParser = parseargs.ArgumentParser(
         add_help=False,
         formatter_class=parseargs.FSLeyesHelpFormatter)
 
@@ -113,7 +115,7 @@ def parseArgs(argv):
         FSLeyes screenshot generator.
 
         Use the '--scene' option to choose between orthographic
-        ('ortho') or lightbox ('lightbox') view.
+        ('ortho'), lightbox ('lightbox'), or 3D ('3d') views.
         """)
 
     namespace = parseargs.parseArgs(mainParser,
@@ -132,7 +134,7 @@ def parseArgs(argv):
 
     namespace.outfile = op.abspath(namespace.outfile)
 
-    if namespace.scene not in ('ortho', 'lightbox'):
+    if namespace.scene not in ('ortho', 'lightbox', '3d'):
         log.info('Unknown scene specified  ("{}") - defaulting '
                  'to ortho'.format(namespace.scene))
         namespace.scene = 'ortho'
@@ -187,6 +189,7 @@ def makeDisplayContext(namespace):
     # the scene to be rendered
     if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
     elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
+    elif namespace.scene == '3d':       sceneOpts = scene3dopts. Scene3DOpts()
 
     parseargs.applySceneArgs(namespace,
                              overlayList,
@@ -250,14 +253,26 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                            *canvases)
         labelMgr.refreshLabels()
 
-    # Do we need to do a neuro/radio l/r flip?
-    inRadio = displayCtx.displaySpaceIsRadiological()
-    lrFlip  = displayCtx.radioOrientation != inRadio
+    # 3D -> one 3D canvas
+    elif namespace.scene == '3d':
+        c = create3DCanvas(namespace,
+                           width,
+                           height,
+                           overlayList,
+                           displayCtx,
+                           sceneOpts)
 
-    if lrFlip:
-        for c in canvases:
-            if c.zax in (1, 2):
-                c.invertX = True
+        canvases = [c]
+
+    # Do we need to do a neuro/radio l/r flip?
+    if namespace.scene in ('ortho', 'lightbox'):
+        inRadio = displayCtx.displaySpaceIsRadiological()
+        lrFlip  = displayCtx.radioOrientation != inRadio
+
+        if lrFlip:
+            for c in canvases:
+                if c.zax in (1, 2):
+                    c.invertX = True
 
     # fix orthographic projection if
     # showing an ortho grid layout.
@@ -280,18 +295,20 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     # properties that are common to both ortho and
     # lightbox canvases) and render them one by one
     canvasBmps = []
+
     for i, c in enumerate(canvases):
 
-        if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
-        elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
-        elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
+        if namespace.scene in ('ortho', 'lightbox'):
+            if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
+            elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
+            elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
 
         c.draw()
 
         canvasBmps.append(c.getBitmap())
 
     # layout the bitmaps
-    if namespace.scene == 'lightbox':
+    if namespace.scene in ('lightbox', '3d'):
         layout = fsllayout.Bitmap(canvasBmps[0])
     elif len(canvasBmps) > 0:
         layout = fsllayout.buildOrthoLayout(canvasBmps,
@@ -442,6 +459,38 @@ def createOrthoCanvases(namespace,
         canvases.append(c)
 
     return canvases
+
+
+def create3DCanvas(namespace,
+                   width,
+                   height,
+                   overlayList,
+                   displayCtx,
+                   sceneOpts):
+    """Creates, configures, and returns an :class:`.OffScreenScene3DCanvas`.
+
+    :arg namespace:   ``argparse.Namespace`` object.
+    :arg width:       Available width in pixels.
+    :arg height:      Available height in pixels.
+    :arg overlayList: The :class:`.OverlayList` instance.
+    :arg displayCtx:  The :class:`.DisplayContext` instance.
+    :arg sceneOpts:   The :class:`.SceneOpts` instance.
+    """
+
+    canvas = scene3dcanvas.OffScreenScene3DCanvas(
+        overlayList,
+        displayCtx,
+        width=width,
+        height=height)
+
+    # props.applyArguments(canvas, namespace)
+
+    # showCursor is called hideCursor
+    # in the namespace, so the above
+    # applyArguments will not apply it.
+    canvas.showCursor = sceneOpts.showCursor
+
+    return canvas
 
 
 def buildColourBarBitmap(overlayList,

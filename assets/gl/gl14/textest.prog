@@ -1,0 +1,31 @@
+# Tests the given texture coordinates to check whether they
+# are between 0 and 1.
+#
+# Inputs:
+#   - texCoord - Texture coordinates to test.
+#
+# Outputs:
+#   - out_result - X component will be +1 if coords are in bounds, -1 otherwise
+
+
+
+# We use result.xyz to process
+# coordinates, and result.w
+# to store the intermediate
+# result.
+
+# < 0 test: result.x will be:
+#   - -1 if any coordinate is < 0
+#   - +1 otherwise
+CMP {{ out_result }}.xyz, {{ texCoord   }}, -1, 1;
+MIN {{ out_result }}.w,   {{ out_result }}.x, {{ out_result }}.y;
+MIN {{ out_result }}.w,   {{ out_result }}.w, {{ out_result }}.z;
+
+# > 1 test: {{ out_result }}.x will be:
+#   - -1 if >  1
+#   - +1 if <= 1
+SUB {{ out_result }}.xyz, 1, {{ texCoord   }};
+CMP {{ out_result }}.xyz,    {{ out_result }}, -1, 1;
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.y;
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.z;
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.w;

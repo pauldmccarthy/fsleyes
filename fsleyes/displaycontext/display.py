@@ -13,9 +13,11 @@ import logging
 import inspect
 
 import fsl.data.image                 as fslimage
+import fsl.data.constants             as constants
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 
+import fsleyes.strings                as strings
 import fsleyes.actions                as actions
 
 
@@ -466,6 +468,68 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         if isinstance(self.overlay, fslimage.Nifti):
             return self.overlay
         return None
+
+
+    def getLabels(self):
+        """Generates some orientation labels for the overlay associated with
+        this ``DisplayOpts`` instance.
+
+        If the overlay is not a ``Nifti`` instance, or does not have a
+        reference image set, the labels will represent an unknown orientation.
+
+        Returns a tuple containing:
+
+          - The ``(xlo, ylo, zlo, xhi, yhi, zhi)`` labels
+          - The ``(xorient, yorient, zorient)`` orientations (see
+            :meth:`.Image.getOrientation`)
+        """
+
+        refImage = self.getReferenceImage()
+
+        if refImage is None:
+            return ('??????', [constants.ORIENT_UNKNOWN] * 3)
+
+        opts = self.displayCtx.getOpts(refImage)
+
+        xorient = None
+        yorient = None
+        zorient = None
+
+        # If we are displaying in voxels/scaled voxels,
+        # and this image is not the current display
+        # image, then we do not show anatomical
+        # orientation labels, as there's no guarantee
+        # that all of the loaded overlays are in the
+        # same orientation, and it can get confusing.
+        if opts.transform in ('id', 'pixdim', 'pixdim-flip') and \
+           self.displayCtx.displaySpace != refImage:
+            xlo = 'Xmin'
+            xhi = 'Xmax'
+            ylo = 'Ymin'
+            yhi = 'Ymax'
+            zlo = 'Zmin'
+            zhi = 'Zmax'
+
+        # Otherwise we assume that all images
+        # are aligned to each other, so we
+        # estimate the current image's orientation
+        # in the display coordinate system
+        else:
+
+            xform   = opts.getTransform('display', 'world')
+            xorient = refImage.getOrientation(0, xform)
+            yorient = refImage.getOrientation(1, xform)
+            zorient = refImage.getOrientation(2, xform)
+
+            xlo     = strings.anatomy['Nifti', 'lowshort',  xorient]
+            ylo     = strings.anatomy['Nifti', 'lowshort',  yorient]
+            zlo     = strings.anatomy['Nifti', 'lowshort',  zorient]
+            xhi     = strings.anatomy['Nifti', 'highshort', xorient]
+            yhi     = strings.anatomy['Nifti', 'highshort', yorient]
+            zhi     = strings.anatomy['Nifti', 'highshort', zorient]
+
+        return ((xlo, ylo, zlo, xhi, yhi, zhi),
+                (xorient, yorient, zorient))
 
 
     def displayToStandardCoordinates(self, coords):

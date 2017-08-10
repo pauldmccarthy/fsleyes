@@ -66,6 +66,14 @@ class OverlayGroup(props.HasProperties):
         'Display'        : [],
         'NiftiOpts'      : ['volume'],
         'VolumeOpts'     : ['interpolation'],
+        'Volume3DOpts'   : ['dithering',
+                            'numSteps',
+                            'numInnerSteps',
+                            'resolution',
+                            'numClipPlanes',
+                            'clipPosition',
+                            'clipAzimuth',
+                            'clipInclination'],
         'LabelOpts'      : ['outline',
                             'outlineWidth'],
         'MeshOpts'       : ['outline',
@@ -114,6 +122,7 @@ class OverlayGroup(props.HasProperties):
             Display,        \
             NiftiOpts,      \
             VolumeOpts,     \
+            Volume3DOpts,   \
             MaskOpts,       \
             VectorOpts,     \
             RGBVectorOpts,  \

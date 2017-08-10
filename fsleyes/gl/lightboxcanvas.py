@@ -406,7 +406,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         xlen = self.displayCtx.bounds.getLen(self.xax)
         ylen = self.displayCtx.bounds.getLen(self.yax)
         zlen = self.zrange.xlen
-        width, height = self._getSize()
+        width, height = self.GetSize()
 
         if xlen   == 0 or \
            ylen   == 0 or \
@@ -819,12 +819,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.destroyed():
             return
 
-        width, height = self._getSize()
+        width, height = self.GetSize()
         if width == 0 or height == 0:
             return
 
         if not self._setGLContext():
             return
+
+        axes = (self.xax, self.yax, self.zax)
 
         overlays, globjs = self._getGLObjects()
 
@@ -899,7 +901,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             else:
 
                 globj.preDraw()
-                globj.drawAll(zposes, xforms)
+                globj.drawAll(axes, zposes, xforms)
                 globj.postDraw()
 
         if self.renderMode == 'offscreen':

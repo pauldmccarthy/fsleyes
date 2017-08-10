@@ -23,20 +23,26 @@ import fsleyes.gl.textures as textures
 
 class GLMesh(globject.GLObject):
     """The ``GLMesh`` class is a :class:`.GLObject` which encapsulates the
-    logic required to render 2D slices of a :class:`.TriangleMesh` overlay.
-    The ``GLMesh`` class assumes that the :class:`.Display` instance
-    associated with the ``TriangleMesh`` overlay holds a reference to a
-    :class:`.MeshOpts` instance, which contains ``GLMesh`` specific
-    display settings.
+    logic required to draw 2D slices, and 3D renderings, of a
+    :class:`.TriangleMesh` overlay.  The ``GLMesh`` class assumes that the
+    :class:`.Display` instance associated with the ``TriangleMesh`` overlay
+    holds a reference to a :class:`.MeshOpts` instance, which contains
+    ``GLMesh`` specific display settings.
 
 
-    A ``GLMesh`` is rendered in one of two different ways, depending upon
-    the  value of the :attr:`.MeshOpts.outline`  property.
+    **2D rendering**
 
 
-    If ``MeshOpts.outline is False``, a filled cross-section of the mesh is
-    drawn. This is accomplished using a three-pass technique, roughly
-    following that described at
+    A ``GLMesh`` is rendered in one of two different ways, depending upon the
+    value of the :attr:`.MeshOpts.outline` and :attr:`.MeshOpts.vertexData`
+    properties.
+
+
+    *Cross-sections*
+
+    If ``outline is False and vertexData is None``, a filled cross-section of
+    the mesh is drawn. This is accomplished using a three-pass technique,
+    roughly following that described at
     http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html:
 
      1. The front face of the mesh is rendered to the stencil buffer.
@@ -51,9 +57,16 @@ class GLMesh(globject.GLObject):
     This cross-section is filled with the :attr:`.MeshOpts.colour` property.
 
 
-    If ``MeshOpts.outline is True``, the :func:`.trimesh.mesh_plane` function
-    is used to calculate the intersection of the mesh triangles with the
-    viewing plane. Theese lines are then rendered as ``GL_LINES`` primitives.
+    *Outlines*
+
+
+    If ``outline is True or vertexData is not None``, the
+    :func:`.trimesh.mesh_plane` function is used to calculate the intersection
+    of the mesh triangles with the viewing plane. Theese lines are then
+    rendered as ``GL_LINES`` primitives.
+
+
+    *Colouring*
 
 
     These lines will be coloured in one of the following ways:
@@ -68,40 +81,64 @@ class GLMesh(globject.GLObject):
          property is ``True``, the :attr:`.MeshOpts.lut` is used.
 
 
-    When ``MeshOpts.outline is True``, and ``MeshOpts.vertexData is not
-    None``, the ``GLMesh`` class makes use of the ``glmesh`` vertex and
-    fragment shaders. These shaders are managed by two OpenGL version-specific
-    modules - :mod:`.gl14.glmesh_funcs`, and :mod:`.gl21.glmesh_funcs`. These
-    version specific modules must provide the following functions:
+    When ``MeshOpts.vertexData is not None``, the ``GLMesh`` class makes use
+    of the ``glmesh`` vertex and fragment shaders. These shaders are managed
+    by two OpenGL version-specific modules - :mod:`.gl14.glmesh_funcs`, and
+    :mod:`.gl21.glmesh_funcs`. These version specific modules must provide the
+    following functions:
 
-    ======================= =================================
-    ``compileShaders``      Compiles vertex/fragment shaders.
-    ``destroy``             Performs any necessary clean up.
-    ``updateShaderState``   Updates vertex/fragment shaders.
-    ``drawColouredOutline`` Draws mesh outline using shaders.
-    ======================= =================================
+
+     - ``compileShaders(GLMesh)``: Compiles vertex/fragment shaders.
+
+     - ``updateShaderState(GLMesh, **kwargs)``: Updates vertex/fragment
+       shaders. Should expect the following keyword arguments:
+
+        - ``useNegCmap``: Boolean which is ``True`` if a negative colour map
+           should be used
+
+        - ``cmapXform``:   Transformation matrix which transforms from vertex
+                           data into colour map texture coordinates.
+
+        - ``flatColour``:  Colour to use for fragments which are outside
+                           of the clipping range.
+
+        - ``lightPos``     Light position in display coordinates.
+
+
+     - ``preDraw(GLMesh)``: Prepare for drawing (e.g. load shaders)
+
+     - ``draw(GLMesh, glType, vertices, indices=None, normals=None,
+         vdata=None)``: Draws mesh using shaders.
+
+     - ``postDraw(GLMesh)``: Clean up after drawing
+
+
+    **3D rendering**
+
+
+    3D mesh rendering is much simpler than 2D rendering. The mesh is simply
+    rendered to the canvas, and coloured in the same way as described above.
+    Whether the 3D mesh is coloured with a flat colour, or according to vertex
+    data, shader programs are used which colour the mesh, and also apply a
+    simple lighting effect.
+
     """
 
 
-    def __init__(self, overlay, display, xax, yax):
+    def __init__(self, overlay, displayCtx, canvas, threedee):
         """Create a ``GLMesh``.
 
-        :arg overlay: A :class:`.TriangleMesh` overlay.
-
-        :arg display: A :class:`.Display` instance defining how the
-                      ``overlay`` is to be displayed.
-
-        :arg xax:     Initial display X axis
-
-        :arg yax:     Initial display Y axis
+        :arg overlay:    A :class:`.TriangleMesh` overlay.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas drawing this ``GLMesh``.
+        :arg threedee:   2D or 3D rendering.
         """
 
-        globject.GLObject.__init__(self, xax, yax)
+        globject.GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
 
-        self.shader  = None
-        self.overlay = overlay
-        self.display = display
-        self.opts    = display.getDisplayOpts()
+        self.flatShader   = None
+        self.dataShader   = None
+        self.activeShader = None
 
         # We use a render texture when
         # rendering model cross sections.
@@ -111,13 +148,12 @@ class GLMesh(globject.GLObject):
 
         # Mesh overlays are coloured:
         #
-        #  - with a costant colour (opts.outline == False), or
+        #  - with a constant colour (opts.outline == False), or
         #
-        #  - with a +/- colour map, (opts.outline == True and opts.vertexData
-        #    is not None), or
+        #  - with a +/- colour map, (opts.vertexData not None), or
         #
-        #  - with a lookup table (opts.outline == True and opts.useLut == True
-        #    and opts.vertexData is not None)
+        #  - with a lookup table (opts.useLut == True and
+        #    opts.vertexData is not None)
         self.cmapTexture    = textures.ColourMapTexture(  self.name)
         self.negCmapTexture = textures.ColourMapTexture(  self.name)
         self.lutTexture     = textures.LookupTableTexture(self.name)
@@ -129,8 +165,8 @@ class GLMesh(globject.GLObject):
         self.updateVertices()
         self.refreshCmapTextures(notify=False)
 
-        fslgl.glmesh_funcs.compileShaders(self)
-        fslgl.glmesh_funcs.updateShaderState(self)
+        self.compileShaders()
+        self.updateShaderState()
 
 
     def destroy(self):
@@ -144,18 +180,23 @@ class GLMesh(globject.GLObject):
         self.negCmapTexture.destroy()
         self.lutTexture    .destroy()
 
-        fslgl.glmesh_funcs.destroy(self)
         self.removeListeners()
         self.deregisterLut()
+
+        globject.GLObject.destroy(self)
+
+        if self.flatShader is not None: self.flatShader.destroy()
+        if self.dataShader is not None: self.dataShader.destroy()
+
+        self.dataShader   = None
+        self.flatShader   = None
+        self.activeShader = None
 
         self.lut            = None
         self.renderTexture  = None
         self.cmapTexture    = None
         self.negCmapTexture = None
         self.lutTexture     = None
-        self.overlay        = None
-        self.display        = None
-        self.opts           = None
 
 
     def ready(self):
@@ -171,15 +212,21 @@ class GLMesh(globject.GLObject):
 
         name    = self.name
         display = self.display
+        canvas  = self.canvas
         opts    = self.opts
 
         def shader(*a):
-            fslgl.glmesh_funcs.updateShaderState(self)
+            self.updateShaderState()
+            self.notify()
+
+        def vertices(*a):
+            self.updateVertices()
+            self.updateShaderState()
             self.notify()
 
         def refreshCmap(*a):
             self.refreshCmapTextures(notify=False)
-            fslgl.glmesh_funcs.updateShaderState(self)
+            self.updateShaderState()
             self.notify()
 
         def registerLut(*a):
@@ -190,14 +237,16 @@ class GLMesh(globject.GLObject):
         def refresh(*a):
             self.notify()
 
-        opts   .addListener('bounds',           name, self.updateVertices)
-        opts   .addListener('colour',           name, refresh,     weak=False)
+        opts   .addListener('bounds',           name, vertices,    weak=False)
+        opts   .addListener('colour',           name, shader,      weak=False)
         opts   .addListener('outline',          name, refresh,     weak=False)
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
+        opts   .addListener('wireframe',        name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, refresh,     weak=False)
         opts   .addListener('vertexDataIndex',  name, refresh,     weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
         opts   .addListener('invertClipping',   name, shader,      weak=False)
+        opts   .addListener('discardClipped',   name, shader,      weak=False)
         opts   .addListener('cmap',             name, refreshCmap, weak=False)
         opts   .addListener('useNegativeCmap',  name, refreshCmap, weak=False)
         opts   .addListener('negativeCmap',     name, refreshCmap, weak=False)
@@ -208,6 +257,11 @@ class GLMesh(globject.GLObject):
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
+
+        if self.threedee:
+            canvas.addListener('light',    name, shader, weak=False)
+            canvas.addListener('lightPos', name, shader, weak=False)
+
         # We don't need to listen for
         # brightness or contrast, because
         # they are linked to displayRange.
@@ -221,10 +275,12 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('colour',           self.name)
         self.opts   .removeListener('outline',          self.name)
         self.opts   .removeListener('outlineWidth',     self.name)
+        self.opts   .removeListener('wireframe',        self.name)
         self.opts   .removeListener('vertexData',       self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
         self.opts   .removeListener('invertClipping',   self.name)
+        self.opts   .removeListener('discardClipped',   self.name)
         self.opts   .removeListener('cmap',             self.name)
         self.opts   .removeListener('useNegativeCmap',  self.name)
         self.opts   .removeListener('negativeCmap',     self.name)
@@ -235,6 +291,11 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
         self.display.removeListener('alpha',            self.name)
+
+        if self.threedee:
+            self.canvas.removeListener('light',    self.name)
+            self.canvas.removeListener('lightPos', self.name)
+
 
 
     def registerLut(self):
@@ -263,21 +324,50 @@ class GLMesh(globject.GLObject):
 
     def updateVertices(self, *a):
         """Called by :meth:`__init__`, and when certain display properties
-        change. (Re-)generates the mesh vertices and indices. They are stored
-        as attributes called ``vertices`` and ``indices`` respectively.
+        change. (Re-)generates the mesh vertices, indices and normals (if
+        being displayed in 3D). They are stored as attributes called
+        ``vertices``, ``indices``, and ``normals`` respectively.
         """
 
         overlay  = self.overlay
         vertices = overlay.vertices
         indices  = overlay.indices
+        normals  = self.overlay.vnormals
         xform    = self.opts.getCoordSpaceTransform()
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = transform.transform(vertices, xform)
 
+            if self.threedee:
+                nmat    = transform.invert(xform).T
+                normals = transform.transform(normals, nmat, vector=True)
+
         self.vertices = np.array(vertices,          dtype=np.float32)
         self.indices  = np.array(indices.flatten(), dtype=np.uint32)
-        self.notify()
+
+        if self.threedee:
+            self.normals = np.array(normals, dtype=np.float32)
+
+
+    def frontFace(self):
+        """Returns the face of the mesh triangles which which will be facing
+        outwards, either ``GL_CCW`` or ``GL_CW``. This will differ depending
+        on the mesh-to-display transformation matrix.
+
+        This method is only used in 3D rendering.
+        """
+
+        if not self.threedee:
+            return gl.GL_CCW
+
+        # Only looking at the mesh -> display
+        # transform, thus we are assuming that
+        # the MVP matrix does not have any
+        # negative scales.
+        xform = self.opts.getCoordSpaceTransform()
+
+        if npla.det(xform) > 0: return gl.GL_CCW
+        else:                   return gl.GL_CW
 
 
     def getDisplayBounds(self):
@@ -288,31 +378,53 @@ class GLMesh(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def preDraw(self):
-        """Overrides :meth:`.GLObject.preDraw`. Sets the size of the backing
-        :class:`.RenderTexture` instance based on the current viewport size.
+    def preDraw(self, xform=None, bbox=None):
+        """Overrides :meth:`.GLObject.preDraw`. Performs some pre-drawing
+        configuration, which might involve loading shaders, and/or setting the
+        size of the backing :class:`.RenderTexture` instance based on the
+        current viewport size.
         """
 
-        size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width  = size[2]
-        height = size[3]
+        opts       = self.opts
+        flat       = self.opts.vertexData is None
+        useShader  = self.threedee or (opts.vertexData is not None)
+        useTexture = not (self.threedee or opts.outline or useShader)
 
-        # We only need to resize the texture when
-        # the viewport size/quality changes.
-        if self.renderTexture.getSize() != (width, height):
-            self.renderTexture.setSize(width, height)
+        if useShader:
+            fslgl.glmesh_funcs.preDraw(self)
+
+            if not flat:
+                if self.opts.useLut:
+                    self.lutTexture.bindTexture(gl.GL_TEXTURE0)
+                else:
+                    self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
+                    self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+
+        if useTexture:
+            size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
+            width  = size[2]
+            height = size[3]
+
+            # We only need to resize the texture when
+            # the viewport size/quality changes.
+            if self.renderTexture.getSize() != (width, height):
+                self.renderTexture.setSize(width, height)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Overrids :meth:`.GLObject.draw`. Draws a 2D slice of the
+    def draw2D(self, zpos, axes, xform=None, bbox=None):
+        """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
-        opts    = self.opts
-        xax     = self.xax
-        yax     = self.yax
-        zax     = self.zax
-        lo,  hi = self.getDisplayBounds()
+        opts          = self.opts
+        lo,  hi       = self.getDisplayBounds()
+        xax, yax, zax = axes
+
+        # If vertexData is set, we ignore
+        # the outline setting - meshes can
+        # only be coloured by vertexData
+        # in outline mode
+        outline = opts.outline or opts.vertexData is not None
 
         # Mesh is 2D, and is
         # perpendicular to
@@ -328,35 +440,98 @@ class GLMesh(globject.GLObject):
             return
 
         if is2D:
-            self.draw2D(xform, bbox)
+            self.draw2DMesh(xform, bbox)
 
-        elif opts.outline:
-            self.drawOutline(zpos, xform, bbox)
+        elif outline:
+            self.drawOutline(zpos, axes, xform, bbox)
 
         else:
-            lo, hi = self.calculateViewport(lo, hi, bbox)
+            lo, hi = self.calculateViewport(lo, hi, axes, bbox)
             xmin   = lo[xax]
             xmax   = hi[xax]
             ymin   = lo[yax]
             ymax   = hi[yax]
             tex    = self.renderTexture
 
-            if is2D: self.renderCrossSection2D(    lo, hi, tex)
-            else:    self.renderCrossSection(zpos, lo, hi, tex)
+            self.drawCrossSection(zpos, axes, lo, hi, tex)
 
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
-    def drawOutline(self, zpos, xform=None, bbox=None):
-        """Called by :meth:`draw` when :attr:`.MeshOpts.outline` is ``True``.
-        Calculates the intersection of the mesh with the viewing plane,
-        and renders it as a set of ``GL_LINES``. If
-        :attr:`.MeshOpts.vertexData` is ``None``, the draw is performed
-        using immediate mode OpenGL.
+    def draw3D(self, xform=None, bbox=None):
+        """Overrides :meth:`.GLObject.draw3D`. Draws a 3D rendering of the
+        mesh.
+        """
+        opts      = self.opts
+        verts     = self.vertices
+        idxs      = self.indices
+        normals   = self.normals
+        blo, bhi  = self.getDisplayBounds()
+        vdata     = opts.getVertexData()
 
-        Otherwise, the :func:`.gl14.glmesh_funcs.drawColouredOutline` or
-        :func:`.gl21.glmesh_funcs.drawColouredOutline` function is used, which
-        performs shader-based rendering.
+        is2D = np.isclose(bhi[2], blo[2])
+
+        if opts.wireframe:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            gl.glLineWidth(2)
+        else:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+        if xform is not None:
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glPushMatrix()
+            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
+
+        if is2D: enable = (gl.GL_DEPTH_TEST)
+        else:    enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
+
+        gl.glDisable(gl.GL_CULL_FACE)
+        with glroutines.enabled(enable):
+            gl.glFrontFace(self.frontFace())
+            if not is2D:
+                gl.glCullFace(gl.GL_BACK)
+            fslgl.glmesh_funcs.draw(
+                self,
+                gl.GL_TRIANGLES,
+                verts,
+                normals=normals,
+                indices=idxs,
+                vdata=vdata)
+
+        if xform is not None:
+            gl.glPopMatrix()
+
+
+    def postDraw(self, xform=None, bbox=None):
+        """Overrides :meth:`.GLObject.postDraw`. May call the
+        :func:`.gl14.glmesh_funcs.postDraw` or
+        :func:`.gl21.glmesh_funcs.postDraw` function.
+        """
+
+        opts      = self.opts
+        useShader = self.threedee or (opts.vertexData is not None)
+
+        if useShader:
+            fslgl.glmesh_funcs.postDraw(self)
+
+            if self.opts.vertexData is not None:
+                if self.opts.useLut:
+                    self.lutTexture.unbindTexture()
+                else:
+                    self.cmapTexture   .unbindTexture()
+                    self.negCmapTexture.unbindTexture()
+
+
+    def drawOutline(self, zpos, axes, xform=None, bbox=None):
+        """Called by :meth:`draw2D` when ``MeshOpts.outline is True or
+        MeshOpts.vertexData is not None``.  Calculates the intersection of the
+        mesh with the viewing plane, and renders it as a set of
+        ``GL_LINES``. If ``MeshOpts.vertexData is None``, the draw is
+        performed using immediate mode OpenGL.
+
+        Otherwise, the :func:`.gl14.glmesh_funcs.draw` or
+        :func:`.gl21.glmesh_funcs.draw` function is used, which performs
+        shader-based rendering.
         """
 
         opts = self.opts
@@ -366,7 +541,7 @@ class GLMesh(globject.GLObject):
             xform = np.eye(4)
 
         vertices, faces, dists, vertXform = self.calculateIntersection(
-            zpos, bbox)
+            zpos, axes, bbox)
 
         if vertXform is not None:
             xform = transform.concat(xform, vertXform)
@@ -374,6 +549,7 @@ class GLMesh(globject.GLObject):
         vdata     = self.getVertexData(faces, dists)
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
+        nvertices = vertices.shape[0]
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
@@ -383,22 +559,28 @@ class GLMesh(globject.GLObject):
 
         # Constant colour
         if not useShader:
+            vertices = vertices.ravel('C')
             gl.glColor(*opts.getConstantColour())
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
-            gl.glDrawArrays(gl.GL_LINES, 0, vertices.shape[0])
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            gl.glDrawArrays(gl.GL_LINES, 0, nvertices)
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
         # Coloured from vertex data
         else:
-            fslgl.glmesh_funcs.drawColouredOutline(self, vertices, vdata)
+            fslgl.glmesh_funcs.draw(
+                self,
+                gl.GL_LINES,
+                vertices,
+                vdata=vdata)
 
         gl.glPopMatrix()
 
 
-    def draw2D(self, xform=None, bbox=None):
-        """Called by :meth:`draw` for :class:`.TriangleMesh` overlays
-        which are actually 2D (with a flat third dimension).
+    def draw2DMesh(self, xform=None, bbox=None):
+        """Not to be confused with :meth:`draw2D`.  Called by :meth:`draw2D`
+        for :class:`.TriangleMesh` overlays which are actually 2D (with a flat
+        third dimension).
         """
 
         opts      = self.opts
@@ -430,33 +612,36 @@ class GLMesh(globject.GLObject):
         # Coloured from vertex data
         else:
             vdata = vdata[:, opts.vertexDataIndex]
-            fslgl.glmesh_funcs.drawColouredOutline(
-                self, vertices, vdata, faces, gl.GL_TRIANGLES)
+            fslgl.glmesh_funcs.draw(
+                self,
+                gl.GL_TRIANGLES,
+                vertices,
+                indices=faces,
+                vdata=vdata)
 
-        # Reset the polygon mode back to fill
-        if opts.outline:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-
-    def renderCrossSection(self, zpos, lo, hi, dest):
+    def drawCrossSection(self, zpos, axes, lo, hi, dest):
         """Renders a filled cross-section of the mesh to an off-screen
-        :class:`.RenderTexture`.
+        :class:`.RenderTexture`. See:
+
+        http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html
 
         :arg zpos: Position along the z axis
+        :arg axes: Tuple containing ``(x, y, z)`` axis indices.
         :arg lo:   Tuple containing the low bounds on each axis.
         :arg hi:   Tuple containing the high bounds on each axis.
         :arg dest: The :class:`.RenderTexture` to render to.
         """
 
         opts     = self.opts
-        xax      = self.xax
-        yax      = self.yax
-        zax      = self.zax
+        xax      = axes[0]
+        yax      = axes[1]
+        zax      = axes[2]
         xmin     = lo[xax]
         ymin     = lo[yax]
         xmax     = hi[xax]
         ymax     = hi[yax]
-        vertices = self.vertices
+        vertices = self.vertices.ravel('C')
         indices  = self.indices
 
         dest.bindAsRenderTarget()
@@ -488,6 +673,8 @@ class GLMesh(globject.GLObject):
         gl.glEnable(gl.GL_CLIP_PLANE0)
         gl.glEnable(gl.GL_CULL_FACE)
         gl.glEnable(gl.GL_STENCIL_TEST)
+        gl.glFrontFace(gl.GL_CCW)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         gl.glClipPlane(gl.GL_CLIP_PLANE0, planeEq)
         gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE)
@@ -500,26 +687,23 @@ class GLMesh(globject.GLObject):
         # intersection of the mesh with the clipping
         # plane.
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
-
-        # If the mesh coordinate transformation
-        # has a positive determinant, we need to
-        # render the back faces first, otherwise
-        # the cross-section mask will not be
-        # created correctly. Something to do with
-        # the vertex unwinding order, I guess.
         direction = [gl.GL_INCR, gl.GL_DECR]
 
+        # If the mesh coordinate transformation
+        # has a negative determinant, it means
+        # the back faces will be facing the camera,
+        # so we need to render the back faces first.
         if npla.det(opts.getCoordSpaceTransform()) > 0:
-            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
-        else:
             faceOrder = [gl.GL_FRONT, gl.GL_BACK]
+        else:
+            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
 
         for face, direction in zip(faceOrder, direction):
 
             gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
             gl.glCullFace(face)
 
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
             gl.glDrawElements(gl.GL_TRIANGLES,
                               len(indices),
                               gl.GL_UNSIGNED_INT,
@@ -555,20 +739,15 @@ class GLMesh(globject.GLObject):
         dest.restoreViewport()
 
 
-    def postDraw(self):
-        """Overrides :meth:`.GLObject.postDraw`. This method does nothing. """
-        pass
-
-
-    def calculateViewport(self, lo, hi, bbox=None):
-        """Called by :meth:`draw`. Calculates an appropriate viewport (the
+    def calculateViewport(self, lo, hi, axes, bbox=None):
+        """Called by :meth:`draw2D`. Calculates an appropriate viewport (the
         horizontal/vertical minimums/maximums in display coordinates) given
         the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
         ``bbox``.
         """
 
-        xax = self.xax
-        yax = self.yax
+        xax = axes[0]
+        yax = axes[1]
 
         if bbox is not None and (lo[xax] < bbox[xax][0] or
                                  hi[xax] < bbox[xax][1] or
@@ -605,13 +784,15 @@ class GLMesh(globject.GLObject):
         return lo, hi
 
 
-    def calculateIntersection(self, zpos, bbox=None):
+    def calculateIntersection(self, zpos, axes, bbox=None):
         """Uses the :func:`.trimesh.mesh_plane` and
         :func:`.trimesh.points_to_barycentric` functions to calculate the
         intersection of the mesh with the viewing plane at the given ``zpos``.
 
         :arg zpos:  Z axis coordinate at which the intersection is to be
                     calculated
+
+        :arg axes:  Tuple containing the ``(x, y, z)`` axis indices.
 
         :arg bbox:  A tuple containing a ``([xlo, ylo, zlo], [xhi, yhi, zhi])``
                     bounding box to which the calculation can be restricted.
@@ -634,7 +815,7 @@ class GLMesh(globject.GLObject):
         """
 
         overlay     = self.overlay
-        zax         = self.zax
+        zax         = axes[2]
         opts        = self.opts
         origin      = [0] * 3
         normal      = [0] * 3
@@ -756,3 +937,46 @@ class GLMesh(globject.GLObject):
 
         if notify:
             self.notify()
+
+
+    def compileShaders(self):
+        """(Re)Compiles the vertex/fragment shader program(s), via a call
+        to the GL-version specific ``compileShaders`` function.
+        """
+        if self.flatShader is not None: self.flatShader.destroy()
+        if self.dataShader is not None: self.dataShader.destroy()
+
+        self.activeShader = None
+
+        fslgl.glmesh_funcs.compileShaders(self)
+
+
+    def updateShaderState(self):
+        """Updates the vertex/fragment shader program(s) state, via a call to
+        the GL-version specific ``updateShaderState`` function.
+        """
+
+        opts       = self.opts
+        canvas     = self.canvas
+        lightPos   = None
+        flatColour = opts.getConstantColour()
+        useNegCmap = (not opts.useLut) and opts.useNegativeCmap
+
+        if self.threedee:
+            lightPos  = np.array(canvas.lightPos)
+            lightPos *= (canvas.zoom / 100.0)
+        else:
+            lightPos = None
+
+        if opts.useLut:
+            delta     = 1.0 / (opts.lut.max() + 1)
+            cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
+        else:
+            cmapXform = self.cmapTexture.getCoordinateTransform()
+
+        fslgl.glmesh_funcs.updateShaderState(
+            self,
+            useNegCmap=useNegCmap,
+            cmapXform=cmapXform,
+            flatColour=flatColour,
+            lightPos=lightPos)

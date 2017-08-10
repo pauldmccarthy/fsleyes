@@ -1,25 +1,34 @@
-# Fragment program routine which tests whether a set of voxel
-# coordinates is within the bounds defined by the image shape,
-# and forces the fragment program to exit if it is.
+# This  routine tests whether a set of voxel coordinates is within
+# the bounds defined by the image shape.
 #
 # Inputs:
 #   voxCoord   - 3D voxel coordinates
 #   imageShape - Shape of the image
 #
+# Outputs:
+#   out_result - X component will be < 0 if the voxel coordinates
+#                are out of bounds, > 0 otherwise.
+#
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-TEMP workspace;
+# Test whether any voxel coordinates are
+# greater than the image shape (- 0.49),
+SUB {{ out_result }}, {{ imageShape }}, {{ voxCoord }};
+ADD {{ out_result }}, {{ out_result }}, 0.49;
 
-# If any of the voxel coordinates are
-# less than -0.51, clear the voxel colour
-MOV workspace, voxCoord;
-ADD workspace, workspace, { 0.51, 0.51, 0.51, 999999999999.0};
-KIL workspace;
+# We store the result in w for the time being.
+# w will be < 0 if any coordinates failed
+# the test, >= 0 if they all passed
+MIN {{ out_result }}.w, {{ out_result }}.x, {{ out_result }}.y;
+MIN {{ out_result }}.w, {{ out_result }}.w, {{ out_result }}.z;
 
-# If any voxel coordinates are greater than
-# the image shape (- 0.49), clear the voxel colour
-MOV workspace, imageShape;
-SUB workspace, workspace, voxCoord;
-ADD workspace, workspace, { 0.49, 0.49, 0.49, 999999999999.0};
-KIL workspace;
+# Test the lower bounds
+ADD {{ out_result }}.xyz, {{ voxCoord }}, 0.51;
+
+# x will be < 0 if any of the voxel
+# coordinates are less than -0.51
+# or greater than shape-0.49.
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.y;
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.z;
+MIN {{ out_result }}.x, {{ out_result }}.x, {{ out_result }}.w;

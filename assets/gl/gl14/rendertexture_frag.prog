@@ -1,0 +1,18 @@
+!!ARBfp1.0
+#
+# Fragment shader used by RenderTexture instances which use
+# a depth texture.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+TEMP colour;
+TEMP depth;
+
+TEX colour,  fragment.texcoord[0], texture[0], 2D;
+TEX depth.x, fragment.texcoord[0], texture[1], 2D;
+
+MOV result.color, colour;
+MOV result.depth, depth.x;
+
+END

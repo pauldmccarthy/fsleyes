@@ -90,6 +90,7 @@ properties = TypeDict({
     'This option is useful for displaying statistic images.',
 
     'ColourMapOpts.cmap'            : 'The colour map to use.',
+    'ColourMapOpts.custom_cmap'     : 'The colour map to use.',
 
     'ColourMapOpts.negativeCmap' :
     'The colour map to use for negative values.',
@@ -123,6 +124,44 @@ properties = TypeDict({
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
+
+    'VolumeOpts.custom_overrideDataRange' :
+    'Override the actual data range of an image with a user-specified '
+    'one. This is useful for images which have a very large data '
+    'range that is driven by outliers.',
+
+    'Volume3DOpts.dithering' :
+    'How much the image sampling position should be randomly adjusted for '
+    'each pixel. ' ,
+
+    'Volume3DOpts.numSteps' :
+    'The maximum number of times that the image is sampled for each pixel.',
+
+    'Volume3DOpts.blendFactor' :
+    'This setting controls the sampling depth - a higher value will result '
+    'in the final volume colour being blended from samples which are deeper '
+    'in the volume.',
+
+    'Volume3DOpts.resolution' :
+    'This setting controls the quality (resolution) at which the volume is '
+    'shown on screen. Higher values look better, but lower values will be '
+    'drawn more quickly.',
+
+    'Volume3DOpts.numClipPlanes' :
+    'Number of active clipping planes. Areas of the image which are in the '
+    'region intersected by all clipping planes will not be shown.',
+
+    'Volume3DOpts.showClipPlanes' :
+    'When enabled, each active clipping plane is shown.',
+
+    'Volume3DOpts.clipPosition' :
+    'Clip plane position, as a percentage of the image length.',
+
+    'Volume3DOpts.clipInclination' :
+    'Amount by which to rotate the clip plane about the X axis.',
+
+    'Volume3DOpts.clipAzimuth' :
+    'Amount by which to rotate the clip plane about the Z axis.',
 
     'MaskOpts.colour'    : 'The colour of this mask image.',
     'MaskOpts.invert'    : 'Invert the mask threshold range, so that values '
@@ -254,6 +293,10 @@ properties = TypeDict({
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
+    'MeshOpts.custom_vertexData'   :
+    'Choose a file which contains data for each vertex - you can colour the '
+    'mesh outline according to the values in the file. This only applies '
+    'when the mesh outline, and not its cross-section is displayed.',
     'MeshOpts.vertexDataIndex' :
     'If you have loaded vertex data with multiple data points for each '
     'vertex, this control allows you to control the data point that is '
@@ -265,6 +308,19 @@ properties = TypeDict({
     'MeshOpts.lut' :
     'The lookup table to use when colouring the mesh with a lookup table '
     'instead of with the colour maps.',
+    'MeshOpts.custom_lut' :
+    'The lookup table to use when colouring the mesh with a lookup table '
+    'instead of with the colour maps.',
+    'MeshOpts.discardClipped' :
+    'When the mesh is coloured according to some data, this setting allows '
+    'you to choose between hiding the areas with data outside of the clipping '
+    'range, or colouring those areas with a constant colour.',
+    'MeshOpts.wireframe' :
+    'When selected, the mesh is shown as a wireframe, rather than being '
+    'filled.',
+    'MeshOpts.lighting' :
+    'When selected, a lighting effect is applied to the mesh.',
+
 
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '
@@ -355,6 +411,20 @@ properties = TypeDict({
                                     'each slice.',
     'LightBoxOpts.highlightSlice' : 'If checked, a box will be drawn around '
                                     'the currently selected slice.',
+
+    'Scene3DOpts.showLegend' :
+    'When selected, a legend will be displayed in the bottom right, showing '
+    'orientation information.',
+    'Scene3DOpts.light'      :
+    'Enable a simple lighting effect.',
+    'Scene3DOpts.lightPos' :
+    'Position of the light in the display coordinate system.',
+    'Scene3DOpts.occlusion' :
+    'When selected, volumes in the scene which are behind another volume will '
+    'not be shown. ',
+
+    'Scene3DOpts.zoom' :
+    'Zoom level - distance from the camera to the model space.',
 
     # ViewPanels
 

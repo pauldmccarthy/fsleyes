@@ -29,7 +29,7 @@ GLSL_ATTRIBUTE_TYPES = {
     'float'         : (gl.GL_FLOAT, 1),
     'vec2'          : (gl.GL_FLOAT, 2),
     'vec3'          : (gl.GL_FLOAT, 3),
-    'vec4'          : (gl.GL_FLOAT, 3)
+    'vec4'          : (gl.GL_FLOAT, 4)
 }
 """This dictionary contains mappings between GLSL data types, and their
 corresponding GL types and sizes.
@@ -120,18 +120,22 @@ class GLSLShader(object):
         vertAtts  = vertDecs['attribute']
         fragUnifs = fragDecs['uniform']
 
-        if len(vertUnifs)  > 0: vuNames, vuTypes = zip(*vertUnifs)
-        else:                   vuNames, vuTypes = [], []
-        if len(vertAtts)  > 0:  vaNames, vaTypes = zip(*vertAtts)
-        else:                   vaNames, vaTypes = [], []
-        if len(fragUnifs) > 0:  fuNames, fuTypes = zip(*fragUnifs)
-        else:                   fuNames, fuTypes = [], []
+        if len(vertUnifs)  > 0: vuNames, vuTypes, vuSizes = zip(*vertUnifs)
+        else:                   vuNames, vuTypes, vuSizes = [], [], []
+        if len(vertAtts)  > 0:  vaNames, vaTypes, vaSizes = zip(*vertAtts)
+        else:                   vaNames, vaTypes, vaSizes = [], [], []
+        if len(fragUnifs) > 0:  fuNames, fuTypes, fuSizes = zip(*fragUnifs)
+        else:                   fuNames, fuTypes, fuSizes = [], [], []
 
         allTypes = {}
+        allSizes = {}
 
         for n, t in zip(vuNames, vuTypes): allTypes[n] = t
         for n, t in zip(vaNames, vaTypes): allTypes[n] = t
         for n, t in zip(fuNames, fuTypes): allTypes[n] = t
+        for n, s in zip(vuNames, vuSizes): allSizes[n] = s
+        for n, s in zip(vaNames, vaSizes): allSizes[n] = s
+        for n, s in zip(fuNames, fuSizes): allSizes[n] = s
 
         # Remove duplicate uniform definitions
         # between the vertex/fragment shader -
@@ -145,6 +149,7 @@ class GLSLShader(object):
         self.vertAttDivisors = {}
 
         self.types     = allTypes
+        self.sizes     = allSizes
         self.positions = self.__getPositions(self.program,
                                              self.vertAttributes,
                                              self.vertUniforms,
@@ -236,7 +241,7 @@ class GLSLShader(object):
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
-    def set(self, name, value):
+    def set(self, name, value, size=None):
         """Sets the value for the specified GLSL ``uniform`` variable.
 
         The ``GLSLShader`` keeps a copy of the value of every uniform, to
@@ -250,17 +255,26 @@ class GLSLShader(object):
 
         vPos  = self.positions[name]
         vType = self.types[    name]
+        vSize = self.sizes[    name]
+
+        if size is None:
+            size = 1
 
         setfunc = getattr(self, '_uniform_{}'.format(vType), None)
+
+        if size > vSize:
+            raise RuntimeError('Specified size ({}) is greater than '
+                               'uniform size {} ({})'.format(
+                                   size, name, vSize))
 
         if setfunc is None:
             raise RuntimeError('Unsupported shader program '
                                'type: {}'.format(vType))
 
-        log.debug('Setting shader variable: {}({}) = {}'.format(
-            vType, name, value))
+        log.debug('Setting shader variable: {}({})[{}] = {}'.format(
+            vType, size, name, value))
 
-        setfunc(vPos, value)
+        setfunc(vPos, value, size)
 
 
     def setAtt(self, name, value, divisor=None):
@@ -400,75 +414,84 @@ class GLSLShader(object):
 
 
     def _attribute_bool(self, val):
-        return np.array(val, dtype=np.bool)
+        return np.array(val, dtype=np.bool, copy=False)
 
 
     def _attribute_int(self, val):
-        return np.array(val, dtype=np.int32)
+        return np.array(val, dtype=np.int32, copy=False)
 
 
     def _attribute_float(self, val):
-        return np.array(val, dtype=np.float32)
+        return np.array(val, dtype=np.float32, copy=False)
 
 
     def _attribute_vec2(self, val):
-        return np.array(val, dtype=np.float32).ravel('C')
+        return np.array(val, dtype=np.float32, copy=False).ravel('C')
 
 
     def _attribute_vec3(self, val):
-        return np.array(val, dtype=np.float32).ravel('C')
+        return np.array(val, dtype=np.float32, copy=False).ravel('C')
 
 
     def _attribute_vec4(self, val):
-        return np.array(val, dtype=np.float32).ravel('C')
+        return np.array(val, dtype=np.float32, copy=False).ravel('C')
 
 
-    def _uniform_bool(self, pos, val):
-        gl.glUniform1i(pos, bool(val))
+    def _uniform_bool(self, pos, val, size):
+        val = np.array(val, dtype=np.int32)
+        gl.glUniform1iv(pos, size, val)
 
 
-    def _uniform_int(self, pos, val):
-        gl.glUniform1i(pos, int(val))
+    def _uniform_int(self, pos, val, size):
+        val = np.array(val, dtype=np.int32)
+        gl.glUniform1iv(pos, size, val)
 
 
-    def _uniform_float(self, pos, val):
-        gl.glUniform1f(pos, float(val))
+    def _uniform_float(self, pos, val, size):
+        val = np.array(val, dtype=np.float32)
+        gl.glUniform1fv(pos, size, val)
 
 
-    def _uniform_vec2(self, pos, val):
-        gl.glUniform2fv(pos, 1, np.array(val, dtype=np.float32))
+    def _uniform_vec2(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniform2fv(pos, size, val)
 
 
-    def _uniform_vec3(self, pos, val):
-        gl.glUniform3fv(pos, 1, np.array(val, dtype=np.float32))
+    def _uniform_vec3(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniform3fv(pos, size, val)
 
 
-    def _uniform_vec4(self, pos, val):
-        gl.glUniform4fv(pos, 1, np.array(val, dtype=np.float32))
+    def _uniform_vec4(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniform4fv(pos, size, val)
 
 
-    def _uniform_mat2(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('F')
-        gl.glUniformMatrix2fv(pos, 1, False, val)
+    def _uniform_mat2(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniformMatrix2fv(pos, size, True, val)
 
 
-    def _uniform_mat3(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('F')
-        gl.glUniformMatrix3fv(pos, 1, False, val)
+    def _uniform_mat3(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniformMatrix3fv(pos, size, True, val)
 
 
-    def _uniform_mat4(self, pos, val):
-        val = np.array(val, dtype=np.float32).ravel('F')
-        gl.glUniformMatrix4fv(pos, 1, False, val)
+    def _uniform_mat4(self, pos, val, size):
+        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        gl.glUniformMatrix4fv(pos, 1, True, val)
 
 
-    def _uniform_sampler1D(self, pos, val):
-        gl.glUniform1i(pos, val)
+    def _uniform_sampler1D(self, pos, val, size):
+        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        gl.glUniform1iv(pos, size, val)
 
 
-    def _uniform_sampler2D(self, pos, val):
-        gl.glUniform1i(pos, val)
+    def _uniform_sampler2D(self, pos, val, size):
+        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        gl.glUniform1iv(pos, size, val)
 
 
-    def _uniform_sampler3D(self, pos, val):
-        gl.glUniform1i(pos, val)
+    def _uniform_sampler3D(self, pos, val, size):
+        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        gl.glUniform1iv(pos, size, val)

@@ -53,22 +53,22 @@ class GLTensor(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLTensor``. Prepares the eigenvalue and eigenvector
         textures, and calls the :func:`.gl21.gltensor_funcs.init` function.
 
-        :arg image:   A :class:`.DTIFitTensor` or compatible :class:`.Image`
-                      overlay.
+        :arg image:      A :class:`.DTIFitTensor` or compatible :class:`.Image`
+                         overlay.
 
-        :arg display: The :class:`.Display` instance associated with the
-                      ``image``.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
 
-        :arg xax:     Initial display X axis
+        :arg canvas:     The canvas doing the drawing.
 
-        :arg yax:     Initial display Y axis
+        :arg threedee:   2D or 3D rendering.
         """
 
         prefilter = np.abs
+
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
@@ -134,9 +134,9 @@ class GLTensor(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
-                                   display,
-                                   xax,
-                                   yax,
+                                   displayCtx,
+                                   canvas,
+                                   threedee,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
                                    vectorImage=v1,
@@ -189,7 +189,7 @@ class GLTensor(glvector.GLVector):
         glvector.GLVector.addListeners(self)
 
         name = self.name
-        opts = self.displayOpts
+        opts = self.opts
 
         opts.addListener('lighting',    name, self.asyncUpdateShaderState)
         opts.addListener('orientFlip',  name, self.asyncUpdateShaderState)
@@ -206,7 +206,7 @@ class GLTensor(glvector.GLVector):
         glvector.GLVector.removeListeners(self)
 
         name = self.name
-        opts = self.displayOpts
+        opts = self.opts
 
         opts.removeListener('lighting',         name)
         opts.removeListener('orientFlip',       name)
@@ -240,7 +240,7 @@ class GLTensor(glvector.GLVector):
         return fslgl.gltensor_funcs.updateShaderState(self)
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.preDraw`. Binds the eigenvalue and
         eigenvector textures, calls the :meth:`.GLVector.preDraw` method,
         and the :func:`.gl21.gltensor_funcs.preDraw` function.
@@ -253,18 +253,25 @@ class GLTensor(glvector.GLVector):
         self.l2Texture.bindTexture(gl.GL_TEXTURE12)
         self.l3Texture.bindTexture(gl.GL_TEXTURE13)
 
-        glvector.GLVector.preDraw(self)
-        fslgl.gltensor_funcs.preDraw(self)
+        glvector.GLVector.preDraw(self, xform, bbox)
+        fslgl.gltensor_funcs.preDraw(self, xform, bbox)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Overrides :meth:`.GLVector.draw`. Calls the
-        :func:`.gl21.gltensor_funcs.draw` function.
+    def draw2D(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.draw2D`. Calls the
+        :func:`.gl21.gltensor_funcs.draw2D` function.
         """
-        fslgl.gltensor_funcs.draw(self, zpos, xform, bbox)
+        fslgl.gltensor_funcs.draw2D(self, *args, **kwargs)
 
 
-    def postDraw(self):
+    def draw3D(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.draw3D`. Calls the
+        :func:`.gl21.gltensor_funcs.draw3D` function.
+        """
+        fslgl.gltensor_funcs.draw3D(self, *args, **kwargs)
+
+
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.postDraw`. Unbinds the eigenvalue and
         eigenvector textures, calls the :meth:`.GLVector.postDraw` method, and
         the :func:`.gl21.gltensor_funcs.postDraw` function.
@@ -277,8 +284,8 @@ class GLTensor(glvector.GLVector):
         self.l2Texture.unbindTexture()
         self.l3Texture.unbindTexture()
 
-        glvector.GLVector.postDraw(self)
-        fslgl.gltensor_funcs.postDraw(self)
+        glvector.GLVector.postDraw(self, xform, bbox)
+        fslgl.gltensor_funcs.postDraw(self, xform, bbox)
 
 
     def __tensorResolutionChanged(self, *a):

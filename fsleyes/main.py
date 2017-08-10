@@ -27,7 +27,6 @@ import            os
 import os.path as op
 import            sys
 import            textwrap
-import            argparse
 import            logging
 
 import wx
@@ -130,7 +129,8 @@ class FSLeyesApp(wx.App):
 
 def main(args=None):
     """*FSLeyes* entry point. Shows a :class:`.FSLeyesSplash` screen, parses
-    command line arguments, and shows a :class:`.FSLeyesFrame`.
+    command line arguments, and shows a :class:`.FSLeyesFrame`. Returns
+    an exit code.
     """
 
     if args is None:
@@ -186,6 +186,11 @@ def main(args=None):
     # parsed argparse.Namespace object.
     namespace = [None]
 
+    # If argument parsing bombs out,
+    # we put the exit code here and
+    # return it at the bottom.
+    exitCode = [0]
+
     def init(splash):
 
         # Parse command line arguments. If the
@@ -204,8 +209,9 @@ def main(args=None):
         # (e.g. code coverage) impossible. So I'm
         # catching SystemExit here, and then
         # telling the wx.App to exit gracefully.
-        except SystemExit:
+        except SystemExit as e:
             app.ExitMainLoop()
+            exitCode[0] = e.code
             return
 
         # See FSLeyesSplash.Show
@@ -259,6 +265,7 @@ def main(args=None):
     wx.CallAfter(init, splash)
     app.MainLoop()
     shutdown()
+    return exitCode[0]
 
 
 def hacksAndWorkarounds():
@@ -415,7 +422,7 @@ def parseArgs(argv):
     import fsleyes.perspectives as perspectives
     import fsleyes.version      as version
 
-    parser = argparse.ArgumentParser(
+    parser = parseargs.ArgumentParser(
         add_help=False,
         formatter_class=parseargs.FSLeyesHelpFormatter)
 

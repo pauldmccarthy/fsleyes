@@ -12,6 +12,7 @@ and ``ARB_fragment_program`` extensions.
 
 from __future__ import division
 
+import re
 import logging
 
 import numpy                          as np
@@ -56,7 +57,7 @@ class ARBPShader(object):
        destroy
        setVertParam
        setFragParam
-       setAttr
+       setAtt
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -86,7 +87,7 @@ class ARBPShader(object):
         # Create and set vertex attributes
         vertices, normals = createVertices()
 
-        program.setAttr('normals', normals)
+        program.setAtt('normals', normals)
 
         # Draw the scene
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
@@ -109,15 +110,34 @@ class ARBPShader(object):
     GLSL shader programs.
     """
 
-    def __init__(self, vertSrc, fragSrc, textureMap=None):
+    def __init__(self,
+                 vertSrc,
+                 fragSrc,
+                 includePath,
+                 textureMap=None,
+                 constants=None,
+                 clean=True):
         """Create an ``ARBPShader``.
 
-        :arg vertSrc:    Vertex program source.
+        :arg vertSrc:     Vertex program source.
 
-        :arg fragSrc:    Fragment program source.
+        :arg fragSrc:     Fragment program source.
 
-        :arg textureMap: A dictionary of ``{name : int}`` mappings, specifying
-                         the texture unit assignments.
+        :arg textureMap:  A dictionary of ``{name : int}`` mappings, specifying
+                          the texture unit assignments.
+
+        :arg constants:   A dictionary of ``{name : values}`` mappings,
+                          specifying any constant parameters required by the
+                          programs.
+
+        :arg includePath: Path to a directory which contains any additional
+                          files that may be included in the given source
+                          files.
+
+        :arg clean:       If ``True`` (the default), the vertex and fragment
+                          program source is 'cleaned' before compilation - all
+                          comments, empty lines, and unncessary spaces are
+                          removed before compilation.
         """
 
         decs = parse.parseARBP(vertSrc, fragSrc)
@@ -125,20 +145,28 @@ class ARBPShader(object):
         vParams = decs['vertParam']
         fParams = decs['fragParam']
 
-        if len(vParams) > 0: vParams, vLens = zip(*vParams)
-        else:                vParams, vLens = [], []
-        if len(fParams) > 0: fParams, fLens = zip(*fParams)
-        else:                fParams, fLens = [], []
+        if constants is None: constants      = {}
+        if len(vParams) > 0:  vParams, vLens = zip(*vParams)
+        else:                 vParams, vLens = [], []
+        if len(fParams) > 0:  fParams, fLens = zip(*fParams)
+        else:                 fParams, fLens = [], []
 
         vLens = {name : length for name, length in zip(vParams, vLens)}
         fLens = {name : length for name, length in zip(fParams, fLens)}
 
+        self.clean         = True
+        self.includePath   = includePath
         self.vertParams    = vParams
         self.vertParamLens = vLens
         self.fragParams    = fParams
         self.fragParamLens = fLens
         self.textures      = decs['texture']
         self.attrs         = decs['attr']
+        self.constants     = dict(constants)
+
+        # See the setAtt method for
+        # information about this dict
+        self.__attCache = {}
 
         poses = self.__generatePositions(textureMap)
         vpPoses, fpPoses, texPoses, attrPoses = poses
@@ -154,8 +182,10 @@ class ARBPShader(object):
                                           self.vertParamLens,
                                           self.fragParamPositions,
                                           self.fragParamLens,
+                                          self.constants,
                                           self.texturePositions,
-                                          self.attrPositions)
+                                          self.attrPositions,
+                                          includePath)
 
         vp, fp = self.__compile(vertSrc, fragSrc)
 
@@ -210,6 +240,8 @@ class ARBPShader(object):
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
+        self.__attCache = {}
+
 
     @memoize.Instanceify(memoize.skipUnchanged)
     def setVertParam(self, name, value):
@@ -225,8 +257,12 @@ class ARBPShader(object):
         """
 
         pos   = self.vertParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('F')
+        value = np.array(value, dtype=np.float32).ravel('C')
         nrows = len(value) // 4
+
+        if value.size < 4 or value.size % 4 != 0:
+            raise ValueError('Value for {} looks invalid: '
+                             '{}'.format(name, value))
 
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
 
@@ -247,8 +283,12 @@ class ARBPShader(object):
                   ``True`` if the value was changed, and ``False`` otherwise.
         """
         pos   = self.fragParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('F')
+        value = np.array(value, dtype=np.float32).ravel('C')
         nrows = len(value) // 4
+
+        if value.size < 4 or value.size % 4 != 0:
+            raise ValueError('Value for {} looks invalid: '
+                             '{}'.format(name, value))
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
 
@@ -259,7 +299,7 @@ class ARBPShader(object):
                 row[0], row[1], row[2], row[3])
 
 
-    def setAttr(self, name, value):
+    def setAtt(self, name, value):
         """Sets the value of the specified vertex attribute. Each vertex
         attribute is mapped to a texture coordinate. It is assumed that
         the given value is a ``numpy`` array of shape ``(n, l)``, where
@@ -268,12 +308,19 @@ class ARBPShader(object):
         """
         texUnit = self.__getAttrTexUnit(name)
         size    = value.shape[1]
-        value   = np.array(value, dtype=np.float32)
+        value   = np.array(value, dtype=np.float32, copy=False)
 
-        log.debug('Setting vertex attribute {} = [{} * {}]'.format(
-            name, value.shape[0], size))
+        log.debug('Setting vertex attribute {} [{}] = [{} * {}]'.format(
+            name, texUnit, value.shape[0], size))
 
+        # We must save a ref to the value so
+        # that it doesn't get GC'd by python
+        # before actually being used by GL.
+        # This took me an entire day to
+        # figure out. The cache gets cleared
+        # on every call to unloadAtts.
         value = value.ravel('C')
+        self.__attCache[name] = value
 
         gl.glClientActiveTexture(texUnit)
         gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
@@ -342,6 +389,27 @@ class ARBPShader(object):
         return vpPoses, fpPoses, texPoses, attrPoses
 
 
+    def __cleanSource(self, src):
+        """Strips out comments and blank lines from the given string, unless
+        ``clean is False`` (as passed into :meth:`__init__`).
+        """
+
+        if not self.clean:
+            return src
+
+        # strip out comments and blank lines
+        lines = src.split('\n')
+        lines = [l.strip() for l in lines]
+        lines = [l         for l in lines if l    != '']
+        lines = [l         for l in lines if l[0] != '#']
+        src  = '\n'.join(lines)
+
+        # Squeeze duplicate spaces
+        src = re.sub(' +', ' ', src)
+
+        return src
+
+
     def __compile(self, vertSrc, fragSrc):
         """Called by :meth:`__init__`. Compiles the vertex and fragment
         programs and returns references to the compiled programs.
@@ -351,13 +419,16 @@ class ARBPShader(object):
         gl.glEnable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glEnable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
 
-        fragProg = arbfp.glGenProgramsARB(1)
-        vertProg = arbvp.glGenProgramsARB(1)
-
-        # Make sure the source is plain
-        # ASCII - not unicode
+        # Clear out unnecessary stuff from
+        # the source, and make sure it is
+        # plain ASCII - not unicode.
+        vertSrc = self.__cleanSource(vertSrc)
+        fragSrc = self.__cleanSource(fragSrc)
         vertSrc = vertSrc.encode('ascii')
         fragSrc = fragSrc.encode('ascii')
+
+        fragProg = arbfp.glGenProgramsARB(1)
+        vertProg = arbvp.glGenProgramsARB(1)
 
         # vertex program
         try:

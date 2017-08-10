@@ -87,6 +87,15 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    discardClipped = props.Boolean(default=False)
+    """Flag which controls clipping. When the mesh is coloured according to
+    some data (the :attr:`vertexData` property), vertices with a data value
+    outside of the clipping range are either discarded (not drawn), or
+    they are still drawn, but not according to the data, rather with the
+    flat :attr:`colour`.
+    """
+
+
     vertexData = props.Choice((None, ))
     """May be populated with the names of files which contain data associated
     with each vertex in the mesh, that can be used to colour the mesh. When
@@ -165,6 +174,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    wireframe = props.Boolean(default=False)
+    """3D only. If ``True``, the mesh is rendered as a wireframe. """
+
+
+
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance. All arguments are passed through
         to the :class:`.DisplayOpts` constructor.
@@ -193,19 +207,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__vertexDataRange = None
 
         nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'transform'])
+        nounbind.extend(['refImage', 'coordSpace', 'transform', 'vertexData'])
         kwargs['nounbind'] = nounbind
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-
-        # TODO Only child instances should
-        #      listen. Alternately, vertexData
-        #      should be in nounbind.
-        self.addListener('vertexData',
-                         self.name,
-                         self.__vertexDataChanged,
-                         immediate=True)
 
         # A number of callback functions are used to
         # keep the refImage, coordSpace and transform
@@ -244,6 +250,19 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
             self.__overlayListChanged()
             self.__updateBounds()
+
+        # Parent instance doesn't need to
+        # worry about loading vertex data
+        else:
+            self.addListener('vertexData',
+                             self.name,
+                             self.__vertexDataChanged,
+                             immediate=True)
+
+        # If we have inherited values from a
+        # parent instance, make sure the vertex
+        # data (if set) is initialised
+        self.__vertexDataChanged()
 
         # If a reference image has not
         # been set on the parent MeshOpts
@@ -338,10 +357,16 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         display = self.display
 
+        # Only apply bricon if there is no vertex data assigned
+        if self.vertexData is None:
+            brightness = display.brightness / 100.0
+            contrast   = display.contrast   / 100.0
+        else:
+            brightness = 0.5
+            contrast   = 0.5
+
         colour = list(fslcmaps.applyBricon(
-            self.colour[:3],
-            display.brightness / 100.0,
-            display.contrast   / 100.0))
+            self.colour[:3], brightness, contrast))
 
         colour.append(display.alpha / 100.0)
 
@@ -631,6 +656,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         try:
             if self.vertexData is not None:
+                log.debug('Loading vertex data: {}'.format(self.vertexData))
                 vdata      = self.overlay.getVertexData(self.vertexData)
                 vdataRange = np.nanmin(vdata), np.nanmax(vdata)
 

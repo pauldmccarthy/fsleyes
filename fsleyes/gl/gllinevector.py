@@ -21,7 +21,6 @@ import numpy                as np
 import fsl.data.dtifit      as dtifit
 import fsleyes.gl           as fslgl
 import fsleyes.gl.glvector  as glvector
-import fsleyes.gl.routines  as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -53,13 +52,13 @@ class GLLineVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, display, xax, yax):
+    def __init__(self, image, displayCtx, canvas, threedee):
         """Create a ``GLLineVector`` instance.
 
-        :arg image:   An :class:`.Image` or :class:`.DTIFitTensor` instance.
-        :arg display: The associated :class:`.Display` instance.
-        :arg xax:     Initial display X axis
-        :arg yax:     Initial display Y axis
+        :arg image:      An :class:`.Image` or :class:`.DTIFitTensor` instance.
+        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg canvas:     The canvas doing the drawing.
+        :arg threedee:   2D or 3D rendering.
         """
 
         # If the overlay is a DTIFitTensor, use the
@@ -70,14 +69,14 @@ class GLLineVector(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
-                                   display,
-                                   xax,
-                                   yax,
+                                   displayCtx,
+                                   canvas,
+                                   threedee,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))
 
-        self.displayOpts.addListener('lineWidth', self.name, self.notify)
+        self.opts.addListener('lineWidth', self.name, self.notify)
 
 
     def destroy(self):
@@ -86,7 +85,7 @@ class GLLineVector(glvector.GLVector):
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
         """
-        self.displayOpts.removeListener('lineWidth', self.name)
+        self.opts.removeListener('lineWidth', self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -117,36 +116,43 @@ class GLLineVector(glvector.GLVector):
         return fslgl.gllinevector_funcs.updateShaderState(self)
 
 
-    def preDraw(self):
+    def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``preDraw``
         function.
         """
-        glvector.GLVector.preDraw(self)
-        fslgl.gllinevector_funcs.preDraw(self)
+        glvector.GLVector.preDraw(self, xform, bbox)
+        fslgl.gllinevector_funcs.preDraw(self, xform, bbox)
 
 
-    def draw(self, zpos, xform=None, bbox=None):
-        """Overrides :meth:`.GLObject.draw`. Calls the OpenGL version-specific
-        ``draw`` function.
+    def draw2D(self, *args, **kwargs):
+        """Overrides :meth:`.GLObject.draw2D`. Calls the OpenGL
+        version-specific ``draw2D`` function.
         """
-        fslgl.gllinevector_funcs.draw(self, zpos, xform, bbox)
+        fslgl.gllinevector_funcs.draw2D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, xforms):
+    def draw3D(self, *args, **kwargs):
+        """Overrides :meth:`.GLObject.draw3D`. Calls the OpenGL
+        version-specific ``draw3D`` function.
+        """
+        fslgl.gllinevector_funcs.draw3D(self, *args, **kwargs)
+
+
+    def drawAll(self, *args, **kwargs):
         """Overrides :meth:`.GLObject.drawAll`. Calls the OpenGL
         version-specific ``drawAll`` function.
         """
-        fslgl.gllinevector_funcs.drawAll(self, zposes, xforms)
+        fslgl.gllinevector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self):
+    def postDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self)
-        fslgl.gllinevector_funcs.postDraw(self)
+        glvector.GLVector.postDraw(self, xform, bbox)
+        fslgl.gllinevector_funcs.postDraw(self, xform, bbox)
 
 
 class GLLineVertices(object):
@@ -163,7 +169,7 @@ class GLLineVertices(object):
 
 
     Later, when the line vectors from a 2D slice  of the image need to be
-    displayed, the :meth:`getVertices` method can be used to extract the
+    displayed, the :meth:`getVertices2D` method can be used to extract the
     vertices and coordinates from the slice.
 
 
@@ -218,7 +224,7 @@ class GLLineVertices(object):
         evaluates to ``False``, the vertices need to be refreshed (via a
         call to :meth:`refresh`).
         """
-        opts = glvec.displayOpts
+        opts = glvec.opts
         return (hash(opts.transform)  ^
                 hash(opts.orientFlip) ^
                 hash(opts.directed)   ^
@@ -239,7 +245,7 @@ class GLLineVertices(object):
         called ``vertices``.
         """
 
-        opts  = glvec.displayOpts
+        opts  = glvec.opts
         image = glvec.vectorImage
         shape = image.shape
 
@@ -292,7 +298,7 @@ class GLLineVertices(object):
         self.__hash   = self.calculateHash(glvec)
 
 
-    def getVertices(self, zpos, glvec, bbox=None):
+    def getVertices2D(self, glvec, zpos, axes, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
@@ -301,11 +307,12 @@ class GLLineVertices(object):
         called.
         """
 
-        image = glvec.image
-        shape = image.shape[:3]
+        image    = glvec.image
+        shape    = image.shape[:3]
+        xax, yax = axes[:2]
 
         vertices  = self.vertices
-        voxCoords = glvec.generateVoxelCoordinates(zpos, bbox)
+        voxCoords = glvec.generateVoxelCoordinates2D(zpos, axes, bbox)
 
         # Turn the voxel coordinates into
         # indices suitable for looking up
