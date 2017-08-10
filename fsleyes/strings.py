@@ -127,23 +127,10 @@ messages = TypeDict({
     'AtlasInfoPanel.loadAtlasError' : 'An error occurred while trying '
                                       'to load the atlas "{}":\nDetails: {}',
 
-    'CanvasPanel.screenshot'            : 'Save screenshot',
-    'CanvasPanel.screenshot.notSaved'   : 'Overlay {} needs saving before a '
-                                          'screenshot can be taken.',
-    'CanvasPanel.screenshot.pleaseWait' : 'Saving screenshot to {}...',
-    'CanvasPanel.screenshot.error'      : 'An error occurred saving the '
-                                          'screenshot.',
-
     'CanvasPanel.showCommandLineArgs.title'   : 'Scene parameters',
     'CanvasPanel.showCommandLineArgs.message' : 'Use these parameters on the '
                                                 'command line to recreate '
                                                 'the current scene',
-
-    'PlotPanel.screenshot'              : 'Save screenshot',
-
-    'PlotPanel.screenshot.error'       : 'An error occurred while saving the '
-                                         'screenshot.\n\n'
-                                         'Details: {}',
 
     'PlotPanel.preparingData'          : 'Preparing data - please wait...',
 
@@ -206,6 +193,11 @@ messages = TypeDict({
     'Load the overlay in the label file',
     'MelodicClassificationPanel.diffMelDir.overlay' :
     'Apply the labels to the current overlay',
+
+
+    'ScreenshotAction.screenshot' : 'Save screenshot',
+    'ScreenshotAction.pleaseWait' : 'Saving screenshot to {}...',
+    'ScreenshotAction.error'      : 'An error occurred saving the screenshot.',
 
     'SaveOverlayAction.saveError' :
     'An error occurred while saving the file {}.',
@@ -307,11 +299,6 @@ titles = TypeDict({
     'SliceCanvas.globjectError'  : 'Error initialising display',
     'Texture3D.dataError'        : 'Error updating data',
 
-    'CanvasPanel.screenshot'          : 'Save screenshot',
-    'CanvasPanel.screenshot.notSaved' : 'Save overlay before continuing',
-    'CanvasPanel.screenshot.error'    : 'Error saving screenshot',
-
-    'PlotPanel.screenshot.error'      : 'Error saving screenshot',
 
     'AtlasInfoPanel'       : 'Atlas information',
     'AtlasOverlayPanel'    : 'Atlas search',
@@ -356,6 +343,8 @@ titles = TypeDict({
     'MelodicClassificationPanel.loadError'  : 'Error loading FIX/Melview file',
     'MelodicClassificationPanel.saveError'  : 'Error saving FIX/Melview file',
 
+    'ScreenshotAction.screenshot'          : 'Save screenshot',
+    'ScreenshotAction.error'               : 'Error saving screenshot',
     'ClearPerspectiveAction.confirmClear'  : 'Clear all perspectives?',
     'DiagnosticReportAction.saveReport'    : 'Save diagnostic report',
     'SaveOverlayAction.overwrite'          : 'Overwrite existing file?',
@@ -527,12 +516,6 @@ labels = TypeDict({
     'LocationPanel.notAvailable'          : 'N/A',
 
     'OverlayListPanel.noDataSource'       : '[in memory]',
-
-    'CanvasPanel.screenshot.notSaved.save'   : 'Save overlay now',
-    'CanvasPanel.screenshot.notSaved.skip'   : 'Skip overlay (will not appear '
-                                               'in screenshot)',
-    'CanvasPanel.screenshot.notSaved.cancel' : 'Cancel screenshot',
-
 
     'LookupTablePanel.selectAll'   : 'Select all',
     'LookupTablePanel.selectNone'  : 'Deselect all',
