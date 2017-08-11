@@ -82,6 +82,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             overlayList,
             displayCtx)
 
+        self.__lbCanvas.bindProps('pos', displayCtx, 'location')
         self.__lbCanvas.bindProps('zax',             sceneOpts)
         self.__lbCanvas.bindProps('bgColour',        sceneOpts)
         self.__lbCanvas.bindProps('cursorColour',    sceneOpts)
@@ -107,12 +108,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
-        # When the display context location changes,
-        # make sure the location is shown on the canvas
-        self.__lbCanvas.pos.xyz = self._displayCtx.location
-        self._displayCtx .addListener('location',
-                                      self._name,
-                                      self.__onLocationChange)
         self._displayCtx .addListener('selectedOverlay',
                                       self._name,
                                       self.__selectedOverlayChanged)
@@ -166,7 +161,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self._displayCtx .removeListener('location',         self._name)
         self._displayCtx .removeListener('selectedOverlay',  self._name)
         self._displayCtx .removeListener('displaySpace',     self._name)
         self._displayCtx .removeListener('radioOrientation', self._name)
@@ -366,18 +360,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         if sliceHeight > 0:
             self.__lbCanvas.nrows = int(height / sliceHeight)
-
-
-    def __onLocationChange(self, *a):
-        """Called when the :attr:`.DisplayContext.location` changes.
-
-        Updates the location shown on the :class:`.LightBoxCanvas`.
-        """
-
-        xpos = self._displayCtx.location.getPos(self.__lbCanvas.xax)
-        ypos = self._displayCtx.location.getPos(self.__lbCanvas.yax)
-        zpos = self._displayCtx.location.getPos(self.__lbCanvas.zax)
-        self.__lbCanvas.pos.xyz = (xpos, ypos, zpos)
 
 
     def __ncolsChanged(self, *a):

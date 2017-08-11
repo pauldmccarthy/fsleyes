@@ -81,7 +81,11 @@ class SliceCanvasOpts(props.HasProperties):
                        alternates=[['x', 'X'], ['y', 'Y'], ['z', 'Z']],
                        allowStr=True)
     """The display coordinate system axis to be used as the screen *depth*
-    axis.
+    axis. The canvas x and y axes are derived from this value:
+
+     - If ``zax == 0``, ``xax, yax == 1, 2``
+     - If ``zax == 1``, ``xax, yax == 0, 2``
+     - If ``zax == 2``, ``xax, yax == 0, 1``
     """
 
 

@@ -186,6 +186,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # its name is stored here.
         self.__editMenuTitle = None
 
+        self.__xcanvas.bindProps('pos', displayCtx, 'location')
+        self.__ycanvas.bindProps('pos', displayCtx, 'location')
+        self.__zcanvas.bindProps('pos', displayCtx, 'location')
+
         self.__xcanvas.bindProps('showCursor',   sceneOpts)
         self.__ycanvas.bindProps('showCursor',   sceneOpts)
         self.__zcanvas.bindProps('showCursor',   sceneOpts)
@@ -237,10 +241,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                 name,
                                 self.__overlayListChanged)
 
-        # Callback for the display context location - when it
-        # changes, update the displayed canvas locations
-        displayCtx.addListener('location', name, self.__locationChanged)
-
         # Callbacks for toggling x/y/z canvas display
         sceneOpts.addListener('showXCanvas', name, self.__toggleCanvas)
         sceneOpts.addListener('showYCanvas', name, self.__toggleCanvas)
@@ -266,7 +266,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__radioOrientationChanged()
         self.__refreshLayout(refresh=False)
         self.__overlayListChanged()
-        self.__locationChanged()
         self.centrePanelLayout()
         self.initProfile()
 
@@ -878,20 +877,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.Layout()
             self.getContentPanel().Layout()
             self.Refresh()
-
-
-    def __locationChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.locavtion` property changes.
-
-        Sets the currently displayed x/y/z position (in display
-        coordinates) on each of the :class:`.SliceCanvas` panels.
-        """
-
-        xpos, ypos, zpos = self._displayCtx.location.xyz
-
-        self.__xcanvas.pos.xyz = [ypos, zpos, xpos]
-        self.__ycanvas.pos.xyz = [xpos, zpos, ypos]
-        self.__zcanvas.pos.xyz = [xpos, ypos, zpos]
 
 
 class OrthoFrame(wx.Frame):

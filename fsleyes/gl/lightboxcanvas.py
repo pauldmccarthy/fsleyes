@@ -158,12 +158,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         slicecanvas.SliceCanvas.destroy(self)
 
 
-    def worldToCanvas(self, xpos, ypos, zpos):
-        """Given an x/y/z location in the display coordinate system (with
-        xpos corresponding to the horizontal screen axis, ypos to the vertical
-        axis, and zpos to the depth axis), converts it into an x/y position,
-        in the coordinate system of this ``LightBoxCanvas``.
+    def worldToCanvas(self, pos):
+        """Given an x/y/z location in the display coordinate system, converts
+        it into an x/y position, in the coordinate system of this
+        ``LightBoxCanvas``.
         """
+        xpos    = pos[self.xax]
+        ypos    = pos[self.yax]
+        zpos    = pos[self.zax]
         sliceno = int(np.floor((zpos - self.zrange.xlo) / self.sliceSpacing))
 
         xlen = self.displayCtx.bounds.getLen(self.xax)
@@ -441,7 +443,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         Makes sure that the corresponding slice is visible.
         """
         # figure out where we are in the canvas world
-        canvasX, canvasY = self.worldToCanvas(*self.pos.xyz)
+        canvasX, canvasY = self.worldToCanvas(self.pos.xyz)
 
         # See the _updateDisplayBounds method for an
         # explanation of the _realBounds attribute
@@ -455,8 +457,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return
 
         # figure out what row we're on
-        sliceno = int(np.floor((self.pos.z - self.zrange.xlo) /
-                                self.sliceSpacing))
+        zpos    = self.pos[self.zax]
+        sliceno = int(np.floor((zpos - self.zrange.xlo) / self.sliceSpacing))
         row     = int(np.floor(sliceno / self.ncols))
 
         # and make sure that row is visible
@@ -738,8 +740,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         location.
         """
 
-        sliceno = int(np.floor((self.pos.z - self.zrange.xlo) /
-                               self.sliceSpacing))
+        zpos    = self.pos[self.zax]
+        sliceno = int(np.floor((zpos - self.zrange.xlo) / self.sliceSpacing))
 
         xlen    = self.displayCtx.bounds.getLen(self.xax)
         ylen    = self.displayCtx.bounds.getLen(self.yax)
@@ -770,8 +772,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :attr:`.SliceCanvas.pos` property).
         """
 
-        sliceno = int(np.floor((self.pos.z - self.zrange.xlo) /
-                               self.sliceSpacing))
+        zpos    = self.pos[self.zax]
+        sliceno = int(np.floor((zpos - self.zrange.xlo) / self.sliceSpacing))
         xlen    = self.displayCtx.bounds.getLen(self.xax)
         ylen    = self.displayCtx.bounds.getLen(self.yax)
         xmin    = self.displayCtx.bounds.getLo( self.xax)
@@ -788,7 +790,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # in GL space, the top row is actually the bottom row
         row = self._totalRows - row - 1
 
-        xpos, ypos = self.worldToCanvas(*self.pos.xyz)
+        xpos, ypos = self.worldToCanvas(self.pos.xyz)
 
         xverts = np.zeros((2, 2))
         yverts = np.zeros((2, 2))
@@ -918,11 +920,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                 self.xax,
                 self.yax)
 
-        self.getAnnotations().draw(self.pos.z)
-
         if len(self.overlayList) > 0:
             if self.showCursor:     self._drawCursor()
             if self.showGridLines:  self._drawGridLines()
             if self.highlightSlice: self._drawSliceHighlight()
 
-        self._annotations.draw(self.pos.z, skipHold=True)
+        self.getAnnotations().draw(self.pos[self.zax])
