@@ -711,9 +711,12 @@ class CanvasPanel(viewpanel.ViewPanel):
         return False
 
 
-    def __doMovieUpdate(self, overlay, opts):
+    def doMovieUpdate(self, overlay, opts):
         """Called by :meth:`__movieFrame`. Updates the properties on the
         given ``opts`` instance to move forward one frame in the movie.
+
+        This method may be overridden by sub-classes for custom behaviour
+        (e.g. the :class:`.Scene3DPanel`).
         """
 
         axis = self.movieAxis
@@ -762,7 +765,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         def other():
 
-            bmin, bmax = opts.bounds.getRangea(axis)
+            bmin, bmax = opts.bounds.getRange(axis)
             delta      = (bmax - bmin) / 75.0
 
             pos = self._displayCtx.location.getPos(axis)
@@ -792,6 +795,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         :returns: ``True`` if the movie loop was started, ``False`` otherwise.
         """
 
+        from . import scene3dpanel
+
         if self.destroyed():   return False
         if not self.movieMode: return False
 
@@ -814,7 +819,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.FreezeDraw()
             c.FreezeSwapBuffers()
 
-        self.__doMovieUpdate(overlay, opts)
+        self.doMovieUpdate(overlay, opts)
 
         # Now we get refs to *all* GLObjects managed
         # by every canvas - we have to wait until
@@ -835,7 +840,16 @@ class CanvasPanel(viewpanel.ViewPanel):
         rate    = self.movieRate
         rateMin = self.getConstraint('movieRate', 'minval')
         rateMax = self.getConstraint('movieRate', 'maxval')
-        rate    = (rateMin + (rateMax - rate)) / 1000.0
+
+        # Special case/hack - if this is a Scene3DPanel,
+        # and the movie axis is X/Y/Z, we always
+        # use a fast rate. Instead, the Scene3dPanel
+        # will increase/decrease the rotation angle
+        # to speed up/slow down the movie instead.
+        if isinstance(self, scene3dpanel.Scene3DPanel) and self.movieAxis < 3:
+            rate = rateMax
+
+        rate = (rateMin + (rateMax - rate)) / 1000.0
 
         # The canvas refreshes are performed by the
         # __syncMovieRefresh or __unsyncMovieRefresh
