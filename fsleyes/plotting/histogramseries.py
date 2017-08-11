@@ -6,6 +6,14 @@
 #
 """This module provides the :class:`HistogramSeries` class, used by the
 :class:`.HistogramPanel` for plotting histogram data.
+
+Two standalone functions are also defined in this module:
+
+  .. autosummary::
+     :nosignatures:
+
+     histogram
+     autoBin
 """
 
 import logging
@@ -225,7 +233,7 @@ class HistogramSeries(dataseries.DataSeries):
                 self.dataRange.xlo  = dmin
                 self.dataRange.xhi  = dmax + dist
 
-                self.nbins = self.__autoBin(nzData, self.dataRange.x)
+                self.nbins = autoBin(nzData, self.dataRange.x)
 
             if not self.overlay.is4DImage():
 
@@ -352,7 +360,7 @@ class HistogramSeries(dataseries.DataSeries):
             else:                    data = self.__clippedFiniteData
 
         if self.autoBin:
-            nbins = self.__autoBin(data, self.dataRange.x)
+            nbins = autoBin(data, self.dataRange.x)
 
             if self.hasListener('nbins', self.__name):
                 self.disableListener('nbins', self.__name)
@@ -360,22 +368,18 @@ class HistogramSeries(dataseries.DataSeries):
             if self.hasListener('nbins', self.__name):
                 self.enableListener('nbins', self.__name)
 
-        # Calculate bin edges
-        bins = np.linspace(self.dataRange.xlo,
-                           self.dataRange.xhi,
-                           self.nbins + 1)
-
-        if self.includeOutliers:
-            bins[ 0] = self.dataRange.xmin
-            bins[-1] = self.dataRange.xmax
-
-        # Calculate the histogram
-        histX    = bins
-        histY, _ = np.histogram(data.flat, bins=bins)
+        hrange              = (self.dataRange.xlo,  self.dataRange.xhi)
+        drange              = (self.dataRange.xmin, self.dataRange.xmax)
+        histX, histY, nvals = histogram(data,
+                                        nbins,
+                                        hrange,
+                                        drange,
+                                        self.includeOutliers,
+                                        True)
 
         self.__xdata = histX
         self.__ydata = histY
-        self.__nvals = histY.sum()
+        self.__nvals = nvals
 
         status.update('Histogram for {} calculated.'.format(
             self.overlay.name))
@@ -388,36 +392,90 @@ class HistogramSeries(dataseries.DataSeries):
                       self.nbins))
 
 
-    def __autoBin(self, data, dataRange):
-        """Calculates the number of bins which should be used for a histogram
-        of the given data. The calculation is identical to that implemented
-        in the original FSLView.
+def histogram(data,
+              nbins,
+              histRange,
+              dataRange,
+              includeOutliers=False,
+              count=True):
+    """Calculates a histogram of the given ``data``.
 
-        :arg data:      The data that the histogram is to be calculated on.
+    :arg data:            The data to calculate a histogram foe
 
-        :arg dataRange: A tuple containing the ``(min, max)`` histogram range.
-        """
+    :arg nbins:           Number of bins to use
 
-        dMin, dMax = dataRange
-        dRange     = dMax - dMin
+    :arg histRange:       Tuple containing  the ``(low, high)`` data range
+                          that the histogram is to be calculated on.
 
-        if np.isclose(dRange, 0):
-            return 1
+    :arg dataRange:       Tuple containing  the ``(min, max)`` range of
+                          values in the data
 
-        binSize = np.power(10, np.ceil(np.log10(dRange) - 1) - 1)
+    :arg includeOutliers: If ``True``, the outermost bins will contain counts
+                          for values which are outside the ``histRange``.
+                          Defaults to ``False``.
 
-        nbins = dRange / binSize
+    :arg count:           If ``True`` (the default), the raw histogram counts
+                          are returned. Otherwise they are converted into
+                          probabilities.
 
-        while nbins < 100:
-            binSize /= 2
-            nbins    = dRange / binSize
+    :returns:             A tuple containing:
+                            - The ``x`` histogram data (bin edges)
+                            - The ``y`` histogram data
+                            - The total number of values that were used
+                              in the histogram calculation
+    """
 
-        if issubclass(data.dtype.type, np.integer):
-            binSize = max(1, np.ceil(binSize))
+    hlo, hhi = histRange
+    dlo, dhi = dataRange
 
-        adjMin = np.floor(dMin / binSize) * binSize
-        adjMax = np.ceil( dMax / binSize) * binSize
+    # Calculate bin edges
+    bins = np.linspace(hlo, hhi, nbins + 1)
 
-        nbins = int((adjMax - adjMin) / binSize) + 1
+    if includeOutliers:
+        bins[ 0] = dlo
+        bins[-1] = dhi
 
-        return nbins
+    # Calculate the histogram
+    histX    = bins
+    histY, _ = np.histogram(data.flat, bins=bins)
+    nvals    = histY.sum()
+
+    if not count:
+        histY = histY / nvals
+
+    return histX, histY, nvals
+
+
+def autoBin(data, dataRange):
+    """Calculates the number of bins which should be used for a histogram
+    of the given data. The calculation is identical to that implemented
+    in the original FSLView.
+
+    :arg data:      The data that the histogram is to be calculated on.
+
+    :arg dataRange: A tuple containing the ``(min, max)`` histogram range.
+    """
+
+    dMin, dMax = dataRange
+    dRange     = dMax - dMin
+
+    if np.isclose(dRange, 0):
+        return 1
+
+    binSize = np.power(10, np.ceil(np.log10(dRange) - 1) - 1)
+
+    nbins = dRange / binSize
+
+    while nbins < 100:
+        binSize /= 2
+        nbins    = dRange / binSize
+
+    if issubclass(data.dtype.type, np.integer):
+        binSize = max(1, np.ceil(binSize))
+
+    adjMin = np.floor(dMin / binSize) * binSize
+    adjMax = np.ceil( dMax / binSize) * binSize
+
+    nbins = int((adjMax - adjMin) / binSize) + 1
+
+    return nbins

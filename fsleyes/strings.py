@@ -225,11 +225,14 @@ messages = TypeDict({
                                             'as the first column?',
 
     'AddMaskDataSeriesAction.selectMask'  :
-    'Choose a mask to extract the time series data (mean across\n'
-    'voxels, weighted by mask values) from {}:',
+    'Choose an ROI mask to extract the time series data (mean across\n'
+    'voxels, optionally weighted by mask values) from {}:',
 
     'AddMaskDataSeriesAction.weighted'  :
-    'Calculate weighted mean using the mask voxel values as weights',
+    'Calculate weighted mean using the ROI mask voxel values as weights',
+
+    'AddROIHistogramAction.selectMask' :
+    'Choose an ROI mask to plot the histogram from {} for:',
 
     'LoadAtlasAction.error'       :
     'An error occurred loading the atlas specification {}.',
@@ -371,7 +374,10 @@ titles = TypeDict({
 
 
     'AddMaskDataSeriesAction.selectMask'  :
-    'Mask time series from {}',
+    'ROI time series from {}',
+
+    'AddROIHistogramAction.selectMask'  :
+    'ROI histogram from {}',
 
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
@@ -477,11 +483,12 @@ actions = TypeDict({
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar',
-    'TimeSeriesPanel.addMaskDataSeries'             : 'Add masked time series',
+    'TimeSeriesPanel.addMaskDataSeries'             : 'Add time series from ROI',
     'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
     'HistogramPanel.toggleHistogramOverlay'         : 'Histogram overlay',
+    'HistogramPanel.addROIHistogram'                : 'Add histogram from ROI',
     'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
@@ -1296,7 +1303,7 @@ plotLabels = {
 about = {
     'title'      : 'About FSLeyes',
     'author'     : 'Paul McCarthy',
-    'email'      : 'paulmc@fmrib.ox.ac.uk',
+    'email'      : 'paul.mccarthy@ndcn.ox.ac.uk',
     'company'    : 'FMRIB Centre, Oxford, UK',
     'version'    : 'FSLeyes version: {}',
     'glVersion'  : 'OpenGL version: {}',
@@ -1318,7 +1325,7 @@ about = {
      - pillow [{}]  (http://python-pillow.org/)
      - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/props)
      - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
-     - fslpy [{}] (https://git.fmrib.ox.ac.uk/paulmc/fslpy)
+     - fslpy [{}] (https://git.fmrib.ox.ac.uk/fsl/fslpy)
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
      - scipy [{}] (http://www.scipy.org)
