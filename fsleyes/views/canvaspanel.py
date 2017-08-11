@@ -9,22 +9,14 @@ class for all panels which display overlays using ``OpenGL``.
 """
 
 
-import os
-import os.path as op
 import logging
 
 import wx
 
-import numpy            as np
-import matplotlib.image as mplimg
-
 import fsl.utils.async                             as async
-import fsl.utils.settings                          as fslsettings
 from   fsl.utils.platform  import platform         as fslplatform
 import fsleyes_props                               as props
-import fsleyes_widgets.utils.status                as status
 
-import fsleyes.strings                             as strings
 import fsleyes.actions                             as actions
 import fsleyes.colourmaps                          as colourmaps
 import fsleyes.displaycontext                      as displayctx
@@ -297,8 +289,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                                       self.__name,
                                       self.__movieModeChanged)
 
-        # Canvas/colour bar layout is managed in
-        # the layoutColourBarAndCanvas method
+        # Canvas/colour bar layout is managed
+        # in the layoutContainerPanel method
         self.__colourBar = None
 
         self.__opts.addListener('colourBarLocation',
@@ -307,6 +299,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts.addListener('showColourBar',
                                 self.__name,
                                 self.__colourBarPropsChanged)
+        self.__opts.addListener('bgColour',
+                                self.__name,
+                                self.__bgColourChanged)
 
 
     def destroy(self):
@@ -323,6 +318,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         self._displayCtx .removeListener('selectedOverlay',   self.__name)
         self.__opts      .removeListener('colourBarLocation', self.__name)
         self.__opts      .removeListener('showColourBar',     self.__name)
+        self.__opts      .removeListener('bgColour',          self.__name)
 
         viewpanel.ViewPanel.destroy(self)
 
@@ -574,6 +570,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             bg = self.getSceneOptions().bgColour
             fg = colourmaps.complementaryColour(bg)
             self.__colourBar.getCanvas().textColour = fg
+            self.__colourBar.getCanvas().bgColour   = bg
 
         self.__opts.bindProps('colourBarLabelSide',
                               self.__colourBar,
@@ -604,6 +601,35 @@ class CanvasPanel(viewpanel.ViewPanel):
         :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
         """
         self.centrePanelLayout()
+
+
+    def __bgColourChanged(self, *a, **kwa):
+        """Called when the :class:`.SceneOpts.bgColour` property changes.
+        Updates background/foreground colours.
+
+        The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
+        ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
+        don't need to manually update them.
+
+        :arg refresh: Must be passed as a keyword argument. If ``True`` (the
+                      default), this ``OrthoPanel`` is refreshed.
+        """
+        refresh = kwa.pop('refresh', True)
+
+        sceneOpts = self.getSceneOptions()
+        canvases  = self.getGLCanvases()
+        bg        = sceneOpts.bgColour
+        fg        = colourmaps.complementaryColour(bg)
+
+        if self.__colourBar is not None:
+            cbCanvas = self.__colourBar.getCanvas()
+            cbCanvas.textColour = fg
+            cbCanvas.bgColour   = bg
+            canvases.append(cbCanvas)
+
+        if refresh:
+            self.Refresh()
+            self.Update()
 
 
     def __movieModeChanged(self, *a):

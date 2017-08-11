@@ -74,6 +74,10 @@ class ColourBarCanvas(props.HasProperties):
     """Colour to use for the colour bar label. """
 
 
+    bgColour = props.Colour(default=(0, 0, 0, 1))
+    """Colour to use for the background. """
+
+
     def __init__(self):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
@@ -192,6 +196,7 @@ class ColourBarCanvas(props.HasProperties):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
 
+        gl.glClearColor(*self.bgColour)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)

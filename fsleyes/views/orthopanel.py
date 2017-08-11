@@ -203,8 +203,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas.bindProps('cursorColour', sceneOpts)
 
         # Callbacks for ortho panel layout options
-        sceneOpts.addListener('layout',   name, self.__refreshLayout)
-        sceneOpts.addListener('bgColour', name, self.__bgColourChanged)
+        sceneOpts.addListener('layout', name, self.__refreshLayout)
 
         # Individual zoom control for each canvas
         self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
@@ -266,7 +265,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Initialise the panel
         self.__radioOrientationChanged()
         self.__refreshLayout(refresh=False)
-        self.__bgColourChanged(refresh=False)
         self.__overlayListChanged()
         self.__locationChanged()
         self.centrePanelLayout()
@@ -662,48 +660,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         menuBar.Remove(idx)
         wx.CallAfter(editMenu.Destroy)
-
-
-    def __bgColourChanged(self, *a, **kwa):
-        """Called when the :class:`.SceneOpts.bgColour` property changes.
-        Updates the panel and anatomical label background/foreground
-        colours.
-
-        The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
-        ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
-        don't need to manually update them.
-
-        :arg refresh: Must be passed as a keyword argument. If ``True`` (the
-                      default), this ``OrthoPanel`` is refreshed.
-        """
-
-        refresh = kwa.pop('refresh', True)
-
-        sceneOpts = self.getSceneOptions()
-        bg        = sceneOpts.bgColour
-        fg        = colourmaps.complementaryColour(bg)
-
-        # All wxwidgets things need colours
-        # to be specified between 0 and 255
-        intbg = [int(round(c * 255)) for c in bg]
-        intfg = [int(round(c * 255)) for c in fg]
-
-        self.getContentPanel().SetBackgroundColour(intbg)
-        self.getContentPanel().SetForegroundColour(intfg)
-
-        sceneOpts.labelColour = fg
-
-        cbCanvas = self.getColourBarCanvas()
-        if cbCanvas is not None:
-            cbCanvas.textColour = fg
-
-        self.__xcanvas.SetBackgroundColour(intbg)
-        self.__ycanvas.SetBackgroundColour(intbg)
-        self.__zcanvas.SetBackgroundColour(intbg)
-
-        if refresh:
-            self.Refresh()
-            self.Update()
 
 
     def __toggleCanvas(self, *a):
