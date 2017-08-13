@@ -271,8 +271,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
         if lrFlip:
             for c in canvases:
-                if c.zax in (1, 2):
-                    c.invertX = True
+                if c.opts.zax in (1, 2):
+                    c.opts.invertX = True
 
     # fix orthographic projection if
     # showing an ortho grid layout.
@@ -289,7 +289,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     # we're assuming knowledge of,
     # by indexing canvases[1].
     if namespace.scene == 'ortho' and sceneOpts.layout == 'grid':
-        canvases[1].invertX = True
+        canvases[1].opts.invertX = True
 
     # Configure each of the canvases (with those
     # properties that are common to both ortho and
@@ -298,10 +298,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
     for i, c in enumerate(canvases):
 
-        if namespace.scene in ('ortho', 'lightbox'):
-            if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
-            elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
-            elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
+        c.opts.pos = displayCtx.location
 
         c.draw()
 
@@ -362,12 +359,14 @@ def createLightBoxCanvas(namespace,
         width=width,
         height=height)
 
-    props.applyArguments(canvas, namespace)
+    opts = canvas.opts
+
+    props.applyArguments(opts, namespace)
 
     # showCursor is called hideCursor
     # in the namespace, so the above
     # applyArguments will not apply it.
-    canvas.showCursor = sceneOpts.showCursor
+    opts.showCursor = sceneOpts.showCursor
 
     return canvas
 
@@ -448,13 +447,15 @@ def createOrthoCanvases(namespace,
             zax=zax,
             width=int(width),
             height=int(height))
+        opts = c.opts
 
-        c.showCursor      = sceneOpts.showCursor
-        c.cursorColour    = sceneOpts.cursorColour
-        c.bgColour        = sceneOpts.bgColour
-        c.renderMode      = sceneOpts.renderMode
+        opts.showCursor      = sceneOpts.showCursor
+        opts.cursorColour    = sceneOpts.cursorColour
+        opts.bgColour        = sceneOpts.bgColour
+        opts.renderMode      = sceneOpts.renderMode
 
-        if zoom is not None: c.zoom = zoom
+        if zoom is not None:
+            opts.zoom = zoom
         c.centreDisplayAt(*centre)
         canvases.append(c)
 
@@ -483,12 +484,12 @@ def create3DCanvas(namespace,
         width=width,
         height=height)
 
-    # props.applyArguments(canvas, namespace)
+    # props.applyArguments(canvas.opts, namespace)
 
     # showCursor is called hideCursor
     # in the namespace, so the above
     # applyArguments will not apply it.
-    canvas.showCursor = sceneOpts.showCursor
+    canvas.opts.showCursor = sceneOpts.showCursor
 
     return canvas
 
@@ -524,9 +525,7 @@ def buildColourBarBitmap(overlayList,
     display = displayCtx.getDisplay(overlay)
     opts    = display.getDisplayOpts()
 
-    # TODO Support other overlay types which
-    # have a display range (when they exist).
-    if not isinstance(opts, displaycontext.VolumeOpts):
+    if not isinstance(opts, displaycontext.ColourMapOpts):
         return None
 
     if   cbarLocation in ('top', 'bottom'): orient = 'horizontal'
