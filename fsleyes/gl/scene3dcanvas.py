@@ -31,24 +31,12 @@ import fsleyes.displaycontext.canvasopts as canvasopts
 log = logging.getLogger(__name__)
 
 
-class Scene3DCanvas(props.HasProperties):
-
-
-    pos           = copy.copy(canvasopts.Scene3DCanvasOpts.pos)
-    showCursor    = copy.copy(canvasopts.Scene3DCanvasOpts.showCursor)
-    cursorColour  = copy.copy(canvasopts.Scene3DCanvasOpts.cursorColour)
-    bgColour      = copy.copy(canvasopts.Scene3DCanvasOpts.bgColour)
-    showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
-    occlusion     = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
-    light         = copy.copy(canvasopts.Scene3DCanvasOpts.light)
-    lightPos      = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
-    zoom          = copy.copy(canvasopts.Scene3DCanvasOpts.zoom)
-    offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
-    rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
+class Scene3DCanvas(object):
 
 
     def __init__(self, overlayList, displayCtx):
 
+        self.__opts        = canvasopts.Scene3DCanvasOpts()
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
@@ -64,15 +52,16 @@ class Scene3DCanvas(props.HasProperties):
                                self.__name,
                                self.__displayBoundsChanged)
 
-        self.addListener('pos',          self.__name, self.Refresh)
-        self.addListener('showCursor',   self.__name, self.Refresh)
-        self.addListener('cursorColour', self.__name, self.Refresh)
-        self.addListener('bgColour',     self.__name, self.Refresh)
-        self.addListener('showLegend',   self.__name, self.Refresh)
-        self.addListener('occlusion',    self.__name, self.Refresh)
-        self.addListener('zoom',         self.__name, self.Refresh)
-        self.addListener('offset',       self.__name, self.Refresh)
-        self.addListener('rotation',     self.__name, self.Refresh)
+        opts = self.opts
+        opts.addListener('pos',          self.__name, self.Refresh)
+        opts.addListener('showCursor',   self.__name, self.Refresh)
+        opts.addListener('cursorColour', self.__name, self.Refresh)
+        opts.addListener('bgColour',     self.__name, self.Refresh)
+        opts.addListener('showLegend',   self.__name, self.Refresh)
+        opts.addListener('occlusion',    self.__name, self.Refresh)
+        opts.addListener('zoom',         self.__name, self.Refresh)
+        opts.addListener('offset',       self.__name, self.Refresh)
+        opts.addListener('rotation',     self.__name, self.Refresh)
 
 
     def destroy(self):
@@ -84,6 +73,7 @@ class Scene3DCanvas(props.HasProperties):
         for ovl in list(self.__glObjects.keys()):
             self.__deregisterOverlay(ovl)
 
+        self.__opts        = None
         self.__displayCtx  = None
         self.__overlayList = None
         self.__glObjects   = None
@@ -93,6 +83,13 @@ class Scene3DCanvas(props.HasProperties):
         """
         """
         return self.__overlayList is None
+
+
+    @property
+    def opts(self):
+        """Returns a reference to the :class:`.Scene3DCanvasOpts` instance.
+        """
+        return self.__opts
 
 
     def getViewMatrix(self):
@@ -175,7 +172,7 @@ class Scene3DCanvas(props.HasProperties):
         in the :class:`.OverlayList` that do not have one.
         """
 
-        overlays  = self.__displayCtx.getOrderedOverlays()
+        overlays = self.__displayCtx.getOrderedOverlays()
 
         surfs = [o for o in overlays if isinstance(o, fslmesh.TriangleMesh)]
         vols  = [o for o in overlays if isinstance(o, fslimage.Image)]
@@ -204,8 +201,8 @@ class Scene3DCanvas(props.HasProperties):
         # sort by depth on every render which, given
         # the possibility of volume clipping planes,
         # is a bit too complicated for my liking.
-        if self.occlusion: ovlOrder = surfs + vols + other
-        else:              ovlOrder = vols + surfs + other
+        if self.opts.occlusion: ovlOrder = surfs + vols + other
+        else:                   ovlOrder = vols + surfs + other
 
         for ovl in ovlOrder:
             globj = self.getGLObject(ovl)
@@ -255,7 +252,7 @@ class Scene3DCanvas(props.HasProperties):
 
     def __displayBoundsChanged(self, *a):
         """Called when the :attr:`.DisplayContext.bounds` change. Resets
-        the :attr:`lightPos` property.
+        the :attr:`.Scene3DCanvasOpts.lightPos` property.
         """
 
         b      = self.__displayCtx.bounds
@@ -263,7 +260,7 @@ class Scene3DCanvas(props.HasProperties):
                            b.ylo + 0.5 * (b.yhi - b.ylo),
                            b.zlo + 0.5 * (b.zhi - b.zlo)])
 
-        self.lightPos = centre + [b.xlen, b.ylen, 0]
+        self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
 
         self.Refresh()
 
@@ -371,6 +368,7 @@ class Scene3DCanvas(props.HasProperties):
         the camera. This method is called by :meth:`__setViewport`.
         """
 
+        opts   = self.opts
         b      = self.__displayCtx.bounds
         w, h   = self.GetSize()
         centre = [b.xlo + 0.5 * b.xlen,
@@ -393,9 +391,9 @@ class Scene3DCanvas(props.HasProperties):
         # is always around the centre of the
         # displaycontext bounds (the bounding
         # box which contains all loaded overlays).
-        scale  = self.zoom / 100.0
+        scale  = opts.zoom / 100.0
         scale  = transform.scaleOffsetXform([scale] * 3, 0)
-        rotate = transform.rotMatToAffine(self.rotation, centre)
+        rotate = transform.rotMatToAffine(opts.rotation, centre)
 
         # The offset property is defined in x/y
         # pixels. We need to conver them into
@@ -403,7 +401,7 @@ class Scene3DCanvas(props.HasProperties):
         # axis maps to (-xhalf, xhalf), and the
         # vertical axis maps to (-yhalf, yhalf).
         # See gl.routines.show3D.
-        offset     = np.array(self.offset[:] + [0])
+        offset     = np.array(opts.offset[:] + [0])
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
         offset[0]  = xlen * offset[0] / w
         offset[1]  = ylen * offset[1] / h
@@ -438,7 +436,7 @@ class Scene3DCanvas(props.HasProperties):
         b             = self.__displayCtx.bounds
         blo           = [b.xlo, b.ylo, b.zlo]
         bhi           = [b.xhi, b.yhi, b.zhi]
-        zoom          = self.zoom / 100.0
+        zoom          = self.opts.zoom / 100.0
 
         if width == 0 or height == 0:
             return False
@@ -468,7 +466,8 @@ class Scene3DCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        glroutines.clear(self.bgColour)
+        opts = self.opts
+        glroutines.clear(opts.bgColour)
 
         if not self.__setViewport():
             return
@@ -497,7 +496,7 @@ class Scene3DCanvas(props.HasProperties):
             if not display.enabled:
                 continue
 
-            if self.occlusion:
+            if opts.occlusion:
                 xform = transform.concat(depthOffset, xform)
             elif isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
@@ -508,11 +507,11 @@ class Scene3DCanvas(props.HasProperties):
             globj.draw3D(  xform=xform)
             globj.postDraw(xform=xform)
 
-        if self.showCursor:
+        if opts.showCursor:
             with glroutines.enabled((gl.GL_DEPTH_TEST)):
                 self.__drawCursor()
 
-        if self.showLegend:
+        if opts.showLegend:
             self.__drawLegend()
 
 
@@ -520,8 +519,9 @@ class Scene3DCanvas(props.HasProperties):
         """Draws three lines at the current :attr:`.DisplayContext.location`.
         """
 
-        b   = self.__displayCtx.bounds
-        pos = self.pos
+        opts = self.opts
+        b    = self.__displayCtx.bounds
+        pos  = opts.pos
 
         points = np.array([
             [pos.x, pos.y, b.zlo],
@@ -534,7 +534,7 @@ class Scene3DCanvas(props.HasProperties):
         points = transform.transform(points, self.__viewMat)
         gl.glLineWidth(1)
 
-        r, g, b = self.cursorColour[:3]
+        r, g, b = opts.cursorColour[:3]
 
         gl.glColor4f(r, g, b, 1)
         gl.glBegin(gl.GL_LINES)
@@ -548,6 +548,7 @@ class Scene3DCanvas(props.HasProperties):
         anatomical orientation.
         """
 
+        copts      = self.opts
         b          = self.__displayCtx.bounds
         w, h       = self.GetSize()
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
@@ -582,7 +583,7 @@ class Scene3DCanvas(props.HasProperties):
 
         # Draw the legend lines
         gl.glDisable(gl.GL_DEPTH_TEST)
-        gl.glColor3f(*self.cursorColour[:3])
+        gl.glColor3f(*copts.cursorColour[:3])
         gl.glLineWidth(2)
         gl.glBegin(gl.GL_LINES)
         gl.glVertex3f(*vertices[0])
@@ -597,8 +598,8 @@ class Scene3DCanvas(props.HasProperties):
         # Figure out the anatomical
         # labels for each axis.
         overlay = self.__displayCtx.getSelectedOverlay()
-        opts    = self.__displayCtx.getOpts(overlay)
-        labels  = opts.getLabels()[0]
+        dopts   = self.__displayCtx.getOpts(overlay)
+        labels  = dopts.getLabels()[0]
 
         # getLabels returns (xlo, ylo, zlo, xhi, yhi, zhi) -
         # - rearrange them to (xlo, xhi, ylo, yhi, zlo, zhi)
@@ -633,8 +634,9 @@ class Scene3DCanvas(props.HasProperties):
 
     def __drawLight(self):
 
-        lightPos  = np.array(self.lightPos)
-        lightPos *= (self.zoom / 100.0)
+        opts      = self.opts
+        lightPos  = np.array(opts.lightPos)
+        lightPos *= (opts.zoom / 100.0)
 
         gl.glColor4f(1, 1, 1, 1)
         gl.glPointSize(10)

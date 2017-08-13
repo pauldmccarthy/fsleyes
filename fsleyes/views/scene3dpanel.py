@@ -65,17 +65,19 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                                                         overlayList,
                                                         displayCtx)
 
-        self.__canvas.bindProps('pos',          displayCtx, 'location')
-        self.__canvas.bindProps('showCursor',   sceneOpts)
-        self.__canvas.bindProps('cursorColour', sceneOpts)
-        self.__canvas.bindProps('bgColour',     sceneOpts)
-        self.__canvas.bindProps('showLegend',   sceneOpts)
-        self.__canvas.bindProps('occlusion',    sceneOpts)
-        self.__canvas.bindProps('light',        sceneOpts)
-        self.__canvas.bindProps('lightPos',     sceneOpts)
-        self.__canvas.bindProps('zoom',         sceneOpts)
-        self.__canvas.bindProps('offset',       sceneOpts)
-        self.__canvas.bindProps('rotation',     sceneOpts)
+        opts = self.__canvas.opts
+
+        opts.bindProps('pos',          displayCtx, 'location')
+        opts.bindProps('showCursor',   sceneOpts)
+        opts.bindProps('cursorColour', sceneOpts)
+        opts.bindProps('bgColour',     sceneOpts)
+        opts.bindProps('showLegend',   sceneOpts)
+        opts.bindProps('occlusion',    sceneOpts)
+        opts.bindProps('light',        sceneOpts)
+        opts.bindProps('lightPos',     sceneOpts)
+        opts.bindProps('zoom',         sceneOpts)
+        opts.bindProps('offset',       sceneOpts)
+        opts.bindProps('rotation',     sceneOpts)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__canvas, flag=wx.EXPAND, proportion=1)
