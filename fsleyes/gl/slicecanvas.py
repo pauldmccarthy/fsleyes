@@ -127,7 +127,7 @@ class SliceCanvas(object):
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=0):
+    def __init__(self, overlayList, displayCtx, zax=0, opts=None):
         """Create a ``SliceCanvas``.
 
         :arg overlayList: An :class:`.OverlayList` object containing a
@@ -140,7 +140,9 @@ class SliceCanvas(object):
                           plane to be displayed (the *depth* axis), default 0.
         """
 
-        opts             = canvasopts.SliceCanvasOpts()
+        if opts is None:
+            opts = canvasopts.SliceCanvasOpts()
+
         self.opts        = opts
         self.overlayList = overlayList
         self.displayCtx  = displayCtx

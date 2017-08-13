@@ -82,14 +82,16 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             overlayList,
             displayCtx)
 
-        self.__lbCanvas.bindProps('pos', displayCtx, 'location')
-        self.__lbCanvas.bindProps('zax',             sceneOpts)
-        self.__lbCanvas.bindProps('bgColour',        sceneOpts)
-        self.__lbCanvas.bindProps('cursorColour',    sceneOpts)
-        self.__lbCanvas.bindProps('showCursor',      sceneOpts)
-        self.__lbCanvas.bindProps('showGridLines',   sceneOpts)
-        self.__lbCanvas.bindProps('highlightSlice',  sceneOpts)
-        self.__lbCanvas.bindProps('renderMode',      sceneOpts)
+        lbopts = self.__lbCanvas.opts
+
+        lbopts.bindProps('pos', displayCtx, 'location')
+        lbopts.bindProps('zax',             sceneOpts)
+        lbopts.bindProps('bgColour',        sceneOpts)
+        lbopts.bindProps('cursorColour',    sceneOpts)
+        lbopts.bindProps('showCursor',      sceneOpts)
+        lbopts.bindProps('showGridLines',   sceneOpts)
+        lbopts.bindProps('highlightSlice',  sceneOpts)
+        lbopts.bindProps('renderMode',      sceneOpts)
 
         # Bind these properties the other way around,
         # so that the sensible values calcualted by
@@ -97,11 +99,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bindProps('nrows',        self.__lbCanvas)
-        sceneOpts.bindProps('ncols',        self.__lbCanvas)
-        sceneOpts.bindProps('topRow',       self.__lbCanvas)
-        sceneOpts.bindProps('sliceSpacing', self.__lbCanvas)
-        sceneOpts.bindProps('zrange',       self.__lbCanvas)
+        sceneOpts.bindProps('nrows',        lbopts)
+        sceneOpts.bindProps('ncols',        lbopts)
+        sceneOpts.bindProps('topRow',       lbopts)
+        sceneOpts.bindProps('sliceSpacing', lbopts)
+        sceneOpts.bindProps('zrange',       lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.getContentPanel().SetSizer(self.__canvasSizer)
@@ -167,6 +169,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self._overlayList.removeListener('overlays',         self._name)
 
         self.__lbCanvas.destroy()
+        self.__lbCanvas = None
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -245,11 +248,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         :attr:`.LightBoxCanvas.invertX` property as needed.
         """
 
+        lbopts  = self.__lbCanvas.opts
         inRadio = self._displayCtx.displaySpaceIsRadiological()
         flip    = self._displayCtx.radioOrientation != inRadio
-        flip    = flip and self.__lbCanvas.zax in (1, 2)
+        flip    = flip and lbopts.zax in (1, 2)
 
-        self.__lbCanvas.invertX = flip
+        lbopts.invertX = flip
 
 
     def __selectedOverlayChanged(self, *a):
@@ -347,19 +351,21 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # canvas panel size is up to date
         self.Layout()
 
-        width,   height   = self.__lbCanvas .GetClientSize().Get()
+        lbcanvas          = self.__lbCanvas
+        lbopts            = lbcanvas.opts
+        width,   height   = lbcanvas        .GetClientSize().Get()
         sbWidth, sbHeight = self.__scrollbar.GetClientSize().Get()
 
         width = width - sbWidth
 
-        xlen = self._displayCtx.bounds.getLen(self.__lbCanvas.xax)
-        ylen = self._displayCtx.bounds.getLen(self.__lbCanvas.yax)
+        xlen = self._displayCtx.bounds.getLen(lbopts.xax)
+        ylen = self._displayCtx.bounds.getLen(lbopts.yax)
 
-        sliceWidth  = width / float(self.__lbCanvas.ncols)
+        sliceWidth  = width / float(lbopts.ncols)
         sliceHeight = fsllayout.calcPixHeight(xlen, ylen, sliceWidth)
 
         if sliceHeight > 0:
-            self.__lbCanvas.nrows = int(height / sliceHeight)
+            lbopts.nrows = int(height / sliceHeight)
 
 
     def __ncolsChanged(self, *a):
@@ -376,10 +382,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the scrollbar to reflect the change.
         """
-        self.__scrollbar.SetScrollbar(self.__lbCanvas.topRow,
-                                      self.__lbCanvas.nrows,
-                                      self.__lbCanvas.getTotalRows(),
-                                      self.__lbCanvas.nrows,
+        canvas = self.__lbCanvas
+        opts   = canvas.opts
+        self.__scrollbar.SetScrollbar(opts.topRow,
+                                      opts.nrows,
+                                      canvas.getTotalRows(),
+                                      opts.nrows,
                                       True)
 
 
@@ -388,4 +396,4 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the top row displayed on the :class:`.LightBoxCanvas`.
         """
-        self.__lbCanvas.topRow = self.__scrollbar.GetThumbPosition()
+        self.__lbCanvas.opts.topRow = self.__scrollbar.GetThumbPosition()
