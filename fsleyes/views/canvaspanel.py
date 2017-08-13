@@ -618,8 +618,15 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         sceneOpts = self.getSceneOptions()
         canvases  = self.getGLCanvases()
+        cpanel    = self.getContentPanel()
         bg        = sceneOpts.bgColour
         fg        = colourmaps.complementaryColour(bg)
+
+        intbg = [c * 255 for c in bg]
+        intfg = [c * 255 for c in fg]
+
+        cpanel.SetBackgroundColour(intbg)
+        cpanel.SetForegroundColour(intfg)
 
         if self.__colourBar is not None:
             cbCanvas = self.__colourBar.getCanvas()

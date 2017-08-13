@@ -13,10 +13,10 @@
 These classes contain the definitions of properties which are available on the
 corresponding canvas class.
 
-These classes are never invoked. They are defined independently of the
-:class:`.SliceCanvas` (and other) classes so they can be inspected without
-having to import the :mod:`.slicecanvas` (and other) modules, e.g. during
-command line argument parsing.
+These classes are defined independently of the :class:`.SliceCanvas` (and
+other) classes so they can be inspected without having to import the
+:mod:`.slicecanvas` (and other) modules, e.g. during command line argument
+parsing.
 """
 
 
@@ -39,11 +39,6 @@ class SliceCanvasOpts(props.HasProperties):
     The ``pos.x`` and ``pos.y`` positions denote the position of a *cursor*,
     which is highlighted with crosshairs (see the :attr:`showCursor`
     property). The ``pos.z`` position specifies the currently displayed slice.
-
-    While the values of this point are in the display coordinate system, the
-    dimension ordering may not be the same as the display coordinate dimension
-    ordering. For this position, the x and y dimensions correspond to the
-    horizontal and vertical screen axes, and the z dimension to *depth*.
     """
 
 
@@ -81,7 +76,8 @@ class SliceCanvasOpts(props.HasProperties):
                        alternates=[['x', 'X'], ['y', 'Y'], ['z', 'Z']],
                        allowStr=True)
     """The display coordinate system axis to be used as the screen *depth*
-    axis. The canvas x and y axes are derived from this value:
+    axis. The :meth:`xax` and :meth:`yax` attributes are derived from this
+    property:
 
      - If ``zax == 0``, ``xax, yax == 1, 2``
      - If ``zax == 1``, ``xax, yax == 0, 2``
@@ -114,6 +110,43 @@ class SliceCanvasOpts(props.HasProperties):
 
     See the :class:`.SliceCanvas` for more details.
     """
+
+    def __init__(self):
+        """Create a ``SliceCanvasOpts`` instance. """
+
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
+        self.__xax  = 0
+        self.__yax  = 0
+
+        self.addListener('zax', self.__name, self.__zaxChanged, immediate=True)
+        self.__zaxChanged()
+
+
+    def __zaxChanged(self, *a):
+        """Calle when the :attr:`zax` property changes. Derives the
+        ``xax`` and ``yax`` values.
+        """
+
+        dims = list(range(3))
+        dims.pop(self.zax)
+        self.__xax = dims[0]
+        self.__yax = dims[1]
+
+
+    @property
+    def xax(self):
+        """The display coordinate system axis which maps to the X (horizontal)
+        canvas axis.
+        """
+        return self.__xax
+
+
+    @property
+    def yax(self):
+        """The display coordinate system axis which maps to the Y (vertical)
+        canvas axis.
+        """
+        return self.__yax
 
 
 class LightBoxCanvasOpts(SliceCanvasOpts):
