@@ -373,10 +373,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
     The values in this ``bounds`` property must be updated by ``DisplayOpts``
     subclasses whenever the spatial representation of their overlay changes.
-    Additionally, whenever the spatial representation changes, sub-classes
-    must call the :meth:`.DisplayContext.cacheStandardCoordinates` method,
-    with a 'standard' space version of the current
-    :attr:`.DisplayContext.location`.
     """
 
 
@@ -526,36 +522,3 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
         return ((xlo, ylo, zlo, xhi, yhi, zhi),
                 (xorient, yorient, zorient))
-
-
-    def displayToStandardCoordinates(self, coords):
-        """This method transforms the given display system coordinates into a
-        standard coordinate system which will remain constant for the given
-        overlay.
-
-        This method must be overridden by any sub-classes for which
-        the display space representation may change - for example, the
-        :class:`.Image` overlays can be transformed into the display
-        coordinate system in different ways, as defined by the
-        :attr:`.NiftiOpts.transform`  property.
-
-        .. note:: The purpose of this method (and the
-                  :meth:`standardToDisplayCoordinates` is so that, when the
-                  currently selected overlay is shifted in the display
-                  coordinate system (e.g. the :attr:`.NiftiOpts.transform`
-                  changes), the current :attr:`.DisplayContext.location`
-                  can be updated so that it stays in the same location
-                  *with respect to* the currently selected overlay.
-        """
-        return coords
-
-
-    def standardToDisplayCoordinates(self, coords):
-        """This method transforms the given coordinates, assumed to be in
-        the standard coordinate system of the overlay, into the display
-        coordinate system.
-
-        This method must be overridden by sub-classes for which their standard
-        coordinate system is not the same as the display coordinate system.
-        """
-        return coords

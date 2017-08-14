@@ -269,12 +269,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         on the ``'transform'`` topic, indicating that its voxel->world
         transformation matrix has been updated.
         """
-        stdLoc = self.displayToStandardCoordinates(
-            self.displayCtx.location.xyz)
-
         self.__setupTransforms()
         self.__transformChanged()
-        self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
 
     def __transformChanged(self, *a):
@@ -284,17 +280,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         coordinate system, which is big enough to contain the image. Sets the
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
-
-        oldValue = self.getLastValue('transform')
-
-        if oldValue is None:
-            oldValue = self.transform
-
-        self.displayCtx.cacheStandardCoordinates(
-            self.overlay,
-            self.transformCoords(self.displayCtx.location.xyz,
-                                 oldValue,
-                                 'world'))
 
         lo, hi = transform.axisBounds(
             self.overlay.shape[:3],
@@ -310,21 +295,9 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :meth:`__transformChanged`).
         """
 
-        stdLoc = self.displayToStandardCoordinates(
-            self.displayCtx.location.xyz)
-
         self.__setupTransforms()
         if self.transform == 'custom':
             self.__transformChanged()
-
-            # if transform == custom, the cached value
-            # calculated in __transformChanged will be
-            # wrong, so we have to overwrite it here.
-            # The stdLoc value calculated above is valid,
-            # because it was calculated before the
-            # transformation matrices were recalculated
-            # in __setupTransforms
-            self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
 
     def __displayXformChanged(self, *a):
@@ -714,24 +687,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                 return None
 
         return vox
-
-
-    def displayToStandardCoordinates(self, coords):
-        """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.
-        Transforms the given display system coordinates into the world
-        coordinates of the :class:`.Nifti` associated with this
-        ``NiftiOpts`` instance.
-        """
-        return self.transformCoords(coords, 'display', 'world')
-
-
-    def standardToDisplayCoordinates(self, coords):
-        """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
-        Transforms the given coordinates (assumed to be in the world
-        coordinate system of the ``Nifti`` associated with this ``NiftiOpts``
-        instance) into the display coordinate system.
-        """
-        return self.transformCoords(coords, 'world', 'display')
 
 
 class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):

@@ -12,10 +12,8 @@ general display settings for displaying the overlays in a
 
 import sys
 import logging
-import weakref
 import contextlib
 
-import numpy        as np
 import numpy.linalg as npla
 
 import fsl.data.image      as fslimage
@@ -61,7 +59,6 @@ class DisplayContext(props.SyncableHasProperties):
         getSelectedOverlay
         getOverlayOrder
         getOrderedOverlays
-        cacheStandardCoordinates
     """
 
 
@@ -131,8 +128,8 @@ class DisplayContext(props.SyncableHasProperties):
     to those of the parent instance. Otherwise, the display properties for
     every overlay will be unsynchronised from the parent.
 
-    Synchronisation of the following  properties across ``DisplayContext``
-    instances is also controlled by this flag:
+    Synchronisation of the following properties between child and parent
+    ``DisplayContext`` instances is also controlled by this flag:
 
       - :attr:`displaySpace`
       - :attr:`bounds`
@@ -271,21 +268,6 @@ class DisplayContext(props.SyncableHasProperties):
         # every overlay in the overlay list, as
         # {Overlay : Display} mappings
         self.__displays = {}
-
-        # We keep a cache of 'standard' coordinates,
-        # one for each overlay - see the cacheStandardCoordinates
-        # method.  We're storing this cache in a tricky
-        # way though - as an attribute of the worldLocation
-        # property. We do this so that the cache will be
-        # automatically synchronised between parent/child
-        # DC objects (unless the worldLocation is unsynced).
-        locPropVal = self.getPropVal('worldLocation')
-
-        # Only set the standardCoords cache on the
-        # parent DC - children will inherit it.
-        if not self.__child:
-            locPropVal.setAttribute('standardCoords',
-                                    weakref.WeakKeyDictionary())
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -503,44 +485,6 @@ class DisplayContext(props.SyncableHasProperties):
         return [self.__overlayList[idx] for idx in self.overlayOrder]
 
 
-    def cacheStandardCoordinates(self, overlay, coords):
-        """Stores the given _standard_ coordinates for the given overlay.
-
-        This method must be called by :class:`.DisplayOpts` sub-classes
-        whenever the spatial representation of their overlay changes -
-        ``DisplayOpts`` instances need to transform the current display
-        :attr:`location` into a consistent coordinate system, relative to
-        their overlay.
-
-        This is necessary in order for the ``DisplayContext`` to update the
-        :attr:`location` with respect to the currently selected overlay - if
-        the current overlay has shifted in the display coordinate system, we
-        want the :attr:`location` to shift with it.
-
-        :arg overlay: The overlay object (e.g. an :class:`.Image`).
-
-        :arg coords:  Coordinates in the standard coordinate system of the
-                      overlay.
-        """
-
-        if not self.__child:
-            return
-
-        locPropVal     = self.getPropVal('worldLocation')
-        standardCoords = weakref.WeakKeyDictionary(
-            locPropVal.getAttribute('standardCoords'))
-
-        standardCoords[overlay] = np.array(coords).tolist()
-
-        locPropVal.setAttribute('standardCoords', standardCoords)
-
-        log.debug('Standard coordinates cached '
-                  'for overlay {}: {} <-> {}'.format(
-                      overlay.name,
-                      self.location.xyz,
-                      coords))
-
-
     @contextlib.contextmanager
     def freeze(self, overlay):
         """This method can be used as a context manager to suppress
@@ -660,10 +604,12 @@ class DisplayContext(props.SyncableHasProperties):
                                  self.__overlayBoundsChanged,
                                  overwrite=True)
 
+        # Limit the selectedOverlay property
+        # so it cannot take a value greater
+        # than len(overlayList)-1. selectedOverlay
+        # is always synchronised, so we only
+        # need to do this on the parent DC.
         if not self.__child:
-            # Limit the selectedOverlay property
-            # so it cannot take a value greater
-            # than len(overlayList)-1
             nOverlays = len(self.__overlayList)
             if nOverlays > 0:
                 self.setConstraint('selectedOverlay',
@@ -781,13 +727,6 @@ class DisplayContext(props.SyncableHasProperties):
         if selectedOverlay is None:
             return
 
-        selectedOpts = self.getOpts(selectedOverlay)
-
-        # The transform of the currently selected
-        # overlay might change, so we want the
-        # location to be preserved with respect to it.
-        stdLoc = selectedOpts.displayToStandardCoordinates(self.location.xyz)
-
         # Update the transform property of all
         # Image overlays to put them into the
         # new display space
@@ -803,10 +742,10 @@ class DisplayContext(props.SyncableHasProperties):
         with props.suppress(self, 'location'):
             self.__updateBounds()
 
-        # making sure that the location is kept
-        # in the same place, relative to the
-        # currently selected overlay
-        self.location.xyz = selectedOpts.standardToDisplayCoordinates(stdLoc)
+        # Make sure that the location is
+        # kept in the same place, relative
+        # to the world coordinate system
+        self.__propagateLocation('display')
 
 
     def __syncOverlayOrder(self):
@@ -877,8 +816,7 @@ class DisplayContext(props.SyncableHasProperties):
     def __overlayBoundsChanged(self, value, valid, opts, name):
         """Called when the :attr:`.DisplayOpts.bounds` property of any
         overlay changes. Updates the :attr:`bounds` property and preserves
-        the display :attr:`location` in terms of the currently selected
-        overlay.
+        the display :attr:`location` in terms of the :attr:`worldLocation`.
         """
 
         # This method might get called
@@ -886,20 +824,6 @@ class DisplayContext(props.SyncableHasProperties):
         # has been destroyed
         if opts.display is None:
             return
-
-        overlay = opts.display.getOverlay()
-
-        # If the bounds of an overlay have changed, the
-        # overlay might have been moved in the dispaly
-        # coordinate system. We want to keep the
-        # current location in the same position, relative
-        # to that overlay. So we get the cached standard
-        # coords (which should have been updated by the
-        # overlay's DisplayOpts instance - see the docs
-        # for the cacheStandardCoordinates), and use them
-        # below to restore the location
-        locPropVal = self.getPropVal('worldLocation')
-        stdLoc     = locPropVal.getAttribute('standardCoords')[overlay]
 
         # Update the display context bounds
         # to take into account any changes
@@ -910,34 +834,10 @@ class DisplayContext(props.SyncableHasProperties):
         with props.suppress(self, 'location'):
             self.__updateBounds()
 
-        # The main purpose of this method is to preserve
-        # the current display location in terms of the
-        # currently selected overlay, when the overlay
-        # bounds have changed. We don't care about changes
-        # to the options for other overlays.
-        if overlay != self.getSelectedOverlay():
-            self.propNotify('location')
-            return
-
-        # Now we want to update the display location
-        # so that it is preserved with respect to the
-        # currently selected overlay.
-        newDispLoc = opts.standardToDisplayCoordinates(stdLoc)
-
-        # Ignore the new display location
-        # if it is not in the display bounds
-        if self.bounds.inBounds(newDispLoc):
-            log.debug('Preserving display location in '
-                      'terms of overlay {} ({}.{}): {} -> {}'.format(
-                          overlay,
-                          type(opts).__name__,
-                          name,
-                          stdLoc,
-                          newDispLoc))
-
-            self.location.xyz = newDispLoc
-        else:
-            self.propNotify('location')
+        # Make sure the display location
+        # is consistent w.r.t. the world
+        # coordinate location
+        self.__propagateLocation('display')
 
 
     def __syncOverlayDisplayChanged(self, *a):
@@ -1001,7 +901,7 @@ class DisplayContext(props.SyncableHasProperties):
                           minBounds[1], maxBounds[1],
                           minBounds[2], maxBounds[2]]
 
-        # Update the constraints on the :attr:`location`
+        # Update the constraints on the location
         # property to be aligned with the new bounds
         self.location.setLimits(0, self.bounds.xlo, self.bounds.xhi)
         self.location.setLimits(1, self.bounds.ylo, self.bounds.yhi)
@@ -1024,7 +924,9 @@ class DisplayContext(props.SyncableHasProperties):
 
     def __propagateLocation(self, dest):
         """Called by the :meth:`__locationChanged` and
-        :meth:`__worldLocationChanged` methods.
+        :meth:`__worldLocationChanged` methods. The ``dest`` argument may be
+        either ``'world'`` (the ``worldLocation`` is updated from the
+        ``location``), or ``'display'` (vice-versa).
         """
 
         if self.displaySpace == 'world':
