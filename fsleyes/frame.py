@@ -388,11 +388,14 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
 
 
-    def addViewPanel(self, panelCls):
+    def addViewPanel(self, panelCls, **kwargs):
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
 
         :arg panelCls: The :class:`.ViewPanel` type to be added.
+
+        All other arguments are passed to the ``__init__`` method of the child
+        :class:`.DisplayContext` that is created for the new view.
         """
         import fsleyes.views.plotpanel  as plotpanel
         import fsleyes.views.shellpanel as shellpanel
@@ -410,7 +413,8 @@ class FSLeyesFrame(wx.Frame):
 
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
-            parent=self.__displayCtx)
+            parent=self.__displayCtx,
+            **kwargs)
 
         panel = panelCls(self.__mainPanel, self.__overlayList, childDC, self)
 

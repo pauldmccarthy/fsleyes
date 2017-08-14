@@ -211,7 +211,7 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    def __init__(self, overlayList, parent=None):
+    def __init__(self, overlayList, parent=None, **kwargs):
         """Create a ``DisplayContext``.
 
         :arg overlayList: An :class:`.OverlayList` instance.
@@ -219,18 +219,36 @@ class DisplayContext(props.SyncableHasProperties):
         :arg parent:      Another ``DisplayContext`` instance to be used
                           as the parent of this instance, passed to the
                           :class:`.SyncableHasProperties` constructor.
+
+        All other arguments are passed through to the ``SyncableHasProperties`
+        constructor, in addition to the following:
+
+          - The ``syncOverlayDisplay`` and ``location`` properties
+            are added to the ``nobind`` argument
+
+          - The ``selectedOverlay``, ``overlayGroups``,
+            ``autoDisplay`` and ``loadInMemory`` properties
+            are added to the ``nounbind`` argument.
         """
 
-        props.SyncableHasProperties.__init__(
-            self,
-            parent=parent,
-            nounbind=['selectedOverlay',
-                      'overlayGroups',
-                      'autoDisplay',
-                      'loadInMemory'],
-            nobind=[  'syncOverlayDisplay',
-                      'location'],
-            state={'overlayOrder' : False})
+        kwargs = dict(kwargs)
+
+        nobind   = kwargs.pop('nobind',   [])
+        nounbind = kwargs.pop('nounbind', [])
+
+        nobind  .extend(['syncOverlayDisplay', 'location'])
+        nounbind.extend(['selectedOverlay',
+                         'overlayGroups',
+                         'autoDisplay',
+                         'loadInMemory'])
+
+        kwargs['parent']   = parent
+        kwargs['nobind']   = nobind
+        kwargs['nounbind'] = nounbind
+        kwargs['state']    = {'overlayOrder' : False}
+
+        props.SyncableHasProperties.__init__(self, **kwargs)
+
 
         self.__overlayList = overlayList
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
@@ -868,14 +886,17 @@ class DisplayContext(props.SyncableHasProperties):
         parent instances.
         """
 
+        dcProps = ['displaySpace', 'bounds', 'radioOrientation']
+
         if self.syncOverlayDisplay:
-            self.syncToParent('displaySpace')
-            self.syncToParent('bounds')
-            self.syncToParent('radioOrientation')
+            for p in dcProps:
+                if self.canBeSyncedToParent(p):
+                    self.syncToParent(p)
+
         else:
-            self.unsyncFromParent('displaySpace')
-            self.unsyncFromParent('bounds')
-            self.unsyncFromParent('radioOrientation')
+            for p in dcProps:
+                if self.canBeUnsyncedFromParent(p):
+                    self.unsyncFromParent(p)
 
         for display in self.__displays.values():
 

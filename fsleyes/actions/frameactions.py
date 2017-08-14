@@ -19,55 +19,63 @@ import fsleyes.frame   as frame
 import fsleyes.actions as actions
 
 
-def addViewPanel(self, vpType, *args, **kwargs):
+def addViewPanel(self, vpType, **kwargs):
     """Function shared by the add*Panel functions below. """
-    vp = self.addViewPanel(vpType)
+    vp = self.addViewPanel(vpType, **kwargs)
     self.viewPanelDefaultLayout(vp)
     vp.SetFocus()
+    return vp
 
 
 def addOrthoPanel(self, *args, **kwargs):
     """Adds a new :class:`.OrthoPanel`."""
     from fsleyes.views.orthopanel import OrthoPanel
-    addViewPanel(self, OrthoPanel, *args, **kwargs)
+    addViewPanel(self, OrthoPanel)
 
 
 def addLightBoxPanel(self, *args, **kwargs):
     """Adds a new :class:`.LightBoxPanel`."""
     from fsleyes.views.lightboxpanel import LightBoxPanel
-    addViewPanel(self, LightBoxPanel, *args, **kwargs)
+    addViewPanel(self, LightBoxPanel)
 
 
 def addScene3DPanel(self, *args, **kwargs):
     """Adds a new :class:`.Scene3DPanel`."""
     from fsleyes.views.scene3dpanel import Scene3DPanel
-    self.getDisplayContext().displaySpace = 'world'
-    addViewPanel(self, Scene3DPanel, *args, **kwargs)
+
+    # In 3D, the displaySpace must always be set
+    # to world, regardless of thed parent DC
+    # value. This can be overridden manually
+    # however (e.g. through the python shell)
+    kwargs                 = {}
+    kwargs['nobind']       = ['displaySpace', 'radioOrientation']
+    kwargs['displaySpace'] = 'world'
+
+    addViewPanel(self, Scene3DPanel, **kwargs)
 
 
 def addTimeSeriesPanel(self, *args, **kwargs):
     """Adds a new :class:`.TimeSeriesPanel`."""
     from fsleyes.views.timeseriespanel import TimeSeriesPanel
-    addViewPanel(self, TimeSeriesPanel, *args, **kwargs)
+    addViewPanel(self, TimeSeriesPanel)
 
 
 def addHistogramPanel(self, *args, **kwargs):
     """Adds a new :class:`.HistogramPanel`."""
     from fsleyes.views.histogrampanel import HistogramPanel
-    addViewPanel(self, HistogramPanel, *args, **kwargs)
+    addViewPanel(self, HistogramPanel)
 
 
 def addPowerSpectrumPanel(self, *args, **kwargs):
     """Adds a new :class:`.PowerSpectrumPanel`."""
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-    addViewPanel(self, PowerSpectrumPanel, *args, **kwargs)
+    addViewPanel(self, PowerSpectrumPanel)
 
 
 def addShellPanel(self, *args, **kwargs):
     """Adds a new :class:`.ShellPanel`."""
     from fsleyes.views.shellpanel import ShellPanel
-    addViewPanel(self, ShellPanel, *args, **kwargs)
-
+    addViewPanel(self, ShellPanel)
 
 
 def removeFocusedViewPanel(self, *args, **kwargs):
