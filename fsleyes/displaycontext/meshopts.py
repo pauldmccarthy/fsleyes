@@ -276,19 +276,26 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         if self.__registered:
 
             self.overlayList.removeListener('overlays', self.name)
+            self.display    .removeListener('alpha',    self.name)
+            self            .removeListener('colour',   self.name)
 
             for overlay in self.overlayList:
-                display = self.displayCtx.getDisplay(overlay)
-                display.removeListener('name', self.name)
 
-            if self.refImage is not None and \
-               self.refImage in self.overlayList:
-                opts = self.displayCtx.getOpts(self.refImage)
-                opts.removeListener('transform',   self.name)
-                opts.removeListener('customXform', self.name)
+                # An error could be raised if the
+                # DC has been/is being destroyed
+                try:
 
-            self.display.removeListener('alpha',  self.name)
-            self        .removeListener('colour', self.name)
+                    display = self.displayCtx.getDisplay(overlay)
+                    opts    = self.displayCtx.getOpts(   overlay)
+
+                    display.removeListener('name', self.name)
+
+                    if overlay is self.refImage:
+                        opts.removeListener('transform',   self.name)
+                        opts.removeListener('customXform', self.name)
+
+                except:
+                    pass
 
         self.__oldRefImage = None
         self.__vertexData  = None

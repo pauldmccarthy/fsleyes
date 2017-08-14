@@ -315,7 +315,13 @@ class DisplayContext(props.SyncableHasProperties):
 
         self.detachFromParent()
 
-        self.__overlayList.removeListener('overlays', self.__name)
+        overlayList = self.__overlayList
+        displays    = self.__displays
+
+        self.__overlayList = None
+        self.__displays    = None
+
+        overlayList.removeListener('overlays', self.__name)
 
         if self.__child:
             self.removeListener('syncOverlayDisplay', self.__name)
@@ -323,11 +329,15 @@ class DisplayContext(props.SyncableHasProperties):
             self.removeListener('location',           self.__name)
             self.removeListener('worldLocation',      self.__name)
 
-        for overlay, display in self.__displays.items():
+        for overlay, display in displays.items():
             display.destroy()
 
-        self.__displays    = None
-        self.__overlayList = None
+
+    def destroyed(self):
+        """Returns ``True`` if this ``DisplayContext`` has been, or is being,
+        destroyed, ``False`` otherwise.
+        """
+        return self.__overlayList is None
 
 
     def getDisplay(self, overlay, overlayType=None):
@@ -338,6 +348,9 @@ class DisplayContext(props.SyncableHasProperties):
         :exc:`InvalidOverlayError` is raised.  Otheriwse, if a
         :class:`Display` object does not exist for the given overlay, one is
         created.
+
+        If this ``DisplayContext`` has been destroyed, a ``ValueError`` is
+        raised.
 
         :arg overlay:     The overlay to retrieve a ``Display`` instance for,
                           or an index into the ``OverlayList``.
@@ -350,6 +363,9 @@ class DisplayContext(props.SyncableHasProperties):
 
         if overlay is None:
             raise ValueError('No overlay specified')
+
+        if self.destroyed():
+            raise ValueError('DisplayContext has been destroyed')
 
         if overlay not in self.__overlayList:
             raise InvalidOverlayError('Overlay {} is not in '
@@ -390,6 +406,9 @@ class DisplayContext(props.SyncableHasProperties):
 
         if overlay is None:
             raise ValueError('No overlay specified')
+
+        if self.destroyed():
+            raise ValueError('DisplayContext has been destroyed')
 
         if overlay not in self.__overlayList:
             raise InvalidOverlayError('Overlay {} is not in '
