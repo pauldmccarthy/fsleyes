@@ -46,8 +46,8 @@ def updateShaderState(self, **kwargs):
     configuration.
     """
 
-    opts    = self.opts
-    canvas  = self.canvas
+    dopts   = self.opts
+    copts   = self.canvas.opts
     dshader = self.dataShader
     fshader = self.flatShader
 
@@ -57,20 +57,20 @@ def updateShaderState(self, **kwargs):
     dshader.set('useNegCmap',     kwargs['useNegCmap'])
     dshader.set('cmapXform',      kwargs['cmapXform'])
     dshader.set('flatColour',     kwargs['flatColour'])
-    dshader.set('invertClip',     opts.invertClipping)
-    dshader.set('discardClipped', opts.discardClipped)
-    dshader.set('clipLow',        opts.clippingRange.xlo)
-    dshader.set('clipHigh',       opts.clippingRange.xhi)
+    dshader.set('invertClip',     dopts.invertClipping)
+    dshader.set('discardClipped', dopts.discardClipped)
+    dshader.set('clipLow',        dopts.clippingRange.xlo)
+    dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
     if self.threedee:
-        dshader.set('lighting', canvas.light)
+        dshader.set('lighting', copts.light)
         dshader.set('lightPos', kwargs['lightPos'])
 
     dshader.unload()
 
     if self.threedee:
         fshader.load()
-        fshader.set('lighting', canvas.light)
+        fshader.set('lighting', copts.light)
         fshader.set('lightPos', kwargs['lightPos'])
         fshader.set('colour',   kwargs['flatColour'])
         fshader.unload()

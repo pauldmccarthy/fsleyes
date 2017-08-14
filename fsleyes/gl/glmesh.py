@@ -259,8 +259,8 @@ class GLMesh(globject.GLObject):
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
         if self.threedee:
-            canvas.addListener('light',    name, shader, weak=False)
-            canvas.addListener('lightPos', name, shader, weak=False)
+            canvas.opts.addListener('light',    name, shader, weak=False)
+            canvas.opts.addListener('lightPos', name, shader, weak=False)
 
         # We don't need to listen for
         # brightness or contrast, because
@@ -293,9 +293,8 @@ class GLMesh(globject.GLObject):
         self.display.removeListener('alpha',            self.name)
 
         if self.threedee:
-            self.canvas.removeListener('light',    self.name)
-            self.canvas.removeListener('lightPos', self.name)
-
+            self.canvas.opts.removeListener('light',    self.name)
+            self.canvas.opts.removeListener('lightPos', self.name)
 
 
     def registerLut(self):
@@ -956,20 +955,20 @@ class GLMesh(globject.GLObject):
         the GL-version specific ``updateShaderState`` function.
         """
 
-        opts       = self.opts
-        canvas     = self.canvas
+        dopts      = self.opts
+        copts      = self.canvas.opts
         lightPos   = None
-        flatColour = opts.getConstantColour()
-        useNegCmap = (not opts.useLut) and opts.useNegativeCmap
+        flatColour = dopts.getConstantColour()
+        useNegCmap = (not dopts.useLut) and dopts.useNegativeCmap
 
         if self.threedee:
-            lightPos  = np.array(canvas.lightPos)
-            lightPos *= (canvas.zoom / 100.0)
+            lightPos  = np.array(copts.lightPos)
+            lightPos *= (copts.zoom / 100.0)
         else:
             lightPos = None
 
-        if opts.useLut:
-            delta     = 1.0 / (opts.lut.max() + 1)
+        if dopts.useLut:
+            delta     = 1.0 / (dopts.lut.max() + 1)
             cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
         else:
             cmapXform = self.cmapTexture.getCoordinateTransform()
