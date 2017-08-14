@@ -243,7 +243,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         if displayCtx.getParent() is not None:
             self.bindProps('syncLocation',
                            displayCtx,
-                           displayCtx.getSyncPropertyName('location'))
+                           displayCtx.getSyncPropertyName('worldLocation'))
             self.bindProps('syncOverlayOrder',
                            displayCtx,
                            displayCtx.getSyncPropertyName('overlayOrder'))

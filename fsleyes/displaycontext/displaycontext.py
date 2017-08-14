@@ -81,7 +81,22 @@ class DisplayContext(props.SyncableHasProperties):
 
     location = props.Point(ndims=3)
     """The location property contains the currently selected 3D location (xyz)
-    in the display coordinate system.
+    in the display coordinate system. Different ``DisplayContext`` instances
+    may be using different display coordinate systems - see the
+    :attr:`displaySpace` property.
+    """
+
+
+    worldLocation = props.Point(ndims=3)
+    """The location property contains the currently selected 3D location (xyz)
+    in the world coordinate system. Whenever the :attr:`location` changes, it
+    gets transformed into the world coordinate system, and propagated to this
+    property. The location of different ``DisplayContext`` instances is
+    synchronised through this property.
+
+    .. note:: If any :attr:`.NiftiOpts.transform` properties have been modified
+              independently of the :attr:`displaySpace`, this value will be
+              invalid.
     """
 
 
@@ -116,6 +131,13 @@ class DisplayContext(props.SyncableHasProperties):
     to those of the parent instance. Otherwise, the display properties for
     every overlay will be unsynchronised from the parent.
 
+    Synchronisation of the following  properties across ``DisplayContext``
+    instances is also controlled by this flag:
+
+      - :attr:`displaySpace`
+      - :attr:`bounds`
+      - :attr:`radioOrientation`
+
     .. note:: This property is accessed by the :class:`.Display` class, in its
               constructor, and when it creates new :class:`.DisplayOpts`
               instances, to set initial sync states.
@@ -123,10 +145,12 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     displaySpace = props.Choice(('world', ))
-    """The *space* in which overlays are displayed. This property globally
-    controls the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti`
-    overlays. It has two settings, described below. The options for this
-    property are dynamically added by :meth:`__updateDisplaySpaceOptions`.
+    """The *space* in which overlays are displayed. This property defines the
+    display coordinate system for this ``DisplayContext``. When it is changed,
+    the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti` overlays
+    in the :class:`.OverlayList` is updated. It has two settings, described
+    below. The options for this property are dynamically added by
+    :meth:`__updateDisplaySpaceOptions`.
 
     1. **World** space (a.k.a. ``'world'``)
 
@@ -156,7 +180,7 @@ class DisplayContext(props.SyncableHasProperties):
     radioOrientation = props.Boolean(default=True)
     """If ``True``, 2D views will show images in radiological convention
     (i.e.subject left on the right of the display). Otherwise, they will be
-    shown  in neurological convention (subject left on the left).
+    shown in neurological convention (subject left on the left).
 
     .. note:: This setting is not enforced by the ``DisplayContext``. It is
               the responsibility of the :class:`.OrthoPanel` and
@@ -207,7 +231,8 @@ class DisplayContext(props.SyncableHasProperties):
                       'overlayGroups',
                       'autoDisplay',
                       'loadInMemory'],
-            nobind=[  'syncOverlayDisplay'],
+            nobind=[  'syncOverlayDisplay',
+                      'location'],
             state={'overlayOrder' : False})
 
         self.__overlayList = overlayList
@@ -250,15 +275,14 @@ class DisplayContext(props.SyncableHasProperties):
         # We keep a cache of 'standard' coordinates,
         # one for each overlay - see the cacheStandardCoordinates
         # method.  We're storing this cache in a tricky
-        # way though - as an attribute of the location
+        # way though - as an attribute of the worldLocation
         # property. We do this so that the cache will be
         # automatically synchronised between parent/child
-        # DC objects.
-        locPropVal = self.getPropVal('location')
+        # DC objects (unless the worldLocation is unsynced).
+        locPropVal = self.getPropVal('worldLocation')
 
-        # Only set the standardCoords cache on
-        # the parent DC - children will inherit
-        # it.
+        # Only set the standardCoords cache on the
+        # parent DC - children will inherit it.
         if not self.__child:
             locPropVal.setAttribute('standardCoords',
                                     weakref.WeakKeyDictionary())
@@ -279,6 +303,14 @@ class DisplayContext(props.SyncableHasProperties):
             self.addListener('displaySpace',
                              self.__name,
                              self.__displaySpaceChanged,
+                             immediate=True)
+            self.addListener('location',
+                             self.__name,
+                             self.__locationChanged,
+                             immediate=True)
+            self.addListener('worldLocation',
+                             self.__name,
+                             self.__worldLocationChanged,
                              immediate=True)
             self.__displaySpaceChanged()
 
@@ -306,6 +338,8 @@ class DisplayContext(props.SyncableHasProperties):
         if self.__child:
             self.removeListener('syncOverlayDisplay', self.__name)
             self.removeListener('displaySpace',       self.__name)
+            self.removeListener('location',           self.__name)
+            self.removeListener('worldLocation',      self.__name)
 
         for overlay, display in self.__displays.items():
             display.destroy()
@@ -492,7 +526,7 @@ class DisplayContext(props.SyncableHasProperties):
         if not self.__child:
             return
 
-        locPropVal     = self.getPropVal('location')
+        locPropVal     = self.getPropVal('worldLocation')
         standardCoords = weakref.WeakKeyDictionary(
             locPropVal.getAttribute('standardCoords'))
 
@@ -864,7 +898,7 @@ class DisplayContext(props.SyncableHasProperties):
         # overlay's DisplayOpts instance - see the docs
         # for the cacheStandardCoordinates), and use them
         # below to restore the location
-        locPropVal = self.getPropVal('location')
+        locPropVal = self.getPropVal('worldLocation')
         stdLoc     = locPropVal.getAttribute('standardCoords')[overlay]
 
         # Update the display context bounds
@@ -972,3 +1006,40 @@ class DisplayContext(props.SyncableHasProperties):
         self.location.setLimits(0, self.bounds.xlo, self.bounds.xhi)
         self.location.setLimits(1, self.bounds.ylo, self.bounds.yhi)
         self.location.setLimits(2, self.bounds.zlo, self.bounds.zhi)
+
+
+    def __locationChanged(self, *a):
+        """Called when the :attr:`location` property changes. Propagates
+        the new location to the :attr:`worldLocation` property.
+        """
+        self.__propagateLocation('world')
+
+
+    def __worldLocationChanged(self, *a):
+        """Called when the :attr:`worldLocation` property changes. Propagates
+        the new location to the :attr:`location` property.
+        """
+        self.__propagateLocation('display')
+
+
+    def __propagateLocation(self, dest):
+        """Called by the :meth:`__locationChanged` and
+        :meth:`__worldLocationChanged` methods.
+        """
+
+        if self.displaySpace == 'world':
+            if dest == 'world': self.worldLocation = self.location
+            else:               self.location      = self.worldLocation
+            return
+
+        ref  = self.displaySpace
+        opts = self.getOpts(ref)
+
+        if dest == 'world':
+            self.worldLocation = opts.transformCoords(self.location,
+                                                      'display',
+                                                      'world')
+        else:
+            self.location      = opts.transformCoords(self.worldLocation,
+                                                      'world',
+                                                      'display')
