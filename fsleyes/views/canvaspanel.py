@@ -9,22 +9,14 @@ class for all panels which display overlays using ``OpenGL``.
 """
 
 
-import os
-import os.path as op
 import logging
 
 import wx
 
-import numpy            as np
-import matplotlib.image as mplimg
-
 import fsl.utils.async                             as async
-import fsl.utils.settings                          as fslsettings
 from   fsl.utils.platform  import platform         as fslplatform
 import fsleyes_props                               as props
-import fsleyes_widgets.utils.status                as status
 
-import fsleyes.strings                             as strings
 import fsleyes.actions                             as actions
 import fsleyes.colourmaps                          as colourmaps
 import fsleyes.displaycontext                      as displayctx
@@ -208,7 +200,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
 
 
-    movieRate = props.Int(minval=10, maxval=500, default=250, clamped=True)
+    movieRate = props.Int(minval=10, maxval=500, default=400, clamped=True)
     """The movie update rate in milliseconds. The value of this property is
     inverted so that a high value corresponds to a fast rate, which makes
     more sense when displayed as an option to the user.
@@ -297,8 +289,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                                       self.__name,
                                       self.__movieModeChanged)
 
-        # Canvas/colour bar layout is managed in
-        # the layoutColourBarAndCanvas method
+        # Canvas/colour bar layout is managed
+        # in the layoutContainerPanel method
         self.__colourBar = None
 
         self.__opts.addListener('colourBarLocation',
@@ -307,6 +299,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts.addListener('showColourBar',
                                 self.__name,
                                 self.__colourBarPropsChanged)
+        self.__opts.addListener('bgColour',
+                                self.__name,
+                                self.__bgColourChanged)
 
 
     def destroy(self):
@@ -323,6 +318,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         self._displayCtx .removeListener('selectedOverlay',   self.__name)
         self.__opts      .removeListener('colourBarLocation', self.__name)
         self.__opts      .removeListener('showColourBar',     self.__name)
+        self.__opts      .removeListener('bgColour',          self.__name)
 
         viewpanel.ViewPanel.destroy(self)
 
@@ -330,9 +326,15 @@ class CanvasPanel(viewpanel.ViewPanel):
     @actions.action
     def screenshot(self):
         """Takes a screenshot of the currently displayed scene on this
-        ``CanvasPanel``. See the :func:`_screenshot` function.
+        ``CanvasPanel``.
+
+        See the :class:`.ScreenshotAction`.
         """
-        _screenshot(self._overlayList, self._displayCtx, self)
+        from fsleyes.actions.screenshot import ScreenshotAction
+
+        ScreenshotAction(self.getOverlayList(),
+                         self.getDisplayContext(),
+                         self)()
 
 
     @actions.action
@@ -568,6 +570,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             bg = self.getSceneOptions().bgColour
             fg = colourmaps.complementaryColour(bg)
             self.__colourBar.getCanvas().textColour = fg
+            self.__colourBar.getCanvas().bgColour   = bg
 
         self.__opts.bindProps('colourBarLabelSide',
                               self.__colourBar,
@@ -598,6 +601,35 @@ class CanvasPanel(viewpanel.ViewPanel):
         :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
         """
         self.centrePanelLayout()
+
+
+    def __bgColourChanged(self, *a, **kwa):
+        """Called when the :class:`.SceneOpts.bgColour` property changes.
+        Updates background/foreground colours.
+
+        The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
+        ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
+        don't need to manually update them.
+
+        :arg refresh: Must be passed as a keyword argument. If ``True`` (the
+                      default), this ``OrthoPanel`` is refreshed.
+        """
+        refresh = kwa.pop('refresh', True)
+
+        sceneOpts = self.getSceneOptions()
+        canvases  = self.getGLCanvases()
+        bg        = sceneOpts.bgColour
+        fg        = colourmaps.complementaryColour(bg)
+
+        if self.__colourBar is not None:
+            cbCanvas = self.__colourBar.getCanvas()
+            cbCanvas.textColour = fg
+            cbCanvas.bgColour   = bg
+            canvases.append(cbCanvas)
+
+        if refresh:
+            self.Refresh()
+            self.Update()
 
 
     def __movieModeChanged(self, *a):
@@ -679,9 +711,12 @@ class CanvasPanel(viewpanel.ViewPanel):
         return False
 
 
-    def __doMovieUpdate(self, overlay, opts):
+    def doMovieUpdate(self, overlay, opts):
         """Called by :meth:`__movieFrame`. Updates the properties on the
         given ``opts`` instance to move forward one frame in the movie.
+
+        This method may be overridden by sub-classes for custom behaviour
+        (e.g. the :class:`.Scene3DPanel`).
         """
 
         axis = self.movieAxis
@@ -730,7 +765,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         def other():
 
-            bmin, bmax = opts.bounds.getRangea(axis)
+            bmin, bmax = opts.bounds.getRange(axis)
             delta      = (bmax - bmin) / 75.0
 
             pos = self._displayCtx.location.getPos(axis)
@@ -760,6 +795,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         :returns: ``True`` if the movie loop was started, ``False`` otherwise.
         """
 
+        from . import scene3dpanel
+
         if self.destroyed():   return False
         if not self.movieMode: return False
 
@@ -782,7 +819,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.FreezeDraw()
             c.FreezeSwapBuffers()
 
-        self.__doMovieUpdate(overlay, opts)
+        self.doMovieUpdate(overlay, opts)
 
         # Now we get refs to *all* GLObjects managed
         # by every canvas - we have to wait until
@@ -803,7 +840,16 @@ class CanvasPanel(viewpanel.ViewPanel):
         rate    = self.movieRate
         rateMin = self.getConstraint('movieRate', 'minval')
         rateMax = self.getConstraint('movieRate', 'maxval')
-        rate    = (rateMin + (rateMax - rate)) / 1000.0
+
+        # Special case/hack - if this is a Scene3DPanel,
+        # and the movie axis is X/Y/Z, we always
+        # use a fast rate. Instead, the Scene3dPanel
+        # will increase/decrease the rotation angle
+        # to speed up/slow down the movie instead.
+        if isinstance(self, scene3dpanel.Scene3DPanel) and self.movieAxis < 3:
+            rate = rateMax
+
+        rate = (rateMin + (rateMax - rate)) / 1000.0
 
         # The canvas refreshes are performed by the
         # __syncMovieRefresh or __unsyncMovieRefresh
@@ -874,210 +920,3 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.SwapBuffers()
 
         async.idle(self.__movieLoop, after=rate)
-
-
-def _screenshot(overlayList, displayCtx, canvasPanel):
-    """Called by the :meth:`CanvasPanel.screenshot` method. Grabs a
-    screenshot of the current scene on the given :class:`.CanvasPanel`,
-    and saves it to a file specified by the user.
-
-    :arg overlayList: A :class:`.OverlayList` .
-    :arg displayCtx:  A :class:`.DisplayContext` instance.
-    :arg canvas:      A :class:`CanvasPanel` instance.
-    """
-
-    # Ask the user where they want
-    # the screenshot to be saved
-    fromDir = fslsettings.read('canvasPanelScreenshotLastDir', os.getcwd())
-
-    dlg = wx.FileDialog(
-        canvasPanel,
-        message=strings.messages['CanvasPanel.screenshot'],
-        defaultDir=fromDir,
-        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
-
-    if dlg.ShowModal() != wx.ID_OK:
-        return
-
-    filename = dlg.GetPath()
-
-    # Make the dialog go away before
-    # the screenshot gets taken
-    dlg.Close()
-    dlg.Destroy()
-    wx.Yield()
-
-    # We do the screenshot asynchronously,
-    # to make sure it is performed on
-    # the main thread, during idle time
-    def doScreenshot(panel):
-
-        # Make a H*W*4 bitmap array (h*w because
-        # that's how matplotlib want it). We
-        # initialise the bitmap to the current
-        # background colour, due to some sizing
-        # issues that are discussed in the
-        # osxPatch function below.
-        opts          = canvasPanel.getSceneOptions()
-        bgColour      = np.array(opts.bgColour) * 255
-
-        width, height = panel.GetClientSize().Get()
-        data          = np.zeros((height, width, 4), dtype=np.uint8)
-        data[:, :, :] = bgColour
-
-        log.debug('Creating bitmap {} * {} for {} screenshot'.format(
-            width, height, type(canvasPanel).__name__))
-
-        # The typical way to get a screen grab of a
-        # wx Window is to use a wx.WindowDC, and a
-        # wx.MemoryDC, and to 'blit' a region from
-        # the window DC into the memory DC. Then we
-        # extract the bitmap data and copy it into
-        # our array.
-        windowDC = wx.WindowDC(panel)
-        memoryDC = wx.MemoryDC()
-
-        if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
-            bmp = wx.Bitmap(width, height)
-        else:
-            bmp = wx.EmptyBitmap(width, height)
-
-        # Copy the contents of the canvas
-        # container to the bitmap
-        memoryDC.SelectObject(bmp)
-        memoryDC.Blit(
-            0,
-            0,
-            width,
-            height,
-            windowDC,
-            0,
-            0)
-        memoryDC.SelectObject(wx.NullBitmap)
-
-        rgb = bmp.ConvertToImage().GetData()
-        rgb = np.frombuffer(rgb, dtype=np.uint8)
-
-        data[:, :, :3] = rgb.reshape(height, width, 3)
-
-        # OSX and SSh/X11 both have complications
-        inSSH = fslplatform.inSSHSession and not fslplatform.inVNCSession
-        if inSSH or fslplatform.os == 'Darwin':
-            data = osxPatch(panel, data, bgColour)
-
-        data[:, :,  3] = 255
-
-        mplimg.imsave(filename, data)
-
-
-    def osxPatch(panel, data, bgColour):
-
-        # For some unknown reason, under OSX the
-        # contents of wx.glcanvas.GLCanvas instances
-        # are not captured by the WindowDC/MemoryDC
-        # blitting process described above - they come
-        # out all black.
-        #
-        # So here, I'm manually patching in bitmaps
-        # (read from the GL front buffer) of each
-        # GLCanvas that is displayed in the canvas
-        # panel.
-
-        # Get all the wx GLCanvas instances
-        # which are displayed in the panel,
-        # including the colour bar canvas
-        glCanvases = canvasPanel.getGLCanvases()
-        glCanvases.append(canvasPanel.getColourBarCanvas())
-
-        totalWidth, totalHeight = panel.GetClientSize().Get()
-        absPosx,    absPosy     = panel.GetScreenPosition()
-
-        # Patch in bitmaps for every GL canvas
-        for glCanvas in glCanvases:
-
-            # If the colour bar is not displayed,
-            # the colour bar canvas will be None
-            if glCanvas is None:
-                continue
-
-            # Hidden wx objects will
-            # still return a size
-            if not glCanvas.IsShown():
-                continue
-
-            width, height = glCanvas.GetClientSize().Get()
-            posx, posy    = glCanvas.GetScreenPosition()
-
-            posx -= absPosx
-            posy -= absPosy
-
-            log.debug('Canvas {} position: ({}, {}); size: ({}, {})'.format(
-                type(glCanvas).__name__, posx, posy, width, height))
-
-            xstart = posx
-            ystart = posy
-            xend   = xstart + width
-            yend   = ystart + height
-
-            bmp = glCanvas.getBitmap()
-
-            # Under OSX, there seems to be a size/position
-            # miscalculation  somewhere, such that if the last
-            # canvas is on the hard edge of the parent, the
-            # canvas size spills over the parent size by a
-            # couple of pixels. If this occurs, I re-size the
-            # final bitmap accordingly.
-            #
-            # n.b. This is why I initialise the bitmap array
-            #      to the canvas panel background colour.
-            if xend > totalWidth:
-
-                oldWidth    = totalWidth
-                totalWidth  = xend
-                newData     = np.zeros((totalHeight, totalWidth, 4),
-                                       dtype=np.uint8)
-
-                newData[:, :, :]         = bgColour
-                newData[:, :oldWidth, :] = data
-                data                     = newData
-
-                log.debug('Adjusted bitmap width: {} -> {}'.format(
-                    oldWidth, totalWidth))
-
-            if yend > totalHeight:
-
-                oldHeight   = totalHeight
-                totalHeight = yend
-                newData     = np.zeros((totalHeight, totalWidth, 4),
-                                       dtype=np.uint8)
-
-                newData[:, :, :]          = bgColour
-                newData[:oldHeight, :, :] = data
-                data                      = newData
-
-                log.debug('Adjusted bitmap height: {} -> {}'.format(
-                    oldHeight, totalHeight))
-
-            log.debug('Patching {} in at [{} - {}], [{} - {}]'.format(
-                type(glCanvas).__name__, xstart, xend, ystart, yend))
-
-            data[ystart:yend, xstart:xend] = bmp
-
-        return data
-
-    # The canvas panel container is the
-    # direct parent of the colour bar
-    # canvas, and an ancestor of the
-    # other GL canvases. So that's the
-    # one that we want to take a screenshot
-    # of.
-    doScreenshot = status.reportErrorDecorator(
-        strings.titles[  'CanvasPanel.screenshot.error'],
-        strings.messages['CanvasPanel.screenshot.error'])(doScreenshot)
-
-    async.idle(doScreenshot, canvasPanel.getContainerPanel())
-
-    status.update(
-        strings.messages['CanvasPanel.screenshot.pleaseWait'].format(filename))
-
-    fslsettings.write('canvasPanelScreenshotLastDir', op.dirname(filename))

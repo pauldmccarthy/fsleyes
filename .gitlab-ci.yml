@@ -557,7 +557,7 @@ deploy-builds:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python3.5
+  image: python:3.5
   tags:
     - docker
 
@@ -576,7 +576,7 @@ deploy-install:
   <<: *only_releases
   stage: deploy
   when:  manual
-  image: python3.5
+  image: python:3.5
   tags:
     - docker
 

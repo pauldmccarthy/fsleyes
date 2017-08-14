@@ -83,6 +83,14 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        toggleTimeSeriesControl
 
 
+    Some tools are also available, to do various things:
+
+    .. autosummary::
+       :nosignatures:
+
+       addMaskDataSeries
+
+
     **FEATures**
 
 

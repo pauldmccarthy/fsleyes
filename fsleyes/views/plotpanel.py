@@ -384,31 +384,15 @@ class PlotPanel(viewpanel.ViewPanel):
     def screenshot(self, *a):
         """Prompts the user to select a file name, then saves a screenshot
         of the current plot.
+
+        See the :class:`.ScreenshotAction`.
         """
 
-        formats  = list(self.__canvas.get_supported_filetypes().items())
+        from fsleyes.actions.screenshot import ScreenshotAction
 
-        wildcard = ['{}|*.{}'.format(desc, fmt) for fmt, desc in formats]
-        wildcard = '|'.join(wildcard)
-
-        dlg = wx.FileDialog(self,
-                            message=strings.messages[self, 'screenshot'],
-                            wildcard=wildcard,
-                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
-
-        if dlg.ShowModal() != wx.ID_OK:
-            return
-
-        path = dlg.GetPath()
-
-        try:
-            self.__figure.savefig(path)
-
-        except Exception as e:
-            wx.MessageBox(
-                strings.messages[self, 'screenshot', 'error'].format(str(e)),
-                strings.titles[  self, 'screenshot', 'error'],
-                wx.ICON_ERROR)
+        ScreenshotAction(self.getOverlayList(),
+                         self.getDisplayContext(),
+                         self)()
 
 
     @actions.action
