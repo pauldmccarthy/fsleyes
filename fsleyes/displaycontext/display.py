@@ -402,10 +402,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
                           how the overlays are to be displayed.
         """
 
-        nounbind = kwargs.get('nounbind', [])
-        nounbind.append('bounds')
-        kwargs['nounbind'] = nounbind
-
         self.overlay     = overlay
         self.display     = display
         self.overlayList = overlayList

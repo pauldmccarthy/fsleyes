@@ -178,6 +178,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
             rots[self.movieAxis] = rate
 
             xform = transform.axisAnglesToRotMat(*rots)
-            xform = transform.concat(xform, canvas.rotation)
+            xform = transform.concat(xform, canvas.opts.rotation)
 
-            canvas.rotation = xform
+            canvas.opts.rotation = xform

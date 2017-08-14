@@ -212,9 +212,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # the display context bounds, which also
         # cannot be unsynced
         nounbind = kwargs.get('nounbind', [])
-        nounbind.append('transform')
-        nounbind.append('customXform')
-        nounbind.append('displayXform')
         nounbind.append('overrideDataRange')
         nounbind.append('enableOverrideDataRange')
 
@@ -228,13 +225,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if len(self.overlay.shape) == 4:
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
 
-        # Because the transform properties cannot
-        # be unbound between parents/children, all
-        # NiftiOpts instances for a single overlay
-        # will have the same values. Therefore
-        # only the parent instance needs to
-        # register for when they change.
-        self.__registered = self.getParent() is None
+        self.__registered = self.getParent() is not None
 
         if self.__registered:
             overlay.register(self.name,
@@ -516,12 +507,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
         """
-
-        # The parent NitfiOpts instance
-        # manages transforms
-        parent = self.getParent()
-        if parent is not None:
-            return parent.getTransform(from_, to, xform)
 
         if xform is None:
             xform = self.transform

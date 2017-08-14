@@ -1105,9 +1105,7 @@ class SliceCanvas(object):
                       :attr:`invertY`.
 
         :returns: A sequence of three ``(low, high)`` values, defining the
-                  display coordinate system bounding box. Note that this
-                  sequence is ordered in absolute terms, not in terms of
-                  the orientation of this ``SliceCanvas``.
+                  display coordinate system bounding box.
         """
 
         opts = self.opts
