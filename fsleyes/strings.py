@@ -127,23 +127,10 @@ messages = TypeDict({
     'AtlasInfoPanel.loadAtlasError' : 'An error occurred while trying '
                                       'to load the atlas "{}":\nDetails: {}',
 
-    'CanvasPanel.screenshot'            : 'Save screenshot',
-    'CanvasPanel.screenshot.notSaved'   : 'Overlay {} needs saving before a '
-                                          'screenshot can be taken.',
-    'CanvasPanel.screenshot.pleaseWait' : 'Saving screenshot to {}...',
-    'CanvasPanel.screenshot.error'      : 'An error occurred saving the '
-                                          'screenshot.',
-
     'CanvasPanel.showCommandLineArgs.title'   : 'Scene parameters',
     'CanvasPanel.showCommandLineArgs.message' : 'Use these parameters on the '
                                                 'command line to recreate '
                                                 'the current scene',
-
-    'PlotPanel.screenshot'              : 'Save screenshot',
-
-    'PlotPanel.screenshot.error'       : 'An error occurred while saving the '
-                                         'screenshot.\n\n'
-                                         'Details: {}',
 
     'PlotPanel.preparingData'          : 'Preparing data - please wait...',
 
@@ -207,6 +194,11 @@ messages = TypeDict({
     'MelodicClassificationPanel.diffMelDir.overlay' :
     'Apply the labels to the current overlay',
 
+
+    'ScreenshotAction.screenshot' : 'Save screenshot',
+    'ScreenshotAction.pleaseWait' : 'Saving screenshot to {}...',
+    'ScreenshotAction.error'      : 'An error occurred saving the screenshot.',
+
     'SaveOverlayAction.saveError' :
     'An error occurred while saving the file {}.',
 
@@ -233,11 +225,14 @@ messages = TypeDict({
                                             'as the first column?',
 
     'AddMaskDataSeriesAction.selectMask'  :
-    'Choose a mask to extract the time series data (mean across\n'
-    'voxels, weighted by mask values) from {}:',
+    'Choose an ROI mask to extract the time series data (mean across\n'
+    'voxels, optionally weighted by mask values) from {}:',
 
     'AddMaskDataSeriesAction.weighted'  :
-    'Calculate weighted mean using the mask voxel values as weights',
+    'Calculate weighted mean using the ROI mask voxel values as weights',
+
+    'AddROIHistogramAction.selectMask' :
+    'Choose an ROI mask to plot the histogram from {} for:',
 
     'LoadAtlasAction.error'       :
     'An error occurred loading the atlas specification {}.',
@@ -307,11 +302,6 @@ titles = TypeDict({
     'SliceCanvas.globjectError'  : 'Error initialising display',
     'Texture3D.dataError'        : 'Error updating data',
 
-    'CanvasPanel.screenshot'          : 'Save screenshot',
-    'CanvasPanel.screenshot.notSaved' : 'Save overlay before continuing',
-    'CanvasPanel.screenshot.error'    : 'Error saving screenshot',
-
-    'PlotPanel.screenshot.error'      : 'Error saving screenshot',
 
     'AtlasInfoPanel'       : 'Atlas information',
     'AtlasOverlayPanel'    : 'Atlas search',
@@ -356,6 +346,8 @@ titles = TypeDict({
     'MelodicClassificationPanel.loadError'  : 'Error loading FIX/Melview file',
     'MelodicClassificationPanel.saveError'  : 'Error saving FIX/Melview file',
 
+    'ScreenshotAction.screenshot'          : 'Save screenshot',
+    'ScreenshotAction.error'               : 'Error saving screenshot',
     'ClearPerspectiveAction.confirmClear'  : 'Clear all perspectives?',
     'DiagnosticReportAction.saveReport'    : 'Save diagnostic report',
     'SaveOverlayAction.overwrite'          : 'Overwrite existing file?',
@@ -382,7 +374,10 @@ titles = TypeDict({
 
 
     'AddMaskDataSeriesAction.selectMask'  :
-    'Mask time series from {}',
+    'ROI time series from {}',
+
+    'AddROIHistogramAction.selectMask'  :
+    'ROI histogram from {}',
 
     'LoadAtlasAction.fileDialog'  : 'Load XML atlas specification',
     'LoadAtlasAction.error'       : 'Error loading atlas specification',
@@ -481,6 +476,8 @@ actions = TypeDict({
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
+    'Scene3DPanel.resetDisplay' : 'Reset camera',
+
     'PlotPanel.screenshot'                          : 'Take screenshot',
     'PlotPanel.importDataSeries'                    : 'Import ...',
     'PlotPanel.exportDataSeries'                    : 'Export ...',
@@ -488,11 +485,12 @@ actions = TypeDict({
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar',
-    'TimeSeriesPanel.addMaskDataSeries'             : 'Add masked time series',
+    'TimeSeriesPanel.addMaskDataSeries'             : 'Add time series from ROI',
     'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
     'HistogramPanel.toggleHistogramOverlay'         : 'Histogram overlay',
+    'HistogramPanel.addROIHistogram'                : 'Add histogram from ROI',
     'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',
@@ -527,12 +525,6 @@ labels = TypeDict({
     'LocationPanel.notAvailable'          : 'N/A',
 
     'OverlayListPanel.noDataSource'       : '[in memory]',
-
-    'CanvasPanel.screenshot.notSaved.save'   : 'Save overlay now',
-    'CanvasPanel.screenshot.notSaved.skip'   : 'Skip overlay (will not appear '
-                                               'in screenshot)',
-    'CanvasPanel.screenshot.notSaved.cancel' : 'Cancel screenshot',
-
 
     'LookupTablePanel.selectAll'   : 'Select all',
     'LookupTablePanel.selectNone'  : 'Deselect all',
@@ -1313,7 +1305,7 @@ plotLabels = {
 about = {
     'title'      : 'About FSLeyes',
     'author'     : 'Paul McCarthy',
-    'email'      : 'paulmc@fmrib.ox.ac.uk',
+    'email'      : 'paul.mccarthy@ndcn.ox.ac.uk',
     'company'    : 'FMRIB Centre, Oxford, UK',
     'version'    : 'FSLeyes version: {}',
     'glVersion'  : 'OpenGL version: {}',
@@ -1335,7 +1327,7 @@ about = {
      - pillow [{}]  (http://python-pillow.org/)
      - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/props)
      - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
-     - fslpy [{}] (https://git.fmrib.ox.ac.uk/paulmc/fslpy)
+     - fslpy [{}] (https://git.fmrib.ox.ac.uk/fsl/fslpy)
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
      - scipy [{}] (http://www.scipy.org)

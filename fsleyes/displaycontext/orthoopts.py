@@ -12,7 +12,8 @@ settings used by the :class:`.OrthoPanel` class.
 import logging
 import copy
 
-import fsleyes_props as props
+import fsleyes_props      as props
+import fsleyes.colourmaps as fslcm
 
 from . import sceneopts
 
@@ -57,9 +58,9 @@ class OrthoOpts(sceneopts.SceneOpts):
 
 
     labelColour = props.Colour(default=(1, 1, 1))
-    """Label colour. Note that the :class:`.OrthoPanel` will automatically
-    update this value when the :attr:`.SceneOpts.bgColour` is changed. But
-    the user can independently modify this property without any side-effects.
+    """Label colour. Note that this colour will automatically be updated when
+    the :attr:`bgColour` is changed. But the user can independently modify this
+    property without any side-effects.
     """
 
 
@@ -91,7 +92,8 @@ class OrthoOpts(sceneopts.SceneOpts):
 
         name = '{}_{}'.format(type(self).__name__, id(self))
 
-        self.addListener('zoom', name, self.__onZoom)
+        self.addListener('zoom',     name, self.__onZoom)
+        self.addListener('bgColour', name, self.__onBgColour)
 
 
     def __onZoom(self, *a):
@@ -103,6 +105,15 @@ class OrthoOpts(sceneopts.SceneOpts):
         self.xzoom = self.zoom
         self.yzoom = self.zoom
         self.zzoom = self.zoom
+
+
+    def __onBgColour(self, *a):
+        """Called when the :attr:`bgColour` changes. Updates the
+        :attr:`labelColour` property to something complementary to
+        the background.
+        """
+
+        self.labelColour = fslcm.complementaryColour(self.bgColour)
 
 
     def _onPerformanceChange(self, *a):

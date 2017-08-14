@@ -180,7 +180,7 @@ def _initPropertyList_VectorOpts(threedee):
     return ['colourImage',
             'modulateImage',
             'clipImage',
-            'custom_cmap',
+            'cmap',
             'clippingRange',
             'modulateRange',
             'xColour',

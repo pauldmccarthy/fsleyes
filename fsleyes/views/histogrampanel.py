@@ -19,6 +19,7 @@ import fsl.data.image                         as fslimage
 import fsleyes_props                          as props
 
 import fsleyes.actions                        as actions
+import fsleyes.actions.addroihistogram        as roihistogram
 import fsleyes.overlay                        as fsloverlay
 import fsleyes.plotting.histogramseries       as histogramseries
 import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
@@ -60,6 +61,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
        toggleHistogramToolBar
        toggleHistogramControl
+
+    Some tools are also available, to do various things:
+
+    .. autosummary::
+       :nosignatures:
+
+       addROIHistogram
     """
 
 
@@ -96,6 +104,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         displayCtx .addListener('selectedOverlay',
                                 self._name,
                                 self.__selectedOverlayChanged)
+
+        self.__roiHistAction = roihistogram.AddROIHistogramAction(
+            overlayList,
+            displayCtx,
+            self)
+
+        self.addROIHistogram.bindProps('enabled', self.__roiHistAction)
 
         self.initProfile()
         self.__selectedOverlayChanged()
@@ -144,6 +159,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         pass
 
 
+    @actions.action
+    def addROIHistogram(self):
+        """Runs an :class:`.AddROIHistogramAction`. """
+
+        self.__roiHistAction()
+
+
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``HistogramPanel``.
@@ -161,6 +183,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         names = [a.__name__ if a is not None else None for a in actions]
 
         return list(zip(names, actions))
+
+
+    def getTools(self):
+        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
+        ``HistogramPanel`` views.
+        """
+        return [self.addROIHistogram]
 
 
     def draw(self, *a):

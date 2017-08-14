@@ -4,13 +4,18 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`Scene3DPanel` class, a FSLeyes view which
+draws the scene in 3D.
 """
-"""
+
 
 import logging
 
 import wx
 
+import numpy as np
+
+import fsl.utils.transform                as transform
 import fsleyes.displaycontext.scene3dopts as scene3dopts
 import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
 import fsleyes.actions                    as actions
@@ -21,8 +26,29 @@ log = logging.getLogger(__name__)
 
 
 class Scene3DPanel(canvaspanel.CanvasPanel):
+    """The ``Scene3DPanel`` is a :class:`.CanvasPanel` which draws the
+    contents of the :class:`.OverlayList` as a 3D scene.
+
+
+    The ``Scene3DPanel`` uses a :class:`.Scene3DCanvas`, which manages all of
+    the GL state and drawing logic. A :class:`.Scene3DViewProfile` instance
+    is used to manage all of the user interaction logic.
+
+
+    The scene properties are described and changed via a :class:`.Scene3DOpts`
+    instance, accessible through the :meth:`.CanvasPanel.getSceneOptions`
+    method.
+    """
+
 
     def __init__(self, parent, overlayList, displayCtx, frame):
+        """Create a ``Scene3dPanel``.
+
+        :arg parent:      A :mod:`wx` parent object.
+        :arg overlayList: A :class:`.OverlayList` instance.
+        :arg displayCtx:  A :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        """
 
         sceneOpts = scene3dopts.Scene3DOpts()
 
@@ -61,6 +87,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
 
     def destroy(self):
+        """Must be called when this ``Scene3DPanel`` is no longer in use.
+        """
 
         self.__canvas.destroy()
         self.__canvas = None
@@ -76,7 +104,9 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
 
     def getActions(self):
-        """
+        """Overrides :meth:`.ViewPanel.getActions`. Returns a list of actions
+        that can be executed on this ``Scene3DPanel``, and which will be added
+        to its view menu.
         """
         actionz = [self.screenshot,
                    self.showCommandLineArgs,
@@ -118,6 +148,34 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
     @actions.action
     def resetDisplay(self):
-        """
+        """An action which resets the current camera configuration
+        (zoom/pan/rotation). See the :meth:`.Scene3DViewProfile.resetDisplay`
+        method.
         """
         self.getCurrentProfile().resetDisplay()
+
+
+    def doMovieUpdate(self, overlay, opts):
+        """Overrides :meth:`.CanvasPanel.doMovieUpdate`. For x/y/z axis
+        movies, the scene is rotated. Otherwise (for time) the ``CanvasPanel``
+        implementation is called.
+        """
+
+        if self.movieAxis >= 3:
+            canvaspanel.CanvasPanel.doMovieUpdate(self, overlay, opts)
+        else:
+
+            rate    = float(self.movieRate)
+            rateMin = self.getConstraint('movieRate', 'minval')
+            rateMax = self.getConstraint('movieRate', 'maxval')
+            rate    = 0.1 + 0.9 * (rate - rateMin) / (rateMax - rateMin)
+            rate    = rate * np.pi / 10
+
+            canvas               = self.__canvas
+            rots                 = [0, 0, 0]
+            rots[self.movieAxis] = rate
+
+            xform = transform.axisAnglesToRotMat(*rots)
+            xform = transform.concat(xform, canvas.rotation)
+
+            canvas.rotation = xform

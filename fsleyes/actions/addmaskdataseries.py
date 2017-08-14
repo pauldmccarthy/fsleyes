@@ -61,6 +61,10 @@ class AddMaskDataSeriesAction(base.Action):
         """
         self.__overlayList.removeListener('overlays',        self.__name)
         self.__displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__plotPanel   = None
+        self.__maskOptions = None
         base.Action.destroy(self)
 
 
@@ -89,8 +93,6 @@ class AddMaskDataSeriesAction(base.Action):
         series in that mask, then adds that time series to the
         :class:`.TimeSeriesPanel` that owns this action instance.
         """
-
-        import wx
 
         overlay = self.__displayCtx.getSelectedOverlay()
         options = self.__maskOptions
@@ -161,6 +163,7 @@ class MaskDialog(wx.Dialog):
                  choices,
                  title=None,
                  message=None,
+                 checkbox=True,
                  checkboxMessage=None):
         """Create a ``ChoiceDialog``.
 
@@ -169,6 +172,7 @@ class MaskDialog(wx.Dialog):
                               user.
         :arg title:           Dialog title
         :arg message:         Message to show above choice widget.
+        :arg checkbox:        Show a checkbox
         :arg checkboxMessage: Message to show alongside checkbox widget.
         """
 
@@ -183,7 +187,9 @@ class MaskDialog(wx.Dialog):
 
         self.__message      = wx.StaticText(self, label=message)
         self.__choice       = wx.Choice(self,     choices=choices)
-        self.__checkbox     = wx.CheckBox(self,   label=checkboxMessage)
+
+        if checkbox: self.__checkbox = wx.CheckBox(self, label=checkboxMessage)
+        else:        self.__checkbox = None
 
         self.__okButton     = wx.Button(self, label='Ok',     id=wx.ID_OK)
         self.__cancelButton = wx.Button(self, label='Cancel', id=wx.ID_CANCEL)
@@ -208,9 +214,12 @@ class MaskDialog(wx.Dialog):
         self.__mainSizer.Add(self.__choice,
                              flag=wx.EXPAND | wx.LEFT | wx.RIGHT,
                              border=20)
-        self.__mainSizer.Add(self.__checkbox,
-                             flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP,
-                             border=20)
+
+        if checkbox:
+            self.__mainSizer.Add(self.__checkbox,
+                                 flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP,
+                                 border=20)
+
         self.__mainSizer.Add(self.__buttonSizer,
                              flag=wx.EXPAND | wx.ALL,
                              border=20)
@@ -228,6 +237,9 @@ class MaskDialog(wx.Dialog):
 
     def GetCheckBox(self):
         """Returns the index of the currently selected choice."""
+        if self.__checkbox is None:
+            raise RuntimeError('This dialog does not have a checkbox')
+
         return self.__checkbox.GetValue()
 
 
