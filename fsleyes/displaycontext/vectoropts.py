@@ -284,7 +284,7 @@ class LineVectorOpts(VectorOpts):
     """
 
 
-    lineWidth = props.Int(minval=1, maxval=10, default=1)
+    lineWidth = props.Real(minval=0.1, maxval=10, default=1, clamped=True)
     """Width of the line in pixels.
     """
 
