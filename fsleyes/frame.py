@@ -920,7 +920,8 @@ class FSLeyesFrame(wx.Frame):
         # then we set the new panel to
         # be unsynced
         elif displaySynced and orderSynced:
-            if newPanel is not None:
+            if newPanel is not None and \
+               isinstance(newPanel, canvaspanel.CanvasPanel):
                 childDC = newPanel.getDisplayContext()
                 childDC.syncOverlayDisplay = False
                 childDC.unsyncFromParent('overlayOrder')
