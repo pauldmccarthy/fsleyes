@@ -191,6 +191,11 @@ def makeDisplayContext(namespace):
     elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
     elif namespace.scene == '3d':       sceneOpts = scene3dopts. Scene3DOpts()
 
+    # 3D views default to
+    # world display space
+    if namespace.scene == '3d':
+        childDisplayCtx.displaySpace = 'world'
+
     parseargs.applySceneArgs(namespace,
                              overlayList,
                              childDisplayCtx,

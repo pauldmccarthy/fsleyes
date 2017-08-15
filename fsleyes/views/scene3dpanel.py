@@ -59,6 +59,14 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
+
+        # In 3D, the displaySpace must always be
+        # set to world, regardless of the parent
+        # DC value. This can be overridden manually
+        # however (e.g. through the python shell)
+        displayCtx.detachDisplaySpace()
+        displayCtx.displaySpace = 'world'
+
         contentPanel = self.getContentPanel()
 
         self.__canvas = scene3dcanvas.WXGLScene3DCanvas(contentPanel,

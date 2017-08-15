@@ -207,15 +207,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         constructor.
         """
 
-        # The transform property cannot be unsynced
-        # across different displays, as it affects
-        # the display context bounds, which also
-        # cannot be unsynced
         nounbind = kwargs.get('nounbind', [])
+        nobind   = kwargs.get('nobind',   [])
+
         nounbind.append('overrideDataRange')
         nounbind.append('enableOverrideDataRange')
+        nobind  .append('displayXform')
 
         kwargs['nounbind'] = nounbind
+        kwargs['nobind']   = nobind
 
         fsldisplay.DisplayOpts.__init__(self, *args, **kwargs)
 

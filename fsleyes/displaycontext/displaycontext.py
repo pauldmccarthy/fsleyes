@@ -59,6 +59,10 @@ class DisplayContext(props.SyncableHasProperties):
         getSelectedOverlay
         getOverlayOrder
         getOrderedOverlays
+        freeze
+        freezeOverlay
+        thawOverlay
+        detachDisplaySpace
     """
 
 
@@ -331,7 +335,7 @@ class DisplayContext(props.SyncableHasProperties):
         instances managed by it are destroyed as well.
         """
 
-        self.detachFromParent()
+        self.detachAllFromParent()
 
         overlayList = self.__overlayList
         displays    = self.__displays
@@ -583,6 +587,32 @@ class DisplayContext(props.SyncableHasProperties):
             opts   .enableAllNotification()
 
 
+    def detachDisplaySpace(self):
+        """Detaches the :attr:`displaySpace` and :attr:`bounds` properties,
+        and all related :class:`.DisplayOpts` properties, from the parent
+        ``DisplayContext``.
+
+        This allows this ``DisplayContext`` to use a display coordinate
+        system that is completely independent from other instances, and is not
+        affected by changes to the parent properties.
+
+        This is an irreversible operation.
+        """
+
+        self.detachFromParent('displaySpace')
+        self.detachFromParent('bounds')
+
+        for ovl in self.__overlayList:
+
+            opts = self.getOpts(ovl)
+
+            opts.detachFromParent('bounds')
+
+            if isinstance(ovl, fslimage.Nifti):
+                opts.detachFromParent('transform')
+                opts.detachFromParent('customXform')
+
+
     def __overlayListChanged(self, *a):
         """Called when the :attr:`.OverlayList.overlays` property
         changes.
@@ -640,6 +670,15 @@ class DisplayContext(props.SyncableHasProperties):
                                  self.__name,
                                  self.__overlayBoundsChanged,
                                  overwrite=True)
+
+                # If detachDisplaySpace has been called,
+                # make sure the opts bounds (and related)
+                # properties are also detached
+                if not self.canBeSyncedToParent('displaySpace'):
+                    opts.detachFromParent('bounds')
+                    if isinstance(overlay, fslimage.Nifti):
+                        opts.detachFromParent('transform')
+                        opts.detachFromParent('customXform')
 
         # Limit the selectedOverlay property
         # so it cannot take a value greater
@@ -970,18 +1009,22 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         if self.displaySpace == 'world':
-            if dest == 'world': self.worldLocation = self.location
-            else:               self.location      = self.worldLocation
+            if dest == 'world':
+                with props.skip(self, 'worldLocation', self.__name):
+                    self.worldLocation = self.location
+            else:
+                with props.skip(self, 'location', self.__name):
+                    self.location = self.worldLocation
             return
 
         ref  = self.displaySpace
         opts = self.getOpts(ref)
 
         if dest == 'world':
-            self.worldLocation = opts.transformCoords(self.location,
-                                                      'display',
-                                                      'world')
+            with props.skip(self, 'location', self.__name):
+                self.worldLocation = opts.transformCoords(
+                    self.location, 'display', 'world')
         else:
-            self.location      = opts.transformCoords(self.worldLocation,
-                                                      'world',
-                                                      'display')
+            with props.skip(self, 'worldLocation', self.__name):
+                self.location = opts.transformCoords(
+                    self.worldLocation, 'world', 'display')

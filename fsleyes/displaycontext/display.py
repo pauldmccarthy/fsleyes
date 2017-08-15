@@ -193,7 +193,7 @@ class Display(props.SyncableHasProperties):
 
         self.removeListener('overlayType', 'Display_{}'.format(id(self)))
 
-        self.detachFromParent()
+        self.detachAllFromParent()
 
         self.__displayOpts = None
         self.__overlayList = None
@@ -426,7 +426,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         """
         actions.ActionProvider.destroy(self)
 
-        self.detachFromParent()
+        self.detachAllFromParent()
 
         self.overlay     = None
         self.display     = None
