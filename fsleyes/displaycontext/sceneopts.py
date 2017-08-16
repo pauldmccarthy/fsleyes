@@ -72,17 +72,25 @@ class SceneOpts(props.HasProperties):
     """
 
 
-    def __init__(self):
+    def __init__(self, panel):
         """Create a ``SceneOpts`` instance.
 
         This method simply links the :attr:`performance` property to the
         :attr:`renderMode` property.
         """
 
-        name = '{}_{}'.format(type(self).__name__, id(self))
-        self.addListener('performance', name, self._onPerformanceChange)
-
+        self.__panel = panel
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+        self.addListener('performance', self.__name, self._onPerformanceChange)
         self._onPerformanceChange()
+
+
+    @property
+    def panel(self):
+        """Return a reference to the ``CanvasPanel`` that owns this
+        ``SceneOpts`` instance.
+        """
+        return self.__panel
 
 
     def _onPerformanceChange(self, *a):

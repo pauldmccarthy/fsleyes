@@ -20,7 +20,6 @@ import wx
 
 import fsleyes_widgets.dialog       as fsldlg
 import fsleyes_widgets.utils.status as status
-import fsl.utils.async              as async
 
 import fsleyes.strings              as strings
 import fsleyes.parseargs            as parseargs
@@ -102,8 +101,6 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
     that ``argv`` only contains overlay arguments.
     """
 
-    import fsleyes.views.orthopanel as orthopanel
-
     # We patch sys.stdout/stderr
     # while parseargs.parseArgs is
     # called so we can capture its
@@ -138,16 +135,3 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
 
     sceneOpts = panel.getSceneOptions()
     parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
-
-    # applySceneArgs does not apply the x/y/zcentre arguments
-    def centre(vp=panel):
-        xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                                 overlayList,
-                                                 displayCtx)
-
-        vp.getXCanvas().centreDisplayAt(*xc)
-        vp.getYCanvas().centreDisplayAt(*yc)
-        vp.getZCanvas().centreDisplayAt(*zc)
-
-    if isinstance(panel, orthopanel.OrthoPanel):
-        async.idle(centre)

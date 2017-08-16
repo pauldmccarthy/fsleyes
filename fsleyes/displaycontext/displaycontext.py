@@ -55,6 +55,9 @@ class DisplayContext(props.SyncableHasProperties):
         getDisplay
         getOpts
         getReferenceImage
+        displayToWorld
+        worldToDisplay
+        displaySpaceIsRadiological
         selectOverlay
         getSelectedOverlay
         getOverlayOrder
@@ -449,6 +452,44 @@ class DisplayContext(props.SyncableHasProperties):
             return None
 
         return self.getOpts(overlay).getReferenceImage()
+
+
+    def displayToWorld(self, dloc):
+        """Transforms the given coordinates from the display coordinate
+        system into the world coordinate system.
+
+        .. warning:: If any :attr:`.NiftiOpts.transform` properties have
+                     been modified manually, this method will return invalid
+                     results.
+        """
+
+        displaySpace = self.displaySpace
+
+        if displaySpace == 'world' or len(self.__overlayList) == 0:
+            return dloc
+
+        opts = self.getOpts(displaySpace)
+
+        return opts.transformCoords(dloc, 'display', 'world')
+
+
+    def worldToDisplay(self, wloc):
+        """Transforms the given coordinates from the world coordinate
+        system into the display coordinate system.
+
+        .. warning:: If any :attr:`.NiftiOpts.transform` properties have
+                     been modified manually, this method will return invalid
+                     results.
+        """
+
+        displaySpace = self.displaySpace
+
+        if displaySpace == 'world' or len(self.__overlayList) == 0:
+            return wloc
+
+        opts = self.getOpts(displaySpace)
+
+        return opts.transformCoords(wloc, 'world', 'display')
 
 
     def displaySpaceIsRadiological(self):

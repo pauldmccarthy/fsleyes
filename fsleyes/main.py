@@ -644,18 +644,6 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         parseargs.applySceneArgs(
             namespace, overlayList, displayCtx, viewOpts)
 
-        def centre(vp=viewPanel):
-            xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                                     overlayList,
-                                                     displayCtx)
-
-            vp.getXCanvas().centreDisplayAt(*xc)
-            vp.getYCanvas().centreDisplayAt(*yc)
-            vp.getZCanvas().centreDisplayAt(*zc)
-
-        if isinstance(viewPanel, orthopanel.OrthoPanel):
-            async.idle(centre)
-
     # If a script has been specified, we run
     # the script. This has to be done on the
     # idle loop, because overlays specified

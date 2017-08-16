@@ -50,7 +50,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        sceneOpts = scene3dopts.Scene3DOpts()
+        sceneOpts = scene3dopts.Scene3DOpts(self)
 
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,

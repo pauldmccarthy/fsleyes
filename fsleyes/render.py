@@ -186,10 +186,19 @@ def makeDisplayContext(namespace):
                                errorFunc=error)
 
     # Create a SceneOpts instance describing
-    # the scene to be rendered
-    if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
-    elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
-    elif namespace.scene == '3d':       sceneOpts = scene3dopts. Scene3DOpts()
+    # the scene to be rendered. The parseargs
+    # module assumes that GL canvases have
+    # already been created, so we use mock
+    # objects to trick it. The options applied
+    # to these mock objects are applied to the
+    # real canvases later on, in the render
+    # function below.
+    if namespace.scene == 'ortho':
+        sceneOpts = orthoopts.OrthoOpts(MockCanvasPanel(3))
+    elif namespace.scene == 'lightbox':
+        sceneOpts = lightboxopts.LightBoxOpts(MockCanvasPanel(1))
+    elif namespace.scene == '3d':
+        sceneOpts = scene3dopts. Scene3DOpts(MockCanvasPanel(1))
 
     # 3D views default to
     # world display space
@@ -395,10 +404,6 @@ def createOrthoCanvases(namespace,
 
     canvases = []
 
-    xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                             overlayList,
-                                             displayCtx)
-
     # Build a list containing the horizontal
     # and vertical axes for each canvas
     canvasAxes = []
@@ -407,15 +412,15 @@ def createOrthoCanvases(namespace,
     if sceneOpts.showXCanvas:
         canvasAxes.append((1, 2))
         zooms     .append(sceneOpts.xzoom)
-        centres   .append(xc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[0].centre)
     if sceneOpts.showYCanvas:
         canvasAxes.append((0, 2))
         zooms     .append(sceneOpts.yzoom)
-        centres   .append(yc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[1].centre)
     if sceneOpts.showZCanvas:
         canvasAxes.append((0, 1))
         zooms     .append(sceneOpts.zzoom)
-        centres   .append(zc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[2].centre)
 
     # Grid layout only makes sense if
     # we're displaying 3 canvases
@@ -452,17 +457,18 @@ def createOrthoCanvases(namespace,
             zax=zax,
             width=int(width),
             height=int(height))
-        opts = c.opts
 
-        opts.showCursor      = sceneOpts.showCursor
-        opts.cursorColour    = sceneOpts.cursorColour
-        opts.bgColour        = sceneOpts.bgColour
-        opts.renderMode      = sceneOpts.renderMode
+        opts              = c.opts
+        opts.showCursor   = sceneOpts.showCursor
+        opts.cursorColour = sceneOpts.cursorColour
+        opts.bgColour     = sceneOpts.bgColour
+        opts.renderMode   = sceneOpts.renderMode
 
         if zoom is not None:
             opts.zoom = zoom
         c.centreDisplayAt(*centre)
         canvases.append(c)
+
 
     return canvases
 
@@ -689,6 +695,37 @@ def calculateOrthoCanvasSizes(overlayList,
                                axisLens,
                                width,
                                height)
+
+
+
+class MockSliceCanvas(object):
+    """Used in place of a :class:`.SliceCanvas`. The :mod:`.parseargs` module
+    needs access to ``SliceCanvas`` instances to apply some command line
+    options. However, ``render`` calls :func:`.parseargs.applySceneArgs`
+    before any ``SliceCanvas`` instances have been created.
+
+    Instances of this class are just used to capture those options, so they
+    can later be applied to the real ``SliceCanvas`` instances.
+
+    The following arguments may be applied to this class.
+      - ``--xcentre``
+      - ``--ycentre``
+      - ``--zcentre``
+    """
+    def __init__(self):
+        self.centre = None
+    def centreDisplayAt(self, x, y):
+        self.centre = x, y
+
+
+class MockCanvasPanel(object):
+    """Used in place of a :class:`.CanvasPanel`. This is used as a container
+    for :class:`MockSliceCanvas` instances.
+    """
+    def __init__(self, ncanvases):
+        self.canvases = [MockSliceCanvas() for i in range(ncanvases)]
+    def getGLCanvases(self):
+        return self.canvases
 
 
 if __name__ == '__main__':

@@ -64,7 +64,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        sceneOpts = lightboxopts.LightBoxOpts()
+        sceneOpts = lightboxopts.LightBoxOpts(self)
 
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,

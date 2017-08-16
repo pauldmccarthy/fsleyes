@@ -145,7 +145,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :arg displayCtx:  A :class:`.FSLeyesFrame` instance.
         """
 
-        sceneOpts = orthoopts.OrthoOpts()
+        sceneOpts = orthoopts.OrthoOpts(self)
 
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
