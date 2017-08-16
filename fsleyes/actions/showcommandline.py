@@ -107,7 +107,9 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
     for overlay in overlayList:
 
         fname   = overlay.dataSource
-        ovlArgv = parseargs.generateOverlayArgs(overlay, displayCtx)
+        ovlArgv = parseargs.generateOverlayArgs(overlay,
+                                                overlayList,
+                                                displayCtx)
         argv   += [fname] + ovlArgv
 
     return argv

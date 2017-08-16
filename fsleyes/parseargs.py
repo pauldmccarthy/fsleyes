@@ -6,8 +6,20 @@
 #
 """This module encapsulates the logic for parsing command line arguments which
 specify a scene to be displayed in *FSLeyes*.  This logic is shared between
-the :mod:`fsleyes` and :mod:`.render` tools.  This module
-make use of the command line generation features of the :mod:`props` package.
+the :mod:`fsleyes` and :mod:`.render` tools.  This module make use of the
+command line generation features of the :mod:`props` package.  Broadly
+speaking, this module can be used to do three things:
+
+ - _Parse_ command line arguments, generating an ``argparse.Namespace``
+   object which contains the parsed options.
+
+ - _Apply_ the options contained in an ``argparse.Namespace`` option to
+   the objects which describe a scene - a :class:`.SceneOpts` instance,
+   a :class:`.DisplayContext` instance, and the :class:`.Display` and
+   :class:`.DisplayOpts` instances for each overlay.
+
+ - _Generate_ command line arguments that can be used to describe an
+   existing scene.
 
 
 There are a lot of command line arguments made available to the user,
@@ -33,9 +45,9 @@ This module provides the following functions:
 
    parseArgs
    applySceneArgs
+   applyOverlayArgs
    generateSceneArgs
    generateOverlayArgs
-   applyOverlayArgs
 
 
 --------------------------
@@ -195,8 +207,26 @@ to modify both the ``clippingRange`` and ``displayRange`` properties of the
    This function simply needs to add the option to the ``ArgumentParser``
    instance.
 
-3. Add a function which
+3. Add a function which applies parsed command line arguments for your option.
+   The function must have the following signature::
 
+       def _applySpecial_[target]_[option](
+           args,        # argparse.Namespace object containing parsed arguments
+           overlayList, # The OverlayList instance
+           displayCtx,  # The DisplayContext instance
+           target       # The target instance (e.g. a VolumeOpts instance)
+       )
+
+4. Add a function which, given a ``target`` instance, will generate command
+   line arguments that can reproduce the ``target`` state. This function must
+   have the following signature::
+
+       def _generateSpecial_[target]_[option](
+           overlayList, # The OverlayList instance
+           displayCtx,  # The DisplayContext instance
+           source,      # The source instance
+           longArg      # String to use as the long form argument
+       )
 """
 
 
@@ -2117,7 +2147,7 @@ def _applyArgs(args,
         _applySpecialOption(args, overlayList, displayCtx, target, s)
 
 
-def _generateArgs(source, propNames=None):
+def _generateArgs(overlayList, displayCtx, source, propNames=None):
     """Does the opposite of :func:`_applyArgs` - generates command line
     arguments which can be used to configure another ``source`` instance
     in the same way as the provided one.
@@ -2138,16 +2168,31 @@ def _generateArgs(source, propNames=None):
 
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
+    special   = []
+
+    for name in list(propNames):
+        if not hasattr(source, name):
+            special  .append(name)
+            propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((source, name), None)
         if xform is not None:
             xforms[name] = xform
 
-    return props.generateArguments(source,
+    args = props.generateArguments(source,
                                    xformFuncs=xforms,
                                    cliProps=propNames,
                                    longArgs=longArgs)
+
+    for s in special:
+        args += _generateSpecialOption(overlayList,
+                                       displayCtx,
+                                       source,
+                                       s,
+                                       longArgs[s])
+
+    return args
 
 
 def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
@@ -2267,49 +2312,43 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
 
     args = []
 
+    # Scene
     args += ['--{}'.format(ARGUMENTS['Main.scene'][1])]
     if   isinstance(sceneOpts, fsldisplay.OrthoOpts):    args += ['ortho']
     elif isinstance(sceneOpts, fsldisplay.LightBoxOpts): args += ['lightbox']
+    elif isinstance(sceneOpts, fsldisplay.Scene3DOpts):  args += ['3d']
     else: raise ValueError('Unrecognised SceneOpts '
                            'type: {}'.format(type(sceneOpts).__name__))
 
-    # main options
+    # World location (if there is one)
     if len(overlayList) > 0:
+        worldLoc = displayCtx.worldLocation.xyz
+        args    += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
+        args    += ['{}'.format(c) for c in worldLoc]
 
-        # Get the world location, in
-        # terms of the first overlay
-        worldLoc = displayCtx.location.xyz
-        opts     = displayCtx.getOpts(overlayList[0])
-        refimg   = opts.getReferenceImage()
-
-        if refimg is not None:
-            refOpts  = displayCtx.getOpts(refimg)
-            worldLoc = refOpts.transformCoords([worldLoc],
-                                               'display',
-                                               'world')[0]
-
-        args += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
-        args += ['{}'.format(c) for c in worldLoc]
-
+    # Everything else
     props = OPTIONS.get(sceneOpts, allhits=True)
-
     props = [p for p in props if p not in exclude]
-    args += _generateArgs(sceneOpts, list(it.chain(*props)))
+    args += _generateArgs(overlayList,
+                          displayCtx,
+                          sceneOpts,
+                          list(it.chain(*props)))
 
     return args
 
 
-def generateOverlayArgs(overlay, displayCtx):
+def generateOverlayArgs(overlay, overlayList, displayCtx):
     """Generates command line arguments which describe the display
     of the current overlay.
 
-    :arg overlay:    An overlay object.
-
-    :arg displayCtx: A :class:`.DisplayContext` instance.
+    :arg overlay:     An overlay object.
+    :arg overlayList: The :class:`.OverlayList`
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
     display = displayCtx.getDisplay(overlay)
     opts    = display   .getDisplayOpts()
-    args    = _generateArgs(display) + _generateArgs(opts)
+    args    = _generateArgs(overlayList, displayCtx, display) + \
+              _generateArgs(overlayList, displayCtx, opts)
 
     return args
 
@@ -2593,6 +2632,33 @@ def _applySpecialOption(args, overlayList, displayCtx, target, optName):
     applyFunc(args, overlayList, displayCtx, target)
 
 
+def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
+    """Called by the :func:`_generateArgs` function for any options
+    which do not map directly to a :class:`.SceneOpts`, :class:`.Display`
+    or :class:`.DisplayOpts` instance. Calls the ``_generateSpecial``
+    function for the option.
+
+    :arg overlayList: The ``OverlayList``
+    :arg displayCtx:  The ``DisplayContext`` instance
+    :arg source:      The ``Opts`` instance with which the option is associated
+    :arg optNmae:     Name of the option
+    :arg longArg:     String to use as the long form argument
+    """
+    cls     = type(source)
+    genFunc = _getSpecialFunction(cls, optName, '_generateSpecial')
+    longArg = '--{}'.format(longArg)
+
+    if genFunc is None:
+        raise ArgumentError(
+            'Could not find generate function for special '
+            'argument {} to {}'.format(optName, cls.__name__))
+
+    log.debug('Generate special argument {} to {}'
+              .format(optName, cls.__name__))
+
+    return genFunc(overlayList, displayCtx, source, longArg)
+
+
 def _getSpecialFunction(target, optName, prefix):
     """Searches for a function in this module with the name
     ``_prefix_target_option``, searching the class hierarchy for ``target``.
@@ -2633,7 +2699,13 @@ def _configSpecial_Volume3DOpts_clipPlane(
 def _applySpecial_Volume3DOpts_clipPlane(
         args, overlayList, displayCtx, target):
     """Applies the ``Volume3DOpts.clipPlane`` option. """
+    # TODO
     print('Todo')
+
+def _generateSpecial_Volume3DOpts_clipPlane(overlayList, displayCtx, source, longArg):
+    # TODO
+    print('Todo')
+    return []
 
 
 def _configSpecial_OrthoOpts_xcentre(
@@ -2662,32 +2734,67 @@ def _configSpecial_OrthoOpts_zcentre(
 
 def _applySpecial_OrthoOpts_xcentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.xcentre`` option. """
-
-    xoff = args.xcentre[0] * 0.5 * displayCtx.bounds.xlen
-    yoff = args.xcentre[1] * 0.5 * displayCtx.bounds.ylen
-    x    = displayCtx.location.y - xoff
-    y    = displayCtx.location.z - yoff
-
-    target.panel.getGLCanvases()[0].centreDisplayAt(x, y)
+    _applySpecialOrthoOptsCentre(
+        args.zcentre, displayCtx, 1, 2, target.getGLCanvases()[0])
 
 
 def _applySpecial_OrthoOpts_ycentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.ycentre`` option. """
-
-    xoff = args.ycentre[0] * 0.5 * displayCtx.bounds.xlen
-    yoff = args.ycentre[1] * 0.5 * displayCtx.bounds.ylen
-    x    = displayCtx.location.x - xoff
-    y    = displayCtx.location.z - yoff
-
-    target.panel.getGLCanvases()[1].centreDisplayAt(x, y)
+    _applySpecialOrthoOptsCentre(
+        args.zcentre, displayCtx, 0, 2, target.getGLCanvases()[1])
 
 
 def _applySpecial_OrthoOpts_zcentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.zcentre`` option. """
+    _applySpecialOrthoOptsCentre(
+        args.zcentre, displayCtx, 0, 1, target.getGLCanvases()[2])
 
-    xoff = args.zcentre[0] * 0.5 * displayCtx.bounds.xlen
-    yoff = args.zcentre[1] * 0.5 * displayCtx.bounds.ylen
-    x    = displayCtx.location.y - xoff
-    y    = displayCtx.location.z - yoff
+def _applySpecialOrthoOptsCentre(centre, displayCtx, xax, yax, canvas):
+    xoff = centre[0] * 0.5 * displayCtx.bounds.xlen
+    yoff = centre[1] * 0.5 * displayCtx.bounds.ylen
+    x    = displayCtx.location[xax] - xoff
+    y    = displayCtx.location[yax] - yoff
 
-    target.panel.getGLCanvases()[2].centreDisplayAt(x, y)
+    canvas.centreDisplayAt(x, y)
+
+
+def _generateSpecial_OrthoOpts_xcentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.xcentre`` option."""
+    canvas = source.panel.getGLCanvases()[0]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 1, 2, canvas)
+    return [longArg] + args
+
+
+def _generateSpecial_OrthoOpts_ycentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.ycentre`` option."""
+    canvas = source.panel.getGLCanvases()[1]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 0, 2, canvas)
+    return [longArg] + args
+
+
+def _generateSpecial_OrthoOpts_zcentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.zcentre`` option."""
+    canvas = source.panel.getGLCanvases()[2]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 0, 1, canvas)
+    return [longArg] + args
+
+
+def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
+    """Used by the generation functions for the ``xcentre``, ``ycentre``,
+    and ``zcentre`` options.
+    """
+
+    x, y     = canvas.getDisplayCentre()
+    xlo, xhi = displayCtx.bounds.getRange(xax)
+    ylo, yhi = displayCtx.bounds.getRange(yax)
+
+    xmid     = xlo + 0.5 * (xhi - xlo)
+    ymid     = ylo + 0.5 * (yhi - ylo)
+
+    xoff = 2 * (xmid - x) / (xhi - xlo)
+    yoff = 2 * (ymid - y) / (yhi - ylo)
+
+    return ['{: 0.5f}'.format(xoff), '{: 0.5f}'.format(yoff)]
