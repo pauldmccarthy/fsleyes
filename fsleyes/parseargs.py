@@ -345,7 +345,8 @@ OPTIONS = td.TypeDict({
                        'nrows',
                        'showGridLines',
                        'highlightSlice'],
-    'Scene3DOpts'   : ['showLegend',
+    'Scene3DOpts'   : ['zoom',
+                       'showLegend',
                        'occlusion',
                        'light',
                        'lightPos',
@@ -609,6 +610,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
+    'Scene3DOpts.zoom'       : ('z',   'zoom',         True),
     'Scene3DOpts.showLegend' : ('he',  'hideLegend',   False),
     'Scene3DOpts.occlusion'  : ('noc', 'noOcclusion',  False),
     'Scene3DOpts.light'      : ('dl',  'disableLight', False),
@@ -763,16 +765,6 @@ HELP = td.TypeDict({
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
 
-    'Scene3DOpts.showLegend' : 'Hide the orientation legend',
-    'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
-    'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
-    'Scene3DOpts.light'      : 'Disable light source',
-    'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
-    'Scene3DOpts.offset'     : 'Offset from centre (pixels, normalised '
-                               '[-1, 1])',
-    'Scene3DOpts.xrotation'  : 'Rotation (degrees) about the horizontal axis',
-    'Scene3DOpts.yrotation'  : 'Rotation (degrees) about the vertical axis',
-
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
     'OrthoOpts.zzoom'       : 'Z canvas zoom (100-5000, default: 100)',
@@ -798,6 +790,16 @@ HELP = td.TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
     'LightBoxOpts.zax'            : 'Z axis',
+
+    'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
+    'Scene3DOpts.showLegend' : 'Hide the orientation legend',
+    'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
+    'Scene3DOpts.light'      : 'Disable light source',
+    'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
+    'Scene3DOpts.offset'     : 'Offset from centre (pixels, normalised '
+                               '[-1, 1])',
+    'Scene3DOpts.xrotation'  : 'Rotation (degrees) about the horizontal axis',
+    'Scene3DOpts.yrotation'  : 'Rotation (degrees) about the vertical axis',
 
     'Display.name'          : 'Overlay name',
     'Display.enabled'       : 'Disable (hide) overlay',
