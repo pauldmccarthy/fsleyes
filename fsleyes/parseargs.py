@@ -245,6 +245,7 @@ import numpy            as np
 
 import fsl.data.image                     as fslimage
 import fsl.utils.async                    as async
+import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
 
 import fsleyes_props                      as props
@@ -423,8 +424,7 @@ OPTIONS = td.TypeDict({
                        'light',
                        'lightPos',
                        'offset',
-                       'xrotation',
-                       'yrotation'],
+                       'cameraRotation'],
 
     # The order in which properties are listed
     # here is the order in which they are applied.
@@ -690,14 +690,13 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
-    'Scene3DOpts.zoom'       : ('z',   'zoom',         True),
-    'Scene3DOpts.showLegend' : ('he',  'hideLegend',   False),
-    'Scene3DOpts.occlusion'  : ('noc', 'noOcclusion',  False),
-    'Scene3DOpts.light'      : ('dl',  'disableLight', False),
-    'Scene3DOpts.lightPos'   : ('lp',  'lightPos',     True),
-    'Scene3DOpts.offset'     : ('off', 'offset',       True),
-    'Scene3DOpts.xrotation'  : ('xr',  'xrotation',    True),
-    'Scene3DOpts.yrotation'  : ('yr',  'yrotation',    True),
+    'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
+    'Scene3DOpts.showLegend'     : ('he',  'hideLegend',     False),
+    'Scene3DOpts.occlusion'      : ('noc', 'noOcclusion',    False),
+    'Scene3DOpts.light'          : ('dl',  'disableLight',   False),
+    'Scene3DOpts.lightPos'       : ('lp',  'lightPos',       True),
+    'Scene3DOpts.offset'         : ('off', 'offset',         True),
+    'Scene3DOpts.cameraRotation' : ('rot', 'cameraRotation', True),
 
     'Display.name'          : ('n',  'name',        True),
     'Display.enabled'       : ('d',  'disabled',    False),
@@ -865,12 +864,9 @@ HELP = td.TypeDict({
     'OrthoOpts.labelSize'   : 'Orientation label font size '
                               '(4-96, default: 14)',
 
-    'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
-                              'of first overlay)',
-    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates '
-                              'of first overlay)',
-    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates '
-                              'of first overlay)',
+    'OrthoOpts.xcentre'     : 'X canvas offset from centre ([-1, 1])',
+    'OrthoOpts.ycentre'     : 'Y canvas offset from centre ([-1, 1])',
+    'OrthoOpts.zcentre'     : 'Z canvas offset from centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.ncols'          : 'Number of columns',
@@ -885,10 +881,9 @@ HELP = td.TypeDict({
     'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
     'Scene3DOpts.light'      : 'Disable light source',
     'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
-    'Scene3DOpts.offset'     : 'Offset from centre (pixels, normalised '
-                               '[-1, 1])',
-    'Scene3DOpts.xrotation'  : 'Rotation (degrees) about the horizontal axis',
-    'Scene3DOpts.yrotation'  : 'Rotation (degrees) about the vertical axis',
+    'Scene3DOpts.offset'     : 'Offset from centre ([-1, 1])',
+    'Scene3DOpts.cameraRotation' :
+    'Rotation (degrees) about the horizontal (X) and vertical (Y) axes',
 
     'Display.name'          : 'Overlay name',
     'Display.enabled'       : 'Disable (hide) overlay',
@@ -2681,33 +2676,6 @@ def _getSpecialFunction(target, optName, prefix):
     return None
 
 
-def _configSpecial_Volume3DOpts_clipPlane(
-        target, parser, shortArg, longArg, helpText):
-    """Configures the ``clipPlane`` option for the ``VolumeOpts`` class.
-    This option allows a clip plane to be defined - the user provides
-    the position, azimuth and inclination as a single argument.
-    """
-    parser.add_argument(shortArg,
-                        longArg,
-                        type=float,
-                        nargs=3,
-                        action='append',
-                        metavar=('POS', 'AZI', 'INC'),
-                        help=helpText)
-
-
-def _applySpecial_Volume3DOpts_clipPlane(
-        args, overlayList, displayCtx, target):
-    """Applies the ``Volume3DOpts.clipPlane`` option. """
-    # TODO
-    print('Todo')
-
-def _generateSpecial_Volume3DOpts_clipPlane(overlayList, displayCtx, source, longArg):
-    # TODO
-    print('Todo')
-    return []
-
-
 def _configSpecial_OrthoOpts_xcentre(
         target, parser, shortArg, longArg, helpText):
     """Configures the ``xcentre`` option for the ``OrthoOpts`` class. """
@@ -2798,3 +2766,69 @@ def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
     yoff = 2 * (ymid - y) / (yhi - ylo)
 
     return ['{: 0.5f}'.format(xoff), '{: 0.5f}'.format(yoff)]
+
+
+def _configSpecial_Volume3DOpts_clipPlane(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``clipPlane`` option for the ``VolumeOpts`` class.
+    This option allows a clip plane to be defined - the user provides
+    the position, azimuth and inclination as a single argument.
+    """
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=float,
+                        nargs=3,
+                        action='append',
+                        metavar=('POS', 'AZI', 'INC'),
+                        help=helpText)
+
+
+def _applySpecial_Volume3DOpts_clipPlane(
+        args, overlayList, displayCtx, target):
+    """Applies the ``Volume3DOpts.clipPlane`` option. """
+
+    target.numClipPlanes    = len(args.clipPlane)
+    target.clipPositions    = [cp[0] for cp in args.clipPlane]
+    target.clipAzimuths     = [cp[1] for cp in args.clipPlane]
+    target.clipInclinations = [cp[2] for cp in args.clipPlane]
+
+
+def _generateSpecial_Volume3DOpts_clipPlane(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguemnts for the ``Volume3DOpts.clipPlane`` option. """
+
+    args = []
+
+    for i in range(source.numClipPlanes):
+        args += [longArg,
+                 '{:0.3f}'.format(source.clipPosition[   i]),
+                 '{:0.3f}'.format(source.clipAzimuth[    i]),
+                 '{:0.3f}'.format(source.clipInclination[i])]
+
+    return args
+
+
+def _configSpecial_Scene3DOpts_cameraRotation(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``Scene3DOpts.cameraRotation`` option."""
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=float,
+                        nargs=2,
+                        metavar=('X', 'Y'),
+                        help=helpText)
+
+
+def _applySpecial_Scene3DOpts_cameraRotation(
+        args, overlayList, displayCtx, target):
+    """Applies the ``Scene3DOpts.cameraRotation`` option."""
+    xrot            = args.cameraRotation[0] * np.pi / 180
+    yrot            = args.cameraRotation[1] * np.pi / 180
+    xform           = transform.axisAnglesToRotMat(xrot, 0, yrot)
+    target.rotation = transform.concat(xform, target.rotation)
+
+
+def _generateSpecial_Scene3DOpts_cameraRotation(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the ``Scene3DOpts.cameraRotation`` option."""
+    return []
