@@ -24,7 +24,8 @@ import copy
 
 import numpy as np
 
-import fsleyes_props as props
+import fsl.utils.transform as transform
+import fsleyes_props       as props
 
 
 class SliceCanvasOpts(props.HasProperties):
@@ -201,6 +202,18 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 class Scene3DCanvasOpts(props.HasProperties):
     """The ``Scene3DCanvasOpts`` class defines the display settings
     available on :class:`.Scene3DCanvas` instances.
+
+
+    .. note:: The purpose of the ``xrotation`` and ``yrotation`` properties is
+              as an easy means of applying one-off modifications to the
+              :attr:`rotation` property.  Whenver the ``xrotation`` or
+              ``yrotation`` properties change, a rotation matrix is created
+              from their current values, and concatenated on to the existing
+              :attr:`rotation` matrix.
+
+              Importantly, the value of the :attr:`rotation` property always
+              reflects the true rotation at any point in time - the
+              ``xrotation`` and ``yrotation`` properties do not.
     """
 
     pos = copy.copy(SliceCanvasOpts.pos)
@@ -254,3 +267,38 @@ class Scene3DCanvasOpts(props.HasProperties):
     system (defined by the :class:`.DisplayContext.bounds`), and applied to
     the scene that is being displayed.
     """
+
+
+    xrotation = props.Real(minval=-180, maxval=180, clamped=True, default=0)
+    """Amount of rotation about the X axis (in the display coordinate system)
+    in degrees. Intended for one-off changes to the :attr:`rotation` matrix.
+    See note above.
+    """
+
+
+    yrotation = props.Real(minval=-180, maxval=180, clamped=True, default=0)
+    """Amount of rotation about the Y axis (in the display coordinate system)
+    in degrees. Intended for one-off changes to the :attr:`rotation` matrix.
+    See note above.
+    """
+
+
+    def __init__(self):
+        """Create a ``Scene3DCanvas`` object.
+        """
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
+        self.addListener('xrotation', self.__name, self.__rotationChanged)
+        self.addListener('yrotation', self.__name, self.__rotationChanged)
+
+
+    def __rotationChanged(self, *a):
+        """Called when either the :attr:`xrotation` or :attr:`yrotation`
+        properties change. Propagates the change on to the :attr:`rotation`
+        property.
+        """
+
+        xrot = self.xrotation * np.pi / 180
+        yrot = self.yrotation * np.pi / 180
+
+        xform = transform.axisAnglesToRotMat(yrot, 0, xrot)
+        self.rotation = transform.concat(xform, self.rotation)

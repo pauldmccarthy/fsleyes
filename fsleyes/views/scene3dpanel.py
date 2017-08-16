@@ -86,6 +86,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('zoom',         sceneOpts)
         opts.bindProps('offset',       sceneOpts)
         opts.bindProps('rotation',     sceneOpts)
+        opts.bindProps('xrotation',    sceneOpts)
+        opts.bindProps('yrotation',    sceneOpts)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__canvas, flag=wx.EXPAND, proportion=1)

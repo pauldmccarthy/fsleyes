@@ -345,6 +345,13 @@ OPTIONS = td.TypeDict({
                        'nrows',
                        'showGridLines',
                        'highlightSlice'],
+    'Scene3DOpts'   : ['showLegend',
+                       'occlusion',
+                       'light',
+                       'lightPos',
+                       'offset',
+                       'xrotation',
+                       'yrotation'],
 
     # The order in which properties are listed
     # here is the order in which they are applied.
@@ -458,6 +465,7 @@ GROUPNAMES = td.TypeDict({
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
+    'Scene3DOpts'    : '3D display options',
     'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
     'MaskOpts'       : 'Mask options',
@@ -479,13 +487,16 @@ defines descriptions for each command line group.
 GROUPDESCS = td.TypeDict({
 
     'SceneOpts'    : 'These settings are applied to every '
-                     'orthographic and lightbox view.',
+                     'orthographic, lightbox, and 3D view.',
 
     'OrthoOpts'    : 'These settings are applied to every '
                      'ortho view.',
 
     'LightBoxOpts' : 'These settings are applied to every '
                      'lightbox view.',
+
+    'Scene3DOpts'  : 'These settings are applied to every '
+                     '3D view.',
 
     'Display'      : 'Each display option will be applied to the '
                      'overlay which is listed before that option. '
@@ -598,6 +609,14 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
+    'Scene3DOpts.showLegend' : ('he',  'hideLegend',   False),
+    'Scene3DOpts.occlusion'  : ('noc', 'noOcclusion',  False),
+    'Scene3DOpts.light'      : ('dl',  'disableLight', False),
+    'Scene3DOpts.lightPos'   : ('lp',  'lightPos',     True),
+    'Scene3DOpts.offset'     : ('of',  'offset',       True),
+    'Scene3DOpts.xrotation'  : ('xr',  'xrotation',    True),
+    'Scene3DOpts.yrotation'  : ('yr',  'yrotation',    True),
+
     'Display.name'          : ('n',  'name',        True),
     'Display.enabled'       : ('d',  'disabled',    False),
     'Display.overlayType'   : ('ot', 'overlayType', True),
@@ -690,7 +709,8 @@ or more arguments, ``False`` otherwise.
 
 .. note:: 1. There cannot be any collisions between the main options, the
              :class:`.SceneOpts` options, the :class:`.OrthOpts` options,
-             and the :class:`.LightBoxOpts` options.
+             the :class:`.LightBoxOpts` options, and the :class:`.Scene3DOpts`
+             options.
 
           2. There cannot be any collisions between the :class:`.Display`
              options and any one set of :class:`.DisplayOpts` options.
@@ -742,6 +762,15 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
+
+    'Scene3DOpts.showLegend' : 'Hide the orientation legend',
+    'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
+    'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
+    'Scene3DOpts.light'      : 'Disable light source',
+    'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
+    'Scene3DOpts.offset'     : 'Offset from centre (XY pixels)',
+    'Scene3DOpts.xrotation'  : 'Rotation (degrees) about the horizontal axis',
+    'Scene3DOpts.yrotation'  : 'Rotation (degrees) about the vertical axis',
 
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
@@ -1145,6 +1174,9 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showYCanvas'       : _boolTrans,
     'OrthoOpts.showZCanvas'       : _boolTrans,
     'OrthoOpts.showLabels'        : _boolTrans,
+    'Scene3DOpts.showLegend'      : _boolTrans,
+    'Scene3DOpts.occlusion'       : _boolTrans,
+    'Scene3DOpts.light'           : _boolTrans,
     'Display.enabled'             : _boolTrans,
     'ColourMapOpts.linkLowRanges' : _boolTrans,
     'LineVectorOpts.unitLength'   : _boolTrans,
@@ -1197,13 +1229,14 @@ def _setupMainParser(mainParser):
       - *SceneOpts*:    Common scene options
       - *OrthoOpts*:    Options related to setting up a orthographic display
       - *LightBoxOpts*: Options related to setting up a lightbox display
+      - *Scene3DOpts*:  Options related to setting up a 3D display
     """
 
     # FSLeyes application options
 
     # Options defining the overall scene,
     # and separate parser groups for scene
-    # settings, ortho, and lightbox.
+    # settings, ortho, lightbox, and 3D.
 
     mainParser._optionals.title       = GROUPNAMES[    'Main']
     mainParser._optionals.description = GROUPDESCS.get('Main')
@@ -1214,11 +1247,14 @@ def _setupMainParser(mainParser):
                                                GROUPDESCS.get('OrthoOpts'))
     lbGroup    = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
                                                GROUPDESCS.get('LightBoxOpts'))
+    s3dGroup   = mainParser.add_argument_group(GROUPNAMES[    'Scene3DOpts'],
+                                               GROUPDESCS.get('Scene3DOpts'))
 
     _configMainParser(     mainParser)
     _configSceneParser(    sceneGroup)
     _configOrthoParser(    orthoGroup)
     _configLightBoxParser( lbGroup)
+    _configScene3DParser(  s3dGroup)
 
 
 def _configParser(target, parser, propNames=None, shortHelp=False):
@@ -1378,6 +1414,13 @@ def _configLightBoxParser(lbParser):
     configure :class:`.LightBoxOpts` properties.
     """
     _configParser(fsldisplay.LightBoxOpts, lbParser)
+
+
+def _configScene3DParser(s3dParser):
+    """Adds options to the given parser allowing the user to
+    configure :class:`.Scene3DOpts` properties.
+    """
+    _configParser(fsldisplay.Scene3DOpts, s3dParser)
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):
@@ -1611,7 +1654,11 @@ def parseArgs(mainParser,
 
     mainExpectsArgs = set(argOpts)
     ovlExpectsArgs  = set()
-    mainGroups      = ['Main', 'SceneOpts', 'OrthoOpts', 'LightBoxOpts']
+    mainGroups      = ['Main',
+                       'SceneOpts',
+                       'OrthoOpts',
+                       'LightBoxOpts',
+                       'Scene3DOpts']
     for key, (shortForm, longForm, expects) in ARGUMENTS.items():
 
         if key[0] in mainGroups: appendTo = mainExpectsArgs
@@ -1670,7 +1717,7 @@ def parseArgs(mainParser,
         ovlIdxs .append(i)
         ovlTypes.append(dtype)
 
-    # Why is this here?
+    # TODO Why is this here?
     ovlIdxs.append(len(argv))
 
     # Separate the program arguments

@@ -32,7 +32,8 @@ class Scene3DOpts(sceneopts.SceneOpts):
     lightPos   = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
     offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
-
+    xrotation  = copy.copy(canvasopts.Scene3DCanvasOpts.xrotation)
+    yrotation  = copy.copy(canvasopts.Scene3DCanvasOpts.yrotation)
 
 
     def __init__(self, *args, **kwargs):
