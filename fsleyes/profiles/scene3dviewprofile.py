@@ -152,7 +152,12 @@ class Scene3DViewProfile(profiles.Profile):
         mouse position and current :attr:`.Scene3DCanvas.offset`
         value.
         """
-        self.__panMousePos    = mousePos
+        x, y = mousePos
+        w, h = canvas.GetSize()
+        x    = -1 + 2 * x / float(w)
+        y    = -1 + 2 * y / float(h)
+
+        self.__panMousePos    = (x, y)
         self.__panStartOffset = canvas.opts.offset[:]
 
 
@@ -163,9 +168,12 @@ class Scene3DViewProfile(profiles.Profile):
         if self.__panMousePos is None:
             return
 
+        w,  h  = canvas.GetSize()
         sx, sy = self.__panMousePos
         ox, oy = self.__panStartOffset
         ex, ey = mousePos
+        ex     = -1 + 2 * ex / float(w)
+        ey     = -1 + 2 * ey / float(h)
 
         canvas.opts.offset = [ox + ex - sx, oy + ey - sy]
 

@@ -251,9 +251,8 @@ class Scene3DCanvasOpts(props.HasProperties):
 
 
     offset = props.Point(ndims=2)
-    """An offset, in pixels, from the centre of the
-    :attr:`.DisplayContext.bounds`. The defines the centre-of-view for the
-    ``Scene3DCanvas``.
+    """An offset, in X/Y pixels normalised to the range ``[-1, 1]``, from the
+    centre of the ``Scene3DCanvas``.
     """
 
 

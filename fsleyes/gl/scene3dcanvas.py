@@ -10,12 +10,8 @@
 
 import logging
 
-import copy
-
 import numpy     as np
 import OpenGL.GL as gl
-
-import fsleyes_props as props
 
 import fsl.data.mesh       as fslmesh
 import fsl.data.image      as fslimage
@@ -396,15 +392,16 @@ class Scene3DCanvas(object):
         rotate = transform.rotMatToAffine(opts.rotation, centre)
 
         # The offset property is defined in x/y
-        # pixels. We need to conver them into
-        # viewport space, where the horizontal
-        # axis maps to (-xhalf, xhalf), and the
-        # vertical axis maps to (-yhalf, yhalf).
-        # See gl.routines.show3D.
+        # pixels, normalised to [-1, 1]. We need
+        # to convert them into viewport space,
+        # where the horizontal axis maps to
+        # (-xhalf, xhalf), and the vertical axis
+        # maps to (-yhalf, yhalf). See
+        # gl.routines.ortho.
         offset     = np.array(opts.offset[:] + [0])
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
-        offset[0]  = xlen * offset[0] / w
-        offset[1]  = ylen * offset[1] / h
+        offset[0]  = xlen * offset[0] / 2
+        offset[1]  = ylen * offset[1] / 2
         offset     = transform.scaleOffsetXform(1, offset)
 
         # And finally the camera.

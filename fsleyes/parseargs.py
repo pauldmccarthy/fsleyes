@@ -768,7 +768,8 @@ HELP = td.TypeDict({
     'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
     'Scene3DOpts.light'      : 'Disable light source',
     'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
-    'Scene3DOpts.offset'     : 'Offset from centre (XY pixels)',
+    'Scene3DOpts.offset'     : 'Offset from centre (pixels, normalised '
+                               '[-1, 1])',
     'Scene3DOpts.xrotation'  : 'Rotation (degrees) about the horizontal axis',
     'Scene3DOpts.yrotation'  : 'Rotation (degrees) about the vertical axis',
 
