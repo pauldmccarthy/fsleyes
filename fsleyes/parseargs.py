@@ -883,7 +883,9 @@ HELP = td.TypeDict({
     'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
     'Scene3DOpts.offset'     : 'Offset from centre ([-1, 1])',
     'Scene3DOpts.cameraRotation' :
-    'Rotation (degrees) about the horizontal (X) and vertical (Y) axes',
+    'Rotation (degrees), specified as yaw (rotation about the vertical '
+    'axis), pitch (rotation about the horizontal axis) and roll (rotation '
+    'about the depth axis).',
 
     'Display.name'          : 'Overlay name',
     'Display.enabled'       : 'Disable (hide) overlay',
@@ -2814,21 +2816,38 @@ def _configSpecial_Scene3DOpts_cameraRotation(
     parser.add_argument(shortArg,
                         longArg,
                         type=float,
-                        nargs=2,
-                        metavar=('X', 'Y'),
+                        nargs=3,
+                        metavar=('YAW', 'PITCH', 'ROLL'),
                         help=helpText)
 
 
 def _applySpecial_Scene3DOpts_cameraRotation(
         args, overlayList, displayCtx, target):
     """Applies the ``Scene3DOpts.cameraRotation`` option."""
-    xrot            = args.cameraRotation[0] * np.pi / 180
-    yrot            = args.cameraRotation[1] * np.pi / 180
-    xform           = transform.axisAnglesToRotMat(xrot, 0, yrot)
+
+    yaw, pitch, roll = args.cameraRotation
+
+    yaw   = yaw   * np.pi / 180
+    pitch = pitch * np.pi / 180
+    roll  = roll  * np.pi / 180
+
+    xform           = transform.axisAnglesToRotMat(pitch, roll, yaw)
     target.rotation = transform.concat(xform, target.rotation)
 
 
 def _generateSpecial_Scene3DOpts_cameraRotation(
         overlayList, displayCtx, source, longArg):
     """Generates arguments for the ``Scene3DOpts.cameraRotation`` option."""
-    return []
+
+    rot = source.rotation
+
+    pitch, roll, yaw = transform.rotMatToAxisAngles(rot)
+
+    yaw   = yaw   * 180 / np.pi
+    pitch = pitch * 180 / np.pi
+    roll  = roll  * 180 / np.pi
+
+    return [longArg,
+            '{: 0.2f}'.format(yaw),
+            '{: 0.2f}'.format(pitch),
+            '{: 0.2f}'.format(roll)]
