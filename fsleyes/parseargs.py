@@ -2789,10 +2789,12 @@ def _applySpecial_Volume3DOpts_clipPlane(
         args, overlayList, displayCtx, target):
     """Applies the ``Volume3DOpts.clipPlane`` option. """
 
-    target.numClipPlanes    = len(args.clipPlane)
-    target.clipPositions    = [cp[0] for cp in args.clipPlane]
-    target.clipAzimuths     = [cp[1] for cp in args.clipPlane]
-    target.clipInclinations = [cp[2] for cp in args.clipPlane]
+    ncp = len(args.clipPlane)
+
+    target.numClipPlanes         = ncp
+    target.clipPosition[   :ncp] = [cp[0] for cp in args.clipPlane]
+    target.clipAzimuth[    :ncp] = [cp[1] for cp in args.clipPlane]
+    target.clipInclination[:ncp] = [cp[2] for cp in args.clipPlane]
 
 
 def _generateSpecial_Volume3DOpts_clipPlane(

@@ -175,6 +175,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     import matplotlib.pyplot                    as plt
     from   fsleyes.views.orthopanel         import OrthoPanel
     from   fsleyes.views.lightboxpanel      import LightBoxPanel
+    from   fsleyes.views.scene3dpanel       import Scene3DPanel
     from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
     from   fsleyes.views.histogrampanel     import HistogramPanel
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
@@ -278,6 +279,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('GiftiSurface',       fslgifti.GiftiSurface),
         ('OrthoPanel',         OrthoPanel),
         ('LightBoxPanel',      LightBoxPanel),
+        ('Scene3DPanel',       Scene3DPanel),
         ('TimeSeriesPanel',    TimeSeriesPanel),
         ('HistogramPanel',     HistogramPanel),
         ('PowerSpectrumPanel', PowerSpectrumPanel),
