@@ -431,15 +431,9 @@ class ColourMapOpts(object):
         for peer in peers:
 
             name = peer.getColourMapOptsListenerName()
-
-            if not any((peer.display.isSyncedToParent('brightness'),
-                        peer.display.isSyncedToParent('contrast'),
-                        peer.        isSyncedToParent('displayRange'))):
-                continue
-
-            bri = peer.display.hasListener('brightness',   name)
-            con = peer.display.hasListener('contrast',     name)
-            dr  = peer        .hasListener('displayRange', name)
+            bri  = peer.display.hasListener('brightness',   name)
+            con  = peer.display.hasListener('contrast',     name)
+            dr   = peer        .hasListener('displayRange', name)
 
             if enable:
                 if bri: peer.display.enableListener('brightness',   name)

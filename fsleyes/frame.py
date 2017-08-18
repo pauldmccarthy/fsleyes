@@ -907,19 +907,11 @@ class FSLeyesFrame(wx.Frame):
                              for c in canvasCtxs
                              if c is not newPanel])
 
-        # If there is only one CanvasPanel
-        # open, sync its overlay display
-        # properties to the master context
-        if numCanvases == 1:
-            childDC = canvasPanels[0].getDisplayContext()
-            childDC.syncToParent('overlayOrder')
-            childDC.syncOverlayDisplay = True
-
         # If an existing canvas panel is
         # already synced to the master,
         # then we set the new panel to
         # be unsynced
-        elif displaySynced and orderSynced:
+        if displaySynced and orderSynced:
             if newPanel is not None and \
                isinstance(newPanel, canvaspanel.CanvasPanel):
                 childDC = newPanel.getDisplayContext()
@@ -932,7 +924,7 @@ class FSLeyesFrame(wx.Frame):
         # one.
         else:
             if newPanel is not None: panel = newPanel
-            else:                    panel = canvasPanels[0]
+            else:                    panel = canvasPanels[-1]
             childDC = panel.getDisplayContext()
 
             # Make sure that the parent context
