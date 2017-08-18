@@ -817,7 +817,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
                                     self.__overrideDataRangeChanged)
 
             self.__overlayListChanged()
-            self.__clipImageChanged()
+            self.__clipImageChanged(updateDataRange=False)
 
 
     def destroy(self):
@@ -908,10 +908,16 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         else:                  self.clipImage = None
 
 
-    def __clipImageChanged(self, *a):
+    def __clipImageChanged(self, *a, **kwa):
         """Called when the :attr:`clipImage` property is changed. Updates
          the range of the :attr:`clippingRange` property.
+
+        :arg updateDataRange: Defaults to ``True``. If ``False``, the
+                              :meth:`.ColourMapOpts.updateDataRange` method
+                              is not called.
         """
+
+        updateDR = kwa.get('updateDataRange', True)
 
         haveClipImage = self.clipImage is not None
 
@@ -937,4 +943,5 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
             self.overlay,
             self.clipImage))
 
-        self.updateDataRange(resetDR=False)
+        if updateDR:
+            self.updateDataRange(resetDR=False)

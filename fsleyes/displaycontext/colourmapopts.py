@@ -177,6 +177,7 @@ class ColourMapOpts(object):
         #       range relationship will break.
         #
         self.__registered = self.getParent() is not None
+
         if self.__registered:
 
             name    = self.getColourMapOptsListenerName()
@@ -231,11 +232,14 @@ class ColourMapOpts(object):
 
         # If this is the parent ColourMapOpts
         # instance, its properties need to be
-        # updated. Child instance properties
+        # initialised. Child instance properties
         # should inherit the current parent
-        # values.
-        else:
+        # values, unless they are not synced
+        # to the parent.
+        if (not self.__registered) or \
+           (not self.isSyncedToParent('displayRange')):
             self.updateDataRange()
+
 
 
     def getColourMapOptsListenerName(self):
@@ -371,8 +375,8 @@ class ColourMapOpts(object):
             drUnset = resetDR or drUnset
             crUnset = resetCR or crUnset
 
-            log.debug('Updating range limits [dr: {} - {}, ''cr: '
-                      '{} - {}]'.format(drmin, drmax, crmin, crmax))
+            log.debug('[{}] Updating range limits [dr: {} - {}, ''cr: '
+                      '{} - {}]'.format(id(self), drmin, drmax, crmin, crmax))
 
             self.displayRange .xlim = drmin, drmax
             self.clippingRange.xlim = crmin, crmax

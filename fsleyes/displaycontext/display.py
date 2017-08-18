@@ -243,8 +243,10 @@ class Display(props.SyncableHasProperties):
 
         optType = DISPLAY_OPTS_MAP[self.overlayType]
 
-        log.debug('Creating {} instance for overlay {} ({})'.format(
-            optType.__name__, self.__overlay, self.overlayType))
+        log.debug('Creating {} instance (synced: {}) for overlay '
+                  '{} ({})'.format(optType.__name__,
+                                   self.__displayCtx.syncOverlayDisplay,
+                                   self.__overlay, self.overlayType))
 
         return optType(self.__overlay,
                        self,
@@ -408,7 +410,8 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         props.SyncableHasProperties.__init__(self, **kwargs)
         actions.ActionProvider     .__init__(self)
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('{}.init [DC: {}] ({})'.format(
+            type(self).__name__, id(displayCtx), id(self)))
 
 
     def __del__(self):
