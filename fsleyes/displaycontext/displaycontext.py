@@ -65,6 +65,7 @@ class DisplayContext(props.SyncableHasProperties):
         freeze
         freezeOverlay
         thawOverlay
+        defaultDisplaySpace
         detachDisplaySpace
     """
 
@@ -178,6 +179,9 @@ class DisplayContext(props.SyncableHasProperties):
               property. However, whenever *this* property changes, it will
               change the ``transform`` property for every ``Nifti``, in the
               manner described above.
+
+    The :meth:`defaultDisplaySpace` can be used to control how the
+    ``displaySpace`` is initialised.
     """
 
 
@@ -218,7 +222,7 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    def __init__(self, overlayList, parent=None, **kwargs):
+    def __init__(self, overlayList, parent=None, defaultDs='ref', **kwargs):
         """Create a ``DisplayContext``.
 
         :arg overlayList: An :class:`.OverlayList` instance.
@@ -226,6 +230,13 @@ class DisplayContext(props.SyncableHasProperties):
         :arg parent:      Another ``DisplayContext`` instance to be used
                           as the parent of this instance, passed to the
                           :class:`.SyncableHasProperties` constructor.
+
+        :arg defaultDs:   Initial value for the :meth:`defaultDisplaySpace`.
+                          Either ``'ref'`` or ``'world'``. If ``'ref'`` (the
+                          default), when overlays are added to an empty list,
+                          the :attr:`displaySpace` will be set to the first
+                          :class:`.Nifti` overlay. Otherwise (``'world'``),
+                          the display space will be set to ``'world'``.
 
         All other arguments are passed through to the ``SyncableHasProperties`
         constructor, in addition to the following:
@@ -256,10 +267,16 @@ class DisplayContext(props.SyncableHasProperties):
 
         props.SyncableHasProperties.__init__(self, **kwargs)
 
-
         self.__overlayList = overlayList
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
         self.__child       = parent is not None
+
+        # When the first overlay(s) is/are
+        # added, the display space may get
+        # set either to a reference image,
+        # or to world. The defaultDisplaySpace
+        # controls this behaviour.
+        self.defaultDisplaySpace = defaultDs
 
         # The overlayOrder is unsynced by
         # default, but we will inherit the
@@ -628,6 +645,29 @@ class DisplayContext(props.SyncableHasProperties):
             opts   .enableAllNotification()
 
 
+    @property
+    def defaultDisplaySpace(self):
+        """This property controls how the :attr:`displaySpace` is initialised
+        when overlays are added to a previously empty :class:`.OverlayList`.
+        If the ``defaultDisplaySpace`` is set to ``'ref'``, the
+        ``displaySpace`` will be initialised to the first :class:`.Nifti`
+        overlay. Otherwise (the ``defaultDisplaySpace`` is set to ``'world'``),
+        the ``displaySpace`` will be set to ``'world'``.
+        """
+        return self.__defaultDisplaySpace
+
+
+    @defaultDisplaySpace.setter
+    def defaultDisplaySpace(self, ds):
+        """Sets the :meth:`defaultDisplaySpace`.
+
+        :arg ds: Either ``'ref'`` or ``'world'``.
+        """
+        if ds not in ('world', 'ref'):
+            raise ValueError('Invalid default display space: {}'.format(ds))
+        self.__defaultDisplaySpace = ds
+
+
     def detachDisplaySpace(self):
         """Detaches the :attr:`displaySpace` and :attr:`bounds` properties,
         and all related :class:`.DisplayOpts` properties, from the parent
@@ -741,10 +781,6 @@ class DisplayContext(props.SyncableHasProperties):
         # property is valid
         self.__syncOverlayOrder()
 
-        # Ensure that the bounds
-        # property is accurate
-        self.__updateBounds()
-
         # Ensure that the displaySpace
         # property options are in sync
         # with the overlay list
@@ -759,16 +795,22 @@ class DisplayContext(props.SyncableHasProperties):
                (overlay not in oldList):
                 self.__setTransform(overlay)
 
+        # Ensure that the bounds
+        # property is accurate
+        self.__updateBounds()
+
         # If the overlay list was empty,
         # and is now non-empty ...
         if (self.__prevOverlayListLen == 0) and (len(self.__overlayList) > 0):
 
-            # Set the displaySpace to
-            # the first new image
-            for overlay in self.__overlayList:
-                if isinstance(overlay, fslimage.Nifti):
-                    self.displaySpace = overlay
-                    break
+            # Initialise the display space
+            if self.defaultDisplaySpace == 'ref':
+                for overlay in self.__overlayList:
+                    if isinstance(overlay, fslimage.Nifti):
+                        self.displaySpace = overlay
+                        break
+            else:
+                self.displaySpace = 'world'
 
             # Centre the currently selected
             # location (but see the comments

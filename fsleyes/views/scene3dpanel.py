@@ -65,7 +65,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         # DC value. This can be overridden manually
         # however (e.g. through the python shell)
         displayCtx.detachDisplaySpace()
-        displayCtx.displaySpace = 'world'
+        displayCtx.defaultDisplaySpace = 'world'
+        displayCtx.displaySpace        = 'world'
 
         contentPanel = self.getContentPanel()
 
