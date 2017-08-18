@@ -190,14 +190,19 @@ void main(void) {
     clipTexCoord = clipTexCoord - rayStep + dither;
 
     /*
-     * Keep going until we have enough
-     * colour, or until we exit the volume.
+     * Keep going until we
+     * have enough colour
      */
-    do {
+    while (finalColour.a < 0.95) {
 
       /* Shift the ray along */
       texCoord     += rayStep;
       clipTexCoord += rayStep;
+
+      /* Finish if we've exited the volume */
+      if (!textest(texCoord)) {
+        break;
+      }
 
       /*
        * We clip out the intersection
@@ -239,7 +244,7 @@ void main(void) {
           depth = tex2ScreenXform * vec4(texCoord, 1.0);
         }
       }
-    } while ((finalColour.a < 0.95) && textest(texCoord));
+    }
 
     if (nsamples > 0) {
 
