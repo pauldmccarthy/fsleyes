@@ -16,6 +16,7 @@ import fsleyes_props      as props
 import fsleyes.colourmaps as fslcm
 
 from . import sceneopts
+from . import canvasopts
 
 
 log = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class OrthoOpts(sceneopts.SceneOpts):
               *global* zoom property can be used to adjust all canvas zoom
               levels simultaneously.
     """
+
+
+    cursorGap = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
 
 
     showXCanvas = props.Boolean(default=True)

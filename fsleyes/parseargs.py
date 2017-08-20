@@ -402,6 +402,7 @@ OPTIONS = td.TypeDict({
     'OrthoOpts'     : ['xzoom',
                        'yzoom',
                        'zzoom',
+                       'cursorGap',
                        'showLabels',
                        'labelSize',
                        'layout',
@@ -671,6 +672,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
     'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
     'OrthoOpts.zzoom'       : ('zz', 'zzoom',      True),
+    'OrthoOpts.cursorGap'   : ('cg', 'cursorGap',  False),
     'OrthoOpts.layout'      : ('lo', 'layout',     True),
     'OrthoOpts.showXCanvas' : ('xh', 'hidex',      False),
     'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
@@ -825,9 +827,8 @@ HELP = td.TypeDict({
 
     'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
                               'first overlay)',
-    'Main.worldLoc'         : 'Location to show (world coordinates of '
-                              'first overlay, takes precedence over '
-                              '--voxelLoc)',
+    'Main.worldLoc'         : 'Location to show (world coordinates, takes '
+                              'precedence over --voxelLoc)',
     'Main.autoDisplay'      : 'Automatically configure overlay display '
                               'settings (unless any display settings are '
                               'specified)',
@@ -856,6 +857,7 @@ HELP = td.TypeDict({
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
     'OrthoOpts.zzoom'       : 'Z canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.cursorGap'   : 'Show a gap at the cursor centre',
     'OrthoOpts.layout'      : 'Canvas layout',
     'OrthoOpts.showXCanvas' : 'Hide the X canvas',
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',

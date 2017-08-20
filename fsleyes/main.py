@@ -441,10 +441,10 @@ def parseArgs(argv):
 
         Use the '--scene' option to load a saved perspective ({persps}).
 
-        If no '--scene' is specified, the previous layout is restored, unless
-        a script is provided via the '--runscript' argument, in which case
-        it is assumed that the script sets up the scene, so the previous
-        layout is not restored.
+        If no '--scene' is specified, a default layout is shown or the
+        previous layout is restored. If a script is provided via
+        the '--runscript' argument, it is assumed that the script sets
+        up the scene.
         """.format(persps=', '.join(persps)))
 
     # Options for configuring the scene are

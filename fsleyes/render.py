@@ -14,7 +14,6 @@ import            sys
 import            logging
 import            textwrap
 
-import fsleyes_props                         as props
 import fsleyes_widgets.utils.layout          as fsllayout
 import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
@@ -373,14 +372,18 @@ def createLightBoxCanvas(namespace,
         width=width,
         height=height)
 
-    opts = canvas.opts
-
-    props.applyArguments(opts, namespace)
-
-    # showCursor is called hideCursor
-    # in the namespace, so the above
-    # applyArguments will not apply it.
-    opts.showCursor = sceneOpts.showCursor
+    opts                = canvas.opts
+    opts.showCursor     = sceneOpts.showCursor
+    opts.bgColour       = sceneOpts.bgColour
+    opts.cursorColour   = sceneOpts.cursorColour
+    opts.renderMode     = sceneOpts.renderMode
+    opts.zax            = sceneOpts.zax
+    opts.sliceSpacing   = sceneOpts.sliceSpacing
+    opts.nrows          = sceneOpts.nrows
+    opts.ncols          = sceneOpts.ncols
+    opts.zrange         = sceneOpts.zrange
+    opts.showGridLines  = sceneOpts.showGridLines
+    opts.highlightSlice = sceneOpts.highlightSlice
 
     return canvas
 
@@ -461,6 +464,7 @@ def createOrthoCanvases(namespace,
         opts              = c.opts
         opts.showCursor   = sceneOpts.showCursor
         opts.cursorColour = sceneOpts.cursorColour
+        opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
         opts.renderMode   = sceneOpts.renderMode
 
@@ -495,12 +499,18 @@ def create3DCanvas(namespace,
         width=width,
         height=height)
 
-    # props.applyArguments(canvas.opts, namespace)
+    opts = canvas.opts
 
-    # showCursor is called hideCursor
-    # in the namespace, so the above
-    # applyArguments will not apply it.
-    canvas.opts.showCursor = sceneOpts.showCursor
+    opts.showCursor   = sceneOpts.showCursor
+    opts.cursorColour = sceneOpts.cursorColour
+    opts.bgColour     = sceneOpts.bgColour
+    opts.showLegend   = sceneOpts.showLegend
+    opts.occlusion    = sceneOpts.occlusion
+    opts.light        = sceneOpts.light
+    opts.lightPos     = sceneOpts.lightPos
+    opts.zoom         = sceneOpts.zoom
+    opts.offset       = sceneOpts.offset
+    opts.rotation     = sceneOpts.rotation
 
     return canvas
 
