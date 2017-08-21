@@ -999,10 +999,10 @@ HELP = td.TypeDict({
     'Use a lookup table instead of colour map(S) when colouring the mesh '
     'with vertex data.',
     'MeshOpts.lut' : 'Lookup table to use  (see -ul/--useLut).',
-    'MeshOpts.discardCliipped' :
+    'MeshOpts.discardClipped' :
     'Discard clipped regions, rather than colouring them with the flat colour',
     'MeshOpts.wireframe' :
-    'Draw as wireframe (3D only)',
+    '3D only. Draw as wireframe',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '

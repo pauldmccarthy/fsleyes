@@ -303,6 +303,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                                 self.__name,
                                 self.__bgColourChanged)
 
+        async.idle(self.__bgColourChanged)
+
 
     def destroy(self):
         """Makes sure that any remaining control panels are destroyed
@@ -622,11 +624,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         bg        = sceneOpts.bgColour
         fg        = colourmaps.complementaryColour(bg)
 
-        intbg = [c * 255 for c in bg]
-        intfg = [c * 255 for c in fg]
-
-        cpanel.SetBackgroundColour(intbg)
-        cpanel.SetForegroundColour(intfg)
+        cpanel.SetBackgroundColour([c * 255 for c in bg])
+        cpanel.SetForegroundColour([c * 255 for c in fg])
 
         if self.__colourBar is not None:
             cbCanvas = self.__colourBar.getCanvas()
