@@ -304,15 +304,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         properties to sensible values.
         """
         slicecanvas.SliceCanvas._zAxisChanged(self, *a)
-
-        opts    = self.opts
-        overlay = self.displayCtx.getSelectedOverlay()
-
-        if overlay is None:
-            return
-
-        opts.sliceSpacing = self.calcSliceSpacing(overlay)
-        opts.zrange.x     = self.displayCtx.bounds.getRange(opts.zax)
+        self._updateZAxisProperties()
+        self._slicePropsChanged()
 
 
     def _topRowChanged(self, *a):
