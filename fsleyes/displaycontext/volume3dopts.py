@@ -234,8 +234,11 @@ class Volume3DOpts(object):
         # Calculate the length of one step
         # along the camera direction in a
         # single iteration of the ray-cast
-        # loop.
-        rayStep = cdir / self.getNumSteps()
+        # loop. Multiply by sqrt(3) so that
+        # the maximum number of steps will
+        # be reached across the longest axis
+        # of the image texture cube.
+        rayStep = np.sqrt(3) * cdir / self.getNumSteps()
 
         # Maximum amount by which to dither
         # the scene. This is done by applying
