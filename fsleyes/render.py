@@ -503,18 +503,18 @@ def create3DCanvas(namespace,
         width=width,
         height=height)
 
-    opts = canvas.opts
-
-    opts.showCursor   = sceneOpts.showCursor
-    opts.cursorColour = sceneOpts.cursorColour
-    opts.bgColour     = sceneOpts.bgColour
-    opts.showLegend   = sceneOpts.showLegend
-    opts.occlusion    = sceneOpts.occlusion
-    opts.light        = sceneOpts.light
-    opts.lightPos     = sceneOpts.lightPos
-    opts.zoom         = sceneOpts.zoom
-    opts.offset       = sceneOpts.offset
-    opts.rotation     = sceneOpts.rotation
+    opts                 = canvas.opts
+    opts.showCursor      = sceneOpts.showCursor
+    opts.cursorColour    = sceneOpts.cursorColour
+    opts.bgColour        = sceneOpts.bgColour
+    opts.showLegend      = sceneOpts.showLegend
+    opts.occlusion       = sceneOpts.occlusion
+    opts.light           = sceneOpts.light
+    opts.lightPos        = sceneOpts.lightPos
+    opts.zoom            = sceneOpts.zoom
+    opts.offset          = sceneOpts.offset
+    opts.rotation        = sceneOpts.rotation
+    canvas.resetLightPos = False
 
     return canvas
 

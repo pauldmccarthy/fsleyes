@@ -1736,8 +1736,8 @@ def parseArgs(mainParser,
         else:                    appendTo = ovlExpectsArgs
 
         if expects:
-            appendTo.add(shortForm)
-            appendTo.add(longForm)
+            appendTo.add( '-{}'.format(shortForm))
+            appendTo.add('--{}'.format(longForm))
 
     log.debug('Identifying overlay paths (ignoring: {})'.format(
         list(mainExpectsArgs) + list(ovlExpectsArgs)))
@@ -1767,7 +1767,7 @@ def parseArgs(mainParser,
 
         # Check that this overlay file was
         # not a parameter to another argument
-        if i > 0 and argv[i - 1].strip('-') in expectsArgs:
+        if i > 0 and argv[i - 1] in expectsArgs:
             continue
 
         # See if the current argument looks like a data source

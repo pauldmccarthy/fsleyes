@@ -32,14 +32,14 @@ class Scene3DCanvas(object):
 
     def __init__(self, overlayList, displayCtx):
 
-        self.__opts        = canvasopts.Scene3DCanvasOpts()
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__viewMat     = np.eye(4)
-        self.__projMat     = np.eye(4)
-
-        self.__glObjects   = {}
+        self.__name          = '{}_{}'.format(type(self).__name__, id(self))
+        self.__opts          = canvasopts.Scene3DCanvasOpts()
+        self.__overlayList   = overlayList
+        self.__displayCtx    = displayCtx
+        self.__viewMat       = np.eye(4)
+        self.__projMat       = np.eye(4)
+        self.__resetLightPos = True
+        self.__glObjects     = {}
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -86,6 +86,15 @@ class Scene3DCanvas(object):
         """Returns a reference to the :class:`.Scene3DCanvasOpts` instance.
         """
         return self.__opts
+
+    @property
+    def resetLightPos(self):
+        return self.__resetLightPos
+
+
+    @resetLightPos.setter
+    def resetLightPos(self, reset):
+        self.__resetLightPos = reset
 
 
     def getViewMatrix(self):
@@ -256,7 +265,8 @@ class Scene3DCanvas(object):
                            b.ylo + 0.5 * (b.yhi - b.ylo),
                            b.zlo + 0.5 * (b.zhi - b.zlo)])
 
-        self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
+        if self.resetLightPos:
+            self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
 
         self.Refresh()
 
