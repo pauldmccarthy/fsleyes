@@ -866,9 +866,9 @@ HELP = td.TypeDict({
     'OrthoOpts.labelSize'   : 'Orientation label font size '
                               '(4-96, default: 14)',
 
-    'OrthoOpts.xcentre'     : 'X canvas offset from centre ([-1, 1])',
-    'OrthoOpts.ycentre'     : 'Y canvas offset from centre ([-1, 1])',
-    'OrthoOpts.zcentre'     : 'Z canvas offset from centre ([-1, 1])',
+    'OrthoOpts.xcentre'     : 'X canvas centre ([-1, 1])',
+    'OrthoOpts.ycentre'     : 'Y canvas centre ([-1, 1])',
+    'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.ncols'          : 'Number of columns',
@@ -2707,25 +2707,30 @@ def _configSpecial_OrthoOpts_zcentre(
 def _applySpecial_OrthoOpts_xcentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.xcentre`` option. """
     _applySpecialOrthoOptsCentre(
-        args.zcentre, displayCtx, 1, 2, target.getGLCanvases()[0])
+        args.xcentre, displayCtx, 1, 2, target.panel.getGLCanvases()[0])
 
 
 def _applySpecial_OrthoOpts_ycentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.ycentre`` option. """
     _applySpecialOrthoOptsCentre(
-        args.zcentre, displayCtx, 0, 2, target.getGLCanvases()[1])
+        args.ycentre, displayCtx, 0, 2, target.panel.getGLCanvases()[1])
 
 
 def _applySpecial_OrthoOpts_zcentre(args, overlayList, displayCtx, target):
     """Applies the ``OrthoOpts.zcentre`` option. """
     _applySpecialOrthoOptsCentre(
-        args.zcentre, displayCtx, 0, 1, target.getGLCanvases()[2])
+        args.zcentre, displayCtx, 0, 1, target.panel.getGLCanvases()[2])
 
 def _applySpecialOrthoOptsCentre(centre, displayCtx, xax, yax, canvas):
-    xoff = centre[0] * 0.5 * displayCtx.bounds.xlen
-    yoff = centre[1] * 0.5 * displayCtx.bounds.ylen
-    x    = displayCtx.location[xax] - xoff
-    y    = displayCtx.location[yax] - yoff
+
+    xlo  = displayCtx.bounds.getLo(xax)
+    ylo  = displayCtx.bounds.getLo(yax)
+    xlen = displayCtx.bounds.getLen(xax)
+    ylen = displayCtx.bounds.getLen(yax)
+    xmid = xlo  + 0.5 * xlen
+    ymid = ylo  + 0.5 * ylen
+    x    = xmid + 0.5 * xlen * centre[0]
+    y    = ymid + 0.5 * ylen * centre[1]
 
     canvas.centreDisplayAt(x, y)
 
@@ -2759,17 +2764,15 @@ def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
     and ``zcentre`` options.
     """
 
-    x, y     = canvas.getDisplayCentre()
-    xlo, xhi = displayCtx.bounds.getRange(xax)
-    ylo, yhi = displayCtx.bounds.getRange(yax)
+    x, y = canvas.getDisplayCentre()
+    xlo  = displayCtx.bounds.getLo( xax)
+    ylo  = displayCtx.bounds.getLo( yax)
+    xlen = displayCtx.bounds.getLen(xax)
+    ylen = displayCtx.bounds.getLen(yax)
+    x    = -1 + 2 * (x - xlo) / xlen
+    y    = -1 + 2 * (y - ylo) / ylen
 
-    xmid     = xlo + 0.5 * (xhi - xlo)
-    ymid     = ylo + 0.5 * (yhi - ylo)
-
-    xoff = 2 * (xmid - x) / (xhi - xlo)
-    yoff = 2 * (ymid - y) / (yhi - ylo)
-
-    return ['{: 0.5f}'.format(xoff), '{: 0.5f}'.format(yoff)]
+    return ['{: 0.5f}'.format(x), '{: 0.5f}'.format(y)]
 
 
 def _configSpecial_Volume3DOpts_clipPlane(

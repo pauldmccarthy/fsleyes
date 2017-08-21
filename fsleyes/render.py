@@ -451,9 +451,6 @@ def createOrthoCanvases(namespace,
 
         zax = 3 - xax - yax
 
-        if centre is None:
-            centre = (displayCtx.location[xax], displayCtx.location[yax])
-
         c = slicecanvas.OffScreenSliceCanvas(
             overlayList,
             displayCtx,
@@ -470,7 +467,14 @@ def createOrthoCanvases(namespace,
 
         if zoom is not None:
             opts.zoom = zoom
+
+        # Default to centering
+        # on the cursor
+        if centre is None:
+            centre = [displayCtx.location[xax], displayCtx.location[yax]]
+
         c.centreDisplayAt(*centre)
+
         canvases.append(c)
 
 
