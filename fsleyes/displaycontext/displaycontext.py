@@ -869,8 +869,11 @@ class DisplayContext(props.SyncableHasProperties):
 
         # Disable notification of the bounds
         # property so the __overlayBoundsChanged
-        # method does not get called.
-        with props.skip(opts, 'bounds', self.__name):
+        # method does not get called. Use
+        # ignoreInvalid, because this method might
+        # get called before we have registered a
+        # listener on the bounds property.
+        with props.skip(opts, 'bounds', self.__name, ignoreInvalid=True):
             if   space == 'world':  opts.transform = 'affine'
             elif image is space:    opts.transform = 'pixdim-flip'
             else:
