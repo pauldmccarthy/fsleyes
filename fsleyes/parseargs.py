@@ -2455,16 +2455,16 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                 value = getattr(optArgs, fileOpt, None)
                 if value is not None:
 
+                    setattr(optArgs, fileOpt, None)
+
                     try:
                         image = _findOrLoad(overlayList,
                                             value,
                                             fslimage.Image,
                                             overlay)
-                    except:
-                        log.warning('Unrecognised value for {}: {}'.format(
-                            fileOpt, value))
-
-                    setattr(optArgs, fileOpt, None)
+                    except Exception as e:
+                        log.warning('{}: {}'.format(fileOpt, str(e)))
+                        continue
 
                     # If the user specified both clipImage
                     # arguments and linklow/high range
