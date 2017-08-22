@@ -81,6 +81,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('cursorColour', sceneOpts)
         opts.bindProps('bgColour',     sceneOpts)
         opts.bindProps('showLegend',   sceneOpts)
+        opts.bindProps('legendColour', sceneOpts, 'fgColour')
         opts.bindProps('occlusion',    sceneOpts)
         opts.bindProps('light',        sceneOpts)
         opts.bindProps('lightPos',     sceneOpts)

@@ -254,7 +254,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.Refresh()
 
         sceneOpts.addListener('labelSize',   name, refresh, weak=False)
-        sceneOpts.addListener('labelColour', name, refresh, weak=False)
+        sceneOpts.addListener('fgColour',    name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
 
         self.addListener('profile', name, self.__profileChanged)

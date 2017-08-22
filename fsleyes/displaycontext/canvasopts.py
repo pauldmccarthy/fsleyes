@@ -220,6 +220,10 @@ class Scene3DCanvasOpts(props.HasProperties):
     """If ``True``, an orientation guide will be shown on the canvas. """
 
 
+    legendColour = props.Colour(default=(0, 0, 1))
+    """Colour to use for the legend."""
+
+
     occlusion = props.Boolean(default=True)
     """If ``True``, objects closer to the camera will occlude objects
     further away. Toggles ``gl.DEPTH_TEST``.

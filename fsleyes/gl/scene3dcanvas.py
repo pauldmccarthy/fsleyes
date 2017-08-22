@@ -590,7 +590,7 @@ class Scene3DCanvas(object):
 
         # Draw the legend lines
         gl.glDisable(gl.GL_DEPTH_TEST)
-        gl.glColor3f(*copts.cursorColour[:3])
+        gl.glColor3f(*copts.legendColour[:3])
         gl.glLineWidth(2)
         gl.glBegin(gl.GL_LINES)
         gl.glVertex3f(*vertices[0])

@@ -116,7 +116,7 @@ class OrthoLabels(object):
 
         orthoOpts  .addListener('showLabels',       **refreshArgs)
         orthoOpts  .addListener('labelSize',        **refreshArgs)
-        orthoOpts  .addListener('labelColour',      **refreshArgs)
+        orthoOpts  .addListener('fgColour',         **refreshArgs)
         displayCtx .addListener('selectedOverlay',  **refreshArgs)
         displayCtx .addListener('displaySpace',     **refreshArgs)
         displayCtx .addListener('radioOrientation', **refreshArgs)
@@ -143,7 +143,7 @@ class OrthoLabels(object):
 
         orthoOpts  .removeListener('showLabels',       name)
         orthoOpts  .removeListener('labelSize',        name)
-        orthoOpts  .removeListener('labelColour',      name)
+        orthoOpts  .removeListener('fgColour',         name)
         displayCtx .removeListener('selectedOverlay',  name)
         displayCtx .removeListener('displaySpace',     name)
         displayCtx .removeListener('radioOrientation', name)
@@ -227,7 +227,7 @@ class OrthoLabels(object):
 
         fontSize = sopts.labelSize
         bgColour = tuple(sopts.bgColour)
-        fgColour = tuple(sopts.labelColour)
+        fgColour = tuple(sopts.fgColour)
 
         # If any axis orientation is unknown, and the
         # the background colour is black or white,

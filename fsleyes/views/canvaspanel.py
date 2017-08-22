@@ -301,9 +301,12 @@ class CanvasPanel(viewpanel.ViewPanel):
                                 self.__colourBarPropsChanged)
         self.__opts.addListener('bgColour',
                                 self.__name,
-                                self.__bgColourChanged)
+                                self.__bgfgColourChanged)
+        self.__opts.addListener('fgColour',
+                                self.__name,
+                                self.__bgfgColourChanged)
 
-        async.idle(self.__bgColourChanged)
+        async.idle(self.__bgfgColourChanged)
 
 
     def destroy(self):
@@ -321,6 +324,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts      .removeListener('colourBarLocation', self.__name)
         self.__opts      .removeListener('showColourBar',     self.__name)
         self.__opts      .removeListener('bgColour',          self.__name)
+        self.__opts      .removeListener('fgColour',          self.__name)
 
         viewpanel.ViewPanel.destroy(self)
 
@@ -547,6 +551,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         and is available for custom sub-class implementations to use.
         """
 
+        sopts = self.getSceneOptions()
+
         if not self.__opts.showColourBar:
 
             if self.__colourBar is not None:
@@ -569,8 +575,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                 self.getDisplayContext(),
                 self.getFrame())
 
-            bg = self.getSceneOptions().bgColour
-            fg = colourmaps.complementaryColour(bg)
+            bg = sopts.bgColour
+            fg = sopts.fgColour
             self.__colourBar.getCanvas().textColour = fg
             self.__colourBar.getCanvas().bgColour   = bg
 
@@ -605,9 +611,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.centrePanelLayout()
 
 
-    def __bgColourChanged(self, *a, **kwa):
-        """Called when the :class:`.SceneOpts.bgColour` property changes.
-        Updates background/foreground colours.
+    def __bgfgColourChanged(self, *a, **kwa):
+        """Called when the :class:`.SceneOpts.bgColour` or
+        :class:`.SceneOpts.fgColour` properties change.  Updates
+        background/foreground colours.
 
         The :attr:`.SliceCanvasOpts.bgColour` properties are bound to
         ``SceneOpts.bgColour``,(see :meth:`.HasProperties.bindProps`), so we
@@ -622,7 +629,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         canvases  = self.getGLCanvases()
         cpanel    = self.getContentPanel()
         bg        = sceneOpts.bgColour
-        fg        = colourmaps.complementaryColour(bg)
+        fg        = sceneOpts.fgColour
 
         cpanel.SetBackgroundColour([c * 255 for c in bg])
         cpanel.SetForegroundColour([c * 255 for c in fg])

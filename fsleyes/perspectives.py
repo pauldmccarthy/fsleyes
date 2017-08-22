@@ -562,13 +562,13 @@ def deserialisePerspective(persp):
         props           = vpPanelProps[i].split(',')
         props           = [p for p in props if p != '']
         props           = [p.split('=') for p in props]
-        vpPanelProps[i] = dict(props)
+        vpPanelProps[i] = collections.OrderedDict(props)
 
     for i in range(len(vpSceneProps)):
         props           = vpSceneProps[i].split(',')
         props           = [p for p in props if p != '']
         props           = [p.split('=') for p in props]
-        vpSceneProps[i] = dict(props)
+        vpSceneProps[i] = collections.OrderedDict(props)
 
 
     return (frameChildren,
@@ -701,6 +701,7 @@ VIEWPANEL_PROPS = {
                         'movieRate'],
                        ['showCursor',
                         'bgColour',
+                        'fgColour',
                         'cursorColour',
                         'cursorGap',
                         'showColourBar',
@@ -718,6 +719,7 @@ VIEWPANEL_PROPS = {
                         'movieRate'],
                        ['showCursor',
                         'bgColour',
+                        'fgColour',
                         'cursorColour',
                         'showColourBar',
                         'colourBarLocation',
@@ -730,6 +732,7 @@ VIEWPANEL_PROPS = {
                         'syncOverlayDisplay'],
                        ['showCursor',
                         'bgColour',
+                        'fgColour',
                         'cursorColour',
                         'showColourBar',
                         'colourBarLocation',
@@ -737,12 +740,18 @@ VIEWPANEL_PROPS = {
                         'showLegend']]}
 
 
+# The order in which properties are defined in
+# a perspective is the order in which they will
+# be applied. This is important to remember when
+# considering properties that have side effects
+# (e.g. setting SceneOpts.bgColour will clobber
+# SceneOpts.fgColour).
 BUILT_IN_PERSPECTIVES = collections.OrderedDict((
     ('default',
      textwrap.dedent("""
                      OrthoPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     OverlayDisplayToolBar,OrthoToolBar,LocationPanel,OverlayListPanel;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
+                     OverlayDisplayToolBar,OrthoToolBar,LocationPanel,OverlayListPanel;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=855;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=748;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=440;floath=127;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=96;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=36|dock_size(1,11,0)=51|
                      """)),
 
@@ -750,7 +759,7 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      LightBoxPanel,TimeSeriesPanel,PowerSpectrumPanel
                      layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=853;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=PowerSpectrumPanel 3;caption=Power spectra 3;state=67377148;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=224|
-                     LocationPanel,OverlayListPanel,MelodicClassificationPanel,LightBoxToolBar,OverlayDisplayToolBar;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
+                     LocationPanel,OverlayListPanel,MelodicClassificationPanel,LightBoxToolBar,OverlayDisplayToolBar;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=440;floath=127;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=96;notebookid=-1;transparent=255|name=MelodicClassificationPanel;caption=Melodic IC classification;state=67373052;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=400;besth=100;minw=400;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=400;floath=116;notebookid=-1;transparent=255|name=LightBoxToolBar;caption=Lightbox view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=639;besth=43;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=898;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=45|dock_size(1,11,0)=51|dock_size(2,0,0)=402|
                      TimeSeriesToolBar;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=619;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|
@@ -762,7 +771,7 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      OrthoPanel,TimeSeriesPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=853;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=472;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=282|
-                     OverlayListPanel,OverlayDisplayToolBar,OrthoToolBar,LocationPanel,ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
+                     OverlayListPanel,OverlayDisplayToolBar,OrthoToolBar,LocationPanel,ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=204;besth=80;minw=197;minh=80;maxw=-1;maxh=-1;floatx=2608;floaty=1116;floatw=204;floath=96;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=899;besth=49;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=590;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=2072;floaty=80;floatw=824;floath=50;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=440;besth=111;minw=440;minh=109;maxw=-1;maxh=-1;floatx=2730;floaty=1104;floatw=440;floath=127;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=0;prop=114760;bestw=396;besth=96;minw=390;minh=96;maxw=-1;maxh=-1;floatx=3516;floaty=636;floatw=396;floath=112;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
                      OverlayListPanel,TimeSeriesToolBar;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=204;besth=60;minw=204;minh=60;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=204;floath=76;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=456;besth=34;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|dock_size(4,0,0)=206|
@@ -772,14 +781,14 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      OrthoPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
+                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      """)),
     ('3d',
      textwrap.dedent("""
                      Scene3DPanel
                      layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=22;besth=3;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=24|
-                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#9999c0ff
+                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#9999c0ff,fgColour=#00ff00ff
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      """)),
 
@@ -787,6 +796,6 @@ BUILT_IN_PERSPECTIVES = collections.OrderedDict((
      textwrap.dedent("""
                      LightBoxPanel
                      layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;bgColour=#000000ff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
+                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10|
                      """))))
