@@ -340,7 +340,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        cbarHeight,
                                        sceneOpts.colourBarLocation,
                                        sceneOpts.colourBarLabelSide,
-                                       sceneOpts.bgColour)
+                                       sceneOpts.bgColour,
+                                       sceneOpts.fgColour)
         if cbarBmp is not None:
             layout  = buildColourBarLayout(layout,
                                            cbarBmp,
@@ -511,6 +512,7 @@ def create3DCanvas(namespace,
     opts.cursorColour    = sceneOpts.cursorColour
     opts.bgColour        = sceneOpts.bgColour
     opts.showLegend      = sceneOpts.showLegend
+    opts.legendColour    = sceneOpts.fgColour
     opts.occlusion       = sceneOpts.occlusion
     opts.light           = sceneOpts.light
     opts.lightPos        = sceneOpts.lightPos
@@ -528,7 +530,8 @@ def buildColourBarBitmap(overlayList,
                          height,
                          cbarLocation,
                          cbarLabelSide,
-                         bgColour):
+                         bgColour,
+                         fgColour):
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
@@ -547,6 +550,8 @@ def buildColourBarBitmap(overlayList,
     :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
 
     :arg bgColour:      RGBA background colour.
+
+    :arg fgColour:      RGBA foreground (text) colour.
     """
 
     overlay = displayCtx.getSelectedOverlay()
@@ -595,7 +600,7 @@ def buildColourBarBitmap(overlayList,
         orientation=orient,
         labelside=labelSide,
         bgColour=bgColour,
-        textColour=fslcm.complementaryColour(bgColour),
+        textColour=fgColour,
         cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4

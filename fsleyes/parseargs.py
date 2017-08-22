@@ -394,6 +394,7 @@ OPTIONS = td.TypeDict({
 
     'SceneOpts'     : ['showCursor',
                        'bgColour',
+                       'fgColour',
                        'cursorColour',
                        'showColourBar',
                        'colourBarLocation',
@@ -663,6 +664,7 @@ ARGUMENTS = td.TypeDict({
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
+    'SceneOpts.fgColour'           : ('fg',  'fgColour',           True),
     'SceneOpts.cursorColour'       : ('cc',  'cursorColour',       True),
     'SceneOpts.colourBarLocation'  : ('cbl', 'colourBarLocation',  True),
     'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
@@ -847,6 +849,7 @@ HELP = td.TypeDict({
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
     'SceneOpts.bgColour'           : 'Canvas background colour (0-1)',
+    'SceneOpts.fgColour'           : 'Canvas foreground colour (0-1)',
     'SceneOpts.cursorColour'       : 'Cursor location colour (0-1)',
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
@@ -1141,6 +1144,7 @@ def getExtra(target, propName, default=None):
         (fsldisplay.SHOpts,         'cmap')          : cmapSettings,
         (fsldisplay.SHOpts,         'shOrder')       : shOrderSettings,
         (fsldisplay.SceneOpts,      'bgColour')      : colourSettings,
+        (fsldisplay.SceneOpts,      'fgColour')      : colourSettings,
         (fsldisplay.SceneOpts,      'cursorColour')  : colourSettings,
         (fsldisplay.MaskOpts,       'colour')        : colourSettings,
         (fsldisplay.LineVectorOpts, 'xColour')       : colourSettings,

@@ -220,8 +220,8 @@ class Scene3DCanvasOpts(props.HasProperties):
     """If ``True``, an orientation guide will be shown on the canvas. """
 
 
-    legendColour = props.Colour(default=(0, 0, 1))
-    """Colour to use for the legend."""
+    legendColour = props.Colour(default=(0, 1, 0))
+    """Colour to use for the legend text."""
 
 
     occlusion = props.Boolean(default=True)
