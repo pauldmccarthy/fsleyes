@@ -9,6 +9,7 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 """
 
 
+import numpy            as np
 import OpenGL.GL        as gl
 
 import fsleyes.gl       as fslgl
@@ -140,7 +141,7 @@ class GLLabel(glimageobject.GLImageObject):
         display.addListener('brightness',   name, self.__colourPropChanged)
         display.addListener('contrast',     name, self.__colourPropChanged)
         opts   .addListener('outline',      name, self.updateShaderState)
-        opts   .addListener('outlineWidth', name, self.updateShaderState)
+        opts   .addListener('outlineWidth', name, self.notify)
         opts   .addListener('lut',          name, self.__lutChanged)
         opts   .addListener('volume',       name, self.__imagePropChanged)
         opts   .addListener('transform',    name, self.notify)
@@ -270,6 +271,29 @@ class GLLabel(glimageobject.GLImageObject):
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()
         fslgl.gllabel_funcs.postDraw(self, xform, bbox)
+
+
+    def calculateOutlineOffsets(self, axes):
+        """
+        """
+        zax            = axes[2]
+        opts           = self.opts
+        imageShape     = np.array(self.image.shape[:3])
+        outlineOffsets = opts.outlineWidth / imageShape
+
+        # If we are not orthogonal to the
+        # display coordinate system, we use
+        # the same outline offset along all
+        # axes.
+        if opts.transform in ('custom', 'affine'):
+            minOffset      = outlineOffsets.min()
+            outlineOffsets = np.array([minOffset] * 3)
+
+        # Otherwise we can ignore the depth axis
+        else:
+            outlineOffsets[zax] = -1
+
+        return outlineOffsets
 
 
     def __lutChanged(self, *a):

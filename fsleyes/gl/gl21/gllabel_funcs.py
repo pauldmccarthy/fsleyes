@@ -59,22 +59,16 @@ def updateShaderState(self):
     opts   = self.opts
     shader = self.shader
 
-    imageShape      = np.array(self.image.shape[:3])
-    vvx             = self.imageTexture.voxValXform
-    outlineOffsets  = opts.outlineWidth / imageShape
-
-    minOffset      = outlineOffsets.min()
-    outlineOffsets = np.array([minOffset] * 3)
+    imageShape = np.array(self.image.shape[:3])
+    vvx        = self.imageTexture.voxValXform
 
     shader.load()
 
-    changed = False
-
+    changed  = False
     changed |= shader.set('outline',        opts.outline)
     changed |= shader.set('numLabels',      opts.lut.max() + 1)
     changed |= shader.set('imageShape',     imageShape)
     changed |= shader.set('voxValXform',    vvx)
-    changed |= shader.set('outlineOffsets', outlineOffsets)
     changed |= shader.set('imageTexture',   0)
     changed |= shader.set('lutTexture',     1)
 
@@ -83,8 +77,14 @@ def updateShaderState(self):
     return changed
 
 
+def draw2D(self, zpos, axes, *args, **kwargs):
+
+    offsets = self.calculateOutlineOffsets(axes)
+    self.shader.set('outlineOffsets', offsets)
+    glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
+
+
 preDraw  = glvolume_funcs.preDraw
-draw2D   = glvolume_funcs.draw2D
 draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw
