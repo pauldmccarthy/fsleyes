@@ -274,8 +274,14 @@ class GLLabel(glimageobject.GLImageObject):
 
 
     def calculateOutlineOffsets(self, axes):
+        """Calculates offsets that are used by the label fragment shader
+        programs to calculate whether a position in the image is on a label
+        boundary. If the image is being shown on a 2D canvas orthogonal
+        to the display coordinate system, we can ignore the depth axis and
+        calculate boundaries in 2D. Otherwise we have to calculate boundaries
+        in 3D.
         """
-        """
+
         zax            = axes[2]
         opts           = self.opts
         imageShape     = np.array(self.image.shape[:3])

@@ -78,6 +78,7 @@ def updateShaderState(self):
 
 
 def draw2D(self, zpos, axes, *args, **kwargs):
+    """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
 
     offsets = self.calculateOutlineOffsets(axes)
     self.shader.set('outlineOffsets', offsets)
