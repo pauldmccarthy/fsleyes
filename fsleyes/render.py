@@ -212,6 +212,18 @@ def makeDisplayContext(namespace):
                              childDisplayCtx,
                              sceneOpts)
 
+    # Centre the location. The DisplayContext
+    # will typically centre its location on
+    # initialisation, but this may not work
+    # if any overlay arguments change the bounds
+    # of an overlay (e.g. mesh reference image)
+    if namespace.worldLoc is None and namespace.voxelLoc is None:
+        b = childDisplayCtx.bounds
+        childDisplayCtx.location = [
+            b.xlo + 0.5 * b.xlen,
+            b.ylo + 0.5 * b.ylen,
+            b.zlo + 0.5 * b.zlen]
+
     # This has to be applied after applySceneArgs,
     # in case the user used the '-std'/'-std1mm'
     # options.
@@ -376,6 +388,9 @@ def createLightBoxCanvas(namespace,
         width=width,
         height=height)
 
+    if sceneOpts.zrange == (0, 0):
+        sceneOpts.zrange = displayCtx.bounds.getRange(sceneOpts.zax)
+
     opts                = canvas.opts
     opts.showCursor     = sceneOpts.showCursor
     opts.bgColour       = sceneOpts.bgColour
@@ -515,11 +530,15 @@ def create3DCanvas(namespace,
     opts.legendColour    = sceneOpts.fgColour
     opts.occlusion       = sceneOpts.occlusion
     opts.light           = sceneOpts.light
-    opts.lightPos        = sceneOpts.lightPos
     opts.zoom            = sceneOpts.zoom
     opts.offset          = sceneOpts.offset
     opts.rotation        = sceneOpts.rotation
-    canvas.resetLightPos = False
+
+    if parseargs.wasSpecified(namespace, sceneOpts, 'lightPos'):
+        opts.lightPos        = sceneOpts.lightPos
+        canvas.resetLightPos = False
+    else:
+        canvas.defaultLightPos()
 
     return canvas
 

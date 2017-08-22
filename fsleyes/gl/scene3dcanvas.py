@@ -89,12 +89,28 @@ class Scene3DCanvas(object):
 
     @property
     def resetLightPos(self):
+        """By default, the :attr:`lightPos` is updated whenever the
+        :attr:`.DisplayContext.bounds` change. This flag can be used to
+        disable this behaviour.
+        """
         return self.__resetLightPos
 
 
     @resetLightPos.setter
     def resetLightPos(self, reset):
+        """Control whether the :attr:`lightPos` property is reset whenever
+        the :attr:`.DisplayContext.bounds` change.
+        """
         self.__resetLightPos = reset
+
+
+    def defaultLightPos(self):
+        """Resets the :attr:`lightPos` property to a sensible value. """
+        b      = self.__displayCtx.bounds
+        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                           b.ylo + 0.5 * (b.yhi - b.ylo),
+                           b.zlo + 0.5 * (b.zhi - b.zlo)])
+        self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
 
 
     def getViewMatrix(self):
@@ -260,13 +276,8 @@ class Scene3DCanvas(object):
         the :attr:`.Scene3DCanvasOpts.lightPos` property.
         """
 
-        b      = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-
         if self.resetLightPos:
-            self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
+            self.defaultLightPos()
 
         self.Refresh()
 

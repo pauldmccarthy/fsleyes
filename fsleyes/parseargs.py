@@ -2533,6 +2533,15 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                  **kwargs)
 
 
+def wasSpecified(namespace, obj, propName):
+    """Returns ``True`` if the given ``propName`` on the given object was
+    specified on the command line, ``False`` otherwise.
+    """
+
+    optName = ARGUMENTS.get((obj, propName), [None, 'nonexistent'])[1]
+    return getattr(namespace, optName, None) is not None
+
+
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
     """Searches for the given ``overlayFile`` in the ``overlayList``. If not
     present, it is created using the given ``overlayType`` constructor, and
