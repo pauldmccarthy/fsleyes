@@ -349,17 +349,20 @@ class ColourMapOpts(object):
             drmin = min((0,            abs(dataMin)))
             drmax = max((abs(dataMin), abs(dataMax)))
 
+        if clipRange is not None: crmin, crmax = clipRange
+        else:                     crmin, crmax = drmin, drmax
+
         # Clipping works on >= and <=, so we add
         # a small offset to the display range limits
         # (which are equal to the clipping limiits)
         # so the user can configure the scene such
         # that no values are clipped.
         droff  = abs(drmax - drmin) / 100.0
+        croff  = abs(crmax - crmin) / 100.0
+        crmin -= croff
+        crmax += croff
         drmin -= droff
         drmax += droff
-
-        if clipRange is not None: crmin, crmax = clipRange
-        else:                     crmin, crmax = drmin, drmax
 
         # Execute on the PV call queue,
         # so that property updates occur
@@ -387,8 +390,8 @@ class ColourMapOpts(object):
             # was previously equal to the max
             # clipping range, keep that relationship,
             # otherwise high values will be clipped.
-            if drUnset: self.displayRange .x   = drmin + droff, drmax
-            if crUnset: self.clippingRange.x   = crmin + droff, crmax
+            if drUnset: self.displayRange .x   = drmin + droff, dataMax
+            if crUnset: self.clippingRange.x   = crmin + croff, crmax
             if crGrow:  self.clippingRange.xhi = crmax
 
             # If using absolute range values, the low
