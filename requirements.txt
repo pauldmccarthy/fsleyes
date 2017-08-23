@@ -11,5 +11,5 @@ scipy==0.*
 indexed_gzip==0.3.*
 wxpython>=3.0.2.0,<4.1
 fslpy==1.0.*
-fsleyes-props==1.0.*
+fsleyes-props==1.1.*
 fsleyes-widgets==0.0.*
