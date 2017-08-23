@@ -168,10 +168,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self._displayCtx .removeListener('radioOrientation', self._name)
         self._overlayList.removeListener('overlays',         self._name)
 
+        canvaspanel.CanvasPanel.destroy(self)
+
         self.__lbCanvas.destroy()
         self.__lbCanvas = None
-
-        canvaspanel.CanvasPanel.destroy(self)
 
 
     @actions.toggleControlAction(lightboxtoolbar.LightBoxToolBar)
