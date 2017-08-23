@@ -327,7 +327,9 @@ build-pypi-dist:
 
 .centos_pre_build: &centos_pre_build
   before_script:
+
     - yum check-update -y || true
+    - yum install -y epel-release
 
     # Install compilers and dependencies
     # for compiling Python
@@ -344,7 +346,7 @@ build-pypi-dist:
     # for download
 
     # We use gtk2 for both CentOS6 and 7
-    - yum install -y epel-release gtk2-devel webkitgtk-devel
+    - yum install -y gtk2-devel webkitgtk-devel
     - yum install -y libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
 
 
@@ -359,7 +361,7 @@ build-pypi-dist:
 
     # install fsleyes/wxpython runtime dependencies
     - apt-get install -y freeglut3 libosmesa6 libsdl1.2debian
-    - apt-get install -y libgtk2.0-0 libgtk-3-0
+    - apt-get install -y libgtk2.0-0
 
 
 .linux_do_build: &linux_do_build
