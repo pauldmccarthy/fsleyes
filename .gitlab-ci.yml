@@ -343,13 +343,8 @@ build-pypi-dist:
     # python 3.5/wxpython binary wheel available
     # for download
 
-    # CentOS6 -> gtk2, CentOS7 -> gtk3
-    - yum install -y epel-release
-    - if [[ `cat /etc/centos-release` == *" 6."* ]]; then
-        yum install -y  gtk2-devel webkitgtk-devel;
-      else
-        yum install -y  gtk2-devel gtk3-devel webkitgtk-devel webkitgtk3-devel;
-      fi;
+    # We use gtk2 for both CentOS6 and 7
+    - yum install -y epel-release gtk2-devel webkitgtk-devel
     - yum install -y libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
 
 
