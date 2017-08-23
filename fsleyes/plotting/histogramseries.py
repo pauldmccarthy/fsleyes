@@ -235,7 +235,7 @@ class HistogramSeries(dataseries.DataSeries):
 
                 self.nbins = autoBin(nzData, self.dataRange.x)
 
-            if self.overlay.ndims <= 3:
+            if self.overlay.ndims < 4:
 
                 self.__finiteData  = finData
                 self.__nonZeroData = nzData

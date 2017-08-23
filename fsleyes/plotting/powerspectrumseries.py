@@ -118,7 +118,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
         #      when the image data changes.
         self.__cache = cache.Cache(maxsize=1000)
 
-        if self.overlay.ndims <= 3:
+        if self.overlay.ndims < 4:
             raise ValueError('Overlay is not a 4D image')
 
 

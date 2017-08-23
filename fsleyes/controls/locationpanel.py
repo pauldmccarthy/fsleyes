@@ -707,11 +707,9 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                 vloc = opts.getVoxel()
 
                 if vloc is not None:
-                    if overlay.ndims > 3:
-                        vloc = vloc + [opts.volume]
-
-                    vloc = [int(v) for v in vloc]
-                    vval = overlay[tuple(vloc)]
+                    vloc = tuple(int(v) for v in vloc)
+                    vloc = opts.index(vloc)
+                    vval = overlay[vloc]
                     vloc = ' '.join(map(str, vloc))
 
                     if not np.isscalar(vval):
