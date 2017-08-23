@@ -498,7 +498,7 @@ def registerColourMap(cmapFile,
 
     # The file could be a FSLView style VEST-LUT
     if vest.looksLikeVestLutFile(cmapFile):
-        data = vest.loadVestLutFile(cmapFile)
+        data = vest.loadVestLutFile(cmapFile, normalise=False)
 
     # Or just a plain 2D text array
     else:

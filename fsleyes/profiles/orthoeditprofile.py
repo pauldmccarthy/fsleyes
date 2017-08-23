@@ -1092,7 +1092,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         overlay  = self.__currentOverlay
-        opts     = self._displayCtx.getOpts(overlay)
+        dopts    = self._displayCtx.getOpts(overlay)
         canvases = [self.__xcanvas,
                     self.__ycanvas,
                     self.__zcanvas]
@@ -1129,7 +1129,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Limit to the current plane
         # if in 2D selection mode
         if self.selectionIs3D: axes = (0, 1, 2)
-        else:                  axes = (canvas.xax, canvas.yax)
+        else:                  axes = (canvas.opts.xax, canvas.opts.yax)
 
         # Calculate a box in the voxel coordinate
         # system, centred at the current voxel,
@@ -1150,17 +1150,18 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # will map voxel coordinates to the
         # displayed voxel centre. So we offset
         # by -0.5 to get the corners.
-        corners = opts.transformCoords(corners - 0.5, 'voxel', 'display')
+        corners = dopts.transformCoords(corners - 0.5, 'voxel', 'display')
 
         cmin = corners.min(axis=0)
         cmax = corners.max(axis=0)
 
         for cur, can in zip(cursors, canvases):
-            xax = can.xax
-            yax = can.yax
-            zax = can.zax
+            copts = can.opts
+            xax   = copts.xax
+            yax   = copts.yax
+            zax   = copts.zax
 
-            if can.pos.z < cmin[zax] or can.pos.z > cmax[zax]:
+            if copts.pos[zax] < cmin[zax] or copts.pos[zax] > cmax[zax]:
                 cur.w = 0
                 cur.h = 0
                 continue
@@ -1253,8 +1254,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                       be another voxel coordinate.
         """
 
+        opts = canvas.opts
+
         if self.selectionIs3D: axes = (0, 1, 2)
-        else:                  axes = (canvas.xax, canvas.yax)
+        else:                  axes = (opts.xax, opts.yax)
 
         overlay   = self.__currentOverlay
         editor    = self.__editors[overlay]
@@ -1678,7 +1681,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.selectionIs3D:
             restrict = None
         else:
-            zax           = canvas.zax
+            zax           = canvas.opts.zax
             restrict      = [slice(None, None, None) for i in range(3)]
             restrict[zax] = slice(voxel[zax], voxel[zax] + 1)
 

@@ -111,12 +111,12 @@ class OrthoLabels(object):
         }
 
         for c in canvases:
-            c.addListener('invertX', **refreshArgs)
-            c.addListener('invertY', **refreshArgs)
+            c.opts.addListener('invertX', **refreshArgs)
+            c.opts.addListener('invertY', **refreshArgs)
 
         orthoOpts  .addListener('showLabels',       **refreshArgs)
         orthoOpts  .addListener('labelSize',        **refreshArgs)
-        orthoOpts  .addListener('labelColour',      **refreshArgs)
+        orthoOpts  .addListener('fgColour',         **refreshArgs)
         displayCtx .addListener('selectedOverlay',  **refreshArgs)
         displayCtx .addListener('displaySpace',     **refreshArgs)
         displayCtx .addListener('radioOrientation', **refreshArgs)
@@ -143,15 +143,15 @@ class OrthoLabels(object):
 
         orthoOpts  .removeListener('showLabels',       name)
         orthoOpts  .removeListener('labelSize',        name)
-        orthoOpts  .removeListener('labelColour',      name)
+        orthoOpts  .removeListener('fgColour',         name)
         displayCtx .removeListener('selectedOverlay',  name)
         displayCtx .removeListener('displaySpace',     name)
         displayCtx .removeListener('radioOrientation', name)
         overlayList.removeListener('overlays',         name)
 
         for c in canvases:
-            c.removeListener('invertX', name)
-            c.removeListener('invertY', name)
+            c.opts.removeListener('invertX', name)
+            c.opts.removeListener('invertY', name)
 
         # The _overlayListChanged method adds
         # listeners to individual overlays,
@@ -227,7 +227,7 @@ class OrthoLabels(object):
 
         fontSize = sopts.labelSize
         bgColour = tuple(sopts.bgColour)
-        fgColour = tuple(sopts.labelColour)
+        fgColour = tuple(sopts.fgColour)
 
         # If any axis orientation is unknown, and the
         # the background colour is black or white,
@@ -249,21 +249,21 @@ class OrthoLabels(object):
         canvasLabels = []
         for canvas in canvases:
 
-            cax = 'xyz'[canvas.zax]
+            cax = 'xyz'[canvas.opts.zax]
 
             if   cax == 'x': clabels = [[ylo, yhi], [zlo, zhi]]
             elif cax == 'y': clabels = [[xlo, xhi], [zlo, zhi]]
             elif cax == 'z': clabels = [[xlo, xhi], [ylo, yhi]]
 
-            if canvas.invertX: clabels[0] = [clabels[0][1], clabels[0][0]]
-            if canvas.invertY: clabels[1] = [clabels[1][1], clabels[1][0]]
+            if canvas.opts.invertX: clabels[0] = [clabels[0][1], clabels[0][0]]
+            if canvas.opts.invertY: clabels[1] = [clabels[1][1], clabels[1][0]]
 
             canvasLabels.append(clabels)
 
         # Update the text annotation properties
         for canvas, cannots, clabels in zip(canvases, annots, canvasLabels):
 
-            cax = 'xyz'[canvas.zax]
+            cax = 'xyz'[canvas.opts.zax]
 
             cannots['left']  .text = clabels[0][0]
             cannots['right'] .text = clabels[0][1]

@@ -16,6 +16,7 @@ import fsleyes_props      as props
 import fsleyes.colourmaps as fslcm
 
 from . import sceneopts
+from . import canvasopts
 
 
 log = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class OrthoOpts(sceneopts.SceneOpts):
               *global* zoom property can be used to adjust all canvas zoom
               levels simultaneously.
     """
+
+
+    cursorGap = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
 
 
     showXCanvas = props.Boolean(default=True)
@@ -55,13 +59,6 @@ class OrthoOpts(sceneopts.SceneOpts):
 
     labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
     """Label font size."""
-
-
-    labelColour = props.Colour(default=(1, 1, 1))
-    """Label colour. Note that this colour will automatically be updated when
-    the :attr:`bgColour` is changed. But the user can independently modify this
-    property without any side-effects.
-    """
 
 
     layout = props.Choice(('horizontal', 'vertical', 'grid'))
@@ -92,8 +89,7 @@ class OrthoOpts(sceneopts.SceneOpts):
 
         name = '{}_{}'.format(type(self).__name__, id(self))
 
-        self.addListener('zoom',     name, self.__onZoom)
-        self.addListener('bgColour', name, self.__onBgColour)
+        self.addListener('zoom', name, self.__onZoom)
 
 
     def __onZoom(self, *a):
@@ -105,15 +101,6 @@ class OrthoOpts(sceneopts.SceneOpts):
         self.xzoom = self.zoom
         self.yzoom = self.zoom
         self.zzoom = self.zoom
-
-
-    def __onBgColour(self, *a):
-        """Called when the :attr:`bgColour` changes. Updates the
-        :attr:`labelColour` property to something complementary to
-        the background.
-        """
-
-        self.labelColour = fslcm.complementaryColour(self.bgColour)
 
 
     def _onPerformanceChange(self, *a):

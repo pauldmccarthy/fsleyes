@@ -70,27 +70,30 @@ def updateShaderState(self):
 
     voxValXform  = self.imageTexture.voxValXform
     voxValXform  = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
-    offsets      = opts.outlineWidth / \
-                   np.array(self.image.shape[:3], dtype=np.float32)
     invNumLabels = 1.0 / (opts.lut.max() + 1)
-
-    minOffset = offsets.min()
-    offsets   = np.array([minOffset] * 3)
-
-    if opts.outline: offsets = [1] + list(offsets)
-    else:            offsets = [0] + list(offsets)
 
     self.shader.setFragParam('voxValXform',  voxValXform)
     self.shader.setFragParam('invNumLabels', [invNumLabels, 0, 0, 0])
-    self.shader.setFragParam('outline',      offsets)
 
     self.shader.unload()
 
     return True
 
 
+def draw2D(self, zpos, axes, *args, **kwargs):
+    """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`. """
+
+    offsets = self.calculateOutlineOffsets(axes)
+
+    if self.opts.outline: offsets = [1] + list(offsets)
+    else:                 offsets = [0] + list(offsets)
+
+    self.shader.setFragParam('outline', offsets)
+
+    glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
+
+
 preDraw  = glvolume_funcs.preDraw
-draw2D   = glvolume_funcs.draw2D
 draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

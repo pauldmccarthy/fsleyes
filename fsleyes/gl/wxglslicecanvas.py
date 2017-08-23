@@ -53,7 +53,7 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         """
         ev.Skip()
 
-        with props.skip(self, 'displayBounds', self.name):
+        with props.skip(self.opts, 'displayBounds', self.name):
             centre = self.getDisplayCentre()
             self._updateDisplayBounds()
             self.centreDisplayAt(*centre)

@@ -67,10 +67,12 @@ class Scene3DViewProfile(profiles.Profile):
         defaults.
         """
 
-        with props.suppressAll(self.__canvas):
-            self.__canvas.zoom     = 75
-            self.__canvas.offset   = [0, 0]
-            self.__canvas.rotation = np.eye(3)
+        opts = self.__canvas.opts
+
+        with props.suppressAll(opts):
+            opts.zoom     = 75
+            opts.offset   = [0, 0]
+            opts.rotation = np.eye(3)
         self.__canvas.Refresh()
 
 
@@ -80,7 +82,7 @@ class Scene3DViewProfile(profiles.Profile):
         :attr:`.Scene3DCanvas.rotation` property).
         """
         self.__rotateMousePos = mousePos
-        self.__baseXform      = canvas.rotation
+        self.__baseXform      = canvas.opts.rotation
         self.__lastRot        = np.eye(3)
 
 
@@ -113,9 +115,9 @@ class Scene3DViewProfile(profiles.Profile):
         self.__lastRot        = rot
         self.__rotateMousePos = mousePos
 
-        canvas.rotation = transform.concat(rot,
-                                           self.__lastRot,
-                                           self.__baseXform)
+        canvas.opts.rotation = transform.concat(rot,
+                                                self.__lastRot,
+                                                self.__baseXform)
 
 
     def _rotateModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -134,9 +136,11 @@ class Scene3DViewProfile(profiles.Profile):
         if wheel == 0:
             return
 
+        opts = canvas.opts
+
         def update():
-            if   wheel > 0: canvas.zoom += 0.1 * canvas.zoom
-            elif wheel < 0: canvas.zoom -= 0.1 * canvas.zoom
+            if   wheel > 0: opts.zoom += 0.1 * opts.zoom
+            elif wheel < 0: opts.zoom -= 0.1 * opts.zoom
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # for the reason why we do this asynchronously.
@@ -148,8 +152,13 @@ class Scene3DViewProfile(profiles.Profile):
         mouse position and current :attr:`.Scene3DCanvas.offset`
         value.
         """
-        self.__panMousePos    = mousePos
-        self.__panStartOffset = canvas.offset[:]
+        x, y = mousePos
+        w, h = canvas.GetSize()
+        x    = -1 + 2 * x / float(w)
+        y    = -1 + 2 * y / float(h)
+
+        self.__panMousePos    = (x, y)
+        self.__panStartOffset = canvas.opts.offset[:]
 
 
     def _panModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -159,11 +168,14 @@ class Scene3DViewProfile(profiles.Profile):
         if self.__panMousePos is None:
             return
 
+        w,  h  = canvas.GetSize()
         sx, sy = self.__panMousePos
         ox, oy = self.__panStartOffset
         ex, ey = mousePos
+        ex     = -1 + 2 * ex / float(w)
+        ey     = -1 + 2 * ey / float(h)
 
-        canvas.offset = [ox + ex - sx, oy + ey - sy]
+        canvas.opts.offset = [ox + ex - sx, oy + ey - sy]
 
 
     def _panModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):

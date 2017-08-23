@@ -133,15 +133,15 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         # each of the canvases, showing
         # the current cropping box.
         self.__xrect   = annotations.Rect(self.__xcanvas.getAnnotations(),
-                                          1, 2, (0, 0), 0, 0,
+                                          (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
         self.__yrect   = annotations.Rect(self.__ycanvas.getAnnotations(),
-                                          0, 2, (0, 0), 0, 0,
+                                          (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
         self.__zrect   = annotations.Rect(self.__zcanvas.getAnnotations(),
-                                          0, 1, (0, 0), 0, 0,
+                                          (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
 
@@ -388,15 +388,16 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         events (see :meth:`_cropModeLeftMouseDrag`).
         """
 
+        copts   = canvas.opts
         overlay = self.__overlay
 
         if overlay is None:
             return
 
         # What canvas was the click on?
-        if   canvas.zax == 0: hax, vax = 1, 2
-        elif canvas.zax == 1: hax, vax = 0, 2
-        elif canvas.zax == 2: hax, vax = 0, 1
+        if   copts.zax == 0: hax, vax = 1, 2
+        elif copts.zax == 1: hax, vax = 0, 2
+        elif copts.zax == 2: hax, vax = 0, 1
 
         # Figure out the distances from
         # the mouse click  to each crop
@@ -473,7 +474,6 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         limit    = self.__dragLimit
         oppLimit = 1 - limit
         vox      = self.__getVoxel(self.__overlay, canvasPos)
-
 
         newval = vox[axis]
         oppval = box.getLimit(axis, oppLimit)

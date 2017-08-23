@@ -441,10 +441,10 @@ def parseArgs(argv):
 
         Use the '--scene' option to load a saved perspective ({persps}).
 
-        If no '--scene' is specified, the previous layout is restored, unless
-        a script is provided via the '--runscript' argument, in which case
-        it is assumed that the script sets up the scene, so the previous
-        layout is not restored.
+        If no '--scene' is specified, a default layout is shown or the
+        previous layout is restored. If a script is provided via
+        the '--runscript' argument, it is assumed that the script sets
+        up the scene.
         """.format(persps=', '.join(persps)))
 
     # Options for configuring the scene are
@@ -454,7 +454,7 @@ def parseArgs(argv):
                                name,
                                prolog=prolog,
                                desc=description,
-                               argOpts=['r', 'runscript'])
+                               argOpts=['-r', '--runscript'])
 
 
 def makeDisplayContext(namespace, splash):
@@ -643,18 +643,6 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
         parseargs.applySceneArgs(
             namespace, overlayList, displayCtx, viewOpts)
-
-        def centre(vp=viewPanel):
-            xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                                     overlayList,
-                                                     displayCtx)
-
-            vp.getXCanvas().centreDisplayAt(*xc)
-            vp.getYCanvas().centreDisplayAt(*yc)
-            vp.getZCanvas().centreDisplayAt(*zc)
-
-        if isinstance(viewPanel, orthopanel.OrthoPanel):
-            async.idle(centre)
 
     # If a script has been specified, we run
     # the script. This has to be done on the

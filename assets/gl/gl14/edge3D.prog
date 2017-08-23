@@ -63,7 +63,7 @@ ABS front.x, front.x;
 
 # Unsafe operation - will only work
 # for single channel textures
-SLT isEdgeBack. {{ swizzle }}, tol.x, back.x;
+SLT isEdgeBack.{{  swizzle }}, tol.x, back.x;
 SLT isEdgeFront.{{ swizzle }}, tol.x, front.x;
 
 {% endfor %}

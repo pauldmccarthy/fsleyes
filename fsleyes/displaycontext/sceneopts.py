@@ -12,7 +12,8 @@ settings used by :class:`.CanvasPanel` instances.
 import copy
 import logging
 
-import fsleyes_props as props
+import fsleyes_props      as props
+import fsleyes.colourmaps as fslcm
 
 from . import canvasopts
 
@@ -31,11 +32,19 @@ class SceneOpts(props.HasProperties):
 
 
     showCursor      = copy.copy(canvasopts.SliceCanvasOpts.showCursor)
-    cursorGap       = copy.copy(canvasopts.SliceCanvasOpts.cursorGap)
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
+
+
+    fgColour = props.Colour(default=(1, 1, 1))
+    """Colour to use for foreground items (e.g. labels).
+
+    .. note:: This colour is automatically updated whenever the
+              :attr:`.bgColour` is changed. But it can be modified
+              independently.
+    """
 
 
     showColourBar = props.Boolean(default=False)
@@ -72,17 +81,26 @@ class SceneOpts(props.HasProperties):
     """
 
 
-    def __init__(self):
+    def __init__(self, panel):
         """Create a ``SceneOpts`` instance.
 
         This method simply links the :attr:`performance` property to the
         :attr:`renderMode` property.
         """
 
-        name = '{}_{}'.format(type(self).__name__, id(self))
-        self.addListener('performance', name, self._onPerformanceChange)
-
+        self.__panel = panel
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+        self.addListener('performance', self.__name, self._onPerformanceChange)
+        self.addListener('bgColour',    self.__name, self.__onBgColourChange)
         self._onPerformanceChange()
+
+
+    @property
+    def panel(self):
+        """Return a reference to the ``CanvasPanel`` that owns this
+        ``SceneOpts`` instance.
+        """
+        return self.__panel
 
 
     def _onPerformanceChange(self, *a):
@@ -94,3 +112,10 @@ class SceneOpts(props.HasProperties):
         """
         raise NotImplementedError('The _onPerformanceChange method must'
                                   'be implemented by sub-classes')
+
+
+    def __onBgColourChange(self, *a):
+        """Called when the background colour changes. Updates the
+        :attr:`fgColour` to a complementary colour.
+        """
+        self.fgColour = fslcm.complementaryColour(self.bgColour)

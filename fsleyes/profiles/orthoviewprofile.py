@@ -338,14 +338,15 @@ class OrthoViewProfile(profiles.Profile):
         try:    ch = chr(key)
         except: ch = None
 
-        dirs = [0, 0, 0]
+        dirs  = [0, 0, 0]
+        copts = canvas.opts
 
-        if   key == wx.WXK_LEFT:  dirs[canvas.xax] = -1
-        elif key == wx.WXK_RIGHT: dirs[canvas.xax] =  1
-        elif key == wx.WXK_UP:    dirs[canvas.yax] =  1
-        elif key == wx.WXK_DOWN:  dirs[canvas.yax] = -1
-        elif ch  in ('+', '='):   dirs[canvas.zax] =  1
-        elif ch  in ('-', '_'):   dirs[canvas.zax] = -1
+        if   key == wx.WXK_LEFT:  dirs[copts.xax] = -1
+        elif key == wx.WXK_RIGHT: dirs[copts.xax] =  1
+        elif key == wx.WXK_UP:    dirs[copts.yax] =  1
+        elif key == wx.WXK_DOWN:  dirs[copts.yax] = -1
+        elif ch  in ('+', '='):   dirs[copts.zax] =  1
+        elif ch  in ('-', '_'):   dirs[copts.zax] = -1
         else:                     return False
 
         def update():
@@ -373,15 +374,16 @@ class OrthoViewProfile(profiles.Profile):
         if len(self._overlayList) == 0:
             return False
 
-        dirs = [0, 0, 0]
+        dirs  = [0, 0, 0]
+        copts = canvas.opts
 
-        if   wheel > 0: dirs[canvas.zax] =  1
-        elif wheel < 0: dirs[canvas.zax] = -1
+        if   wheel > 0: dirs[copts.zax] =  1
+        elif wheel < 0: dirs[copts.zax] = -1
 
         pos = self.__offsetLocation(*dirs)
 
         def update():
-            self._displayCtx.location[canvas.zax] = pos[canvas.zax]
+            self._displayCtx.location[copts.zax] = pos[copts.zax]
 
         # See comment in _zoomModeMouseWheel about timeout
         async.idle(update, timeout=0.1)
@@ -422,8 +424,9 @@ class OrthoViewProfile(profiles.Profile):
         if   wheel > 0: wheel =  50
         elif wheel < 0: wheel = -50
 
-        minzoom = canvas.getConstraint('zoom', 'minval')
-        maxzoom = canvas.getConstraint('zoom', 'maxval')
+        copts   = canvas.opts
+        minzoom = copts.getConstraint('zoom', 'minval')
+        maxzoom = copts.getConstraint('zoom', 'maxval')
 
         # Over SSH/X11, mouse wheel events seem to get queued,
         # and continue to get processed after the user has
@@ -432,8 +435,8 @@ class OrthoViewProfile(profiles.Profile):
         # set a time out to drop the event, and prevent the
         # horribleness from happening.
         def update():
-            newZoom     = np.clip(canvas.zoom + wheel, minzoom, maxzoom)
-            canvas.zoom = newZoom
+            newZoom    = np.clip(copts.zoom + wheel, minzoom, maxzoom)
+            copts.zoom = newZoom
 
         async.idle(update, timeout=0.1)
 
@@ -474,9 +477,11 @@ class OrthoViewProfile(profiles.Profile):
         if canvasPos is None or canvasDownPos is None:
             return False
 
-        corner = [canvasDownPos[canvas.xax], canvasDownPos[canvas.yax]]
-        width  = canvasPos[canvas.xax] - corner[0]
-        height = canvasPos[canvas.yax] - corner[1]
+        copts  = canvas.opts
+
+        corner = [canvasDownPos[copts.xax], canvasDownPos[copts.yax]]
+        width  = canvasPos[copts.xax] - corner[0]
+        height = canvasPos[copts.yax] - corner[1]
 
         self.__lastRect = canvas.getAnnotations().rect(corner,
                                                        width,
@@ -507,10 +512,11 @@ class OrthoViewProfile(profiles.Profile):
             canvas.getAnnotations().dequeue(self.__lastRect)
             self.__lastRect = None
 
-        xlo = min(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
-        xhi = max(canvasPos[canvas.xax], canvasDownPos[canvas.xax])
-        ylo = min(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
-        yhi = max(canvasPos[canvas.yax], canvasDownPos[canvas.yax])
+        copts = canvas.opts
+        xlo   = min(canvasPos[copts.xax], canvasDownPos[copts.xax])
+        xhi   = max(canvasPos[copts.xax], canvasDownPos[copts.xax])
+        ylo   = min(canvasPos[copts.yax], canvasDownPos[copts.yax])
+        yhi   = max(canvasPos[copts.yax], canvasDownPos[copts.yax])
 
         canvas.zoomTo(xlo, xhi, ylo, yhi)
 
@@ -536,8 +542,9 @@ class OrthoViewProfile(profiles.Profile):
         if canvasPos     is None: return False
         if canvasDownPos is None: return False
 
-        xoff = canvasPos[canvas.xax] - canvasDownPos[canvas.xax]
-        yoff = canvasPos[canvas.yax] - canvasDownPos[canvas.yax]
+        copts = canvas.opts
+        xoff  = canvasPos[copts.xax] - canvasDownPos[copts.xax]
+        yoff  = canvasPos[copts.yax] - canvasDownPos[copts.yax]
 
         canvas.panDisplayBy(-xoff, -yoff)
 
@@ -628,7 +635,7 @@ class OrthoViewProfile(profiles.Profile):
         (ob, oc)    = self.__briconOrigin
 
         display = self._displayCtx.getDisplay(overlay)
-        w, h    = canvas.GetSize().Get()
+        w, h    = canvas.GetSize()
         x, y    = mousePos
 
         # Brightness is mapped to the horizontal

@@ -61,24 +61,24 @@ def updateShaderState(self, **kwargs):
     current :class:`.MeshOpts` configuration. This involves setting the
     parameter values used by the shaders.
     """
-    opts    = self.opts
-    canvas  = self.canvas
+    dopts   = self.opts
+    copts   = self.canvas.opts
     dshader = self.dataShader
     fshader = self.flatShader
 
     settings   = [-1 if     kwargs['useNegCmap'] else 1,
-                  -1 if     opts.invertClipping  else 1,
-                  -1 if not opts.discardClipped  else 1,
+                  -1 if     dopts.invertClipping else 1,
+                  -1 if not dopts.discardClipped else 1,
                   0]
 
-    clipping   = [opts.clippingRange.xlo, opts.clippingRange.xhi, 0, 0]
+    clipping   = [dopts.clippingRange.xlo, dopts.clippingRange.xhi, 0, 0]
 
     if self.threedee:
 
         lighting = list(kwargs['lightPos'])
 
-        if canvas.light: lighting += [ 1]
-        else:            lighting += [-1]
+        if copts.light: lighting += [ 1]
+        else:           lighting += [-1]
 
 
     dshader.load()

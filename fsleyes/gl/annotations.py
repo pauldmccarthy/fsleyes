@@ -87,6 +87,13 @@ class Annotations(object):
         self.__canvas = canvas
 
 
+    @property
+    def canvas(self):
+        """Returns a ref to the canvas that owns this ``Annotations`` instance.
+        """
+        return self.__canvas
+
+
     def setAxes(self, xax, yax):
         """This method must be called if the display orientation changes.  See
         :meth:`__init__`.
@@ -101,14 +108,7 @@ class Annotations(object):
         """Returns a tuple containing the ``(xmin, xmax, ymin, ymax)`` display
         bounds of the ``SliceCanvas`` that owns this ``Annotations`` object.
         """
-        return self.__canvas.displayBounds
-
-
-    def getCanvasSize(self):
-        """Returns a tuple containing the ``(width, height)``, in pixels, of
-        the ``SliceCanvas`` that owns this ``Annotations`` object.
-        """
-        return self.__canvas.GetSize()
+        return self.__canvas.opts.displayBounds
 
 
     def line(self, *args, **kwargs):
@@ -824,7 +824,7 @@ class Text(AnnotationObject):
     def draw2D(self, zpos, axes):
         """Draws this ``Text`` annotation. """
 
-        canvasSize = self.annot.getCanvasSize()
+        canvasSize = self.annot.canvas.GetSize()
         pos        = [self.xpos * canvasSize[0], self.ypos * canvasSize[1]]
 
         if self.__textSize is None:

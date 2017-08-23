@@ -28,7 +28,6 @@ import fsleyes_widgets.utils.layout            as fsllayout
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
-import fsleyes.colourmaps                      as colourmaps
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
@@ -146,7 +145,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :arg displayCtx:  A :class:`.FSLeyesFrame` instance.
         """
 
-        sceneOpts = orthoopts.OrthoOpts()
+        sceneOpts = orthoopts.OrthoOpts(self)
 
         canvaspanel.CanvasPanel.__init__(self,
                                          parent,
@@ -186,33 +185,41 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # its name is stored here.
         self.__editMenuTitle = None
 
-        self.__xcanvas.bindProps('showCursor',   sceneOpts)
-        self.__ycanvas.bindProps('showCursor',   sceneOpts)
-        self.__zcanvas.bindProps('showCursor',   sceneOpts)
+        xopts = self.__xcanvas.opts
+        yopts = self.__ycanvas.opts
+        zopts = self.__zcanvas.opts
 
-        self.__xcanvas.bindProps('cursorGap',   sceneOpts)
-        self.__ycanvas.bindProps('cursorGap',   sceneOpts)
-        self.__zcanvas.bindProps('cursorGap',   sceneOpts)
+        xopts.bindProps('pos', displayCtx, 'location')
+        yopts.bindProps('pos', displayCtx, 'location')
+        zopts.bindProps('pos', displayCtx, 'location')
 
-        self.__xcanvas.bindProps('bgColour',     sceneOpts)
-        self.__ycanvas.bindProps('bgColour',     sceneOpts)
-        self.__zcanvas.bindProps('bgColour',     sceneOpts)
+        xopts.bindProps('showCursor',   sceneOpts)
+        yopts.bindProps('showCursor',   sceneOpts)
+        zopts.bindProps('showCursor',   sceneOpts)
 
-        self.__xcanvas.bindProps('cursorColour', sceneOpts)
-        self.__ycanvas.bindProps('cursorColour', sceneOpts)
-        self.__zcanvas.bindProps('cursorColour', sceneOpts)
+        xopts.bindProps('cursorGap',    sceneOpts)
+        yopts.bindProps('cursorGap',    sceneOpts)
+        zopts.bindProps('cursorGap',    sceneOpts)
+
+        xopts.bindProps('bgColour',     sceneOpts)
+        yopts.bindProps('bgColour',     sceneOpts)
+        zopts.bindProps('bgColour',     sceneOpts)
+
+        xopts.bindProps('cursorColour', sceneOpts)
+        yopts.bindProps('cursorColour', sceneOpts)
+        zopts.bindProps('cursorColour', sceneOpts)
+
+        xopts.bindProps('zoom',         sceneOpts, 'xzoom')
+        yopts.bindProps('zoom',         sceneOpts, 'yzoom')
+        zopts.bindProps('zoom',         sceneOpts, 'zzoom')
+
+        xopts.bindProps('renderMode',   sceneOpts)
+        yopts.bindProps('renderMode',   sceneOpts)
+        zopts.bindProps('renderMode',   sceneOpts)
+
 
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout', name, self.__refreshLayout)
-
-        # Individual zoom control for each canvas
-        self.__xcanvas.bindProps('zoom', sceneOpts, 'xzoom')
-        self.__ycanvas.bindProps('zoom', sceneOpts, 'yzoom')
-        self.__zcanvas.bindProps('zoom', sceneOpts, 'zzoom')
-
-        self.__xcanvas.bindProps('renderMode',      sceneOpts)
-        self.__ycanvas.bindProps('renderMode',      sceneOpts)
-        self.__zcanvas.bindProps('renderMode',      sceneOpts)
 
         self.toggleCursor .bindProps('toggled', sceneOpts, 'showCursor')
         self.toggleLabels .bindProps('toggled', sceneOpts, 'showLabels')
@@ -237,10 +244,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                 name,
                                 self.__overlayListChanged)
 
-        # Callback for the display context location - when it
-        # changes, update the displayed canvas locations
-        displayCtx.addListener('location', name, self.__locationChanged)
-
         # Callbacks for toggling x/y/z canvas display
         sceneOpts.addListener('showXCanvas', name, self.__toggleCanvas)
         sceneOpts.addListener('showYCanvas', name, self.__toggleCanvas)
@@ -251,7 +254,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.Refresh()
 
         sceneOpts.addListener('labelSize',   name, refresh, weak=False)
-        sceneOpts.addListener('labelColour', name, refresh, weak=False)
+        sceneOpts.addListener('fgColour',    name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
 
         self.addListener('profile', name, self.__profileChanged)
@@ -266,7 +269,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__radioOrientationChanged()
         self.__refreshLayout(refresh=False)
         self.__overlayListChanged()
-        self.__locationChanged()
         self.centrePanelLayout()
         self.initProfile()
 
@@ -286,11 +288,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self._displayCtx .removeListener('radioOrientation', self._name)
         self._overlayList.removeListener('overlays',         self._name)
 
+        self.__labelMgr.destroy()
         self.__xcanvas.destroy()
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
-        self.__labelMgr.destroy()
         self.__removeEditMenu()
+
+        self.__xcanvas  = None
+        self.__ycanvas  = None
+        self.__zcanvas  = None
+        self.__labelMgr = None
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -703,8 +710,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         inRadio = self._displayCtx.displaySpaceIsRadiological()
         flip    = self._displayCtx.radioOrientation != inRadio
 
-        self.__ycanvas.invertX = flip
-        self.__zcanvas.invertX = flip
+        self.__ycanvas.opts.invertX = flip
+        self.__zcanvas.opts.invertX = flip
 
 
     def __overlayListChanged(self, *a):
@@ -780,7 +787,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # fsleyes_widgets.utils.layout (a.k.a.
         # fsllayout) provides functions to do
         # this for us
-        canvasaxes = [(c.xax, c.yax) for c in canvases]
+        canvasaxes = [(c.opts.xax, c.opts.yax) for c in canvases]
         axisLens   = [self._displayCtx.bounds.xlen,
                       self._displayCtx.bounds.ylen,
                       self._displayCtx.bounds.zlen]
@@ -872,26 +879,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # When in grid layout, flip the horizontal axis
         # of the X canvas (assumed to be A/P), to force
         # third angle orthographic projection.
-        self.__xcanvas.invertX = layout == 'grid'
+        self.__xcanvas.opts.invertX = layout == 'grid'
 
         if refresh:
             self.Layout()
             self.getContentPanel().Layout()
             self.Refresh()
-
-
-    def __locationChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.locavtion` property changes.
-
-        Sets the currently displayed x/y/z position (in display
-        coordinates) on each of the :class:`.SliceCanvas` panels.
-        """
-
-        xpos, ypos, zpos = self._displayCtx.location.xyz
-
-        self.__xcanvas.pos.xyz = [ypos, zpos, xpos]
-        self.__ycanvas.pos.xyz = [xpos, zpos, ypos]
-        self.__zcanvas.pos.xyz = [xpos, ypos, zpos]
 
 
 class OrthoFrame(wx.Frame):

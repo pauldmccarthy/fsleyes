@@ -11,7 +11,6 @@ by :class:`.Scene3DPanel` instances for managing their display settings.
 
 import copy
 
-
 from . import sceneopts
 from . import canvasopts
 
@@ -34,22 +33,21 @@ class Scene3DOpts(sceneopts.SceneOpts):
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
 
-
     def __init__(self, *args, **kwargs):
         """Create a ``Scene3DCanvasOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
-
-        The :attr:`.SceneOpts.zoom` attribute is modified slightly.
         """
-        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
         self.setConstraint('zoom',     'minval',  1)
         self.setConstraint('zoom',     'default', 75)
         self.setConstraint('zoom',     'maxval',  5000)
         self.setConstraint('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
+        self.setConstraint('fgColour', 'default', (0.0, 1.0, 0.0,   1.0))
 
-        self.showCursor = False
-        self.zoom       = 75
-        self.bgColour   = (0.6, 0.6, 0.753)
+        self.zoom     = 75
+        self.bgColour = (0.6, 0.6, 0.753)
+        self.fgColour = (0,   1,   0)
+
+        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
 
 
     def _onPerformanceChange(self, *a):

@@ -207,18 +207,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         constructor.
         """
 
-        # The transform property cannot be unsynced
-        # across different displays, as it affects
-        # the display context bounds, which also
-        # cannot be unsynced
         nounbind = kwargs.get('nounbind', [])
-        nounbind.append('transform')
-        nounbind.append('customXform')
-        nounbind.append('displayXform')
+        nobind   = kwargs.get('nobind',   [])
+
         nounbind.append('overrideDataRange')
         nounbind.append('enableOverrideDataRange')
+        nobind  .append('displayXform')
 
         kwargs['nounbind'] = nounbind
+        kwargs['nobind']   = nobind
 
         fsldisplay.DisplayOpts.__init__(self, *args, **kwargs)
 
@@ -228,13 +225,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if len(self.overlay.shape) == 4:
             self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
 
-        # Because the transform properties cannot
-        # be unbound between parents/children, all
-        # NiftiOpts instances for a single overlay
-        # will have the same values. Therefore
-        # only the parent instance needs to
-        # register for when they change.
-        self.__registered = self.getParent() is None
+        self.__registered = self.getParent() is not None
 
         if self.__registered:
             overlay.register(self.name,
@@ -278,12 +269,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         on the ``'transform'`` topic, indicating that its voxel->world
         transformation matrix has been updated.
         """
-        stdLoc = self.displayToStandardCoordinates(
-            self.displayCtx.location.xyz)
-
         self.__setupTransforms()
         self.__transformChanged()
-        self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
 
     def __transformChanged(self, *a):
@@ -293,17 +280,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         coordinate system, which is big enough to contain the image. Sets the
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
-
-        oldValue = self.getLastValue('transform')
-
-        if oldValue is None:
-            oldValue = self.transform
-
-        self.displayCtx.cacheStandardCoordinates(
-            self.overlay,
-            self.transformCoords(self.displayCtx.location.xyz,
-                                 oldValue,
-                                 'world'))
 
         lo, hi = transform.axisBounds(
             self.overlay.shape[:3],
@@ -319,21 +295,9 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :meth:`__transformChanged`).
         """
 
-        stdLoc = self.displayToStandardCoordinates(
-            self.displayCtx.location.xyz)
-
         self.__setupTransforms()
         if self.transform == 'custom':
             self.__transformChanged()
-
-            # if transform == custom, the cached value
-            # calculated in __transformChanged will be
-            # wrong, so we have to overwrite it here.
-            # The stdLoc value calculated above is valid,
-            # because it was calculated before the
-            # transformation matrices were recalculated
-            # in __setupTransforms
-            self.displayCtx.cacheStandardCoordinates(self.overlay, stdLoc)
 
 
     def __displayXformChanged(self, *a):
@@ -516,12 +480,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         is ``display``, the value of ``xform`` is used instead of the current
         value of :attr:`transform`.
         """
-
-        # The parent NitfiOpts instance
-        # manages transforms
-        parent = self.getParent()
-        if parent is not None:
-            return parent.getTransform(from_, to, xform)
 
         if xform is None:
             xform = self.transform
@@ -731,24 +689,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return vox
 
 
-    def displayToStandardCoordinates(self, coords):
-        """Overrides :meth:`.DisplayOpts.displayToStandardCoordinates`.
-        Transforms the given display system coordinates into the world
-        coordinates of the :class:`.Nifti` associated with this
-        ``NiftiOpts`` instance.
-        """
-        return self.transformCoords(coords, 'display', 'world')
-
-
-    def standardToDisplayCoordinates(self, coords):
-        """Overrides :meth:`.DisplayOpts.standardToDisplayCoordinates`.
-        Transforms the given coordinates (assumed to be in the world
-        coordinate system of the ``Nifti`` associated with this ``NiftiOpts``
-        instance) into the display coordinate system.
-        """
-        return self.transformCoords(coords, 'world', 'display')
-
-
 class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
     """The ``VolumeOpts`` class defines options for displaying :class:`.Image`
     instances as regular 3D volumes.
@@ -877,7 +817,7 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
                                     self.__overrideDataRangeChanged)
 
             self.__overlayListChanged()
-            self.__clipImageChanged()
+            self.__clipImageChanged(updateDataRange=False)
 
 
     def destroy(self):
@@ -968,10 +908,16 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         else:                  self.clipImage = None
 
 
-    def __clipImageChanged(self, *a):
+    def __clipImageChanged(self, *a, **kwa):
         """Called when the :attr:`clipImage` property is changed. Updates
          the range of the :attr:`clippingRange` property.
+
+        :arg updateDataRange: Defaults to ``True``. If ``False``, the
+                              :meth:`.ColourMapOpts.updateDataRange` method
+                              is not called.
         """
+
+        updateDR = kwa.get('updateDataRange', True)
 
         haveClipImage = self.clipImage is not None
 
@@ -997,4 +943,5 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
             self.overlay,
             self.clipImage))
 
-        self.updateDataRange(resetDR=False)
+        if updateDR:
+            self.updateDataRange(resetDR=False)

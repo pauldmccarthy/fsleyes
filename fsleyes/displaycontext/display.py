@@ -193,7 +193,7 @@ class Display(props.SyncableHasProperties):
 
         self.removeListener('overlayType', 'Display_{}'.format(id(self)))
 
-        self.detachFromParent()
+        self.detachAllFromParent()
 
         self.__displayOpts = None
         self.__overlayList = None
@@ -243,8 +243,10 @@ class Display(props.SyncableHasProperties):
 
         optType = DISPLAY_OPTS_MAP[self.overlayType]
 
-        log.debug('Creating {} instance for overlay {} ({})'.format(
-            optType.__name__, self.__overlay, self.overlayType))
+        log.debug('Creating {} instance (synced: {}) for overlay '
+                  '{} ({})'.format(optType.__name__,
+                                   self.__displayCtx.syncOverlayDisplay,
+                                   self.__overlay, self.overlayType))
 
         return optType(self.__overlay,
                        self,
@@ -373,10 +375,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
     The values in this ``bounds`` property must be updated by ``DisplayOpts``
     subclasses whenever the spatial representation of their overlay changes.
-    Additionally, whenever the spatial representation changes, sub-classes
-    must call the :meth:`.DisplayContext.cacheStandardCoordinates` method,
-    with a 'standard' space version of the current
-    :attr:`.DisplayContext.location`.
     """
 
 
@@ -402,10 +400,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
                           how the overlays are to be displayed.
         """
 
-        nounbind = kwargs.get('nounbind', [])
-        nounbind.append('bounds')
-        kwargs['nounbind'] = nounbind
-
         self.overlay     = overlay
         self.display     = display
         self.overlayList = overlayList
@@ -416,7 +410,8 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         props.SyncableHasProperties.__init__(self, **kwargs)
         actions.ActionProvider     .__init__(self)
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('{}.init [DC: {}] ({})'.format(
+            type(self).__name__, id(displayCtx), id(self)))
 
 
     def __del__(self):
@@ -434,7 +429,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         """
         actions.ActionProvider.destroy(self)
 
-        self.detachFromParent()
+        self.detachAllFromParent()
 
         self.overlay     = None
         self.display     = None
@@ -530,36 +525,3 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
         return ((xlo, ylo, zlo, xhi, yhi, zhi),
                 (xorient, yorient, zorient))
-
-
-    def displayToStandardCoordinates(self, coords):
-        """This method transforms the given display system coordinates into a
-        standard coordinate system which will remain constant for the given
-        overlay.
-
-        This method must be overridden by any sub-classes for which
-        the display space representation may change - for example, the
-        :class:`.Image` overlays can be transformed into the display
-        coordinate system in different ways, as defined by the
-        :attr:`.NiftiOpts.transform`  property.
-
-        .. note:: The purpose of this method (and the
-                  :meth:`standardToDisplayCoordinates` is so that, when the
-                  currently selected overlay is shifted in the display
-                  coordinate system (e.g. the :attr:`.NiftiOpts.transform`
-                  changes), the current :attr:`.DisplayContext.location`
-                  can be updated so that it stays in the same location
-                  *with respect to* the currently selected overlay.
-        """
-        return coords
-
-
-    def standardToDisplayCoordinates(self, coords):
-        """This method transforms the given coordinates, assumed to be in
-        the standard coordinate system of the overlay, into the display
-        coordinate system.
-
-        This method must be overridden by sub-classes for which their standard
-        coordinate system is not the same as the display coordinate system.
-        """
-        return coords

@@ -14,7 +14,6 @@ import            sys
 import            logging
 import            textwrap
 
-import fsleyes_props                         as props
 import fsleyes_widgets.utils.layout          as fsllayout
 import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
@@ -54,21 +53,21 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    # Initialise OpenGL
-    fslgl.getGLContext(offscreen=True, createApp=True)
-    fslgl.bootstrap()
-
-    # Initialise FSLeyes and colour
-    # maps, and implement hacks
-    fsleyes.initialise()
-    fsleyesmain.hacksAndWorkarounds()
-
+    # Initialise colour maps module
     fslcm.init()
 
     # Parse arguments, and
     # configure logging/debugging
     namespace = parseArgs(args)
     fsleyes.configLogging(namespace)
+
+    # Initialise OpenGL
+    fslgl.getGLContext(offscreen=True, createApp=True)
+    fslgl.bootstrap(namespace.glversion)
+
+    # Initialise FSLeyes and implement hacks
+    fsleyes.initialise()
+    fsleyesmain.hacksAndWorkarounds()
 
     # Create a description of the scene
     overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
@@ -124,7 +123,10 @@ def parseArgs(argv):
                                     prolog=prolog,
                                     desc=description,
                                     usageProlog=optStr,
-                                    argOpts=['of', 'outfile', 'sz', 'size'],
+                                    argOpts=['-of',
+                                             '--outfile',
+                                             '-sz',
+                                             '--size'],
                                     shortHelpExtra=['--outfile', '--size'])
 
     if namespace.outfile is None:
@@ -186,15 +188,41 @@ def makeDisplayContext(namespace):
                                errorFunc=error)
 
     # Create a SceneOpts instance describing
-    # the scene to be rendered
-    if   namespace.scene == 'ortho':    sceneOpts = orthoopts   .OrthoOpts()
-    elif namespace.scene == 'lightbox': sceneOpts = lightboxopts.LightBoxOpts()
-    elif namespace.scene == '3d':       sceneOpts = scene3dopts. Scene3DOpts()
+    # the scene to be rendered. The parseargs
+    # module assumes that GL canvases have
+    # already been created, so we use mock
+    # objects to trick it. The options applied
+    # to these mock objects are applied to the
+    # real canvases later on, in the render
+    # function below.
+    if namespace.scene == 'ortho':
+        sceneOpts = orthoopts.OrthoOpts(MockCanvasPanel(3))
+    elif namespace.scene == 'lightbox':
+        sceneOpts = lightboxopts.LightBoxOpts(MockCanvasPanel(1))
+    elif namespace.scene == '3d':
+        sceneOpts = scene3dopts. Scene3DOpts(MockCanvasPanel(1))
+
+    # 3D views default to
+    # world display space
+    if namespace.scene == '3d':
+        childDisplayCtx.displaySpace = 'world'
 
     parseargs.applySceneArgs(namespace,
                              overlayList,
                              childDisplayCtx,
                              sceneOpts)
+
+    # Centre the location. The DisplayContext
+    # will typically centre its location on
+    # initialisation, but this may not work
+    # if any overlay arguments change the bounds
+    # of an overlay (e.g. mesh reference image)
+    if namespace.worldLoc is None and namespace.voxelLoc is None:
+        b = childDisplayCtx.bounds
+        childDisplayCtx.location = [
+            b.xlo + 0.5 * b.xlen,
+            b.ylo + 0.5 * b.ylen,
+            b.zlo + 0.5 * b.zlen]
 
     # This has to be applied after applySceneArgs,
     # in case the user used the '-std'/'-std1mm'
@@ -271,8 +299,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
         if lrFlip:
             for c in canvases:
-                if c.zax in (1, 2):
-                    c.invertX = True
+                if c.opts.zax in (1, 2):
+                    c.opts.invertX = True
 
     # fix orthographic projection if
     # showing an ortho grid layout.
@@ -289,7 +317,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     # we're assuming knowledge of,
     # by indexing canvases[1].
     if namespace.scene == 'ortho' and sceneOpts.layout == 'grid':
-        canvases[1].invertX = True
+        canvases[1].opts.invertX = True
 
     # Configure each of the canvases (with those
     # properties that are common to both ortho and
@@ -298,10 +326,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
     for i, c in enumerate(canvases):
 
-        if namespace.scene in ('ortho', 'lightbox'):
-            if   c.zax == 0: c.pos.xyz = displayCtx.location.yzx
-            elif c.zax == 1: c.pos.xyz = displayCtx.location.xzy
-            elif c.zax == 2: c.pos.xyz = displayCtx.location.xyz
+        c.opts.pos = displayCtx.location
 
         c.draw()
 
@@ -327,7 +352,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        cbarHeight,
                                        sceneOpts.colourBarLocation,
                                        sceneOpts.colourBarLabelSide,
-                                       sceneOpts.bgColour)
+                                       sceneOpts.bgColour,
+                                       sceneOpts.fgColour)
         if cbarBmp is not None:
             layout  = buildColourBarLayout(layout,
                                            cbarBmp,
@@ -362,12 +388,21 @@ def createLightBoxCanvas(namespace,
         width=width,
         height=height)
 
-    props.applyArguments(canvas, namespace)
+    if sceneOpts.zrange == (0, 0):
+        sceneOpts.zrange = displayCtx.bounds.getRange(sceneOpts.zax)
 
-    # showCursor is called hideCursor
-    # in the namespace, so the above
-    # applyArguments will not apply it.
-    canvas.showCursor = sceneOpts.showCursor
+    opts                = canvas.opts
+    opts.showCursor     = sceneOpts.showCursor
+    opts.bgColour       = sceneOpts.bgColour
+    opts.cursorColour   = sceneOpts.cursorColour
+    opts.renderMode     = sceneOpts.renderMode
+    opts.zax            = sceneOpts.zax
+    opts.sliceSpacing   = sceneOpts.sliceSpacing
+    opts.nrows          = sceneOpts.nrows
+    opts.ncols          = sceneOpts.ncols
+    opts.zrange         = sceneOpts.zrange
+    opts.showGridLines  = sceneOpts.showGridLines
+    opts.highlightSlice = sceneOpts.highlightSlice
 
     return canvas
 
@@ -391,10 +426,6 @@ def createOrthoCanvases(namespace,
 
     canvases = []
 
-    xc, yc, zc = parseargs.calcCanvasCentres(namespace,
-                                             overlayList,
-                                             displayCtx)
-
     # Build a list containing the horizontal
     # and vertical axes for each canvas
     canvasAxes = []
@@ -403,15 +434,15 @@ def createOrthoCanvases(namespace,
     if sceneOpts.showXCanvas:
         canvasAxes.append((1, 2))
         zooms     .append(sceneOpts.xzoom)
-        centres   .append(xc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[0].centre)
     if sceneOpts.showYCanvas:
         canvasAxes.append((0, 2))
         zooms     .append(sceneOpts.yzoom)
-        centres   .append(yc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[1].centre)
     if sceneOpts.showZCanvas:
         canvasAxes.append((0, 1))
         zooms     .append(sceneOpts.zzoom)
-        centres   .append(zc)
+        centres   .append(sceneOpts.panel.getGLCanvases()[2].centre)
 
     # Grid layout only makes sense if
     # we're displaying 3 canvases
@@ -439,9 +470,6 @@ def createOrthoCanvases(namespace,
 
         zax = 3 - xax - yax
 
-        if centre is None:
-            centre = (displayCtx.location[xax], displayCtx.location[yax])
-
         c = slicecanvas.OffScreenSliceCanvas(
             overlayList,
             displayCtx,
@@ -449,14 +477,25 @@ def createOrthoCanvases(namespace,
             width=int(width),
             height=int(height))
 
-        c.showCursor      = sceneOpts.showCursor
-        c.cursorColour    = sceneOpts.cursorColour
-        c.bgColour        = sceneOpts.bgColour
-        c.renderMode      = sceneOpts.renderMode
+        opts              = c.opts
+        opts.showCursor   = sceneOpts.showCursor
+        opts.cursorColour = sceneOpts.cursorColour
+        opts.cursorGap    = sceneOpts.cursorGap
+        opts.bgColour     = sceneOpts.bgColour
+        opts.renderMode   = sceneOpts.renderMode
 
-        if zoom is not None: c.zoom = zoom
+        if zoom is not None:
+            opts.zoom = zoom
+
+        # Default to centering
+        # on the cursor
+        if centre is None:
+            centre = [displayCtx.location[xax], displayCtx.location[yax]]
+
         c.centreDisplayAt(*centre)
+
         canvases.append(c)
+
 
     return canvases
 
@@ -483,12 +522,23 @@ def create3DCanvas(namespace,
         width=width,
         height=height)
 
-    # props.applyArguments(canvas, namespace)
+    opts                 = canvas.opts
+    opts.showCursor      = sceneOpts.showCursor
+    opts.cursorColour    = sceneOpts.cursorColour
+    opts.bgColour        = sceneOpts.bgColour
+    opts.showLegend      = sceneOpts.showLegend
+    opts.legendColour    = sceneOpts.fgColour
+    opts.occlusion       = sceneOpts.occlusion
+    opts.light           = sceneOpts.light
+    opts.zoom            = sceneOpts.zoom
+    opts.offset          = sceneOpts.offset
+    opts.rotation        = sceneOpts.rotation
 
-    # showCursor is called hideCursor
-    # in the namespace, so the above
-    # applyArguments will not apply it.
-    canvas.showCursor = sceneOpts.showCursor
+    if parseargs.wasSpecified(namespace, sceneOpts, 'lightPos'):
+        opts.lightPos        = sceneOpts.lightPos
+        canvas.resetLightPos = False
+    else:
+        canvas.defaultLightPos()
 
     return canvas
 
@@ -499,7 +549,8 @@ def buildColourBarBitmap(overlayList,
                          height,
                          cbarLocation,
                          cbarLabelSide,
-                         bgColour):
+                         bgColour,
+                         fgColour):
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
@@ -518,15 +569,15 @@ def buildColourBarBitmap(overlayList,
     :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
 
     :arg bgColour:      RGBA background colour.
+
+    :arg fgColour:      RGBA foreground (text) colour.
     """
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)
     opts    = display.getDisplayOpts()
 
-    # TODO Support other overlay types which
-    # have a display range (when they exist).
-    if not isinstance(opts, displaycontext.VolumeOpts):
+    if not isinstance(opts, displaycontext.ColourMapOpts):
         return None
 
     if   cbarLocation in ('top', 'bottom'): orient = 'horizontal'
@@ -568,7 +619,7 @@ def buildColourBarBitmap(overlayList,
         orientation=orient,
         labelside=labelSide,
         bgColour=bgColour,
-        textColour=fslcm.complementaryColour(bgColour),
+        textColour=fgColour,
         cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4
@@ -685,6 +736,37 @@ def calculateOrthoCanvasSizes(overlayList,
                                axisLens,
                                width,
                                height)
+
+
+
+class MockSliceCanvas(object):
+    """Used in place of a :class:`.SliceCanvas`. The :mod:`.parseargs` module
+    needs access to ``SliceCanvas`` instances to apply some command line
+    options. However, ``render`` calls :func:`.parseargs.applySceneArgs`
+    before any ``SliceCanvas`` instances have been created.
+
+    Instances of this class are just used to capture those options, so they
+    can later be applied to the real ``SliceCanvas`` instances.
+
+    The following arguments may be applied to this class.
+      - ``--xcentre``
+      - ``--ycentre``
+      - ``--zcentre``
+    """
+    def __init__(self):
+        self.centre = None
+    def centreDisplayAt(self, x, y):
+        self.centre = x, y
+
+
+class MockCanvasPanel(object):
+    """Used in place of a :class:`.CanvasPanel`. This is used as a container
+    for :class:`MockSliceCanvas` instances.
+    """
+    def __init__(self, ncanvases):
+        self.canvases = [MockSliceCanvas() for i in range(ncanvases)]
+    def getGLCanvases(self):
+        return self.canvases
 
 
 if __name__ == '__main__':

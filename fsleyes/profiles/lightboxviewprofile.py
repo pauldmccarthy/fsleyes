@@ -81,10 +81,12 @@ class LightBoxViewProfile(profiles.Profile):
         elif wheel < 0: wheel =  1
         else:           return False
 
+        opts = self.__canvas.opts
+
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
         def update():
-            self._viewPanel.getCanvas().topRow += wheel
+            opts.topRow += wheel
 
         async.idle(update, timeout=0.1)
 
@@ -122,10 +124,12 @@ class LightBoxViewProfile(profiles.Profile):
         elif wheel < 0: wheel = -50
         else:           return False
 
+        opts = self._viewPanel.getSceneOptions()
+
         # see comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
         def update():
-            self._viewPanel.getSceneOptions().zoom += wheel
+            opts.zoom += wheel
 
         async.idle(update, timeout=0.1)
 

@@ -10,9 +10,9 @@ can control through the :ref:`overlay display panel
 <ortho_lightbox_views_view_settings>` for orthographic/lightbox views, can be
 set via the command line.
 
-  
+
 .. _command_line_overview:
-  
+
 Overview
 --------
 
@@ -27,7 +27,7 @@ where:
 
 - ``options`` refers to options which relate to FSLeyes layout, behaviour,
   orthographic/lightbox configuration, etc.
-  
+
 - ``displayOpts`` refers to a group of options which are applied to the
   ``file`` that preceeds the group.
 
@@ -51,7 +51,7 @@ long!)::
   fsleyes --fullhelp
   fsleyes  -fh
 
-  
+
 To print the version of FSLeyes you are using::
 
   fsleyes --version
@@ -84,7 +84,7 @@ Auto-display
   fsleyes --autoDisplay files ...
   fsleyes  -ad          files ...
 
-  
+
 The ``--autoDisplay`` option tells FSLeyes to automatically configure certain
 display properties when you load an overlay. For example, if you start FSLeyes
 with ``--autoDisplay``, and then load some Z-statistic images from a
@@ -103,7 +103,7 @@ Add standard
 ^^^^^^^^^^^^
 
 ::
-   
+
   fsleyes --standard    files ...
   fsleyes --standard1mm files ...
   fsleyes  -std         files ...
@@ -133,7 +133,7 @@ Perspectives
    fsleyes  -s     default  files ...
    fsleyes  -s     ortho    files ...
    fsleyes  -s     ligthbox files ...
-   
+
 
 The ``--scene`` option allows you to tell FSLeyes to start up with a specific
 :ref:`perspective <overview_layout_and_perspectives>`. If you have saved your
@@ -212,14 +212,14 @@ Volume overlays
 Set up display/clipping/colourmap/interpolation on an image, and centre
 display at a specific voxel::
 
-  
-  fsleyes -sortho -std1mm -vl 33 20 31 \
-    zstat1.nii.gz -dr 2.5 3.5 -cr 2.5 3.5 -cm hot -in spline 
 
-    
+  fsleyes -sortho -std1mm -vl 33 20 31 \
+    zstat1.nii.gz -dr 2.5 3.5 -cr 2.5 3.5 -cm hot -in spline
+
+
 Set up positive/negative colour map on a PE image::
 
-  
+
   fsleyes -std1mm pe1 -un -cm red-yellow \
     -nc blue-lightblue -dr 10 60 -in spline
 
@@ -229,42 +229,42 @@ Vector overlays
 
 
 Display ``dtifit`` output as an RGB vector::
-  
+
   fsleyes dti_FA dti_V1 -ot rgbvector
- 
+
 Display ``bedpostx`` two-fibre output as line vectors::
-  
+
   fsleyes mean_f1samples dyads1 -ot linevector dyads2_thr0.05 -ot linevector
 
 
 Display ``dtifit`` output as a tensor (not possible in a SSH/X11 session).
 You can specify the ``dtifit`` output directory::
- 
+
   fsleyes dtifit/dti_FA dtifit/
 
 Or the 6-volume image containing the unique elements of the tensor matrix::
-  
+
   fsleyes dtifit/dti_FA dtifit/dti_tensor.nii.gz -ot tensor
 
-  
+
 Display spherical harmonic coefficients (not possible in a SSH/X11 session)::
 
   fsleyes asym_fods.nii.gz -ot sh
-    
-    
+
+
 Melodic mode
 ^^^^^^^^^^^^
 
 Specify the path to your filtered_func_data.ica directory::
-  
+
   fsleyes -s melodic path/to/analysis.ica/filtered_func_data.ica
 
 Or the path to your melodic_IC file::
-  
+
   fsleyes -s melodic path/to/analysis.ica/filtered_func_data.ica/melodic_IC
 
 Use the ``-ad`` flag (``--autoDisplay``) to automatically set up colour maps::
-  
+
   fsleyes -ad -s melodic path/to/analysis.ica/filtered_func_data.ica/melodic_IC
 
 
@@ -272,17 +272,17 @@ Lightbox view
 ^^^^^^^^^^^^^
 
 Set Z axis, number of rows, and number of columns::
-  
-  fsleyes -slightbox -zx Z -nr 10 -nc 10 -std1mm 
+
+  fsleyes -slightbox -zx Z -nr 10 -nc 10 -std1mm
 
 Set slice spacing (mm)::
-  
-  fsleyes -slightbox -zx Z -ss 10 -std1mm 
- 
+
+  fsleyes -slightbox -zx Z -ss 10 -std1mm
+
 Set slice range (mm, starting from 0)::
-  
-  fsleyes -slightbox -zx Z -ss 5 -zr  0  91 -std1mm 
-  fsleyes -slightbox -zx Z -ss 5 -zr 91 182 -std1mm 
+
+  fsleyes -slightbox -zx Z -ss 5 -zr  0  91 -std1mm
+  fsleyes -slightbox -zx Z -ss 5 -zr 91 182 -std1mm
   fsleyes -slightbox -zx Z -ss 5 -zr 45 136 -std1mm
 
 
@@ -299,15 +299,20 @@ the scene that you wish to view, and then tell FSLeyes to render the scene to
 a file.
 
 
-FSLeyes should also work on systems which do not have a display (e.g. cluster
-nodes), via a tool such as `Xvfb
-<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_..
-
-
 You can access the FSLeyes off-screen renderer by passing the word ``render``
 as the **first** argument to FSLeyes::
 
   fsleyes render ...
+
+
+FSLeyes should also work on systems which do not have a display (e.g. cluster
+nodes), via a tool such as `Xvfb
+<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_... Make sure
+you specify a 24-bit depth-buffer, for example::
+
+  xvfb-run -s "-screen 0 640x480x24" fsleyes render ...
+
+
 
 
 You can access command line help in the same manner as :ref:`described above
@@ -316,22 +321,22 @@ You can access command line help in the same manner as :ref:`described above
   fsleyes render --help
   fsleyes render  -h
   fsleyes render --fullhelp
-  fsleyes render  -fh 
+  fsleyes render  -fh
 
-  
+
 Using the off-screen renderer is nearly identical to using the :ref:`standard
 FSLeyes command line interface <command_line_overview>`, but you must also
 specify an output file::
 
   fsleyes render [options] --outfile outfile file [displayOpts] ...
-  fsleyes render [options]  -of      outfile file [displayOpts] ... 
+  fsleyes render [options]  -of      outfile file [displayOpts] ...
 
 
 You may also specify the size of the generated image, in pixels::
 
   fsleyes render [options] --outfile outfile --size 800 600 file [displayOpts] ...
-  fsleyes render [options]  -of      outfile  -sz   800 600 file [displayOpts] ... 
-  
+  fsleyes render [options]  -of      outfile  -sz   800 600 file [displayOpts] ...
+
 
 When using the off-screen renderer, the ``--scene`` option, normally used to
 :ref:`specify a perspective <command_line_perspectives>`, allows you to choose

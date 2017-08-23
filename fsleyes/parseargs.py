@@ -6,8 +6,20 @@
 #
 """This module encapsulates the logic for parsing command line arguments which
 specify a scene to be displayed in *FSLeyes*.  This logic is shared between
-the :mod:`fsleyes` and :mod:`.render` tools.  This module
-make use of the command line generation features of the :mod:`props` package.
+the :mod:`fsleyes` and :mod:`.render` tools.  This module make use of the
+command line generation features of the :mod:`props` package.  Broadly
+speaking, this module can be used to do three things:
+
+ - _Parse_ command line arguments, generating an ``argparse.Namespace``
+   object which contains the parsed options.
+
+ - _Apply_ the options contained in an ``argparse.Namespace`` option to
+   the objects which describe a scene - a :class:`.SceneOpts` instance,
+   a :class:`.DisplayContext` instance, and the :class:`.Display` and
+   :class:`.DisplayOpts` instances for each overlay.
+
+ - _Generate_ command line arguments that can be used to describe an
+   existing scene.
 
 
 There are a lot of command line arguments made available to the user,
@@ -33,9 +45,9 @@ This module provides the following functions:
 
    parseArgs
    applySceneArgs
+   applyOverlayArgs
    generateSceneArgs
    generateOverlayArgs
-   applyOverlayArgs
 
 
 --------------------------
@@ -158,6 +170,63 @@ To make this new propery settable via the command line, you need to:
              # .
              # .
          })
+
+
+-------------------------------------
+Adding special (non-property) options
+-------------------------------------
+
+
+If you need to add an option which does not directly map to a
+:class:`SceneOpts` or :class:`DisplayOpts` property, you need to do some extra
+work. For example, let's say we wish to add a custom option ``clipAndDisplay``
+to modify both the ``clippingRange`` and ``displayRange`` properties of the
+:class:`.VolumeOpts` class.
+
+1. Following steps 1-3 above, we add ``'clipAndDisplay'`` to the
+   ``OPTIONS['VolumeOpts']`` list, and add a ``'VolumeOpts.clipAndDisplay'``
+   entries to the ``ARGUMENTS`` and ``HELP`` dictionaries.
+
+2. Add a function which configures the argument parser for your option. The
+   function must have the following signature::
+
+       def _configSpecial_[target]_[option](
+           target,    # The class with which the option is associated
+           parser,    # The ArgumentParser to be configured
+           shortArg,  # String to use as the short form argument
+           longArg,   # String to use as the longform argument
+           helpText   # Help text
+       )
+
+   where ``target`` is the name of the ``DisplayOpts`` class you are adding
+   an option for (e.g. ``'VolumeOpts'``), and ``option`` is the option name.
+   In our example, we would add a function::
+
+       def _configSpecial_VolumeOpts_clipAndDisplay(...):
+
+   This function simply needs to add the option to the ``ArgumentParser``
+   instance.
+
+3. Add a function which applies parsed command line arguments for your option.
+   The function must have the following signature::
+
+       def _applySpecial_[target]_[option](
+           args,        # argparse.Namespace object containing parsed arguments
+           overlayList, # The OverlayList instance
+           displayCtx,  # The DisplayContext instance
+           target       # The target instance (e.g. a VolumeOpts instance)
+       )
+
+4. Add a function which, given a ``target`` instance, will generate command
+   line arguments that can reproduce the ``target`` state. This function must
+   have the following signature::
+
+       def _generateSpecial_[target]_[option](
+           overlayList, # The OverlayList instance
+           displayCtx,  # The DisplayContext instance
+           source,      # The source instance
+           longArg      # String to use as the long form argument
+       )
 """
 
 
@@ -176,6 +245,7 @@ import numpy            as np
 
 import fsl.data.image                     as fslimage
 import fsl.utils.async                    as async
+import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
 
 import fsleyes_props                      as props
@@ -324,6 +394,7 @@ OPTIONS = td.TypeDict({
 
     'SceneOpts'     : ['showCursor',
                        'bgColour',
+                       'fgColour',
                        'cursorColour',
                        'showColourBar',
                        'colourBarLocation',
@@ -332,12 +403,16 @@ OPTIONS = td.TypeDict({
     'OrthoOpts'     : ['xzoom',
                        'yzoom',
                        'zzoom',
+                       'cursorGap',
                        'showLabels',
                        'labelSize',
                        'layout',
                        'showXCanvas',
                        'showYCanvas',
-                       'showZCanvas'],
+                       'showZCanvas',
+                       'xcentre',
+                       'ycentre',
+                       'zcentre'],
     'LightBoxOpts'  : ['zax',
                        'sliceSpacing',
                        'zrange',
@@ -345,6 +420,13 @@ OPTIONS = td.TypeDict({
                        'nrows',
                        'showGridLines',
                        'highlightSlice'],
+    'Scene3DOpts'   : ['zoom',
+                       'showLegend',
+                       'occlusion',
+                       'light',
+                       'lightPos',
+                       'offset',
+                       'cameraRotation'],
 
     # The order in which properties are listed
     # here is the order in which they are applied.
@@ -385,6 +467,12 @@ OPTIONS = td.TypeDict({
                         'interpolation',
                         'interpolateCmaps',
                         'invert'],
+    'Volume3DOpts'   : ['numSteps',
+                        'blendFactor',
+                        'resolution',
+                        'dithering',
+                        'numInnerSteps',
+                        'clipPlane'],
     'MaskOpts'       : ['colour',
                         'invert',
                         'threshold'],
@@ -421,12 +509,14 @@ OPTIONS = td.TypeDict({
                         'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
+                        'discardClipped',
                         'invertClipping',
                         'cmap',
                         'negativeCmap',
                         'cmapResolution',
                         'interpolateCmaps',
-                        'invert'],
+                        'invert',
+                        'wireframe'],
     'GiftiOpts'      : [],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
@@ -458,6 +548,7 @@ GROUPNAMES = td.TypeDict({
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
+    'Scene3DOpts'    : '3D display options',
     'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
     'MaskOpts'       : 'Mask options',
@@ -479,13 +570,16 @@ defines descriptions for each command line group.
 GROUPDESCS = td.TypeDict({
 
     'SceneOpts'    : 'These settings are applied to every '
-                     'orthographic and lightbox view.',
+                     'orthographic, lightbox, and 3D view.',
 
     'OrthoOpts'    : 'These settings are applied to every '
                      'ortho view.',
 
     'LightBoxOpts' : 'These settings are applied to every '
                      'lightbox view.',
+
+    'Scene3DOpts'  : 'These settings are applied to every '
+                     '3D view.',
 
     'Display'      : 'Each display option will be applied to the '
                      'overlay which is listed before that option. '
@@ -570,6 +664,7 @@ ARGUMENTS = td.TypeDict({
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
+    'SceneOpts.fgColour'           : ('fg',  'fgColour',           True),
     'SceneOpts.cursorColour'       : ('cc',  'cursorColour',       True),
     'SceneOpts.colourBarLocation'  : ('cbl', 'colourBarLocation',  True),
     'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
@@ -579,6 +674,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
     'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
     'OrthoOpts.zzoom'       : ('zz', 'zzoom',      True),
+    'OrthoOpts.cursorGap'   : ('cg', 'cursorGap',  False),
     'OrthoOpts.layout'      : ('lo', 'layout',     True),
     'OrthoOpts.showXCanvas' : ('xh', 'hidex',      False),
     'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
@@ -597,6 +693,14 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
+
+    'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
+    'Scene3DOpts.showLegend'     : ('he',  'hideLegend',     False),
+    'Scene3DOpts.occlusion'      : ('noc', 'noOcclusion',    False),
+    'Scene3DOpts.light'          : ('dl',  'disableLight',   False),
+    'Scene3DOpts.lightPos'       : ('lp',  'lightPos',       True),
+    'Scene3DOpts.offset'         : ('off', 'offset',         True),
+    'Scene3DOpts.cameraRotation' : ('rot', 'cameraRotation', True),
 
     'Display.name'          : ('n',  'name',        True),
     'Display.enabled'       : ('d',  'disabled',    False),
@@ -622,6 +726,13 @@ ARGUMENTS = td.TypeDict({
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
     'VolumeOpts.clipImage'         : ('cl',  'clipImage',         True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
+
+    'Volume3DOpts.numSteps'      : ('ns',  'numSteps',      True),
+    'Volume3DOpts.blendFactor'   : ('bf',  'blendFactor',   True),
+    'Volume3DOpts.resolution'    : ('r',   'resolution',    True),
+    'Volume3DOpts.dithering'     : ('dt',  'dithering',     True),
+    'Volume3DOpts.numInnerSteps' : ('nis', 'numInnerSteps', True),
+    'Volume3DOpts.clipPlane'     : ('cp',  'clipPlane',     True),
 
     'MaskOpts.colour'    : ('mc', 'maskColour', False),
     'MaskOpts.invert'    : ('i',  'maskInvert', False),
@@ -662,6 +773,8 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.vertexDataIndex' : ('vdi', 'vertexDataIndex', True),
     'MeshOpts.useLut'          : ('ul',  'useLut',          False),
     'MeshOpts.lut'             : ('l',   'lut',             True),
+    'MeshOpts.discardClipped'  : ('dc',  'discardClipped',  False),
+    'MeshOpts.wireframe'       : ('wf',  'wireframe',       False),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
     'LabelOpts.outline'      : ('o',  'outline',      False),
@@ -690,7 +803,8 @@ or more arguments, ``False`` otherwise.
 
 .. note:: 1. There cannot be any collisions between the main options, the
              :class:`.SceneOpts` options, the :class:`.OrthOpts` options,
-             and the :class:`.LightBoxOpts` options.
+             the :class:`.LightBoxOpts` options, and the :class:`.Scene3DOpts`
+             options.
 
           2. There cannot be any collisions between the :class:`.Display`
              options and any one set of :class:`.DisplayOpts` options.
@@ -715,9 +829,8 @@ HELP = td.TypeDict({
 
     'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
                               'first overlay)',
-    'Main.worldLoc'         : 'Location to show (world coordinates of '
-                              'first overlay, takes precedence over '
-                              '--voxelLoc)',
+    'Main.worldLoc'         : 'Location to show (world coordinates, takes '
+                              'precedence over --voxelLoc)',
     'Main.autoDisplay'      : 'Automatically configure overlay display '
                               'settings (unless any display settings are '
                               'specified)',
@@ -736,6 +849,7 @@ HELP = td.TypeDict({
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
     'SceneOpts.bgColour'           : 'Canvas background colour (0-1)',
+    'SceneOpts.fgColour'           : 'Canvas foreground colour (0-1)',
     'SceneOpts.cursorColour'       : 'Cursor location colour (0-1)',
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
@@ -746,6 +860,7 @@ HELP = td.TypeDict({
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
     'OrthoOpts.zzoom'       : 'Z canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.cursorGap'   : 'Show a gap at the cursor centre',
     'OrthoOpts.layout'      : 'Canvas layout',
     'OrthoOpts.showXCanvas' : 'Hide the X canvas',
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
@@ -754,12 +869,9 @@ HELP = td.TypeDict({
     'OrthoOpts.labelSize'   : 'Orientation label font size '
                               '(4-96, default: 14)',
 
-    'OrthoOpts.xcentre'     : 'X canvas display centre (YZ world coordinates '
-                              'of first overlay)',
-    'OrthoOpts.ycentre'     : 'Y canvas display centre (XZ world coordinates '
-                              'of first overlay)',
-    'OrthoOpts.zcentre'     : 'Z canvas display centre (XY world coordinates '
-                              'of first overlay)',
+    'OrthoOpts.xcentre'     : 'X canvas centre ([-1, 1])',
+    'OrthoOpts.ycentre'     : 'Y canvas centre ([-1, 1])',
+    'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.ncols'          : 'Number of columns',
@@ -768,6 +880,17 @@ HELP = td.TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
     'LightBoxOpts.zax'            : 'Z axis',
+
+    'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
+    'Scene3DOpts.showLegend' : 'Hide the orientation legend',
+    'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
+    'Scene3DOpts.light'      : 'Disable light source',
+    'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
+    'Scene3DOpts.offset'     : 'Offset from centre ([-1, 1])',
+    'Scene3DOpts.cameraRotation' :
+    'Rotation (degrees), specified as yaw (rotation about the vertical '
+    'axis), pitch (rotation about the horizontal axis) and roll (rotation '
+    'about the depth axis).',
 
     'Display.name'          : 'Overlay name',
     'Display.enabled'       : 'Disable (hide) overlay',
@@ -809,6 +932,21 @@ HELP = td.TypeDict({
     'VolumeOpts.clipImage'         : 'Image containing clipping values '
                                      '(defaults to the image itself)' ,
     'VolumeOpts.interpolation'     : 'Interpolation',
+
+    'Volume3DOpts.numSteps' :
+    '3D only. Maximum number of samples per pixel',
+    'Volume3DOpts.blendFactor' :
+    '3D only Sample blending factor [0.001-1, default: 0.2]',
+    'Volume3DOpts.resolution' :
+    '3D only. Resolution [1-100, default: 100]',
+    'Volume3DOpts.dithering' :
+    '3D only. Dithering [0-0.05, default: 0.02]',
+    'Volume3DOpts.numInnerSteps' :
+    '3D/GL14 only. Nmber of samples to run on GPU',
+    'Volume3DOpts.clipPlane' :
+    '3D only. Add a clipping plane. Requires three values: position [0-1], '
+    'azimuth [-180, 180], inclination [-180, 180]. Can be used up to 10 '
+    'times.',
 
     'MaskOpts.colour'    : 'Colour (0-1)',
     'MaskOpts.invert'    : 'Invert',
@@ -864,6 +1002,10 @@ HELP = td.TypeDict({
     'Use a lookup table instead of colour map(S) when colouring the mesh '
     'with vertex data.',
     'MeshOpts.lut' : 'Lookup table to use  (see -ul/--useLut).',
+    'MeshOpts.discardClipped' :
+    'Discard clipped regions, rather than colouring them with the flat colour',
+    'MeshOpts.wireframe' :
+    '3D only. Draw as wireframe',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
@@ -1002,6 +1144,7 @@ def getExtra(target, propName, default=None):
         (fsldisplay.SHOpts,         'cmap')          : cmapSettings,
         (fsldisplay.SHOpts,         'shOrder')       : shOrderSettings,
         (fsldisplay.SceneOpts,      'bgColour')      : colourSettings,
+        (fsldisplay.SceneOpts,      'fgColour')      : colourSettings,
         (fsldisplay.SceneOpts,      'cursorColour')  : colourSettings,
         (fsldisplay.MaskOpts,       'colour')        : colourSettings,
         (fsldisplay.LineVectorOpts, 'xColour')       : colourSettings,
@@ -1145,6 +1288,9 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showYCanvas'       : _boolTrans,
     'OrthoOpts.showZCanvas'       : _boolTrans,
     'OrthoOpts.showLabels'        : _boolTrans,
+    'Scene3DOpts.showLegend'      : _boolTrans,
+    'Scene3DOpts.occlusion'       : _boolTrans,
+    'Scene3DOpts.light'           : _boolTrans,
     'Display.enabled'             : _boolTrans,
     'ColourMapOpts.linkLowRanges' : _boolTrans,
     'LineVectorOpts.unitLength'   : _boolTrans,
@@ -1197,13 +1343,14 @@ def _setupMainParser(mainParser):
       - *SceneOpts*:    Common scene options
       - *OrthoOpts*:    Options related to setting up a orthographic display
       - *LightBoxOpts*: Options related to setting up a lightbox display
+      - *Scene3DOpts*:  Options related to setting up a 3D display
     """
 
     # FSLeyes application options
 
     # Options defining the overall scene,
     # and separate parser groups for scene
-    # settings, ortho, and lightbox.
+    # settings, ortho, lightbox, and 3D.
 
     mainParser._optionals.title       = GROUPNAMES[    'Main']
     mainParser._optionals.description = GROUPDESCS.get('Main')
@@ -1214,11 +1361,14 @@ def _setupMainParser(mainParser):
                                                GROUPDESCS.get('OrthoOpts'))
     lbGroup    = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
                                                GROUPDESCS.get('LightBoxOpts'))
+    s3dGroup   = mainParser.add_argument_group(GROUPNAMES[    'Scene3DOpts'],
+                                               GROUPDESCS.get('Scene3DOpts'))
 
-    _configMainParser(     mainParser)
-    _configSceneParser(    sceneGroup)
-    _configOrthoParser(    orthoGroup)
-    _configLightBoxParser( lbGroup)
+    _configMainParser(mainParser)
+    _configParser(fsldisplay.SceneOpts,    sceneGroup)
+    _configParser(fsldisplay.OrthoOpts,    orthoGroup)
+    _configParser(fsldisplay.LightBoxOpts, lbGroup)
+    _configParser(fsldisplay.Scene3DOpts,  s3dGroup)
 
 
 def _configParser(target, parser, propNames=None, shortHelp=False):
@@ -1227,13 +1377,15 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
     """
 
     if propNames is None:
-        propNames = OPTIONS[target]
+        propNames = list(OPTIONS[target])
+
     shortArgs = {}
     longArgs  = {}
     helpTexts = {}
     extra     = {}
+    special   = []
 
-    for propName in propNames:
+    for propName in list(propNames):
 
         shortArg, longArg = ARGUMENTS[ target, propName][:2]
         propExtra         = getExtra(target, propName)
@@ -1249,6 +1401,10 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
         if propExtra is not None:
             extra[propName] = propExtra
 
+        if not hasattr(target, propName):
+            propNames.remove(propName)
+            special  .append(propName)
+
     props.addParserArguments(target,
                              parser,
                              cliProps=propNames,
@@ -1256,6 +1412,10 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
                              longArgs=longArgs,
                              propHelp=helpTexts,
                              extra=extra)
+
+    for s in special:
+        _configSpecialOption(
+            target, parser, s, shortArgs[s], longArgs[s], helpTexts[s])
 
 
 def _configMainParser(mainParser):
@@ -1336,48 +1496,6 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['bumMode'],
                             action='store_true',
                             help=mainHelp['bumMode'])
-
-
-def _configSceneParser(sceneParser):
-    """Adds options to the given argument parser which allow
-    the user to specify :class:`.SceneOpts` properties.
-    """
-    _configParser(fsldisplay.SceneOpts, sceneParser)
-
-
-def _configOrthoParser(orthoParser):
-    """Adds options to the given parser allowing the user to
-    configure :class:`.OrthoOpts` properties.
-    """
-
-    OrthoOpts = fsldisplay.OrthoOpts
-    _configParser(OrthoOpts, orthoParser)
-
-    # Extra configuration options that are
-    # not OrthoPanel properties, so can't
-    # be automatically set up
-    for opt, metavar in zip(['xcentre',  'ycentre',  'zcentre'],
-                            [('Y', 'Z'), ('X', 'Z'), ('X', 'Y')]):
-
-        shortArg, longArg = ARGUMENTS[OrthoOpts, opt][:2]
-        helpText          = HELP[     OrthoOpts, opt]
-
-        shortArg =  '-{}'.format(shortArg)
-        longArg  = '--{}'.format(longArg)
-
-        orthoParser.add_argument(shortArg,
-                                 longArg,
-                                 metavar=metavar,
-                                 type=float,
-                                 nargs=2,
-                                 help=helpText)
-
-
-def _configLightBoxParser(lbParser):
-    """Adds options to the given parser allowing the user to
-    configure :class:`.LightBoxOpts` properties.
-    """
-    _configParser(fsldisplay.LightBoxOpts, lbParser)
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):
@@ -1611,15 +1729,19 @@ def parseArgs(mainParser,
 
     mainExpectsArgs = set(argOpts)
     ovlExpectsArgs  = set()
-    mainGroups      = ['Main', 'SceneOpts', 'OrthoOpts', 'LightBoxOpts']
+    mainGroups      = ['Main',
+                       'SceneOpts',
+                       'OrthoOpts',
+                       'LightBoxOpts',
+                       'Scene3DOpts']
     for key, (shortForm, longForm, expects) in ARGUMENTS.items():
 
         if key[0] in mainGroups: appendTo = mainExpectsArgs
         else:                    appendTo = ovlExpectsArgs
 
         if expects:
-            appendTo.add(shortForm)
-            appendTo.add(longForm)
+            appendTo.add( '-{}'.format(shortForm))
+            appendTo.add('--{}'.format(longForm))
 
     log.debug('Identifying overlay paths (ignoring: {})'.format(
         list(mainExpectsArgs) + list(ovlExpectsArgs)))
@@ -1649,7 +1771,7 @@ def parseArgs(mainParser,
 
         # Check that this overlay file was
         # not a parameter to another argument
-        if i > 0 and argv[i - 1].strip('-') in expectsArgs:
+        if i > 0 and argv[i - 1] in expectsArgs:
             continue
 
         # See if the current argument looks like a data source
@@ -1670,7 +1792,7 @@ def parseArgs(mainParser,
         ovlIdxs .append(i)
         ovlTypes.append(dtype)
 
-    # Why is this here?
+    # TODO Why is this here?
     ovlIdxs.append(len(argv))
 
     # Separate the program arguments
@@ -1988,7 +2110,12 @@ def _printFullHelp(mainParser):
     print(helpText)
 
 
-def _applyArgs(args, target, propNames=None, **kwargs):
+def _applyArgs(args,
+               overlayList,
+               displayCtx,
+               target,
+               propNames=None,
+               **kwargs):
     """Applies the given command line arguments to the given target object."""
 
     if propNames is None:
@@ -1996,6 +2123,12 @@ def _applyArgs(args, target, propNames=None, **kwargs):
 
     longArgs  = {name : ARGUMENTS[target, name][1] for name in propNames}
     xforms    = {}
+    special   = []
+
+    for name in list(propNames):
+        if not hasattr(target, name):
+            special  .append(name)
+            propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((target, name), None)
@@ -2013,8 +2146,11 @@ def _applyArgs(args, target, propNames=None, **kwargs):
                          longArgs=longArgs,
                          **kwargs)
 
+    for s in special:
+        _applySpecialOption(args, overlayList, displayCtx, target, s)
 
-def _generateArgs(source, propNames=None):
+
+def _generateArgs(overlayList, displayCtx, source, propNames=None):
     """Does the opposite of :func:`_applyArgs` - generates command line
     arguments which can be used to configure another ``source`` instance
     in the same way as the provided one.
@@ -2035,71 +2171,31 @@ def _generateArgs(source, propNames=None):
 
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
+    special   = []
+
+    for name in list(propNames):
+        if not hasattr(source, name):
+            special  .append(name)
+            propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((source, name), None)
         if xform is not None:
             xforms[name] = xform
 
-    return props.generateArguments(source,
+    args = props.generateArguments(source,
                                    xformFuncs=xforms,
                                    cliProps=propNames,
                                    longArgs=longArgs)
 
+    for s in special:
+        args += _generateSpecialOption(overlayList,
+                                       displayCtx,
+                                       source,
+                                       s,
+                                       longArgs[s])
 
-def calcCanvasCentres(args, overlayList, displayCtx):
-    """Convenience function which calculates and returns the locations of the
-    ``xcentre``, ``ycentre``, and ``zcentre`` arguments, in the display
-    coordinate system.
-
-    .. todo:: Allow transformation in both directions.
-    """
-
-    loc = displayCtx.location.xyz
-    xc  = args.xcentre
-    yc  = args.ycentre
-    zc  = args.zcentre
-
-    if len(overlayList) == 0:
-        return ((loc[1], loc[2]),
-                (loc[0], loc[2]),
-                (loc[0], loc[1]))
-
-    opts   = displayCtx.getOpts(overlayList[0])
-    refimg = opts.getReferenceImage()
-
-    # This overlay has no referecne image -
-    # therefore its world coordinate system
-    # is equivalent to the display coordinate
-    # system.
-    if refimg is None:
-        if xc is None: xc = (loc[1], loc[2])
-        if yc is None: yc = (loc[0], loc[2])
-        if zc is None: zc = (loc[0], loc[1])
-        return xc, yc, zc
-
-    # Transform the display location into
-    # world coordinates of the overlay
-    loc = opts.transformCoords([loc], 'display', 'world')[0]
-
-    if xc is None: xc = (loc[1], loc[2])
-    if yc is None: yc = (loc[0], loc[2])
-    if zc is None: zc = (loc[0], loc[1])
-
-    # Fill in the horizontal/vertical coordinates
-    xc  = [loc[0], xc[ 0], xc[ 1]]
-    yc  = [yc[ 0], loc[1], yc[ 1]]
-    zc  = [zc[ 0], zc[ 1], loc[2]]
-
-    # Transform them from the overlay world
-    # coordinates into display coordinates
-    xc, yc, zc = opts.transformCoords([xc, yc, zc], 'world', 'display')
-
-    xc = xc[1], xc[2]
-    yc = yc[0], yc[2]
-    zc = zc[0], zc[1]
-
-    return xc, yc, zc
+    return args
 
 
 def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
@@ -2183,37 +2279,20 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         displayCtx.autoDisplay = args.autoDisplay
 
         # voxel/world location
-        if len(overlayList) > 0:
+        if (args.worldLoc or args.voxelLoc) and \
+           len(overlayList) > 0             and \
+           isinstance(overlayList[0], fslimage.Nifti):
 
-            defaultLoc = [displayCtx.bounds.xlo + 0.5 * displayCtx.bounds.xlen,
-                          displayCtx.bounds.ylo + 0.5 * displayCtx.bounds.ylen,
-                          displayCtx.bounds.zlo + 0.5 * displayCtx.bounds.zlen]
+            if args.worldLoc:
+                loc = args.worldLoc
+            elif args.voxelLoc:
+                opts = displayCtx.getOpts(overlayList[0])
+                loc  = opts.transformCoords(args.voxelLoc, 'voxel', 'world')
 
-            opts   = displayCtx.getOpts(overlayList[0])
-            refimg = opts.getReferenceImage()
-
-            if refimg is None:
-                displayLoc = defaultLoc
-            else:
-                refOpts = displayCtx.getOpts(refimg)
-
-                if args.worldLoc:
-                    displayLoc = refOpts.transformCoords([args.worldLoc],
-                                                         'world',
-                                                         'display')[0]
-
-                elif args.voxelLoc:
-                    displayLoc = refOpts.transformCoords([args.voxelLoc],
-                                                         'voxel',
-                                                         'display')[0]
-
-                else:
-                    displayLoc = defaultLoc
-
-            displayCtx.location.xyz = displayLoc
+            displayCtx.worldLocation.xyz = loc
 
         # Now, apply arguments to the SceneOpts instance
-        _applyArgs(args, sceneOpts)
+        _applyArgs(args, overlayList, displayCtx, sceneOpts)
 
     async.idle(apply)
 
@@ -2236,49 +2315,43 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
 
     args = []
 
+    # Scene
     args += ['--{}'.format(ARGUMENTS['Main.scene'][1])]
     if   isinstance(sceneOpts, fsldisplay.OrthoOpts):    args += ['ortho']
     elif isinstance(sceneOpts, fsldisplay.LightBoxOpts): args += ['lightbox']
+    elif isinstance(sceneOpts, fsldisplay.Scene3DOpts):  args += ['3d']
     else: raise ValueError('Unrecognised SceneOpts '
                            'type: {}'.format(type(sceneOpts).__name__))
 
-    # main options
+    # World location (if there is one)
     if len(overlayList) > 0:
+        worldLoc = displayCtx.worldLocation.xyz
+        args    += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
+        args    += ['{}'.format(c) for c in worldLoc]
 
-        # Get the world location, in
-        # terms of the first overlay
-        worldLoc = displayCtx.location.xyz
-        opts     = displayCtx.getOpts(overlayList[0])
-        refimg   = opts.getReferenceImage()
-
-        if refimg is not None:
-            refOpts  = displayCtx.getOpts(refimg)
-            worldLoc = refOpts.transformCoords([worldLoc],
-                                               'display',
-                                               'world')[0]
-
-        args += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
-        args += ['{}'.format(c) for c in worldLoc]
-
+    # Everything else
     props = OPTIONS.get(sceneOpts, allhits=True)
-
     props = [p for p in props if p not in exclude]
-    args += _generateArgs(sceneOpts, list(it.chain(*props)))
+    args += _generateArgs(overlayList,
+                          displayCtx,
+                          sceneOpts,
+                          list(it.chain(*props)))
 
     return args
 
 
-def generateOverlayArgs(overlay, displayCtx):
+def generateOverlayArgs(overlay, overlayList, displayCtx):
     """Generates command line arguments which describe the display
     of the current overlay.
 
-    :arg overlay:    An overlay object.
-
-    :arg displayCtx: A :class:`.DisplayContext` instance.
+    :arg overlay:     An overlay object.
+    :arg overlayList: The :class:`.OverlayList`
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
     display = displayCtx.getDisplay(overlay)
     opts    = display   .getDisplayOpts()
-    args    = _generateArgs(display) + _generateArgs(opts)
+    args    = _generateArgs(overlayList, displayCtx, display) + \
+              _generateArgs(overlayList, displayCtx, opts)
 
     return args
 
@@ -2363,7 +2436,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
             # Otherwise, we start by applying
             # arguments to the Display instance
-            _applyArgs(optArgs, display)
+            _applyArgs(optArgs, overlayList, displayCtx, display)
 
             # Retrieve the DisplayOpts instance
             # after applying arguments to the
@@ -2386,16 +2459,16 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                 value = getattr(optArgs, fileOpt, None)
                 if value is not None:
 
+                    setattr(optArgs, fileOpt, None)
+
                     try:
                         image = _findOrLoad(overlayList,
                                             value,
                                             fslimage.Image,
                                             overlay)
-                    except:
-                        log.warning('Unrecognised value for {}: {}'.format(
-                            fileOpt, value))
-
-                    setattr(optArgs, fileOpt, None)
+                    except Exception as e:
+                        log.warning('{}: {}'.format(fileOpt, str(e)))
+                        continue
 
                     # If the user specified both clipImage
                     # arguments and linklow/high range
@@ -2449,7 +2522,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # overlay is passed through to any
             # transform functions (see the
             # TRANSFORMS dict)
-            _applyArgs(optArgs, opts, overlay=overlay)
+            _applyArgs(optArgs, overlayList, displayCtx, opts, overlay=overlay)
 
     paths = [o.overlay for o in args.overlays]
 
@@ -2458,6 +2531,15 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory,
                                  **kwargs)
+
+
+def wasSpecified(namespace, obj, propName):
+    """Returns ``True`` if the given ``propName`` on the given object was
+    specified on the command line, ``False`` otherwise.
+    """
+
+    optName = ARGUMENTS.get((obj, propName), [None, 'nonexistent'])[1]
+    return getattr(namespace, optName, None) is not None
 
 
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
@@ -2497,3 +2579,295 @@ def fsleyesUrlToArgs(url):
     url = str(urllib.parse.unquote(url))
 
     return url.split()
+
+
+def _configSpecialOption(target,
+                         parser,
+                         optName,
+                         shortArg,
+                         longArg,
+                         helpText):
+    """Called by the ``_configParser`` function for any options which do
+    not map directly to a :class:`.SceneOpts` or :class:`.DisplayOpts`
+    property. Calls the ``_configSpecial`` function for the option.
+
+    :arg target:   The ``Opts`` class with which the option is associated
+    :arg parser:   the ``ArgumentParser`` to be configured
+    :arg optNmae:  Name of the option
+    :arg shortArg: Short form argument for the option
+    :arg longArg:  Long form argument for the option
+    :arg helpText: Help text
+    """
+
+    cfgFunc = _getSpecialFunction(target, optName, '_configSpecial')
+    if cfgFunc is None:
+        raise ArgumentError(
+            'Could not find configuration function for special '
+            'argument {}.{}'.format(target.__name__, optName))
+
+    log.debug('Configuring special argument {}.{}'
+              .format(target.__name__, optName))
+
+    shortArg = '-{}' .format(shortArg)
+    longArg  = '--{}'.format(longArg)
+
+    cfgFunc(target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecialOption(args, overlayList, displayCtx, target, optName):
+    """Called by the ``_applyArgs`` function for any options which do
+    not map directly to a :class:`.SceneOpts` or :class:`.DisplayOpts`
+    property. Calls the ``_applySpecial`` function for the option.
+
+
+    :arg args:        The ``argparse.Namespace`` containing parsed arguments
+    :arg overlayList: The ``OverlayList``
+    :arg displayCtx:  The ``DisplayContext`` instance
+    :arg target:      The ``Opts`` instance with which the option is associated
+    :arg optNmae:     Name of the option
+    """
+
+    cls       = type(target)
+    applyFunc = _getSpecialFunction(cls, optName, '_applySpecial')
+
+    if applyFunc is None:
+        raise ArgumentError(
+            'Could not find apply function for special '
+            'argument {} to {}'.format(optName, cls.__name__))
+
+    if getattr(args, optName) is None:
+        return
+
+    log.debug('Applying special argument {} to {}'
+              .format(optName, cls.__name__))
+
+    applyFunc(args, overlayList, displayCtx, target)
+
+
+def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
+    """Called by the :func:`_generateArgs` function for any options
+    which do not map directly to a :class:`.SceneOpts`, :class:`.Display`
+    or :class:`.DisplayOpts` instance. Calls the ``_generateSpecial``
+    function for the option.
+
+    :arg overlayList: The ``OverlayList``
+    :arg displayCtx:  The ``DisplayContext`` instance
+    :arg source:      The ``Opts`` instance with which the option is associated
+    :arg optNmae:     Name of the option
+    :arg longArg:     String to use as the long form argument
+    """
+    cls     = type(source)
+    genFunc = _getSpecialFunction(cls, optName, '_generateSpecial')
+    longArg = '--{}'.format(longArg)
+
+    if genFunc is None:
+        raise ArgumentError(
+            'Could not find generate function for special '
+            'argument {} to {}'.format(optName, cls.__name__))
+
+    log.debug('Generate special argument {} to {}'
+              .format(optName, cls.__name__))
+
+    return genFunc(overlayList, displayCtx, source, longArg)
+
+
+def _getSpecialFunction(target, optName, prefix):
+    """Searches for a function in this module with the name
+    ``_prefix_target_option``, searching the class hierarchy for ``target``.
+    """
+
+    thismod = sys.modules[__name__]
+    func    = getattr(thismod, '{}_{}_{}'.format(
+        prefix, target.__name__, optName), None)
+
+    if func is not None:
+        return func
+
+    bases = target.__bases__
+
+    for b in bases:
+        func = _getSpecialFunction(b, optName, prefix)
+        if func is not None:
+            return func
+
+    return None
+
+
+def _configSpecial_OrthoOpts_xcentre(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``xcentre`` option for the ``OrthoOpts`` class. """
+    parser.add_argument(
+        shortArg, longArg, metavar=('Y', 'Z'),
+        type=float, nargs=2, help=helpText)
+
+
+def _configSpecial_OrthoOpts_ycentre(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``ycentre`` option for the ``OrthoOpts`` class. """
+    parser.add_argument(
+        shortArg, longArg, metavar=('X', 'Z'),
+        type=float, nargs=2, help=helpText)
+
+
+def _configSpecial_OrthoOpts_zcentre(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``zcentre`` option for the ``OrthoOpts`` class. """
+    parser.add_argument(
+        shortArg, longArg, metavar=('X', 'Y'),
+        type=float, nargs=2, help=helpText)
+
+
+def _applySpecial_OrthoOpts_xcentre(args, overlayList, displayCtx, target):
+    """Applies the ``OrthoOpts.xcentre`` option. """
+    _applySpecialOrthoOptsCentre(
+        args.xcentre, displayCtx, 1, 2, target.panel.getGLCanvases()[0])
+
+
+def _applySpecial_OrthoOpts_ycentre(args, overlayList, displayCtx, target):
+    """Applies the ``OrthoOpts.ycentre`` option. """
+    _applySpecialOrthoOptsCentre(
+        args.ycentre, displayCtx, 0, 2, target.panel.getGLCanvases()[1])
+
+
+def _applySpecial_OrthoOpts_zcentre(args, overlayList, displayCtx, target):
+    """Applies the ``OrthoOpts.zcentre`` option. """
+    _applySpecialOrthoOptsCentre(
+        args.zcentre, displayCtx, 0, 1, target.panel.getGLCanvases()[2])
+
+def _applySpecialOrthoOptsCentre(centre, displayCtx, xax, yax, canvas):
+
+    xlo  = displayCtx.bounds.getLo(xax)
+    ylo  = displayCtx.bounds.getLo(yax)
+    xlen = displayCtx.bounds.getLen(xax)
+    ylen = displayCtx.bounds.getLen(yax)
+    xmid = xlo  + 0.5 * xlen
+    ymid = ylo  + 0.5 * ylen
+    x    = xmid + 0.5 * xlen * centre[0]
+    y    = ymid + 0.5 * ylen * centre[1]
+
+    canvas.centreDisplayAt(x, y)
+
+
+def _generateSpecial_OrthoOpts_xcentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.xcentre`` option."""
+    canvas = source.panel.getGLCanvases()[0]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 1, 2, canvas)
+    return [longArg] + args
+
+
+def _generateSpecial_OrthoOpts_ycentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.ycentre`` option."""
+    canvas = source.panel.getGLCanvases()[1]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 0, 2, canvas)
+    return [longArg] + args
+
+
+def _generateSpecial_OrthoOpts_zcentre(
+        overlayList, displayCtx, source, longArg):
+    """Generates CLI arguments for the ``OrthoOpts.zcentre`` option."""
+    canvas = source.panel.getGLCanvases()[2]
+    args   = _generateSpecialOrthoOptsCentre(displayCtx, 0, 1, canvas)
+    return [longArg] + args
+
+
+def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
+    """Used by the generation functions for the ``xcentre``, ``ycentre``,
+    and ``zcentre`` options.
+    """
+
+    x, y = canvas.getDisplayCentre()
+    xlo  = displayCtx.bounds.getLo( xax)
+    ylo  = displayCtx.bounds.getLo( yax)
+    xlen = displayCtx.bounds.getLen(xax)
+    ylen = displayCtx.bounds.getLen(yax)
+    x    = -1 + 2 * (x - xlo) / xlen
+    y    = -1 + 2 * (y - ylo) / ylen
+
+    return ['{: 0.5f}'.format(x), '{: 0.5f}'.format(y)]
+
+
+def _configSpecial_Volume3DOpts_clipPlane(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``clipPlane`` option for the ``VolumeOpts`` class.
+    This option allows a clip plane to be defined - the user provides
+    the position, azimuth and inclination as a single argument.
+    """
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=float,
+                        nargs=3,
+                        action='append',
+                        metavar=('POS', 'AZI', 'INC'),
+                        help=helpText)
+
+
+def _applySpecial_Volume3DOpts_clipPlane(
+        args, overlayList, displayCtx, target):
+    """Applies the ``Volume3DOpts.clipPlane`` option. """
+
+    ncp = len(args.clipPlane)
+
+    target.numClipPlanes         = ncp
+    target.clipPosition[   :ncp] = [cp[0] for cp in args.clipPlane]
+    target.clipAzimuth[    :ncp] = [cp[1] for cp in args.clipPlane]
+    target.clipInclination[:ncp] = [cp[2] for cp in args.clipPlane]
+
+
+def _generateSpecial_Volume3DOpts_clipPlane(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguemnts for the ``Volume3DOpts.clipPlane`` option. """
+
+    args = []
+
+    for i in range(source.numClipPlanes):
+        args += [longArg,
+                 '{:0.3f}'.format(source.clipPosition[   i]),
+                 '{:0.3f}'.format(source.clipAzimuth[    i]),
+                 '{:0.3f}'.format(source.clipInclination[i])]
+
+    return args
+
+
+def _configSpecial_Scene3DOpts_cameraRotation(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``Scene3DOpts.cameraRotation`` option."""
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=float,
+                        nargs=3,
+                        metavar=('YAW', 'PITCH', 'ROLL'),
+                        help=helpText)
+
+
+def _applySpecial_Scene3DOpts_cameraRotation(
+        args, overlayList, displayCtx, target):
+    """Applies the ``Scene3DOpts.cameraRotation`` option."""
+
+    yaw, pitch, roll = args.cameraRotation
+
+    yaw   = yaw   * np.pi / 180
+    pitch = pitch * np.pi / 180
+    roll  = roll  * np.pi / 180
+
+    xform           = transform.axisAnglesToRotMat(pitch, roll, yaw)
+    target.rotation = transform.concat(xform, target.rotation)
+
+
+def _generateSpecial_Scene3DOpts_cameraRotation(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the ``Scene3DOpts.cameraRotation`` option."""
+
+    rot = source.rotation
+
+    pitch, roll, yaw = transform.rotMatToAxisAngles(rot)
+
+    yaw   = yaw   * 180 / np.pi
+    pitch = pitch * 180 / np.pi
+    roll  = roll  * 180 / np.pi
+
+    return [longArg,
+            '{: 0.2f}'.format(yaw),
+            '{: 0.2f}'.format(pitch),
+            '{: 0.2f}'.format(roll)]

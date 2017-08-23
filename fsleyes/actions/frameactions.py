@@ -12,62 +12,60 @@ monkey-patched into the :class:`.FSLeyesFrame` class.
 
 import os.path as op
 
-from fsl.utils.platform import platform as fslplatform
-
-import                    fsleyes
-import fsleyes.frame   as frame
-import fsleyes.actions as actions
+import                      fsleyes
+import fsleyes.actions   as actions
+from   fsleyes.frame import FSLeyesFrame
 
 
-def addViewPanel(self, vpType, *args, **kwargs):
+
+def addViewPanel(self, vpType, **kwargs):
     """Function shared by the add*Panel functions below. """
-    vp = self.addViewPanel(vpType)
+    vp = self.addViewPanel(vpType, **kwargs)
     self.viewPanelDefaultLayout(vp)
     vp.SetFocus()
+    return vp
 
 
 def addOrthoPanel(self, *args, **kwargs):
     """Adds a new :class:`.OrthoPanel`."""
     from fsleyes.views.orthopanel import OrthoPanel
-    addViewPanel(self, OrthoPanel, *args, **kwargs)
+    addViewPanel(self, OrthoPanel)
 
 
 def addLightBoxPanel(self, *args, **kwargs):
     """Adds a new :class:`.LightBoxPanel`."""
     from fsleyes.views.lightboxpanel import LightBoxPanel
-    addViewPanel(self, LightBoxPanel, *args, **kwargs)
+    addViewPanel(self, LightBoxPanel)
 
 
 def addScene3DPanel(self, *args, **kwargs):
     """Adds a new :class:`.Scene3DPanel`."""
     from fsleyes.views.scene3dpanel import Scene3DPanel
-    self.getDisplayContext().displaySpace = 'world'
-    addViewPanel(self, Scene3DPanel, *args, **kwargs)
+    addViewPanel(self, Scene3DPanel)
 
 
 def addTimeSeriesPanel(self, *args, **kwargs):
     """Adds a new :class:`.TimeSeriesPanel`."""
     from fsleyes.views.timeseriespanel import TimeSeriesPanel
-    addViewPanel(self, TimeSeriesPanel, *args, **kwargs)
+    addViewPanel(self, TimeSeriesPanel)
 
 
 def addHistogramPanel(self, *args, **kwargs):
     """Adds a new :class:`.HistogramPanel`."""
     from fsleyes.views.histogrampanel import HistogramPanel
-    addViewPanel(self, HistogramPanel, *args, **kwargs)
+    addViewPanel(self, HistogramPanel)
 
 
 def addPowerSpectrumPanel(self, *args, **kwargs):
     """Adds a new :class:`.PowerSpectrumPanel`."""
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-    addViewPanel(self, PowerSpectrumPanel, *args, **kwargs)
+    addViewPanel(self, PowerSpectrumPanel)
 
 
 def addShellPanel(self, *args, **kwargs):
     """Adds a new :class:`.ShellPanel`."""
     from fsleyes.views.shellpanel import ShellPanel
-    addViewPanel(self, ShellPanel, *args, **kwargs)
-
+    addViewPanel(self, ShellPanel)
 
 
 def removeFocusedViewPanel(self, *args, **kwargs):
@@ -150,16 +148,16 @@ def closeFSLeyes(self, *args, **kwargs):
     self.Close()
 
 
-frame.FSLeyesFrame.addOrthoPanel           = actions.action(addOrthoPanel)
-frame.FSLeyesFrame.addLightBoxPanel        = actions.action(addLightBoxPanel)
-frame.FSLeyesFrame.addScene3DPanel         = actions.action(addScene3DPanel)
-frame.FSLeyesFrame.addTimeSeriesPanel      = actions.action(addTimeSeriesPanel)
-frame.FSLeyesFrame.addHistogramPanel       = actions.action(addHistogramPanel)
-frame.FSLeyesFrame.addPowerSpectrumPanel   = actions.action(addPowerSpectrumPanel)
-frame.FSLeyesFrame.addShellPanel           = actions.action(addShellPanel)
-frame.FSLeyesFrame.removeFocusedViewPanel  = actions.action(removeFocusedViewPanel)
-frame.FSLeyesFrame.selectNextOverlay       = actions.action(selectNextOverlay)
-frame.FSLeyesFrame.selectPreviousOverlay   = actions.action(selectPreviousOverlay)
-frame.FSLeyesFrame.toggleOverlayVisibility = actions.action(toggleOverlayVisibility)
-frame.FSLeyesFrame.openHelp                = actions.action(openHelp)
-frame.FSLeyesFrame.closeFSLeyes            = actions.action(closeFSLeyes)
+FSLeyesFrame.addOrthoPanel           = actions.action(addOrthoPanel)
+FSLeyesFrame.addLightBoxPanel        = actions.action(addLightBoxPanel)
+FSLeyesFrame.addScene3DPanel         = actions.action(addScene3DPanel)
+FSLeyesFrame.addTimeSeriesPanel      = actions.action(addTimeSeriesPanel)
+FSLeyesFrame.addHistogramPanel       = actions.action(addHistogramPanel)
+FSLeyesFrame.addPowerSpectrumPanel   = actions.action(addPowerSpectrumPanel)
+FSLeyesFrame.addShellPanel           = actions.action(addShellPanel)
+FSLeyesFrame.removeFocusedViewPanel  = actions.action(removeFocusedViewPanel)
+FSLeyesFrame.selectNextOverlay       = actions.action(selectNextOverlay)
+FSLeyesFrame.selectPreviousOverlay   = actions.action(selectPreviousOverlay)
+FSLeyesFrame.toggleOverlayVisibility = actions.action(toggleOverlayVisibility)
+FSLeyesFrame.openHelp                = actions.action(openHelp)
+FSLeyesFrame.closeFSLeyes            = actions.action(closeFSLeyes)

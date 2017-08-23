@@ -273,14 +273,14 @@ def drawAll(self, axes, zposes, xforms):
 
     vertices = vertices.ravel('C')
 
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
     self.shader.setAtt('texCoord', texCoords)
 
-    gl.glDrawElements(gl.GL_TRIANGLES,
-                      nslices * 6,
-                      gl.GL_UNSIGNED_INT,
-                      indices)
+    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+        gl.glDrawElements(gl.GL_TRIANGLES,
+                          nslices * 6,
+                          gl.GL_UNSIGNED_INT,
+                          indices)
 
 
 def postDraw(self, xform=None, bbox=None):

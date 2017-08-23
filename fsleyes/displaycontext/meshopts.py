@@ -207,18 +207,16 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__vertexDataRange = None
 
         nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'transform', 'vertexData'])
+        nounbind.extend(['refImage', 'coordSpace', 'vertexData'])
         kwargs['nounbind'] = nounbind
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
 
-        # A number of callback functions are used to
-        # keep the refImage, coordSpace and transform
-        # properties consistent. Only the master
-        # MeshOpts instance needs to register these
-        # listeners.
-        self.__registered = self.getParent() is None
+        # The master MeshOpts instance is just a
+        # sync-slave, so we only need to register
+        # property listeners on child instances
+        self.__registered = self.getParent() is not None
         if self.__registered:
 
             self.overlayList.addListener('overlays',
@@ -235,7 +233,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                              self.__coordSpaceChanged,
                              immediate=True)
 
-            # The master MeshOpts instance also
+            # We need to keep colour[3]
             # keeps colour[3] and Display.alpha
             # consistent w.r.t. each other (see
             # also MaskOpts)
@@ -248,16 +246,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                                      self.__colourChanged,
                                      immediate=True)
 
-            self.__overlayListChanged()
-            self.__updateBounds()
-
-        # Parent instance doesn't need to
-        # worry about loading vertex data
-        else:
             self.addListener('vertexData',
                              self.name,
                              self.__vertexDataChanged,
                              immediate=True)
+
+            self.__overlayListChanged()
+            self.__updateBounds()
 
         # If we have inherited values from a
         # parent instance, make sure the vertex
@@ -281,19 +276,26 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         if self.__registered:
 
             self.overlayList.removeListener('overlays', self.name)
+            self.display    .removeListener('alpha',    self.name)
+            self            .removeListener('colour',   self.name)
 
             for overlay in self.overlayList:
-                display = self.displayCtx.getDisplay(overlay)
-                display.removeListener('name', self.name)
 
-            if self.refImage is not None and \
-               self.refImage in self.overlayList:
-                opts = self.displayCtx.getOpts(self.refImage)
-                opts.removeListener('transform',   self.name)
-                opts.removeListener('customXform', self.name)
+                # An error could be raised if the
+                # DC has been/is being destroyed
+                try:
 
-            self.display.removeListener('alpha',  self.name)
-            self        .removeListener('colour', self.name)
+                    display = self.displayCtx.getDisplay(overlay)
+                    opts    = self.displayCtx.getOpts(   overlay)
+
+                    display.removeListener('name', self.name)
+
+                    if overlay is self.refImage:
+                        opts.removeListener('transform',   self.name)
+                        opts.removeListener('customXform', self.name)
+
+                except:
+                    pass
 
         self.__oldRefImage = None
         self.__vertexData  = None
@@ -399,105 +401,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return opts.getTransform(self.coordSpace, opts.transform)
 
 
-    def displayToStandardCoordinates(self, coords):
-        """Transforms the given coordinates into a standardised coordinate
-        system specific to the overlay associated with this ``MeshOpts``
-        instance.
-
-        The coordinate system used is the coordinate system in which the
-        :class:`.TriangleMesh` vertices are defined.
-        """
-        if self.refImage is None or self.refImage not in self.overlayList:
-            return coords
-
-        opts = self.displayCtx.getOpts(self.refImage)
-
-        return opts.transformCoords(coords, opts.transform, self.coordSpace)
-
-
-    def standardToDisplayCoordinates(self, coords):
-        """Transforms the given coordinates from standardised coordinates
-        into the display coordinate system - see
-        :meth:`displayToStandardCoordinates`.
-        """
-        if self.refImage is None or self.refImage not in self.overlayList:
-            return coords
-
-        opts = self.displayCtx.getOpts(self.refImage)
-
-        return opts.transformCoords(coords, self.coordSpace, opts.transform)
-
-
-    def __cacheCoords(self,
-                      refImage=-1,
-                      coordSpace=None,
-                      transform=None,
-                      customXform=None):
-        """Caches the current :attr:`.DisplayContext.location` in standardised
-        coordinates see the :meth:`.DisplayContext.cacheStandardCoordinates`
-        method).
-
-        This method is called whenever the :attr:`refImage` or
-        :attr:`coordSpace` properties change and, if a ``refImage`` is
-        specified, whenever the :attr:`.NiftiOpts.transform` or
-        :attr:`.NiftiOpts.customXform` properties change.
-
-        :arg refImage:    Reference image to use to calculate the coordinates.
-                          If ``-1`` the :attr:`refImage` is used (``-1`` is
-                          used as the default value instead of ``None`` because
-                          the latter is a valid value for ``refImage``).
-
-        :arg coordSpace:  Coordinate space value to use - if ``None``, the
-                          :attr:`coordSpace` is used.
-
-        :arg transform:   Transform to use - if ``None``, and a ``refImage`` is
-                          defined, the :attr:`.NiftiOpts.transform` value is
-                          used.
-
-        :arg customXform: Custom transform to use (if
-                          ``transform=custom``). If ``None``, and a
-                          ``refImage`` is defined, the
-                          :attr:`.NiftiOpts.customXform` value is used.
-        """
-
-        if refImage   is -1:   refImage   = self.refImage
-        if coordSpace is None: coordSpace = self.coordSpace
-
-        if refImage is None:
-            coords = self.displayCtx.location.xyz
-
-        else:
-            refOpts = self.displayCtx.getOpts(refImage)
-
-            if transform   is None: transform   = refOpts.transform
-            if customXform is None: customXform = refOpts.customXform
-
-            # TODO if transform == custom, we
-            # have to use the old custom xform
-
-            coords  = refOpts.transformCoords(self.displayCtx.location.xyz,
-                                              transform,
-                                              coordSpace)
-
-        self.displayCtx.cacheStandardCoordinates(self.overlay, coords)
-
-
     def __transformChanged(self, value, valid, ctx, name):
         """Called when the :attr:`.NiftiOpts.transfrom` or
         :attr:`.NiftiOpts.customXform` properties of the current
         :attr:`refImage` change. Calls :meth:`__updateBounds`.
         """
-
-        refOpts = ctx
-
-        if   name == 'transform':
-            transform   = refOpts.getLastValue('transform')
-            customXform = refOpts.customXform
-        elif name == 'customXform':
-            transform   = refOpts.transform
-            customXform = refOpts.getLastValue('customXform')
-
-        self.__cacheCoords(transform=transform, customXform=customXform)
         self.__updateBounds()
 
 
@@ -505,13 +413,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """Called when the :attr:`coordSpace` property changes.
         Calls :meth:`__updateBounds`.
         """
-
-        oldValue = self.getLastValue('coordSpace')
-
-        if oldValue is None:
-            oldValue = self.coordSpace
-
-        self.__cacheCoords(coordSpace=oldValue)
         self.__updateBounds()
 
 
@@ -524,15 +425,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         properties associated with the new image. Calls
         :meth:`__updateBounds`.
         """
-
-        oldValue = self.getLastValue('refImage')
-
-        # The reference image may have been
-        # removed from the overlay list
-        if oldValue not in self.overlayList:
-            oldValue = None
-
-        self.__cacheCoords(refImage=oldValue)
 
         # TODO You are not tracking changes to the
         # refImage overlay type -  if this changes,
@@ -579,30 +471,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         oldBounds = self.bounds
         self.bounds = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
-        # Horrible hack here.
-
-        # The coordSpace/refImage/transform property
-        # change may not result in a change to the
-        # bound values. But listeners of the bounds
-        # property need to be notified regardless, as
-        # the model space has changed (e.g. it may
-        # have just been flipped along an axis).
-        # For example, the OrthoPanel needs to refresh
-        # its orientation labels.
-        #
-        # This method is only called on the 'master'
-        # MeshOpts instance - the bounds on child
-        # instances are synced automatically. So we
-        # have to force notification of all bounds
-        # listeners on the child instances.
-        #
-        # Hopefully in the future I will come up with
-        # a solution to these horrible parent-child
-        # discrepancies.
-        if oldBounds == self.bounds:
-            children = self.getChildren()
-            for c in [self] + children:
-                c.propNotify('bounds')
+        if np.all(np.isclose(oldBounds, self.bounds)):
+            self.propNotify('bounds')
 
 
     def __overlayListChanged(self, *a):

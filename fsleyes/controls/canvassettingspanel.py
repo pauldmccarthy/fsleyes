@@ -88,6 +88,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         sceneOptsProps = collections.OrderedDict((
             ('showCursor',   props.Widget('showCursor')),
             ('bgColour',     props.Widget('bgColour')),
+            ('fgColour',     props.Widget('fgColour')),
             ('cursorColour', props.Widget('cursorColour')),
             ('performance',
              props.Widget('performance',
@@ -127,7 +128,6 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                           labels=strings.choices['OrthoOpts.layout'])),
             ('zoom',        props.Widget('zoom', showLimits=False)),
             ('showLabels',  props.Widget('showLabels')),
-            ('labelColour', props.Widget('labelColour')),
             ('labelSize',   props.Widget('labelSize',
                                          spin=True,
                                          showLimits=False,

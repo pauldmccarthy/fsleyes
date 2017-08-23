@@ -177,6 +177,7 @@ class ColourMapOpts(object):
         #       range relationship will break.
         #
         self.__registered = self.getParent() is not None
+
         if self.__registered:
 
             name    = self.getColourMapOptsListenerName()
@@ -231,11 +232,14 @@ class ColourMapOpts(object):
 
         # If this is the parent ColourMapOpts
         # instance, its properties need to be
-        # updated. Child instance properties
+        # initialised. Child instance properties
         # should inherit the current parent
-        # values.
-        else:
+        # values, unless they are not synced
+        # to the parent.
+        if (not self.__registered) or \
+           (not self.isSyncedToParent('displayRange')):
             self.updateDataRange()
+
 
 
     def getColourMapOptsListenerName(self):
@@ -345,17 +349,20 @@ class ColourMapOpts(object):
             drmin = min((0,            abs(dataMin)))
             drmax = max((abs(dataMin), abs(dataMax)))
 
+        if clipRange is not None: crmin, crmax = clipRange
+        else:                     crmin, crmax = drmin, drmax
+
         # Clipping works on >= and <=, so we add
         # a small offset to the display range limits
         # (which are equal to the clipping limiits)
         # so the user can configure the scene such
         # that no values are clipped.
         droff  = abs(drmax - drmin) / 100.0
+        croff  = abs(crmax - crmin) / 100.0
+        crmin -= croff
+        crmax += croff
         drmin -= droff
         drmax += droff
-
-        if clipRange is not None: crmin, crmax = clipRange
-        else:                     crmin, crmax = drmin, drmax
 
         # Execute on the PV call queue,
         # so that property updates occur
@@ -371,8 +378,8 @@ class ColourMapOpts(object):
             drUnset = resetDR or drUnset
             crUnset = resetCR or crUnset
 
-            log.debug('Updating range limits [dr: {} - {}, ''cr: '
-                      '{} - {}]'.format(drmin, drmax, crmin, crmax))
+            log.debug('[{}] Updating range limits [dr: {} - {}, ''cr: '
+                      '{} - {}]'.format(id(self), drmin, drmax, crmin, crmax))
 
             self.displayRange .xlim = drmin, drmax
             self.clippingRange.xlim = crmin, crmax
@@ -383,8 +390,8 @@ class ColourMapOpts(object):
             # was previously equal to the max
             # clipping range, keep that relationship,
             # otherwise high values will be clipped.
-            if drUnset: self.displayRange .x   = drmin + droff, drmax
-            if crUnset: self.clippingRange.x   = crmin + droff, crmax
+            if drUnset: self.displayRange .x   = drmin + droff, dataMax
+            if crUnset: self.clippingRange.x   = crmin + croff, crmax
             if crGrow:  self.clippingRange.xhi = crmax
 
             # If using absolute range values, the low
@@ -431,15 +438,9 @@ class ColourMapOpts(object):
         for peer in peers:
 
             name = peer.getColourMapOptsListenerName()
-
-            if not any((peer.display.isSyncedToParent('brightness'),
-                        peer.display.isSyncedToParent('contrast'),
-                        peer.        isSyncedToParent('displayRange'))):
-                continue
-
-            bri = peer.display.hasListener('brightness',   name)
-            con = peer.display.hasListener('contrast',     name)
-            dr  = peer        .hasListener('displayRange', name)
+            bri  = peer.display.hasListener('brightness',   name)
+            con  = peer.display.hasListener('contrast',     name)
+            dr   = peer        .hasListener('displayRange', name)
 
             if enable:
                 if bri: peer.display.enableListener('brightness',   name)
