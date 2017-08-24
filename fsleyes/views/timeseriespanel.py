@@ -195,6 +195,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('plotMelodicICs', self._name)
 
         self.__addMaskAction.destroy()
+        self.__addMaskAction = None
 
         plotpanel.OverlayPlotPanel.destroy(self)
 
