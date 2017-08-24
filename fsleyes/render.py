@@ -53,6 +53,13 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
+    # Create a GL context
+    fslgl.getGLContext(offscreen=True, createApp=True)
+
+    # Initialise FSLeyes and implement hacks
+    fsleyes.initialise()
+    fsleyesmain.hacksAndWorkarounds()
+
     # Initialise colour maps module
     fslcm.init()
 
@@ -61,13 +68,8 @@ def main(args=None):
     namespace = parseArgs(args)
     fsleyes.configLogging(namespace)
 
-    # Initialise OpenGL
-    fslgl.getGLContext(offscreen=True, createApp=True)
+    # Initialise the fsleyes.gl modules
     fslgl.bootstrap(namespace.glversion)
-
-    # Initialise FSLeyes and implement hacks
-    fsleyes.initialise()
-    fsleyesmain.hacksAndWorkarounds()
 
     # Create a description of the scene
     overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
