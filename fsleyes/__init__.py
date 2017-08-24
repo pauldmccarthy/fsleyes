@@ -255,42 +255,42 @@ def initialise():
     mpl.use('WxAgg')
 
     fsleyesDir = op.dirname(__file__)
+    assetDir   = None
+    options    = []
 
     # If we are running from a bundled application,
     # wx will know where the FSLeyes resources are
     if fslplatform.frozen:
 
         # If we have a display, assume
-        # that a wx app has been created
+        # that a wx app has been created,
+        # and let wx tell us where the
+        # directory is.
         if fslplatform.canHaveGui:
+            sp = wx.StandardPaths.Get()
+            options.append(op.join(sp.GetResourcesDir()))
 
-            sp       = wx.StandardPaths.Get()
-            assetDir = op.join(sp.GetResourcesDir())
-
-        # Otherwise we have to guess at the location
-        elif fslplatform.os == 'Darwin':
-            assetDir = op.join(fsleyesDir, '..', 'Resources')
-        elif fslplatform.os == 'Linux':
-            assetDir = op.join(fsleyesDir, '..', 'share', 'FSLeyes')
+        # Otherwise we have to guess at
+        # the location, which will differ
+        # depending on the platform
+        options.append(op.join(fsleyesDir, '..', 'Resources'))
+        options.append(op.join(fsleyesDir, '..', 'share', 'FSLeyes'))
 
     # Otherwise we are running from a code install,
     # or from a source distribution. The assets
     # directory is either inside, or alongside, the
     # FSLeyes package directory.
     else:
-
         options = [op.join(fsleyesDir, '..'), fsleyesDir]
 
-        for opt in options:
-            if op.exists(op.join(opt, 'assets')):
-                assetDir = opt
-                break
+    for opt in options:
+        if op.exists(op.join(opt, 'assets')):
+            assetDir = op.abspath(opt)
+            break
 
-    assetDir = op.abspath(assetDir)
-
-    if not op.exists(assetDir):
+    if assetDir is None:
         raise RuntimeError('Could not find FSLeyes asset directory! '
-                           'It should be at {}'.format(assetDir))
+                           'Searched: {}'.format(options))
 
 
 def configLogging(namespace):

@@ -121,7 +121,10 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.destroy`.
         """
 
-        self.__currentHs = None
+        self.__roiHistAction.destroy()
+
+        self.__currentHs     = None
+        self.__roiHistAction = None
 
         self             .removeListener('histType',        self._name)
         self._overlayList.removeListener('overlays',        self._name)
