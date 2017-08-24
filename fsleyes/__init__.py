@@ -290,7 +290,7 @@ def initialise():
 
     if assetDir is None:
         raise RuntimeError('Could not find FSLeyes asset directory! '
-                           'It should be at {}'.format(assetDir))
+                           'Searched: {}'.format(options))
 
 
 def configLogging(namespace):
