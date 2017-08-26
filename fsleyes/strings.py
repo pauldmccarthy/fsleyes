@@ -858,8 +858,7 @@ properties = TypeDict({
     'Display.brightness'        : 'Brightness',
     'Display.contrast'          : 'Contrast',
 
-    'NiftiOpts.transform'  : 'Image transform',
-    'NiftiOpts.volume'     : 'Volume',
+    'NiftiOpts.custom_volume' : 'Volume',
 
     'ColourMapOpts.displayRange'     : 'Display range',
     'ColourMapOpts.clippingRange'    : 'Clipping range',

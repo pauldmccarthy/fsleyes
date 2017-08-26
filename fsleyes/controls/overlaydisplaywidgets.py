@@ -146,7 +146,7 @@ def _initPropertyList_Display(threedee):
 
 
 def _initPropertyList_VolumeOpts(threedee):
-    return ['volume',
+    return ['custom_volume',
             'interpolation',
             'custom_cmap',
             'cmapResolution',
@@ -170,7 +170,7 @@ def _init3DPropertyList_VolumeOpts():
 
 
 def _initPropertyList_MaskOpts(threedee):
-    return ['volume',
+    return ['custom_volume',
             'colour',
             'invert',
             'threshold']
@@ -256,7 +256,7 @@ def _initPropertyList_LabelOpts(threedee):
     return ['lut',
             'outline',
             'outlineWidth',
-            'volume']
+            'custom_volume']
 
 
 def _initPropertyList_SHOpts(threedee):
@@ -327,10 +327,18 @@ def _initWidgetSpec_VolumeOpts(threedee):
         else:           return img.name
 
     return {
+        'custom_volume'  : _NiftiOpts_VolumeWidget,
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3),
+            enabledWhen=lambda o: o.overlay.ndims > 3,
+            spinWidth=6),
+        'volumeDim'      : props.Widget(
+            'volumeDim',
+            showLimits=False,
+            slider=False,
+            enabledWhen=lambda o: o.overlay.ndims > 4,
+            spinWidth=2),
         'interpolation'  : props.Widget(
             'interpolation',
             labels=strings.choices['VolumeOpts.interpolation']),
@@ -377,10 +385,18 @@ def _init3DWidgetSpec_VolumeOpts():
 
 def _initWidgetSpec_MaskOpts(threedee):
     return {
-        'volume'     : props.Widget(
+        'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3),
+            enabledWhen=lambda o: o.overlay.ndims > 3,
+            spinWidth=6),
+        'volumeDim'      : props.Widget(
+            'volumeDim',
+            showLimits=False,
+            slider=False,
+            enabledWhen=lambda o: o.overlay.ndims > 4,
+            spinWidth=2),
         'colour'     : props.Widget('colour'),
         'invert'     : props.Widget('invert'),
         'threshold'  : props.Widget('threshold', showLimits=False),
@@ -392,10 +408,18 @@ def _initWidgetSpec_LabelOpts(threedee):
         'lut'          : props.Widget('lut', labels=lambda l: l.name),
         'outline'      : props.Widget('outline'),
         'outlineWidth' : props.Widget('outlineWidth', showLimits=False),
-        'volume'       : props.Widget(
+        'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3),
+            enabledWhen=lambda o: o.overlay.ndims > 3,
+            spinWidth=6),
+        'volumeDim'      : props.Widget(
+            'volumeDim',
+            showLimits=False,
+            slider=False,
+            enabledWhen=lambda o: o.overlay.ndims > 4,
+            spinWidth=2),
     }
 
 
@@ -726,6 +750,37 @@ def _ColourMapOpts_ColourMapWidget(
     sizer.Add(useNegCmap, flag=wx.EXPAND)
 
     return sizer, [cmap, negCmap, useNegCmap]
+
+
+def _NiftiOpts_VolumeWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains widgets for the
+    :attr:`.NiftiOpts.volume` and :attr:`.NiftiOpts.volumeDim` properties.
+    """
+
+    volume    = getWidgetSpecs(target, threedee)['volume']
+    volumeDim = getWidgetSpecs(target, threedee)['volumeDim']
+
+    volume    = props.buildGUI(parent, target, volume)
+    volumeDim = props.buildGUI(parent, target, volumeDim)
+
+    dimLabel = wx.StaticText(parent,
+                             label='Dim',
+                             style=(wx.ALIGN_CENTRE_VERTICAL |
+                                    wx.ALIGN_CENTRE_HORIZONTAL))
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(volume,    flag=wx.EXPAND, proportion=1)
+    sizer.Add(dimLabel,  flag=wx.EXPAND)
+    sizer.Add(volumeDim, flag=wx.EXPAND)
+
+    return sizer, [volume, volumeDim]
 
 
 def _VolumeOpts_OverrideDataRangeWidget(
