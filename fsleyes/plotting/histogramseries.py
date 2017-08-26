@@ -235,7 +235,7 @@ class HistogramSeries(dataseries.DataSeries):
 
                 self.nbins = autoBin(nzData, self.dataRange.x)
 
-            if not self.overlay.is4DImage():
+            if self.overlay.ndims <= 3:
 
                 self.__finiteData  = finData
                 self.__nonZeroData = nzData
@@ -273,8 +273,8 @@ class HistogramSeries(dataseries.DataSeries):
         :meth:`.HasProperties.addListener` method).
         """
 
-        if self.overlay.is4DImage(): data = self.overlay[..., self.volume]
-        else:                        data = self.overlay[:]
+        if self.overlay.ndims > 3: data = self.overlay[..., self.volume]
+        else:                      data = self.overlay[:]
 
         data = data[np.isfinite(data)]
 

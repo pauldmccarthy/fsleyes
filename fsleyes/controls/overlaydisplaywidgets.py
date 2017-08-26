@@ -330,7 +330,7 @@ def _initWidgetSpec_VolumeOpts(threedee):
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.is4DImage()),
+            enabledWhen=lambda o: o.overlay.ndims > 3),
         'interpolation'  : props.Widget(
             'interpolation',
             labels=strings.choices['VolumeOpts.interpolation']),
@@ -380,7 +380,7 @@ def _initWidgetSpec_MaskOpts(threedee):
         'volume'     : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.is4DImage()),
+            enabledWhen=lambda o: o.overlay.ndims > 3),
         'colour'     : props.Widget('colour'),
         'invert'     : props.Widget('invert'),
         'threshold'  : props.Widget('threshold', showLimits=False),
@@ -395,7 +395,7 @@ def _initWidgetSpec_LabelOpts(threedee):
         'volume'       : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.is4DImage()),
+            enabledWhen=lambda o: o.overlay.ndims > 3),
     }
 
 

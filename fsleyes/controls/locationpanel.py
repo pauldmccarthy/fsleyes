@@ -707,7 +707,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                 vloc = opts.getVoxel()
 
                 if vloc is not None:
-                    if overlay.is4DImage():
+                    if overlay.ndims > 3:
                         vloc = vloc + [opts.volume]
 
                     vloc = [int(v) for v in vloc]

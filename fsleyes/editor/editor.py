@@ -446,8 +446,8 @@ class Editor(actions.ActionProvider):
         image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
 
-        if image.is4DImage(): volume = opts.volume
-        else:                 volume = None
+        if image.ndims > 3: volume = opts.volume
+        else:               volume = None
 
         if isinstance(change, ValueChange):
             log.debug('{}: changing image {} data - offset '
@@ -480,8 +480,8 @@ class Editor(actions.ActionProvider):
         image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
 
-        if image.is4DImage(): volume = opts.volume
-        else:                 volume = None
+        if image.ndims > 3: volume = opts.volume
+        else:               volume = None
 
         if isinstance(change, ValueChange):
             log.debug('{}: reverting image {} data change - offset '
