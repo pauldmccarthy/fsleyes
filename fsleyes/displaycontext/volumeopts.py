@@ -232,16 +232,24 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         overlay = self.overlay
 
-        # is this a >3D volume?
-        ndims = self.overlay.ndims
-        self.setConstraint('volumeDim', 'maxval', max(0, ndims - 4))
-
-        if ndims <= 3:
-            self.setConstraint('volume', 'maxval', 0)
-
         self.__child = self.getParent() is not None
 
         if self.__child:
+
+            # is this a >3D volume?
+            ndims = self.overlay.ndims
+
+            # We store indices for every dimension
+            # past the XYZ dims. Whenever the volumeDim
+            # changes, we cache the index for the old
+            # dimensions, and restore the index for the
+            # new dimension.
+            self.setConstraint('volumeDim', 'maxval', max(0, ndims - 4))
+            self.setConstraint('volume',    'cache',  [0] * (ndims - 3))
+
+            if ndims <= 3:
+                self.setConstraint('volume', 'maxval', 0)
+
             overlay.register(self.name,
                              self.__overlayTransformChanged,
                              topic='transform')
@@ -268,13 +276,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self.__xforms = {}
             self.__setupTransforms()
             self.__transformChanged()
-
-            # We store indices for every dimension
-            # past the XYZ dims. Whenever the volumeDim
-            # changes, we cache the index for the old
-            # dimensions, and restore the index for the
-            # new dimension.
-            self.__volumeCache = [0] * (ndims - 3)
             self.__volumeDimChanged()
 
 
@@ -291,6 +292,17 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         fsldisplay.DisplayOpts.destroy(self)
 
 
+    def __toggleSiblingListeners(self, enable=True):
+        """Enables/disables the ``volumeDim`` listeners of sibling
+        ``NiftiOpts`` instances. This is used by the :meth:`__volumeDimChanged`
+        method to avoid nastiness.
+        """
+        for s in self.getParent().getChildren():
+            if s is not self:
+                if enable: s.enableListener( 'volumeDim', s.name)
+                else:      s.disableListener('volumeDim', s.name)
+
+
     def __volumeDimChanged(self, *a):
         """Called when the :attr:`volumeDim` changes. Saves the value of
         ``volume`` for the last ``volumeDim``, and restores the previous
@@ -300,20 +312,41 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if self.overlay.ndims <= 3:
             return
 
-        oldVolume    = self.volume
-        oldVolumeDim = self.getLastValue('volumeDim')
-        newDim       = self.volumeDim
+        # Here we disable volumeDim listeners on all
+        # sibling instances, then save/restore the
+        # volume value and properties asynchronously,
+        # then re-enable the slblings.  This is a
+        # horrible means of ensuring that only the
+        # first VolumeOpts instance (out of a set of
+        # synchronised instances) updates the volume
+        # value and properties. The other instances
+        # will be updated through synchronisation.
+        # This is necessary because subsequent
+        # instances would corrupt the update made by
+        # the first instance.
+        #
+        # A nicer way to do things like this would be
+        # nice.
+        def update():
 
-        if oldVolumeDim is None:
-            oldVolumeDim = 0
+            oldVolume    = self.volume
+            oldVolumeDim = self.getLastValue('volumeDim')
 
-        self.__volumeCache[oldVolumeDim] = oldVolume
+            if oldVolumeDim is None:
+                oldVolumeDim = 0
 
-        newVolume    = self.__volumeCache[newDim]
-        newVolumeLim = self.overlay.shape[newDim + 3]
+            cache               = list(self.getConstraint('volume', 'cache'))
+            cache[oldVolumeDim] = oldVolume
+            newVolume           = cache[self.volumeDim]
+            newVolumeLim        = self.overlay.shape[self.volumeDim + 3] - 1
 
-        self.setConstraint('volume', 'maxval', newVolumeLim - 1)
-        self.volume = newVolume
+            self.setConstraint('volume', 'maxval', newVolumeLim)
+            self.setConstraint('volume', 'cache',  cache)
+            self.volume = newVolume
+
+        self.__toggleSiblingListeners(False)
+        props.safeCall(update)
+        props.safeCall(self.__toggleSiblingListeners, True)
 
 
     def __overlayTransformChanged(self, *a):
@@ -764,7 +797,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         newSlc      = [None] * self.overlay.ndims
         newSlc[:3]  = slc
-        newSlc[ 3:] = self.__volumeCache
+        newSlc[ 3:] = self.getConstraint('volume', 'cache')
 
         vdim = self.volumeDim + 3
 
