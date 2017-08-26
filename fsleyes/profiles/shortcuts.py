@@ -18,7 +18,6 @@ actions = td.TypeDict({
     'LoadStandardAction'       : 'Ctrl-S',
     'CopyOverlayAction'        : 'Ctrl-Shift-C',
     'SaveOverlayAction'        : 'Ctrl-Shift-S',
-    'PearsonCorrelateAction'   : 'Ctrl-Shift-P',
     'ReloadOverlayAction'      : 'Ctrl-Shift-R',
     'RemoveOverlayAction'      : 'Ctrl-Shift-W',
 
@@ -73,6 +72,8 @@ actions = td.TypeDict({
     'OrthoPanel.toggleXCanvas'              : 'Alt-X',
     'OrthoPanel.toggleYCanvas'              : 'Alt-Y',
     'OrthoPanel.toggleZCanvas'              : 'Alt-Z',
+    'OrthoPanel.pearsonCorrelation'         : 'Alt-I',
+
 
     'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
 

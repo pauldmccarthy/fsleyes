@@ -466,6 +466,7 @@ actions = TypeDict({
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
+    'OrthoPanel.pearsonCorrelation'       : 'Seed correlation (Pearson)',
     'OrthoPanel.centreCursorWorld'        : 'Centre cursor at (0, 0, 0)',
 
     'OrthoPanel.toggleCursor'           : 'Show/hide location cursor',

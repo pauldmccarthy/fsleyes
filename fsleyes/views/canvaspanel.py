@@ -18,7 +18,6 @@ from   fsl.utils.platform  import platform         as fslplatform
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
-import fsleyes.colourmaps                          as colourmaps
 import fsleyes.displaycontext                      as displayctx
 import fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsleyes.controls.overlayinfopanel           as overlayinfopanel

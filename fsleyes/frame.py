@@ -1556,12 +1556,10 @@ class FSLeyesFrame(wx.Frame):
         that are not bound to a specific ``ViewPanel`` (and which are always
         present).
         """
-        from fsleyes.actions.correlate     import PearsonCorrelateAction
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
 
         actionz = [
-            PearsonCorrelateAction,
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
         ]
