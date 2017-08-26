@@ -200,7 +200,7 @@ class CorrelateAction(base.Action):
         if xyz is None:
             return
 
-        data = ovl.nibImage.get_data()
+        data = ovl.nibImage.get_data()[opts.index(atVolume=False)]
 
         # The correlation calculation is performed
         # on a separate thread. This thread then

@@ -186,8 +186,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
             ps        = psseries.VoxelPowerSpectrumSeries(overlay,
                                                           self._displayCtx)
-            targets   = [self._displayCtx]
-            propNames = ['location']
+            opts      = self._displayCtx.getOpts(overlay)
+            targets   = [self._displayCtx, opts]
+            propNames = ['location', 'volumeDim']
 
         else:
             return None, None, None

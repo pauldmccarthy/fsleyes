@@ -336,10 +336,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         # Otherwise we just plot
         # bog-standard 4D voxel data
-        elif len(overlay.shape) == 4 and overlay.shape[3] > 1:
+        # (listening to volumeDim for
+        # images with >4 dimensions)
+        elif overlay.ndims > 3:
             ts = plotting.VoxelTimeSeries(self, overlay, self._displayCtx)
-            targets   = [self._displayCtx]
-            propNames = ['location']
+            opts      = self._displayCtx.getOpts(overlay)
+            targets   = [self._displayCtx, opts]
+            propNames = ['location', 'volumeDim']
 
         else:
             return None, None, None

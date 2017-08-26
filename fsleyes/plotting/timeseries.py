@@ -163,6 +163,7 @@ class VoxelTimeSeries(TimeSeries):
 
         if ydata is None:
             opts = self.displayCtx.getOpts(self.overlay)
+            vdim = opts.volumeDim
             xyz  = opts.getVoxel(vround=True)
 
             if xyz is None:
@@ -170,11 +171,11 @@ class VoxelTimeSeries(TimeSeries):
 
             x, y, z = xyz
 
-            ydata = self.__cache.get((x, y, z), None)
+            ydata = self.__cache.get((x, y, z, vdim), None)
 
             if ydata is None:
-                ydata = self.overlay[x, y, z, :]
-                self.__cache.put((x, y, z), ydata)
+                ydata = self.overlay[opts.index(xyz, atVolume=False)]
+                self.__cache.put((x, y, z, vdim), ydata)
 
         if xdata is None:
             xdata = np.arange(len(ydata))

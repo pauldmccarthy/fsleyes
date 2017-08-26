@@ -149,6 +149,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
         """
 
         opts  = self.displayCtx.getOpts(self.overlay)
+        vdim  = opts.volumeDim
         voxel = opts.getVoxel()
 
         if voxel is None:
@@ -156,11 +157,11 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
         x, y, z = voxel
 
-        ydata = self.__cache.get((x, y, z), None)
+        ydata = self.__cache.get((x, y, z, vdim), None)
 
         if ydata is None:
-            ydata = self.overlay[x, y, z, :]
-            self.__cache.put((x, y, z), ydata)
+            ydata = self.overlay[opts.index(voxel, atVolume=False)]
+            self.__cache.put((x, y, z, vdim), ydata)
 
         ydata = self.calcPowerSpectrum(ydata)
         xdata = np.arange(len(ydata), dtype=np.float32)
