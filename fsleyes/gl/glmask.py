@@ -138,8 +138,8 @@ class GLMask(glvolume.GLVolume):
     def __updateImageTexture(self, *a):
         """Called when the image texture needs updating. """
 
-        opts       = self.opts
-        volume     = opts.volume
+        opts   = self.opts
+        volume = opts.index()[3:]
 
         self.imageTexture.set(volume=volume)
 
