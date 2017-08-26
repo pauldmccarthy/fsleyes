@@ -234,7 +234,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         # is this a >3D volume?
         ndims = self.overlay.ndims
-        self.setConstraint('volumeDim', 'maxval', ndims - 3)
+        self.setConstraint('volumeDim', 'maxval', max(0, ndims - 4))
 
         if ndims <= 3:
             self.setConstraint('volume', 'maxval', 0)
@@ -312,7 +312,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         newVolume    = self.__volumeCache[newDim]
         newVolumeLim = self.overlay.shape[newDim + 3]
 
-        self.setConstraint('volume', 'maxval', newVolumeLim)
+        self.setConstraint('volume', 'maxval', newVolumeLim - 1)
         self.volume = newVolume
 
 
@@ -741,14 +741,14 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return vox
 
 
-    def index(self, slc, atVolume=True):
+    def index(self, slc=None, atVolume=True):
         """Given a slice object ``slc``, which indexes into the X, Y, and Z
         dimensions, fills it to slice every dimension of the image, using
         the current :attr:`volume` and :attr:`volumeDim`, and saved values
         for the other volume dimensions.
 
         :arg slc:      Something which can slice the first three dimensions
-                       of the image.
+                       of the image. If ``None``, defaults to ``[:, :, :]``.
 
         :arg atVolume: If ``True``, the returned slice will index the current
                        :attr:`volume` of the current :attr:`volumeDim`.
@@ -756,8 +756,11 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                        :attr:`volumeDim`.
         """
 
+        if slc is None:
+            slc = [slice(None), slice(None), slice(None)]
+
         if self.overlay.ndims <= 3:
-            return self.overlay[slc]
+            return tuple(slc)
 
         newSlc      = [None] * self.overlay.ndims
         newSlc[:3]  = slc
@@ -768,7 +771,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if atVolume: newSlc[vdim] = self.volume
         else:        newSlc[vdim] = slice(None)
 
-        return newSlc
+        return tuple(newSlc)
 
 
 class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):

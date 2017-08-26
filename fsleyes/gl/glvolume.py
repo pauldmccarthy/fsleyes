@@ -529,7 +529,7 @@ class GLVolume(glimageobject.GLImageObject):
             texName,
             self.image,
             interp=interp,
-            volume=opts.volume,
+            volume=opts.index()[3:],
             notify=False)
 
         self.imageTexture.register(self.name, self.__texturesChanged)
@@ -552,7 +552,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipOpts  = clipOpts
 
         def updateClipTexture(*a):
-            self.clipTexture.set(volume=clipOpts.volume)
+            self.clipTexture.set(volume=clipOpts.index()[3:])
 
         clipOpts.addListener('volume',
                              self.name,
@@ -860,7 +860,6 @@ class GLVolume(glimageobject.GLImageObject):
         called when other properties, which require a texture refresh, change.
         """
         opts       = self.opts
-        volume     = opts.volume
         volRefresh = kwa.pop('volRefresh', False)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
@@ -869,7 +868,7 @@ class GLVolume(glimageobject.GLImageObject):
         if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
         else:                            normRange = None
 
-        self.imageTexture.set(volume=volume,
+        self.imageTexture.set(volume=opts.index()[3:],
                               interp=interp,
                               volRefresh=volRefresh,
                               normaliseRange=normRange)
