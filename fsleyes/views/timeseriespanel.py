@@ -236,8 +236,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                    self.toggleOverlayList,
                    self.togglePlotList,
                    self.toggleTimeSeriesToolBar,
-                   self.toggleTimeSeriesControl,
-                   None]
+                   self.toggleTimeSeriesControl]
 
         names = [a.__name__ if a is not None else None for a in actionz]
 
