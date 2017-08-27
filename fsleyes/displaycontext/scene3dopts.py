@@ -37,11 +37,11 @@ class Scene3DOpts(sceneopts.SceneOpts):
         """Create a ``Scene3DCanvasOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
         """
-        self.setConstraint('zoom',     'minval',  1)
-        self.setConstraint('zoom',     'default', 75)
-        self.setConstraint('zoom',     'maxval',  5000)
-        self.setConstraint('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
-        self.setConstraint('fgColour', 'default', (0.0, 1.0, 0.0,   1.0))
+        self.setAttribute('zoom',     'minval',  1)
+        self.setAttribute('zoom',     'default', 75)
+        self.setAttribute('zoom',     'maxval',  5000)
+        self.setAttribute('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
+        self.setAttribute('fgColour', 'default', (0.0, 1.0, 0.0,   1.0))
 
         self.zoom     = 75
         self.bgColour = (0.6, 0.6, 0.753)

@@ -425,8 +425,8 @@ class OrthoViewProfile(profiles.Profile):
         elif wheel < 0: wheel = -50
 
         copts   = canvas.opts
-        minzoom = copts.getConstraint('zoom', 'minval')
-        maxzoom = copts.getConstraint('zoom', 'maxval')
+        minzoom = copts.getAttribute('zoom', 'minval')
+        maxzoom = copts.getAttribute('zoom', 'maxval')
 
         # Over SSH/X11, mouse wheel events seem to get queued,
         # and continue to get processed after the user has

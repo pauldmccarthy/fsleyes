@@ -769,11 +769,11 @@ class DisplayContext(props.SyncableHasProperties):
             # need to do this on the parent DC.
             nOverlays = len(self.__overlayList)
             if nOverlays > 0:
-                self.setConstraint('selectedOverlay',
-                                   'maxval',
-                                   nOverlays - 1)
+                self.setAttribute('selectedOverlay',
+                                  'maxval',
+                                  nOverlays - 1)
             else:
-                self.setConstraint('selectedOverlay', 'maxval', 0)
+                self.setAttribute('selectedOverlay', 'maxval', 0)
 
             return
 

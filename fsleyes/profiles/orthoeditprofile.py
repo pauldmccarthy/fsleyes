@@ -802,10 +802,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             dmin = None
             dmax = None
 
-        self.setConstraint('fillValue',  'minval', dmin)
-        self.setConstraint('fillValue',  'maxval', dmax)
-        self.setConstraint('eraseValue', 'minval', dmin)
-        self.setConstraint('eraseValue', 'maxval', dmax)
+        self.setAttribute('fillValue',  'minval', dmin)
+        self.setAttribute('fillValue',  'maxval', dmax)
+        self.setAttribute('eraseValue', 'minval', dmin)
+        self.setAttribute('eraseValue', 'maxval', dmax)
 
         # Retrieve cached values. The cached
         # targetImage is set in the
@@ -836,11 +836,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Initialise property values, or
         # restore them from the cache.
         with props.skip(self, 'searchRadius', self._name):
-            self.setConstraint('searchRadius', 'maxval', radiusLimit)
+            self.setAttribute('searchRadius', 'maxval', radiusLimit)
             self.searchRadius = radius
 
         with props.skip(self, 'intensityThres', self._name):
-            self.setConstraint('intensityThres', 'maxval', limit)
+            self.setAttribute('intensityThres', 'maxval', limit)
             self.intensityThres = thres
 
         with props.skip(self, 'intensityThresLimit', self._name):
@@ -1640,9 +1640,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """Called when the :attr:`intensityThresLimit` changes. Updates the
         maximum value on the :attr:`intensityThres` accordingly.
         """
-        self.setConstraint('intensityThres',
-                           'maxval',
-                           self.intensityThresLimit)
+        self.setAttribute('intensityThres',
+                          'maxval',
+                          self.intensityThresLimit)
 
 
     def __selintSelect(self, voxel, canvas):

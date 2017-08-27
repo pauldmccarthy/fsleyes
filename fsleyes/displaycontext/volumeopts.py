@@ -244,11 +244,11 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # changes, we cache the index for the old
             # dimensions, and restore the index for the
             # new dimension.
-            self.setConstraint('volumeDim', 'maxval', max(0, ndims - 4))
-            self.setConstraint('volume',    'cache',  [0] * (ndims - 3))
+            self.setAttribute('volumeDim', 'maxval', max(0, ndims - 4))
+            self.setAttribute('volume',    'cache',  [0] * (ndims - 3))
 
             if ndims <= 3:
-                self.setConstraint('volume', 'maxval', 0)
+                self.setAttribute('volume', 'maxval', 0)
 
             overlay.register(self.name,
                              self.__overlayTransformChanged,
@@ -335,13 +335,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             if oldVolumeDim is None:
                 oldVolumeDim = 0
 
-            cache               = list(self.getConstraint('volume', 'cache'))
+            cache               = list(self.getAttribute('volume', 'cache'))
             cache[oldVolumeDim] = oldVolume
             newVolume           = cache[self.volumeDim]
             newVolumeLim        = self.overlay.shape[self.volumeDim + 3] - 1
 
-            self.setConstraint('volume', 'maxval', newVolumeLim)
-            self.setConstraint('volume', 'cache',  cache)
+            self.setAttribute('volume', 'maxval', newVolumeLim)
+            self.setAttribute('volume', 'cache',  cache)
             self.volume = newVolume
 
         self.__toggleSiblingListeners(False)
@@ -797,7 +797,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         newSlc      = [None] * self.overlay.ndims
         newSlc[:3]  = slc
-        newSlc[ 3:] = self.getConstraint('volume', 'cache')
+        newSlc[ 3:] = self.getAttribute('volume', 'cache')
 
         vdim = self.volumeDim + 3
 
