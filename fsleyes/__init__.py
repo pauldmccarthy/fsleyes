@@ -303,11 +303,14 @@ def configLogging(namespace):
 
     global log
 
-    # make numpy/matplotlib quiet
-    warnings.filterwarnings('ignore', module='matplotlib')
-    warnings.filterwarnings('ignore', module='mpl_toolkits')
-    warnings.filterwarnings('ignore', module='numpy')
+    # make numpy/matplotlib/nibabel quiet
+    warnings.filterwarnings('ignore',  module='matplotlib')
+    warnings.filterwarnings('ignore',  module='mpl_toolkits')
+    warnings.filterwarnings('ignore',  module='numpy')
     logging.getLogger('nibabel').setLevel(logging.CRITICAL)
+
+    # Show deprecations
+    warnings.filterwarnings('default', category=DeprecationWarning)
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
