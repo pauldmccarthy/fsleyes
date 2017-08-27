@@ -1351,7 +1351,7 @@ about = {
     # string.
     'libs' : [                 'jinja2',             'matplotlib',
               'nibabel',       'numpy',              'PIL',
-              'fsleyes_props', 'fsleyes_widgets',    'fsl',
+              'fsleyes_props', 'fsleyes_widgets',    'fsl.version',
               'OpenGL',        'pyparsing',          'scipy',
               'six',           'fsleyes.gl.trimesh', 'wx'],
 }
