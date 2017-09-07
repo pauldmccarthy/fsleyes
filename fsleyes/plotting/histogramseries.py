@@ -372,7 +372,7 @@ class HistogramSeries(dataseries.DataSeries):
         hrange              = (self.dataRange.xlo,  self.dataRange.xhi)
         drange              = (self.dataRange.xmin, self.dataRange.xmax)
         histX, histY, nvals = histogram(data,
-                                        nbins,
+                                        self.nbins,
                                         hrange,
                                         drange,
                                         self.includeOutliers,
