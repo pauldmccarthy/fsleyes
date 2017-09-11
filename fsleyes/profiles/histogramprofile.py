@@ -468,19 +468,28 @@ class HistogramOverlay(object):
         :arg overlayList: The :class:`.OverlayList` instance.
         """
 
+        display = displayCtx.getDisplay(overlay)
+
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__histSeries  = histSeries
         self.__overlay     = overlay
+        self.__display     = display
+        self.__opts        = None
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
         self.__histMask    = None
 
+        display    .addListener('overlayType',
+                                self.__name,
+                                self.__overlayTypeChanged)
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged)
         histSeries.addListener('showOverlay',
                                 self.__name,
                                 self.__showOverlayChanged)
+
+        self.__overlayTypeChanged()
 
 
     def destroy(self):
@@ -490,60 +499,46 @@ class HistogramOverlay(object):
 
         self.__overlayList.removeListener('overlays',    self.__name)
         self.__histSeries .removeListener('showOverlay', self.__name)
+        self.__display    .removeListener('overlayType', self.__name)
+
+        if self.__opts is not None:
+            self.__opts.removeListener('volume', self.__name)
+
 
         if self.__histMask is not None:
             self.__overlayList.remove(self.__histMask)
 
         self.__histSeries  = None
         self.__overlay     = None
+        self.__display     = None
+        self.__opts        = None
         self.__displayCtx  = None
         self.__overlayList = None
         self.__histMask    = None
 
 
-    def __showOverlayChanged(self, *a):
-        """Called when the :attr:`.HistogramSeries.showOverlay` property
-        changes.
-
-        Adds/removes a 3D mask :class:`.Image` to the :class:`.OverlayList`,
-        which highlights the voxels that have been included in the histogram.
-        The :class:`.MaskOpts.threshold` property is bound to the
-        :attr:`.HistogramSeries.showOverlayRange` property, so the masked
-        voxels are updated whenever the histogram overlay range changes, and
-        vice versa.
+    def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` changes.
+        De/re-registers a listener on the :attr:`.NiftiOpts.volume` property
+        (as ``Opts`` instances are destroyed/re-created when the
+        ``overlayType`` changes).
         """
 
-        hs = self.__histSeries
+        oldOpts     = self.__opts
+        newOpts     = self.__displayCtx.getOpts(self.__overlay)
+        self.__opts = newOpts
 
-        if      hs.showOverlay  and (self.__histMask is not None): return
-        if (not hs.showOverlay) and (self.__histMask is     None): return
+        if oldOpts is not None:
+            oldOpts.removeListener('volume', self.__name)
 
-        if not hs.showOverlay:
+        newOpts.addListener('volume', self.__name, self.__volumeChanged)
 
-            log.debug('Removing 3D histogram overlay mask for {}'.format(
-                self.__overlay.name))
 
-            if self.__histMask in self.__overlayList:
-                self.__overlayList.remove(self.__histMask)
-
-            self.__histMask = None
-
-        else:
-
-            log.debug('Creating 3D histogram overlay mask for {}'.format(
-                self.__overlay.name))
-
-            self.__histMask = fsloverlay.ProxyImage(
-                self.__overlay,
-                name='{}/histogram/mask'.format(self.__overlay.name))
-
-            self.__overlayList.append(self.__histMask, overlayType='mask')
-
-            opts = self.__displayCtx.getOpts(self.__histMask)
-
-            opts.bindProps('volume',    hs)
-            opts.bindProps('colour',    hs)
-            opts.bindProps('threshold', hs, 'showOverlayRange')
+    def __volumeChanged(self, *a):
+        """Called when the :attr:`.NiftiOpts.volume` property changes. Makes
+        sure  that the 3d mask overlay is up to date (if it is being shown).
+        """
+        self.__showOverlayChanged(force=True)
 
 
     def __overlayListChanged(self, *a):
@@ -566,3 +561,57 @@ class HistogramOverlay(object):
             with props.skip(self.__histSeries, 'showOverlay', self.__name):
                 self.__histSeries.showOverlay = False
                 self.__showOverlayChanged()
+
+
+    def __showOverlayChanged(self, *args, **kwargs):
+        """Called when the :attr:`.HistogramSeries.showOverlay` property
+        changes.
+
+        Adds/removes a 3D mask :class:`.Image` to the :class:`.OverlayList`,
+        which highlights the voxels that have been included in the histogram.
+        The :class:`.MaskOpts.threshold` property is bound to the
+        :attr:`.HistogramSeries.showOverlayRange` property, so the masked
+        voxels are updated whenever the histogram overlay range changes, and
+        vice versa.
+
+        :arg force: If ``True``, and ``HistogramSeries.showOverlay is True``,
+                    the mask overlay is recreated even if one already exists.
+        """
+
+        hs     = self.__histSeries
+        force  = kwargs.get('force', False)
+        exists = self.__histMask is not None
+
+        if      hs.showOverlay  and      exists and (not force): return
+        if (not hs.showOverlay) and (not exists):                return
+
+        # Remove any old mask overlay
+        if exists:
+
+            log.debug('Removing 3D histogram overlay mask for {}'.format(
+                self.__overlay.name))
+
+            if self.__histMask in self.__overlayList:
+                self.__overlayList.remove(self.__histMask)
+
+            self.__histMask = None
+
+        # Create a new mask overlay
+        if hs.showOverlay:
+
+            log.debug('Creating 3D histogram overlay mask for {}'.format(
+                self.__overlay.name))
+
+            opts = self.__displayCtx.getOpts(hs.overlay)
+
+            self.__histMask = fsloverlay.ProxyImage(
+                self.__overlay,
+                volume=opts.index(),
+                name='{}/histogram/mask'.format(self.__overlay.name))
+
+            self.__overlayList.append(self.__histMask, overlayType='mask')
+
+            opts = self.__displayCtx.getOpts(self.__histMask)
+
+            opts.bindProps('colour',    hs)
+            opts.bindProps('threshold', hs, 'showOverlayRange')

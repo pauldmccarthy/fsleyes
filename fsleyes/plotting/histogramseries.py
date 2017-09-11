@@ -20,8 +20,8 @@ import logging
 
 import numpy as np
 
+import fsl.utils.cache              as cache
 import fsleyes_widgets.utils.status as status
-import fsl.utils.async              as async
 import fsleyes_props                as props
 from . import                          dataseries
 
@@ -58,7 +58,7 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
-    dataRange = props.Bounds(ndims=1)
+    dataRange = props.Bounds(ndims=1, clamped=False)
     """Specifies the range of data which should be included in the histogram.
     See the :attr:`includeOutliers` property.
     """
@@ -105,7 +105,7 @@ class HistogramSeries(dataseries.DataSeries):
         self.__nonZeroData        = np.array([])
         self.__clippedFiniteData  = np.array([])
         self.__clippedNonZeroData = np.array([])
-        self.__initProperties()
+        self.__volCache           = cache.Cache(maxsize=10)
 
         self.__display.addListener('overlayType',
                                    self.__name,
@@ -129,6 +129,11 @@ class HistogramSeries(dataseries.DataSeries):
                                    self.__name,
                                    self.__histPropsChanged)
 
+        # volumeChanged performs initial histogram-
+        # related calculations for the current volume
+        # (whether it is 3D or 4D)
+        self.__volumeChanged()
+
 
     def destroy(self):
         """This needs to be called when this ``HistogramSeries`` instance
@@ -143,8 +148,9 @@ class HistogramSeries(dataseries.DataSeries):
         self          .removeListener('dataRange',       self.__name)
         self          .removeListener('nbins',           self.__name)
 
-        self.__opts    = None
-        self.__display = None
+        self.__volCache = None
+        self.__opts     = None
+        self.__display  = None
 
 
     def redrawProperties(self):
@@ -192,62 +198,6 @@ class HistogramSeries(dataseries.DataSeries):
         return self.__nvals
 
 
-    def __initProperties(self):
-        """Called by :meth:`__init__`. Calculates and caches some things which
-        are needed for the histogram calculation.
-
-        .. note:: The work performed by this method is done on a separate
-                  thread, via the :mod:`.async` module. If you want to be
-                  notified when the work is complete, register a listener on
-                  the :attr:`dataRange` property (via
-                  :meth:`.HasProperties.addListener`).
-        """
-
-        log.debug('Performining initial histogram '
-                  'calculations for overlay {}'.format(
-                      self.overlay.name))
-
-        status.update('Performing initial histogram calculation '
-                      'for overlay {}...'.format(self.overlay.name))
-
-        def init():
-
-            data    = self.overlay[:]
-            finData = data[np.isfinite(data)]
-            nzData  = finData[finData != 0]
-
-            dmin    = finData.min()
-            dmax    = finData.max()
-            dist    = (dmax - dmin) / 10000.0
-
-            with props.suppress(self, 'showOverlayRange'), \
-                 props.suppress(self, 'dataRange'), \
-                 props.suppress(self, 'nbins'):
-
-                self.dataRange.xmin = dmin
-                self.dataRange.xmax = dmax + dist
-                self.dataRange.xlo  = dmin
-                self.dataRange.xhi  = dmax + dist
-
-                self.nbins = autoBin(nzData, self.dataRange.x)
-
-            if self.overlay.ndims < 4:
-
-                self.__finiteData  = finData
-                self.__nonZeroData = nzData
-                self.__dataRangeChanged(callHistPropsChanged=False)
-
-            else:
-                self.__volumeChanged(callHistPropsChanged=False)
-
-            self.__histPropsChanged()
-
-        def onFinish():
-            self.propNotify('dataRange')
-
-        async.run(init, onFinish=onFinish)
-
-
     def __overlayTypeChanged(self, *a):
         """Called when the :attr:`.Display.overlayType` changes. When this
         happens, the :class:`.DisplayOpts` instance associated with the
@@ -264,48 +214,59 @@ class HistogramSeries(dataseries.DataSeries):
 
     def __volumeChanged(self, *args, **kwargs):
         """Called when the :attr:`volume` property changes, and also by the
-        :meth:`__initProperties` method.
+        :meth:`__init__` method.
 
         Re-calculates some things for the new overlay volume.
-
-        :arg callHistPropsChanged: If ``True`` (the default), the
-                                   :meth:`__histPropsChanged` method will be
-                                   called.
-
-        All other arguments are ignored, but are passed in when this method is
-        called due to a property change (see the
-        :meth:`.HasProperties.addListener` method).
         """
 
-        callHistPropsChanged = kwargs.pop('callHistPropsChanged', True)
-        callPropNotify       = kwargs.pop('callPropNotify',       True)
+        opts    = self.__opts
+        overlay = self.overlay
 
-        data = self.overlay[self.__opts.index()]
-        data = data[np.isfinite(data)]
+        # We cache the following for each volume
+        # so they don't need to be recalculated:
+        #  - finite data
+        #  - non-zero data
+        #  - finite minimum
+        #  - finite maximum
+        #
+        # The cache size is restricted so we don't
+        # blow out RAM
+        volkey   = (opts.volumeDim, opts.volume)
+        volprops = self.__volCache.get(volkey, None)
 
-        self.__finiteData  = data
-        self.__nonZeroData = data[data != 0]
+        if volprops is None:
+            finData = overlay[opts.index()]
+            finData = finData[np.isfinite(finData)]
+            nzData  = finData[finData != 0]
+            dmin    = finData.min()
+            dmax    = finData.max()
+            self.__volCache.put(volkey, (finData, nzData, dmin, dmax))
+        else:
+            finData, nzData, dmin, dmax = volprops
 
-        self.__dataRangeChanged(callHistPropsChanged=False)
+        dist = (dmax - dmin) / 10000.0
 
-        if callHistPropsChanged: self.__histPropsChanged()
-        if callPropNotify:       self.propNotify('dataRange')
+        with props.suppressAll(self):
+
+            self.dataRange.xmin = dmin
+            self.dataRange.xmax = dmax + dist
+            self.dataRange.xlo  = dmin
+            self.dataRange.xhi  = dmax + dist
+            self.nbins          = autoBin(nzData, self.dataRange.x)
+
+            self.__finiteData  = finData
+            self.__nonZeroData = nzData
+
+            self.__dataRangeChanged()
+
+        self.propNotify('dataRange')
 
 
     def __dataRangeChanged(self, *args, **kwargs):
         """Called when the :attr:`dataRange` property changes, and also by the
         :meth:`__initProperties` and :meth:`__volumeChanged` methods.
-
-        :arg callHistPropsChanged: If ``True`` (the default), the
-                                   :meth:`__histPropsChanged` method will be
-                                   called.
-
-        All other arguments are ignored, but are passed in when this method is
-        called due to a property change (see the
-        :meth:`.HasProperties.addListener` method).
         """
 
-        callHistPropsChanged = kwargs.pop('callHistPropsChanged', True)
         finData = self.__finiteData
         nzData  = self.__nonZeroData
 
@@ -325,15 +286,14 @@ class HistogramSeries(dataseries.DataSeries):
             self.showOverlayRange.xmin = dlo - dist
             self.showOverlayRange.xmax = dhi + dist
 
-            if needsInit:
+            if needsInit or not self.showOverlay:
                 self.showOverlayRange.xlo = dlo
                 self.showOverlayRange.xhi = dhi
             else:
                 self.showOverlayRange.xlo = max(dlo, self.showOverlayRange.xlo)
                 self.showOverlayRange.xhi = min(dhi, self.showOverlayRange.xhi)
 
-        if callHistPropsChanged:
-            self.__histPropsChanged()
+        self.__histPropsChanged()
 
 
     def __histPropsChanged(self, *a):
