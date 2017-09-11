@@ -75,15 +75,10 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
 
         widgetList = self.getWidgetList()
 
-        volume     = props.Widget('volume',
-                                  showLimits=False,
-                                  enabledWhen=is4D)
         autoBin    = props.Widget('autoBin')
         nbins      = props.Widget('nbins',
                                   enabledWhen=lambda i: not i.autoBin,
                                   showLimits=False)
-
-        volume     = props.buildGUI(widgetList, hs, volume)
         autoBin    = props.buildGUI(widgetList, hs, autoBin)
         nbins      = props.buildGUI(widgetList, hs, nbins)
 
@@ -119,10 +114,6 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
                              groupName=groupName,
                              displayName=strings.properties[hs, 'nbins'],
                              tooltip=fsltooltips.properties[hs, 'nbins'])
-        widgetList.AddWidget(volume,
-                             groupName=groupName,
-                             displayName=strings.properties[hs, 'volume'],
-                             tooltip=fsltooltips.properties[hs, 'volume'])
         widgetList.AddWidget(dataRange,
                              groupName=groupName,
                              displayName=strings.properties[hs, 'dataRange'],
@@ -133,5 +124,4 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
                 includeOutliers,
                 autoBin,
                 nbins,
-                volume,
                 dataRange]

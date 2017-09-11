@@ -147,7 +147,7 @@ class OverlayGroup(props.HasProperties):
 
         # Special case - make sure that the NiftiOpts
         # volume property is not constrained
-        self.setConstraint('NiftiOpts_volume', 'maxval', six.MAXSIZE)
+        self.setAttribute('NiftiOpts_volume', 'maxval', six.MAXSIZE)
 
 
     def __copy__(self):

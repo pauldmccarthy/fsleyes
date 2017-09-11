@@ -1556,12 +1556,10 @@ class FSLeyesFrame(wx.Frame):
         that are not bound to a specific ``ViewPanel`` (and which are always
         present).
         """
-        from fsleyes.actions.correlate     import PearsonCorrelateAction
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
 
         actionz = [
-            PearsonCorrelateAction,
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
         ]
@@ -1596,8 +1594,11 @@ class FSLeyesFrame(wx.Frame):
 
         # Remove all old tools
         for vpType, items in list(self.__viewPanelTools.items()):
-            for item in items:
+            for item, tool in items:
                 menu.Remove(item)
+                if tool is not None:
+                    tool.unbindWidget(item)
+
 
             self.__viewPanelTools.pop(vpType)
 
@@ -1617,9 +1618,10 @@ class FSLeyesFrame(wx.Frame):
 
         for panel in panels:
 
-            vpType = type(panel)
-            tools  = [t.name() for t in panel.getTools()]
-            items  = []
+            vpType    = type(panel)
+            tools     = panel.getTools()
+            toolNames = [t.name() for t in tools]
+            items     = []
 
             # Only the first panel for each type
             # has its tools added to the menu.
@@ -1633,9 +1635,11 @@ class FSLeyesFrame(wx.Frame):
             items.append(menu.Append(wx.ID_ANY, self.__viewPanelTitles[panel]))
             items[-1].Enable(False)
 
-            items.extend(self.populateMenu(menu, panel, tools))
+            items.extend(self.populateMenu(menu, panel, toolNames))
 
-            self.__viewPanelTools[vpType] = items
+            tools = [None, None] + tools
+
+            self.__viewPanelTools[vpType] = zip(items, tools)
 
 
     def __selectedOverlayChanged(self, *a):

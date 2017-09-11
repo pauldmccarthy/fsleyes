@@ -83,7 +83,7 @@ class AddMaskDataSeriesAction(base.Action):
 
         self.enabled = (len(self.__overlayList) > 0         and
                         isinstance(overlay, fslimage.Image) and
-                        len(overlay.shape) == 4             and
+                        overlay.ndims > 3                   and
                         len(self.__maskOptions) > 0)
 
 
@@ -95,6 +95,7 @@ class AddMaskDataSeriesAction(base.Action):
         """
 
         overlay = self.__displayCtx.getSelectedOverlay()
+        opts    = self.__displayCtx.getOpts(overlay)
         options = self.__maskOptions
 
         frame   = wx.GetApp().GetTopWindow()
@@ -116,7 +117,7 @@ class AddMaskDataSeriesAction(base.Action):
         weight    = dlg.GetCheckBox()
         ds        = dataseries.DataSeries(overlay)
 
-        data     = overlay.nibImage.get_data()
+        data     = overlay.nibImage.get_data()[opts.index(atVolume=False)]
         mask     = maskimg.nibImage.get_data()
         maskmask = mask > 0
         ydata    = data[maskmask]

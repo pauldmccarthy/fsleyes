@@ -58,16 +58,6 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
-    volume = props.Int(minval=0, maxval=0, clamped=True)
-    """If the :class:`.Image` overlay associated with this ``HistogramSeries``
-    is 4D, this settings specifies the index of the volume that the histogram
-    is calculated upon.
-
-    .. note:: Calculating the histogram over an entire 4D :class:`.Image` is
-              not yet supported.
-    """
-
-
     dataRange = props.Bounds(ndims=1)
     """Specifies the range of data which should be included in the histogram.
     See the :attr:`includeOutliers` property.
@@ -105,9 +95,8 @@ class HistogramSeries(dataseries.DataSeries):
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
-
-        opts = displayCtx.getOpts(overlay)
-        self.bindProps('volume', opts)
+        self.__display     = displayCtx.getDisplay(overlay)
+        self.__opts        = displayCtx.getOpts(overlay)
 
         self.__nvals              = 0
         self.__finiteData         = np.array([])
@@ -118,24 +107,27 @@ class HistogramSeries(dataseries.DataSeries):
         self.__clippedNonZeroData = np.array([])
         self.__initProperties()
 
-        self.addListener('volume',
-                         self.__name,
-                         self.__volumeChanged)
-        self.addListener('dataRange',
-                         self.__name,
-                         self.__dataRangeChanged)
-        self.addListener('nbins',
-                         self.__name,
-                         self.__histPropsChanged)
-        self.addListener('autoBin',
-                         self.__name,
-                         self.__histPropsChanged)
-        self.addListener('ignoreZeros',
-                         self.__name,
-                         self.__histPropsChanged)
-        self.addListener('includeOutliers',
-                         self.__name,
-                         self.__histPropsChanged)
+        self.__display.addListener('overlayType',
+                                   self.__name,
+                                   self.__overlayTypeChanged)
+        self.__opts   .addListener('volume',
+                                   self.__name,
+                                   self.__volumeChanged)
+        self          .addListener('dataRange',
+                                   self.__name,
+                                   self.__dataRangeChanged)
+        self          .addListener('nbins',
+                                   self.__name,
+                                   self.__histPropsChanged)
+        self          .addListener('autoBin',
+                                   self.__name,
+                                   self.__histPropsChanged)
+        self          .addListener('ignoreZeros',
+                                   self.__name,
+                                   self.__histPropsChanged)
+        self          .addListener('includeOutliers',
+                                   self.__name,
+                                   self.__histPropsChanged)
 
 
     def destroy(self):
@@ -143,12 +135,16 @@ class HistogramSeries(dataseries.DataSeries):
         is no longer being used.
         """
 
-        self.removeListener('nbins',           self.__name)
-        self.removeListener('ignoreZeros',     self.__name)
-        self.removeListener('includeOutliers', self.__name)
-        self.removeListener('volume',          self.__name)
-        self.removeListener('dataRange',       self.__name)
-        self.removeListener('nbins',           self.__name)
+        self.__display.removeListener('overlayType',     self.__name)
+        self.__opts   .removeListener('volume',          self.__name)
+        self          .removeListener('nbins',           self.__name)
+        self          .removeListener('ignoreZeros',     self.__name)
+        self          .removeListener('includeOutliers', self.__name)
+        self          .removeListener('dataRange',       self.__name)
+        self          .removeListener('nbins',           self.__name)
+
+        self.__opts    = None
+        self.__display = None
 
 
     def redrawProperties(self):
@@ -235,7 +231,7 @@ class HistogramSeries(dataseries.DataSeries):
 
                 self.nbins = autoBin(nzData, self.dataRange.x)
 
-            if not self.overlay.is4DImage():
+            if self.overlay.ndims < 4:
 
                 self.__finiteData  = finData
                 self.__nonZeroData = nzData
@@ -252,13 +248,21 @@ class HistogramSeries(dataseries.DataSeries):
         async.run(init, onFinish=onFinish)
 
 
-    def __volumeChanged(
-            self,
-            ctx=None,
-            value=None,
-            valid=None,
-            name=None,
-            callHistPropsChanged=True):
+    def __overlayTypeChanged(self, *a):
+        """Called when the :attr:`.Display.overlayType` changes. When this
+        happens, the :class:`.DisplayOpts` instance associated with the
+        overlay gets destroyed and recreated. This method de-registers
+        and re-registers property listeners as needed.
+        """
+        oldOpts     = self.__opts
+        newOpts     = self.__displayCtx.getOpts(self.overlay)
+        self.__opts = newOpts
+
+        oldOpts.removeListener('volume', self.__name)
+        newOpts.addListener(   'volume', self.__name, self.__volumeChanged)
+
+
+    def __volumeChanged(self, *args, **kwargs):
         """Called when the :attr:`volume` property changes, and also by the
         :meth:`__initProperties` method.
 
@@ -273,9 +277,10 @@ class HistogramSeries(dataseries.DataSeries):
         :meth:`.HasProperties.addListener` method).
         """
 
-        if self.overlay.is4DImage(): data = self.overlay[..., self.volume]
-        else:                        data = self.overlay[:]
+        callHistPropsChanged = kwargs.pop('callHistPropsChanged', True)
+        callPropNotify       = kwargs.pop('callPropNotify',       True)
 
+        data = self.overlay[self.__opts.index()]
         data = data[np.isfinite(data)]
 
         self.__finiteData  = data
@@ -283,17 +288,11 @@ class HistogramSeries(dataseries.DataSeries):
 
         self.__dataRangeChanged(callHistPropsChanged=False)
 
-        if callHistPropsChanged:
-            self.__histPropsChanged()
+        if callHistPropsChanged: self.__histPropsChanged()
+        if callPropNotify:       self.propNotify('dataRange')
 
 
-    def __dataRangeChanged(
-            self,
-            ctx=None,
-            value=None,
-            valid=None,
-            name=None,
-            callHistPropsChanged=True):
+    def __dataRangeChanged(self, *args, **kwargs):
         """Called when the :attr:`dataRange` property changes, and also by the
         :meth:`__initProperties` and :meth:`__volumeChanged` methods.
 
@@ -305,6 +304,8 @@ class HistogramSeries(dataseries.DataSeries):
         called due to a property change (see the
         :meth:`.HasProperties.addListener` method).
         """
+
+        callHistPropsChanged = kwargs.pop('callHistPropsChanged', True)
         finData = self.__finiteData
         nzData  = self.__nonZeroData
 
@@ -371,7 +372,7 @@ class HistogramSeries(dataseries.DataSeries):
         hrange              = (self.dataRange.xlo,  self.dataRange.xhi)
         drange              = (self.dataRange.xmin, self.dataRange.xmax)
         histX, histY, nvals = histogram(data,
-                                        nbins,
+                                        self.nbins,
                                         hrange,
                                         drange,
                                         self.includeOutliers,

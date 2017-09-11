@@ -259,6 +259,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.addListener('profile', name, self.__profileChanged)
 
+        from fsleyes.actions.correlate import PearsonCorrelateAction
+
+        self.__pCorrAction = PearsonCorrelateAction(
+            self.getOverlayList(),
+            self.getDisplayContext(),
+            self)
+
+        self.pearsonCorrelation.bindProps('enabled', self.__pCorrAction)
+
         # Call the __onResize method to refresh
         # the slice canvases when the canvas
         # panel is resized, so aspect ratio
@@ -293,11 +302,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
         self.__removeEditMenu()
+        self.__pCorrAction.destroy()
 
-        self.__xcanvas  = None
-        self.__ycanvas  = None
-        self.__zcanvas  = None
-        self.__labelMgr = None
+        self.__xcanvas     = None
+        self.__ycanvas     = None
+        self.__zcanvas     = None
+        self.__labelMgr    = None
+        self.__pCorrAction = None
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -392,6 +403,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
                          ortho=self,
                          floatPane=floatPane)
+
+
+    @actions.action
+    def pearsonCorrelation(self):
+        """Executes a :class:`.PearsonCorrelateAction`. """
+        self.__pCorrAction()
 
 
     @actions.action
@@ -511,7 +528,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         return [self.toggleEditMode,
                 self.toggleCropMode,
-                self.toggleEditTransformPanel]
+                self.toggleEditTransformPanel,
+                self.pearsonCorrelation]
 
 
     def getGLCanvases(self):

@@ -18,7 +18,6 @@ from   fsl.utils.platform  import platform         as fslplatform
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
-import fsleyes.colourmaps                          as colourmaps
 import fsleyes.displaycontext                      as displayctx
 import fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsleyes.controls.overlayinfopanel           as overlayinfopanel
@@ -851,8 +850,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         # number of seconds to wait until
         # triggering the next frame.
         rate    = self.movieRate
-        rateMin = self.getConstraint('movieRate', 'minval')
-        rateMax = self.getConstraint('movieRate', 'maxval')
+        rateMin = self.getAttribute('movieRate', 'minval')
+        rateMax = self.getAttribute('movieRate', 'maxval')
 
         # Special case/hack - if this is a Scene3DPanel,
         # and the movie axis is X/Y/Z, we always

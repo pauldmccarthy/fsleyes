@@ -135,7 +135,18 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
 
     volume = props.Int(minval=0, maxval=0, default=0, clamped=True)
-    """If the ``Image`` is 4D, the current volume to display."""
+    """If the ``Image`` has more than 3 dimensions, the current volume to
+    display. The volume dimension is controlled by the :attr:`volumeDim`
+    property.
+    """
+
+
+    volumeDim = props.Int(minval=0, maxval=5, default=0, clamped=True)
+    """For images with more than three dimensions, this property controls
+    the dimension that the :attr:`volume` property indexes into. When the
+    ``volumeDim`` changes, the ``volume`` for the previous ``volumeDim``
+    is fixed at its last value, and used for subsequent lookups.
+    """
 
 
     transform = props.Choice(
@@ -221,17 +232,32 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         overlay = self.overlay
 
-        # is this a 4D volume?
-        if len(self.overlay.shape) == 4:
-            self.setConstraint('volume', 'maxval', overlay.shape[3] - 1)
+        self.__child = self.getParent() is not None
 
-        self.__registered = self.getParent() is not None
+        if self.__child:
 
-        if self.__registered:
+            # is this a >3D volume?
+            ndims = self.overlay.ndims
+
+            # We store indices for every dimension
+            # past the XYZ dims. Whenever the volumeDim
+            # changes, we cache the index for the old
+            # dimensions, and restore the index for the
+            # new dimension.
+            self.setAttribute('volumeDim', 'maxval', max(0, ndims - 4))
+            self.setAttribute('volume',    'cache',  [0] * (ndims - 3))
+
+            if ndims <= 3:
+                self.setAttribute('volume', 'maxval', 0)
+
             overlay.register(self.name,
                              self.__overlayTransformChanged,
                              topic='transform')
 
+            self.addListener('volumeDim',
+                             self.name,
+                             self.__volumeDimChanged,
+                             immediate=True)
             self.addListener('transform',
                              self.name,
                              self.__transformChanged,
@@ -250,18 +276,77 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self.__xforms = {}
             self.__setupTransforms()
             self.__transformChanged()
+            self.__volumeDimChanged()
 
 
     def destroy(self):
         """Calls the :meth:`.DisplayOpts.destroy` method. """
 
-        if self.__registered:
+        if self.__child:
             self.overlay.deregister(self.name, topic='transform')
+            self.removeListener('volumeDim',    self.name)
             self.removeListener('transform',    self.name)
             self.removeListener('customXform',  self.name)
             self.removeListener('displayXform', self.name)
 
         fsldisplay.DisplayOpts.destroy(self)
+
+
+    def __toggleSiblingListeners(self, enable=True):
+        """Enables/disables the ``volumeDim`` listeners of sibling
+        ``NiftiOpts`` instances. This is used by the :meth:`__volumeDimChanged`
+        method to avoid nastiness.
+        """
+        for s in self.getParent().getChildren():
+            if s is not self:
+                if enable: s.enableListener( 'volumeDim', s.name)
+                else:      s.disableListener('volumeDim', s.name)
+
+
+    def __volumeDimChanged(self, *a):
+        """Called when the :attr:`volumeDim` changes. Saves the value of
+        ``volume`` for the last ``volumeDim``, and restores the previous
+        value of ``volume`` for the new ``volumeDim``.
+        """
+
+        if self.overlay.ndims <= 3:
+            return
+
+        # Here we disable volumeDim listeners on all
+        # sibling instances, then save/restore the
+        # volume value and properties asynchronously,
+        # then re-enable the slblings.  This is a
+        # horrible means of ensuring that only the
+        # first VolumeOpts instance (out of a set of
+        # synchronised instances) updates the volume
+        # value and properties. The other instances
+        # will be updated through synchronisation.
+        # This is necessary because subsequent
+        # instances would corrupt the update made by
+        # the first instance.
+        #
+        # A nicer way to do things like this would be
+        # nice.
+        def update():
+
+            oldVolume    = self.volume
+            oldVolumeDim = self.getLastValue('volumeDim')
+
+            if oldVolumeDim is None:
+                oldVolumeDim = 0
+
+            cache               = list(self.getAttribute('volume', 'cache'))
+            cache[oldVolumeDim] = oldVolume
+            newVolume           = cache[self.volumeDim]
+            newVolumeLim        = self.overlay.shape[self.volumeDim + 3] - 1
+
+            self.setAttribute('volume', 'maxval', newVolumeLim)
+            self.setAttribute('volume', 'cache',  cache)
+            self.volume = newVolume
+
+        self.__toggleSiblingListeners(False)
+        props.safeCall(update)
+        props.safeCall(self.__toggleSiblingListeners, True)
 
 
     def __overlayTransformChanged(self, *a):
@@ -687,6 +772,39 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                 return None
 
         return vox
+
+
+    def index(self, slc=None, atVolume=True):
+        """Given a slice object ``slc``, which indexes into the X, Y, and Z
+        dimensions, fills it to slice every dimension of the image, using
+        the current :attr:`volume` and :attr:`volumeDim`, and saved values
+        for the other volume dimensions.
+
+        :arg slc:      Something which can slice the first three dimensions
+                       of the image. If ``None``, defaults to ``[:, :, :]``.
+
+        :arg atVolume: If ``True``, the returned slice will index the current
+                       :attr:`volume` of the current :attr:`volumeDim`.
+                       Otherwise the returned slice will index across the whole
+                       :attr:`volumeDim`.
+        """
+
+        if slc is None:
+            slc = [slice(None), slice(None), slice(None)]
+
+        if self.overlay.ndims <= 3:
+            return tuple(slc)
+
+        newSlc      = [None] * self.overlay.ndims
+        newSlc[:3]  = slc
+        newSlc[ 3:] = self.getAttribute('volume', 'cache')
+
+        vdim = self.volumeDim + 3
+
+        if atVolume: newSlc[vdim] = self.volume
+        else:        newSlc[vdim] = slice(None)
+
+        return tuple(newSlc)
 
 
 class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):

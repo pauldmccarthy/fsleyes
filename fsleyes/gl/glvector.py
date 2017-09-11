@@ -345,7 +345,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         setattr(self, optsAttr, opts)
 
         def volumeChange(*a):
-            tex.set(volume=opts.volume)
+            tex.set(volume=opts.index()[3:])
             self.asyncUpdateShaderState(alwaysNotify=True)
 
         # We set overwrite=True, because
@@ -425,7 +425,7 @@ class GLVectorBase(glimageobject.GLImageObject):
             if unsynced:
                 texName = '{}_unsync_{}'.format(texName, id(opts))
 
-        if opts is not None: volume = opts.volume
+        if opts is not None: volume = opts.index()[3:]
         else:                volume = 0
 
         tex = glresources.get(

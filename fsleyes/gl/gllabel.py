@@ -204,7 +204,7 @@ class GLLabel(glimageobject.GLImageObject):
             texName,
             self.image,
             notify=False,
-            volume=opts.volume)
+            volume=opts.index()[3:])
 
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
@@ -326,7 +326,7 @@ class GLLabel(glimageobject.GLImageObject):
         """
         opts = self.opts
 
-        self.imageTexture.set(volume=opts.volume)
+        self.imageTexture.set(volume=opts.index()[3:])
         self.updateShaderState(alwaysNotify=True)
 
 

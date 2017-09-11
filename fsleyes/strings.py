@@ -466,6 +466,7 @@ actions = TypeDict({
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
+    'OrthoPanel.pearsonCorrelation'       : 'Seed correlation (Pearson)',
     'OrthoPanel.centreCursorWorld'        : 'Centre cursor at (0, 0, 0)',
 
     'OrthoPanel.toggleCursor'           : 'Show/hide location cursor',
@@ -857,8 +858,7 @@ properties = TypeDict({
     'Display.brightness'        : 'Brightness',
     'Display.contrast'          : 'Contrast',
 
-    'NiftiOpts.transform'  : 'Image transform',
-    'NiftiOpts.volume'     : 'Volume',
+    'NiftiOpts.custom_volume' : 'Volume',
 
     'ColourMapOpts.displayRange'     : 'Display range',
     'ColourMapOpts.clippingRange'    : 'Clipping range',
@@ -1351,7 +1351,7 @@ about = {
     # string.
     'libs' : [                 'jinja2',             'matplotlib',
               'nibabel',       'numpy',              'PIL',
-              'fsleyes_props', 'fsleyes_widgets',    'fsl',
+              'fsleyes_props', 'fsleyes_widgets',    'fsl.version',
               'OpenGL',        'pyparsing',          'scipy',
               'six',           'fsleyes.gl.trimesh', 'wx'],
 }

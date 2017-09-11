@@ -507,13 +507,7 @@ class Selection(notifier.Notifier):
                   and offset of this array into the full selection image.
         """
 
-        if   len(self.__image.shape) == 3:
-            data = self.__image[:]
-        elif len(self.__image.shape) == 4:
-            data = self.__image[:, :, :, self.__opts.volume]
-        else:
-            raise RuntimeError('Only 3D and 4D images are currently supported')
-
+        data = self.__image[self.__opts.index()]
         block, offset = selectByValue(data,
                                       seedLoc,
                                       precision,

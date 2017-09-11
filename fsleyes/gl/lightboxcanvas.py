@@ -434,16 +434,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # All slices are going to be displayed, so
         # we'll 'disable' the topRow property
         if self._totalRows < opts.nrows:
-            opts.setConstraint('topRow', 'minval', 0)
-            opts.setConstraint('topRow', 'maxval', 0)
+            opts.setAttribute('topRow', 'minval', 0)
+            opts.setAttribute('topRow', 'maxval', 0)
 
         # nrows slices are going to be displayed,
         # and the topRow property can be used to
         # scroll through all available rows.
         else:
-            opts.setConstraint('topRow',
-                               'maxval',
-                               self._totalRows - opts.nrows)
+            opts.setAttribute('topRow', 'maxval', self._totalRows - opts.nrows)
 
 
     def _zPosChanged(self, *a):
@@ -497,7 +495,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts = self.opts
 
         if len(self.overlayList) == 0:
-            opts.setConstraint('zrange', 'minDistance', 0)
+            opts.setAttribute('zrange', 'minDistance', 0)
             opts.zrange.x     = (0, 0)
             opts.sliceSpacing = 0
             return
@@ -521,8 +519,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Update the zrange and slice
         # spacing constraints
         opts.zrange.setLimits(0, *newZRange)
-        opts.setConstraint('zrange',       'minDistance', newZGap)
-        opts.setConstraint('sliceSpacing', 'minval',      newZGap)
+        opts.setAttribute('zrange',       'minDistance', newZGap)
+        opts.setAttribute('sliceSpacing', 'minval',      newZGap)
 
 
     def _overlayBoundsChanged(self, *a):

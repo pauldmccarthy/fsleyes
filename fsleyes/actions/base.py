@@ -168,7 +168,8 @@ class Action(props.HasProperties):
                 break
 
         if index == -1:
-            raise ValueError('Widget {} is not bound'.format(type().__name__))
+            raise ValueError('Widget {} [{}] is not bound'
+                             .format(type(widget).__name__, id(widget)))
 
         self.__unbindWidget(    index)
         self.__boundWidgets.pop(index)
