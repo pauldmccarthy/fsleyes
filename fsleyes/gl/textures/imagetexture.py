@@ -10,6 +10,7 @@ for storing a :class:`.Image` instance.
 
 
 import logging
+import collections
 
 import numpy as np
 
@@ -44,7 +45,7 @@ class ImageTexture(texture3d.Texture3D):
 
         :arg image:  The :class:`.Image` instance.
 
-        :arg volume: Initial volume, for 4D images.
+        :arg volume: Initial volume index/indices, for >3D images.
 
         All other arguments are passed through to the
         :meth:`.Texture3D.__init__` method, and thus used as initial texture
@@ -86,8 +87,11 @@ class ImageTexture(texture3d.Texture3D):
 
 
     def setVolume(self, volume):
-        """For 4D :class:`.Image` instances, specifies the volume to use
-        as the 3D texture data.
+        """For :class:`.Image` instances with more than three dimensions,
+        specifies the indices for the fourth and above dimensions with which
+        to extract the 3D texture data. If the image has four dimensions, this
+        may be a scalar, otherwise it must be a sequence of
+        (``Image.ndims - 3``) the correct length.
         """
         self.set(volume=volume)
 
@@ -155,28 +159,35 @@ class ImageTexture(texture3d.Texture3D):
         normRange  = kwargs.pop('normaliseRange', None)
         volume     = kwargs.pop('volume',         self.__volume)
         volRefresh = kwargs.pop('volRefresh',     True)
+        image      = self.image
+        ndims      = image.ndims
 
         if normRange is None:
-            normRange = self.image.dataRange
+            normRange = image.dataRange
 
-        is4D   = self.__nvals == 1          and \
-                 len(self.image.shape) == 4 and \
-                 self.image.shape[3] > 1
+        if ndims == 3:
+            volume = None
+        else:
+            if volume is None and self.__volume is None:
+                volume = [0] * (ndims  - 3)
 
-        if volume is None and self.__volume is None:
-            volume = 0
+            elif not isinstance(volume, collections.Sequence):
+                volume = [volume]
+
+            if len(volume) != ndims - 3:
+                raise ValueError('Invalid volume indices for {} '
+                                 'dims: {}'.format(ndims, volume))
 
         if (not volRefresh) and volume == self.__volume:
             return
 
-        if not is4D:
-            kwargs['data'] = self.image[:]
+        self.__volume = volume
 
-        else:
+        slc = [slice(None), slice(None), slice(None)]
+        if volume is not None:
+            slc += volume
 
-            self.__volume  = volume
-            kwargs['data'] = self.image[..., volume]
-
+        kwargs['data']           = self.image[tuple(slc)]
         kwargs['normaliseRange'] = normRange
 
         return texture3d.Texture3D.set(self, **kwargs)

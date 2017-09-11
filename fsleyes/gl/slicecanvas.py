@@ -384,8 +384,8 @@ class SliceCanvas(object):
         opts       = self.opts
         xmin, xmax = self.displayCtx.bounds.getRange(opts.xax)
         ymin, ymax = self.displayCtx.bounds.getRange(opts.yax)
-        zoommin    = opts.getConstraint('zoom', 'minval')
-        zoommax    = opts.getConstraint('zoom', 'maxval')
+        zoommin    = opts.getAttribute('zoom', 'minval')
+        zoommax    = opts.getAttribute('zoom', 'maxval')
 
         xlen    = xmax    - xmin
         ylen    = ymax    - ymin
@@ -947,8 +947,8 @@ class SliceCanvas(object):
         # Assuming that minval == 100.0
         opts    = self.opts
         zoom    = opts.zoom
-        minzoom = opts.getConstraint('zoom', 'minval')
-        maxzoom = opts.getConstraint('zoom', 'maxval')
+        minzoom = opts.getAttribute('zoom', 'minval')
+        maxzoom = opts.getAttribute('zoom', 'maxval')
 
         # Don't break the maths below
         if zoom <= 0:

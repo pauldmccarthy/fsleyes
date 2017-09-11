@@ -549,7 +549,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         else:                 npoints = 1
 
         self.vertexDataIndex = 0
-        self.setConstraint('vertexDataIndex', 'maxval', npoints - 1)
+        self.setAttribute('vertexDataIndex', 'maxval', npoints - 1)
 
         self.updateDataRange()
 

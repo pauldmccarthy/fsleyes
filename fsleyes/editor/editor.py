@@ -213,12 +213,10 @@ class Editor(actions.ActionProvider):
         yhi = ylo + selectBlock.shape[1]
         zhi = zlo + selectBlock.shape[2]
 
-        if   len(image.shape) == 3:
-            oldVals = image[xlo:xhi, ylo:yhi, zlo:zhi]
-        elif len(image.shape) == 4:
-            oldVals = image[xlo:xhi, ylo:yhi, zlo:zhi, opts.volume]
-        else:
-            raise RuntimeError('Only 3D and 4D images are currently supported')
+        slc     = opts.index((slice(xlo, xhi),
+                              slice(ylo, yhi),
+                              slice(zlo, zhi)))
+        oldVals = image[slc]
 
         selectBlock = selectBlock == 0
         newVals[selectBlock] = oldVals[selectBlock]
@@ -366,14 +364,7 @@ class Editor(actions.ActionProvider):
         selection = np.array(self.__selection.getSelection() > 0)
         data      = np.zeros(image.shape[:3], dtype=image.dtype)
 
-        if   len(image.shape) == 3:
-            data[selection] = image[selection]
-
-        elif len(image.shape) == 4:
-            data[selection] = image[:, :, :, opts.volume][selection]
-        else:
-            raise RuntimeError('Only 3D and 4D images '
-                               'are currently supported')
+        data[selection] = image[opts.index()][selection]
 
         return data, selection
 
@@ -446,9 +437,6 @@ class Editor(actions.ActionProvider):
         image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
 
-        if image.is4DImage(): volume = opts.volume
-        else:                 volume = None
-
         if isinstance(change, ValueChange):
             log.debug('{}: changing image {} data - offset '
                       '{}, volume {}, size {}'.format(
@@ -460,8 +448,7 @@ class Editor(actions.ActionProvider):
 
             sliceobj = self.__makeSlice(change.offset,
                                         change.newVals.shape,
-                                        volume)
-
+                                        opts.index()[3:])
             image[sliceobj] = change.newVals
 
         elif isinstance(change, SelectionChange):
@@ -480,9 +467,6 @@ class Editor(actions.ActionProvider):
         image = change.overlay
         opts  = self.__displayCtx.getOpts(image)
 
-        if image.is4DImage(): volume = opts.volume
-        else:                 volume = None
-
         if isinstance(change, ValueChange):
             log.debug('{}: reverting image {} data change - offset '
                       '{}, volume {}, size {}'.format(
@@ -494,7 +478,7 @@ class Editor(actions.ActionProvider):
 
             sliceobj = self.__makeSlice(change.offset,
                                         change.oldVals.shape,
-                                        volume)
+                                        opts.index()[3:])
             image[sliceobj] = change.oldVals
 
         elif isinstance(change, SelectionChange):
@@ -506,9 +490,10 @@ class Editor(actions.ActionProvider):
 
     def __makeSlice(self, offset, shape, volume=None):
         """Generate a tuple of ``slice`` objects and/or integers, suitable for
-        indexing a region of a 3D image at the given ``offset``, with the given
-        ``shape``. If the image is 4D, the generated slice will index the
-        specified ``volume``.
+        indexing a region of an image at the given ``offset``, with the given
+        ``shape``. If the image has more than three dimensions, the generated
+        slice will index the specified ``volume`` (assumed to be a sequence of
+        indices).
         """
 
         sliceobjs = []
@@ -520,7 +505,7 @@ class Editor(actions.ActionProvider):
             sliceobjs.append(slice(offset[i], offset[i] + shape[i], 1))
 
         if volume is not None:
-            sliceobjs.append(volume)
+            sliceobjs.extend(volume)
 
         return tuple(sliceobjs)
 
@@ -536,7 +521,8 @@ class ValueChange(object):
         """Create a ``ValueChange``.
 
         :arg overlay: The :class:`.Image` instance.
-        :arg volume:  Volume index, if ``overlay`` is 4D.
+        :arg volume:  Sequence of volume indices, if ``overlay`` has more
+                      than 3 dimensions.
         :arg offset:  Location (voxel coordinates) of the change.
         :arg oldVals: A ``numpy`` array containing the old image values.
         :arg newVals: A ``numpy`` array containing the new image values.

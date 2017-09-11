@@ -623,7 +623,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # level so that all created SceneOpts
     # instances will default to it
     if namespace.performance is not None:
-        fsldisplay.SceneOpts.performance.setConstraint(
+        fsldisplay.SceneOpts.performance.setAttribute(
             None, 'default', namespace.performance)
 
     # If a perspective has been specified,

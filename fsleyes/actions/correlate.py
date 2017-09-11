@@ -40,19 +40,19 @@ class CorrelateAction(base.Action):
     and is used to store and display the correlation values.
     """
 
-    def __init__(self, overlayList, displayCtx, frame):
+    def __init__(self, overlayList, displayCtx, panel):
         """Create a ``CorrelateAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
+        :arg panel:       The :class:`.CanvasPanel` that owns this action.
         """
 
         base.Action.__init__(self, self.__runCorrelateAction)
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        self.__panel       = panel
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
 
         displayCtx .addListener('selectedOverlay',
@@ -102,8 +102,7 @@ class CorrelateAction(base.Action):
         self.enabled = isCorrOvl or  \
                        ((ovl is not None)               and
                         isinstance(ovl, fslimage.Image) and
-                        len(ovl.shape) == 4             and
-                        ovl.shape[3] > 1)
+                        ovl.ndims > 3)
 
 
     def __overlayListChanged(self, *a):
@@ -201,7 +200,7 @@ class CorrelateAction(base.Action):
         if xyz is None:
             return
 
-        data = ovl.nibImage.get_data()
+        data = ovl.nibImage.get_data()[opts.index(atVolume=False)]
 
         # The correlation calculation is performed
         # on a separate thread. This thread then

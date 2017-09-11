@@ -334,8 +334,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         the number of slice columns shown.
         """
         opts       = self.getSceneOptions()
-        minval     = opts.getConstraint('zoom', 'minval')
-        maxval     = opts.getConstraint('zoom', 'maxval')
+        minval     = opts.getAttribute('zoom', 'minval')
+        maxval     = opts.getAttribute('zoom', 'maxval')
         normZoom   = 1.0 - (opts.zoom - minval) / float(maxval)
         opts.ncols = int(1 + np.round(normZoom * 29))
 

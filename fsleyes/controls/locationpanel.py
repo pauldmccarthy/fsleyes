@@ -378,23 +378,22 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             opts.addListener(n, self._name, self.__infoOptsChanged)
 
         # Enable the volume widget if the
-        # overlay is a 4D image, and bind
+        # overlay is a NIFTI image with more
+        # than three dimensions, and bind
         # the widget to the volume property
-        # of  the associated NiftiOpts
-        # instance
-        is4D = isinstance(overlay, fslimage.Nifti) and \
-               len(overlay.shape) >= 4             and \
-               overlay.shape[3] > 1
+        # of  the associated NiftiOpts instance
+        isND = isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3
 
-        if is4D:
+        if isND:
             props.bindWidget(
                 self.__volume, opts, 'volume', floatspin.EVT_FLOATSPIN)
 
-            self.__volume.SetRange(0, overlay.shape[3] - 1)
-            self.__volume.SetValue(opts.volume)
+            opts.addListener('volumeDim', self._name, self.__volumeDimChanged)
 
             self.__volume     .Enable()
             self.__volumeLabel.Enable()
+            self.__volumeDimChanged()
+
         else:
             self.__volume.SetRange(0, 0)
             self.__volume.SetValue(0)
@@ -429,15 +428,28 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         for p in boundPropNames: opts.removeListener(p, self._name)
         for p in infoPropNames:  opts.removeListener(p, self._name)
 
-        is4D      = isinstance(overlay, fslimage.Nifti) and \
-                    len(overlay.shape) >= 4             and \
-                    overlay.shape[3] > 1
+        isND = isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3
 
-        if is4D:
+        if isND:
             props.unbindWidget(self.__volume,
                                opts,
                                'volume',
                                floatspin.EVT_FLOATSPIN)
+            opts.removeListener('volumeDim', self._name)
+
+
+    def __volumeDimChanged(self, *a):
+        """Called when the selected overlay is a :class:`.Nifti`, and its
+        :attr:`.NiftiOpts.volumeDim` property changes. Updates the volume
+        wodget.
+        """
+        overlay = self.__registeredOverlay
+        opts    = self.__registeredOpts
+        volume  = opts.volume
+        vdim    = opts.volumeDim + 3
+
+        self.__volume.SetRange(0, overlay.shape[vdim] - 1)
+        self.__volume.SetValue(volume)
 
 
     def __boundsOptsChanged(self, *a):
@@ -707,11 +719,9 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                 vloc = opts.getVoxel()
 
                 if vloc is not None:
-                    if overlay.is4DImage():
-                        vloc = vloc + [opts.volume]
-
-                    vloc = [int(v) for v in vloc]
-                    vval = overlay[tuple(vloc)]
+                    vloc = tuple(int(v) for v in vloc)
+                    vloc = opts.index(vloc)
+                    vval = overlay[vloc]
                     vloc = ' '.join(map(str, vloc))
 
                     if not np.isscalar(vval):

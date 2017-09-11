@@ -178,8 +178,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         else:
 
             rate    = float(self.movieRate)
-            rateMin = self.getConstraint('movieRate', 'minval')
-            rateMax = self.getConstraint('movieRate', 'maxval')
+            rateMin = self.getAttribute('movieRate', 'minval')
+            rateMax = self.getAttribute('movieRate', 'maxval')
             rate    = 0.1 + 0.9 * (rate - rateMin) / (rateMax - rateMin)
             rate    = rate * np.pi / 10
 
