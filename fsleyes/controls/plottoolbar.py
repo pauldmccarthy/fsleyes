@@ -82,6 +82,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         """
         self.__commonTools = None
         self.__commonNav   = None
+        self.__plotPanel   = None
 
         fsltoolbar.FSLeyesToolBar.destroy(self)
 

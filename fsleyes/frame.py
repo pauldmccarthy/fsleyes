@@ -831,6 +831,11 @@ class FSLeyesFrame(wx.Frame):
         dctx = self.__viewPanelDCs   .pop(   panel)
         menu = self.__viewPanelMenus .pop(   panel, None)
 
+        for shortcutList in self.__viewPanelShortcuts.values():
+            for key in list(shortcutList.keys()):
+                if key is panel:
+                    shortcutList.pop(key)
+
         log.debug('Destroying {} ({}) and '
                   'associated DisplayContext ({})'.format(
                       type(panel).__name__,

@@ -347,9 +347,6 @@ class PlotPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.destroy`.
         """
 
-        self.__drawQueue.stop()
-        self.__drawQueue = None
-
         self.removeListener('dataSeries', self.__name)
         self.removeListener('artists',    self.__name)
         self.removeListener('limits',     self.__name)
@@ -374,8 +371,14 @@ class PlotPanel(viewpanel.ViewPanel):
                 ds.removeListener(propName, self.__name)
             ds.destroy()
 
-        self.dataSeries = []
-        self.artists    = []
+        self.__drawQueue.stop()
+        self.__drawQueue       = None
+        self.__drawnDataSeries = None
+        self.dataSeries        = []
+        self.artists           = []
+        self.__figure          = None
+        self.__axis            = None
+        self.__canvas          = None
 
         viewpanel.ViewPanel.destroy(self)
 

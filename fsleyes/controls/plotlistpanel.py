@@ -89,6 +89,8 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         """
 
         self.__plotPanel.removeListener('dataSeries', self._name)
+        self.__plotPanel = None
+        self.__dsList.Clear()
         fslpanel.FSLeyesPanel.destroy(self)
 
 

@@ -290,6 +290,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :class:`.SliceCanvas` panels, and calls :meth:`.CanvasPanel.destroy`.
         """
 
+        sceneOpts    = self.getSceneOptions()
+        contentPanel = self.getContentPanel()
+
+        sceneOpts        .removeListener('showXCanvas',      self._name)
+        sceneOpts        .removeListener('showYCanvas',      self._name)
+        sceneOpts        .removeListener('showZCanvas',      self._name)
+        sceneOpts        .removeListener('labelSize',        self._name)
+        sceneOpts        .removeListener('fgColour',         self._name)
+        sceneOpts        .removeListener('showLabels',       self._name)
         self._displayCtx .removeListener('location',         self._name)
         self._displayCtx .removeListener('bounds',           self._name)
         self._displayCtx .removeListener('selectedOverlay',  self._name)
@@ -303,6 +312,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas.destroy()
         self.__removeEditMenu()
         self.__pCorrAction.destroy()
+
+        contentPanel.Unbind(wx.EVT_SIZE)
 
         self.__xcanvas     = None
         self.__ycanvas     = None
