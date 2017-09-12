@@ -106,6 +106,7 @@ class HistogramSeries(dataseries.DataSeries):
         self.__clippedFiniteData  = np.array([])
         self.__clippedNonZeroData = np.array([])
         self.__volCache           = cache.Cache(maxsize=10)
+        self.__histCache          = cache.Cache(maxsize=100)
 
         self.__display.addListener('overlayType',
                                    self.__name,
@@ -148,9 +149,12 @@ class HistogramSeries(dataseries.DataSeries):
         self          .removeListener('dataRange',       self.__name)
         self          .removeListener('nbins',           self.__name)
 
-        self.__volCache = None
-        self.__opts     = None
-        self.__display  = None
+        self.__volCache .clear()
+        self.__histCache.clear()
+        self.__volCache  = None
+        self.__histCache = None
+        self.__opts      = None
+        self.__display   = None
 
 
     def redrawProperties(self):
@@ -229,12 +233,15 @@ class HistogramSeries(dataseries.DataSeries):
         #  - finite minimum
         #  - finite maximum
         #
-        # The cache size is restricted so we don't
-        # blow out RAM
+        # The cache size is restricted (see its
+        # creation in __init__) so we don't blow
+        # out RAM
         volkey   = (opts.volumeDim, opts.volume)
         volprops = self.__volCache.get(volkey, None)
 
         if volprops is None:
+            log.debug('Volume changed {} - extracting '
+                      'finite/non-zero data'.format(volkey))
             finData = overlay[opts.index()]
             finData = finData[np.isfinite(finData)]
             nzData  = finData[finData != 0]
@@ -242,6 +249,8 @@ class HistogramSeries(dataseries.DataSeries):
             dmax    = finData.max()
             self.__volCache.put(volkey, (finData, nzData, dmin, dmax))
         else:
+            log.debug('Volume changed {} - got finite/'
+                      'non-zero data from cache'.format(volkey))
             finData, nzData, dmin, dmax = volprops
 
         dist = (dmax - dmin) / 10000.0
@@ -259,7 +268,8 @@ class HistogramSeries(dataseries.DataSeries):
 
             self.__dataRangeChanged()
 
-        self.propNotify('dataRange')
+        with props.skip(self, 'dataRange', self.__name):
+            self.propNotify('dataRange')
 
 
     def __dataRangeChanged(self, *args, **kwargs):
@@ -329,14 +339,29 @@ class HistogramSeries(dataseries.DataSeries):
             if self.hasListener('nbins', self.__name):
                 self.enableListener('nbins', self.__name)
 
-        hrange              = (self.dataRange.xlo,  self.dataRange.xhi)
-        drange              = (self.dataRange.xmin, self.dataRange.xmax)
-        histX, histY, nvals = histogram(data,
-                                        self.nbins,
-                                        hrange,
-                                        drange,
-                                        self.includeOutliers,
-                                        True)
+        # We cache calculated bins and counts
+        # for each combination of parameters,
+        # as histogram calculation can take
+        # time.
+        hrange  = (self.dataRange.xlo,  self.dataRange.xhi)
+        drange  = (self.dataRange.xmin, self.dataRange.xmax)
+        histkey = ((self.__opts.volumeDim, self.__opts.volume),
+                   self.includeOutliers,
+                   hrange,
+                   drange,
+                   self.nbins)
+        cached  = self.__histCache.get(histkey, None)
+
+        if cached is not None:
+            histX, histY, nvals = cached
+        else:
+            histX, histY, nvals = histogram(data,
+                                            self.nbins,
+                                            hrange,
+                                            drange,
+                                            self.includeOutliers,
+                                            True)
+            self.__histCache.put(histkey, (histX, histY, nvals))
 
         self.__xdata = histX
         self.__ydata = histY
