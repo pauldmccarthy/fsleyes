@@ -147,16 +147,6 @@ messages = TypeDict({
                                     'check your cluster_*.txt files.',
     'ClusterPanel.loadingCluster' : 'Loading clusters for COPE{} ({}) ...',
 
-    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange' :
-    'You are now transforming {}. ',
-
-    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange.hint' :
-    'Setting the display space to world coordinates - \n'
-    'this is required when transforming images.',
-
-    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange.suppress' :
-    'Do not show this message again',
-
     'OrthoEditProfile.imageChange'        : 'You are now editing {}. ',
     'OrthoEditProfile.imageChangeHint'    : 'Setting {} as the display '
                                             'space reference\nimage - the '
@@ -360,9 +350,6 @@ titles = TypeDict({
     'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
     'OrthoPanel.toolMenu'                 : 'Tools',
-
-    'OrthoPanel.toggleEditTransformPanel.displaySpaceChange' :
-    'Changing display space for transform',
 
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
     'OrthoCropProfile.imageChange'        : 'Changing cropped image',
@@ -708,6 +695,11 @@ labels = TypeDict({
     'CropImagePanel.robustFovButton'  : 'Robust FOV',
     'CropImagePanel.cancelButton'     : 'Cancel',
 
+    'EditTransformPanel.dsWarning'   :
+    'Warning: Change the display space to "World" to see\n'
+    'the effects of the transformation. You can change it\n'
+    'back in the view settings panel',
+    'EditTransformPanel.changeDS'    : 'Change display space',
     'EditTransformPanel.noOverlay'   : 'Select a NIFTI image',
     'EditTransformPanel.overlayName' : 'Transform {}',
     'EditTransformPanel.oldXform'    : 'Original transform',
