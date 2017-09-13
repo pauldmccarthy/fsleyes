@@ -1302,6 +1302,7 @@ TRANSFORMS = td.TypeDict({
     'VolumeOpts.clippingRange'    : _clippingRangeTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
+    'SceneOpts.fgColour'         : _colourTrans,
     'SceneOpts.cursorColour'     : _colourTrans,
     'MeshOpts.colour'            : _colourTrans,
     'MaskOpts.colour'            : _colourTrans,
@@ -2328,6 +2329,12 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
         worldLoc = displayCtx.worldLocation.xyz
         args    += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
         args    += ['{}'.format(c) for c in worldLoc]
+
+    # display space
+    ds = displayCtx.displaySpace
+    args += ['--{}'.format(ARGUMENTS['Main.displaySpace'][1])]
+    if isinstance(ds, fslimage.Nifti): args += [ds.dataSource]
+    else:                              args += [ds]
 
     # Everything else
     props = OPTIONS.get(sceneOpts, allhits=True)

@@ -104,7 +104,7 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
         exclude=['performance'])
 
     # Add display options for each overlay
-    for overlay in overlayList:
+    for overlay in displayCtx.getOrderedOverlays():
 
         fname   = overlay.dataSource
         ovlArgv = parseargs.generateOverlayArgs(overlay,
