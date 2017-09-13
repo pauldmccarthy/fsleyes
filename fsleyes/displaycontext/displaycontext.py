@@ -17,9 +17,8 @@ import contextlib
 import numpy        as np
 import numpy.linalg as npla
 
-import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
-import fsleyes_props       as props
+import fsl.data.image as fslimage
+import fsleyes_props  as props
 
 
 log = logging.getLogger(__name__)
@@ -168,12 +167,11 @@ class DisplayContext(props.SyncableHasProperties):
 
        A single :class:`.Nifti` overlay is selected as a *reference* image,
        and is displayed in scaled voxel space (with a potential L/R flip for
-       neurological images - :attr:`.NiftiOpts.transform` is set to
+       neurological images - its :attr:`.NiftiOpts.transform` is set to
        ``pixdim-flip``). All other ``Nifti`` overlays are transformed into
        this reference space - their :attr:`.NiftiOpts.transform` property is
-       set to ``custom``, and their :attr:`.NiftiOpts.customXform` matrix is
-       set such that it transforms from the image voxel space to the scaled
-       voxel space of the reference image.
+       set to ``reference``, which results in them being transformed into the
+       scaled voxel space of the reference image.
 
     .. note:: The :attr:`.NiftiOpts.transform` property of any
               :class:`.Nifti` overlay can be set independently of this
@@ -681,7 +679,6 @@ class DisplayContext(props.SyncableHasProperties):
 
             if isinstance(ovl, fslimage.Nifti):
                 opts.detachFromParent('transform')
-                opts.detachFromParent('customXform')
 
 
     def __overlayListChanged(self, *a):
@@ -751,7 +748,6 @@ class DisplayContext(props.SyncableHasProperties):
                     opts.detachFromParent('bounds')
                     if isinstance(overlay, fslimage.Nifti):
                         opts.detachFromParent('transform')
-                        opts.detachFromParent('customXform')
 
         # Ensure that the displaySpace
         # property options are in sync
@@ -876,14 +872,7 @@ class DisplayContext(props.SyncableHasProperties):
         with props.skip(opts, 'bounds', self.__name, ignoreInvalid=True):
             if   space == 'world':  opts.transform = 'affine'
             elif image is space:    opts.transform = 'pixdim-flip'
-            else:
-                refOpts = self.getOpts(space)
-                xform   = transform.concat(
-                    refOpts.getTransform('world', 'pixdim-flip'),
-                    opts   .getTransform('voxel', 'world'))
-
-                opts.customXform = xform
-                opts.transform   = 'custom'
+            else:                   opts.transform = 'reference'
 
 
     def __displaySpaceChanged(self, *a):

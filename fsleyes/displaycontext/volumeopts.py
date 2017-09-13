@@ -175,10 +175,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     (when :attr:`.DisplayContext.displaySpace` ``== 'world'``) - changes to it
     will *not* result in the ::attr:`.DisplayContext.bounds` being updated.
 
-
-    If the :attr:`.DisplayContext.displaySpace` is not equal to ``'world'``,
-    changing the displayXform will not have any immediate effect.
-
     If you change the ``displayXform``, make sure to change it back to an
     identity matrix when you are done.
     """

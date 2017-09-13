@@ -1029,7 +1029,7 @@ choices = TypeDict({
                              'pixdim'      : 'Scaled voxels',
                              'pixdim-flip' : 'Radiological scaled voxels',
                              'id'          : 'Voxels',
-                             'custom'      : 'Custom transformation'},
+                             'reference'   : 'Reference image'},
 
     'VolumeOpts.interpolation' : {'none'   : 'No interpolation',
                                   'linear' : 'Linear interpolation',

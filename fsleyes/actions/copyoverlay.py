@@ -283,7 +283,7 @@ def copyImage(overlayList,
             # But don't clobber the transform, and related,
             # properties, as it is (typically) automatically
             # controlled via the DisplayContext.displaySpace
-            if prop in ('transform', 'bounds', 'customXform'):
+            if prop in ('transform', 'bounds'):
                 continue
 
             val = getattr(srcOpts, prop)

@@ -52,14 +52,6 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
     and :mod:`.saveflirtxfm` modules to load, save, and calculate FLIRT
     transformation matrices. When the user loads a FLIRT matrix, it is used in
     place of the :attr:`.Image.voxToWorldMat` transformation.
-
-
-    .. note:: The transformation that the user defines with this panel is
-              applied to the image coordinates after its voxel-to-world
-              transformation has been applied. Furthermore, the
-              :attr:`.DisplayContext.displaySpace` attribute must be set to
-              ``'world'`` for the :attr:`.NiftiOpts.displayXform` updates to
-              be seen immediately.
     """
 
 

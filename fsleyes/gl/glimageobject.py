@@ -88,7 +88,6 @@ class GLImageObject(globject.GLObject):
             # Invalidate vertices on bounds change
             opts.addListener('bounds',       name, **kwargs)
             opts.addListener('transform',    name, **kwargs)
-            opts.addListener('customXform',  name, **kwargs)
             opts.addListener('displayXform', name, **kwargs)
 
             # Invalidate 3Dclipping on any clip chagnes
@@ -116,7 +115,6 @@ class GLImageObject(globject.GLObject):
 
         opts.removeListener('bounds',          name)
         opts.removeListener('transform',       name)
-        opts.removeListener('customXform',     name)
         opts.removeListener('displayXform',    name)
 
         if self.threedee and isinstance(opts, volume3dopts.Volume3DOpts):
