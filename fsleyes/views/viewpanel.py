@@ -173,6 +173,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Make sure that any control panels are correctly destroyed
         for panelType, panel in self.__panels.items():
+            self.__auiMgr.DetachPane(panel)
             panel.destroy()
 
         # Remove listeners from the overlay
@@ -187,6 +188,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__profileManager.destroy()
 
         # Un-initialise the AUI manager
+        self.__auiMgr.Unbind(aui.EVT_AUI_PANE_CLOSE)
+        self.__auiMgr.Update()
         self.__auiMgr.UnInit()
 
         # The AUI manager does not clear its

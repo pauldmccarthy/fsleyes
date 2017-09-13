@@ -325,6 +325,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts      .removeListener('bgColour',          self.__name)
         self.__opts      .removeListener('fgColour',          self.__name)
 
+        self.__opts = None
+
         viewpanel.ViewPanel.destroy(self)
 
 

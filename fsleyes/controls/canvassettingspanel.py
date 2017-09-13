@@ -68,6 +68,14 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         self.__makeTools()
 
 
+    def destroy(self):
+        """Must be called when this ``CanvasSettingsPanel`` is no longer
+        needed. Clears references and calls the base class ``destroy`` method.
+        """
+        self.__canvasPanel = None
+        super(CanvasSettingsPanel, self).destroy()
+
+
     def __makeTools(self):
 
         displayCtx  = self._displayCtx

@@ -53,6 +53,14 @@ class ToggleControlPanelAction(base.ToggleAction):
         auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED, self.__viewPanelChanged)
 
 
+    def destroy(self):
+        """Must be called when this ``ToggleControlPanelAction`` is no longer
+        used. Clears references, and calls the base-class ``destroy`` method.
+        """
+        base.ToggleAction.destroy(self)
+        self.__viewPanel = None
+
+
     def __viewPanelChanged(self, ev):
         """Called whenever a control panel is added to/removed from the
         :class:`.ViewPanel` that owns this ``ToggleControlPanelAction``.

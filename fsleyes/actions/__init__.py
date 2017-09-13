@@ -141,7 +141,7 @@ class ActionProvider(object):
         """Must be called when this ``ActionProvider`` is no longer needed.
         Calls the :meth:`Action.destroy` method of all ``Action`` instances.
         """
-        for name, actionz in self.getActions():
+        for name, actionz in ActionProvider.getActions(self):
 
             # Entries in getActions may be (None, None)
             if actionz is None:
