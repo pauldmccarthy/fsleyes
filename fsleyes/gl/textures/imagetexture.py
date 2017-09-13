@@ -54,13 +54,17 @@ class ImageTexture(texture3d.Texture3D):
 
         nvals = kwargs.get('nvals', 1)
 
-        try:
-            if nvals > 1 and image.shape[3] != nvals:
-                raise RuntimeError()
-        except:
-            raise RuntimeError('Data shape mismatch: texture '
-                               'size {} requested for '
-                               'image shape {}'.format(nvals, image.shape))
+        # For 4D textures, the image must have a shape of the form:
+        #   (x, y, z, [1, [1, [1, [1, ]]]] nvals)
+        if nvals > 1:
+            ndims        = image.ndims
+            expShape     = list(image.shape[:3])
+            expShape    += [1] * (ndims - 3)
+            expShape[-1] = nvals
+            if list(image.shape) != expShape:
+                raise RuntimeError('Data shape mismatch: texture '
+                                   'size {} requested for '
+                                   'image shape {}'.format(nvals, image.shape))
 
         self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.image        = image
@@ -160,16 +164,17 @@ class ImageTexture(texture3d.Texture3D):
         volume     = kwargs.pop('volume',         self.__volume)
         volRefresh = kwargs.pop('volRefresh',     True)
         image      = self.image
+        nvals      = self.__nvals
         ndims      = image.ndims
 
         if normRange is None:
             normRange = image.dataRange
 
-        if ndims == 3:
+        if ndims == 3 or nvals > 1:
             volume = None
         else:
             if volume is None and self.__volume is None:
-                volume = [0] * (ndims  - 3)
+                volume = [0] * (ndims - 3)
 
             elif not isinstance(volume, collections.Sequence):
                 volume = [volume]

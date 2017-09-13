@@ -68,6 +68,18 @@ class PlotProfile(profiles.Profile):
         self.__panning = False
 
 
+    def destroy(self):
+        """Must be called when this ``PlotProfile`` is no longer needed. Clears
+        references and calls the base class ``destroy`` method.
+        """
+        self.__canvas          = None
+        self.__axis            = None
+        self.__toolbar.canvas  = None
+        self.__toolbar._parent = None
+        self.__toolbar         = None
+        profiles.Profile.destroy(self)
+
+
     def getEventTargets(self):
         """Overrides :meth:`.Profile.getEventTargets`. Returns the
         ``matplotlib`` ``Canvas`` object displayed in the :class:`.PlotPanel`.

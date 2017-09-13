@@ -194,6 +194,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             display = self._displayCtx.getDisplay(overlay)
             display.removeListener('name', self._name)
 
+        self.__filterFunc = None
+        self.__listBox.Clear()
+
         fslpanel.FSLeyesPanel.destroy(self)
 
 

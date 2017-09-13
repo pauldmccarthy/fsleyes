@@ -313,8 +313,12 @@ class ProxyImage(fslimage.Image):
     def __init__(self, base, *args, **kwargs):
         """Create a ``ProxyImage``.
 
-        :arg base: The :class:`Image` instance upon which this ``ProxyImage``
-                   is based.
+        :arg base:   The :class:`Image` instance upon which this ``ProxyImage``
+                     is based.
+
+        :arg volume: Must be passed as a keyword argument. If provided, is a
+                     slice into the image data specifying the 3D volume to
+                     copy. If not provided, the entire image is copied.
         """
 
         if not isinstance(base, fslimage.Image):
@@ -324,7 +328,11 @@ class ProxyImage(fslimage.Image):
 
         kwargs['header'] = base.header
 
-        fslimage.Image.__init__(self, base[:], *args, **kwargs)
+        volume = kwargs.pop('volume', None)
+        if volume is not None: data = base[volume]
+        else:                  data = base[:]
+
+        fslimage.Image.__init__(self, data, *args, **kwargs)
 
 
     def getBase(self):
