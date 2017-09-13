@@ -259,8 +259,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                                         immediate=True)
 
             # The display<->* transformation matrices
-            # are created in the _setupTransforms method
-            self.__xforms = {}
+            # are created in the _setupTransforms method.
+            # The __displaySpaceChanged method registers
+            # a listener with the current display space
+            # (if it is an overlay)
+            self.__xforms    = {}
+            self.__dsOverlay = None
             self.__setupTransforms()
             self.__transformChanged()
             self.__volumeDimChanged()
@@ -275,6 +279,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             self           .removeListener('volumeDim',    self.name)
             self           .removeListener('transform',    self.name)
             self           .removeListener('displayXform', self.name)
+
+            if self.__dsOverlay is not None:
+                self.__dsOverlay.deregister(self.name, topic='transform')
+                self.__dsOverlay = None
 
         fsldisplay.DisplayOpts.destroy(self)
 
@@ -345,6 +353,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__transformChanged()
 
 
+    def __displaySpaceTransformChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` is a
+        :class:`.Nifti`  overlay, and its :attr:`.Nifti.voxToWorldMat`
+        changes. Updates the transformation matrices for this image.
+        """
+        self.__setupTransforms()
+        self.__transformChanged()
+
+
     def __transformChanged(self, *a):
         """Called when the :attr:`transform` property changes.
 
@@ -366,6 +383,22 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         the display :attr:`bounds` (via calls to :meth:`__setupTransforms` and
         :meth:`__transformChanged`).
         """
+
+        displaySpace = self.displayCtx.displaySpace
+
+        if self.__dsOverlay is not None:
+            self.__dsOverlay.deregister(self.name, topic='transform')
+            self.__dsOverlay = None
+
+        # Register a listener on the display space reference
+        # image, because when its voxToWorldMat changes, we
+        # need to update our *toref and refto* transforms.
+        if isinstance(displaySpace, fslimage.Nifti) and \
+           displaySpace is not self.overlay:
+            self.__dsOverlay = displaySpace
+            self.__dsOverlay.register(self.name,
+                                      self.__displaySpaceTransformChanged,
+                                      topic='transform')
 
         self.__setupTransforms()
         if self.transform == 'reference':
