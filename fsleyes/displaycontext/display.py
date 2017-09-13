@@ -400,12 +400,12 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
                           how the overlays are to be displayed.
         """
 
-        self.overlay     = overlay
-        self.display     = display
-        self.overlayList = overlayList
-        self.displayCtx  = displayCtx
-        self.overlayType = display.overlayType
-        self.name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__overlay     = overlay
+        self.__display     = display
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__overlayType = display.overlayType
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
 
         props.SyncableHasProperties.__init__(self, **kwargs)
         actions.ActionProvider     .__init__(self)
@@ -420,6 +420,50 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
             log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    @property
+    def overlay(self):
+        """Return the overlay associated with this ``DisplayOpts`` object.
+        """
+        return self.__overlay
+
+
+    @property
+    def display(self):
+        """Return the :class:`.Display` that is managing this
+        ``DisplayOpts`` object.
+        """
+        return self.__display
+
+
+    @property
+    def overlayList(self):
+        """Return the :class:`.OverlayList` that contains all overlays.
+        """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Return the :class:`.DisplayContext` that is managing this
+        ``DisplayOpts`` object.
+        """
+        return self.__displayCtx
+
+
+    @property
+    def overlayType(self):
+        """Return the type of this ``DisplayOpts`` object (the value of
+        :attr:`Display.overlayType`).
+        """
+        return self.__overlayType
+
+
+    @property
+    def name(self):
+        """Return the name of this ``DisplayOpts`` object. """
+        return self.__name
+
+
     def destroy(self):
         """This method must be called when this ``DisplayOpts`` instance
         is no longer needed.
@@ -431,10 +475,10 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
         self.detachAllFromParent()
 
-        self.overlay     = None
-        self.display     = None
-        self.overlayList = None
-        self.displayCtx  = None
+        self.__overlay     = None
+        self.__display     = None
+        self.__overlayList = None
+        self.__displayCtx  = None
 
 
     def getReferenceImage(self):
