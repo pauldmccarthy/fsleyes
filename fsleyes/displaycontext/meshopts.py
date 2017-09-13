@@ -178,7 +178,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """3D only. If ``True``, the mesh is rendered as a wireframe. """
 
 
-
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance. All arguments are passed through
         to the :class:`.DisplayOpts` constructor.
@@ -291,8 +290,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                     display.removeListener('name', self.name)
 
                     if overlay is self.refImage:
-                        opts.removeListener('transform',   self.name)
-                        opts.removeListener('customXform', self.name)
+                        opts.removeListener('transform', self.name)
 
                 except:
                     pass
@@ -402,9 +400,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
 
     def __transformChanged(self, value, valid, ctx, name):
-        """Called when the :attr:`.NiftiOpts.transfrom` or
-        :attr:`.NiftiOpts.customXform` properties of the current
-        :attr:`refImage` change. Calls :meth:`__updateBounds`.
+        """Called when the :attr:`.NiftiOpts.transform` property of the current
+        :attr:`refImage` changes. Calls :meth:`__updateBounds`.
         """
         self.__updateBounds()
 
@@ -421,9 +418,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
-        :attr:`.NiftiOpts.transform` and :attr:`.NiftiOpts.customXform`
-        properties associated with the new image. Calls
-        :meth:`__updateBounds`.
+        :attr:`.NiftiOpts.transform` property associated with the new image.
+        Calls :meth:`__updateBounds`.
         """
 
         # TODO You are not tracking changes to the
@@ -435,18 +431,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
            self.__oldRefImage in self.overlayList:
 
             opts = self.displayCtx.getOpts(self.__oldRefImage)
-            opts.removeListener('transform',   self.name)
-            opts.removeListener('customXform', self.name)
+            opts.removeListener('transform', self.name)
 
         self.__oldRefImage = self.refImage
 
         if self.refImage is not None:
             opts = self.displayCtx.getOpts(self.refImage)
             opts.addListener('transform',
-                             self.name,
-                             self.__transformChanged,
-                             immediate=True)
-            opts.addListener('customXform',
                              self.name,
                              self.__transformChanged,
                              immediate=True)
