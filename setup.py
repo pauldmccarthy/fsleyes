@@ -539,7 +539,8 @@ class pyinstaller(Command):
             'scipy.integrate',
             'OpenGL_accelerate',
             'OpenGL.platform.osmesa',
-            'OpenGL.GLUT'
+            'OpenGL.GLUT',
+            'wx.__version__',
         ]
 
         excludes = [
