@@ -12,6 +12,8 @@ which encapsulate overlay display settings.
 import logging
 import inspect
 
+import deprecation
+
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
 import fsleyes_props                  as props
@@ -175,7 +177,16 @@ class Display(props.SyncableHasProperties):
             log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    @deprecation.deprecated(deprecated_in='0.14.3',
+                            removed_in='1.0.0',
+                            details='Use overlay instead')
     def getOverlay(self):
+        """Deprecated - use :meth:`overlay` instead."""
+        return self.__overlay
+
+
+    @property
+    def overlay(self):
         """Returns the overlay associated with this ``Display`` instance."""
         return self.__overlay
 
