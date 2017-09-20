@@ -103,6 +103,10 @@ stages:
 #
 #   - WXPYTHON_UBUNTU1604_URL:       - URL to location of wxPython wheel for
 #                                      Ubuntu 16.04
+#
+#   - WXPYTHON_VERSION:              - Version of wxpython to install, as a
+#                                      version specifier which can be passed to
+#                                      pip (e.g. "wxpython==4.0.0b1")
 ###############################################################################
 
 
@@ -406,11 +410,11 @@ build-pypi-dist:
     # for ubuntu, but not for centos, where it needs
     # to be compiled from source.
     - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1404_URL wxpython;
+        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1404_URL "$WXPYTHON_VERSION";
       elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython;
+        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL "$WXPYTHON_VERSION";
       else
-        pip install --pre "wxpython>=3.0.2.0,<4.1";
+        pip install --pre "$WXPYTHON_VERSION";
       fi
 
     # Everything else can be installed
@@ -481,7 +485,7 @@ build-macos:
     - python3.5 -m venv fsleyes-build-venv
     - . fsleyes-build-venv/bin/activate
     - pip install numpy
-    - pip install --pre wxpython
+    - pip install --pre "$WXPYTHON_VERSION"
     - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
     - pip install -r requirements.txt
     - pip install "py2app==0.14"
