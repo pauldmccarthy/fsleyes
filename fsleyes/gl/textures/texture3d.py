@@ -33,33 +33,25 @@ log = logging.getLogger(__name__)
 # Used for debugging
 GL_TYPE_NAMES = {
 
-    gl.GL_UNSIGNED_BYTE             : 'GL_UNSIGNED_BYTE',
-    gl.GL_UNSIGNED_SHORT            : 'GL_UNSIGNED_SHORT',
-    gl.GL_FLOAT                     : 'GL_FLOAT',
+    gl.GL_UNSIGNED_BYTE       : 'GL_UNSIGNED_BYTE',
+    gl.GL_UNSIGNED_SHORT      : 'GL_UNSIGNED_SHORT',
+    gl.GL_FLOAT               : 'GL_FLOAT',
 
-    gl.GL_RED                       : 'GL_RED',
-    gl.GL_LUMINANCE                 : 'GL_LUMINANCE',
-    gl.GL_RG                        : 'GL_RG',
-    gl.GL_LUMINANCE_ALPHA           : 'GL_LUMINANCE_ALPHA',
-    gl.GL_RGB                       : 'GL_RGB',
-    gl.GL_RGBA                      : 'GL_RGBA',
+    gl.GL_RED                 : 'GL_RED',
+    gl.GL_LUMINANCE           : 'GL_LUMINANCE',
+    gl.GL_RGB                 : 'GL_RGB',
 
-    gl.GL_LUMINANCE8                : 'GL_LUMINANCE8',
-    gl.GL_LUMINANCE16               : 'GL_LUMINANCE16',
-    arbtf.GL_LUMINANCE32F_ARB       : 'GL_LUMINANCE32F',
-    gl.GL_R32F                      : 'GL_R32F',
+    gl.GL_LUMINANCE8          : 'GL_LUMINANCE8',
+    gl.GL_LUMINANCE16         : 'GL_LUMINANCE16',
+    arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
+    gl.GL_R32F                : 'GL_R32F',
 
-    gl.GL_LUMINANCE8_ALPHA8         : 'GL_LUMINANCE8_ALPHA8',
-    gl.GL_LUMINANCE16_ALPHA16       : 'GL_LUMINANCE16_ALPHA16',
-    arbtf.GL_LUMINANCE_ALPHA32F_ARB : 'GL_LUMINANCE_ALPHA_32F',
-    gl.GL_RG32F                     : 'GL_RG32F',
+    gl.GL_R8                  : 'GL_R8',
+    gl.GL_R16                 : 'GL_R16',
 
-    gl.GL_RGB8                      : 'GL_RGB8',
-    gl.GL_RGB16                     : 'GL_RGB16',
-    gl.GL_RGB32F                    : 'GL_RGB32F' ,
-    gl.GL_RGBA8                     : 'GL_RGBA8',
-    gl.GL_RGBA16                    : 'GL_RGBA16',
-    gl.GL_RGBA32F                   : 'GL_RGBA32F'
+    gl.GL_RGB8                : 'GL_RGB8',
+    gl.GL_RGB16               : 'GL_RGB16',
+    gl.GL_RGB32F              : 'GL_RGB32F' ,
 }
 
 
@@ -116,7 +108,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         :arg name:      A unique name for the texture.
 
-        :arg nvals:     Number of values per voxel.
+        :arg nvals:     Number of values per voxel. Currently must be either
+                        ``1`` or ``3``.
 
         :arg notify:    Passed to the initial call to :meth:`refresh`.
 
@@ -135,6 +128,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
         .. note:: The default value of the ``threaded`` parameter is set to
                   the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
         """
+
+        if nvals not in (1, 3):
+            raise ValueError('nvals must be either 1 or 3')
 
         if threaded is None:
             threaded = fslplatform.haveGui
@@ -240,30 +236,53 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         if rgSupported:
             if   nvals == 1: baseFmt = gl.GL_RED
-            elif nvals == 2: baseFmt = gl.GL_RG
             elif nvals == 3: baseFmt = gl.GL_RGB
-            elif nvals == 4: baseFmt = gl.GL_RGBA
 
             if   nvals == 1: intFmt  = gl.GL_R32F
-            elif nvals == 2: intFmt  = gl.GL_RG32F
             elif nvals == 3: intFmt  = gl.GL_RGB32F
-            elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
             return True, baseFmt, intFmt
 
         else:
 
             if   nvals == 1: baseFmt = gl.GL_LUMINANCE
-            elif nvals == 2: baseFmt = gl.GL_LUMINANCE_ALPHA
             elif nvals == 3: baseFmt = gl.GL_RGB
-            elif nvals == 4: baseFmt = gl.GL_RGBA
 
             if   nvals == 1: intFmt  = arbtf.GL_LUMINANCE32F_ARB
-            elif nvals == 2: intFmt  = arbtf.GL_LUMINANCE_ALPHA32F_ARB
             elif nvals == 3: intFmt  = gl.GL_RGB32F
-            elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
             return True, baseFmt, intFmt
+
+
+    @classmethod
+    @memoize.memoize
+    def oneChannelFormat(cls, dtype):
+        """Determines suitable one-channel base and internal texture formats
+        to use for the given ``numpy`` data type.
+
+        :return: A tuple containing:
+
+                   - the base texture format to use
+                   - the internal texture format to use
+
+        .. note:: This is used by the :meth:`getTextureType` method. The
+                  returned formats may be ignored for floating point data
+                  types, depending on whether floating point textures are
+                  supported - see :meth:`canUseFloatTextures`.
+        """
+
+        rgSupported = glexts.hasExtension('GL_ARB_texture_rg')
+        nbits       = dtype.itemsize * 8
+
+        if rgSupported:
+            if nbits == 8: return gl.GL_RED, gl.GL_R8
+            else:          return gl.GL_RED, gl.GL_R16
+
+        # GL_RED does not exist in old OpenGLs -
+        # we have to use luminance instead.
+        else:
+            if nbits == 8: return gl.GL_LUMINANCE, gl.GL_LUMINANCE8
+            else:          return gl.GL_LUMINANCE, gl.GL_LUMINANCE16
 
 
     @classmethod
@@ -274,7 +293,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         :arg normalise: Whether the data is to be normalised or not
         :arg dtype:     The original data type (e.g. ``np.uint8``)
-        :arg nvals:     Number of values per voxel
+        :arg nvals:     Number of values per voxel. Must be either ``1`` or
+                        ``3``.
 
         :returns: A tuple containing:
 
@@ -282,12 +302,15 @@ class Texture3D(texture.Texture, notifier.Notifier):
                     - The base texture format
                     - The internal texture format
         """
-        floatTextures, fFmt, fIntFmt = cls.canUseFloatTextures(nvals)
-        isFloat                      = issubclass(dtype.type, np.floating)
+
+        floatTextures, fBaseFmt, fIntFmt = cls.canUseFloatTextures(nvals)
+        ocBaseFmt, ocIntFmt              = cls.oneChannelFormat(dtype)
+        isFloat                          = issubclass(dtype.type, np.floating)
 
         # Signed data types are a pain in the arse.
         # We have to store them as unsigned, and
-        # apply an offset.
+        # apply an offset. There is some associated
+        # nastiness in __realPrepareTextureData.
 
         # Note: Throughout this method, it is assumed
         #       that if the data type is not supported,
@@ -306,27 +329,17 @@ class Texture3D(texture.Texture, notifier.Notifier):
         elif floatTextures:      texDtype = gl.GL_FLOAT
 
         # Base texture format
-        if floatTextures and isFloat: texFmt = fFmt
-        elif nvals == 1:              texFmt = gl.GL_LUMINANCE
-        elif nvals == 2:              texFmt = gl.GL_LUMINANCE_ALPHA
-        elif nvals == 3:              texFmt = gl.GL_RGB
-        elif nvals == 4:              texFmt = gl.GL_RGBA
+        if floatTextures and isFloat: baseFmt = fBaseFmt
+        elif nvals == 1:              baseFmt = ocBaseFmt
+        elif nvals == 3:              baseFmt = gl.GL_RGB
 
         # Internal texture format
         if nvals == 1:
-            if   normalise:          intFmt = gl.GL_LUMINANCE16
-            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8
-            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8
-            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16
-            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16
-            elif floatTextures:      intFmt = fIntFmt
-
-        elif nvals == 2:
-            if   normalise:          intFmt = gl.GL_LUMINANCE16_ALPHA16
-            elif dtype == np.uint8:  intFmt = gl.GL_LUMINANCE8_ALPHA8
-            elif dtype == np.int8:   intFmt = gl.GL_LUMINANCE8_ALPHA8
-            elif dtype == np.uint16: intFmt = gl.GL_LUMINANCE16_ALPHA16
-            elif dtype == np.int16:  intFmt = gl.GL_LUMINANCE16_ALPHA16
+            if   normalise:          intFmt = ocIntFmt
+            elif dtype == np.uint8:  intFmt = ocIntFmt
+            elif dtype == np.int8:   intFmt = ocIntFmt
+            elif dtype == np.uint16: intFmt = ocIntFmt
+            elif dtype == np.int16:  intFmt = ocIntFmt
             elif floatTextures:      intFmt = fIntFmt
 
         elif nvals == 3:
@@ -337,15 +350,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             elif dtype == np.int16:  intFmt = gl.GL_RGB16
             elif floatTextures:      intFmt = fIntFmt
 
-        elif nvals == 4:
-            if   normalise:          intFmt = gl.GL_RGBA16
-            elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
-            elif dtype == np.int8:   intFmt = gl.GL_RGBA8
-            elif dtype == np.uint16: intFmt = gl.GL_RGBA16
-            elif dtype == np.int16:  intFmt = gl.GL_RGBA16
-            elif floatTextures:      intFmt = fIntFmt
-
-        return texDtype, texFmt, intFmt
+        return texDtype, baseFmt, intFmt
 
 
     def ready(self):
