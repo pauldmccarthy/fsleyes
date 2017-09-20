@@ -18,19 +18,19 @@ bool test_in_bounds(vec3 coords, vec3 shape) {
 }
 
 
-vec3 __textest_ones  = vec3(1, 1, 1);
-vec3 __textest_zeros = vec3(0, 0, 0);
+vec3 _textest_ones  = vec3(1, 1, 1);
+vec3 _textest_zeros = vec3(0, 0, 0);
 
 /*
  * Tests whether the given texture coordinates are outside the
  * texture coordinate range.
  */
 bool textest(vec3 coords) {
-  return (!(any(greaterThan(coords, __textest_ones)) ||
-            any(lessThan(   coords, __textest_zeros))));
+  return (!(any(greaterThan(coords, _textest_ones)) ||
+            any(lessThan(   coords, _textest_zeros))));
 }
 
 bool textest(vec3 coords, float tol) {
-  return (!(any(greaterThan(coords-tol, __textest_ones)) ||
-            any(lessThan(   coords+tol, __textest_zeros))));
+  return (!(any(greaterThan(coords-tol, _textest_ones)) ||
+            any(lessThan(   coords+tol, _textest_zeros))));
 }
