@@ -503,8 +503,8 @@ def pointGrid(shape,
 
     # Number of samples along each display
     # axis, given the requested resolution
-    xNumSamples = np.floor((xmax - xmin) / xres)
-    yNumSamples = np.floor((ymax - ymin) / yres)
+    xNumSamples = int(np.floor((xmax - xmin) / xres))
+    yNumSamples = int(np.floor((ymax - ymin) / yres))
 
     # adjust the x/y resolution so
     # the samples fit exactly into

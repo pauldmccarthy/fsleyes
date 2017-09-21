@@ -306,7 +306,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                                       'displaySpace',
                                       opts.transform]
 
-        if opts.transform == 'custom':
+        if opts.transform == 'reference':
             dsImg = self._displayCtx.displaySpace
             if isinstance(dsImg, fslimage.Nifti):
                 dsDisplay    = self._displayCtx.getDisplay(dsImg)
@@ -575,7 +575,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 self, overlay,
                 'coordSpace', opts.coordSpace].format(refImg.name)
 
-            if refOpts.transform == 'custom':
+            if refOpts.transform == 'reference':
                 dsDisplay    = self._displayCtx.getDisplay(dsImg)
                 displaySpace = displaySpace.format(dsDisplay.name)
 

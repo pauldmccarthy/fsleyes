@@ -147,6 +147,7 @@ import fsl.data.constants             as constants
 from .               import display
 from .displaycontext import DisplayContext
 from .display        import Display
+from .display        import DisplayOpts
 from .group          import OverlayGroup
 from .sceneopts      import SceneOpts
 from .orthoopts      import OrthoOpts

@@ -100,7 +100,7 @@ class ScreenshotAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        filename = dlg.GetFilename()
+        filename = dlg.GetPath()
 
         # Make the dialog go away before
         # the screenshot gets taken

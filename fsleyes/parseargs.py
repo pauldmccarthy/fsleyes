@@ -1215,13 +1215,19 @@ been loaded, so we need to figure out what to do.
 #
 #      Currently, the overlay-specific transform
 #      functions can tell the direction by
-#      checking whether overlay == None - if this
-#      is True, we are generating arguments.
+#      checking whether the gen argument is True -
+#      if this is True, we are generating arguments.
+#
+#      Transform functions for arguments which are
+#      associated with an overlay (applied to
+#      a Display or DisplayOpts instances) are also
+#      passed the overlay as a keyword argument.
+#
 
 # When generating CLI arguments, turn Image
 # instances into their file names. And a few
 # other special cases.
-def _imageTrans(i, overlay=None):
+def _imageTrans(i, gen=None, overlay=None):
 
     stri = str(i).lower()
 
@@ -1236,7 +1242,7 @@ def _imageTrans(i, overlay=None):
 
 # When generating CLI arguments, turn a
 # LookupTable instance into its name
-def _lutTrans(l, overlay=None):
+def _lutTrans(l, gen=None, overlay=None):
     if isinstance(l, colourmaps.LookupTable): return l.key
     else:                                     return l
 
@@ -1245,9 +1251,9 @@ def _lutTrans(l, overlay=None):
 # specified as a percentile by
 # appending '%' to the high range
 # value.
-def _clippingRangeTrans(crange, overlay=None):
+def _clippingRangeTrans(crange, gen=None, overlay=None):
 
-    if overlay is None:
+    if gen:
         return crange
 
     crange = list(crange)
@@ -1266,8 +1272,16 @@ def _clippingRangeTrans(crange, overlay=None):
 # for some boolean properties
 # need the property value to be
 # inverted.
-def _boolTrans(b, overlay=None):
+def _boolTrans(b, gen=None, overlay=None):
     return not b
+
+
+# The --orientFlip command line argument
+# inverts the default behaviour of the
+# VectorOpts.orientFlip option
+def _orientFlipTrans(b, gen=None, overlay=None):
+    if gen: return b != overlay.isNeurological()
+    else:          return b
 
 
 # The props.addParserArguments function allows
@@ -1278,7 +1292,7 @@ def _boolTrans(b, overlay=None):
 # transform functions though, so we hackily
 # truncate any RGBA colours via these transform
 # functions.
-def _colourTrans(c, overlay=None):
+def _colourTrans(c, gen=None, overlay=None):
     return c[:3]
 
 
@@ -1302,12 +1316,15 @@ TRANSFORMS = td.TypeDict({
     'VolumeOpts.clippingRange'    : _clippingRangeTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
+    'SceneOpts.fgColour'         : _colourTrans,
     'SceneOpts.cursorColour'     : _colourTrans,
     'MeshOpts.colour'            : _colourTrans,
     'MaskOpts.colour'            : _colourTrans,
     'VectorOpts.xColour'         : _colourTrans,
     'VectorOpts.yColour'         : _colourTrans,
     'VectorOpts.zColour'         : _colourTrans,
+    'VectorOpts.orientFlip'      : _orientFlipTrans,
+
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -2183,10 +2200,18 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
         if xform is not None:
             xforms[name] = xform
 
+    # Arguments passed through
+    # to the transform functions
+    extraArgs = {'gen' : True}
+
+    if isinstance(source, (fsldisplay.DisplayOpts, fsldisplay.Display)):
+        extraArgs['overlay'] = source.overlay
+
     args = props.generateArguments(source,
                                    xformFuncs=xforms,
                                    cliProps=propNames,
-                                   longArgs=longArgs)
+                                   longArgs=longArgs,
+                                   **extraArgs)
 
     for s in special:
         args += _generateSpecialOption(overlayList,
@@ -2328,6 +2353,12 @@ def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
         worldLoc = displayCtx.worldLocation.xyz
         args    += ['--{}'.format(ARGUMENTS['Main.worldLoc'][1])]
         args    += ['{}'.format(c) for c in worldLoc]
+
+    # display space
+    ds = displayCtx.displaySpace
+    args += ['--{}'.format(ARGUMENTS['Main.displaySpace'][1])]
+    if isinstance(ds, fslimage.Nifti): args += [ds.dataSource]
+    else:                              args += [ds]
 
     # Everything else
     props = OPTIONS.get(sceneOpts, allhits=True)
@@ -2519,10 +2550,15 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # After handling the special cases
             # above, we can apply the CLI
             # options to the Opts instance. The
-            # overlay is passed through to any
-            # transform functions (see the
-            # TRANSFORMS dict)
-            _applyArgs(optArgs, overlayList, displayCtx, opts, overlay=overlay)
+            # overlay and gen flag is passed
+            # through to any transform functions
+            # (see the TRANSFORMS dict)
+            _applyArgs(optArgs,
+                       overlayList,
+                       displayCtx,
+                       opts,
+                       gen=False,
+                       overlay=overlay)
 
     paths = [o.overlay for o in args.overlays]
 

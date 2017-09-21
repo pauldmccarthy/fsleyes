@@ -22,7 +22,6 @@ import logging
 import wx
 
 import fsl.data.image                          as fslimage
-import fsleyes_widgets.dialog                  as fsldlg
 import fsleyes_widgets.utils.layout            as fsllayout
 
 import fsleyes.strings                         as strings
@@ -41,15 +40,6 @@ from . import                                     canvaspanel
 
 
 log = logging.getLogger(__name__)
-
-
-_suppressDisplaySpaceWarning = False
-"""Sometimes the :attr:`.DisplayContext.displaySpace` must be changed to
-perform certain operations (e.g. when the :meth:`toggleEditTransformPanel`
-method is called). When this happens a warning message is shown to the user,
-with the option to suppress future warnings. This flag keeps track of
-whether the user has chosen to ignore future warnings.
-"""
 
 
 class OrthoPanel(canvaspanel.CanvasPanel):
@@ -357,47 +347,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.EditTransformPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-
-        editing    = not self.toggleEditTransformPanel.toggled
-        displayCtx = self.getDisplayContext()
-        overlay    = displayCtx.getSelectedOverlay()
-
-        if editing and displayCtx.displaySpace != 'world':
-
-            global _suppressDisplaySpaceWarning
-            if not _suppressDisplaySpaceWarning and \
-               overlay is not None:
-
-                msg   = strings.messages[self,
-                                         'toggleEditTransformPanel',
-                                         'displaySpaceChange']
-                hint  = strings.messages[self,
-                                         'toggleEditTransformPanel',
-                                         'displaySpaceChange.hint']
-                msg   = msg .format(overlay.name)
-                hint  = hint.format(overlay.name)
-                cbMsg = strings.messages[self,
-                                         'toggleEditTransformPanel',
-                                         'displaySpaceChange.suppress']
-                title = strings.titles[  self,
-                                         'toggleEditTransformPanel',
-                                         'displaySpaceChange']
-
-                dlg   = fsldlg.CheckBoxMessageDialog(
-                    self,
-                    title=title,
-                    message=msg,
-                    cbMessages=[cbMsg],
-                    cbStates=[_suppressDisplaySpaceWarning],
-                    hintText=hint,
-                    focus='yes',
-                    icon=wx.ICON_INFORMATION)
-
-                dlg.ShowModal()
-
-                _suppressDisplaySpaceWarning  = dlg.CheckBoxState()
-
-            displayCtx.displaySpace = 'world'
 
         self.togglePanel(edittransformpanel.EditTransformPanel,
                          floatPane=True,

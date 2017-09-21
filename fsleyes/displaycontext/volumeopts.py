@@ -17,7 +17,8 @@ An important note on coordinate systems
 
 *FSLeyes* displays all overlays in a single coordinate system, referred
 throughout as the *display coordinate system*. However, :class:`.Nifti`
-overlays can potentially be displayed in one of four coordinate systems:
+overlays can potentially be transformed into the display coordinate system
+in one of several ways:
 
 
  ============================== ===============================================
@@ -41,21 +42,24 @@ overlays can potentially be displayed in one of four coordinate systems:
                                 transformation matrix stored in the NIFTI
                                 header - see the :class:`.Nifti` class for more
                                 details.
+
+ **reference**                  (a.k.a. ``reference``) The image data voxel
+                                coordinates are transformed into the
+                                ``pixdim-flip`` coordinate system of another,
+                                *reference*, NIFTI image. The reference overlay
+                                is specified by the
+                                :attr:`.DisplayContext.displaySpace` attribute.
  ============================== ===============================================
-
-
-Pixdim flip
-^^^^^^^^^^^
 
 
 The :attr:`NiftiOpts.transform` property controls how the image data is
 transformed into the display coordinate system. It allows any of the above
-spaces to be specified (as ``id``, ``pixdim``, ``pixdim-flip``, or ``affine```
-respectively), and also allows a ``custom`` transformation to be specified
-(see the :attr:`customXform` property). This ``custom`` transformation is used
-to transform one image into the space of another, by concatentating multiple
-transformation matrices - see the :attr:`.DisplayContext.displaySpace`
-property.
+spaces to be specified (as ``id``, ``pixdim``, ``pixdim-flip``, ``affine```,
+or ``reference`` respectively).
+
+
+Pixdim flip
+^^^^^^^^^^^
 
 
 The ``pixdim-flip`` transform is the coordinate system used internally by many
@@ -150,22 +154,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
 
     transform = props.Choice(
-        ('affine', 'pixdim', 'pixdim-flip', 'id', 'custom'),
+        ('affine', 'pixdim', 'pixdim-flip', 'id', 'reference'),
         default='pixdim-flip')
     """This property defines how the overlay should be transformd into
     the display coordinate system. See the
     :ref:`note on coordinate systems <volumeopts-coordinate-systems>`
     for important information regarding this property.
-    """
-
-
-    customXform = props.Array(
-        dtype=np.float64,
-        shape=(4, 4),
-        resizable=False,
-        default=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-    """A custom transformation matrix which is used when the :attr:`transform`
-    property is set to ``custom``.
     """
 
 
@@ -181,12 +175,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     (when :attr:`.DisplayContext.displaySpace` ``== 'world'``) - changes to it
     will *not* result in the ::attr:`.DisplayContext.bounds` being updated.
 
-
-    If the :attr:`.DisplayContext.displaySpace` is not equal to ``'world'``,
-    changing the displayXform will not have any immediate effect.
-
-    If you change the ``displayXform`` to temporarily change the , make sure
-    to change it back to an identity matrix when you are done.
+    If you change the ``displayXform``, make sure to change it back to an
+    identity matrix when you are done.
     """
 
 
@@ -230,8 +220,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         fsldisplay.DisplayOpts.__init__(self, *args, **kwargs)
 
-        overlay = self.overlay
-
         self.__child = self.getParent() is not None
 
         if self.__child:
@@ -250,30 +238,33 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             if ndims <= 3:
                 self.setAttribute('volume', 'maxval', 0)
 
-            overlay.register(self.name,
-                             self.__overlayTransformChanged,
-                             topic='transform')
-
-            self.addListener('volumeDim',
-                             self.name,
-                             self.__volumeDimChanged,
-                             immediate=True)
-            self.addListener('transform',
-                             self.name,
-                             self.__transformChanged,
-                             immediate=True)
-            self.addListener('customXform',
-                             self.name,
-                             self.__customXformChanged,
-                             immediate=True)
-            self.addListener('displayXform',
-                             self.name,
-                             self.__displayXformChanged,
-                             immediate=True)
+            self.overlay   .register(   self.name,
+                                        self.__overlayTransformChanged,
+                                        topic='transform')
+            self           .addListener('volumeDim',
+                                        self.name,
+                                        self.__volumeDimChanged,
+                                        immediate=True)
+            self           .addListener('transform',
+                                        self.name,
+                                        self.__transformChanged,
+                                        immediate=True)
+            self           .addListener('displayXform',
+                                        self.name,
+                                        self.__displayXformChanged,
+                                        immediate=True)
+            self.displayCtx.addListener('displaySpace',
+                                        self.name,
+                                        self.__displaySpaceChanged,
+                                        immediate=True)
 
             # The display<->* transformation matrices
-            # are created in the _setupTransforms method
-            self.__xforms = {}
+            # are created in the _setupTransforms method.
+            # The __displaySpaceChanged method registers
+            # a listener with the current display space
+            # (if it is an overlay)
+            self.__xforms    = {}
+            self.__dsOverlay = None
             self.__setupTransforms()
             self.__transformChanged()
             self.__volumeDimChanged()
@@ -283,11 +274,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         """Calls the :meth:`.DisplayOpts.destroy` method. """
 
         if self.__child:
-            self.overlay.deregister(self.name, topic='transform')
-            self.removeListener('volumeDim',    self.name)
-            self.removeListener('transform',    self.name)
-            self.removeListener('customXform',  self.name)
-            self.removeListener('displayXform', self.name)
+            self.overlay   .deregister(    self.name, topic='transform')
+            self.displayCtx.removeListener('displaySpace', self.name)
+            self           .removeListener('volumeDim',    self.name)
+            self           .removeListener('transform',    self.name)
+            self           .removeListener('displayXform', self.name)
+
+            if self.__dsOverlay is not None:
+                self.__dsOverlay.deregister(self.name, topic='transform')
+                self.__dsOverlay = None
 
         fsldisplay.DisplayOpts.destroy(self)
 
@@ -358,6 +353,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__transformChanged()
 
 
+    def __displaySpaceTransformChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` is a
+        :class:`.Nifti`  overlay, and its :attr:`.Nifti.voxToWorldMat`
+        changes. Updates the transformation matrices for this image.
+        """
+        self.__setupTransforms()
+        self.__transformChanged()
+
+
     def __transformChanged(self, *a):
         """Called when the :attr:`transform` property changes.
 
@@ -373,15 +377,31 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.bounds[:] = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
 
-    def __customXformChanged(self, *a):
-        """Called when the :attr:`customXform` property changes.  Re-generates
-        transformation matrices, and re-calculates the display :attr:`bounds`
-        (via calls to :meth:`__setupTransforms` and
+    def __displaySpaceChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` property
+        changes.  Re-generates transformation matrices, and re-calculates
+        the display :attr:`bounds` (via calls to :meth:`__setupTransforms` and
         :meth:`__transformChanged`).
         """
 
+        displaySpace = self.displayCtx.displaySpace
+
+        if self.__dsOverlay is not None:
+            self.__dsOverlay.deregister(self.name, topic='transform')
+            self.__dsOverlay = None
+
+        # Register a listener on the display space reference
+        # image, because when its voxToWorldMat changes, we
+        # need to update our *toref and refto* transforms.
+        if isinstance(displaySpace, fslimage.Nifti) and \
+           displaySpace is not self.overlay:
+            self.__dsOverlay = displaySpace
+            self.__dsOverlay.register(self.name,
+                                      self.__displaySpaceTransformChanged,
+                                      topic='transform')
+
         self.__setupTransforms()
-        if self.transform == 'custom':
+        if self.transform == 'reference':
             self.__transformChanged()
 
 
@@ -418,109 +438,112 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         voxToIdMat      = np.eye(4)
         voxToPixdimMat  = np.diag(list(image.pixdim[:3]) + [1.0])
-        voxToPixFlipMat = np.array(voxToPixdimMat)
-        voxToAffineMat  = image.voxToWorldMat
-        voxToAffineMat  = transform.concat(self.displayXform, voxToAffineMat)
-        voxToCustomMat  = self.customXform
+        voxToPixFlipMat = image.voxToScaledVoxMat
+        voxToWorldMat   = image.voxToWorldMat
+        voxToWorldMat   = transform.concat(self.displayXform, voxToWorldMat)
+        ds              = self.displayCtx.displaySpace
+
+        # The reference transforms depend on the value of
+        # displaySpace
+        if ds == 'world':
+            voxToRefMat = voxToWorldMat
+        elif ds is self.overlay:
+            voxToRefMat = voxToPixFlipMat
+        else:
+            voxToRefMat = transform.concat(ds.voxToScaledVoxMat,
+                                           ds.worldToVoxMat,
+                                           voxToWorldMat)
 
         # When going from voxels to textures,
         # we add 0.5 to centre the voxel (see
         # the note on coordinate systems at
         # the top of this file).
-        voxToTexMat     = transform.scaleOffsetXform(tuple(1.0 / shape),
-                                                     tuple(0.5 / shape))
-
-        # pixdim-flip space differs from
-        # pixdim space only if the image
-        # is in neurological orientation
-        if image.isNeurological():
-            x               = (image.shape[0] - 1) * image.pixdim[0]
-            flip            = transform.scaleOffsetXform([-1, 1, 1], [x, 0, 0])
-            voxToPixFlipMat = transform.concat(voxToPixFlipMat, flip)
+        voxToTexMat        = transform.scaleOffsetXform(tuple(1.0 / shape),
+                                                        tuple(0.5 / shape))
 
         idToVoxMat         = transform.invert(voxToIdMat)
         idToPixdimMat      = transform.concat(voxToPixdimMat,  idToVoxMat)
         idToPixFlipMat     = transform.concat(voxToPixFlipMat, idToVoxMat)
-        idToAffineMat      = transform.concat(voxToAffineMat,  idToVoxMat)
-        idToCustomMat      = transform.concat(voxToCustomMat,  idToVoxMat)
+        idToWorldMat       = transform.concat(voxToWorldMat,   idToVoxMat)
+        idToRefMat         = transform.concat(voxToRefMat,     idToVoxMat)
         idToTexMat         = transform.concat(voxToTexMat,     idToVoxMat)
 
         pixdimToVoxMat     = transform.invert(voxToPixdimMat)
         pixdimToIdMat      = transform.concat(voxToIdMat,      pixdimToVoxMat)
         pixdimToPixFlipMat = transform.concat(voxToPixFlipMat, pixdimToVoxMat)
-        pixdimToAffineMat  = transform.concat(voxToAffineMat,  pixdimToVoxMat)
-        pixdimToCustomMat  = transform.concat(voxToCustomMat,  pixdimToVoxMat)
+        pixdimToWorldMat   = transform.concat(voxToWorldMat,   pixdimToVoxMat)
+        pixdimToRefMat     = transform.concat(voxToRefMat,     pixdimToVoxMat)
         pixdimToTexMat     = transform.concat(voxToTexMat,     pixdimToVoxMat)
 
         pixFlipToVoxMat    = transform.invert(voxToPixFlipMat)
-        pixFlipToIdMat     = transform.concat(voxToIdMat,     pixFlipToVoxMat)
-        pixFlipToPixdimMat = transform.concat(voxToPixdimMat, pixFlipToVoxMat)
-        pixFlipToAffineMat = transform.concat(voxToAffineMat, pixFlipToVoxMat)
-        pixFlipToCustomMat = transform.concat(voxToCustomMat, pixFlipToVoxMat)
-        pixFlipToTexMat    = transform.concat(voxToTexMat,    pixFlipToVoxMat)
+        pixFlipToIdMat     = transform.concat(voxToIdMat,      pixFlipToVoxMat)
+        pixFlipToPixdimMat = transform.concat(voxToPixdimMat,  pixFlipToVoxMat)
+        pixFlipToWorldMat  = transform.concat(voxToWorldMat,   pixFlipToVoxMat)
+        pixFlipToRefMat    = transform.concat(voxToRefMat,     pixFlipToVoxMat)
+        pixFlipToTexMat    = transform.concat(voxToTexMat,     pixFlipToVoxMat)
 
-        affineToVoxMat     = transform.invert(voxToAffineMat)
-        affineToIdMat      = transform.concat(voxToIdMat,      affineToVoxMat)
-        affineToPixdimMat  = transform.concat(voxToPixdimMat,  affineToVoxMat)
-        affineToPixFlipMat = transform.concat(voxToPixFlipMat, affineToVoxMat)
-        affineToCustomMat  = transform.concat(voxToCustomMat,  affineToVoxMat)
-        affineToTexMat     = transform.concat(voxToTexMat,     affineToVoxMat)
+        worldToVoxMat      = transform.invert(voxToWorldMat)
+        worldToIdMat       = transform.concat(voxToIdMat,      worldToVoxMat)
+        worldToPixdimMat   = transform.concat(voxToPixdimMat,  worldToVoxMat)
+        worldToPixFlipMat  = transform.concat(voxToPixFlipMat, worldToVoxMat)
+        worldToRefMat      = transform.concat(voxToRefMat,     worldToVoxMat)
+        worldToTexMat      = transform.concat(voxToTexMat,     worldToVoxMat)
 
-        customToVoxMat     = transform.invert(voxToCustomMat)
-        customToIdMat      = transform.concat(voxToIdMat,      customToVoxMat)
-        customToPixdimMat  = transform.concat(voxToPixdimMat,  customToVoxMat)
-        customToPixFlipMat = transform.concat(voxToPixFlipMat, customToVoxMat)
-        customToAffineMat  = transform.concat(voxToAffineMat,  customToVoxMat)
-        customToTexMat     = transform.concat(voxToTexMat,     customToVoxMat)
+        refToVoxMat        = transform.invert(voxToRefMat)
+        refToIdMat         = transform.concat(voxToIdMat,      refToVoxMat)
+        refToPixdimMat     = transform.concat(voxToPixdimMat,  refToVoxMat)
+        refToPixFlipMat    = transform.concat(voxToPixFlipMat, refToVoxMat)
+        refToWorldMat      = transform.concat(voxToWorldMat,   refToVoxMat)
+        refToTexMat        = transform.concat(voxToTexMat,     refToVoxMat)
 
         texToVoxMat        = transform.invert(voxToTexMat)
         texToIdMat         = transform.concat(voxToIdMat,      texToVoxMat)
         texToPixdimMat     = transform.concat(voxToPixdimMat,  texToVoxMat)
         texToPixFlipMat    = transform.concat(voxToPixFlipMat, texToVoxMat)
-        texToAffineMat     = transform.concat(voxToAffineMat,  texToVoxMat)
-        texToCustomMat     = transform.concat(voxToCustomMat , texToVoxMat)
+        texToWorldMat      = transform.concat(voxToWorldMat,   texToVoxMat)
+        texToRefMat        = transform.concat(voxToRefMat,     texToVoxMat)
 
         self.__xforms['id',  'id']          = np.eye(4)
         self.__xforms['id',  'pixdim']      = idToPixdimMat
         self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat
-        self.__xforms['id',  'affine']      = idToAffineMat
-        self.__xforms['id',  'custom']      = idToCustomMat
+        self.__xforms['id',  'affine']      = idToWorldMat
+        self.__xforms['id',  'reference']   = idToRefMat
         self.__xforms['id',  'texture']     = idToTexMat
 
         self.__xforms['pixdim', 'pixdim']      = np.eye(4)
         self.__xforms['pixdim', 'id']          = pixdimToIdMat
         self.__xforms['pixdim', 'pixdim-flip'] = pixdimToPixFlipMat
-        self.__xforms['pixdim', 'affine']      = pixdimToAffineMat
-        self.__xforms['pixdim', 'custom']      = pixdimToCustomMat
+        self.__xforms['pixdim', 'affine']      = pixdimToWorldMat
+        self.__xforms['pixdim', 'reference']   = pixdimToRefMat
         self.__xforms['pixdim', 'texture']     = pixdimToTexMat
 
         self.__xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
         self.__xforms['pixdim-flip', 'id']          = pixFlipToIdMat
         self.__xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
-        self.__xforms['pixdim-flip', 'affine']      = pixFlipToAffineMat
-        self.__xforms['pixdim-flip', 'custom']      = pixFlipToCustomMat
+        self.__xforms['pixdim-flip', 'affine']      = pixFlipToWorldMat
+        self.__xforms['pixdim-flip', 'reference']   = pixFlipToRefMat
         self.__xforms['pixdim-flip', 'texture']     = pixFlipToTexMat
 
         self.__xforms['affine', 'affine']      = np.eye(4)
-        self.__xforms['affine', 'id']          = affineToIdMat
-        self.__xforms['affine', 'pixdim']      = affineToPixdimMat
-        self.__xforms['affine', 'pixdim-flip'] = affineToPixFlipMat
-        self.__xforms['affine', 'custom']      = affineToCustomMat
-        self.__xforms['affine', 'texture']     = affineToTexMat
+        self.__xforms['affine', 'id']          = worldToIdMat
+        self.__xforms['affine', 'pixdim']      = worldToPixdimMat
+        self.__xforms['affine', 'pixdim-flip'] = worldToPixFlipMat
+        self.__xforms['affine', 'reference']   = worldToRefMat
+        self.__xforms['affine', 'texture']     = worldToTexMat
 
-        self.__xforms['custom', 'custom']      = np.eye(4)
-        self.__xforms['custom', 'id']          = customToIdMat
-        self.__xforms['custom', 'pixdim']      = customToPixdimMat
-        self.__xforms['custom', 'pixdim-flip'] = customToPixFlipMat
-        self.__xforms['custom', 'affine']      = customToAffineMat
-        self.__xforms['custom', 'texture']     = customToTexMat
+        self.__xforms['reference', 'reference']   = np.eye(4)
+        self.__xforms['reference', 'id']          = refToIdMat
+        self.__xforms['reference', 'pixdim']      = refToPixdimMat
+        self.__xforms['reference', 'pixdim-flip'] = refToPixFlipMat
+        self.__xforms['reference', 'affine']      = refToWorldMat
+        self.__xforms['reference', 'texture']     = refToTexMat
 
         self.__xforms['texture', 'texture']     = np.eye(4)
         self.__xforms['texture', 'id']          = texToIdMat
         self.__xforms['texture', 'pixdim']      = texToPixdimMat
         self.__xforms['texture', 'pixdim-flip'] = texToPixFlipMat
-        self.__xforms['texture', 'affine']      = texToAffineMat
-        self.__xforms['texture', 'custom']      = texToCustomMat
+        self.__xforms['texture', 'affine']      = texToWorldMat
+        self.__xforms['texture', 'reference']   = texToRefMat
 
 
     def getTransform(self, from_, to, xform=None):
@@ -549,9 +572,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         ``world``       Equivalent to ``affine``.
 
-        ``custom``      Coordinates in the space defined by the custom
-                        transformation matrix, as specified via the
-                        :attr:`customXform` property.
+        ``reference``   ``pixdim-flip`` coordinates of the reference image
+                        specified by the :attr:`.DisplayContext.displaySpace`
+                        attribute. If the ``displaySpace`` is set to
+                        ``'world'``, this is equivalent to ``affine``.
+
+        ``ref``         Equivalent to ``reference``.
 
         ``display``     Equivalent to the current value of :attr:`transform`.
 
@@ -573,11 +599,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         elif from_ == 'world':   from_ = 'affine'
         elif from_ == 'voxel':   from_ = 'id'
         elif from_ == 'pixflip': from_ = 'pixdim-flip'
+        elif from_ == 'ref':     from_ = 'reference'
 
         if   to    == 'display': to    = xform
         elif to    == 'world':   to    = 'affine'
         elif to    == 'voxel':   to    = 'id'
         elif to    == 'pixflip': to    = 'pixdim-flip'
+        elif to    == 'ref':     to    = 'reference'
 
         return self.__xforms[from_, to]
 
@@ -704,19 +732,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     def transformCoords(self, coords, from_, to_, vround=False):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
-        The ``from_`` and ``to_`` parameters must both be one of:
-
-           - ``display``: The display coordinate system
-           - ``voxel``:   The image voxel coordinate system
-           - ``world``:   The image world coordinate system
-           - ``custom``:  The coordinate system defined by the custom
-                          transformation matrix (see :attr:`customXform`)
+        The ``from_`` and ``to_`` parameters must be those accepted by the
+        :meth:`getTransform` method.
 
         :arg coords: Coordinates to transform
         :arg from_:  Space to transform from
         :arg to_:    Space to transform to
-        :arg vround: If ``True``, and ``to_ == 'voxel'``, the transformed
-                     coordinates are rounded to the nearest integer.
+        :arg vround: If ``True``, and ``to_ in ('voxel', 'id)``, the
+                     transformed coordinates are rounded to the nearest
+                     integer.
         """
 
         xform  = self.getTransform(from_, to_)
@@ -724,7 +748,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         coords = transform.transform(coords, xform)
 
         # Round to integer voxel coordinates?
-        if to_ == 'voxel' and vround:
+        if to_ in ('voxel', 'id') and vround:
             coords = self.roundVoxels(coords)
 
         return coords
