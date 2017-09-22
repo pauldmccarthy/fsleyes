@@ -412,6 +412,7 @@ actions = TypeDict({
     'ApplyFlirtXfmAction'      : 'Load FLIRT transformation',
     'SaveFlirtXfmAction'       : 'Export FLIRT transformation',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
+    'ResampleAction'           : 'Resample image',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -618,7 +619,7 @@ labels = TypeDict({
                                                         '(FSL convention)',
     'OverlayInfoPanel.Nifti.displaySpace.affine'      : 'World coordinates',
     'OverlayInfoPanel.Nifti.displaySpace.world'       : 'World coordinates',
-    'OverlayInfoPanel.Nifti.displaySpace.custom'      : 'Scaled voxels '
+    'OverlayInfoPanel.Nifti.displaySpace.reference'   : 'Scaled voxels '
                                                         '({}; FSL convention)',
 
 

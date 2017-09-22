@@ -1563,10 +1563,12 @@ class FSLeyesFrame(wx.Frame):
         """
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
+        from fsleyes.actions.resample      import ResampleAction
 
         actionz = [
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
+            ResampleAction,
         ]
 
         for action in actionz:
