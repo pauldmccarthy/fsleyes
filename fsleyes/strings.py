@@ -245,6 +245,13 @@ messages = TypeDict({
     'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
     'FlirtFileDialog.refFile'    : 'Select FLIRT reference image',
 
+    'CropImagePanel.saveCrop'  : 'Select a file to save the crop parameters',
+    'CropImagePanel.loadCrop'  : 'Select a file to load crop parameters from',
+    'CropImagePanel.saveError' :
+    'An error occurred saving the crop parameters',
+    'CropImagePanel.loadError' :
+    'An error occurred loading the crop parameters',
+
 
     'LoadVertexDataAction.loadVertexData' :
     'Select a vertex data file for {}',
@@ -359,6 +366,8 @@ titles = TypeDict({
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 
+    'CropImagePanel.loadError' : 'Error loading crop parameters',
+    'CropImagePanel.saveError' : 'Error saving crop parameters',
 
     'AddMaskDataSeriesAction.selectMask'  :
     'ROI time series from {}',
@@ -692,9 +701,11 @@ labels = TypeDict({
     'CropImagePanel.cropSize.noImage' : 'Croppsed shape: n/a',
     'CropImagePanel.image'            : 'Crop {}',
     'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
-    'CropImagePanel.cropButton'       : 'Crop',
-    'CropImagePanel.robustFovButton'  : 'Robust FOV',
-    'CropImagePanel.cancelButton'     : 'Cancel',
+    'CropImagePanel.crop'             : 'Crop',
+    'CropImagePanel.robustFov'        : 'Robust FOV',
+    'CropImagePanel.load'             : 'Load',
+    'CropImagePanel.save'             : 'Save',
+    'CropImagePanel.cancel'           : 'Cancel',
 
     'EditTransformPanel.dsWarning'   :
     'Warning: Change the display space to "World" to see\n'
