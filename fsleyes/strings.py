@@ -741,6 +741,18 @@ labels = TypeDict({
     'FlirtFileDialog.selectFile'          : 'Choose',
     'FlirtFileDialog.ok'                  : 'Ok',
     'FlirtFileDialog.cancel'              : 'Cancel',
+
+    'ResampleDialog.ok'            : 'Ok',
+    'ResampleDialog.reset'         : 'Reset',
+    'ResampleDialog.cancel'        : 'Cancel',
+    'ResampleDialog.interpolation' : 'Interpolation',
+    'ResampleDialog.nearest'       : 'Nearest neighbour',
+    'ResampleDialog.linear'        : 'Linear',
+    'ResampleDialog.cubic'         : 'Cubic',
+    'ResampleDialog.origVoxels'    : 'Old shape',
+    'ResampleDialog.origPixdims'   : 'Old pixdims',
+    'ResampleDialog.newVoxels'     : 'New shape',
+    'ResampleDialog.newPixdims'    : 'New pixdims',
 })
 
 

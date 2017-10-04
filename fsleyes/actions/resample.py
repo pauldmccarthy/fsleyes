@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# resample.py -
+# resample.py - The ResampleAction class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ResampleAction` class, a FSLeyes action
+which allows the user to resample an image to a different resolution.
+"""
 
 
 import wx
@@ -11,6 +14,7 @@ import wx
 import fsleyes_widgets.floatspin as floatspin
 import fsl.data.image            as fslimage
 import fsl.utils.transform       as transform
+import fsleyes.strings           as strings
 from . import                       base
 
 
@@ -61,6 +65,9 @@ class ResampleAction(base.Action):
 
 
     def __resample(self):
+        """Called when this ``ResampleAction`` is invoked. Shows a
+        ``ResampleDialog``, and then resamples the currently selected overlay.
+        """
 
         ovl = self.__displayCtx.getSelectedOverlay()
 
@@ -73,29 +80,39 @@ class ResampleAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        # TODO interpolation option
         oldShape  = ovl.shape[:3]
-        newShape  = dlg.GetShape()
-        resampled = ovl.resample(newShape, order=1)
+        newShape  = dlg.GetVoxels()
+        interp    = dlg.GetInterpolation()
+        interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
+        resampled = ovl.resample(newShape, order=interp)
+        name      = '{}_resampled'.format(ovl.name)
 
         scale     = [os / float(ns) for os, ns in zip(oldShape, newShape)]
         offset    = [(s - 1) / 2.0  for s in scale]
         scale     = transform.scaleOffsetXform(scale, offset)
         xform     = transform.concat(ovl.voxToWorldMat, scale)
-        resampled = fslimage.Image(resampled, xform=xform)
+        resampled = fslimage.Image(resampled,
+                                   xform=xform,
+                                   header=ovl.header,
+                                   name=name)
 
         self.__overlayList.append(resampled)
 
 
-# TODO Interpolation option
-
 class ResampleDialog(wx.Dialog):
+    """The ``ResampleDialog`` is used by the ``ResampleAction`` to prompt the
+    user for a new resampled image shape. It contains controls allowing the
+    user to select new voxel and pixdim values.
+    """
 
-    def __init__(self,
-                 parent,
-                 title,
-                 shape,
-                 pixdim):
+    def __init__(self, parent, title, shape, pixdim):
+        """Create a ``ResampleDialog``.
+
+        :arg parent: ``wx`` parent object
+        :arg title:  Dialog title
+        :arg shape:  The original image shape (a tuple of three integers)
+        :arg pixdim: The original image pixdims (a tuple of three floats)
+        """
 
         wx.Dialog.__init__(self,
                            parent,
@@ -104,111 +121,246 @@ class ResampleDialog(wx.Dialog):
 
         self.__oldShape  = tuple(shape)
         self.__oldPixdim = tuple(pixdim)
-        self.__ok     = wx.Button(self, label='Ok',     id=wx.ID_OK)
-        self.__cancel = wx.Button(self, label='Cancel', id=wx.ID_CANCEL)
+
+        self.__ok     = wx.Button(self, id=wx.ID_OK)
+        self.__reset  = wx.Button(self)
+        self.__cancel = wx.Button(self, id=wx.ID_CANCEL)
+
+        self.__ok    .SetLabel(strings.labels[self, 'ok'])
+        self.__reset .SetLabel(strings.labels[self, 'reset'])
+        self.__cancel.SetLabel(strings.labels[self, 'cancel'])
 
         voxargs = {'minValue'  : 1,
                    'maxValue'  : 9999,
                    'increment' : 1,
                    'width'     : 6,
                    'style'     : floatspin.FSC_INTEGER}
+        pixargs = {'minValue'  : 0.001,
+                   'maxValue'  : 50,
+                   'increment' : 0.5,
+                   'width'     : 6}
 
-        strvox = ['{:0.2f}'.format(p) for p in shape]
+        strvox = ['{:d}'   .format(p) for p in shape]
         strpix = ['{:0.2f}'.format(p) for p in pixdim]
 
-        self.__origVoxx    = wx.StaticText(self, label=strvox[0])
-        self.__origVoxy    = wx.StaticText(self, label=strvox[1])
-        self.__origVoxz    = wx.StaticText(self, label=strvox[2])
-        self.__origPixdimx = wx.StaticText(self, label=strpix[0])
-        self.__origPixdimy = wx.StaticText(self, label=strpix[1])
-        self.__origPixdimz = wx.StaticText(self, label=strpix[2])
+        self.__origVoxLabel = wx.StaticText(self)
+        self.__origPixLabel = wx.StaticText(self)
+        self.__voxLabel     = wx.StaticText(self)
+        self.__pixLabel     = wx.StaticText(self)
 
-        self.__voxx = floatspin.FloatSpinCtrl(self, value=shape[0], **voxargs)
-        self.__voxy = floatspin.FloatSpinCtrl(self, value=shape[1], **voxargs)
-        self.__voxz = floatspin.FloatSpinCtrl(self, value=shape[2], **voxargs)
-        self.__pixdimx = wx.StaticText(self, label=strpix[0])
-        self.__pixdimy = wx.StaticText(self, label=strpix[1])
-        self.__pixdimz = wx.StaticText(self, label=strpix[2])
+        self.__origVoxLabel.SetLabel(strings.labels[self, 'origVoxels'])
+        self.__origPixLabel.SetLabel(strings.labels[self, 'origPixdims'])
+        self.__voxLabel    .SetLabel(strings.labels[self, 'newVoxels'])
+        self.__pixLabel    .SetLabel(strings.labels[self, 'newPixdims'])
 
-        self.__origVoxSizer    = wx.BoxSizer(wx.VERTICAL)
-        self.__origPixdimSizer = wx.BoxSizer(wx.VERTICAL)
-        self.__voxSizer        = wx.BoxSizer(wx.VERTICAL)
-        self.__pixdimSizer     = wx.BoxSizer(wx.VERTICAL)
-        self.__origVoxSizer   .Add(self.__origVoxx)
-        self.__origVoxSizer   .Add(self.__origVoxy)
-        self.__origVoxSizer   .Add(self.__origVoxz)
-        self.__origPixdimSizer.Add(self.__origPixdimx)
-        self.__origPixdimSizer.Add(self.__origPixdimy)
-        self.__origPixdimSizer.Add(self.__origPixdimz)
+        self.__origVoxx = wx.StaticText(self, label=strvox[0])
+        self.__origVoxy = wx.StaticText(self, label=strvox[1])
+        self.__origVoxz = wx.StaticText(self, label=strvox[2])
+        self.__origPixx = wx.StaticText(self, label=strpix[0])
+        self.__origPixy = wx.StaticText(self, label=strpix[1])
+        self.__origPixz = wx.StaticText(self, label=strpix[2])
 
-        self.__voxSizer       .Add(self.__voxx)
-        self.__voxSizer       .Add(self.__voxy)
-        self.__voxSizer       .Add(self.__voxz)
-        self.__pixdimSizer    .Add(self.__pixdimx)
-        self.__pixdimSizer    .Add(self.__pixdimy)
-        self.__pixdimSizer    .Add(self.__pixdimz)
+        self.__voxx = floatspin.FloatSpinCtrl(self, value=shape[ 0], **voxargs)
+        self.__voxy = floatspin.FloatSpinCtrl(self, value=shape[ 1], **voxargs)
+        self.__voxz = floatspin.FloatSpinCtrl(self, value=shape[ 2], **voxargs)
+        self.__pixx = floatspin.FloatSpinCtrl(self, value=pixdim[0], **pixargs)
+        self.__pixy = floatspin.FloatSpinCtrl(self, value=pixdim[1], **pixargs)
+        self.__pixz = floatspin.FloatSpinCtrl(self, value=pixdim[2], **pixargs)
 
-        self.__dimSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__dimSizer.Add(self.__origVoxSizer)
-        self.__dimSizer.Add(self.__origPixdimSizer)
-        self.__dimSizer.Add(self.__voxSizer)
-        self.__dimSizer.Add(self.__pixdimSizer)
+        self.__interpChoices = ['nearest', 'linear', 'cubic']
+        self.__interpLabels  = [strings.labels[self, c]
+                                for c in self.__interpChoices]
 
-        self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__interpLabel   = wx.StaticText(self)
+        self.__interp        = wx.Choice(self, choices=self.__interpLabels)
+
+        self.__interp.SetSelection(1)
+        self.__interpLabel.SetLabel(strings.labels[self, 'interpolation'])
+
+        self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
+        self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        self.__yrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        self.__zrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        self.__interpSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
+        self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
+
+        self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
+        self.__labelSizer.Add(self.__origVoxLabel, flag=wx.EXPAND,
+                              proportion=1)
+        self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
+        self.__labelSizer.Add(self.__origPixLabel, flag=wx.EXPAND,
+                              proportion=1)
+        self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
+        self.__labelSizer.Add(self.__voxLabel,     flag=wx.EXPAND,
+                              proportion=1)
+        self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
+        self.__labelSizer.Add(self.__pixLabel,     flag=wx.EXPAND,
+                              proportion=1)
+        self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
+
+        self.__xrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__xrowSizer.Add(self.__origVoxx, flag=wx.EXPAND, proportion=1)
+        self.__xrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__xrowSizer.Add(self.__origPixx, flag=wx.EXPAND, proportion=1)
+        self.__xrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__xrowSizer.Add(self.__voxx,     flag=wx.EXPAND, proportion=1)
+        self.__xrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__xrowSizer.Add(self.__pixx,     flag=wx.EXPAND, proportion=1)
+        self.__xrowSizer.Add((10, 10),        flag=wx.EXPAND)
+
+        self.__yrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__yrowSizer.Add(self.__origVoxy, flag=wx.EXPAND, proportion=1)
+        self.__yrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__yrowSizer.Add(self.__origPixy, flag=wx.EXPAND, proportion=1)
+        self.__yrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__yrowSizer.Add(self.__voxy,     flag=wx.EXPAND, proportion=1)
+        self.__yrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__yrowSizer.Add(self.__pixy,     flag=wx.EXPAND, proportion=1)
+        self.__yrowSizer.Add((10, 10),        flag=wx.EXPAND)
+
+        self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__zrowSizer.Add(self.__origVoxz, flag=wx.EXPAND, proportion=1)
+        self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__zrowSizer.Add(self.__origPixz, flag=wx.EXPAND, proportion=1)
+        self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__zrowSizer.Add(self.__voxz,     flag=wx.EXPAND, proportion=1)
+        self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
+        self.__zrowSizer.Add(self.__pixz,     flag=wx.EXPAND, proportion=1)
+        self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
+
+        self.__interpSizer.Add((10, 1),            flag=wx.EXPAND,
+                               proportion=1)
+        self.__interpSizer.Add(self.__interpLabel, flag=wx.EXPAND)
+        self.__interpSizer.Add((10, 1),            flag=wx.EXPAND)
+        self.__interpSizer.Add(self.__interp,      flag=wx.EXPAND)
+        self.__interpSizer.Add((10, 1),            flag=wx.EXPAND,
+                               proportion=1)
+
+        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
         self.__btnSizer.Add(self.__ok,     flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
+        self.__btnSizer.Add(self.__reset,  flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
         self.__btnSizer.Add(self.__cancel, flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
 
-        self.__mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.__mainSizer.Add(self.__dimSizer)
-        self.__mainSizer.Add(self.__btnSizer)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__labelSizer,  flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__xrowSizer,   flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__yrowSizer,   flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__zrowSizer,   flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__interpSizer, flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__btnSizer,    flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
 
         self.SetSizer(self.__mainSizer)
 
         self.__ok    .Bind(wx.EVT_BUTTON,           self.__onOk)
+        self.__reset .Bind(wx.EVT_BUTTON,           self.__onReset)
         self.__cancel.Bind(wx.EVT_BUTTON,           self.__onCancel)
         self.__voxx  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
         self.__voxy  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
         self.__voxz  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
+        self.__pixx  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
+        self.__pixy  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
+        self.__pixz  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
 
         self.__ok.SetDefault()
 
+        self.Layout()
+        self.Fit()
+        self.CentreOnParent()
+
 
     def __onVoxel(self, ev):
+        """Called when the user changes a voxel value. Updates the pixdim
+        values accordingly.
+        """
 
-        newpix = self.GetPixdim()
+        newpix = self.__derivePixdims()
 
-        self.__pixdimx.SetLabel('{:0.2f}'.format(newpix[0]))
-        self.__pixdimy.SetLabel('{:0.2f}'.format(newpix[1]))
-        self.__pixdimz.SetLabel('{:0.2f}'.format(newpix[2]))
+        self.__pixx.SetValue(newpix[0])
+        self.__pixy.SetValue(newpix[1])
+        self.__pixz.SetValue(newpix[2])
+
+
+    def __onPixdim(self, ev):
+        """Called when the user changes a pixdim value. Updates the voxel
+        values accordingly.
+        """
+
+        newvox = self.__deriveVoxels()
+
+        self.__voxx.SetValue(newvox[0])
+        self.__voxy.SetValue(newvox[1])
+        self.__voxz.SetValue(newvox[2])
 
 
     def __onOk(self, ev):
-        """Called when the ok button is pushed. """
-        self.__newShape = (self.__voxx.GetValue(),
-                           self.__voxy.GetValue(),
-                           self.__voxz.GetValue())
+        """Called when the ok button is pushed. Closes the dialog. """
         self.EndModal(wx.ID_OK)
 
 
+    def __onReset(self, ev):
+        """Called when the reset button is pushed. Resets the shape and pixdims
+        to their original values.
+        """
+        self.__voxx.SetValue(self.__oldShape[ 0])
+        self.__voxy.SetValue(self.__oldShape[ 1])
+        self.__voxz.SetValue(self.__oldShape[ 2])
+        self.__pixx.SetValue(self.__oldPixdim[0])
+        self.__pixy.SetValue(self.__oldPixdim[1])
+        self.__pixz.SetValue(self.__oldPixdim[2])
+
+
     def __onCancel(self, ev):
-        """Called when the cancel button is pushed. """
+        """Called when the cancel button is pushed. Closes the dialog. """
         self.EndModal(wx.ID_CANCEL)
 
 
-    def GetShape(self):
+    def GetVoxels(self):
+        """Returns the current voxel values. """
         return (self.__voxx.GetValue(),
                 self.__voxy.GetValue(),
                 self.__voxz.GetValue())
 
 
-    def GetPixdim(self):
+    def GetInterpolation(self):
+        """Returns the currently selected interpolation setting, either
+        ``'nearest'``, ``'linear'``, or ``'cubic'``.
         """
-        """
+        choice = self.__interp.GetSelection()
+        return self.__interpChoices[choice]
+
+
+    def GetPixdims(self):
+        """Returns the current pixdim values. """
+        return (self.__pixx.GetValue(),
+                self.__pixy.GetValue(),
+                self.__pixz.GetValue())
+
+
+    def __derivePixdims(self):
+        """Derives new pixdim values from the current voxel values. """
         olds = self.__oldShape
         oldp = self.__oldPixdim
-        news = self.GetShape()
-
-        pfac = [o / float(n) for o, n in zip(olds, news)]
-        newp = [p * f for p, f in zip(oldp, pfac)]
+        news = self.GetVoxels()
+        fac  = [o / float(n) for o, n in zip(olds, news)]
+        newp = [p * f        for p, f in zip(oldp, fac)]
 
         return newp
+
+
+    def __deriveVoxels(self):
+        """Derives new voxel values from the current pixdim values. """
+        olds = self.__oldShape
+        oldp = self.__oldPixdim
+        newp = self.GetPixdims()
+        fac  = [o / float(n)      for o, n in zip(oldp, newp)]
+        news = [int(round(p * f)) for p, f in zip(olds, fac)]
+
+        return news
