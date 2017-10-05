@@ -9,11 +9,11 @@ which allows the user to resample an image to a different resolution.
 """
 
 
-import wx
+import          wx
+import numpy as np
 
 import fsleyes_widgets.floatspin as floatspin
 import fsl.data.image            as fslimage
-import fsl.utils.transform       as transform
 import fsleyes.strings           as strings
 from . import                       base
 
@@ -80,21 +80,17 @@ class ResampleAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        oldShape  = ovl.shape[:3]
         newShape  = dlg.GetVoxels()
         interp    = dlg.GetInterpolation()
+        dtype     = dlg.GetDataType()
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
-        resampled = ovl.resample(newShape, order=interp)
         name      = '{}_resampled'.format(ovl.name)
 
-        scale     = [os / float(ns) for os, ns in zip(oldShape, newShape)]
-        offset    = [(s - 1) / 2.0  for s in scale]
-        scale     = transform.scaleOffsetXform(scale, offset)
-        xform     = transform.concat(ovl.voxToWorldMat, scale)
-        resampled = fslimage.Image(resampled,
-                                   xform=xform,
-                                   header=ovl.header,
-                                   name=name)
+        resampled, xform = ovl.resample(newShape, dtype=dtype, order=interp)
+        resampled        = fslimage.Image(resampled,
+                                          xform=xform,
+                                          header=ovl.header,
+                                          name=name)
 
         self.__overlayList.append(resampled)
 
@@ -167,21 +163,35 @@ class ResampleDialog(wx.Dialog):
         self.__pixy = floatspin.FloatSpinCtrl(self, value=pixdim[1], **pixargs)
         self.__pixz = floatspin.FloatSpinCtrl(self, value=pixdim[2], **pixargs)
 
-        self.__interpChoices = ['nearest', 'linear', 'cubic']
+        self.__interpChoices = ['linear', 'nearest', 'cubic']
+        self.__dtypeChoices  = [('float',  np.float32),
+                                ('uchar',  np.uint8),
+                                ('sshort', np.int16),
+                                ('sint',   np.int32),
+                                ('double', np.float64)]
+
         self.__interpLabels  = [strings.labels[self, c]
                                 for c in self.__interpChoices]
+        self.__dtypeLabels   = [strings.labels[self, c[0]]
+                                for c in self.__dtypeChoices]
 
         self.__interpLabel   = wx.StaticText(self)
+        self.__dtypeLabel    = wx.StaticText(self)
         self.__interp        = wx.Choice(self, choices=self.__interpLabels)
+        self.__dtype         = wx.Choice(self, choices=self.__dtypeLabels)
 
-        self.__interp.SetSelection(1)
+        self.__interp.SetSelection(0)
+        self.__dtype .SetSelection(0)
+
         self.__interpLabel.SetLabel(strings.labels[self, 'interpolation'])
+        self.__dtypeLabel .SetLabel(strings.labels[self, 'dtype'])
 
         self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
         self.__yrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
         self.__zrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
         self.__interpSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__dtypeSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
         self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
 
@@ -237,6 +247,14 @@ class ResampleDialog(wx.Dialog):
         self.__interpSizer.Add((10, 1),            flag=wx.EXPAND,
                                proportion=1)
 
+        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND,
+                               proportion=1)
+        self.__dtypeSizer.Add(self.__dtypeLabel, flag=wx.EXPAND)
+        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND)
+        self.__dtypeSizer.Add(self.__dtype,      flag=wx.EXPAND)
+        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND,
+                               proportion=1)
+
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
         self.__btnSizer.Add(self.__ok,     flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
@@ -253,6 +271,8 @@ class ResampleDialog(wx.Dialog):
         self.__mainSizer.Add(self.__zrowSizer,   flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__interpSizer, flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__dtypeSizer,  flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__btnSizer,    flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
@@ -316,6 +336,9 @@ class ResampleDialog(wx.Dialog):
         self.__pixy.SetValue(self.__oldPixdim[1])
         self.__pixz.SetValue(self.__oldPixdim[2])
 
+        self.__interp.SetSelection(0)
+        self.__dtype .SetSelection(0)
+
 
     def __onCancel(self, ev):
         """Called when the cancel button is pushed. Closes the dialog. """
@@ -335,6 +358,15 @@ class ResampleDialog(wx.Dialog):
         """
         choice = self.__interp.GetSelection()
         return self.__interpChoices[choice]
+
+
+    def GetDataType(self):
+        """Returns the currently selected data type setting as a
+        ``numpy.dtype``, one of ``uint8``, ``int16``, ``int32``, ``float32``,
+        or ``float64``.
+        """
+        choice = self.__dtype.GetSelection()
+        return self.__dtypeChoices[choice][1]
 
 
     def GetPixdims(self):
