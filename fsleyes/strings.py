@@ -746,6 +746,7 @@ labels = TypeDict({
     'ResampleDialog.reset'         : 'Reset',
     'ResampleDialog.cancel'        : 'Cancel',
     'ResampleDialog.interpolation' : 'Interpolation',
+    'ResampleDialog.smoothing'     : 'Smoothing',
     'ResampleDialog.dtype'         : 'Data type',
     'ResampleDialog.nearest'       : 'Nearest neighbour',
     'ResampleDialog.linear'        : 'Linear',

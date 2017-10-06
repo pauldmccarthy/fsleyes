@@ -735,9 +735,22 @@ actions = TypeDict({
 })
 
 
-
 misc = TypeDict({
     'PlotControlPanel.labels' : 'X/Y axis labels.',
     'PlotControlPanel.xlim'   : 'X axis data limits.',
-    'PlotControlPanel.ylim'   : 'Y axis data limits.'
+    'PlotControlPanel.ylim'   : 'Y axis data limits.',
+
+    'ResampleDialog.interpolation' :
+    'The interpolation approach to use when resampling.',
+    'ResampleDialog.dtype' :
+    'The data type of the resampled image. If you are resampling and '
+    'interpolating an image with an integer data type, you may need to select '
+    'a floating point type for the interpolation to have any effect.',
+    'ResampleDialog.smoothing' :
+    'If selected, the image data is smoothed with a gaussian filter before '
+    'being resampled. This is to ensure that the values of the voxels in the '
+    'image contribute more evenly to the values in the resampled image '
+    'voxels. This setting has no effect when using nearest neighbour '
+    'interpolation, and is only applied along axes which are being '
+    'down-sampled.',
 })

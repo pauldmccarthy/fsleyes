@@ -15,6 +15,7 @@ import numpy as np
 import fsleyes_widgets.floatspin as floatspin
 import fsl.data.image            as fslimage
 import fsleyes.strings           as strings
+import fsleyes.tooltips          as tooltips
 from . import                       base
 
 
@@ -83,10 +84,14 @@ class ResampleAction(base.Action):
         newShape  = dlg.GetVoxels()
         interp    = dlg.GetInterpolation()
         dtype     = dlg.GetDataType()
+        smoothing = dlg.GetSmoothing()
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
         name      = '{}_resampled'.format(ovl.name)
 
-        resampled, xform = ovl.resample(newShape, dtype=dtype, order=interp)
+        resampled, xform = ovl.resample(newShape,
+                                        dtype=dtype,
+                                        order=interp,
+                                        smooth=smoothing)
         resampled        = fslimage.Image(resampled,
                                           xform=xform,
                                           header=ovl.header,
@@ -98,7 +103,8 @@ class ResampleAction(base.Action):
 class ResampleDialog(wx.Dialog):
     """The ``ResampleDialog`` is used by the ``ResampleAction`` to prompt the
     user for a new resampled image shape. It contains controls allowing the
-    user to select new voxel and pixdim values.
+    user to select new voxel and pixdim values, and to select resampling
+    options for interpolation, data type, and smoothing.
     """
 
     def __init__(self, parent, title, shape, pixdim):
@@ -129,8 +135,7 @@ class ResampleDialog(wx.Dialog):
         voxargs = {'minValue'  : 1,
                    'maxValue'  : 9999,
                    'increment' : 1,
-                   'width'     : 6,
-                   'style'     : floatspin.FSC_INTEGER}
+                   'width'     : 6}
         pixargs = {'minValue'  : 0.001,
                    'maxValue'  : 50,
                    'increment' : 0.5,
@@ -175,16 +180,27 @@ class ResampleDialog(wx.Dialog):
         self.__dtypeLabels   = [strings.labels[self, c[0]]
                                 for c in self.__dtypeChoices]
 
-        self.__interpLabel   = wx.StaticText(self)
-        self.__dtypeLabel    = wx.StaticText(self)
-        self.__interp        = wx.Choice(self, choices=self.__interpLabels)
-        self.__dtype         = wx.Choice(self, choices=self.__dtypeLabels)
+        self.__interpLabel = wx.StaticText(self)
+        self.__dtypeLabel  = wx.StaticText(self)
+        self.__smoothLabel = wx.StaticText(self)
+        self.__interp      = wx.Choice(self, choices=self.__interpLabels)
+        self.__dtype       = wx.Choice(self, choices=self.__dtypeLabels)
+        self.__smooth      = wx.CheckBox(self)
 
         self.__interp.SetSelection(0)
         self.__dtype .SetSelection(0)
+        self.__smooth.SetValue(True)
 
         self.__interpLabel.SetLabel(strings.labels[self, 'interpolation'])
         self.__dtypeLabel .SetLabel(strings.labels[self, 'dtype'])
+        self.__smoothLabel.SetLabel(strings.labels[self, 'smoothing'])
+
+        self.__interp     .SetToolTip(tooltips.misc[self, 'interpolation'])
+        self.__interpLabel.SetToolTip(tooltips.misc[self, 'interpolation'])
+        self.__dtype      .SetToolTip(tooltips.misc[self, 'dtype'])
+        self.__dtypeLabel .SetToolTip(tooltips.misc[self, 'dtype'])
+        self.__smooth     .SetToolTip(tooltips.misc[self, 'smoothing'])
+        self.__smoothLabel.SetToolTip(tooltips.misc[self, 'smoothing'])
 
         self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
@@ -192,6 +208,7 @@ class ResampleDialog(wx.Dialog):
         self.__zrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
         self.__interpSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__dtypeSizer  = wx.BoxSizer(wx.HORIZONTAL)
+        self.__smoothSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
         self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
 
@@ -239,20 +256,25 @@ class ResampleDialog(wx.Dialog):
         self.__zrowSizer.Add(self.__pixz,     flag=wx.EXPAND, proportion=1)
         self.__zrowSizer.Add((10, 10),        flag=wx.EXPAND)
 
-        self.__interpSizer.Add((10, 1),            flag=wx.EXPAND,
-                               proportion=1)
+        self.__interpSizer.Add((50, 1),            flag=wx.EXPAND)
         self.__interpSizer.Add(self.__interpLabel, flag=wx.EXPAND)
         self.__interpSizer.Add((10, 1),            flag=wx.EXPAND)
         self.__interpSizer.Add(self.__interp,      flag=wx.EXPAND)
         self.__interpSizer.Add((10, 1),            flag=wx.EXPAND,
                                proportion=1)
 
-        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND,
-                               proportion=1)
+        self.__dtypeSizer.Add((50, 1),           flag=wx.EXPAND)
         self.__dtypeSizer.Add(self.__dtypeLabel, flag=wx.EXPAND)
-        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND)
+        self.__dtypeSizer.Add((10, 1),           flag=wx.EXPAND)
         self.__dtypeSizer.Add(self.__dtype,      flag=wx.EXPAND)
-        self.__dtypeSizer.Add((10, 1),            flag=wx.EXPAND,
+        self.__dtypeSizer.Add((10, 1),           flag=wx.EXPAND,
+                               proportion=1)
+
+        self.__smoothSizer.Add((50, 1),            flag=wx.EXPAND)
+        self.__smoothSizer.Add(self.__smoothLabel, flag=wx.EXPAND)
+        self.__smoothSizer.Add((10, 1),            flag=wx.EXPAND)
+        self.__smoothSizer.Add(self.__smooth,      flag=wx.EXPAND)
+        self.__smoothSizer.Add((10, 1),            flag=wx.EXPAND,
                                proportion=1)
 
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
@@ -273,6 +295,8 @@ class ResampleDialog(wx.Dialog):
         self.__mainSizer.Add(self.__interpSizer, flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__dtypeSizer,  flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__smoothSizer, flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__btnSizer,    flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
@@ -369,6 +393,13 @@ class ResampleDialog(wx.Dialog):
         return self.__dtypeChoices[choice][1]
 
 
+    def GetSmoothing(self):
+        """Returns the currently selected smoothing setting, either
+        ``True``, or ``False``.
+        """
+        return self.__smooth.GetValue()
+
+
     def GetPixdims(self):
         """Returns the current pixdim values. """
         return (self.__pixx.GetValue(),
@@ -392,7 +423,7 @@ class ResampleDialog(wx.Dialog):
         olds = self.__oldShape
         oldp = self.__oldPixdim
         newp = self.GetPixdims()
-        fac  = [o / float(n)      for o, n in zip(oldp, newp)]
-        news = [int(round(p * f)) for p, f in zip(olds, fac)]
+        fac  = [o / float(n) for o, n in zip(oldp, newp)]
+        news = [p * f        for p, f in zip(olds, fac)]
 
         return news
