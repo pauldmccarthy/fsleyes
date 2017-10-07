@@ -4,28 +4,40 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`CropImagePanel` class.
+
+The ``CropImagePanel`` is a a FSLeyes control which is used in conjunction
+with the :class:`.OrthoCropProfile`, allowing the user to crop an image.
+This module also provides the standalone :func:`loadCropParameters` function,
+for loading cropping parameters from a file.
+"""
 
 
-import wx
+import              os
+import os.path   as op
+import itertools as it
+import              wx
+import numpy     as np
 
-import fsl.utils.async             as async
-import fsl.data.image              as fslimage
+import fsl.utils.async              as async
+import fsl.data.image               as fslimage
 
-import fsleyes_props               as props
-import fsleyes_widgets.rangeslider as rslider
+import fsleyes_props                as props
+import fsleyes_widgets.rangeslider  as rslider
+import fsleyes_widgets.utils.status as status
 
-import fsleyes.panel               as fslpanel
-import fsleyes.displaycontext      as displaycontext
-import fsleyes.strings             as strings
-import fsleyes.actions.copyoverlay as copyoverlay
+import fsleyes.panel                as fslpanel
+import fsleyes.displaycontext       as displaycontext
+import fsleyes.strings              as strings
+import fsleyes.actions.copyoverlay  as copyoverlay
 
 
 class CropImagePanel(fslpanel.FSLeyesPanel):
     """The ``CropImagePanel`` class is a FSLeyes control for use in an
-    :class:`.OrthoPanel`, with the associated :class:`.CropImageProfile`.
-    It contains controls allowing the user to define a cropping box
-    for the currently selected overlay (if it is an :class:`.Image`),
-    and "Crop" and "Cancel" buttons.
+    :class:`.OrthoPanel`, with the associated :class:`.CropImageProfile`.  It
+    contains controls allowing the user to define a cropping box for the
+    currently selected overlay (if it is an :class:`.Image`), and "Crop",
+    "Load", "Save", and "Cancel" buttons.
     """
 
 
@@ -67,12 +79,15 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__sizeLabel       = wx.StaticText(self)
         self.__cropButton      = wx.Button(    self, id=wx.ID_OK)
         self.__robustFovButton = wx.Button(    self)
+        self.__loadButton      = wx.Button(    self)
+        self.__saveButton      = wx.Button(    self)
         self.__cancelButton    = wx.Button(    self, id=wx.ID_CANCEL)
 
-        self.__cropButton     .SetLabel(strings.labels[self, 'cropButton'])
-        self.__robustFovButton.SetLabel(strings.labels[self,
-                                                       'robustFovButton'])
-        self.__cancelButton   .SetLabel(strings.labels[self, 'cancelButton'])
+        self.__cropButton     .SetLabel(strings.labels[self, 'crop'])
+        self.__robustFovButton.SetLabel(strings.labels[self, 'robustFov'])
+        self.__loadButton     .SetLabel(strings.labels[self, 'load'])
+        self.__saveButton     .SetLabel(strings.labels[self, 'save'])
+        self.__cancelButton   .SetLabel(strings.labels[self, 'cancel'])
 
         self.__sizer    = wx.BoxSizer(wx.VERTICAL)
         self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -94,6 +109,10 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
         self.__btnSizer.Add(self.__robustFovButton, flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
+        self.__btnSizer.Add(self.__loadButton,      flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
+        self.__btnSizer.Add(self.__saveButton,      flag=wx.EXPAND)
+        self.__btnSizer.Add((10, 1),                flag=wx.EXPAND)
         self.__btnSizer.Add(self.__cancelButton,    flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),                flag=wx.EXPAND,
                             proportion=1)
@@ -103,6 +122,8 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__cropButton.SetDefault()
 
         self.__cropButton  .Bind(wx.EVT_BUTTON,          self.__onCrop)
+        self.__loadButton  .Bind(wx.EVT_BUTTON,          self.__onLoad)
+        self.__saveButton  .Bind(wx.EVT_BUTTON,          self.__onSave)
         self.__cancelButton.Bind(wx.EVT_BUTTON,          self.__onCancel)
         self.__volumeWidget.Bind(rslider.EVT_RANGE,      self.__onVolume)
         self.__volumeWidget.Bind(rslider.EVT_LOW_RANGE,  self.__onVolume)
@@ -153,8 +174,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__overlay = overlay
 
         display = self.getDisplayContext().getDisplay(overlay)
-
-        is4D = len(overlay.shape) == 4 and overlay.shape[3] > 1
+        is4D    = overlay.ndims >= 4
 
         if is4D:
             self.__volumeWidget.SetLimits(0, overlay.shape[3])
@@ -224,7 +244,6 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         overlay = self.__overlay
         profile = self.__profile
-        is4D    = len(overlay.shape) == 4 and overlay.shape[3] > 1
         xlen    = profile.cropBox.xlen
         ylen    = profile.cropBox.ylen
         zlen    = profile.cropBox.zlen
@@ -232,7 +251,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         thi     = self.__volumeWidget.GetHigh()
         tlen    = thi - tlo
 
-        if is4D:
+        if overlay.ndims >= 4:
             label = strings.labels[self, 'cropSize4d']
             label = label.format(xlen, ylen, zlen, tlen)
         else:
@@ -254,6 +273,95 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         Updates the label which displays the crop region size.
         """
         self.__updateSizeLabel()
+
+
+    def __onLoad(self, ev):
+        """Called when the Save button is pushed. Prompts the user to select
+        a file to load crop parameters from.
+        """
+
+        overlay  = self.__overlay
+        cropBox  = self.__profile.cropBox
+        fileName = '{}_crop.txt'.format(overlay.name)
+
+        if overlay.dataSource is not None:
+            dirName = op.dirname(overlay.dataSource)
+        else:
+            dirName = os.getcwd()
+
+        if not op.exists(op.join(dirName, fileName)):
+            fileName = ''
+
+        dlg = wx.FileDialog(
+            self,
+            defaultDir=dirName,
+            defaultFile=fileName,
+            message=strings.messages[self, 'saveCrop'],
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        filePath = dlg.GetPath()
+        errTitle = strings.titles[  self, 'loadError']
+        errMsg   = strings.messages[self, 'loadError']
+
+        with status.reportIfError(errTitle, errMsg, raiseError=False):
+
+            params     = loadCropParameters(filePath, overlay)
+            cropBox[:] = params[:6]
+
+            if overlay.ndims >= 4:
+                tlo, thi = params[6:]
+                self.__volumeWidget.SetLow(tlo)
+                self.__volumeWidget.SetHigh(thi)
+
+
+    def __onSave(self, ev):
+        """Called when the Save button is pushed. Saves the current crop
+        parameters to a text file.
+        """
+
+        overlay  = self.__overlay
+        cropBox  = self.__profile.cropBox
+        fileName = '{}_crop.txt'.format(overlay.name)
+
+        if overlay.dataSource is not None:
+            dirName = op.dirname(overlay.dataSource)
+        else:
+            dirName = os.getcwd()
+
+        dlg = wx.FileDialog(
+            self,
+            defaultDir=dirName,
+            defaultFile=fileName,
+            message=strings.messages[self, 'saveCrop'],
+            style=wx.FD_SAVE)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        filePath = dlg.GetPath()
+
+        # The crop parameters are saved
+        # in a fslroi-compatible manner.
+        params = [cropBox.xlo,
+                  cropBox.xhi - cropBox.xlo,
+                  cropBox.ylo,
+                  cropBox.yhi - cropBox.ylo,
+                  cropBox.zlo,
+                  cropBox.zhi - cropBox.zlo]
+
+        if overlay.ndims >= 4:
+            tlo     = self.__volumeWidget.GetLow()
+            thi     = self.__volumeWidget.GetHigh()
+            params.extend((tlo, thi - tlo))
+
+        errTitle = strings.titles[  self, 'saveError']
+        errMsg   = strings.messages[self, 'saveError']
+
+        with status.reportIfError(errTitle, errMsg, raiseError=False):
+            np.savetxt(filePath, [params], fmt='%i')
 
 
     def __onCancel(self, ev=None):
@@ -280,7 +388,6 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         overlayList = self.getOverlayList()
         displayCtx  = self.getDisplayContext()
         overlay     = displayCtx.getSelectedOverlay()
-        is4D        = len(overlay.shape) == 4 and overlay.shape[3] > 1
         display     = displayCtx.getDisplay(overlay)
         name        = '{}_roi'.format(display.name)
         cropBox     = self.__profile.cropBox
@@ -288,7 +395,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
                        cropBox.y,
                        cropBox.z]
 
-        if is4D:
+        if overlay.ndims >= 4:
             roi.append(self.__volumeWidget.GetRange())
 
         copyoverlay.copyImage(
@@ -302,3 +409,59 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             roi=roi)
 
         self.__onCancel()
+
+
+def loadCropParameters(filename, overlay):
+    """Load in crop values from a text file assumed to contain ``fslroi``-
+    compatible parameters. Any parameters which may be passed to ``fslroi``
+    are accepted::
+
+        fslroi in out tmin tlen
+        fslroi in out xmin xlen ymin ylen zmin zlen
+        fslroi in out xmin xlen ymin ylen zmin zlen tmin tlen
+
+    Any of the ``len`` parameters may be equal to -1, in which case it is
+    interpreted as continuing from the low index
+
+    :arg filename: File to load crop parameters from.
+    :arg overlay:  An :class:`.Image` which is the cropping target.
+    :returns:      A sequence of ``lo, hi`` crop parameters.
+    """
+
+    is4D   = overlay.ndims >= 4
+    shape  = overlay.shape[:4]
+    params = list(np.loadtxt(filename).flatten())
+
+    if len(params) not in (2, 6, 8):
+        raise ValueError('File contains the wrong number of crop parameters')
+    if len(params) in (2, 8) and not is4D:
+        raise ValueError('File contains the wrong number of crop parameters')
+
+    if len(params) == 2:
+        params = [0, -1, 0, -1, 0, -1] + params
+
+    if is4D and len(params) == 6:
+        params = params + [0, -1]
+
+    los = []
+    his = []
+
+    for dim in range(len(shape)):
+
+        dlo  = params[dim * 2]
+        dlen = params[dim * 2 + 1]
+
+        if dlen == -1:
+            dlen = shape[dim] - dlo
+
+        dhi = dlo + dlen
+
+        los.append(dlo)
+        his.append(dhi)
+
+    for lo, hi, lim in zip(los, his, shape):
+        if lo < 0 or hi > lim:
+            raise ValueError('Crop parameters are out of bounds for image '
+                             'shape ({} < 0 or {} > {}'.format(lo, hi, lim))
+
+    return list(it.chain(*zip(los, his)))
