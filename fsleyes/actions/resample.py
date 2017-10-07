@@ -21,7 +21,7 @@ from . import                       base
 
 class ResampleAction(base.Action):
     def __init__(self, overlayList, displayCtx, frame):
-        """Create a ``CopyOverlayAction``.
+        """Create a ``ResampleAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
