@@ -245,6 +245,13 @@ messages = TypeDict({
     'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
     'FlirtFileDialog.refFile'    : 'Select FLIRT reference image',
 
+    'CropImagePanel.saveCrop'  : 'Select a file to save the crop parameters',
+    'CropImagePanel.loadCrop'  : 'Select a file to load crop parameters from',
+    'CropImagePanel.saveError' :
+    'An error occurred saving the crop parameters',
+    'CropImagePanel.loadError' :
+    'An error occurred loading the crop parameters',
+
 
     'LoadVertexDataAction.loadVertexData' :
     'Select a vertex data file for {}',
@@ -359,6 +366,8 @@ titles = TypeDict({
 
     'ExportDataSeriesAction.saveXColumn'  : 'Save X data?',
 
+    'CropImagePanel.loadError' : 'Error loading crop parameters',
+    'CropImagePanel.saveError' : 'Error saving crop parameters',
 
     'AddMaskDataSeriesAction.selectMask'  :
     'ROI time series from {}',
@@ -412,6 +421,7 @@ actions = TypeDict({
     'ApplyFlirtXfmAction'      : 'Load FLIRT transformation',
     'SaveFlirtXfmAction'       : 'Export FLIRT transformation',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
+    'ResampleAction'           : 'Resample image',
 
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -618,7 +628,7 @@ labels = TypeDict({
                                                         '(FSL convention)',
     'OverlayInfoPanel.Nifti.displaySpace.affine'      : 'World coordinates',
     'OverlayInfoPanel.Nifti.displaySpace.world'       : 'World coordinates',
-    'OverlayInfoPanel.Nifti.displaySpace.custom'      : 'Scaled voxels '
+    'OverlayInfoPanel.Nifti.displaySpace.reference'   : 'Scaled voxels '
                                                         '({}; FSL convention)',
 
 
@@ -691,9 +701,11 @@ labels = TypeDict({
     'CropImagePanel.cropSize.noImage' : 'Croppsed shape: n/a',
     'CropImagePanel.image'            : 'Crop {}',
     'CropImagePanel.image.noImage'    : 'Choose a NIFTI image',
-    'CropImagePanel.cropButton'       : 'Crop',
-    'CropImagePanel.robustFovButton'  : 'Robust FOV',
-    'CropImagePanel.cancelButton'     : 'Cancel',
+    'CropImagePanel.crop'             : 'Crop',
+    'CropImagePanel.robustFov'        : 'Robust FOV',
+    'CropImagePanel.load'             : 'Load',
+    'CropImagePanel.save'             : 'Save',
+    'CropImagePanel.cancel'           : 'Cancel',
 
     'EditTransformPanel.dsWarning'   :
     'Warning: Change the display space to "World" to see\n'
@@ -729,6 +741,25 @@ labels = TypeDict({
     'FlirtFileDialog.selectFile'          : 'Choose',
     'FlirtFileDialog.ok'                  : 'Ok',
     'FlirtFileDialog.cancel'              : 'Cancel',
+
+    'ResampleDialog.ok'            : 'Ok',
+    'ResampleDialog.reset'         : 'Reset',
+    'ResampleDialog.cancel'        : 'Cancel',
+    'ResampleDialog.interpolation' : 'Interpolation',
+    'ResampleDialog.smoothing'     : 'Smoothing',
+    'ResampleDialog.dtype'         : 'Data type',
+    'ResampleDialog.nearest'       : 'Nearest neighbour',
+    'ResampleDialog.linear'        : 'Linear',
+    'ResampleDialog.cubic'         : 'Cubic',
+    'ResampleDialog.uchar'         : 'Unsigned char',
+    'ResampleDialog.sshort'        : 'Signed short',
+    'ResampleDialog.sint'          : 'Signed int',
+    'ResampleDialog.float'         : 'Float',
+    'ResampleDialog.double'        : 'Double',
+    'ResampleDialog.origVoxels'    : 'Old shape',
+    'ResampleDialog.origPixdims'   : 'Old pixdims',
+    'ResampleDialog.newVoxels'     : 'New shape',
+    'ResampleDialog.newPixdims'    : 'New pixdims',
 })
 
 
