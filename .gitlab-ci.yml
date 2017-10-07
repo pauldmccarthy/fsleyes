@@ -32,7 +32,7 @@
 # branches.
 #
 # Standalone distributions are deployed to a hosting server for release
-# tags, and installed internally for CentOS6 and macOS.
+# tags.
 ###########################################################################
 
 
@@ -571,29 +571,3 @@ deploy-builds:
 
   script:
     - rsync -rv dist/FSLeyes*zip "builddeploy:"
-
-
-deploy-install:
-  <<: *only_releases
-  stage: deploy
-  when:  manual
-  image: python:3.5
-  tags:
-    - docker
-
-  dependencies:
-    - build-centos6
-    - build-macos
-
-  script:
-    - mkdir mac-install
-    - mkdir centos6-install
-    - pushd mac-install
-    - unzip ../dist/FSLeyes*macos.zip
-    - rsync -rv FSLeyes.app "macinstall:"
-    - popd
-    - pushd centos6-install
-    - unzip ../dist/FSLeyes*centos6.zip
-    - rsync -rv FSLeyes "linuxinstall:"
-    - popd
-    - rm -r mac-install linux-install
