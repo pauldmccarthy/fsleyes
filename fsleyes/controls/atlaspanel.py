@@ -459,6 +459,10 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
                 # regional label image
                 if summary:
+
+                    # Label index for probabilistic images refers
+                    # to the volume, so we need to add one to get
+                    # the label value in the summary image.
                     if   atlasDesc.atlasType == 'probabilistic':
                         labelVal = labelIdx + 1
                     elif atlasDesc.atlasType == 'label':

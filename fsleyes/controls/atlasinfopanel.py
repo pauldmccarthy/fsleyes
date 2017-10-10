@@ -350,8 +350,6 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
                     lines.append(probTemplate.format(prop,
                                                      label.name,
                                                      atlasID,
-                                                     label.index,
-                                                     atlasID,
                                                      label.index))
 
             elif isinstance(atlas, atlases.LabelAtlas):
@@ -364,8 +362,6 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
                 label = atlas.desc.labels[int(labelVal)]
 
                 lines.append(labelTemplate.format(label.name,
-                                                  atlasID,
-                                                  label.index,
                                                   atlasID,
                                                   label.index))
 
