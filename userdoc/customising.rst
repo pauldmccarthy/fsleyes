@@ -307,7 +307,8 @@ up looking something like the following:
               label image which 'summarises' the
               probabilistic image. If the atlas type is
               "Label", the <summaryimagefile> is identical
-              to the <imagefile>. -->
+              to the <imagefile>. There must be a
+              <summaryimagefile> for every <imagefile>. -->
          <summaryimagefile>/HarvardOxford/HarvardOxford-cort-maxprob-thr25-2mm</summaryimagefile>
        </images>
 
@@ -324,11 +325,12 @@ up looking something like the following:
 
        <!-- Every region in the atlas has a <label> element which defines:
 
-            - The "index" of the label in the 4D probabilistic
-              image, if the atlas type is "Probabilistic". The
-              index also defines the region label value, for
-              "Label" atlases, and for 3D summary files - add
-              1 to the index to get the label value.
+            - The "index". For probabilistic atlases, this is the index
+              of the corresponding volume in the 4D image file. For
+              label images, the index is the value of voxels which
+              are in the corresponding region. For 3D summary images of
+              probabilistic atlases, add 1 to the index to get the
+              label value.
 
             - The "x", "y", and "z" coordinates of a pre-
               calculated "centre-of-gravity" for this region.
