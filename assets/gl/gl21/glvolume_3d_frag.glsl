@@ -110,6 +110,15 @@ uniform int numClipPlanes;
  */
 uniform vec4 clipPlanes[10];
 
+
+/*
+ * How the clipping planes are applied:
+ *   -  1 clips the intersection of all planes
+ *   -  2 clips the union of all planes
+ *   -  3 clips the complement of all planes
+ */
+uniform int clipMode;
+
 /*
  * A vector which defines how far to move in one iteration
  * of the ray-cast loop. This is added directly to the
@@ -168,12 +177,13 @@ varying vec3 fragClipTexCoord;
 
 void main(void) {
 
-    vec3 texCoord     = fragTexCoord;
-    vec3 clipTexCoord = fragClipTexCoord;
-    vec4 colour       = vec4(0);
-    vec4 finalColour  = vec4(0);
-    vec4 depth        = vec4(0);
-    int  nsamples     = 0;
+    vec3 texCoord         = fragTexCoord;
+    vec3 clipTexCoord     = fragClipTexCoord;
+    vec4 colour           = vec4(0);
+    vec4 finalColour      = vec4(0);
+    vec4 depth            = vec4(0);
+    int  nsamples         = 0;
+    int  activeClipPlanes = 0;
     int  clipIdx;
 
     /*
@@ -205,24 +215,27 @@ void main(void) {
       }
 
       /*
-       * We clip out the intersection
-       * of all clipping planes. If this
-       * position is on the correct side
-       * of any clipping plane, we don't
-       * do any clipping.
+       * Count the number of active clipping
+       * planes (planes for which the current
+       * ray position is on thwe wrong side).
        */
+      activeClipPlanes = 0;
       for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++) {
-        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w >= 0) {
-          break;
+        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w < 0) {
+          activeClipPlanes += 1;
         }
       }
 
       /*
-       * If it is on the wrong side of *all*
-       * clipping planes, keep casting.
+       * If the current position is in the
+       * intersection, union, or complement
+       * of all clipping planes, then don't
+       * sample this point, and keep casting.
        */
-      if (numClipPlanes > 0 && clipIdx == numClipPlanes) {
-        continue;
+      if (numClipPlanes > 0) {
+        if      (clipMode == 1) { if (activeClipPlanes == numClipPlanes) continue; }
+        else if (clipMode == 2) { if (activeClipPlanes >= 1)             continue; }
+        else if (clipMode == 3) { if (activeClipPlanes == 0)             continue; }
       }
 
       /*
