@@ -58,13 +58,22 @@ class LabelOpts(volumeopts.NiftiOpts):
         # existing values).
         aux_file = overlay.strval('aux_file').lower()
 
-        if aux_file == '':
-            aux_file = 'random'
-
         if aux_file.startswith('mgh'):
             aux_file = 'mgh-cma-freesurfer'
 
-        if colourmaps.isLookupTableRegistered(aux_file):
-            self.lut = aux_file
+        # Check to see if any registered lookup table
+        # has an ID that starts with the aux_file value.
+        # Default to random lut if aux_file is empty,
+        # or does not correspond to a registered lut.
+        lut = 'random'
+
+        if aux_file != '':
+            luts = colourmaps.getLookupTables()
+            luts = [l.key for l in luts if l.key.startswith(aux_file)]
+
+            if len(luts) == 1:
+                lut = luts[0]
+
+        self.lut = lut
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
