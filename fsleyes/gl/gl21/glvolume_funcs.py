@@ -123,6 +123,11 @@ def updateShaderState(self):
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
 
+        if   opts.clipMode == 'intersection': clipMode = 1
+        elif opts.clipMode == 'union':        clipMode = 2
+        elif opts.clipMode == 'complement':   clipMode = 3
+        else:                                 clipMode = 0
+
         for i in range(opts.numClipPlanes):
             origin, normal   = self.get3DClipPlane(i)
             origin           = transform.transform(origin, d2tmat)
@@ -130,6 +135,7 @@ def updateShaderState(self):
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)
+        changed |= shader.set('clipMode',      clipMode)
         changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
         changed |= shader.set('blendFactor',   blendFactor)
         changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())

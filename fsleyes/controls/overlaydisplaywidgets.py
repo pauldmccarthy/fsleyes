@@ -372,6 +372,9 @@ def _init3DWidgetSpec_VolumeOpts():
         'numClipPlanes'     : props.Widget('numClipPlanes',
                                            slider=False,
                                            showLimits=False),
+        'clipMode'          : props.Widget(
+            'clipMode',
+            labels=strings.choices['Volume3DOpts.clipMode']),
         'showClipPlanes'    : props.Widget('showClipPlanes'),
         'clipPosition'      : props.Widget('clipPosition',
                                            showLimits=False),
@@ -844,22 +847,22 @@ def _VolumeOpts_3DClipPlanes(
                        overwrite=True,
                        weak=False)
 
+    numPlanes    = target.numClipPlanes
     numPlaneSpec = get3DWidgetSpecs(target)['numClipPlanes']
+    clipMode     = get3DWidgetSpecs(target)['clipMode']
     showPlanes   = get3DWidgetSpecs(target)['showClipPlanes']
     position     = get3DWidgetSpecs(target)['clipPosition']
     azimuth      = get3DWidgetSpecs(target)['clipAzimuth']
     inclination  = get3DWidgetSpecs(target)['clipInclination']
 
-    numPlanes = target.numClipPlanes
+    specs = [numPlaneSpec, showPlanes, clipMode]
 
     if numPlanes == 0:
-        return [numPlaneSpec, showPlanes], None
+        return specs, None
 
     positions    = [copy.deepcopy(position)    for i in range(numPlanes)]
     azimuths     = [copy.deepcopy(azimuth)     for i in range(numPlanes)]
     inclinations = [copy.deepcopy(inclination) for i in range(numPlanes)]
-
-    specs = [numPlaneSpec, showPlanes]
 
     for i in range(numPlanes):
 

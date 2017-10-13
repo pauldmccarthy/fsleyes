@@ -360,6 +360,7 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('numClipPlanes',
                              name,
                              self._numClipPlanesChanged)
+            opts.addListener('clipMode',        name, self._clipping3DChanged)
             opts.addListener('clipPosition',    name, self._clipping3DChanged)
             opts.addListener('clipAzimuth',     name, self._clipping3DChanged)
             opts.addListener('clipInclination', name, self._clipping3DChanged)
@@ -422,6 +423,7 @@ class GLVolume(glimageobject.GLImageObject):
             opts.removeListener('numSteps',        name)
             opts.removeListener('numClipPlanes',   name)
             opts.removeListener('showClipPlanes',  name)
+            opts.removeListener('clipMode',        name)
             opts.removeListener('clipPosition',    name)
             opts.removeListener('clipAzimuth',     name)
             opts.removeListener('clipInclination', name)
@@ -933,7 +935,7 @@ class GLVolume(glimageobject.GLImageObject):
 
     def _clipping3DChanged(self, *a):
         """Called when any of the :attr:`.Volume3DOpts.clipPosition`,
-        :attr:`.Volume3DOpts.clipAzimuth`, or
+        :attr:`.Volume3DOpts.clipAzimuth`, :attr:`.Volume3DOpts.clipMode` or
         :attr:`.Volume3DOpts.clipInclination` properties change.
         """
 

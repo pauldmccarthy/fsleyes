@@ -908,6 +908,7 @@ properties = TypeDict({
     'Volume3DOpts.resolution'              : 'Quality',
     'Volume3DOpts.numClipPlanes'           : 'Number of clipping planes',
     'Volume3DOpts.showClipPlanes'          : 'Show clipping planes',
+    'Volume3DOpts.clipMode'                : 'Clipping mode',
     'Volume3DOpts.clipPosition'            : 'Clip position (%)',
     'Volume3DOpts.clipInclination'         : 'Clip Z angle',
     'Volume3DOpts.clipAzimuth'             : 'Clip rotation',
@@ -1058,6 +1059,9 @@ choices = TypeDict({
                                   'linear' : 'Linear interpolation',
                                   'spline' : 'Spline interpolation'},
 
+    'Volume3DOpts.clipMode' : {'intersection' : 'Intersection',
+                               'union'        : 'Union',
+                               'complement'   : 'Complement'},
 
     'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
                            'direction' : 'Colour by direction'},
