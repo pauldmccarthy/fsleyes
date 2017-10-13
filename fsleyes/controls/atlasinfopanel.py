@@ -359,7 +359,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
                 if labelVal is None:
                     continue
 
-                label = atlas.desc.labels[int(labelVal)]
+                label = atlas.find(value=labelVal)
 
                 lines.append(labelTemplate.format(label.name,
                                                   atlasID,

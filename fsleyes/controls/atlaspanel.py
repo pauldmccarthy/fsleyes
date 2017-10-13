@@ -302,7 +302,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         desc = atlases.getAtlasDescription(atlasID)
         res  = self.__getSuitableResolution(desc, matchResolution)
 
-        if desc.atlasType == 'summary':
+        if desc.atlasType == 'label':
             summary = True
 
         atlas = self.__loadedAtlases.get((atlasID, summary, res), None)
@@ -460,17 +460,10 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 # regional label image
                 if summary:
 
-                    # Label index for probabilistic images refers
-                    # to the volume, so we need to add one to get
-                    # the label value in the summary image.
-                    if   atlasDesc.atlasType == 'probabilistic':
-                        labelVal = labelIdx + 1
-                    elif atlasDesc.atlasType == 'label':
-                        labelVal = labelIdx
-
+                    labelVal    = atlasDesc.find(index=labelIdx).value
                     overlayType = 'mask'
                     data        = np.zeros(atlas.shape, dtype=np.uint16)
-                    data[atlas[:] == labelIdx] = labelVal
+                    data[atlas[:] == labelVal] = labelVal
 
                 # regional probability image
                 else:
@@ -501,21 +494,6 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
             if   overlayType == 'mask':   opts.colour = np.random.random(3)
             elif overlayType == 'volume': opts.cmap   = 'hot'
-            elif overlayType == 'label':
-
-                # The Harvard-Oxford atlases
-                # have special colour maps.
-                # The Talairach atlas has
-                # loads of labels, so needs
-                # a big lut.
-                if   atlasID == 'harvardoxford-cortical':
-                    opts.lut = 'harvard-oxford-cortical'
-                elif atlasID == 'harvardoxford-subcortical':
-                    opts.lut = 'harvard-oxford-subcortical'
-                elif atlasID == 'talairach':
-                    opts.lut = 'random_big'
-                else:
-                    opts.lut = 'random'
 
             if onLoad is not None:
                 onLoad()
