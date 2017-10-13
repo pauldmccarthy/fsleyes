@@ -360,7 +360,7 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('numClipPlanes',
                              name,
                              self._numClipPlanesChanged)
-            opts.addListener('clipMode',        name, self._clipping3DChanged)
+            opts.addListener('clipMode',        name, self._clipModeChanged)
             opts.addListener('clipPosition',    name, self._clipping3DChanged)
             opts.addListener('clipAzimuth',     name, self._clipping3DChanged)
             opts.addListener('clipInclination', name, self._clipping3DChanged)
@@ -933,9 +933,18 @@ class GLVolume(glimageobject.GLImageObject):
         self.updateShaderState(alwaysNotify=True)
 
 
+    def _clipModeChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.clipMode` property
+        changes.
+        """
+        if float(fslplatform.glVersion) == 1.4:
+            fslgl.glvolume_funcs.compileShaders(self)
+        self.updateShaderState(alwaysNotify=True)
+
+
     def _clipping3DChanged(self, *a):
         """Called when any of the :attr:`.Volume3DOpts.clipPosition`,
-        :attr:`.Volume3DOpts.clipAzimuth`, :attr:`.Volume3DOpts.clipMode` or
+        :attr:`.Volume3DOpts.clipAzimuth`, or
         :attr:`.Volume3DOpts.clipInclination` properties change.
         """
 

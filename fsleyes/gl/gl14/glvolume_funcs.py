@@ -64,7 +64,14 @@ def compileShaders(self):
     constants = {'kill_fragments_early' : not self.threedee}
 
     if self.threedee:
+
+        if   self.opts.clipMode == 'intersection': clipMode = 1
+        elif self.opts.clipMode == 'union':        clipMode = 2
+        elif self.opts.clipMode == 'complement':   clipMode = 3
+        else:                                      clipMode = 0
+
         constants['numSteps']        = self.opts.numInnerSteps
+        constants['clipMode']        = clipMode
         constants['numClipPlanes']   = self.opts.numClipPlanes
         texes[    'startingTexture'] = 4
         texes[    'depthTexture']    = 5
@@ -121,9 +128,8 @@ def updateShaderState(self):
     changed |= shader.setFragParam('clipping',    clipping)
     changed |= shader.setFragParam('negCmap',     negCmap)
 
-
     if self.threedee:
-        clipPlanes  = np.zeros((10, 4), dtype=np.float32)
+        clipPlanes  = np.zeros((5, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
 
         for i in range(opts.numClipPlanes):

@@ -149,7 +149,12 @@ properties = TypeDict({
 
     'Volume3DOpts.numClipPlanes' :
     'Number of active clipping planes. Areas of the image which are in the '
-    'region intersected by all clipping planes will not be shown.',
+    'intersection, union, or complement of all clipping planes will not be '
+    'shown. The clip mode controls how clipping is applied',
+
+    'Volume3DOpts.clipMode' :
+    'How the clipping planes are applied. You can choose to clip (hide) the '
+    'intersection, union, or complement of all active clipping planes',
 
     'Volume3DOpts.showClipPlanes' :
     'When enabled, each active clipping plane is shown.',

@@ -108,7 +108,7 @@ uniform int numClipPlanes;
  * The clip planes, specified as plane equations in the image
  * texture coordinate system.
  */
-uniform vec4 clipPlanes[10];
+uniform vec4 clipPlanes[5];
 
 
 /*
