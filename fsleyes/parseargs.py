@@ -472,6 +472,7 @@ OPTIONS = td.TypeDict({
                         'resolution',
                         'dithering',
                         'numInnerSteps',
+                        'clipMode',
                         'clipPlane'],
     'MaskOpts'       : ['colour',
                         'invert',
@@ -733,6 +734,7 @@ ARGUMENTS = td.TypeDict({
     'Volume3DOpts.dithering'     : ('dt',  'dithering',     True),
     'Volume3DOpts.numInnerSteps' : ('nis', 'numInnerSteps', True),
     'Volume3DOpts.clipPlane'     : ('cp',  'clipPlane',     True),
+    'Volume3DOpts.clipMode'      : ('m',   'clipMode',      True),
 
     'MaskOpts.colour'    : ('mc', 'maskColour', False),
     'MaskOpts.invert'    : ('i',  'maskInvert', False),
@@ -944,9 +946,11 @@ HELP = td.TypeDict({
     'Volume3DOpts.numInnerSteps' :
     '3D/GL14 only. Nmber of samples to run on GPU',
     'Volume3DOpts.clipPlane' :
-    '3D only. Add a clipping plane. Requires three values: position [0-1], '
+    '3D only. Add a clipping plane. Requires three values: position [0-100], '
     'azimuth [-180, 180], inclination [-180, 180]. Can be used up to 10 '
     'times.',
+    'Volume3DOpts.clipMode' :
+    '3D only. How to apply the clipping plane(s).',
 
     'MaskOpts.colour'    : 'Colour (0-1)',
     'MaskOpts.invert'    : 'Invert',
@@ -1281,7 +1285,7 @@ def _boolTrans(b, gen=None, overlay=None):
 # VectorOpts.orientFlip option
 def _orientFlipTrans(b, gen=None, overlay=None):
     if gen: return b != overlay.isNeurological()
-    else:          return b
+    else:   return b
 
 
 # The props.addParserArguments function allows
