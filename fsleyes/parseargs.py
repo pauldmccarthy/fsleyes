@@ -94,8 +94,8 @@ Adding new command line options
 -------------------------------
 
 
-Most classes in *FSLeyes* derive from the :class:`.HasProperties` class of the
-:mod:`props` package. Therefore, with only a couple of excpetions, the
+Many classes in *FSLeyes* derive from the :class:`.HasProperties` class of the
+:mod:`props` package. Therefore, with only a couple of exceptions, the
 processing of nearly all *FSLeyes* command line arguments is completely
 automatic.
 
@@ -1209,29 +1209,30 @@ been loaded, so we need to figure out what to do.
 # value, and the overlay to which the property
 # applies.
 #
-# TODO All of these functions are called both
-#      when parsing command line arguments, and
-#      when generating them from an in-memory
-#      object. If/when you have a need for more
-#      complicated property transformations (i.e.
-#      non-reversible ones), you'll need to have
-#      an inverse transforms dictionary.
+# Currently, the overlay-specific transform
+# functions can tell the transform direction
+# (either generating arguments or applying
+# arguments) by checking whether the gen
+# argument is True - if this is True, we are
+# generating arguments.
 #
-#      Currently, the overlay-specific transform
-#      functions can tell the direction by
-#      checking whether the gen argument is True -
-#      if this is True, we are generating arguments.
+# Transform functions for arguments which are
+# associated with an overlay (applied to
+# a Display or DisplayOpts instances) are also
+# passed the overlay and the target (the
+# Display or DisplayOpts instance) as keyword
+# arguments.
 #
-#      Transform functions for arguments which are
-#      associated with an overlay (applied to
-#      a Display or DisplayOpts instances) are also
-#      passed the overlay as a keyword argument.
+# So a transform function needs a signature
+# like so:
 #
+# def xform(value, gen=None, overlay=None, target=None):
+#     ...
 
 # When generating CLI arguments, turn Image
 # instances into their file names. And a few
 # other special cases.
-def _imageTrans(i, gen=None, overlay=None):
+def _imageTrans(i, **kwargs):
 
     stri = str(i).lower()
 
@@ -1240,13 +1241,12 @@ def _imageTrans(i, gen=None, overlay=None):
 
     # Special cases for Main.displaySpace
     elif stri == 'world':  return 'world'
-
     else:                  return i.dataSource
 
 
 # When generating CLI arguments, turn a
 # LookupTable instance into its name
-def _lutTrans(l, gen=None, overlay=None):
+def _lutTrans(l, **kwargs):
     if isinstance(l, colourmaps.LookupTable): return l.key
     else:                                     return l
 
@@ -1255,7 +1255,7 @@ def _lutTrans(l, gen=None, overlay=None):
 # specified as a percentile by
 # appending '%' to the high range
 # value.
-def _clippingRangeTrans(crange, gen=None, overlay=None):
+def _clippingRangeTrans(crange, gen=None, overlay=None, **kwargs):
 
     if gen:
         return crange
@@ -1276,14 +1276,14 @@ def _clippingRangeTrans(crange, gen=None, overlay=None):
 # for some boolean properties
 # need the property value to be
 # inverted.
-def _boolTrans(b, gen=None, overlay=None):
+def _boolTrans(b, **kwargs):
     return not b
 
 
 # The --orientFlip command line argument
 # inverts the default behaviour of the
 # VectorOpts.orientFlip option
-def _orientFlipTrans(b, gen=None, overlay=None):
+def _orientFlipTrans(b, gen=None, overlay=None, **kwargs):
     if gen: return b != overlay.isNeurological()
     else:   return b
 
@@ -1296,8 +1296,21 @@ def _orientFlipTrans(b, gen=None, overlay=None):
 # transform functions though, so we hackily
 # truncate any RGBA colours via these transform
 # functions.
-def _colourTrans(c, gen=None, overlay=None):
+def _colourTrans(c, **kwargs):
     return c[:3]
+
+
+# When generating arguments, suppress
+# overrideDataRange if enableOverrideDataRange
+# is False.
+def _overrideDataRangeTrans(orange, gen=None, target=None, **kwargs):
+    if gen:
+        if not target.enableOverrideDataRange:
+            raise props.SkipArgument()
+        else:
+            return orange
+    else:
+        return [float(v) for v in orange]
 
 
 TRANSFORMS = td.TypeDict({
@@ -1317,7 +1330,8 @@ TRANSFORMS = td.TypeDict({
     'MeshOpts.lut'                : _lutTrans,
     # 'SHOpts.lighting'            : lambda b : not b,
 
-    'VolumeOpts.clippingRange'    : _clippingRangeTrans,
+    'VolumeOpts.clippingRange'       : _clippingRangeTrans,
+    'Volume3DOpts.overrideDataRange' : _overrideDataRangeTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
     'SceneOpts.fgColour'         : _colourTrans,
@@ -2137,7 +2151,10 @@ def _applyArgs(args,
                target,
                propNames=None,
                **kwargs):
-    """Applies the given command line arguments to the given target object."""
+    """Applies the given command line arguments to the given target object.
+    The target object is added as a keyword argument to pass through to
+    any transform functions.
+    """
 
     if propNames is None:
         propNames = list(it.chain(*OPTIONS.get(target, allhits=True)))
@@ -2145,6 +2162,8 @@ def _applyArgs(args,
     longArgs  = {name : ARGUMENTS[target, name][1] for name in propNames}
     xforms    = {}
     special   = []
+
+    kwargs['target'] = target
 
     for name in list(propNames):
         if not hasattr(target, name):
@@ -2210,6 +2229,7 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
 
     if isinstance(source, (fsldisplay.DisplayOpts, fsldisplay.Display)):
         extraArgs['overlay'] = source.overlay
+        extraArgs['target']  = source
 
     args = props.generateArguments(source,
                                    xformFuncs=xforms,
