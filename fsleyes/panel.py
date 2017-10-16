@@ -48,6 +48,7 @@ should be made available available to the user can be added as
 import logging
 
 import six
+import deprecation
 
 import                   wx
 import wx.lib.agw.aui as wxaui
@@ -239,11 +240,47 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
             toFocus.SelectAll()
 
 
+    @property
+    def name(self):
+        """Returns a unique name associated with this ``_FSLeyesPanel``. """
+        return self.__name
+
+
+    @property
+    def frame(self):
+        """Returns the :class:`.FSLeyesFrame` which created this
+        ``_FSLeyesPanel``. May be ``None``, if this panel was not created
+        by a ``FSLeyesFrame``.
+        """
+        return self.__frame
+
+
+    @property
+    def displayCtx(self):
+        """Returns a reference to the :class:`.DisplayContext` that is
+        associated with this ``_FSLeyesPanel``.
+        """
+        return self.__displayCtx
+
+
+    @property
+    def overlayList(self):
+        """Returns a reference to the :class:`.OverlayList`. """
+        return self.__overlayList
+
+
+
+    @deprecation.deprecated(deprecated_in='0.15.2',
+                            removed_in='1.0.0',
+                            details='Use name instead')
     def getName(self):
         """Returns a unique name associated with this ``_FSLeyesPanel``. """
         return self.__name
 
 
+    @deprecation.deprecated(deprecated_in='0.15.2',
+                            removed_in='1.0.0',
+                            details='Use frame instead')
     def getFrame(self):
         """Returns the :class:`.FSLeyesFrame` which created this
         ``_FSLeyesPanel``. May be ``None``, if this panel was not created
@@ -252,6 +289,9 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__frame
 
 
+    @deprecation.deprecated(deprecated_in='0.15.2',
+                            removed_in='1.0.0',
+                            details='Use displayCtx instead')
     def getDisplayContext(self):
         """Returns a reference to the :class:`.DisplayContext` that is
         associated with this ``_FSLeyesPanel``.
@@ -259,6 +299,9 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__displayCtx
 
 
+    @deprecation.deprecated(deprecated_in='0.15.2',
+                            removed_in='1.0.0',
+                            details='Use overlayList instead')
     def getOverlayList(self):
         """Returns a reference to the :class:`.OverlayList`. """
         return self.__overlayList
