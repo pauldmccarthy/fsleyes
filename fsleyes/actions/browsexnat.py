@@ -10,8 +10,8 @@ to connect to and browse an XNAT repository.
 """
 
 
+import            os
 import os.path as op
-import            tempfile
 
 import wx
 import wxnat
@@ -116,8 +116,7 @@ class XNATBrowser(wx.Dialog):
     def __init__(self,
                  parent,
                  knownHosts=None,
-                 knownAccounts=None,
-                 saveTo=None):
+                 knownAccounts=None):
         """Create a ``XNATBrowser``.
 
         :arg parent:        ``wx`` parent object
@@ -126,9 +125,6 @@ class XNATBrowser(wx.Dialog):
 
         :arg knownAccounts: Mapping containing login credentials, in the
                             ``{ host : (username, password) }``.
-
-        :arg saveTo:        Directory to save downloaded files to. If ``None``,
-                            a temporary directory is created and used.
         """
 
         wx.Dialog.__init__(self,
@@ -172,8 +168,7 @@ class XNATBrowser(wx.Dialog):
         self.__ok    .Bind(wx.EVT_BUTTON,                    self.__onOk)
         self.__cancel.Bind(wx.EVT_BUTTON,                    self.__onCancel)
 
-        self.__saveTo = saveTo
-        self.__paths  = []
+        self.__paths = []
 
 
     def GetPaths(self):
@@ -181,9 +176,19 @@ class XNATBrowser(wx.Dialog):
         return self.__paths
 
 
+    def GetHosts(self):
+        """Wraps ``wxnat.XNATBrowserPanel.GetHosts``. """
+        return self.__panel.GetHosts()
+
+
+    def GetAccounts(self):
+        """Wraps ``wxnat.XNATBrowserPanel.GetAccounts``. """
+        return self.__panel.GetAccounts()
+
+
     def __onOk(self, ev):
-        """Called when the *Ok* button is pushed. Downloads the files to a
-        temporary directory.
+        """Called when the *Ok* button is pushed. Prompts the user to select a
+        directory, and then downloads the files.
         """
 
         files = self.__panel.GetSelectedFiles()
@@ -191,13 +196,23 @@ class XNATBrowser(wx.Dialog):
         if len(files) == 0:
             self.EndModal(wx.ID_OK)
 
-        if self.__saveTo is None: destdir = tempfile.mkdtemp('fsleyes_xnat')
-        else:                     destdir = self.__saveTo
+        destdir = fslsettings.read('fsleyes.xnat.downloaddir', os.getcwd())
+        dlg     = wx.DirDialog(self,
+                               strings.labels[self, 'choosedir'],
+                               defaultPath=destdir)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        destdir = dlg.GetPath()
 
         for f in files:
-            dest = op.join(destdir, f.id)
-            self.__panel.DownloadFile(f, dest)
-            self.__paths.append(dest)
+            dest = self.__panel.DownloadFile(f, op.join(destdir, f.id))
+
+            if dest is not None:
+                self.__paths.append(dest)
+
+        fslsettings.write('fsleyes.xnat.downloaddir', destdir)
 
         self.__panel.EndSession()
         self.EndModal(wx.ID_OK)

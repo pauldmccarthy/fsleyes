@@ -764,8 +764,9 @@ labels = TypeDict({
     'ResampleDialog.newVoxels'     : 'New shape',
     'ResampleDialog.newPixdims'    : 'New pixdims',
 
-    'XNATBrowser.ok'     : 'Load',
-    'XNATBrowser.cancel' : 'Cancel',
+    'XNATBrowser.ok'        : 'Download',
+    'XNATBrowser.cancel'    : 'Cancel',
+    'XNATBrowser.choosedir' : 'Choose a download location',
 })
 
 
