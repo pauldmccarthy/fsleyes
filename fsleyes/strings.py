@@ -395,6 +395,8 @@ titles = TypeDict({
 
     'ApplyCommandLineAction.title' : 'Apply FSLeyes command line',
     'ApplyCommandLineAction.error' : 'Error applying command line',
+
+    'XNATBrowser' : 'Open from XNAT repository',
 })
 
 
@@ -403,6 +405,7 @@ actions = TypeDict({
     'LoadOverlayAction'        : 'Add overlay from file',
     'LoadOverlayFromDirAction' : 'Add overlay from directory',
     'LoadStandardAction'       : 'Add standard',
+    'BrowseXNATAction'         : 'Add overlay from XNAT',
     'CopyOverlayAction'        : 'Copy',
     'LoadAtlasAction'          : 'Add atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
@@ -760,6 +763,9 @@ labels = TypeDict({
     'ResampleDialog.origPixdims'   : 'Old pixdims',
     'ResampleDialog.newVoxels'     : 'New shape',
     'ResampleDialog.newPixdims'    : 'New pixdims',
+
+    'XNATBrowser.ok'     : 'Load',
+    'XNATBrowser.cancel' : 'Cancel',
 })
 
 

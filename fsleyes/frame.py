@@ -1320,12 +1320,14 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.loadoverlayfromdir import LoadOverlayFromDirAction
         from fsleyes.actions.loadstandard       import LoadStandardAction
         from fsleyes.actions.loadatlas          import LoadAtlasAction
+        from fsleyes.actions.browsexnat         import BrowseXNATAction
         from fsleyes.actions.runscript          import RunScriptAction
 
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
                        LoadStandardAction,
                        LoadAtlasAction,
+                       BrowseXNATAction,
                        RunScriptAction]
 
         for action in fileActions:
