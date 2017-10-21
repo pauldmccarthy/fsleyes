@@ -141,104 +141,11 @@ class docbuilder(Command):
 
         # Sigh. Why can't I mock a package?
         mockobj       = mock.MagicMock()
-        mockedModules = [
-            'OpenGL',
-            'OpenGL.GL',
-            'OpenGL.GL.ARB',
-            'OpenGL.GL.ARB.draw_instanced',
-            'OpenGL.GL.ARB.fragment_program',
-            'OpenGL.GL.ARB.instanced_arrays',
-            'OpenGL.GL.ARB.texture_float',
-            'OpenGL.GL.ARB.vertex_program',
-            'OpenGL.GL.EXT',
-            'OpenGL.GL.EXT.framebuffer_object',
-            'OpenGL.GLUT',
-            'OpenGL.extensions',
-            'OpenGL.raw',
-            'OpenGL.raw.GL',
-            'OpenGL.raw.GL._types',
-            'fsl',
-            'fsl.data',
-            'fsl.data.atlases',
-            'fsl.data.constants',
-            'fsl.data.dtifit',
-            'fsl.data.featanalysis',
-            'fsl.data.featimage',
-            'fsl.data.fixlabels',
-            'fsl.data.gifti',
-            'fsl.data.image',
-            'fsl.data.imagewrapper',
-            'fsl.data.melodicimage',
-            'fsl.data.mesh',
-            'fsl.data.vest',
-            'fsl.data.volumelabels',
-            'fsl.utils',
-            'fsl.utils.async',
-            'fsl.utils.cache',
-            'fsl.utils.callfsl',
-            'fsl.utils.memoize',
-            'fsl.utils.notifier',
-            'fsl.utils.platform',
-            'fsl.utils.settings',
-            'fsl.utils.transform',
-            'fsl.version',
-            'fsleyes_props',
-            'fsleyes_widgets',
-            'fsleyes_widgets.bitmaptoggle',
-            'fsleyes_widgets.dialog',
-            'fsleyes_widgets.elistbox',
-            'fsleyes_widgets.floatslider',
-            'fsleyes_widgets.floatspin',
-            'fsleyes_widgets.imagepanel',
-            'fsleyes_widgets.notebook',
-            'fsleyes_widgets.numberdialog',
-            'fsleyes_widgets.placeholder_textctrl',
-            'fsleyes_widgets.rangeslider',
-            'fsleyes_widgets.texttag',
-            'fsleyes_widgets.utils',
-            'fsleyes_widgets.utils.colourbarbitmap',
-            'fsleyes_widgets.utils.layout',
-            'fsleyes_widgets.utils.status',
-            'fsleyes_widgets.utils.typedict',
-            'fsleyes_widgets.widgetgrid',
-            'fsleyes_widgets.widgetlist',
-            'matplotlib',
-            'matplotlib.backend_bases',
-            'matplotlib.backends',
-            'matplotlib.backends.backend_wx',
-            'matplotlib.backends.backend_wxagg',
-            'matplotlib.image',
-            'matplotlib.patches',
-            'matplotlib.pyplot',
-            'numpy',
-            'numpy.fft',
-            'numpy.linalg',
-            'pyparsing',
-            'scipy',
-            'scipy.interpolate',
-            'scipy.ndimage',
-            'scipy.ndimage.measurements',
-            'scipy.spatial',
-            'scipy.spatial.distance',
-            'wx',
-            'wx.glcanvas',
-            'wx.html',
-            'wx.lib',
-            'wx.lib.agw',
-            'wx.lib.agw.aui',
-            'wx.lib.newevent',
-            'wx.py',
-            'wx.py.interpreter',
-            'wx.py.shell',
-        ]
+        mockedModules = open(op.join(docdir, 'mock_modules.txt')).readlines()
+        mockedClasses = open(op.join(docdir, 'mock_classes.txt')).readlines()
+        mockedModules = {m.strip() : mockobj for m in mockedModules}
+        mockedClasses = [l.strip() for l in mockedClasses]
 
-        mockedModules = {m : mockobj for m in mockedModules}
-
-        # Various classes and types have
-        # to be mocked, otherwise we get
-        # all sorts of errors in cases
-        # of inheritance and monkey
-        # patching.
         class MockClass(object):
             def __init__(self, *args, **kwargs):
                 pass
@@ -246,21 +153,15 @@ class docbuilder(Command):
         class MockType(type):
             pass
 
-        with mock.patch.dict('sys.modules', **mockedModules), \
-             mock.patch('fsl.utils.notifier.Notifier',         MockClass), \
-             mock.patch('fsleyes_props.HasProperties',         MockClass), \
-             mock.patch('fsleyes_props.SyncableHasProperties', MockClass), \
-             mock.patch('fsleyes_props.PropertyOwner',         MockType),  \
-             mock.patch('fsleyes_props.Toggle',                MockClass), \
-             mock.patch('fsleyes_props.Button',                MockClass), \
-             mock.patch('wx.Panel',                            MockClass), \
-             mock.patch('wx.glcanvas.GLCanvas',                MockClass), \
-             mock.patch('wx.PyPanel',                          MockClass), \
-             mock.patch('wx.lib.agw.aui.AuiFloatingFrame',     MockClass), \
-             mock.patch('wx.lib.agw.aui.AuiDockingGuide',      MockClass), \
-             mock.patch('wx.lib.newevent.NewEvent',    return_value=(0, 0)):
+        patches = [mock.patch.dict('sys.modules', **mockedModules)] + \
+                  [mock.patch('wx.lib.newevent.NewEvent',
+                              return_value=(mockobj, mockobj))]     + \
+                  [mock.patch(c, MockClass) for c in mockedClasses]    + \
+                  [mock.patch('fsleyes_props.PropertyOwner', MockType)]
 
-            sphinx.build_main(['sphinx-build', docdir, destdir])
+        [p.start() for p in patches]
+        sphinx.build_main(['sphinx-build', docdir, destdir])
+        [p.stop() for p in patches]
 
 
 class userdoc(docbuilder):

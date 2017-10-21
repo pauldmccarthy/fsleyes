@@ -1,0 +1,2 @@
+wx
+fsleyes_props

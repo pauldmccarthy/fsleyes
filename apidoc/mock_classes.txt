@@ -1,0 +1,10 @@
+fsl.utils.notifier.Notifier
+fsleyes_props.HasProperties
+fsleyes_props.SyncableHasProperties
+fsleyes_props.Toggle
+fsleyes_props.Button
+wx.Panel
+wx.glcanvas.GLCanvas
+wx.PyPanel
+wx.lib.agw.aui.AuiFloatingFrame
+wx.lib.agw.aui.AuiDockingGuide
