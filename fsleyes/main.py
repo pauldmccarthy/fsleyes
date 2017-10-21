@@ -566,12 +566,11 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # FSLeyesFrame class, so it must be
     # imported immediately after fsleyes.frame.
     import fsleyes.frame                as fsleyesframe
-    import fsleyes.actions.frameactions as frameactions
+    import fsleyes.actions.frameactions as frameactions  # noqa
 
     import fsleyes.displaycontext       as fsldisplay
     import fsleyes.perspectives         as perspectives
     import fsleyes.views.canvaspanel    as canvaspanel
-    import fsleyes.views.orthopanel     as orthopanel
 
     # Set up the frame scene (a.k.a. layout, perspective)
     # The scene argument can be:
@@ -593,7 +592,12 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     status.update('Creating FSLeyes interface...')
 
     frame = fsleyesframe.FSLeyesFrame(
-        None, overlayList, displayCtx, restore, True)
+        None,
+        overlayList,
+        displayCtx,
+        restore,
+        True,
+        fontSize=namespace.fontSize)
 
     # Make sure the new frame is shown
     # before destroying the splash screen

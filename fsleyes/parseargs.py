@@ -385,7 +385,8 @@ OPTIONS = td.TypeDict({
                        'standard',
                        'standard1mm',
                        'bigmem',
-                       'bumMode'],
+                       'bumMode',
+                       'fontSize'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -662,6 +663,7 @@ ARGUMENTS = td.TypeDict({
     'Main.standard1mm'      : ('std1mm', 'standard1mm',      False),
     'Main.bigmem'           : ('b',      'bigmem',           False),
     'Main.bumMode'          : ('bums',   'bumMode',          False),
+    'Main.fontSize'         : ('fs',     'fontSize',         True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -847,6 +849,7 @@ HELP = td.TypeDict({
     'Main.bigmem'           : 'Load all images into memory, '
                               'regardless of size.',
     'Main.bumMode'          : 'Make the coronal icon look like a bum',
+    'Main.fontSize'         : 'Application font size',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -1531,6 +1534,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['bumMode'],
                             action='store_true',
                             help=mainHelp['bumMode'])
+    mainParser.add_argument(*mainArgs['fontSize'],
+                            type=int,
+                            help=mainHelp['fontSize'])
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):

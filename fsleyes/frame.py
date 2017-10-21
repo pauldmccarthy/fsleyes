@@ -123,7 +123,8 @@ class FSLeyesFrame(wx.Frame):
                  overlayList,
                  displayCtx,
                  restore=False,
-                 save=True):
+                 save=True,
+                 fontSize=None):
         """Create a ``FSLeyesFrame``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -136,6 +137,8 @@ class FSLeyesFrame(wx.Frame):
                           view panels will be displayed.
 
         :arg save:        Save current layout when closed.
+
+        :arg fontSize:    Application-wide font size to use. Defaults to 10.
         """
 
         wx.Frame.__init__(self, parent, title='FSLeyes')
@@ -146,9 +149,10 @@ class FSLeyesFrame(wx.Frame):
         # inherited by all child controls.
         font = self.GetFont()
 
-        if fslplatform.wxPlatform == fslplatform.WX_GTK: font.SetPointSize(8)
-        else:                                            font.SetPointSize(10)
+        if fontSize is None:
+            fontSize = 10
 
+        font.SetPointSize(fontSize)
         font.SetWeight(wx.FONTWEIGHT_LIGHT)
         self.SetFont(font)
 
