@@ -728,6 +728,7 @@ labels = TypeDict({
     'EditTransformPanel.saveFlirt'   : 'Save FLIRT',
     'EditTransformPanel.cancel'      : 'Close',
 
+    'DisplaySpaceWarning.changeDS'    : 'Change display space',
 
     'FlirtFileDialog.load.message' :
     'Select a FLIRT transformation matrix\n'
