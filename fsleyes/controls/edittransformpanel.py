@@ -268,15 +268,19 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         """
 
         self.__deregisterOverlay()
-        self.__ortho        = None
-        self.__cachedXforms = None
 
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
+        dsWarning   = self.__dsWarning
 
         displayCtx .removeListener('selectedOverlay', self.name)
         overlayList.removeListener('overlays',        self.name)
 
+        self.__ortho        = None
+        self.__cachedXforms = None
+        self.__dsWarning    = None
+
+        dsWarning.destroy()
         fslpanel.FSLeyesPanel.destroy(self)
 
 

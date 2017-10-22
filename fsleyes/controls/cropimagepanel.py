@@ -167,14 +167,17 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         profile     = self.__profile
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
+        dsWarning   = self.__dsWarning
 
         profile    .removeListener('cropBox',         self.name)
         displayCtx .removeListener('selectedOverlay', self.name)
         overlayList.removeListener('overlays',        self.name)
 
-        self.__ortho   = None
-        self.__profile = None
+        self.__ortho     = None
+        self.__profile   = None
+        self.__dsWarning = None
 
+        dsWarning.destroy()
         fslpanel.FSLeyesPanel.destroy(self)
 
 

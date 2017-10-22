@@ -20,7 +20,8 @@ import fsleyes.icons    as fslicons
 import fsleyes.tooltips as fsltooltips
 import fsleyes.strings  as strings
 
-from fsleyes.profiles.orthoeditprofile import OrthoEditProfile
+import fsleyes.controls.displayspacewarning  as dswarning
+from   fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 
 
 log = logging.getLogger(__name__)
@@ -88,6 +89,14 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
                                            kbFocus=True)
 
         self.__orthoPanel = ortho
+        self.__dsWarning = dswarning.DisplaySpaceWarning(
+            self,
+            self.overlayList,
+            self.displayCtx,
+            self.frame,
+            strings.messages[self, 'dsWarning'],
+            'not overlay',
+            'overlay')
 
         ortho.addListener('profile', self.name, self.__profileChanged)
 
@@ -100,6 +109,11 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         :meth:`.FSLeyesToolBar.destroy` method.
         """
         self.__orthoPanel.removeListener('profile', self.name)
+        self.__dsWarning.destroy()
+
+        self.__orthoPanel = None
+        self.__dsWarning  = None
+
         fsltoolbar.FSLeyesToolBar.destroy(self)
 
 
@@ -115,6 +129,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         profileObj = ortho.getCurrentProfile()
 
         if profile != 'edit':
+            self.__dsWarning.Show(False)
             return
 
         allTools   = []
@@ -169,7 +184,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
             else:
                 allTools.append(groupWidgets[0])
 
-        self.SetTools(   allTools)
+        self.SetTools(   [self.__dsWarning] + allTools)
         self.setNavOrder(allWidgets)
 
 

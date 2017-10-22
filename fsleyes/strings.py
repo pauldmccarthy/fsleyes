@@ -147,24 +147,6 @@ messages = TypeDict({
                                     'check your cluster_*.txt files.',
     'ClusterPanel.loadingCluster' : 'Loading clusters for COPE{} ({}) ...',
 
-    'OrthoEditProfile.imageChange'        : 'You are now editing {}. ',
-    'OrthoEditProfile.imageChangeHint'    : 'Setting {} as the display '
-                                            'space reference\nimage - the '
-                                            'display space must match the '
-                                            'image being edited.',
-
-    'OrthoEditProfile.imageChange.suppress' : 'Do not show this '
-                                              'message again',
-
-    'OrthoCropProfile.imageChange'        : 'You are now cropping {}. ',
-    'OrthoCropProfile.imageChangeHint'    : 'Setting {} as the display '
-                                            'space reference\nimage - the '
-                                            'display space must match the '
-                                            'image being cropped.',
-
-    'OrthoCropProfile.imageChange.suppress' : 'Do not show this '
-                                              'message again',
-
     'MelodicClassificationPanel.disabled' :
     'Choose a melodic or other 4D image.',
     'MelodicClassificationPanel.loadError' :
@@ -256,6 +238,9 @@ messages = TypeDict({
     'as the display space. You can change the display\n'
     'space back in the view settings panel.',
 
+    'OrthoEditToolBar.dsWarning' :
+    'Warning: You must set the display\n'
+    'space to the image being edited!',
 
     'LoadVertexDataAction.loadVertexData' :
     'Select a vertex data file for {}',

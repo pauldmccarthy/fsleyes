@@ -10,19 +10,13 @@
 
 import logging
 
-import wx
-
 import numpy                        as np
-
 
 import fsl.data.image               as fslimage
 import fsl.utils.async              as async
 import fsleyes_props                as props
-import fsleyes_widgets.dialog       as fsldlg
-import fsleyes_widgets.utils.status as status
 import fsleyes.overlay              as fsloverlay
 import fsleyes.displaycontext       as fsldisplay
-import fsleyes.strings              as strings
 import fsleyes.actions              as actions
 import fsleyes.actions.copyoverlay  as copyoverlay
 import fsleyes.editor.editor        as fsleditor
@@ -32,16 +26,6 @@ from . import                          orthoviewprofile
 
 
 log = logging.getLogger(__name__)
-
-
-_suppressOverlayChangeWarning = False
-"""Whenever an :class:`OrthoEditProfile` is active, and the
-:attr:`.DisplayContext.selectedOverlay` changes, the ``OrthoEditProfile``
-changes the :attr:`.DisplayContext.displaySpace` to the newly selected
-overlay. If this boolean flag is ``True``, a warning message is shown
-to the user. The message dialog has a checkbox which updates this attribute,
-and thus allows the user to suppress the warning in the future.
-"""
 
 
 class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
@@ -122,9 +106,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     The ``OrthoEditProfile`` class has been written in a way which requires
     the :class:`.Image` instance that is being edited to be displayed in
-    *scaled voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image``
-    overlay is selected, the ``OrthoEditProfile`` instance sets that ``Image``
-    as the current :attr:`.DisplayContext.displaySpace` reference image.
+    *scaled voxel* (a.k.a. ``pixdim``) space.  The :class:`.OrthoEditToolBar`
+    uses a :class:`.DisplaySpaceWarning` widget to warn the user if the
+    :attr:`.DisplayContext.displaySpace` is not set appropriately.
     """
 
 
@@ -918,40 +902,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Update the limits/options on all properties.
         self.__setPropertyLimits()
         self.__setCopyPasteState()
-
-        # Change the display space so that the newly
-        # selected image is the reference image -
-        # display a message to the user, as this may
-        # otherwise be confusing
-        if self.displayCtx.displaySpace != overlay:
-
-            msg   = strings.messages[self, 'imageChange']
-            hint  = strings.messages[self, 'imageChangeHint']
-            msg   = msg.format(overlay.name)
-            hint  = hint.format(overlay.name)
-
-            global _suppressOverlayChangeWarning
-            if not _suppressOverlayChangeWarning:
-
-                cbMsg = strings.messages[self, 'imageChange.suppress']
-                title = strings.titles[  self, 'imageChange']
-
-                dlg   = fsldlg.CheckBoxMessageDialog(
-                    self.viewPanel,
-                    title=title,
-                    message=msg,
-                    cbMessages=[cbMsg],
-                    cbStates=[_suppressOverlayChangeWarning],
-                    hintText=hint,
-                    focus='yes',
-                    icon=wx.ICON_INFORMATION)
-
-                dlg.ShowModal()
-
-                _suppressOverlayChangeWarning  = dlg.CheckBoxState()
-
-            status.update(msg)
-            self.displayCtx.displaySpace = overlay
 
         # Load the editor for the overlay (create
         # one if necessary), and add listeners to
