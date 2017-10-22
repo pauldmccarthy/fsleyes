@@ -181,6 +181,7 @@ import platform
 
 import fsl.utils.async                    as async
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets                    as fwidgets
 import fsleyes_props                      as props
 
 
@@ -931,7 +932,7 @@ class WXGLCanvasTarget(object):
         """
 
         def doRefresh():
-            if fslplatform.isWidgetAlive(self):
+            if fwidgets.isalive(self):
                 self.Refresh()
 
         # GL canvases do need to be refreshed

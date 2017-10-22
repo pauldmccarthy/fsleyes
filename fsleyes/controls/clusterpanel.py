@@ -8,21 +8,21 @@
 panel for viewing cluster results from a FEAT analysis.
 """
 
-import                                       logging
-import                                       wx
-import                                       six
+import                                 logging
+import                                 wx
+import                                 six
 
-import fsl.utils.async                    as async
-from   fsl.utils.platform import platform as fslplatform
-import fsl.data.image                     as fslimage
-import fsl.data.featimage                 as featimage
-import fsl.data.featanalysis              as featanalysis
+import fsl.utils.async              as async
+import fsl.data.image               as fslimage
+import fsl.data.featimage           as featimage
+import fsl.data.featanalysis        as featanalysis
 
-import fsleyes_widgets.utils.status       as status
-import fsleyes_widgets.widgetgrid         as widgetgrid
-import fsleyes.panel                      as fslpanel
-import fsleyes.strings                    as strings
-import fsleyes.autodisplay                as autodisplay
+import fsleyes_widgets              as fwidgets
+import fsleyes_widgets.utils.status as status
+import fsleyes_widgets.widgetgrid   as widgetgrid
+import fsleyes.panel                as fslpanel
+import fsleyes.strings              as strings
+import fsleyes.autodisplay          as autodisplay
 
 
 log = logging.getLogger(__name__)
@@ -392,7 +392,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         def addCluster(i, clust):
 
-            if not fslplatform.isWidgetAlive(grid):
+            if not fwidgets.isalive(grid):
                 return
 
             zmaxbtn    = makeCoordButton((clust.zmaxx,
@@ -423,7 +423,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         # clusters have been added.
         def onFinish():
 
-            if not fslplatform.isWidgetAlive(grid):
+            if not fwidgets.isalive(grid):
                 return
 
             status.update('All clusters loaded.')

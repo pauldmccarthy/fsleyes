@@ -24,8 +24,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 
 import fsl.utils.async                    as async
-from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
+import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.elistbox           as elistbox
 
 import fsleyes.strings                    as strings
@@ -502,7 +502,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
             # Just in case this PlotPanel is destroyed
             # before this task gets executed
-            if not fslplatform.isWidgetAlive(self):
+            if not fwidgets.isalive(self):
                 return
 
             for artist in self.artists:

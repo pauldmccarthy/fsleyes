@@ -11,8 +11,8 @@ See the :mod:`.actions` package documentation for more details.
 
 import logging
 
-import fsleyes_props                      as props
-from   fsl.utils.platform import platform as fslplatform
+import fsleyes_props   as props
+import fsleyes_widgets as fwidgets
 
 
 log = logging.getLogger(__name__)
@@ -55,14 +55,14 @@ class BoundWidget(object):
 
         import wx
 
-        if not fslplatform.isWidgetAlive(self.parent):
+        if not fwidgets.isalive(self.parent):
             return False
 
         if isinstance(self.widget, wx.MenuItem):
-            return fslplatform.isWidgetAlive(self.menu)
+            return fwidgets.isalive(self.menu)
 
         else:
-            return fslplatform.isWidgetAlive(self.widget)
+            return fwidgets.isalive(self.widget)
 
 
 class Action(props.HasProperties):
