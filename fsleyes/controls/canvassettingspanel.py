@@ -202,7 +202,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                 tooltip=fsltooltips.properties[canvasPanel, dispProp.key],
                 groupName='scene')
 
-        opts = canvasPanel.getSceneOptions()
+        opts = canvasPanel.sceneOpts
 
         for dispProp in sceneOptsProps.values():
 

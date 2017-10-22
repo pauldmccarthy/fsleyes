@@ -58,10 +58,10 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
     The ``LocationPanel`` is primarily designed to work with :class:`.Image`
     overlays. If the :attr:`.DisplayContext.selectedOverlay` is an
-    :class:`.Image`, or has an associated reference image (see the
-    :meth:`.DisplayOpts.getReferenceImage` method), the ``LocationPanel``
-    will display the current :class:`.DisplayContext.location` in both the
-    the voxel coordinates and world coordinates of the ``Image`` instance.
+    :class:`.Image`, or has an associated reference image (see
+    :meth:`.DisplayOpts.referenceImage`), the ``LocationPanel`` will display
+    the current :class:`.DisplayContext.location` in both the the voxel
+    coordinates and world coordinates of the ``Image`` instance.
 
 
     **Other overlays**
@@ -350,7 +350,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             return
 
         display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         self.__registeredOverlay = overlay
         self.__registeredDisplay = display
@@ -488,7 +488,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         overlay = self.__registeredOverlay
         opts    = self.__registeredOpts
 
-        if overlay is not None: refImage = opts.getReferenceImage()
+        if overlay is not None: refImage = opts.referenceImage
         else:                   refImage = None
 
         haveRef = refImage is not None
@@ -648,7 +648,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         elif source == 'voxel':   coords = self.voxelLocation.xyz
         elif source == 'world':   coords = self.worldLocation.xyz
 
-        refImage = self.__registeredOpts.getReferenceImage()
+        refImage = self.__registeredOpts.referenceImage
 
         if refImage is not None:
             opts    = self._displayCtx.getOpts(refImage)

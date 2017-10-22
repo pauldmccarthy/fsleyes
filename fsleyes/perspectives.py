@@ -128,11 +128,11 @@ def applyPerspective(frame, name, perspective, message=None):
         frame.addViewPanel(vp)
 
     # Apply the layout to those view panels
-    frame.getAuiManager().LoadPerspective(frameLayout)
+    frame.auiManager.LoadPerspective(frameLayout)
 
     # For each view panel, add all of the
     # control panels, and lay them out
-    viewPanels = frame.getViewPanels()
+    viewPanels = frame.viewPanels
     for i in range(len(viewPanels)):
 
         vp         = viewPanels[  i]
@@ -146,7 +146,7 @@ def applyPerspective(frame, name, perspective, message=None):
                 child.__name__, type(vp).__name__))
             _addControlPanel(vp, child)
 
-        vp.getAuiManager().LoadPerspective(layout)
+        vp.auiManager.LoadPerspective(layout)
 
         # Apply saved property values
         # to the view panel.
@@ -158,7 +158,7 @@ def applyPerspective(frame, name, perspective, message=None):
         # And, if it is a CanvasPanel,
         # to its SceneOpts instance.
         if isinstance(vp, canvaspanel.CanvasPanel):
-            opts = vp.getSceneOptions()
+            opts = vp.sceneOpts
             for name, val in sceneProps.items():
                 log.debug('Setting {}.{} = {}'.format(
                     type(opts).__name__, name, val))
@@ -343,8 +343,8 @@ def serialisePerspective(frame):
 
     # Now we can start extracting the layout information.
     # We start with the FSLeyesFrame layout.
-    auiMgr     = frame.getAuiManager()
-    viewPanels = frame.getViewPanels()
+    auiMgr     = frame.auiManager
+    viewPanels = frame.viewPanels
 
     # Generate the frame layout string, and a
     # list of the children of the frame
@@ -367,9 +367,9 @@ def serialisePerspective(frame):
         # string needs to contain layout information for
         # all of these panels, but we only care about the
         # control panels.
-        vpAuiMgr    = vp.getAuiManager()
+        vpAuiMgr    = vp.auiManager
         ctrlPanels  = vp.getPanels()
-        centrePanel = vp.getCentrePanel()
+        centrePanel = vp.centrePanel
 
         # As above for the frame, generate a layout
         # string and a list of control panels - the
@@ -684,7 +684,7 @@ def _getPanelProps(panel):
         return {}, {}
 
     panelType = type(panel).__name__
-    opts      = panel.getSceneOptions()
+    opts      = panel.sceneOpts
 
     panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
 

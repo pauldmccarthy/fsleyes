@@ -10,6 +10,7 @@ class for all panels which display overlays using ``OpenGL``.
 
 
 import logging
+import deprecation
 
 import wx
 
@@ -42,7 +43,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     (e.g. the :class:`.OrthoPanel` and the :class:`.LightBoxPanel`). A
     ``CanvasPanel`` instance uses a :class:`.SceneOpts` instance to control
     much of its functionality. The ``SceneOpts`` instance used by a
-    ``CanvasPanel`` can be accessed via the :meth:`getSceneOptions` method.
+    ``CanvasPanel`` can be accessed via the :meth:`sceneOpts` property.
 
 
     The ``CanvasPanel`` class contains settings and functionality common to
@@ -57,7 +58,7 @@ class CanvasPanel(viewpanel.ViewPanel):
     Sub-classes of the ``CanvasPanel`` must do the following:
 
       1. Add their content to the panel that is accessible via the
-         :meth:`getContentPanel` method (see the note on
+         :meth:`contentPanel` property (see the note on
          :ref:`adding content <canvaspanel-adding-content>`).
 
       2. Override the :meth:`getGLCanvases` method.
@@ -136,15 +137,13 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     As depicted in the diagram, sub-classes need to add their content to the
-    *content panel*. This panel is accessible via the :meth:`getContentPanel`
-    method.
+    *content panel*. This panel is accessible via the :meth:`contentPanel`
+    property.
 
 
-    The *centre panel* is what gets passed to the
-    :meth:`.ViewPanel.setCentrePanel` method, and is accessible via the
-    :meth:`getCentrePanel` method, if necessary. The *container panel* is
-    also available, via the :meth:`getContainerPanel`. Everything in the
-    container panel will appear in screenshots (see the :meth:`screenshot`
+    The *centre panel* is the :meth:`.ViewPanel.centrePanel`. The *container
+    panel* is also available, via :meth:`containerPanel`. Everything in
+    the container panel will appear in screenshots (see the :meth:`screenshot`
     method).
 
 
@@ -158,10 +157,11 @@ class CanvasPanel(viewpanel.ViewPanel):
 
       1. Call the :meth:`layoutContainerPanel` method.
 
-      2. Add the container panel (accessed via :meth:`getContainerPanel`)
-         to the centre panel (accessed via :meth:`getCentrePanel`).
+      2. Add the container panel (accessed via :meth:`containerPanel`)
+         to the centre panel (accessed via :meth:`centrePanel`).
 
       3. Add any other custom content to the centre panel.
+
     """
 
 
@@ -256,14 +256,12 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.disableProperty('syncOverlayOrder')
             self.disableProperty('syncOverlayDisplay')
 
-        self.__centrePanel    = wx.Panel(self)
-        self.__containerPanel = wx.Panel(self.__centrePanel)
+        self.centrePanel      = wx.Panel(self)
+        self.__containerPanel = wx.Panel(self.centrePanel)
         self.__contentPanel   = wx.Panel(self.__containerPanel)
 
         self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
         self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
-
-        self.setCentrePanel(self.__centrePanel)
 
         # the __movieModeChanged method is called
         # when movieMode changes, but also when
@@ -339,8 +337,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         from fsleyes.actions.screenshot import ScreenshotAction
 
-        ScreenshotAction(self.getOverlayList(),
-                         self.getDisplayContext(),
+        ScreenshotAction(self.overlayList,
+                         self.displayCtx,
                          self)()
 
 
@@ -352,8 +350,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         from fsleyes.actions.showcommandline import ShowCommandLineAction
 
-        ShowCommandLineAction(self.getOverlayList(),
-                              self.getDisplayContext(),
+        ShowCommandLineAction(self.overlayList,
+                              self.displayCtx,
                               self)()
 
 
@@ -365,8 +363,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         from fsleyes.actions.applycommandline import ApplyCommandLineAction
 
-        ApplyCommandLineAction(self.getOverlayList(),
-                               self.getDisplayContext(),
+        ApplyCommandLineAction(self.overlayList,
+                               self.displayCtx,
                                self)()
 
 
@@ -476,6 +474,47 @@ class CanvasPanel(viewpanel.ViewPanel):
                          canvasPanel=self)
 
 
+    @property
+    def sceneOpts(self):
+        """Returns the :class:`.SceneOpts` instance used by this
+        ``CanvasPanel``.
+        """
+        return self.__opts
+
+
+    @property
+    def contentPanel(self):
+        """Returns the ``wx.Panel`` to which sub-classes must add their content.
+        See the note on :ref:`adding content <canvaspanel-adding-content>`.
+        """
+        return self.__contentPanel
+
+
+    @property
+    def containerPanel(self):
+        """Returns the ``wx.Panel`` which contains the
+        :class:`.ColourBarPanel` if it is being displayed, and the content
+        panel. See the note on
+        :ref:`adding content <canvaspanel-adding-content>`.
+        """
+        return self.__containerPanel
+
+
+    def colourBarCanvas(self):
+        """If a colour bar is being displayed, this method returns
+        the :class:`.ColourBarCanvas` instance which is used by the
+        :class:`.ColourBarPanel` to render the colour bar.
+
+        Otherwise, ``None`` is returned.
+        """
+        if self.__colourBar is not None:
+            return self.__colourBar.getCanvas()
+        return None
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use sceneOpts instead')
     def getSceneOptions(self):
         """Returns the :class:`.SceneOpts` instance used by this
         ``CanvasPanel``.
@@ -483,14 +522,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__opts
 
 
-    def getCentrePanel(self):
-        """Returns the ``wx.Panel`` which is passed to
-        :meth:`.ViewPanel.setCentrePanel`. See the note on
-        :ref:`adding content <canvaspanel-adding-content>`.
-        """
-        return self.__centrePanel
-
-
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use contentPanel instead')
     def getContentPanel(self):
         """Returns the ``wx.Panel`` to which sub-classes must add their content.
         See the note on :ref:`adding content <canvaspanel-adding-content>`.
@@ -498,6 +532,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__contentPanel
 
 
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use containerPanel instead')
     def getContainerPanel(self):
         """Returns the ``wx.Panel`` which contains the
         :class:`.ColourBarPanel` if it is being displayed, and the content
@@ -507,16 +544,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__containerPanel
 
 
-    def getGLCanvases(self):
-        """This method must be overridden by subclasses, and must return a
-        list containing all :class:`.SliceCanvas` instances which are being
-        displayed.
-        """
-        raise NotImplementedError(
-            'getGLCanvases has not been implemented '
-            'by {}'.format(type(self).__name__))
-
-
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use colourBarCanvas instead')
     def getColourBarCanvas(self):
         """If a colour bar is being displayed, this method returns
         the :class:`.ColourBarCanvas` instance which is used by the
@@ -529,6 +559,16 @@ class CanvasPanel(viewpanel.ViewPanel):
         return None
 
 
+    def getGLCanvases(self):
+        """This method must be overridden by subclasses, and must return a
+        list containing all :class:`.SliceCanvas` instances which are being
+        displayed.
+        """
+        raise NotImplementedError(
+            'getGLCanvases has not been implemented '
+            'by {}'.format(type(self).__name__))
+
+
     def centrePanelLayout(self):
         """Lays out the centre panel. This method may be overridden by
         sub-classes which need more advanced layout logic. See the note on
@@ -539,7 +579,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__containerPanel, flag=wx.EXPAND, proportion=1)
-        self.__centrePanel.SetSizer(sizer)
+        self.centrePanel.SetSizer(sizer)
 
         self.PostSizeEvent()
 
@@ -552,14 +592,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         and is available for custom sub-class implementations to use.
         """
 
-        sopts = self.getSceneOptions()
+        sopts = self.sceneOpts
 
-        if not self.__opts.showColourBar:
+        if not sopts.showColourBar:
 
             if self.__colourBar is not None:
-                self.__opts.unbindProps('colourBarLabelSide',
-                                        self.__colourBar,
-                                        'labelSide')
+                sopts.unbindProps('colourBarLabelSide',
+                                  self.__colourBar,
+                                  'labelSide')
                 self.__colourBar.destroy()
                 self.__colourBar.Destroy()
                 self.__colourBar = None
@@ -572,30 +612,28 @@ class CanvasPanel(viewpanel.ViewPanel):
         if self.__colourBar is None:
             self.__colourBar = colourbarpanel.ColourBarPanel(
                 self.__containerPanel,
-                self.getOverlayList(),
-                self.getDisplayContext(),
-                self.getFrame())
+                self.overlayList,
+                self.displayCtx,
+                self.frame)
 
             bg = sopts.bgColour
             fg = sopts.fgColour
             self.__colourBar.getCanvas().textColour = fg
             self.__colourBar.getCanvas().bgColour   = bg
 
-        self.__opts.bindProps('colourBarLabelSide',
-                              self.__colourBar,
-                              'labelSide')
+        sopts.bindProps('colourBarLabelSide', self.__colourBar, 'labelSide')
 
-        if   self.__opts.colourBarLocation in ('top', 'bottom'):
+        if   sopts.colourBarLocation in ('top', 'bottom'):
             self.__colourBar.orientation = 'horizontal'
-        elif self.__opts.colourBarLocation in ('left', 'right'):
+        elif sopts.colourBarLocation in ('left', 'right'):
             self.__colourBar.orientation = 'vertical'
 
-        if self.__opts.colourBarLocation in ('top', 'bottom'):
+        if sopts.colourBarLocation in ('top', 'bottom'):
             sizer = wx.BoxSizer(wx.VERTICAL)
         else:
             sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        if self.__opts.colourBarLocation in ('top', 'left'):
+        if sopts.colourBarLocation in ('top', 'left'):
             sizer.Add(self.__colourBar,    flag=wx.EXPAND)
             sizer.Add(self.__contentPanel, flag=wx.EXPAND, proportion=1)
         else:
@@ -626,9 +664,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         refresh = kwa.pop('refresh', True)
 
-        sceneOpts = self.getSceneOptions()
+        sceneOpts = self.sceneOpts
+        cpanel    = self.contentPanel
         canvases  = self.getGLCanvases()
-        cpanel    = self.getContentPanel()
         bg        = sceneOpts.bgColour
         fg        = sceneOpts.fgColour
 

@@ -490,7 +490,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
             display             = self._displayCtx.getDisplay(overlay)
             display.overlayType = overlayType
-            opts                = display.getDisplayOpts()
+            opts                = display.opts
 
             if   overlayType == 'mask':   opts.colour = np.random.random(3)
             elif overlayType == 'volume': opts.cmap   = 'hot'

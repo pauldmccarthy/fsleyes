@@ -42,7 +42,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     the slices, and a :class:`.LightBoxOpts` instance to manage the display
     settings. The canvas is accessed through the :meth:`getCanvas` and
     :meth:`getGLCanvases` methods, and the ``LightBoxOpts`` instanace can
-    be retrieved via the :meth:`.CanvasPanel.getSceneOptions` method.
+    be retrieved via the :meth:`.CanvasPanel.sceneOpts` property.
 
 
     The ``LightBoxPanel`` adds the following actions to those already
@@ -73,12 +73,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
-        self.__scrollbar = wx.ScrollBar(
-            self.getCentrePanel(),
-            style=wx.SB_VERTICAL)
-
+        self.__scrollbar = wx.ScrollBar(self.centrePanel, style=wx.SB_VERTICAL)
         self.__lbCanvas  = lightboxcanvas.WXGLLightBoxCanvas(
-            self.getContentPanel(),
+            self.contentPanel,
             overlayList,
             displayCtx)
 
@@ -106,7 +103,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.bindProps('zrange',       lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.getContentPanel().SetSizer(self.__canvasSizer)
+        self.contentPanel.SetSizer(self.__canvasSizer)
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
@@ -230,8 +227,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.layoutContainerPanel()
 
-        centrePanel    = self.getCentrePanel()
-        containerPanel = self.getContainerPanel()
+        centrePanel    = self.centrePanel
+        containerPanel = self.containerPanel
         sizer          = wx.BoxSizer(wx.HORIZONTAL)
 
         centrePanel.SetSizer(sizer)
@@ -261,7 +258,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         If the currently selected overlay is a :class:`.Nifti` instance, or
         has an associated reference image (see
-        :meth:`.DisplayOpts.getReferenceImage`), a listener is registered on
+        :meth:`.DisplayOpts.referenceImage`), a listener is registered on
         the reference image :attr:`.NiftiOpts.transform` property, so that the
         :meth:`__transformChanged` method will be called when it changes.
         """
@@ -291,7 +288,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # we'll assume that the spacing/
         # zrange need to be initialised.
         lbCanvas = self.__lbCanvas
-        opts     = self.getSceneOptions()
+        opts     = self.sceneOpts
 
         if opts.zrange == [0.0, 0.0]:
 
@@ -308,7 +305,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         new overlay display space.
         """
 
-        sceneOpts = self.getSceneOptions()
+        sceneOpts = self.sceneOpts
         overlay   = self._displayCtx.getReferenceImage(
             self._displayCtx.getSelectedOverlay())
 
@@ -333,7 +330,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """Called when the :attr:`.SceneOpts.zoom` property changes. Updates
         the number of slice columns shown.
         """
-        opts       = self.getSceneOptions()
+        opts       = self.sceneOpts
         minval     = opts.getAttribute('zoom', 'minval')
         maxval     = opts.getAttribute('zoom', 'maxval')
         normZoom   = 1.0 - (opts.zoom - minval) / float(maxval)

@@ -101,7 +101,7 @@ class ShellPanel(viewpanel.ViewPanel):
 
         font = shell.GetFont()
         shell.SetFont(font.Larger())
-        self.setCentrePanel(shell)
+        self.centrePanel = shell
 
 
     def destroy(self):

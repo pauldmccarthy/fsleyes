@@ -108,7 +108,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         if overlay is not None:
             try:
                 display = self._displayCtx.getDisplay(overlay)
-                opts    = display.getDisplayOpts()
+                opts    = display.opts
 
                 if isinstance(opts, cmapopts.ColourMapOpts):
                     opts   .removeListener('displayRange',    self._name)
@@ -155,7 +155,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         if overlay is not None:
             try:
                 display = self._displayCtx.getDisplay(overlay)
-                opts    = display.getDisplayOpts()
+                opts    = display.opts
 
                 opts   .removeListener('displayRange',    self._name)
                 opts   .removeListener('cmap',            self._name)
@@ -181,7 +181,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
             return
 
         display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         if not isinstance(opts, cmapopts.ColourMapOpts):
             self.__refreshColourBar()

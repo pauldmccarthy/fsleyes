@@ -373,8 +373,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return colour
 
 
-    def getReferenceImage(self):
-        """Overrides :meth:`.DisplayOpts.getReferenceIamge`.
+    @property
+    def referenceImage(self):
+        """Overrides :meth:`.DisplayOpts.referenceImage`.
 
         If a :attr:`refImage` is selected, it is returned. Otherwise,``None``
         is returned.

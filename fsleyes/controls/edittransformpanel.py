@@ -281,8 +281,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__ortho        = None
         self.__cachedXforms = None
 
-        displayCtx  = self.getDisplayContext()
-        overlayList = self.getOverlayList()
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
 
         displayCtx .removeListener('displaySpace',    self._name)
         displayCtx .removeListener('selectedOverlay', self._name)
@@ -298,7 +298,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         message is shown.
         """
         overlay     = self.__overlay
-        displayCtx  = self.getDisplayContext()
+        displayCtx  = self.displayCtx
         showWarning = displayCtx.displaySpace is overlay
 
         self.__primarySizer.Show(self.__dsSizer, showWarning)
@@ -321,7 +321,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         """
 
         self.__overlay = overlay
-        display = self.getDisplayContext().getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         display.addListener('name', self._name, self.__overlayNameChanged)
 
         self.__overlayNameChanged()
@@ -351,7 +351,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         # overlay has been removed
         # from the list
         try:
-            display = self.getDisplayContext().getDisplay(overlay)
+            display = self.displayCtx.getDisplay(overlay)
             display.removeListener('name', self._name)
 
         except displaycontext.InvalidOverlayError:
@@ -362,7 +362,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         """Called when the :attr:`.Display.name` of the currently selected
         overlay changes. Updates the name label.
         """
-        display = self.getDisplayContext().getDisplay(self.__overlay)
+        display = self.displayCtx.getDisplay(self.__overlay)
         label   = strings.labels[self, 'overlayName'].format(display.name)
 
         self.__overlayName.SetLabel(label)
@@ -374,7 +374,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         selected overlay is an :class:`.Image`, it is registered, and
         the transform widgets reset.
         """
-        overlay = self.getDisplayContext().getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is self.__overlay:
             return
@@ -475,7 +475,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
             return
 
         overlay  = self.__overlay
-        opts     = self.getDisplayContext().getOpts(overlay)
+        opts     = self.displayCtx.getOpts(overlay)
 
         if self.__extraXform is None: v2wXform = overlay.voxToWorldMat
         else:                         v2wXform = self.__extraXform
@@ -501,7 +501,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         have no effect on the display. This method changes the ``displaySpace``
         to ``'world'``.
         """
-        self.getDisplayContext().displaySpace = 'world'
+        self.displayCtx.displaySpace = 'world'
 
 
     def __onApply(self, ev):
@@ -519,7 +519,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         else:                         v2wXform = self.__extraXform
 
         newXform = self.__getCurrentXform()
-        opts     = self.getDisplayContext().getOpts(overlay)
+        opts     = self.displayCtx.getOpts(overlay)
 
         xform = transform.concat(newXform, v2wXform)
 
@@ -552,7 +552,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         for overlay in reset:
             try:
-                opts = self.getDisplayContext().getOpts(overlay)
+                opts = self.displayCtx.getOpts(overlay)
                 opts.displayXform = np.eye(4)
 
             # In cas overlay has been removed
@@ -580,8 +580,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        overlayList      = self.getOverlayList()
-        displayCtx       = self.getDisplayContext()
+        overlayList      = self.overlayList
+        displayCtx       = self.displayCtx
         matFile, refFile = applyflirtxfm.promptForFlirtFiles(
             self,
             overlay,
@@ -612,8 +612,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        overlayList      = self.getOverlayList()
-        displayCtx       = self.getDisplayContext()
+        overlayList      = self.overlayList
+        displayCtx       = self.displayCtx
         matFile, refFile = applyflirtxfm.promptForFlirtFiles(
             self,
             overlay,

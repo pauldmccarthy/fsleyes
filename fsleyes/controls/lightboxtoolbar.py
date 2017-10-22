@@ -63,7 +63,7 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.lightBoxPanel = lb
 
-        lbOpts = lb.getSceneOptions()
+        lbOpts = lb.sceneOpts
 
         if BUM_MODE: coronalIcon          = 'coronalBumSlice24'
         else:        coronalIcon          = 'coronalSlice24'

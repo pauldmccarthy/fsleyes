@@ -93,8 +93,8 @@ class ReloadOverlayAction(base.Action):
         # the master one, and the one for
         # every view panel.
         displayCtxs  = [self.__displayCtx]
-        viewPanels   = self.__frame.getViewPanels()
-        displayCtxs += [vp.getDisplayContext() for vp in viewPanels]
+        viewPanels   = self.__frame.viewPanels
+        displayCtxs += [vp.displayCtx for vp in viewPanels]
 
         # Now get refs to all Display and
         # DisplayOpts instances for this

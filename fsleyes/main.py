@@ -636,14 +636,14 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         perspectives.loadPerspective(frame, namespace.scene)
 
     # Apply any view-panel specific arguments
-    viewPanels = frame.getViewPanels()
+    viewPanels = frame.viewPanels
     for viewPanel in viewPanels:
 
         if not isinstance(viewPanel, canvaspanel.CanvasPanel):
             continue
 
-        displayCtx = viewPanel.getDisplayContext()
-        viewOpts   = viewPanel.getSceneOptions()
+        displayCtx = viewPanel.displayCtx
+        viewOpts   = viewPanel.sceneOpts
 
         parseargs.applySceneArgs(
             namespace, overlayList, displayCtx, viewOpts)

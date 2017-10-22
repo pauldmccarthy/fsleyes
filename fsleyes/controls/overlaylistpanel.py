@@ -216,7 +216,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         the corresponding label in the overlay list.
         """
 
-        overlay = display.getOverlay()
+        overlay = display.overlay
         idx     = self._displayCtx.getOverlayOrder(overlay)
         name    = display.name
 

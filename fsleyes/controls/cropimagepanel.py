@@ -153,8 +153,8 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         """
 
         profile     = self.__profile
-        displayCtx  = self.getDisplayContext()
-        overlayList = self.getOverlayList()
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
 
         profile    .removeListener('cropBox',         self._name)
         displayCtx .removeListener('selectedOverlay', self._name)
@@ -173,7 +173,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         self.__overlay = overlay
 
-        display = self.getDisplayContext().getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         is4D    = overlay.ndims >= 4
 
         if is4D:
@@ -195,7 +195,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             return
 
         try:
-            display = self.getDisplayContext().getDisplay(self.__overlay)
+            display = self.displayCtx.getDisplay(self.__overlay)
             display.removeListener('name', self._name)
 
         except displaycontext.InvalidOverlayError:
@@ -211,7 +211,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         overlay changes. Updates the name label.
         """
 
-        display = self.getDisplayContext().getDisplay(self.__overlay)
+        display = self.displayCtx.getDisplay(self.__overlay)
         label   = strings.labels[self, 'image']
         label   = label.format(display.name)
         self.__cropLabel.SetLabel(label)
@@ -222,7 +222,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         Updates labels appropriately.
         """
 
-        displayCtx = self.getDisplayContext()
+        displayCtx = self.displayCtx
         overlay    = displayCtx.getSelectedOverlay()
 
         if overlay is self.__overlay:
@@ -385,8 +385,8 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         to finish cropping.
         """
 
-        overlayList = self.getOverlayList()
-        displayCtx  = self.getDisplayContext()
+        overlayList = self.overlayList
+        displayCtx  = self.displayCtx
         overlay     = displayCtx.getSelectedOverlay()
         display     = displayCtx.getDisplay(overlay)
         name        = '{}_roi'.format(display.name)

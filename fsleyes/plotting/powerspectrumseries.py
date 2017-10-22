@@ -128,7 +128,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
         """
 
         display = self.displayCtx.getDisplay(self.overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
         coords  = opts.getVoxel()
 
         if coords is not None:
@@ -194,7 +194,7 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
         ``MelodicPowerSpectrumSeries``.
         """
         display   = self.displayCtx.getDisplay(self.overlay)
-        opts      = display.getDisplayOpts()
+        opts      = display.opts
         component = opts.volume
 
         return '{} [component {}]'.format(display.name, component + 1)

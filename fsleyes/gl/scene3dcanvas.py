@@ -367,7 +367,7 @@ class Scene3DCanvas(object):
         """
         """
 
-        overlay = display.getOverlay()
+        overlay = display.overlay
         globj   = self.__glObjects.pop(overlay, None)
 
         if globj is not None:

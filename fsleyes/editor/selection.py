@@ -95,7 +95,7 @@ class Selection(notifier.Notifier):
 
         self.__image              = image
         self.__display            = display
-        self.__opts               = display.getDisplayOpts()
+        self.__opts               = display.opts
         self.__clear              = True
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None

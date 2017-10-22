@@ -12,7 +12,7 @@ for FSLeyes.
 from __future__ import division
 
 import logging
-
+import deprecation
 import six
 
 import wx
@@ -77,24 +77,24 @@ class FSLeyesFrame(wx.Frame):
     **Programming interface**
 
 
-    The ``FSLeyesFrame`` provides the following methods for programmatically
-    configuring the display:
+    The ``FSLeyesFrame`` provides the following properties and methods for
+    programmatically configuring the display:
 
     .. autosummary::
        :nosignatures:
 
-       getOverlayList
-       getDisplayContext
-       getViewPanels
+       overlayList
+       displayContext
+       viewPanels
+       focusedViewPanel
+       auiManager
        getViewPanelInfo
        getViewPanelID
        getViewPanelTitle
-       getFocusedViewPanel
        addViewPanel
        viewPanelDefaultLayout
        removeViewPanel
        removeAllViewPanels
-       getAuiManager
        refreshPerspectiveMenu
        runScript
        populateMenu
@@ -287,6 +287,51 @@ class FSLeyesFrame(wx.Frame):
         self.Layout()
 
 
+    @property
+    def overlayList(self):
+        """Returns the :class:`.OverlayList` which contains the overlays
+        being displayed by this ``FSLeyesFrame``.
+        """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Returns the top-level :class:`.DisplayContext` associated with this
+        ``FSLeyesFrame``.
+        """
+        return self.__displayCtx
+
+
+    @property
+    def viewPanels(self):
+        """Returns a list of all :class:`.ViewPanel` instances that are
+        currenlty displayed in this ``FSLeyesFrame``.
+        """
+        return list(self.__viewPanels)
+
+
+    @property
+    def focusedViewPanel(self):
+        """Returns the :class:`.ViewPanel` which currently has focus, or
+        ``None`` if no ``ViewPanel`` has focus.
+        """
+        import fsleyes.views.viewpanel as viewpanel
+
+        focused = wx.Window.FindFocus()
+
+        while focused is not None:
+
+            if isinstance(focused, viewpanel.ViewPanel):
+                return focused
+
+            focused = focused.GetParent()
+        return None
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use overlayList instead')
     def getOverlayList(self):
         """Returns the :class:`.OverlayList` which contains the overlays
         being displayed by this ``FSLeyesFrame``.
@@ -294,6 +339,9 @@ class FSLeyesFrame(wx.Frame):
         return self.__overlayList
 
 
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use displayCtx instead')
     def getDisplayContext(self):
         """Returns the top-level :class:`.DisplayContext` associated with this
         ``FSLeyesFrame``.
@@ -301,11 +349,24 @@ class FSLeyesFrame(wx.Frame):
         return self.__displayCtx
 
 
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use viewPanels instead')
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLeyesFrame``.
         """
         return list(self.__viewPanels)
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use focusedViewPanel instead')
+    def getFocusedViewPanel(self):
+        """Returns the :class:`.ViewPanel` which currently has focus, or
+        ``None`` if no ``ViewPanel`` has focus.
+        """
+        return self.focusedViewPanel
 
 
     def getViewPanelID(self, viewPanel):
@@ -329,6 +390,17 @@ class FSLeyesFrame(wx.Frame):
         return self.__auiManager.GetPane(viewPanel)
 
 
+    @property
+    def auiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
+        the layout of this ``FSLeyesFrame``.
+        """
+        return self.__auiManager
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use auiManager instead')
     def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
         the layout of this ``FSLeyesFrame``.
@@ -346,23 +418,6 @@ class FSLeyesFrame(wx.Frame):
 
         self.__auiManager.ClosePane(paneInfo)
         self.__auiManager.Update()
-
-
-    def getFocusedViewPanel(self):
-        """Returns the :class:`.ViewPanel` which currently has focus, or
-        ``None`` if no ``ViewPanel`` has focus.
-        """
-        import fsleyes.views.viewpanel as viewpanel
-
-        focused = wx.Window.FindFocus()
-
-        while focused is not None:
-
-            if isinstance(focused, viewpanel.ViewPanel):
-                return focused
-
-            focused = focused.GetParent()
-        return None
 
 
     def removeAllViewPanels(self):
@@ -766,7 +821,7 @@ class FSLeyesFrame(wx.Frame):
         # ViewPanel/action to execute based on the
         # keyboard shortcut.
 
-        viewPanel  = self.getFocusedViewPanel()
+        viewPanel  = self.focusedViewPanel
         actionName = self.__viewPanelShortcuts[shortcut].get(viewPanel, None)
 
         if actionName is None:
@@ -897,7 +952,7 @@ class FSLeyesFrame(wx.Frame):
 
         canvasPanels = [vp for vp in self.__viewPanels
                         if isinstance(vp, canvaspanel.CanvasPanel)]
-        canvasCtxs   = [c.getDisplayContext() for c in canvasPanels]
+        canvasCtxs   = [c.displayCtx for c in canvasPanels]
         numCanvases  = len(canvasPanels)
 
         # We only care about
@@ -923,7 +978,7 @@ class FSLeyesFrame(wx.Frame):
         if displaySynced and orderSynced:
             if newPanel is not None and \
                isinstance(newPanel, canvaspanel.CanvasPanel):
-                childDC = newPanel.getDisplayContext()
+                childDC = newPanel.displayCtx
                 childDC.syncOverlayDisplay = False
                 childDC.unsyncFromParent('overlayOrder')
 
@@ -934,7 +989,7 @@ class FSLeyesFrame(wx.Frame):
         else:
             if newPanel is not None: panel = newPanel
             else:                    panel = canvasPanels[-1]
-            childDC = panel.getDisplayContext()
+            childDC = panel.displayCtx
 
             # Make sure that the parent context
             # inherits the values from this context
@@ -943,7 +998,7 @@ class FSLeyesFrame(wx.Frame):
             childDC.setBindingDirection(False)
 
             for display in displays:
-                opts = display.getDisplayOpts()
+                opts = display.opts
                 display.setBindingDirection(False)
                 opts   .setBindingDirection(False)
 
@@ -954,7 +1009,7 @@ class FSLeyesFrame(wx.Frame):
             childDC.setBindingDirection(True)
 
             for display in displays:
-                opts = display.getDisplayOpts()
+                opts = display.opts
                 display.setBindingDirection(True)
                 opts   .setBindingDirection(True)
 
@@ -1619,7 +1674,7 @@ class FSLeyesFrame(wx.Frame):
         # ensure that the tools for different view
         # panel types are always in a consistent
         # order (i.e. ortho first, shell last)
-        panels  = self.getViewPanels()
+        panels  = self.viewPanels
         vpOrder = [OrthoPanel,
                    LightBoxPanel,
                    Scene3DPanel,

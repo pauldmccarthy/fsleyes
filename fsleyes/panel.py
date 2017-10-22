@@ -72,16 +72,16 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
     and the :class:`.FSLeyesToolBar`.
 
 
-    A ``_FSLeyesPanel`` has the following methods, available for use by
-    subclasses:
+    A ``_FSLeyesPanel`` has the following methods and properties, available for
+    use by subclasses:
 
     .. autosummary::
        :nosignatures:
 
-       getName
-       getFrame
-       getOverlayList
-       getDisplayContext
+       name
+       frame
+       overlayList
+       displayContext
        setNavOrder
        destroy
        destroyed

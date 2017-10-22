@@ -167,7 +167,7 @@ class OrthoViewProfile(profiles.Profile):
         See the :meth:`.SliceCanvas.resetDisplay` method.
         """
 
-        opts = self._viewPanel.getSceneOptions()
+        opts = self._viewPanel.sceneOpts
 
         self.__xcanvas.resetDisplay()
         self.__ycanvas.resetDisplay()

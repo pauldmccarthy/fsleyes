@@ -36,8 +36,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
 
 
     The scene properties are described and changed via a :class:`.Scene3DOpts`
-    instance, accessible through the :meth:`.CanvasPanel.getSceneOptions`
-    method.
+    instance, accessible through the :meth:`.CanvasPanel.sceneOpts`
+    property.
     """
 
 
@@ -68,7 +68,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         displayCtx.defaultDisplaySpace = 'world'
         displayCtx.displaySpace        = 'world'
 
-        contentPanel = self.getContentPanel()
+        contentPanel = self.contentPanel
 
         self.__canvas = scene3dcanvas.WXGLScene3DCanvas(contentPanel,
                                                         overlayList,

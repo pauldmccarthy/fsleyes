@@ -2410,7 +2410,7 @@ def generateOverlayArgs(overlay, overlayList, displayCtx):
     :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
     display = displayCtx.getDisplay(overlay)
-    opts    = display   .getDisplayOpts()
+    opts    = display   .opts
     args    = _generateArgs(overlayList, displayCtx, display) + \
               _generateArgs(overlayList, displayCtx, opts)
 
@@ -2505,7 +2505,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             # type is set on the command line, the
             # DisplayOpts instance will have been
             # re-created
-            opts = display.getDisplayOpts()
+            opts = display.opts
 
             # All options in the FILE_OPTIONS dictionary
             # are Choice properties, where the valid

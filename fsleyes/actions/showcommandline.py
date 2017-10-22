@@ -96,7 +96,7 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
     argv = ['fsleyes']
 
     # Add scene options
-    sceneOpts = canvas.getSceneOptions()
+    sceneOpts = canvas.sceneOpts
     argv += parseargs.generateSceneArgs(
         overlayList,
         displayCtx,

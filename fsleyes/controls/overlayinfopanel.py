@@ -184,7 +184,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         """
 
         display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         self.__currentOverlay = overlay
         self.__currentDisplay = display
@@ -284,7 +284,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         img     = overlay.nibImage
         hdr     = overlay.header
         isNifti = overlay.niftiVersion >= 1
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         if isNifti: title = strings.labels[self, overlay]
         else:       title = strings.labels[self, 'Analyze']
@@ -553,7 +553,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                       ``TriangleMesh``.
         """
 
-        opts   = display.getDisplayOpts()
+        opts   = display.opts
         refImg = opts.refImage
 
         modelInfo = [

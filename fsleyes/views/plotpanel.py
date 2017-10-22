@@ -217,8 +217,7 @@ class PlotPanel(viewpanel.ViewPanel):
         figure.subplots_adjust(top=1.0, bottom=0.0, left=0.0, right=1.0)
         figure.patch.set_visible(False)
 
-        self.setCentrePanel(canvas)
-
+        self.centrePanel = canvas
         self.__figure    = figure
         self.__axis      = axis
         self.__canvas    = canvas
@@ -393,8 +392,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         from fsleyes.actions.screenshot import ScreenshotAction
 
-        ScreenshotAction(self.getOverlayList(),
-                         self.getDisplayContext(),
+        ScreenshotAction(self.overlayList,
+                         self.displayCtx,
                          self)()
 
 
@@ -407,8 +406,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         from fsleyes.actions.importdataseries import ImportDataSeriesAction
 
-        ImportDataSeriesAction(self.getOverlayList(),
-                               self.getDisplayContext(),
+        ImportDataSeriesAction(self.overlayList,
+                               self.displayCtx,
                                self)()
 
 
@@ -421,8 +420,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         from fsleyes.actions.exportdataseries import ExportDataSeriesAction
 
-        ExportDataSeriesAction(self.getOverlayList(),
-                               self.getDisplayContext(),
+        ExportDataSeriesAction(self.overlayList,
+                               self.displayCtx,
                                self)()
 
 

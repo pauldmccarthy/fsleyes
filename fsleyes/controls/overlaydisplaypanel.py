@@ -136,7 +136,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         self.__widgets        = collections.OrderedDict()
 
         display = self._displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         if self.__threedee:
             groups  = ['display', 'opts', '3d']
@@ -266,8 +266,8 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                     target,
                     widgetList,
                     self,
-                    self.getOverlayList(),
-                    self.getDisplayContext(),
+                    self.overlayList,
+                    self.displayCtx,
                     self.__threedee)
 
                 if isinstance(container, collections.Sequence):

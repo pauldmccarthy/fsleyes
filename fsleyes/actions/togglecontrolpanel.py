@@ -43,7 +43,7 @@ class ToggleControlPanelAction(base.ToggleAction):
         self.__viewPanel = instance
         self.__cpType    = cpType
 
-        auiMgr = instance.getAuiManager()
+        auiMgr = instance.auiManager
 
         # WTF. The AuiManager does not post an event
         #      when a pane is added - only when one

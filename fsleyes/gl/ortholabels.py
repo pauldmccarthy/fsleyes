@@ -26,7 +26,7 @@ class OrthoLabels(object):
     canvas. These labels are only shown if the currently selected overlay (as
     dicated by the :attr:`.DisplayContext.selectedOverlay` property) is a
     :class:`.Image` instance, **or** the
-    :meth:`.DisplayOpts.getReferenceImage` method for the currently selected
+    :meth:`.DisplayOpts.referenceImage` property for the currently selected
     overlay returns an :class:`.Image` instance.
     """
 

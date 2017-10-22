@@ -114,7 +114,7 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         ortho     = self.orthoPanel
-        orthoOpts = ortho.getSceneOptions()
+        orthoOpts = ortho.sceneOpts
         profile   = ortho.getCurrentProfile()
 
         if BUM_MODE: coronalIcon          = 'coronalBumSlice24'
@@ -258,6 +258,6 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         :attr:`.OrthoOpts.showLabels` properties.
         """
 
-        opts            = self.orthoPanel.getSceneOptions()
+        opts            = self.orthoPanel.sceneOpts
         opts.showCursor = self.showCursorAndLabels
         opts.showLabels = self.showCursorAndLabels

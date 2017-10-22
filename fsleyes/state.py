@@ -25,9 +25,9 @@ def save(frame):
     instances being displayed.
     """
 
-    overlayList = frame.getOverlayList()
-    displayCtx  = frame.getDisplayContext()
-    viewPanels  = frame.getViewPanels()
+    overlayList = frame.overlayList
+    displayCtx  = frame.displayCtx
+    viewPanels  = frame.viewPanels
 
     layout   = perspectives.serialisePerspective(frame)
     overlays = [(type(o).__name__, o.dataSource) for o in overlayList]
@@ -52,7 +52,7 @@ def save(frame):
         # Accessing the undocumented
         # AuiPaneInfo.name attribute
         vpName       = frame.getViewPanelInfo(vp).name
-        vpDisplayCtx = vp.getDisplayContext()
+        vpDisplayCtx = vp.displayCtx
 
         vpStates[vpName] = OrderedDict([
             ('View',           _viewPanelState(vp)),
@@ -140,7 +140,7 @@ def _viewPanelState(viewPanel):
     if isinstance(viewPanel, canvaspanel.CanvasPanel):
 
         sceneOptsState = OrderedDict()
-        sceneOpts      = viewPanel.getSceneOptions()
+        sceneOpts      = viewPanel.sceneOpts
         propNames      = sceneOpts.getAllProperties()[0]
 
         sceneOptsState['type'] = type(sceneOpts).__name__
@@ -162,8 +162,8 @@ def restore(frame, state):
 
     return
 
-    overlayList     = frame.getOverlayList()
-    displayCtx      = frame.getDisplayContext()
+    overlayList     = frame.overlayList
+    displayCtx      = frame.displayCtx
     layout          = state['Layout']
     overlays        = state['Overlays']
     displayCtxState = state['DisplayContext']
@@ -212,15 +212,15 @@ def restore(frame, state):
     perspectives.applyPerspective(frame, None, layout)
 
     # Restore view panel settings
-    viewPanels = frame.getViewPanels()
+    viewPanels = frame.viewPanels
     for vp, vpState in zip(viewPanels, vpStates):
         _restoreViewPanel(vp, overlayList, vpState)
 
 
 def _restoreViewPanel(viewPanel, overlayList, state):
 
-    displayCtx     = viewPanel.getDisplayContext()
-    sceneOpts      = viewPanel.getSceneOptions()
+    displayCtx     = viewPanel.displayCtx
+    sceneOpts      = viewPanel.sceneOpts
     vpState        = state['View']
     dcState        = state['DisplayContext']
     vpType         = vpState.pop('type')

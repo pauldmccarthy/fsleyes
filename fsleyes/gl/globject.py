@@ -225,7 +225,7 @@ class GLObject(notifier.Notifier):
         # both the overlay and the displayCtx.
         if overlay is not None and displayCtx is not None:
             self.__display    = displayCtx.getDisplay(overlay)
-            self.__opts       = self.__display.getDisplayOpts()
+            self.__opts       = self.__display.opts
             self.__displayCtx = displayCtx
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))

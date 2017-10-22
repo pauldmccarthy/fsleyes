@@ -132,7 +132,7 @@ class VoxelTimeSeries(TimeSeries):
         """
 
         display = self.displayCtx.getDisplay(self.overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
         coords  = opts.getVoxel()
 
         if coords is not None:

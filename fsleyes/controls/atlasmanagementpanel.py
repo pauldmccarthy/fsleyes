@@ -114,7 +114,7 @@ class AtlasManagementPanel(fslpanel.FSLeyesPanel):
         """Called when the user clicks the *Add* button on the list.
         Calls the :func:`.loadatlas.loadAtlas` function.
         """
-        loadatlas.loadAtlas(self.getFrame())
+        loadatlas.loadAtlas(self.frame)
 
 
     def __onListRemove(self, ev):

@@ -144,7 +144,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         log.debug('Showing tools for {}'.format(overlay))
 
         display   = self._displayCtx.getDisplay(overlay)
-        opts      = display.getDisplayOpts()
+        opts      = display.opts
         tools     = []
         nav       = []
 

@@ -71,7 +71,7 @@ def addShellPanel(self, *args, **kwargs):
 def removeFocusedViewPanel(self, *args, **kwargs):
     """Removes the :class:`.ViewPanel` which currently has focus. """
 
-    vp = self.getFocusedViewPanel()
+    vp = self.focusedViewPanel
 
     if vp is not None:
         self.removeViewPanel(vp)
@@ -82,15 +82,15 @@ def _changeOverlay(self, offset):
     Changes the currently selected overlay by the given offset.
     """
 
-    overlayList = self.getOverlayList()
+    overlayList = self.overlayList
 
     if len(overlayList) in (0, 1):
         return
 
-    viewPanel = self.getFocusedViewPanel()
+    viewPanel = self.focusedViewPanel
 
-    if viewPanel is None: displayCtx = self     .getDisplayContext()
-    else:                 displayCtx = viewPanel.getDisplayContext()
+    if viewPanel is None: displayCtx = self     .displayCtx
+    else:                 displayCtx = viewPanel.displayCtx
 
     cur = displayCtx.overlayOrder.index(displayCtx.selectedOverlay)
     new = displayCtx.overlayOrder[(cur + offset) % len(overlayList)]
@@ -111,15 +111,15 @@ def selectPreviousOverlay(self, *args, **kwargs):
 def toggleOverlayVisibility(self, *args, **kwargs):
     """Shows/hides the currently selected overlay. """
 
-    overlayList = self.getOverlayList()
+    overlayList = self.overlayList
 
     if len(overlayList) == 0:
         return
 
-    viewPanel = self.getFocusedViewPanel()
+    viewPanel = self.focusedViewPanel
 
-    if viewPanel is None: displayCtx = self     .getDisplayContext()
-    else:                 displayCtx = viewPanel.getDisplayContext()
+    if viewPanel is None: displayCtx = self     .displayCtx
+    else:                 displayCtx = viewPanel.displayCtx
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)

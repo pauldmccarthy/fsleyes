@@ -124,7 +124,7 @@ class LightBoxViewProfile(profiles.Profile):
         elif wheel < 0: wheel = -50
         else:           return False
 
-        opts = self._viewPanel.getSceneOptions()
+        opts = self._viewPanel.sceneOpts
 
         # see comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout

@@ -181,7 +181,7 @@ class OverlayGroup(props.HasProperties):
         self.overlays.append(overlay)
 
         display = self.__displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         log.debug('Adding overlay {} to group {}'.format(
             overlay.name, self.__name))
@@ -200,7 +200,7 @@ class OverlayGroup(props.HasProperties):
         self.overlays.remove(overlay)
 
         display = self.__displayCtx.getDisplay(overlay)
-        opts    = display.getDisplayOpts()
+        opts    = display.opts
 
         log.debug('Removing overlay {} from group {}'.format(
             overlay.name, self.__name))
@@ -276,5 +276,5 @@ class OverlayGroup(props.HasProperties):
         It makes sure that the display properties of the new
         :class:`.DisplayOpts` instance are bound to the group properties.
         """
-        opts = display.getDisplayOpts()
+        opts = display.opts
         self.__bindDisplayOpts(opts)

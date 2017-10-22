@@ -80,7 +80,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     The display of an ``OrthoPanel`` can be configured through all of the
     settings provided by the :class:`.OrthoOpts` class. The ``OrthoOpts``
     instance for a given ``OrthoPanel`` can be accessed via the
-    :meth:`.CanvasPanel.getSceneOptions` method.
+    :meth:`.CanvasPanel.sceneOpts` method.
 
 
     **Interaction**
@@ -144,8 +144,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                          frame,
                                          sceneOpts)
 
-        name         = self.getName()
-        contentPanel = self.getContentPanel()
+        name         = self.name
+        contentPanel = self.contentPanel
 
         # The canvases themselves - each one displays a
         # slice along each of the three world axes
@@ -252,8 +252,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         from fsleyes.actions.correlate import PearsonCorrelateAction
 
         self.__pCorrAction = PearsonCorrelateAction(
-            self.getOverlayList(),
-            self.getDisplayContext(),
+            self.overlayList,
+            self.displayCtx,
             self)
 
         self.pearsonCorrelation.bindProps('enabled', self.__pCorrAction)
@@ -280,8 +280,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :class:`.SliceCanvas` panels, and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        sceneOpts    = self.getSceneOptions()
-        contentPanel = self.getContentPanel()
+        sceneOpts    = self.sceneOpts
+        contentPanel = self.contentPanel
 
         sceneOpts        .removeListener('showXCanvas',      self._name)
         sceneOpts        .removeListener('showYCanvas',      self._name)
@@ -566,7 +566,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # It's unlikely, but an OrthoPanel might be
         # created without a ref to a FSLeyesFrame.
-        if self.getFrame() is not None:
+        if self.frame is not None:
             if inEdit: self.__addEditMenu()
             else:      self.__removeEditMenu()
 
@@ -577,9 +577,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         menu to the :class:`.FSLeyesFrame`.
         """
 
-        frame    = self.getFrame()
+        frame    = self.frame
         menuName = strings.labels[self, 'editMenu']
-        menuName = menuName.format(self.getFrame().getViewPanelID(self))
+        menuName = menuName.format(frame.getViewPanelID(self))
         menuBar  = frame.GetMenuBar()
         profile  = self.getCurrentProfile()
         idx      = menuBar.FindMenu(menuName)
@@ -631,7 +631,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if self.__editMenuTitle is None:
             return
 
-        frame        = self.getFrame()
+        frame        = self.frame
         editMenuName = self.__editMenuTitle
         menuBar      = frame.GetMenuBar()
         idx          = menuBar.FindMenu(editMenuName)
@@ -655,7 +655,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         Shows/hides each of the :class:`.SliceCanvas` panels accordingly.
         """
 
-        opts     = self.getSceneOptions()
+        opts     = self.sceneOpts
         canvases = [self.__xcanvas,   self.__ycanvas,   self.__zcanvas]
         shows    = [opts.showXCanvas, opts.showYCanvas, opts.showZCanvas]
 
@@ -736,10 +736,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         calculation.
         """
 
-        opts   = self.getSceneOptions()
+        opts   = self.sceneOpts
         layout = opts.layout
 
-        width, height = self.getContentPanel().GetClientSize().Get()
+        width, height = self.contentPanel.GetClientSize().Get()
 
         show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
         canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
@@ -791,7 +791,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         refresh = kwa.pop('refresh', True)
 
-        opts   = self.getSceneOptions()
+        opts   = self.sceneOpts
         layout = opts.layout
 
         # We lay out all canvases, even
@@ -845,7 +845,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         for c in canvases:
             self.__canvasSizer.Add(c, flag=flag | wx.EXPAND)
 
-        self.getContentPanel().SetSizer(self.__canvasSizer)
+        self.contentPanel.SetSizer(self.__canvasSizer)
 
         # Calculate/ adjust the appropriate sizes
         # for each canvas, such that they are scaled
@@ -861,7 +861,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         if refresh:
             self.Layout()
-            self.getContentPanel().Layout()
+            self.contentPanel.Layout()
             self.Refresh()
 
 

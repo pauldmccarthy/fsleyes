@@ -430,8 +430,8 @@ class DisplayContext(props.SyncableHasProperties):
 
     def getOpts(self, overlay, overlayType=None):
         """Returns the :class:`.DisplayOpts` instance associated with the
-        specified overlay.  See :meth:`getDisplay` and
-        :meth:`.Display.getDisplayOpts` for more details,
+        specified overlay.  See :meth:`getDisplay` and :meth:`.Display.opts`
+        for more details.
         """
 
         if overlay is None:
@@ -444,19 +444,19 @@ class DisplayContext(props.SyncableHasProperties):
             raise InvalidOverlayError('Overlay {} is not in '
                                       'list'.format(overlay.name))
 
-        return self.getDisplay(overlay, overlayType).getDisplayOpts()
+        return self.getDisplay(overlay, overlayType).opts
 
 
     def getReferenceImage(self, overlay):
         """Convenience method which returns the reference image associated
         with the given overlay, or ``None`` if there is no reference image.
 
-        See the :class:`.DisplayOpts.getReferenceImage` method.
+        See the :class:`.DisplayOpts.referenceImage` method.
         """
         if overlay is None:
             return None
 
-        return self.getOpts(overlay).getReferenceImage()
+        return self.getOpts(overlay).referenceImage
 
 
     def displayToWorld(self, dloc):
@@ -609,7 +609,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         for dctx in dctxs:
             display = dctx.getDisplay(overlay)
-            opts    = display.getDisplayOpts()
+            opts    = display.opts
 
             display.disableAllNotification()
             opts   .disableAllNotification()
@@ -627,7 +627,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         for dctx in dctxs:
             display = dctx.getDisplay(overlay)
-            opts    = display.getDisplayOpts()
+            opts    = display.opts
 
             display.enableAllNotification()
             opts   .enableAllNotification()
@@ -698,7 +698,7 @@ class DisplayContext(props.SyncableHasProperties):
             if overlay not in self.__overlayList:
 
                 display = self.__displays.pop(overlay)
-                opts    = display.getDisplayOpts()
+                opts    = display.opts
 
                 display.removeListener('overlayType', self.__name)
                 opts   .removeListener('bounds',      self.__name)
@@ -717,7 +717,7 @@ class DisplayContext(props.SyncableHasProperties):
             # will create a Display object
             # if one does not already exist
             display = self.getDisplay(overlay, ovlType)
-            opts    = display.getDisplayOpts()
+            opts    = display.opts
 
             # Register a listener on the overlay type,
             # because when it changes, the DisplayOpts
@@ -1020,7 +1020,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         for display in self.__displays.values():
 
-            opts = display.getDisplayOpts()
+            opts = display.opts
 
             if self.syncOverlayDisplay:
                 display.syncAllToParent()
@@ -1048,7 +1048,7 @@ class DisplayContext(props.SyncableHasProperties):
         for ovl in self.__overlayList:
 
             display = self.__displays[ovl]
-            opts    = display.getDisplayOpts()
+            opts    = display.opts
             lo      = opts.bounds.getLo()
             hi      = opts.bounds.getHi()
 

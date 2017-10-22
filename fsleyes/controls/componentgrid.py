@@ -127,7 +127,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         self.__overlay   = overlay
         self.__volLabels = volLabels
         display          = self._displayCtx.getDisplay(overlay)
-        opts             = display.getDisplayOpts()
+        opts             = display.opts
 
         volLabels.register(             self._name, self.__labelsChanged)
         opts     .addListener('volume', self._name, self.__volumeChanged)
@@ -213,7 +213,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         try:
             display = self._displayCtx.getDisplay(overlay)
-            opts    = display.getDisplayOpts()
+            opts    = display.opts
             opts   .removeListener('volume',      self._name)
             display.removeListener('overlayType', self._name)
 

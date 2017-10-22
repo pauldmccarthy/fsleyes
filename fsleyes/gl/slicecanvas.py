@@ -554,7 +554,7 @@ class SliceCanvas(object):
 
         display = self.displayCtx.getDisplay(overlay)
         copts   = self.opts
-        dopts   = display.getDisplayOpts()
+        dopts   = display.opts
 
         name = '{}_{}_zax{}'.format(
             id(overlay),
@@ -665,7 +665,7 @@ class SliceCanvas(object):
                   'changed to {}'.format(display.name,
                                          display.overlayType))
 
-        self.__regenGLObject(display.getOverlay())
+        self.__regenGLObject(display.overlay)
         self.Refresh()
 
 
@@ -1282,7 +1282,7 @@ class SliceCanvas(object):
 
             rt      = self._offscreenTextures.get(overlay, None)
             display = self.displayCtx.getDisplay(overlay)
-            dopts   = display.getDisplayOpts()
+            dopts   = display.opts
             lo      = dopts.bounds.getLo()
             hi      = dopts.bounds.getHi()
 
@@ -1338,7 +1338,7 @@ class SliceCanvas(object):
         for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
-            dopts   = display.getDisplayOpts()
+            dopts   = display.opts
 
             if not display.enabled:
                 continue

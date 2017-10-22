@@ -11,6 +11,7 @@ documentation for more details.
 
 
 import logging
+import deprecation
 
 import                   wx
 import wx.lib.agw.aui as aui
@@ -45,7 +46,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     children. A ``ViewPanel`` has one central panel, which contains the
     primary view; and may have one or more secondary panels, which contain
     *controls* - see the :mod:`.controls` package. The centre panel can be set
-    via the :meth:`setCentrePanel` method, and secondary panels can be
+    via the :meth:`centrePanel` property, and secondary panels can be
     added/removed to/from with the :meth:`togglePanel` method. The current
     state of a secondary panel (i.e. whether one is open or not) can be
     queried with the :meth:`isPanelOpen` method, and existing secondary panels
@@ -86,7 +87,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
        getTools
        removeAllPanels
        getPanelInfo
-       getAuiManager
+       auiManager
     """
 
 
@@ -105,10 +106,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx)
 
-        # The centrePanel attribute stores a reference
+        # The __centrePanel attribute stores a reference
         # to the main (centre) panel on this ViewPanel.
         # It is set by sub-class implementations via
-        # the setCentrePanel method.
+        # the centrePanel property.
         #
         # The panels dictionary stores a collection
         # of {type : instance} mappings of active
@@ -217,7 +218,24 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__profileManager.getCurrentProfile()
 
 
-    def setCentrePanel(self, panel):
+    @property
+    def centrePanel(self):
+        """Returns the primary (centre) panel on this ``ViewPanel``.
+        """
+        return self.__centrePanel
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use centrePanel instead')
+    def getCentrePanel(self):
+        """Returns the primary (centre) panel on this ``ViewPanel``.
+        """
+        return self.centrePanel
+
+
+    @centrePanel.setter
+    def centrePanel(self, panel):
         """Set the primary centre panel for this ``ViewPanel``. This method
         is only intended to be called by sub-classes.
         """
@@ -230,6 +248,16 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.AddPane(panel, paneInfo)
         self.__auiMgrUpdate()
         self.__centrePanel = panel
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use centrePanel instead')
+    def setCentrePanel(self, panel):
+        """Set the primary centre panel for this ``ViewPanel``. This method
+        is only intended to be called by sub-classes.
+        """
+        self.centrePanel = panel
 
 
     def togglePanel(self, panelType, *args, **kwargs):
@@ -303,9 +331,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # this is used for saving and restoring perspectives.
         paneInfo  = aui.AuiPaneInfo().Name(panelType.__name__)
         window    = panelType(self,
-                              self.getOverlayList(),
-                              self.getDisplayContext(),
-                              self.getFrame(),
+                              self.overlayList,
+                              self.displayCtx,
+                              self.frame,
                               *args,
                               **kwargs)
         isToolbar = isinstance(window, fsltoolbar.FSLeyesToolBar)
@@ -411,12 +439,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             self.togglePanel(panelType)
 
 
-    def getCentrePanel(self):
-        """Returns the primary (centre) panel on this ``ViewPanel``.
-        """
-        return self.__centrePanel
-
-
     def getPanels(self):
         """Returns a list containing all control panels currently shown in this
         ``ViewPanel``.
@@ -431,6 +453,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__auiMgr.GetPane(panel)
 
 
+    @property
+    def auiManager(self):
+        """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
+        layout of this ``ViewPanel``.
+        """
+        return self.__auiMgr
+
+
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use auiManager instead')
     def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
         layout of this ``ViewPanel``.

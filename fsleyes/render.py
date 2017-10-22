@@ -577,7 +577,7 @@ def buildColourBarBitmap(overlayList,
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)
-    opts    = display.getDisplayOpts()
+    opts    = display.opts
 
     if not isinstance(opts, displaycontext.ColourMapOpts):
         return None

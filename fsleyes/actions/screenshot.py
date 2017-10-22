@@ -154,8 +154,8 @@ def canvasPanelScreenshot(panel, filename):
     # one that we want to take a screenshot
     # of.
     cpanel = panel
-    opts   = panel.getSceneOptions()
-    panel  = panel.getContainerPanel()
+    opts   = panel.sceneOpts
+    panel  = panel.containerPanel
 
     # Make a H*W*4 bitmap array (h*w because
     # that's how matplotlib want it). We
@@ -232,7 +232,7 @@ def _patchInCanvases(canvasPanel, containerPanel, data, bgColour):
     # which are displayed in the panel,
     # including the colour bar canvas
     glCanvases = cpanel.getGLCanvases()
-    glCanvases.append(cpanel.getColourBarCanvas())
+    glCanvases.append(cpanel.colourBarCanvas)
 
     totalWidth, totalHeight = panel.GetClientSize().Get()
     absPosx,    absPosy     = panel.GetScreenPosition()

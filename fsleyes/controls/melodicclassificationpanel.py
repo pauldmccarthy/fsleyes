@@ -233,12 +233,12 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
            not isinstance(self.__canvasPanel, LightBoxPanel):
             return
 
-        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
         volLabels.deregister(self._name, topic='added')
         volLabels.deregister(self._name, topic='removed')
 
         try:
-            opts = self.getDisplayContext().getOpts(overlay)
+            opts = self.displayCtx.getOpts(overlay)
             opts.removeListener('volume', self._name)
 
         except displaycontext.InvalidOverlayError:
@@ -257,13 +257,12 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
         self.__overlay = overlay
 
-        opts      = self.getDisplayContext().getOpts(overlay)
-        volLabels = self.getOverlayList().getData(
-            overlay, 'VolumeLabels', None)
+        opts      = self.displayCtx.getOpts(overlay)
+        volLabels = self.overlayList.getData(overlay, 'VolumeLabels', None)
 
         if volLabels is None:
             volLabels = vollabels.VolumeLabels(overlay.shape[3])
-            self.getOverlayList().setData(overlay, 'VolumeLabels', volLabels)
+            self.overlayList.setData(overlay, 'VolumeLabels', volLabels)
 
             # Initialse component with an 'Unknown' label
             for i in range(overlay.shape[3]):
@@ -360,8 +359,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         """
 
         overlay   = self.__overlay
-        opts      = self.getDisplayContext().getOpts(overlay)
-        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        opts      = self.displayCtx.getOpts(overlay)
+        volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
         labels    = volLabels.getLabels(opts.volume)
 
         if len(labels) == 0:
@@ -427,7 +426,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             #             otherwise
 
             lut       = self.__lut
-            volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+            volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
 
             ncomps  = volLabels.numComponents()
             nlabels = len(allLabels)
@@ -653,7 +652,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         """
 
         overlay   = self._displayCtx.getSelectedOverlay()
-        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
 
         if isinstance(overlay, fslmelimage.MelodicImage):
             defaultDir = overlay.getMelodicDir()
@@ -686,7 +685,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         """
 
         overlay  = self._displayCtx.getSelectedOverlay()
-        volLabels = self.getOverlayList().getData(overlay, 'VolumeLabels')
+        volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
 
         for c in range(volLabels.numComponents()):
 

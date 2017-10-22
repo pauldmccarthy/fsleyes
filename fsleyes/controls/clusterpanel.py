@@ -284,8 +284,8 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         autodisplay.autoDisplay(
             zstats,
-            self.getOverlayList(),
-            self.getDisplayContext(),
+            self.overlayList,
+            self.displayCtx,
             zthres=zthres,
             posCmap='red-yellow',
             negCmap='blue-lightblue')

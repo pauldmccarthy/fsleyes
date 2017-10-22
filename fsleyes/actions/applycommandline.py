@@ -133,5 +133,5 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
     if panel is None:
         return
 
-    sceneOpts = panel.getSceneOptions()
+    sceneOpts = panel.sceneOpts
     parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
