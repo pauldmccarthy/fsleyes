@@ -70,14 +70,14 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         self.bindProps('orientation', self.__cbCanvas)
         self.bindProps('labelSide',   self.__cbCanvas)
 
-        self.addListener('orientation', self._name, self.__layout)
+        self.addListener('orientation', self.name, self.__layout)
 
-        self._overlayList.addListener('overlays',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
-        self._displayCtx .addListener('selectedOverlay',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
+        self.overlayList.addListener('overlays',
+                                     self.name,
+                                     self.__selectedOverlayChanged)
+        self.displayCtx .addListener('selectedOverlay',
+                                     self.name,
+                                     self.__selectedOverlayChanged)
 
         self.__selectedOverlay = None
 
@@ -100,24 +100,24 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """
 
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         overlay = self.__selectedOverlay
 
         if overlay is not None:
             try:
-                display = self._displayCtx.getDisplay(overlay)
+                display = self.displayCtx.getDisplay(overlay)
                 opts    = display.opts
 
                 if isinstance(opts, cmapopts.ColourMapOpts):
-                    opts   .removeListener('displayRange',    self._name)
-                    opts   .removeListener('cmap',            self._name)
-                    opts   .removeListener('negativeCmap',    self._name)
-                    opts   .removeListener('useNegativeCmap', self._name)
-                    opts   .removeListener('invert',          self._name)
-                    opts   .removeListener('cmapResolution',  self._name)
-                    display.removeListener('name',            self._name)
+                    opts   .removeListener('displayRange',    self.name)
+                    opts   .removeListener('cmap',            self.name)
+                    opts   .removeListener('negativeCmap',    self.name)
+                    opts   .removeListener('useNegativeCmap', self.name)
+                    opts   .removeListener('invert',          self.name)
+                    opts   .removeListener('cmapResolution',  self.name)
+                    display.removeListener('name',            self.name)
 
             except fsldc.InvalidOverlayError:
                 pass
@@ -154,16 +154,16 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         if overlay is not None:
             try:
-                display = self._displayCtx.getDisplay(overlay)
+                display = self.displayCtx.getDisplay(overlay)
                 opts    = display.opts
 
-                opts   .removeListener('displayRange',    self._name)
-                opts   .removeListener('cmap',            self._name)
-                opts   .removeListener('negativeCmap',    self._name)
-                opts   .removeListener('useNegativeCmap', self._name)
-                opts   .removeListener('invert',          self._name)
-                opts   .removeListener('cmapResolution',  self._name)
-                display.removeListener('name',            self._name)
+                opts   .removeListener('displayRange',    self.name)
+                opts   .removeListener('cmap',            self.name)
+                opts   .removeListener('negativeCmap',    self.name)
+                opts   .removeListener('useNegativeCmap', self.name)
+                opts   .removeListener('invert',          self.name)
+                opts   .removeListener('cmapResolution',  self.name)
+                display.removeListener('name',            self.name)
 
             # The previously selected overlay
             # has been removed from the list,
@@ -174,13 +174,13 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         self.__selectedOverlay = None
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             self.__refreshColourBar()
             return
 
-        display = self._displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         opts    = display.opts
 
         if not isinstance(opts, cmapopts.ColourMapOpts):
@@ -194,25 +194,25 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         # that has a display range and colour map
 
         opts   .addListener('displayRange',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         opts   .addListener('cmap',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         opts   .addListener('negativeCmap',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         opts   .addListener('useNegativeCmap',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         opts   .addListener('invert',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         opts   .addListener('cmapResolution',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
         display.addListener('name',
-                            self._name,
+                            self.name,
                             self.__refreshColourBar)
 
         self.__refreshColourBar()
@@ -232,8 +232,8 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         overlay = self.__selectedOverlay
 
         if overlay is not None:
-            display         = self._displayCtx.getDisplay(overlay)
-            opts            = self._displayCtx.getOpts(   overlay)
+            display         = self.displayCtx.getDisplay(overlay)
+            opts            = self.displayCtx.getOpts(   overlay)
             cmap            = opts.cmap
             negativeCmap    = opts.negativeCmap
             useNegativeCmap = opts.useNegativeCmap

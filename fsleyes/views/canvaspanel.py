@@ -232,8 +232,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts = sceneOpts
 
         # Use this name for listener registration,
-        # in case subclasses use the FSLeyesPanel._name
-        self.__name = 'CanvasPanel_{}'.format(self._name)
+        # in case subclasses use the FSLeyesPanel.name
+        self.__name = 'CanvasPanel_{}'.format(self.name)
 
         # Bind the sync* properties of this
         # CanvasPanel to the corresponding
@@ -273,18 +273,18 @@ class CanvasPanel(viewpanel.ViewPanel):
         # re-started if/when a compatible overlay is
         # selected.
         self.__movieRunning = False
-        self             .addListener('movieMode',
-                                      self.__name,
-                                      self.__movieModeChanged)
-        self             .addListener('movieAxis',
-                                      self.__name,
-                                      self.__movieModeChanged)
-        self._overlayList.addListener('overlays',
-                                      self.__name,
-                                      self.__movieModeChanged)
-        self._displayCtx .addListener('selectedOverlay',
-                                      self.__name,
-                                      self.__movieModeChanged)
+        self            .addListener('movieMode',
+                                     self.__name,
+                                     self.__movieModeChanged)
+        self            .addListener('movieAxis',
+                                     self.__name,
+                                     self.__movieModeChanged)
+        self.overlayList.addListener('overlays',
+                                     self.__name,
+                                     self.__movieModeChanged)
+        self.displayCtx .addListener('selectedOverlay',
+                                     self.__name,
+                                     self.__movieModeChanged)
 
         # Canvas/colour bar layout is managed
         # in the layoutContainerPanel method
@@ -314,14 +314,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         if self.__colourBar is not None:
             self.__colourBar.destroy()
 
-        self             .removeListener('movieMode',         self.__name)
-        self             .removeListener('movieAxis',         self.__name)
-        self._overlayList.removeListener('overlays',          self.__name)
-        self._displayCtx .removeListener('selectedOverlay',   self.__name)
-        self.__opts      .removeListener('colourBarLocation', self.__name)
-        self.__opts      .removeListener('showColourBar',     self.__name)
-        self.__opts      .removeListener('bgColour',          self.__name)
-        self.__opts      .removeListener('fgColour',          self.__name)
+        self            .removeListener('movieMode',         self.__name)
+        self            .removeListener('movieAxis',         self.__name)
+        self.overlayList.removeListener('overlays',          self.__name)
+        self.displayCtx .removeListener('selectedOverlay',   self.__name)
+        self.sceneOpts  .removeListener('colourBarLocation', self.__name)
+        self.sceneOpts  .removeListener('showColourBar',     self.__name)
+        self.sceneOpts  .removeListener('bgColour',          self.__name)
+        self.sceneOpts  .removeListener('fgColour',          self.__name)
 
         self.__opts = None
 
@@ -798,7 +798,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                 if voxel[axis] >= limit - 1: voxel[axis]  = 0
                 else:                        voxel[axis] += 1
 
-                self._displayCtx.location = opts.transformCoords(
+                self.displayCtx.location = opts.transformCoords(
                     voxel, 'voxel', 'display')
 
         def mesh():
@@ -820,12 +820,12 @@ class CanvasPanel(viewpanel.ViewPanel):
             bmin, bmax = opts.bounds.getRange(axis)
             delta      = (bmax - bmin) / 75.0
 
-            pos = self._displayCtx.location.getPos(axis)
+            pos = self.displayCtx.location.getPos(axis)
 
             if pos >= bmax: pos = bmin
             else:           pos = pos + delta
 
-            self._displayCtx.location.setPos(axis, pos)
+            self.displayCtx.location.setPos(axis, pos)
 
         import fsl.data.image as fslimage
         import fsl.data.mesh  as fslmesh
@@ -852,13 +852,13 @@ class CanvasPanel(viewpanel.ViewPanel):
         if self.destroyed():   return False
         if not self.movieMode: return False
 
-        overlay  = self._displayCtx.getSelectedOverlay()
+        overlay  = self.displayCtx.getSelectedOverlay()
         canvases = self.getGLCanvases()
 
         if overlay is None:
             return False
 
-        opts = self._displayCtx.getOpts(overlay)
+        opts = self.displayCtx.getOpts(overlay)
 
         if not self.__canRunMovie(overlay, opts):
             return False
@@ -880,7 +880,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         # is only necessary when the movie axis == 3
         globjs = [c.getGLObject(o)
                   for c in canvases
-                  for o in self._overlayList]
+                  for o in self.overlayList]
         globjs = [g for g in globjs if g is not None]
 
         def allReady():

@@ -69,8 +69,8 @@ class AtlasManagementPanel(fslpanel.FSLeyesPanel):
         self.__atlasList.Bind(elistbox.EVT_ELB_REMOVE_EVENT,
                               self.__onListRemove)
 
-        atlases.registry.register(self._name, self.__atlasAdded,   'add')
-        atlases.registry.register(self._name, self.__atlasRemoved, 'remove')
+        atlases.registry.register(self.name, self.__atlasAdded,   'add')
+        atlases.registry.register(self.name, self.__atlasRemoved, 'remove')
 
 
     def destroy(self):
@@ -81,8 +81,8 @@ class AtlasManagementPanel(fslpanel.FSLeyesPanel):
 
         fslpanel.FSLeyesPanel.destroy(self)
 
-        atlases.registry.deregister(self._name, 'add')
-        atlases.registry.deregister(self._name, 'remove')
+        atlases.registry.deregister(self.name, 'add')
+        atlases.registry.deregister(self.name, 'remove')
 
 
     def __atlasAdded(self, registry, topic, desc):
@@ -122,5 +122,5 @@ class AtlasManagementPanel(fslpanel.FSLeyesPanel):
         Removes the corresponding atlas from the :class:`.AtlasRegistry`.
         """
 
-        with atlases.registry.skip(self._name, 'remove'):
+        with atlases.registry.skip(self.name, 'remove'):
             atlases.removeAtlas(ev.data.atlasID)

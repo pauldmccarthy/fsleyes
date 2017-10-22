@@ -103,7 +103,7 @@ class LightBoxViewProfile(profiles.Profile):
         if canvasPos is None:
             return False
 
-        self._displayCtx.location.xyz = canvasPos
+        self.displayCtx.location.xyz = canvasPos
 
         return True
 
@@ -124,7 +124,7 @@ class LightBoxViewProfile(profiles.Profile):
         elif wheel < 0: wheel = -50
         else:           return False
 
-        opts = self._viewPanel.sceneOpts
+        opts = self.viewPanel.sceneOpts
 
         # see comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout

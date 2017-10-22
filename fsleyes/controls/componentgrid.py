@@ -78,9 +78,9 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut.register(self._name, self.__lutChanged, 'added')
-        lut.register(self._name, self.__lutChanged, 'removed')
-        lut.register(self._name, self.__lutChanged, 'label')
+        lut.register(self.name, self.__lutChanged, 'added')
+        lut.register(self.name, self.__lutChanged, 'removed')
+        lut.register(self.name, self.__lutChanged, 'label')
 
         self.__overlay   = None
         self.__volLabels = None
@@ -92,9 +92,9 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
 
-        self.__lut.deregister(self._name, 'added')
-        self.__lut.deregister(self._name, 'removed')
-        self.__lut.deregister(self._name, 'label')
+        self.__lut.deregister(self.name, 'added')
+        self.__lut.deregister(self.name, 'removed')
+        self.__lut.deregister(self.name, 'label')
         self.__deregisterCurrentOverlay()
 
         self.__lut = None
@@ -126,13 +126,13 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         self.__overlay   = overlay
         self.__volLabels = volLabels
-        display          = self._displayCtx.getDisplay(overlay)
+        display          = self.displayCtx.getDisplay(overlay)
         opts             = display.opts
 
-        volLabels.register(             self._name, self.__labelsChanged)
-        opts     .addListener('volume', self._name, self.__volumeChanged)
+        volLabels.register(             self.name, self.__labelsChanged)
+        opts     .addListener('volume', self.name, self.__volumeChanged)
         display  .addListener('overlayType',
-                              self._name,
+                              self.name,
                               self.__overlayTypeChanged)
 
         # We refresh the component grid on idle, in
@@ -159,7 +159,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         if refreshGrid:
             async.idle(doRefreshGrid,
-                       name='{}_doRefreshGrid'.format(self._name),
+                       name='{}_doRefreshGrid'.format(self.name),
                        skipIfQueued=True)
 
 
@@ -209,13 +209,13 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         self.__overlay   = None
         self.__volLabels = None
 
-        volLabels.deregister(self._name)
+        volLabels.deregister(self.name)
 
         try:
-            display = self._displayCtx.getDisplay(overlay)
+            display = self.displayCtx.getDisplay(overlay)
             opts    = display.opts
-            opts   .removeListener('volume',      self._name)
-            display.removeListener('overlayType', self._name)
+            opts   .removeListener('volume',      self.name)
+            display.removeListener('overlayType', self.name)
 
         except fsldisplay.InvalidOverlayError:
             pass
@@ -302,7 +302,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         log.debug('Label added to component {} ("{}")'.format(comp, label))
 
         # Add the new label to the component
-        with volLabels.skip(self._name):
+        with volLabels.skip(self.name):
 
             volLabels.addLabel(comp, label)
 
@@ -327,7 +327,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             log.debug('Adding new lookup table '
                       'entry for label {}'.format(label))
 
-            with lut.skip(self._name, ('added', 'removed', 'label')):
+            with lut.skip(self.name, ('added', 'removed', 'label')):
                 lut.new(name=label, colour=colour)
 
             self.__refreshTagOptions()
@@ -349,7 +349,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
 
         # Remove the label from
         # the melodic component
-        with volLabels.skip(self._name):
+        with volLabels.skip(self.name):
 
             volLabels.removeLabel(comp, label)
 
@@ -373,12 +373,12 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         """
 
         component = ev.row
-        opts      = self._displayCtx.getOpts(self.__overlay)
+        opts      = self.displayCtx.getOpts(self.__overlay)
 
         log.debug('Grid row selected (component {}) - updating '
                   'overlay volume'.format(component))
 
-        with props.skip(opts, 'volume', self._name):
+        with props.skip(opts, 'volume', self.name):
             opts.volume = component
 
         tags = self.__grid.GetWidget(ev.row, 1)
@@ -397,7 +397,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             return
 
         grid = self.__grid
-        opts = self._displayCtx.getOpts(self.__overlay)
+        opts = self.displayCtx.getOpts(self.__overlay)
 
         log.debug('Overlay volume changed ({}) - updating '
                   'selected component'.format(opts.volume))

@@ -93,9 +93,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                             displayCtx,
                                             frame)
 
-        self.addListener('plotFrequencies', self._name, self.draw)
+        self.addListener('plotFrequencies', self.name, self.draw)
         self.addListener('plotMelodicICs',
-                                self._name,
+                                self.name,
                                 self.__plotMelodicICsChanged)
 
         self.initProfile()
@@ -107,8 +107,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :meth:`.OverlayPlotPanel.destroy`.
         """
 
-        self.removeListener('plotFrequencies', self._name)
-        self.removeListener('plotMelodicICs',  self._name)
+        self.removeListener('plotFrequencies', self.name)
+        self.removeListener('plotMelodicICs',  self.name)
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
@@ -178,16 +178,16 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
            isinstance(overlay, fslmelimage.MelodicImage):
 
             ps        = psseries.MelodicPowerSpectrumSeries(overlay,
-                                                            self._displayCtx)
-            targets   = [self._displayCtx.getOpts(overlay)]
+                                                            self.displayCtx)
+            targets   = [self.displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
         elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
 
             ps        = psseries.VoxelPowerSpectrumSeries(overlay,
-                                                          self._displayCtx)
-            opts      = self._displayCtx.getOpts(overlay)
-            targets   = [self._displayCtx, opts]
+                                                          self.displayCtx)
+            opts      = self.displayCtx.getOpts(overlay)
+            targets   = [self.displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
         else:
@@ -231,7 +231,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
         """
 
-        for overlay in self._overlayList:
+        for overlay in self.overlayList:
             if isinstance(overlay, fslmelimage.MelodicImage):
                 self.clearDataSeries(overlay)
 

@@ -27,7 +27,6 @@ import fsleyes.strings        as strings
 import fsleyes.actions        as actions
 
 
-
 log = logging.getLogger(__name__)
 
 
@@ -132,8 +131,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
 
         # Use a different listener name so that subclasses
-        # can register on the same properties with self._name
-        lName = 'ViewPanel_{}'.format(self._name)
+        # can register on the same properties with self.name
+        lName = 'ViewPanel_{}'.format(self.name)
 
         self.addListener('profile', lName, self.__profileChanged)
 
@@ -179,11 +178,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Remove listeners from the overlay
         # list and display context
-        lName = 'ViewPanel_{}'.format(self._name)
+        lName = 'ViewPanel_{}'.format(self.name)
 
-        self             .removeListener('profile',         lName)
-        self._overlayList.removeListener('overlays',        lName)
-        self._displayCtx .removeListener('selectedOverlay', lName)
+        self            .removeListener('profile',         lName)
+        self.overlayList.removeListener('overlays',        lName)
+        self.displayCtx .removeListener('selectedOverlay', lName)
 
         # Disable the  ProfileManager
         self.__profileManager.destroy()
@@ -490,12 +489,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         user can only choose an ``edit`` profile on ``volume`` overlay types.
         """
 
-        lName   = 'ViewPanel_{}'.format(self._name)
-        overlay = self._displayCtx.getSelectedOverlay()
+        lName   = 'ViewPanel_{}'.format(self.name)
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if self.__selectedOverlay not in (None, overlay):
             try:
-                d = self._displayCtx.getDisplay(self.__selectedOverlay)
+                d = self.displayCtx.getDisplay(self.__selectedOverlay)
 
                 d.removeListener('overlayType', lName)
 
@@ -512,7 +511,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # register for overlay type changes, as
         # these will affect the profile property
         if isinstance(overlay, fslimage.Image):
-            display = self._displayCtx.getDisplay(overlay)
+            display = self.displayCtx.getDisplay(overlay)
             display.addListener('overlayType',
                                 lName,
                                 self.__configureProfile,
@@ -527,7 +526,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """
 
         overlay     = self.__selectedOverlay
-        display     = self._displayCtx.getDisplay(overlay)
+        display     = self.displayCtx.getDisplay(overlay)
         profileProp = self.getProp('profile')
 
         # edit profile is not an option -

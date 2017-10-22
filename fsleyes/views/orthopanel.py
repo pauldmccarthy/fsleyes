@@ -283,18 +283,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts    = self.sceneOpts
         contentPanel = self.contentPanel
 
-        sceneOpts        .removeListener('showXCanvas',      self._name)
-        sceneOpts        .removeListener('showYCanvas',      self._name)
-        sceneOpts        .removeListener('showZCanvas',      self._name)
-        sceneOpts        .removeListener('labelSize',        self._name)
-        sceneOpts        .removeListener('fgColour',         self._name)
-        sceneOpts        .removeListener('showLabels',       self._name)
-        self._displayCtx .removeListener('location',         self._name)
-        self._displayCtx .removeListener('bounds',           self._name)
-        self._displayCtx .removeListener('selectedOverlay',  self._name)
-        self._displayCtx .removeListener('displaySpace',     self._name)
-        self._displayCtx .removeListener('radioOrientation', self._name)
-        self._overlayList.removeListener('overlays',         self._name)
+        sceneOpts       .removeListener('showXCanvas',      self.name)
+        sceneOpts       .removeListener('showYCanvas',      self.name)
+        sceneOpts       .removeListener('showZCanvas',      self.name)
+        sceneOpts       .removeListener('labelSize',        self.name)
+        sceneOpts       .removeListener('fgColour',         self.name)
+        sceneOpts       .removeListener('showLabels',       self.name)
+        self.displayCtx .removeListener('location',         self.name)
+        self.displayCtx .removeListener('bounds',           self.name)
+        self.displayCtx .removeListener('selectedOverlay',  self.name)
+        self.displayCtx .removeListener('displaySpace',     self.name)
+        self.displayCtx .removeListener('radioOrientation', self.name)
+        self.overlayList.removeListener('overlays',         self.name)
 
         self.__labelMgr.destroy()
         self.__xcanvas.destroy()
@@ -682,11 +682,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         necessary.
         """
 
-        if len(self._overlayList) == 0:
+        if len(self.overlayList) == 0:
             return
 
-        inRadio = self._displayCtx.displaySpaceIsRadiological()
-        flip    = self._displayCtx.radioOrientation != inRadio
+        inRadio = self.displayCtx.displaySpaceIsRadiological()
+        flip    = self.displayCtx.radioOrientation != inRadio
 
         self.__ycanvas.opts.invertX = flip
         self.__zcanvas.opts.invertX = flip
@@ -699,12 +699,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
 
         # Disable actions that need an overlay
-        haveOverlays = len(self._overlayList) > 0
-        selOverlay   = self._displayCtx.getSelectedOverlay()
+        haveOverlays = len(self.overlayList) > 0
+        selOverlay   = self.displayCtx.getSelectedOverlay()
 
         if selOverlay is not None:
 
-            display = self._displayCtx.getDisplay(selOverlay)
+            display = self.displayCtx.getDisplay(selOverlay)
             isImage = isinstance(selOverlay, fslimage.Image) and \
                       display.overlayType in ('volume', 'mask', 'label')
         else:
@@ -744,9 +744,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         show     = [opts.showXCanvas,  opts.showYCanvas,  opts.showZCanvas]
         canvases = [self.__xcanvas,    self.__ycanvas,    self.__zcanvas]
 
-        if width == 0 or height == 0:   return
-        if len(self._overlayList) == 0: return
-        if not any(show):               return
+        if width == 0 or height == 0:  return
+        if len(self.overlayList) == 0: return
+        if not any(show):              return
 
         canvases = [c for (c, s) in zip(canvases, show) if s]
 
@@ -766,9 +766,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # fsllayout) provides functions to do
         # this for us
         canvasaxes = [(c.opts.xax, c.opts.yax) for c in canvases]
-        axisLens   = [self._displayCtx.bounds.xlen,
-                      self._displayCtx.bounds.ylen,
-                      self._displayCtx.bounds.zlen]
+        axisLens   = [self.displayCtx.bounds.xlen,
+                      self.displayCtx.bounds.ylen,
+                      self.displayCtx.bounds.zlen]
 
         sizes = fsllayout.calcSizes(layout,
                                     canvasaxes,

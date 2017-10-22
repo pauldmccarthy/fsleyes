@@ -253,10 +253,10 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__cancel   .Bind(wx.EVT_BUTTON, self.__onCancel)
 
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
@@ -274,8 +274,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
 
-        displayCtx .removeListener('selectedOverlay', self._name)
-        overlayList.removeListener('overlays',        self._name)
+        displayCtx .removeListener('selectedOverlay', self.name)
+        overlayList.removeListener('overlays',        self.name)
 
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -287,7 +287,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         self.__overlay = overlay
         display = self.displayCtx.getDisplay(overlay)
-        display.addListener('name', self._name, self.__overlayNameChanged)
+        display.addListener('name', self.name, self.__overlayNameChanged)
 
         self.__overlayNameChanged()
 
@@ -317,7 +317,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         # from the list
         try:
             display = self.displayCtx.getDisplay(overlay)
-            display.removeListener('name', self._name)
+            display.removeListener('name', self.name)
 
         except displaycontext.InvalidOverlayError:
             pass

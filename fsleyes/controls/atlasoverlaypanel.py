@@ -131,9 +131,9 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         self.__atlasList.Bind(elistbox.EVT_ELB_SELECT_EVENT,
                               self.__onAtlasSelect)
 
-        fslplatform.register(     self._name, self.__fslDirChanged)
-        atlases.registry.register(self._name, self.__atlasAdded,   'add')
-        atlases.registry.register(self._name, self.__atlasRemoved, 'remove')
+        fslplatform.register(     self.name, self.__fslDirChanged)
+        atlases.registry.register(self.name, self.__atlasAdded,   'add')
+        atlases.registry.register(self.name, self.__atlasRemoved, 'remove')
 
         self.__buildAtlasList()
 
@@ -149,7 +149,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
     def destroy(self):
         """Performs some clean up operations. """
-        fslplatform.deregister(self._name)
+        fslplatform.deregister(self.name)
         fslpanel.FSLeyesPanel.destroy(self)
 
 

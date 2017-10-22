@@ -62,7 +62,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
 
         tsPanel = self.getPlotPanel()
         tsPanel.addListener('plotMelodicICs',
-                            self._name,
+                            self.name,
                             self.__plotMelodicICsChanged)
 
 
@@ -72,7 +72,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         :meth:`.PlotControlPanel.destroy`.
         """
         psPanel = self.getPlotPanel()
-        psPanel.removeListener('plotMelodicICs', self._name)
+        psPanel.removeListener('plotMelodicICs', self.name)
         plotcontrolpanel.PlotControlPanel.destroy(self)
 
 

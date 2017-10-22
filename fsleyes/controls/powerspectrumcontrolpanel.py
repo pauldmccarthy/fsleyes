@@ -31,7 +31,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
         psPanel = self.getPlotPanel()
         psPanel.addListener('plotMelodicICs',
-                            self._name,
+                            self.name,
                             self.__plotMelodicICsChanged)
 
 
@@ -41,7 +41,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         :meth:`.PlotControlPanel.destroy` method.
         """
         psPanel = self.getPlotPanel()
-        psPanel.removeListener('plotMelodicICs', self._name)
+        psPanel.removeListener('plotMelodicICs', self.name)
         plotcontrol.PlotControlPanel.destroy(self)
 
 

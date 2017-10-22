@@ -169,10 +169,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             frame,
             initialState=initialState)
 
-        self.addListener('plotMode',  self._name, self.draw)
-        self.addListener('usePixdim', self._name, self.draw)
+        self.addListener('plotMode',  self.name, self.draw)
+        self.addListener('usePixdim', self.name, self.draw)
         self.addListener('plotMelodicICs',
-                         self._name,
+                         self.name,
                          self.__plotMelodicICsChanged)
 
         self.__addMaskAction = addmaskdataseries.AddMaskDataSeriesAction(
@@ -190,9 +190,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         method.
         """
 
-        self.removeListener('plotMode',       self._name)
-        self.removeListener('usePixdim',      self._name)
-        self.removeListener('plotMelodicICs', self._name)
+        self.removeListener('plotMode',       self.name)
+        self.removeListener('usePixdim',      self.name)
+        self.removeListener('plotMelodicICs', self.name)
 
         self.__addMaskAction.destroy()
         self.__addMaskAction = None
@@ -321,8 +321,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             # has been loaded, we show its time series.
             ts        = plotting.FEATTimeSeries(self,
                                                 overlay,
-                                                self._displayCtx)
-            targets   = [self._displayCtx]
+                                                self.displayCtx)
+            targets   = [self.displayCtx]
             propNames = ['location']
 
         # If this is a melodic IC image, and we are
@@ -330,8 +330,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # we use a MelodicTimeSeries object.
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
-            ts = plotting.MelodicTimeSeries(self, overlay, self._displayCtx)
-            targets   = [self._displayCtx.getOpts(overlay)]
+            ts = plotting.MelodicTimeSeries(self, overlay, self.displayCtx)
+            targets   = [self.displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
         # Otherwise we just plot
@@ -339,9 +339,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # (listening to volumeDim for
         # images with >4 dimensions)
         elif overlay.ndims > 3:
-            ts = plotting.VoxelTimeSeries(self, overlay, self._displayCtx)
-            opts      = self._displayCtx.getOpts(overlay)
-            targets   = [self._displayCtx, opts]
+            ts = plotting.VoxelTimeSeries(self, overlay, self.displayCtx)
+            opts      = self.displayCtx.getOpts(overlay)
+            targets   = [self.displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
         else:
@@ -398,7 +398,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :class:`.MelodicImage` overlays in the :class:`.OverlayList`.
         """
 
-        for overlay in self._overlayList:
+        for overlay in self.overlayList:
             if isinstance(overlay, fslmelimage.MelodicImage):
                 self.clearDataSeries(overlay)
 

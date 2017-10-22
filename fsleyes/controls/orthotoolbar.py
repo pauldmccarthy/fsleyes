@@ -86,10 +86,10 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         # Profile instance changes too, so we need
         # to re-create these action buttons. I'm being
         # lazy and just re-generating the entire toolbar.
-        ortho.addListener('profile', self._name, self.__makeTools)
+        ortho.addListener('profile', self.name, self.__makeTools)
 
         self.addListener('showCursorAndLabels',
-                         self._name,
+                         self.name,
                          self.__showCursorAndLabelsChanged)
 
         self.__makeTools()
@@ -100,8 +100,8 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         Removes some property listeners, and calls the base class
         implementation.
         """
-        self.orthoPanel.removeListener('profile',             self._name)
-        self           .removeListener('showCursorAndLabels', self._name)
+        self.orthoPanel.removeListener('profile',             self.name)
+        self           .removeListener('showCursorAndLabels', self.name)
 
         fsltoolbar.FSLeyesToolBar.destroy(self)
 

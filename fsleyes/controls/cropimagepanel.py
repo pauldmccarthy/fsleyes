@@ -194,7 +194,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         self.__volumeWidget.Enable(is4D)
 
-        display.addListener('name', self._name, self.__overlayNameChanged)
+        display.addListener('name', self.name, self.__overlayNameChanged)
         self.__overlayNameChanged()
 
 
@@ -208,7 +208,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
 
         try:
             display = self.displayCtx.getDisplay(self.__overlay)
-            display.removeListener('name', self._name)
+            display.removeListener('name', self.name)
 
         except displaycontext.InvalidOverlayError:
             pass

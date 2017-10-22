@@ -113,17 +113,17 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
             widgetList.RemoveGroup('customPlotSettings')
 
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         plotPanel.addListener('xAutoScale',
-                              self._name,
+                              self.name,
                               self.__autoScaleChanged)
         plotPanel.addListener('yAutoScale',
-                              self._name,
+                              self.name,
                               self.__autoScaleChanged)
 
         # This attribute keeps track of the currently
@@ -141,16 +141,16 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         needed. Removes some property listeners, and calls the
         :meth:`.FSLeyesPanel.destroy` method.
         """
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
-        self.__plotPanel .removeListener('limits',          self._name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.__plotPanel.removeListener('limits',          self.name)
 
         self.__plotWidgets = None
         self.__dsWidgets   = None
 
         if self.__selectedOverlay is not None:
-            display = self._displayCtx.getDisplay(self.__selectedOverlay)
-            display.removeListener('name', self._name)
+            display = self.displayCtx.getDisplay(self.__selectedOverlay)
+            display.removeListener('name', self.name)
 
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -274,8 +274,8 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
 
         if self.__selectedOverlay is not None:
             try:
-                display = self._displayCtx.getDisplay(self.__selectedOverlay)
-                display.removeListener('name', self._name)
+                display = self.displayCtx.getDisplay(self.__selectedOverlay)
+                display.removeListener('name', self.name)
 
             # The overlay may have been
             # removed from the overlay list
@@ -289,7 +289,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         if widgetList.HasGroup('customDSSettings'):
             widgetList.RemoveGroup('customDSSettings')
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return
@@ -301,10 +301,10 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
 
         self.__selectedOverlay = overlay
 
-        display = self._displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
 
         display.addListener('name',
-                            self._name,
+                            self.name,
                             self.__selectedOverlayNameChanged)
 
         widgetList.AddGroup(
@@ -400,7 +400,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         """
 
         widgets = self.getWidgetList()
-        display = self._displayCtx.getDisplay(self.__selectedOverlay)
+        display = self.displayCtx.getDisplay(self.__selectedOverlay)
 
         if widgets.HasGroup('currentDSSettings'):
             widgets.RenameGroup(
@@ -422,7 +422,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
         # changed before refreshing the panel, as it
         # may not have (e.g. new overlay added, but
         # selected overlay stayed the same).
-        if self._displayCtx.getSelectedOverlay() is not self.__selectedOverlay:
+        if self.displayCtx.getSelectedOverlay() is not self.__selectedOverlay:
             self.refreshDataSeriesWidgets()
 
 

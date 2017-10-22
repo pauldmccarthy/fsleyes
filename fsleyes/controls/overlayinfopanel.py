@@ -115,10 +115,10 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         self.SetSizer(self.__sizer)
 
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__currentOverlay = None
@@ -136,8 +136,8 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy` method.
         """
 
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.overlayList.removeListener('overlays',        self.name)
 
         self.__deregisterOverlay()
 
@@ -150,7 +150,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         information shown on this ``OverlayInfoPanel``.
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         # Overlay list is empty
         if overlay is None:
@@ -183,7 +183,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         information can be refreshed when necessary.
         """
 
-        display = self._displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         opts    = display.opts
 
         self.__currentOverlay = overlay
@@ -191,14 +191,14 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         self.__currentOpts    = opts
 
         display.addListener('name',
-                            self._name,
+                            self.name,
                             self.__overlayNameChanged)
         display.addListener('overlayType',
-                            self._name,
+                            self.name,
                             self.__overlayTypeChanged)
 
         for propName in OverlayInfoPanel._optProps.get(overlay, []):
-            opts.addListener(propName, self._name, self.__overlayOptsChanged)
+            opts.addListener(propName, self.name, self.__overlayOptsChanged)
 
 
     def __deregisterOverlay(self):
@@ -217,11 +217,11 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         self.__currentDisplay = None
         self.__currentOpts    = None
 
-        display.removeListener('name',        self._name)
-        display.removeListener('overlayType', self._name)
+        display.removeListener('name',        self.name)
+        display.removeListener('overlayType', self.name)
 
         for propName in OverlayInfoPanel._optProps[overlay]:
-            opts.removeListener(propName, self._name)
+            opts.removeListener(propName, self.name)
 
 
     def __overlayTypeChanged(self, *a):
@@ -307,16 +307,16 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                                       opts.transform]
 
         if opts.transform == 'reference':
-            dsImg = self._displayCtx.displaySpace
+            dsImg = self.displayCtx.displaySpace
             if isinstance(dsImg, fslimage.Nifti):
-                dsDisplay    = self._displayCtx.getDisplay(dsImg)
+                dsDisplay    = self.displayCtx.getDisplay(dsImg)
                 displaySpace = displaySpace.format(dsDisplay.name)
             else:
                 log.warn('{} transform ({}) seems to be out '
                          'of date (display space: {})'.format(
                              overlay,
                              opts.transform,
-                             self._displayCtx.displaySpace))
+                             self.displayCtx.displaySpace))
 
         dataType = strings.nifti.get(('datatype', int(hdr['datatype'])),
                                      'Unknown')
@@ -567,8 +567,8 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                     self, overlay, 'coordSpace', 'display']))
         else:
 
-            refOpts      = self._displayCtx.getOpts(refImg)
-            dsImg        = self._displayCtx.displaySpace
+            refOpts      = self.displayCtx.getOpts(refImg)
+            dsImg        = self.displayCtx.displaySpace
             displaySpace = strings.labels[
                 self, refImg, 'displaySpace', refOpts.transform]
             coordSpace   = strings.labels[
@@ -576,7 +576,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 'coordSpace', opts.coordSpace].format(refImg.name)
 
             if refOpts.transform == 'reference':
-                dsDisplay    = self._displayCtx.getDisplay(dsImg)
+                dsDisplay    = self.displayCtx.getDisplay(dsImg)
                 displaySpace = displaySpace.format(dsDisplay.name)
 
             modelInfo.append(('refImage',     refImg.dataSource))

@@ -51,9 +51,9 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         otherwise.
         """
 
-        tsPanel = self._viewPanel
-        overlay = self._displayCtx.getSelectedOverlay()
-        display = self._displayCtx.getDisplay(overlay)
+        tsPanel = self.viewPanel
+        overlay = self.displayCtx.getSelectedOverlay()
+        display = self.displayCtx.getDisplay(overlay)
 
         if not isinstance(overlay, fslimage.Image):
             return False
@@ -79,10 +79,10 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         currently selected overlay accordingly.
         """
 
-        tsPanel = self._viewPanel
+        tsPanel = self.viewPanel
         canvas  = tsPanel.getCanvas()
-        overlay = self._displayCtx.getSelectedOverlay()
-        opts    = self._displayCtx.getOpts(overlay)
+        overlay = self.displayCtx.getSelectedOverlay()
+        opts    = self.displayCtx.getOpts(overlay)
 
         if xvalue is None:
             return
@@ -107,7 +107,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
 
         async.idle(
             update,
-            name='{}_{}_volume'.format(self._name, id(overlay)),
+            name='{}_{}_volume'.format(self.name, id(overlay)),
             dropIfQueued=True)
 
 
@@ -124,7 +124,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         if canvasPos is None: xvalue = None
         else:                 xvalue = canvasPos[0]
 
-        tsPanel = self._viewPanel
+        tsPanel = self.viewPanel
         axis    = tsPanel.getAxis()
 
         self.__volumeLine = axis.axvline(0, c='#000080', lw=3)
@@ -153,4 +153,4 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         self.__volumeLine.remove()
         self.__volumeLine = None
 
-        self._viewPanel.getCanvas().draw()
+        self.viewPanel.getCanvas().draw()

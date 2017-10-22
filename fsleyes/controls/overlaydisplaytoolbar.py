@@ -90,13 +90,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         self.__viewPanel      = viewPanel
         self.__currentOverlay = None
 
-        self._displayCtx.addListener(
+        self.displayCtx.addListener(
             'selectedOverlay',
-            self._name,
+            self.name,
             self.__selectedOverlayChanged)
-        self._overlayList.addListener(
+        self.overlayList.addListener(
             'overlays',
-            self._name,
+            self.name,
             self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
@@ -108,15 +108,15 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         :meth:`.FSLeyesToolBar.destroy` method.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         if self.__currentOverlay is not None and \
-           self.__currentOverlay in self._overlayList:
+           self.__currentOverlay in self.overlayList:
 
-            display = self._displayCtx.getDisplay(self.__currentOverlay)
-            display.removeListener('overlayType', self._name)
-            display.removeListener('enabled',     self._name)
+            display = self.displayCtx.getDisplay(self.__currentOverlay)
+            display.removeListener('overlayType', self.name)
+            display.removeListener('enabled',     self.name)
 
         self.__currentOverlay = None
         self.__viewPanel      = None
@@ -143,7 +143,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         log.debug('Showing tools for {}'.format(overlay))
 
-        display   = self._displayCtx.getDisplay(overlay)
+        display   = self.displayCtx.getDisplay(overlay)
         opts      = display.opts
         tools     = []
         nav       = []
@@ -185,7 +185,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         selected overlay changes. Enables/disables this
         ``OverlayDisplayToolBar`` accordingly.
         """
-        display = self._displayCtx.getDisplay(self.__currentOverlay)
+        display = self.displayCtx.getDisplay(self.__currentOverlay)
         self.Enable(display.enabled)
 
 
@@ -196,12 +196,12 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """
 
         if self.__currentOverlay is not None and \
-           self.__currentOverlay in self._overlayList:
-            display = self._displayCtx.getDisplay(self.__currentOverlay)
-            display.removeListener('overlayType', self._name)
-            display.removeListener('enabled',     self._name)
+           self.__currentOverlay in self.overlayList:
+            display = self.displayCtx.getDisplay(self.__currentOverlay)
+            display.removeListener('overlayType', self.name)
+            display.removeListener('enabled',     self.name)
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         self.__currentOverlay = overlay
 
@@ -209,13 +209,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
             self.ClearTools(destroy=True)
             return
 
-        display = self._displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
 
         display.addListener('enabled',
-                            self._name,
+                            self.name,
                             self.__overlayEnableChanged)
         display.addListener('overlayType',
-                            self._name,
+                            self.name,
                             self.__selectedOverlayChanged)
 
         self.__showTools(overlay)

@@ -221,7 +221,7 @@ class PlotPanel(viewpanel.ViewPanel):
         self.__figure    = figure
         self.__axis      = axis
         self.__canvas    = canvas
-        self.__name      = 'PlotPanel_{}'.format(self._name)
+        self.__name      = 'PlotPanel_{}'.format(self.name)
 
         # Accessing data from large compressed
         # files may take time, so we maintain
@@ -1084,7 +1084,7 @@ class OverlayPlotPanel(PlotPanel):
 
         PlotPanel.__init__(self, *args, **kwargs)
 
-        self.__name = 'OverlayPlotPanel_{}'.format(self._name)
+        self.__name = 'OverlayPlotPanel_{}'.format(self.name)
 
         # The dataSeries attribute is a dictionary of
         #
@@ -1117,15 +1117,15 @@ class OverlayPlotPanel(PlotPanel):
         self.__dataSeries   = {}
         self.__refreshProps = {}
 
-        self             .addListener('dataSeries',
-                                      self.__name,
-                                      self.__dataSeriesChanged)
-        self._displayCtx .addListener('selectedOverlay',
-                                      self.__name,
-                                      self.__selectedOverlayChanged)
-        self._overlayList.addListener('overlays',
-                                      self.__name,
-                                      self.__overlayListChanged)
+        self            .addListener('dataSeries',
+                                     self.__name,
+                                     self.__dataSeriesChanged)
+        self.displayCtx .addListener('selectedOverlay',
+                                     self.__name,
+                                     self.__selectedOverlayChanged)
+        self.overlayList.addListener('overlays',
+                                     self.__name,
+                                     self.__overlayListChanged)
 
         self.__overlayListChanged(initialState=initialState)
         self.__dataSeriesChanged()
@@ -1135,9 +1135,9 @@ class OverlayPlotPanel(PlotPanel):
         """Must be called when this ``OverlayPlotPanel`` is no longer needed.
         Removes some property listeners, and calls :meth:`PlotPanel.destroy`.
         """
-        self._overlayList.removeListener('overlays',        self.__name)
-        self._displayCtx .removeListener('selectedOverlay', self.__name)
-        self             .removeListener('dataSeries',      self.__name)
+        self.overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self            .removeListener('dataSeries',      self.__name)
 
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
@@ -1153,11 +1153,11 @@ class OverlayPlotPanel(PlotPanel):
         :class:`.DataSeries` that should be plotted.
         """
 
-        overlays = self._overlayList[:]
+        overlays = self.overlayList[:]
 
         # Display.enabled
         overlays = [o for o in overlays
-                    if self._displayCtx.getDisplay(o).enabled]
+                    if self.displayCtx.getDisplay(o).enabled]
 
         # Replace proxy images
         overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
@@ -1268,7 +1268,7 @@ class OverlayPlotPanel(PlotPanel):
             # each data series instance so that the
             # PlotListPanel.__onListSelect method can
             # update the display properties.
-            opts = self._displayCtx.getOpts(ds.overlay)
+            opts = self.displayCtx.getOpts(ds.overlay)
             if isinstance(ds, (plotting.MelodicTimeSeries,
                                plotting.MelodicPowerSpectrumSeries)):
                 copy._volume = opts.volume
@@ -1372,15 +1372,15 @@ class OverlayPlotPanel(PlotPanel):
         # Default to showing the
         # currently selected overlay
         if initialState is None:
-            if len(self._overlayList) > 0:
-                initialState = {self._displayCtx.getSelectedOverlay() : True}
+            if len(self.overlayList) > 0:
+                initialState = {self.displayCtx.getSelectedOverlay() : True}
             else:
                 initialState = {}
 
         # Make sure that a DataSeries
         # exists for every compatible overlay
         newOverlays = []
-        for ovl in self._overlayList:
+        for ovl in self.overlayList:
 
             if ovl in self.__dataSeries:
                 continue
@@ -1389,14 +1389,14 @@ class OverlayPlotPanel(PlotPanel):
                 continue
 
             ds, refreshTargets, refreshProps = self.createDataSeries(ovl)
-            display                          = self._displayCtx.getDisplay(ovl)
+            display                          = self.displayCtx.getDisplay(ovl)
 
             if ds is None:
 
                 # "Disable" overlays which don't have any data
                 # to plot. We do this mostly so the overlay
                 # appears greyed out in the OverlayListPanel.
-                self._displayCtx.getDisplay(ovl).enabled = False
+                self.displayCtx.getDisplay(ovl).enabled = False
                 continue
 
             # Display.enabled == DataSeries.enabled
@@ -1499,7 +1499,7 @@ class OverlayPlotPanel(PlotPanel):
         exists, and is not currently enabled, it is enabled.
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return
@@ -1526,16 +1526,16 @@ class OverlayPlotPanel(PlotPanel):
         initialState = kwa.get('initialState', None)
 
         for ds in list(self.dataSeries):
-            if ds.overlay is not None and ds.overlay not in self._overlayList:
+            if ds.overlay is not None and ds.overlay not in self.overlayList:
                 self.dataSeries.remove(ds)
                 ds.destroy()
 
         for overlay in list(self.__dataSeries.keys()):
-            if overlay not in self._overlayList:
+            if overlay not in self.overlayList:
                 self.clearDataSeries(overlay)
 
-        for overlay in self._overlayList:
-            display = self._displayCtx.getDisplay(overlay)
+        for overlay in self.overlayList:
+            display = self.displayCtx.getDisplay(overlay)
 
             # PlotPanels use the Display.enabled property
             # to toggle on/off overlay plots. We don't want

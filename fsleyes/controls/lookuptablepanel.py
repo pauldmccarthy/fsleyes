@@ -156,10 +156,10 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__labelListCreateKey = 0
 
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__updateLutChoices()
@@ -191,25 +191,25 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         :meth:`FSLeyesPanel.destroy` method.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         overlay = self.__selectedOverlay
         opts    = self.__selectedOpts
         lut     = self.__selectedLut
 
-        if overlay is not None and overlay in self._overlayList:
+        if overlay is not None and overlay in self.overlayList:
 
-            display = self._displayCtx.getDisplay(overlay)
-            display.removeListener('overlayType', self._name)
+            display = self.displayCtx.getDisplay(overlay)
+            display.removeListener('overlayType', self.name)
 
         if opts is not None:
-            opts.removeListener('lut', self._name)
+            opts.removeListener('lut', self.name)
 
         if lut is not None:
-            lut.deregister(self._name, 'saved')
-            lut.deregister(self._name, 'added')
-            lut.deregister(self._name, 'removed')
+            lut.deregister(self.name, 'saved')
+            lut.deregister(self.name, 'added')
+            lut.deregister(self.name, 'removed')
 
         self.__selectedOverlay = None
         self.__selectedOpts    = None
@@ -330,19 +330,19 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         log.debug('Selecting lut: {}'.format(lut))
 
         if self.__selectedLut is not None:
-            self.__selectedLut.deregister(self._name, 'saved')
-            self.__selectedLut.deregister(self._name, 'added')
-            self.__selectedLut.deregister(self._name, 'removed')
+            self.__selectedLut.deregister(self.name, 'saved')
+            self.__selectedLut.deregister(self.name, 'added')
+            self.__selectedLut.deregister(self.name, 'removed')
 
         self.__selectedLut = lut
 
         if lut is not None:
-            lut.register(self._name, self.__lutSaveStateChanged, 'saved')
-            lut.register(self._name, self.__lutLabelAdded,       'added')
-            lut.register(self._name, self.__lutLabelRemoved,     'removed')
+            lut.register(self.name, self.__lutSaveStateChanged, 'saved')
+            lut.register(self.name, self.__lutLabelAdded,       'added')
+            lut.register(self.name, self.__lutLabelRemoved,     'removed')
 
         if lut is not None and self.__selectedOpts is not None:
-            with props.skip(self.__selectedOpts, 'lut', self._name):
+            with props.skip(self.__selectedOpts, 'lut', self.name):
                 self.__selectedOpts.lut = lut
 
         allLuts = fslcmaps.getLookupTables()
@@ -432,7 +432,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                   'LookupTable: {}'.format(key))
 
         lut = fslcmaps.LookupTable(key=key, name=name)
-        fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
+        fslcmaps.registerLookupTable(lut, self.overlayList, self.displayCtx)
 
         self.__updateLutChoices()
         self.__setLut(lut)
@@ -467,7 +467,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                        colour=label.colour,
                        enabled=label.enabled)
 
-        fslcmaps.registerLookupTable(lut, self._overlayList, self._displayCtx)
+        fslcmaps.registerLookupTable(lut, self.overlayList, self.displayCtx)
 
         self.__updateLutChoices()
         self.__setLut(lut)
@@ -513,8 +513,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         # Register the lut
         lut = fslcmaps.registerLookupTable(lutFile,
-                                           self._overlayList,
-                                           self._displayCtx,
+                                           self.overlayList,
+                                           self.displayCtx,
                                            key=lutKey,
                                            name=lutName)
 
@@ -573,7 +573,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             name,
             colour))
 
-        with lut.skip(self._name, 'added'):
+        with lut.skip(self.name, 'added'):
             label  = lut.insert(value, name=name, colour=colour)
             widget = LabelWidget(self, lut, label)
             idx    = lut.index(label)
@@ -593,7 +593,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         lut   = self.__selectedLut
         value = lut[idx].value
 
-        with lut.skip(self._name, 'removed'):
+        with lut.skip(self.name, 'removed'):
             lut.delete(value)
         self.__labelList.Delete(idx)
 
@@ -604,21 +604,21 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         ``LookupTablePanel`` accordingly.
         """
 
-        newOverlay = self._displayCtx.getSelectedOverlay()
+        newOverlay = self.displayCtx.getSelectedOverlay()
 
         if self.__selectedOverlay is not None and \
-           self.__selectedOverlay in self._overlayList:
+           self.__selectedOverlay in self.overlayList:
 
-            display = self._displayCtx.getDisplay(self.__selectedOverlay)
-            display.removeListener('overlayType', self._name)
+            display = self.displayCtx.getDisplay(self.__selectedOverlay)
+            display.removeListener('overlayType', self.name)
 
         self.__selectedOverlay = newOverlay
 
         if newOverlay is not None:
 
-            display = self._displayCtx.getDisplay(newOverlay)
+            display = self.displayCtx.getDisplay(newOverlay)
             display.addListener('overlayType',
-                                self._name,
+                                self.name,
                                 self.__overlayTypeChanged)
 
         self.__overlayTypeChanged()
@@ -632,7 +632,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         """
 
         if self.__selectedOpts is not None:
-            self.__selectedOpts.removeListener('lut', self._name)
+            self.__selectedOpts.removeListener('lut', self.name)
             self.__selectedOpts = None
 
         overlay = self.__selectedOverlay
@@ -641,7 +641,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        opts = self._displayCtx.getOpts(overlay)
+        opts = self.displayCtx.getOpts(overlay)
 
         if not isinstance(opts, (displayctx.LabelOpts, displayctx.MeshOpts)):
 
@@ -652,7 +652,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
             return
 
-        opts.addListener('lut', self._name, self.__lutChanged)
+        opts.addListener('lut', self.name, self.__lutChanged)
 
         self.__selectedOpts = opts
         self.__lutChanged()

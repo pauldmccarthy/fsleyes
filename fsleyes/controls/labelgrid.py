@@ -78,9 +78,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         self.__grid.Bind(widgetgrid.EVT_WG_SELECT, self.__onGridSelect)
 
-        lut.register(self._name, self.__lutChanged, 'added')
-        lut.register(self._name, self.__lutChanged, 'removed')
-        lut.register(self._name, self.__lutChanged, 'label')
+        lut.register(self.name, self.__lutChanged, 'added')
+        lut.register(self.name, self.__lutChanged, 'removed')
+        lut.register(self.name, self.__lutChanged, 'label')
 
         self.__overlay = None
 
@@ -91,9 +91,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
 
-        self.__lut.deregister(self._name, 'added')
-        self.__lut.deregister(self._name, 'removed')
-        self.__lut.deregister(self._name, 'label')
+        self.__lut.deregister(self.name, 'added')
+        self.__lut.deregister(self.name, 'removed')
+        self.__lut.deregister(self.name, 'label')
         self.__lut = None
 
         self.__deregisterCurrentOverlay()
@@ -121,7 +121,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         self.__overlay   = overlay
         self.__volLabels = volLabels
 
-        volLabels.register(self._name, self.__labelsChanged)
+        volLabels.register(self.name, self.__labelsChanged)
 
         # We refresh the label grid on idle, in
         # case multiple calls to setOverlay are
@@ -152,7 +152,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             self.__grid.Refresh()
 
         async.idle(createGrid,
-                   name='{}_createGrid'.format(self._name),
+                   name='{}_createGrid'.format(self.name),
                    skipIfQueued=True)
 
 
@@ -169,7 +169,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
         self.__overlay   = None
         self.__volLabels = None
 
-        volLabels.deregister(self._name)
+        volLabels.deregister(self.name)
 
 
     def __createTags(self, labels=None):
@@ -324,7 +324,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Component {} added to label {}'.format(comp, label))
 
-        with volLabels.skip(self._name):
+        with volLabels.skip(self.name):
 
             # If this component now has two
             # labels, and the other label is
@@ -362,7 +362,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         log.debug('Component {} removed from label {}'.format(comp, label))
 
-        with volLabels.skip(self._name):
+        with volLabels.skip(self.name):
 
             volLabels.removeComponent(label, comp)
 
@@ -405,7 +405,7 @@ class LabelGrid(fslpanel.FSLeyesPanel):
 
         comp        = int(ev.tag) - 1
         overlay     = self.__overlay
-        opts        = self._displayCtx.getOpts(overlay)
+        opts        = self.displayCtx.getOpts(overlay)
 
         log.debug('Component {} selected on label grid - '
                   'updating overlay volume'.format(comp))

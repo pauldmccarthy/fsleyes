@@ -297,7 +297,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             [xhi, yhi, zlo],
             [xhi, yhi, zhi]])
 
-        opts   = self._displayCtx.getOpts(self.__overlay)
+        opts   = self.displayCtx.getOpts(self.__overlay)
         coords = opts.transformCoords(coords, 'voxel', 'display')
 
         mins = coords.min(axis=0)
@@ -426,7 +426,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         with props.suppress(self, 'cropBox', notify=True):
             self.cropBox.setLimit(voxAxis, limit, vox[voxAxis])
 
-        self._displayCtx.location = canvasPos
+        self.displayCtx.location = canvasPos
 
 
     def _cropModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
@@ -453,7 +453,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         with props.suppress(self, 'cropBox', notify=True):
             self.cropBox.setLimit(axis, limit, newval)
 
-        self._displayCtx.location = canvasPos
+        self.displayCtx.location = canvasPos
 
 
     def _cropModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):

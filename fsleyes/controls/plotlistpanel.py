@@ -74,7 +74,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         self.__dsList.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__onListSelect)
 
         self.__plotPanel.addListener('dataSeries',
-                                     self._name,
+                                     self.name,
                                      self.__dataSeriesChanged)
 
         self.__dataSeriesChanged()
@@ -88,7 +88,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy` method.
         """
 
-        self.__plotPanel.removeListener('dataSeries', self._name)
+        self.__plotPanel.removeListener('dataSeries', self.name)
         self.__plotPanel = None
         self.__dsList.Clear()
         fslpanel.FSLeyesPanel.destroy(self)
@@ -142,9 +142,9 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        opts = self._displayCtx.getOpts(overlay)
+        opts = self.displayCtx.getOpts(overlay)
 
-        self._displayCtx.selectedOverlay = self._overlayList.index(overlay)
+        self.displayCtx.selectedOverlay = self.overlayList.index(overlay)
 
         # See hacky things in __onListAdd
         if hasattr(ds, '_volume'):
@@ -153,7 +153,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         elif hasattr(ds, '_location'):
             voxLoc = np.array(ds._location)
             disLoc = opts.transformCoords([voxLoc], 'voxel', 'display')[0]
-            self._displayCtx.location = disLoc
+            self.displayCtx.location = disLoc
 
 
     def __onListRemove(self, ev):
@@ -162,7 +162,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
         :class:`.DataSeries` instance from the :attr:`.PlotPanel.dataSeries`
         list of the :class:`.OverlayPlotPanel`.
         """
-        with props.skip(self.__plotPanel, 'dataSeries', self._name):
+        with props.skip(self.__plotPanel, 'dataSeries', self.name):
             self.__plotPanel.dataSeries.remove(ev.data)
 
 

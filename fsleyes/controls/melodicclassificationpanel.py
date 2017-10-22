@@ -166,10 +166,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         self.__clearButton.Bind(wx.EVT_BUTTON, self.__onClearButton)
 
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
@@ -186,8 +186,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             annot = self.__canvasPanel.getCanvas().getAnnotations()
             annot.dequeue(self.__textAnnotation, hold=True)
 
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.overlayList.removeListener('overlays',        self.name)
         self.__componentGrid.destroy()
         self.__labelGrid    .destroy()
 
@@ -234,12 +234,12 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             return
 
         volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
-        volLabels.deregister(self._name, topic='added')
-        volLabels.deregister(self._name, topic='removed')
+        volLabels.deregister(self.name, topic='added')
+        volLabels.deregister(self.name, topic='removed')
 
         try:
             opts = self.displayCtx.getOpts(overlay)
-            opts.removeListener('volume', self._name)
+            opts.removeListener('volume', self.name)
 
         except displaycontext.InvalidOverlayError:
             pass
@@ -273,7 +273,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         if not isinstance(self.__canvasPanel, LightBoxPanel):
             return volLabels
 
-        opts.addListener('volume', self._name, self.__volumeChanged)
+        opts.addListener('volume', self.name, self.__volumeChanged)
 
         # Whenever the classification labels change,
         # update the text annotation on the canvas.
@@ -282,7 +282,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # instance may not have been updated to contain
         # the new label - see ComponentGrid.__onTagAdded.
         for topic in ['added', 'removed']:
-            volLabels.register(self._name,
+            volLabels.register(self.name,
                                self.__labelsChanged,
                                topic=topic,
                                runOnIdle=True)
@@ -303,7 +303,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         this panel is disabled (via :meth:`__enable`).
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if self.__overlay is overlay:
             return
@@ -452,8 +452,8 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             # Disable notification while applying
             # labels so the component/label grids
             # don't confuse themselves.
-            with volLabels.skip(self.__componentGrid._name), \
-                 volLabels.skip(self.__labelGrid    ._name):
+            with volLabels.skip(self.__componentGrid.name), \
+                 volLabels.skip(self.__labelGrid    .name):
 
                 volLabels.clear()
 
@@ -477,10 +477,10 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
             if newOverlay:
 
                 # Make sure the new image is selected.
-                with props.skip(self._displayCtx,
+                with props.skip(self.displayCtx,
                                 'selectedOverlay',
-                                self._name):
-                    self._displayCtx.selectOverlay(overlay)
+                                self.name):
+                    self.displayCtx.selectOverlay(overlay)
 
                 self.__componentGrid.setOverlay(overlay)
                 self.__labelGrid    .setOverlay(overlay)
@@ -494,7 +494,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # If the current overlay is a compatible
         # Image, the open file dialog starting
         # point will be its directory.
-        overlay          = self._displayCtx.getSelectedOverlay()
+        overlay          = self.displayCtx.getSelectedOverlay()
         selectedIsCompat = isinstance(overlay, fslimage.Image)
 
         if selectedIsCompat and overlay.dataSource is not None:
@@ -620,15 +620,15 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
 
             log.debug('Adding {} to overlay list'.format(overlay))
 
-            with props.skip(self._overlayList, 'overlays',        self._name),\
-                 props.skip(self._displayCtx,  'selectedOverlay', self._name):
+            with props.skip(self.overlayList, 'overlays',        self.name),\
+                 props.skip(self.displayCtx,  'selectedOverlay', self.name):
 
-                self._overlayList.append(overlay)
+                self.overlayList.append(overlay)
 
-            if self._displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 autodisplay.autoDisplay(overlay,
-                                        self._overlayList,
-                                        self._displayCtx)
+                                        self.overlayList,
+                                        self.displayCtx)
 
             fslsettings.write('loadSaveOverlayDir', op.abspath(melDir))
 
@@ -651,7 +651,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         where they'd like the label saved, then saves said labels.
         """
 
-        overlay   = self._displayCtx.getSelectedOverlay()
+        overlay   = self.displayCtx.getSelectedOverlay()
         volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
 
         if isinstance(overlay, fslmelimage.MelodicImage):
@@ -684,7 +684,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         ``'Unknown'``).
         """
 
-        overlay  = self._displayCtx.getSelectedOverlay()
+        overlay   = self.displayCtx.getSelectedOverlay()
         volLabels = self.overlayList.getData(overlay, 'VolumeLabels')
 
         for c in range(volLabels.numComponents()):

@@ -138,10 +138,10 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         self.__sizer.Add(self.__mainSizer,    **args)
 
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__overlayListChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__statSelect  .Bind(wx.EVT_CHOICE, self.__statSelected)
@@ -168,8 +168,8 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         self.__clusterGrids = None
         self.__featImages   = None
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -271,14 +271,14 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         contrast  = self.__statSelect.GetSelection()
         zstats    = featImage.getZStats(contrast)
 
-        for ol in self._overlayList:
+        for ol in self.overlayList:
 
             # Already in overlay list
             if ol.dataSource == zstats.dataSource:
                 return
 
         log.debug('Adding Z-statistic {} to overlay list'.format(zstats.name))
-        self._overlayList.append(zstats, overlayType='volume')
+        self.overlayList.append(zstats, overlayType='volume')
 
         zthres = featImage.thresholds()['z']
 
@@ -301,14 +301,14 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         contrast  = self.__statSelect.GetSelection()
         mask      = featImage.getClusterMask(contrast)
 
-        for ol in self._overlayList:
+        for ol in self.overlayList:
 
             # Already in overlay list
             if ol.dataSource == mask.dataSource:
                 return
 
         log.debug('Adding cluster mask {} to overlay list'.format(mask.name))
-        self._overlayList.append(mask, overlayType='label')
+        self.overlayList.append(mask, overlayType='label')
 
 
     def __genClusterGrid(self, overlay, featImage, contrast, clusters):
@@ -348,7 +348,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         grid    = widgetgrid.WidgetGrid(self)
         conName = featImage.contrastNames()[contrast]
-        opts    = self._displayCtx.getOpts(overlay)
+        opts    = self.displayCtx.getOpts(overlay)
 
         # We hide the grid and disable
         # this panle while the grid is
@@ -377,7 +377,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
             def onClick(ev):
                 dloc = opts.transformCoords([coords], 'voxel', 'display')[0]
-                self._displayCtx.location = dloc
+                self.displayCtx.location = dloc
 
             btn.Bind(wx.EVT_BUTTON, onClick)
 
@@ -451,14 +451,14 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         # that have been removed from the
         # list.
         for overlay in list(self.__featImages.keys()):
-            if overlay not in self._overlayList:
+            if overlay not in self.overlayList:
 
                 featImage = self.__featImages.pop(overlay)
 
                 # Has the feat image associated with
                 # this overlay also been removed?
                 if featImage is overlay or \
-                   featImage not in self._overlayList:
+                   featImage not in self.overlayList:
 
                     # The grid widgets for the feat image
                     # associated with this overlay may
@@ -497,7 +497,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         zstat     = featImage.getZStats(     contrast)
         clustMask = featImage.getClusterMask(contrast)
 
-        dss = [ovl.dataSource for ovl in self._overlayList]
+        dss = [ovl.dataSource for ovl in self.overlayList]
 
         self.__addZStats   .Enable(zstat    .dataSource not in dss)
         self.__addClustMask.Enable(clustMask.dataSource not in dss)
@@ -516,11 +516,11 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         self.__selectedOverlay = None
 
         # No overlays are loaded
-        if len(self._overlayList) == 0:
+        if len(self.overlayList) == 0:
             self.__disable(strings.messages[self, 'noOverlays'])
             return
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         # Overlay is in-memory
         if overlay.dataSource is None:
@@ -583,7 +583,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
                 # The FEATImage might already
                 # be in the overlay list -
                 # let's search for it.
-                for ovl in self._overlayList:
+                for ovl in self.overlayList:
                     if isinstance(ovl, featimage.FEATImage) and \
                        ovl.getFEATDir() == featDir:
                         featImage = ovl
@@ -602,7 +602,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         # Get the contrast and cluster
         # information for the FEAT analysis.
-        display  = self._displayCtx.getDisplay(overlay)
+        display  = self.displayCtx.getDisplay(overlay)
         numCons  = featImage.numContrasts()
         conNames = featImage.contrastNames()
 

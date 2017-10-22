@@ -74,10 +74,10 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
                                                kbFocus=True)
 
         displayCtx .addListener('selectedOverlay',
-                                 self._name,
+                                 self.name,
                                  self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
-                                 self._name,
+                                 self.name,
                                  self.__selectedOverlayChanged)
 
         self.__threedee       = isinstance(parent, Scene3DPanel)
@@ -94,15 +94,15 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         :meth:`.FSLeyesPanel.destroy` method.
         """
 
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._overlayList.removeListener('overlays',        self._name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.overlayList.removeListener('overlays',        self.name)
 
         if self.__currentOverlay is not None and \
-           self.__currentOverlay in self._overlayList:
+           self.__currentOverlay in self.overlayList:
 
-            display = self._displayCtx.getDisplay(self.__currentOverlay)
+            display = self.displayCtx.getDisplay(self.__currentOverlay)
 
-            display.removeListener('overlayType', self._name)
+            display.removeListener('overlayType', self.name)
 
         self.__viewPanel      = None
         self.__widgets        = None
@@ -118,7 +118,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         selected overlay are shown.
         """
 
-        overlay     = self._displayCtx.getSelectedOverlay()
+        overlay     = self.displayCtx.getSelectedOverlay()
         lastOverlay = self.__currentOverlay
         widgetList  = self.getWidgetList()
 
@@ -135,7 +135,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         self.__currentOverlay = overlay
         self.__widgets        = collections.OrderedDict()
 
-        display = self._displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         opts    = display.opts
 
         if self.__threedee:
@@ -153,17 +153,16 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         keepExpanded = {g : True for g in groups}
 
-        if lastOverlay is not None and \
-           lastOverlay in self._overlayList:
+        if lastOverlay is not None and lastOverlay in self.overlayList:
 
-            lastDisplay = self._displayCtx.getDisplay(lastOverlay)
-            lastDisplay.removeListener('overlayType', self._name)
+            lastDisplay = self.displayCtx.getDisplay(lastOverlay)
+            lastDisplay.removeListener('overlayType', self.name)
 
         if lastOverlay is not None:
             for g in groups:
                 keepExpanded[g] = widgetList.IsExpanded(g)
 
-        display.addListener('overlayType', self._name, self.__ovlTypeChanged)
+        display.addListener('overlayType', self.name, self.__ovlTypeChanged)
 
         widgetList.Clear()
 
@@ -192,7 +191,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         overlay.
         """
 
-        opts       = self._displayCtx.getOpts(self.__currentOverlay)
+        opts       = self.displayCtx.getOpts(self.__currentOverlay)
         widgetList = self.getWidgetList()
 
         self.__widgets[opts] = self.__updateWidgets(opts, 'opts')

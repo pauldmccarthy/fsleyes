@@ -74,10 +74,10 @@ class HistogramProfile(plotprofile.PlotProfile):
         self.__draggingRange = False
 
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__overlayListChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
@@ -88,8 +88,8 @@ class HistogramProfile(plotprofile.PlotProfile):
         Removes property listeners, and cleans some things up.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         for hs in list(self.__rangePolygons.keys()):
             self.__deregisterHistogramSeries(hs)
@@ -106,7 +106,7 @@ class HistogramProfile(plotprofile.PlotProfile):
         """
 
         for hs in list(self.__rangePolygons.keys()):
-            if hs.overlay not in self._overlayList:
+            if hs.overlay not in self.overlayList:
                 self.__deregisterHistogramSeries(hs)
 
         self.__selectedOverlayChanged()
@@ -123,7 +123,7 @@ class HistogramProfile(plotprofile.PlotProfile):
 
         rangePolygon = RangePolygon(
             hs,
-            self._viewPanel,
+            self.viewPanel,
             np.zeros((2, 2)),
             closed=True,
             linewidth=2)
@@ -131,8 +131,8 @@ class HistogramProfile(plotprofile.PlotProfile):
         rangeOverlay = HistogramOverlay(
             hs,
             hs.overlay,
-            self._displayCtx,
-            self._overlayList)
+            self.displayCtx,
+            self.overlayList)
 
         self.__rangePolygons[hs] = rangePolygon
         self.__rangeOverlays[hs] = rangeOverlay
@@ -157,9 +157,9 @@ class HistogramProfile(plotprofile.PlotProfile):
         exist for the newly selected overlay.
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
         oldHs   = self.__currentHs
-        newHs   = self._viewPanel.getDataSeries(overlay)
+        newHs   = self.viewPanel.getDataSeries(overlay)
 
         if oldHs == newHs:
             return

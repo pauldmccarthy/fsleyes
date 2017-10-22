@@ -97,23 +97,23 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self.__infoPanel.Bind(wxhtml.EVT_HTML_LINK_CLICKED,
                               self.__infoPanelLinkClicked)
 
-        fslplatform     .register(self._name,
+        fslplatform     .register(self.name,
                                   self.__fslDirChanged)
-        atlases.registry.register(self._name,
+        atlases.registry.register(self.name,
                                   self.__atlasAdded,
                                   topic='add')
-        atlases.registry.register(self._name,
+        atlases.registry.register(self.name,
                                   self.__atlasRemoved,
                                   topic='remove')
 
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('location',
-                                self._name,
+                                self.name,
                                 self.__locationChanged)
 
         self.__atlasList.SetMinSize((50, 60))
@@ -142,13 +142,13 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         :meth:`FSLeyesPanel.destroy`.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('location',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('location',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
-        atlases.registry.deregister(self._name, 'add')
-        atlases.registry.deregister(self._name, 'remove')
-        fslplatform     .deregister(self._name)
+        atlases.registry.deregister(self.name, 'add')
+        atlases.registry.deregister(self.name, 'remove')
+        fslplatform     .deregister(self.name)
 
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -283,8 +283,8 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         """
 
         text    = self.__infoPanel
-        overlay = self._displayCtx.getReferenceImage(
-            self._displayCtx.getSelectedOverlay())
+        overlay = self.displayCtx.getReferenceImage(
+            self.displayCtx.getSelectedOverlay())
 
         topText = None
 
@@ -311,8 +311,8 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
             text.Refresh()
             return
 
-        opts = self._displayCtx.getOpts(overlay)
-        loc  = self._displayCtx.location
+        opts = self.displayCtx.getOpts(overlay)
+        loc  = self.displayCtx.location
         loc  = opts.transformCoords([loc], 'display', 'world')[0]
 
         # Three types of hyperlink:
@@ -418,15 +418,15 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         the atlas information is refreshed.
         """
 
-        if len(self._overlayList) == 0:
+        if len(self.overlayList) == 0:
             self.__locationChanged()
             return
 
-        selOverlay = self._displayCtx.getSelectedOverlay()
+        selOverlay = self.displayCtx.getSelectedOverlay()
 
-        for ovl in self._overlayList:
+        for ovl in self.overlayList:
 
-            opts = self._displayCtx.getOpts(ovl)
+            opts = self.displayCtx.getOpts(ovl)
 
             # Add a listener to the bounds property for
             # the selected overlay. Bounds is used as a
@@ -437,11 +437,11 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
             # atlas info.
             if ovl == selOverlay:
                 opts.addListener('bounds',
-                                 self._name,
+                                 self.name,
                                  self.__locationChanged,
                                  overwrite=True)
             else:
-                opts.removeListener('bounds', self._name)
+                opts.removeListener('bounds', self.name)
 
         self.__locationChanged()
 

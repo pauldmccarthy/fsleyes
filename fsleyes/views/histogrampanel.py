@@ -97,12 +97,12 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         self.__currentHs = None
 
-        self       .addListener('histType', self._name, self.draw)
+        self       .addListener('histType', self.name, self.draw)
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
 
         self.__roiHistAction = roihistogram.AddROIHistogramAction(
@@ -126,9 +126,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         self.__currentHs     = None
         self.__roiHistAction = None
 
-        self             .removeListener('histType',        self._name)
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
+        self            .removeListener('histType',        self.name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
 
         plotpanel.OverlayPlotPanel.destroy(self)
 
@@ -208,7 +208,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         for hs in hss:
             with props.suppress(hs, 'label'):
-                hs.label = self._displayCtx.getDisplay(hs.overlay).name
+                hs.label = self.displayCtx.getDisplay(hs.overlay).name
 
         if self.smooth:
             self.drawDataSeries(hss)
@@ -230,8 +230,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             overlay = overlay.getBase()
 
         hs = histogramseries.HistogramSeries(overlay,
-                                             self._displayCtx,
-                                             self._overlayList)
+                                             self.displayCtx,
+                                             self.overlayList)
 
         hs.colour      = self.getOverlayPlotColour(overlay)
         hs.alpha       = 1
@@ -292,7 +292,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`toggleHistogramOverlay` action.
         """
 
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
         oldHs   = self.__currentHs
         newHs   = self.getDataSeries(overlay)
         enable  = (overlay is not None) and \

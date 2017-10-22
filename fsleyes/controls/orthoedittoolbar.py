@@ -89,7 +89,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.__orthoPanel = ortho
 
-        ortho.addListener('profile', self._name, self.__profileChanged)
+        ortho.addListener('profile', self.name, self.__profileChanged)
 
         self.__profileChanged()
 
@@ -99,7 +99,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         needed. Removes property listeners, and calls the
         :meth:`.FSLeyesToolBar.destroy` method.
         """
-        self.__orthoPanel.removeListener('profile', self._name)
+        self.__orthoPanel.removeListener('profile', self.name)
         fsltoolbar.FSLeyesToolBar.destroy(self)
 
 

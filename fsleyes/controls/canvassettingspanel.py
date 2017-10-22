@@ -78,7 +78,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
 
     def __makeTools(self):
 
-        displayCtx  = self._displayCtx
+        displayCtx  = self.displayCtx
         canvasPanel = self.__canvasPanel
         widgets     = self.getWidgetList()
 

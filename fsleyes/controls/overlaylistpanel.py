@@ -142,19 +142,19 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         self.__sizer.Add(self.__listBox, flag=wx.EXPAND, proportion=1)
 
-        self._overlayList.addListener(
+        self.overlayList.addListener(
             'overlays',
-            self._name,
+            self.name,
             self.__overlayListChanged)
 
-        self._displayCtx.addListener(
+        self.displayCtx.addListener(
             'overlayOrder',
-            self._name,
+            self.name,
             self.__overlayListChanged)
 
-        self._displayCtx.addListener(
+        self.displayCtx.addListener(
             'selectedOverlay',
-            self._name,
+            self.name,
             self.__selectedOverlayChanged)
 
         self.__overlayListChanged()
@@ -184,15 +184,15 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         :meth:`.FSLeyesPanel.destroy`.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self._displayCtx .removeListener('overlayOrder',    self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.displayCtx .removeListener('overlayOrder',    self.name)
 
         # A listener on name was added
         # in the _overlayListChanged method
-        for overlay in self._overlayList:
-            display = self._displayCtx.getDisplay(overlay)
-            display.removeListener('name', self._name)
+        for overlay in self.overlayList:
+            display = self.displayCtx.getDisplay(overlay)
+            display.removeListener('name', self.name)
 
         self.__filterFunc = None
         self.__listBox.Clear()
@@ -205,10 +205,10 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         changes. Updates the selected item in the list box.
         """
 
-        if len(self._overlayList) > 0:
+        if len(self.overlayList) > 0:
             self.__listBox.SetSelection(
-                self._displayCtx.getOverlayOrder(
-                    self._displayCtx.selectedOverlay))
+                self.displayCtx.getOverlayOrder(
+                    self.displayCtx.selectedOverlay))
 
 
     def __overlayNameChanged(self, value, valid, display, propName):
@@ -217,7 +217,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         """
 
         overlay = display.overlay
-        idx     = self._displayCtx.getOverlayOrder(overlay)
+        idx     = self.displayCtx.getOverlayOrder(overlay)
         name    = display.name
 
         if name is None:
@@ -233,9 +233,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
 
         self.__listBox.Clear()
 
-        for i, overlay in enumerate(self._displayCtx.getOrderedOverlays()):
+        for i, overlay in enumerate(self.displayCtx.getOrderedOverlays()):
 
-            display  = self._displayCtx.getDisplay(overlay)
+            display  = self.displayCtx.getDisplay(overlay)
             name     = display.name
             if name is None: name = ''
 
@@ -244,7 +244,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             widget = ListItemWidget(self,
                                     overlay,
                                     display,
-                                    self._displayCtx,
+                                    self.displayCtx,
                                     self.__listBox,
                                     showVis=self.__showVis,
                                     showGroup=self.__showGroup,
@@ -262,14 +262,14 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             self.__listBox.SetItemTooltip(i, tooltip)
 
             display.addListener('name',
-                                self._name,
+                                self.name,
                                 self.__overlayNameChanged,
                                 overwrite=True)
 
-        if len(self._overlayList) > 0:
+        if len(self.overlayList) > 0:
             self.__listBox.SetSelection(
-                self._displayCtx.getOverlayOrder(
-                    self._displayCtx.selectedOverlay))
+                self.displayCtx.getOverlayOrder(
+                    self.displayCtx.selectedOverlay))
 
         self.__listBox.Layout()
 
@@ -279,9 +279,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         Reorders the :attr:`.DisplayContext.overlayOrder` to reflect the
         change.
         """
-        self._displayCtx.disableListener('overlayOrder', self._name)
-        self._displayCtx.overlayOrder.move(ev.oldIdx, ev.newIdx)
-        self._displayCtx.enableListener('overlayOrder', self._name)
+        self.displayCtx.disableListener('overlayOrder', self.name)
+        self.displayCtx.overlayOrder.move(ev.oldIdx, ev.newIdx)
+        self.displayCtx.enableListener('overlayOrder', self.name)
 
 
     def __lbSelect(self, ev):
@@ -291,10 +291,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         """
 
 
-        self._displayCtx.disableListener('selectedOverlay', self._name)
-        self._displayCtx.selectedOverlay = \
-            self._displayCtx.overlayOrder[ev.idx]
-        self._displayCtx.enableListener('selectedOverlay', self._name)
+        self.displayCtx.disableListener('selectedOverlay', self.name)
+        self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[ev.idx]
+        self.displayCtx.enableListener('selectedOverlay', self.name)
 
 
     def __lbAdd(self, ev):
@@ -306,19 +305,18 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             if len(overlays) == 0:
                 return
 
-            self._overlayList.extend(overlays)
+            self.overlayList.extend(overlays)
+            self.displayCtx.selectedOverlay = len(self.overlayList) - 1
 
-            self._displayCtx.selectedOverlay = len(self._overlayList) - 1
-
-            if self._displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
-                                            self._overlayList,
-                                            self._displayCtx)
+                                            self.overlayList,
+                                            self.displayCtx)
 
         loadoverlay.interactiveLoadOverlays(
             onLoad=onLoad,
-            inmem=self._displayCtx.loadInMemory)
+            inmem=self.displayCtx.loadInMemory)
 
 
     def __lbRemove(self, ev):
@@ -326,14 +324,14 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         Removes the corresponding overlay from the :class:`.OverlayList`.
         """
 
-        overlay = self._displayCtx.overlayOrder[ev.idx]
-        overlay = self._overlayList[overlay]
+        overlay = self.displayCtx.overlayOrder[ev.idx]
+        overlay = self.overlayList[overlay]
 
-        with props.skip(self._overlayList, 'overlays',     self._name), \
-             props.skip(self._displayCtx,  'overlayOrder', self._name):
+        with props.skip(self.overlayList, 'overlays',     self.name), \
+             props.skip(self.displayCtx,  'overlayOrder', self.name):
 
-            if not removeoverlay.removeOverlay(self._overlayList,
-                                               self._displayCtx,
+            if not removeoverlay.removeOverlay(self.overlayList,
+                                               self.displayCtx,
                                                overlay):
                 ev.Veto()
 
@@ -350,9 +348,9 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         box. Toggles the visibility of the overlay, via the
         :attr:`.Display.enabled` property..
         """
-        idx             = self._displayCtx.overlayOrder[ev.idx]
-        overlay         = self._overlayList[idx]
-        display         = self._displayCtx.getDisplay(overlay)
+        idx             = self.displayCtx.overlayOrder[ev.idx]
+        overlay         = self.overlayList[idx]
+        display         = self.displayCtx.getDisplay(overlay)
         display.enabled = not display.enabled
 
 

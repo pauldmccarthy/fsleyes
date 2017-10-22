@@ -107,35 +107,35 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
-        self._displayCtx .addListener('selectedOverlay',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
-        self._displayCtx .addListener('displaySpace',
-                                      self._name,
-                                      self.__radioOrientationChanged)
-        self._displayCtx .addListener('radioOrientation',
-                                      self._name,
-                                      self.__radioOrientationChanged)
-        self._overlayList.addListener('overlays',
-                                      self._name,
-                                      self.__selectedOverlayChanged)
+        self.displayCtx .addListener('selectedOverlay',
+                                     self.name,
+                                     self.__selectedOverlayChanged)
+        self.displayCtx .addListener('displaySpace',
+                                     self.name,
+                                     self.__radioOrientationChanged)
+        self.displayCtx .addListener('radioOrientation',
+                                     self.name,
+                                     self.__radioOrientationChanged)
+        self.overlayList.addListener('overlays',
+                                     self.name,
+                                     self.__selectedOverlayChanged)
 
         # When any lightbox properties change,
         # make sure the scrollbar is updated
         sceneOpts.addListener(
-            'ncols',        self._name, self.__ncolsChanged)
+            'ncols',        self.name, self.__ncolsChanged)
         sceneOpts.addListener(
-            'nrows',        self._name, self.__onLightBoxChange)
+            'nrows',        self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
-            'topRow',       self._name, self.__onLightBoxChange)
+            'topRow',       self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
-            'sliceSpacing', self._name, self.__onLightBoxChange)
+            'sliceSpacing', self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
-            'zrange',       self._name, self.__onLightBoxChange)
+            'zrange',       self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
-            'zax',          self._name, self.__onLightBoxChange)
+            'zax',          self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
-            'zoom',         self._name, self.__onZoom)
+            'zoom',         self.name, self.__onZoom)
 
         # When the scrollbar is moved,
         # update the canvas display
@@ -160,10 +160,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self._displayCtx .removeListener('selectedOverlay',  self._name)
-        self._displayCtx .removeListener('displaySpace',     self._name)
-        self._displayCtx .removeListener('radioOrientation', self._name)
-        self._overlayList.removeListener('overlays',         self._name)
+        self.displayCtx .removeListener('selectedOverlay',  self.name)
+        self.displayCtx .removeListener('displaySpace',     self.name)
+        self.displayCtx .removeListener('radioOrientation', self.name)
+        self.overlayList.removeListener('overlays',         self.name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -246,8 +246,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """
 
         lbopts  = self.__lbCanvas.opts
-        inRadio = self._displayCtx.displaySpaceIsRadiological()
-        flip    = self._displayCtx.radioOrientation != inRadio
+        inRadio = self.displayCtx.displaySpaceIsRadiological()
+        flip    = self.displayCtx.radioOrientation != inRadio
         flip    = flip and lbopts.zax in (1, 2)
 
         lbopts.invertX = flip
@@ -263,25 +263,25 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         :meth:`__transformChanged` method will be called when it changes.
         """
 
-        if len(self._overlayList) == 0:
+        if len(self.overlayList) == 0:
             return
 
-        selectedOverlay = self._displayCtx.getSelectedOverlay()
+        selectedOverlay = self.displayCtx.getSelectedOverlay()
 
-        for overlay in self._overlayList:
+        for overlay in self.overlayList:
 
-            refImage = self._displayCtx.getReferenceImage(overlay)
+            refImage = self.displayCtx.getReferenceImage(overlay)
 
             if refImage is None:
                 continue
 
-            opts = self._displayCtx.getOpts(refImage)
+            opts = self.displayCtx.getOpts(refImage)
 
-            opts.removeListener('transform', self._name)
+            opts.removeListener('transform', self.name)
 
             if overlay == selectedOverlay:
                 opts.addListener('transform',
-                                 self._name,
+                                 self.name,
                                  self.__transformChanged)
 
         # If the current zrange is [0, 0]
@@ -293,7 +293,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         if opts.zrange == [0.0, 0.0]:
 
             opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
-            opts.zrange       = self._displayCtx.bounds.getRange(opts.zax)
+            opts.zrange       = self.displayCtx.bounds.getRange(opts.zax)
 
 
     def __transformChanged(self, *a):
@@ -306,13 +306,13 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """
 
         sceneOpts = self.sceneOpts
-        overlay   = self._displayCtx.getReferenceImage(
-            self._displayCtx.getSelectedOverlay())
+        overlay   = self.displayCtx.getReferenceImage(
+            self.displayCtx.getSelectedOverlay())
 
         if overlay is None:
             return
 
-        opts     = self._displayCtx.getOpts(overlay)
+        opts     = self.displayCtx.getOpts(overlay)
         loBounds = opts.bounds.getLo()
         hiBounds = opts.bounds.getHi()
 
@@ -355,8 +355,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         width = width - sbWidth
 
-        xlen = self._displayCtx.bounds.getLen(lbopts.xax)
-        ylen = self._displayCtx.bounds.getLen(lbopts.yax)
+        xlen = self.displayCtx.bounds.getLen(lbopts.xax)
+        ylen = self.displayCtx.bounds.getLen(lbopts.yax)
 
         sliceWidth  = width / float(lbopts.ncols)
         sliceHeight = fsllayout.calcPixHeight(xlen, ylen, sliceWidth)
