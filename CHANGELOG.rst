@@ -12,6 +12,9 @@ FSLeyes release history
   union or complement of all active clipping planes.
 * Bugfix in CLI generation - ``--overrideDataRange`` option does not get
   generated if data range override is disabled.
+* Display space warning popups/changes are no longer used - instead, a little
+  warning message is shown alongside a button that allows the user to change the
+  display space manually.
 
 
 0.15.1 (Saturday October 7th 2017)
