@@ -2,10 +2,12 @@ FSLeyes release history
 =======================
 
 
-0.15.2 (under development)
+0.16.0 (under development)
 --------------------------
 
-
+* Added the ability to load images from an XNAT server.
+* Application font size can now be set via the ``--fontSize`` command line
+  option.
 * 3D volume clipping planes can now be applied as the intersection (default),
   union or complement of all active clipping planes.
 * Bugfix in CLI generation - ``--overrideDataRange`` option does not get
