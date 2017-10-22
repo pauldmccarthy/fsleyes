@@ -251,6 +251,10 @@ messages = TypeDict({
     'An error occurred saving the crop parameters',
     'CropImagePanel.loadError' :
     'An error occurred loading the crop parameters',
+    'CropImagePanel.dsWarning' :
+    'Warning: To crop an image, you must select it\n'
+    'as the display space. You can change the display\n'
+    'space back in the view settings panel.',
 
 
     'LoadVertexDataAction.loadVertexData' :

@@ -11,16 +11,12 @@
 
 import logging
 
-import wx
-
 import numpy as np
 
 import fsl.data.image                     as fslimage
 import fsl.utils.callfsl                  as callfsl
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
-import fsleyes_widgets.dialog             as fsldlg
-import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.gl.annotations             as annotations
 from . import                                orthoviewprofile
@@ -28,15 +24,6 @@ from . import                                orthoviewprofile
 
 log = logging.getLogger(__name__)
 
-
-_suppressOverlayChangeWarning = False
-"""Whenever an :class:`OrthoCropProfile` is active, and the
-:attr:`.DisplayContext.selectedOverlay` changes, the ``OrthoCropProfile``
-changes the :attr:`.DisplayContext.displaySpace` to the newly selected
-overlay. If this boolean flag is ``True``, a warning message is shown
-to the user. The message dialog has a checkbox which updates this attribute,
-and thus allows the user to suppress the warning in the future.
-"""
 
 
 class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
@@ -66,12 +53,10 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
     ======== ===================================================
 
 
-    In a similar manner as for the :class:`.OrthoEditProfile`, the
-    ``OrthoCropProfile`` class has been written in a way which requires the
-    :class:`.Image` instance that is being edited to be displayed in *scaled
-    voxel* (a.k.a. ``pixdim``) space.  Therefore, when an ``Image`` overlay is
-    selected, the ``OrthoCropProfile`` instance sets that ``Image`` as the
-    current :attr:`.DisplayContext.displaySpace` reference image.
+    .. note:: The crop overlay will only be shown if the
+              :attr:`.DisplayContext.displaySpace` is set to the currently
+              selected overlay. The :class:`.CropImagePanel` uses a
+              :class:`.DisplaySpaceWarning` to inform the user.
     """
 
 
@@ -145,14 +130,17 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
                                           colour=(0.3, 0.3, 1.0),
                                           filled=True)
 
+        displayCtx .addListener('displaySpace',
+                                self.name,
+                                self.__displaySpaceChanged)
         displayCtx .addListener('selectedOverlay',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         overlayList.addListener('overlays',
-                                self._name,
+                                self.name,
                                 self.__selectedOverlayChanged)
         self       .addListener('cropBox',
-                                self._name,
+                                self.name,
                                 self.__cropBoxChanged)
 
         self.__xcanvas.getAnnotations().obj(self.__xrect, hold=True)
@@ -169,9 +157,10 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         needed. Removes property listeners and does some other clean up.
         """
 
-        self._overlayList.removeListener('overlays',        self._name)
-        self._displayCtx .removeListener('selectedOverlay', self._name)
-        self             .removeListener('cropBox',         self._name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
+        self.displayCtx .removeListener('displaySpace',    self.name)
+        self            .removeListener('cropBox',         self.name)
 
         self.__xcanvas.getAnnotations().dequeue(self.__xrect, hold=True)
         self.__ycanvas.getAnnotations().dequeue(self.__yrect, hold=True)
@@ -236,7 +225,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         :attr:`cropBox` is configured to be relative to the newly selected
         overlay.
         """
-        overlay = self._displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is self.__overlay:
             return
@@ -254,39 +243,6 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__registerOverlay(overlay)
 
-        # The display coord system must be
-        # orthogonal to the overlay, so we
-        # may need to change the display space.
-        if self._displayCtx.displaySpace != overlay:
-
-            # We show a warning to the
-            # user when this happens
-            global _suppressOverlayChangeWarning
-            if not _suppressOverlayChangeWarning:
-
-                msg   = strings.messages[self, 'imageChange']
-                hint  = strings.messages[self, 'imageChangeHint']
-                msg   = msg.format(overlay.name)
-                hint  = hint.format(overlay.name)
-                cbMsg = strings.messages[self, 'imageChange.suppress']
-                title = strings.titles[  self, 'imageChange']
-
-                dlg   = fsldlg.CheckBoxMessageDialog(
-                    self._viewPanel,
-                    title=title,
-                    message=msg,
-                    cbMessages=[cbMsg],
-                    cbStates=[_suppressOverlayChangeWarning],
-                    hintText=hint,
-                    focus='yes',
-                    icon=wx.ICON_INFORMATION)
-
-                dlg.ShowModal()
-
-                _suppressOverlayChangeWarning  = dlg.CheckBoxState()
-
-            self._displayCtx.displaySpace = overlay
-
         shape = overlay.shape[:3]
         crop  = self.__cachedCrops.get(overlay, None)
 
@@ -301,6 +257,19 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             self.cropBox.ymax = shape[1]
             self.cropBox.zmax = shape[2]
             self.cropBox      = crop
+
+
+    def __displaySpaceChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` changes.
+        Resets the :attr:`cropBox`.
+        """
+        cropBox     = self.cropBox
+        cropBox.xlo = self.cropBox.xmin
+        cropBox.ylo = self.cropBox.ymin
+        cropBox.zlo = self.cropBox.zmin
+        cropBox.xhi = self.cropBox.xmax
+        cropBox.yhi = self.cropBox.ymax
+        cropBox.zhi = self.cropBox.zmax
 
 
     def __cropBoxChanged(self, *a):
@@ -366,7 +335,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         """
 
         shape = overlay.shape[:3]
-        vox   = self._displayCtx.getOpts(overlay).getVoxel(
+        vox   = self.displayCtx.getOpts(overlay).getVoxel(
             canvasPos, clip=False, vround=False)
 
         vox = np.ceil(vox)

@@ -66,7 +66,7 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         self.__dsWarning.SetLabel(msg)
         self.__changeDS .SetLabel(strings.labels[self, 'changeDS'])
 
-        self.__dsWarning.SetForegroundColour((127, 0, 0, 255))
+        self.__dsWarning.SetForegroundColour((192, 0, 0, 255))
 
         self.__sizer     = wx.BoxSizer(wx.HORIZONTAL)
         self.__realSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -103,9 +103,9 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
 
-        displayCtx .removeListener('displaySpace',    self._name)
-        displayCtx .removeListener('selectedOverlay', self._name)
-        overlayList.removeListener('overlays',        self._name)
+        displayCtx .removeListener('displaySpace',    self.name)
+        displayCtx .removeListener('selectedOverlay', self.name)
+        overlayList.removeListener('overlays',        self.name)
 
         fslpanel.FSLeyesPanel.destroy(self)
 
