@@ -122,15 +122,8 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__displayCtx  = displayCtx
         self.__frame       = frame
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-
-        # TODO Remove these attributes. Access
-        #      should be through the methods.
-        self._overlayList = self.__overlayList
-        self._displayCtx  = self.__displayCtx
-        self._name        = self.__name
-
-        self.__destroyed  = False
-        self.__navOrder   = None
+        self.__destroyed   = False
+        self.__navOrder    = None
 
         if kbFocus:
             self.Bind(wx.EVT_CHAR_HOOK, self.__onCharHook)
@@ -269,6 +262,29 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__overlayList
 
 
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use overlayList instead')
+    def _overlayList(self):
+        return self.__overlayList
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use displayCtx instead')
+    def _displayCtx(self):
+        return self.__displayCtx
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use name instead')
+    def _name(self):
+        return self.__name
+
 
     @deprecation.deprecated(deprecated_in='0.15.2',
                             removed_in='1.0.0',
@@ -343,8 +359,8 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__navOrder    = None
         self.__destroyed   = True
 
-        self._displayCtx   = None
-        self._overlayList  = None
+        self.__displayCtx  = None
+        self.__overlayList = None
 
 
     def destroyed(self):

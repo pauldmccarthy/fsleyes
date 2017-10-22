@@ -44,6 +44,7 @@ defines global *FSLeyes* keyboard shortcuts.
 
 import logging
 import inspect
+import deprecation
 
 import wx
 
@@ -268,12 +269,12 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     The following instance attributes are present on a ``Profile`` instance,
     intended to be accessed by sub-classes:
 
-    ================ =======================================================
-    ``_viewPanel``   The :class:`ViewPanel` which is using this ``Profile``.
-    ``_overlayList`` A :class:`.OverlayList` instance.
-    ``_displayCtx``  A :class:`.DisplayContext` instance.
-    ``_name``        A unique name for this ``Profile`` instance.
-    ================ =======================================================
+    =============== =======================================================
+    ``viewPanel``   The :class:`ViewPanel` which is using this ``Profile``.
+    ``overlayList`` A :class:`.OverlayList` instance.
+    ``displayCtx``  A :class:`.DisplayContext` instance.
+    ``name``        A unique name for this ``Profile`` instance.
+    =============== =======================================================
     """
 
 
@@ -308,10 +309,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         actions.ActionProvider     .__init__(self)
         props.SyncableHasProperties.__init__(self)
 
-        self._viewPanel   = viewPanel
-        self._overlayList = overlayList
-        self._displayCtx  = displayCtx
-        self._name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__viewPanel   = viewPanel
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
 
         import fsleyes.views.canvaspanel as canvaspanel
         import fsleyes.views.plotpanel   as plotpanel
@@ -435,10 +436,69 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         list, and calls :meth:`.ActionProvider.destroy`.
         """
         actions.ActionProvider.destroy(self)
-        self.__lastCanvas = None
-        self._viewPanel   = None
-        self._overlayList = None
-        self._displayCtx  = None
+        self.__lastCanvas  = None
+        self.__viewPanel   = None
+        self.__overlayList = None
+        self.__displayCtx  = None
+
+
+    @property
+    def name(self):
+        """Returns the name of this ``Profile``. """
+        return self.__name
+
+
+    @property
+    def viewPanel(self):
+        """Returns the :class:`.ViewPanel` associated with this ``Profile``.
+        """
+        return self.__viewPanel
+
+
+    @property
+    def overlayList(self):
+        """Returns the :class:`.OverlayList`. """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Returns the :class:`.DisplayContext` associated with this
+        ``Profile``.
+        """
+        return self.__displayCtx
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use viewPanel instead')
+    def _viewPanel(self):
+        return self.__viewPanel
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use name instead')
+    def _name(self):
+        return self.__name
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use displayCtx instead')
+    def _displayCtx(self):
+        return self.__displayCtx
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.16.0',
+                            removed_in='1.0.0',
+                            details='Use overlayList instead')
+    def _overlayList(self):
+        return self.__overlayList
 
 
     def getEventTargets(self):
