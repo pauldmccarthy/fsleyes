@@ -710,11 +710,10 @@ labels = TypeDict({
     'CropImagePanel.save'             : 'Save',
     'CropImagePanel.cancel'           : 'Cancel',
 
-    'EditTransformPanel.dsWarning'   :
+    'EditTransformPanel.dsWarning'  :
     'Warning: Change the display space to "World" to see\n'
     'the effects of the transformation. You can change it\n'
     'back in the view settings panel',
-    'EditTransformPanel.changeDS'    : 'Change display space',
     'EditTransformPanel.noOverlay'   : 'Select a NIFTI image',
     'EditTransformPanel.overlayName' : 'Transform {}',
     'EditTransformPanel.oldXform'    : 'Original transform',
