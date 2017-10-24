@@ -252,6 +252,11 @@ class build_standalone(Command):
                             'zip',
                             root_dir=distdir,
                             base_dir=archivedir)
+        print('Creating {}.tar.gz...'.format(archivefile))
+        shutil.make_archive(archivefile,
+                            'gztar',
+                            root_dir=distdir,
+                            base_dir=archivedir)
 
 
     def patch_code(self, enableLogging):
