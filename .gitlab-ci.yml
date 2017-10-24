@@ -327,6 +327,7 @@ build-pypi-dist:
     expire_in: 1 day
     paths:
       - dist/FSLeyes*.zip
+      - dist/FSLeyes*.tar.gz
 
 
 .centos_pre_build: &centos_pre_build
@@ -437,7 +438,8 @@ build-centos6:
   <<: *centos_pre_build
   <<: *linux_do_build
   after_script:
-    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
 
 
 build-centos7:
@@ -448,7 +450,8 @@ build-centos7:
   <<: *centos_pre_build
   <<: *linux_do_build
   after_script:
-    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
 
 
 build-ubuntu1404:
@@ -459,7 +462,8 @@ build-ubuntu1404:
   <<: *ubuntu_pre_build
   <<: *linux_do_build
   after_script:
-    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
 
 
 build-ubuntu1604:
@@ -470,7 +474,8 @@ build-ubuntu1604:
   <<: *ubuntu_pre_build
   <<: *linux_do_build
   after_script:
-    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
 
 
 build-macos:
@@ -503,12 +508,14 @@ build-macos:
     - python setup.py build_standalone
     - deactivate
     - rm -r fsleyes-build-venv
-    - mv dist/FSLeyes*zip dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
 
   artifacts:
     expire_in: 1 day
     paths:
       - dist/FSLeyes*zip
+      - dist/FSLeyes*tar.gz
 
 
 ##############
@@ -570,4 +577,4 @@ deploy-builds:
     - build-macos
 
   script:
-    - rsync -rv dist/FSLeyes*zip "builddeploy:"
+    - rsync -rv dist/FSLeyes*zip dist/FSLeyes*tar.gz "builddeploy:"
