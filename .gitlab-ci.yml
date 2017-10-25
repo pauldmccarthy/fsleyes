@@ -3,25 +3,28 @@
 #
 #    https://git.fmrib.ox.ac.uk/fsl/fsleyes
 #
-# The build pipeline currently comprises three stages:
+# The build pipeline currently comprises the following stages:
 #
-#    1. doc:    Building user and API documentation
+#    1. test:   Unit tests
 #
-#    2. build:  Building source distributions, wheels, and standalone
+#    2. style:  Check coding style
+#
+#    3. doc:    Building user and API documentation
+#
+#    4. build:  Building source distributions, wheels, and standalone
 #               distributions.
 #
-#    3. deploy: Uploading the source and wheel distributions to pypi,
+#    5. deploy: Uploading the source and wheel distributions to pypi,
 #               and the documentation and standalone distributions to a
 #               hosting server.
 #
-# Unit and integration tests will hopefully be added soon!
+# The test and style stages are executed on all branches of upstream and
+# fork repositories.
 #
-# This pipeline is only executed on the upstream repository, not on forks.
-#
-#
-# The doc stage executed on all branches (master and release branches).
-#
-# Source distributions and wheels are built for release tags.
+# The doc stage executed on all branches of the upastream repository.
+
+# The build and deploy stages are only executed on release tags on
+# the upstream repository.
 #
 # Standalons distributions (py2app/pyinstaller) are built for several
 # platforms for release tags.
@@ -37,6 +40,8 @@
 
 
 stages:
+ - test
+ - style
  - doc
  - build
  - deploy
@@ -136,6 +141,11 @@ variables:
     - tags@fsl/fsleyes/fsleyes
 
 
+.except_releases: &except_releases
+  except:
+    - tags
+
+
 ##########################################################
 # The setup_ssh anchor contains a before_script section
 # which does the following:
@@ -160,9 +170,8 @@ variables:
 
     - if [[ -f /.dockerenv ]]; then
 
-        apt-get update -y                 || yum -y check-update           || true;
-        apt-get install -y openssh-client || yum install -y openssh-client || true;
-        apt-get install -y rsync          || yum install -y rsync          || true;
+        apt-get update -y                           || yum -y check-update                     || true;
+        apt-get install -y git rsync openssh-client || yum install -y git rsync openssh-client || true;
 
         eval $(ssh-agent -s);
         mkdir -p $HOME/.ssh;
@@ -244,6 +253,128 @@ variables:
         echo "Release detected - patching version - $CI_COMMIT_REF_NAME";
         sed -ie "s/^__version__ = .*$/__version__ = '$CI_COMMIT_REF_NAME'/g" fsleyes/version.py;
       fi
+
+
+############
+# Test stage
+############
+
+
+.test: &test_template
+  <<: *setup_ssh
+
+  # Releases are just tags on a release
+  # branch, so we don't need to test them.
+  <<: *except_releases
+
+  tags:
+    - docker
+
+  script:
+
+    # Install $PY_VERSION, xvfb, and all
+    # of the wxpython dependencies.
+    - apt-get update -y || true
+    - apt-get install -y software-properties-common python-software-properties xvfb libgtk2.0-0 libnotify4 freeglut3 libsdl1.2debian
+    - add-apt-repository -y ppa:deadsnakes/ppa
+    - apt-get update -y || true
+    - apt-get install -y $PY_VERSION "$PY_VERSION"-dev $PY_PACKAGES
+    - $PY_VENV test.venv
+    - source test.venv/bin/activate
+    - pip install --upgrade pip setuptools
+
+    # If running on a fork repository, we merge in the
+    # upstream/master branch. This is done so that merge
+    # requests from fork to the parent repository will
+    # have unit tests run on the merged code, something
+    # which gitlab CE does not currently do for us.
+    - if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
+        git fetch upstream;
+        git merge --no-commit --no-ff upstream/master;
+      fi;
+
+    - $INSTALL_WX
+
+    # All other deps can be installed as normal.
+    # We install test dependenciesd through pip,
+    # because if we let setuptools do it, it
+    # will build/install everything from source,
+    # rather than using wheels.
+    - pip install -r requirements.txt
+    - pip install sphinx sphinx-rtd-theme
+    - pip install pytest pytest-cov pytest-html pytest-runner mock coverage
+
+    # style stage
+    - if [ "$TEST_STYLE"x != "x" ]; then pip install pylint flake8; fi;
+    - if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || true; fi;
+    - if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
+    - if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
+
+    # Run the tests
+    - xvfb-run python setup.py test
+
+
+test:2.7:
+  stage: test
+  image: ubuntu:16.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python2.7"
+    PY_PACKAGES: "python-pip python-virtualenv"
+    PY_VENV:     "virtualenv"
+    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
+
+
+# we use ubuntu:14.04 for python 3.4, because
+# wxpython is not available for 16.04/3.4
+test:3.4:
+  stage: test
+  image: ubuntu:14.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python3.4"
+    PY_PACKAGES: "python3-pip python3.4-venv"
+    PY_VENV:     "python3.4 -m venv"
+    INSTALL_WX:  "pip install --pre -f $WXPYTHON_UBUNTU1404_URL wxpython"
+
+
+test:3.5:
+  stage: test
+  image: ubuntu:16.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python3.5"
+    PY_PACKAGES: "python3-pip python3-venv"
+    PY_VENV:     "python3.5 -m venv"
+    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
+
+
+test:3.6:
+  stage: test
+  image: ubuntu:16.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python3.6"
+    PY_PACKAGES: "python3-pip python3.6-venv"
+    PY_VENV:     "python3.6 -m venv"
+    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
+
+
+#############
+# Style stage
+#############
+
+
+style:
+  stage: style
+  image: ubuntu:16.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python3.5"
+    PY_PACKAGES: "python3-pip python3-venv"
+    PY_VENV:     "python3.5 -m venv"
+    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
+    TEST_STYLE:  "true"
 
 
 ###########
