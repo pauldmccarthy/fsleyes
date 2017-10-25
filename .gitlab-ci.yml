@@ -162,7 +162,7 @@ variables:
         eval $(ssh-agent -s);
         mkdir -p $HOME/.ssh;
 
-        echo "$SSH_PRIVATE_KEY_GIT"            > $HOME/.ssh/id_git;
+        echo "$SSH_PRIVATE_KEY_GIT" > $HOME/.ssh/id_git;
 
         if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
           echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
@@ -213,9 +213,6 @@ variables:
             git remote remove upstream;
         fi;
         git remote add upstream "$UPSTREAM_URL:$UPSTREAM_PROJECT";
-        ls -l $HOME/.ssh/;
-        git remote -v;
-        cat $HOME/.ssh/config;
       fi
 
 
