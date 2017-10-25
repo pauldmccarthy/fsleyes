@@ -654,7 +654,9 @@ def main():
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
     assets           = build_asset_list(True)
-    setup_requires   = ['sphinx', 'sphinx-rtd-theme', 'mock']
+    setup_requires   = ['pytest-runner', 'mock', 'sphinx', 'sphinx-rtd-theme'],
+    tests_require    = ['pytest-runner', 'mock', 'coverage',
+                        'pytest-cov', 'pytest-html', 'pytest']
 
     # When building/installing, all asset files
     # are placed within the fsleyes package
@@ -688,8 +690,10 @@ def main():
         packages=packages,
         install_requires=install_requires,
         setup_requires=setup_requires,
+        tests_require=tests_require,
         include_package_data=True,
         package_data=assets,
+        test_suite='tests',
 
         cmdclass={
             'build'            : custom_build,
