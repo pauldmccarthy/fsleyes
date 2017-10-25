@@ -163,16 +163,22 @@ variables:
         mkdir -p $HOME/.ssh;
 
         echo "$SSH_PRIVATE_KEY_GIT"            > $HOME/.ssh/id_git;
-        echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
-        echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
-        echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
+
+        if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
+          echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
+          echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
+          echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
+        fi
 
         chmod go-rwx $HOME/.ssh/id_*;
 
         ssh-add $HOME/.ssh/id_git;
-        ssh-add $HOME/.ssh/id_apidoc_deploy;
-        ssh-add $HOME/.ssh/id_userdoc_deploy;
-        ssh-add $HOME/.ssh/id_build_deploy;
+
+        if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
+          ssh-add $HOME/.ssh/id_apidoc_deploy;
+          ssh-add $HOME/.ssh/id_userdoc_deploy;
+          ssh-add $HOME/.ssh/id_build_deploy;
+        fi
 
         echo "$SSH_SERVER_HOSTKEYS" > $HOME/.ssh/known_hosts;
 
