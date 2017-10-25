@@ -213,6 +213,9 @@ variables:
             git remote remove upstream;
         fi;
         git remote add upstream "$UPSTREAM_URL:$UPSTREAM_PROJECT";
+        ls -l $HOME/.ssh/;
+        git remote -v;
+        cat $HOME/.ssh/config;
       fi
 
 
