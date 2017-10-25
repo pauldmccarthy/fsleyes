@@ -69,14 +69,6 @@ stages:
 #   - SSH_PRIVATE_KEY_BUILD_DEPLOY   - private key for standalone builds
 #                                      to remote host (BUILD_HOST)
 #
-#   - SSH_PRIVATE_KEY_LINUX_INSTALL  - private key for rsyncing standalone
-#                                      linux build to remote host
-#                                      LINUX_INSTALL_HOST.
-#
-#   - SSH_PRIVATE_KEY_MAC_INSTALL    - private key for rsyncing standalone
-#                                      mac build to remote host
-#                                      MAC_INSTALL_HOST.
-#
 #   - SSH_SERVER_HOSTKEYS            - List of trusted SSH hosts
 #
 #   - APIDOC_HOST:                   - Username@host to upload API
@@ -89,12 +81,6 @@ stages:
 #
 #   - BUILD_HOST                     - Username@host to upload release
 #                                      standalone builds to
-#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
-#
-#   - LINUX_INSTALL_HOST             - Username@host to upload linux build to
-#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
-#
-#   - MAC_INSTALL_HOST:              - Username@host to upload mac build to
 #                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
 #
 #   - TWINE_USERNAME:                - Username to use when uploading to pypi
@@ -180,8 +166,6 @@ variables:
         echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
         echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
         echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
-        echo "$SSH_PRIVATE_KEY_LINUX_INSTALL"  > $HOME/.ssh/id_linux_install;
-        echo "$SSH_PRIVATE_KEY_MAC_INSTALL"    > $HOME/.ssh/id_mac_install;
 
         chmod go-rwx $HOME/.ssh/id_*;
 
@@ -189,8 +173,6 @@ variables:
         ssh-add $HOME/.ssh/id_apidoc_deploy;
         ssh-add $HOME/.ssh/id_userdoc_deploy;
         ssh-add $HOME/.ssh/id_build_deploy;
-        ssh-add $HOME/.ssh/id_linux_install;
-        ssh-add $HOME/.ssh/id_mac_install;
 
         echo "$SSH_SERVER_HOSTKEYS" > $HOME/.ssh/known_hosts;
 
@@ -214,16 +196,6 @@ variables:
         echo "    HostName ${BUILD_HOST##*@}"                >> $HOME/.ssh/config;
         echo "    User ${BUILD_HOST%@*}"                     >> $HOME/.ssh/config;
         echo "    IdentityFile $HOME/.ssh/id_build_deploy"   >> $HOME/.ssh/config;
-
-        echo "Host linuxinstall"                             >> $HOME/.ssh/config;
-        echo "    HostName ${LINUX_INSTALL_HOST##*@}"        >> $HOME/.ssh/config;
-        echo "    User ${LINUX_INSTALL_HOST%@*}"             >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_linux_install"  >> $HOME/.ssh/config;
-
-        echo "Host macinstall"                               >> $HOME/.ssh/config;
-        echo "    HostName ${MAC_INSTALL_HOST##*@}"          >> $HOME/.ssh/config;
-        echo "    User ${MAC_INSTALL_HOST%@*}"               >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_mac_install"    >> $HOME/.ssh/config;
 
         echo "Host *"                                        >> $HOME/.ssh/config;
         echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;
