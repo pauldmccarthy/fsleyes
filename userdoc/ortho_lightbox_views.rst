@@ -21,8 +21,8 @@
 Orthographic/lightbox views
 ===========================
 
-FSLeyes |version| has two primary views - the orthographic (*ortho*) view, and
-the *lightbox* view.
+FSLeyes |version| has two primary 2D views - the orthographic (*ortho*) view,
+and the *lightbox* view.
 
 
 .. _ortho_lightbox_views_ortho:
@@ -304,7 +304,10 @@ space.
 
 You can use the coordinate controls to change the currently displayed location
 and, for 4D NIFTI images, use the volume control to change the currently
-displayed volume. Note that FSLeyes starts counting volumes from 0, not 1.
+displayed volume.
+
+
+.. warning:: Note that FSLeyes starts counting volumes from **0**, not **1**.
 
 
 The area on the right of the location panel displays the intensity values at
@@ -340,6 +343,10 @@ settings panel:
  - The **Location cursor colour** can be changed.
 
  - The canvas **Background colour** can be changed.
+
+ - The canvas **Foreground colour** can be changed. This controls the font
+   colour. Note that the foreground colour will be automatically adjusted
+   whenever you change the background colour.
 
  - **Display in radiological orientation** The view orientation can be toggled
    between radiological and neurological [*]_.
@@ -398,9 +405,10 @@ Movie mode
 ^^^^^^^^^^
 
 
-If the currently selected overlay is a 4D NIFTI image, turning on movie mode
-will causes FSLeyes to automatically loop through all of the 3D volumes in the
-image. This allows you to quickly scan through 4D images to, for example,
+If the currently selected overlay is a 4D NIFTI image or a mesh with 4D vertex
+data loaded, turning on movie mode will causes FSLeyes to automatically loop
+through all of the 3D volumes in the image (or time points in the mesh vertex
+data). This allows you to quickly scan through 4D images to, for example,
 visually check for motion artefacts in fMRI time series, or check registration
 alignment in a collection of T1 MRI images. The **Movie update rate** setting
 will adjust the speed at which the movie frames change. You can also change
@@ -425,5 +433,6 @@ are shown.
    :align: center
 
 .. [*] The colour bar feature currently only works for :ref:`volume
-       <overlays_volume>` overlays. Future versions of FSLeyes will offer more
+       <overlays_volume>` overlays and :ref:`mesh <overlays_mesh>` overlays
+       with vertex data selected. Future versions of FSLeyes will offer more
        colour bar options.

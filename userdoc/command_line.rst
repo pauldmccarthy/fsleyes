@@ -7,8 +7,8 @@ Command line interface
 FSLeyes has a comprehensive command line interface. Nearly everything that you
 can control through the :ref:`overlay display panel
 <overlays_overlay_display_panel>`, and the :ref:`view settings panel
-<ortho_lightbox_views_view_settings>` for orthographic/lightbox views, can be
-set via the command line.
+<ortho_lightbox_views_view_settings>` for orthographic/lightbox/3D views, can
+be set via the command line.
 
 
 .. _command_line_overview:
@@ -69,6 +69,7 @@ the :ref:`command line help <command_line_help>`.
 - :ref:`Auto display <command_line_auto_display>`
 - :ref:`Add standard <command_line_add_standard>`
 - :ref:`Perspectives <command_line_perspectives>`
+- :ref:`Font size <command_line_font_size>`
 - :ref:`Neurological orientation <command_line_neurological_orientation>`
 - :ref:`Force-load images <command_line_force_load_images>`
 - :ref:`Run script <command_line_run_script>`
@@ -141,6 +142,21 @@ own custom perspective, you can also load it, by name, using the ``--scene``
 option.
 
 
+
+.. _command_line_font_size:
+
+Font size
+^^^^^^^^^
+
+
+You can set the font used throughout the FSLeyes interface via the
+``--fontSize`` argument::
+
+    fsleyes --fontSize  6 files ...
+    fsleyes  -fs       14 files ...
+
+
+
 .. _command_line_neurological_orientation:
 
 Neurological orientation
@@ -198,6 +214,20 @@ script when FSLeyes starts, which can load overlays and configure their
 display properties, and set up the FSLeyes interface.  These scripts have
 access to the same environment that is available in the :ref:`Python shell
 <python_shell>`.
+
+
+.. _command_line_generating_arguments:
+
+Generating command line arguments
+---------------------------------
+
+
+The :ref:`orthographic, ligthtbox <ortho_lightbox_views>` and :ref:`3D
+<3d_view>` views have the ability to generate a command line which describes
+the currently displayed scene. This is available in the *View* sub-menu for
+each of these views, as the *Show command line for scene* option.  These views
+also have a *Apply command line arguments* option, which allows you to paste
+in a previosuly generated command line.
 
 
 .. _command_line_examples:
@@ -307,11 +337,11 @@ as the **first** argument to FSLeyes::
 
 FSLeyes should also work on systems which do not have a display (e.g. cluster
 nodes), via a tool such as `Xvfb
-<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_... Make sure
-you specify a 24-bit depth-buffer, for example::
+<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_, which is easy
+to install on most linux platforms. Make sure that you specify a 24-bit
+depth-buffer, for example::
 
   xvfb-run -s "-screen 0 640x480x24" fsleyes render ...
-
 
 
 
@@ -340,9 +370,10 @@ You may also specify the size of the generated image, in pixels::
 
 When using the off-screen renderer, the ``--scene`` option, normally used to
 :ref:`specify a perspective <command_line_perspectives>`, allows you to choose
-between generating a screenshot with an :ref:`orthographic view
-<ortho_lightbox_views_ortho>` or a :ref:`lightbox view
-<ortho_lightbox_views_lightbox>`::
+between generating a screenshot with an :ref:`orthographic
+<ortho_lightbox_views_ortho>`, :ref:`lightbox
+<ortho_lightbox_views_lightbox>`, or :ref:`3D <3d_view>` view::
 
   fsleyes render --scene ortho    --outfile outfile file [displayOpts] ...
   fsleyes render --scene lightbox --outfile outfile file [displayOpts] ...
+  fsleyes render --scene 3d       --outfile outfile file [displayOpts] ...

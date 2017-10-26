@@ -9,7 +9,7 @@ FSLeyes
 
 This is the user documentation for *FSLeyes* [*]_, the `FSL
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ image viewer. This documentation
-pertains to FSLeyes |version|, which is a part of FSL |fsl_version|.
+pertains to FSLeyes |version|.
 
 You can download the latest version of FSLeyes from the |fsleyes_homepage|_
 home page.
@@ -30,10 +30,12 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    overlays
    ortho_lightbox_views
    plot_views
+   3d_view
    atlases
    editing_images
    feat_mode
    ic_classification
+   tools
    command_line
    python_shell
    display_space

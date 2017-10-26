@@ -61,7 +61,10 @@ You can load an overlay by doing one of the following:
 3. The *File* |right_arrow| *Add standard* menu option allows you to choose a
    file from the ``$FSLDIR/data/standard/`` directory to load [*]_.
 
-4. The + button on the :ref:`overlay list <ortho_lightbox_views_overlay_list>`
+4. The *File* |right_arrow| *Add overlay from XNAT* menu option allows you to
+   connect to, and download files from, XNAT server.
+
+5. The + button on the :ref:`overlay list <ortho_lightbox_views_overlay_list>`
    allows you to choose a file to load.
 
 
@@ -174,7 +177,13 @@ The *General display settings* section at the top contains settings common to
 all overlay types. The bottom section (*Volume settings* in this example)
 contain settings which are specific to the type of the currently selected
 overlay. The settings available for each overlay type are covered :ref:`below
-<overlays_overlay_type>`.
+<overlays_overlay_type>` [*]_.
+
+
+ .. [*] In the `3D view <3d_view>`, the overlay display panel contains a third
+        section containing 3d-specific settings. These settings are described
+        separately in the `3D view <3d_view_overlay_display_settings>`
+        section.
 
 
 .. _overlays_overlay_information_panel:
@@ -238,6 +247,9 @@ The following settings are available for volume overlays:
 
   .. [*] The **Volume** setting is also available on :ref:`label
          <overlays_label>` and :ref:`mask <overlays_mask>` overlays.
+
+- **Dimension** If your image has more than four dimensinos, you can select
+  the dimension (fourth or higher) that the **Volume** setting controls.
 
 
 - **Interpolation** You can interpolate the image data (resampled to the
@@ -798,7 +810,7 @@ The following display settings are available for mesh overlays:
   image associated with the model (see the :ref:`sidebar
   <overlays_mesh_reference_image>`).
 
-- **Model coordinate space** This is an advanced setting which allows you to
+- **Mesh coordinate space** This is an advanced setting which allows you to
   specify how the VTK model coordinates are defined, relative to its reference
   image.
 
@@ -816,6 +828,9 @@ The following display settings are available for mesh overlays:
   and clip the mesh according to this data (only when showing the mesh
   outline), using the same properties that are described for :ref:`volume
   overlays <overlays_volume>`.
+
+- **Vertex data index** If you have selected some 4D **vertex data**, this
+  setting allows you to control the data volume that is displayed.
 
 - **Lookup table** If you have selected some categorical vertex data, you may
   use this setting to colour the mesh according to a lookup table instead of a

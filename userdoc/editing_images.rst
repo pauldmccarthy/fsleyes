@@ -51,16 +51,17 @@ Overview
 
 
 
-**Important:** When you are in edit mode, the :ref:`currently selected overlay
-<overview_overlays>` (assuming that it is a NIFTI image) is the default target
-for all editing operations. Whenever you draw, erase, fill, select, copy, or
-paste voxels, you will be doing so with respect to the *currently selected
-image*.
+.. important:: When you are in edit mode, the :ref:`currently selected overlay
+               <overview_overlays>` (assuming that it is a NIFTI image) is the
+               default target for all editing operations. Whenever you draw,
+               erase, fill, select, copy, or paste voxels, you will be doing
+               so with respect to the *currently selected image*.
 
 
-When you use :ref:`select mode <editing_images_select_mode>`, you may use the
-*Target image* setting to specify an alternate target for fill and paste
-operations.
+               There is one exception to this rule - in :ref:`select mode
+               <editing_images_select_mode>`, you may use the *Target image*
+               setting to specify an alternate target for fill and paste
+               operations.
 
 
 Create a mask/copy!

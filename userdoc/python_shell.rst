@@ -67,6 +67,15 @@ python ``list``::
   >>> [Image(MNI152_T1_2mm, /.../MNI152_T1_2mm.nii.gz)]
 
 
+.. note:: The ``load`` function is only intended for interactive use - it
+          loads overlays asynchronously, so you may encounter problems if you
+          use it in a script.  In a script, a safer option is to manually
+          create an overlay, and then add it to the ``overlayList``. For
+          example::
+
+              image = Image('path/to/my_image.nii.gz')
+              overlayList.append(image)
+
 Display settings
 ----------------
 

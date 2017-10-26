@@ -13,6 +13,7 @@
 .. |camera_icon|      image:: images/camera_icon.png
 .. |gear_icon|        image:: images/gear_icon.png
 .. |spanner_icon|     image:: images/spanner_icon.png
+.. |posneg_cmap_icon| image:: images/posneg_cmap_icon.png
 
 
 .. _quick_start:
@@ -239,11 +240,14 @@ Link/unlink the display properties across multiple views?
 
 If you have more than one view open (e.g. an ortho view and a lightbox view),
 and you want the overlay display settings to be the same across all views,
-open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` for
-each view (via the toolbar |spanner_icon| button, or the *Settings*
-|right_arrow| *<view name>* |right_arrow| *View settings panel* menu option),
-and make sure that the *Link overlay display settings* box is checked or
-unchecked.
+make sure that the *Settings* |right_arrow| *<view name>* |right_arrow| *Link
+display settings* menu option for all views is selected.
+
+
+This setting is also available via the :ref:`view settings panel
+<ortho_lightbox_views_view_settings>` (via the toolbar |spanner_icon| button,
+or the *Settings* |right_arrow| *<view name>* |right_arrow| *View settings
+panel* menu option), as the *Link overlay display settings* check box.
 
 
 Link the volumes on two or more 4D images?
@@ -259,10 +263,16 @@ Set up a positive/negative colour map for Z statistics?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-You can set up a negative colour map through the :ref:`overlay display panel
-<overlays_overlay_display_panel>` (the |gear_icon| button on the :ref:`overlay
-display toolbar <overlays_overlay_display_toolbar>`). See the section on
-:ref:`volume display settings <overlays_volume>` for more details.
+You can set up a negative colour map by clicking on the negative colour map
+button (|posneg_cmap_icon|) on the :ref:`overlay display toolbar
+<overlays_overlay_display_toolbar>`. The top colour map on the toolbar will be
+used for positive values, and the bottom colour map for negative values.
+
+
+You can also set up a negative colour map through the :ref:`overlay display
+panel <overlays_overlay_display_panel>` (the |gear_icon| button on the
+:ref:`overlay display toolbar <overlays_overlay_display_toolbar>`). See the
+section on :ref:`volume display settings <overlays_volume>` for more details.
 
 
 My image is tilted/oblique! How do I make it oriented/rectangular?

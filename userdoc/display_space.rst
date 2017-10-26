@@ -49,10 +49,10 @@ curious.
 Overview
 --------
 
-          
+
 FSLeyes assumes that all of the overlays you load are defined in the same
 space. If this assumption holds, FSLeyes will align all of your overlays in
-the display, even if they have different resolution or orientation. 
+the display, even if they have different resolution or orientation.
 
 
 For NIFTI images, FSLeyes accomplishes this by using the transformation
@@ -67,8 +67,9 @@ system.
 FSLeyes allows you to choose between displaying your overlays in terms of one
 :ref:`reference image <display_space_reference_image_space>`, or displaying
 all overlays in :ref:`world space <display_space_world_space>`. This setting
-is called the *display space*, and you can change it via the :ref:`view
-settings panel <ortho_lightbox_views_view_settings>`.
+is called the *display space*, and you can change independently for each open
+view it via the :ref:`view settings panel
+<ortho_lightbox_views_view_settings>`.
 
 
 .. _display_space_display_coordinate_system:
@@ -144,7 +145,7 @@ information).
        to the sagittal, coronal, and axial axes, respectively.
 
 
-.. _display_space_world_space: 
+.. _display_space_world_space:
 
 World space
 ^^^^^^^^^^^
@@ -156,11 +157,10 @@ to display all of your images in the *world coordinate system*.  In this
 scenario, the :ref:`display coordinate system
 <display_space_display_coordinate_system>` is set to the :ref:`world
 coordinate system <display_space_world_coordinate_system>` of the images you
-are viewing - this is where FSLeyes makes the critical assumption that all of
-the overlays you have loaded share the same world coordinate system.
+are viewing.
 
 
-.. _display_space_nifti_image_orientation: 
+.. _display_space_nifti_image_orientation:
 
 NIFTI image orientation
 -----------------------
@@ -175,7 +175,7 @@ coordinate system <display_space_voxel_coordinate_system>`, and the
 
 Voxel coordinate system
 ^^^^^^^^^^^^^^^^^^^^^^^
-            
+
 
 The voxel coordinate system of a NIFTI image defines how the voxel intensities
 of that image were acquired, and how they are stored and accessed in the image
@@ -207,9 +207,9 @@ The |nifti|_ specification does not impose any requirements upon the
 anatomical orientation of the voxel coordinate system. However, in a research
 environment, it is relatively common to see NIFTI images for which:
 
-- The voxel X axis corresponds to the left-right axis 
-- The voxel Y axis corresponds to the posterior-anterior axis 
-- The voxel Z axis corresponds to the inferior-superior axis      
+- The voxel X axis corresponds to the left-right axis
+- The voxel Y axis corresponds to the posterior-anterior axis
+- The voxel Z axis corresponds to the inferior-superior axis
 
 
 .. _display_space_world_coordinate_system:
@@ -245,10 +245,10 @@ http://nipy.org/nibabel/nifti_images.html#the-nifti-affines):
 
   1. If the ``sform`` code is not ``NIFTI_XFORM_UNKNOWN``, use the
      sform matrix; else
-     
+
   2. If the ``qform`` code is not ``NIFTI_XFORM_UNKNOWN``, use the qform
      matrix; else
-     
+
   3. Use the *fall-back* matrix.
 
 
@@ -311,12 +311,12 @@ three scenarios:
        axis - recall the section on the :ref:`NIFTI voxel coordinate system
        <display_space_voxel_coordinate_system>`.
 
-.. [*] But what makes things really confusing is the face that the MNI152
+.. [*] But what makes things really confusing is the fact that the MNI152
        standard brain image (and thus all images stored with the same voxel
        orientation) has a *radiological* (LAS) voxel storage order!
 
 
-.. _display_space_data_storage_order: 
+.. _display_space_data_storage_order:
 
 Data storage order
 ^^^^^^^^^^^^^^^^^^
@@ -334,10 +334,10 @@ stored on disk, would correspond to voxel coordinates like so (the index
 :math:`i` refers to the location, in the file, of the intensity for each
 voxel) [*]_:
 
-             
-=========  =========  =========  ========= 
+
+=========  =========  =========  =========
 :math:`i`  :math:`x`  :math:`y`  :math:`z`
-=========  =========  =========  ========= 
+=========  =========  =========  =========
 0          0          0          0
 1          1          0          0
 2          2          0          0
@@ -350,13 +350,13 @@ voxel) [*]_:
 9          0          1          1
 10         1          1          1
 11         2          1          1
-=========  =========  =========  ========= 
+=========  =========  =========  =========
 
 
 It is easy to calculate the index :math:`i` of a voxel from its coordinates:
 
 .. math::
-   
+
    i = x + (y\times d_x) + (z\times d_x\times d_y)
 
 

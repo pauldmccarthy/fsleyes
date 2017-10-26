@@ -14,12 +14,8 @@ Overview
 FSLeyes is a viewer for 3D and 4D neuroimaging data. It is intended as a
 replacement for the much loved `FSLView
 <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_. FSLeyes offers similar
-functionality to FSLView [*]_, and aims to improve and expand upon this
+functionality to FSLView, and aims to improve and expand upon this
 functionality in many ways.
-
-
-.. [*] With the exception that FSLeyes |version| does not provide a *3D
-       mode* - this will be added in a future version.
 
 
 .. _overview_overlays:
@@ -144,8 +140,8 @@ view. For example, the settings menu for an :ref:`orthographic
 
 
 Views and controls are described in more detail in the pages on
-:ref:`orthographic/lightbox views <ortho_lightbox_views>` and :ref:`plotting
-views <plot_views>`.
+:ref:`orthographic/lightbox views <ortho_lightbox_views>`, :ref:`plotting
+views <plot_views>`, and the :ref:`3D view <3d_view>`.
 
 
 .. _overview_layout_and_perspectives:
@@ -254,18 +250,21 @@ analyses <feat_mode>` for more information.
    :width: 75%
 
 
-Plain orthographic/Plain lightbox
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Plain orthographic/lightbox/3D
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-These perspectives simply display a plain orthographic or lightbox view,
+These perspectives simply display a plain orthographic, lightbox, or 3D view,
 respectively.
 
 
 .. container:: image-strip
 
   .. image:: images/overview_ortho.png
-     :width: 45%
+     :width: 30%
 
   .. image:: images/overview_lightbox.png
-     :width: 45%
+     :width: 30%
+
+  .. image:: images/overview_3d.png
+     :width: 30%
