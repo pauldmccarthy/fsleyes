@@ -288,8 +288,11 @@ variables:
     - if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
     - if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 
-    # Run the tests
-    - xvfb-run python setup.py test
+    # Run the tests. If we don't set the
+    # matplotlib backend, matplotlib will
+    # try and access tkinter, which doesn't
+    # exist.
+    - MPLBACKEND='wxagg' xvfb-run python setup.py test
 
 
 test:2.7:
