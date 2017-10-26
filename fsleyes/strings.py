@@ -1297,6 +1297,7 @@ perspectives = {
     'feat'     : 'FEAT mode',
     'ortho'    : 'Plain orthographic',
     'lightbox' : 'Plain lightbox',
+    '3d'       : 'Plain 3D',
 }
 
 tensor = {
