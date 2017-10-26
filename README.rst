@@ -1,11 +1,11 @@
 FSLeyes
 =======
 
-.. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/badges/master/build.svg
-   :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/commits/master/
+.. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/build.svg
+   :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
 
-.. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/badges/master/coverage.svg
-   :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/commits/master/
+.. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/coverage.svg
+   :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
 
 .. image:: https://img.shields.io/pypi/v/fsleyes.svg
    :target: https://pypi.python.org/pypi/fsleyes/)
