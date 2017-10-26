@@ -373,6 +373,7 @@ build-userdoc:
   image: python:3.5
 
   script:
+    - apt-get install -y graphviz
     - python setup.py userdoc
     - mv userdoc/html userdoc/"$CI_COMMIT_REF_NAME"
   artifacts:
@@ -393,6 +394,7 @@ build-apidoc:
   image: python:3.5
 
   script:
+    - apt-get install -y graphviz
     - python setup.py apidoc
     - mv apidoc/html apidoc/"$CI_COMMIT_REF_NAME"
   artifacts:
