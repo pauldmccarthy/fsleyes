@@ -362,19 +362,27 @@ style:
 # Doc stage
 ###########
 
-build-userdoc:
+
+.build_doc: &build_doc
   <<: *only_upstream
   <<: *patch_version
 
   tags:
-   - docker
+    - docker
 
   stage: doc
   image: python:3.5
 
-  script:
+  before_script:
     - apt-get update -y
     - apt-get install -y graphviz
+
+
+build-userdoc:
+  <<: *build_doc
+  <<: *patch_version
+
+  script:
     - python setup.py userdoc
     - mv userdoc/html userdoc/"$CI_COMMIT_REF_NAME"
   artifacts:
@@ -383,19 +391,11 @@ build-userdoc:
       - userdoc/$CI_COMMIT_REF_NAME
 
 
-
 build-apidoc:
-  <<: *only_upstream
+  <<: *build_doc
   <<: *patch_version
 
-  tags:
-   - docker
-
-  stage: doc
-  image: python:3.5
-
   script:
-    - apt-get install -y graphviz
     - python setup.py apidoc
     - mv apidoc/html apidoc/"$CI_COMMIT_REF_NAME"
   artifacts:
