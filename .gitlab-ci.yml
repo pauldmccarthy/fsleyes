@@ -555,7 +555,7 @@ build-pypi-dist:
       - dist/FSLeyes*.tar.gz
 
 
-.mac_do_build: &mac_do_build:
+.mac_do_build: &mac_do_build
   tags:
     - macOS
 
@@ -594,7 +594,7 @@ build-pypi-dist:
 # build-dev jobs
 ################
 
-.build_dev_template: &build_dev_template:
+.build_dev_template: &build_dev_template
   stage:  build-dev
   when:   manual
   <<: *except_releases
