@@ -239,7 +239,7 @@ class build_standalone(Command):
             if platform == 'darwin': self.run_command('py2app')
             else:                    self.run_command('pyinstaller')
 
-        # create a zip file
+        # create archive file
         distdir     = op.join(basedir, 'dist')
         archivefile = op.join(distdir,
                               'FSLeyes-{}'.format(get_fsleyes_version()))
@@ -247,11 +247,6 @@ class build_standalone(Command):
         if platform == 'darwin': archivedir = 'FSLeyes.app'
         else:                    archivedir = 'FSLeyes'
 
-        print('Creating {}.zip...'.format(archivefile))
-        shutil.make_archive(archivefile,
-                            'zip',
-                            root_dir=distdir,
-                            base_dir=archivedir)
         print('Creating {}.tar.gz...'.format(archivefile))
         shutil.make_archive(archivefile,
                             'gztar',
