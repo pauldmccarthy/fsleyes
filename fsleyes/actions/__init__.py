@@ -95,6 +95,7 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 import logging
 import types
 import inspect
+import warnings
 import functools
 
 import fsleyes_props   as props
@@ -202,9 +203,11 @@ class ActionProvider(object):
 
         acts = []
 
-        for name, attr in inspect.getmembers(self):
-            if isinstance(attr, Action):
-                acts.append((name, attr))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            for name, attr in inspect.getmembers(self):
+                if isinstance(attr, Action):
+                    acts.append((name, attr))
 
         return acts
 
