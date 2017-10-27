@@ -3,6 +3,11 @@ fsleyes_props.HasProperties
 fsleyes_props.SyncableHasProperties
 fsleyes_props.Toggle
 fsleyes_props.Button
+matplotlib.patches.Polygon
+wx.App
+wx.CheckBox
+wx.Dialog
+wx.Frame
 wx.Panel
 wx.glcanvas.GLCanvas
 wx.PyPanel

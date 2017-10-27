@@ -88,3 +88,4 @@ wx.lib.newevent
 wx.py
 wx.py.interpreter
 wx.py.shell
+wxnat
