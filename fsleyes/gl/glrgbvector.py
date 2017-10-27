@@ -53,7 +53,7 @@ class GLRGBVector(glvector.GLVector):
     ``preDraw(GLRGBVector, xform, bbox)``      Prepare the GL state for
                                                drawing.
     ``draw2D(GLRGBVector, zpos, xform, bbox)`` Draw the slice specified by
-                                             ``zpos``.
+                                               ``zpos``.
     ``draw3D(GLRGBVector, zpos, xform)``       Draw the volume in 3D
     ``drawAll(GLRGBVector, zposes, xforms)``   Draw all slices specified by
                                                ``zposes``.

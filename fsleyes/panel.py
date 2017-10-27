@@ -81,7 +81,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
        name
        frame
        overlayList
-       displayContext
+       displayCtx
        setNavOrder
        destroy
        destroyed

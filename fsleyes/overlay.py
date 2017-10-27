@@ -86,8 +86,8 @@ class OverlayList(props.HasProperties):
     """Class representing a collection of overlays to be displayed together.
 
     Contains a :class:`props.properties_types.List` property called
-    :attr:`overlays`, containing overlay objects (e.g. :class:`.Image`
-    or :class:`.TriangleMesh`objects). Listeners can be registered on the
+    :attr:`overlays`, containing overlay objects (e.g. :class:`.Image` or
+    :class:`.TriangleMesh` objects). Listeners can be registered on the
     ``overlays`` property, so they are notified when the overlay list changes.
 
     An :class:`OverlayList` object has a few wrapper methods around the

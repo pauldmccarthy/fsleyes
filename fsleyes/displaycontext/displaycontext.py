@@ -237,7 +237,7 @@ class DisplayContext(props.SyncableHasProperties):
                           :class:`.Nifti` overlay. Otherwise (``'world'``),
                           the display space will be set to ``'world'``.
 
-        All other arguments are passed through to the ``SyncableHasProperties`
+        All other arguments are passed through to the ``SyncableHasProperties``
         constructor, in addition to the following:
 
           - The ``syncOverlayDisplay`` and ``location`` properties
@@ -1088,7 +1088,7 @@ class DisplayContext(props.SyncableHasProperties):
         """Called by the :meth:`__locationChanged` and
         :meth:`__worldLocationChanged` methods. The ``dest`` argument may be
         either ``'world'`` (the ``worldLocation`` is updated from the
-        ``location``), or ``'display'` (vice-versa).
+        ``location``), or ``'display'`` (vice-versa).
         """
 
         if self.displaySpace == 'world':
