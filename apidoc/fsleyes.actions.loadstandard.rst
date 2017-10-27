@@ -1,5 +1,5 @@
-fsleyes.actions.loadstandard module
-===================================
+``fsleyes.actions.loadstandard``
+================================
 
 .. automodule:: fsleyes.actions.loadstandard
     :members:

@@ -1,5 +1,5 @@
-fsleyes.controls.componentgrid module
-=====================================
+``fsleyes.controls.componentgrid``
+==================================
 
 .. automodule:: fsleyes.controls.componentgrid
     :members:

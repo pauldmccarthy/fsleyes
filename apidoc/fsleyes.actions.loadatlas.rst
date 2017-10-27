@@ -1,5 +1,5 @@
-fsleyes.actions.loadatlas module
-================================
+``fsleyes.actions.loadatlas``
+=============================
 
 .. automodule:: fsleyes.actions.loadatlas
     :members:

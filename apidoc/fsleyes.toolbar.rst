@@ -1,5 +1,5 @@
-fsleyes.toolbar module
-======================
+``fsleyes.toolbar``
+===================
 
 .. automodule:: fsleyes.toolbar
     :members:

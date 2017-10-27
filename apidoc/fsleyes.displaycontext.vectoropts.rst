@@ -1,5 +1,5 @@
-fsleyes.displaycontext.vectoropts module
-========================================
+``fsleyes.displaycontext.vectoropts``
+=====================================
 
 .. automodule:: fsleyes.displaycontext.vectoropts
     :members:

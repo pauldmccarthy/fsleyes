@@ -1,5 +1,5 @@
-fsleyes.views.orthopanel module
-===============================
+``fsleyes.views.orthopanel``
+============================
 
 .. automodule:: fsleyes.views.orthopanel
     :members:

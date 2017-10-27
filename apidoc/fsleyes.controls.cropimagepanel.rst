@@ -1,5 +1,5 @@
-fsleyes.controls.cropimagepanel module
-======================================
+``fsleyes.controls.cropimagepanel``
+===================================
 
 .. automodule:: fsleyes.controls.cropimagepanel
     :members:

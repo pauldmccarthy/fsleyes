@@ -1,5 +1,5 @@
-fsleyes.plotting.histogramseries module
-=======================================
+``fsleyes.plotting.histogramseries``
+====================================
 
 .. automodule:: fsleyes.plotting.histogramseries
     :members:

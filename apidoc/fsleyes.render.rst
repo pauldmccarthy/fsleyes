@@ -1,5 +1,5 @@
-fsleyes.render module
-=====================
+``fsleyes.render``
+==================
 
 .. automodule:: fsleyes.render
     :members:

@@ -1,5 +1,5 @@
-fsleyes.plotting package
-========================
+``fsleyes.plotting``
+====================
 
 .. toctree::
    :hidden:

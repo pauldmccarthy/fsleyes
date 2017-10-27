@@ -1,5 +1,5 @@
-fsleyes.plotting.dataseries module
-==================================
+``fsleyes.plotting.dataseries``
+===============================
 
 .. automodule:: fsleyes.plotting.dataseries
     :members:

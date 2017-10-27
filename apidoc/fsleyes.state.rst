@@ -1,5 +1,5 @@
-fsleyes.state module
-====================
+``fsleyes.state``
+=================
 
 .. automodule:: fsleyes.state
     :members:

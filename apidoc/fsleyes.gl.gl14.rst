@@ -1,5 +1,5 @@
-fsleyes.gl.gl14 package
-=======================
+``fsleyes.gl.gl14``
+===================
 
 .. toctree::
    :hidden:

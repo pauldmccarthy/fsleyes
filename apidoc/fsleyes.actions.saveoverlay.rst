@@ -1,5 +1,5 @@
-fsleyes.actions.saveoverlay module
-==================================
+``fsleyes.actions.saveoverlay``
+===============================
 
 .. automodule:: fsleyes.actions.saveoverlay
     :members:

@@ -1,5 +1,5 @@
-fsleyes.actions.about module
-============================
+``fsleyes.actions.about``
+=========================
 
 .. automodule:: fsleyes.actions.about
     :members:

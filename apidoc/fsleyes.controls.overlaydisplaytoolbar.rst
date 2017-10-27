@@ -1,5 +1,5 @@
-fsleyes.controls.overlaydisplaytoolbar module
-=============================================
+``fsleyes.controls.overlaydisplaytoolbar``
+==========================================
 
 .. automodule:: fsleyes.controls.overlaydisplaytoolbar
     :members:

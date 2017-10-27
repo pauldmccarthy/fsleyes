@@ -1,5 +1,5 @@
-fsleyes.gl.gl14.glrgbvector_funcs module
-========================================
+``fsleyes.gl.gl14.glrgbvector_funcs``
+=====================================
 
 .. automodule:: fsleyes.gl.gl14.glrgbvector_funcs
     :members:

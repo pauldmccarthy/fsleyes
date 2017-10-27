@@ -1,5 +1,5 @@
-fsleyes.controls.plottoolbar module
-===================================
+``fsleyes.controls.plottoolbar``
+================================
 
 .. automodule:: fsleyes.controls.plottoolbar
     :members:

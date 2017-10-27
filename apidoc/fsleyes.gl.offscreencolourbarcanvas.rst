@@ -1,5 +1,5 @@
-fsleyes.gl.offscreencolourbarcanvas module
-==========================================
+``fsleyes.gl.offscreencolourbarcanvas``
+=======================================
 
 .. automodule:: fsleyes.gl.offscreencolourbarcanvas
     :members:

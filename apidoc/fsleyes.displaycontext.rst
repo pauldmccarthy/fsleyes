@@ -1,5 +1,5 @@
-fsleyes.displaycontext package
-==============================
+``fsleyes.displaycontext``
+==========================
 
 .. toctree::
    :hidden:
@@ -8,18 +8,20 @@ fsleyes.displaycontext package
    fsleyes.displaycontext.colourmapopts
    fsleyes.displaycontext.display
    fsleyes.displaycontext.displaycontext
+   fsleyes.displaycontext.giftiopts
    fsleyes.displaycontext.group
+   fsleyes.displaycontext.labelopts
    fsleyes.displaycontext.lightboxopts
+   fsleyes.displaycontext.maskopts
+   fsleyes.displaycontext.meshopts
    fsleyes.displaycontext.orthoopts
    fsleyes.displaycontext.sceneopts
-   fsleyes.displaycontext.volumeopts
-   fsleyes.displaycontext.labelopts
-   fsleyes.displaycontext.maskopts
-   fsleyes.displaycontext.vectoropts 
+   fsleyes.displaycontext.scene3dopts
    fsleyes.displaycontext.shopts
    fsleyes.displaycontext.tensoropts
-   fsleyes.displaycontext.meshopts
-   fsleyes.displaycontext.giftiopts
+   fsleyes.displaycontext.vectoropts
+   fsleyes.displaycontext.volume3dopts
+   fsleyes.displaycontext.volumeopts
 
 
 .. automodule:: fsleyes.displaycontext

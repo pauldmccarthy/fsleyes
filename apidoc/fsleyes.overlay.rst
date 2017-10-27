@@ -1,5 +1,5 @@
-fsleyes.overlay module
-======================
+``fsleyes.overlay``
+===================
 
 .. automodule:: fsleyes.overlay
     :members:

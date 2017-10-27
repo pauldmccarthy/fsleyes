@@ -1,5 +1,5 @@
-fsleyes.gl.routines module
-==========================
+``fsleyes.gl.routines``
+=======================
 
 .. automodule:: fsleyes.gl.routines
     :members:

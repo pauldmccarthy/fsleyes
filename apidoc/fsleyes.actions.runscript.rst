@@ -1,5 +1,5 @@
-fsleyes.actions.runscript module
-================================
+``fsleyes.actions.runscript``
+=============================
 
 .. automodule:: fsleyes.actions.runscript
     :members:

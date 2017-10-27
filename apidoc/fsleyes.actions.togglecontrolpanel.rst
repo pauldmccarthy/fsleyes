@@ -1,5 +1,5 @@
-fsleyes.actions.togglecontrolpanel module
-=========================================
+``fsleyes.actions.togglecontrolpanel``
+======================================
 
 .. automodule:: fsleyes.actions.togglecontrolpanel
     :members:

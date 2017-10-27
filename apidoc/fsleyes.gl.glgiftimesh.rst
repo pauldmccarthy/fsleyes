@@ -1,5 +1,5 @@
-fsleyes.gl.glgiftimesh module
-=============================
+``fsleyes.gl.glgiftimesh``
+==========================
 
 .. automodule:: fsleyes.gl.glgiftimesh
     :members:

@@ -1,5 +1,5 @@
-fsleyes.displaycontext.display module
-=====================================
+``fsleyes.displaycontext.display``
+==================================
 
 .. automodule:: fsleyes.displaycontext.display
     :members:

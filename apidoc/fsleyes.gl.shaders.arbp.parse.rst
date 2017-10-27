@@ -1,5 +1,5 @@
-fsleyes.gl.shaders.arbp.parse module
-====================================
+``fsleyes.gl.shaders.arbp.parse``
+=================================
 
 .. automodule:: fsleyes.gl.shaders.arbp.parse
     :members:

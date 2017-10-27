@@ -1,5 +1,5 @@
-fsleyes.controls.orthoeditsettingspanel module
-==============================================
+``fsleyes.controls.orthoeditsettingspanel``
+===========================================
 
 .. automodule:: fsleyes.controls.orthoeditsettingspanel
     :members:

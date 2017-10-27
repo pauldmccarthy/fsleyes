@@ -1,5 +1,5 @@
-fsleyes.actions.loadoverlay module
-==================================
+``fsleyes.actions.loadoverlay``
+===============================
 
 .. automodule:: fsleyes.actions.loadoverlay
     :members:

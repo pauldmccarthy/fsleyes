@@ -1,5 +1,5 @@
-fsleyes.actions.correlate module
-================================
+``fsleyes.actions.correlate``
+=============================
 
 .. automodule:: fsleyes.actions.correlate
     :members:

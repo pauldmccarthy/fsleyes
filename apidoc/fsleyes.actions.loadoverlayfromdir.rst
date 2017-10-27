@@ -1,5 +1,5 @@
-fsleyes.actions.loadoverlayfromdir module
-=========================================
+``fsleyes.actions.loadoverlayfromdir``
+======================================
 
 .. automodule:: fsleyes.actions.loadoverlayfromdir
     :members:

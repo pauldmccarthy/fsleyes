@@ -1,5 +1,5 @@
-fsleyes.displaycontext.meshopts module
-======================================
+``fsleyes.displaycontext.meshopts``
+===================================
 
 .. automodule:: fsleyes.displaycontext.meshopts
     :members:

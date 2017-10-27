@@ -1,5 +1,5 @@
-fsleyes.views.shellpanel module
-===============================
+``fsleyes.views.shellpanel``
+============================
 
 .. automodule:: fsleyes.views.shellpanel
     :members:

@@ -1,5 +1,5 @@
-fsleyes.displaycontext.volumeopts module
-========================================
+``fsleyes.displaycontext.volumeopts``
+=====================================
 
 .. automodule:: fsleyes.displaycontext.volumeopts
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.globject module
-==========================
+``fsleyes.gl.globject``
+=======================
 
 .. automodule:: fsleyes.gl.globject
     :members:

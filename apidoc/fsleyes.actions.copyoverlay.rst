@@ -1,5 +1,5 @@
-fsleyes.actions.copyoverlay module
-==================================
+``fsleyes.actions.copyoverlay``
+===============================
 
 .. automodule:: fsleyes.actions.copyoverlay
     :members:

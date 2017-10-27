@@ -1,5 +1,5 @@
-fsleyes.version module
-======================
+``fsleyes.version``
+===================
 
 .. automodule:: fsleyes.version
     :members:

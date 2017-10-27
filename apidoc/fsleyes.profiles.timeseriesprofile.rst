@@ -1,5 +1,5 @@
-fsleyes.profiles.timeseriesprofile module
-=========================================
+``fsleyes.profiles.timeseriesprofile``
+======================================
 
 .. automodule:: fsleyes.profiles.timeseriesprofile
     :members:

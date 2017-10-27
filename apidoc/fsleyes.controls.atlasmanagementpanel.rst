@@ -1,5 +1,5 @@
-fsleyes.controls.atlasmanagementpanel module
-============================================
+``fsleyes.controls.atlasmanagementpanel``
+=========================================
 
 .. automodule:: fsleyes.controls.atlasmanagementpanel
     :members:

@@ -1,5 +1,5 @@
-fsleyes.profiles.histogramprofile module
-========================================
+``fsleyes.profiles.histogramprofile``
+=====================================
 
 .. automodule:: fsleyes.profiles.histogramprofile
     :members:

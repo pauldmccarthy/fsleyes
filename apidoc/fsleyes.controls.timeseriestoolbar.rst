@@ -1,5 +1,5 @@
-fsleyes.controls.timeseriestoolbar module
-=========================================
+``fsleyes.controls.timeseriestoolbar``
+======================================
 
 .. automodule:: fsleyes.controls.timeseriestoolbar
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.shaders.glsl package
-===============================
+``fsleyes.gl.shaders.glsl``
+===========================
 
 .. toctree::
    :hidden:

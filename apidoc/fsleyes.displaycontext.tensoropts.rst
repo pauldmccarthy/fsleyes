@@ -1,5 +1,5 @@
-fsleyes.displaycontext.tensoropts module
-========================================
+``fsleyes.displaycontext.tensoropts``
+=====================================
 
 .. automodule:: fsleyes.displaycontext.tensoropts
     :members:

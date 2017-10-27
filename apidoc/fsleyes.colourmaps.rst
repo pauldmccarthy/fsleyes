@@ -1,5 +1,5 @@
-fsleyes.colourmaps module
-=========================
+``fsleyes.colourmaps``
+======================
 
 .. automodule:: fsleyes.colourmaps
     :members:

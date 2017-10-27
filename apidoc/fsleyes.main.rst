@@ -1,5 +1,5 @@
-fsleyes.main module
-===================
+``fsleyes.main``
+================
 
 .. automodule:: fsleyes.main
     :members:

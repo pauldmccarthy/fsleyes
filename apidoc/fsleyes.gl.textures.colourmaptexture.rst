@@ -1,5 +1,5 @@
-fsleyes.gl.textures.colourmaptexture module
-===========================================
+``fsleyes.gl.textures.colourmaptexture``
+========================================
 
 .. automodule:: fsleyes.gl.textures.colourmaptexture
     :members:

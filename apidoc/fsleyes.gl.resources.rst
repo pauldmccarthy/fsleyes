@@ -1,5 +1,5 @@
-fsleyes.gl.resources module
-===========================
+``fsleyes.gl.resources``
+========================
 
 .. automodule:: fsleyes.gl.resources
     :members:

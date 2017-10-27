@@ -1,5 +1,5 @@
-fsleyes.gl.gl14.glvolume_funcs module
-=====================================
+``fsleyes.gl.gl14.glvolume_funcs``
+==================================
 
 .. automodule:: fsleyes.gl.gl14.glvolume_funcs
     :members:

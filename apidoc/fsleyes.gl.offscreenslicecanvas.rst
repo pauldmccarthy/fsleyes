@@ -1,5 +1,5 @@
-fsleyes.gl.offscreenslicecanvas module
-======================================
+``fsleyes.gl.offscreenslicecanvas``
+===================================
 
 .. automodule:: fsleyes.gl.offscreenslicecanvas
     :members:

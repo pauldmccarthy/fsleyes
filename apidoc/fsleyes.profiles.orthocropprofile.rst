@@ -1,5 +1,5 @@
-fsleyes.profiles.orthocropprofile module
-========================================
+``fsleyes.profiles.orthocropprofile``
+=====================================
 
 .. automodule:: fsleyes.profiles.orthocropprofile
     :members:

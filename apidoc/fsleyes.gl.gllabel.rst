@@ -1,5 +1,5 @@
-fsleyes.gl.gllabel module
-=========================
+``fsleyes.gl.gllabel``
+======================
 
 .. automodule:: fsleyes.gl.gllabel
     :members:

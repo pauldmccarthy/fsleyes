@@ -1,5 +1,5 @@
-fsleyes.controls package
-========================
+``fsleyes.controls``
+====================
 
 .. toctree::
    :hidden:
@@ -26,6 +26,7 @@ fsleyes.controls package
    fsleyes.controls.orthotoolbar
    fsleyes.controls.overlaydisplaypanel
    fsleyes.controls.overlaydisplaytoolbar
+   fsleyes.controls.overlaydisplaywidgets
    fsleyes.controls.overlayinfopanel
    fsleyes.controls.overlaylistpanel
    fsleyes.controls.plotcontrolpanel

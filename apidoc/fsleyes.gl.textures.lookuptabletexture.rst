@@ -1,5 +1,5 @@
-fsleyes.gl.textures.lookuptabletexture module
-=============================================
+``fsleyes.gl.textures.lookuptabletexture``
+==========================================
 
 .. automodule:: fsleyes.gl.textures.lookuptabletexture
     :members:

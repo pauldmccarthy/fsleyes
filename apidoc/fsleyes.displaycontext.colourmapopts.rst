@@ -1,5 +1,5 @@
-fsleyes.displaycontext.colourmapopts module
-===========================================
+``fsleyes.displaycontext.colourmapopts``
+========================================
 
 .. automodule:: fsleyes.displaycontext.colourmapopts
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.shaders.glsl.program module
-======================================
+``fsleyes.gl.shaders.glsl.program``
+===================================
 
 .. automodule:: fsleyes.gl.shaders.glsl.program
     :members:

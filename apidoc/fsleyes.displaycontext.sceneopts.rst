@@ -1,5 +1,5 @@
-fsleyes.displaycontext.sceneopts module
-=======================================
+``fsleyes.displaycontext.sceneopts``
+====================================
 
 .. automodule:: fsleyes.displaycontext.sceneopts
     :members:

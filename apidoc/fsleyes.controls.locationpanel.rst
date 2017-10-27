@@ -1,5 +1,5 @@
-fsleyes.controls.locationpanel module
-=====================================
+``fsleyes.controls.locationpanel``
+==================================
 
 .. automodule:: fsleyes.controls.locationpanel
     :members:

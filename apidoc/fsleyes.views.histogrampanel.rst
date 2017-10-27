@@ -1,5 +1,5 @@
-fsleyes.views.histogrampanel module
-===================================
+``fsleyes.views.histogrampanel``
+================================
 
 .. automodule:: fsleyes.views.histogrampanel
     :members:

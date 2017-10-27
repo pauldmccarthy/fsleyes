@@ -1,5 +1,5 @@
-fsleyes.views.lightboxpanel module
-==================================
+``fsleyes.views.lightboxpanel``
+===============================
 
 .. automodule:: fsleyes.views.lightboxpanel
     :members:

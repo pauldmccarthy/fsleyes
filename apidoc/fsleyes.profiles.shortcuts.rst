@@ -1,5 +1,5 @@
-fsleyes.profiles.shortcuts module
-=================================
+``fsleyes.profiles.shortcuts``
+==============================
 
 .. automodule:: fsleyes.profiles.shortcuts
     :members:

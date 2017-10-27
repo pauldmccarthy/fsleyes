@@ -1,5 +1,5 @@
-fsleyes.views.timeseriespanel module
-====================================
+``fsleyes.views.timeseriespanel``
+=================================
 
 .. automodule:: fsleyes.views.timeseriespanel
     :members:

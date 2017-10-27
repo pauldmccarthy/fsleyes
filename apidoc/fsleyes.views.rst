@@ -1,5 +1,5 @@
-fsleyes.views package
-=====================
+``fsleyes.views``
+=================
 
 .. toctree::
    :hidden:
@@ -11,6 +11,7 @@ fsleyes.views package
    fsleyes.views.orthopanel
    fsleyes.views.plotpanel
    fsleyes.views.powerspectrumpanel
+   fsleyes.views.scene3dpanel
    fsleyes.views.shellpanel
    fsleyes.views.timeseriespanel
    fsleyes.views.viewpanel

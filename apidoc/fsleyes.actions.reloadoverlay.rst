@@ -1,5 +1,5 @@
-fsleyes.actions.reloadoverlay module
-====================================
+``fsleyes.actions.reloadoverlay``
+=================================
 
 .. automodule:: fsleyes.actions.reloadoverlay
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.shaders.arbp package
-===============================
+``fsleyes.gl.shaders.arbp``
+===========================
 
 .. toctree::
    :hidden:

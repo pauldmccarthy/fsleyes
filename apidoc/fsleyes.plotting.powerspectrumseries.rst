@@ -1,5 +1,5 @@
-fsleyes.plotting.powerspectrumseries module
-===========================================
+``fsleyes.plotting.powerspectrumseries``
+========================================
 
 .. automodule:: fsleyes.plotting.powerspectrumseries
     :members:

@@ -1,5 +1,5 @@
-fsleyes.icons module
-====================
+``fsleyes.icons``
+=================
 
 .. automodule:: fsleyes.icons
     :members:

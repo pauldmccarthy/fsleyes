@@ -1,5 +1,5 @@
-fsleyes.gl.colourbarcanvas module
-=================================
+``fsleyes.gl.colourbarcanvas``
+==============================
 
 .. automodule:: fsleyes.gl.colourbarcanvas
     :members:

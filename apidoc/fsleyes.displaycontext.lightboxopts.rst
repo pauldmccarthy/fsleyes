@@ -1,5 +1,5 @@
-fsleyes.displaycontext.lightboxopts module
-==========================================
+``fsleyes.displaycontext.lightboxopts``
+=======================================
 
 .. automodule:: fsleyes.displaycontext.lightboxopts
     :members:

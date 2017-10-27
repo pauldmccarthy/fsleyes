@@ -1,5 +1,5 @@
-fsleyes.gl.lightboxcanvas module
-================================
+``fsleyes.gl.lightboxcanvas``
+=============================
 
 .. automodule:: fsleyes.gl.lightboxcanvas
     :members:

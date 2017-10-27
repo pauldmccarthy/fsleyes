@@ -1,5 +1,5 @@
-fsleyes.actions.importdataseries module
-=======================================
+``fsleyes.actions.importdataseries``
+====================================
 
 .. automodule:: fsleyes.actions.importdataseries
     :members:

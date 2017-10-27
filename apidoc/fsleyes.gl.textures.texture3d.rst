@@ -1,5 +1,5 @@
-fsleyes.gl.textures.texture3d module
-====================================
+``fsleyes.gl.textures.texture3d``
+=================================
 
 .. automodule:: fsleyes.gl.textures.texture3d
     :members:

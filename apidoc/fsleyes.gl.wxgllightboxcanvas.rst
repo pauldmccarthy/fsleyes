@@ -1,5 +1,5 @@
-fsleyes.gl.wxgllightboxcanvas module
-====================================
+``fsleyes.gl.wxgllightboxcanvas``
+=================================
 
 .. automodule:: fsleyes.gl.wxgllightboxcanvas
     :members:
