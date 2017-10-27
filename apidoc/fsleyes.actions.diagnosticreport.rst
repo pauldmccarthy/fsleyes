@@ -1,5 +1,5 @@
-fsleyes.actions.diagnosticreport module
-=======================================
+``fsleyes.actions.diagnosticreport``
+====================================
 
 .. automodule:: fsleyes.actions.diagnosticreport
     :members:

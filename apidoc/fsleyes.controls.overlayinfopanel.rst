@@ -1,5 +1,5 @@
-fsleyes.controls.overlayinfopanel module
-========================================
+``fsleyes.controls.overlayinfopanel``
+=====================================
 
 .. automodule:: fsleyes.controls.overlayinfopanel
     :members:

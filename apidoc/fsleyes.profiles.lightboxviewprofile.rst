@@ -1,5 +1,5 @@
-fsleyes.profiles.lightboxviewprofile module
-===========================================
+``fsleyes.profiles.lightboxviewprofile``
+========================================
 
 .. automodule:: fsleyes.profiles.lightboxviewprofile
     :members:

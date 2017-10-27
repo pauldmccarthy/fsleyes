@@ -1,5 +1,5 @@
-fsleyes.editor.editor module
-============================
+``fsleyes.editor.editor``
+=========================
 
 .. automodule:: fsleyes.editor.editor
     :members:

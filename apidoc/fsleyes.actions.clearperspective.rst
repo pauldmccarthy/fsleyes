@@ -1,5 +1,5 @@
-fsleyes.actions.clearperspective module
-=======================================
+``fsleyes.actions.clearperspective``
+====================================
 
 .. automodule:: fsleyes.actions.clearperspective
     :members:

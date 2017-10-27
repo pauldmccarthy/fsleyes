@@ -1,5 +1,5 @@
-fsleyes.actions.clearsettings module
-====================================
+``fsleyes.actions.clearsettings``
+=================================
 
 .. automodule:: fsleyes.actions.clearsettings
     :members:

@@ -1,5 +1,5 @@
-fsleyes.actions.exportdataseries module
-=======================================
+``fsleyes.actions.exportdataseries``
+====================================
 
 .. automodule:: fsleyes.actions.exportdataseries
     :members:

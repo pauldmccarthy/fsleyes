@@ -1,5 +1,5 @@
-fsleyes.frame module
-====================
+``fsleyes.frame``
+=================
 
 .. automodule:: fsleyes.frame
     :members:

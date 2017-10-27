@@ -1,5 +1,5 @@
-fsleyes.strings module
-======================
+``fsleyes.strings``
+===================
 
 .. automodule:: fsleyes.strings
     :members:

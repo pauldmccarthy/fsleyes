@@ -1,5 +1,5 @@
-fsleyes.profiles.profilemap module
-==================================
+``fsleyes.profiles.profilemap``
+===============================
 
 .. automodule:: fsleyes.profiles.profilemap
     :members:

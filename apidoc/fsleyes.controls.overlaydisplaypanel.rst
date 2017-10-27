@@ -1,5 +1,5 @@
-fsleyes.controls.overlaydisplaypanel module
-===========================================
+``fsleyes.controls.overlaydisplaypanel``
+========================================
 
 .. automodule:: fsleyes.controls.overlaydisplaypanel
     :members:

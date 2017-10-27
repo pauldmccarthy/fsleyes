@@ -1,5 +1,5 @@
-fsleyes.controls.orthotoolbar module
-====================================
+``fsleyes.controls.orthotoolbar``
+=================================
 
 .. automodule:: fsleyes.controls.orthotoolbar
     :members:

@@ -1,5 +1,5 @@
-fsleyes.actions.saveperspective module
-======================================
+``fsleyes.actions.saveperspective``
+===================================
 
 .. automodule:: fsleyes.actions.saveperspective
     :members:

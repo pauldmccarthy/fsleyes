@@ -1,5 +1,5 @@
-fsleyes.controls.powerspectrumcontrolpanel module
-=================================================
+``fsleyes.controls.powerspectrumcontrolpanel``
+==============================================
 
 .. automodule:: fsleyes.controls.powerspectrumcontrolpanel
     :members:

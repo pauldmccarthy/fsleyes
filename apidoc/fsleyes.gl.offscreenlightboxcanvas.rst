@@ -1,5 +1,5 @@
-fsleyes.gl.offscreenlightboxcanvas module
-=========================================
+``fsleyes.gl.offscreenlightboxcanvas``
+======================================
 
 .. automodule:: fsleyes.gl.offscreenlightboxcanvas
     :members:

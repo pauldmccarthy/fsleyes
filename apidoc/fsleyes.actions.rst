@@ -1,13 +1,16 @@
-fsleyes.actions package
-=======================
+``fsleyes.actions``
+===================
 
 .. toctree::
    :hidden:
 
    fsleyes.actions.base
    fsleyes.actions.about
+   fsleyes.actions.addmaskdataseries
+   fsleyes.actions.addroihistogram
    fsleyes.actions.applycommandline
    fsleyes.actions.applyflirtxfm
+   fsleyes.actions.browsexnat
    fsleyes.actions.clearperspective
    fsleyes.actions.clearsettings
    fsleyes.actions.copyoverlay
@@ -18,17 +21,20 @@ fsleyes.actions package
    fsleyes.actions.importdataseries
    fsleyes.actions.loadatlas
    fsleyes.actions.loadcolourmap
-   fsleyes.actions.loadperspective
    fsleyes.actions.loadoverlay
    fsleyes.actions.loadoverlayfromdir
+   fsleyes.actions.loadperspective
    fsleyes.actions.loadstandard
+   fsleyes.actions.loadvertexdata
    fsleyes.actions.reloadoverlay
    fsleyes.actions.removealloverlays
    fsleyes.actions.removeoverlay
+   fsleyes.actions.resample
    fsleyes.actions.runscript
    fsleyes.actions.saveflirtxfm
    fsleyes.actions.saveoverlay
    fsleyes.actions.saveperspective
+   fsleyes.actions.screenshot
    fsleyes.actions.showcommandline
    fsleyes.actions.togglecontrolpanel
    fsleyes.actions.updatecheck

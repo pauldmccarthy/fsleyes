@@ -1,5 +1,5 @@
-fsleyes.controls.atlasoverlaypanel module
-=========================================
+``fsleyes.controls.atlasoverlaypanel``
+======================================
 
 .. automodule:: fsleyes.controls.atlasoverlaypanel
     :members:

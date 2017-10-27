@@ -1,5 +1,5 @@
-fsleyes.gl.annotations module
-=============================
+``fsleyes.gl.annotations``
+==========================
 
 .. automodule:: fsleyes.gl.annotations
     :members:

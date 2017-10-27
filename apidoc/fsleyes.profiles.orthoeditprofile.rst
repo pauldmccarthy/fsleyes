@@ -1,5 +1,5 @@
-fsleyes.profiles.orthoeditprofile module
-========================================
+``fsleyes.profiles.orthoeditprofile``
+=====================================
 
 .. automodule:: fsleyes.profiles.orthoeditprofile
     :members:

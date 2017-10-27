@@ -1,5 +1,5 @@
-fsleyes.tooltips module
-=======================
+``fsleyes.tooltips``
+====================
 
 .. automodule:: fsleyes.tooltips
     :members:

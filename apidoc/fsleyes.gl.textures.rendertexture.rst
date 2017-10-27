@@ -1,5 +1,5 @@
-fsleyes.gl.textures.rendertexture module
-========================================
+``fsleyes.gl.textures.rendertexture``
+=====================================
 
 .. automodule:: fsleyes.gl.textures.rendertexture
     :members:

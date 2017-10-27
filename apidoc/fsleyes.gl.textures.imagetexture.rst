@@ -1,5 +1,5 @@
-fsleyes.gl.textures.imagetexture module
-=======================================
+``fsleyes.gl.textures.imagetexture``
+====================================
 
 .. automodule:: fsleyes.gl.textures.imagetexture
     :members:

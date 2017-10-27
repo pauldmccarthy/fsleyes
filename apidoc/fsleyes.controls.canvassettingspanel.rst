@@ -1,5 +1,5 @@
-fsleyes.controls.canvassettingspanel module
-===========================================
+``fsleyes.controls.canvassettingspanel``
+========================================
 
 .. automodule:: fsleyes.controls.canvassettingspanel
     :members:

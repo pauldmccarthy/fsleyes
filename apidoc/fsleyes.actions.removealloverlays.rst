@@ -1,5 +1,5 @@
-fsleyes.actions.removealloverlays module
-========================================
+``fsleyes.actions.removealloverlays``
+=====================================
 
 .. automodule:: fsleyes.actions.removealloverlays
     :members:

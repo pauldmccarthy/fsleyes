@@ -1,5 +1,5 @@
-fsleyes.splash module
-=====================
+``fsleyes.splash``
+==================
 
 .. automodule:: fsleyes.splash
     :members:

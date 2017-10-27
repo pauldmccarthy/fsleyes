@@ -1,5 +1,5 @@
-fsleyes.gl.gllinevector module
-==============================
+``fsleyes.gl.gllinevector``
+===========================
 
 .. automodule:: fsleyes.gl.gllinevector
     :members:

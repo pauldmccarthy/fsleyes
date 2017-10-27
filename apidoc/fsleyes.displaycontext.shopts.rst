@@ -1,5 +1,5 @@
-fsleyes.displaycontext.shopts module
-====================================
+``fsleyes.displaycontext.shopts``
+=================================
 
 .. automodule:: fsleyes.displaycontext.shopts
     :members:

@@ -1,5 +1,5 @@
-fsleyes.controls.melodicclassificationpanel module
-==================================================
+``fsleyes.controls.melodicclassificationpanel``
+===============================================
 
 .. automodule:: fsleyes.controls.melodicclassificationpanel
     :members:

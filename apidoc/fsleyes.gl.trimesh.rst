@@ -1,5 +1,5 @@
-fsleyes.gl.trimesh module
-=========================
+``fsleyes.gl.trimesh``
+======================
 
 .. automodule:: fsleyes.gl.trimesh
     :members:

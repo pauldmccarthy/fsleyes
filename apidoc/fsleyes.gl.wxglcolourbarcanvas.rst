@@ -1,5 +1,5 @@
-fsleyes.gl.wxglcolourbarcanvas module
-=====================================
+``fsleyes.gl.wxglcolourbarcanvas``
+==================================
 
 .. automodule:: fsleyes.gl.wxglcolourbarcanvas
     :members:

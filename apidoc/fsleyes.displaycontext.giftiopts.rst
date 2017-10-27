@@ -1,5 +1,5 @@
-fsleyes.displaycontext.giftiopts module
-=======================================
+``fsleyes.displaycontext.giftiopts``
+====================================
 
 .. automodule:: fsleyes.displaycontext.giftiopts
     :members:

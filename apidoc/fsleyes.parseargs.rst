@@ -1,5 +1,5 @@
-fsleyes.parseargs module
-========================
+``fsleyes.parseargs``
+=====================
 
 .. automodule:: fsleyes.parseargs
     :members:

@@ -1,5 +1,5 @@
-fsleyes.displaycontext.orthoopts module
-=======================================
+``fsleyes.displaycontext.orthoopts``
+====================================
 
 .. automodule:: fsleyes.displaycontext.orthoopts
     :members:

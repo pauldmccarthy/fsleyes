@@ -1,5 +1,5 @@
-fsleyes.plotting.timeseries module
-==================================
+``fsleyes.plotting.timeseries``
+===============================
 
 .. automodule:: fsleyes.plotting.timeseries
     :members:

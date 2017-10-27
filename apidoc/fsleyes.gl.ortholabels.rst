@@ -1,5 +1,5 @@
-fsleyes.gl.ortholabels module
-=============================
+``fsleyes.gl.ortholabels``
+==========================
 
 .. automodule:: fsleyes.gl.ortholabels
     :members:

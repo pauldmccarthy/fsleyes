@@ -1,5 +1,5 @@
-fsleyes.controls.edittransformpanel module
-==========================================
+``fsleyes.controls.edittransformpanel``
+=======================================
 
 .. automodule:: fsleyes.controls.edittransformpanel
     :members:

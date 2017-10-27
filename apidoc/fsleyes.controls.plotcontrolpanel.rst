@@ -1,5 +1,5 @@
-fsleyes.controls.plotcontrolpanel module
-========================================
+``fsleyes.controls.plotcontrolpanel``
+=====================================
 
 .. automodule:: fsleyes.controls.plotcontrolpanel
     :members:

@@ -1,5 +1,5 @@
-fsleyes.views.plotpanel module
-==============================
+``fsleyes.views.plotpanel``
+===========================
 
 .. automodule:: fsleyes.views.plotpanel
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.glmesh module
-========================
+``fsleyes.gl.glmesh``
+=====================
 
 .. automodule:: fsleyes.gl.glmesh
     :members:

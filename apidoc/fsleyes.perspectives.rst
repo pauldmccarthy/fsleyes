@@ -1,5 +1,5 @@
-fsleyes.perspectives module
-===========================
+``fsleyes.perspectives``
+========================
 
 .. automodule:: fsleyes.perspectives
     :members:

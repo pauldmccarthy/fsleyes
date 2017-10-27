@@ -1,5 +1,5 @@
-fsleyes.controls.powerspectrumtoolbar module
-============================================
+``fsleyes.controls.powerspectrumtoolbar``
+=========================================
 
 .. automodule:: fsleyes.controls.powerspectrumtoolbar
     :members:

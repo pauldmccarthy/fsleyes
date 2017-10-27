@@ -1,5 +1,5 @@
-fsleyes.actions.applyflirtxfm module
-====================================
+``fsleyes.actions.applyflirtxfm``
+=================================
 
 .. automodule:: fsleyes.actions.applyflirtxfm
     :members:

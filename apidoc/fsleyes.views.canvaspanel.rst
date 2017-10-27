@@ -1,5 +1,5 @@
-fsleyes.views.canvaspanel module
-================================
+``fsleyes.views.canvaspanel``
+=============================
 
 .. automodule:: fsleyes.views.canvaspanel
     :members:

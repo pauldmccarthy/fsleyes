@@ -1,5 +1,5 @@
-fsleyes.controls.clusterpanel module
-====================================
+``fsleyes.controls.clusterpanel``
+=================================
 
 .. automodule:: fsleyes.controls.clusterpanel
     :members:

@@ -1,5 +1,5 @@
-fsleyes.controls.lookuptablepanel module
-========================================
+``fsleyes.controls.lookuptablepanel``
+=====================================
 
 .. automodule:: fsleyes.controls.lookuptablepanel
     :members:

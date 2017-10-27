@@ -1,5 +1,5 @@
-fsleyes.actions.base module
-===========================
+``fsleyes.actions.base``
+========================
 
 .. automodule:: fsleyes.actions.base
     :members:

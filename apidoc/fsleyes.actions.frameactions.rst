@@ -1,5 +1,5 @@
-fsleyes.actions.frameactions module
-===================================
+``fsleyes.actions.frameactions``
+================================
 
 .. automodule:: fsleyes.actions.frameactions
     :members:

@@ -1,5 +1,5 @@
-fsleyes.controls.timeseriescontrolpanel module
-==============================================
+``fsleyes.controls.timeseriescontrolpanel``
+===========================================
 
 .. automodule:: fsleyes.controls.timeseriescontrolpanel
     :members:

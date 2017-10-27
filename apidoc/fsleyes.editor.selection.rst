@@ -1,5 +1,5 @@
-fsleyes.editor.selection module
-===============================
+``fsleyes.editor.selection``
+============================
 
 .. automodule:: fsleyes.editor.selection
     :members:

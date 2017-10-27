@@ -1,5 +1,5 @@
-fsleyes.views.colourbarpanel module
-===================================
+``fsleyes.views.colourbarpanel``
+================================
 
 .. automodule:: fsleyes.views.colourbarpanel
     :members:

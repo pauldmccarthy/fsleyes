@@ -1,5 +1,5 @@
-fsleyes.gl.gltensor module
-==========================
+``fsleyes.gl.gltensor``
+=======================
 
 .. automodule:: fsleyes.gl.gltensor
     :members:

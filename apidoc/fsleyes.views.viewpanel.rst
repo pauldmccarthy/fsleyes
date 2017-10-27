@@ -1,5 +1,5 @@
-fsleyes.views.viewpanel module
-==============================
+``fsleyes.views.viewpanel``
+===========================
 
 .. automodule:: fsleyes.views.viewpanel
     :members:

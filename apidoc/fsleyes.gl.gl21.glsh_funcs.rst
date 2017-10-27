@@ -1,5 +1,5 @@
-fsleyes.gl.gl21.glsh_funcs module
-=================================
+``fsleyes.gl.gl21.glsh_funcs``
+==============================
 
 .. automodule:: fsleyes.gl.gl21.glsh_funcs
     :members:

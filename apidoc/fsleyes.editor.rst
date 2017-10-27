@@ -1,5 +1,5 @@
-fsleyes.editor package
-======================
+``fsleyes.editor``
+==================
 
 .. toctree::
    :hidden:

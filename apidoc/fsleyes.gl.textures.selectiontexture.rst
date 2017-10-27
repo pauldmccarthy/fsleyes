@@ -1,5 +1,5 @@
-fsleyes.gl.textures.selectiontexture module
-===========================================
+``fsleyes.gl.textures.selectiontexture``
+========================================
 
 .. automodule:: fsleyes.gl.textures.selectiontexture
     :members:

@@ -1,5 +1,5 @@
-fsleyes.profiles.plotprofile module
-===================================
+``fsleyes.profiles.plotprofile``
+================================
 
 .. automodule:: fsleyes.profiles.plotprofile
     :members:

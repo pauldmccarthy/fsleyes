@@ -1,5 +1,5 @@
-fsleyes.displaycontext.canvasopts module
-========================================
+``fsleyes.displaycontext.canvasopts``
+=====================================
 
 .. automodule:: fsleyes.displaycontext.canvasopts
     :members:

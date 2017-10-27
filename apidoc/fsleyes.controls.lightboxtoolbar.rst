@@ -1,5 +1,5 @@
-fsleyes.controls.lightboxtoolbar module
-=======================================
+``fsleyes.controls.lightboxtoolbar``
+====================================
 
 .. automodule:: fsleyes.controls.lightboxtoolbar
     :members:

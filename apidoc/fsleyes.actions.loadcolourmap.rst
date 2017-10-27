@@ -1,5 +1,5 @@
-fsleyes.actions.loadcolourmap module
-====================================
+``fsleyes.actions.loadcolourmap``
+=================================
 
 .. automodule:: fsleyes.actions.loadcolourmap
     :members:

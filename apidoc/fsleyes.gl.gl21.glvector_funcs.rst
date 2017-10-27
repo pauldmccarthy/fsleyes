@@ -1,5 +1,5 @@
-fsleyes.gl.gl21.glvector_funcs module
-=====================================
+``fsleyes.gl.gl21.glvector_funcs``
+==================================
 
 .. automodule:: fsleyes.gl.gl21.glvector_funcs
     :members:

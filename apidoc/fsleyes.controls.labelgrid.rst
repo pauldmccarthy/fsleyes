@@ -1,5 +1,5 @@
-fsleyes.controls.labelgrid module
-=================================
+``fsleyes.controls.labelgrid``
+==============================
 
 .. automodule:: fsleyes.controls.labelgrid
     :members:

@@ -1,5 +1,5 @@
-fsleyes.controls.histogramcontrolpanel module
-=============================================
+``fsleyes.controls.histogramcontrolpanel``
+==========================================
 
 .. automodule:: fsleyes.controls.histogramcontrolpanel
     :members:

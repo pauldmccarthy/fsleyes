@@ -1,5 +1,5 @@
-fsleyes.displaycontext.labelopts module
-=======================================
+``fsleyes.displaycontext.labelopts``
+====================================
 
 .. automodule:: fsleyes.displaycontext.labelopts
     :members:

@@ -1,5 +1,5 @@
-fsleyes.actions.updatecheck module
-==================================
+``fsleyes.actions.updatecheck``
+===============================
 
 .. automodule:: fsleyes.actions.updatecheck
     :members:

@@ -1,5 +1,5 @@
-fsleyes.gl.wxglslicecanvas module
-=================================
+``fsleyes.gl.wxglslicecanvas``
+==============================
 
 .. automodule:: fsleyes.gl.wxglslicecanvas
     :members:

@@ -1,5 +1,5 @@
-fsleyes.autodisplay module
-==========================
+``fsleyes.autodisplay``
+=======================
 
 .. automodule:: fsleyes.autodisplay
     :members:

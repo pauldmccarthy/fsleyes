@@ -1,5 +1,5 @@
-fsleyes.gl.glmask module
-========================
+``fsleyes.gl.glmask``
+=====================
 
 .. automodule:: fsleyes.gl.glmask
     :members:

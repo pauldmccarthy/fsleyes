@@ -1,5 +1,5 @@
-fsleyes.actions.loadperspective module
-======================================
+``fsleyes.actions.loadperspective``
+===================================
 
 .. automodule:: fsleyes.actions.loadperspective
     :members:

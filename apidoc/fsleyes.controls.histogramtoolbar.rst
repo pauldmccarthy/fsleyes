@@ -1,5 +1,5 @@
-fsleyes.controls.histogramtoolbar module
-========================================
+``fsleyes.controls.histogramtoolbar``
+=====================================
 
 .. automodule:: fsleyes.controls.histogramtoolbar
     :members:

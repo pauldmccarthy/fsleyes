@@ -1,5 +1,5 @@
-fsleyes.actions.showcommandline module
-======================================
+``fsleyes.actions.showcommandline``
+===================================
 
 .. automodule:: fsleyes.actions.showcommandline
     :members:

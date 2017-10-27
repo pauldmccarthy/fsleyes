@@ -1,5 +1,5 @@
-fsleyes.displaycontext.maskopts module
-======================================
+``fsleyes.displaycontext.maskopts``
+===================================
 
 .. automodule:: fsleyes.displaycontext.maskopts
     :members:

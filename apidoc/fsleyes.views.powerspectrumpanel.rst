@@ -1,5 +1,5 @@
-fsleyes.views.powerspectrumpanel module
-=======================================
+``fsleyes.views.powerspectrumpanel``
+====================================
 
 .. automodule:: fsleyes.views.powerspectrumpanel
     :members:

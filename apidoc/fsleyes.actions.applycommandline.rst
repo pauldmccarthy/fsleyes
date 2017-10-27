@@ -1,5 +1,5 @@
-fsleyes.actions.applycommandline module
-=======================================
+``fsleyes.actions.applycommandline``
+====================================
 
 .. automodule:: fsleyes.actions.applycommandline
     :members:
