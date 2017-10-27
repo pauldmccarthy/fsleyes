@@ -89,6 +89,11 @@ stages:
 #
 #   - TWINE_REPOSITORY_URL:          - Pypi repository to upload to
 #
+#   - WXPYTHON_CENTOS_GTK:           - Either 'gtk2' or 'gtk3', the version of
+#                                      GTK to guild wxPython for on CentOS.
+#                                      For Ubuntu, you can select gtk2/3 by
+#                                      setting the wheel URLs below.
+#
 #   - WXPYTHON_UBUNTU1404_URL:       - URL to location of wxPython wheel for
 #                                      Ubuntu 14.04
 #
@@ -253,7 +258,7 @@ variables:
     # Install $PY_VERSION, xvfb, and all
     # of the wxpython dependencies.
     - apt-get update -y || true
-    - apt-get install -y software-properties-common python-software-properties xvfb libgtk2.0-0 libnotify4 freeglut3 libsdl1.2debian
+    - apt-get install -y software-properties-common python-software-properties xvfb libgtk2.0-0 libgtk-3-0 libnotify4 freeglut3 libsdl1.2debian
     - add-apt-repository -y ppa:deadsnakes/ppa
     - apt-get update -y || true
     - apt-get install -y $PY_VERSION "$PY_VERSION"-dev $PY_PACKAGES
@@ -463,10 +468,13 @@ build-pypi-dist:
     # We currently have to compile wx from source
     # because, on centos6, there is no
     # python 3.5/wxpython binary wheel available
-    # for download
+    # for download.
+    - if [ "$WXPYTHON_CENTOS_GTK" == "gtk3" ]; then
+        yum install -y gtk3-devel webkitgtk3-devel;
+      else
+        yum install -y gtk2-devel webkitgtk-devel;
+      fi;
 
-    # We use gtk2 for both CentOS6 and 7
-    - yum install -y gtk2-devel webkitgtk-devel
     - yum install -y libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
 
 
@@ -481,7 +489,7 @@ build-pypi-dist:
 
     # install fsleyes/wxpython runtime dependencies
     - apt-get install -y freeglut3 libosmesa6 libsdl1.2debian
-    - apt-get install -y libgtk2.0-0
+    - apt-get install -y libgtk2.0-0 libgtk-3-0
 
 
 .linux_do_build: &linux_do_build
