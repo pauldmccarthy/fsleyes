@@ -2,8 +2,9 @@ FSLeyes release history
 =======================
 
 
-0.16.0 (under development)
---------------------------
+0.16.0 (Friday 27th October 2017)
+---------------------------------
+
 
 * Added the ability to load images from an XNAT server.
 * Application font size can now be set via the ``--fontSize`` command line
