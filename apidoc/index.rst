@@ -10,3 +10,4 @@ This is the API documentation for FSLeyes |version|.
 
    self
    fsleyes
+   changelog

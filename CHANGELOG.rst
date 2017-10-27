@@ -1,5 +1,5 @@
-FSLeyes release history
-=======================
+This document contains the ``fsleyes`` release history in reverse
+chronological order.
 
 
 0.16.0 (Friday 27th October 2017)
@@ -77,7 +77,7 @@ FSLeyes release history
 * Changes to command line for setting ortho centr
 * VEST lookup table files are no longer normalised when loaded
 * Canvases now have a foreground colour option, which controls text,
-cursor, etc.
+  cursor, etc.
 
 
 

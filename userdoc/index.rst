@@ -41,6 +41,7 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    display_space
    customising
    troubleshooting
+   changelog
 
 
 .. [*] *FSLeyes* is pronounced **"fossilise"**.
