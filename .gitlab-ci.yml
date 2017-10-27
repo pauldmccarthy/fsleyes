@@ -5,18 +5,21 @@
 #
 # The build pipeline currently comprises the following stages:
 #
-#    1. test:   Unit tests
+#    1. test:      Unit tests
 #
-#    2. style:  Check coding style
+#    2. style:     Check coding style
 #
-#    3. doc:    Building user and API documentation
+#    3. doc:       Building user and API documentation
 #
-#    4. build:  Building source distributions, wheels, and standalone
-#               distributions.
+#    4. dev-build: Building standalone distributions for development
+#                  versions.
 #
-#    5. deploy: Uploading the source and wheel distributions to pypi,
-#               and the documentation and standalone distributions to a
-#               hosting server.
+#    5. build:     Building source distributions, wheels, and standalone
+#                  distributions for releases
+#
+#    6. deploy:    Uploading the source and wheel distributions to pypi,
+#                  and the documentation and standalone distributions to a
+#                  hosting server.
 #
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
@@ -25,6 +28,9 @@
 
 # The build and deploy stages are only executed on release tags on
 # the upstream repository.
+#
+# Development builds can be manually executed on any branch of any
+# repository.
 #
 # Standalons distributions (py2app/pyinstaller) are built for several
 # platforms for release tags.
@@ -44,6 +50,7 @@ stages:
  - style
  - doc
  - build
+ - build-dev
  - deploy
 
 
@@ -409,9 +416,9 @@ build-apidoc:
       - apidoc/$CI_COMMIT_REF_NAME
 
 
-#############
-# Build stage
-#############
+###################
+# Build[-dev] stage
+###################
 
 
 build-pypi-dist:
@@ -434,20 +441,6 @@ build-pypi-dist:
     paths:
       - dist/*tar.gz
       - dist/*whl
-
-
-.linux_build_template: &linux_build_template
-
-  stage: build
-
-  tags:
-    - docker
-
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - dist/FSLeyes*.zip
-      - dist/FSLeyes*.tar.gz
 
 
 .centos_pre_build: &centos_pre_build
@@ -493,6 +486,9 @@ build-pypi-dist:
 
 
 .linux_do_build: &linux_do_build
+  tags:
+    - docker
+
   script:
     # Download, compile, and install python
     - pushd /
@@ -552,60 +548,14 @@ build-pypi-dist:
     - pip install sphinx sphinx-rtd-theme mock
     - python setup.py build_standalone
 
-
-build-centos6:
-  image: centos:6
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_build_template
-  <<: *centos_pre_build
-  <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - dist/FSLeyes*.zip
+      - dist/FSLeyes*.tar.gz
 
 
-build-centos7:
-  image: centos:7
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_build_template
-  <<: *centos_pre_build
-  <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
-
-
-build-ubuntu1404:
-  image: ubuntu:14.04
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_build_template
-  <<: *ubuntu_pre_build
-  <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
-
-
-build-ubuntu1604:
-  image: ubuntu:16.04
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_build_template
-  <<: *ubuntu_pre_build
-  <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
-
-
-build-macos:
-  <<: *only_releases
-  <<: *patch_version
-  stage: build
-
+.mac_do_build: &mac_do_build:
   tags:
     - macOS
 
@@ -639,6 +589,124 @@ build-macos:
     paths:
       - dist/FSLeyes*zip
       - dist/FSLeyes*tar.gz
+
+
+# build-dev jobs
+################
+
+.build_dev_template: &build_dev_template:
+  stage:  build-dev
+  when:   manual
+  <<: *except_releases
+
+build-dev-centos6:
+  image: centos:6
+  <<: *build_dev_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
+
+
+build-dev-centos7:
+  image: centos:7
+  <<: *build_dev_template
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
+
+
+build-dev-ubuntu1404:
+  image: ubuntu:14.04
+  <<: *build_dev_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
+
+
+build-dev-ubuntu1604:
+  image: ubuntu:16.04
+  <<: *build_dev_template
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
+
+
+build-dev-macos:
+  <<: *build_dev_template
+  <<: *mac_do_build
+
+
+# build jobs
+############
+
+build-macos:
+  stage: build
+  <<: *only_releases
+  <<: *patch_version
+  <<: *mac_do_build
+
+
+build-centos6:
+  stage: build
+  image: centos:6
+  <<: *only_releases
+  <<: *patch_version
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
+
+
+build-centos7:
+  stage: build
+  image: centos:7
+  <<: *only_releases
+  <<: *patch_version
+  <<: *centos_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
+
+
+build-ubuntu1404:
+  stage: build
+  image: ubuntu:14.04
+  <<: *only_releases
+  <<: *patch_version
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
+
+
+build-ubuntu1604:
+  stage: build
+  image: ubuntu:16.04
+  <<: *only_releases
+  <<: *patch_version
+  <<: *ubuntu_pre_build
+  <<: *linux_do_build
+  after_script:
+    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
+    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
+
+
+build-macos:
+  stage: build
+  <<: *only_releases
+  <<: *patch_version
+  <<: *mac_do_build
 
 
 ##############
