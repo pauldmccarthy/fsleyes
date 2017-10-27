@@ -14,7 +14,7 @@ version number. See also the :mod:`fsl.version` module.
 """
 
 
-__version__ = '0.16.0.dev'
+__version__ = '0.17.0.dev'
 """Current version number, as a string. The FSLeyes version number consists
 of three numbers, separated by a period, which roughly obeys the Semantic
 Versioning conventions (http://semver.org/).
