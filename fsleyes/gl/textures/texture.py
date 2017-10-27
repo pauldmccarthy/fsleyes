@@ -275,10 +275,10 @@ class Texture2D(Texture):
     def getDataTypeParams(cls, dtype):
         """Returns a tuple containing information about the given sized
         internal GL texture data format:
-          - The base GL internal format
-          - The GL external data format
-          - The equivalent ``numpy`` data type
-          - The number of channels
+        - The base GL internal format
+        - The GL external data format
+        - The equivalent ``numpy`` data type
+        - The number of channels
         """
 
         if dtype == gl.GL_RGBA8:

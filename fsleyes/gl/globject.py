@@ -470,9 +470,9 @@ class GLSimpleObject(GLObject):
     be called.
 
     .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
-    :attr:`GLObject.opts`, :attr:`GLObject.canvas` and
-    :attr:`GLObject.displayCtx` properties of a ``GLSimpleObject`` are all set
-    to ``None``.
+              :attr:`GLObject.opts`, :attr:`GLObject.canvas` and
+              :attr:`GLObject.displayCtx` properties of a ``GLSimpleObject``
+              are all set to ``None``.
     """
 
 

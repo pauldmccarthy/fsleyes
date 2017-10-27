@@ -74,7 +74,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 
    ~fsleyes.displaycontext.volumeopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
-   ~fsleyes.displaycontext.volumeopts.Volume3DOpts
+   ~fsleyes.displaycontext.volume3dopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
@@ -119,7 +119,7 @@ define *scene* options:
    ~fsleyes.displaycontext.sceneopts.SceneOpts
    ~fsleyes.displaycontext.orthoopts.OrthoOpts
    ~fsleyes.displaycontext.lightboxopts.LightBoxOpts
-   ~fsleyes.displaycontext.orthoopts.Scene3DOpts
+   ~fsleyes.displaycontext.scene3dopts.Scene3DOpts
 
 
 .. note:: Aside from an increase in code modularity and cleanliness, another

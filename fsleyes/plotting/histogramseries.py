@@ -405,10 +405,10 @@ def histogram(data,
                           probabilities.
 
     :returns:             A tuple containing:
-                            - The ``x`` histogram data (bin edges)
-                            - The ``y`` histogram data
-                            - The total number of values that were used
-                              in the histogram calculation
+                          - The ``x`` histogram data (bin edges)
+                          - The ``y`` histogram data
+                          - The total number of values that were used
+                            in the histogram calculation
     """
 
     hlo, hhi = histRange

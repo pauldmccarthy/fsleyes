@@ -107,8 +107,8 @@ class GLMesh(globject.GLObject):
 
      - ``preDraw(GLMesh)``: Prepare for drawing (e.g. load shaders)
 
-     - ``draw(GLMesh, glType, vertices, indices=None, normals=None,
-         vdata=None)``: Draws mesh using shaders.
+     - ``draw(GLMesh, glType, vertices, indices=None, normals=None, vdata=None)``:  # noqa
+        Draws mesh using shaders.
 
      - ``postDraw(GLMesh)``: Clean up after drawing
 

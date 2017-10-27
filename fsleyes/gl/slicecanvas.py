@@ -678,8 +678,8 @@ class SliceCanvas(object):
         method).
 
         If ``updateRenderTextures`` is ``True`` (the default), and the
-        :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
-        render texture associated with the overlay is destroyed.
+        :attr:`.SliceCanvasOpts.renderMode` is ``offscreen`` or ``prerender``,
+        any render texture associated with the overlay is destroyed.
         """
 
         renderMode = self.opts.renderMode
@@ -711,8 +711,8 @@ class SliceCanvas(object):
         Does nothing if a ``GLObject`` already exists for the given overlay.
 
         If ``updateRenderTextures`` is ``True`` (the default), and the
-        :attr:`.renderMode` is ``offscreen`` or ``prerender``, any
-        textures for the overlay are updated.
+        :attr:`.SliceCanvasOpts.renderMode` is ``offscreen`` or ``prerender``,
+        any textures for the overlay are updated.
 
         If ``refresh`` is ``True`` (the default), the :meth:`Refresh` method
         is called after the ``GLObject`` has been created.
