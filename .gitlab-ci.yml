@@ -537,6 +537,11 @@ build-pypi-dist:
         pip install --pre "$WXPYTHON_VERSION";
       fi
 
+    # Force the use of nibabel 2.1.0,
+    # because 2.2.0 is incompatible
+    # with frozen apps
+    - pip install nibabel==2.1.0
+
     # Everything else can be installed
     # in the normal manner
     - pip install -r requirements.txt
@@ -565,6 +570,12 @@ build-pypi-dist:
     - pip install numpy
     - pip install --pre "$WXPYTHON_VERSION"
     - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
+
+    # Force the use of nibabel 2.1.0,
+    # because 2.2.0 is incompatible
+    # with frozen apps
+    - pip install nibabel==2.1.0
+
     - pip install -r requirements.txt
     - pip install "py2app==0.14"
     - pip install sphinx sphinx-rtd-theme mock
