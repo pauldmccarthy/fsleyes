@@ -547,11 +547,11 @@ build-pypi-dist:
     # source distributions
     - pip install sphinx sphinx-rtd-theme mock
     - python setup.py build_standalone
+    - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-"$OSNAME".tar.gz
 
   artifacts:
     expire_in: 1 day
     paths:
-      - dist/FSLeyes*.zip
       - dist/FSLeyes*.tar.gz
 
 
@@ -581,14 +581,12 @@ build-pypi-dist:
     - python setup.py build_standalone
     - deactivate
     - rm -r fsleyes-build-venv
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
+    - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
 
   artifacts:
     expire_in: 1 day
     paths:
-      - dist/FSLeyes*zip
-      - dist/FSLeyes*tar.gz
+      - dist/FSLeyes*.tar.gz
 
 
 # build-dev jobs
@@ -604,9 +602,8 @@ build-dev-centos6:
   <<: *build_dev_template
   <<: *centos_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
+  variables:
+    OSNAME: "centos6"
 
 
 build-dev-centos7:
@@ -614,9 +611,8 @@ build-dev-centos7:
   <<: *build_dev_template
   <<: *centos_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
+  variables:
+    OSNAME: "centos7"
 
 
 build-dev-ubuntu1404:
@@ -624,9 +620,8 @@ build-dev-ubuntu1404:
   <<: *build_dev_template
   <<: *ubuntu_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
+  variables:
+    OSNAME: "ubuntu1404"
 
 
 build-dev-ubuntu1604:
@@ -634,9 +629,8 @@ build-dev-ubuntu1604:
   <<: *build_dev_template
   <<: *ubuntu_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
+  variables:
+    OSNAME: "ubuntu1604"
 
 
 build-dev-macos:
@@ -661,9 +655,8 @@ build-centos6:
   <<: *patch_version
   <<: *centos_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos6.tar.gz
+  variables:
+    OSNAME: "centos6"
 
 
 build-centos7:
@@ -673,9 +666,8 @@ build-centos7:
   <<: *patch_version
   <<: *centos_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-centos7.tar.gz
+  variables:
+    OSNAME: "centos7"
 
 
 build-ubuntu1404:
@@ -685,9 +677,8 @@ build-ubuntu1404:
   <<: *patch_version
   <<: *ubuntu_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1404.tar.gz
+  variables:
+    OSNAME: "ubuntu1404"
 
 
 build-ubuntu1604:
@@ -697,9 +688,8 @@ build-ubuntu1604:
   <<: *patch_version
   <<: *ubuntu_pre_build
   <<: *linux_do_build
-  after_script:
-    - mv dist/FSLeyes*zip    dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.zip
-    - mv dist/FSLeyes*tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-ubuntu1604.tar.gz
+  variables:
+    OSNAME: "ubuntu1604"
 
 
 build-macos:
