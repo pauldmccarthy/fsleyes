@@ -249,12 +249,12 @@ def main(args=None):
         # Check for updates. Ignore point
         # releases, otherwise users might
         # get swamped with update notifications.
-        if not namespace[0].skipupdatecheck:
+        if namespace[0].updatecheck:
             import fsleyes.actions.updatecheck as updatecheck
             wx.CallAfter(updatecheck.UpdateCheckAction(),
                          showUpToDateMessage=False,
                          showErrorMessage=False,
-                         ignorePoint=True)
+                         ignorePoint=False)
 
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
