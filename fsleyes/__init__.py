@@ -312,6 +312,14 @@ def configLogging(namespace):
     # Show deprecations
     warnings.filterwarnings('default', category=DeprecationWarning)
 
+    # But ignore the fsl.data.image
+    # deprecation warning about nibabel
+    # (this is a temporary hack)
+    warnings.filterwarnings('ignore',
+                            module='deprecation',
+                            category=DeprecationWarning,
+                            message='read_segments is dep')
+
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
                                      '%(filename)20.20s '
