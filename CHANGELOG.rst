@@ -2,10 +2,13 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.16.0 (Friday 27th October 2017)
----------------------------------
+0.16.0 (Saturday 28th October 2017)
+-----------------------------------
 
 
+* Removed the ``--skipupdatecheck`` command line option - the default
+  behaviour is now *not* to check for updates on startup. This can be
+  enabled via the new ``--updatecheck`` option.
 * Added the ability to load images from an XNAT server.
 * Application font size can now be set via the ``--fontSize`` command line
   option.
