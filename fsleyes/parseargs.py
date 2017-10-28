@@ -373,7 +373,7 @@ OPTIONS = td.TypeDict({
                        'verbose',
                        'version',
                        'skipfslcheck',
-                       'skipupdatecheck',
+                       'updatecheck',
                        'noisy',
                        'glversion',
                        'scene',
@@ -650,7 +650,7 @@ ARGUMENTS = td.TypeDict({
     'Main.verbose'          : ('v',      'verbose',          False),
     'Main.version'          : ('V',      'version',          False),
     'Main.skipfslcheck'     : ('S',      'skipfslcheck',     False),
-    'Main.skipupdatecheck'  : ('U',      'skipupdatecheck',  False),
+    'Main.updatecheck'      : ('U',      'updatecheck',      False),
     'Main.noisy'            : ('n',      'noisy',            False),
     'Main.glversion'        : ('gl',     'glversion',        True),
     'Main.scene'            : ('s',      'scene',            True),
@@ -826,7 +826,7 @@ HELP = td.TypeDict({
     'Main.verbose'         : 'Verbose output (can be used up to 3 times)',
     'Main.version'         : 'Print the current version and exit',
     'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
-    'Main.skipupdatecheck' : 'Do not check for FSLeyes updates on startup',
+    'Main.updatecheck'     : 'Check for FSLeyes updates on startup',
     'Main.noisy'           : 'Make the specified module noisy',
     'Main.glversion'       : 'Desired (major, minor) OpenGL version',
     'Main.scene'           : 'Scene to show',
@@ -1478,9 +1478,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['skipfslcheck'],
                             action='store_true',
                             help=mainHelp['skipfslcheck'])
-    mainParser.add_argument(*mainArgs['skipupdatecheck'],
+    mainParser.add_argument(*mainArgs['updatecheck'],
                             action='store_true',
-                            help=mainHelp['skipupdatecheck'])
+                            help=mainHelp['updatecheck'])
 
     # Debug messages are stripped from frozen
     # versions of FSLeyes, so there's no point
