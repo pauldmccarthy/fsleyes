@@ -2,8 +2,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.16.0 (Saturday 28th October 2017)
------------------------------------
+0.16.0 (under development)
+--------------------------
 
 
 * Removed the ``--skipupdatecheck`` command line option - the default
