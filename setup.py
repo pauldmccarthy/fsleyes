@@ -70,6 +70,8 @@ import               pkgutil
 import               fnmatch
 import               platform
 import               logging
+import               importlib
+import               py_compile
 import subprocess as sp
 import itertools  as it
 import os.path    as op
@@ -217,6 +219,14 @@ class build_standalone(Command):
         'enable-logging'
     ]
 
+    # Some combination of typing, jinja2, and possibly sphinx
+    # causes errors to be raised when jinja2 is imported during
+    # the py2app/pyinstaller build processes. Importing here
+    # seems to work fine. I suspect that the problem lies with
+    # the python typing module.
+    import jinja2.utils
+    import jinja2.runtime
+
     def initialize_options(self):
         self.skip_patch_code = False
         self.skip_build      = False
@@ -358,7 +368,11 @@ class py2app(orig_py2app):
         self.dociconfile         = dociconfile
         self.plist               = plist
         self.resources           = assets
-        self.packages            = ['OpenGL_accelerate']
+        self.packages            = ['OpenGL_accelerate',
+                                    'certifi',
+                                    'wxnat',
+                                    'nibabel',
+                                    'xnat']
         self.matplotlib_backends = ['wx_agg']
         self.excludes            = ['IPython', 'ipykernel', 'Cython']
 
@@ -366,14 +380,6 @@ class py2app(orig_py2app):
 
 
     def run(self):
-
-        # Some combination of typing, jinja2, and possibly sphinx
-        # causes errors to be raised when jinja2 is imported during
-        # the py2app build process. Importing here seems to work
-        # fine. I suspect that the problem lies with the python
-        # typing module.
-        import jinja2.utils
-        import jinja2.runtime
 
         orig_py2app.run(self)
 
@@ -454,6 +460,9 @@ class pyinstaller(Command):
         extrabins = [find_library(b)  for b in extrabins]
         extrabins = ['{}:.'.format(b) for b in extrabins]
 
+        extrafiles  = self.include_package('xnat')
+        extrafiles += self.include_package('nibabel')
+
         cmd = [
             'pyinstaller',
             '--name=FSLeyes',
@@ -463,9 +472,10 @@ class pyinstaller(Command):
             '--distpath={}'.format(distdir)
         ]
 
-        for h in hidden:    cmd += ['--hidden-import',  h]
-        for e in excludes:  cmd += ['--exclude-module', e]
-        for e in extrabins: cmd += ['--add-binary',     e]
+        for h in hidden:     cmd += ['--hidden-import',  h]
+        for e in excludes:   cmd += ['--exclude-module', e]
+        for e in extrabins:  cmd += ['--add-binary',     e]
+        for e in extrafiles: cmd += ['--add-data',       e]
 
         cmd += [entrypt]
 
@@ -505,6 +515,32 @@ class pyinstaller(Command):
 
             for src in files:
                 shutil.copy(src, dirname)
+
+
+    def include_package(self, pkgname):
+
+        pkg     = importlib.import_module(pkgname)
+        pkgpath = pkg.__path__[0]
+
+        extrafiles = []
+
+        for dirpath, _, filenames in os.walk(pkgpath):
+
+            filenames = [f for f in filenames if f.endswith('.py')]
+
+            dest = op.relpath(dirpath, op.join(pkgpath, '..'))
+
+            for filename in filenames:
+
+                srcfile    = op.join(dirpath, filename)
+                srccmpfile = srcfile + 'c'
+
+                py_compile.compile(srcfile, srccmpfile)
+
+                extrafiles.append('{}:{}'.format(srcfile,    dest))
+                extrafiles.append('{}:{}'.format(srccmpfile, dest))
+
+        return extrafiles
 
 
 def find_library(name):
