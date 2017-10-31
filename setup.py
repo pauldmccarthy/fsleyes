@@ -219,14 +219,6 @@ class build_standalone(Command):
         'enable-logging'
     ]
 
-    # Some combination of typing, jinja2, and possibly sphinx
-    # causes errors to be raised when jinja2 is imported during
-    # the py2app/pyinstaller build processes. Importing here
-    # seems to work fine. I suspect that the problem lies with
-    # the python typing module.
-    import jinja2.utils
-    import jinja2.runtime
-
     def initialize_options(self):
         self.skip_patch_code = False
         self.skip_build      = False
@@ -236,6 +228,14 @@ class build_standalone(Command):
         pass
 
     def run(self):
+
+        # Some combination of typing, jinja2, and possibly sphinx
+        # causes errors to be raised when jinja2 is imported during
+        # the py2app/pyinstaller build processes. Importing here
+        # seems to work fine. I suspect that the problem lies with
+        # the python typing module.
+        import jinja2.utils
+        import jinja2.runtime
 
         # Build user documentation
         self.run_command('userdoc')
@@ -685,9 +685,16 @@ def main():
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
     assets           = build_asset_list(True)
-    setup_requires   = ['pytest-runner', 'mock', 'sphinx', 'sphinx-rtd-theme'],
-    tests_require    = ['pytest-runner', 'mock', 'coverage',
-                        'pytest-cov', 'pytest-html', 'pytest']
+    setup_requires   = ['pytest-runner',
+                        'mock',
+                        'sphinx',
+                        'sphinx-rtd-theme'],
+    tests_require    = ['pytest-runner',
+                        'mock',
+                        'coverage',
+                        'pytest-cov',
+                        'pytest-html',
+                        'pytest']
 
     # When building/installing, all asset files
     # are placed within the fsleyes package
