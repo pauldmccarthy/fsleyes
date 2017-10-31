@@ -53,13 +53,6 @@ class BrowseXNATAction(base.Action):
         hosts    = fslsettings.read('fsleyes.xnat.hosts',    [])
         accounts = fslsettings.read('fsleyes.xnat.accounts', {})
 
-        hosts    = ['10.1.1.17', 'central.xnat.org', 'xw2017-01.xnat.org']
-        accounts = {
-            'central.xnat.org'   : ('guest', 'guest'),
-            '10.1.1.17'          : ('admin', 'admin'),
-            'xw2017-01.xnat.org' : ('admin', 'R0tt3rd@m')
-        }
-
         dlg = XNATBrowser(self.__frame, hosts, accounts)
 
         dlg.Layout()
