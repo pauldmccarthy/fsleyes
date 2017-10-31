@@ -1343,21 +1343,23 @@ about = {
 
     FSLeyes is a Python application which leverages the following open-source software libraries:
 
+     - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/props)
+     - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
+     - fslpy [{}] (https://git.fmrib.ox.ac.uk/fsl/fslpy)
      - indexed_gzip [{}] (https://github.com/pauldmccarthy/indexed_gzip/)
      - jinja2 [{}] (http://jinja.pocoo.org)
      - matplotlib [{}] (http://www.matplotlib.org)
      - nibabel [{}] (http://nipy.org/nibabel)
      - numpy [{}] (http://www.numpy.org)
      - pillow [{}]  (http://python-pillow.org/)
-     - fsleyes-props [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/props)
-     - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
-     - fslpy [{}] (https://git.fmrib.ox.ac.uk/fsl/fslpy)
      - pyopengl [{}] (http://pyopengl.sourceforge.net)
      - pyparsing [{}] (http://pyparsing.wikispaces.com/)
      - scipy [{}] (http://www.scipy.org)
      - six [{}] (https://pythonhosted.org/six/)
      - trimesh [{}] (https://github.com/mikedh/trimesh)
-     - wxPython [{}] (http://www.wxpython.org)
+     - wxpython [{}] (http://www.wxpython.org)
+     - wxnatpy [{}] (https://github.com/pauldmccarthy/wxnatpy/)
+     - xnatpy [{}] (https://bitbucket.org/bigr_erasmusmc/xnatpy)
 
     Cubic/spline interpolation routines used in FSLeyes are provided by Daniel Ruijters and Philippe Th\u00E9venaz, described at http://www.dannyruijters.nl/cubicinterpolation/.
 
@@ -1373,9 +1375,10 @@ about = {
     # dynamically looks up the version number for
     # each of them, and inserts them into the above
     # string.
-    'libs' : ['indexed_gzip',  'jinja2',             'matplotlib',
+    'libs' : ['fsleyes_props', 'fsleyes_widgets',    'fsl.version',
+              'indexed_gzip',  'jinja2',             'matplotlib',
               'nibabel',       'numpy',              'PIL',
-              'fsleyes_props', 'fsleyes_widgets',    'fsl.version',
               'OpenGL',        'pyparsing',          'scipy',
-              'six',           'fsleyes.gl.trimesh', 'wx'],
+              'six',           'fsleyes.gl.trimesh', 'wx',
+              'wxnat',         'xnat'],
 }
