@@ -758,4 +758,4 @@ deploy-builds:
     - build-macos
 
   script:
-    - rsync -rv dist/FSLeyes*zip dist/FSLeyes*tar.gz "builddeploy:"
+    - rsync -rv dist/FSLeyes*tar.gz "builddeploy:"
