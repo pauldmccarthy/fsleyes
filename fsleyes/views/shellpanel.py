@@ -9,6 +9,7 @@ which contains an interactive Python shell.
 """
 
 
+import re
 import sys
 import textwrap
 
@@ -71,14 +72,28 @@ class ShellPanel(viewpanel.ViewPanel):
                       else overrideDocs[k]
                       for k in localVars]
 
-        localDescs = [d.split('\n')[0].strip()[:60] for d in localDescs]
+        descWidth   = 60
+        varWidth    = max([len(v) for v in localVars])
 
-        varWidth  = max([len(v) for v in localVars])
+        localDescs = [d[:descWidth + 30]   for d in localDescs]
+        localDescs = [d.replace('\n', ' ') for d in localDescs]
+        localDescs = [re.sub(' +', ' ', d) for d in localDescs]
+        localDescs = [d[:descWidth]        for d in localDescs]
 
-        fmtStr = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
+        shortFmtStr = '  - {{:{:d}s}} : {{}}\n'   .format(varWidth)
+        longFmtStr  = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
 
         for lvar, ldesc in zip(localVars, localDescs):
-            introText = introText + fmtStr.format(lvar, ldesc)
+
+            if len(ldesc) >= descWidth: fmt = longFmtStr
+            else:                       fmt = shortFmtStr
+
+            introText = introText + fmt.format(lvar, ldesc)
+
+        introText = introText + textwrap.dedent("""
+
+        Type help(item) for additional details on a specific item.
+        """)
 
         shell = wxshell.Shell(
             self,

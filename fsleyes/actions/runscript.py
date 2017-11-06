@@ -24,6 +24,7 @@ import __future__          as futures
 import                        os
 import os.path             as op
 import                        logging
+import                        textwrap
 import                        collections
 
 import fsl.utils.settings  as fslsettings
@@ -235,6 +236,10 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         """Run the specified Python script. """
         runScript(frame, overlayList, displayCtx, script)
 
+    def help(obj):
+        """Print help on the given object. """
+        print(textwrap.dedent(obj.__doc__).strip())
+
 
     def setprop(substr, propName, value, testName=False):
         """Set the given property value for all overlays which have the
@@ -293,6 +298,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('setprop',            setprop),
         ('load',               load),
         ('run',                run),
+        ('help',               help),
     ))
 
     return globals(), _locals
