@@ -43,6 +43,7 @@ GL_TYPE_NAMES = {
 
     gl.GL_LUMINANCE8          : 'GL_LUMINANCE8',
     gl.GL_LUMINANCE16         : 'GL_LUMINANCE16',
+    arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
     arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
     gl.GL_R32F                : 'GL_R32F',
 
@@ -271,8 +272,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   supported - see :meth:`canUseFloatTextures`.
         """
 
-        rgSupported = glexts.hasExtension('GL_ARB_texture_rg')
-        nbits       = dtype.itemsize * 8
+        floatSupported = glexts.hasExtension('GL_ARB_texture_float')
+        rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
+        nbits          = dtype.itemsize * 8
 
         if rgSupported:
             if nbits == 8: return gl.GL_RED, gl.GL_R8
@@ -281,8 +283,24 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # GL_RED does not exist in old OpenGLs -
         # we have to use luminance instead.
         else:
-            if nbits == 8: return gl.GL_LUMINANCE, gl.GL_LUMINANCE8
-            else:          return gl.GL_LUMINANCE, gl.GL_LUMINANCE16
+            if nbits == 8:
+                return gl.GL_LUMINANCE, gl.GL_LUMINANCE8
+
+            # But GL_LUMINANCE is deprecated in GL 3.x,
+            # and some more recent GL drivers seem to
+            # have trouble displaying GL_LUMINANCE16
+            # textures - displayting them at what seems
+            # to be a down-sampled (e.g. using a 4 bit
+            # storage format) version of the data. So we
+            # store the data as floating point if we can.
+            elif floatSupported:
+                return gl.GL_LUMINANCE, arbtf.GL_LUMINANCE16F_ARB
+
+            # Hopefully float textures are supported
+            # on recent GL drivers which don't support
+            # LUMINANCE_16
+            else:
+                return gl.GL_LUMINANCE, gl.GL_LUMINANCE16
 
 
     @classmethod
