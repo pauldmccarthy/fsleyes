@@ -19,9 +19,6 @@ OPTION ARB_precision_hint_nicest;
 #   {{ param_rayStep }} - xyz is a vector defining how far to move through
 #      the volume texture space on each ray-casting iteration.
 #
-#   {{ param_ditherDir }} - A vector, in the same direction as the camera,
-#      specifying the maximum amount to dither by.
-#
 #   {{ param_tex2ScreenXform }} - A transformation matrix which transforms
 #      image texture coordinates into normalised device coordinates. Only
 #      the row which generates the Z-coordinate should be passed in.
@@ -104,9 +101,9 @@ FRC tempVar.x, tempVar.x;
 
 
 # Add dither to the starting location
-MUL tempVar,       {{ param_ditherDir }}, tempVar.x;
-ADD texCoord.xyz,     texCoord,           tempVar;
-ADD clipTexCoord.xyz, clipTexCoord,       tempVar;
+MUL tempVar,       {{ param_rayStep }}, tempVar.x;
+ADD texCoord.xyz,     texCoord,         tempVar;
+ADD clipTexCoord.xyz, clipTexCoord,     tempVar;
 
 
 # Retrieve the starting colour and depth

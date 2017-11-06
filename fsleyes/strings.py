@@ -901,7 +901,6 @@ properties = TypeDict({
     'VolumeOpts.overrideDataRange'        : 'Override image data range',
     'VolumeOpts.custom_overrideDataRange' : 'Override image data range',
 
-    'Volume3DOpts.dithering'               : 'Dithering',
     'Volume3DOpts.numSteps'                : 'Number of samples',
     'Volume3DOpts.blendFactor'             : 'Blending',
     'Volume3DOpts.resolution'              : 'Quality',

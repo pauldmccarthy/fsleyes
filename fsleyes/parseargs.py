@@ -237,6 +237,7 @@ import itertools        as it
 import                     sys
 import                     types
 import                     logging
+import                     warnings
 import                     textwrap
 import                     argparse
 import                     collections
@@ -945,9 +946,9 @@ HELP = td.TypeDict({
     'Volume3DOpts.resolution' :
     '3D only. Resolution [1-100, default: 100]',
     'Volume3DOpts.dithering' :
-    '3D only. Dithering [0-0.05, default: 0.02]',
+    '3D only. Deprecated, has no effect.',
     'Volume3DOpts.numInnerSteps' :
-    '3D/GL14 only. Nmber of samples to run on GPU',
+    '3D/GL14 only. Number of samples to run on GPU',
     'Volume3DOpts.clipPlane' :
     '3D only. Add a clipping plane. Requires three values: position [0-100], '
     'azimuth [-180, 180], inclination [-180, 180]. Can be used up to 10 '
@@ -1439,7 +1440,8 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
         if propExtra is not None:
             extra[propName] = propExtra
 
-        if not hasattr(target, propName):
+        if _isSpecialConfigOption(target, propName) or \
+           not hasattr(target, propName):
             propNames.remove(propName)
             special  .append(propName)
 
@@ -2172,7 +2174,7 @@ def _applyArgs(args,
     kwargs['target'] = target
 
     for name in list(propNames):
-        if not hasattr(target, name):
+        if _isSpecialApplyOption(target, name) or not hasattr(target, name):
             special  .append(name)
             propNames.remove(name)
 
@@ -2220,7 +2222,8 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
     special   = []
 
     for name in list(propNames):
-        if not hasattr(source, name):
+        if _isSpecialGenerateOption(source, name) or \
+           not hasattr(source, name):
             special  .append(name)
             propNames.remove(name)
 
@@ -2737,10 +2740,37 @@ def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
     return genFunc(overlayList, displayCtx, source, longArg)
 
 
+def _isSpecialConfigOption(target, optName):
+    """
+    Returns ``True`` if the given option has a special configuration function,
+    ``False`` otherwise.
+    """
+    return _getSpecialFunction(target, optName, '_configSpecial') is not None
+
+
+def _isSpecialApplyOption(target, optName):
+    """
+    Returns ``True`` if the given option has a special apply function,
+    ``False`` otherwise.
+    """
+    return _getSpecialFunction(target, optName, '_applySpecial') is not None
+
+
+def _isSpecialGenerateOption(target, optName):
+    """
+    Returns ``True`` if the given option has a special generation function,
+    ``False`` otherwise.
+    """
+    return _getSpecialFunction(target, optName, '_generateSpecial') is not None
+
+
 def _getSpecialFunction(target, optName, prefix):
     """Searches for a function in this module with the name
     ``_prefix_target_option``, searching the class hierarchy for ``target``.
     """
+
+    if not isinstance(target, type):
+        target = type(target)
 
     thismod = sys.modules[__name__]
     func    = getattr(thismod, '{}_{}_{}'.format(
@@ -2801,6 +2831,8 @@ def _applySpecial_OrthoOpts_zcentre(args, overlayList, displayCtx, target):
         args.zcentre, displayCtx, 0, 1, target.panel.getGLCanvases()[2])
 
 def _applySpecialOrthoOptsCentre(centre, displayCtx, xax, yax, canvas):
+    """Shared by the ``xcentre``, ``ycentre``, and ``zcentre`` functions.
+    """
 
     xlo  = displayCtx.bounds.getLo(xax)
     ylo  = displayCtx.bounds.getLo(yax)
@@ -2879,6 +2911,28 @@ def _applySpecial_Volume3DOpts_clipPlane(
     target.clipPosition[   :ncp] = [cp[0] for cp in args.clipPlane]
     target.clipAzimuth[    :ncp] = [cp[1] for cp in args.clipPlane]
     target.clipInclination[:ncp] = [cp[2] for cp in args.clipPlane]
+
+
+def _configSpecial_Volume3DOpts_dithering(
+        target, parser, shortArg, longArg, helpText):
+    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=float,
+                        help=helpText)
+
+
+def _applySpecial_Volume3DOpts_dithering(
+        args, overlayList, displayCtx, target):
+    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
+    warnings.warn('dithering is deprecated - it is automatically calculated',
+                  DeprecationWarning)
+
+
+def _generateSpecial_Volume3DOpts_dithering(
+        overlayList, displayCtx, source, longArg):
+    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
+    return []
 
 
 def _generateSpecial_Volume3DOpts_clipPlane(

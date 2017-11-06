@@ -92,13 +92,6 @@ uniform float texZero;
 uniform bool invertClip;
 
 /*
- * A vector, in the same direction as the camera, specifying
- * the maximum amount to dither the starting position by.
- */
-uniform vec3 ditherDir;
-
-
-/*
  * Number of active clip planes. Regions which are clipped
  * by *all* active clip planes are not drawn.
  */
@@ -195,9 +188,9 @@ void main(void) {
      * occasionally break on the first
      * iteration.
      */
-    vec3 dither  = ditherDir * rand(gl_FragCoord.x, gl_FragCoord.y);
-    texCoord     = texCoord     - rayStep + dither;
-    clipTexCoord = clipTexCoord - rayStep + dither;
+    vec3 dither  = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
+    texCoord     = texCoord     - dither;
+    clipTexCoord = clipTexCoord - dither;
 
     /*
      * Keep going until we

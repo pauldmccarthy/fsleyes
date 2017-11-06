@@ -8,6 +8,7 @@
 use with :class:`.DisplayOpts` classes.
 """
 
+import deprecation
 
 import numpy as np
 
@@ -25,17 +26,6 @@ class Volume3DOpts(object):
     The properties in this class are tightly coupled to the ray-casting
     implementation used by the :class:`.GLVolume` class - see its documentation
     for details.
-    """
-
-
-    dithering = props.Real(minval=0,
-                           maxval=0.05,
-                           default=0.01,
-                           clamped=True)
-    """Specifies the amount of randomness to introduce in the rendering
-    procedure to achieve a dithering (addition of random noise) effect. This is
-    necessary to remove some aliasing effects inherent in the rendering
-    process.
     """
 
 
@@ -133,7 +123,6 @@ class Volume3DOpts(object):
         if fslplatform.inSSHSession:
             self.numSteps    = 40
             self.resolution  = 40
-            self.dithering   = 0.02
             self.blendFactor = 0.4
 
         self.clipPosition[:]    = 10 * [50]
@@ -149,8 +138,16 @@ class Volume3DOpts(object):
 
 
     def destroy(self):
-        """
-        """
+        """Does nothing. """
+        pass
+
+
+    @property
+    @deprecation.deprecated(deprecated_in='0.17.0',
+                            removed_in='1.0.0',
+                            details='Dithering is automatically calculated')
+    def dithering(self):
+        """Deprecated."""
         pass
 
 
@@ -203,10 +200,6 @@ class Volume3DOpts(object):
             single iteration of the ray-casting algorithm. This can be added
             directly to the volume texture coordinates.
 
-          - A vector defining the maximum distance by which to randomly adjust
-            the start location of each ray, to induce a dithering effect in
-            the rendered scene.
-
           - A transformation matrix which transforms from image texture
             coordinates into the display coordinate system.
 
@@ -248,16 +241,6 @@ class Volume3DOpts(object):
         # of the image texture cube.
         rayStep = np.sqrt(3) * cdir / self.getNumSteps()
 
-        # Maximum amount by which to dither
-        # the scene. This is done by applying
-        # a random offset to the starting
-        # point of each ray - we pass the
-        # shader a vector in the camera direction,
-        # so all it needs to do is scale the
-        # vector by a random amount, and add the
-        # vector to the starting point.
-        ditherDir = cdir * self.dithering
-
         # A transformation matrix which can
         # transform image texture coordinates
         # into the corresponding screen
@@ -271,7 +254,7 @@ class Volume3DOpts(object):
         zscale = transform.scaleOffsetXform([1, 1, 0.5], [0, 0, 0.5])
         xform  = transform.concat(zscale, proj, xform)
 
-        return rayStep, ditherDir, xform
+        return rayStep, xform
 
 
     def get3DClipPlane(self, planeIdx):

@@ -204,14 +204,13 @@ def draw3D(self, xform=None, bbox=None):
     tex                            = self.renderTexture1
     proj                           = self.canvas.getProjectionMatrix()
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep , ditherDir, texform   = opts.calculateRayCastSettings(xform, proj)
+    rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
 
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
-    self.shader.set(   'ditherDir',       ditherDir)
     self.shader.setAtt('vertex',          vertices)
     self.shader.setAtt('texCoord',        texCoords)
 

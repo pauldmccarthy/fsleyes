@@ -130,10 +130,6 @@ properties = TypeDict({
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
 
-    'Volume3DOpts.dithering' :
-    'How much the image sampling position should be randomly adjusted for '
-    'each pixel. ' ,
-
     'Volume3DOpts.numSteps' :
     'The maximum number of times that the image is sampled for each pixel.',
 

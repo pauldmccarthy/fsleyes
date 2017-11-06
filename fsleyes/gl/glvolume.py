@@ -349,7 +349,6 @@ class GLVolume(glimageobject.GLImageObject):
         # 3D-only options
         if self.threedee:
 
-            opts.addListener('dithering',       name, self._ditheringChanged)
             opts.addListener('numSteps',        name, self._numStepsChanged)
             opts.addListener('numInnerSteps',   name,
                              self._numInnerStepsChanged)
@@ -419,7 +418,6 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener(          'overrideDataRange',       name)
 
         if self.threedee:
-            opts.removeListener('dithering',       name)
             opts.removeListener('numSteps',        name)
             opts.removeListener('numClipPlanes',   name)
             opts.removeListener('showClipPlanes',  name)
@@ -893,12 +891,6 @@ class GLVolume(glimageobject.GLImageObject):
 
     def _displayXformChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.displayXform` property changes.
-        """
-        self.notify()
-
-
-    def _ditheringChanged(self, *a):
-        """Called when the :attr:`.Volume3DOpts.dithering` property changes.
         """
         self.notify()
 

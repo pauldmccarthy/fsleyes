@@ -197,7 +197,7 @@ def draw3D(self, xform=None, bbox=None):
     w, h    = src.getSize()
 
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, ditherDir, texform    = opts.calculateRayCastSettings(xform, proj)
+    rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
@@ -206,7 +206,6 @@ def draw3D(self, xform=None, bbox=None):
 
     outerLoop  = opts.getNumOuterSteps()
     screenSize = [1.0 / w, 1.0 / h, 0, 0]
-    ditherDir  = list(ditherDir) + [0]
     rayStep    = list(rayStep)   + [0]
     texform    = texform[2, :]
     settings   = [
@@ -219,7 +218,6 @@ def draw3D(self, xform=None, bbox=None):
 
     shader.setAtt(      'texCoord',        texCoords)
     shader.setFragParam('rayStep',         rayStep)
-    shader.setFragParam('ditherDir',       ditherDir)
     shader.setFragParam('screenSize',      screenSize)
     shader.setFragParam('tex2ScreenXform', texform)
 
