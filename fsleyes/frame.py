@@ -453,6 +453,8 @@ class FSLeyesFrame(wx.Frame):
 
         :arg panelCls: The :class:`.ViewPanel` type to be added.
 
+        :returns: The newly created ``ViewPanel``.
+
         All other arguments are passed to the ``__init__`` method of the child
         :class:`.DisplayContext` that is created for the new view.
         """
