@@ -455,7 +455,7 @@ build-pypi-dist:
     - yum install -y wget zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel gdbm-devel libpcap-devel xz-devel expat-devel
 
     # install fsleyes/wxpython runtime dependencies
-    - yum install -y freeglut mesa-libOSMesa SDL
+    - yum install -y freeglut mesa-libOSMesa SDL xvfb
 
     # install wxpython compile-time dependencies.
     # We currently have to compile wx from source
@@ -481,7 +481,7 @@ build-pypi-dist:
     - apt-get install -y zlib1g-dev libbz2-dev libssl-dev libncursesw5-dev libsqlite3-dev libreadline-gplv2-dev libgdbm-dev libc6-dev libpcap-dev libexpat1-dev
 
     # install fsleyes/wxpython runtime dependencies
-    - apt-get install -y freeglut3 libosmesa6 libsdl1.2debian
+    - apt-get install -y freeglut3 libosmesa6 libsdl1.2debian xvfb
     - apt-get install -y libgtk2.0-0 libgtk-3-0
 
 
@@ -549,6 +549,10 @@ build-pypi-dist:
     - python setup.py build_standalone
     - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-"$OSNAME".tar.gz
 
+  # Sanity check - make sure we can start FSLeyes
+  after_script:
+    - xvfb-run dist/FSLeyes/fsleyes -V
+
   artifacts:
     expire_in: 1 day
     paths:
@@ -582,6 +586,12 @@ build-pypi-dist:
     - deactivate
     - rm -r fsleyes-build-venv
     - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
+
+  # Sanity check - make sure we can start
+  # FSLeyes. Assuming here that we have a
+  # display on the mac build environment
+  after_script:
+    - dist/FSLeyes.app/Contents/MacOS/fsleyes -V
 
   artifacts:
     expire_in: 1 day
