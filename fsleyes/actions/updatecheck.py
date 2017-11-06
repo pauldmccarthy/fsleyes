@@ -13,6 +13,9 @@ import logging
 
 from six.moves.urllib import request
 
+import           wx
+import wx.adv as wxadv
+
 import fsl.version                  as fslversion
 
 import fsleyes_widgets.utils.status as status
@@ -24,11 +27,13 @@ from . import                          base
 log = logging.getLogger(__name__)
 
 
-_FSLEYES_URL = 'https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/dist/'
-"""A url which contains the latest version of FSLeyes for download. """
+_FSLEYES_URL = 'https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes'
+"""A url to direct the user towards to download the latest version of FSLeyes.
+"""
 
 
-_FSLEYES_VERSION_URL = '{}version.txt'.format(_FSLEYES_URL)
+_FSLEYES_VERSION_URL = 'https://fsl.fmrib.ox.ac.uk/'\
+                       'fsldownloads/fsleyes/version.txt'
 """A url which points to a text file that contains the most recently released
 FSLeyes version number.
 """
@@ -67,8 +72,6 @@ class UpdateCheckAction(base.Action):
                                   comparison.
         """
 
-        import wx
-
         errMsg   = strings.messages[self, 'newVersionError']
         errTitle = strings.titles[  self, 'newVersionError']
 
@@ -93,6 +96,8 @@ class UpdateCheckAction(base.Action):
             if upToDate and not showUpToDateMessage:
                 return
 
+            urlMsg = strings.messages[self, 'updateUrl']
+
             if upToDate:
                 title = strings.titles[  self, 'upToDate']
                 msg   = strings.messages[self, 'upToDate']
@@ -103,6 +108,71 @@ class UpdateCheckAction(base.Action):
                 msg   = strings.messages[self, 'newVersionAvailable']
                 msg   = msg.format(current, latest, _FSLEYES_URL)
 
-            # TODO Make a custom dialog with a clickable URL.
-            #      MessageBox only supports plain text
-            wx.MessageBox(msg, title, wx.OK | wx.ICON_INFORMATION)
+            parent = wx.GetTopLevelWindows()[0]
+            dlg    = UrlDialog(parent, title, msg, urlMsg, _FSLEYES_URL)
+
+            dlg.CentreOnParent()
+            dlg.ShowModal()
+
+
+class UrlDialog(wx.Dialog):
+    """Custom ``wx.Dialog`` used by the :class:`UpdateCheckAction` to
+    display a message containing the FSLeyes download URL to the user.
+    """
+
+
+    def __init__(self,
+                 parent,
+                 title,
+                 msg,
+                 urlMsg=None,
+                 url=None):
+        """Create a ``UrlDialog``.
+
+        :arg parent: ``wx`` parent object
+        :arg title:  Dialog title
+        :arg msg:    Message to display
+        :arg urlMsg: Message to display next to the URL. Not shown if a URL
+                     is not provided.
+        :arg url:    URL to display.
+        """
+
+        wx.Dialog.__init__(self,
+                           parent,
+                           title=title,
+                           style=wx.DEFAULT_DIALOG_STYLE)
+
+        ok  = wx.Button(    self, label='Ok', id=wx.ID_OK)
+        msg = wx.StaticText(self, label=msg)
+
+        if urlMsg is not None:
+            urlMsg = wx.StaticText(self, label=urlMsg)
+        if url is not None:
+            url = wxadv.HyperlinkCtrl(self, url=url)
+
+        sizer    = wx.BoxSizer(wx.VERTICAL)
+        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        sizer.Add((1, 20),  flag=wx.EXPAND, proportion=1)
+        sizer.Add(msg,      flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=20)
+        sizer.Add((1, 20),  flag=wx.EXPAND, proportion=1)
+
+        if urlMsg is not None and url is not None:
+            sizer.Add(urlMsg,  flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=20)
+            sizer.Add((1, 5),  flag=wx.EXPAND, proportion=1)
+
+        if url is not None:
+            sizer.Add(url,     flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=20)
+            sizer.Add((1, 20), flag=wx.EXPAND, proportion=1)
+
+        btnSizer.Add((20, 1),  flag=wx.EXPAND, proportion=1)
+        btnSizer.Add(ok,       flag=wx.EXPAND)
+        btnSizer.Add((20, 1),  flag=wx.EXPAND)
+
+        sizer.Add(btnSizer, flag=wx.EXPAND)
+        sizer.Add((1, 20),  flag=wx.EXPAND, proportion=1)
+
+        ok.SetDefault()
+        self.SetSizer(sizer)
+        self.Layout()
+        self.Fit()

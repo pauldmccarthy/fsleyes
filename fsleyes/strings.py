@@ -248,11 +248,14 @@ messages = TypeDict({
     'An error occurred while loading the vertex data for {}',
 
     'UpdateCheckAction.newVersionAvailable' :
-    'A new version of FSLeyes is available. This version of FSLeyes is {}, '
-    'and the latest is {}.\n\nVisit {} to upgrade!',
+    'A new version of FSLeyes is available. This version\n'
+    'of FSLeyes is {}, and the latest is {}.',
 
     'UpdateCheckAction.upToDate' :
     'Your version of FSLeyes ({}) is up to date.',
+
+    'UpdateCheckAction.updateUrl' :
+    'The latest version of FSLeyes is available from:',
 
     'UpdateCheckAction.newVersionError' :
     'An error occurred while checking for FSLeyes updates. Try again later.',
