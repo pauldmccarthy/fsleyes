@@ -455,7 +455,7 @@ build-pypi-dist:
     - yum install -y wget zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel gdbm-devel libpcap-devel xz-devel expat-devel
 
     # install fsleyes/wxpython runtime dependencies
-    - yum install -y freeglut mesa-libOSMesa SDL xvfb
+    - yum install -y freeglut mesa-libOSMesa SDL xorg-x11-server-Xvfb
 
     # install wxpython compile-time dependencies.
     # We currently have to compile wx from source
@@ -551,6 +551,7 @@ build-pypi-dist:
 
   # Sanity check - make sure we can start FSLeyes
   after_script:
+    - pwd
     - xvfb-run dist/FSLeyes/fsleyes -V
 
   artifacts:
