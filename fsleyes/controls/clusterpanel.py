@@ -12,7 +12,7 @@ import                                 logging
 import                                 wx
 import                                 six
 
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 import fsl.data.image               as fslimage
 import fsl.data.featimage           as featimage
 import fsl.data.featanalysis        as featanalysis
@@ -385,7 +385,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         # Creating all of the widgets could
         # take a bit of time, so we'll
-        # do it asynchronously via async.idle
+        # do it asynchronously via idle.idle
         # display a message while doing so.
         status.update(strings.messages[self, 'loadingCluster'].format(
             contrast + 1, conName), timeout=None)
@@ -432,9 +432,9 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
             grid.Refresh()
 
         for i, clust in enumerate(clusters):
-            async.idle(addCluster, i, clust)
+            idle.idle(addCluster, i, clust)
 
-        async.idle(onFinish)
+        idle.idle(onFinish)
 
         return grid
 

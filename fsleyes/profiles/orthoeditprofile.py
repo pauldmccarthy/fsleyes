@@ -13,7 +13,7 @@ import logging
 import numpy                        as np
 
 import fsl.data.image               as fslimage
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 import fsleyes_props                as props
 import fsleyes.overlay              as fsloverlay
 import fsleyes.displaycontext       as fsldisplay
@@ -1543,7 +1543,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev, canvas)
 
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 
@@ -1583,7 +1583,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             # so we don't queue loads of redundant jobs while
             # the user is e.g. dragging the intensityThres
             # slider real fast.
-            async.idle(update, timeout=0.1)
+            idle.idle(update, timeout=0.1)
 
 
     def __selintThresLimitChanged(self, *a):

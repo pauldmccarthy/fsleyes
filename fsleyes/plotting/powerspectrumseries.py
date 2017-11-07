@@ -23,7 +23,7 @@ import logging
 import numpy     as np
 import numpy.fft as fft
 
-import fsl.utils.async       as async
+import fsl.utils.idle        as idle
 import fsl.utils.cache       as cache
 import fsl.data.melodicimage as fslmelimage
 import fsleyes_props         as props
@@ -142,7 +142,7 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
     # See VoxelTimeSeries.getData for an
     # explanation of the mutex decorator.
-    @async.mutex
+    @idle.mutex
     def getData(self):
         """Returns the data for the current voxel of the overlay. The current
         voxel is dictated by the :attr:`.DisplayContext.location` property.

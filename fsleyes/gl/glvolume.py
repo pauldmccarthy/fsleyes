@@ -16,7 +16,7 @@ import numpy                              as np
 import OpenGL.GL                          as gl
 
 from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
 import fsleyes.gl                         as fslgl
 import fsleyes.gl.routines                as glroutines
@@ -240,7 +240,7 @@ class GLVolume(glimageobject.GLImageObject):
             fslgl.glvolume_funcs.init(self)
             self.notify()
 
-        async.idleWhen(init, self.texturesReady)
+        idle.idleWhen(init, self.texturesReady)
 
 
     def destroy(self):
@@ -447,7 +447,7 @@ class GLVolume(glimageobject.GLImageObject):
     def updateShaderState(self, *args, **kwargs):
         """Calls :func:`.gl14.glvolume_funcs.updateShaderState` or
         :func:`.gl21.glvolume_funcs.updateShaderStatea`, then
-        :meth:`.Notifier.notify`. Uses the :func:`.async.idleWhen` function to
+        :meth:`.Notifier.notify`. Uses the :func:`.idle.idleWhen` function to
         make sure that it is not called until :meth:`ready` returns ``True``.
 
         :arg alwaysNotify: Must be passed as a keyword argument. If
@@ -492,10 +492,10 @@ class GLVolume(glimageobject.GLImageObject):
         # single event, but in this situation
         # we only want to actually do the
         # update once.
-        async.idleWhen(func,
-                       self.ready,
-                       name=self.name,
-                       skipIfQueued=True)
+        idle.idleWhen(func,
+                      self.ready,
+                      name=self.name,
+                      skipIfQueued=True)
 
 
     def refreshImageTexture(self):

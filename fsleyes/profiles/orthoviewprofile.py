@@ -16,7 +16,7 @@ import numpy as np
 
 import fsleyes.profiles as profiles
 import fsleyes.actions  as actions
-import fsl.utils.async  as async
+import fsl.utils.idle   as idle
 
 
 log = logging.getLogger(__name__)
@@ -353,7 +353,7 @@ class OrthoViewProfile(profiles.Profile):
             self.displayCtx.location.xyz = self.__offsetLocation(*dirs)
 
         # See comment in _zoomModeMouseWheel about timeout
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 
@@ -386,7 +386,7 @@ class OrthoViewProfile(profiles.Profile):
             self.displayCtx.location[copts.zax] = pos[copts.zax]
 
         # See comment in _zoomModeMouseWheel about timeout
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 
@@ -438,7 +438,7 @@ class OrthoViewProfile(profiles.Profile):
             newZoom    = np.clip(copts.zoom + wheel, minzoom, maxzoom)
             copts.zoom = newZoom
 
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 
@@ -571,7 +571,7 @@ class OrthoViewProfile(profiles.Profile):
             canvas.panDisplayBy(xoff, yoff)
 
         # See comment in _zoomModeMouseWheel about timeout
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 

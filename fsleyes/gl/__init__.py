@@ -179,7 +179,7 @@ import os
 import logging
 import platform
 
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
 import fsleyes_props                      as props
@@ -201,7 +201,7 @@ if not fslplatform.canHaveGui:
     os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
 
 
-import OpenGL
+import OpenGL  # noqa
 
 
 # Make PyOpenGL throw an error, instead of implicitly
@@ -620,7 +620,7 @@ class GLContext(object):
             # above).  If an existing wx.App is running,
             # we just schedule the context creation
             # routine on it.
-            async.idle(create, alwaysQueue=True)
+            idle.idle(create, alwaysQueue=True)
 
             if self.__ownApp:
                 log.debug('Starting temporary wx.MainLoop')
@@ -939,7 +939,7 @@ class WXGLCanvasTarget(object):
         # on EVT_PAINT events. If they are not,
         # the canvas will be corrupted.
         if not self.__freezeDraw:
-            async.idle(doRefresh)
+            idle.idle(doRefresh)
 
 
     def _initGL(self):

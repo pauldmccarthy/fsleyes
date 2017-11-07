@@ -11,7 +11,7 @@
 import logging
 
 import fsleyes.profiles as profiles
-import fsl.utils.async  as async
+import fsl.utils.idle   as idle
 
 
 log = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class LightBoxViewProfile(profiles.Profile):
         def update():
             opts.topRow += wheel
 
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True
 
@@ -131,6 +131,6 @@ class LightBoxViewProfile(profiles.Profile):
         def update():
             opts.zoom += wheel
 
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
         return True

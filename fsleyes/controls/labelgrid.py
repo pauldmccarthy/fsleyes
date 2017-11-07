@@ -15,7 +15,7 @@ import collections
 import wx
 
 import fsl.data.image             as fslimage
-import fsl.utils.async            as async
+import fsl.utils.idle             as idle
 
 import fsleyes_widgets.widgetgrid as widgetgrid
 import fsleyes_widgets.texttag    as texttag
@@ -151,9 +151,9 @@ class LabelGrid(fslpanel.FSLeyesPanel):
             self.refreshTags()
             self.__grid.Refresh()
 
-        async.idle(createGrid,
-                   name='{}_createGrid'.format(self.name),
-                   skipIfQueued=True)
+        idle.idle(createGrid,
+                  name='{}_createGrid'.format(self.name),
+                  skipIfQueued=True)
 
 
     def __deregisterCurrentOverlay(self):

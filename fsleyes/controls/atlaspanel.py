@@ -20,7 +20,7 @@ import          wx
 import fsl.data.image               as fslimage
 import fsl.data.atlases             as atlases
 import fsl.data.constants           as constants
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 
 import fsleyes_props                as props
 import fsleyes_widgets.notebook     as notebook
@@ -276,7 +276,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                   onError=None,
                   matchResolution=True):
         """Loads the atlas image with the specified ID. The atlas is loaded
-        asynchronously (via the :mod:`.async` module), as it can take some
+        asynchronously (via the :mod:`.idle` module), as it can take some
         time. Use the `onLoad` argument if you need to do something when the
         atlas has been loaded.
 
@@ -328,9 +328,9 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
                 status.update('Atlas {} loaded.'.format(atlasID))
 
                 if onLoad is not None:
-                    async.idle(onLoad, atlas)
+                    idle.idle(onLoad, atlas)
 
-            async.run(load, onError=onError)
+            idle.run(load, onError=onError)
 
         # If the atlas has already been loaded,
         # pass it straight to the onload function

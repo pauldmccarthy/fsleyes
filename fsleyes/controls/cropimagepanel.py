@@ -19,7 +19,7 @@ import itertools as it
 import              wx
 import numpy     as np
 
-import fsl.utils.async                      as async
+import fsl.utils.idle                       as idle
 import fsl.data.image                       as fslimage
 
 import fsleyes_props                        as props
@@ -391,7 +391,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         # Do asynchronously, because we don't want
         # this CropImagePanel being destroyed from
         # its own event handler.
-        async.idle(self.__ortho.toggleCropMode)
+        idle.idle(self.__ortho.toggleCropMode)
 
 
     def __onCrop(self, ev):

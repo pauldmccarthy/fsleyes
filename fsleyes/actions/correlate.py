@@ -17,7 +17,7 @@ import numpy                  as np
 import scipy.spatial.distance as spd
 
 import fsl.data.image               as fslimage
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 import fsleyes_props                as props
 import fsleyes_widgets.utils.status as fslstatus
 import fsleyes.strings              as strings
@@ -160,7 +160,7 @@ class CorrelateAction(base.Action):
         updates the correlate overlay.
 
         The correlation calculation and overlay update is performed on a
-        separate thread (via :meth:`.async.run`), with a call to
+        separate thread (via :meth:`.idle.run`), with a call to
         :meth:`calculateCorrelation`.
         """
 
@@ -204,7 +204,7 @@ class CorrelateAction(base.Action):
 
         # The correlation calculation is performed
         # on a separate thread. This thread then
-        # schedules a function on async.idle to
+        # schedules a function on idle.idle to
         # update the correlation overlay back on the
         # main thread.
         def calcCorr():
@@ -234,13 +234,13 @@ class CorrelateAction(base.Action):
                     fslstatus.clearStatus()
                     self.__correlateFlag.clear()
 
-            async.idle(update)
+            idle.idle(update)
 
         # Protect against more calls
         # while this job is running.
         self.__correlateFlag.set()
         fslstatus.update(strings.messages[self, 'calculating'].format(*xyz))
-        async.run(calcCorr)
+        idle.run(calcCorr)
 
 
     def calculateCorrelation(self, seed, data):

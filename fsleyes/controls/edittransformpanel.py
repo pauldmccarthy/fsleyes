@@ -17,7 +17,7 @@ import wx
 import numpy as np
 
 import fsl.data.image                       as fslimage
-import fsl.utils.async                      as async
+import fsl.utils.idle                       as idle
 import fsl.utils.transform                  as transform
 
 import fsleyes_props                        as props
@@ -617,4 +617,4 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         """
 
         self.__resetAllOverlays()
-        async.idle(self.__ortho.toggleEditTransformPanel)
+        idle.idle(self.__ortho.toggleEditTransformPanel)

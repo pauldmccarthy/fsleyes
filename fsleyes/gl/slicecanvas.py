@@ -16,7 +16,7 @@ import OpenGL.GL as gl
 import numpy as np
 
 import fsl.data.image                     as fslimage
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsleyes_widgets.utils.status       as status
 import fsleyes_props                      as props
 
@@ -798,7 +798,7 @@ class SliceCanvas(object):
             strings.messages[self, 'globjectError'].format(overlay.name))(
                 create)
 
-        async.idle(create)
+        idle.idle(create)
 
 
     def __onGLObjectUpdate(self, globj, *a):
@@ -853,7 +853,7 @@ class SliceCanvas(object):
                                  refresh=False)
 
         # All the GLObjects are created using
-        # async.idle, so we call refresh in the
+        # idle.idle, so we call refresh in the
         # same way to make sure it gets called
         # after all the GLObject creations.
         def refresh():
@@ -867,7 +867,7 @@ class SliceCanvas(object):
             self._updateRenderTextures()
             self.Refresh()
 
-        async.idle(refresh)
+        idle.idle(refresh)
 
 
     def _getGLObjects(self):

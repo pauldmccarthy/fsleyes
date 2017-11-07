@@ -25,7 +25,7 @@ import numpy as np
 
 
 import fsl.utils.cache    as cache
-import fsl.utils.async    as async
+import fsl.utils.idle     as idle
 import fsleyes_props      as props
 import fsleyes.strings    as strings
 import fsleyes.colourmaps as fslcm
@@ -154,7 +154,7 @@ class VoxelTimeSeries(TimeSeries):
     # subsequent (blocked) accesses execute, they
     # will hit the cache instead of hitting the disk
     # (which is a good thing).
-    @async.mutex
+    @idle.mutex
     def getData(self, xdata=None, ydata=None):
         """Returns the data at the current voxel location. The ``xdata`` and
         ``ydata`` parameters may be used by sub-classes to override this

@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image  as mplimg
 
 from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsleyes_widgets.utils.status       as status
 import fsl.utils.settings                 as fslsettings
 import fsleyes.views.canvaspanel          as canvaspanel
@@ -117,7 +117,7 @@ class ScreenshotAction(base.Action):
         # We do the screenshot asynchronously,
         # to make sure it is performed on
         # the main thread, during idle time
-        async.idle(doScreenshot, self.__panel, filename)
+        idle.idle(doScreenshot, self.__panel, filename)
 
         status.update(strings.messages[self, 'pleaseWait'].format(filename))
 

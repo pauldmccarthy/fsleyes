@@ -32,7 +32,7 @@ import os.path as op
 
 import numpy   as np
 
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 import fsl.utils.notifier           as notifier
 import fsl.utils.settings           as fslsettings
 import fsleyes_widgets.utils.status as status
@@ -133,7 +133,7 @@ def loadOverlays(paths,
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
 
-    .. note:: The overlays are loaded asynchronously via :func:`.async.idle`.
+    .. note:: The overlays are loaded asynchronously via :func:`.idle.idle`.
               Use the ``onLoad`` argument if you wish to be notified when
               the overlays have been loaded.
 
@@ -239,9 +239,9 @@ def loadOverlays(paths,
 
     # Load the images
     for path in paths:
-        async.idle(loadPath, path)
+        idle.idle(loadPath, path)
 
-    async.idle(realOnLoad)
+    idle.idle(realOnLoad)
 
 
 def loadImage(dtype, path, inmem=False):

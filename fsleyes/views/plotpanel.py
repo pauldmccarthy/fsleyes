@@ -23,7 +23,7 @@ import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
 
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsleyes_props                      as props
 import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.elistbox           as elistbox
@@ -235,7 +235,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # asynchronous data preparation, and the
         # __drawDataSeries method does the actual
         # plotting.
-        self.__drawQueue = async.TaskThread()
+        self.__drawQueue = idle.TaskThread()
         self.__drawQueue.daemon = True
         self.__drawQueue.start()
 
@@ -337,8 +337,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         idleName = '{}.draw'.format(id(self))
 
-        if not self.destroyed() and not async.inIdle(idleName):
-            async.idle(self.draw, name=idleName)
+        if not self.destroyed() and not idle.inIdle(idleName):
+            idle.idle(self.draw, name=idleName)
 
 
     def destroy(self):
@@ -511,11 +511,11 @@ class PlotPanel(viewpanel.ViewPanel):
 
         if immediate: realDraw()
         else:
-            self.__drawQueue.enqueue(async.idle, realDraw)
+            self.__drawQueue.enqueue(idle.idle, realDraw)
 
         if refresh:
             if immediate: canvas.draw()
-            else:         self.__drawQueue.enqueue(async.idle, canvas.draw)
+            else:         self.__drawQueue.enqueue(idle.idle, canvas.draw)
 
 
     def drawDataSeries(self, extraSeries=None, refresh=False, **plotArgs):
@@ -526,9 +526,9 @@ class PlotPanel(viewpanel.ViewPanel):
         asynchronously, to avoid locking up the GUI:
 
          1. The data for each ``DataSeries`` instance is prepared on
-            separate threads (using :func:`.async.run`).
+            separate threads (using :func:`.idle.run`).
 
-         2. A call to :func:`.async.wait` is enqueued on a
+         2. A call to :func:`.idle.wait` is enqueued on a
             :class:`.TaskThread`.
 
          3. This ``wait`` function waits until all of the data preparation
@@ -616,7 +616,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
         # Run the data preparation tasks,
         # a separate thread for each.
-        tasks = [async.run(t) for t in tasks]
+        tasks = [idle.run(t) for t in tasks]
 
         # Show a message while we're
         # preparing the data.
@@ -627,7 +627,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # Wait until data preparation is
         # done, then call __drawDataSeries.
         self.__drawRequests += 1
-        self.__drawQueue.enqueue(async.wait,
+        self.__drawQueue.enqueue(idle.wait,
                                  tasks,
                                  self.__drawDataSeries,
                                  toPlot,

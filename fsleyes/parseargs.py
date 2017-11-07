@@ -245,7 +245,7 @@ import six.moves.urllib as urllib
 import numpy            as np
 
 import fsl.data.image                     as fslimage
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
 
@@ -2262,7 +2262,7 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     line.
 
     .. note:: The scene arguments are applied asynchronously using
-              :func:`.async.idle`. This is done because the
+              :func:`.idle.idle`. This is done because the
               :func:`.applyOverlayArgs` function also applies its
               arguments asynchrnously, and we want the order of
               application to match the order in which these functions
@@ -2352,7 +2352,7 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # Now, apply arguments to the SceneOpts instance
         _applyArgs(args, overlayList, displayCtx, sceneOpts)
 
-    async.idle(apply)
+    idle.idle(apply)
 
 
 def generateSceneArgs(overlayList, displayCtx, sceneOpts, exclude=None):
@@ -2425,7 +2425,7 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
     command line.
 
     .. warning:: This function uses the :func:`.loadoverlay.loadOverlays`
-                 function which in turn uses :func:`.async.idle` to load the
+                 function which in turn uses :func:`.idle.idle` to load the
                  overlays.  This means that the overlays are loaded and
                  configured asynchronously, meaning that they may not be
                  loaded by the time that this function returns. See the

@@ -276,7 +276,7 @@ def hacksAndWorkarounds():
     # Under wxPython/Phoenix, the
     # wx.html package must be imported
     # before a wx.App has been created
-    import wx.html
+    import wx.html  # noqa
 
     # PyInstaller 3.2.1 forces matplotlib to use a
     # temporary directory for its settings and font
@@ -557,7 +557,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     :returns: the :class:`.FSLeyesFrame` that was created.
     """
 
-    import fsl.utils.async              as async
+    import fsl.utils.idle               as idle
     import fsleyes_widgets.utils.status as status
     import fsleyes.parseargs            as parseargs
 
@@ -657,7 +657,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # script can assume that all overlays have
     # already been loaded.
     if script is not None:
-        async.idle(frame.runScript, script)
+        idle.idle(frame.runScript, script)
 
     return frame
 

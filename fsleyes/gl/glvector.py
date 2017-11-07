@@ -16,7 +16,7 @@ import numpy               as np
 import OpenGL.GL           as gl
 
 import fsl.data.image      as fslimage
-import fsl.utils.async     as async
+import fsl.utils.idle      as idle
 import fsl.utils.transform as transform
 import fsleyes.colourmaps  as fslcm
 from . import resources    as glresources
@@ -166,7 +166,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         if preinit is not None:
             preinit()
 
-        async.idleWhen(initWrapper, self.texturesReady)
+        idle.idleWhen(initWrapper, self.texturesReady)
 
 
     def destroy(self):
@@ -299,7 +299,7 @@ class GLVectorBase(glimageobject.GLImageObject):
 
     def asyncUpdateShaderState(self, *args, **kwargs):
         """Calls :meth:`updateShaderState` and then :meth:`.Notifier.notify`, using
-        :func:`.async.idleWhen` function to make sure that it is only called
+        :func:`.idle.idleWhen` function to make sure that it is only called
         when :meth:`ready` returns ``True``.
         """
 
@@ -309,10 +309,10 @@ class GLVectorBase(glimageobject.GLImageObject):
             if self.updateShaderState() or alwaysNotify:
                 self.notify()
 
-        async.idleWhen(func,
-                       self.ready,
-                       name=self.name,
-                       skipIfQueued=True)
+        idle.idleWhen(func,
+                      self.ready,
+                      name=self.name,
+                      skipIfQueued=True)
 
 
     def registerAuxImage(self, which):
@@ -625,7 +625,7 @@ class GLVectorBase(glimageobject.GLImageObject):
             self.asyncUpdateShaderState(alwaysNotify=True)
 
         self.refreshAuxTexture('colour')
-        async.idleWhen(onRefresh, self.texturesReady)
+        idle.idleWhen(onRefresh, self.texturesReady)
 
 
     def __modImageChanged(self, *a):

@@ -18,7 +18,7 @@ import OpenGL.GL.ARB.texture_float        as arbtf
 
 import fsl.utils.notifier                 as notifier
 import fsl.utils.memoize                  as memoize
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets.utils.status       as status
@@ -89,7 +89,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
     When a ``Texture3D`` is created, and when its settings are changed, it may
     need to prepare the data to be passed to OpenGL - for large textures, this
     can be a time consuming process, so this is performed on a separate thread
-    using the :mod:`.async` module (unless the ``threaded`` parameter to
+    using the :mod:`.idle` module (unless the ``threaded`` parameter to
     :meth:`__init__` is set to ``False``). The :meth:`ready` method returns
     ``True`` or ``False`` to indicate whether the ``Texture3D`` can be used.
 
@@ -172,9 +172,9 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         # If threading is enabled, texture
         # refreshes are performed with an
-        # async.TaskThread.
+        # idle.TaskThread.
         if threaded:
-            self.__taskThread = async.TaskThread()
+            self.__taskThread = idle.TaskThread()
             self.__taskName   = '{}_{}_refresh'.format(type(self).__name__,
                                                        id(self))
 
@@ -543,7 +543,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                            function is called (but only if a setting has
                            changed).
         ``callback``       Optional function which will be called (via
-                           :func:`.async.idle`) when the texture has been
+                           :func:`.idle.idle`) when the texture has been
                            refreshed. Only called if ``refresh`` is
                            ``True``, and a setting has changed.
         ``notify``         Passed through to the :meth:`refresh` method.
@@ -651,7 +651,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
                            suppressed.
 
         :arg callback:     Optional function which will be called (via
-                           :func:`.async.idle`) when the texture has been
+                           :func:`.idle.idle`) when the texture has been
                            refreshed. Only called if ``refresh`` is
                            ``True``, and a setting has changed.
 
@@ -659,7 +659,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         instance, containing the shape of the texture data.
 
         .. note:: The texture data is generated on a separate thread, using
-                  the :func:`.async.run` function.
+                  the :func:`.idle.run` function.
         """
 
         # Don't bother if data
@@ -677,7 +677,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
         # This can take a long time for big
         # data, so we do it in a separate
-        # thread using the async module.
+        # thread using the idle module.
         def genData():
 
             # Another genData function is
@@ -687,7 +687,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # calling configTexture as well.
             if self.__taskThread is not None and \
                self.__taskThread.isQueued(self.__taskName):
-                raise async.TaskThreadVeto()
+                raise idle.TaskThreadVeto()
 
             if refreshData:
                 self.__determineTextureType()

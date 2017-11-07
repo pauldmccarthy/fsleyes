@@ -13,7 +13,7 @@ import numpy            as np
 import OpenGL.GL        as gl
 
 import fsleyes.gl       as fslgl
-import fsl.utils.async  as async
+import fsl.utils.idle   as idle
 from . import resources as glresources
 from . import              glimageobject
 from . import              textures
@@ -78,7 +78,7 @@ class GLLabel(glimageobject.GLImageObject):
             fslgl.gllabel_funcs.init(self)
             self.notify()
 
-        async.idleWhen(init, self.textureReady)
+        idle.idleWhen(init, self.textureReady)
 
 
     def destroy(self):
@@ -112,7 +112,7 @@ class GLLabel(glimageobject.GLImageObject):
     def updateShaderState(self, *args, **kwargs):
         """Calls :func:`.gl14.gllabel_funcs.updateShaderState` or
         :func:`.gl21.gllabel_funcs.updateShaderState`, and
-        :meth:`.Notifier.notify`. Uses :func:`.async.idleWhen` to ensure that
+        :meth:`.Notifier.notify`. Uses :func:`.idle.idleWhen` to ensure that
         they don't get called until :meth:`ready` returns ``True``.
         """
         alwaysNotify = kwargs.pop('alwaysNotify', None)
@@ -121,10 +121,10 @@ class GLLabel(glimageobject.GLImageObject):
             if fslgl.gllabel_funcs.updateShaderState(self) or alwaysNotify:
                 self.notify()
 
-        async.idleWhen(func,
-                       self.ready,
-                       name=self.name,
-                       skipIfQueued=True)
+        idle.idleWhen(func,
+                      self.ready,
+                      name=self.name,
+                      skipIfQueued=True)
 
 
     def addListeners(self):

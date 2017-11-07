@@ -15,7 +15,7 @@ import OpenGL.GL as gl
 
 import fsl.data.mesh       as fslmesh
 import fsl.data.image      as fslimage
-import fsl.utils.async     as async
+import fsl.utils.idle      as idle
 import fsl.utils.transform as transform
 
 import fsleyes.gl.routines               as glroutines
@@ -359,7 +359,7 @@ class Scene3DCanvas(object):
                 globj.register(self.__name, self.Refresh)
                 self.__glObjects[overlay] = globj
 
-        async.idle(create)
+        idle.idle(create)
         return True
 
 

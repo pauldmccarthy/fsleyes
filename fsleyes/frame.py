@@ -18,7 +18,7 @@ import six
 import wx
 import wx.lib.agw.aui                     as aui
 
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsl.utils.settings                 as fslsettings
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets.dialog             as fsldlg
@@ -775,7 +775,7 @@ class FSLeyesFrame(wx.Frame):
                           :class:`.ViewPanel`.
 
         :arg runOnIdle:   If ``True``, the action is executed on the
-                          ``async.idle`` loop. Otherwise (the default),
+                          ``idle.idle`` loop. Otherwise (the default),
                           the action is executed on the calling thread.
         """
 
@@ -795,7 +795,7 @@ class FSLeyesFrame(wx.Frame):
         if ignoreFocus or shortcut is None or (not keyDown):
             func = target.getAction(actionName)
             if runOnIdle:
-                async.idle(func)
+                idle.idle(func)
             else:
                 func()
             return
@@ -832,7 +832,7 @@ class FSLeyesFrame(wx.Frame):
         func = viewPanel.getAction(actionName)
 
         if runOnIdle:
-            async.idle(func)
+            idle.idle(func)
         else:
             func()
 

@@ -27,7 +27,7 @@ import            functools
 
 import            wx
 
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 import fsleyes_props                      as props
 import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.utils.typedict     as td
@@ -833,7 +833,7 @@ def _VolumeOpts_3DClipPlanes(
     def numClipPlanesChanged(*a):
         if fwidgets.isalive(panel) and \
            fwidgets.isalive(parent):
-            async.idle(panel.updateWidgets, target, '3d')
+            idle.idle(panel.updateWidgets, target, '3d')
 
     name = '{}_{}_VolumeOpts_3DClipPlanes'.format(
         target.name, id(panel))

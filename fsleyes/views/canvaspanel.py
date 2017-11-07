@@ -14,8 +14,8 @@ import deprecation
 
 import wx
 
-import fsl.utils.async                             as async
-from   fsl.utils.platform  import platform         as fslplatform
+import fsl.utils.idle                              as idle
+from   fsl.utils.platform import platform          as fslplatform
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
@@ -303,7 +303,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                                 self.__name,
                                 self.__bgfgColourChanged)
 
-        async.idle(self.__bgfgColourChanged)
+        idle.idle(self.__bgfgColourChanged)
 
 
     def destroy(self):
@@ -689,22 +689,22 @@ class CanvasPanel(viewpanel.ViewPanel):
         enabled, calls :meth:`__movieUpdate`, to start the movie loop.
         """
 
-        # The fsl.utils.async idle loop timeout
+        # The fsl.utils.idle idle loop timeout
         # defaults to 200 milliseconds, which can
         # cause delays in frame updates. So when
         # movie mode is on, we bump up the rate.
         def startMovie():
-            async.setIdleTimeout(10)
+            idle.setIdleTimeout(10)
             if not self.__movieLoop(startLoop=True):
-                async.setIdleTimeout(None)
+                idle.setIdleTimeout(None)
 
         # The __movieModeChanged method is called
         # on the props event queue. Here we make
         # sure that __movieLoop() is called *off*
         # the props event queue, by calling it from
         # the idle loop.
-        if self.movieMode: async.idle(startMovie)
-        else:              async.setIdleTimeout(None)
+        if self.movieMode: idle.idle(startMovie)
+        else:              idle.setIdleTimeout(None)
 
 
     def __movieLoop(self, startLoop=False):
@@ -923,7 +923,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         # Refresh the canvases when all
         # GLObjects are ready to be drawn.
-        async.idleWhen(update, allReady, canvases, rate, pollTime=rate / 10)
+        idle.idleWhen(update, allReady, canvases, rate, pollTime=rate / 10)
 
         return True
 
@@ -949,7 +949,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.ThawSwapBuffers()
             c.Refresh()
 
-        async.idle(self.__movieLoop, after=rate)
+        idle.idle(self.__movieLoop, after=rate)
 
 
     def __syncMovieRefresh(self, canvases, rate):
@@ -971,4 +971,4 @@ class CanvasPanel(viewpanel.ViewPanel):
             c.ThawSwapBuffers()
             c.SwapBuffers()
 
-        async.idle(self.__movieLoop, after=rate)
+        idle.idle(self.__movieLoop, after=rate)

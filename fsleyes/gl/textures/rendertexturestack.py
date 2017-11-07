@@ -19,7 +19,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes.gl.routines as glroutines
-import fsl.utils.async     as async
+import fsl.utils.idle      as idle
 from . import                 rendertexture
 
 
@@ -38,7 +38,7 @@ class RenderTextureStack(object):
     in real time.
 
     The :class:`.RenderTexture` textures are updated in an idle loop, via the
-    :func:`.async.idle` function.
+    :func:`.idle.idle` function.
 
 
     .. note:: A ``RenderTextureStack`` instance must be manually updated
@@ -76,7 +76,7 @@ class RenderTextureStack(object):
         self.__lastDrawnTexture   = None
         self.__updateQueue        = []
 
-        async.idle(self.__textureUpdateLoop)
+        idle.idle(self.__textureUpdateLoop)
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -166,14 +166,14 @@ class RenderTextureStack(object):
 
     def __destroyTextures(self):
         """Destroys all :class:`.RenderTexture` instances. This is performed
-        asynchronously, via the ``.async.idle`` function.
+        asynchronously, via the ``idle.idle`` function.
         """
 
         texes = self.__textures
         self.__textures = []
 
         for tex in texes:
-            async.idle(tex.destroy)
+            idle.idle(tex.destroy)
 
 
     def onGLObjectUpdate(self):
@@ -221,18 +221,18 @@ class RenderTextureStack(object):
         self.__textureDirty = [True] * len(self.__textures)
         self.__updateQueue  = idxs
 
-        async.idle(self.__textureUpdateLoop)
+        idle.idle(self.__textureUpdateLoop)
 
 
     def __textureUpdateLoop(self):
-        """This method is called via the :func:`.async.idle` function.
+        """This method is called via the :func:`.idle.idle` function.
         It loops through all :class:`.RenderTexture` instances, and
         refreshes any that have been marked as *dirty*.
 
         Each call to this method causes one ``RenderTexture`` to be
         refreshed. After a ``RenderTexture`` has been refreshed, if there
         are dirty more ``RenderTexture`` instances, this method re-schedules
-        itself to be called again via :func:`.async.idle`.
+        itself to be called again via :func:`.idle.idle`.
         """
 
         if len(self.__updateQueue) == 0 or len(self.__textures) == 0:
@@ -250,7 +250,7 @@ class RenderTextureStack(object):
             self.__refreshTexture(tex, idx)
 
         if len(self.__updateQueue) > 0:
-            async.idle(self.__textureUpdateLoop)
+            idle.idle(self.__textureUpdateLoop)
 
 
     def __refreshTexture(self, tex, idx):

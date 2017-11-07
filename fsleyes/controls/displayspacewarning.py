@@ -15,7 +15,7 @@ import                   logging
 import                   wx
 import wx.lib.agw.aui as wxaui
 
-import fsl.utils.async as async
+import fsl.utils.idle  as idle
 import fsleyes.panel   as fslpanel
 import fsleyes.strings as strings
 
@@ -92,7 +92,7 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
                                 self.name,
                                 self.__displaySpaceChanged)
 
-        async.idle(self.__displaySpaceChanged)
+        idle.idle(self.__displaySpaceChanged)
 
 
     def destroy(self):

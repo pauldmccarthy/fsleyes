@@ -14,7 +14,7 @@ import logging
 import wx
 
 import fsl.data.image                as fslimage
-import fsl.utils.async               as async
+import fsl.utils.idle                as idle
 
 import fsleyes_props                 as props
 import fsleyes_widgets.bitmaptoggle  as bmptoggle
@@ -340,7 +340,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
             # otherwise it will corrupt the
             # EditableListBox state
             else:
-                async.idle(self.__overlayListChanged)
+                idle.idle(self.__overlayListChanged)
 
 
     def __lbDblClick(self, ev):

@@ -14,7 +14,7 @@ import logging
 import wx
 
 import fsl.data.image             as fslimage
-import fsl.utils.async            as async
+import fsl.utils.idle             as idle
 
 import fsleyes_props              as props
 import fsleyes_widgets.widgetgrid as widgetgrid
@@ -158,9 +158,9 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
             self.__volumeChanged()
 
         if refreshGrid:
-            async.idle(doRefreshGrid,
-                       name='{}_doRefreshGrid'.format(self.name),
-                       skipIfQueued=True)
+            idle.idle(doRefreshGrid,
+                      name='{}_doRefreshGrid'.format(self.name),
+                      skipIfQueued=True)
 
 
     def refreshTags(self, comps=None):
@@ -413,7 +413,7 @@ class ComponentGrid(fslpanel.FSLeyesPanel):
         #  3. Grid refresh
         #
         # may raise an error
-        async.idle(grid.SetSelection, opts.volume, -1)
+        idle.idle(grid.SetSelection, opts.volume, -1)
 
 
     def __labelsChanged(self, volLabels, topic, components):

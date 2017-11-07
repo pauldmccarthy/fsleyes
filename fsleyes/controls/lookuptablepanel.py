@@ -26,7 +26,7 @@ import            logging
 
 import wx
 
-import fsl.utils.async              as async
+import fsl.utils.idle               as idle
 import fsl.utils.settings           as fslsettings
 import fsl.data.melodicimage        as fslmelimage
 
@@ -270,7 +270,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         # The label widgets are created via consecutive
         # calls to addLabel, which is scheduled on the
-        # async.idle loop. We create blockSize labels
+        # idle.idle loop. We create blockSize labels
         # in each asynchronous call.
         blockSize = 100
 
@@ -302,7 +302,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
                     self.Enable()
                     self.__labelList.Enable()
                 else:
-                    async.idle(addLabel, labelIdx + 1)
+                    idle.idle(addLabel, labelIdx + 1)
 
             except wx.PyDeadObjectError:
                 pass
@@ -312,7 +312,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
 
         self.__labelList.Disable()
         self.Disable()
-        async.idle(addLabel, 0)
+        idle.idle(addLabel, 0)
 
 
     def __setLut(self, lut):

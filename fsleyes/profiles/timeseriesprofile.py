@@ -9,7 +9,7 @@ profile for the :class:`.TimeSeriesPanel`.
 """
 
 
-import fsl.utils.async       as async
+import fsl.utils.idle        as idle
 import fsl.data.image        as fslimage
 import fsl.data.melodicimage as fslmelimage
 from . import                   plotprofile
@@ -105,7 +105,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         def update():
             opts.volume = volume
 
-        async.idle(
+        idle.idle(
             update,
             name='{}_{}_volume'.format(self.name, id(overlay)),
             dropIfQueued=True)

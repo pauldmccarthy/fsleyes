@@ -16,7 +16,7 @@ import wx.html                            as wxhtml
 import fsleyes_widgets.elistbox           as elistbox
 import fsleyes.panel                      as fslpanel
 import fsleyes.strings                    as strings
-import fsl.utils.async                    as async
+import fsl.utils.idle                     as idle
 from   fsl.utils.platform import platform as fslplatform
 import fsl.data.atlases                   as atlases
 import fsl.data.constants                 as constants
@@ -133,7 +133,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         enable = [e for e in enable if atlases.hasAtlas(e)]
         for i, e in enumerate(enable):
             refresh = i == len(enable) - 1
-            async.idle(self.enableAtlasInfo, e, refresh=refresh)
+            idle.idle(self.enableAtlasInfo, e, refresh=refresh)
 
 
     def destroy(self):
@@ -241,7 +241,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
     def __buildAtlasList(self):
         """Clears and then builds the list of available atlases. The
-        This is performed asynchronously, via the :func:`.async.run` function,
+        This is performed asynchronously, via the :func:`.idle.run` function,
         although the atlas list widget is updated on the ``wx`` idle loop.
         """
 

@@ -15,7 +15,7 @@ import numpy as np
 
 import fsleyes_props       as props
 import fsl.utils.transform as transform
-import fsl.utils.async     as async
+import fsl.utils.idle      as idle
 import fsleyes.profiles    as profiles
 
 
@@ -144,7 +144,7 @@ class Scene3DViewProfile(profiles.Profile):
 
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # for the reason why we do this asynchronously.
-        async.idle(update, timeout=0.1)
+        idle.idle(update, timeout=0.1)
 
 
     def _panModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
