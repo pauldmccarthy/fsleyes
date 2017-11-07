@@ -551,9 +551,6 @@ build-pypi-dist:
 
   # Sanity check - make sure we can start FSLeyes
   after_script:
-    - pwd
-    - ls
-    - ls dist
     - xvfb-run dist/FSLeyes/fsleyes -V
 
   artifacts:
