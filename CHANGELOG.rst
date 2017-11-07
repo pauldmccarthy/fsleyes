@@ -2,6 +2,22 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.17.0 (Under development)
+--------------------------
+
+
+* Adjustments to the use of ``GL_LUMINANCE`` textures - they are now
+  only used as a fallback if there are are absolutely no other options,
+  as they do not display correctly on some more recent GL drivers.
+* Improved the version update notification dialog.
+* Fixed use of the ``help`` function in the python shell.
+* The :attr:`.Volume3DOpts.dithering` property, and the ``--dithering``
+  command line option are now deprecated - a suitable dithering level
+  is now automatically determined.
+* Removed some XNAT account credentials which were accidentally hard-coded.
+
+
+
 0.16.0 (Tuesday 31st October 2017)
 ----------------------------------
 
