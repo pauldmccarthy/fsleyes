@@ -38,8 +38,8 @@ Editing NIFTI images
 
 The :ref:`orthographic view <ortho_lightbox_views_ortho>` has an *edit mode*
 which allows you to edit the values contained in NIFTI images.  You can enter
-edit mode in any orthographic view via its settings menu, e.g. *Settings*
-|right_arrow| *Ortho View 1* |right_arrow| *Edit mode*.
+edit mode in any orthographic view via the *Tools* |right_arrow| *Edit mode*
+menu option.
 
 .. image:: images/editing_images_edit_mode_menu.png
    :align: center
