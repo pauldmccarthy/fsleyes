@@ -2,8 +2,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.17.0 (Thursday 9th November 2017)
------------------------------------
+0.17.0 (Sunday 12th November 2017)
+----------------------------------
 
 
 * Adjustments to the use of ``GL_LUMINANCE`` textures - they are now
