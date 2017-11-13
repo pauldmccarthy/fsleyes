@@ -500,6 +500,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__containerPanel
 
 
+    @property
     def colourBarCanvas(self):
         """If a colour bar is being displayed, this method returns
         the :class:`.ColourBarCanvas` instance which is used by the
