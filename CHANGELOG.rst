@@ -7,6 +7,12 @@ chronological order.
 
 
 * Fixed API documentation generation
+
+
+0.17.1 (Monday 13th Novermber 2017)
+-----------------------------------
+
+
 * Fixed screenhot bug (related to :meth:`.CanvasPanel.colourBarCanvas`
   property).
 
