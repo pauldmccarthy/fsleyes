@@ -16,7 +16,11 @@ import          contextlib
 import          wx
 import numpy as np
 
+import matplotlib as mpl
+mpl.use('WxAgg')  # noqa
+
 import fsleyes_props                as props
+import fsl.utils.idle               as idle
 import                                 fsleyes
 import fsleyes.frame                as fslframe
 import fsleyes.main                 as fslmain
@@ -53,40 +57,52 @@ def tempdir():
         shutil.rmtree(testdir)
 
 
+initialised = [False]
+
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
     gc.collect()
+    idle.idleReset()
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
-    finishingDelay = kwargs.pop('finishingDelay', 500)
+    finishingDelay = kwargs.pop('finishingDelay', 5)
     callAfterApp   = kwargs.pop('callAfterApp',   None)
 
     result = [None]
     raised = [None]
+    frame  = [None]
     app    = [None]
 
-    def dorun():
-
+    def init():
         fsleyes.initialise()
         props.initGUI()
         colourmaps.init()
+        initialised[0] = True
+        fslgl.bootstrap((2, 1))
+        wx.CallAfter(run)
+
+    def finish():
+        frame[0].Close(askUnsaved=False, askLayout=False)
+        app[0].ExitMainLoop()
+
+    def run():
 
         overlayList = fsloverlay.OverlayList()
         displayCtx  = dc.DisplayContext(overlayList)
-        frame       = fslframe.FSLeyesFrame(None,
+        frame[0]    = fslframe.FSLeyesFrame(None,
                                             overlayList,
                                             displayCtx)
 
         app[0].SetOverlayListAndDisplayContext(overlayList, displayCtx)
-        app[0].SetTopWindow(frame)
+        app[0].SetTopWindow(frame[0])
 
-        frame.Show()
+        frame[0].Show()
 
         try:
             if func is not None:
-                result[0] = func(frame,
+                result[0] = func(frame[0],
                                  overlayList,
                                  displayCtx,
                                  *args,
@@ -97,32 +113,37 @@ def run_with_fsleyes(func, *args, **kwargs):
             raised[0] = e
 
         finally:
-            def finish():
-                frame.Close(askUnsaved=False, askLayout=False)
-                app[0].ExitMainLoop()
             wx.CallLater(finishingDelay, finish)
 
-    def glcallback():
-        fslgl.bootstrap((2, 1))
-        wx.CallLater(startingDelay, dorun)
-
     app[0] = fslmain.FSLeyesApp()
+    dummy  = wx.Frame(None)
+    panel  = wx.Panel(dummy)
+    sizer  = wx.BoxSizer(wx.HORIZONTAL)
+    sizer.Add(panel, flag=wx.EXPAND, proportion=1)
+    dummy.SetSizer(sizer)
 
     if callAfterApp is not None:
         callAfterApp()
 
-    dummy = wx.Frame(None)
+    dummy.SetSize((100, 100))
+    dummy.Layout()
     dummy.Show()
 
-    wx.CallAfter(fslgl.getGLContext, parent=dummy, ready=glcallback)
+    if not initialised[0]:
+        wx.CallLater(startingDelay,
+                     fslgl.getGLContext,
+                     parent=panel,
+                     ready=init)
+    else:
+        wx.CallLater(startingDelay, run)
+
     app[0].MainLoop()
+    dummy.Close()
 
     time.sleep(1)
 
     if raised[0] and propagateRaise:
         raise raised[0]
-
-    del app[0]
 
     return result[0]
 
