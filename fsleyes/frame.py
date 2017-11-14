@@ -256,7 +256,7 @@ class FSLeyesFrame(wx.Frame):
         # __makeRecentPathsMenu methods
         import fsleyes.actions.loadoverlay as loadoverlay
         loadoverlay.recentPathManager.register(
-            'FSLeyesFrame', self.__makeRecentPathsMenu)
+            self.__name, self.__makeRecentPathsMenu)
 
         # This dictionary contains mappings of the form
         #
@@ -1131,6 +1131,11 @@ class FSLeyesFrame(wx.Frame):
         # they'll probably complain
         for panel in self.__viewPanels:
             panel.destroy()
+
+        # Deregister loadoverlay listener
+        # (registered in __init__)
+        import fsleyes.actions.loadoverlay as loadoverlay
+        loadoverlay.recentPathManager.deregister(self.__name)
 
 
     def __restoreState(self, restore):
