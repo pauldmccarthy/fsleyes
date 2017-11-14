@@ -35,17 +35,18 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
 
     with tempdir():
 
-        realYield()
-        idle.idle(screenshot.screenshot,
-                  panel,
-                  'screenshot_{}.png'.format(stype))
+        fname = 'screenshot_{}.png'.format(stype)
+
+        realYield(100)
+        idle.idle(screenshot.screenshot, panel, fname)
         realYield()
 
-        benchmark  = op.join(datadir, 'screenshot_{}.png'.format(stype))
-        screenshot = mplimg.imread('screenshot.png')
+        benchmark  = op.join(datadir, 'test_screenshot_{}.png'.format(stype))
+        screenshot = mplimg.imread(fname)
         benchmark  = mplimg.imread(benchmark)
 
         return compare_images(screenshot, benchmark, 50)[0]
+
 
 def test_screenshot_ortho():
     run_with_orthopanel(_test_screenshot, 'ortho', 'MNI152_T1_2mm_brain')
