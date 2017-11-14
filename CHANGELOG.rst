@@ -2,13 +2,13 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.17.1 (Monday 13th November 2017)
-----------------------------------
+0.17.2 (Wednesday 15th November 2017)
+-------------------------------------
 
 
+* Fixed API documentation generation
 * Fixed screenhot bug (related to :meth:`.CanvasPanel.colourBarCanvas`
   property).
-
 
 
 0.17.0 (Sunday 12th November 2017)
