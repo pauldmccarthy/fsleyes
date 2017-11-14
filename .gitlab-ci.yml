@@ -304,7 +304,7 @@ variables:
     # matplotlib backend, matplotlib will
     # try and access tkinter, which doesn't
     # exist.
-    - MPLBACKEND='wxagg' xvfb-run python setup.py test
+    - MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" python setup.py test
 
 
 test:2.7:
