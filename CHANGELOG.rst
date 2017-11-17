@@ -2,6 +2,15 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.17.3 (Under development)
+--------------------------
+
+
+* Fixed issue linking to the ``freeglut`` library on linux builds.
+* Fixed bug drawing ``label`` overlays on lightbox views - outlines
+  were not being drawn.
+
+
 0.17.2 (Wednesday 15th November 2017)
 -------------------------------------
 
