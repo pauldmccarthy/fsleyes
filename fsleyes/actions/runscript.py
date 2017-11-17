@@ -181,6 +181,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     from   fsleyes.views.histogrampanel     import HistogramPanel
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     from   fsleyes.views.shellpanel         import ShellPanel
+    from   fsleyes.actions.screenshot       import screenshot
     import fsl.data.image                       as fslimage
     import fsl.data.featimage                   as featimage
     import fsl.data.melodicimage                as melimage
@@ -292,6 +293,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('overlayList',        overlayList),
         ('displayCtx',         displayCtx),
         ('frame',              frame),
+        ('screenshot',         screenshot),
         ('scaledVoxels',       scaledVoxels),
         ('trueScaledVoxels',   trueScaledVoxels),
         ('rawVoxels',          rawVoxels),
