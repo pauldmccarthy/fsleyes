@@ -85,7 +85,14 @@ def draw2D(self, zpos, axes, *args, **kwargs):
     glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
 
 
+def drawAll(self, axes, *args, **kwargs):
+    """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
+
+    offsets = self.calculateOutlineOffsets(axes)
+    self.shader.set('outlineOffsets', offsets)
+    glvolume_funcs.drawAll(self, axes, *args, **kwargs)
+
+
 preDraw  = glvolume_funcs.preDraw
 draw3D   = glvolume_funcs.draw3D
-drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw
