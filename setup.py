@@ -502,7 +502,8 @@ class pyinstaller(Command):
         if len(libglut) != 1:
             raise RuntimeError('Cannot identify libglut')
 
-        os.symlink(libglut[0], op.join(distdir, 'FSLeyes', 'glut'))
+        os.symlink(op.basename(libglut[0]),
+                   op.join(distdir, 'FSLeyes', 'glut'))
 
         # Copy assets
         os.makedirs(assetdir)
