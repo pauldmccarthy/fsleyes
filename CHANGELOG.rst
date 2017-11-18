@@ -9,6 +9,9 @@ chronological order.
 * Fixed issue linking to the ``freeglut`` library on linux builds.
 * Fixed bug drawing ``label`` overlays on lightbox views - outlines
   were not being drawn.
+* The :func:`~fsleyes.actions.screenshot.screenshot` function is
+  now available in the shell environment (in the :class:`.ShellPanel`,
+  and in scripts executed by the :class:`.RunScriptAction`).
 
 
 0.17.2 (Wednesday 15th November 2017)
