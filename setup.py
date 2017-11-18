@@ -456,7 +456,7 @@ class pyinstaller(Command):
             'jinja2.asyncsupport',
         ]
 
-        extrabins = ['glut', 'OSMesa', 'xcb', 'SDL-1.2']
+        extrabins = ['glut', 'OSMesa', 'xcb', 'SDL-1.2', 'notify']
         extrabins = [find_library(b)  for b in extrabins]
         extrabins = ['{}:.'.format(b) for b in extrabins]
 
