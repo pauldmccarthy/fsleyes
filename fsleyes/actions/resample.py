@@ -70,7 +70,8 @@ class ResampleAction(base.Action):
         ``ResampleDialog``, and then resamples the currently selected overlay.
         """
 
-        ovl = self.__displayCtx.getSelectedOverlay()
+        ovl  = self.__displayCtx.getSelectedOverlay()
+        opts = self.__displayCtx.getOpts(ovl)
 
         dlg = ResampleDialog(
             self.__frame,
@@ -88,7 +89,11 @@ class ResampleAction(base.Action):
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
         name      = '{}_resampled'.format(ovl.name)
 
+        if ovl.ndims == 3: slc = None
+        else:              slc = opts.index()
+
         resampled, xform = ovl.resample(newShape,
+                                        sliceobj=slc,
                                         dtype=dtype,
                                         order=interp,
                                         smooth=smoothing)
@@ -195,12 +200,18 @@ class ResampleDialog(wx.Dialog):
         self.__dtypeLabel .SetLabel(strings.labels[self, 'dtype'])
         self.__smoothLabel.SetLabel(strings.labels[self, 'smoothing'])
 
-        self.__interp     .SetToolTip(tooltips.misc[self, 'interpolation'])
-        self.__interpLabel.SetToolTip(tooltips.misc[self, 'interpolation'])
-        self.__dtype      .SetToolTip(tooltips.misc[self, 'dtype'])
-        self.__dtypeLabel .SetToolTip(tooltips.misc[self, 'dtype'])
-        self.__smooth     .SetToolTip(tooltips.misc[self, 'smoothing'])
-        self.__smoothLabel.SetToolTip(tooltips.misc[self, 'smoothing'])
+        self.__interp     .SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'interpolation']))
+        self.__interpLabel.SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'interpolation']))
+        self.__dtype      .SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'dtype']))
+        self.__dtypeLabel .SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'dtype']))
+        self.__smooth     .SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'smoothing']))
+        self.__smoothLabel.SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'smoothing']))
 
         self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
