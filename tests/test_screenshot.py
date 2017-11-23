@@ -45,7 +45,7 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
         screenshot = mplimg.imread(fname)
         benchmark  = mplimg.imread(benchmark)
 
-        return compare_images(screenshot, benchmark, 50)[0]
+        assert compare_images(screenshot, benchmark, 50)[0]
 
 
 def test_screenshot_ortho():
