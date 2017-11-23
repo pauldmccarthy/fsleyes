@@ -161,7 +161,6 @@ class CanvasPanel(viewpanel.ViewPanel):
          to the centre panel (accessed via :meth:`centrePanel`).
 
       3. Add any other custom content to the centre panel.
-
     """
 
 
@@ -770,6 +769,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         This method may be overridden by sub-classes for custom behaviour
         (e.g. the :class:`.Scene3DPanel`).
+
+        :returns:   A value which identifies the current movie frame. This may
+                    be a volume or voxel index, or a world coordinate location
+                    on one axis.
         """
 
         axis = self.movieAxis
@@ -794,6 +797,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                 if opts.volume >= limit - 1: opts.volume  = 0
                 else:                        opts.volume += 1
 
+                frame = opts.volume
+
             else:
                 voxel = opts.getVoxel()
                 if voxel[axis] >= limit - 1: voxel[axis]  = 0
@@ -801,6 +806,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
                 self.displayCtx.location = opts.transformCoords(
                     voxel, 'voxel', 'display')
+
+                frame = voxel[axis]
+            return frame
 
         def mesh():
 
@@ -813,8 +821,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
                 opts.vertexDataIndex = val
 
+                return val
+
             else:
-                other()
+                return other()
 
         def other():
 
@@ -827,13 +837,16 @@ class CanvasPanel(viewpanel.ViewPanel):
             else:           pos = pos + delta
 
             self.displayCtx.location.setPos(axis, pos)
+            return pos
 
         import fsl.data.image as fslimage
         import fsl.data.mesh  as fslmesh
 
-        if   isinstance(overlay, fslimage.Nifti):       nifti()
-        elif isinstance(overlay, fslmesh.TriangleMesh): mesh()
-        else:                                           other()
+        if   isinstance(overlay, fslimage.Nifti):       frame = nifti()
+        elif isinstance(overlay, fslmesh.TriangleMesh): frame = mesh()
+        else:                                           frame = other()
+
+        return frame
 
 
     def __movieFrame(self):
