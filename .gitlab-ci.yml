@@ -144,88 +144,9 @@ variables:
     - tags
 
 
-##########################################################
-# The setup_ssh anchor contains a before_script section
-# which does the following:
-#
-#  - Sets up key-based SSH login, and
-#    installs the private keys, so
-#    we can connect to servers.
-#
-#  - Configures git, and adds the
-#    upstream repo as a remote
-#
-# (see https://docs.gitlab.com/ce/ci/ssh_keys/README.html)
-#
-# NOTE: It is assumed that non-docker
-#       executors are already configured
-#       (or don't need any configuration).
-##########################################################
-
-
 .setup_ssh: &setup_ssh
   before_script:
-
-    - if [[ -f /.dockerenv ]]; then
-
-        apt-get update -y                           || yum -y check-update                     || true;
-        apt-get install -y git rsync openssh-client || yum install -y git rsync openssh-client || true;
-
-        eval $(ssh-agent -s);
-        mkdir -p $HOME/.ssh;
-
-        echo "$SSH_PRIVATE_KEY_GIT" > $HOME/.ssh/id_git;
-
-        if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
-          echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
-          echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
-          echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
-        fi
-
-        chmod go-rwx $HOME/.ssh/id_*;
-
-        ssh-add $HOME/.ssh/id_git;
-
-        if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
-          ssh-add $HOME/.ssh/id_apidoc_deploy;
-          ssh-add $HOME/.ssh/id_userdoc_deploy;
-          ssh-add $HOME/.ssh/id_build_deploy;
-        fi
-
-        echo "$SSH_SERVER_HOSTKEYS" > $HOME/.ssh/known_hosts;
-
-        touch $HOME/.ssh/config;
-
-        echo "Host ${UPSTREAM_URL##*@}"                      >> $HOME/.ssh/config;
-        echo "    User ${UPSTREAM_URL%@*}"                   >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_git"            >> $HOME/.ssh/config;
-
-        echo "Host userdocdeploy"                            >> $HOME/.ssh/config;
-        echo "    HostName ${USERDOC_HOST##*@}"              >> $HOME/.ssh/config;
-        echo "    User ${USERDOC_HOST%@*}"                   >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_userdoc_deploy" >> $HOME/.ssh/config;
-
-        echo "Host apidocdeploy"                             >> $HOME/.ssh/config;
-        echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
-        echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
-
-        echo "Host builddeploy"                              >> $HOME/.ssh/config;
-        echo "    HostName ${BUILD_HOST##*@}"                >> $HOME/.ssh/config;
-        echo "    User ${BUILD_HOST%@*}"                     >> $HOME/.ssh/config;
-        echo "    IdentityFile $HOME/.ssh/id_build_deploy"   >> $HOME/.ssh/config;
-
-        echo "Host *"                                        >> $HOME/.ssh/config;
-        echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;
-
-        git config --global user.name  "Gitlab CI";
-        git config --global user.email "gitlabci@localhost";
-
-        if [[ `git remote -v` == *"upstream"* ]]; then
-            git remote remove upstream;
-        fi;
-        git remote add upstream "$UPSTREAM_URL:$UPSTREAM_PROJECT";
-      fi
+    - bash ./.ci/setup_ssh.sh
 
 
 ###################################################
@@ -238,11 +159,7 @@ variables:
 
 .patch_version: &patch_version
   before_script:
-
-    - if [[ "x$CI_COMMIT_TAG" != "x" ]]; then
-        echo "Release detected - patching version - $CI_COMMIT_REF_NAME";
-        sed -ie "s/^__version__ = .*$/__version__ = '$CI_COMMIT_REF_NAME'/g" fsleyes/version.py;
-      fi
+    - bash ./.ci/patch_version.sh
 
 
 ############
@@ -261,50 +178,7 @@ variables:
     - docker
 
   script:
-
-    # Install $PY_VERSION, xvfb, and all
-    # of the wxpython dependencies.
-    - apt-get update -y || true
-    - apt-get install -y software-properties-common python-software-properties xvfb libgtk2.0-0 libgtk-3-0 libnotify4 freeglut3 libsdl1.2debian
-    - add-apt-repository -y ppa:deadsnakes/ppa
-    - apt-get update -y || true
-    - apt-get install -y $PY_VERSION "$PY_VERSION"-dev $PY_PACKAGES
-    - $PY_VENV test.venv
-    - source test.venv/bin/activate
-    - pip install --upgrade pip setuptools
-
-    # If running on a fork repository, we merge in the
-    # upstream/master branch. This is done so that merge
-    # requests from fork to the parent repository will
-    # have unit tests run on the merged code, something
-    # which gitlab CE does not currently do for us.
-    - if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
-        git fetch upstream;
-        git merge --no-commit --no-ff upstream/master;
-      fi;
-
-    - $INSTALL_WX
-
-    # All other deps can be installed as normal.
-    # We install test dependenciesd through pip,
-    # because if we let setuptools do it, it
-    # will build/install everything from source,
-    # rather than using wheels.
-    - pip install -r requirements.txt
-    - pip install sphinx sphinx-rtd-theme
-    - pip install pytest pytest-cov pytest-html pytest-runner mock coverage
-
-    # style stage
-    - if [ "$TEST_STYLE"x != "x" ]; then pip install pylint flake8; fi;
-    - if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || true; fi;
-    - if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
-    - if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
-
-    # Run the tests. If we don't set the
-    # matplotlib backend, matplotlib will
-    # try and access tkinter, which doesn't
-    # exist.
-    - MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" python setup.py test
+    - bash ./.ci/test_template.sh
 
 
 test:2.7:
@@ -385,18 +259,14 @@ style:
   stage: doc
   image: python:3.5
 
-  before_script:
-    - apt-get update -y
-    - apt-get install -y graphviz
-
 
 build-userdoc:
   <<: *build_doc
   <<: *patch_version
 
   script:
-    - python setup.py userdoc
-    - mv userdoc/html userdoc/"$CI_COMMIT_REF_NAME"
+    - bash ./.ci/build_userdoc.sh
+
   artifacts:
     expire_in: 1 day
     paths:
@@ -408,8 +278,8 @@ build-apidoc:
   <<: *patch_version
 
   script:
-    - python setup.py apidoc
-    - mv apidoc/html apidoc/"$CI_COMMIT_REF_NAME"
+    - bash ./.ci/build_apidoc.sh
+
   artifacts:
     expire_in: 1 day
     paths:
@@ -432,9 +302,7 @@ build-pypi-dist:
     - docker
 
   script:
-   - pip install wheel
-   - python setup.py sdist
-   - python setup.py bdist_wheel
+   - bash ./.ci/build_pypi_dist.sh
 
   artifacts:
     expire_in: 1 day
@@ -445,44 +313,12 @@ build-pypi-dist:
 
 .centos_pre_build: &centos_pre_build
   before_script:
-
-    - yum check-update -y || true
-    - yum install -y epel-release
-
-    # Install compilers and dependencies
-    # for compiling Python
-    - yum groupinstall -y "Development tools"
-    - yum install -y wget zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel gdbm-devel libpcap-devel xz-devel expat-devel
-
-    # install fsleyes/wxpython runtime dependencies
-    - yum install -y freeglut libnotify mesa-libOSMesa SDL xorg-x11-server-Xvfb
-
-    # install wxpython compile-time dependencies.
-    # We currently have to compile wx from source
-    # because, on centos6, there is no
-    # python 3.5/wxpython binary wheel available
-    # for download.
-    - if [ "$WXPYTHON_CENTOS_GTK" == "gtk3" ]; then
-        yum install -y gtk3-devel webkitgtk3-devel;
-      else
-        yum install -y gtk2-devel webkitgtk-devel;
-      fi;
-
-    - yum install -y libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
+    - bash ./.ci/centos_pre_build.sh
 
 
 .ubuntu_pre_build: &ubuntu_pre_build
   before_script:
-
-    # Install python compile-time dependencies
-    - apt-get update -y
-    - apt-get install -y wget
-    - apt-get install -y build-essential
-    - apt-get install -y zlib1g-dev libbz2-dev libnotify-dev libssl-dev libncursesw5-dev libsqlite3-dev libreadline-gplv2-dev libgdbm-dev libc6-dev libpcap-dev libexpat1-dev
-
-    # install fsleyes/wxpython runtime dependencies
-    - apt-get install -y freeglut3 libnotify4 libosmesa6 libsdl1.2debian xvfb
-    - apt-get install -y libgtk2.0-0 libgtk-3-0
+    - bash ./.ci/ubuntu_pre_build.sh
 
 
 .linux_do_build: &linux_do_build
@@ -490,73 +326,7 @@ build-pypi-dist:
     - docker
 
   script:
-    # Download, compile, and install python
-    - pushd /
-    - wget http://python.org/ftp/python/3.5.3/Python-3.5.3.tar.xz
-    - tar xf Python-3.5.3.tar.xz
-    - cd Python-3.5.3
-    - ./configure --prefix=`pwd`/install/ --enable-shared
-    - make
-    - make install
-    - export PATH=`pwd`/install/bin:$PATH
-    - export LD_LIBRARY_PATH=`pwd`/install/lib
-
-    # Make  sure that a command called "python" exists
-    - pushd install/bin
-    - if [ ! -f python ]; then
-        ln -s python3.5 python;
-      fi
-
-    # get pip
-    - wget https://bootstrap.pypa.io/get-pip.py
-    - python get-pip.py
-
-    # Make sure that a command called "pip" exists
-    - if  [ ! -f pip ]; then
-        ln -s pip3.5 pip;
-      fi
-    - popd
-    - popd
-
-    # Installing pyopengl-accelerete the
-    # standard way doesn't seem to work -
-    # the numpy module doesn't get installed.
-    # Force-installing from source works
-    # though.
-    - pip install numpy
-    - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
-
-    # pre-built binaries for wxpython are available
-    # for ubuntu, but not for centos, where it needs
-    # to be compiled from source.
-    - if   [[ -f /etc/lsb-release && `grep "Ubuntu 14" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1404_URL "$WXPYTHON_VERSION";
-      elif [[ -f /etc/lsb-release && `grep "Ubuntu 16" /etc/lsb-release` ]]; then
-        pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL "$WXPYTHON_VERSION";
-      else
-        pip install --pre "$WXPYTHON_VERSION";
-      fi
-
-    # Everything else can be installed
-    # in the normal manner
-    - pip install -r requirements.txt
-    - pip install "pyinstaller==3.2.1"
-
-    # We also manually install the setup_requires
-    # packages, otherwise they will be built from
-    # source distributions
-    - pip install sphinx sphinx-rtd-theme mock
-    - python setup.py build_standalone
-    - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-"$OSNAME".tar.gz
-
-    # Sanity check - make sure we can
-    # start FSLeyes, and run a basic
-    # test. Sleep between calls to xvfb
-    # otherwise it gets upset.
-    - apt-get remove -y freeglut3 || yum remove -y freeglut
-    - xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes -V
-    - sleep 5
-    - xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes -S -r .ci/build_test.py
+    - bash ./.ci/linux_do_build.sh
 
   artifacts:
     expire_in: 1 day
@@ -569,34 +339,7 @@ build-pypi-dist:
     - macOS
 
   script:
-    - python3.5 -m venv fsleyes-build-venv
-    - . fsleyes-build-venv/bin/activate
-    - pip install numpy
-    - pip install --pre "$WXPYTHON_VERSION"
-    - pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
-    - pip install -r requirements.txt
-    - pip install "py2app==0.14"
-    - pip install sphinx sphinx-rtd-theme mock
-
-    # Patch/rebuild py2app (see setup.py docstring)
-    - PY2APP=`python -c "import py2app; print(py2app.__file__)"`
-    - BUILDDIR=`pwd`
-    - pushd `dirname $PY2APP`
-    - patch -p2 < "$BUILDDIR"/assets/build/py2app.patch
-    - pushd apptemplate
-    - python setup.py
-    - popd
-    - popd
-    - python setup.py build_standalone
-    - deactivate
-    - rm -r fsleyes-build-venv
-    - mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
-
-  # Sanity check - make sure we can start
-  # FSLeyes. Assuming here that we have a
-  # display on the mac build environment
-  after_script:
-    - dist/FSLeyes.app/Contents/MacOS/fsleyes -V
+    - bash ./.ci/mac_do_build.sh
 
   artifacts:
     expire_in: 1 day
@@ -734,8 +477,7 @@ deploy-doc:
     - build-apidoc
 
   script:
-    - rsync -rv userdoc/"$CI_COMMIT_REF_NAME" "userdocdeploy:"
-    - rsync -rv apidoc/"$CI_COMMIT_REF_NAME" "apidocdeploy:"
+    - bash ./.ci/deploy_doc.sh
 
 
 deploy-pypi:
@@ -752,8 +494,7 @@ deploy-pypi:
     - build-pypi-dist
 
   script:
-    - pip install setuptools wheel twine
-    - twine upload dist/*whl dist/*tar.gz
+    - bash ./.ci/deploy_pypi.sh
 
 
 deploy-builds:
@@ -773,4 +514,4 @@ deploy-builds:
     - build-macos
 
   script:
-    - rsync -rv dist/FSLeyes*tar.gz "builddeploy:"
+    - bash ./.ci/deploy_builds.sh
