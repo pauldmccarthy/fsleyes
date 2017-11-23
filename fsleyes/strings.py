@@ -171,6 +171,8 @@ messages = TypeDict({
     'ScreenshotAction.pleaseWait' : 'Saving screenshot to {}...',
     'ScreenshotAction.error'      : 'An error occurred saving the screenshot.',
 
+    'MovieGifAction.movieGif'     : 'Save animated GIF',
+
     'SaveOverlayAction.saveError' :
     'An error occurred while saving the file {}.',
 
