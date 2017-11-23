@@ -12,6 +12,7 @@ for FSLeyes.
 from __future__ import division
 
 import logging
+import collections
 
 import six
 
