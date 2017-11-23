@@ -2,7 +2,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.17.3 (Under development)
+
+0.18.0 (Under development)
 --------------------------
 
 
@@ -62,6 +63,14 @@ chronological order.
 * Display space warning popups/changes are no longer used - instead, a little
   warning message is shown alongside a button that allows the user to change the
   display space manually.
+
+
+0.15.2 (Friday 24th November 2017)
+----------------------------------
+
+
+* A couple of wxPython 3.0.2.0 compatibility bug-fixes (backported from
+  0.18.0).
 
 
 0.15.1 (Saturday October 7th 2017)
