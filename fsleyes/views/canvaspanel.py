@@ -765,6 +765,37 @@ class CanvasPanel(viewpanel.ViewPanel):
         return False
 
 
+    def getMovieFrame(self, overlay, opts):
+        """Returns the current movie frame for the given overlay.
+
+        A movie frame is typically a sequentially increasing number in
+        some minimum/maximum range, e.g. a voxel or volume index.
+
+        This method may be overridden by sub-classes for custom behaviour
+        (e.g. the :class:`.Scene3DPanel`).
+        """
+
+        axis = self.movieAxis
+
+        def nifti():
+            if axis < 3: return opts.getVoxel(vround=False)[axis]
+            else:        return opts.volume
+
+        def mesh():
+            if axis < 3: return other()
+            else:        return opts.vertexDataIndex
+
+        def other():
+            return self.displayCtx.location.getPos(axis)
+
+        import fsl.data.image as fslimage
+        import fsl.data.mesh  as fslmesh
+
+        if   isinstance(overlay, fslimage.Nifti):       return nifti()
+        elif isinstance(overlay, fslmesh.TriangleMesh): return mesh()
+        else:                                           return other()
+
+
     def doMovieUpdate(self, overlay, opts):
         """Called by :meth:`__movieFrame`. Updates the properties on the
         given ``opts`` instance to move forward one frame in the movie.

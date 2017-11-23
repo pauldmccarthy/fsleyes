@@ -168,6 +168,17 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         self.getCurrentProfile().resetDisplay()
 
 
+    def getMovieFrame(self, overlay, opts):
+        """Returns the current movie frame. If the :attr:`movieAxis` is ``3``
+        (e.g. time series), the volume index is returned. Otherwise the
+        current rotation matrix is returned.
+        """
+        if self.movieAxis == 3:
+            return super(Scene3DPanel, self).getMovieFrame(overlay, opts)
+        else:
+            return np.copy(self.__canvas.opts.rotation)
+
+
     def doMovieUpdate(self, overlay, opts):
         """Overrides :meth:`.CanvasPanel.doMovieUpdate`. For x/y/z axis
         movies, the scene is rotated. Otherwise (for time) the ``CanvasPanel``
@@ -193,5 +204,4 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
             xform = transform.concat(xform, currot)
 
             canvas.opts.rotation = xform
-
-            return xform
+            return np.copy(xform)
