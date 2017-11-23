@@ -240,7 +240,13 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelMenus  = {}
         self.__viewPanelIDs    = {}
         self.__viewPanelTitles = {}
-        self.__viewPanelTools  = {}
+
+        # There is a bug somewhere in wxPython
+        # 3.0.2.0 which causes segfaults when
+        # menu items are removed (in
+        # __refreshToolsMenu). Avoided if we
+        # remove items in order.
+        self.__viewPanelTools  = collections.OrderedDict()
 
         # Refs to menus
         self.__menuBar        = None
@@ -1601,12 +1607,10 @@ class FSLeyesFrame(wx.Frame):
 
         # Remove all old tools
         for vpType, items in list(self.__viewPanelTools.items()):
-            for item, tool in items:
-                menu.Remove(item)
+            for i, (item, tool) in enumerate(items):
+                menu.Remove(item.GetId())
                 if tool is not None:
                     tool.unbindWidget(item)
-
-
             self.__viewPanelTools.pop(vpType)
 
         # Recreate tools for each view panel. We
