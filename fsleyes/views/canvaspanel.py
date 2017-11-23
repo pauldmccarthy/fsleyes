@@ -335,10 +335,18 @@ class CanvasPanel(viewpanel.ViewPanel):
         See the :class:`.ScreenshotAction`.
         """
         from fsleyes.actions.screenshot import ScreenshotAction
+        ScreenshotAction(self.overlayList, self.displayCtx, self)()
 
-        ScreenshotAction(self.overlayList,
-                         self.displayCtx,
-                         self)()
+
+    @actions.action
+    def movieGif(self):
+        """Generates an animated GIF of the currently displayed scene and
+        movie mode settings on this ``CanvasPanel``.
+
+        See the :class:`.MovieGifAction`.
+        """
+        from fsleyes.actions.moviegif import MovieGifAction
+        MovieGifAction(self.overlayList, self.displayCtx, self)()
 
 
     @actions.action
@@ -348,10 +356,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         class.
         """
         from fsleyes.actions.showcommandline import ShowCommandLineAction
-
-        ShowCommandLineAction(self.overlayList,
-                              self.displayCtx,
-                              self)()
+        ShowCommandLineAction(self.overlayList, self.displayCtx, self)()
 
 
     @actions.action
@@ -361,10 +366,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         class.
         """
         from fsleyes.actions.applycommandline import ApplyCommandLineAction
-
-        ApplyCommandLineAction(self.overlayList,
-                               self.displayCtx,
-                               self)()
+        ApplyCommandLineAction(self.overlayList, self.displayCtx, self)()
 
 
     @actions.toggleAction

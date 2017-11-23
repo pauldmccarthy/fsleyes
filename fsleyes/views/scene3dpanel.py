@@ -121,6 +121,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         to its view menu.
         """
         actionz = [self.screenshot,
+                   self.movieGif,
                    self.showCommandLineArgs,
                    self.applyCommandLineArgs,
                    None,

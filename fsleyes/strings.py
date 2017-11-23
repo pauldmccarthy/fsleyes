@@ -435,6 +435,7 @@ actions = TypeDict({
     'ViewPanel.removeAllPanels'             : 'Remove all panels',
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
+    'CanvasPanel.movieGif'                  : 'Save animated GIF',
     'CanvasPanel.showCommandLineArgs'       : 'Show command line for scene',
     'CanvasPanel.applyCommandLineArgs'      : 'Apply command line arguments',
     'CanvasPanel.toggleMovieMode'           : 'Movie mode',

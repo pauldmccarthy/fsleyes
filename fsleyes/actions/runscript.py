@@ -182,6 +182,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     from   fsleyes.views.shellpanel         import ShellPanel
     from   fsleyes.actions.screenshot       import screenshot
+    from   fsleyes.actions.moviegif         import makeGif
     import fsl.data.image                       as fslimage
     import fsl.data.featimage                   as featimage
     import fsl.data.melodicimage                as melimage
@@ -294,6 +295,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('displayCtx',         displayCtx),
         ('frame',              frame),
         ('screenshot',         screenshot),
+        ('makeGif',            makeGif),
         ('scaledVoxels',       scaledVoxels),
         ('trueScaledVoxels',   trueScaledVoxels),
         ('rawVoxels',          rawVoxels),

@@ -434,6 +434,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :mod:`.actions` that are defined on this ``OrthoPanel``.
         """
         actionz = [self.screenshot,
+                   self.movieGif,
                    self.showCommandLineArgs,
                    self.applyCommandLineArgs,
                    None,
