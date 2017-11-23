@@ -72,6 +72,9 @@ class PlotProfile(profiles.Profile):
         """Must be called when this ``PlotProfile`` is no longer needed. Clears
         references and calls the base class ``destroy`` method.
         """
+
+        self.__toolbar.Destroy()
+
         self.__canvas          = None
         self.__axis            = None
         self.__toolbar.canvas  = None

@@ -13,8 +13,15 @@ import logging
 
 from six.moves.urllib import request
 
-import           wx
-import wx.adv as wxadv
+import wx
+
+# The HyperLinkCtrl is in wx.adv in wxPython/Phoenix
+try:
+    import wx.adv as wxadv
+
+# But it is in wx in wxpython 3.
+except ImportError:
+    wxadv = wx
 
 import fsl.version                  as fslversion
 
