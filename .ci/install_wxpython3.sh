@@ -2,6 +2,16 @@
 
 set -e
 
+apt-get install -y build-essential \
+                   libgtk2.0-dev \
+                   libwebkitgtk-dev \
+                   libjpeg-dev \
+                   libtiff-dev \
+                   libsdl-dev \
+                   libgstreamer-plugins-base1.0-dev \
+                   libnotify-dev \
+                   freeglut3-dev
+
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build
 
