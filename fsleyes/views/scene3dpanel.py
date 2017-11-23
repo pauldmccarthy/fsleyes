@@ -175,20 +175,23 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         """
 
         if self.movieAxis >= 3:
-            canvaspanel.CanvasPanel.doMovieUpdate(self, overlay, opts)
+            return canvaspanel.CanvasPanel.doMovieUpdate(self, overlay, opts)
         else:
 
+            canvas  = self.__canvas
+            currot  = canvas.opts.rotation
             rate    = float(self.movieRate)
             rateMin = self.getAttribute('movieRate', 'minval')
             rateMax = self.getAttribute('movieRate', 'maxval')
             rate    = 0.1 + 0.9 * (rate - rateMin) / (rateMax - rateMin)
             rate    = rate * np.pi / 10
 
-            canvas               = self.__canvas
             rots                 = [0, 0, 0]
             rots[self.movieAxis] = rate
 
             xform = transform.axisAnglesToRotMat(*rots)
-            xform = transform.concat(xform, canvas.opts.rotation)
+            xform = transform.concat(xform, currot)
 
             canvas.opts.rotation = xform
+
+            return xform
