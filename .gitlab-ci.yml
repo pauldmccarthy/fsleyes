@@ -181,6 +181,17 @@ variables:
     - bash ./.ci/test_template.sh
 
 
+test:wxpython3:
+  stage: test
+  image: ubuntu:16.04
+  <<: *test_template
+  variables:
+    PY_VERSION:  "python2.7"
+    PY_PACKAGES: "python-pip python-virtualenv"
+    PY_VENV:     "virtualenv"
+    INSTALL_WX:  "source ./.ci/install_wxpython3.sh"
+
+
 test:2.7:
   stage: test
   image: ubuntu:16.04
