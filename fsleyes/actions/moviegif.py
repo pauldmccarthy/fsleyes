@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# moviegif.py -
+# moviegif.py - The MovieGifAction class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`MovieGifAction`, which allows the user
+to save animated gifs. The :func:`makeGif` function can also be used to
+programmatically generate animated gifs.
+"""
 
 
 import os.path as op
@@ -13,7 +17,6 @@ import            tempfile
 
 import          PIL
 import          wx
-import numpy as np
 
 import fsl.utils.idle                 as idle
 import fsl.utils.transform            as transform
@@ -29,7 +32,9 @@ import fsleyes.views.scene3dpanel as scene3dpanel
 
 
 class MovieGifAction(base.Action):
-    """
+    """The ``MovieGifAction`` allows the user to save an animated gif of the
+    currently selected overlay in a :class:`.CanvasPanel`, according to the
+    current movie mode settings.
     """
 
     def __init__(self, overlayList, displayCtx, panel):
@@ -47,11 +52,51 @@ class MovieGifAction(base.Action):
         self.__displayCtx  = displayCtx
         self.__panel       = panel
 
-        # TODO disable when appropriate (e.g. .gif output not supported,
-        #      movie settings not compatible with overlay, etc)
+        self.__overlayList.addListener('overlays',
+                                       self.name,
+                                       self.__selectedOverlayChanged)
+        self.__displayCtx .addListener('selectedOverlay',
+                                       self.name,
+                                       self.__selectedOverlayChanged)
+        self.__panel      .addListener('movieAxis',
+                                       self.name,
+                                       self.__selectedOverlayChanged)
+
+        self.__selectedOverlayChanged()
+
+
+    def destroy(self):
+        """Must be called when this ``MovieGifAction` is no longer neded.
+        Removes some property listeners.
+        """
+        self.__overlayList.removeListener('overlays',        self.name)
+        self.__displayCtx .removeListener('selectedOverlay', self.name)
+        self.__panel      .removeListener('movieAxis',       self.name)
+
+        base.Action.destroy(self)
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
+        Enables/disables this action based on whether a movie can be played
+        (see :meth:`.CanvasPanel.canRunMovie`).
+        """
+
+        overlay = self.__displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            self.enabled = False
+            return
+
+        opts = self.__displayCtx.getOpts(overlay)
+
+        self.enabled = self.__panel.canRunMovie(overlay, opts)
 
 
     def __doMakeGif(self):
+        """Prompts the user to select a file to save the movie to, and then
+        generates the movie via :func:`makeGif`.
+        """
 
         lastDirSetting = 'fsleyes.actions.screenshot.lastDir'
         filename       = 'movie.gif'
@@ -74,7 +119,7 @@ class MovieGifAction(base.Action):
             parent=self.__panel)
 
         def update(frame):
-            if isalive(self.__progdlg):
+            if self.__progdlg is not None and isalive(self.__progdlg):
                 self.__progdlg.DoBounce('Saved frame {}...'.format(frame))
                 return not self.__progdlg.WasCancelled()
             else:
@@ -86,7 +131,6 @@ class MovieGifAction(base.Action):
                 self.__progdlg.Close()
             self.__progdlg = None
 
-        # TODO show progress dialog
         # TODO prompt user to select axis/delay/limits?
         self.__progdlg.Show()
         makeGif(self.__overlayList,
@@ -103,10 +147,19 @@ def makeGif(overlayList,
             filename,
             progfunc=None,
             onfinish=None):
-    """
+    """Save an animated gif of the currently selected overlay, according to the
+    current movie mode settings.
 
     .. note:: This function will return immediately, as the animated GIF is
               generated on the ``wx`` :mod:`.idle` loop
+
+    :arg overlayList: The :class:`.OverlayList`
+    :arg displayCtx:  The :class:`.DisplayContext`
+    :arg panel:       The :class:`.CanvasPanel`.
+    :arg filename:    Name of file to save the movie to
+    :arg progfunc:    Function which will be called after each frame is saved.
+    :arg onfinish:    Function which will be called after all frames have been
+                      saved.
     """
 
     def defaultProgFunc(frame):
@@ -206,7 +259,7 @@ def makeGif(overlayList,
             # normalise the rotmat for this
             # frame to the rms difference
             # from the starting rotmat
-            frame = _rmsdev(ctx.startFrame, frame)
+            frame = transform.rmsdev(ctx.startFrame, frame)
 
             # Keep capturing frames until we
             # have performed a full 360 degree
@@ -243,42 +296,3 @@ def makeGif(overlayList,
         ctx.frames.append(frame)
 
     idle.idleWhen(captureFrame, ready, ctx, after=0.1)
-
-
-def _rmsdev(T1, T2, R=None, xc=None):
-    """Calculates the RMS deviation of the given affine transforms ``T1`` and
-    ``T2``.
-
-    See FMRIB technical report TR99MJ1, available at:
-
-    https://www.fmrib.ox.ac.uk/datasets/techrep/
-
-    .. warning:: This function will be moved somewhere else in the future. Do
-                 not depend on it.
-    """
-
-    if R is None:
-        R = 1
-
-    if xc is None:
-        xc = np.zeros(3)
-
-    # rotations only
-    if T1.shape == (3, 3):
-        M = np.dot(T2, transform.invert(T1)) - np.eye(3)
-        A = M[:3, :3]
-        t = np.zeros(3)
-
-    # full affine
-    else:
-        M = np.dot(T2, transform.invert(T1)) - np.eye(4)
-        A = M[:3, :3]
-        t = M[:3,  3]
-
-    Axc = np.dot(A, xc)
-
-    erms = np.dot((t + Axc).T, t + Axc)
-    erms = 0.2 * R ** 2 * np.dot(A.T, A).trace() + erms
-    erms = np.sqrt(erms)
-
-    return erms
