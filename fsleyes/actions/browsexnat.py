@@ -6,7 +6,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`BrowseXNATAction`, which allows the user
-to connect to and browse an XNAT repository.
+to connect to and browse an XNAT repository. If ``wxnatpy``
+(https://github.com/pauldmccarthy/wxnatpy) is not present, the action is
+disabled.
 """
 
 
@@ -14,7 +16,6 @@ import            os
 import os.path as op
 
 import wx
-import wxnat
 
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
@@ -22,6 +23,13 @@ import fsleyes.autodisplay as autodisplay
 
 from . import base
 from . import loadoverlay
+
+# if wxnatpy is not present, the
+# action is permanently disabled
+try:
+    import wxnat
+except ImportError:
+    wxnat = None
 
 
 class BrowseXNATAction(base.Action):
@@ -43,6 +51,9 @@ class BrowseXNATAction(base.Action):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__frame       = frame
+
+        if wxnat is None:
+            self.enabled = False
 
 
     def __openBrowser(self):
@@ -124,6 +135,9 @@ class XNATBrowser(wx.Dialog):
                            parent,
                            title=strings.titles[self],
                            style=wx.RESIZE_BORDER)
+
+        if wxnat is None:
+            raise RuntimeError('wxnatpy is not available!')
 
         filters = {'file' : '*.nii|*.nii.gz|*.img|*.img.gz|*.gii|*.vtk'}
 
