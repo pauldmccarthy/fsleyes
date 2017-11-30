@@ -735,7 +735,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__movieRunning
 
 
-    def __canRunMovie(self, overlay, opts):
+    def canRunMovie(self, overlay, opts):
         """Returns ``True`` or ``False``, depending on whether movie mode
         is possible with the given z`overlay`` and ``opts``.
         """
@@ -907,7 +907,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         opts = self.displayCtx.getOpts(overlay)
 
-        if not self.__canRunMovie(overlay, opts):
+        if not self.canRunMovie(overlay, opts):
             return False
 
         # We want the canvas refreshes to be
