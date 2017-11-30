@@ -744,6 +744,7 @@ class PlotPanel(viewpanel.ViewPanel):
         # Ticks
         if self.ticks:
             axis.tick_params(direction='in', pad=-5)
+            axis.tick_params(axis='both', which='both', length=3)
 
             for ytl in axis.yaxis.get_ticklabels():
                 ytl.set_horizontalalignment('left')
@@ -751,11 +752,16 @@ class PlotPanel(viewpanel.ViewPanel):
             for xtl in axis.xaxis.get_ticklabels():
                 xtl.set_verticalalignment('bottom')
         else:
+
+            # we clear the labels, but
+            # leave the ticks, so the
+            # axis grid gets drawn
             xlabels = ['' for i in range(len(axis.xaxis.get_ticklabels()))]
             ylabels = ['' for i in range(len(axis.yaxis.get_ticklabels()))]
 
             axis.set_xticklabels(xlabels)
             axis.set_yticklabels(ylabels)
+            axis.tick_params(axis='both', which='both', length=0)
 
         # Limits
         if xmin != xmax:
@@ -781,6 +787,11 @@ class PlotPanel(viewpanel.ViewPanel):
                       zorder=0)
         else:
             axis.grid(False)
+
+        axis.spines['right'] .set_visible(False)
+        axis.spines['left']  .set_visible(False)
+        axis.spines['top']   .set_visible(False)
+        axis.spines['bottom'].set_visible(False)
 
         axis.set_axisbelow(True)
         axis.patch.set_facecolor(self.bgColour)
