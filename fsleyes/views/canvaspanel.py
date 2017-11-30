@@ -74,13 +74,13 @@ class CanvasPanel(viewpanel.ViewPanel):
 
 
     The following actions are available through a ``CanvasPanel`` (see
-    the :mod:`.actions` module). They toggle a range of
-    :mod:`control <.controls>` panels:
+    the :mod:`.actions` module):
 
     .. autosummary::
        :nosignatures:
 
        screenshot
+       movieGif
        showCommandLineArgs
        toggleMovieMode
        toggleDisplaySync
@@ -255,12 +255,17 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.disableProperty('syncOverlayOrder')
             self.disableProperty('syncOverlayDisplay')
 
+        import fsleyes.actions.moviegif as moviegif
+
         self.centrePanel      = wx.Panel(self)
         self.__containerPanel = wx.Panel(self.centrePanel)
         self.__contentPanel   = wx.Panel(self.__containerPanel)
+        self.__movieGifAction = moviegif.MovieGifAction(
+            overlayList, displayCtx, self)
 
         self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
         self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
+        self.movieGif         .bindProps('enabled', self.__movieGifAction)
 
         # the __movieModeChanged method is called
         # when movieMode changes, but also when
@@ -321,8 +326,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.sceneOpts  .removeListener('showColourBar',     self.__name)
         self.sceneOpts  .removeListener('bgColour',          self.__name)
         self.sceneOpts  .removeListener('fgColour',          self.__name)
+        self.__movieGifAction.destroy()
 
-        self.__opts = None
+        self.__opts           = None
+        self.__movieGifAction = None
 
         viewpanel.ViewPanel.destroy(self)
 
@@ -345,8 +352,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         See the :class:`.MovieGifAction`.
         """
-        from fsleyes.actions.moviegif import MovieGifAction
-        MovieGifAction(self.overlayList, self.displayCtx, self)()
+        self.__movieGifAction()
 
 
     @actions.action
