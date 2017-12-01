@@ -15,14 +15,14 @@ chronological order.
   and in scripts executed by the :class:`.RunScriptAction`).
 
 
-0.17.2 (Wednesday 15th November 2017)
+0.17.2 (Wednesday November 15th 2017)
 -------------------------------------
 
 
 * Fixed API documentation generation
 
 
-0.17.1 (Monday 13th Novermber 2017)
+0.17.1 (Monday Novermber 13th 2017)
 -----------------------------------
 
 
@@ -30,7 +30,7 @@ chronological order.
   property).
 
 
-0.17.0 (Sunday 12th November 2017)
+0.17.0 (Sunday November 12th 2017)
 ----------------------------------
 
 
@@ -46,7 +46,7 @@ chronological order.
 
 
 
-0.16.0 (Tuesday 31st October 2017)
+0.16.0 (Tuesday October 31st 2017)
 ----------------------------------
 
 
@@ -65,7 +65,7 @@ chronological order.
   display space manually.
 
 
-0.15.2 (Friday 24th November 2017)
+0.15.2 (Friday November 24th 2017)
 ----------------------------------
 
 
