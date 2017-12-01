@@ -48,18 +48,19 @@ class MovieGifAction(base.Action):
 
         base.Action.__init__(self, self.__doMakeGif)
 
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__panel       = panel
 
         self.__overlayList.addListener('overlays',
-                                       self.name,
+                                       self.__name,
                                        self.__selectedOverlayChanged)
         self.__displayCtx .addListener('selectedOverlay',
-                                       self.name,
+                                       self.__name,
                                        self.__selectedOverlayChanged)
         self.__panel      .addListener('movieAxis',
-                                       self.name,
+                                       self.__name,
                                        self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
@@ -69,9 +70,9 @@ class MovieGifAction(base.Action):
         """Must be called when this ``MovieGifAction` is no longer neded.
         Removes some property listeners.
         """
-        self.__overlayList.removeListener('overlays',        self.name)
-        self.__displayCtx .removeListener('selectedOverlay', self.name)
-        self.__panel      .removeListener('movieAxis',       self.name)
+        self.__overlayList.removeListener('overlays',        self.__name)
+        self.__displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__panel      .removeListener('movieAxis',       self.__name)
 
         base.Action.destroy(self)
 
