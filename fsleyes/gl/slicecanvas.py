@@ -425,16 +425,12 @@ class SliceCanvas(object):
         """
 
         opts = self.opts
-        xmin = self.displayCtx.bounds.getLo(opts.xax)
-        xmax = self.displayCtx.bounds.getHi(opts.xax)
-        ymin = self.displayCtx.bounds.getLo(opts.yax)
-        ymax = self.displayCtx.bounds.getHi(opts.yax)
 
         with props.skip(opts, 'zoom', self.name):
             opts.zoom = 100
 
         with props.suppress(opts, 'displayBounds'):
-            self._updateDisplayBounds((xmin, xmax, ymin, ymax))
+            self._updateDisplayBounds()
 
         self.Refresh()
 
@@ -901,11 +897,46 @@ class SliceCanvas(object):
         return overlays, globjs
 
 
-    def _overlayBoundsChanged(self, *a):
-        """Called when the display bounds are changed. Calls the
-        :meth:`resetDisplay` method.
+    def _overlayBoundsChanged(self, *args, **kwargs):
+        """Called when the :attr:`.DisplayContext.bounds` are changed.
+        Initialises/resets the display bounds, and/or preserves the zoom
+        level if necessary.
+
+        :arg preserveZoom: Must be passed as a keyword argument. If ``True``
+                           (the default), the :attr:`zoom` value is adjusted
+                           so that the effective zoom is preserved
         """
-        self.resetDisplay()
+
+        preserveZoom = kwargs.get('preserveZoom', True)
+
+        opts = self.opts
+        xax  = opts.xax
+        yax  = opts.yax
+        xmin = self.displayCtx.bounds.getLo(xax)
+        xmax = self.displayCtx.bounds.getHi(xax)
+        ymin = self.displayCtx.bounds.getLo(yax)
+        ymax = self.displayCtx.bounds.getHi(yax)
+        width, height = self.GetSize()
+
+        if np.isclose(xmin, xmax) or width == 0 or height == 0:
+            return
+
+        if not preserveZoom or opts.displayBounds.xlen == 0:
+            self.resetDisplay()
+            return
+
+        # Figure out the scaling factor that
+        # would preserve the current zoom
+        # level for the new display bounds.
+        xmin, xmax, ymin, ymax = glroutines.preserveAspectRatio(
+            width, height, xmin, xmax, ymin, ymax)
+
+        scale = opts.displayBounds.xlen / (xmax - xmin)
+
+        # Adjust the zoom value so that the
+        # effective zoom stays the same
+        with props.suppress(opts, 'zoom'):
+            opts.zoom = self.scaleToZoom(scale)
 
 
     def _zoomChanged(self, *a):
@@ -917,38 +948,31 @@ class SliceCanvas(object):
         self._updateDisplayBounds(oldLoc=loc)
 
 
-    def _applyZoom(self, xmin, xmax, ymin, ymax):
-        """*Zooms* in to the given rectangle according to the current value
-        of the zoom property Returns a 4-tuple containing the updated bound
-        values.
+    def zoomToScale(self, zoom):
+        """Converts the given zoom value into a scaling factor that can be
+        multiplied by the display bounds width/height.
+
+        Zoom is specified as a percentage.  At 100% the full scene takes up
+        the full display.
+
+        In order to make the zoom smoother at low levels, we re-scale the zoom
+        value to be exponential across the range.
+
+        This is done by transforming the zoom from ``[zmin, zmax]`` into
+        ``[0.0, 1.0]``, then turning it from linear ``[0.0, 1.0]`` to
+        exponential ``[0.0, 1.0]``, and then finally transforming it back to
+        ``[zmin - zmax]``.
+
+        However there is a slight hack in that, if the zoom value is less than
+        100%, it will be applied linearly (i.e. 50% will cause the width/height
+        to be scaled by 50%).
         """
 
-        # Zoom is specified as a percentage.
-        # At 100% the full scene takes up the
-        # full display.
-        #
-        # In order to make the zoom smoother
-        # at low levels, we re-scale the zoom
-        # value to be exponential across the
-        # range.
-        #
-        # This is done by transforming the zoom
-        # from [100 - zmax] into [0.0 - 1.0], then
-        # turning it from linear [0.0 - 1.0] to
-        # exponential [0.0 - 1.0], and then finally
-        # transforming it back to [100 - zmax].
-        #
-        # HOWEVER there is a slight hack in that,
-        # if the zoom value is less than 100%, it
-        # will be applied linearly (i.e. 50% will
-        # cause the scene to take up 50% of the
-        # screen)
-
         # Assuming that minval == 100.0
-        opts    = self.opts
-        zoom    = opts.zoom
-        minzoom = opts.getAttribute('zoom', 'minval')
-        maxzoom = opts.getAttribute('zoom', 'maxval')
+        opts = self.opts
+        zmin = opts.getAttribute('zoom', 'minval')
+        zmax = opts.getAttribute('zoom', 'maxval')
+        zlen = zmax - zmin
 
         # Don't break the maths below
         if zoom <= 0:
@@ -958,18 +982,54 @@ class SliceCanvas(object):
         if zoom >= 100:
 
             # [100 - zmax] -> [0.0 - 1.0] -> exponentify -> [100 - zmax]
-            zoom       = (zoom - minzoom)      / (maxzoom - minzoom)
-            zoom       = minzoom + (zoom ** 3) * (maxzoom - minzoom)
+            zoom = (zoom - zmin)      / zlen
+            zoom = zmin + (zoom ** 3) * zlen
 
             # Then we transform the zoom from
             # [100 - zmax] to [1.0 - 0.0] -
             # this value is used to scale the
             # bounds.
-            zoomFactor = minzoom / zoom
+            scale = zmin / zoom
 
         # Hack for zoom < 100
         else:
-            zoomFactor = 100.0 / zoom
+            scale = 100.0 / zoom
+
+        return scale
+
+
+    def scaleToZoom(self, scale):
+        """Converts the given zoom scaling factor into a zoom percentage.
+        This method performs the reverse operation to the :meth:`zoomToScale`
+        method.
+        """
+
+        opts = self.opts
+        zmin = opts.getAttribute('zoom', 'minval')
+        zmax = opts.getAttribute('zoom', 'maxval')
+        zlen = zmax - zmin
+
+        if scale > 1:
+            zoom = 100.0 / scale
+
+        else:
+
+            # [100 - zmax] -> [0.0 - 1.0] -> de-exponentify -> [100 - zmax]
+            zoom = zmin / scale
+            zoom = (zoom - zmin) / zlen
+            zoom = np.power(zoom, 1.0 / 3.0)
+            zoom = zmin + zoom * zlen
+
+        return zoom
+
+
+    def _applyZoom(self, xmin, xmax, ymin, ymax):
+        """*Zooms* in to the given rectangle according to the current value
+        of the zoom property Returns a 4-tuple containing the updated bound
+        values.
+        """
+
+        zoomFactor = self.zoomToScale(self.opts.zoom)
 
         xlen    = xmax - xmin
         ylen    = ymax - ymin

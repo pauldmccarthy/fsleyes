@@ -10,7 +10,6 @@ from a collection of 3D overlays.
 """
 
 import sys
-import copy
 import logging
 
 import numpy     as np
@@ -530,7 +529,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :attr:`zrange` min/max values.
         """
 
-        slicecanvas.SliceCanvas._overlayBoundsChanged(self)
+        slicecanvas.SliceCanvas._overlayBoundsChanged(self, preserveZoom=False)
 
         self._updateZAxisProperties()
         self._calcNumSlices()
