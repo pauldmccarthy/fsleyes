@@ -509,8 +509,10 @@ properties = TypeDict({
     'TimeSeriesPanel.currentLineStyle' : 'Line style of the current time '
                                          'series.',
 
-    'HistogramPanel.histType'    : 'Show histogram data as raw counts, or '
-                                   'as probabilities.',
+    'HistogramPanel.histType' :
+    'Show histogram data as raw counts, or as probabilities.',
+    'HistogramPanel.plotType'    :
+    'Use histogram bin edges or bin centres for the histogram plot.',
 
     'PowerSpectrumPanel.plotFrequencies'  : 'If checked, the x values '
                                             'are transformed into frequency '

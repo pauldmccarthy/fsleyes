@@ -83,6 +83,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     """
 
 
+    plotType = props.Choice(('centre', 'edge'))
+    """How histograms are plotted:
+
+    ========== ==========================================================
+    ``centre`` Plot one data point at the centre of each bin
+    ``edge``   Plot one data point at each bin edge - this produces a
+               "stepped" plot.
+    ========== ==========================================================
+    """
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``HistogramPanel``.
 
@@ -98,6 +109,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         self.__currentHs = None
 
         self       .addListener('histType', self.name, self.draw)
+        self       .addListener('plotType', self.name, self.draw)
         overlayList.addListener('overlays',
                                 self.name,
                                 self.__selectedOverlayChanged)
@@ -127,6 +139,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         self.__roiHistAction = None
 
         self            .removeListener('histType',        self.name)
+        self            .removeListener('plotType',        self.name)
         self.overlayList.removeListener('overlays',        self.name)
         self.displayCtx .removeListener('selectedOverlay', self.name)
 
@@ -210,8 +223,10 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             with props.suppress(hs, 'label'):
                 hs.label = self.displayCtx.getDisplay(hs.overlay).name
 
-        if self.smooth:
+        if self.smooth or self.plotType == 'centre':
             self.drawDataSeries(hss)
+
+        # use a step plot when plotting bin edges
         else:
             self.drawDataSeries(hss, drawstyle='steps-pre')
 
@@ -253,11 +268,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if len(xdata) == 0 or len(ydata) == 0:
             return [], []
 
-        # If smoothing is not enabled, we'll
-        # munge the histogram data a bit so
-        # that plt.plot(drawstyle='steps-pre')
-        # plots it nicely.
-        if not self.smooth:
+        # If smoothing is enabled, we just
+        # need to provide the data as-is
+        if self.smooth:
+            xdata = np.array(xdata[:-1], dtype=np.float32)
+            ydata = np.array(ydata,      dtype=np.float32)
+
+        # If plotting on bin edges, we need to
+        # munge the histogram data a bit so that
+        # plt.plot(drawstyle='steps-pre') plots
+        # it nicely.
+        elif self.plotType == 'edge':
             xpad = np.zeros(len(xdata) + 1, dtype=np.float32)
             ypad = np.zeros(len(ydata) + 2, dtype=np.float32)
 
@@ -267,13 +288,13 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             xdata      = xpad
             ydata      = ypad
 
-        # If smoothing is enabled, the above munge
-        # is not necessary, and will probably cause
-        # the spline interpolation (performed by
-        # the PlotPanel) to fail.
-        else:
-            xdata = np.array(xdata[:-1], dtype=np.float32)
+        # otherwise if plotting bin centres,
+        # we need to offset the data, as it
+        # is on bin edges
+        elif self.plotType == 'centre':
             ydata = np.array(ydata,      dtype=np.float32)
+            xdata = np.array(xdata[:-1], dtype=np.float32)
+            xdata = xdata + 0.5 * (xdata[1] - xdata[0])
 
         # The passed-in series may just
         # be a DataSeries instance.

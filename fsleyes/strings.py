@@ -831,6 +831,7 @@ properties = TypeDict({
     'TimeSeriesPanel.plotResiduals'    : 'Plot residuals',
 
     'HistogramPanel.histType'    : 'Histogram type',
+    'HistogramPanel.plotType'    : 'Plot type',
 
     'PowerSpectrumPanel.plotFrequencies' : 'Show frequencies along x axis ',
     'PowerSpectrumPanel.plotMelodicICs'  : 'Plot component power spectra for '
@@ -1079,6 +1080,8 @@ choices = TypeDict({
 
     'HistogramPanel.histType' : {'probability' : 'Probability',
                                  'count'       : 'Count'},
+    'HistogramPanel.plotType' : {'centre'      : 'Bin centres',
+                                 'edge'        : 'Bin edges'},
 
     'DataSeries.lineStyle' : {'-'  : 'Solid line',
                               '--' : 'Dashed line',
