@@ -35,7 +35,7 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
-    nbins = props.Int(minval=10, maxval=500, default=100, clamped=True)
+    nbins = props.Int(minval=10, maxval=1000, default=100, clamped=False)
     """Number of bins to use in the histogram. This value is overridden
     by the :attr:`autoBin` setting.
     """
@@ -330,14 +330,18 @@ class HistogramSeries(dataseries.DataSeries):
             if self.includeOutliers: data = self.__finiteData
             else:                    data = self.__clippedFiniteData
 
-        if self.autoBin:
-            nbins = autoBin(data, self.dataRange.x)
+        # Figure out the number of bins to use
+        if self.autoBin: nbins = autoBin(data, self.dataRange.x)
+        else:            nbins = self.nbins
 
-            if self.hasListener('nbins', self.__name):
-                self.disableListener('nbins', self.__name)
+        # nbins is unclamped, but
+        # we don't allow < 10
+        if nbins < 10:
+            nbins = 10
+
+        # Update the nbins property
+        with props.skip(self, 'nbins', self.__name):
             self.nbins = nbins
-            if self.hasListener('nbins', self.__name):
-                self.enableListener('nbins', self.__name)
 
         # We cache calculated bins and counts
         # for each combination of parameters,
