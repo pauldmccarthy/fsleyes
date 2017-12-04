@@ -380,6 +380,7 @@ OPTIONS = td.TypeDict({
                        'scene',
                        'voxelLoc',
                        'worldLoc',
+                       'selectedOverlay',
                        'autoDisplay',
                        'displaySpace',
                        'neuroOrientation',
@@ -657,6 +658,7 @@ ARGUMENTS = td.TypeDict({
     'Main.scene'            : ('s',      'scene',            True),
     'Main.voxelLoc'         : ('vl',     'voxelLoc',         True),
     'Main.worldLoc'         : ('wl',     'worldLoc',         True),
+    'Main.selectedOverlay'  : ('o',      'selectedOverlay',  True),
     'Main.autoDisplay'      : ('ad',     'autoDisplay',      False),
     'Main.displaySpace'     : ('ds',     'displaySpace',     True),
     'Main.neuroOrientation' : ('no',     'neuroOrientation', False),
@@ -836,6 +838,7 @@ HELP = td.TypeDict({
                               'first overlay)',
     'Main.worldLoc'         : 'Location to show (world coordinates, takes '
                               'precedence over --voxelLoc)',
+    'Main.selectedOverlay'  : 'Selected overlay (index, starting from 0)',
     'Main.autoDisplay'      : 'Automatically configure overlay display '
                               'settings (unless any display settings are '
                               'specified)',
@@ -1513,6 +1516,10 @@ def _configMainParser(mainParser):
                             type=float,
                             nargs=3,
                             help=mainHelp['worldLoc'])
+    mainParser.add_argument(*mainArgs['selectedOverlay'],
+                            metavar='INDEX',
+                            type=int,
+                            help=mainHelp['selectedOverlay'])
     mainParser.add_argument(*mainArgs['autoDisplay'],
                             action='store_true',
                             help=mainHelp['autoDisplay'])
@@ -2473,7 +2480,11 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         overlayList.extend(overlays, overlayTypes=overlayTypes)
 
         # Select the last image in the list
-        displayCtx.selectedOverlay = len(overlayList) - 1
+        selovl = args.selectedOverlay
+        if selovl is None or selovl < 0 or selovl >= len(overlayList):
+            displayCtx.selectedOverlay = len(overlayList) - 1
+        else:
+            displayCtx.selectedOverlay = selovl
 
         for i, overlay in enumerate(overlays):
 
