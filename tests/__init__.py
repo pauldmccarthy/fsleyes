@@ -9,6 +9,7 @@ import          os
 import          gc
 import          time
 import          shutil
+import          logging
 import          tempfile
 import          traceback
 import          contextlib
@@ -77,6 +78,9 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     def init():
         fsleyes.initialise()
+        fsleyes.disableLogging = True
+        fsleyes.configLogging(None)
+        logging.getLogger().setLevel(logging.WARNING)
         props.initGUI()
         colourmaps.init()
         initialised[0] = True
@@ -91,6 +95,10 @@ def run_with_fsleyes(func, *args, **kwargs):
 
         overlayList = fsloverlay.OverlayList()
         displayCtx  = dc.DisplayContext(overlayList)
+        lockGroup   = dc.OverlayGroup(displayCtx, overlayList)
+
+        displayCtx.overlayGroups.append(lockGroup)
+
         frame[0]    = fslframe.FSLeyesFrame(None,
                                             overlayList,
                                             displayCtx)
