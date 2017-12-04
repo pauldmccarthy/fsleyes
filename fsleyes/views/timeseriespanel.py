@@ -374,6 +374,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             else:
                 xdata = xdata * ts.overlay.pixdim[3]
 
+            toffset = ts.overlay.nibImage.header.get('toffset', 0)
+            xdata  += toffset
+
         if self.plotMode == 'demean':
             ydata = ydata - ydata.mean()
 

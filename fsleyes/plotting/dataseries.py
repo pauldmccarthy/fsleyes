@@ -74,7 +74,7 @@ class DataSeries(props.HasProperties):
                       retrieved.  May be ``None``.
         """
 
-        self.overlay = overlay
+        self.__overlay = overlay
         self.setData([], [])
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
@@ -89,6 +89,13 @@ class DataSeries(props.HasProperties):
     def __hash__(self):
         """Returns a hash for this ``DataSeries`` instance."""
         return hash(id(self))
+
+
+    @property
+    def overlay(self):
+        """Returns the overlay associated with this ``DataSeries`` instance.
+        """
+        return self.__overlay
 
 
     def destroy(self):
