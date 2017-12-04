@@ -26,8 +26,8 @@ chronological order.
   value of 1000, and will also accept larger values.
 * The :class:`.SliceCanvas` no longer resets the pan/zoom settings
   when an overlay is added/removed.
-* The :ref:`xnat <https://bitbucket.org/bigr_erasmusmc/xnatpy>` and
-  :ref:`wxnatpy <https://github.com/pauldmccarthy/wxnatpy>` dependencies
+* The `xnat <https://bitbucket.org/bigr_erasmusmc/xnatpy>`_ and
+  `wxnatpy <https://github.com/pauldmccarthy/wxnatpy>`_ dependencies
   are now optional - the *Load overlay from XNAT* option will be disabled
   if these dependenceies are not present.
 * New option to generate animated GIFs (see the :class:`.MovieGifAction`).
