@@ -111,6 +111,7 @@ class ColourBarCanvas(props.HasProperties):
         """
         self.removeGlobalListener(self._name)
         self._tex.destroy()
+        self._tex = None
 
 
     def _genColourBarTexture(self):
@@ -183,7 +184,7 @@ class ColourBarCanvas(props.HasProperties):
     def _draw(self):
         """Renders the colour bar texture using all available canvas space."""
 
-        if not self._setGLContext():
+        if self._tex is None or not self._setGLContext():
             return
 
         width, height = self.GetSize()
