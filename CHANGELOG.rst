@@ -10,9 +10,28 @@ chronological order.
 * Fixed issue linking to the ``freeglut`` library on linux builds.
 * Fixed bug drawing ``label`` overlays on lightbox views - outlines
   were not being drawn.
+* A couple of wxPython 3.0.2.0 compatibility bug-fixes.
+* Fixed bug in :class:`.ResampleAction` - was crashing on 4D images.
+* Fixed bug in :class:`.ColourBarCanvas` - was trying to draw before
+  colour bar texture had been created.
 * The :func:`~fsleyes.actions.screenshot.screenshot` function is
   now available in the shell environment (in the :class:`.ShellPanel`,
   and in scripts executed by the :class:`.RunScriptAction`).
+* New command line option ``--selectedOverlay`` to specify the
+  selected overlay.
+* The :class:`.TimeSeriesPanel` honours the NIFTI ``toffset`` field.
+* New histogram option :attr:`.HistogramPanel.plotType`, to choose
+  between plotting bin edges or bin centres.
+* The :attr:`.HistogramSeries.nbins` property now has a maximum
+  value of 1000, and will also accept larger values.
+* The :class:`.SliceCanvas` no longer resets the pan/zoom settings
+  when an overlay is added/removed.
+* The :ref:`xnat <https://bitbucket.org/bigr_erasmusmc/xnatpy>` and
+  :ref:`wxnatpy <https://github.com/pauldmccarthy/wxnatpy>` dependencies
+  are now optional - the *Load overlay from XNAT* option will be disabled
+  if these dependenceies are not present.
+* New option to generate animated GIFs (see the :class:`.MovieGifAction`).
+* Plot panels no longer draw tick lines when ticks are disabled.
 
 
 0.17.2 (Wednesday November 15th 2017)
