@@ -21,6 +21,11 @@
 #                  and the documentation and standalone distributions to a
 #                  hosting server.
 #
+# Custom docker images are used for several jobs - these images are
+# available at:
+#
+#    https://hub.docker.com/u/pauldmccarthy/
+#
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
 #
@@ -183,59 +188,32 @@ variables:
 
 test:wxpython3:
   stage: test
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-py27-wxpy3-gtk2
   <<: *test_template
-  variables:
-    PY_VERSION:  "python2.7"
-    PY_PACKAGES: "python-pip python-virtualenv"
-    PY_VENV:     "virtualenv"
-    INSTALL_WX:  "source ./.ci/install_wxpython3.sh"
 
 
 test:2.7:
   stage: test
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-py27-wxpy4-gtk2
   <<: *test_template
-  variables:
-    PY_VERSION:  "python2.7"
-    PY_PACKAGES: "python-pip python-virtualenv"
-    PY_VENV:     "virtualenv"
-    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
 
 
-# we use ubuntu:14.04 for python 3.4, because
-# wxpython is not available for 16.04/3.4
 test:3.4:
   stage: test
-  image: ubuntu:14.04
+  image: pauldmccarthy/fsleyes-py34-wxpy4-gtk2
   <<: *test_template
-  variables:
-    PY_VERSION:  "python3.4"
-    PY_PACKAGES: "python3-pip python3.4-venv"
-    PY_VENV:     "python3.4 -m venv"
-    INSTALL_WX:  "pip install --pre -f $WXPYTHON_UBUNTU1404_URL wxpython"
 
 
 test:3.5:
   stage: test
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
   <<: *test_template
-  variables:
-    PY_VERSION:  "python3.5"
-    PY_PACKAGES: "python3-pip python3-venv"
-    PY_VENV:     "python3.5 -m venv"
-    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
 
 
 test:3.6:
   stage: test
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-py36-wxpy4-gtk2
   <<: *test_template
-  variables:
-    PY_VERSION:  "python3.6"
-    PY_PACKAGES: "python3-pip python3.6-venv"
-    PY_VENV:     "python3.6 -m venv"
-    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
 
 
 #############
@@ -245,14 +223,10 @@ test:3.6:
 
 style:
   stage: style
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
   <<: *test_template
   variables:
-    PY_VERSION:  "python3.5"
-    PY_PACKAGES: "python3-pip python3-venv"
-    PY_VENV:     "python3.5 -m venv"
-    INSTALL_WX:  "pip install --only-binary wxpython -f $WXPYTHON_UBUNTU1604_URL wxpython"
-    TEST_STYLE:  "true"
+    TEST_STYLE: "true"
 
 
 ###########
