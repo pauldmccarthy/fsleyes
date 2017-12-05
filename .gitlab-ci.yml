@@ -100,21 +100,6 @@ stages:
 #   - TWINE_PASSWORD:                - Password to use when uploading to pypi
 #
 #   - TWINE_REPOSITORY_URL:          - Pypi repository to upload to
-#
-#   - WXPYTHON_CENTOS_GTK:           - Either 'gtk2' or 'gtk3', the version of
-#                                      GTK to guild wxPython for on CentOS.
-#                                      For Ubuntu, you can select gtk2/3 by
-#                                      setting the wheel URLs below.
-#
-#   - WXPYTHON_UBUNTU1404_URL:       - URL to location of wxPython wheel for
-#                                      Ubuntu 14.04
-#
-#   - WXPYTHON_UBUNTU1604_URL:       - URL to location of wxPython wheel for
-#                                      Ubuntu 16.04
-#
-#   - WXPYTHON_VERSION:              - Version of wxpython to install, as a
-#                                      version specifier which can be passed to
-#                                      pip (e.g. "wxpython==4.0.0b1")
 ###############################################################################
 
 
@@ -296,16 +281,6 @@ build-pypi-dist:
       - dist/*whl
 
 
-.centos_pre_build: &centos_pre_build
-  before_script:
-    - bash ./.ci/centos_pre_build.sh
-
-
-.ubuntu_pre_build: &ubuntu_pre_build
-  before_script:
-    - bash ./.ci/ubuntu_pre_build.sh
-
-
 .linux_do_build: &linux_do_build
   tags:
     - docker
@@ -341,36 +316,32 @@ build-pypi-dist:
   <<: *except_releases
 
 build-dev-centos6:
-  image: centos:6
+  image: pauldmccarthy/fsleyes-centos6
   <<: *build_dev_template
-  <<: *centos_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "centos6"
 
 
 build-dev-centos7:
-  image: centos:7
+  image: pauldmccarthy/fsleyes-centos7
   <<: *build_dev_template
-  <<: *centos_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "centos7"
 
 
 build-dev-ubuntu1404:
-  image: ubuntu:14.04
+  image: pauldmccarthy/fsleyes-ubuntu1404
   <<: *build_dev_template
-  <<: *ubuntu_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "ubuntu1404"
 
 
 build-dev-ubuntu1604:
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-ubuntu1404
   <<: *build_dev_template
-  <<: *ubuntu_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "ubuntu1604"
@@ -393,10 +364,9 @@ build-macos:
 
 build-centos6:
   stage: build
-  image: centos:6
+  image: pauldmccarthy/fsleyes-centos6
   <<: *only_releases
   <<: *patch_version
-  <<: *centos_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "centos6"
@@ -404,10 +374,9 @@ build-centos6:
 
 build-centos7:
   stage: build
-  image: centos:7
+  image: pauldmccarthy/fsleyes-centos7
   <<: *only_releases
   <<: *patch_version
-  <<: *centos_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "centos7"
@@ -415,10 +384,9 @@ build-centos7:
 
 build-ubuntu1404:
   stage: build
-  image: ubuntu:14.04
+  image: pauldmccarthy/fsleyes-ubuntu1404
   <<: *only_releases
   <<: *patch_version
-  <<: *ubuntu_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "ubuntu1404"
@@ -426,10 +394,9 @@ build-ubuntu1404:
 
 build-ubuntu1604:
   stage: build
-  image: ubuntu:16.04
+  image: pauldmccarthy/fsleyes-ubuntu1604
   <<: *only_releases
   <<: *patch_version
-  <<: *ubuntu_pre_build
   <<: *linux_do_build
   variables:
     OSNAME: "ubuntu1604"
