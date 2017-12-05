@@ -3,8 +3,8 @@ chronological order.
 
 
 
-0.18.0 (Under development)
---------------------------
+0.18.0 (Wednesday December 6th 2017)
+------------------------------------
 
 
 * Fixed issue linking to the ``freeglut`` library on linux builds.
@@ -31,6 +31,7 @@ chronological order.
   are now optional - the *Load overlay from XNAT* option will be disabled
   if these dependenceies are not present.
 * New option to generate animated GIFs (see the :class:`.MovieGifAction`).
+  The :func:`.movieGif` function is available in the shell environment.
 * Plot panels no longer draw tick lines when ticks are disabled.
 
 
