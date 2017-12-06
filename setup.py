@@ -507,7 +507,15 @@ class pyinstaller(Command):
         os.symlink(op.basename(libglut[0]),
                    op.join(distdir, 'FSLeyes', 'glut'))
 
-        # Copy assets
+        # Remove certain .so files that will
+        # be provided by the running OS
+        toremove = ['libstdc*']
+        for tr in toremove:
+            paths = glob.glob(op.join(distdir, 'FSLeyes', tr))
+            for p in paths:
+                os.remove(p)
+
+       # Copy assets
         os.makedirs(assetdir)
         for dirname, files in assets:
 
