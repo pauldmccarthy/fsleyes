@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 source /build.venv/bin/activate
 
 # Install deps
@@ -17,3 +19,6 @@ apt-get remove -y freeglut3 || yum remove -y freeglut
 xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes -V
 sleep 5
 xvfb-run -s "-screen 0 640x482x24" dist/FSLeyes/fsleyes -S -r .ci/build_test.py
+sleep 5
+xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes render -of file.png -sz 640 480 tests/testdata/av
+ls file.png

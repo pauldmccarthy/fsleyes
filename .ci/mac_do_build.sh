@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 python3.5 -m venv fsleyes-build-venv
 . fsleyes-build-venv/bin/activate
 pip install numpy
@@ -28,3 +30,5 @@ mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
 # FSLeyes. Assuming here that we have a
 # display on the mac build environment
 dist/FSLeyes.app/Contents/MacOS/fsleyes -V
+dist/FSLeyes.app/Contents/MacOS/fsleyes render -of file.png -sz 640 480 tests/testdata/av
+ls file.png
