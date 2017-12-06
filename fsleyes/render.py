@@ -103,11 +103,6 @@ def parseArgs(argv):
                             metavar=('W', 'H'),
                             help='Size in pixels (width, height)',
                             default=(800, 600))
-    mainParser.add_argument('-o',
-                            '--selectedOverlay',
-                            metavar='IDX',
-                            help='Index of selected overlay '
-                                 '(starting from 0)'),
 
     name        = 'render'
     prolog      = 'FSLeyes render version {}\n'.format(version.__version__)
