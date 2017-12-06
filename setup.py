@@ -325,6 +325,7 @@ class build_standalone(Command):
                     propsfiles, widgetsfiles, fslpyfiles, fsleyesfiles):
                 if not filename.endswith('.py'):
                     continue
+                logging.getLogger().setLevel(logging.WARNING)
                 logstrip.main(['-f', '-M', 'INFO', filename])
 
         def enable_logging():
@@ -465,6 +466,7 @@ class pyinstaller(Command):
 
         cmd = [
             'pyinstaller',
+            '--log-level=WARN',
             '--name=FSLeyes',
             '--icon={}'.format(iconfile),
             '--windowed',
