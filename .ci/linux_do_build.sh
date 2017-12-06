@@ -20,5 +20,5 @@ xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes -V
 sleep 5
 xvfb-run -s "-screen 0 640x482x24" dist/FSLeyes/fsleyes -S -r .ci/build_test.py
 sleep 5
-xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes render -of file.png -sz 640 480 tests/testdata/av
-ls file.png
+xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes render -of file.png -sz 572 386 -hc -hl tests/testdata/MNI152_T1_2mm_brain
+python tests/compare_images.py file.png tests/testdata/test_screenshot_ortho.png 1000
