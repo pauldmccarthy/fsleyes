@@ -28,6 +28,11 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
 
     import matplotlib.image           as mplimg
     import fsleyes.actions.screenshot as screenshot
+    import fsleyes.views.orthopanel   as orthopanel
+
+    if isinstance(panel, orthopanel.OrthoPanel):
+        panel.sceneOpts.showCursor = False
+        panel.sceneOpts.showLabels = False
 
     img = fslimage.Image(op.join(datadir, imgfile))
 
