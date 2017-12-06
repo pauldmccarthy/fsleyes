@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /build.venv/bin/activate
+
 # Install deps
 pip install -r requirements.txt
 
