@@ -3,7 +3,9 @@ import os
 import time
 import os.path as op
 import numpy as np
-import matplotlib.image as mplimg
+
+from scipy.misc import imread, imsave, imresize
+import scipy.ndimage as ndi
 
 import wx
 
@@ -24,8 +26,33 @@ def compare_images(img1, img2, threshold):
     img1 = img1[:, :, :3]
     img2 = img2[:, :, :3]
 
+    # pad poth images
     if img1.shape != img2.shape:
-        return False, 0
+
+        img1w, img1h = img1.shape[:2]
+        img2w, img2h = img2.shape[:2]
+
+        maxw = max(img1w, img2w)
+        maxh = max(img1h, img2h)
+
+        newimg1 = np.zeros((maxw, maxh, 3), dtype=np.uint8)
+        newimg2 = np.zeros((maxw, maxh, 3), dtype=np.uint8)
+
+        img1woff = int(round((maxw - img1w) / 2.0))
+        img1hoff = int(round((maxh - img1h) / 2.0))
+        img2woff = int(round((maxw - img2w) / 2.0))
+        img2hoff = int(round((maxh - img2h) / 2.0))
+
+        newimg1[img1woff:img1woff + img1w,
+                img1hoff:img1hoff + img1h, :] = img1
+        newimg2[img2woff:img2woff + img2w,
+                img2hoff:img2hoff + img2h, :] = img2
+
+        img1 = newimg1
+        img2 = newimg2
+
+    img1 = ndi.gaussian_filter(img1, sigma=(2, 2, 0), order=0)
+    img2 = ndi.gaussian_filter(img2, sigma=(2, 2, 0), order=0)
 
     flat1   = img1.reshape(-1, 3)
     flat2   = img2.reshape(-1, 3)
@@ -45,8 +72,13 @@ datadir = op.join(os.getcwd(), 'tests', 'testdata')
 
 try:
 
+    # frame.SetSize((int(round(0.9 * 640)), int(round(0.9 * 480))))
+
     overlayList.append(Image('tests/testdata/MNI152_T1_2mm_brain'))
     ortho = frame.addViewPanel(OrthoPanel)
+
+    ortho.sceneOpts.showLabels = False
+    ortho.sceneOpts.showCursor = False
 
     code = [None]
 
@@ -57,13 +89,15 @@ try:
         screenshot(ortho, 'file.png')
 
         benchmark  = op.join(datadir, 'test_screenshot_ortho.png')
-        screenshot = mplimg.imread('file.png')
-        benchmark  = mplimg.imread(benchmark)
+        screenshot = imread('file.png')
+        benchmark  = imread(benchmark)
 
-        if compare_images(screenshot, benchmark, 50)[0]:
-            code[0] = 0
-        else:
-            code[0] = 1
+        result = compare_images(screenshot, benchmark, 500)
+
+        if result[0]: code[0] = 0
+        else:         code[0] = 1
+
+        print('Image difference: {}'.format(result))
 
     idle.idle(do_test, after=5)
 
