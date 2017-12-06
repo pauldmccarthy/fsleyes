@@ -63,6 +63,8 @@ initialised = [False]
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
+    logging.getLogger().setLevel(logging.WARNING)
+
     gc.collect()
     idle.idleReset()
 
@@ -78,9 +80,6 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     def init():
         fsleyes.initialise()
-        fsleyes.disableLogging = True
-        fsleyes.configLogging(None)
-        logging.getLogger().setLevel(logging.WARNING)
         props.initGUI()
         colourmaps.init()
         initialised[0] = True
