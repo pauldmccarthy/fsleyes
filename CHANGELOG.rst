@@ -2,6 +2,13 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.18.1 (Wednesday December 6th 2017)
+------------------------------------
+
+
+* Fixed bug in ``render`` (introduced by new ``--selectedOverlay`` command
+  line option)
+
 
 0.18.0 (Wednesday December 6th 2017)
 ------------------------------------
