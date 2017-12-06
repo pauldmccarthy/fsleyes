@@ -6,10 +6,10 @@ Jinja2==2.*
 Pillow>=3.2.0,<5.0
 PyOpenGL>=3.1.0,<4.0
 PyOpenGL-accelerate>=3.1.0,<4.0
-PyParsing==2.*
+pyparsing==2.*
 scipy==0.*
 indexed_gzip>=0.6.1,<1
-wxpython>=3.0.2.0,<4.1
+wxPython>=3.0.2.0,<4.1
 fslpy>=1.4.0,<2
 fsleyes-props>=1.2.2,<2
 fsleyes-widgets>=0.1.0,<2
