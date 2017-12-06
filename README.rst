@@ -8,10 +8,11 @@ FSLeyes
    :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
 
 .. image:: https://img.shields.io/pypi/v/fsleyes.svg
-   :target: https://pypi.python.org/pypi/fsleyes/)
+   :target: https://pypi.python.org/pypi/fsleyes/
 
 
-*FSLeyes* is the `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_ image viewer.
+`FSLeyes <https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes>`_ is the `FSL
+<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_ image viewer.
 
 
 Dependencies
