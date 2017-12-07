@@ -2,6 +2,14 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.18.2 (Thursday December 7th 2017)
+-----------------------------------
+
+
+* Fixed another bug drawing ``label`` overlays - were not being drawn
+  correctly when both image and LUT had low number of labels.
+
+
 0.18.1 (Wednesday December 6th 2017)
 ------------------------------------
 
