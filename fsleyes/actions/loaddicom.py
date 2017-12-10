@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# loaddicom.py -
+# loaddicom.py - The LoadDicomAction class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`LoadDicomAction` class, an :class:`.Action`
+which allows the user to load images from a DICOM directory.
+"""
+
 
 import itertools  as it
 from datetime import datetime
@@ -19,8 +23,16 @@ from . import base
 
 
 class LoadDicomAction(base.Action):
+    """The ``LoadDicomAction`` is an :class:`.Action` which allows the user to
+    load images from a DICOM directory. When invoked, the ``LoadDicomAction``
+    does the following:
+
+    1. Prompts the user to select a DICOM directory
+    2. Identifies the data series that are present in the directory
+    3. Prompts the user to select which series they would like to load
+    4. Loads the selected series.
     """
-    """
+
 
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``LoadDicomAction``.
@@ -34,6 +46,8 @@ class LoadDicomAction(base.Action):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__frame       = frame
+
+        # TODO disable if dcm2niix is not present
 
 
     def __loadDicom(self):
@@ -60,6 +74,7 @@ class LoadDicomAction(base.Action):
 
         # TODO show progress
 
+        # TODO handle error
         series = fsldcm.scanDir(dcmdir)
 
         dlg = BrowseDicomDialog(self.__frame, series)
@@ -71,6 +86,7 @@ class LoadDicomAction(base.Action):
         series = [series[i] for i in range(len(series)) if dlg.IsSelected(i)]
 
         # TODO show progress when loading
+        # TODO handle error
         images = [fsldcm.loadSeries(s) for s in series]
         images = it.chain(*images)
 
@@ -78,7 +94,18 @@ class LoadDicomAction(base.Action):
 
 
 class BrowseDicomDialog(wx.Dialog):
+    """The ``BrowseDicomDialog`` contains a ``BrowseDicomPanel``, and a
+    couple of buttons, allowing the user to select which DICOM series
+    they would like to load.
+    """
+
     def __init__(self, parent, dcmseries):
+        """Create a ``BrowseDicomDialog``.
+
+        :arg parent:    ``wx`` parent object
+        :arg dcmseries: List of DICOM data series, as returned by the
+                        :func:`fsl.data.dicom.scanDir` function.
+        """
 
         wx.Dialog.__init__(self, parent, title=strings.titles[self])
 
@@ -132,8 +159,18 @@ class BrowseDicomDialog(wx.Dialog):
 
 
 class BrowseDicomPanel(wx.Panel):
+    """The ``BrowseDicomPanel`` displayes information about a collection of
+    DICOM data series, and allows the user to select which series they would
+    like to load.
+    """
+
+
     def __init__(self, parent, dcmseries):
-        """
+        """Create a ``BrowseDicomPanel``.
+
+        :arg parent:    ``wx`` parent object
+        :arg dcmseries: List of DICOM data series, as returned by the
+                        :func:`fsl.data.dicom.scanDir` function.
         """
 
         wx.Panel.__init__(self, parent)
@@ -201,6 +238,8 @@ class BrowseDicomPanel(wx.Panel):
         #   SeriesDescription
         #   ReconMatrix
         #   Load (checkbox)
+        # TODO For other useful information,
+        #      you might need to look in the niftis
 
         # set up the grid
         self.__series.SetGridSize(len(dcmseries), 4, growCols=(0, 1))
