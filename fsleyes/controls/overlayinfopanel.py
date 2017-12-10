@@ -272,7 +272,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         self.__info.Refresh()
 
 
-    def __getImageInfo(self, overlay, display):
+    def __getImageInfo(self, overlay, display, title=None):
         """Creates and returns an :class:`OverlayInfo` object containing
         information about the given :class:`.Image` overlay.
 
@@ -643,6 +643,27 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
             info.addInfo(strings.tensor[name], val, section)
 
         return info
+
+
+    def __getDicomImageInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.DicomImage` overlay.
+
+        :arg overlay: A :class:`.DicomImage` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``DicomImage``.
+        """
+
+        info      = self.__getImageInfo(overlay, display)
+        dicomInfo = strings.labels[self, overlay, 'dicomInfo']
+
+        info.addSection(dicomInfo)
+
+        for k, v in overlay.items():
+            info.addInfo(k, str(v), dicomInfo)
+
+        return info
+
 
 
     def __formatArray(self, array):

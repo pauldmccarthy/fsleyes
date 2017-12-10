@@ -676,6 +676,9 @@ labels = TypeDict({
     'OverlayInfoPanel.DTIFitTensor'             : 'DTIFit tensor images',
     'OverlayInfoPanel.DTIFitTensor.tensorInfo'  : 'Tensor image paths ',
 
+    'OverlayInfoPanel.DicomImage'               : 'NIFTI Image (from DICOM)',
+    'OverlayInfoPanel.DicomImage.dicomInfo'     : 'DICOM information',
+
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
     'MelodicClassificationPanel.loadButton'     : 'Load labels',
