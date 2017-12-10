@@ -1390,6 +1390,8 @@ about = {
 
     Some of the icons used in FSLeyes are derived from the Freeline icon set, by Enes Dal, available at https://www.iconfinder.com/Enesdal, and released under the Creative Commons (Attribution 3.0 Unported) license.
 
+    DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix (https://github.com/rordenlab/dcm2niix).
+
     FSLeyes is released under Version 2.0 of the Apache Software License. Source code for FSLeyes is available at https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 
     Copyright 2016-2017 University of Oxford, Oxford, UK.
