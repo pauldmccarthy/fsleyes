@@ -267,6 +267,9 @@ messages = TypeDict({
 
     'ApplyCommandLineAction.error' :
     'An error occurred while applying the command line arguments.',
+
+    'LoadDicomAction.selectDir' :
+    'Select DICOM directory',
 })
 
 
@@ -391,15 +394,18 @@ titles = TypeDict({
     'ApplyCommandLineAction.error' : 'Error applying command line',
 
     'XNATBrowser' : 'Open from XNAT repository',
+
+    'BrowseDicomDialog' : 'Select DICOM series',
 })
 
 
 actions = TypeDict({
 
-    'LoadOverlayAction'        : 'Add overlay from file',
-    'LoadOverlayFromDirAction' : 'Add overlay from directory',
+    'LoadOverlayAction'        : 'Add from file',
+    'LoadOverlayFromDirAction' : 'Add from directory',
     'LoadStandardAction'       : 'Add standard',
-    'BrowseXNATAction'         : 'Add overlay from XNAT',
+    'LoadDicomAction'          : 'Add from DICOM',
+    'BrowseXNATAction'         : 'Add from XNAT',
     'CopyOverlayAction'        : 'Copy',
     'LoadAtlasAction'          : 'Add atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
@@ -762,6 +768,14 @@ labels = TypeDict({
     'XNATBrowser.ok'        : 'Download',
     'XNATBrowser.cancel'    : 'Cancel',
     'XNATBrowser.choosedir' : 'Choose a download location',
+
+    'BrowseDicomPanel.dicomdir'    : 'Directory',
+    'BrowseDicomPanel.date'        : 'Date',
+    'BrowseDicomPanel.patient'     : 'Patient',
+    'BrowseDicomPanel.institution' : 'Institution',
+
+    'BrowseDicomDialog.load'       : 'Load',
+    'BrowseDicomDialog.cancel'     : 'Cancel',
 })
 
 
