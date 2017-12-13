@@ -355,7 +355,7 @@ def initialise(splash, namespace, callback):
         #   [install_dir]/FSLeyes.app/Contents/MacOS/fsleyes/),
         #
         # Because the cwd will default to:
-        #   [install_dir/
+        #   [install_dir]/
 
         if fslplatform.os == 'Darwin':
 

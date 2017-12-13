@@ -17,6 +17,11 @@ perform one or more actions.  As the :class:`.FSLeyesPanel` class derives from
 :class:`ActionProvider`.
 
 
+Many of the modules in this package also contain standalone functions for doing
+various things, such as the :func:`.screenshot.screenshot` function, and the
+:func:`.loadoverlay.loadImage` function.
+
+
 The :func:`action` and :func:`toggleAction` functions are intended to be used
 as decorators upon the methods of a class which derives from
 :class:`ActionProvider`. For example::

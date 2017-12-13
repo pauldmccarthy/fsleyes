@@ -9,17 +9,20 @@ which allows the user to load images from a DICOM directory.
 """
 
 
-import itertools  as it
-from datetime import datetime
+import                 os
+import os.path      as op
+import itertools    as it
+from   datetime import datetime
 
 import wx
 
-import fsleyes_widgets.widgetgrid as wg
-
-import fsl.data.dicom as fsldcm
-
-import fsleyes.strings as strings
-from . import base
+import fsleyes_widgets.widgetgrid     as wg
+import fsleyes_widgets.utils.status   as status
+import fsleyes_widgets.utils.progress as progress
+import fsl.utils.settings             as fslsettings
+import fsl.data.dicom                 as fsldcm
+import fsleyes.strings                as strings
+from . import                            base
 
 
 class LoadDicomAction(base.Action):
@@ -47,50 +50,73 @@ class LoadDicomAction(base.Action):
         self.__displayCtx  = displayCtx
         self.__frame       = frame
 
-        # TODO disable if dcm2niix is not present
+        # permanently disable if
+        # fsl.data.dicom says it
+        # is disabled
+        self.enabled = fsldcm.enabled()
 
 
     def __loadDicom(self):
+        """Called when this ``LoadDicomAction`` is invoked.
+
+        Does the following:
+
+          1. Prompts the user to select a DICOM directory
+
+          2. Loads metadata about all of the data series in the
+             DICOM directory
+
+          3. Uses a :class:`.BrowseDicomDialog` to allow the user
+             to choose which data series they wish to load
+
+          4. Loads the selected series
         """
-        """
-
-        # 1. prompt user for directory
-        # 2. load metadata
-        # 3. show user list of data series, each has checkboxes
-        # 4. convert checked series
-        # 5. load checked series
-
-        # TODO use recent dir
-
-        dlg = wx.DirDialog(self.__frame,
-                           message=strings.messages[self, 'selectDir'],
-#                            defaultPath=None,
-                           style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        # 1. prompt user to select dicom directory
+        fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+        dlg     = wx.DirDialog(
+            self.__frame,
+            message=strings.messages[self, 'selectDir'],
+            adefaultPath=fromDir,
+            style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        dcmdir = dlg.GetPath()
+        # 2. load metadata about all data
+        #    series in the DICOM directory
+        dcmdir   = dlg.GetPath()
+        title    = strings.titles[  self, 'scanning']
+        msg      = strings.messages[self, 'scanning']
+        errTitle = strings.titles[  self, 'scanError']
+        errMsg   = strings.messages[self, 'scanError']
 
-        # TODO show progress
+        with progress.bounce(title, msg), \
+             status.reportIfError(errTitle, errMsg, raiseError=False):
+            series = fsldcm.scanDir(dcmdir)
 
-        # TODO handle error
-        series = fsldcm.scanDir(dcmdir)
-
+        # 3. ask user which data series
+        #    they want to load
         dlg = BrowseDicomDialog(self.__frame, series)
         dlg.CentreOnParent()
 
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        series = [series[i] for i in range(len(series)) if dlg.IsSelected(i)]
+        # 4. load all those series
+        series   = [series[i] for i in range(len(series)) if dlg.IsSelected(i)]
+        title    = strings.titles[  self, 'loading']
+        msg      = strings.messages[self, 'loading']
+        errTitle = strings.titles[  self, 'loadError']
+        errMsg   = strings.messages[self, 'loadError']
 
-        # TODO show progress when loading
-        # TODO handle error
-        images = [fsldcm.loadSeries(s) for s in series]
-        images = it.chain(*images)
+        with progress.bounce(title, msg), \
+             status.reportIfError(errTitle, errMsg, raiseError=False):
+            images = [fsldcm.loadSeries(s) for s in series]
 
-        self.__overlayList.extend(images)
+        self.__overlayList.extend(it.chain(*images))
+
+        dcmdir = dcmdir.rstrip(op.sep)
+        fslsettings.write('loadSaveOverlayDir', op.dirname(dcmdir))
 
 
 class BrowseDicomDialog(wx.Dialog):
