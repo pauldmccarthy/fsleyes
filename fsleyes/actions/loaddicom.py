@@ -11,7 +11,6 @@ which allows the user to load images from a DICOM directory.
 
 import                 os
 import os.path      as op
-import itertools    as it
 from   datetime import datetime
 
 import wx
@@ -76,7 +75,7 @@ class LoadDicomAction(base.Action):
         dlg     = wx.DirDialog(
             self.__frame,
             message=strings.messages[self, 'selectDir'],
-            adefaultPath=fromDir,
+            defaultPath=fromDir,
             style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
         if dlg.ShowModal() != wx.ID_OK:
@@ -89,10 +88,22 @@ class LoadDicomAction(base.Action):
         msg      = strings.messages[self, 'scanning']
         errTitle = strings.titles[  self, 'scanError']
         errMsg   = strings.messages[self, 'scanError']
+        series   = []
 
-        with progress.bounce(title, msg), \
-             status.reportIfError(errTitle, errMsg, raiseError=False):
-            series = fsldcm.scanDir(dcmdir)
+        def scan():
+            try:
+                series.extend(fsldcm.scanDir(dcmdir))
+                if len(series) == 0:
+                    raise Exception('Could not find any DICOM '
+                                    'data series in {}'.format(dcmdir))
+
+            except Exception as e:
+                series.append(e)
+
+        progress.runWithBounce(scan, title, msg)
+        if isinstance(series[0], Exception):
+            status.reportError(errTitle, errMsg, series[0])
+            return
 
         # 3. ask user which data series
         #    they want to load
@@ -108,12 +119,26 @@ class LoadDicomAction(base.Action):
         msg      = strings.messages[self, 'loading']
         errTitle = strings.titles[  self, 'loadError']
         errMsg   = strings.messages[self, 'loadError']
+        images   = []
 
-        with progress.bounce(title, msg), \
-             status.reportIfError(errTitle, errMsg, raiseError=False):
-            images = [fsldcm.loadSeries(s) for s in series]
+        def load():
+            try:
+                for s in series:
+                    images.extend(fsldcm.loadSeries(s))
 
-        self.__overlayList.extend(it.chain(*images))
+                if len(images) == 0:
+                    raise Exception('No images could be loaded '
+                                    'from {}'.format(dcmdir))
+
+            except Exception as e:
+                images.insert(0, e)
+
+        progress.runWithBounce(load, title, msg)
+        if isinstance(images[0], Exception):
+            status.reportError(errTitle, errMsg, images[0])
+            return
+
+        self.__overlayList.extend(images)
 
         dcmdir = dcmdir.rstrip(op.sep)
         fslsettings.write('loadSaveOverlayDir', op.dirname(dcmdir))
@@ -270,10 +295,10 @@ class BrowseDicomPanel(wx.Panel):
         # set up the grid
         self.__series.SetGridSize(len(dcmseries), 4, growCols=(0, 1))
         self.__series.ShowColLabels()
-        self.__series.SetColLabel(0, 'SeriesNumber')
-        self.__series.SetColLabel(1, 'SeriesDesription')
-        self.__series.SetColLabel(2, 'Matrix')
-        self.__series.SetColLabel(3, 'Load')
+        self.__series.SetColLabel(0, strings.labels[self, 'SeriesNumber'])
+        self.__series.SetColLabel(1, strings.labels[self, 'SeriesDescription'])
+        self.__series.SetColLabel(2, strings.labels[self, 'Matrix'])
+        self.__series.SetColLabel(3, strings.labels[self, 'Load'])
 
         for i, s in enumerate(dcmseries):
 

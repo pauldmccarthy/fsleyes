@@ -782,10 +782,14 @@ labels = TypeDict({
     'XNATBrowser.cancel'    : 'Cancel',
     'XNATBrowser.choosedir' : 'Choose a download location',
 
-    'BrowseDicomPanel.dicomdir'    : 'Directory',
-    'BrowseDicomPanel.date'        : 'Date',
-    'BrowseDicomPanel.patient'     : 'Patient',
-    'BrowseDicomPanel.institution' : 'Institution',
+    'BrowseDicomPanel.dicomdir'          : 'Directory',
+    'BrowseDicomPanel.date'              : 'Date',
+    'BrowseDicomPanel.patient'           : 'Patient',
+    'BrowseDicomPanel.institution'       : 'Institution',
+    'BrowseDicomPanel.SeriesNumber'      : 'Series',
+    'BrowseDicomPanel.SeriesDescription' : 'Description',
+    'BrowseDicomPanel.Matrix'            : 'Matrix',
+    'BrowseDicomPanel.Load'              : 'Load',
 
     'BrowseDicomDialog.load'       : 'Load',
     'BrowseDicomDialog.cancel'     : 'Cancel',
