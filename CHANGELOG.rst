@@ -2,6 +2,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.19.0 (Under development)
+--------------------------
+
+
+* Volumetric DICOM data series can now be loaded into FSLeyes, via
+  the *File* unicode:: U+21D2 *Add from DICOM* menu option. The
+  DICOM to NIFTI conversion is performed using Chris Rorden's
+  `dcm2niix <https://github.com/rordenlab/dcm2niix/>`_ tool.
+* Ortho edit mode has a new *Invert selection* option.
+
+
 0.18.2 (Thursday December 7th 2017)
 -----------------------------------
 
