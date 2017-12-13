@@ -190,6 +190,19 @@ class Editor(actions.ActionProvider):
                 self.__changeMade(change)
 
 
+    def invertSelection(self):
+        """Inverts the current selection. """
+
+        image     = self.__image
+        selection = self.__selection.getSelection()
+        inverted  = np.array(selection == 0, dtype=np.uint8)
+
+        change = SelectionChange(image, (0, 0, 0), selection, inverted)
+
+        self.__applyChange(change)
+        self.__changeMade( change)
+
+
     def fillSelection(self, newVals):
         """Fills the current selection with the specified value or values.
 

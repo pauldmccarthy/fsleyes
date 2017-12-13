@@ -604,7 +604,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    'fillSelection',
                    'eraseSelection',
                    'copySelection',
-                   'pasteSelection']
+                   'pasteSelection',
+                   'invertSelection']
 
         frame.populateMenu(editMenu,
                            profile,

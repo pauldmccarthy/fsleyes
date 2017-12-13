@@ -81,6 +81,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
        redo
        clearSelection
        fillSelection
+       invertSelection
        eraseSelection
        copySelection
        pasteSelection
@@ -488,6 +489,23 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.action
+    def invertSelection(self):
+        """Inverts the current selection. See :meth:`.Editor.invertSelection`.
+        """
+        if self.__currentOverlay is None:
+            return
+
+        editor = self.__editors[self.__currentOverlay]
+
+        if self.targetImage is not None:
+            editor = self.__getTargetImageEditor(editor)
+
+        editor.startChangeGroup()
+        editor.invertSelection()
+        editor.endChangeGroup()
+
+
+    @actions.action
     def eraseSelection(self):
         """Fills the current selection with zero. See
         :meth:`.Editor.fillSelection`.
@@ -637,9 +655,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.drawMode: self.getProp('mode').disableChoice('selint', self)
         else:             self.getProp('mode').enableChoice( 'selint', self)
 
-        self.clearSelection.enabled = not self.drawMode
-        self.fillSelection .enabled = not self.drawMode
-        self.eraseSelection.enabled = not self.drawMode
+        self.clearSelection .enabled = not self.drawMode
+        self.fillSelection  .enabled = not self.drawMode
+        self.eraseSelection .enabled = not self.drawMode
+        self.invertSelection.enabled = not self.drawMode
 
         with props.skip(self, 'showSelection', self.name):
             self.showSelection = True
