@@ -10,7 +10,10 @@ chronological order.
   the *File* unicode:: U+21D2 *Add from DICOM* menu option. The
   DICOM to NIFTI conversion is performed using Chris Rorden's
   `dcm2niix <https://github.com/rordenlab/dcm2niix/>`_ tool.
+* The selected overlay can now be different in different FSLeyes views.
 * Ortho edit mode has a new *Invert selection* option.
+* Bug fix in time series and histogram panels regarding non-Image overlays
+  (e.g. surfaces).
 * Work around in screenshot logic for a bug in matplotlib (see
   https://github.com/matplotlib/matplotlib/pull/10084).
 
