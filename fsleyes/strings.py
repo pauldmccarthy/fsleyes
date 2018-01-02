@@ -268,12 +268,12 @@ messages = TypeDict({
     'ApplyCommandLineAction.error' :
     'An error occurred while applying the command line arguments.',
 
-    'LoadDicomAction.selectDir' : 'Select DICOM directory',
-    'LoadDicomAction.scanning'  : 'Scanning for DICOM data series...',
-    'LoadDicomAction.loading'   : 'Loading DICOM data series...',
-    'LoadDicomAction.scanError' :
+    'loadDicom.selectDir' : 'Select DICOM directory',
+    'loadDicom.scanning'  : 'Scanning for DICOM data series...',
+    'loadDicom.loading'   : 'Loading DICOM data series...',
+    'loadDicom.scanError' :
     'An error occurred while scanning the DICOM directory',
-    'LoadDicomAction.loadError' :
+    'loadDicom.loadError' :
     'An error occurred while loading DICOM data',
 })
 
@@ -400,11 +400,11 @@ titles = TypeDict({
 
     'XNATBrowser' : 'Open from XNAT repository',
 
-    'LoadDicomAction.scanning'  : 'Scanning DICOM directory',
-    'LoadDicomAction.loading'   : 'Loading DICOM data series',
-    'LoadDicomAction.scanError' : 'Error reading DICOM directory',
-    'LoadDicomAction.loadError' : 'Error loading DICOM series',
-    'BrowseDicomDialog'         : 'Select DICOM series',
+    'loadDicom.scanning'  : 'Scanning DICOM directory',
+    'loadDicom.loading'   : 'Loading DICOM data series',
+    'loadDicom.scanError' : 'Error reading DICOM directory',
+    'loadDicom.loadError' : 'Error loading DICOM series',
+    'BrowseDicomDialog'   : 'Select DICOM series',
 })
 
 

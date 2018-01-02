@@ -6,6 +6,13 @@
 #
 """This module provides the :class:`LoadDicomAction` class, an :class:`.Action`
 which allows the user to load images from a DICOM directory.
+
+A few standalone functions are also defined in this module:
+
+.. autosummary::
+   :nosignatures:
+
+   loadDicom
 """
 
 
@@ -21,6 +28,7 @@ import fsleyes_widgets.utils.progress as progress
 import fsl.utils.settings             as fslsettings
 import fsl.data.dicom                 as fsldcm
 import fsleyes.strings                as strings
+import fsleyes.autodisplay            as autodisplay
 from . import                            base
 
 
@@ -56,92 +64,160 @@ class LoadDicomAction(base.Action):
 
 
     def __loadDicom(self):
-        """Called when this ``LoadDicomAction`` is invoked.
-
-        Does the following:
-
-          1. Prompts the user to select a DICOM directory
-
-          2. Loads metadata about all of the data series in the
-             DICOM directory
-
-          3. Uses a :class:`.BrowseDicomDialog` to allow the user
-             to choose which data series they wish to load
-
-          4. Loads the selected series
+        """Called when this ``LoadDicomAction`` is invoked. Calls the
+        :func:`loadDicom` function.
         """
-        # 1. prompt user to select dicom directory
+
+        def onLoad(overlays):
+            if len(overlays) == 0:
+                return
+
+            self.__overlayList.extend(overlays)
+
+            self.__displayCtx.selectedOverlay = \
+                self.__displayCtx.overlayOrder[-1]
+
+            if self.__displayCtx.autoDisplay:
+                for overlay in overlays:
+                    autodisplay.autoDisplay(overlay,
+                                            self.__overlayList,
+                                            self.__displayCtx)
+
+        loadDicom(parent=self.__frame, callback=onLoad)
+
+
+def loadDicom(dcmdir=None, parent=None, callback=None):
+    """Does the following:
+
+      1. Prompts the user to select a DICOM directory (unless
+         ``dcmdir is not None``)
+
+      2. Loads metadata about all of the data series in the
+         DICOM directory
+
+      3. Uses a :class:`.BrowseDicomDialog` to allow the user
+         to choose which data series they wish to load
+
+      4. Loads the selected series, and passes them to the
+         ``callback`` function if it is provided.
+
+    :arg dcmdir:   Directory to load DICOMs from. If not provided, the user is
+                   prompted to select a directory.
+
+    :arg parent:   ``wx`` parent object.
+
+    :arg callback: Function which is passed the loaded DICOM series
+                   (:class:`.Image` objects).
+    """
+
+    if parent is None:
+        parent = wx.GetTopLevelWindows()[0]
+
+    # 1. prompt user to select dicom directory
+    if dcmdir is None:
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
         dlg     = wx.DirDialog(
-            self.__frame,
-            message=strings.messages[self, 'selectDir'],
+            parent,
+            message=strings.messages['loadDicom.selectDir'],
             defaultPath=fromDir,
             style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        # 2. load metadata about all data
-        #    series in the DICOM directory
-        dcmdir   = dlg.GetPath()
-        title    = strings.titles[  self, 'scanning']
-        msg      = strings.messages[self, 'scanning']
-        errTitle = strings.titles[  self, 'scanError']
-        errMsg   = strings.messages[self, 'scanError']
-        series   = []
+        dcmdir = dlg.GetPath()
 
-        def scan():
-            try:
-                series.extend(fsldcm.scanDir(dcmdir))
-                if len(series) == 0:
-                    raise Exception('Could not find any DICOM '
-                                    'data series in {}'.format(dcmdir))
+    # 2. load metadata about all data series in
+    #    the DICOM directory. This is performed
+    #    on a separate thread via the
+    #    progress.runWithBounce function.
+    series = []
+    images = []
 
-            except Exception as e:
-                series.append(e)
+    def scan():
+        try:
+            series.extend(fsldcm.scanDir(dcmdir))
+            if len(series) == 0:
+                raise Exception('Could not find any DICOM '
+                                'data series in {}'.format(dcmdir))
 
-        progress.runWithBounce(scan, title, msg)
+        except Exception as e:
+            series.append(e)
+
+    # 3. ask user which data series
+    #    they want to load. This is called
+    #    after the scan function has
+    #    finished - see runWithBounce.
+    def postScan(completed):
+
+        # did the user cancel the progress dialog?
+        if not completed:
+            return
+
+        # did an error occur in the scan step above?
         if isinstance(series[0], Exception):
+            errTitle = strings.titles[  'loadDicom.scanError']
+            errMsg   = strings.messages['loadDicom.scanError']
             status.reportError(errTitle, errMsg, series[0])
             return
 
-        # 3. ask user which data series
-        #    they want to load
-        dlg = BrowseDicomDialog(self.__frame, series)
+        dlg = BrowseDicomDialog(parent, series)
         dlg.CentreOnParent()
 
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        # 4. load all those series
-        series   = [series[i] for i in range(len(series)) if dlg.IsSelected(i)]
-        title    = strings.titles[  self, 'loading']
-        msg      = strings.messages[self, 'loading']
-        errTitle = strings.titles[  self, 'loadError']
-        errMsg   = strings.messages[self, 'loadError']
-        images   = []
+        # load the selected series - this is
+        # done asynchronously via another
+        # call to runWithBounce.
+        for i in reversed(list(range(len(series)))):
+            if not dlg.IsSelected(i):
+                series.pop(i)
 
-        def load():
-            try:
-                for s in series:
-                    images.extend(fsldcm.loadSeries(s))
+        title = strings.titles[  'loadDicom.loading']
+        msg   = strings.messages['loadDicom.loading']
+        progress.runWithBounce(load, title, msg, callback=postLoad)
 
-                if len(images) == 0:
-                    raise Exception('No images could be loaded '
-                                    'from {}'.format(dcmdir))
+    # 4. Load the selected series. This is run
+    #    on a separate thread via runWithBounce
+    def load():
+        try:
+            for s in series:
+                images.extend(fsldcm.loadSeries(s))
 
-            except Exception as e:
-                images.insert(0, e)
+            if len(images) == 0:
+                raise Exception('No images could be loaded '
+                                'from {}'.format(dcmdir))
 
-        progress.runWithBounce(load, title, msg)
+        except Exception as e:
+            images.insert(0, e)
+
+    # Pass the loaded images to the calback
+    # function. This is called after the
+    # load function has finished.
+    def postLoad(completed):
+
+        # Did the user cancel the progress dialog?
+        if not completed:
+            return
+
+        # Did an error occur in the load step above?
         if isinstance(images[0], Exception):
+            errTitle = strings.titles[  'loadDicom.loadError']
+            errMsg   = strings.messages['loadDicom.loadError']
             status.reportError(errTitle, errMsg, images[0])
             return
 
-        self.__overlayList.extend(images)
+        fslsettings.write('loadSaveOverlayDir',
+                          op.dirname(dcmdir.rstrip(op.sep)))
 
-        dcmdir = dcmdir.rstrip(op.sep)
-        fslsettings.write('loadSaveOverlayDir', op.dirname(dcmdir))
+        if callback is not None:
+            callback(images)
+
+    # Kick off the process
+    title = strings.titles[  'loadDicom.scanning']
+    msg   = strings.messages['loadDicom.scanning']
+    progress.runWithBounce(scan, title, msg, callback=postScan)
 
 
 class BrowseDicomDialog(wx.Dialog):
