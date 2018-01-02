@@ -311,6 +311,7 @@ class RangePolygon(patches.Polygon):
         hs.addGlobalListener(           self._rp_name, self.updatePolygon)
         hsPanel.addListener('smooth',   self._rp_name, self.updatePolygon)
         hsPanel.addListener('histType', self._rp_name, self.updatePolygon)
+        hsPanel.addListener('plotType', self._rp_name, self.updatePolygon)
 
         self.updatePolygon()
 
@@ -327,6 +328,7 @@ class RangePolygon(patches.Polygon):
         hs.removeGlobalListener(           self._rp_name)
         hsPanel.removeListener('smooth',   self._rp_name)
         hsPanel.removeListener('histType', self._rp_name)
+        hsPanel.removeListener('plotType', self._rp_name)
 
         if self in hsPanel.artists:
             hsPanel.artists.remove(self)
@@ -347,15 +349,17 @@ class RangePolygon(patches.Polygon):
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
 
-        # If smoothing is enabled, we get
+        # If smoothing is enabled, or we are
+        # plotting bin centres, we get
         # the histogram data from the plotted
         # Line2D instance. This is because the
-        # HistogramPanel does the smoothing,
-        # not the HistogramSeries instance.
+        # HistogramPanel does the smoothing and
+        # bin centre adjustmennt, not the
+        # HistogramSeries instance.
         #
         # Try/except because the HistogramSeries
         # may not yet have been plotted.
-        if hsPanel.smooth:
+        if hsPanel.smooth or hsPanel.plotType == 'centre':
             try:
 
                 hsArtist = hsPanel.getArtist(hs)
