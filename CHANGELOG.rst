@@ -11,6 +11,8 @@ chronological order.
   DICOM to NIFTI conversion is performed using Chris Rorden's
   `dcm2niix <https://github.com/rordenlab/dcm2niix/>`_ tool.
 * Ortho edit mode has a new *Invert selection* option.
+* Work around in screenshot logic for a bug in matplotlib (see
+  https://github.com/matplotlib/matplotlib/pull/10084).
 
 
 0.18.2 (Thursday December 7th 2017)
