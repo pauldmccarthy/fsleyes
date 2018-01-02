@@ -210,7 +210,10 @@ def canvasPanelScreenshot(panel, filename):
 
     data[:, :,  3] = 255
 
-    mplimg.imsave(filename, data)
+    try:              fmt = op.splitext(filename)[1][1:]
+    except Exception: fmt = None
+
+    mplimg.imsave(filename, data, format=fmt)
 
 
 def _patchInCanvases(canvasPanel, containerPanel, data, bgColour):
