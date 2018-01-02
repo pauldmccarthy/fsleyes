@@ -173,7 +173,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     The ``Profile`` class currently only supports :class:`.CanvasPanel` and
     :class:`.PlotPanel` views. ``Profile`` instances use a
     :class:`.CanvasPanelEventManager` instance to manage GUI events on
-    :class:`.CanvasPanel` instances, or a:class:`.PlotPanelEventMAnager`
+    :class:`.CanvasPanel` instances, or a:class:`.PlotPanelEventManager`
     to manage GUI events on ``matplotlib Canvas`` objects.
 
 
