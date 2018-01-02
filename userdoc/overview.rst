@@ -47,12 +47,12 @@ see the page on :ref:`overlays <overlays>` for more information.
              - |alt_key|:     Option (on OSX; Alt on other platforms)
 
 
-In FSLeyes, **only one overlay** may be selected at a time. You can tell which
-overlay is selected by looking at the name field on the :ref:`overlay display
-toolbar <overlays_overlay_display_toolbar>`, or looking at the highlighted
-item in the :ref:`overlay list <ortho_lightbox_views_overlay_list>`. Many
-operations in FSLeyes will be applied to the currently selected overlay, such
-as adjusting the overlay visibility, brightness and colour map.
+Within a FSLeyes view, you can tell which overlay is selected by looking at
+the name field on the :ref:`overlay display toolbar
+<overlays_overlay_display_toolbar>`, or looking at the highlighted item in the
+:ref:`overlay list <ortho_lightbox_views_overlay_list>`. Many operations in
+FSLeyes will be applied to the currently selected overlay, such as adjusting
+the overlay visibility, brightness and colour map.
 
 
 The *Overlay* menu contains options for changing the selected overlay, and
