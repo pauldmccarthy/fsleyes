@@ -112,14 +112,10 @@ def toggleOverlayVisibility(self, *args, **kwargs):
     """Shows/hides the currently selected overlay. """
 
     overlayList = self.overlayList
+    displayCtx  = self.displayCtx
 
     if len(overlayList) == 0:
         return
-
-    viewPanel = self.focusedViewPanel
-
-    if viewPanel is None: displayCtx = self     .displayCtx
-    else:                 displayCtx = viewPanel.displayCtx
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)
