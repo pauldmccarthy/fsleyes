@@ -947,9 +947,9 @@ class FSLeyesFrame(wx.Frame):
     def __configDisplaySync(self, newPanel=None):
         """Called by :meth:`addViewPanel` and :meth:`__onViewPanelClose`.
 
-        This method ensures that at the display properties and overlay order
-        for the :class:`.DisplayContext` of at least least one
-        :class:`.CanvasPanel` is synced to the master
+        This method ensures that the display properties, overlay order,
+        and selected overlay for the :class:`.DisplayContext` of at least
+        least one :class:`.CanvasPanel` is synced to the master
         :class:`.DisplayContext`.
 
         :arg newPanel: If this method has been called as a result of a new
@@ -958,6 +958,12 @@ class FSLeyesFrame(wx.Frame):
         """
 
         import fsleyes.views.canvaspanel as canvaspanel
+        import fsleyes.views.plotpanel   as plotpanel
+
+        # Plot panels are unsynced from master
+        if newPanel is not None and isinstance(newPanel, plotpanel.PlotPanel):
+            newPanel.displayCtx.unsyncFromParent('overlayOrder')
+            newPanel.displayCtx.unsyncFromParent('selectedOverlay')
 
         canvasPanels = [vp for vp in self.__viewPanels
                         if isinstance(vp, canvaspanel.CanvasPanel)]
@@ -979,17 +985,21 @@ class FSLeyesFrame(wx.Frame):
         orderSynced   = any([c.isSyncedToParent('overlayOrder')
                              for c in canvasCtxs
                              if c is not newPanel])
+        selOvlSynced  = any([c.isSyncedToParent('selectedOverlay')
+                             for c in canvasCtxs
+                             if c is not newPanel])
 
         # If an existing canvas panel is
         # already synced to the master,
         # then we set the new panel to
         # be unsynced
-        if displaySynced and orderSynced:
+        if displaySynced and orderSynced and selOvlSynced:
             if newPanel is not None and \
                isinstance(newPanel, canvaspanel.CanvasPanel):
                 childDC = newPanel.displayCtx
                 childDC.syncOverlayDisplay = False
                 childDC.unsyncFromParent('overlayOrder')
+                childDC.unsyncFromParent('selectedOverlay')
 
         # If no existing CanvasPanels are
         # synced to the master context,
@@ -1013,6 +1023,7 @@ class FSLeyesFrame(wx.Frame):
 
             childDC.syncOverlayDisplay = True
             childDC.syncToParent('overlayOrder')
+            childDC.syncToParent('selectedOverlay')
 
             # Reset the binding directiona
             childDC.setBindingDirection(True)

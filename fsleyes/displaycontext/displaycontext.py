@@ -240,12 +240,11 @@ class DisplayContext(props.SyncableHasProperties):
         All other arguments are passed through to the ``SyncableHasProperties``
         constructor, in addition to the following:
 
-          - The ``syncOverlayDisplay`` and ``location`` properties
-            are added to the ``nobind`` argument
+          - The ``syncOverlayDisplay``,  ``location``, and ``bounds``
+            properties are added to the ``nobind`` argument
 
-          - The ``selectedOverlay``, ``overlayGroups``,
-            ``autoDisplay`` and ``loadInMemory`` properties
-            are added to the ``nounbind`` argument.
+          - The ``overlayGroups``, ``autoDisplay`` and ``loadInMemory``
+            properties are added to the ``nounbind`` argument.
         """
 
         kwargs = dict(kwargs)
@@ -256,8 +255,7 @@ class DisplayContext(props.SyncableHasProperties):
         nobind  .extend(['syncOverlayDisplay',
                          'location',
                          'bounds'])
-        nounbind.extend(['selectedOverlay',
-                         'overlayGroups',
+        nounbind.extend(['overlayGroups',
                          'autoDisplay',
                          'loadInMemory'])
 
