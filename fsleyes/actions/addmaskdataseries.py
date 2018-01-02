@@ -76,15 +76,18 @@ class AddMaskDataSeriesAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
-        self.__maskOptions = [o for o in self.__overlayList if
-                              isinstance(o, fslimage.Image) and
-                              o is not overlay              and
-                              o.sameSpace(overlay)]
-
         self.enabled = (len(self.__overlayList) > 0         and
                         isinstance(overlay, fslimage.Image) and
                         overlay.ndims > 3                   and
                         len(self.__maskOptions) > 0)
+
+        if self.enabled:
+            self.__maskOptions = [o for o in self.__overlayList if
+                                  isinstance(o, fslimage.Image) and
+                                  o is not overlay              and
+                                  o.sameSpace(overlay)]
+        else:
+            self.__maskOptions = []
 
 
     def __addMaskDataSeries(self):
