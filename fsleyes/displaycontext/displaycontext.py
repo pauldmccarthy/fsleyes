@@ -792,24 +792,23 @@ class DisplayContext(props.SyncableHasProperties):
         # with the overlay list.
         self.__updateDisplaySpaceOptions()
 
-        # Stuff which only needs to
-        # be done on the parent DC
+        # The rest of the stuff only
+        # needs to be done on child DCs
         if not self.__child:
-
-            # Limit the selectedOverlay property
-            # so it cannot take a value greater
-            # than len(overlayList)-1. selectedOverlay
-            # is always synchronised, so we only
-            # need to do this on the parent DC.
-            nOverlays = len(self.__overlayList)
-            if nOverlays > 0:
-                self.setAttribute('selectedOverlay',
-                                  'maxval',
-                                  nOverlays - 1)
-            else:
-                self.setAttribute('selectedOverlay', 'maxval', 0)
-
             return
+
+        # Limit the selectedOverlay property
+        # so it cannot take a value greater
+        # than len(overlayList)-1. selectedOverlay
+        # is always synchronised, so we only
+        # need to do this on the parent DC.
+        nOverlays = len(self.__overlayList)
+        if nOverlays > 0:
+            self.setAttribute('selectedOverlay',
+                              'maxval',
+                              nOverlays - 1)
+        else:
+            self.setAttribute('selectedOverlay', 'maxval', 0)
 
         # Ensure that the overlayOrder
         # property is valid
