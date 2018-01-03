@@ -64,7 +64,8 @@ class OverlayGroup(props.HasProperties):
 
     _groupBindings = td.TypeDict({
         'Display'        : [],
-        'NiftiOpts'      : ['volume'],
+        'NiftiOpts'      : ['volume',
+                            'volumeDim'],
         'VolumeOpts'     : ['interpolation'],
         'Volume3DOpts'   : ['numSteps',
                             'numInnerSteps',
@@ -117,18 +118,18 @@ class OverlayGroup(props.HasProperties):
 
         # Import all of the Display/DisplayOpts
         # classes into the local namespace
-        from fsleyes.displaycontext import \
-            Display,        \
-            NiftiOpts,      \
-            VolumeOpts,     \
-            Volume3DOpts,   \
-            MaskOpts,       \
-            VectorOpts,     \
-            RGBVectorOpts,  \
-            LineVectorOpts, \
-            MeshOpts,       \
-            LabelOpts,      \
-            TensorOpts
+        from fsleyes.displaycontext import (  # noqa
+            Display,
+            NiftiOpts,
+            VolumeOpts,
+            Volume3DOpts,
+            MaskOpts,
+            VectorOpts,
+            RGBVectorOpts,
+            LineVectorOpts,
+            MeshOpts,
+            LabelOpts,
+            TensorOpts)
 
         # Add all of the properties listed
         # in the _groupBindings dict as

@@ -17,8 +17,9 @@ import contextlib
 import numpy        as np
 import numpy.linalg as npla
 
-import fsl.data.image as fslimage
-import fsleyes_props  as props
+import        fsl.data.image as fslimage
+import        fsleyes_props  as props
+from . import group          as dcgroup
 
 
 log = logging.getLogger(__name__)
@@ -125,6 +126,10 @@ class DisplayContext(props.SyncableHasProperties):
     overlayGroups = props.List()
     """A list of :class:`.OverlayGroup` instances, each of which defines
     a group of overlays which share display properties.
+
+    By default there is one overlay group, to which all new overlays are
+    initially added. The :class:`.OverlayListPanel` allows the user to
+    add/remove overlays from this default group.
     """
 
 
@@ -303,6 +308,16 @@ class DisplayContext(props.SyncableHasProperties):
         # settings.
         if self.__child:
             self.__initDS = (len(parent.getChildren()) - 1) == 0
+
+
+        # While the DisplayContext may refer to
+        # multiple overlay groups, we are currently
+        # using just one, allowing the user to specify
+        # a set of overlays for which their display
+        # properties are 'locked'.
+        if not self.__child:
+            lockGroup = dcgroup.OverlayGroup(self, overlayList)
+            self.overlayGroups.append(lockGroup)
 
         # This dict contains the Display
         # objects for every overlay in
@@ -730,6 +745,7 @@ class DisplayContext(props.SyncableHasProperties):
             # The getDisplay method
             # will create a Display object
             # if one does not already exist
+            new     = overlay not in self.__displays
             display = self.getDisplay(overlay, ovlType)
             opts    = display.opts
 
@@ -762,6 +778,14 @@ class DisplayContext(props.SyncableHasProperties):
                     opts.detachFromParent('bounds')
                     if isinstance(overlay, fslimage.Nifti):
                         opts.detachFromParent('transform')
+
+            # All new overlays are initially
+            # added to the default overlay group.
+            # This only needs to be done on the
+            # master DC, as the overlayGroups are
+            # the same across all DCs.
+            if new and not self.__child and len(self.overlayGroups) > 0:
+                self.overlayGroups[0].addOverlay(overlay)
 
         # Ensure that the displaySpace
         # property options are in sync
