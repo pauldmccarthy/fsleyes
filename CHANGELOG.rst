@@ -2,6 +2,14 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.19.1 (Wednesday January 3rd 2017)
+-----------------------------------
+
+
+* Small fix related to per-view selected overlays.
+* Adjustments to per-view volume linking.
+
+
 0.19.0 (Wednesday January 3rd 2017)
 -----------------------------------
 
