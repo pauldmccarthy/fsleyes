@@ -635,6 +635,7 @@ labels = TypeDict({
     'OverlayInfoPanel.Nifti.dimensions'   : 'Dimensions',
     'OverlayInfoPanel.Nifti.transform'    : 'Transform/space',
     'OverlayInfoPanel.Nifti.orient'       : 'Orientation',
+    'OverlayInfoPanel.Nifti.size'         : 'Size',
 
     'OverlayInfoPanel.Nifti.displaySpace.id'          : 'Raw voxels',
     'OverlayInfoPanel.Nifti.displaySpace.pixdim'      : 'True scaled voxels',
@@ -665,6 +666,8 @@ labels = TypeDict({
     'Display space',
     'OverlayInfoPanel.TriangleMesh.refImage'               :
     'Reference image',
+    'OverlayInfoPanel.TriangleMesh.size'                   :
+    'Size',
     'OverlayInfoPanel.TriangleMesh.coordSpace'             :
     'Vertices defined in',
     'OverlayInfoPanel.TriangleMesh.coordSpace.id'          :

@@ -18,6 +18,7 @@ import numpy as np
 
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
+import fsl.utils.transform            as transform
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.panel                  as fslpanel
@@ -394,6 +395,19 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 pixdim,
                 section=dimSect)
 
+        bounds = transform.axisBounds(overlay.shape[:3],
+                                      opts.getTransform('voxel', 'world'))
+        lens   = bounds[1] - bounds[0]
+        lens   = 'X={:0.0f} {} Y={:0.0f} {} Z={:0.0f} {}'.format(
+            lens[0], voxUnits,
+            lens[1], voxUnits,
+            lens[2], voxUnits)
+
+        info.addInfo(
+            strings.labels[self, overlay, 'size'],
+            lens,
+            section=dimSect)
+
         # For NIFTI images, we show both
         # the sform and qform matrices,
         # in addition to the effective
@@ -565,15 +579,21 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
             modelInfo.append(
                 ('displaySpace', strings.labels[
                     self, overlay, 'coordSpace', 'display']))
+
+            mesh2worldXform = np.eye(4)
+
         else:
 
-            refOpts      = self.displayCtx.getOpts(refImg)
-            dsImg        = self.displayCtx.displaySpace
-            displaySpace = strings.labels[
+            refOpts         = self.displayCtx.getOpts(refImg)
+            dsImg           = self.displayCtx.displaySpace
+            displaySpace    = strings.labels[
                 self, refImg, 'displaySpace', refOpts.transform]
-            coordSpace   = strings.labels[
+            coordSpace      = strings.labels[
                 self, overlay,
                 'coordSpace', opts.coordSpace].format(refImg.name)
+            mesh2worldXform = transform.concat(
+                refOpts.getTransform('display', 'world'),
+                opts.getCoordSpaceTransform())
 
             if refOpts.transform == 'reference':
                 dsDisplay    = self.displayCtx.getDisplay(dsImg)
@@ -582,6 +602,13 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
             modelInfo.append(('refImage',     refImg.dataSource))
             modelInfo.append(('coordSpace',   coordSpace))
             modelInfo.append(('displaySpace', displaySpace))
+
+        bounds = overlay.getBounds()
+        bounds = transform.transform(bounds, mesh2worldXform)
+        lens   = bounds[1] - bounds[0]
+        lens   = 'X={:0.0f} mm Y={:0.0f} mm Z={:0.0f} mm'.format(*lens)
+
+        modelInfo.append(('size', lens))
 
         info = OverlayInfo('{} - {}'.format(
             display.name,
