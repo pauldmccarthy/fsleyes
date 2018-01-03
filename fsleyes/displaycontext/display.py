@@ -475,7 +475,8 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         self.__displayCtx  = None
 
 
-    def getVolumeProps(self):
+    @classmethod
+    def getVolumeProps(cls):
         """Intended to be overridden by sub-classes as needed.  Returns a list
         of property names which control the currently displayed
         volume/timepoint for 4D overlays. The default implementation returns

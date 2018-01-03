@@ -546,7 +546,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__xforms['texture', 'reference']   = texToRefMat
 
 
-    def getVolumeProps(self):
+    @classmethod
+    def getVolumeProps(cls):
         """Overrides :meth:`DisplayOpts.getVolumeProps`. Returns a list
         of property names which control the displayed volume/timepoint.
         """

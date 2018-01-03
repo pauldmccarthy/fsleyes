@@ -302,7 +302,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         fsldisplay.DisplayOpts  .destroy(self)
 
 
-    def getVolumeProps(self):
+    @classmethod
+    def getVolumeProps(cls):
         """Overrides :meth:`DisplayOpts.getVolumeProps`. Returns a list
         of property names which control the displayed volume/timepoint.
         """
