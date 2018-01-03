@@ -86,6 +86,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             ('syncOverlayOrder',   props.Widget('syncOverlayOrder')),
             ('syncLocation',       props.Widget('syncLocation')),
             ('syncOverlayDisplay', props.Widget('syncOverlayDisplay')),
+            ('syncOverlayVolume',  props.Widget('syncOverlayVolume')),
             ('movieMode',          props.Widget('movieMode')),
             ('movieAxis',
              props.Widget('movieAxis',

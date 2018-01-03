@@ -84,6 +84,7 @@ class CanvasPanel(viewpanel.ViewPanel):
        showCommandLineArgs
        toggleMovieMode
        toggleDisplaySync
+       toggleVolumeSync
        toggleOverlayList
        toggleOverlayInfo
        toggleAtlasPanel
@@ -186,6 +187,15 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
 
 
+    syncOverlayVolume = props.Boolean(default=True)
+    """If ``True`` (the default), the volume/timepoint properties of the
+    :class:`.DisplayOpts` instances for every overlay, as managed by the
+    :attr:`.DisplayContext` for this ``CanvasPanel``, are linked to the
+    properties of all ``DisplayOpts`` instances managed by the master
+    ``DisplayContext`` instance.
+    """
+
+
     movieMode = props.Boolean(default=False)
     """If ``True``, and the currently selected overlay (see
     :attr:`.DisplayContext.selectedOverlay`) is a :class:`.Image` instance
@@ -246,6 +256,7 @@ class CanvasPanel(viewpanel.ViewPanel):
                            displayCtx,
                            displayCtx.getSyncPropertyName('overlayOrder'))
             self.bindProps('syncOverlayDisplay', displayCtx)
+            self.bindProps('syncOverlayVolume',  displayCtx)
 
         # If the displayCtx instance does not
         # have a parent, this means that it is
@@ -254,6 +265,7 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.disableProperty('syncLocation')
             self.disableProperty('syncOverlayOrder')
             self.disableProperty('syncOverlayDisplay')
+            self.disableProperty('syncOverlayVolume')
 
         import fsleyes.actions.moviegif as moviegif
 
@@ -265,6 +277,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
         self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
+        self.toggleVolumeSync .bindProps('toggled', self, 'syncOverlayVolume')
         self.movieGif         .bindProps('enabled', self.__movieGifAction)
 
         # the __movieModeChanged method is called
@@ -388,6 +401,14 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Toggles the value of :attr:`syncOverlayDisplay`. """
         # The state of this action gets bound to
         # the syncOverlayDisplay attribute in __init__
+        pass
+
+
+    @actions.toggleAction
+    def toggleVolumeSync(self):
+        """Toggles the value of :attr:`syncOverlayVolume`. """
+        # The state of this action gets bound to
+        # the syncOverlayVolume attribute in __init__
         pass
 
 

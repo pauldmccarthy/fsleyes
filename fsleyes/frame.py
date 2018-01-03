@@ -960,8 +960,10 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.views.canvaspanel as canvaspanel
         import fsleyes.views.plotpanel   as plotpanel
 
-        # Plot panels are unsynced from master
+        # Plot panel defaults
         if newPanel is not None and isinstance(newPanel, plotpanel.PlotPanel):
+            newPanel.displayCtx.syncOverlayDisplay = False
+            newPanel.displayCtx.syncOverlayVolume  = True
             newPanel.displayCtx.unsyncFromParent('overlayOrder')
             newPanel.displayCtx.unsyncFromParent('selectedOverlay')
 
@@ -970,8 +972,8 @@ class FSLeyesFrame(wx.Frame):
         canvasCtxs   = [c.displayCtx for c in canvasPanels]
         numCanvases  = len(canvasPanels)
 
-        # We only care about
-        # canvas panels.
+        # We only care about canvas
+        # panels from here on.
         if numCanvases == 0:
             return
 
@@ -980,6 +982,9 @@ class FSLeyesFrame(wx.Frame):
         # order synced to the master display
         # context?
         displaySynced = any([c.syncOverlayDisplay
+                             for c in canvasCtxs
+                             if c is not newPanel])
+        volumeSynced = any([c.syncOverlayVolume
                              for c in canvasCtxs
                              if c is not newPanel])
         orderSynced   = any([c.isSyncedToParent('overlayOrder')
@@ -993,10 +998,11 @@ class FSLeyesFrame(wx.Frame):
         # already synced to the master,
         # then we set the new panel to
         # be unsynced
-        if displaySynced and orderSynced and selOvlSynced:
+        if displaySynced and volumeSynced and orderSynced and selOvlSynced:
             if newPanel is not None and \
                isinstance(newPanel, canvaspanel.CanvasPanel):
-                childDC = newPanel.displayCtx
+                childDC                    = newPanel.displayCtx
+                childDC.syncOverlayVolume  = True
                 childDC.syncOverlayDisplay = False
                 childDC.unsyncFromParent('overlayOrder')
                 childDC.unsyncFromParent('selectedOverlay')
@@ -1022,6 +1028,7 @@ class FSLeyesFrame(wx.Frame):
                 opts   .setBindingDirection(False)
 
             childDC.syncOverlayDisplay = True
+            childDC.syncOverlayVolume  = True
             childDC.syncToParent('overlayOrder')
             childDC.syncToParent('selectedOverlay')
 

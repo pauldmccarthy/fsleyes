@@ -443,7 +443,13 @@ properties = TypeDict({
                                        'also have this setting enabled). ',
     'CanvasPanel.syncOverlayDisplay' : 'If checked, the display properties '
                                        'of all overlays shown in this panel '
-                                       'linked to the display properties '
+                                       'are linked to the display properties '
+                                       'on other panels (as long as they '
+                                       'also have this setting enabled). ',
+    'CanvasPanel.syncOverlayVolume'  : 'If checked,  properties which control '
+                                       'the displayed volume/timepoint '
+                                       'of all overlays shown in this panel '
+                                       'are linked to the volume properties '
                                        'on other panels (as long as they '
                                        'also have this setting enabled). ',
 

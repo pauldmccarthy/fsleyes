@@ -804,6 +804,7 @@ properties = TypeDict({
     'CanvasPanel.syncLocation'       : 'Link location',
     'CanvasPanel.syncOverlayOrder'   : 'Link overlay order',
     'CanvasPanel.syncOverlayDisplay' : 'Link overlay display settings',
+    'CanvasPanel.syncOverlayVolume'  : 'Link overlay volume settings',
     'CanvasPanel.movieMode'          : 'Movie mode',
     'CanvasPanel.movieRate'          : 'Movie update rate',
     'CanvasPanel.movieAxis'          : 'Movie axis',
