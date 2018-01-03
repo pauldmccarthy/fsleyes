@@ -286,12 +286,22 @@ class Display(props.SyncableHasProperties):
                                    self.__displayCtx.syncOverlayDisplay,
                                    self.__overlay, self.overlayType))
 
+        volProps  = optType.getVolumeProps()
+        allProps  = optType.getAllProperties()[0]
+        initState = {}
+
+        for p in allProps:
+            if p in volProps:
+                initState[p] = self.__displayCtx.syncOverlayVolume
+            else:
+                initState[p] = self.__displayCtx.syncOverlayDisplay
+
         return optType(self.__overlay,
                        self,
                        self.__overlayList,
                        self.__displayCtx,
                        parent=oParent,
-                       state=self.__displayCtx.syncOverlayDisplay)
+                       state=initState)
 
 
     def __findOptBaseType(self, optType, optName):
