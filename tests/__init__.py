@@ -96,10 +96,6 @@ def run_with_fsleyes(func, *args, **kwargs):
 
         overlayList = fsloverlay.OverlayList()
         displayCtx  = dc.DisplayContext(overlayList)
-        lockGroup   = dc.OverlayGroup(displayCtx, overlayList)
-
-        displayCtx.overlayGroups.append(lockGroup)
-
         frame[0]    = fslframe.FSLeyesFrame(None,
                                             overlayList,
                                             displayCtx)
