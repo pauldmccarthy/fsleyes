@@ -1,3 +1,6 @@
+.. |right_arrow| unicode:: U+21D2
+
+
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
@@ -15,7 +18,7 @@ chronological order.
 
 
 * Volumetric DICOM data series can now be loaded into FSLeyes, via
-  the *File* unicode:: U+21D2 *Add from DICOM* menu option. The
+  the *File* |right_arrow| *Add from DICOM* menu option. The
   DICOM to NIFTI conversion is performed using Chris Rorden's
   `dcm2niix <https://github.com/rordenlab/dcm2niix/>`_ tool.
 * The selected overlay can now be different in different FSLeyes views.
