@@ -546,6 +546,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.__xforms['texture', 'reference']   = texToRefMat
 
 
+    def getVolumeProps(self):
+        """Overrides :meth:`DisplayOpts.getVolumeProps`. Returns a list
+        of property names which control the displayed volume/timepoint.
+        """
+        return ['volume', 'volumeDim']
+
+
     def getTransform(self, from_, to, xform=None):
         """Return a matrix which may be used to transform coordinates
         from ``from_`` to ``to``. Valid values for ``from_`` and ``to``

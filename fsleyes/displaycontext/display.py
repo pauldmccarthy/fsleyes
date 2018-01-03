@@ -458,6 +458,32 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
             log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    def destroy(self):
+        """This method must be called when this ``DisplayOpts`` instance
+        is no longer needed.
+
+        If a subclass overrides this method, the subclass implementation
+        must call this method, **after** performing its own clean up.
+        """
+        actions.ActionProvider.destroy(self)
+
+        self.detachAllFromParent()
+
+        self.__overlay     = None
+        self.__display     = None
+        self.__overlayList = None
+        self.__displayCtx  = None
+
+
+    def getVolumeProps(self):
+        """Intended to be overridden by sub-classes as needed.  Returns a list
+        of property names which control the currently displayed
+        volume/timepoint for 4D overlays. The default implementation returns
+        an empty list.
+        """
+        return []
+
+
     @property
     def overlay(self):
         """Return the overlay associated with this ``DisplayOpts`` object.
@@ -500,23 +526,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
     def name(self):
         """Return the name of this ``DisplayOpts`` object. """
         return self.__name
-
-
-    def destroy(self):
-        """This method must be called when this ``DisplayOpts`` instance
-        is no longer needed.
-
-        If a subclass overrides this method, the subclass implementation
-        must call this method, **after** performing its own clean up.
-        """
-        actions.ActionProvider.destroy(self)
-
-        self.detachAllFromParent()
-
-        self.__overlay     = None
-        self.__display     = None
-        self.__overlayList = None
-        self.__displayCtx  = None
 
 
     @property

@@ -302,6 +302,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         fsldisplay.DisplayOpts  .destroy(self)
 
 
+    def getVolumeProps(self):
+        """Overrides :meth:`DisplayOpts.getVolumeProps`. Returns a list
+        of property names which control the displayed volume/timepoint.
+        """
+        return ['vertexDataIndex']
+
+
     def getDataRange(self):
         """Overrides the :meth:`.ColourMapOpts.getDisplayRange` method.
         Returns the display range of the currently selected
