@@ -2,8 +2,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.19.0 (Under development)
---------------------------
+0.19.0 (Wednesday January 3rd 2017)
+-----------------------------------
 
 
 * Volumetric DICOM data series can now be loaded into FSLeyes, via
@@ -11,6 +11,11 @@ chronological order.
   DICOM to NIFTI conversion is performed using Chris Rorden's
   `dcm2niix <https://github.com/rordenlab/dcm2niix/>`_ tool.
 * The selected overlay can now be different in different FSLeyes views.
+* Volume/timepoint properties can now be linked across views independently of
+  other display properties. This is accessible via a new setting *Link overlay
+  volume settings* in the view settings panel.
+* All new overlays are now linked by default. This is so that the volumes
+  for 4D images will be synchronised by default.
 * Ortho edit mode has a new *Invert selection* option.
 * Bug fix in time series and histogram panels regarding non-Image overlays
   (e.g. surfaces).
