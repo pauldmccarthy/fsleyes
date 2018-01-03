@@ -136,6 +136,10 @@ class DisplayContext(props.SyncableHasProperties):
     to those of the parent instance. Otherwise, the display properties for
     every overlay will be unsynchronised from the parent.
 
+    Properties which control the current volume/timepoint in a 4D data set are
+    not managed by this property - see the :attr: :attr:`syncOverlayVolume`
+    property.
+
     Synchronisation of the following properties between child and parent
     ``DisplayContext`` instances is also controlled by this flag:
 
@@ -146,6 +150,13 @@ class DisplayContext(props.SyncableHasProperties):
     .. note:: This property is accessed by the :class:`.Display` class, in its
               constructor, and when it creates new :class:`.DisplayOpts`
               instances, to set initial sync states.
+    """
+
+
+    syncOverlayVolume = props.Boolean(default=True)
+    """This property performs the same task as the :attr:`syncOverlayDisplay`
+    property, but it only affects :class:`DisplayOpts` properties which control
+    the current volume/timepoint in a 4D overlay.
     """
 
 
@@ -240,8 +251,8 @@ class DisplayContext(props.SyncableHasProperties):
         All other arguments are passed through to the ``SyncableHasProperties``
         constructor, in addition to the following:
 
-          - The ``syncOverlayDisplay``,  ``location``, and ``bounds``
-            properties are added to the ``nobind`` argument
+          - The ``syncOverlayDisplay``,, ``syncOverlayVolume``, ``location``,
+            and ``bounds`` properties are added to the ``nobind`` argument
 
           - The ``overlayGroups``, ``autoDisplay`` and ``loadInMemory``
             properties are added to the ``nounbind`` argument.
@@ -253,6 +264,7 @@ class DisplayContext(props.SyncableHasProperties):
         nounbind = kwargs.pop('nounbind', [])
 
         nobind  .extend(['syncOverlayDisplay',
+                         'syncOverlayVolume',
                          'location',
                          'bounds'])
         nounbind.extend(['overlayGroups',
@@ -307,6 +319,9 @@ class DisplayContext(props.SyncableHasProperties):
             self.addListener('syncOverlayDisplay',
                              self.__name,
                              self.__syncOverlayDisplayChanged)
+            self.addListener('syncOverlayVolume',
+                             self.__name,
+                             self.__syncOverlayVolumeChanged)
             self.addListener('displaySpace',
                              self.__name,
                              self.__displaySpaceChanged,
@@ -353,6 +368,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         if self.__child:
             self.removeListener('syncOverlayDisplay', self.__name)
+            self.removeListener('syncOverlayVolume',  self.__name)
             self.removeListener('displaySpace',       self.__name)
             self.removeListener('location',           self.__name)
             self.removeListener('worldLocation',      self.__name)
@@ -1018,14 +1034,49 @@ class DisplayContext(props.SyncableHasProperties):
 
         for display in self.__displays.values():
 
-            opts = display.opts
-
             if self.syncOverlayDisplay:
                 display.syncAllToParent()
-                opts   .syncAllToParent()
             else:
                 display.unsyncAllFromParent()
-                opts   .unsyncAllFromParent()
+
+            opts     = display.opts
+            optProps = opts.getAllProperties()[0]
+            exclude  = opts.getVolumeProps()
+
+            for optProp in optProps:
+
+                # volume properties are managed
+                # by syncOverlayVolume
+                if optProp in exclude:
+                    continue
+
+                if self.syncOverlayDisplay:
+                    if opts.canBeSyncedToParent(optProp):
+                        opts.syncToParent(optProp)
+                else:
+                    if opts.canBeUnsyncedFromParent(optProp):
+                        opts.unsyncFromParent(optProp)
+
+
+    def __syncOverlayVolumeChanged(self, *a):
+        """Called when the :attr:`syncOverlayVolume` property changes.
+
+        Synchronises or unsychronises the volume/timepoint properties of
+        the :class:`.Display` and :class:`.DisplayOpts` instances for every
+        overlay.
+        """
+
+        for display in self.__displays.values():
+            opts     = display.opts
+            optProps = opts.getVolumeProps()
+
+            for optProp in optProps:
+                if self.syncOverlayVolume:
+                    if opts.canBeSyncedToParent(optProp):
+                        opts.syncToParent(optProp)
+                else:
+                    if opts.canBeUnsyncedFromParent(optProp):
+                        opts.unsyncFromParent(optProp)
 
 
     def __updateBounds(self, *a):
