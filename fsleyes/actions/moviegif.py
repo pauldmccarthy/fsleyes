@@ -222,8 +222,10 @@ def makeGif(overlayList,
 
     def realCaptureFrame(ctx):
 
+        # individual frames don't
+        # need to be saved as gif
         idx   = len(ctx.frames)
-        fname = op.join(tempdir, '{}.gif'.format(idx))
+        fname = op.join(tempdir, '{}.png'.format(idx))
 
         frame = panel.getMovieFrame(overlay, opts)
 
