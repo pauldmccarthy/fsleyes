@@ -236,6 +236,11 @@ to modify both the ``clippingRange`` and ``displayRange`` properties of the
            source,      # The source instance
            longArg      # String to use as the long form argument
        )
+
+   In a similar vein to the apply function, described above, a generate
+   function may return a value of ``False``, indicating that the argument
+   should be passed through to the :func:`fsleyes_props.generateArguments`
+   function.
 """
 
 
@@ -1308,19 +1313,6 @@ def _colourTrans(c, **kwargs):
     return c[:3]
 
 
-# When generating arguments, suppress
-# overrideDataRange if enableOverrideDataRange
-# is False.
-def _overrideDataRangeTrans(orange, gen=None, target=None, **kwargs):
-    if gen:
-        if not target.enableOverrideDataRange:
-            raise props.SkipArgument()
-        else:
-            return orange
-    else:
-        return [float(v) for v in orange]
-
-
 TRANSFORMS = td.TypeDict({
     'SceneOpts.showCursor'        : _boolTrans,
     'OrthoOpts.showXCanvas'       : _boolTrans,
@@ -1336,10 +1328,7 @@ TRANSFORMS = td.TypeDict({
     'TensorOpts.lighting'         : _boolTrans,
     'LabelOpts.lut'               : _lutTrans,
     'MeshOpts.lut'                : _lutTrans,
-    # 'SHOpts.lighting'            : lambda b : not b,
-
-    'VolumeOpts.clippingRange'       : _clippingRangeTrans,
-    'Volume3DOpts.overrideDataRange' : _overrideDataRangeTrans,
+    'VolumeOpts.clippingRange'    : _clippingRangeTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
     'SceneOpts.fgColour'         : _colourTrans,
@@ -2222,13 +2211,21 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
 
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
-    special   = []
+    args      = []
 
     for name in list(propNames):
         if _isSpecialGenerateOption(source, name) or \
            not hasattr(source, name):
-            special  .append(name)
-            propNames.remove(name)
+
+            nargs = _generateSpecialOption(overlayList,
+                                           displayCtx,
+                                           source,
+                                           name,
+                                           longArgs[name])
+
+            if nargs is not False:
+                args += nargs
+                propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((source, name), None)
@@ -2248,13 +2245,6 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
                                    cliProps=propNames,
                                    longArgs=longArgs,
                                    **extraArgs)
-
-    for s in special:
-        args += _generateSpecialOption(overlayList,
-                                       displayCtx,
-                                       source,
-                                       s,
-                                       longArgs[s])
 
     return args
 
@@ -2557,12 +2547,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                         setattr(optArgs, lhr, None)
 
                     setattr(opts, fileOpt, image)
-
-            # If VolumeOpts.overrideDataRange has
-            # been provided, we implicitly enable it.
-            if isinstance(opts, fsldisplay.VolumeOpts) and \
-               optArgs.overrideDataRange is not None:
-                opts.enableOverrideDataRange = True
 
             # After handling the special cases
             # above, we can apply the CLI
@@ -3014,3 +2998,34 @@ def _applySpecial_MeshOpts_vertexData(
         loadvertexdata.loadVertexData(target.overlay,
                                       displayCtx,
                                       args.vertexData)
+
+
+def _applySpecial_VolumeOpts_overrideDataRange(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.VolumeOpts.overrideDataRange` option.
+
+    If the ``overrideDataRange`` command line argument has been provided,
+    we need to set the :attr:`.VolumeOpts.enableOverrideDataRange` property.
+    """
+    if args.overrideDataRange is not None:
+        target.enableOverrideDataRange = True
+
+    # But we can let props handle
+    # the overrideDataRange parsing
+    return True
+
+
+def _generateSpecial_VolumeOpts_overrideDataRange(
+        overlayList, displayCtx, source, longArg):
+    """Generates the :attr:`.VolumeOpts.overrideDataRange` option.
+
+    If the :attr:`.VolumeOpts.enableOverrideDataRange` property is ``False``,
+    no arguments are generated.
+    """
+    if not target.enableOverrideDataRange:
+        return []
+
+    # otherwise we let props handle
+    # the argument generation
+    else:
+        return False
