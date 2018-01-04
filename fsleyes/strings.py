@@ -240,6 +240,13 @@ messages = TypeDict({
     'as the display space. You can change the display\n'
     'space back in the view settings panel.',
 
+    'LocationHistoryPanel.load' : 'Select a location file to load',
+    'LocationHistoryPanel.save' : 'Select a file to save the locations to',
+    'LocationHistoryPanel.loadError' :
+    'An error occurred loading locations from {}',
+    'LocationHistoryPanel.saveError' :
+    'An error occurred saving locations to {}',
+
     'OrthoEditToolBar.dsWarning' :
     'Warning: You must set the display\n'
     'space to the image being edited!',
@@ -334,6 +341,9 @@ titles = TypeDict({
 
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
+
+    'LocationHistoryPanel.loadError' : 'Error loading location file',
+    'LocationHistoryPanel.saveError' : 'Error saving location file',
 
     'LookupTablePanel.newlut'       : 'Name lookup table',
     'LookupTablePanel.loadLut'      : 'Select a lookup table file',
@@ -537,6 +547,11 @@ labels = TypeDict({
     'LocationInfoPanel.noData'                : 'No data',
     'LocationInfoPanel.outOfBounds'           : 'Out of bounds',
     'LocationInfoPanel.notAvailable'          : 'N/A',
+    'LocationHistoryPanel.load'               : 'Load',
+    'LocationHistoryPanel.save'               : 'Save',
+    'LocationHistoryPanel.clear'              : 'Clear',
+    'LocationHistoryPanel.hint'               :
+    'Double click on an item to add a comment.',
 
     'OverlayListPanel.noDataSource'       : '[in memory]',
 

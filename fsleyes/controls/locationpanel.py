@@ -18,12 +18,15 @@ import wx.html as wxhtml
 import numpy as np
 
 import fsl.utils.transform            as transform
+import fsl.utils.settings             as fslsettings
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
 
 import fsleyes_props                  as props
 import fsleyes_widgets.floatspin      as floatspin
 import fsleyes_widgets.notebook       as notebook
+import fsleyes_widgets.elistbox       as elistbox
+import fsleyes_widgets.utils.status   as status
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.panel                  as fslpanel
@@ -86,18 +89,19 @@ class LocationPanel(fslpanel.FSLeyesPanel):
             self.__notebook = notebook.Notebook(self,
                                                 style=wx.LEFT | wx.VERTICAL,
                                                 border=0)
-            parent          = self.__notebook
+            subparent       = self.__notebook
         else:
-            parent          = self
+            subparent       = self
             self.__notebook = None
 
         # We always create an info panel
-        self.__info = LocationInfoPanel(parent, overlayList, displayCtx, frame)
+        self.__info = LocationInfoPanel(
+            subparent, overlayList, displayCtx, frame)
 
         # We don't always create a history panel
         if showHistory:
             self.__history = LocationHistoryPanel(
-                parent, overlayList, displayCtx, frame)
+                subparent, overlayList, displayCtx, frame, parent)
             self.__notebook.AddPage(self.__info,
                                     strings.labels[self, 'info'])
             self.__notebook.AddPage(self.__history,
@@ -871,17 +875,287 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 frame):
+                 frame,
+                 canvasPanel,
+                 limit=500):
         """Create a ``LocationHistoryPanel``.
 
-        :arg parent:      The :mod:`wx` parent object, assumed to be a
-                          :class:`.CanvasPanel`.
+        :arg parent:      The :mod:`wx` parent object.
 
         :arg overlayList: The :class:`.OverlayList` instance.
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
+
+        :arg canvasPanel: The :class:`.CanvasPanel` which owns this
+                          ``LocationHistoryPanel``.
+
+        :arg limit:       Maximum number of locations to save before dropping
+                          old locations.
         """
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
+
+        self.__profile  = None
+        self.__limit    = limit
+        self.__canvas   = canvasPanel
+        self.__sizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__load     = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.__save     = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.__clear    = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.__hint     = wx.StaticText(self)
+        self.__list     = elistbox.EditableListBox(
+            self,
+            style=(elistbox.ELB_REVERSE   |
+                   elistbox.ELB_NO_ADD    |
+                   elistbox.ELB_NO_REMOVE |
+                   elistbox.ELB_NO_MOVE   |
+                   elistbox.ELB_EDITABLE  |
+                   elistbox.ELB_SCROLL_BUTTONS))
+
+        self.__load .SetLabel(strings.labels[self, 'load'])
+        self.__save .SetLabel(strings.labels[self, 'save'])
+        self.__clear.SetLabel(strings.labels[self, 'clear'])
+        self.__hint .SetLabel(strings.labels[self, 'hint'])
+
+        self.__btnSizer.Add((10, 1))
+        self.__btnSizer.Add(self.__hint, flag=wx.EXPAND, proportion=1)
+        self.__btnSizer.Add(self.__load)
+        self.__btnSizer.Add((10, 1))
+        self.__btnSizer.Add(self.__save)
+        self.__btnSizer.Add((10, 1))
+        self.__btnSizer.Add(self.__clear)
+        self.__btnSizer.Add((10, 1))
+
+        self.__sizer.Add(self.__btnSizer,
+                         flag=wx.EXPAND | wx.TOP | wx.BOTTOM,
+                         border=3)
+        self.__sizer.Add(self.__list,
+                         flag=wx.EXPAND,
+                         proportion=1)
+        self.SetSizer(self.__sizer)
+        self.Layout()
+
+        self.__list .Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__onListSelect)
+        self.__load .Bind(wx.EVT_BUTTON,                 self.__onLoad)
+        self.__save .Bind(wx.EVT_BUTTON,                 self.__onSave)
+        self.__clear.Bind(wx.EVT_BUTTON,                 self.__onClear)
+
+        self.__canvas.addListener('profile', self.name, self.__profileChanged)
+        self.__profileChanged()
+
+
+    def destroy(self):
+        """Must be called when this ``LocationHistoryPanel`` is no longer
+        needed.
+        """
+        self.__deregisterProfile()
+        self.__canvas.removeListener('profile', self.name)
+        self.__canvas = None
+        fslpanel.FSLeyesPanel.destroy(self)
+
+
+    def getHistory(self):
+        """Returns a list containing the currently displayed location history.
+        Each entry in the list is a tuple containing the coordinates, and any
+        comment that the user has addded.
+        """
+
+        history = []
+
+        for i in range(self.__list.GetCount()):
+            location = self.__list.GetItemData(i)
+            comment  = self.__list.GetItemLabel(i)
+            history.append((location, comment))
+
+        return history
+
+
+    def __registerProfile(self, profile):
+        """Registers a mouse event listener with the given ``profile``. """
+        if profile is not None:
+            self.__profile = profile
+            self.__profile.registerHandler('LeftMouseUp',
+                                           self.name,
+                                           self.__onMouseUp)
+
+
+    def __deregisterProfile(self):
+        """De-registers listeners that have previously been registered with a
+        :class:`.Profile` object.
+        """
+        if self.__profile is not None:
+            self.__profile.deregisterHandler('LeftMouseUp', self.name)
+            self.__profile = None
+
+
+    def __profileChanged(self, *a):
+        """Called when the :attr:`.CanvasPanel.profile` changes. Re-registers
+        mouse event listeners with the new :class:`.Profile` object.
+        """
+        self.__deregisterProfile()
+        self.__registerProfile(self.__canvas.getCurrentProfile())
+
+
+    def __addLocation(self, worldLoc, comment=None):
+        """Add a location to the location history.
+
+        :arg worldLoc: Location in world coordinates
+        :arg comment:  Comment about the location
+        """
+
+        if comment is None:
+            comment = ''
+
+        label = '[{:7.2f}, {:7.2f}, {:7.2f}]'.format(*worldLoc)
+        label = wx.StaticText(self.__list, label=label)
+
+        self.__list.Append(comment, clientData=worldLoc, extraWidget=label)
+
+
+    def __onMouseUp(self, ev, canvas, mouseLoc, canvasLoc):
+        """Called on mouse up events. Adds the mouse location (in the world
+        coordinate system) to the location history list.
+        """
+
+        overlay = self.displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+
+        opts    = self.displayCtx.getOpts(overlay)
+        overlay = opts.referenceImage
+
+        if overlay is not None:
+            opts     = self.displayCtx.getOpts(overlay)
+            worldLoc = opts.transformCoords(canvasLoc, 'display', 'world')
+        else:
+            worldLoc = canvasLoc
+
+        self.__addLocation(worldLoc)
+
+        while self.__list.GetCount() > self.__limit:
+            self.__list.Delete(0)
+
+
+    def __onListSelect(self, ev):
+        """Called when a location is selected from the location history list.
+
+        Sets the :attr:`.DisplayContext.worldLocation` accordingly.
+        """
+        self.displayCtx.worldLocation = ev.data
+
+
+    def __onLoad(self, ev):
+        """Called when the *load* button is pushed. Prompts the user to select
+        a file, then loads a history from that file.
+        """
+
+        msg     = strings.messages[self, 'load']
+        fromDir = fslsettings.read('loadSaveOverlayDir')
+        dlg     = wx.FileDialog(self,
+                                message=msg,
+                                defaultDir=fromDir,
+                                wildcard='*.txt',
+                                style=wx.FD_OPEN)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        errTitle = strings.titles[  self, 'loadError']
+        errMsg   = strings.messages[self, 'loadError'].format(dlg.GetPath())
+        with status.reportIfError(errTitle, errMsg, raiseError=False):
+            history = loadLocationHistory(dlg.GetPath())
+
+        self.__list.Clear()
+        for loc, comment  in history:
+            self.__addLocation(loc, comment)
+
+
+    def __onSave(self, ev):
+        """Called when the *save* button is pushed. Prompts the user to select
+        a file name, then saves the current history to that file.
+        """
+        history = self.getHistory()
+        msg     = strings.messages[self, 'save']
+        defDir  = fslsettings.read('loadSaveOverlayDir')
+        dlg     = wx.FileDialog(self,
+                                message=msg,
+                                defaultDir=defDir,
+                                wildcard='*.txt',
+                                style=wx.FD_SAVE)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        errTitle = strings.titles[  self, 'saveError']
+        errMsg   = strings.messages[self, 'saveError'].format(dlg.GetPath())
+        with status.reportIfError(errTitle, errMsg, raiseError=False):
+            saveLocationHistory(history, dlg.GetPath())
+
+
+    def __onClear(self, ev):
+        """Called when the *clear* button is pushed. Clears the current
+        history.
+        """
+        self.__list.Clear()
+
+
+def loadLocationHistory(filename):
+    """Loads a location history from the given ``filename``. A location history
+    file contains one location on each line, where the X, Y, and Z coordinates
+    are separated by a space character. All remaining characters on the line
+    are treated as the location comment. For example::
+
+        1.27 4.23 1.63 this is a comment
+        5.25 2.66 1.23
+
+    Returns a list containing the location history, in the same format as that
+    returned by :meth:`.LocationHistoryPanel.getHistory`.
+    """
+
+    history = []
+
+    with open(filename, 'rt') as f:
+
+        lines = f.read().strip().split('\n')
+
+        for line in lines:
+            line = line.strip()
+
+            if line == '':
+                continue
+
+            try:
+                parts = line.split(maxsplit=3)
+                loc   = [float(parts[0]),
+                         float(parts[1]),
+                         float(parts[2])]
+
+                if len(parts) > 3: comment = parts[3]
+                else:              comment = ''
+
+                history.append((loc, comment))
+
+            except Exception:
+                raise ValueError('Invalid location history '
+                                 'format: {}'.format(line))
+
+    return history
+
+
+def saveLocationHistory(history, filename):
+    """Saves the given location ``history`` to the given ``filename``. See
+    :func:`loadLocationHistory` and :meth:`LocationHistoryPanel.getHistory`.
+    """
+
+    lines = []
+
+    for loc, comment in history:
+        loc = '{:0.8f} {:0.8f} {:0.8f}'.format(*loc)
+        lines.append('{} {}'.format(loc, comment))
+
+    with open(filename, 'wt') as f:
+        f.write('\n'.join(lines))
