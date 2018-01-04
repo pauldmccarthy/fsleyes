@@ -11,7 +11,9 @@ chronological order.
 
 * The location panel now has a *history* section, which contains a list of
   previously visited locations.
-
+* Volume display range can now be specified as a percentile on the command
+  line
+* Colour maps and lookup table files can now be specified on the command line.
 
 
 0.19.1 (Wednesday January 3rd 2017)
