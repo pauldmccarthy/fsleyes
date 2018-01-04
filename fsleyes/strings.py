@@ -528,13 +528,15 @@ labels = TypeDict({
     'FSLeyesFrame.noName'                 : '<unnamed>',
     'FSLeyesFrame.recentPathsMenu'        : 'Recent files',
 
-    'LocationPanel.worldLocation'         : 'Coordinates: ',
-    'LocationPanel.worldLocation.unknown' : 'Unknown',
-    'LocationPanel.voxelLocation'         : 'Voxel location',
-    'LocationPanel.volume'                : 'Volume',
-    'LocationPanel.noData'                : 'No data',
-    'LocationPanel.outOfBounds'           : 'Out of bounds',
-    'LocationPanel.notAvailable'          : 'N/A',
+    'LocationPanel.info'                      : 'Location',
+    'LocationPanel.history'                   : 'History',
+    'LocationInfoPanel.worldLocation'         : 'Coordinates: ',
+    'LocationInfoPanel.worldLocation.unknown' : 'Unknown',
+    'LocationInfoPanel.voxelLocation'         : 'Voxel location',
+    'LocationInfoPanel.volume'                : 'Volume',
+    'LocationInfoPanel.noData'                : 'No data',
+    'LocationInfoPanel.outOfBounds'           : 'Out of bounds',
+    'LocationInfoPanel.notAvailable'          : 'N/A',
 
     'OverlayListPanel.noDataSource'       : '[in memory]',
 

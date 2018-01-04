@@ -23,6 +23,7 @@ import fsl.data.constants             as constants
 
 import fsleyes_props                  as props
 import fsleyes_widgets.floatspin      as floatspin
+import fsleyes_widgets.notebook       as notebook
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.panel                  as fslpanel
@@ -34,16 +35,105 @@ log = logging.getLogger(__name__)
 
 class LocationPanel(fslpanel.FSLeyesPanel):
     """The ``LocationPanel`` is a panel which contains controls allowing the
-    user to view and modify the :attr:`.DisplayContext.location` property. A
-    ``LocationPanel`` is intended to be contained within a
+    user to view and modify the :attr:`.DisplayContext.location` property.
+
+    A ``LocationPanel`` is intended to be contained within a
     :class:`.CanvasPanel`, and looks something like this:
 
     .. image:: images/locationpanel.png
        :scale: 50%
        :align: center
 
+    By default, the ``LocationPanel`` contains a notebook with two pages:
 
-    The ``LocationPanel`` contains two main sections:
+      - The :class:`LocationInfoPanel` contains information about the currently
+        displayed location, and controls allowing the user to change the
+        location.
+
+      - The :class:`LocationHistoryPanel` contains a list of previously visited
+        locations, and allows the user to revisit those locations.
+
+    The history panel is optional - if the ``showHistory`` parameter to
+    ``__init__`` is ``False`` then only the information panel will be shown.
+    """
+
+
+    def __init__(self,
+                 parent,
+                 overlayList,
+                 displayCtx,
+                 frame,
+                 showHistory=True):
+        """Creat a ``LocationPanel``.
+
+        :arg parent:      The :mod:`wx` parent object, assumed to be a
+                          :class:`.CanvasPanel`.
+
+        :arg overlayList: The :class:`.OverlayList` instance.
+
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
+
+        :arg showHistory: Defaults to ``True``. Create and display a
+                          :class:`LocationHistoryPanel`.
+        """
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)
+
+        # only use a notebook if showing history panel
+        if showHistory:
+            self.__notebook = notebook.Notebook(self,
+                                                style=wx.LEFT | wx.VERTICAL,
+                                                border=0)
+            parent          = self.__notebook
+        else:
+            parent          = self
+            self.__notebook = None
+
+        # We always create an info panel
+        self.__info = LocationInfoPanel(parent, overlayList, displayCtx, frame)
+
+        # We don't always create a history panel
+        if showHistory:
+            self.__history = LocationHistoryPanel(
+                parent, overlayList, displayCtx, frame)
+            self.__notebook.AddPage(self.__info,
+                                    strings.labels[self, 'info'])
+            self.__notebook.AddPage(self.__history,
+                                    strings.labels[self, 'history'])
+        else:
+            self.__history = None
+
+        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        if showHistory:
+            self.__sizer.Add(self.__notebook, flag=wx.EXPAND, proportion=1)
+        else:
+            self.__sizer.Add(self.__info, flag=wx.EXPAND, proportion=1)
+
+        self.SetSizer(self.__sizer)
+        self.Layout()
+
+
+    def destroy(self):
+        """Must be called when this ``LocationPanel`` is no longer needed. """
+
+        self.__info.destroy()
+        self.__history.destroy()
+        self.__info    = None
+        self.__history = None
+
+        fslpanel.FSLeyesPanel.destroy(self)
+
+
+class LocationInfoPanel(fslpanel.FSLeyesPanel):
+    """The ``LocationInfoPanel`` is a panel which is embedded in the
+    :class:`LocationPanel`, and which contains controls allowing the user to
+    view and modify the :attr:`.DisplayContext.location` property.
+
+
+    The ``LocationInfoPanel`` contains two main sections:
 
       - A collection of controls which show the current
         :attr:`.DisplayContext.location`
@@ -56,34 +146,34 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     **NIFTI overlays**
 
 
-    The ``LocationPanel`` is primarily designed to work with :class:`.Image`
-    overlays. If the :attr:`.DisplayContext.selectedOverlay` is an
-    :class:`.Image`, or has an associated reference image (see
-    :meth:`.DisplayOpts.referenceImage`), the ``LocationPanel`` will display
-    the current :class:`.DisplayContext.location` in both the the voxel
-    coordinates and world coordinates of the ``Image`` instance.
+    The ``LocationInfoPanel`` is primarily designed to work with
+    :class:`.Image` overlays. If the :attr:`.DisplayContext.selectedOverlay`
+    is an :class:`.Image`, or has an associated reference image (see
+    :meth:`.DisplayOpts.referenceImage`), the ``LocationInfoPanel`` will
+    display the current :class:`.DisplayContext.location` in both the the
+    voxel coordinates and world coordinates of the ``Image`` instance.
 
 
     **Other overlays**
 
 
     If the :attr:`.DisplayContext.selectedOverlay` is not an :class:`.Image`,
-    or does not have an associated reference image, the ``LocationPanel`` will
-    display the current :attr:`.DisplayContext.location` as-is (i.e. in the
-    display coordinate system); furthermore, the voxel location controls will
-    be disabled.
+    or does not have an associated reference image, the ``LocationInfoPanel``
+    will display the current :attr:`.DisplayContext.location` as-is (i.e. in
+    the display coordinate system); furthermore, the voxel location controls
+    will be disabled.
 
 
     **Location updates**
 
 
     The :data:`DISPLAYOPTS_BOUNDS` and :data:`DISPLAYOPTS_INFO` dictionaries
-    contain lists of property names that the :class:`.LocationPanel` listens
-    on for changes, so it knows when the location widgets, and information
-    about the currenty location, need to be refreshed. For example, when the
-    :attr`.NiftiOpts.volume` property of a :class:`.Nifti` overlay changes,
-    the volume index, and potentially the overlay information, needs to be
-    updated.
+    contain lists of property names that the :class:`.LocationInfoPanel`
+    listens on for changes, so it knows when the location widgets, and
+    information about the currenty location, need to be refreshed. For
+    example, when the :attr`.NiftiOpts.volume` property of a :class:`.Nifti`
+    overlay changes, the volume index, and potentially the overlay
+    information, needs to be updated.
     """
 
 
@@ -103,13 +193,6 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
-        """Creat a ``LocationPanel``.
-
-        :arg parent:      The :mod:`wx` parent object.
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        """
 
         fslpanel.FSLeyesPanel.__init__(self,
                                        parent,
@@ -244,7 +327,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 
     def destroy(self):
-        """Must be called when this ``LocationPanel`` is no longer needed.
+        """Must be called when this ``LocationInfoPanel`` is no longer needed.
         Removes property listeners and calls :meth:`.FSLeyesPanel.destroy`.
         """
 
@@ -258,18 +341,18 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
 
     def GetMinSize(self):
-        """Returns the minimum size for this ``LocationPanel``.
+        """Returns the minimum size for this ``LocationInfoPanel``.
 
         Under Linux/GTK, the ``wx.agw.lib.aui`` layout manager seems to
         arbitrarily adjust the minimum sizes of some panels. Therefore, The
-        minimum size of the ``LocationPanel`` is calculated in
+        minimum size of the ``LocationInfoPanel`` is calculated in
         :meth:`__init__`, and is fixed.
         """
         return self.__minSize
 
 
     def DoGetBestClientSize(self):
-        """Returns the best size for this ``LocationPanel``.
+        """Returns the best size for this ``LocationInfoPanel``.
         """
         return self.__minSize
 
@@ -323,7 +406,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     def __selectedOverlayChanged(self, *a):
         """Called when the :attr:`.DisplayContext.selectedOverlay` or
         :class:`.OverlayList` is changed. Registered with the new overlay,
-        and refreshes the ``LocationPanel`` interface accordingly.
+        and refreshes the ``LocationInfoPanel`` interface accordingly.
         """
 
         self.__deregisterOverlay()
@@ -456,7 +539,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         """Called when a :class:`.DisplayOpts` property associated
         with the currently selected overlay, and listed in the
         :data:`DISPLAYOPTS_BOUNDS` dictionary, changes. Refreshes the
-        ``LocationPanel`` interface accordingly.
+        ``LocationInfoPanel`` interface accordingly.
         """
         self.__updateWidgets()
         self.__displayLocationChanged()
@@ -466,7 +549,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         """Called when a :class:`.DisplayOpts` property associated
         with the currently selected overlay, and listed in the
         :data:`DISPLAYOPTS_INFO` dictionary, changes. Refreshes the
-        ``LocationPanel`` interface accordingly.
+        ``LocationInfoPanel`` interface accordingly.
         """
         self.__displayLocationChanged()
 
@@ -776,3 +859,29 @@ affect the current overlay location information.  Therefore, when the current
 overlay changes the :meth:`__registerOverlay` method registers property
 listeners on the properties specified in this dictionary.
 """
+
+
+class LocationHistoryPanel(fslpanel.FSLeyesPanel):
+    """The ``LocationHistoryPanel`` is a panel which is embedded in the
+    :class:`LocationPanel`, and which contains a list of locations
+    previously visited by the user.
+    """
+
+    def __init__(self,
+                 parent,
+                 overlayList,
+                 displayCtx,
+                 frame):
+        """Create a ``LocationHistoryPanel``.
+
+        :arg parent:      The :mod:`wx` parent object, assumed to be a
+                          :class:`.CanvasPanel`.
+
+        :arg overlayList: The :class:`.OverlayList` instance.
+
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        """
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame)

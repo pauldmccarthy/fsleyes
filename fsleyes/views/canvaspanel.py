@@ -473,7 +473,13 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Toggles a :class:`.LocationPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(locationpanel.LocationPanel, location=wx.BOTTOM)
+        from fsleyes.views.orthopanel import OrthoPanel
+
+        # location history only shown in ortho panels
+        if not isinstance(self, OrthoPanel):
+            self.togglePanel(locationpanel.LocationPanel,
+                             showHistory=False,
+                             location=wx.BOTTOM)
 
 
     @actions.toggleControlAction(clusterpanel.ClusterPanel)
