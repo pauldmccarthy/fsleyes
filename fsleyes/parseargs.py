@@ -2169,7 +2169,7 @@ def _applyArgs(args,
 
     for name in list(propNames):
         if _isSpecialApplyOption(target, name) or not hasattr(target, name):
-            if _applySpecialOption(
+            if not _applySpecialOption(
                     args, overlayList, displayCtx, target, name):
                 propNames.remove(name)
 
