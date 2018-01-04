@@ -3022,7 +3022,7 @@ def _generateSpecial_VolumeOpts_overrideDataRange(
     If the :attr:`.VolumeOpts.enableOverrideDataRange` property is ``False``,
     no arguments are generated.
     """
-    if not target.enableOverrideDataRange:
+    if not source.enableOverrideDataRange:
         return []
 
     # otherwise we let props handle
