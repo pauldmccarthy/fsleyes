@@ -178,7 +178,8 @@ Adding special (non-property) options
 
 
 If you need to add an option which does not directly map to a
-:class:`SceneOpts` or :class:`DisplayOpts` property, you need to do some extra
+:class:`SceneOpts` or :class:`DisplayOpts` property, or if you need to perform
+some custom/extra processing for a property, you need to do some extra
 work. For example, let's say we wish to add a custom option ``clipAndDisplay``
 to modify both the ``clippingRange`` and ``displayRange`` properties of the
 :class:`.VolumeOpts` class.
@@ -216,6 +217,14 @@ to modify both the ``clippingRange`` and ``displayRange`` properties of the
            displayCtx,  # The DisplayContext instance
            target       # The target instance (e.g. a VolumeOpts instance)
        )
+
+   Apply functions should typically return ``None`` or ``False``, which
+   indicates that the argument has been fully processed. However, if you
+   have a property for which you need to perform some pre-processing, but
+   you also want to be handled by :func:`fsleyes_props.applyArguments`,
+   you can have your apply function return ``True``, which indicates that
+   the arguemnt should be passed through to ``applyArguments``, in addition
+   to being handled by your apply function.
 
 4. Add a function which, given a ``target`` instance, will generate command
    line arguments that can reproduce the ``target`` state. This function must
@@ -2166,14 +2175,14 @@ def _applyArgs(args,
 
     longArgs  = {name : ARGUMENTS[target, name][1] for name in propNames}
     xforms    = {}
-    special   = []
 
     kwargs['target'] = target
 
     for name in list(propNames):
         if _isSpecialApplyOption(target, name) or not hasattr(target, name):
-            special  .append(name)
-            propNames.remove(name)
+            if _applySpecialOption(
+                    args, overlayList, displayCtx, target, name):
+                propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((target, name), None)
@@ -2190,9 +2199,6 @@ def _applyArgs(args,
                          xformFuncs=xforms,
                          longArgs=longArgs,
                          **kwargs)
-
-    for s in special:
-        _applySpecialOption(args, overlayList, displayCtx, target, s)
 
 
 def _generateArgs(overlayList, displayCtx, source, propNames=None):
@@ -2688,7 +2694,7 @@ def _applySpecialOption(args, overlayList, displayCtx, target, optName):
     log.debug('Applying special argument {} to {}'
               .format(optName, cls.__name__))
 
-    applyFunc(args, overlayList, displayCtx, target)
+    return applyFunc(args, overlayList, displayCtx, target)
 
 
 def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
