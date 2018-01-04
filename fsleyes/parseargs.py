@@ -1287,14 +1287,6 @@ def _boolTrans(b, **kwargs):
     return not b
 
 
-# The --orientFlip command line argument
-# inverts the default behaviour of the
-# VectorOpts.orientFlip option
-def _orientFlipTrans(b, gen=None, overlay=None, **kwargs):
-    if gen: return b != overlay.isNeurological()
-    else:   return b
-
-
 # The props.addParserArguments function allows
 # us to specify 'extra' parameters (above) to
 # specify that we expect RGB, not RGBA colours.
@@ -1348,8 +1340,6 @@ TRANSFORMS = td.TypeDict({
     'VectorOpts.xColour'         : _colourTrans,
     'VectorOpts.yColour'         : _colourTrans,
     'VectorOpts.zColour'         : _colourTrans,
-    'VectorOpts.orientFlip'      : _orientFlipTrans,
-
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
@@ -2570,19 +2560,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                optArgs.overrideDataRange is not None:
                 opts.enableOverrideDataRange = True
 
-            # If the VectorOpts.orientFlip argument is
-            # passed, we need to invert its value -
-            # apply the flip for radiologically stored
-            # images, but not for neurologically stored
-            # images.
-            if isinstance(opts, fsldisplay.VectorOpts):
-
-                orientFlip = getattr(optArgs, 'orientFlip', None)
-
-                if orientFlip is not None:
-                    opts.orientFlip = not opts.orientFlip
-                    setattr(optArgs, 'orientFlip', opts.orientFlip)
-
             # Load vertex data files specified
             # for mesh overlays
             if isinstance(opts, fsldisplay.MeshOpts) and \
@@ -3002,3 +2979,30 @@ def _generateSpecial_Scene3DOpts_cameraRotation(
             '{: 0.2f}'.format(yaw),
             '{: 0.2f}'.format(pitch),
             '{: 0.2f}'.format(roll)]
+
+
+def _applySpecial_VectorOpts_orientFlip(
+        args, overlayList, displayCtx, target):
+    """Applies the ``VectorOpts.orientFlip`` option.
+
+    The :attr:`.VectorOpts.orientFlip` property is initialised to ``False``
+    for images with a radiological storage order, and ``True`` for images with
+    a neurological storage order. So if this argument is specified, we need to
+    invert its initial value - apply the flip for radiologically stored
+    images, but not for neurologically stored images.
+    """
+
+    orientFlip = getattr(args, 'orientFlip', None)
+
+    if orientFlip is not None:
+        target.orientFlip = not target.orientFlip
+
+
+def _generateSpecial_VectorOpts_orientFlip(
+        overlayList, displayCtx, source, longArg):
+    """Generates the ``VectorOpts.orientFlip`` option. """
+
+    flip = source.overlay.isNeurological() != source.orientFlip
+
+    if flip: return [longArg]
+    else:    return []
