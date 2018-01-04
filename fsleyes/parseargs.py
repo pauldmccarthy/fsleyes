@@ -926,7 +926,9 @@ HELP = td.TypeDict({
 
     'ColourMapOpts.displayRange'      : 'Display range. Setting this will '
                                         'override brightnes/contrast '
-                                        'settings.',
+                                        'settings. For volume overlays only: '
+                                        'append a "%%" to the high value to '
+                                        'set range by percentile.',
     'ColourMapOpts.clippingRange'     : 'Clipping range. Setting this will '
                                         'override the low display range '
                                         '(unless low ranges are unlinked).'
@@ -1127,14 +1129,14 @@ def getExtra(target, propName, default=None):
         'useAlts' : False,
     }
 
-    # VolumeOpts.clippingRange is manually
-    # parsed (see TRANSFORMS[VolumeOpts, 'clippingRange']),
+    # VolumeOpts.clippingRange and displayRange are
+    # manually applied with special apply functions,
     # but if an invalid value is passed in, we want the
     # error to occur during argument parsing. So we define
     # a custom 'type' which validates the value, raises
     # an error if it is bad, but in the end returns the
     # argument unmodified.
-    def crType(val):
+    def rangeType(val):
 
         orig = val
 
@@ -1145,8 +1147,8 @@ def getExtra(target, propName, default=None):
 
         return orig
 
-    clippingRangeSettings = {
-        'atype' : crType
+    rangeSettings = {
+        'atype' : rangeType
     }
 
     allSettings = {
@@ -1161,7 +1163,8 @@ def getExtra(target, propName, default=None):
         (fsldisplay.GiftiOpts,      'cmap')          : cmapSettings,
         (fsldisplay.MeshOpts,       'negativeCmap')  : cmapSettings,
         (fsldisplay.VolumeOpts,     'cmap')          : cmapSettings,
-        (fsldisplay.VolumeOpts,     'clippingRange') : clippingRangeSettings,
+        (fsldisplay.VolumeOpts,     'clippingRange') : rangeSettings,
+        (fsldisplay.VolumeOpts,     'displayRange')  : rangeSettings,
         (fsldisplay.VolumeOpts,     'negativeCmap')  : cmapSettings,
         (fsldisplay.LineVectorOpts, 'cmap')          : cmapSettings,
         (fsldisplay.RGBVectorOpts,  'cmap')          : cmapSettings,
@@ -1272,27 +1275,6 @@ def _lutTrans(l, **kwargs):
     else:                                     return l
 
 
-# VolumeOpts.clippingRange can be
-# specified as a percentile by
-# appending '%' to the high range
-# value.
-def _clippingRangeTrans(crange, gen=None, overlay=None, **kwargs):
-
-    if gen:
-        return crange
-
-    crange = list(crange)
-
-    if crange[1][-1] == '%':
-        crange[1] = crange[1][:-1]
-        crange    = [float(r) for r in crange]
-        crange    = np.nanpercentile(overlay[:], crange)
-    else:
-        crange = [float(r) for r in crange]
-
-    return crange
-
-
 # The command line interface
 # for some boolean properties
 # need the property value to be
@@ -1328,7 +1310,6 @@ TRANSFORMS = td.TypeDict({
     'TensorOpts.lighting'         : _boolTrans,
     'LabelOpts.lut'               : _lutTrans,
     'MeshOpts.lut'                : _lutTrans,
-    'VolumeOpts.clippingRange'    : _clippingRangeTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
     'SceneOpts.fgColour'         : _colourTrans,
@@ -2516,37 +2497,38 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
             for fileOpt in fileOpts:
                 value = getattr(optArgs, fileOpt, None)
-                if value is not None:
+                if value is None:
+                    continue
 
-                    setattr(optArgs, fileOpt, None)
+                setattr(optArgs, fileOpt, None)
 
-                    try:
-                        image = _findOrLoad(overlayList,
-                                            value,
-                                            fslimage.Image,
-                                            overlay)
-                    except Exception as e:
-                        log.warning('{}: {}'.format(fileOpt, str(e)))
-                        continue
+                try:
+                    image = _findOrLoad(overlayList,
+                                        value,
+                                        fslimage.Image,
+                                        overlay)
+                except Exception as e:
+                    log.warning('{}: {}'.format(fileOpt, str(e)))
+                    continue
 
-                    # If the user specified both clipImage
-                    # arguments and linklow/high range
-                    # arguments, an error will be raised
-                    # when we try to set the link properties
-                    # on the VolumeOpts instance (because
-                    # they have been disabled). So we
-                    # clear themfrom the argparse namespace
-                    # to prevent this from occurring.
-                    if fileOpt == 'clipImage' and \
-                       isinstance(opts, fsldisplay.VolumeOpts):
+                # If the user specified both clipImage
+                # arguments and linklow/high range
+                # arguments, an error will be raised
+                # when we try to set the link properties
+                # on the VolumeOpts instance (because
+                # they have been disabled). So we
+                # clear themfrom the argparse namespace
+                # to prevent this from occurring.
+                if fileOpt == 'clipImage' and \
+                   isinstance(opts, fsldisplay.VolumeOpts):
 
-                        llr = ARGUMENTS['ColourMapOpts.linkLowRanges'][ 1]
-                        lhr = ARGUMENTS['ColourMapOpts.linkHighRanges'][1]
+                    llr = ARGUMENTS['ColourMapOpts.linkLowRanges'][ 1]
+                    lhr = ARGUMENTS['ColourMapOpts.linkHighRanges'][1]
 
-                        setattr(optArgs, llr, None)
-                        setattr(optArgs, lhr, None)
+                    setattr(optArgs, llr, None)
+                    setattr(optArgs, lhr, None)
 
-                    setattr(opts, fileOpt, image)
+                setattr(opts, fileOpt, image)
 
             # After handling the special cases
             # above, we can apply the CLI
@@ -3029,3 +3011,48 @@ def _generateSpecial_VolumeOpts_overrideDataRange(
     # the argument generation
     else:
         return False
+
+
+def _applySpecial_VolumeOpts_clippingRange(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.VolumeOpts.clippingRange` option.
+
+    The ``VolumeOpts.clippingRange`` property can be specified on the command
+    line normally (as two numbers), or can be specified as a percentile by
+    appending a ``'%'`` character to the high range value.
+    """
+    if args.clippingRange is None:
+        return
+
+    target.clippingRange = _applyVolumeOptsRange(args.clippingRange, target)
+
+
+def _applySpecial_VolumeOpts_displayRange(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.VolumeOpts.displayRange` option.
+
+    The ``VolumeOpts.displayRange`` property can be specified on the command
+    line normally (as two numbers), or can be specified as a percentile by
+    appending a ``'%'`` character to the high range value.
+    """
+    if args.displayRange is None:
+        return
+
+    target.displayRange = _applyVolumeOptsRange(args.displayRange, target)
+
+
+def _applyVolumeOptsRange(arange, target):
+    """This function is used to parse display/clipping range arguments. """
+
+    arange = list(arange)
+
+    if arange[1][-1] == '%':
+
+        arange[1] = arange[1][:-1]
+        arange    = [float(r) for r in arange]
+        arange    = np.nanpercentile(target.overlay[:], arange)
+
+    else:
+        arange = [float(r) for r in arange]
+
+    return arange
