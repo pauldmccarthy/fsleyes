@@ -10,7 +10,7 @@ standalone function, :func:`loadVertexData` is also provided.
 """
 
 
-import os.path          as op
+import os.path as op
 
 import fsl.data.mesh                as fslmesh
 import fsleyes_widgets.utils.status as status
@@ -110,7 +110,8 @@ def loadVertexData(overlay, displayCtx, filename):
     :arg filename:   Path to the vertex data file that is to be loaded.
     """
 
-    opts = displayCtx.getOpts(overlay)
+    opts     = displayCtx.getOpts(overlay)
+    filename = op.abspath(filename)
 
     # The sole reason that this function exists is because
     # MeshOpts.vertexData is a props.Choice property, which

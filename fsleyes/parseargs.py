@@ -2440,11 +2440,9 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
     :arg kwargs:      Passed through to the :func:`.loadoverlay.loadOverlays`
                       function.
-
     """
 
-    import fsleyes.actions.loadoverlay    as loadoverlay
-    import fsleyes.actions.loadvertexdata as loadvertexdata
+    import fsleyes.actions.loadoverlay as loadoverlay
 
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
@@ -2559,14 +2557,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
             if isinstance(opts, fsldisplay.VolumeOpts) and \
                optArgs.overrideDataRange is not None:
                 opts.enableOverrideDataRange = True
-
-            # Load vertex data files specified
-            # for mesh overlays
-            if isinstance(opts, fsldisplay.MeshOpts) and \
-               optArgs.vertexData is not None:
-                loadvertexdata.loadVertexData(overlay,
-                                              displayCtx,
-                                              optArgs.vertexData)
 
             # After handling the special cases
             # above, we can apply the CLI
@@ -3006,3 +2996,15 @@ def _generateSpecial_VectorOpts_orientFlip(
 
     if flip: return [longArg]
     else:    return []
+
+
+def _applySpecial_MeshOpts_vertexData(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.MeshOpts.vertexData` option. """
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+
+    # Vertex data files need to be pre-loaded
+    if args.vertexData is not None:
+        loadvertexdata.loadVertexData(target.overlay,
+                                      displayCtx,
+                                      args.vertexData)
