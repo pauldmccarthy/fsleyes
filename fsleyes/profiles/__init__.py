@@ -44,6 +44,7 @@ defines global *FSLeyes* keyboard shortcuts.
 
 import logging
 import inspect
+import collections
 import deprecation
 
 import wx
@@ -177,6 +178,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     to manage GUI events on ``matplotlib Canvas`` objects.
 
 
+    **Receiving events**
+
+
     In order to receive mouse or keyboard events, subclasses simply need to
     implement methods which handle the events of interest for the relevant
     mode, and name them appropriately. The name of a method handler must be
@@ -226,10 +230,66 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     ``nav`` mode, this method will be called on left mouse clicks.
 
 
-    These methods should return ``True`` to indicate that the event was
-    handled, or ``False``  if the event was not handled. This is particularly
+    **Handler methods**
+
+
+    The parameters that are passed to these methods differs slightly depending
+    on the type of event:
+
+     - All mouse events, with the exception of ``MouseWheel`` must have
+       the following signature::
+
+        def _[modeName]Mode[eventName](ev, canvas, mouseLoc, canvasLoc)
+
+       where:
+
+         - ``ev`` is the ``wx.Event`` object
+         - ``canvas`` is the source canvas,
+         - ``mouseLoc`` is the ``(x, y)`` mouse coordinates,
+         - ``canvasLoc`` is the coordinates in the display/data coordinate
+           system.
+
+     - The ``MouseWheel`` handler must have the following signature::
+
+        def _[modeName]ModeMouseWheel(ev, canvas, wheel, mouseLoc, canvasLoc)
+
+       where ``wheel`` is a positive or negative number indicating how much
+       the mouse wheel was moved.
+
+     - ``Char`` events must have the following signature::
+
+        def _[modeName]ModeChar(ev, canvas, key)
+
+       where ``key`` is the key code of the key that was pressed.
+
+     - Pick event handlers (only on :class:`.PlotPanel` views) must have
+       the following signature::
+
+        def _[modeName]Mode[eventType](ev, canvas, artist, mouseLoc, canvasLoc)
+
+       where ``artist`` is the ``matplotlib`` artist that was picked.
+
+    All handler methods should return ``True`` to indicate that the event was
+    handled, or ``False`` if the event was not handled. This is particularly
     important for ``Char`` event handlers - we don't want ``Profile``
     sub-classes to be eating global keyboard shortcuts.
+
+
+    **Extra handlers**
+
+
+    Additional handlers can be registered for any event type via the
+    :meth:`registerHandler` method. These handlers do not have to be methods
+    of the ``Profile`` sub-class, and will be called for every occurrence of
+    the event, regardless of the current mode. These handlers will be called
+    after the standard handler method.
+
+
+    When an extra handler is no longer needed, it must be removed via the
+    :meth:`deregisterHandler` method.
+
+
+    **Pre- and post- methods**
 
 
     A couple of other methods may be defined which, if they are present, will
@@ -240,8 +300,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
     The ``_preEvent`` method will get called just before an event is passed
     to the handler. Likewise, the ``_postEvent`` method will get called
-    just after the handler has been called. If a handler for a particular
-    event is not defined, neither of these methods will be called.
+    just after the handler has been called. If no handlers for a particular
+    event are defined, neither of these methods will be called.
+
+
+    **Temporary and alternate handlers**
 
 
     The :mod:`.profilemap` module contains a ``tempModeMap`` which, for each
@@ -258,6 +321,9 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     would like right clicks in ``zoom`` mode to behave like left clicks in
     ``nav`` mode, you can set up such a mapping using the
     ``altHandlerMap`` dictionary.
+
+
+    **Actions and attributes**
 
 
     As the ``Profile`` class derives from the :class:`.ActionProvider`
@@ -334,7 +400,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         self.__tempModeMap   = {}
         self.__altHandlerMap = {}
 
-        # some attributes to keep track
+        # Extra handlers - for each event type,
+        # a dictionary of { name : handler }
+        # mappings which will be called after
+        # the profile handler has been called
+        # for a given event.
+        self.__extraHandlers = collections.defaultdict(collections.OrderedDict)
+
         # of mouse/canvas event locations
         self.__lastCanvas       = None
         self.__lastMousePos     = None
@@ -436,10 +508,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         list, and calls :meth:`.ActionProvider.destroy`.
         """
         actions.ActionProvider.destroy(self)
-        self.__lastCanvas  = None
-        self.__viewPanel   = None
-        self.__overlayList = None
-        self.__displayCtx  = None
+        self.__lastCanvas    = None
+        self.__viewPanel     = None
+        self.__overlayList   = None
+        self.__displayCtx    = None
+        self.__extraHandlers = None
 
 
     @property
@@ -620,10 +693,45 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         receiving mouse/keybouard events. This method is called by the
         :class:`ProfileManager`.
 
+
         Subclasses may override this method to performa any initialisation,
         but must make sure to call this implementation.
         """
         self.__evtManager.deregister()
+
+
+    def registerHandler(self, event, name, handler):
+        """Add an extra handler for the specified event.
+
+        When the event occurs, The ``handler`` function will be called after
+        the default handler, provided by the  ``Profie`` sub-class, is called.
+
+        :arg event:   The event type (e.g. ``LeftMouseDown``).
+
+        :arg name:    A unique name for the handler. A ``KeyError`` will be
+                      raised if a handler with ``name`` is already registered.
+
+        :arg handler: Function to call when the event occurs. See the class
+                      documentation for details on the required signature.
+        """
+
+        if name in self.__extraHandlers[event]:
+            raise KeyError('A handler with name "{}" is '
+                           'already registered'.format(name))
+
+        self.__extraHandlers[event][name] = handler
+
+
+    def deregisterHandler(self, event, name):
+        """Remove an extra handler from the specified event, that was previously
+        added via :meth:`registerHandler`
+
+        :arg event:   The event type (e.g. ``LeftMouseDown``).
+
+        :arg name:    A unique name for the handler. A ``KeyError`` will be
+                      raised if a handler with ``name`` is already registered.
+        """
+        self.__extraHandlers[event].pop(name)
 
 
     def handleEvent(self, ev):
@@ -727,9 +835,14 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
 
     def __getHandler(self, ev, evType, mode=None):
-        """Returns a reference to a method of this ``Profile`` instance
-        (defined on the sub-class) which can handle the given
-        :class:`wx.MouseEvent` or :class:`wx.KeyEvent` (the ``ev`` argument).
+        """Returns a function which will handle the given
+        :class:`wx.MouseEvent` or :class:`wx.KeyEvent` (the ``ev`` argument),
+        or ``None`` if no handlers are found.
+
+        The returned function will call the standard event handler (a method
+        of the ``Profile`` sub-class), any extra handlers that have been
+        registered for the event type, and will also call the pre- and
+        post- event methods.
 
         The ``mode`` and ``evType`` arguments may be used to force the lookup
         of a handler for the specified mode (see the :attr:`mode` property)
@@ -764,7 +877,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             handlerName = '_{}{}'.format(evType[0].lower(),
                                          evType[1:])
 
-        handler = getattr(self, handlerName, None)
+        handlers   = []
+        defHandler = getattr(self, handlerName, None)
+
+        if defHandler is not None:
+            handlers.append(defHandler)
+
+        handlers.extend(self.__extraHandlers[evType].values())
 
         def handlerWrapper(*args, **kwargs):
 
@@ -776,16 +895,17 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             if self.__preEventHandler is not None:
                 self.__preEventHandler(mode, evType)
 
-            handler(*args, **kwargs)
+            for handler in handlers:
+                handler(*args, **kwargs)
 
             if self.__postEventHandler is not None:
                 self.__postEventHandler(mode, evType)
 
             self.__lastHandler = (mode, evType)
 
-        if handler is not None:
-            log.debug('Handler found for mode {}, event {}'.format(
-                mode, evType))
+        if len(handlers) > 0:
+            log.debug('{} Handler(s) found for mode {}, event {}'.format(
+                len(handlers), mode, evType))
             return handlerWrapper
 
         return None
