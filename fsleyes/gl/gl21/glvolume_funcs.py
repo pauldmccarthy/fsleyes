@@ -177,7 +177,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
         zpos, axes, bbox=bbox)
 
     if xform is not None:
-        vertices = transform.transform(vertices)
+        vertices = transform.transform(vertices, xform)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)

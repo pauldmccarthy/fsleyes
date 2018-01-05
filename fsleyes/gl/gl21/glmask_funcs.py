@@ -58,7 +58,7 @@ def updateShaderState(self):
     shader.load()
 
     changed  = False
-    changed |= shader.set('imageTexture',  1)
+    changed |= shader.set('imageTexture',  0)
     changed |= shader.set('voxValXform',   vvx)
     changed |= shader.set('imageShape',    imageShape)
     changed |= shader.set('threshold',     self.getThreshold())
@@ -70,17 +70,21 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
-    pass
-
-
 def draw2D(self, zpos, axes, xform=None, bbox=None):
-
+    """Draws a 2D slice at the given ``zpos``. Uses the
+    :func:`.glvolume_funcs.draw2D` function.
+    """
     self.shader.load()
     glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
     self.shader.unloadAtts()
     self.shader.unload()
 
 
-def postDraw(self, xform=None, bbox=None):
-    pass
+def drawAll(self, axes, zposes, xforms):
+    """Draws all specified slices. Uses the
+    :func:`.glvolume_funcs.drawAll` function.
+    """
+    self.shader.load()
+    glvolume_funcs.drawAll(self, axes, zposes, xforms)
+    self.shader.unloadAtts()
+    self.shader.unload()

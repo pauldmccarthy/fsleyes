@@ -10,19 +10,16 @@ functionality for rendering an :class:`.Image` overlay as a binary mask.
 
 import logging
 
-import numpy                as np
-import OpenGL.GL            as gl
+import OpenGL.GL                 as gl
 
-import fsl.utils.idle       as idle
-import fsl.utils.transform  as transform
-import fsleyes.colourmaps   as colourmaps
-import fsleyes.gl           as fslgl
-import fsleyes.gl.resources as glresources
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.textures  as textures
-import fsleyes.gl.shaders   as shaders
-from . import                  glimageobject
-from . import                  gllabel
+import fsl.utils.idle            as idle
+import fsleyes.colourmaps        as colourmaps
+import fsleyes.gl                as fslgl
+import fsleyes.gl.resources      as glresources
+import fsleyes.gl.textures       as textures
+import fsleyes.gl.shaders.filter as glfilter
+from . import                       glimageobject
+from . import                       gllabel
 
 
 log = logging.getLogger(__name__)
@@ -36,6 +33,47 @@ class GLMask(glimageobject.GLImageObject):
     :class:`.Image` instance has a :attr:`.Display.overlayType` of ``mask``,
     and that its associated :class:`.Display` instance contains a
     :class:`.MaskOpts` instance, containing mask-specific display properties.
+
+
+    **Textures**
+
+    A ``GLMask`` will use up to two textures:
+
+      - An :class:`.ImageTexture` for storing the 3D image data. This texture
+        is bound to texture unit 0.
+
+      - A :class:`.RenderTexture`, used for edge filtering if necessary. This
+        texture will be bound to texture unit 1.
+
+
+    **2D rendering**
+
+
+    On 2D canvases, A ``GLMask`` is rendered similarly to a :class:`.GLVolume`
+    - a 2D slice is taken through the 3D image texture. If the
+    :attr:`.MaskOpts.outline` property is active, this slice is rendered to
+    an off-screen texture, which is then passed through an edge filter (see
+    the :mod:`.filters` module).
+
+
+    **Version dependent modules**
+
+
+    The ``GLMask`` class makes use of the functions defined in the
+    :mod:`.gl14.glmask_funcs` or the :mod:`.gl21.glmask_funcs` modules,
+    which provide OpenGL version specific details for rendering.
+
+
+    These version dependent modules must provide the following functions:
+
+    ============================= =====================================
+    ``init(GLMask)``              Perform any necessary initialisation.
+    ``destroy(GLMask)``           Perform any necessary cleanup
+    ``compileShaders(GLMask)``    (Re-)compile the shader program
+    ``updateShaderState(GLMask)`` Update the shader program state
+    ``draw2D(GLMask, ...)``       Draw a slice of the image
+    ``drawAll(GLMask, ...)``      Draw multiple slices of the image
+    ============================= =====================================
     """
 
 
@@ -57,7 +95,7 @@ class GLMask(glimageobject.GLImageObject):
         # by the glmask_funcs module
         self.shader        = None
         self.imageTexture  = None
-        self.edgeFilter    = shaders.Filter('edge')
+        self.edgeFilter    = glfilter.Filter('edge')
         self.renderTexture = textures.RenderTexture(
             self.name, gl.GL_LINEAR, rttype='c')
 
@@ -136,8 +174,9 @@ class GLMask(glimageobject.GLImageObject):
         opts   .addListener('colour',        name, update, weak=False)
         opts   .addListener('threshold',     name, update, weak=False)
         opts   .addListener('invert',        name, update, weak=False)
+        opts   .addListener('outlineWidth',  name, update, weak=False)
         opts   .addListener('outline',       name, self.notify)
-        opts   .addListener('outlineWidth',  name, self.notify)
+
         opts   .addListener('transform',     name, self.notify)
         opts   .addListener('volume',        name, self.__volumeChanged)
 
@@ -150,26 +189,25 @@ class GLMask(glimageobject.GLImageObject):
 
 
     def removeDisplayListeners(self):
-        """Overrides :meth:`.GLVolume.removeDisplayListeners`.
-
-        Removes all the listeners added by :meth:`addDisplayListeners`.
-        """
+        """Removes all the listeners added by :meth:`addDisplayListeners`. """
 
         display = self.display
         opts    = self.opts
         name    = self.name
 
-        display.removeListener(          'alpha',         name)
-        display.removeListener(          'brightness',    name)
-        display.removeListener(          'contrast',      name)
-        opts   .removeListener(          'colour',        name)
-        opts   .removeListener(          'threshold',     name)
-        opts   .removeListener(          'invert',        name)
-        opts   .removeListener(          'volume',        name)
-        opts   .removeListener(          'transform',     name)
+        display.removeListener('alpha',        name)
+        display.removeListener('brightness',   name)
+        display.removeListener('contrast',     name)
+        opts   .removeListener('colour',       name)
+        opts   .removeListener('threshold',    name)
+        opts   .removeListener('invert',       name)
+        opts   .removeListener('outline',      name)
+        opts   .removeListener('outlineWidth', name)
+        opts   .removeListener('transform',    name)
+        opts   .removeListener('volume',       name)
 
         if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('volume',     name)
+            opts.removeSyncChangeListener('volume', name)
 
 
     def refreshImageTexture(self):
@@ -230,11 +268,6 @@ class GLMask(glimageobject.GLImageObject):
         return (lo, hi)
 
 
-    def calculateOutlineOffsets(self, axes):
-        """See the :func:`calculateOutlineOffsets` function. """
-        return gllabel.calculateOutlineOffsets(self.image, self.opts, axes)
-
-
     def preDraw(self, xform=None, bbox=None):
         """Binds the :class:`.ImageTexture` and calls the version-dependent
         ``preDraw`` function.
@@ -249,12 +282,13 @@ class GLMask(glimageobject.GLImageObject):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         rtex.unbindAsRenderTarget()
 
-        self.imageTexture.bindTexture(gl.GL_TEXTURE1)
-        fslgl.glmask_funcs.preDraw(self, xform, bbox)
+        self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
-        """Calls the version-dependent ``draw2D`` function. """
+        """Calls the version-dependent ``draw2D`` function, then applies
+        the edge filter if necessary.
+        """
 
         opts = self.opts
 
@@ -262,37 +296,76 @@ class GLMask(glimageobject.GLImageObject):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
             return
 
-        owidth = float(opts.outlineWidth)
-        rtex   = self.renderTexture
-        w, h   = self.canvas.GetSize()
-
+        owidth     = float(opts.outlineWidth)
+        rtex       = self.renderTexture
+        w, h       = self.canvas.GetSize()
         xax        = axes[0]
         yax        = axes[1]
         xmin, xmax = self.canvas.opts.displayBounds.x
         ymin, ymax = self.canvas.opts.displayBounds.y
         offsets    = [owidth / w, owidth / h]
 
+        # Draw the mask to the off-screen texture
         rtex.bindAsRenderTarget()
         fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
         rtex.unbindAsRenderTarget()
 
+        # Run the texture through an edge detection
+        # filter, drawing the result to screen
+        self.edgeFilter.set(texture=1, offsets=offsets)
         self.edgeFilter.apply(
             self.renderTexture,
-            zpos, xmin, xmax, ymin, ymax, xax, yax, xform,
-            offsets=offsets)
+            zpos, xmin, xmax, ymin, ymax, xax, yax,
+            textureUnit=gl.GL_TEXTURE1)
+
+
+    def drawAll(self, axes, zposes, xforms):
+        """Calls the version-dependent ``drawAll`` function, then applies
+        the edge filter if necessary.
+        """
+
+        opts = self.opts
+        rtex = self.renderTexture
+
+        # Draw all slices to the off-screen texture
+        rtex.bindAsRenderTarget()
+        fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
+        rtex.unbindAsRenderTarget()
+
+        # Is this hacky?
+        zpos       = max(zposes)
+        owidth     = float(opts.outlineWidth)
+        w, h       = self.canvas.GetSize()
+        xax        = axes[0]
+        yax        = axes[1]
+        xmin, xmax = self.canvas.opts.displayBounds.x
+        ymin, ymax = self.canvas.opts.displayBounds.y
+        offsets    = [owidth / w, owidth / h]
+
+        # if no outline, draw the texture directly
+        if not opts.outline:
+            self.renderTexture.drawOnBounds(
+                zpos, xmin, xmax, ymin, ymax, xax, yax,
+                textureUnit=gl.GL_TEXTURE1)
+
+        else:
+            # Run the texture through an edge detection
+            # filter, drawing the result to screen
+            self.edgeFilter.set(texture=1, offsets=offsets)
+            self.edgeFilter.apply(
+                self.renderTexture,
+                zpos, xmin, xmax, ymin, ymax, xax, yax,
+                textureUnit=gl.GL_TEXTURE1)
 
 
     def draw3D(self, *args, **kwargs):
-        """Calls the version-dependent ``draw3D`` function. """
-        fslgl.glmask_funcs.draw3D(self, *args, **kwargs)
+        """Does nothing. """
+        pass
 
 
     def postDraw(self, xform=None, bbox=None):
-        """Unbinds the ``ImageTexture`` and calls the version-dependent
-        ``postDraw`` function.
-        """
+        """Unbinds the ``ImageTexture``. """
         self.imageTexture.unbindTexture()
-        fslgl.glmask_funcs.postDraw(self, xform, bbox)
 
 
     def __volumeChanged(self, *a):

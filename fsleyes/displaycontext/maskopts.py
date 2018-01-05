@@ -52,40 +52,30 @@ class MaskOpts(volumeopts.NiftiOpts):
     in terms of pixels.
     """
 
+
+    # interpolation =
+
+
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MaskOpts`` instance for the given overlay. All arguments
         are passed through to the :class:`.NiftiOpts` constructor.
         """
 
-        #################
-        # This is a hack.
-        #################
+        # TODO threshold not applied on command line.
 
-        # Mask images are rendered using GLMask, which
-        # inherits from GLVolume. The latter assumes
-        # that the DisplayOpts instance passed to it
-        # has the following attributes (see the
-        # VolumeOpts class). So we're adding dummy
-        # attributes to make the GLVolume rendering
-        # code happy.
-        #
-        # TODO Write independent GLMask rendering routines
-        # instead of using the GLVolume implementations
+        # TODO Remove all this hack stuff.
 
-        dataMin, dataMax = overlay.dataRange
-        dRangeLen        = abs(dataMax - dataMin)
-        dMinDistance     = dRangeLen / 100.0
+        # Initialise threshold from data reange. Do
+        # this before __init__, in case we need to
+        # inherit settings from the parent instance
+        dmin, dmax = overlay.dataRange
+        dlen       = dmax - dmin
+        doff       = dlen / 100.0
 
-        self.clippingRange   = (dataMin - 1, dataMax + 1)
-        self.interpolation   = 'none'
-        self.invertClipping  = False
-        self.useNegativeCmap = False
-        self.clipImage       = None
-
-        self.threshold.xmin = dataMin - dMinDistance
-        self.threshold.xmax = dataMax + dMinDistance
-        self.threshold.xlo  = dataMin + dMinDistance
-        self.threshold.xhi  = dataMax + dMinDistance
+        self.threshold.xmin = dmin - doff
+        self.threshold.xmax = dmax + doff
+        self.threshold.xlo  = dmin + doff
+        self.threshold.xhi  = dmax + doff
 
         volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
 
