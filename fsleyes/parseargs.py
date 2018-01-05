@@ -1103,7 +1103,7 @@ def getExtra(target, propName, default=None):
 
     # Similar procedure for the colour map properties
     cmapSettings = {
-        'choices'  : colourmaps.scanColourMaps(),
+        'choices'  : None,
         'metavar'  : 'CMAP',
         'parseStr' : True
     }
@@ -3056,3 +3056,43 @@ def _applyVolumeOptsRange(arange, target):
         arange = [float(r) for r in arange]
 
     return arange
+
+
+def _applySpecial_ColourMapOpts_cmap(
+        args, overlayList, displayCtx, target):
+    """Handles the :attr:`.ColourMapOpts.cmap` option. See
+    :func:`_applyColourMap`.
+    """
+    args.cmap = _applyColourMap(args.cmap, overlayList, displayCtx)
+    return True
+
+
+def _applySpecial_ColourMapOpts_negativeCmap(
+        args, overlayList, displayCtx, target):
+    """Handles the :attr:`.ColourMapOpts.negativeCmap` option. See
+    :func:`_applyColourMap`.
+    """
+    args.negativeCmap = _applyColourMap(
+        args.negativeCmap, overlayList, displayCtx)
+    return True
+
+
+def _applySpecial_VectorOpts_cmap(
+        args, overlayList, displayCtx, target):
+    """Handles the :attr:`.VectorOpts.cmap` option. See
+    :func:`_applyColourMap`.
+    """
+    args.cmap = _applyColourMap(args.cmap, overlayList, displayCtx)
+    return True
+
+
+def _applyColourMap(cmap, overlayList, displayCtx):
+    """Handles a colour map argument.  If the specified colour map is a file,
+    it is loaded and registered with the :mod:`.colourmaps` module. Returns
+    a new value for the colour map argument.
+    """
+    if op.exists(cmap):
+        key = op.splitext(op.basename(cmap))[0]
+        colourmaps.registerColourMap(cmap, overlayList, displayCtx, key)
+        cmap = key
+    return cmap
