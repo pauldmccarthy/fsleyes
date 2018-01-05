@@ -493,7 +493,10 @@ OPTIONS = td.TypeDict({
                         'clipPlane'],
     'MaskOpts'       : ['colour',
                         'invert',
-                        'threshold'],
+                        'threshold',
+                        'outline',
+                        'outlineWidth',
+                        'interpolation'],
     'VectorOpts'     : ['xColour',
                         'yColour',
                         'zColour',
@@ -758,9 +761,12 @@ ARGUMENTS = td.TypeDict({
     'Volume3DOpts.clipPlane'     : ('cp',  'clipPlane',     True),
     'Volume3DOpts.clipMode'      : ('m',   'clipMode',      True),
 
-    'MaskOpts.colour'    : ('mc', 'maskColour', False),
-    'MaskOpts.invert'    : ('i',  'maskInvert', False),
-    'MaskOpts.threshold' : ('t',  'threshold',  True),
+    'MaskOpts.colour'        : ('mc', 'maskColour',    False),
+    'MaskOpts.invert'        : ('i',  'maskInvert',    False),
+    'MaskOpts.threshold'     : ('t',  'threshold',     True),
+    'MaskOpts.outline'       : ('o',  'outline',       False),
+    'MaskOpts.outlineWidth'  : ('w',  'outlineWidth',  True),
+    'MaskOpts.interpolation' : ('in', 'interpolation', True),
 
     'VectorOpts.xColour'         : ('xc', 'xColour',       True),
     'VectorOpts.yColour'         : ('yc', 'yColour',       True),
@@ -978,9 +984,12 @@ HELP = td.TypeDict({
     'Volume3DOpts.clipMode' :
     '3D only. How to apply the clipping plane(s).',
 
-    'MaskOpts.colour'    : 'Colour (0-1)',
-    'MaskOpts.invert'    : 'Invert',
-    'MaskOpts.threshold' : 'Threshold',
+    'MaskOpts.colour'       : 'Colour (0-1)',
+    'MaskOpts.invert'        : 'Invert',
+    'MaskOpts.threshold'     : 'Threshold',
+    'MaskOpts.outline'       : 'Show mask outline',
+    'MaskOpts.outlineWidth'  : 'Mask outline width (1-10, default: 2)',
+    'MaskOpts.interpolation' : 'Interpolation',
 
     'VectorOpts.xColour'         : 'X colour (0-1)',
     'VectorOpts.yColour'         : 'Y colour (0-1)',
