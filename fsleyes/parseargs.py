@@ -1133,6 +1133,7 @@ def getExtra(target, propName, default=None):
         'metavar' : 'FILE',
         'choices' : None,
         'useAlts' : False,
+        'action'  : 'append',
     }
 
     # VolumeOpts.clippingRange and displayRange are
@@ -2974,9 +2975,11 @@ def _applySpecial_MeshOpts_vertexData(
 
     # Vertex data files need to be pre-loaded
     if args.vertexData is not None:
-        loadvertexdata.loadVertexData(target.overlay,
-                                      displayCtx,
-                                      args.vertexData)
+        vertexData = list(args.vertexData)
+        for i, vd in enumerate(vertexData):
+            vertexData[i] = loadvertexdata.loadVertexData(
+                target.overlay, displayCtx, vd)
+        target.vertexData = vertexData[0]
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(

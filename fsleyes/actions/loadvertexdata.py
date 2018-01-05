@@ -108,6 +108,9 @@ def loadVertexData(overlay, displayCtx, filename):
     :arg displayCtx: The :class:`.DisplayContext`
 
     :arg filename:   Path to the vertex data file that is to be loaded.
+
+    :returns:        The path that was actually used - it will have been
+                     converted to an absolute path if necessary.
     """
 
     opts     = displayCtx.getOpts(overlay)
@@ -130,3 +133,4 @@ def loadVertexData(overlay, displayCtx, filename):
     # option, then select it.
     opts.addVertexDataOptions([filename])
     opts.vertexData = filename
+    return filename
