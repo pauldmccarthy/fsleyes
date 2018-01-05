@@ -111,7 +111,7 @@ properties = TypeDict({
     'colour, and vice versa.',
 
     'VolumeOpts.interpolation' :
-    'Interpolate the image data for display purposes. You can choose no  '
+    'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
     'interpolation, or third-order spline (cubic) interpolation.',
 
@@ -164,12 +164,24 @@ properties = TypeDict({
     'Volume3DOpts.clipAzimuth' :
     'Amount by which to rotate the clip plane about the Z axis.',
 
-    'MaskOpts.colour'    : 'The colour of this mask image.',
-    'MaskOpts.invert'    : 'Invert the mask threshold range, so that values '
-                           'outside of the range are shown, and values '
-                           'within the range are hidden.',
-    'MaskOpts.threshold' : 'The mask threshold range - values outside of '
-                           'this range will not be displayed.',
+    'MaskOpts.colour' :
+    'The colour of this mask image.',
+    'MaskOpts.invert' :
+    'Invert the mask threshold range, so that values outside of the range '
+    'are shown, and values within the range are hidden.',
+    'MaskOpts.threshold' :
+    'The mask threshold range - values outside of this range will not be '
+    'displayed.',
+    'MaskOpts.outline' :
+    'When selected, an outline of the mask is shown, instead of the filled '
+    'mask being shown.',
+    'MaskOpts.outlineWidth'  :
+    'When the mask outline is shown, this setting controls the outline width '
+    'in pixels.',
+    'MaskOpts.interpolation' :
+    'Interpolate the mask data on the display. You can choose no  '
+    'interpolation (equivalent to nearest neighbour interpolation), linear '
+    'interpolation, or third-order spline (cubic) interpolation.',
 
     'LabelOpts.lut'          : 'The lookup table to use for this label image.',
     'LabelOpts.outline'      : 'Show the outline of each labelled region '

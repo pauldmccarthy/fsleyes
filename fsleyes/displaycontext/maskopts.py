@@ -9,11 +9,12 @@ for displaying an :class:`.Image` overlay as a binary mask.
 """
 
 
+import copy
 import logging
 
-import fsleyes_props as props
-
-from . import volumeopts
+import fsleyes_props                      as props
+from   fsl.utils.platform import platform as fslplatform
+from . import                                volumeopts
 
 
 log = logging.getLogger(__name__)
@@ -47,13 +48,13 @@ class MaskOpts(volumeopts.NiftiOpts):
     """
 
 
-    outlineWidth = props.Real(minval=1, maxval=30, default=2, clamped=True)
+    outlineWidth = props.Int(minval=1, maxval=10, default=2, clamped=True)
     """Width of mask outline, if :attr:``outline` is ``True``.  This value is
     in terms of pixels.
     """
 
 
-    # interpolation =
+    interpolation = copy.copy(volumeopts.VolumeOpts.interpolation)
 
 
     def __init__(self, overlay, *args, **kwargs):
@@ -61,9 +62,14 @@ class MaskOpts(volumeopts.NiftiOpts):
         are passed through to the :class:`.NiftiOpts` constructor.
         """
 
-        # TODO threshold not applied on command line.
+        # We need GL >= 2.1 for
+        # spline interpolation
+        if float(fslplatform.glVersion) < 2.1:
+            interp = self.getProp('interpolation')
+            interp.removeChoice('spline', instance=self)
+            interp.updateChoice('linear', instance=self, newAlt=['spline'])
 
-        # TODO Remove all this hack stuff.
+        kwargs['nounbind'] = ['interpolation']
 
         # Initialise threshold from data reange. Do
         # this before __init__, in case we need to

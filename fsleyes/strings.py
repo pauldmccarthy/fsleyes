@@ -967,9 +967,12 @@ properties = TypeDict({
     'Volume3DOpts.clipInclination'         : 'Clip Z angle',
     'Volume3DOpts.clipAzimuth'             : 'Clip rotation',
 
-    'MaskOpts.colour'         : 'Colour',
-    'MaskOpts.invert'         : 'Invert',
-    'MaskOpts.threshold'      : 'Threshold',
+    'MaskOpts.colour'        : 'Colour',
+    'MaskOpts.invert'        : 'Invert',
+    'MaskOpts.threshold'     : 'Threshold',
+    'MaskOpts.outline'       : 'Show outline only',
+    'MaskOpts.outlineWidth'  : 'Outline width',
+    'MaskOpts.interpolation' : 'Interpolation',
 
     'VectorOpts.xColour'       : 'X Colour',
     'VectorOpts.yColour'       : 'Y Colour',

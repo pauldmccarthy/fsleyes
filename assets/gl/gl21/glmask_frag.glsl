@@ -7,6 +7,7 @@
 #version 120
 
 #pragma include edge.glsl
+#pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
 
 /*
@@ -36,6 +37,11 @@ uniform vec2 threshold;
 uniform bool invert;
 
 /*
+ * Use spline interpolation
+ */
+uniform bool useSpline;
+
+/*
  * Mask colour
  */
 uniform vec4 colour;
@@ -53,13 +59,18 @@ varying vec3 fragTexCoord;
 
 void main(void) {
 
-    vec3 voxCoord = fragVoxCoord;
+    vec3  voxCoord = fragVoxCoord;
+    float voxValue;
 
     if (!test_in_bounds(voxCoord, imageShape)) {
         discard;
     }
 
-    float voxValue = texture3D(imageTexture, fragTexCoord).r;
+    if (useSpline) voxValue = spline_interp(imageTexture,
+                                            fragTexCoord,
+                                            imageShape,
+                                            0);
+    else           voxValue = texture3D(    imageTexture, fragTexCoord).r;
 
     if ((!invert && (voxValue <= threshold.x || voxValue >= threshold.y)) ||
         ( invert && (voxValue >= threshold.x && voxValue <= threshold.y))) {

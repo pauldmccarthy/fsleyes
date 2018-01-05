@@ -61,6 +61,7 @@ def updateShaderState(self):
     changed |= shader.set('imageTexture',  0)
     changed |= shader.set('voxValXform',   vvx)
     changed |= shader.set('imageShape',    imageShape)
+    changed |= shader.set('useSpline',     opts.interpolation == 'spline')
     changed |= shader.set('threshold',     self.getThreshold())
     changed |= shader.set('invert',        opts.invert)
     changed |= shader.set('colour',        self.getColour())

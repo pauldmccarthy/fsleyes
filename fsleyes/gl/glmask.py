@@ -19,7 +19,6 @@ import fsleyes.gl.resources      as glresources
 import fsleyes.gl.textures       as textures
 import fsleyes.gl.shaders.filter as glfilter
 from . import                       glimageobject
-from . import                       gllabel
 
 
 log = logging.getLogger(__name__)
@@ -176,9 +175,9 @@ class GLMask(glimageobject.GLImageObject):
         opts   .addListener('invert',        name, update, weak=False)
         opts   .addListener('outlineWidth',  name, update, weak=False)
         opts   .addListener('outline',       name, self.notify)
-
         opts   .addListener('transform',     name, self.notify)
         opts   .addListener('volume',        name, self.__volumeChanged)
+        opts   .addListener('interpolation', name, self.__interpChanged)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
@@ -195,16 +194,17 @@ class GLMask(glimageobject.GLImageObject):
         opts    = self.opts
         name    = self.name
 
-        display.removeListener('alpha',        name)
-        display.removeListener('brightness',   name)
-        display.removeListener('contrast',     name)
-        opts   .removeListener('colour',       name)
-        opts   .removeListener('threshold',    name)
-        opts   .removeListener('invert',       name)
-        opts   .removeListener('outline',      name)
-        opts   .removeListener('outlineWidth', name)
-        opts   .removeListener('transform',    name)
-        opts   .removeListener('volume',       name)
+        display.removeListener('alpha',         name)
+        display.removeListener('brightness',    name)
+        display.removeListener('contrast',      name)
+        opts   .removeListener('colour',        name)
+        opts   .removeListener('threshold',     name)
+        opts   .removeListener('invert',        name)
+        opts   .removeListener('outline',       name)
+        opts   .removeListener('outlineWidth',  name)
+        opts   .removeListener('transform',     name)
+        opts   .removeListener('volume',        name)
+        opts   .removeListener('interpolation', name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume', name)
@@ -334,7 +334,7 @@ class GLMask(glimageobject.GLImageObject):
 
         # Is this hacky?
         zpos       = max(zposes)
-        owidth     = float(opts.outlineWidth)
+        owidth     = opts.outlineWidth
         w, h       = self.canvas.GetSize()
         xax        = axes[0]
         yax        = axes[1]
@@ -373,6 +373,15 @@ class GLMask(glimageobject.GLImageObject):
         image texture.
         """
         self.imageTexture.set(volume=self.opts.index()[3:])
+
+
+    def __interpChanged(self, *a):
+        """Called when the :attr:`.MaskOpts.interpolation` changes. Updates the
+        image texture.
+        """
+        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                                 interp = gl.GL_LINEAR
+        self.imageTexture.set(interp=interp)
 
 
     def __imageTextureChanged(self, *a):

@@ -173,6 +173,7 @@ def _initPropertyList_MaskOpts(threedee):
             'colour',
             'invert',
             'threshold',
+            'interpolation',
             'outline',
             'outlineWidth']
 
@@ -399,6 +400,9 @@ def _initWidgetSpec_MaskOpts(threedee):
             slider=False,
             enabledWhen=lambda o: o.overlay.ndims > 4,
             spinWidth=2),
+        'interpolation'  : props.Widget(
+            'interpolation',
+            labels=strings.choices['VolumeOpts.interpolation']),
         'colour'       : props.Widget('colour'),
         'invert'       : props.Widget('invert'),
         'threshold'    : props.Widget('threshold', showLimits=False),
