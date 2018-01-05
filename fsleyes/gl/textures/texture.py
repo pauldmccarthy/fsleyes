@@ -7,6 +7,14 @@
 """This module provides the :class:`Texture` and :class:`Texture2D` classes,
 which are the base classes for all other texture types. See also the
 :class:`.Texture3D` class.
+
+This module also contains a handful of standalone functions:
+
+ .. autosummary::
+    :nosignature:
+
+    generateVertices
+    generateTextureCoords
 """
 
 
@@ -425,16 +433,23 @@ class Texture2D(Texture):
         self.unbindTexture()
 
 
-    def draw(self, vertices, xform=None):
-        """Draw the contents of this ``Texture2D`` to a region specified by
-        the given vertices. The texture is bound to texture unit 0.
+    def __prepareCoords(self, vertices, xform=None):
+        """Called by :meth:`draw`. Prepares vertices, texture coordinates and
+        indices for drawing the texture.
 
-        :arg vertices: A ``numpy`` array of shape ``6 * 3`` specifying the
-                       region, made up of two triangles, to which this
-                       ``Texture2D`` should be drawn.
+        If ``vertices is None``, it is assumed that the caller has already
+        assigned vertices and texture coordinates, either via a shader, or
+        via vertex/texture coordinate pointers. In this case,
 
-        :arg xform:    A transformation to be applied to the vertices.
+        :returns: A tuple containing the vertices, texture coordinates, and
+                  indices, or ``(None, None, indices)`` if
+                  ``vertices is None``
         """
+
+        indices = np.arange(6, dtype=np.uint32)
+
+        if vertices is None:
+            return None, None, indices
 
         if vertices.shape != (6, 3):
             raise ValueError('Six vertices must be provided')
@@ -442,23 +457,40 @@ class Texture2D(Texture):
         if xform is not None:
             vertices = transform.transform(vertices, xform)
 
-        vertices  = np.array(vertices, dtype=np.float32)
-        texCoords = np.zeros((6, 2),   dtype=np.float32)
-        indices   = np.arange(6,       dtype=np.uint32)
+        vertices  = np.array(vertices, dtype=np.float32).ravel('C')
+        texCoords = generateTextureCoords()             .ravel('C')
 
-        texCoords[0, :] = [0, 0]
-        texCoords[1, :] = [0, 1]
-        texCoords[2, :] = [1, 0]
-        texCoords[3, :] = [1, 0]
-        texCoords[4, :] = [0, 1]
-        texCoords[5, :] = [1, 1]
+        return vertices, texCoords, indices
 
-        vertices  = vertices .ravel('C')
-        texCoords = texCoords.ravel('C')
 
-        self.bindTexture(gl.GL_TEXTURE0)
+    def draw(self,
+             vertices=None,
+             xform=None,
+             textureUnit=None):
+        """Draw the contents of this ``Texture2D`` to a region specified by
+        the given vertices. The texture is bound to texture unit 0.
 
-        gl.glClientActiveTexture(gl.GL_TEXTURE0)
+        :arg vertices:    A ``numpy`` array of shape ``6 * 3`` specifying the
+                          region, made up of two triangles, to which this
+                          ``Texture2D`` should be drawn. If ``None``, it is
+                          assumed that the vertices and texture coordinates
+                          have already been configured (e.g. via a shader
+                          program).
+
+        :arg xform:       A transformation to be applied to the vertices.
+                          Ignored if ``vertices is None``.
+
+        :arg textureUnit: Texture unit to bind to. Defaults to
+                          ``gl.GL_TEXTURE0``.
+        """
+
+        if textureUnit is None:
+            textureUnit = gl.GL_TEXTURE0
+
+        vertices, texCoords, indices = self.__prepareCoords(vertices, xform)
+
+        self.bindTexture(textureUnit)
+        gl.glClientActiveTexture(textureUnit)
 
         gl.glTexEnvf(gl.GL_TEXTURE_ENV,
                      gl.GL_TEXTURE_ENV_MODE,
@@ -468,8 +500,10 @@ class Texture2D(Texture):
                                  gl.GL_TEXTURE_COORD_ARRAY,
                                  gl.GL_VERTEX_ARRAY)):
 
-            gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
-            gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
+            if vertices is not None:
+                gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
+                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
+
             gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, indices)
 
         self.unbindTexture()
@@ -503,15 +537,55 @@ class Texture2D(Texture):
         All other arguments are passed to the :meth:`draw` method.
         """
 
-        zax              = 3 - xax - yax
-        vertices         = np.zeros((6, 3), dtype=np.float32)
-        vertices[:, zax] = zpos
-
-        vertices[ 0, [xax, yax]] = [xmin, ymin]
-        vertices[ 1, [xax, yax]] = [xmin, ymax]
-        vertices[ 2, [xax, yax]] = [xmax, ymin]
-        vertices[ 3, [xax, yax]] = [xmax, ymin]
-        vertices[ 4, [xax, yax]] = [xmin, ymax]
-        vertices[ 5, [xax, yax]] = [xmax, ymax]
-
+        vertices = generateVertices(zpos, xmin, xmax, ymin, ymax, xax, yax)
         self.draw(vertices, *args, **kwargs)
+
+
+def generateVertices(zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
+    """Generates a set of vertices suitable for passing to the
+    :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D canvas.
+
+    :arg zpos:  Position along the Z axis, in the display coordinate
+                system.
+    :arg xmin:  Minimum X axis coordinate.
+    :arg xmax:  Maximum X axis coordinate.
+    :arg ymin:  Minimum Y axis coordinate.
+    :arg ymax:  Maximum Y axis coordinate.
+    :arg xax:   Display space axis which maps to the horizontal screen
+                axis.
+    :arg yax:   Display space axis which maps to the vertical screen
+                axis.
+    :arg xform: Transformation matrix to appply to vertices.
+    """
+
+    zax              = 3 - xax - yax
+    vertices         = np.zeros((6, 3), dtype=np.float32)
+    vertices[:, zax] = zpos
+
+    vertices[ 0, [xax, yax]] = [xmin, ymin]
+    vertices[ 1, [xax, yax]] = [xmin, ymax]
+    vertices[ 2, [xax, yax]] = [xmax, ymin]
+    vertices[ 3, [xax, yax]] = [xmax, ymin]
+    vertices[ 4, [xax, yax]] = [xmin, ymax]
+    vertices[ 5, [xax, yax]] = [xmax, ymax]
+
+    if xform is not None:
+        vertices = transform.transform(vertices, xform)
+
+    return vertices
+
+
+def generateTextureCoords():
+    """Generates a set of texture coordinates for drawing a :class:`Texture2D`.
+    This function is used by the :meth:`Texture2D.draw` method.
+    """
+
+    texCoords       = np.zeros((6, 2), dtype=np.float32)
+    texCoords[0, :] = [0, 0]
+    texCoords[1, :] = [0, 1]
+    texCoords[2, :] = [1, 0]
+    texCoords[3, :] = [1, 0]
+    texCoords[4, :] = [0, 1]
+    texCoords[5, :] = [1, 1]
+
+    return texCoords
