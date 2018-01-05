@@ -274,32 +274,8 @@ class GLLabel(glimageobject.GLImageObject):
 
 
     def calculateOutlineOffsets(self, axes):
-        """Calculates offsets that are used by the label fragment shader
-        programs to calculate whether a position in the image is on a label
-        boundary. If the image is being shown on a 2D canvas orthogonal
-        to the display coordinate system, we can ignore the depth axis and
-        calculate boundaries in 2D. Otherwise we have to calculate boundaries
-        in 3D.
-        """
-
-        zax            = axes[2]
-        opts           = self.opts
-        imageShape     = np.array(self.image.shape[:3])
-        outlineOffsets = opts.outlineWidth / imageShape
-
-        # If we are not orthogonal to the
-        # display coordinate system, we use
-        # the same outline offset along all
-        # axes.
-        if opts.transform in ('custom', 'affine'):
-            minOffset      = outlineOffsets.min()
-            outlineOffsets = np.array([minOffset] * 3)
-
-        # Otherwise we can ignore the depth axis
-        else:
-            outlineOffsets[zax] = -1
-
-        return outlineOffsets
+        """See the :func:`calculateOutlineOffsets` function. """
+        return calculateOutlineOffsets(self.image, self.opts, axes)
 
 
     def __lutChanged(self, *a):
@@ -344,3 +320,31 @@ class GLLabel(glimageobject.GLImageObject):
         changes. Calls :meth:`updateShaderState`.
         """
         self.updateShaderState(alwaysNotify=True)
+
+
+def calculateOutlineOffsets(image, opts, axes):
+    """Calculates offsets that are used by the label fragment shader
+    programs to calculate whether a position in the image is on a label
+    boundary. If the image is being shown on a 2D canvas orthogonal
+    to the display coordinate system, we can ignore the depth axis and
+    calculate boundaries in 2D. Otherwise we have to calculate boundaries
+    in 3D.
+    """
+
+    zax            = axes[2]
+    imageShape     = np.array(image.shape[:3])
+    outlineOffsets = opts.outlineWidth / imageShape
+
+    # If we are not orthogonal to the
+    # display coordinate system, we use
+    # the same outline offset along all
+    # axes.
+    if opts.transform in ('custom', 'affine'):
+        minOffset      = outlineOffsets.min()
+        outlineOffsets = np.array([minOffset] * 3)
+
+    # Otherwise we can ignore the depth axis
+    else:
+        outlineOffsets[zax] = -1
+
+    return outlineOffsets

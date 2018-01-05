@@ -266,6 +266,9 @@ def bootstrap(glVersion=None):
     ``glmesh_funcs``       The version-specific module containing functions for
                            rendering :class:`.GLMesh` instances.
 
+    ``glmask_funcs``       The version-specific module containing functions for
+                           rendering :class:`.GLMask` instances.
+
     ``gllabel_funcs``      The version-specific module containing functions for
                            rendering :class:`.GLLabel` instances.
 
@@ -386,6 +389,7 @@ def bootstrap(glVersion=None):
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
+    thismod.glmask_funcs       = glpkg.glmask_funcs
     thismod.glmesh_funcs       = glpkg.glmesh_funcs
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs

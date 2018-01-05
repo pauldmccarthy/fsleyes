@@ -24,10 +24,12 @@ class MaskOpts(volumeopts.NiftiOpts):
     :class:`.Image` overlay as a binary mask.
     """
 
+
     threshold = props.Bounds(ndims=1)
     """The mask threshold range - values outside of this range are not
     displayed.
     """
+
 
     invert = props.Boolean(default=False)
     """If ``True``, the :attr:`threshold` range is inverted - values
@@ -38,6 +40,18 @@ class MaskOpts(volumeopts.NiftiOpts):
     colour = props.Colour()
     """The mask colour."""
 
+
+    outline = props.Boolean(default=False)
+    """If ``True`` only the outline of the mask will be shown.  If ``False``,
+    the filled mask will be displayed.
+    """
+
+
+    outlineWidth = props.Real(minval=0, maxval=1, default=0.25, clamped=True)
+    """Width of mask outline, if :attr:``outline` is ``True``.  This value is
+    in terms of the image voxels - a value of 1 will result in an outline
+    that is one voxel wide.
+    """
 
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MaskOpts`` instance for the given overlay. All arguments
