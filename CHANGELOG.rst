@@ -17,6 +17,8 @@ chronological order.
 * The ``--vertexData`` command line argument, for mesh overlays, can be
   specified multiple times. All vertex data files will be pre-loaded, and the
   first one will be selected.
+* New options on mask overlays to display the mask outline, and to apply
+  interpolation on the display.
 
 
 0.19.1 (Wednesday January 3rd 2017)
