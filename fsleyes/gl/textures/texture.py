@@ -7,14 +7,6 @@
 """This module provides the :class:`Texture` and :class:`Texture2D` classes,
 which are the base classes for all other texture types. See also the
 :class:`.Texture3D` class.
-
-This module also contains a handful of standalone functions:
-
- .. autosummary::
-    :nosignature:
-
-    generateVertices
-    generateTextureCoords
 """
 
 
@@ -458,7 +450,7 @@ class Texture2D(Texture):
             vertices = transform.transform(vertices, xform)
 
         vertices  = np.array(vertices, dtype=np.float32).ravel('C')
-        texCoords = generateTextureCoords()             .ravel('C')
+        texCoords = self.generateTextureCoords()        .ravel('C')
 
         return vertices, texCoords, indices
 
@@ -537,55 +529,61 @@ class Texture2D(Texture):
         All other arguments are passed to the :meth:`draw` method.
         """
 
-        vertices = generateVertices(zpos, xmin, xmax, ymin, ymax, xax, yax)
+        vertices = self.generateVertices(
+            zpos, xmin, xmax, ymin, ymax, xax, yax)
         self.draw(vertices, *args, **kwargs)
 
 
-def generateVertices(zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
-    """Generates a set of vertices suitable for passing to the
-    :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D canvas.
+    @classmethod
+    def generateVertices(
+            cls, zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
+        """Generates a set of vertices suitable for passing to the
+        :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D
+        canvas.
 
-    :arg zpos:  Position along the Z axis, in the display coordinate
-                system.
-    :arg xmin:  Minimum X axis coordinate.
-    :arg xmax:  Maximum X axis coordinate.
-    :arg ymin:  Minimum Y axis coordinate.
-    :arg ymax:  Maximum Y axis coordinate.
-    :arg xax:   Display space axis which maps to the horizontal screen
-                axis.
-    :arg yax:   Display space axis which maps to the vertical screen
-                axis.
-    :arg xform: Transformation matrix to appply to vertices.
-    """
+        :arg zpos:  Position along the Z axis, in the display coordinate
+                    system.
+        :arg xmin:  Minimum X axis coordinate.
+        :arg xmax:  Maximum X axis coordinate.
+        :arg ymin:  Minimum Y axis coordinate.
+        :arg ymax:  Maximum Y axis coordinate.
+        :arg xax:   Display space axis which maps to the horizontal screen
+                    axis.
+        :arg yax:   Display space axis which maps to the vertical screen
+                    axis.
+        :arg xform: Transformation matrix to appply to vertices.
+        """
 
-    zax              = 3 - xax - yax
-    vertices         = np.zeros((6, 3), dtype=np.float32)
-    vertices[:, zax] = zpos
+        zax              = 3 - xax - yax
+        vertices         = np.zeros((6, 3), dtype=np.float32)
+        vertices[:, zax] = zpos
 
-    vertices[ 0, [xax, yax]] = [xmin, ymin]
-    vertices[ 1, [xax, yax]] = [xmin, ymax]
-    vertices[ 2, [xax, yax]] = [xmax, ymin]
-    vertices[ 3, [xax, yax]] = [xmax, ymin]
-    vertices[ 4, [xax, yax]] = [xmin, ymax]
-    vertices[ 5, [xax, yax]] = [xmax, ymax]
+        vertices[ 0, [xax, yax]] = [xmin, ymin]
+        vertices[ 1, [xax, yax]] = [xmin, ymax]
+        vertices[ 2, [xax, yax]] = [xmax, ymin]
+        vertices[ 3, [xax, yax]] = [xmax, ymin]
+        vertices[ 4, [xax, yax]] = [xmin, ymax]
+        vertices[ 5, [xax, yax]] = [xmax, ymax]
 
-    if xform is not None:
-        vertices = transform.transform(vertices, xform)
+        if xform is not None:
+            vertices = transform.transform(vertices, xform)
 
-    return vertices
+        return vertices
 
 
-def generateTextureCoords():
-    """Generates a set of texture coordinates for drawing a :class:`Texture2D`.
-    This function is used by the :meth:`Texture2D.draw` method.
-    """
+    @classmethod
+    def generateTextureCoords(cls):
+        """Generates a set of texture coordinates for drawing a
+        :class:`Texture2D`. This function is used by the
+        :meth:`Texture2D.draw` method.
+        """
 
-    texCoords       = np.zeros((6, 2), dtype=np.float32)
-    texCoords[0, :] = [0, 0]
-    texCoords[1, :] = [0, 1]
-    texCoords[2, :] = [1, 0]
-    texCoords[3, :] = [1, 0]
-    texCoords[4, :] = [0, 1]
-    texCoords[5, :] = [1, 1]
+        texCoords       = np.zeros((6, 2), dtype=np.float32)
+        texCoords[0, :] = [0, 0]
+        texCoords[1, :] = [0, 1]
+        texCoords[2, :] = [1, 0]
+        texCoords[3, :] = [1, 0]
+        texCoords[4, :] = [0, 1]
+        texCoords[5, :] = [1, 1]
 
-    return texCoords
+        return texCoords
