@@ -621,9 +621,12 @@ GROUPDESCS = td.TypeDict({
 GROUPEPILOGS = td.TypeDict({
 
     'Display'    : 'Available overlay types: {}',
-    'LabelOpts'  : 'Available lookup tables: {}',
-    'VolumeOpts' : 'Available colour maps: {}',
-    'SHOpts'     : 'Available colour maps: {}'
+    'LabelOpts'  : 'Available lookup tables: {}. You can also specify a '
+                   'lookup table file.',
+    'VolumeOpts' : 'Available colour maps: {}. You can also specify any '
+                   'matplotlib colour map, or a colour map file. ',
+    'SHOpts'     : 'Available colour maps: {}. You can also specify any '
+                   'matplotlib colour map, or a colour map file. ',
 })
 """This dictionary contains epilogs for some types - information to be shown
 after the help for that type. Use the :func:`groupEpilog` function to access
@@ -1091,11 +1094,11 @@ def getExtra(target, propName, default=None):
 
     # Settings for the LabelOpts/MeshOpts.lut property -
     # we don't want to pre-load all LUTs as it takes too
-    # long, so we're using the scanLookupTables function
-    # to grab the names of all existing LUTs, and then
-    # using them as the CLI options.
+    # long. And luts can be specified by name, or by file,
+    # soe we accept any string here, and then parse them
+    # witn an applySpecial function.
     lutSettings = {
-        'choices'       : colourmaps.scanLookupTables(),
+        'choices'       : None,
         'useAlts'       : False,
         'metavar'       : 'LUT',
         'default'       : 'random',
@@ -1122,7 +1125,10 @@ def getExtra(target, propName, default=None):
 
     # MeshOpts.vertexData is a Choice
     # property, but needs to accept
-    # any value on the command line
+    # any value on the command line,
+    # as the vertex data files need to
+    # be pre-loaded (by an applySpecial
+    # function).
     vertexDataSettings = {
         'metavar' : 'FILE',
         'choices' : None,
@@ -1268,13 +1274,6 @@ def _imageTrans(i, **kwargs):
     else:                  return i.dataSource
 
 
-# When generating CLI arguments, turn a
-# LookupTable instance into its name
-def _lutTrans(l, **kwargs):
-    if isinstance(l, colourmaps.LookupTable): return l.key
-    else:                                     return l
-
-
 # The command line interface
 # for some boolean properties
 # need the property value to be
@@ -1308,8 +1307,6 @@ TRANSFORMS = td.TypeDict({
     'ColourMapOpts.linkLowRanges' : _boolTrans,
     'LineVectorOpts.unitLength'   : _boolTrans,
     'TensorOpts.lighting'         : _boolTrans,
-    'LabelOpts.lut'               : _lutTrans,
-    'MeshOpts.lut'                : _lutTrans,
 
     'SceneOpts.bgColour'         : _colourTrans,
     'SceneOpts.fgColour'         : _colourTrans,
@@ -2221,11 +2218,11 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
         extraArgs['overlay'] = source.overlay
         extraArgs['target']  = source
 
-    args = props.generateArguments(source,
-                                   xformFuncs=xforms,
-                                   cliProps=propNames,
-                                   longArgs=longArgs,
-                                   **extraArgs)
+    args += props.generateArguments(source,
+                                    xformFuncs=xforms,
+                                    cliProps=propNames,
+                                    longArgs=longArgs,
+                                    **extraArgs)
 
     return args
 
@@ -3096,3 +3093,119 @@ def _applyColourMap(cmap, overlayList, displayCtx):
         colourmaps.registerColourMap(cmap, overlayList, displayCtx, key)
         cmap = key
     return cmap
+
+
+def _generateSpecial_ColourMapOpts_cmap(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.ColourMapOpts.cmap` argument. """
+    return _generateColourMap(longArg, source.cmap)
+
+
+def _generateSpecial_ColourMapOpts_negativeCmap(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.ColourMapOpts.negativeCmap`
+    argument.
+    """
+    return _generateColourMap(longArg, source.negativeCmap)
+
+
+def _generateSpecial_VectorOpts_cmap(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.VectorOpts.lut` argument. """
+    return _generateColourMap(longArg, source.cmap)
+
+
+def _generateColourMap(longArg, cmap):
+    """Generates a command line argument for the given colour map. This be
+    different depending on whether the colour map is installed as a FSLeyes
+    colour map, or has been manualy specified from a colour map file.
+    """
+
+    cmap = cmap.name
+
+    # if not registered with colourmaps module,
+    # then it's a built-in matplotlib colour map
+    if not colourmaps.isColourMapRegistered(cmap):
+        return [longArg, cmap]
+
+    # if installed, then it's a FSLeyes colour map
+    if colourmaps.isColourMapInstalled(cmap):
+        return [longArg, cmap]
+
+    # otherwise, it is likely to have been
+    # initially specified as a colour map file
+    cmap = colourmaps.getColourMapFile(cmap)
+
+    if cmap is not None:
+        return [longArg, op.abspath(cmap)]
+
+    # added by some other means (e.g. manually by
+    # user in python shell) - don't know what to do
+    else:
+        return []
+
+
+def _applySpecial_LabelOpts_lut(args, overlayList, displayCtx, target):
+    """Handles the :attr:`.LabelOpts.lut` option. See
+    :func:`_applyLookupTable`.
+    """
+    args.lut = _applyLookupTable(args.lut, overlayList, displayCtx)
+    return True
+
+
+def _applySpecial_MeshOpts_lut(args, overlayList, displayCtx, target):
+    """Handles the :attr:`.MeshOpts.lut` option. See
+    :func:`_applyLookupTable`.
+    """
+    args.lut = _applyLookupTable(args.lut, overlayList, displayCtx)
+    return True
+
+
+def _applyLookupTable(lut, overlayList, displayCtx):
+    """Handles a lookup table argument.  If the specified lookup table is a
+    file, it is loaded and registered with the :mod:`.colourmaps` module.
+    Returns a new value for the lookup table argument.
+    """
+    if op.exists(lut):
+        key = op.splitext(op.basename(lut))[0]
+        colourmaps.registerLookupTable(lut, overlayList, displayCtx, key)
+        lut = key
+    return lut
+
+
+def _generateSpecial_LabelOpts_lut(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.LabelOpts.lut` argument. """
+    return _generateLookupTable(longArg, source.lut)
+
+
+def _generateSpecial_MeshOpts_lut(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.MeshOpts.lut` argument. """
+    return _generateLookupTable(longArg, source.lut)
+
+
+def _generateLookupTable(longArg, lut):
+    """Generates a command line argument for the given lookup table. This will
+    be different depending on whether the lookup table is installed as a
+    FSLeyes lookup tablea, or has been manualy specified from a lookup table
+    file.
+    """
+
+    lut = lut.key
+
+    # the lut has been installed into FSLeyes
+    if colourmaps.isLookupTableInstalled(lut):
+        return [longArg, lut]
+
+    # otherwise the lut is likely to
+    # have been specified as a file
+    lut = colourmaps.getLookupTableFile(lut)
+
+    if lut is not None:
+        return [longArg, op.abspath(lut)]
+
+    # lut was registered in some other
+    # way - don't know what to do
+    else:
+        return []
