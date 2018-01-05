@@ -14,6 +14,9 @@ chronological order.
 * Volume display range can now be specified as a percentile on the command
   line
 * Colour maps and lookup table files can now be specified on the command line.
+* The ``--vertexData`` command line argument, for mesh overlays, can be
+  specified multiple times. All vertex data files will be pre-loaded, and the
+  first one will be selected.
 
 
 0.19.1 (Wednesday January 3rd 2017)
