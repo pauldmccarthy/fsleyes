@@ -71,6 +71,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMaps
    getColourMap
    getColourMapLabel
+   getColourMapFile
    registerColourMap
    installColourMap
    isColourMapRegistered
@@ -157,6 +158,7 @@ access and manage :class:`LookupTable` instances:
    scanLookupTables
    getLookupTables
    getLookupTable
+   getLookpuTableFile
    registerLookupTable
    installLookupTable
    isLookupTableRegistered
@@ -511,7 +513,7 @@ def registerColourMap(cmapFile,
 
     mplcm.register_cmap(key, cmap)
 
-    _cmaps[key] = _Map(key, name, cmap, None, False)
+    _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
 
     log.debug('Patching DisplayOpts instances and class '
               'to support new colour map {}'.format(key))
@@ -611,7 +613,7 @@ def registerLookupTable(lut,
     # a file, it has not necessarily been installed
     lut.saved = False
 
-    _luts[key] = _Map(key, name, lut, None, False)
+    _luts[key] = _Map(key, name, lut, lutFile, False)
 
     log.debug('Patching LabelOpts classes to support '
               'new LookupTable {}'.format(key))
@@ -669,6 +671,20 @@ def getColourMap(key):
 def getColourMapLabel(key):
     """Returns a label/display name for the specified colour map. """
     return _caseInsensitiveLookup(_cmaps, key).name
+
+
+def getColourMapFile(key):
+    """Returns the file associated with the specified colour map, or ``None``
+    if the colour map is registered but not installed.
+    """
+    return _cmaps[key].mapFile
+
+
+def getLookupTableFile(key):
+    """Returns the file associated with the specified lookup table, or ``None``
+    if the lookup table is registered but not installed.
+    """
+    return _luts[key].mapFile
 
 
 def isColourMapRegistered(key):
