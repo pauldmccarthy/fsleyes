@@ -128,8 +128,8 @@ class GLMask(glimageobject.GLImageObject):
         opts   .addListener('colour',        name, update, weak=False)
         opts   .addListener('threshold',     name, update, weak=False)
         opts   .addListener('invert',        name, update, weak=False)
-        opts   .addListener('volume',        name, self.refreshImageTexture)
         opts   .addListener('transform',     name, update, weak=False)
+        opts   .addListener('volume',        name, self.__volumeChanged)
 
         # See comment in GLVolume.addDisplayListeners about this
         self.__syncListenersRegistered = opts.getParent() is not None
@@ -176,9 +176,8 @@ class GLMask(glimageobject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-
             if self.imageTexture.getTextureName() == texName:
-                return None
+                return
 
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
@@ -214,7 +213,11 @@ class GLMask(glimageobject.GLImageObject):
         """Prepares and returns the mask thresholds for use in the fragment
         shader.
         """
-        return (0, 1)
+        opts  = self.opts
+        xform = self.imageTexture.invVoxValXform
+        lo    = opts.threshold[0] * xform[0, 0] + xform[0, 3]
+        hi    = opts.threshold[1] * xform[0, 0] + xform[0, 3]
+        return (lo, hi)
 
 
     def calculateOutlineOffsets(self, axes):
@@ -253,8 +256,16 @@ class GLMask(glimageobject.GLImageObject):
         fslgl.glmask_funcs.postDraw(self, xform, bbox)
 
 
+    def __volumeChanged(self, *a):
+        """Called when the :attr:`.NiftiOpts.volume` changes. Updates the
+        image texture.
+        """
+        self.imageTexture.set(volume=self.opts.index()[3:])
+
+
     def __imageTextureChanged(self, *a):
-        """Called when the image texture has changed. """
+        """Called when the image texture data has changed. Triggers a refresh.
+        """
         self.updateShaderState(alwaysNotify=True)
 
 

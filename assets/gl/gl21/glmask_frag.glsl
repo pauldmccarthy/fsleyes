@@ -41,16 +41,6 @@ uniform bool invert;
 uniform vec4 colour;
 
 /*
- * Show outline of labelled regions?
- */
-uniform bool outline;
-
-/*
- * Width of edges along each axis.
- */
-uniform vec3 outlineOffsets;
-
-/*
  * Voxel coordinates.
  */
 varying vec3 fragVoxCoord;
@@ -70,12 +60,11 @@ void main(void) {
     }
 
     float voxValue = texture3D(imageTexture, fragTexCoord).r;
-    bool isEdge    = edge3D(imageTexture,
-                            fragTexCoord,
-                            voxValue,
-                            0.000001,
-                            outlineOffsets);
 
-    if (isEdge == outline) gl_FragColor   = colour;
-    else                   gl_FragColor.a = 0.0;
+    if ((!invert && (voxValue <= threshold.x || voxValue >= threshold.y)) ||
+        ( invert && (voxValue >= threshold.x && voxValue <= threshold.y))) {
+      discard;
+    }
+
+  gl_FragColor = colour;
 }

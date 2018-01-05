@@ -58,13 +58,12 @@ def updateShaderState(self):
     shader.load()
 
     changed  = False
-    changed |= shader.set('imageTexture',   0)
-    changed |= shader.set('voxValXform',    vvx)
-    changed |= shader.set('imageShape',     imageShape)
-    changed |= shader.set('threshold',      self.getThreshold())
-    changed |= shader.set('invert',         opts.invert)
-    changed |= shader.set('colour',         self.getColour())
-    changed |= shader.set('outline',        opts.outline)
+    changed |= shader.set('imageTexture',  0)
+    changed |= shader.set('voxValXform',   vvx)
+    changed |= shader.set('imageShape',    imageShape)
+    changed |= shader.set('threshold',     self.getThreshold())
+    changed |= shader.set('invert',        opts.invert)
+    changed |= shader.set('colour',        self.getColour())
 
     shader.unload()
 
@@ -73,16 +72,11 @@ def updateShaderState(self):
 
 def draw2D(self, zpos, axes, *args, **kwargs):
     """Draws the mask overlay in 2D. See :meth:`.GLObject.draw2D`."""
-    offsets = self.calculateOutlineOffsets(axes)
-    self.shader.set('outlineOffsets', offsets)
     glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
 
 
 def drawAll(self, axes, *args, **kwargs):
     """Draws the mask overlay in 2D. See :meth:`.GLObject.draw2D`."""
-
-    offsets = self.calculateOutlineOffsets(axes)
-    self.shader.set('outlineOffsets', offsets)
     glvolume_funcs.drawAll(self, axes, *args, **kwargs)
 
 
