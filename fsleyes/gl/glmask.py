@@ -14,10 +14,13 @@ import numpy                as np
 import OpenGL.GL            as gl
 
 import fsl.utils.idle       as idle
+import fsl.utils.transform  as transform
 import fsleyes.colourmaps   as colourmaps
 import fsleyes.gl           as fslgl
 import fsleyes.gl.resources as glresources
+import fsleyes.gl.routines  as glroutines
 import fsleyes.gl.textures  as textures
+import fsleyes.gl.shaders   as shaders
 from . import                  glimageobject
 from . import                  gllabel
 
@@ -52,8 +55,11 @@ class GLMask(glimageobject.GLImageObject):
 
         # The shader attribute will be created
         # by the glmask_funcs module
-        self.shader       = None
-        self.imageTexture = None
+        self.shader        = None
+        self.imageTexture  = None
+        self.edgeFilter    = shaders.Filter('edge')
+        self.renderTexture = textures.RenderTexture(
+            self.name, gl.GL_LINEAR, rttype='c')
 
         self.addDisplayListeners()
         self.refreshImageTexture()
@@ -69,6 +75,8 @@ class GLMask(glimageobject.GLImageObject):
         """Must be called when this ``GLMask`` is no longer needed. Destroys
         the :class:`.ImageTexture`.
         """
+        self.edgeFilter.destroy()
+        self.renderTexture.destroy()
         self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.getTextureName())
 
@@ -128,7 +136,9 @@ class GLMask(glimageobject.GLImageObject):
         opts   .addListener('colour',        name, update, weak=False)
         opts   .addListener('threshold',     name, update, weak=False)
         opts   .addListener('invert',        name, update, weak=False)
-        opts   .addListener('transform',     name, update, weak=False)
+        opts   .addListener('outline',       name, self.notify)
+        opts   .addListener('outlineWidth',  name, self.notify)
+        opts   .addListener('transform',     name, self.notify)
         opts   .addListener('volume',        name, self.__volumeChanged)
 
         # See comment in GLVolume.addDisplayListeners about this
@@ -229,23 +239,52 @@ class GLMask(glimageobject.GLImageObject):
         """Binds the :class:`.ImageTexture` and calls the version-dependent
         ``preDraw`` function.
         """
-        self.imageTexture.bindTexture(gl.GL_TEXTURE0)
+
+        w, h = self.canvas.GetSize()
+        rtex = self.renderTexture
+
+        rtex.setSize(w, h)
+        rtex.bindAsRenderTarget()
+        gl.glClearColor(0, 0, 0, 0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        rtex.unbindAsRenderTarget()
+
+        self.imageTexture.bindTexture(gl.GL_TEXTURE1)
         fslgl.glmask_funcs.preDraw(self, xform, bbox)
 
 
-    def draw2D(self, *args, **kwargs):
+    def draw2D(self, zpos, axes, xform=None, bbox=None):
         """Calls the version-dependent ``draw2D`` function. """
-        fslgl.glmask_funcs.draw2D(self, *args, **kwargs)
+
+        opts = self.opts
+
+        if not opts.outline:
+            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
+            return
+
+        owidth = float(opts.outlineWidth)
+        rtex   = self.renderTexture
+        w, h   = self.canvas.GetSize()
+
+        xax        = axes[0]
+        yax        = axes[1]
+        xmin, xmax = self.canvas.opts.displayBounds.x
+        ymin, ymax = self.canvas.opts.displayBounds.y
+        offsets    = [owidth / w, owidth / h]
+
+        rtex.bindAsRenderTarget()
+        fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
+        rtex.unbindAsRenderTarget()
+
+        self.edgeFilter.apply(
+            self.renderTexture,
+            zpos, xmin, xmax, ymin, ymax, xax, yax, xform,
+            offsets=offsets)
 
 
     def draw3D(self, *args, **kwargs):
         """Calls the version-dependent ``draw3D`` function. """
         fslgl.glmask_funcs.draw3D(self, *args, **kwargs)
-
-
-    def drawAll(self, *args, **kwargs):
-        """Calls the version-dependent ``drawAll`` function. """
-        fslgl.glmask_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self, xform=None, bbox=None):

@@ -15,8 +15,8 @@ defined in this module:
    GLSimpleObject
 
 
-See also the :class:`.GLImageObject`, which is the base class for all ``GLObject``
- sub-types that display :class:`.Nifti` overlays.
+See also the :class:`.GLImageObject`, which is the base class for all
+``GLObject`` sub-types that display :class:`.Nifti` overlays.
 
 
 This module also provides a few functions, most importantly

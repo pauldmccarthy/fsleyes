@@ -1,7 +1,7 @@
 /*
  * Filter fragment shader which renders an outline.
  *
- * Author: Paul McCarthy <pauldmccarthy@gmail.com> 
+ * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 #version 120
 
@@ -12,7 +12,7 @@ uniform vec2      offsets;
 varying vec2      texCoord;
 
 void main(void) {
-  
+
   vec4 colour = texture2D(texture, texCoord);
   vec4 tol    = 1.0 / vec4(255, 255, 255, 255);
 

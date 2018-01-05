@@ -47,10 +47,9 @@ class MaskOpts(volumeopts.NiftiOpts):
     """
 
 
-    outlineWidth = props.Real(minval=0, maxval=1, default=0.25, clamped=True)
+    outlineWidth = props.Real(minval=1, maxval=30, default=2, clamped=True)
     """Width of mask outline, if :attr:``outline` is ``True``.  This value is
-    in terms of the image voxels - a value of 1 will result in an outline
-    that is one voxel wide.
+    in terms of pixels.
     """
 
     def __init__(self, overlay, *args, **kwargs):

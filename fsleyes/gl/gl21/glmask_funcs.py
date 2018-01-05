@@ -58,7 +58,7 @@ def updateShaderState(self):
     shader.load()
 
     changed  = False
-    changed |= shader.set('imageTexture',  0)
+    changed |= shader.set('imageTexture',  1)
     changed |= shader.set('voxValXform',   vvx)
     changed |= shader.set('imageShape',    imageShape)
     changed |= shader.set('threshold',     self.getThreshold())
@@ -70,16 +70,17 @@ def updateShaderState(self):
     return changed
 
 
-def draw2D(self, zpos, axes, *args, **kwargs):
-    """Draws the mask overlay in 2D. See :meth:`.GLObject.draw2D`."""
-    glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
+def preDraw(self, xform=None, bbox=None):
+    pass
 
 
-def drawAll(self, axes, *args, **kwargs):
-    """Draws the mask overlay in 2D. See :meth:`.GLObject.draw2D`."""
-    glvolume_funcs.drawAll(self, axes, *args, **kwargs)
+def draw2D(self, zpos, axes, xform=None, bbox=None):
+
+    self.shader.load()
+    glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
+    self.shader.unloadAtts()
+    self.shader.unload()
 
 
-preDraw  = glvolume_funcs.preDraw
-draw3D   = glvolume_funcs.draw3D
-postDraw = glvolume_funcs.postDraw
+def postDraw(self, xform=None, bbox=None):
+    pass

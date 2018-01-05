@@ -172,7 +172,9 @@ def _initPropertyList_MaskOpts(threedee):
     return ['custom_volume',
             'colour',
             'invert',
-            'threshold']
+            'threshold',
+            'outline',
+            'outlineWidth']
 
 
 def _initPropertyList_VectorOpts(threedee):
@@ -397,9 +399,11 @@ def _initWidgetSpec_MaskOpts(threedee):
             slider=False,
             enabledWhen=lambda o: o.overlay.ndims > 4,
             spinWidth=2),
-        'colour'     : props.Widget('colour'),
-        'invert'     : props.Widget('invert'),
-        'threshold'  : props.Widget('threshold', showLimits=False),
+        'colour'       : props.Widget('colour'),
+        'invert'       : props.Widget('invert'),
+        'threshold'    : props.Widget('threshold', showLimits=False),
+        'outline'      : props.Widget('outline'),
+        'outlineWidth' : props.Widget('outlineWidth', showLimits=False),
     }
 
 
