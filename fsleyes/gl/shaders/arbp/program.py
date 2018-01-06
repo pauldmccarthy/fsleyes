@@ -257,12 +257,8 @@ class ARBPShader(object):
         """
 
         pos   = self.vertParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('C')
+        value = self.__normaliseParam(value)
         nrows = len(value) // 4
-
-        if value.size < 4 or value.size % 4 != 0:
-            raise ValueError('Value for {} looks invalid: '
-                             '{}'.format(name, value))
 
         log.debug('Setting vertex parameter {} = {}'.format(name, value))
 
@@ -283,12 +279,8 @@ class ARBPShader(object):
                   ``True`` if the value was changed, and ``False`` otherwise.
         """
         pos   = self.fragParamPositions[name]
-        value = np.array(value, dtype=np.float32).ravel('C')
+        value = self.__normaliseParam(value)
         nrows = len(value) // 4
-
-        if value.size < 4 or value.size % 4 != 0:
-            raise ValueError('Value for {} looks invalid: '
-                             '{}'.format(name, value))
 
         log.debug('Setting fragment parameter {} = {}'.format(name, value))
 
@@ -324,6 +316,34 @@ class ARBPShader(object):
 
         gl.glClientActiveTexture(texUnit)
         gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+
+
+    def __normaliseParam(self, value):
+        """Used by :meth:`setVertParam` and :meth:`setFragParam`. Ensures that
+        all vertex/fragment program parameters are vectors of length 4, or
+        matrices of size ``(n, 4)``.
+        """
+
+        # scalar
+        if np.isscalar(value):
+            value = [value]
+
+        value = np.array(value, copy=False)
+
+        # vector
+        if len(value.shape) == 1:
+
+            # if < 4 values, pad it to 4. If > 4
+            # values, an error will be raised below
+            if value.shape[0] < 4:
+                value = list(value) + [0] * (4 - len(value))
+
+        value = np.array(value, dtype=np.float32, copy=False)
+
+        if value.size < 4 or value.size % 4 != 0:
+            raise ValueError('Invalid arbp parameter: {}'.format(value))
+
+        return value.ravel('C')
 
 
     def __getAttrTexUnit(self, attr):
