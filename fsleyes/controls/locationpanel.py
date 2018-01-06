@@ -123,8 +123,10 @@ class LocationPanel(fslpanel.FSLeyesPanel):
     def destroy(self):
         """Must be called when this ``LocationPanel`` is no longer needed. """
 
+        if self.__history is not None:
+            self.__history.destroy()
+
         self.__info.destroy()
-        self.__history.destroy()
         self.__info    = None
         self.__history = None
 
