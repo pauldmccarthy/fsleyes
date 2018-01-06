@@ -16,6 +16,7 @@ other situations throughout FSLeyes. See also the
 
 
 import logging
+import contextlib
 
 import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
@@ -235,6 +236,19 @@ class RenderTexture(texture.Texture2D):
         texture.Texture2D.setSize(self, width, height)
 
 
+    @contextlib.contextmanager
+    def renderViewport(self, xax, yax, lo, hi):
+        """Context manager which sets and restores the viewport via
+        :meth:`setRenderViewport` and :meth:`restoreViewport`.
+        """
+
+        self.setRenderViewport(xax, yax, lo, hi)
+        try:
+            yield
+        finally:
+            self.restoreViewport()
+
+
     def setRenderViewport(self, xax, yax, lo, hi):
         """Configures the GL viewport for a 2D orthographic display. See the
         :func:`.routines.show2D` function.
@@ -302,6 +316,30 @@ class RenderTexture(texture.Texture2D):
         self.__oldSize    = None
         self.__oldProjMat = None
         self.__oldMVMat   = None
+
+
+    @contextlib.contextmanager
+    def bound(self, *args, **kwargs):
+        """Context manager which binds and unbinds this ``RenderTexture`` as
+        the render target, via :meth:`bindAsRenderTarget` and
+        :meth:`unbindAsRenderTarget`.
+
+        If any arguments are provided, the viewport is also set and restored
+        via :meth:`setRenderViewport` and :meth:`restoreViewport`.
+        """
+
+        setViewport = len(args) > 0 or len(kwargs) > 0
+
+        self.bindAsRenderTarget()
+
+        if setViewport:
+            self.setRenderViewport(*args, **kwargs)
+        try:
+            yield
+        finally:
+            if setViewport:
+                self.restoreViewport()
+            self.unbindAsRenderTarget()
 
 
     def bindAsRenderTarget(self):

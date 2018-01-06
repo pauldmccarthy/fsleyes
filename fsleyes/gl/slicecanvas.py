@@ -124,6 +124,7 @@ class SliceCanvas(object):
        zoomTo
        resetDisplay
        getAnnotations
+       getViewport
     """
 
 
@@ -152,6 +153,12 @@ class SliceCanvas(object):
         # every overlay in the overlay list,
         # and stored in this dictionary
         self._glObjects = {}
+
+        # A copy of the final viewport is
+        # stored here on each call to _draw.
+        # It is accessible via the getViewport
+        # method.
+        self.__viewport = None
 
         # If render mode is offscren or prerender, these
         # dictionaries will contain a RenderTexture or
@@ -451,6 +458,16 @@ class SliceCanvas(object):
         # globjs can be set to False
         if not globj: return None
         else:         return globj
+
+
+    def getViewport(self):
+        """Return the current viewport, as two tuples containing the
+        ``(xlo, ylo, zlo)`` and ``(xhi, yhi, zhi)`` bounds.
+
+        This method will return ``None`` if :meth:`_draw` has not yet been
+        called.
+        """
+        return self.__viewport
 
 
     def _initGL(self):
@@ -1211,6 +1228,11 @@ class SliceCanvas(object):
         lo[yax], hi[yax] = ymin, ymax
         lo[zax], hi[zax] = zmin, zmax
 
+        # store a copy of the final bounds -
+        # interested parties can retrieve it
+        # via the getViewport method.
+        self.__viewport = (tuple(lo), tuple(hi))
+
         # set up 2D orthographic drawing
         glroutines.show2D(xax,
                           yax,
@@ -1436,18 +1458,14 @@ class SliceCanvas(object):
                           'to off-screen texture'.format(
                               copts.zax, overlay.name))
 
-                rt.bindAsRenderTarget()
-                rt.setRenderViewport(copts.xax, copts.yax, lo, hi)
+                with rt.bound(), \
+                     rt.renderViewport(copts.xax, copts.yax, lo, hi),  \
+                     glroutines.disabled(gl.GL_BLEND):
 
-                glroutines.clear((0, 0, 0, 0))
-
-                with glroutines.disabled(gl.GL_BLEND):
+                    glroutines.clear((0, 0, 0, 0))
                     globj.preDraw()
                     globj.draw2D(zpos, axes)
                     globj.postDraw()
-
-                rt.unbindAsRenderTarget()
-                rt.restoreViewport()
 
             # Pre-rendering - a pre-generated 2D
             # texture of the current z position
