@@ -299,16 +299,16 @@ class GLMask(glimageobject.GLImageObject):
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
+        lo, hi     = self.canvas.getViewport()
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = self.canvas.opts.displayBounds.x
-        ymin, ymax = self.canvas.opts.displayBounds.y
+        xmin, xmax = lo[xax], hi[xax]
+        ymin, ymax = lo[yax], hi[yax]
         offsets    = [owidth / w, owidth / h]
 
         # Draw the mask to the off-screen texture
-        rtex.bindAsRenderTarget()
-        fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
-        rtex.unbindAsRenderTarget()
+        with rtex.bound(xax, yax, lo, hi):
+            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
@@ -327,20 +327,20 @@ class GLMask(glimageobject.GLImageObject):
         opts = self.opts
         rtex = self.renderTexture
 
-        # Draw all slices to the off-screen texture
-        rtex.bindAsRenderTarget()
-        fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
-        rtex.unbindAsRenderTarget()
-
-        # Is this hacky?
+        # Is taking max(z) hacky? It seems to work ok.
         zpos       = max(zposes)
         owidth     = opts.outlineWidth
         w, h       = self.canvas.GetSize()
+        lo, hi     = self.canvas.getViewport()
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = self.canvas.opts.displayBounds.x
-        ymin, ymax = self.canvas.opts.displayBounds.y
+        xmin, xmax = lo[xax], hi[xax]
+        ymin, ymax = lo[yax], hi[yax]
         offsets    = [owidth / w, owidth / h]
+
+        # Draw all slices to the off-screen texture
+        with rtex.bound(xax, yax, lo, hi):
+            fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
 
         # if no outline, draw the texture directly
         if not opts.outline:
