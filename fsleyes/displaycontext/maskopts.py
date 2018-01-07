@@ -48,7 +48,7 @@ class MaskOpts(volumeopts.NiftiOpts):
     """
 
 
-    outlineWidth = props.Int(minval=1, maxval=10, default=2, clamped=True)
+    outlineWidth = props.Int(minval=0, maxval=10, default=1, clamped=True)
     """Width of mask outline, if :attr:``outline` is ``True``.  This value is
     in terms of pixels.
     """

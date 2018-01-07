@@ -5,8 +5,6 @@
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 #version 120
-
-#pragma include edge.glsl
 #pragma include test_in_bounds.glsl
 
 /*
@@ -36,16 +34,6 @@ uniform vec3 imageShape;
 uniform float numLabels;
 
 /*
- * Show outline of labelled regions?
- */
-uniform bool outline;
-
-/*
- * Width of edges along each axis.
- */
-uniform vec3 outlineOffsets;
-
-/*
  * Voxel coordinates.
  */
 varying vec3 fragVoxCoord;
@@ -64,34 +52,12 @@ void main(void) {
         discard;
     }
 
-    float voxValue;
-    voxValue = texture3D(imageTexture, fragTexCoord).r;
-
+    float voxValue = texture3D(imageTexture, fragTexCoord).r;
     float lutCoord = ((voxValXform * vec4(voxValue, 0, 0, 1)).x + 0.5) / numLabels;
 
     if (lutCoord < 0 || lutCoord > 1) {
         discard;
     }
 
-    vec4 colour = texture1D(lutTexture, lutCoord);
-    bool isEdge = edge3D(imageTexture,
-                         fragTexCoord,
-                         voxValue,
-                         0.000001,
-                         outlineOffsets);
-
-    /*
-     * I want the fragment to be filled if outlines
-     * are enabled, and the fragment lies on an edge,
-     * or if outlines are disabled and the fragment
-     * does not lie on an edge. The corresponding
-     * boolean logic:
-     *
-     *     (isEdge && outline) || !(isEdge || outline);
-     *
-     * is a negated exclusive or, which reduces
-     * down to a simple equality test ...
-     */
-    if (isEdge == outline) gl_FragColor   = colour;
-    else                   gl_FragColor.a = 0.0;
+    gl_FragColor = texture1D(lutTexture, lutCoord);
 }
