@@ -22,15 +22,19 @@
 {{ arb_temp('back')         }}
 {{ arb_temp('front')        }}
 {{ arb_temp('tempCoord')    }}
-{{ arb_temp('isEdgeBack0')  }}
-{{ arb_temp('isEdgeBack1')  }}
-{{ arb_temp('isEdgeFront0') }}
-{{ arb_temp('isEdgeFront1') }}
+{{ arb_temp('isEdgeBack')   }}
+{{ arb_temp('isEdgeFront')  }}
 
 
-# Test along the x axis
+{% set offsetmasks  = ['{1, 0, 0, 0}', '{0, 1, 0, 0}'] %}
+{% set testchannels = ['x',            'y'] %}
+{% for axis in range(2) %}
+{% set offsetmask  = offsetmasks[ axis] %}
+{% set testchannel = testchannels[axis] %}
+
+# Test along the current axis
 MOV {{ off }}, {{ offsets }};
-MUL {{ off }}, {{ off     }}, {1, 0, 0, 0};
+MUL {{ off }}, {{ off     }}, {{ offsetmask }};
 
 # Sample a value behind the coordinate
 MOV {{ tempCoord }}, {{ texCoord }};
@@ -47,45 +51,23 @@ SUB {{ front }}, {{ front }}, {{ val }};
 ABS {{ back  }}, {{ back  }};
 ABS {{ front }}, {{ front }};
 
-SLT {{ isEdgeBack0  }}, {{ tol }}, {{ back  }};
-SLT {{ isEdgeFront0 }}, {{ tol }}, {{ front }};
+SLT {{ isEdgeBack  }}.{{ testchannel }}, {{ tol }}, {{ back  }};
+SLT {{ isEdgeFront }}.{{ testchannel }}, {{ tol }}, {{ front }};
 
-
-# Test along the y axis
-MOV {{ off }}, {{ offsets }};
-MUL {{ off }}, {{ off     }}, {0, 1, 0, 0};
-
-# Sample a value behind the coordinate
-MOV {{ tempCoord }}, {{ texCoord }};
-ADD {{ tempCoord }}, {{ tempCoord }}, {{ off }};
-TEX {{ back      }}, {{ tempCoord }}, {{ texture }}, 2D;
-
-# Sample a value in front of the coordinatea
-MOV {{ tempCoord }}, {{ texCoord }};
-SUB {{ tempCoord }}, {{ tempCoord }}, {{ off }};
-TEX {{ front     }}, {{ tempCoord }}, {{ texture }}, 2D;
-
-SUB {{ back  }}, {{ back  }}, {{ val }};
-SUB {{ front }}, {{ front }}, {{ val }};
-ABS {{ back  }}, {{ back  }};
-ABS {{ front }}, {{ front }};
-
-SLT {{ isEdgeBack1  }}, {{ tol }}, {{ back  }};
-SLT {{ isEdgeFront1 }}, {{ tol }}, {{ front }};
-
+{% endfor %}
 
 # For each of the isEdgeBack/isEdgeFront
 # vectors, set all components to 1 if an
 # edge was found on any component.
-DP4 {{ isEdgeBack0  }}, {{ isEdgeBack0  }}, {{ isEdgeBack0  }};
-DP4 {{ isEdgeFront0 }}, {{ isEdgeFront0 }}, {{ isEdgeFront0 }};
-DP4 {{ isEdgeBack1  }}, {{ isEdgeBack1  }}, {{ isEdgeBack1  }};
-DP4 {{ isEdgeFront1 }}, {{ isEdgeFront1 }}, {{ isEdgeFront1 }};
+DP4 {{ isEdgeBack  }}.x, {{ isEdgeBack  }}.x, {{ isEdgeBack  }}.x;
+DP4 {{ isEdgeFront }}.x, {{ isEdgeFront }}.x, {{ isEdgeFront }}.x;
+DP4 {{ isEdgeBack  }}.y, {{ isEdgeBack  }}.y, {{ isEdgeBack  }}.y;
+DP4 {{ isEdgeFront }}.y, {{ isEdgeFront }}.y, {{ isEdgeFront }}.y;
 
 # Set out_result.i if there was an edge
 # on any component of the i axis.
-MAX {{ out_result }}.x, {{ isEdgeBack0 }}, {{ isEdgeFront0 }};
-MAX {{ out_result }}.y, {{ isEdgeBack1 }}, {{ isEdgeFront1 }};
+MAX {{ out_result }}.x, {{ isEdgeBack }}.x, {{ isEdgeFront }}.x;
+MAX {{ out_result }}.y, {{ isEdgeBack }}.y, {{ isEdgeFront }}.y;
 
 # Clamp the out_result values to 1
 SGE {{ out_result }}, {{ out_result }}, 1;
