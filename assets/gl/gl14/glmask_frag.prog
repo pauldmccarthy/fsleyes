@@ -1,0 +1,79 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLMask instances.
+# This is to be used with the glvolume_vert.prog vertex shader.
+#
+# Input parameters:
+#   {{ param_threshold }} - The first two components contain the low and high
+#                           thresholds against which the voxel value is
+#                           compared. These are assumed to be in the texture
+#                           value system. The third component must be +1 if
+#                           the threshold is to be inverted, -1 otherwise.
+#
+#   {{ param_colour }}    - Colour to draw the mask voxel if its value passes
+#                           the threshold test.
+#
+# Input varyings:
+#
+#   {{ varying_texCoord }} - Fragment texture coordinates
+#
+# Input textures:
+#
+#   {{ texture_imageTexture }} - 3D texture containing the image data
+
+{{ arb_include('textest.prog') }}
+
+
+TEMP thresTest;
+TEMP voxValue;
+
+PARAM threshold   = {{ param_threshold }};
+PARAM colour      = {{ param_colour    }};
+
+
+# bail if texture coordinates are out of bounds
+# we use voxValue here out of convenience
+{{
+arb_call('textest.prog',
+         texCoord='{{ varying_texCoord }}',
+         out_result='voxValue')
+}}
+KIL voxValue.x;
+
+# look up image voxel value
+# from 3D image texture
+TEX voxValue.x, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
+
+# Calculate the difference between the
+# voxel value and the low and high thresholds.
+SUB thresTest.x, voxValue.x,  threshold.x;
+SUB thresTest.y, voxValue.x,  threshold.y;
+
+# multiply the low and high differences -
+# after this, thresTest will be positive
+# if the value is outside of the range,
+# negative if the value is inside.
+MUL thresTest.x, thresTest.x, thresTest.y;
+
+# threshold.z will be +1 if threshold
+# inverting is enabled, -1 otherwise.
+MUL thresTest.x, thresTest.x, threshold.z;
+
+# At this point, thresTest.x is negative
+# if the voxel value is less than the low
+# threshold or greater than the high
+# threshold. Here we force thresTest to
+# also be negative if it were zero - now
+# we can use KIL on it to kill voxels
+# which are less than *or equal to* the
+# low threshold, or greater than or equal
+# to the high threshold.
+MUL thresTest.x, thresTest.x, -1.0;
+SGE thresTest.x, thresTest.x,  0.0;
+MUL thresTest.x, thresTest.x, -1.0;
+KIL thresTest.x;
+
+# Otherwise all good.
+MOV result.color, colour;
+
+END

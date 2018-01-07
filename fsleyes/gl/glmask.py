@@ -230,13 +230,17 @@ class GLMask(glimageobject.GLImageObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
         self.imageTexture = glresources.get(
             texName,
             textures.ImageTexture,
             texName,
             self.image,
-            notify=False,
-            volume=opts.index()[3:])
+            interp=interp,
+            volume=opts.index()[3:],
+            notify=False)
 
         self.imageTexture.register(self.name, self.__imageTextureChanged)
 
@@ -277,10 +281,9 @@ class GLMask(glimageobject.GLImageObject):
         rtex = self.renderTexture
 
         rtex.setSize(w, h)
-        rtex.bindAsRenderTarget()
-        gl.glClearColor(0, 0, 0, 0)
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        rtex.unbindAsRenderTarget()
+        with rtex.bound():
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
@@ -312,7 +315,7 @@ class GLMask(glimageobject.GLImageObject):
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
-        self.edgeFilter.set(texture=1, offsets=offsets)
+        self.edgeFilter.set(offsets=offsets)
         self.edgeFilter.apply(
             self.renderTexture,
             zpos, xmin, xmax, ymin, ymax, xax, yax,

@@ -6,7 +6,6 @@
  */
 #version 120
 
-#pragma include edge.glsl
 #pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
 
