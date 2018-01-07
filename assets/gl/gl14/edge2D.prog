@@ -11,9 +11,8 @@
 #   {{ tol      }}   - Value tolerance
 #
 # Result:
-#   {{ out_result }} - First component has 1 if the texture coordinate is
-#                      on an edge, 0 otherwise.
-#
+#   {{ out_isEdge }} - {{ out_isEdge }}.i will be set to 1 if axis i lies on
+#                      an edge, 0 otherwise. Untested axes are set to 0.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -25,16 +24,23 @@
 {{ arb_temp('isEdgeBack')   }}
 {{ arb_temp('isEdgeFront')  }}
 
+MOV {{ isEdgeBack  }}, 0;
+MOV {{ isEdgeFront }}, 0;
 
-{% set offsetmasks  = ['{1, 0, 0, 0}', '{0, 1, 0, 0}'] %}
-{% set testchannels = ['x',            'y'] %}
-{% for axis in range(2) %}
-{% set offsetmask  = offsetmasks[ axis] %}
-{% set testchannel = testchannels[axis] %}
+# TODO make this a user-settable constant,
+# and merge this with edge3D.prog
+{% set numaxes      = 2 %}
+{% set offsetmasks  = ['{1, 0, 0, 0}', '{0, 1, 0, 0}', '{0, 0, 1, 0}', '{0, 0, 0, 1}'] %}
+{% set testchannels = ['x', 'y', 'z', 'w'] %}
+
+{% for i in range(numaxes) %}
+
+{% set offmask = offsetmasks[ i] %}
+{% set tchan   = testchannels[i] %}
 
 # Test along the current axis
 MOV {{ off }}, {{ offsets }};
-MUL {{ off }}, {{ off     }}, {{ offsetmask }};
+MUL {{ off }}, {{ off     }}, {{ offmask }};
 
 # Sample a value behind the coordinate
 MOV {{ tempCoord }}, {{ texCoord }};
@@ -51,27 +57,20 @@ SUB {{ front }}, {{ front }}, {{ val }};
 ABS {{ back  }}, {{ back  }};
 ABS {{ front }}, {{ front }};
 
-SLT {{ isEdgeBack  }}.{{ testchannel }}, {{ tol }}, {{ back  }};
-SLT {{ isEdgeFront }}.{{ testchannel }}, {{ tol }}, {{ front }};
+SLT {{ isEdgeBack  }}.{{ tchan }}, {{ tol }}, {{ back  }};
+SLT {{ isEdgeFront }}.{{ tchan }}, {{ tol }}, {{ front }};
+
+# Set out_isEdge.i if there was an
+# edge on any side of the i axis.
+DP4 {{ isEdgeBack  }}.{{ tchan }}, {{ isEdgeBack  }}.{{ tchan }}, {{ isEdgeBack  }}.{{ tchan }};
+DP4 {{ isEdgeFront }}.{{ tchan }}, {{ isEdgeFront }}.{{ tchan }}, {{ isEdgeFront }}.{{ tchan }};
 
 {% endfor %}
 
-# For each of the isEdgeBack/isEdgeFront
-# vectors, set all components to 1 if an
-# edge was found on any component.
-DP4 {{ isEdgeBack  }}.x, {{ isEdgeBack  }}.x, {{ isEdgeBack  }}.x;
-DP4 {{ isEdgeFront }}.x, {{ isEdgeFront }}.x, {{ isEdgeFront }}.x;
-DP4 {{ isEdgeBack  }}.y, {{ isEdgeBack  }}.y, {{ isEdgeBack  }}.y;
-DP4 {{ isEdgeFront }}.y, {{ isEdgeFront }}.y, {{ isEdgeFront }}.y;
-
-# Set out_result.i if there was an edge
-# on any component of the i axis.
-MAX {{ out_result }}.x, {{ isEdgeBack }}.x, {{ isEdgeFront }}.x;
-MAX {{ out_result }}.y, {{ isEdgeBack }}.y, {{ isEdgeFront }}.y;
-
-# Clamp the out_result values to 1
-SGE {{ out_result }}, {{ out_result }}, 1;
+# Set isEdge to 1 whereever either
+# isEdgeBack or isEdgeFront are 1
+MAX {{ out_isEdge }}, {{ isEdgeBack }}, {{ isEdgeFront }};
 
 # Clear if offsets[i] < 0 - this allows
 # individual axes to be skipped
-CMP {{ out_result }}, {{ offsets }}, 0, {{ out_result }};
+CMP {{ out_isEdge }}, {{ offsets }}, 0, {{ out_isEdge }};

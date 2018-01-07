@@ -37,10 +37,11 @@ arb_call('edge2D.prog',
          offsets='{{ param_offsets }}',
          val='colour',
          tol='tol',
-         out_result='isEdge')
+         out_isEdge='isEdge')
 }}
 
-SUB isEdge, isEdge, 0.5;
+MAX isEdge.x, isEdge.x, isEdge.y;
+SUB isEdge.x, isEdge.x, 0.5;
 KIL isEdge.x;
 
 MOV result.color, colour;
