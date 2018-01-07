@@ -71,6 +71,12 @@ DP4 {{ isEdgeFront }}.{{ tchan }}, {{ isEdgeFront }}.{{ tchan }}, {{ isEdgeFront
 # isEdgeBack or isEdgeFront are 1
 MAX {{ out_isEdge }}, {{ isEdgeBack }}, {{ isEdgeFront }};
 
+# Channels may be > 1 if there is an
+# edge on more than one side, so we
+# force all channels to be either 0 or 1
+SUB {{ out_isEdge }}, {{ out_isEdge }}, 0.5;
+CMP {{ out_isEdge }}, {{ out_isEdge }}, 0, 1;
+
 # Clear if offsets[i] < 0 - this allows
 # individual axes to be skipped
 CMP {{ out_isEdge }}, {{ offsets }}, 0, {{ out_isEdge }};

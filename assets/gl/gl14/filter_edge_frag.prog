@@ -7,6 +7,8 @@
 #
 # Input uniforms:
 #   {{ param_offsets  }} - how far away to search for edge (see edge2D.prog)
+#   {{ param_outline  }} - If == 1, edges are drawn and non-edges are clipped.
+#                          If == 0, edges are clipped and non-edges are drawn.
 #
 #
 # Input varyings:
@@ -40,8 +42,29 @@ arb_call('edge2D.prog',
          out_isEdge='isEdge')
 }}
 
+# Make isEdge.x 1 if there
+# is an edge on any axis.
 MAX isEdge.x, isEdge.x, isEdge.y;
-SUB isEdge.x, isEdge.x, 0.5;
+
+#
+# If drawing edges, and this
+# fragment is not on an edge,
+# kill the fragment.
+#
+# Simiarly, if clipping edges,
+# and this fragment is on an edge,
+# kill the fragment.
+#
+# This boils down to testing whether
+# isEdge.x == outline.x
+
+SUB isEdge.x, isEdge.x, {{ param_outline }}.x;
+ABS isEdge.x, isEdge.x;
+
+# isEdge.x is now 0 if
+# isEdge.x == outline.x,
+# 1 otherwise
+MAD isEdge.x, isEdge.x, -1, 0.5;
 KIL isEdge.x;
 
 MOV result.color, colour;
