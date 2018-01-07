@@ -1,80 +1,95 @@
 # Edge detection routine for 2D textures - see also edge3D.prog.
 #
+# Inputs:
+#
+#   {{ texture  }}   - 2D texture to run edge detection on
+#   {{ texCoord }}   - Texture coordinate at which to to test for edges
+#   {{ offsets  }}   - Distance from this texcoord around which to sample
+#                      the texture. Channels with a negative offset will
+#                      not be tested.
+#   {{ val      }}   - Value at the given texCoord.
+#   {{ tol      }}   - Value tolerance
+#
+# Result:
+#   {{ out_result }} - First component has 1 if the texture coordinate is
+#                      on an edge, 0 otherwise.
+#
+#
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+{{ arb_temp('off')          }}
+{{ arb_temp('back')         }}
+{{ arb_temp('front')        }}
+{{ arb_temp('tempCoord')    }}
+{{ arb_temp('isEdgeBack0')  }}
+{{ arb_temp('isEdgeBack1')  }}
+{{ arb_temp('isEdgeFront0') }}
+{{ arb_temp('isEdgeFront1') }}
 
-TEMP off;
-TEMP back;
-TEMP front;
-TEMP tempCoord;
-TEMP isEdgeBack0;
-TEMP isEdgeBack1;
-TEMP isEdgeFront0;
-TEMP isEdgeFront1;
-TEMP isEdge;
 
 # Test along the x axis
-MOV off, offsets;
-MUL off, off, {1, 0, 0, 0};
+MOV {{ off }}, {{ offsets }};
+MUL {{ off }}, {{ off     }}, {1, 0, 0, 0};
 
 # Sample a value behind the coordinate
-MOV tempCoord, coord;
-ADD tempCoord, tempCoord, off;
-TEX back, tempCoord, texture[0], 2D;
+MOV {{ tempCoord }}, {{ texCoord }};
+ADD {{ tempCoord }}, {{ tempCoord }}, {{ off }};
+TEX {{ back      }}, {{ tempCoord }}, {{ texture }}, 2D;
 
 # Sample a value in front of the coordinatea
-MOV tempCoord, coord;
-SUB tempCoord, tempCoord, off;
-TEX front, tempCoord, texture[0], 2D;
+MOV {{ tempCoord }}, {{ texCoord }};
+SUB {{ tempCoord }}, {{ tempCoord }}, {{ off }};
+TEX {{ front     }}, {{ tempCoord }}, {{ texture }}, 2D;
 
-SUB back,  back,  val;
-SUB front, front, val;
-ABS back,  back;
-ABS front, front;
+SUB {{ back  }}, {{ back  }}, {{ val }};
+SUB {{ front }}, {{ front }}, {{ val }};
+ABS {{ back  }}, {{ back  }};
+ABS {{ front }}, {{ front }};
 
-SLT isEdgeBack0,  tol, back;
-SLT isEdgeFront0, tol, front; 
+SLT {{ isEdgeBack0  }}, {{ tol }}, {{ back  }};
+SLT {{ isEdgeFront0 }}, {{ tol }}, {{ front }};
 
 
 # Test along the y axis
-MOV off, offsets;
-MUL off, off, {0, 1, 0, 0};
+MOV {{ off }}, {{ offsets }};
+MUL {{ off }}, {{ off     }}, {0, 1, 0, 0};
 
 # Sample a value behind the coordinate
-MOV tempCoord, coord;
-ADD tempCoord, tempCoord, off;
-TEX back, tempCoord, texture[0], 2D;
+MOV {{ tempCoord }}, {{ texCoord }};
+ADD {{ tempCoord }}, {{ tempCoord }}, {{ off }};
+TEX {{ back      }}, {{ tempCoord }}, {{ texture }}, 2D;
 
 # Sample a value in front of the coordinatea
-MOV tempCoord, coord;
-SUB tempCoord, tempCoord, off;
-TEX front, tempCoord, texture[0], 2D;
+MOV {{ tempCoord }}, {{ texCoord }};
+SUB {{ tempCoord }}, {{ tempCoord }}, {{ off }};
+TEX {{ front     }}, {{ tempCoord }}, {{ texture }}, 2D;
 
-SUB back,  back,  val;
-SUB front, front, val;
-ABS back,  back;
-ABS front, front;
+SUB {{ back  }}, {{ back  }}, {{ val }};
+SUB {{ front }}, {{ front }}, {{ val }};
+ABS {{ back  }}, {{ back  }};
+ABS {{ front }}, {{ front }};
 
-SLT isEdgeBack1,  tol, back;
-SLT isEdgeFront1, tol, front;  
+SLT {{ isEdgeBack1  }}, {{ tol }}, {{ back  }};
+SLT {{ isEdgeFront1 }}, {{ tol }}, {{ front }};
 
 
 # For each of the isEdgeBack/isEdgeFront
 # vectors, set all components to 1 if an
 # edge was found on any component.
-DP4 isEdgeBack0,  isEdgeBack0,  isEdgeBack0;
-DP4 isEdgeFront0, isEdgeFront0, isEdgeFront0;
-DP4 isEdgeBack1,  isEdgeBack1,  isEdgeBack1;
-DP4 isEdgeFront1, isEdgeFront1, isEdgeFront1;
+DP4 {{ isEdgeBack0  }}, {{ isEdgeBack0  }}, {{ isEdgeBack0  }};
+DP4 {{ isEdgeFront0 }}, {{ isEdgeFront0 }}, {{ isEdgeFront0 }};
+DP4 {{ isEdgeBack1  }}, {{ isEdgeBack1  }}, {{ isEdgeBack1  }};
+DP4 {{ isEdgeFront1 }}, {{ isEdgeFront1 }}, {{ isEdgeFront1 }};
 
-# Set isEdge.i  if there was an edge
+# Set out_result.i if there was an edge
 # on any component of the i axis.
-MAX isEdge.x, isEdgeBack0, isEdgeFront0;
-MAX isEdge.y, isEdgeBack1, isEdgeFront1;
+MAX {{ out_result }}.x, {{ isEdgeBack0 }}, {{ isEdgeFront0 }};
+MAX {{ out_result }}.y, {{ isEdgeBack1 }}, {{ isEdgeFront1 }};
 
-# Clamp the isEdge values to 1
-SGE isEdge, isEdge, 1;
+# Clamp the out_result values to 1
+SGE {{ out_result }}, {{ out_result }}, 1;
 
-# Clear if offsets[i] < 0
-CMP isEdge, offsets, 0, isEdge;
+# Clear if offsets[i] < 0 - this allows
+# individual axes to be skipped
+CMP {{ out_result }}, {{ offsets }}, 0, {{ out_result }};

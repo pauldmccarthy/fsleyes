@@ -1,0 +1,34 @@
+!!ARBvp1.0
+#
+# Vertex program for filters - see the fsleyes.gl.shaders.filter module.
+#
+# Performs a standard transformation of the vertex coordinates, and
+# passes the corresponding voxel and texture coordinates through to the
+# fragment program.
+#
+# Input attributes:
+#    {{ attr_texCoord }} - Texture coordinates
+#
+# Output varyings:
+#    {{ varying_texCoord }} - Image texture coordinates
+#
+
+TEMP texCoord;
+
+# Transform the vertex position
+# into display coordinates.
+DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
+DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
+DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
+DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
+
+# Get the texture coordinates, make
+# sure the 4th component is 1.
+MOV texCoord, {{ attr_texCoord }};
+MOV texCoord.w, 1;
+
+# Pass texture coordinates
+# through to the fragment program.
+MOV {{ varying_texCoord }}, texCoord;
+
+END

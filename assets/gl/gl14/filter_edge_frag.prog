@@ -1,0 +1,48 @@
+!!ARBfp1.0
+#
+# Fragment program used for edge filter - see the
+# fsleyes.gl.shaders.filter module.
+#
+# This is to be used with the filter_vert.prog vertex shader.
+#
+# Input uniforms:
+#   {{ param_offsets  }} - how far away to search for edge (see edge2D.prog)
+#
+#
+# Input varyings:
+#   {{ varying_texCoord }} - Texture coordinates for this fragment
+#
+# Input textures:
+#   {{ texture_texture  }} - 2D texture containing the filter input
+
+{{ arb_include('edge2D.prog') }}
+
+
+TEMP colour;
+TEMP tol;
+TEMP isEdge;
+
+# Tolerance = {1 / 255, 1 / 255, 1 / 255, 1 / 255}
+MOV tol, {0.0039215, 0.0039215, 0.0039215, 0.0039215};
+
+# Look up the colour at the current fragment
+TEX colour, {{ varying_texCoord }}, {{ texture_texture }}, 2D;
+
+# Test whether this fragment is on an edge
+
+{{
+arb_call('edge2D.prog',
+         texture='{{ texture_texture }}',
+         texCoord='{{ varying_texCoord }}',
+         offsets='{{ param_offsets }}',
+         val='colour',
+         tol='tol',
+         out_result='isEdge')
+}}
+
+SUB isEdge, isEdge, 0.5;
+KIL isEdge.x;
+
+MOV result.color, colour;
+
+END

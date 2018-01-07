@@ -94,7 +94,7 @@ class GLMask(glimageobject.GLImageObject):
         # by the glmask_funcs module
         self.shader        = None
         self.imageTexture  = None
-        self.edgeFilter    = glfilter.Filter('edge')
+        self.edgeFilter    = glfilter.Filter('edge', texture=1)
         self.renderTexture = textures.RenderTexture(
             self.name, gl.GL_LINEAR, rttype='c')
 

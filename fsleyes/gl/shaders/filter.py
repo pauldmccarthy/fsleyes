@@ -10,9 +10,10 @@ to loading and running simple filter shader programs, which require a
 """
 
 
-import OpenGL.GL          as gl
+import OpenGL.GL                          as gl
 
-import fsleyes.gl.shaders as shaders
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.gl.shaders                 as shaders
 
 
 class Filter(object):
@@ -39,18 +40,29 @@ class Filter(object):
     """
 
 
-    def __init__(self, filterName):
+    def __init__(self, filterName, texture):
         """Create a ``Filter``.
 
         :arg filterName: Name of the filter to create.
+
+        :arg texture:    Number of the texture unit that the filter input
+                         texture will be bound to. This must be specified
+                         specified when the shader program is compiled,
+                         to support OpenGL 1.4.
         """
 
-        filterName = 'filter_{}'.format(filterName)
-        vertSrc    = shaders.getVertexShader( 'filter')
-        fragSrc    = shaders.getFragmentShader(filterName)
+        filterName     = 'filter_{}'.format(filterName)
+        vertSrc        = shaders.getVertexShader( 'filter')
+        fragSrc        = shaders.getFragmentShader(filterName)
+        self.__texture = texture
 
-        # TODO gl14
-        self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
+        if float(fslplatform.glVersion) >= 2.1:
+            self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
+        else:
+            self.__shader = shaders.ARBPShader(vertSrc,
+                                               fragSrc,
+                                               shaders.getShaderDir(),
+                                               {'texture' : texture})
 
 
     def destroy(self):
@@ -62,19 +74,25 @@ class Filter(object):
 
 
     def set(self, **kwargs):
-        """Set filter parameters. This method must be called before :meth:`apply`
-        or :meth:`osApply` can be called.
+        """Set filter parameters. This method must be called before
+        :meth:`apply` or :meth:`osApply` can be called, even if no parameters
+        need to be set.
 
-        All filters have a ``texture`` parameter which specifies the texture
-        unit that the input :class:`.Texture2D` is bound to, and which *must*
-        be set.
-
-        The other filter parameters vary depending on the specific filter that
-        is used.
+        The filter parameters vary depending on the specific filter that is
+        used.
         """
         self.__shader.load()
+
+        kwargs = dict(kwargs)
+        glver  = float(fslplatform.glVersion)
+
+        if glver >= 2.1:
+            kwargs['texture'] = self.__texture
+
         for name, value in kwargs.items():
-            self.__shader.set(name, value)
+            if glver >= 2.1: self.__shader.set(         name, value)
+            else:            self.__shader.setFragParam(name, value)
+
         self.__shader.unload()
 
 
@@ -114,11 +132,15 @@ class Filter(object):
         texCoords = source.generateTextureCoords()
 
         shader.load()
-        shader.setAtt('texCoord', texCoords)
-        shader.setAtt('vertex',   vertices)
         shader.loadAtts()
+        shader.setAtt('texCoord', texCoords)
 
-        source.draw(textureUnit=textureUnit)
+        if float(fslplatform.glVersion) >= 2.1:
+            shader.setAtt('vertex', vertices)
+            source.draw(textureUnit=textureUnit)
+        else:
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            source.draw(textureUnit=textureUnit)
 
         shader.unloadAtts()
         shader.unload()
