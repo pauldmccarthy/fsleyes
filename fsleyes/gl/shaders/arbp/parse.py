@@ -537,6 +537,22 @@ The ``arb_call`` function requires:
   - Mappings between the variables in your code, and the routine's input and
     output parameters. These must all be passed as named (keyword) arguments.
     You cannot use swizzle masks in these mappings.
+
+
+Temporary variables in included files
+-------------------------------------
+
+
+When your shader logic is split across several files, it can become difficult
+to ensure that you don't introduce any variable name conflicts. To avoid this,
+the ``arb_temp`` macro allows you to safely define temporary variables in
+included files. For example::
+
+    {{ arb_temp('mytemp') }}
+    MOV {{ mytemp }}, 1;
+
+The ``arb_temp`` macro will assign a unique variable name, ensuring that there
+are no conflicts with other files.
 """
 
 
