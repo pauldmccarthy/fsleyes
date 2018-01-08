@@ -518,7 +518,7 @@ class ColourMapOpts(object):
             self.display.enableProperty('contrast')
 
         if kwa.pop('updateDataRange', True):
-            self.updateDataRange()
+            self.updateDataRange(resetDR=False, resetCR=False)
 
 
     def __linkLowRangesChanged(self, *a):
