@@ -66,7 +66,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
                  overlayList,
                  displayCtx,
                  frame,
-                 showHistory=True):
+                 showHistory=False):
         """Creat a ``LocationPanel``.
 
         :arg parent:      The :mod:`wx` parent object, assumed to be a
@@ -78,8 +78,8 @@ class LocationPanel(fslpanel.FSLeyesPanel):
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
 
-        :arg showHistory: Defaults to ``True``. Create and display a
-                          :class:`LocationHistoryPanel`.
+        :arg showHistory: Defaults to ``False``. If ``True``, create and
+                          display a :class:`LocationHistoryPanel`.
         """
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)

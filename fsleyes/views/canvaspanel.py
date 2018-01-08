@@ -476,10 +476,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         from fsleyes.views.orthopanel import OrthoPanel
 
         # location history only shown in ortho panels
-        if not isinstance(self, OrthoPanel):
-            self.togglePanel(locationpanel.LocationPanel,
-                             showHistory=False,
-                             location=wx.BOTTOM)
+        self.togglePanel(locationpanel.LocationPanel,
+                         showHistory=isinstance(self, OrthoPanel),
+                         location=wx.BOTTOM)
 
 
     @actions.toggleControlAction(clusterpanel.ClusterPanel)

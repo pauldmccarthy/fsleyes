@@ -730,6 +730,7 @@ def AuiFloatingFrame__init__(*args, **kwargs):
 
     return AuiFloatingFrame__real__init__(*args, **kwargs)
 
+
 # Store a reference to the real constructor, and
 # Patch my constructor in to the class definition.
 AuiFloatingFrame__real__init__ = aui.AuiFloatingFrame.__init__

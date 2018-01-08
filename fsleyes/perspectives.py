@@ -611,12 +611,14 @@ def _addControlPanel(viewPanel, panelType):
     :arg viewPanel: A :class:`.ViewPanel` instance.
     :arg panelType: A control panel type.
     """
-    import fsleyes.views.plotpanel as plotpanel
 
+    from fsleyes.views.plotpanel                     import OverlayPlotPanel
+    from fsleyes.views.orthopanel                    import OrthoPanel
     from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
     from fsleyes.controls.histogramcontrolpanel      import \
         HistogramControlPanel
     from fsleyes.controls.histogramtoolbar           import HistogramToolBar
+    from fsleyes.controls.locationpanel              import LocationPanel
     from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
     from fsleyes.controls.melodicclassificationpanel import \
         MelodicClassificationPanel
@@ -657,15 +659,16 @@ def _addControlPanel(viewPanel, panelType):
 
     args = args.get(panelType, {})
 
-    # Slightly hacky ... the PlotPanel customises
-    # its OverlayListPanel quite a bit, so we
-    # call its toggleOverlayList method directly.
-    # No other control panels (to date) are
-    # customised in any way, so I'm accepting
-    # this hack for the time being.
-    if isinstance(viewPanel, plotpanel.OverlayPlotPanel) and \
-       panelType == OverlayListPanel:
+    # Slightly hacky ... some views
+    # customies certain controls a
+    # bit, so we call specific
+    # methods to add them.
+    if   isinstance(viewPanel, OverlayPlotPanel) and \
+         panelType == OverlayListPanel:
         viewPanel.toggleOverlayList()
+    elif isinstance(viewPanel, OrthoPanel) and \
+         panelType == LocationPanel:
+        viewPanel.toggleLocationPanel()
     else:
         viewPanel.togglePanel(panelType, **args)
 
