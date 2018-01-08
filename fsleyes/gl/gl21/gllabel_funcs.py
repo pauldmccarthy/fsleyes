@@ -76,18 +76,18 @@ def updateShaderState(self):
     return changed
 
 
-def draw2D(self, zpos, axes, *args, **kwargs):
+def draw2D(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
     self.shader.load()
-    glvolume_funcs.draw2D(self, zpos, axes, *args, **kwargs)
+    glvolume_funcs.draw2D(self, *args, **kwargs)
     self.shader.unloadAtts()
     self.shader.unload()
 
 
-def drawAll(self, axes, *args, **kwargs):
+def drawAll(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
     self.shader.load()
-    glvolume_funcs.drawAll(self, axes, *args, **kwargs)
+    glvolume_funcs.drawAll(self, *args, **kwargs)
     self.shader.unloadAtts()
     self.shader.unload()
 

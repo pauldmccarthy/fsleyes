@@ -12,10 +12,6 @@
 #
 #   invNumLabels         - 1.0 / (number of labels in the lookup table)
 #
-#   outline              - If the x component is non-zero, show region
-#                          outlines. The yzw components specify the
-#                          border/outline widths along each axis.
-#
 # Input varyings:
 #
 #   texCoord - Fragment texture coordinates
@@ -66,56 +62,5 @@ MUL lutCoord, lutCoord, invNumLabels;
 # look up the appropriate colour
 # in the 1D colour map texture
 TEX result.color, lutCoord.x, {{ texture_lutTexture }}, 1D;
-
-
-# Test whether this fragment lies
-# on an edge between label regions.
-
-TEMP coord;
-TEMP val;
-TEMP tol;
-TEMP offsets;
-
-MOV coord, {{ varying_texCoord }};
-MOV val,   voxValue;
-MOV tol,   invNumLabels.x;
-MUL tol,   tol, 0.001;
-
-MOV offsets, outline.yzww;
-
-
-#pragma include edge3D.prog
-
-
-# Figure out if we want to fill the
-# fragment, or kill the fragment.
-TEMP fill;
-
-# Set fill to 1 if there is an edge
-# along any dimension, 0 otherwise
-MAX fill, isEdge.x, isEdge.y;
-MAX fill, fill,     isEdge.z;
-
-#
-# If outlines are enabled, and
-# this fragment is not on an edge,
-# kill the fragment.
-#
-# Simiarly, if outlines are disabled
-# and this fragment is on an edge,
-# kill the fragment.
-#
-# This boils down to testing whether
-# isEdge == outline.x
-#
-SUB fill, fill, outline.x;
-ABS fill, fill;
-
-# Fill is now 0 if isEdge == outline.x,
-# 1 otherwise
-
-MAD fill, fill, -1, 0.5;
-KIL fill;
-
 
 END
