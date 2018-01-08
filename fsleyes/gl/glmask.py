@@ -15,8 +15,9 @@ import OpenGL.GL                 as gl
 import fsl.utils.idle            as idle
 import fsleyes.colourmaps        as colourmaps
 import fsleyes.gl                as fslgl
-import fsleyes.gl.resources      as glresources
 import fsleyes.gl.textures       as textures
+import fsleyes.gl.routines       as glroutines
+import fsleyes.gl.resources      as glresources
 import fsleyes.gl.shaders.filter as glfilter
 from . import                       glimageobject
 
@@ -310,7 +311,7 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw the mask to the off-screen texture
-        with rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # Run the texture through an edge detection
@@ -342,7 +343,7 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw all slices to the off-screen texture
-        with rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
             fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
 
         # if no outline, draw the texture directly

@@ -12,6 +12,7 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 import OpenGL.GL                 as gl
 
 import fsleyes.gl                as fslgl
+import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.shaders.filter as glfilter
 import fsl.utils.idle            as idle
 from . import resources          as glresources
@@ -278,7 +279,7 @@ class GLLabel(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # draw the label to the offscreen texture
-        with rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
             fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # run it through the edge filter
@@ -310,7 +311,7 @@ class GLLabel(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # draw all slices to the offscreen texture
-        with rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
             fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
 
         # run it through the edge filter
