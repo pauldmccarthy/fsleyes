@@ -19,6 +19,9 @@ chronological order.
   first one will be selected.
 * New options on mask overlays to display the mask outline, and to apply
   interpolation on the display.
+* The threshold range for mask overlays is now **exclusive** - now, only
+  values which are within the threshold limits are displayed.  Previously,
+  values which were within or equal to the limits were displayed.
 
 
 0.19.1 (Wednesday January 3rd 2017)
