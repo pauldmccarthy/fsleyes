@@ -260,7 +260,6 @@ class GLLabel(glimageobject.GLImageObject):
 
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
-        fslgl.gllabel_funcs.preDraw(self, xform, bbox)
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
@@ -295,9 +294,31 @@ class GLLabel(glimageobject.GLImageObject):
         fslgl.gllabel_funcs.draw3D(self, *args, **kwargs)
 
 
-    def drawAll(self, *args, **kwargs):
+    def drawAll(self, axes, zposes, xforms):
         """Calls the version-dependent ``drawAll`` function. """
-        fslgl.gllabel_funcs.drawAll(self, *args, **kwargs)
+
+        opts       = self.opts
+        outline    = opts.outline
+        owidth     = float(opts.outlineWidth)
+        rtex       = self.renderTexture
+        w, h       = self.canvas.GetSize()
+        lo, hi     = self.canvas.getViewport()
+        xax        = axes[0]
+        yax        = axes[1]
+        xmin, xmax = lo[xax], hi[xax]
+        ymin, ymax = lo[yax], hi[yax]
+        offsets    = [owidth / w, owidth / h]
+
+        # draw all slices to the offscreen texture
+        with rtex.bound(xax, yax, lo, hi):
+            fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
+
+        # run it through the edge filter
+        self.edgeFilter.set(offsets=offsets, outline=outline)
+        self.edgeFilter.apply(
+            self.renderTexture,
+            max(zposes), xmin, xmax, ymin, ymax, xax, yax,
+            textureUnit=gl.GL_TEXTURE2)
 
 
     def postDraw(self, xform=None, bbox=None):
@@ -306,7 +327,6 @@ class GLLabel(glimageobject.GLImageObject):
         """
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()
-        fslgl.gllabel_funcs.postDraw(self, xform, bbox)
 
 
     def __lutChanged(self, *a):

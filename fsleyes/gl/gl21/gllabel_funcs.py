@@ -76,10 +76,6 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, *args, **kwargs):
-    pass
-
-
 def draw2D(self, zpos, axes, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
     self.shader.load()
@@ -97,8 +93,4 @@ def drawAll(self, axes, *args, **kwargs):
 
 
 def draw3D(self, *args, **kwargs):
-    pass
-
-
-def postDraw(self, *args, **kwargs):
     pass
