@@ -2155,12 +2155,6 @@ def _applyArgs(args,
 
     kwargs['target'] = target
 
-    for name in list(propNames):
-        if _isSpecialApplyOption(target, name) or not hasattr(target, name):
-            if not _applySpecialOption(
-                    args, overlayList, displayCtx, target, name):
-                propNames.remove(name)
-
     for name in propNames:
         xform = TRANSFORMS.get((target, name), None)
         if xform is not None:
@@ -2170,12 +2164,19 @@ def _applyArgs(args,
         type(target).__name__,
         propNames))
 
-    props.applyArguments(target,
-                         args,
-                         propNames=propNames,
-                         xformFuncs=xforms,
-                         longArgs=longArgs,
-                         **kwargs)
+    for name in list(propNames):
+        applied = False
+        if _isSpecialApplyOption(target, name) or not hasattr(target, name):
+            applied = not _applySpecialOption(
+                args, overlayList, displayCtx, target, name)
+
+        if not applied:
+            props.applyArguments(target,
+                                 args,
+                                 propNames=[name],
+                                 xformFuncs=xforms,
+                                 longArgs=longArgs,
+                                 **kwargs)
 
 
 def _generateArgs(overlayList, displayCtx, source, propNames=None):
