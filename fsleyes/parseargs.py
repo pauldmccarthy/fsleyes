@@ -2961,11 +2961,7 @@ def _applySpecial_VectorOpts_orientFlip(
     invert its initial value - apply the flip for radiologically stored
     images, but not for neurologically stored images.
     """
-
-    orientFlip = getattr(args, 'orientFlip', None)
-
-    if orientFlip is not None:
-        target.orientFlip = not target.orientFlip
+    target.orientFlip = not target.orientFlip
 
 
 def _generateSpecial_VectorOpts_orientFlip(
@@ -2984,12 +2980,11 @@ def _applySpecial_MeshOpts_vertexData(
     import fsleyes.actions.loadvertexdata as loadvertexdata
 
     # Vertex data files need to be pre-loaded
-    if args.vertexData is not None:
-        vertexData = list(args.vertexData)
-        for i, vd in enumerate(vertexData):
-            vertexData[i] = loadvertexdata.loadVertexData(
-                target.overlay, displayCtx, vd)
-        target.vertexData = vertexData[0]
+    vertexData = list(args.vertexData)
+    for i, vd in enumerate(vertexData):
+        vertexData[i] = loadvertexdata.loadVertexData(
+            target.overlay, displayCtx, vd)
+    target.vertexData = vertexData[0]
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(
@@ -2999,8 +2994,7 @@ def _applySpecial_VolumeOpts_overrideDataRange(
     If the ``overrideDataRange`` command line argument has been provided,
     we need to set the :attr:`.VolumeOpts.enableOverrideDataRange` property.
     """
-    if args.overrideDataRange is not None:
-        target.enableOverrideDataRange = True
+    target.enableOverrideDataRange = True
 
     # But we can let props handle
     # the overrideDataRange parsing
@@ -3031,9 +3025,6 @@ def _applySpecial_VolumeOpts_clippingRange(
     line normally (as two numbers), or can be specified as a percentile by
     appending a ``'%'`` character to the high range value.
     """
-    if args.clippingRange is None:
-        return
-
     target.clippingRange = _applyVolumeOptsRange(args.clippingRange, target)
 
 
@@ -3045,9 +3036,6 @@ def _applySpecial_VolumeOpts_displayRange(
     line normally (as two numbers), or can be specified as a percentile by
     appending a ``'%'`` character to the high range value.
     """
-    if args.displayRange is None:
-        return
-
     target.displayRange = _applyVolumeOptsRange(args.displayRange, target)
 
 
