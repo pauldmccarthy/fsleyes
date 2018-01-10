@@ -145,7 +145,7 @@ def draw(self,
 
         # NOTE You are assuming here that the canvas
         #      view matrix is the GL model view matrix.
-        normalMatrix = self.canvas.getViewMatrix()
+        normalMatrix = self.canvas.viewMatrix
         normalMatrix = transform.invert(normalMatrix).T
 
         shader.setVertParam('normalMatrix', normalMatrix)

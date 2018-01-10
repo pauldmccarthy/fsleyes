@@ -202,7 +202,7 @@ def draw3D(self, xform=None, bbox=None):
 
     opts                           = self.opts
     tex                            = self.renderTexture1
-    proj                           = self.canvas.getProjectionMatrix()
+    proj                           = self.canvas.projectionMatrix
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
 

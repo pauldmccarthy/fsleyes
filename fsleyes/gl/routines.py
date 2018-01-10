@@ -234,6 +234,11 @@ def ortho(lo, hi, width, height, zoom):
     :arg height:      Canvas height in pixels
     :arg zoom:        Zoom factor. Required to determine suitable near and far
                       clipping plane locations.
+
+    :returns: A tuple containing:
+                - The ``(4, 4)`` projection matrix
+                - A list of three ``(min, max)`` tuples, defining the limits
+                  for each axis.
     """
 
     lo = np.array(lo, copy=False)
@@ -268,7 +273,11 @@ def ortho(lo, hi, width, height, zoom):
     projmat[1, 3] = -(ymax + ymin) / (ymax - ymin)
     projmat[2, 3] = -(zmax + zmin) / (zmax - zmin)
 
-    return projmat
+    limits = [(xmin, xmax),
+              (ymin, ymax),
+              (zmin, zmax)]
+
+    return projmat, limits
 
 
 def adjust(x, y, w, h):

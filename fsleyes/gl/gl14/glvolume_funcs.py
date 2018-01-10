@@ -191,7 +191,7 @@ def draw3D(self, xform=None, bbox=None):
     canvas  = self.canvas
     display = self.display
     shader  = self.shader
-    proj    = canvas.getProjectionMatrix()
+    proj    = canvas.projectionMatrix
     src     = self.renderTexture1
     dest    = self.renderTexture2
     w, h    = src.getSize()

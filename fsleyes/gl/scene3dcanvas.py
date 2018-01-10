@@ -4,7 +4,8 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
+"""This module provides the :class:`.Scene3DCanvas` class, which is used by
+FSLeyes for its 3D view.
 """
 
 
@@ -38,6 +39,7 @@ class Scene3DCanvas(object):
         self.__displayCtx    = displayCtx
         self.__viewMat       = np.eye(4)
         self.__projMat       = np.eye(4)
+        self.__viewport      = None
         self.__resetLightPos = True
         self.__glObjects     = {}
 
@@ -113,28 +115,72 @@ class Scene3DCanvas(object):
         self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
 
 
-    def getViewMatrix(self):
+    @property
+    def viewMatrix(self):
+        """Returns the view matrix for the current scene - this is an affine
+        matrix which encodes the current :attr:`.Scene3DCanvasOpts.offset`,
+        :attr:`.Scene3DCanvasOpts.zoom`,
+        :attr:`.Scene3DCanvasOpts.rotation` and camera settings.
+
+        See :meth:`__genViewMatrix`.
+        """
         return self.__viewMat
 
 
-    def getViewScale(self):
+    @property
+    def viewScale(self):
+        """Returns an affine matrix which encodes the current
+        :attr:`.Scene3DCanvasOpts.zoom` setting.
+        """
         return self.__viewScale
 
 
-    def getViewOffset(self):
+    @property
+    def viewOffset(self):
+        """Returns an affine matrix which encodes the current
+        :attr:`.Scene3DCanvasOpts.offset` setting.
+        """
         return self.__viewOffset
 
 
-    def getViewRotation(self):
+    @property
+    def viewRotation(self):
+        """Returns an affine matrix which encodes the current
+        :attr:`.Scene3DCanvasOpts.rotation` setting.
+        """
         return self.__viewRotate
 
 
-    def getViewCamera(self):
+    @property
+    def viewCamera(self):
+        """Returns an affine matrix which encodes the current camera.
+        transformation. The initial camera orientation in the view shown by a
+        :class:`Scene3DCanvas` is located on the positive Y axis, is oriented
+        towards the positive Z axis, and is pointing towards the centre of the
+        :attr:`.DisplayContext.displayBounds`.
+        """
         return self.__viewCamera
 
 
-    def getProjectionMatrix(self):
+    @property
+    def projectionMatrix(self):
+        """Returns the projection matrix. This is an affine matrix which
+        converts from normalised device coordinates (NDCs, coordinates between
+        -1 and +1) into viewport coordinates. The initial viewport for a
+        :class:`Scene3DCanvas` is configured by the :func:`.routines.ortho`
+        function.
+
+        See :meth:`__setViewport`.
+        """
         return self.__projMat
+
+
+    @property
+    def viewport(self):
+        """Returns a list of three ``(min, max)`` tuples which specify the
+        viewport limits of the currently displayed scene.
+        """
+        return self.__viewport
 
 
     def canvasToWorld(self, xpos, ypos):
@@ -467,7 +513,9 @@ class Scene3DCanvas(object):
 
         # Generate the view and projection matrices
         self.__genViewMatrix()
-        self.__projMat = glroutines.ortho(blo, bhi, width, height, zoom)
+        projmat, viewport = glroutines.ortho(blo, bhi, width, height, zoom)
+        self.__projMat    = projmat
+        self.__viewport   = viewport
 
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(gl.GL_PROJECTION)

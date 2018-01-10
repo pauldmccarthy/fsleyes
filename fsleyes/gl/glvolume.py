@@ -713,7 +713,7 @@ class GLVolume(glimageobject.GLImageObject):
                           [-1,  1, 0],
                           [ 1,  1, 0]], dtype=np.float32)
 
-        invproj = transform.invert(self.canvas.getProjectionMatrix())
+        invproj = transform.invert(self.canvas.projectionMatrix)
         verts   = transform.transform(verts, invproj)
 
         if opts.resolution != 100:
