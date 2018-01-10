@@ -731,7 +731,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         :arg name:    A unique name for the handler. A ``KeyError`` will be
                       raised if a handler with ``name`` is already registered.
         """
-        self.__extraHandlers[event].pop(name)
+        if self.__extraHandlers is not None:
+            self.__extraHandlers[event].pop(name)
 
 
     def handleEvent(self, ev):
