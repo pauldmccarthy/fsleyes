@@ -5,8 +5,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.20.0 (Under development)
---------------------------
+0.20.0 (Wednesday January 10th 2017)
+------------------------------------
 
 
 * The location panel now has a *history* section, which contains a list of
