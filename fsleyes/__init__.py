@@ -364,4 +364,4 @@ def configLogging(namespace):
     # it can set itself up.
     traceLogger = logging.getLogger('fsleyes_props.trace')
     if traceLogger.getEffectiveLevel() <= logging.DEBUG:
-        import fsleyes_props.trace
+        import fsleyes_props.trace  # noqa
