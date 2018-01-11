@@ -89,6 +89,24 @@ from distutils.command.build import build
 # Expected to be "darwin" or "linux"
 platform = platform.system().lower()
 
+# if linux, we add some extra information
+# if centos6/7 or ubuntu 1404/1604
+if platform == 'linux':
+
+    if op.exists(op.join(op.sep, 'etc', 'redhat-release')):
+        with open(op.join(op.sep, 'etc', 'redhat-release'), 'rt') as f:
+            info = f.read().lower()
+            if 'centos' in info:
+                if   ' 6.' in info: platform = 'centos6'
+                elif ' 7.' in info: platform = 'centos7'
+
+    elif op.exists(op.join(op.sep, 'etc', 'lsb-release')):
+        with open(op.join(op.sep, 'etc', 'lsb-release'), 'rt') as f:
+            info = f.read().lower()
+            if 'ubuntu' in info:
+                if   '14.04' in info: platform = 'ubuntu1404'
+                elif '16.04' in info: platform = 'ubuntu1604'
+
 
 # The directory in which this
 # setup.py file is contained.
@@ -234,8 +252,8 @@ class build_standalone(Command):
         # the py2app/pyinstaller build processes. Importing here
         # seems to work fine. I suspect that the problem lies with
         # the python typing module.
-        import jinja2.utils
-        import jinja2.runtime
+        import jinja2.utils    # noqa
+        import jinja2.runtime  # noqa
 
         # Build user documentation
         self.run_command('userdoc')
@@ -457,7 +475,12 @@ class pyinstaller(Command):
             'jinja2.asyncsupport',
         ]
 
-        extrabins = ['glut', 'OSMesa', 'xcb', 'SDL-1.2', 'notify']
+        # Extra .so files to include in the bundle
+        extrabins = ['glut',
+                     'OSMesa',
+                     'SDL-1.2',
+                     'notify']
+
         extrabins = [find_library(b)  for b in extrabins]
         extrabins = ['{}:.'.format(b) for b in extrabins]
 
@@ -507,15 +530,87 @@ class pyinstaller(Command):
         os.symlink(op.basename(libglut[0]),
                    op.join(distdir, 'FSLeyes', 'glut'))
 
-        # Remove certain .so files that will
-        # be provided by the running OS
-        toremove = ['libstdc*']
-        for tr in toremove:
-            paths = glob.glob(op.join(distdir, 'FSLeyes', tr))
+        # pyinstaller tends to include lots
+        # of things that will be provided
+        # by the running OS, so we can remove
+        # a bunch of cruft.
+        libstoremove = ['libasyncns*',
+                        'libasound*',
+                        'libatk*',
+                        'libcaca*',
+                        'libcairo*',
+                        'libcom_err*',
+                        'libcrypto*',
+                        'libdatrie*',
+                        'libdbus*',
+                        'libdrm*',
+                        'libenchant*',
+                        'libffi*',
+                        'libFLAC*',
+                        'libfontconfig*',
+                        'libgailutil*',
+                        'libgcc_s*',
+                        'libgdk*',
+                        'libgio*',
+                        'libGL.*',
+                        'libGLU*',
+                        'libglib*',
+                        'libglapi*',
+                        'libgmodule*',
+                        'libgobject*',
+                        'libgraphite*',
+                        'libgssapi*',
+                        'libgst*',
+                        'libgthread*',
+                        'libgtk*',
+                        'libjbig*',
+                        'libharfbuzz*',
+                        'libICE*',
+                        'libicu*',
+                        'libk5crypto*',
+                        'libkeyutils*',
+                        'libkrb*',
+                        'libncurses*',
+                        'libogg*',
+                        'libpango*',
+                        'libpcre*',
+                        'libpixman*',
+                        'libpulse*',
+                        'libselinux*',
+                        'libslang*',
+                        'libSM*',
+                        'libsndfile*',
+                        'libsoup*',
+                        'libssl*',
+                        'libstdc*',
+                        'libthai*',
+                        'libtinfo*',
+                        'libuuid*',
+                        'libvorbis*',
+                        'libwrap*',
+                        'libxcb*',
+                        'libxml*',
+                        'libxslt*',
+                        'libxshm*',
+                        'libX*']
+
+        # libGLU is not present
+        # by default on centos7
+        if platform == 'centos7':
+            libstoremove.remove('libGLU*')
+
+        for ltr in libstoremove:
+            paths = glob.glob(op.join(distdir, 'FSLeyes', ltr))
             for p in paths:
                 os.remove(p)
 
-       # Copy assets
+        # Directories that can be safely removed
+        dirstoremove = ['sphinx', 'mpl-data/sample_data']
+        for dtr in dirstoremove:
+            dtr = op.join(distdir, 'FSLeyes', dtr)
+            shutil.rmtree(dtr)
+
+        # Copy assets
         os.makedirs(assetdir)
         for dirname, files in assets:
 
