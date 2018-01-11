@@ -599,6 +599,18 @@ class Scene3DCanvas(object):
         if opts.showLegend:
             self.__drawLegend()
 
+        # Testing click-to-near/far clipping plane transformation
+        if hasattr(self, 'points'):
+            colours = [(1, 0, 0, 1), (0, 0, 1, 1)]
+            gl.glPointSize(5)
+
+            gl.glBegin(gl.GL_LINES)
+            for i, p in enumerate(self.points):
+                gl.glColor4f(*colours[i % 2])
+                p = transform.transform(p, self.viewMatrix)
+                gl.glVertex3f(*p)
+            gl.glEnd()
+
 
     def __drawCursor(self):
         """Draws three lines at the current :attr:`.DisplayContext.location`.

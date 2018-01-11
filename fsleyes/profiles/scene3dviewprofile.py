@@ -42,7 +42,7 @@ class Scene3DViewProfile(profiles.Profile):
                  overlayList,
                  displayCtx):
 
-        modes = ['rotate', 'zoom', 'pan']
+        modes = ['rotate', 'zoom', 'pan', 'pick']
 
         profiles.Profile.__init__(self,
                                   viewPanel,
@@ -183,3 +183,38 @@ class Scene3DViewProfile(profiles.Profile):
         internal state used by the down and drag handlers.
         """
         self.__panMousePos  = None
+
+
+    def _pickModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """
+        """
+
+        from fsl.data.mesh import TriangleMesh
+
+        # visualising near-far clipping plane ray
+        farPos = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
+        canvas.points = [canvasPos, farPos]
+
+        ovl = self.displayCtx.getSelectedOverlay()
+
+        if not isinstance(ovl, TriangleMesh) or ovl.trimesh is None:
+            return
+
+        hits = ovl.trimesh.ray.intersects_id(
+            [canvasPos],
+            [canvasPos - farPos],
+            return_locations=True,
+            mulltiple_hits=False)
+
+        print('Intersection: {}'.format(hits))
+
+
+
+
+
+
+
+
+
+    def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        self._pickModeLeftMouseDown(ev, canvas, mousePos, canvasPos)
