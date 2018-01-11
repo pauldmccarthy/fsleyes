@@ -191,28 +191,25 @@ class Scene3DViewProfile(profiles.Profile):
 
         from fsl.data.mesh import TriangleMesh
 
-        # visualising near-far clipping plane ray
-        farPos = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
-        canvas.points = [canvasPos, farPos]
-
         ovl = self.displayCtx.getSelectedOverlay()
 
-        if not isinstance(ovl, TriangleMesh) or ovl.trimesh is None:
+        if not isinstance(ovl, TriangleMesh):
             return
 
-        hits = ovl.trimesh.ray.intersects_id(
-            [canvasPos],
-            [canvasPos - farPos],
-            return_locations=True,
-            mulltiple_hits=False)
+        # The canvasPos is located on the near clipping
+        # plane (see Scene3DCanvas.canvasToWorld). To
+        # calculate the intersection ray, we also need
+        # the corresponding point on the far clipping
+        # plane.
+        farPos    = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
+        rayOrigin = canvasPos
+        rayDir    = transform.normalise(farPos - canvasPos)
+        hits      = ovl.rayIntersection([rayOrigin], [rayDir], sort=True)[0]
 
-        print('Intersection: {}'.format(hits))
+        if len(hits) == 0:
+            return
 
-
-
-
-
-
+        self.displayCtx.location.xyz = hits[0]
 
 
 
