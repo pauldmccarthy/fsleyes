@@ -488,13 +488,16 @@ class DisplayContext(props.SyncableHasProperties):
         return self.getOpts(overlay).referenceImage
 
 
-    def displayToWorld(self, dloc):
+    def displayToWorld(self, dloc, *args, **kwargs):
         """Transforms the given coordinates from the display coordinate
         system into the world coordinate system.
 
         .. warning:: If any :attr:`.NiftiOpts.transform` properties have
                      been modified manually, this method will return invalid
                      results.
+
+        All other arguments are passed to the
+        :meth:`.NiftiOpts.transformCoords` method.
         """
 
         displaySpace = self.displaySpace
@@ -504,16 +507,19 @@ class DisplayContext(props.SyncableHasProperties):
 
         opts = self.getOpts(displaySpace)
 
-        return opts.transformCoords(dloc, 'display', 'world')
+        return opts.transformCoords(dloc, 'display', 'world', *args, **kwargs)
 
 
-    def worldToDisplay(self, wloc):
+    def worldToDisplay(self, wloc, *args, **kwargs):
         """Transforms the given coordinates from the world coordinate
         system into the display coordinate system.
 
         .. warning:: If any :attr:`.NiftiOpts.transform` properties have
                      been modified manually, this method will return invalid
                      results.
+
+        All other arguments are passed to the
+        :meth:`.NiftiOpts.transformCoords` method.
         """
 
         displaySpace = self.displaySpace
@@ -523,7 +529,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         opts = self.getOpts(displaySpace)
 
-        return opts.transformCoords(wloc, 'world', 'display')
+        return opts.transformCoords(wloc, 'world', 'display', *args, **kwargs)
 
 
     def displaySpaceIsRadiological(self):

@@ -737,7 +737,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return voxels
 
 
-    def transformCoords(self, coords, from_, to_, vround=False):
+    def transformCoords(self, coords, from_, to_, vround=False, vector=False):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
         The ``from_`` and ``to_`` parameters must be those accepted by the
@@ -749,11 +749,13 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :arg vround: If ``True``, and ``to_ in ('voxel', 'id)``, the
                      transformed coordinates are rounded to the nearest
                      integer.
+        :arg vector: Defaults to ``False``. If ``True``, the coordinates
+                     are treated as vectors.
         """
 
         xform  = self.getTransform(from_, to_)
         coords = np.array(coords)
-        coords = transform.transform(coords, xform)
+        coords = transform.transform(coords, xform, vector=vector)
 
         # Round to integer voxel coordinates?
         if to_ in ('voxel', 'id') and vround:
