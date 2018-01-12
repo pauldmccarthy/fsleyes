@@ -106,6 +106,14 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    index = props.Int()
+    """This property may be used to control the :attr:`location` when the
+    currently selected overlay is a :class:`.TriangleMesh`, which comprises
+    a list of vertices. If this propert is set to an index into the mesh
+    vertex list, the :attr:`location` will be set to that vertex.
+    """
+
+
     bounds = props.Bounds(ndims=3)
     """This property contains the min/max values of a bounding box (in display
     coordinates) which is big enough to contain all of the overlays in the

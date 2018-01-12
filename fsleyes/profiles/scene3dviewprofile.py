@@ -191,26 +191,45 @@ class Scene3DViewProfile(profiles.Profile):
 
         from fsl.data.mesh import TriangleMesh
 
-        ovl = self.displayCtx.getSelectedOverlay()
+        displayCtx = self.displayCtx
+        ovl        = displayCtx.getSelectedOverlay()
 
-        if not isinstance(ovl, TriangleMesh):
+        if ovl is None:
             return
 
         # The canvasPos is located on the near clipping
-        # plane (see Scene3DCanvas.canvasToWorld). To
-        # calculate the intersection ray, we also need
-        # the corresponding point on the far clipping
-        # plane.
-        farPos    = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
-        rayOrigin = canvasPos
-        rayDir    = transform.normalise(farPos - canvasPos)
-        hits      = ovl.rayIntersection([rayOrigin], [rayDir], sort=True)[0]
+        # plane (see Scene3DCanvas.canvasToWorld).
+        # We also need the corresponding point on the
+        # far clipping plane.
+        farPos = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
 
-        if len(hits) == 0:
-            return
+        # For non-mesh overlays, we select a point which
+        # is in between the near/far clipping planes.
+        if not isinstance(ovl, TriangleMesh):
 
-        self.displayCtx.location.xyz = hits[0]
+            posDir = farPos - canvasPos
+            dist   = transform.veclength(posDir)
+            posDir = transform.normalise(posDir)
+            midPos = canvasPos + 0.5 * dist * posDir
 
+            self.displayCtx.location.xyz = midPos
+
+        else:
+            opts      = self.displayCtx.getOpts(ovl)
+            rayOrigin = canvasPos
+            rayDir    = transform.normalise(farPos - canvasPos)
+
+            # transform into model space
+            rayOrigin = opts.transformCoords(rayOrigin, 'display', 'mesh')
+            rayDir    = opts.transformCoords(rayDir,    'display', 'mesh',
+                                             vector=True)
+            hits = ovl.rayIntersection([rayOrigin], [rayDir], sort=True)[0]
+
+            if len(hits) == 0:
+                return
+
+            pos = opts.transformCoords(hits[0], 'mesh', 'display')
+            self.displayCtx.location.xyz = pos
 
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
