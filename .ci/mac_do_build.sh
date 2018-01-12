@@ -8,6 +8,8 @@ pip install numpy
 pip install --pre "$WXPYTHON_VERSION"
 pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
 pip install -r requirements.txt
+pip install -r requirements-extra.txt
+pip install -r requirements-dev.txt
 pip install "py2app==0.14"
 pip install sphinx sphinx-rtd-theme mock
 
