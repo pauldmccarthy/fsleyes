@@ -774,12 +774,22 @@ def get_fsleyes_readme():
 
 def get_fsleyes_deps():
     """Returns a list containing the FSLeyes dependencies. """
-
-    # The dependency list is stored in requirements.txt
     with open(op.join(basedir, 'requirements.txt'), 'rt') as f:
         install_requires = f.readlines()
-
     return [i.strip() for i in install_requires]
+
+def get_fsleyes_extra_deps():
+    """Returns a dict specifying the extra FSLeyes dependencies."""
+    with open(op.join(basedir, 'requirements-extra.txt'), 'rt') as f:
+        extras_require = f.readlines()
+    return {'extras' : [r.strip() for r in extras_require]}
+
+
+def get_fsleyes_dev_deps():
+    """Returns a dict specifying the FSLeyes development dependencies."""
+    with open(op.join(basedir, 'requirements-dev.txt'), 'rt') as f:
+        setup_requires = f.readlines()
+    return [i.strip() for i in setup_requires]
 
 
 def main():
@@ -790,17 +800,10 @@ def main():
     version          = get_fsleyes_version()
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
+    extras_require   = get_fsleyes_extra_deps()
+    setup_requires   = get_fsleyes_dev_deps()
+    tests_require    = setup_requires
     assets           = build_asset_list(True)
-    setup_requires   = ['pytest-runner',
-                        'mock',
-                        'sphinx',
-                        'sphinx-rtd-theme'],
-    tests_require    = ['pytest-runner',
-                        'mock',
-                        'coverage',
-                        'pytest-cov',
-                        'pytest-html',
-                        'pytest']
 
     # When building/installing, all asset files
     # are placed within the fsleyes package
@@ -832,9 +835,12 @@ def main():
             'Topic :: Scientific/Engineering :: Visualization'],
 
         packages=packages,
+
         install_requires=install_requires,
+        extras_require=extras_require,
         setup_requires=setup_requires,
         tests_require=tests_require,
+
         include_package_data=True,
         package_data=assets,
         test_suite='tests',
