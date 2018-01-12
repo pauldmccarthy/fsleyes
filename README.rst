@@ -15,12 +15,42 @@ FSLeyes
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_ image viewer.
 
 
+Installation
+------------
+
+
+FSLeyes is a `wxPython <https://www.wxpython.org>`_ application. As of January
+2018, the latest version of wxPython is in pre-release, so it cannot be
+installed like any other Python package.
+
+
+ - **macOS**: ``pip install --pre wxpython``
+ - **Linux** (change the URL for your specific platform): ``pip install --only-binary wxpython -f https://extras.wxpython.org/wxPython4/extras/linux/gtk2/ubuntu-16.04/ wxpython``
+
+
+Once ``wxPython`` has been installed, you can install FSLeyes like so::
+
+
+    pip install fsleyes
+
+
+To install FSLeyes with all of the optional dependencies (for additional
+functionality)::
+
+
+    pip install fsleyes[extras]
+
+
 Dependencies
 ------------
 
 
-All of the dependencies of FSLeyes are listed in
-`requirements.txt <requirements.txt>`_.
+All of the core dependencies of FSLeyes are listed in `requirements.txt
+<requirements.txt>`_.
+
+
+Some extra dependencies, which provide additional functionality, are listed
+in `requirements-extras.txt <requirements-extras.txt>`_.
 
 
 Being an OpenGL application, FSLeyes can only be used on computers with
