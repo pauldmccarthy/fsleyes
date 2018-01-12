@@ -6,6 +6,7 @@ source /build.venv/bin/activate
 
 # Install deps
 pip install -r requirements.txt
+pip install -r requirements-extra.txt
 
 # Build package
 python setup.py build_standalone
