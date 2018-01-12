@@ -5,6 +5,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.20.1 (Friday January 11th 2017)
+---------------------------------
+
+
+* Fixed an issue with ``label`` overlays - the outline and width settings
+  defaulted to being synchronised across images.
+* FSLeyes dependencies are now separated into core, optional and development
+  dependencies.
+* Adjustments to standalone build environment.
+
+
 0.20.0 (Wednesday January 10th 2017)
 ------------------------------------
 
