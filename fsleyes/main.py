@@ -146,24 +146,55 @@ def main(args=None):
     # Implement various hacks and workarounds
     hacksAndWorkarounds()
 
-    # Then, first thing's first. Create a wx.App,
-    # and initialise the FSLeyes package.
-    app = FSLeyesApp()
-    fsleyes.initialise()
+    # Function to bootstrap the GUI - keep
+    # reading below.
+    def initgui():
 
-    # Show the splash screen as soon as
-    # possible, unless it looks like the
-    # user is asking for the software
-    # version or command line help.
-    splash = fslsplash.FSLeyesSplash(None)
+        # First thing's first. Create a wx.App,
+        # and initialise the FSLeyes package.
+        app = FSLeyesApp()
+        fsleyes.initialise()
 
+        # Create a splash screen frame
+        splash = fslsplash.FSLeyesSplash(None)
+        return app, splash
+
+    # If it looks like the user is asking for
+    # help, then we parse command line arguments
+    # before creating a wx.App and showing the
+    # splash screen. This means that FSLeyes
+    # help/version information can be retrieved
+    # without a display, and hopefully fairly
+    # quickly.
+    #
+    # Otherwise we create the app and splash
+    # screen first, so the splash screen gets
+    # shown as soon as possible. Arguments
+    # will get parsed in the init function below.
+    #
+    # The argparse.Namespace object is kept in a
+    # list so it can be shared between the sub-
+    # functions below
+    #
+    # If argument parsing bombs out, we put the
+    # exit code here and return it at the bottom.
+    namespace = [None]
+    exitCode  = [0]
+
+    # user asking for help - parse args first
     if (len(args) > 0) and (args[0] in ('-V',
                                         '-h',
                                         '-fh',
                                         '--version',
                                         '--help',
                                         '--fullhelp')):
-        splash.Hide()
+        namespace   = [parseArgs(args)]
+        app, splash = initgui()
+
+    # otherwise parse arguments on wx.MainLoop
+    # below
+    else:
+        app, splash = initgui()
 
     # We are going do all processing on the
     # wx.MainLoop, so the GUI can be shown
@@ -180,31 +211,22 @@ def main(args=None):
     # via ugly callbacks, but which are
     # ultimately scheduled and executed on the
     # wx main loop.
-
-    # This is a container, shared amongst
-    # the callbacks, which contains the
-    # parsed argparse.Namespace object.
-    namespace = [None]
-
-    # If argument parsing bombs out,
-    # we put the exit code here and
-    # return it at the bottom.
-    exitCode = [0]
-
     def init(splash):
 
-        # Parse command line arguments. If the
-        # user has asked for help (see above),
-        # the parseargs module will raise
-        # SystemExit. Hence we make sure the
-        # splash screen is shown only after
-        # arguments have been parsed.
+        # See FSLeyesSplash.Show
+        # for horribleness.
+        splash.Show()
+
+        # Parse command line arguments if necessary.
+        # If arguments are invalid, the parseargs
+        # module will raise SystemExit.
         try:
-            namespace[0] = parseArgs(args)
+            if namespace[0] is None:
+                namespace[0] = parseArgs(args)
 
         # But the wx.App.MainLoop eats SystemExit
         # exceptions for unknown reasons, and
-        # and causes the application to exit
+        # causes the application to exit
         # immediately. This makes testing FSLeyes
         # (e.g. code coverage) impossible. So I'm
         # catching SystemExit here, and then
@@ -213,10 +235,6 @@ def main(args=None):
             app.ExitMainLoop()
             exitCode[0] = e.code
             return
-
-        # See FSLeyesSplash.Show
-        # for horribleness.
-        splash.Show()
 
         # Configure logging (this has to be done
         # after cli arguments have been parsed,
