@@ -494,10 +494,9 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # If the current overlay is a compatible
         # Image, the open file dialog starting
         # point will be its directory.
-        overlay          = self.displayCtx.getSelectedOverlay()
-        selectedIsCompat = isinstance(overlay, fslimage.Image)
+        overlay = self.__overlay
 
-        if selectedIsCompat and overlay.dataSource is not None:
+        if overlay is not None and overlay.dataSource is not None:
             loadDir = op.dirname(overlay.dataSource)
 
         # Otherwise it will be the most
@@ -535,7 +534,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # current overlay is a compatible
         # image, apply the labels to the
         # image.
-        if selectedIsCompat and (melDir is None):
+        if overlay is not None and melDir is None:
             applyLabels(filename, overlay, allLabels, False)
             return
 
@@ -543,7 +542,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         # Melodic directory, and the
         # current overlay is a compatible
         # image.
-        if selectedIsCompat and (melDir is not None):
+        if overlay is not None and melDir is not None:
 
             if isinstance(overlay, fslmelimage.MelodicImage):
                 overlayDir = overlay.getMelodicDir()
