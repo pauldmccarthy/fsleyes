@@ -223,13 +223,25 @@ class Scene3DViewProfile(profiles.Profile):
             rayOrigin = opts.transformCoords(rayOrigin, 'display', 'mesh')
             rayDir    = opts.transformCoords(rayDir,    'display', 'mesh',
                                              vector=True)
-            hits = ovl.rayIntersection([rayOrigin], [rayDir], sort=True)[0]
+            loc, tri  = ovl.rayIntersection([rayOrigin],
+                                            [rayDir],
+                                            vertices=True)
 
-            if len(hits) == 0:
+            if len(loc) == 0:
                 return
 
-            pos = opts.transformCoords(hits[0], 'mesh', 'display')
-            self.displayCtx.location.xyz = pos
+            loc = loc[0]
+            tri = ovl.indices[int(tri[0]), :]
+
+            # The rayIntersection method gives us a
+            # point on one of the mesh triangles -
+            # we want the vertex on that triangle
+            # which is nearest to the intersection.
+            triVerts = ovl.vertices[tri, :]
+            triDists = transform.veclength(loc - triVerts)
+            vertIdx  = np.argsort(triDists)[0]
+
+            self.displayCtx.vertexIndex = tri[vertIdx]
 
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):

@@ -18,6 +18,7 @@ import numpy        as np
 import numpy.linalg as npla
 
 import        fsl.data.image as fslimage
+import        fsl.data.mesh  as fslmesh
 import        fsleyes_props  as props
 from . import group          as dcgroup
 
@@ -106,10 +107,10 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    index = props.Int()
+    vertexIndex = props.Int()
     """This property may be used to control the :attr:`location` when the
     currently selected overlay is a :class:`.TriangleMesh`, which comprises
-    a list of vertices. If this propert is set to an index into the mesh
+    a list of vertices. If this property is set to an index into the mesh
     vertex list, the :attr:`location` will be set to that vertex.
     """
 
@@ -279,6 +280,7 @@ class DisplayContext(props.SyncableHasProperties):
         nobind  .extend(['syncOverlayDisplay',
                          'syncOverlayVolume',
                          'location',
+                         'vertexIndex',
                          'bounds'])
         nounbind.extend(['overlayGroups',
                          'autoDisplay',
@@ -356,6 +358,10 @@ class DisplayContext(props.SyncableHasProperties):
             self.addListener('worldLocation',
                              self.__name,
                              self.__worldLocationChanged,
+                             immediate=True)
+            self.addListener('vertexIndex',
+                             self.__name,
+                             self.__vertexIndexChanged,
                              immediate=True)
 
         # The overlayListChanged method
@@ -1168,6 +1174,28 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         self.__propagateLocation('display')
+
+
+    def __vertexIndexChanged(self, *a):
+        """Called when the :attr:`index` property changes. Propagates
+        the new location to the :attr:`location` property.
+        """
+
+        vidx = self.vertexIndex
+        ovl  = self.getSelectedOverlay()
+
+        # If the current overlay is a mesh, and
+        # the index looks valid, propagate it on
+        # to the location.
+        if isinstance(ovl, fslmesh.TriangleMesh) and \
+           vidx >= 0                             and \
+           vidx < ovl.vertices.shape[0]:
+
+            opts = self.getOpts(ovl)
+            loc  = ovl.vertices[vidx, :]
+            loc  = opts.transformCoords(loc, 'mesh', 'display')
+
+            self.location.xyz = loc
 
 
     def __propagateLocation(self, dest):
