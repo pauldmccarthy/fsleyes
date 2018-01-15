@@ -75,11 +75,10 @@ class PlotProfile(profiles.Profile):
 
         self.__toolbar.Destroy()
 
-        self.__canvas          = None
-        self.__axis            = None
-        self.__toolbar.canvas  = None
-        self.__toolbar._parent = None
-        self.__toolbar         = None
+        self.__canvas  = None
+        self.__axis    = None
+        self.__toolbar = None
+
         profiles.Profile.destroy(self)
 
 
