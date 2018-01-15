@@ -835,7 +835,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         else:                return tempMode
 
 
-    def __getHandler(self, ev, evType, mode=None):
+    def __getHandler(self, ev, evType, mode=None, origEvType=None):
         """Returns a function which will handle the given
         :class:`wx.MouseEvent` or :class:`wx.KeyEvent` (the ``ev`` argument),
         or ``None`` if no handlers are found.
@@ -849,10 +849,17 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         of a handler for the specified mode (see the :attr:`mode` property)
         or event type.
 
+        In the event that the ``evType`` is used to override the original
+        event type, the ``origEvType`` should be set to the actual (real)
+        event type.
+
         If a handler is not found, the :attr:`__altHandlerMap` map is checked
         to see if an alternate handler for the mode/event type has been
         specified.
         """
+
+        if origEvType is None:
+            origEvType = evType
 
         if mode is None:
             mode = self.__getMode(ev)
@@ -867,7 +874,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # event - look it up.
         if alt is not None:
             altMode, altEvType = alt
-            return self.__getHandler(ev, altEvType, altMode)
+            return self.__getHandler(ev, altEvType, altMode, evType)
 
         # Otherwise search for a default
         # method which can handle the
@@ -884,7 +891,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         if defHandler is not None:
             handlers.append(defHandler)
 
-        handlers.extend(self.__extraHandlers[evType].values())
+        handlers.extend(self.__extraHandlers[origEvType].values())
 
         def handlerWrapper(*args, **kwargs):
 
