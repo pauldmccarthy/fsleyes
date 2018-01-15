@@ -9,6 +9,10 @@ chronological order.
 --------------------------
 
 
+* The vertices of a 3D mesh (``vtk`` or ``gifti`` file) can now be selected in
+  the 3D view by holding down the shift key. If data is associated with the
+  mesh vertices, it will be shown in the location panel, and the time series
+  panel.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
 
