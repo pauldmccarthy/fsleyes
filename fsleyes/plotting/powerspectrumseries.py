@@ -213,3 +213,67 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
         xdata = np.arange(len(ydata), dtype=np.float32)
 
         return xdata, ydata
+
+
+
+class MeshPowerSpectrumSeries(PowerSpectrumSeries):
+    """A ``MeshPowerSpectrumSeries`` object encapsulates the power spectrum for
+    the data from a :class:`.TriangleMesh` overlay which has some time series
+    vertex data associated with it. See the :attr:`.MeshOpts.vertexData`
+    property.
+    """
+
+
+    def __init__(self, overlay, displayCtx):
+        """Create a ``MeshPowerSpectrumSeries`` instance.
+
+        :arg overlay:    The :class:`.TriangleMesh` instance to extract the
+                         data from.
+
+        :arg displayCtx: The :class:`.DisplayContext`.
+        """
+        PowerSpectrumSeries.__init__(self, overlay, displayCtx)
+
+
+    def makeLabel(self):
+        """Returns a label to use for this ``MeshPowerSpectrumSeries`` on the
+        legend.
+        """
+
+        if self.__haveData():
+            display = self.displayCtx.getDisplay(self.overlay)
+            opts    = display.opts
+            vidx    = opts.getVertex()
+
+            return '{} [{}]'.format(display.name, vidx)
+
+        else:
+            return PowerSpectrumSeries.makeLabel(self)
+
+
+    def __haveData(self):
+        """Returns ``True`` if there is currently time series data to show
+        for this ``MeshPowerSpectrumSeries``, ``False`` otherwise.
+        """
+        opts = self.displayCtx.getOpts(self.overlay)
+        vidx = opts.getVertex()
+        vd   = opts.getVertexData()
+
+        return vidx is not None and vd is not None and vd.shape[1] > 1
+
+
+    def getData(self):
+        """Returns the power spectrum of the data at the current location for
+        the :class:`.TriangleMesh`, or ``[], []`` if there is no data.
+        """
+
+        if not self.__haveData():
+            return [], []
+
+        opts  = self.displayCtx.getOpts(self.overlay)
+        vidx  = opts.getVertex()
+        vd    = opts.getVertexData()
+        ydata = self.calcPowerSpectrum(vd[vidx, :])
+        xdata = np.arange(len(ydata))
+
+        return xdata, ydata

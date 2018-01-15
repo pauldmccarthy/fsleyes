@@ -56,9 +56,11 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     .. autosummary::
        :nosignatures:
 
-       ~fsleyes.plotting.timeseries.TimeSeries
-       ~fsleyes.plotting.timeseries.FEATTimeSeries
-       ~fsleyes.plotting.timeseries.MelodicTimeSeries
+       .timeseries.TimeSeries
+       .timeseries.VoxelTimeSeries
+       .timeseries.FEATTimeSeries
+       .timeseries.MelodicTimeSeries
+       .timeseries.MeshTimeSeries
 
 
     **Control panels**

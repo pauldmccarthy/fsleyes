@@ -16,6 +16,7 @@ import wx
 import numpy as np
 
 import fsl.data.image                             as fslimage
+import fsl.data.mesh                              as fslmesh
 import fsl.data.melodicimage                      as fslmelimage
 import fsleyes_props                              as props
 
@@ -32,8 +33,7 @@ log = logging.getLogger(__name__)
 class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     """The ``PowerSpectrumPanel`` class is an :class:`.OverlayPlotPanel` which
     plots power spectra of overlay data.  ``PowerSpectrumPanel`` uses
-    :class:`.PowerSpectrumSeries` to plot power spectra of :class:`.Image`
-    overlays,
+    :class:`.PowerSpectrumSeries` to plot the power spectra of overlay data.
 
 
     A couple of control panels may be shown on a ``PowerSpectrumPanel``:
@@ -174,21 +174,28 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :class:`.PowerSpectrumSeries` instance for the given overlay.
         """
 
+        displayCtx = self.displayCtx
+
         if self.plotMelodicICs and \
            isinstance(overlay, fslmelimage.MelodicImage):
 
             ps        = psseries.MelodicPowerSpectrumSeries(overlay,
-                                                            self.displayCtx)
-            targets   = [self.displayCtx.getOpts(overlay)]
+                                                            displayCtx)
+            targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
         elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
 
-            ps        = psseries.VoxelPowerSpectrumSeries(overlay,
-                                                          self.displayCtx)
-            opts      = self.displayCtx.getOpts(overlay)
-            targets   = [self.displayCtx, opts]
+            ps        = psseries.VoxelPowerSpectrumSeries(overlay, displayCtx)
+            opts      = displayCtx.getOpts(overlay)
+            targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
+
+        elif isinstance(overlay, fslmesh.TriangleMesh):
+            ps        = psseries.MeshPowerSpectrumSeries(overlay, displayCtx)
+            opts      = displayCtx.getOpts(overlay)
+            targets   = [displayCtx, opts]
+            propNames = ['location', 'vertexData']
 
         else:
             return None, None, None
@@ -209,7 +216,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = ps.getData()
 
-        if self.plotFrequencies:
+        if len(xdata) > 0 and self.plotFrequencies:
 
             nsamples   = len(ydata)
             sampleTime = 1

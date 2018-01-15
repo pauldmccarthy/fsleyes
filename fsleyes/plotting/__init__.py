@@ -29,3 +29,4 @@ HistogramSeries            = histogramseries    .HistogramSeries
 PowerSpectrumSeries        = powerspectrumseries.PowerSpectrumSeries
 VoxelPowerSpectrumSeries   = powerspectrumseries.VoxelPowerSpectrumSeries
 MelodicPowerSpectrumSeries = powerspectrumseries.MelodicPowerSpectrumSeries
+MeshPowerSpectrumSeries    = powerspectrumseries.MeshPowerSpectrumSeries
