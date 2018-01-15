@@ -280,7 +280,6 @@ class DisplayContext(props.SyncableHasProperties):
         nobind  .extend(['syncOverlayDisplay',
                          'syncOverlayVolume',
                          'location',
-                         'vertexIndex',
                          'bounds'])
         nounbind.extend(['overlayGroups',
                          'autoDisplay',

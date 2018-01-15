@@ -18,6 +18,7 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    FEATResidualTimeSeries
    FEATModelFitTimeSeries
    MelodicTimeSeries
+   MeshTimeSeries
 """
 
 
@@ -795,3 +796,73 @@ class MelodicTimeSeries(TimeSeries):
         component = self.getComponent()
         ydata     = self.overlay.getComponentTimeSeries(component)
         return TimeSeries.getData(self, ydata=ydata)
+
+
+class MeshTimeSeries(TimeSeries):
+    """A ``MeshTimeSeries`` object encapsulates the time course for a
+    :class:`.TriangleMesh` overlay which has some time series vertex data
+    associated with it. See the :attr:`.MeshOpts.vertexData` property.
+    """
+
+
+    def __init__(self, tsPanel, overlay, displayCtx):
+        """Create a ``MeshTimeSeries`` instance.
+
+        :arg tsPanel:    The :class:`TimeSeriesPanel` which owns this
+                         ``MeshTimeSeries``.
+
+        :arg overlay:    The :class:`.TriangleMesh` instance to extract the
+                         data from.
+
+        :arg displayCtx: The :class:`.DisplayContext`.
+        """
+        TimeSeries.__init__(self, tsPanel, overlay, displayCtx)
+
+
+    def makeLabel(self):
+        """Returns a label to use for this ``MeshTimeSeries`` on the
+        legend.
+        """
+
+        if self.__haveData():
+            display = self.displayCtx.getDisplay(self.overlay)
+            opts    = display.opts
+            vidx    = opts.getVertex()
+
+            return '{} [{}]'.format(display.name, vidx)
+
+        else:
+            return TimeSeries.makeLabel(self)
+
+
+    def __haveData(self):
+        """Returns ``True`` if there is currently time series data to show
+        for this ``MeshTimeSeries``, ``False`` otherwise.
+        """
+        opts = self.displayCtx.getOpts(self.overlay)
+        vidx = opts.getVertex()
+        vd   = opts.getVertexData()
+
+        return vidx is not None and vd is not None and vd.shape[1] > 1
+
+
+    def getData(self, xdata=None, ydata=None):
+        """Returns the data at the current location for the
+        :class:`.TriangleMesh`, or ``[], []`` if there is no data.
+        """
+
+        if ydata is None:
+
+            if not self.__haveData():
+                return [], []
+
+            opts = self.displayCtx.getOpts(self.overlay)
+            vidx = opts.getVertex()
+            vd   = opts.getVertexData()
+
+            ydata = vd[vidx, :]
+
+        if xdata is None:
+            xdata = np.arange(len(ydata))
+
+        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)

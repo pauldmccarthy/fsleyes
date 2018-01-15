@@ -24,6 +24,7 @@ FEATEVTimeSeries           = timeseries         .FEATEVTimeSeries
 FEATResidualTimeSeries     = timeseries         .FEATResidualTimeSeries
 FEATModelFitTimeSeries     = timeseries         .FEATModelFitTimeSeries
 MelodicTimeSeries          = timeseries         .MelodicTimeSeries
+MeshTimeSeries             = timeseries         .MeshTimeSeries
 HistogramSeries            = histogramseries    .HistogramSeries
 PowerSpectrumSeries        = powerspectrumseries.PowerSpectrumSeries
 VoxelPowerSpectrumSeries   = powerspectrumseries.VoxelPowerSpectrumSeries
