@@ -408,6 +408,30 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return opts.getTransform(self.coordSpace, opts.transform)
 
 
+    def getVertex(self, xyz=None):
+        """Returns an integer identifying the index of the mesh vertex that
+        coresponds to the given ``xyz`` location,
+
+        :arg xyz: Location to convert to a vertex index. If not provided, the
+                  current :class:`.DisplayContext.location` is used.
+        """
+
+        # TODO return vertex closest to the point,
+        #      within some configurabe tolerance?
+
+        if xyz is None:
+            xyz = self.displayCtx.location.xyz
+            xyz = self.transformCoords(xyz, 'display', 'mesh')
+
+        vidx = self.displayCtx.vertexIndex
+        vert = self.overlay.vertices[vidx, :]
+
+        if np.all(np.isclose(vert, xyz)):
+            return vidx
+        else:
+            return None
+
+
     def transformCoords(self, coords, from_, to, vector=False):
         """Transforms the given ``coords`` from ``from_`` to ``to``.
 

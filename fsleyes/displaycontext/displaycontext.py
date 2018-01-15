@@ -1177,7 +1177,7 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     def __vertexIndexChanged(self, *a):
-        """Called when the :attr:`index` property changes. Propagates
+        """Called when the :attr:`vertexIndex` property changes. Propagates
         the new location to the :attr:`location` property.
         """
 
