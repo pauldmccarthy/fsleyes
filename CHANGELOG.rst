@@ -41,6 +41,8 @@ chronological order.
 * The threshold range for mask overlays is now **exclusive** - now, only
   values which are within the threshold limits are displayed.  Previously,
   values which were within or equal to the limits were displayed.
+* :class:`.Profile` instances can now notify arbitrary listeners of mouse and
+  keyboard events, instead of only notifying via sub-class methods.
 
 
 0.19.1 (Wednesday January 3rd 2017)
