@@ -20,6 +20,7 @@ import numpy as np
 import fsl.utils.transform            as transform
 import fsl.utils.settings             as fslsettings
 import fsl.data.image                 as fslimage
+import fsl.data.mesh                  as fslmesh
 import fsl.data.constants             as constants
 
 import fsleyes_props                  as props
@@ -471,17 +472,31 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         # than three dimensions, and bind
         # the widget to the volume property
         # of  the associated NiftiOpts instance
-        isND = isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3
+        if isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3:
 
-        if isND:
-            props.bindWidget(
-                self.__volume, opts, 'volume', floatspin.EVT_FLOATSPIN)
+            props.bindWidget(self.__volume,
+                             opts,
+                             'volume',
+                             floatspin.EVT_FLOATSPIN)
 
             opts.addListener('volumeDim', self.name, self.__volumeDimChanged)
 
             self.__volume     .Enable()
             self.__volumeLabel.Enable()
             self.__volumeDimChanged()
+
+        # Or, if the overlay is a mesh which
+        # has some time series data associated
+        # with it
+        elif isinstance(overlay, fslmesh.TriangleMesh):
+
+            props.bindWidget(self.__volume,
+                             opts,
+                             'vertexDataIndex',
+                             floatspin.EVT_FLOATSPIN)
+
+            opts.addListener('vertexData', self.name, self.__vertexDataChanged)
+            self.__vertexDataChanged()
 
         else:
             self.__volume.SetRange(0, 0)
@@ -517,20 +532,25 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         for p in boundPropNames: opts.removeListener(p, self.name)
         for p in infoPropNames:  opts.removeListener(p, self.name)
 
-        isND = isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3
-
-        if isND:
+        if isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3:
             props.unbindWidget(self.__volume,
                                opts,
                                'volume',
                                floatspin.EVT_FLOATSPIN)
             opts.removeListener('volumeDim', self.name)
 
+        elif isinstance(overlay, fslmesh.TriangleMesh):
+            props.unbindWidget(self.__volume,
+                               opts,
+                               'vertexDataIndex',
+                               floatspin.EVT_FLOATSPIN)
+            opts.removeListener('vertexData', self.name)
+
 
     def __volumeDimChanged(self, *a):
         """Called when the selected overlay is a :class:`.Nifti`, and its
         :attr:`.NiftiOpts.volumeDim` property changes. Updates the volume
-        wodget.
+        widget.
         """
         overlay = self.__registeredOverlay
         opts    = self.__registeredOpts
@@ -539,6 +559,28 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
         self.__volume.SetRange(0, overlay.shape[vdim] - 1)
         self.__volume.SetValue(volume)
+        self.__infoOptsChanged()
+
+
+    def __vertexDataChanged(self, *a):
+        """Called when the selected overlay is a :class:`.TriangleMesh`, and
+        its :attr:`.MeshOpts.vertexData` property changes. Updates the volume
+        widget.
+        """
+
+        opts    = self.__registeredOpts
+        vd      = opts.getVertexData()
+        vdi     = opts.vertexDataIndex
+        enabled = vd is not None and vd.shape[1] > 1
+
+        self.__volume     .Enable(enabled)
+        self.__volumeLabel.Enable(enabled)
+
+        if enabled:
+            self.__volume.SetRange(0, vd.shape[1] - 1)
+            self.__volume.SetValue(vdi)
+
+        self.__infoOptsChanged()
 
 
     def __boundsOptsChanged(self, *a):
@@ -786,13 +828,15 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         # Reverse the overlay order so they
         # are ordered the same on the info
         # page as in the overlay list panel
-        overlays = reversed(self.displayCtx.getOrderedOverlays())
-        selOvl   = self.displayCtx.getSelectedOverlay()
-        lines    = []
+        displayCtx = self.displayCtx
+        overlays   = reversed(displayCtx.getOrderedOverlays())
+        selOvl     = displayCtx.getSelectedOverlay()
+        lines      = []
 
         for overlay in overlays:
 
-            display = self.displayCtx.getDisplay(overlay)
+            display = displayCtx.getDisplay(overlay)
+            opts    = display.opts
 
             if not display.enabled:
                 continue
@@ -800,10 +844,41 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             info = None
             title = '<b>{}</b>'.format(display.name)
 
-            if not isinstance(overlay, fslimage.Image):
-                info = '{}'.format(strings.labels[self, 'noData'])
-            else:
-                opts = self.displayCtx.getOpts(overlay)
+            # For mesh overlays, if the current location
+            # corresponds to a vertex, show some info
+            # about that vertex
+            if isinstance(overlay, fslmesh.TriangleMesh):
+                vidx  = opts.getVertex()
+                vd    = opts.getVertexData()
+                vdidx = opts.vertexDataIndex
+
+                if vidx is None:
+                    info = '[no vertex]'
+
+                else:
+                    # some vertex data has been
+                    # loaded for this mesh.
+                    if vd is not None:
+
+                        # time series/multiple data points per
+                        # vertex - display the time/data index
+                        # as well
+                        if vd.shape[1] > 1:
+                            info = '[{}, {}]: {}'.format(vidx,
+                                                         vdidx,
+                                                         vd[vidx, vdidx])
+
+                        # Only one scalar value per vertex -
+                        # don't bother showing the vertex
+                        # data index
+                        else:
+                            info = '[{}]: {}'.format(vidx, vd[vidx, vdidx])
+
+                    else:
+                        info = '[{}]'.format(vidx)
+
+            elif isinstance(overlay, fslimage.Image):
+
                 vloc = opts.getVoxel()
 
                 if vloc is not None:
@@ -826,6 +901,8 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
                 else:
                     info = strings.labels[self, 'outOfBounds']
+            else:
+                info = '{}'.format(strings.labels[self, 'noData'])
 
             # Indent info for unselected overlays,
             # to make the info for the selected
@@ -858,7 +935,8 @@ listeners on the properties specified in this dictionary.
 
 
 DISPLAYOPTS_INFO = td.TypeDict({
-    'NiftiOpts'  : ['volume'],
+    'NiftiOpts' : ['volume'],
+    'MeshOpts'  : ['vertexDataIndex'],
 })
 """Different :class:`.DisplayOpts` types have different properties which
 affect the current overlay location information.  Therefore, when the current
