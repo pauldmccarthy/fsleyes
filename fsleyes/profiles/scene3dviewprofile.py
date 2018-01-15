@@ -30,11 +30,13 @@ class Scene3DViewProfile(profiles.Profile):
     The following *modes* are defined (see the :class:`.Profile`
     documentation):
 
-    ========== =================================================
+    ========== ========================================================
     ``rotate`` Clicking and dragging the mouse rotates the scene
     ``zoom``   Moving the mouse wheel zooms in and out.
     ``pan``    Clicking and dragging the mouse pans the scene.
-    ========== =================================================
+    ``pick``   Clicking changes the :attr:`.DisplayContext.vertexIndex`
+               or :attr:`.DisplayContext.location`
+    ========== ========================================================
     """
 
     def __init__(self,
@@ -186,7 +188,11 @@ class Scene3DViewProfile(profiles.Profile):
 
 
     def _pickModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        """
+        """Called on mouse down events in ``pick`` mode.
+
+        Updates the :attr:`DisplayContext.vertexIndex` property if the
+        currently selected overlay is a :class:`.TriangleMesh`, otherwise
+        updates the :attr:`DisplayContext.location` property.
         """
 
         from fsl.data.mesh import TriangleMesh
@@ -219,7 +225,7 @@ class Scene3DViewProfile(profiles.Profile):
             rayOrigin = canvasPos
             rayDir    = transform.normalise(farPos - canvasPos)
 
-            # transform into model space
+            # transform location from display into model space
             rayOrigin = opts.transformCoords(rayOrigin, 'display', 'mesh')
             rayDir    = opts.transformCoords(rayDir,    'display', 'mesh',
                                              vector=True)
@@ -245,4 +251,7 @@ class Scene3DViewProfile(profiles.Profile):
 
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Called on mouse drag events in ``pick`` mode. Forwards the
+        event to the :meth:`_pickModeLeftMouseDown` method.
+        """
         self._pickModeLeftMouseDown(ev, canvas, mousePos, canvasPos)
