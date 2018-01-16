@@ -84,9 +84,9 @@ class HistogramSeries(dataseries.DataSeries):
 
         self.__nvals              = 0
         self.__dataKey            = None
-        self.__finiteData         = np.array([])
         self.__xdata              = np.array([])
         self.__ydata              = np.array([])
+        self.__finiteData         = np.array([])
         self.__nonZeroData        = np.array([])
         self.__clippedFiniteData  = np.array([])
         self.__clippedNonZeroData = np.array([])
@@ -115,6 +115,14 @@ class HistogramSeries(dataseries.DataSeries):
         self.__histCache.clear()
         self.__dataCache = None
         self.__histCache = None
+        self.__nvals              = 0
+        self.__dataKey            = None
+        self.__xdata              = None
+        self.__ydata              = None
+        self.__finiteData         = None
+        self.__nonZeroData        = None
+        self.__clippedFiniteData  = None
+        self.__clippedNonZeroData = None
 
 
     def setHistogramData(self, data, key):
@@ -122,11 +130,27 @@ class HistogramSeries(dataseries.DataSeries):
         changes.
 
         :arg data: A ``numpy`` array containing the data that the histogram is
-                   to be calculated on
+                   to be calculated on. Pass in ``None``  to indicate that
+                   there is currently no histogram data.
 
         :arg key:  Something which identifies the ``data``, and can be used as
                    a ``dict`` key.
         """
+
+        if data is None:
+            self.__nvals              = 0
+            self.__dataKey            = None
+            self.__xdata              = np.array([])
+            self.__ydata              = np.array([])
+            self.__finiteData         = np.array([])
+            self.__nonZeroData        = np.array([])
+            self.__clippedFiniteData  = np.array([])
+            self.__clippedNonZeroData = np.array([])
+
+            # force the panel to refresh
+            with props.skip(self, 'dataRange', self.name):
+                self.propNotify('dataRange')
+            return
 
         # We cache the following data, based
         # on the provided key, so they don't
@@ -429,12 +453,53 @@ class ImageHistogramSeries(HistogramSeries):
         newOpts.addListener(   'volumeDim', self.name, self.__volumeChanged)
 
 
-
 class MeshHistogramSeries(HistogramSeries):
-    """An ``MeshHistogramSeries`` instance manages generation of histogram
+    """A ``MeshHistogramSeries`` instance manages generation of histogram
     data for a :class:`.Mesh` overlay.
     """
-    pass
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``MeshHistogramSeries``. All arguments are passed
+        through to :meth:`HistogramSeries.__init__`.
+        """
+
+        HistogramSeries.__init__(self, *args, **kwargs)
+
+        self.__opts = self.displayCtx.getOpts(self.overlay)
+
+        self.__opts.addListener('vertexData',
+                                self.name,
+                                self.__vertexDataChanged)
+        self.__opts.addListener('vertexDataIndex',
+                                self.name,
+                                self.__vertexDataChanged)
+
+        self.__vertexDataChanged()
+
+
+    def destroy(self):
+        """Must be called when this ``MeshHistogramSeries`` is no longer
+        needed. Calls :meth:`HistogramSeries.destroy` and removes some
+        property listeners.
+        """
+        HistogramSeries.destroy(self)
+        self.__opts.removeListener('vertexData',      self.name)
+        self.__opts.removeListener('vertexDataIndex', self.name)
+        self.__opts = None
+
+
+    def __vertexDataChanged(self, *a):
+        """Called when the :attr:`.MeshOpts.vertexData` or
+        :attr:`.MeshOpts.vertexDataIndex` properties change. Updates the
+        histogram data via :meth:`HistogramSeries.setHistogramData`.
+        """
+
+        vdname = self.__opts.vertexData
+        vdi    = self.__opts.vertexDataIndex
+        vd     = self.__opts.getVertexData()
+
+        if vd is None: self.setHistogramData(None, None)
+        else:          self.setHistogramData(vd[:, vdi],   (vdname, vdi))
 
 
 def histogram(data,

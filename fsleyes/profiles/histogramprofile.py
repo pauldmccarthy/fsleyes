@@ -15,6 +15,7 @@ import numpy              as np
 import matplotlib.patches as patches
 
 import fsleyes_props      as props
+import fsl.data.image     as fslimage
 
 import fsleyes.overlay    as fsloverlay
 from . import                plotprofile
@@ -164,9 +165,11 @@ class HistogramProfile(plotprofile.PlotProfile):
         if oldHs == newHs:
             return
 
-        self.__currentHs = newHs
-
-        self.__registerHistogramSeries(newHs)
+        if isinstance(overlay, fslimage.Image):
+            self.__currentHs = newHs
+            self.__registerHistogramSeries(newHs)
+        else:
+            self.__currentHs = None
 
 
     def __updateShowOverlayRange(self, datax, which=False):
