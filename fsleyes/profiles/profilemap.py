@@ -184,7 +184,11 @@ altHandlerMap = {
         (('zoom', 'RightMouseDown'),  ('zoom', 'RightMouseDrag')),
         (('zoom', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
         (('zoom', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
-        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')))),
+        (('zoom', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
+
+        # In pick mode, left mouse down
+        # is the same as left mouse drag.
+        (('pick', 'LeftMouseDown'),   ('pick', 'LeftMouseDrag')))),
 
     OrthoEditProfile : OrderedDict((
 

@@ -14,9 +14,11 @@ import wx
 
 import numpy as np
 
-import fsleyes.profiles as profiles
-import fsleyes.actions  as actions
-import fsl.utils.idle   as idle
+import fsl.utils.idle      as idle
+import fsl.utils.transform as transform
+
+import fsleyes.profiles    as profiles
+import fsleyes.actions     as actions
 
 
 log = logging.getLogger(__name__)
@@ -51,6 +53,10 @@ class OrthoViewProfile(profiles.Profile):
 
     ``bricon`` The user can drag the mouse along a canvas to change the
                brightness/contrast of the currently selected overlay.
+
+    ``pick``   If the currently selected overlay is a :class:`.TriangleMesh`,
+               the user can select the mesh vertex which is nearest to the
+               mouse click.
     ========== ==============================================================
 
 
@@ -91,7 +97,7 @@ class OrthoViewProfile(profiles.Profile):
         if extraModes is None:
             extraModes = []
 
-        modes = ['nav', 'slice', 'pan', 'zoom', 'bricon'] + extraModes
+        modes = ['nav', 'slice', 'pan', 'zoom', 'bricon', 'pick'] + extraModes
 
         profiles.Profile.__init__(self,
                                   viewPanel,
@@ -665,3 +671,63 @@ class OrthoViewProfile(profiles.Profile):
         if display.propertyIsEnabled('contrast'):   display.contrast   = c
 
         return True
+
+
+    ###########
+    # Pick mode
+    ###########
+
+
+    def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Handles left mouse drag events in ``pick`` mode. If the currently
+        selected overlay is a :class:`.TriangleMesh`, identifies the mesh
+        vertex which is nearest to the mouse click. Otherwise, returns
+        ``False``.
+        """
+
+        import fsl.data.mesh as fslmesh
+
+        overlay = self.displayCtx.getSelectedOverlay()
+
+        if not isinstance(overlay, fslmesh.TriangleMesh):
+            return False
+
+
+        opts  = self.displayCtx.getOpts(overlay)
+        loc   = opts.transformCoords(canvasPos, 'display', 'mesh')
+
+        # The GLMesh caches the most
+        # recently drawn cross section
+        # vertices, and corresponding
+        # mesh triangle indices, in
+        # the mesh coordinate system.
+        xsect = self.overlayList.getData(
+            overlay,
+            'crosssection_{}'.format(canvas.opts.zax), None)
+
+        # No cross-section calculated,
+        # can't pick the nearest vertex.
+        if xsect is None or len(xsect[0]) == 0:
+            return False
+
+        lines, faces = xsect
+        lines        = lines.reshape(-1, 3)
+
+        # Find the location on the cross section
+        # that was nearest to the mouse click
+        ldists = transform.veclength(loc - lines)
+        lidx   = np.argsort(ldists)[0]
+        lvert  = lines[lidx]
+        fidx   = faces[int(np.floor(lidx / 2))]
+
+        # Get the triangle on the mesh
+        # corresponding to this location
+        face      = overlay.indices[ fidx]
+        faceVerts = overlay.vertices[face]
+
+        # Calculate the nearest vertex on
+        # this triangle
+        fdists = transform.veclength(faceVerts - lvert)
+        vidx   = np.argsort(fdists)[0]
+
+        self.displayCtx.vertexIndex = face[vidx]
