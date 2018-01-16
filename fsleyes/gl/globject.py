@@ -203,23 +203,29 @@ class GLObject(notifier.Notifier):
         perform any necessary OpenGL initialisation, such as creating
         textures.
 
-        :arg overlay:    The overlay
+        :arg overlay:     The overlay
 
-        :arg displayCtx: The ``DisplayContext`` managing the scene
+        :arg overlayList: The :class:`.OverlayList`
 
-        :arg canvas:     The canvas that is displaying this ``GLObject``.
+        :arg displayCtx:  The ``DisplayContext`` managing the scene
 
-        :arg threedee:   Whether this ``GLObject`` is to be used for 2D or 3D
-                         rendering.
+        :arg canvas:      The canvas that is displaying this ``GLObject``.
+
+        :arg threedee:    Whether this ``GLObject`` is to be used for 2D or 3D
+                          rendering.
         """
 
-        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
-        self.__threedee   = threedee
-        self.__overlay    = overlay
-        self.__canvas     = canvas
-        self.__display    = None
-        self.__opts       = None
-        self.__displayCtx = None
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__threedee    = threedee
+        self.__overlay     = overlay
+        self.__overlayList = None   # overlayList
+        self.__canvas      = canvas
+        self.__display     = None
+        self.__opts        = None
+        self.__displayCtx  = None
+
+        if canvas is not None:
+            self.__overlayList = canvas.overlayList
 
         # GLSimpleObject passes in None for
         # both the overlay and the displayCtx.
@@ -269,6 +275,12 @@ class GLObject(notifier.Notifier):
         (type-specific) display properties.
         """
         return self.__opts
+
+
+    @property
+    def overlayList(self):
+        """The :class:`.OverlayList`."""
+        return self.__overlayList
 
 
     @property

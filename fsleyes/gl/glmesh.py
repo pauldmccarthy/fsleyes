@@ -415,6 +415,7 @@ class GLMesh(globject.GLObject):
         :class:`.TriangleMesh`, at the specified Z location.
         """
 
+        overlay       = self.overlay
         opts          = self.opts
         lo,  hi       = self.getDisplayBounds()
         xax, yax, zax = axes
@@ -437,6 +438,12 @@ class GLMesh(globject.GLObject):
         # regardless of the zpos
         if not is2D and (zpos < lo[zax] or zpos > hi[zax]):
             return
+
+        # the calculateIntersection method caches
+        # cross section vertices - make sure they're
+        # cleared in case we are not doing an outline
+        # draw.
+        self.overlayList.setData(overlay, 'crosssection_{}'.format(zax), None)
 
         if is2D:
             self.draw2DMesh(xform, bbox)
@@ -811,6 +818,12 @@ class GLMesh(globject.GLObject):
                      for transforming the line vertices into the display
                      coordinate system. May be ``None``, indicating that
                      no transformation is necessary.
+
+        .. note:: The line vertices, and corresponding mesh triangle face
+                  indices, which make up the cross section are saved
+                  via the :meth:`.OverlayList.setData` method, with a key
+                  ``'crosssection_[zax]'``, where ``[zax]`` is set to the
+                  index of the display Z axis.
         """
 
         overlay     = self.overlay
@@ -833,13 +846,23 @@ class GLMesh(globject.GLObject):
         else:
             vertXform = None
 
-        # TODO use bbox to constrain?
+        # TODO use bbox to constrain? This
+        #      would be nice, but is not
+        #      supported by trimesh.
         lines, faces = trimesh.mesh_plane(
             overlay.vertices,
             overlay.indices,
             plane_normal=normal,
             plane_origin=origin,
             return_faces=True)
+
+        # cache the line vertices for other
+        # things which might be interested.
+        # See, for example, OrthoViewProfile
+        # pick mode methods.
+        self.overlayList.setData(overlay,
+                                 'crosssection_{}'.format(zax),
+                                 (lines, faces))
 
         faces = overlay.indices[faces]
 
