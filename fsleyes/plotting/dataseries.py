@@ -23,8 +23,10 @@ class DataSeries(props.HasProperties):
 
     Sub-class implementations must:
 
-      - Accept an overlay object in their ``__init__`` method
-      - Pass this overlay to meth:`.DataSeries.__init__`
+      - Accept an overlay object, :class:`.OverlayList`,
+        :class:`.DisplayContext`, and :class:`.PlotPanel` in their
+        ``__init__`` method, and pass these through to
+        :meth:`.DataSeries.__init__`.
       - Override the :meth:`getData` method
       - Override the :meth:`redrawProperties` method if necessary
 
@@ -42,6 +44,7 @@ class DataSeries(props.HasProperties):
     style defined by properties on the ``DataSeries`` instance,
     such as :attr:`colour`, :attr:`lineWidth` etc.
     """
+
 
     colour = props.Colour()
     """Line colour. """
@@ -67,14 +70,22 @@ class DataSeries(props.HasProperties):
     """Line style. """
 
 
-    def __init__(self, overlay):
+    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
         """Create a ``DataSeries``.
 
-        :arg overlay: The overlay from which the data to be plotted is
-                      retrieved.  May be ``None``.
+        :arg overlay:     The overlay from which the data to be plotted is
+                          retrieved.  May be ``None``.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg plotPanel:   The :class:`.PlotPanel` that owns this
+                          ``DataSeries``.
         """
 
-        self.__overlay = overlay
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__overlay     = overlay
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__plotPanel   = plotPanel
         self.setData([], [])
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
@@ -92,10 +103,38 @@ class DataSeries(props.HasProperties):
 
 
     @property
+    def name(self):
+        """Returns a unique name for this ``DataSeries`` instance. """
+        return self.__name
+
+
+    @property
     def overlay(self):
         """Returns the overlay associated with this ``DataSeries`` instance.
         """
         return self.__overlay
+
+
+    @property
+    def overlayList(self):
+        """Returns the :class:`.OverlayList`.
+        """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Returns the :class:`.DisplayContext`.
+        """
+        return self.__displayCtx
+
+
+    @property
+    def plotPanel(self):
+        """Returns the :class:`.PlotPanel` that owns this ``DataSeries``
+        instance.
+        """
+        return self.__plotPanel
 
 
     def destroy(self):

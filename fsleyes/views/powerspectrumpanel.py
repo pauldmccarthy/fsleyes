@@ -174,25 +174,27 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :class:`.PowerSpectrumSeries` instance for the given overlay.
         """
 
-        displayCtx = self.displayCtx
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
+
+        psargs = [overlay, overlayList, displayCtx, self]
 
         if self.plotMelodicICs and \
            isinstance(overlay, fslmelimage.MelodicImage):
 
-            ps        = psseries.MelodicPowerSpectrumSeries(overlay,
-                                                            displayCtx)
+            ps        = psseries.MelodicPowerSpectrumSeries(*psargs)
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
         elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
 
-            ps        = psseries.VoxelPowerSpectrumSeries(overlay, displayCtx)
+            ps        = psseries.VoxelPowerSpectrumSeries(*psargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
         elif isinstance(overlay, fslmesh.TriangleMesh):
-            ps        = psseries.MeshPowerSpectrumSeries(overlay, displayCtx)
+            ps        = psseries.MeshPowerSpectrumSeries(*psargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'vertexData']

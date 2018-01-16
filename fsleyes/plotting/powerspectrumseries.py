@@ -48,14 +48,18 @@ class PowerSpectrumSeries(dataseries.DataSeries):
     """
 
 
-    def __init__(self, overlay, displayCtx):
+    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
         """Create a ``PowerSpectrumSeries``.
 
-        :arg overlay:    The overlay.
-        :arg displayCtx: The :class:`.DisplayContext` instance.
+        :arg overlay:     The overlay from which the data to be plotted is
+                          retrieved.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg plotPanel:   The :class:`.PlotPanel` that owns this
+                          ``PowerSpectrumSeries``.
         """
-        dataseries.DataSeries.__init__(self, overlay)
-        self.displayCtx = displayCtx
+        dataseries.DataSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
 
 
     def destroy(self):
@@ -224,15 +228,11 @@ class MeshPowerSpectrumSeries(PowerSpectrumSeries):
     """
 
 
-    def __init__(self, overlay, displayCtx):
-        """Create a ``MeshPowerSpectrumSeries`` instance.
-
-        :arg overlay:    The :class:`.TriangleMesh` instance to extract the
-                         data from.
-
-        :arg displayCtx: The :class:`.DisplayContext`.
+    def __init__(self, *args, **kwargs):
+        """Create a ``MeshPowerSpectrumSeries`` instance. All arguments are
+        passed through to  :meth:`PowerSpectrumSeries.__init__`.
         """
-        PowerSpectrumSeries.__init__(self, overlay, displayCtx)
+        PowerSpectrumSeries.__init__(self, *args, **kwargs)
 
 
     def makeLabel(self):

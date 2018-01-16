@@ -314,16 +314,16 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         data to be plotted), a tuple of ``None`` values is returned.
         """
 
-        displayCtx = self.displayCtx
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
+        tsargs      = (overlay, overlayList, displayCtx, self)
 
         # Is this a FEAT filtered_func_data image?
         if isinstance(overlay, fslfeatimage.FEATImage):
 
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
-            ts        = plotting.FEATTimeSeries(self,
-                                                overlay,
-                                                displayCtx)
+            ts        = plotting.FEATTimeSeries(*tsargs)
             targets   = [displayCtx]
             propNames = ['location']
 
@@ -332,7 +332,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # we use a MelodicTimeSeries object.
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
-            ts        = plotting.MelodicTimeSeries(self, overlay, displayCtx)
+            ts        = plotting.MelodicTimeSeries(*tsargs)
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
@@ -341,13 +341,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # (listening to volumeDim for
         # images with >4 dimensions)
         elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
-            ts        = plotting.VoxelTimeSeries(self, overlay, displayCtx)
+            ts        = plotting.VoxelTimeSeries(*tsargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
         elif isinstance(overlay, fslmesh.TriangleMesh):
-            ts        = plotting.MeshTimeSeries(self, overlay, displayCtx)
+            ts        = plotting.MeshTimeSeries(*tsargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'vertexData']
