@@ -167,9 +167,11 @@ altHandlerMap = {
         (('nav',  'RightMouseUp'),    ('zoom', 'RightMouseUp')),
 
         # In slice mode, the left and right
-        # mouse buttons work as for nav mode.
-        (('slice', 'LeftMouseDown'),   ('nav',  'LeftMouseDown')),
-        (('slice', 'LeftMouseDrag'),   ('nav',  'LeftMouseDrag')),
+        # mouse buttons work as for pick mode.
+        # Middle and right mouse works the
+        # same as for nav mode, defined above.
+        (('slice', 'LeftMouseDown'),   ('pick', 'LeftMouseDown')),
+        (('slice', 'LeftMouseDrag'),   ('pick', 'LeftMouseDrag')),
         (('slice', 'MiddleMouseDrag'), ('pan',  'LeftMouseDrag')),
         (('slice', 'RightMouseDown'),  ('zoom', 'RightMouseDown')),
         (('slice', 'RightMouseDrag'),  ('zoom', 'RightMouseDrag')),
@@ -249,4 +251,16 @@ states that when the ``Profile`` is in ``'zoom'`` mode, and a
           the event bindings defined in the :class:`.Profile` sub-class. So
           you can use the ``altHandlerMap`` to override the default behaviour
           of a ``Profile``.
+"""
+
+
+fallbackHandlerMap = {
+    OrthoViewProfile : OrderedDict((
+        (('pick', 'LeftMouseDown'), ('nav', 'LeftMouseDown')),
+        (('pick', 'LeftMouseDrag'), ('nav', 'LeftMouseDrag')),
+    ))
+}
+"""The ``fallbackHandlerMap`` dictionary defines handlers for a given mode and
+event type which will be called if the handler for that mode/event type returns
+a value of ``False``, indicating that it has not been handled.
 """
