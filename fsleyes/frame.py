@@ -962,7 +962,7 @@ class FSLeyesFrame(wx.Frame):
 
         # Plot panel defaults
         if newPanel is not None and isinstance(newPanel, plotpanel.PlotPanel):
-            newPanel.displayCtx.syncOverlayDisplay = False
+            newPanel.displayCtx.syncOverlayDisplay = True
             newPanel.displayCtx.syncOverlayVolume  = True
             newPanel.displayCtx.unsyncFromParent('overlayOrder')
             newPanel.displayCtx.unsyncFromParent('selectedOverlay')

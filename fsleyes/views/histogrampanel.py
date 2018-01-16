@@ -16,6 +16,7 @@ import wx
 import numpy as np
 
 import fsl.data.image                         as fslimage
+import fsl.data.mesh                          as fslmesh
 import fsleyes_props                          as props
 
 import fsleyes.actions                        as actions
@@ -238,16 +239,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         overlay.
         """
 
-        if not isinstance(overlay, fslimage.Image):
-            return None, None, None
-
         if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase()
 
-        hs = histogramseries.HistogramSeries(overlay,
-                                             self.displayCtx,
-                                             self.overlayList)
+        if   isinstance(overlay, fslimage.Image):
+            hsType = histogramseries.ImageHistogramSeries
+        elif isinstance(overlay, fslmesh.TriangleMesh):
+            hsType = histogramseries.MeshHistogramSeries
+        else:
+            return None, None, None
 
+        hs = hsType(overlay, self.overlayList, self.displayCtx, self)
         hs.colour      = self.getOverlayPlotColour(overlay)
         hs.alpha       = 1
         hs.lineWidth   = 1
