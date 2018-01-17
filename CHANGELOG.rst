@@ -9,6 +9,7 @@ chronological order.
 --------------------------
 
 
+* FSLeyes is now able to load Freesurfer ``mgh`` / ``mgz`` image files.
 * The vertices of a 3D mesh (``vtk`` or ``gifti`` file) can now be selected in
   both 3D and ortho views by holding down the shift key. If data is associated
   with the mesh vertices, it will be shown in the location panel, the time
