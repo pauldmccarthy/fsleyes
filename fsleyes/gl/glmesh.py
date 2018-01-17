@@ -66,6 +66,16 @@ class GLMesh(globject.GLObject):
     rendered as ``GL_LINES`` primitives.
 
 
+    When a mesh outline is drawn on a canvas, the calculated line vertices,
+    and corresponding mesh faces (triangles) are cached via the
+    :meth:`.OverlayList.setData` method. This is so that other parts of
+    FSLeyes can access this information if necessary (e.g. the
+    :class:`.OrthoViewProfile` provides mesh-specific interaction). For a
+    canvas which is showing a plane orthogonal to display axis X, Y or Z, this
+    data will be given a key of ``'crosssection_0'``, ``'crosssection_1'``, or
+    ``'crosssection_2'`` respectively.
+
+
     *Colouring*
 
 
@@ -121,7 +131,6 @@ class GLMesh(globject.GLObject):
     Whether the 3D mesh is coloured with a flat colour, or according to vertex
     data, shader programs are used which colour the mesh, and also apply a
     simple lighting effect.
-
     """
 
 
