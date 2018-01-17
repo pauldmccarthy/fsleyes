@@ -684,13 +684,33 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         info      = self.__getImageInfo(overlay, display)
         dicomInfo = strings.labels[self, overlay, 'dicomInfo']
 
+        info.addInfo(strings.labels[self, overlay, 'dicomDir'],
+                     overlay.dicomDir)
+
         info.addSection(dicomInfo)
 
-        for k, v in overlay.items():
+        for k, v in overlay.metaItems():
             info.addInfo(k, str(v), dicomInfo)
 
         return info
 
+
+    def __getMGHImageInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.MGHImage` overlay.
+
+        :arg overlay: A :class:`.MGHImage` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``DicomImage``.
+        """
+
+        info     = self.__getImageInfo(overlay, display)
+        filename = overlay.mghImageFile
+
+        if filename is not None:
+            info.addInfo(strings.labels[self, overlay, 'filename'], filename)
+
+        return info
 
 
     def __formatArray(self, array):

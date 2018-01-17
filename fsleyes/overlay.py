@@ -71,9 +71,9 @@ This module also provides a few convenience classes and functions:
 """
 
 
-import logging
-import weakref
 import os.path as op
+import            logging
+import            weakref
 
 import fsl.data.image as fslimage
 import fsleyes_props  as props
@@ -473,6 +473,7 @@ def guessDataSourceType(path):
 
     import fsl.data.mesh            as fslmesh
     import fsl.data.gifti           as fslgifti
+    import fsl.data.mghimage        as fslmgh
     import fsl.data.featimage       as featimage
     import fsl.data.melodicimage    as melimage
     import fsl.data.dtifit          as dtifit
@@ -485,36 +486,45 @@ def guessDataSourceType(path):
 
     path = op.abspath(path)
 
-    # VTK files are easy
-    if path.endswith('.vtk'):
-        return fslmesh.TriangleMesh, path
+    if op.isfile(path):
 
-    # So are GIFTIS
-    if path.endswith('.gii'):
-        return fslgifti.GiftiSurface, path
+        # VTK files are easy
+        if path.endswith('.vtk'):
+            return fslmesh.TriangleMesh, path
+
+        # So are GIFTIS
+        elif path.endswith('.gii'):
+            return fslgifti.GiftiSurface, path
+
+        # Other specialised image types
+        elif fslmgh.looksLikeMGHImage(path):
+            return fslmgh.MGHImage, path
+        elif melanalysis .isMelodicImage(path):
+            return melimage.MelodicImage, path
+        elif featanalysis.isFEATImage(   path):
+            return featimage.FEATImage,   path
+        elif fslimage.looksLikeImage(path):
+            return fslimage.Image, path
 
     # Analysis directory?
-    if op.isdir(path):
+    elif op.isdir(path):
         if melanalysis.isMelodicDir(path):
             return melimage.MelodicImage, path
-
         elif featanalysis.isFEATDir(path):
             return featimage.FEATImage, path
-
         elif dtifit.isDTIFitPath(path):
             return dtifit.DTIFitTensor, path
 
-    # Assume it's a NIFTI image
-    try:                       path = fslimage.addExt(path, mustExist=True)
-    except fslimage.PathError: return None, path
-
-    if   melanalysis .isMelodicImage(path): return melimage.MelodicImage, path
-    elif featanalysis.isFEATImage(   path): return featimage.FEATImage,   path
-    else:                                   return fslimage.Image,        path
+    # Last-ditch effort - is it an
+    # incomplete path to an image?
+    try:
+        path = fslimage.addExt(path, mustExist=True)
+        return fslimage.Image, path
 
     # Otherwise, I don't
     # know what to do
-    return None, path
+    except fslimage.PathError:
+        return None, path
 
 
 def findFEATImage(overlayList, overlay):

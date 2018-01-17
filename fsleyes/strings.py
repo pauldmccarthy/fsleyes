@@ -707,7 +707,11 @@ labels = TypeDict({
     'OverlayInfoPanel.DTIFitTensor.tensorInfo'  : 'Tensor image paths ',
 
     'OverlayInfoPanel.DicomImage'               : 'NIFTI Image (from DICOM)',
+    'OverlayInfoPanel.DicomImage.dicomDir'      : 'DICOM directory',
     'OverlayInfoPanel.DicomImage.dicomInfo'     : 'DICOM information',
+
+    'OverlayInfoPanel.MGHImage'                 : 'NIFTI Image (from MGH)',
+    'OverlayInfoPanel.MGHImage.filename'        : 'MGH image file',
 
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
