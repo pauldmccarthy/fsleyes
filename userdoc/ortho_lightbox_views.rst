@@ -62,6 +62,9 @@ You can interact with an ortho view in a number of ways:
    current location along the depth axis for that canvas (i.e. to scroll
    through slices).
 
+ - If a mesh overlay is selected, hold down the |shift_key| and click the
+   mouse to select the mesh vertex that is nearest to the mouse click.
+
  - Middle-click and drag, or hold down the |alt_key| key and drag with the
    left mouse button, to pan around.
 
