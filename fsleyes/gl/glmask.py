@@ -77,16 +77,18 @@ class GLMask(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
         """Create a ``GLMask``.
 
-        :arg image:      The :class:`.Image` instance.
-        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
-        :arg canvas:     The canvas doing the drawing.
-        :arg threedee:   2D or 3D rendering
+        :arg image:       The :class:`.Image` instance.
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
+        :arg canvas:      The canvas doing the drawing.
+        :arg threedee:    2D or 3D rendering
         """
         glimageobject.GLImageObject.__init__(self,
                                              image,
+                                             overlayList,
                                              displayCtx,
                                              canvas,
                                              threedee)

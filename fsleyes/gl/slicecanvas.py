@@ -775,6 +775,7 @@ class SliceCanvas(object):
                 return
 
             globj = globject.createGLObject(overlay,
+                                            self.overlayList,
                                             self.displayCtx,
                                             self,
                                             False)

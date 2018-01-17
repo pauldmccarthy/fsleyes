@@ -86,6 +86,7 @@ class GLVectorBase(glimageobject.GLImageObject):
 
     def __init__(self,
                  overlay,
+                 overlayList,
                  displayCtx,
                  canvas,
                  threedee,
@@ -103,27 +104,30 @@ class GLVectorBase(glimageobject.GLImageObject):
             instances, so the textures and geometry can be updated when
             necessary.
 
-        :arg overlay:        A :class:`.Nifti` object.
+        :arg overlay:     A :class:`.Nifti` object.
 
-        :arg displayCtx:     A :class:`.DisplayContext` object which describes
-                             how the overlay is to be displayed.
+        :arg overlayList: The :class:`.OverlayList`
 
-        :arg canvas:         The canvas doing the drawing.
+        :arg displayCtx:  A :class:`.DisplayContext` object which describes
+                          how the overlay is to be displayed.
 
-        :arg threedee:       2D or 3D rendering.
+        :arg canvas:      The canvas doing the drawing.
 
-        :arg init:           An optional function to be called when all of the
-                             :class:`.ImageTexture` instances associated with
-                             this ``GLVectorBase`` have been initialised.
+        :arg threedee:    2D or 3D rendering.
 
-        :arg preinit:        An optional functiono be called after this
-                             ``GLVectorBase`` has configured itself, but
-                             *before* ``init`` is called. Used by
-                             :class:`GLVector`.
+        :arg init:        An optional function to be called when all of the
+                          :class:`.ImageTexture` instances associated with
+                          this ``GLVectorBase`` have been initialised.
+
+        :arg preinit:     An optional functiono be called after this
+                          ``GLVectorBase`` has configured itself, but
+                          *before* ``init`` is called. Used by
+                          :class:`GLVector`.
         """
 
         glimageobject.GLImageObject.__init__(self,
                                              overlay,
+                                             overlayList,
                                              displayCtx,
                                              canvas,
                                              threedee)

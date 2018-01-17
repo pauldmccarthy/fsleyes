@@ -413,6 +413,7 @@ class Scene3DCanvas(object):
             log.debug('Creating GLObject for {}'.format(overlay))
 
             globj = globject.createGLObject(overlay,
+                                            self.__overlayList,
                                             self.__displayCtx,
                                             self,
                                             True)

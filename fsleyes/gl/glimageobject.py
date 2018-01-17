@@ -50,10 +50,12 @@ class GLImageObject(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
         """Create a ``GLImageObject``.
 
         :arg image:       A :class:`.Nifti` object.
+
+        :arg overlayList: The :class`.OverlayList`.
 
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
@@ -63,7 +65,8 @@ class GLImageObject(globject.GLObject):
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
-        globject.GLObject.__init__(self, overlay, displayCtx, canvas, threedee)
+        globject.GLObject.__init__(
+            self, overlay, overlayList, displayCtx, canvas, threedee)
 
         self.__name = 'GLImageObject_{}'.format(self.name)
 

@@ -160,10 +160,12 @@ class GLVolume(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
         """Create a ``GLVolume`` object.
 
         :arg image:       An :class:`.Image` object.
+
+        :arg overlayList: The :class:`.OverlayList`
 
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
@@ -176,6 +178,7 @@ class GLVolume(glimageobject.GLImageObject):
 
         glimageobject.GLImageObject.__init__(self,
                                              image,
+                                             overlayList,
                                              displayCtx,
                                              canvas,
                                              threedee)

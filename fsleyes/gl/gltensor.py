@@ -53,18 +53,20 @@ class GLTensor(glvector.GLVector):
     """
 
 
-    def __init__(self, image, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
         """Create a ``GLTensor``. Prepares the eigenvalue and eigenvector
         textures, and calls the :func:`.gl21.gltensor_funcs.init` function.
 
-        :arg image:      A :class:`.DTIFitTensor` or compatible :class:`.Image`
-                         overlay.
+        :arg image:       A :class:`.DTIFitTensor` or compatible :class:`.Image`
+                          overlay.
 
-        :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+        :arg overlayList: The :class:`.OverlayList`
 
-        :arg canvas:     The canvas doing the drawing.
+        :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
 
-        :arg threedee:   2D or 3D rendering.
+        :arg canvas:      The canvas doing the drawing.
+
+        :arg threedee:    2D or 3D rendering.
         """
 
         prefilter = np.abs
@@ -134,6 +136,7 @@ class GLTensor(glvector.GLVector):
 
         glvector.GLVector.__init__(self,
                                    image,
+                                   overlayList,
                                    displayCtx,
                                    canvas,
                                    threedee,

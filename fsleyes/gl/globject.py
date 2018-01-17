@@ -67,26 +67,30 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, displayCtx, canvas, threedee=False):
+def createGLObject(overlay, overlayList, displayCtx, canvas, threedee=False):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
-    :arg overlay:    An overlay object (e.g. a :class:`.Image` instance).
+    :arg overlay:     An overlay object (e.g. a :class:`.Image` instance).
 
-    :arg displayCtx: The :class:`.DisplayContext` managing the scene.
+    :arg overlayList: The :class:`.OverlayList`
 
-    :arg canvas:     The canvas which will be displaying this ``GLObject``.
+    :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
 
-    :arg threedee:   If ``True``, the ``GLObject`` will be configured for
-                     3D rendering. Otherwise it will be configured for 2D
-                     slice-based rendering.
+    :arg canvas:      The canvas which will be displaying this ``GLObject``.
+
+    :arg threedee:    If ``True``, the ``GLObject`` will be configured for
+                      3D rendering. Otherwise it will be configured for 2D
+                      slice-based rendering.
     """
 
     display = displayCtx.getDisplay(overlay)
     ctr     = getGLObjectType(display.overlayType)
 
-    if ctr is not None: return ctr(overlay, displayCtx, canvas, threedee)
-    else:               return None
+    if ctr is not None:
+        return ctr(overlay, overlayList, displayCtx, canvas, threedee)
+    else:
+        return None
 
 
 class GLObject(notifier.Notifier):
@@ -194,7 +198,7 @@ class GLObject(notifier.Notifier):
     """
 
 
-    def __init__(self, overlay, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance.
@@ -218,21 +222,17 @@ class GLObject(notifier.Notifier):
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__threedee    = threedee
         self.__overlay     = overlay
-        self.__overlayList = None   # overlayList
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
         self.__canvas      = canvas
         self.__display     = None
         self.__opts        = None
-        self.__displayCtx  = None
-
-        if canvas is not None:
-            self.__overlayList = canvas.overlayList
 
         # GLSimpleObject passes in None for
         # both the overlay and the displayCtx.
         if overlay is not None and displayCtx is not None:
-            self.__display    = displayCtx.getDisplay(overlay)
-            self.__opts       = self.__display.opts
-            self.__displayCtx = displayCtx
+            self.__display = displayCtx.getDisplay(overlay)
+            self.__opts    = self.__display.opts
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
 
@@ -482,15 +482,15 @@ class GLSimpleObject(GLObject):
     be called.
 
     .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
-              :attr:`GLObject.opts`, :attr:`GLObject.canvas` and
-              :attr:`GLObject.displayCtx` properties of a ``GLSimpleObject``
-              are all set to ``None``.
+              :attr:`GLObject.opts`, :attr:`GLObject.canvas`,
+              :attr:`GLObject.overlayList` and :attr:`GLObject.displayCtx`
+              properties of a ``GLSimpleObject`` are all set to ``None``.
     """
 
 
     def __init__(self, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, None, None, None, threedee)
+        GLObject.__init__(self, None, None, None, None, threedee)
         self.__destroyed = False
 
 
