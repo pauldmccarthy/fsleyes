@@ -105,6 +105,10 @@ class GLSH(glvector.GLVectorBase):
         self.shader     = None
         self.radTexture = None
 
+        # These are updated in the
+        # __shStateChanged method.
+        self.__shParams = None
+
         # This texture gets updated on
         # draw calls, so we want it to
         # run on the main thread.
@@ -142,6 +146,14 @@ class GLSH(glvector.GLVectorBase):
         self.radTexture = None
 
         glvector.GLVectorBase.destroy(self)
+
+
+    def ready(self):
+        """Overrides :class:`.GLVectorBase.ready`. Returns ``True`` when this
+        ``GLSH`` is ready to be drawn.
+        """
+        return self.__shParams is not None \
+            and glvector.GLVectorBase.ready(self)
 
 
     def addListeners(self):
