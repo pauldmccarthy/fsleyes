@@ -97,12 +97,6 @@ Some of the FSLeyes icons are derived from the Freeline icon set, by Enes Dal,
 available at https://www.iconfinder.com/Enesdal, and released under the
 Creative Commons (Attribution 3.0 Unported) license.
 
-
-The file `fsleyes.gl.trimesh <fsleyes/gl/trimesh.py>`_ module includes code
-from Michael Dawson-Haggerty's `trimesh <https://github.com/mikedh/trimesh>`_
-project, which is released under the MIT license.
-
-
 The volumetric spline interpolation routine uses code from:
 
 Daniel Ruijters and Philippe Thévenaz,
