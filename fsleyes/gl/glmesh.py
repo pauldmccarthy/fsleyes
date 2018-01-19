@@ -352,8 +352,8 @@ class GLMesh(globject.GLObject):
                 nmat    = transform.invert(xform).T
                 normals = transform.transform(normals, nmat, vector=True)
 
-        self.vertices = np.array(vertices,          dtype=np.float32)
-        self.indices  = np.array(indices.flatten(), dtype=np.uint32)
+        self.vertices = np.asarray(vertices,          dtype=np.float32)
+        self.indices  = np.asarray(indices.flatten(), dtype=np.uint32)
 
         if self.threedee:
             self.normals = np.array(normals, dtype=np.float32)
@@ -867,6 +867,9 @@ class GLMesh(globject.GLObject):
             plane_origin=origin,
             return_faces=True)
 
+        lines = np.asarray(lines, dtype=np.float32)
+        faces = np.asarray(faces, dtype=np.uint32)
+
         # cache the line vertices for other
         # things which might be interested.
         # See, for example, OrthoViewProfile
@@ -917,7 +920,7 @@ class GLMesh(globject.GLObject):
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
         vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
 
-        return vdata
+        return np.asarray(vdata, np.float32)
 
 
     def refreshCmapTextures(self, *a, **kwa):
