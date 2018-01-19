@@ -32,7 +32,6 @@
    fsleyes.gl.shaders
    fsleyes.gl.slicecanvas
    fsleyes.gl.textures
-   fsleyes.gl.trimesh
    fsleyes.gl.wxglcolourbarcanvas
    fsleyes.gl.wxgllightboxcanvas
    fsleyes.gl.wxglscene3dcanvas
