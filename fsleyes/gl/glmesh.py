@@ -16,7 +16,6 @@ import OpenGL.GL    as gl
 from . import                 globject
 import fsl.utils.transform as transform
 import fsleyes.gl          as fslgl
-import fsleyes.gl.trimesh  as trimesh
 import fsleyes.gl.routines as glroutines
 import fsleyes.gl.textures as textures
 
@@ -60,9 +59,8 @@ class GLMesh(globject.GLObject):
     *Outlines*
 
 
-    If ``outline is True or vertexData is not None``, the
-    :func:`.trimesh.mesh_plane` function is used to calculate the intersection
-    of the mesh triangles with the viewing plane. Theese lines are then
+    If ``outline is True or vertexData is not None``, the intersection of the
+    mesh triangles with the viewing plane is calculated. These lines are then
     rendered as ``GL_LINES`` primitives.
 
 
@@ -802,9 +800,9 @@ class GLMesh(globject.GLObject):
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):
-        """Uses the :func:`.trimesh.mesh_plane` and
-        :func:`.trimesh.points_to_barycentric` functions to calculate the
-        intersection of the mesh with the viewing plane at the given ``zpos``.
+        """Uses the :func:`.TriangleMesh.planeIntersection` method to
+        calculate the intersection of the mesh with the viewing plane at
+        the given ``zpos``.
 
         :arg zpos:  Z axis coordinate at which the intersection is to be
                     calculated
@@ -860,12 +858,8 @@ class GLMesh(globject.GLObject):
         # TODO use bbox to constrain? This
         #      would be nice, but is not
         #      supported by trimesh.
-        lines, faces = trimesh.mesh_plane(
-            overlay.vertices,
-            overlay.indices,
-            plane_normal=normal,
-            plane_origin=origin,
-            return_faces=True)
+        lines, faces, dists = overlay.planeIntersection(
+            normal, origin, distances=True)
 
         lines = np.asarray(lines, dtype=np.float32)
         faces = np.asarray(faces, dtype=np.uint32)
@@ -878,21 +872,8 @@ class GLMesh(globject.GLObject):
                                  'crosssection_{}'.format(zax),
                                  (lines, faces))
 
+
         faces = overlay.indices[faces]
-
-        # Calculate the barycentric coordinates
-        # (distance from triangle vertices) for
-        # each intersection line - this is used
-        # for interpolating vertex colours.
-
-        triangles = overlay.vertices[faces].repeat(2, axis=0)
-        points    = lines.reshape((-1, 3))
-
-        if triangles.size > 0:
-            dists = trimesh.points_to_barycentric(triangles, points)
-            dists = dists.reshape((-1, 2, 3))
-        else:
-            dists = np.zeros((0, 2, 3))
 
         return lines, faces, dists, vertXform
 
