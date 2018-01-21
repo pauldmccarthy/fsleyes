@@ -9,11 +9,12 @@ chronological order.
 --------------------------
 
 
-* FSLeyes is now able to load Freesurfer ``mgh`` / ``mgz`` image files.
-* The vertices of a 3D mesh (``vtk`` or ``gifti`` file) can now be selected in
-  both 3D and ortho views by holding down the shift key. If data is associated
-  with the mesh vertices, it will be shown in the location panel, the time
-  series panel, and the power spectrum panel.
+* FSLeyes is now able to load Freesurfer ``mgh`` / ``mgz`` image files, and
+  surface files.
+* The vertices of a 3D mesh (VTK, GIFTI, or Freesurfer file) can now be
+  selected in both 3D and ortho views by holding down the shift key. If data
+  is associated with the mesh vertices, it will be shown in the location
+  panel, the time series panel, and the power spectrum panel.
 * Mesh vertex data is now shown on the histogram panel.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
