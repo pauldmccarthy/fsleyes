@@ -188,8 +188,9 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     import fsl.data.melodicimage                as melimage
     import fsl.data.dtifit                      as dtifit
     import fsl.data.mesh                        as fslmesh
+    import fsl.data.vtk                         as fslvtk
     import fsl.data.gifti                       as fslgifti
-
+    import fsl.data.freesurfer                  as fslfs
 
     def load(filename):
         """Load the specified file into FSLeyes. """
@@ -282,8 +283,10 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('FEATImage',          featimage.FEATImage),
         ('MelodicImage',       melimage.MelodicImage),
         ('DTIFitTensor',       dtifit.DTIFitTensor),
-        ('TriangleMesh',       fslmesh.TriangleMesh),
-        ('GiftiSurface',       fslgifti.GiftiSurface),
+        ('Mesh',               fslmesh.Mesh),
+        ('VTKMesh',            fslvtk.VTKMesh),
+        ('GiftiMesh',          fslgifti.GiftiMesh),
+        ('FreesurferMesh',     fslfs.FreesurferMesh),
         ('OrthoPanel',         OrthoPanel),
         ('LightBoxPanel',      LightBoxPanel),
         ('Scene3DPanel',       Scene3DPanel),

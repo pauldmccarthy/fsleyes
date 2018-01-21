@@ -254,6 +254,14 @@ def _init3DPropertyList_GiftiOpts():
     return []
 
 
+def _initPropertyList_FreesurferOpts(threedee):
+    return []
+
+
+def _init3DPropertyList_FreesurferOpts(threedee):
+    return []
+
+
 def _initPropertyList_LabelOpts(threedee):
     return ['lut',
             'outline',
@@ -712,6 +720,12 @@ def _init3DWidgetSpec_MeshOpts():
 def _initWidgetSpec_GiftiOpts(threedee):
     return {}
 def _init3DWidgetSpec_GiftiOpts():
+    return {}
+
+
+def _initWidgetSpec_FreesurferOpts(threedee):
+    return {}
+def _init3DWidgetSpec_FreesurferOpts():
     return {}
 
 

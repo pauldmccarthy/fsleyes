@@ -99,24 +99,29 @@ def makeWildcard(allowedExts=None, descs=None):
     the the displayed file types to supported overlay file types.
     """
 
-    import fsl.data.mesh     as fslmesh
-    import fsl.data.image    as fslimage
-    import fsl.data.mghimage as fslmgh
-    import fsl.data.gifti    as fslgifti
+    import fsl.data.image      as fslimage
+    import fsl.data.mghimage   as fslmgh
+    import fsl.data.vtk        as fslvtk
+    import fsl.data.gifti      as fslgifti
+    import fsl.data.freesurfer as fslfs
 
     # Hack - the wx wildcard logic doesn't support
     # files with multiple extensions (e.g. .nii.gz).
-    # So I'm adding support for '.gz' extensions here.
+    # So I'm adding support for '.gz' and '.gii'
+    # extensions here.
     if allowedExts is None: allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
-                                           fslmesh .ALLOWED_EXTENSIONS     + \
+                                           fslvtk  .ALLOWED_EXTENSIONS     + \
                                            fslmgh  .ALLOWED_EXTENSIONS     + \
                                            fslgifti.ALLOWED_EXTENSIONS     + \
-                                           ['.gz']
+                                           fslfs   .GEOMETRY_EXTENSIONS    + \
+                                           ['.gz', '.gii']
     if descs       is None: descs        = fslimage.EXTENSION_DESCRIPTIONS + \
-                                           fslmesh .EXTENSION_DESCRIPTIONS + \
+                                           fslvtk  .EXTENSION_DESCRIPTIONS + \
                                            fslmgh  .EXTENSION_DESCRIPTIONS + \
                                            fslgifti.EXTENSION_DESCRIPTIONS + \
-                                           ['Compressed images']
+                                           fslfs   .EXTENSION_DESCRIPTIONS + \
+                                           ['Compressed images',
+                                            'GIFTI surfaces']
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]
     exts  = [';'.join(exts)]        + exts

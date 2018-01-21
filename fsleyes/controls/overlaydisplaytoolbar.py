@@ -60,6 +60,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeLineVectorOptsTools
        _OverlayDisplayToolBar__makeMeshOptsTools
        _OverlayDisplayToolBar__makeGiftiOptsTools
+       _OverlayDisplayToolBar__makeFreesurferOptsTools
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
     """
@@ -470,6 +471,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def __makeGiftiOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.GiftiOpts` instance.
+        """
+        return self.__makeMeshOptsTools(opts)
+
+
+    def __makeFreesurferOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.FreesurferOpts` instance.
         """
         return self.__makeMeshOptsTools(opts)
 

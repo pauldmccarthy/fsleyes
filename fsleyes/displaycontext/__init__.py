@@ -81,6 +81,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.vectoropts.LineVectorOpts
    ~fsleyes.displaycontext.meshopts.MeshOpts
    ~fsleyes.displaycontext.giftiopts.GiftiOpts
+   ~fsleyes.displaycontext.freesurfer.FreesurferOpts
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts
@@ -163,6 +164,7 @@ from .vectoropts     import RGBVectorOpts
 from .vectoropts     import LineVectorOpts
 from .meshopts       import MeshOpts
 from .giftiopts      import GiftiOpts
+from .freesurferopts import FreesurferOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
 from .shopts         import SHOpts
@@ -203,6 +205,7 @@ DISPLAY_OPTS_MAP = td.TypeDict({
     'Nifti.sh'            : SHOpts,
     'VTKMesh.mesh'        : MeshOpts,
     'GiftiMesh.mesh'      : GiftiOpts,
+    'FreesurferMesh.mesh' : FreesurferOpts,
 })
 """This dictionary provides a mapping between each (overlay type,
 :attr:`.Display.overlayType`) pair, and the :class:`DisplayOpts` subclass

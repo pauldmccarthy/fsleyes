@@ -53,9 +53,11 @@ Currently (``fsleyes`` version |version|) the only overlay types in existence
    ~fsl.data.image.Image
    ~fsl.data.featimage.FEATImage
    ~fsl.data.melodicimage.MelodicImage
+   ~fsl.data.mghimage.MGHImage
    ~fsl.data.dtifit.DTIFitTensor
-   ~fsl.data.mesh.TriangleMesh
-   ~fsl.data.gifti.GiftiSurface
+   ~fsl.data.vtk.VTKMesh
+   ~fsl.data.gifti.GiftiMesh
+   ~fsl.data.freesurfer.FreesurferMesh
 
 
 This module also provides a few convenience classes and functions:
@@ -75,6 +77,7 @@ import os.path as op
 import            logging
 import            weakref
 
+import fsl.utils.path as fslpath
 import fsl.data.image as fslimage
 import fsleyes_props  as props
 
@@ -471,8 +474,9 @@ def guessDataSourceType(path):
     is unrecognised, the first tuple value will be ``None``.
     """
 
-    import fsl.data.mesh            as fslmesh
+    import fsl.data.vtk             as fslvtk
     import fsl.data.gifti           as fslgifti
+    import fsl.data.freesurfer      as fslfs
     import fsl.data.mghimage        as fslmgh
     import fsl.data.featimage       as featimage
     import fsl.data.melodicimage    as melimage
@@ -488,17 +492,17 @@ def guessDataSourceType(path):
 
     if op.isfile(path):
 
-        # VTK files are easy
-        if path.endswith('.vtk'):
-            return fslmesh.TriangleMesh, path
-
-        # So are GIFTIS
-        elif path.endswith('.gii'):
-            return fslgifti.GiftiSurface, path
+        # Some types are easy - just check the extensions
+        if fslpath.hasExt(path, fslvtk.ALLOWED_EXTENSIONS):
+            return fslvtk.VTKMesh, path
+        elif fslpath.hasExt(path, fslgifti.ALLOWED_EXTENSIONS):
+            return fslgifti.GiftiMesh, path
+        elif fslpath.hasExt(path, fslfs.GEOMETRY_EXTENSIONS):
+            return fslfs.FreesurferMesh, path
+        elif fslpath.hasExt(path, fslmgh.ALLOWED_EXTENSIONS):
+            return fslmgh.MGHImage, path
 
         # Other specialised image types
-        elif fslmgh.looksLikeMGHImage(path):
-            return fslmgh.MGHImage, path
         elif melanalysis .isMelodicImage(path):
             return melimage.MelodicImage, path
         elif featanalysis.isFEATImage(   path):

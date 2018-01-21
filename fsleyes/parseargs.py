@@ -539,6 +539,7 @@ OPTIONS = td.TypeDict({
                         'invert',
                         'wireframe'],
     'GiftiOpts'      : [],
+    'FreesurferOpts' : [],
     'TensorOpts'     : ['lighting',
                         'orientFlip',
                         'tensorResolution',
@@ -577,6 +578,7 @@ GROUPNAMES = td.TypeDict({
     'RGBVectorOpts'  : 'RGB vector options',
     'MeshOpts'       : 'Mesh options',
     'GiftiOpts'      : 'GIFTI surface options',
+    'FreesurferOpts' : 'Freesurfer surface options',
     'LabelOpts'      : 'Label options',
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
@@ -1171,11 +1173,14 @@ def getExtra(target, propName, default=None):
         (fsldisplay.LabelOpts,      'lut')           : lutSettings,
         (fsldisplay.MeshOpts,       'lut')           : lutSettings,
         (fsldisplay.GiftiOpts,      'lut')           : lutSettings,
+        (fsldisplay.FreesurferOpts, 'lut')           : lutSettings,
         (fsldisplay.ColourMapOpts,  'cmap')          : cmapSettings,
         (fsldisplay.ColourMapOpts,  'negativeCmap')  : cmapSettings,
         (fsldisplay.MeshOpts,       'cmap')          : cmapSettings,
         (fsldisplay.GiftiOpts,      'negativeCmap')  : cmapSettings,
         (fsldisplay.GiftiOpts,      'cmap')          : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'negativeCmap')  : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'cmap')          : cmapSettings,
         (fsldisplay.MeshOpts,       'negativeCmap')  : cmapSettings,
         (fsldisplay.VolumeOpts,     'cmap')          : cmapSettings,
         (fsldisplay.VolumeOpts,     'clippingRange') : rangeSettings,
@@ -1204,8 +1209,10 @@ def getExtra(target, propName, default=None):
         (fsldisplay.SHOpts,         'zColour')       : colourSettings,
         (fsldisplay.MeshOpts,       'colour')        : colourSettings,
         (fsldisplay.GiftiOpts,      'colour')        : colourSettings,
+        (fsldisplay.FreesurferOpts, 'colour')        : colourSettings,
         (fsldisplay.MeshOpts,       'vertexData')    : vertexDataSettings,
         (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'vertexData')    : vertexDataSettings,
     }
 
     # Add (str, propname) versions
@@ -1562,14 +1569,16 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     MaskOpts       = fsldisplay.MaskOpts
     MeshOpts       = fsldisplay.MeshOpts
     GiftiOpts      = fsldisplay.GiftiOpts
+    FreesurferOpts = fsldisplay.FreesurferOpts
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
-                   MeshOpts, GiftiOpts, LineVectorOpts,
-                   RGBVectorOpts, TensorOpts, SHOpts]
+                   MeshOpts, GiftiOpts, FreesurferOpts,
+                   LineVectorOpts, RGBVectorOpts,
+                   TensorOpts, SHOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use
