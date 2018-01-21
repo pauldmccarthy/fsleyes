@@ -96,14 +96,17 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    vertexSet = props.Choice((None, ))
+    """May be populated with the names of files which contain different
+    vertex sets for the :class:`.Mesh` object.
+    """
+
+
     vertexData = props.Choice((None, ))
     """May be populated with the names of files which contain data associated
     with each vertex in the mesh, that can be used to colour the mesh. When
     some vertex data has been succsessfully loaded, it can be accessed via
     the :meth:`getVertexData` method.
-
-    This property is not currently populated by the ``MeshOpts`` class, but
-    is used by sub-classes (e.g. :class:`.GiftiOpts`).
     """
 
 
