@@ -516,7 +516,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         Updates the :attr:`.DisplayOpts.bounds` property accordingly.
         """
 
-        lo, hi = self.overlay.getBounds()
+        lo, hi = self.overlay.bounds
         xform  = self.getCoordSpaceTransform()
 
         lohi   = transform.transform([lo, hi], xform)

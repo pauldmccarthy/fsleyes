@@ -605,8 +605,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
             modelInfo.append(('coordSpace',   coordSpace))
             modelInfo.append(('displaySpace', displaySpace))
 
-        bounds = overlay.getBounds()
-        bounds = transform.transform(bounds, mesh2worldXform)
+        bounds = transform.transform(overlay.bounds, mesh2worldXform)
         lens   = bounds[1] - bounds[0]
         lens   = 'X={:0.0f} mm Y={:0.0f} mm Z={:0.0f} mm'.format(*lens)
 
