@@ -193,7 +193,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
-        elif isinstance(overlay, fslmesh.TriangleMesh):
+        elif isinstance(overlay, fslmesh.Mesh):
             ps        = psseries.MeshPowerSpectrumSeries(*psargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]

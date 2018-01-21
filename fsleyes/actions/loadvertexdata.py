@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`LoadVertexDataAction`, which allows
-the user to load vertex data for a :class:`.TriangleMesh` overlay. A
-standalone function, :func:`loadVertexData` is also provided.
+"""This module provides the :class:`LoadVertexDataAction`, which allows the
+user to load vertex data for a :class:`.Mesh` overlay. A standalone function,
+:func:`loadVertexData` is also provided.
 """
 
 
@@ -19,9 +19,9 @@ from . import                          base
 
 
 class LoadVertexDataAction(base.Action):
-    """The ``LoadVertexDataAction`` prompts the user to load a file
-    containing vertex data for a :class:`.TriangleMesh` overlay.
-    See the :attr:`.MeshOpts.vertexData` property.
+    """The ``LoadVertexDataAction`` prompts the user to load a file containing
+    vertex data for a :class:`.Mesh` overlay.  See the
+    :attr:`.MeshOpts.vertexData` property.
     """
 
 
@@ -63,16 +63,15 @@ class LoadVertexDataAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
-        self.enabled = isinstance(overlay, fslmesh.TriangleMesh)
+        self.enabled = isinstance(overlay, fslmesh.Mesh)
 
 
     def __loadVertexData(self):
-        """Called when this action is executed. Prompts the user to load
-        some vertex data for the currently selected :class:`.TriangleMesh`
-        overlay, then sets the :attr:`.MeshOpts.vertexData` property
-        accordingly. If the file was successfully loaded, also adds the
-        loaded file as an option on the :attr:`.MeshOpts.vertexData`
-        property.
+        """Called when this action is executed. Prompts the user to load some
+        vertex data for the currently selected :class:`.Mesh` overlay, then
+        sets the :attr:`.MeshOpts.vertexData` property accordingly. If the
+        file was successfully loaded, also adds the loaded file as an option
+        on the :attr:`.MeshOpts.vertexData` property.
         """
 
         import wx
@@ -102,8 +101,7 @@ class LoadVertexDataAction(base.Action):
 def loadVertexData(overlay, displayCtx, filename):
     """Attempt to load the specified vertex data for the given overlay.
 
-    :arg overlay:    The overlay (assumed to be a :class:`.TriangleMesh`
-                     instance)
+    :arg overlay:    The overlay (assumed to be a :class:`.Mesh` instance)
 
     :arg displayCtx: The :class:`.DisplayContext`
 

@@ -673,32 +673,34 @@ labels = TypeDict({
                                                   '(MELODIC analysis)',
     'OverlayInfoPanel.MelodicImage.melodicInfo' : 'MELODIC information',
 
-    'OverlayInfoPanel.TriangleMesh'                        :
-    'VTK model',
-    'OverlayInfoPanel.TriangleMesh.numVertices'            :
+    'OverlayInfoPanel.Mesh'            :
+    '3D mesh',
+    'OverlayInfoPanel.Mesh.numVertices'            :
     'Number of vertices',
-    'OverlayInfoPanel.TriangleMesh.numTriangles'           :
+    'OverlayInfoPanel.Mesh.numTriangles'           :
     'Number of triangles',
-    'OverlayInfoPanel.TriangleMesh.displaySpace'           :
+    'OverlayInfoPanel.Mesh.displaySpace'           :
     'Display space',
-    'OverlayInfoPanel.TriangleMesh.refImage'               :
+    'OverlayInfoPanel.Mesh.refImage'               :
     'Reference image',
-    'OverlayInfoPanel.TriangleMesh.size'                   :
+    'OverlayInfoPanel.Mesh.size'                   :
     'Size',
-    'OverlayInfoPanel.TriangleMesh.coordSpace'             :
+    'OverlayInfoPanel.Mesh.coordSpace'             :
     'Vertices defined in',
-    'OverlayInfoPanel.TriangleMesh.coordSpace.id'          :
+    'OverlayInfoPanel.Mesh.coordSpace.id'          :
     'Voxels ({})',
-    'OverlayInfoPanel.TriangleMesh.coordSpace.pixdim'      :
+    'OverlayInfoPanel.Mesh.coordSpace.pixdim'      :
     'Scaled voxels ({})',
-    'OverlayInfoPanel.TriangleMesh.coordSpace.pixdim-flip' :
+    'OverlayInfoPanel.Mesh.coordSpace.pixdim-flip' :
     'Scaled voxels [FSL convention] ({})',
-    'OverlayInfoPanel.TriangleMesh.coordSpace.affine'      :
+    'OverlayInfoPanel.Mesh.coordSpace.affine'      :
     'World coordinates ({})',
-    'OverlayInfoPanel.TriangleMesh.coordSpace.display'     :
+    'OverlayInfoPanel.Mesh.coordSpace.display'     :
     'Display coordinate system',
 
-    'OverlayInfoPanel.GiftiSurface' : 'GIFTI surface',
+    'OverlayInfoPanel.VTKMesh'        : 'VTK model',
+    'OverlayInfoPanel.GiftiMesh'      : 'GIFTI surface',
+    'OverlayInfoPanel.FreesurferMesh' : 'Freesurfer surface',
 
     'OverlayInfoPanel.dataSource'               : 'Data source',
     'OverlayInfoPanel.niftiVersion'             : 'NIFTI version',

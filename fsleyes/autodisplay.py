@@ -209,23 +209,3 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
 
         meanImg = fslimage.Image(meanFile)
         overlayList.insert(idx, meanImg)
-
-
-def TriangleMeshDisplay(overlay, overlayList, displayCtx):
-    """Automatically configure display settings for the given
-    :class:`.TriangleMesh` overlay.
-    """
-
-    # TODO some nice default colours?
-    #      try and set reference image?
-    pass
-
-
-def GiftiSurfaceDisplay(overlay, overlayList, displayCtx):
-    """Automatically configure display settings for the given
-    :class:`.GiftiSurface` overlay.
-    """
-
-    # TODO some nice default colours?
-    #      try and set reference image?
-    pass

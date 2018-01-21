@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides functions which are used by the :class:`.GLMesh`
-class to render :class:`.TriangleMesh` overlays in an OpenGL 1.4 compatible
+class to render :class:`.Mesh` overlays in an OpenGL 1.4 compatible
 manner.
 
 An :class:`.ARBPShader` is used to manage the ``glmesh`` vertex/fragment

@@ -346,7 +346,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
 
-        elif isinstance(overlay, fslmesh.TriangleMesh):
+        elif isinstance(overlay, fslmesh.Mesh):
             ts        = plotting.MeshTimeSeries(*tsargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]

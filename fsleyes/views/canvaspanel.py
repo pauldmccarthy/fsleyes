@@ -793,7 +793,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         # Mesh surfaces with N-D
         # vertex data are all good
-        if isinstance(overlay, fslmesh.TriangleMesh) and \
+        if isinstance(overlay, fslmesh.Mesh) and \
            opts.vertexDataLen() > 1:
             return True
 
@@ -826,9 +826,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         import fsl.data.image as fslimage
         import fsl.data.mesh  as fslmesh
 
-        if   isinstance(overlay, fslimage.Nifti):       return nifti()
-        elif isinstance(overlay, fslmesh.TriangleMesh): return mesh()
-        else:                                           return other()
+        if   isinstance(overlay, fslimage.Nifti): return nifti()
+        elif isinstance(overlay, fslmesh.Mesh):   return mesh()
+        else:                                     return other()
 
 
     def doMovieUpdate(self, overlay, opts):
@@ -910,9 +910,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         import fsl.data.image as fslimage
         import fsl.data.mesh  as fslmesh
 
-        if   isinstance(overlay, fslimage.Nifti):       frame = nifti()
-        elif isinstance(overlay, fslmesh.TriangleMesh): frame = mesh()
-        else:                                           frame = other()
+        if   isinstance(overlay, fslimage.Nifti): frame = nifti()
+        elif isinstance(overlay, fslmesh.Mesh):   frame = mesh()
+        else:                                     frame = other()
 
         return frame
 

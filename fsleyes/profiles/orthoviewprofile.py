@@ -54,7 +54,7 @@ class OrthoViewProfile(profiles.Profile):
     ``bricon`` The user can drag the mouse along a canvas to change the
                brightness/contrast of the currently selected overlay.
 
-    ``pick``   If the currently selected overlay is a :class:`.TriangleMesh`,
+    ``pick``   If the currently selected overlay is a :class:`.Mesh`,
                the user can select the mesh vertex which is nearest to the
                mouse click.
     ========== ==============================================================
@@ -680,7 +680,7 @@ class OrthoViewProfile(profiles.Profile):
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse drag events in ``pick`` mode. If the currently
-        selected overlay is a :class:`.TriangleMesh`, identifies the mesh
+        selected overlay is a :class:`.Mesh`, identifies the mesh
         vertex which is nearest to the mouse click. Otherwise, returns
         ``False``.
         """
@@ -689,7 +689,7 @@ class OrthoViewProfile(profiles.Profile):
 
         overlay = self.displayCtx.getSelectedOverlay()
 
-        if not isinstance(overlay, fslmesh.TriangleMesh):
+        if not isinstance(overlay, fslmesh.Mesh):
             return False
 
 

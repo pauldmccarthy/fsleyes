@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides functions which are used by the :class:`.GLMesh`
-class to render :class:`.TriangleMesh` overlays in an OpenGL 2.1 compatible
+class to render :class:`.Mesh` overlays in an OpenGL 2.1 compatible
 manner.
 
 A :class:`.GLSLShader` is used to manage the ``glmesh`` vertex/fragment

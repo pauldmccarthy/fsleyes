@@ -822,7 +822,7 @@ class MelodicTimeSeries(TimeSeries):
 
 class MeshTimeSeries(TimeSeries):
     """A ``MeshTimeSeries`` object encapsulates the time course for a
-    :class:`.TriangleMesh` overlay which has some time series vertex data
+    :class:`.Mesh` overlay which has some time series vertex data
     associated with it. See the :attr:`.MeshOpts.vertexData` property.
     """
 
@@ -830,8 +830,7 @@ class MeshTimeSeries(TimeSeries):
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
         """Create a ``MeshTimeSeries`` instance.
 
-        :arg overlay:     The :class:`.TriangleMesh` instance to extract the
-                          data from.
+        :arg overlay:     The :class:`.Mesh` instance to extract the data from.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
         :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
@@ -869,7 +868,7 @@ class MeshTimeSeries(TimeSeries):
 
     def getData(self, xdata=None, ydata=None):
         """Returns the data at the current location for the
-        :class:`.TriangleMesh`, or ``[], []`` if there is no data.
+        :class:`.Mesh`, or ``[], []`` if there is no data.
         """
 
         if ydata is None:

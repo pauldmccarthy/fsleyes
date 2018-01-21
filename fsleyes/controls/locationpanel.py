@@ -488,7 +488,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         # Or, if the overlay is a mesh which
         # has some time series data associated
         # with it
-        elif isinstance(overlay, fslmesh.TriangleMesh):
+        elif isinstance(overlay, fslmesh.Mesh):
 
             props.bindWidget(self.__volume,
                              opts,
@@ -539,7 +539,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
                                floatspin.EVT_FLOATSPIN)
             opts.removeListener('volumeDim', self.name)
 
-        elif isinstance(overlay, fslmesh.TriangleMesh):
+        elif isinstance(overlay, fslmesh.Mesh):
             props.unbindWidget(self.__volume,
                                opts,
                                'vertexDataIndex',
@@ -563,7 +563,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
 
     def __vertexDataChanged(self, *a):
-        """Called when the selected overlay is a :class:`.TriangleMesh`, and
+        """Called when the selected overlay is a :class:`.Mesh`, and
         its :attr:`.MeshOpts.vertexData` property changes. Updates the volume
         widget.
         """
@@ -847,7 +847,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             # For mesh overlays, if the current location
             # corresponds to a vertex, show some info
             # about that vertex
-            if isinstance(overlay, fslmesh.TriangleMesh):
+            if isinstance(overlay, fslmesh.Mesh):
                 vidx  = opts.getVertex()
                 vd    = opts.getVertexData()
                 vdidx = opts.vertexDataIndex

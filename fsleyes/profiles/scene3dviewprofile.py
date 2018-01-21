@@ -191,11 +191,11 @@ class Scene3DViewProfile(profiles.Profile):
         """Called on mouse down events in ``pick`` mode.
 
         Updates the :attr:`DisplayContext.vertexIndex` property if the
-        currently selected overlay is a :class:`.TriangleMesh`, otherwise
+        currently selected overlay is a :class:`.Mesh`, otherwise
         updates the :attr:`DisplayContext.location` property.
         """
 
-        from fsl.data.mesh import TriangleMesh
+        from fsl.data.mesh import Mesh
 
         displayCtx = self.displayCtx
         ovl        = displayCtx.getSelectedOverlay()
@@ -211,7 +211,7 @@ class Scene3DViewProfile(profiles.Profile):
 
         # For non-mesh overlays, we select a point which
         # is in between the near/far clipping planes.
-        if not isinstance(ovl, TriangleMesh):
+        if not isinstance(ovl, Mesh):
 
             posDir = farPos - canvasPos
             dist   = transform.veclength(posDir)

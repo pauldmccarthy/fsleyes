@@ -87,7 +87,7 @@ class OverlayList(props.HasProperties):
 
     Contains a :class:`props.properties_types.List` property called
     :attr:`overlays`, containing overlay objects (e.g. :class:`.Image` or
-    :class:`.TriangleMesh` objects). Listeners can be registered on the
+    :class:`.Mesh` objects). Listeners can be registered on the
     ``overlays`` property, so they are notified when the overlay list changes.
 
     An :class:`OverlayList` object has a few wrapper methods around the
@@ -553,7 +553,7 @@ def findFEATImage(overlayList, overlay):
 
 def findMeshReferenceImage(overlayList, overlay):
     """Searches the :class:`.OverlayList` and tries to identify a reference
-    image for the given :class:`.TriangleMesh` overlay. Returns the identified
+    image for the given :class:`.Mesh` overlay. Returns the identified
     overlay, or ``None`` if one can't be found.
     """
 

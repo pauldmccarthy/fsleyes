@@ -169,7 +169,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
 
     _optProps = td.TypeDict({
         'Image'        : ['transform'],
-        'TriangleMesh' : ['refImage', 'coordSpace'],
+        'Mesh'         : ['refImage', 'coordSpace'],
         'DTIFitTensor' : ['transform'],
     })
     """This dictionary contains a list of :class:`.DisplayOpts` properties
@@ -558,13 +558,13 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         return info
 
 
-    def __getTriangleMeshInfo(self, overlay, display):
+    def __getMeshInfo(self, overlay, display):
         """Creates and returns an :class:`OverlayInfo` object containing
-        information about the given :class:`.TriangleMesh` overlay.
+        information about the given :class:`.Mesh` overlay.
 
-        :arg overlay: A :class:`.TriangleMesh` instance.
+        :arg overlay: A :class:`.Mesh` instance.
         :arg display: The :class:`.Display` instance assocated with the
-                      ``TriangleMesh``.
+                      ``Mesh``.
         """
 
         opts   = display.opts
@@ -622,16 +622,16 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
         return info
 
 
-    def __getGiftiSurfaceInfo(self, overlay, display):
+    def __getGiftiMeshInfo(self, overlay, display):
         """Creates and returns an :class:`OverlayInfo` object containing
-        information about the given :class:`.GiftiSurface` overlay.
+        information about the given :class:`.GiftiMesh` overlay.
 
-        :arg overlay: A :class:`.GiftiSurface` instance.
+        :arg overlay: A :class:`.GiftiMesh` instance.
         :arg display: The :class:`.Display` instance assocated with the
-                      ``DTIFitTensor``.
+                      ``GiftiMesh``.
         """
 
-        info       = self.__getTriangleMeshInfo(overlay, display)
+        info       = self.__getMeshInfo(overlay, display)
         info.title = strings.labels[self, overlay]
 
         return info

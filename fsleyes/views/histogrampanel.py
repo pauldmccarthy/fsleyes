@@ -244,7 +244,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         if   isinstance(overlay, fslimage.Image):
             hsType = histogramseries.ImageHistogramSeries
-        elif isinstance(overlay, fslmesh.TriangleMesh):
+        elif isinstance(overlay, fslmesh.Mesh):
             hsType = histogramseries.MeshHistogramSeries
         else:
             return None, None, None

@@ -257,7 +257,7 @@ class Scene3DCanvas(object):
 
         overlays = self.__displayCtx.getOrderedOverlays()
 
-        surfs = [o for o in overlays if isinstance(o, fslmesh.TriangleMesh)]
+        surfs = [o for o in overlays if isinstance(o, fslmesh.Mesh)]
         vols  = [o for o in overlays if isinstance(o, fslimage.Image)]
         other = [o for o in overlays if o not in surfs and o not in vols]
 
@@ -348,7 +348,7 @@ class Scene3DCanvas(object):
         """
         """
 
-        if not isinstance(overlay, (fslmesh.TriangleMesh, fslimage.Image)):
+        if not isinstance(overlay, (fslmesh.Mesh, fslimage.Image)):
             return
 
         log.debug('Registering overlay {}'.format(overlay))
@@ -393,7 +393,7 @@ class Scene3DCanvas(object):
 
         display = self.__displayCtx.getDisplay(overlay)
 
-        if display.overlayType not in ('volume', 'mesh', 'giftimesh'):
+        if display.overlayType not in ('volume', 'mesh'):
             return False
 
         self.__glObjects[overlay] = False

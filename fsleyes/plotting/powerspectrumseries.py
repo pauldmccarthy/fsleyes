@@ -222,7 +222,7 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
 
 class MeshPowerSpectrumSeries(PowerSpectrumSeries):
     """A ``MeshPowerSpectrumSeries`` object encapsulates the power spectrum for
-    the data from a :class:`.TriangleMesh` overlay which has some time series
+    the data from a :class:`.Mesh` overlay which has some time series
     vertex data associated with it. See the :attr:`.MeshOpts.vertexData`
     property.
     """
@@ -264,7 +264,7 @@ class MeshPowerSpectrumSeries(PowerSpectrumSeries):
 
     def getData(self):
         """Returns the power spectrum of the data at the current location for
-        the :class:`.TriangleMesh`, or ``[], []`` if there is no data.
+        the :class:`.Mesh`, or ``[], []`` if there is no data.
         """
 
         if not self.__haveData():

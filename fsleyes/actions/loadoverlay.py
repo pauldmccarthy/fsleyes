@@ -204,7 +204,7 @@ def loadOverlays(paths,
         try:
             if   issubclass(dtype, fslimage.Image):
                 overlay = loadImage(dtype, path, inmem=inmem)
-            elif issubclass(dtype, fslmesh.TriangleMesh):
+            elif issubclass(dtype, fslmesh.Mesh):
                 overlay = dtype(path, fixWinding=True)
             else:
                 overlay = dtype(path)

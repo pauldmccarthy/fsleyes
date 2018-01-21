@@ -109,7 +109,7 @@ class DisplayContext(props.SyncableHasProperties):
 
     vertexIndex = props.Int()
     """This property may be used to control the :attr:`location` when the
-    currently selected overlay is a :class:`.TriangleMesh`, which comprises
+    currently selected overlay is a :class:`.Mesh`, which comprises
     a list of vertices. If this property is set to an index into the mesh
     vertex list, the :attr:`location` will be set to that vertex.
     """
@@ -1187,8 +1187,8 @@ class DisplayContext(props.SyncableHasProperties):
         # If the current overlay is a mesh, and
         # the index looks valid, propagate it on
         # to the location.
-        if isinstance(ovl, fslmesh.TriangleMesh) and \
-           vidx >= 0                             and \
+        if isinstance(ovl, fslmesh.Mesh) and \
+           vidx >= 0                     and \
            vidx < ovl.vertices.shape[0]:
 
             opts = self.getOpts(ovl)

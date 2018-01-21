@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLMesh` class, a :class:`.GLObject` used
-to render :class:`.TriangleMesh` overlays.
+to render :class:`.Mesh` overlays.
 """
 
 
@@ -23,8 +23,8 @@ import fsleyes.gl.textures as textures
 class GLMesh(globject.GLObject):
     """The ``GLMesh`` class is a :class:`.GLObject` which encapsulates the
     logic required to draw 2D slices, and 3D renderings, of a
-    :class:`.TriangleMesh` overlay.  The ``GLMesh`` class assumes that the
-    :class:`.Display` instance associated with the ``TriangleMesh`` overlay
+    :class:`.Mesh` overlay.  The ``GLMesh`` class assumes that the
+    :class:`.Display` instance associated with the ``Mesh`` overlay
     holds a reference to a :class:`.MeshOpts` instance, which contains
     ``GLMesh`` specific display settings.
 
@@ -135,7 +135,7 @@ class GLMesh(globject.GLObject):
     def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
         """Create a ``GLMesh``.
 
-        :arg overlay:     A :class:`.TriangleMesh` overlay.
+        :arg overlay:     A :class:`.Mesh` overlay.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
         :arg canvas:      The canvas drawing this ``GLMesh``.
@@ -421,7 +421,7 @@ class GLMesh(globject.GLObject):
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
         """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
-        :class:`.TriangleMesh`, at the specified Z location.
+        :class:`.Mesh`, at the specified Z location.
         """
 
         overlay       = self.overlay
@@ -594,7 +594,7 @@ class GLMesh(globject.GLObject):
 
     def draw2DMesh(self, xform=None, bbox=None):
         """Not to be confused with :meth:`draw2D`.  Called by :meth:`draw2D`
-        for :class:`.TriangleMesh` overlays which are actually 2D (with a flat
+        for :class:`.Mesh` overlays which are actually 2D (with a flat
         third dimension).
         """
 
@@ -800,7 +800,7 @@ class GLMesh(globject.GLObject):
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):
-        """Uses the :func:`.TriangleMesh.planeIntersection` method to
+        """Uses the :func:`.Mesh.planeIntersection` method to
         calculate the intersection of the mesh with the viewing plane at
         the given ``zpos``.
 
@@ -818,7 +818,7 @@ class GLMesh(globject.GLObject):
                      a line for every intersected face (triangle) in the mesh.
 
                    - A ``(n, 3)`` array containing the intersected faces
-                     (indices into the :attr:`.TriangleMesh.vertices` array).
+                     (indices into the :attr:`.Mesh.vertices` array).
 
                    - A ``(n, 2, 3)`` array containing the barycentric
                      coordinates of the intersection line vertices.

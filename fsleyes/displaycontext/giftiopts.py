@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GiftiOpts` class, which contains settings
-for displaying a :class:`.GiftiSurface` overlay.
+for displaying a :class:`.GiftiMesh` overlay.
 """
 
 
@@ -15,7 +15,7 @@ from . import            meshopts
 
 class GiftiOpts(meshopts.MeshOpts):
     """The :class:`GiftiOpts` class, which contains settings for displaying
-    a :class:`.GiftiSurface` overlay.
+    a :class:`.GiftiMesh` overlay.
 
     Currently (as of FSLeyes |version|), the ``GiftiOpts`` class is identical
     to the :class:`.MeshOpts` class (from which it derives), with the exception
