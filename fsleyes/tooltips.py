@@ -302,7 +302,13 @@ properties = TypeDict({
     'If a reference image is selected, this setting defines the space, '
     'relative to the reference image, in which the model coordinates are '
     'defined.',
-    'MeshOpts.vertexData'   :
+    'MeshOpts.vertexSet' :
+    'Choose a file which contains a surface definition (vertices) for this '
+    'mesh',
+    'MeshOpts.custom_vertexSet' :
+    'Choose a file which contains a surface definition (vertices) for this '
+    'mesh',
+    'MeshOpts.vertexData' :
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',

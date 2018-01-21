@@ -10,7 +10,8 @@ of the currently selected overlay.
 """
 
 
-import logging
+import            logging
+import os.path as op
 
 import wx
 
@@ -472,14 +473,31 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.GiftiOpts` instance.
         """
-        return self.__makeMeshOptsTools(opts)
+        tools, nav = self.__makeMeshOptsTools(opts)
+
+        vertWidget  = _TOOLBAR_PROPS[opts, 'vertexSet']
+        vdataWidget = _TOOLBAR_PROPS[opts, 'vertexData']
+
+        panel       = wx.Panel(self)
+        sizer       = wx.BoxSizer(wx.VERTICAL)
+        vertWidget  = props.buildGUI(panel, opts, vertWidget)
+        vdataWidget = props.buildGUI(panel, opts, vdataWidget)
+
+        sizer.Add(vertWidget,  flag=wx.EXPAND)
+        sizer.Add(vdataWidget, flag=wx.EXPAND)
+        panel.SetSizer(sizer)
+
+        tools += [panel]
+        nav   += [vertWidget, vdataWidget]
+
+        return tools, nav
 
 
     def __makeFreesurferOptsTools(self, opts):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.FreesurferOpts` instance.
         """
-        return self.__makeMeshOptsTools(opts)
+        return self.__makeGiftiOptsTools(opts)
 
 
     def __makeTensorOptsTools(self, opts):
@@ -537,6 +555,12 @@ def _imageLabel(img):
     else:           return img.name
 
 
+
+def _pathLabel(p):
+    if p is None: return 'None'
+    else:         return op.basename(p)
+
+
 _TOOLTIPS = td.TypeDict({
 
     'Display.name'        : fsltooltips.properties['Display.name'],
@@ -576,6 +600,8 @@ _TOOLTIPS = td.TypeDict({
     'MeshOpts.outline'      : fsltooltips.properties['MeshOpts.outline'],
     'MeshOpts.outlineWidth' : fsltooltips.properties['MeshOpts.'
                                                      'outlineWidth'],
+    'MeshOpts.vertexSet'    : fsltooltips.properties['MeshOpts.vertexSet'],
+    'MeshOpts.vertexData'   : fsltooltips.properties['MeshOpts.vertexData'],
 
     'TensorOpts.lighting' : fsltooltips.properties['TensorOpts.'
                                                    'lighting'],
@@ -691,6 +717,16 @@ _TOOLBAR_PROPS = td.TypeDict({
         spin=False,
         tooltip=_TOOLTIPS['MeshOpts.outlineWidth'],
         enabledWhen=lambda i: i.outline),
+    'MeshOpts.vertexSet' : props.Widget(
+        'vertexSet',
+        labels=_pathLabel,
+        tooltip=_TOOLTIPS['MeshOpts.vertexSet']
+    ),
+    'MeshOpts.vertexData' : props.Widget(
+        'vertexData',
+        labels=_pathLabel,
+        tooltip=_TOOLTIPS['MeshOpts.vertexData']
+    ),
 
     'VectorOpts.modulateImage' : props.Widget(
         'modulateImage',

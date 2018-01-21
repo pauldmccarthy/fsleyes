@@ -219,6 +219,7 @@ def _initPropertyList_MeshOpts(threedee):
              'outline',
              'outlineWidth',
              'colour',
+             'custom_vertexSet',
              'custom_vertexData',
              'vertexDataIndex',
              'custom_lut',
@@ -606,7 +607,7 @@ def _initWidgetSpec_MeshOpts(threedee):
         if img is None: return 'None'
         else:           return img.name
 
-    def vertexDataName(vdata):
+    def pathName(vdata):
         if vdata is None: return 'None'
         else:             return op.basename(vdata)
 
@@ -635,10 +636,14 @@ def _initWidgetSpec_MeshOpts(threedee):
             labels=strings.choices['MeshOpts.coordSpace'],
             dependencies=['refImage']),
         'colour'       : props.Widget('colour'),
-        'custom_vertexData' : _MeshOpts_VertexDataWidget,
+        'custom_vertexData' : _MeshOpts_vertexDataWidget,
+        'custom_vertexSet'  : _MeshOpts_vertexSetWidget,
+        'vertexSet'    : props.Widget(
+            'vertexSet',
+            labels=pathName),
         'vertexData'   : props.Widget(
             'vertexData',
-            labels=vertexDataName),
+            labels=pathName),
         'vertexDataIndex' : props.Widget(
             'vertexDataIndex',
             showLimits=False,
@@ -897,7 +902,7 @@ def _VolumeOpts_3DClipPlanes(
     return specs, None
 
 
-def _MeshOpts_VertexDataWidget(
+def _MeshOpts_vertexDataWidget(
         target,
         parent,
         panel,
@@ -925,6 +930,24 @@ def _MeshOpts_VertexDataWidget(
     sizer.Add(loadButton, flag=wx.EXPAND)
 
     return sizer, [vdata]
+
+
+def _MeshOpts_vertexSetWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains a widget for controlling the
+    :attr:`.MeshOpts.vertexSet` property, and also has a button
+    which opens a file dialog, allowing the user to select other
+    data.
+    """
+    vdata = getWidgetSpecs(target, threedee)['vertexSet']
+    vdata = props.buildGUI(parent, target, vdata)
+
+    return vdata, [vdata]
 
 
 def _MeshOpts_LutWidget(
