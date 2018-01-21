@@ -125,7 +125,7 @@ def loadVertexData(overlay, displayCtx, filename):
     # the vertex data. This will
     # throw an error if the file
     # is unrecognised.
-    overlay.getVertexData(filename)
+    overlay.loadVertexData(filename)
 
     # Add the file as an
     # option, then select it.

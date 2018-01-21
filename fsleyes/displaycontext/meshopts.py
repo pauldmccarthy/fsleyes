@@ -578,11 +578,18 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         vdata      = None
         vdataRange = None
+        overlay    = self.overlay
+        vdfile     = self.vertexData
 
         try:
-            if self.vertexData is not None:
-                log.debug('Loading vertex data: {}'.format(self.vertexData))
-                vdata      = self.overlay.getVertexData(self.vertexData)
+            if vdfile is not None:
+
+                if vdfile not in overlay.vertexDataSets():
+                    log.debug('Loading vertex data: {}'.format(vdfile))
+                    vdata = overlay.loadVertexData(vdfile)
+                else:
+                    vdata = overlay.getVertexData(vdfile)
+
                 vdataRange = np.nanmin(vdata), np.nanmax(vdata)
 
                 if len(vdata.shape) == 1:
@@ -592,7 +599,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
             # TODO show a warning
             log.warning('Unable to load vertex data from {}: {}'.format(
-                self.vertexData, e, exc_info=True))
+                vdfile, e, exc_info=True))
 
             vdata      = None
             vdataRange = None
