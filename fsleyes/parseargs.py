@@ -614,7 +614,6 @@ GROUPDESCS = td.TypeDict({
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
     'RGBVectorOpts'  : 'These options are applied to \'rgbvector\' overlays.',
     'MeshOpts'       : 'These options are applied to \'mesh\' overlays.',
-    'GiftiOpts'      : 'These options are applied to \'giftimesh\' overlays.',
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
 })
@@ -1913,7 +1912,7 @@ def parseArgs(mainParser,
 
         # Now parse the Display/DisplayOpts
         # with the appropriate parser
-        optType   = fsldisplay.DISPLAY_OPTS_MAP[otArgs.overlayType]
+        optType   = fsldisplay.DISPLAY_OPTS_MAP[ovlType, otArgs.overlayType]
         optParser = optParsers[optType]
 
         try: optArgs = optParser.parse_args(remaining)

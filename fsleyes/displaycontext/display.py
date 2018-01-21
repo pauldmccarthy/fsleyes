@@ -268,8 +268,8 @@ class Display(props.SyncableHasProperties):
         value of the :attr:`overlayType` property.
 
         The :data:`.displaycontext.DISPLAY_OPTS_MAP` dictionary defines the
-        mapping between :attr:`overlayType` values, and ``DisplayOpts``
-        sub-class types.
+        mapping between overlay types and :attr:`overlayType` values, and
+        ``DisplayOpts`` sub-class types.
         """
 
         if self.getParent() is None:
@@ -279,7 +279,7 @@ class Display(props.SyncableHasProperties):
 
         from . import DISPLAY_OPTS_MAP
 
-        optType = DISPLAY_OPTS_MAP[self.overlayType]
+        optType = DISPLAY_OPTS_MAP[self.__overlay, self.overlayType]
 
         log.debug('Creating {} instance (synced: {}) for overlay '
                   '{} ({})'.format(optType.__name__,

@@ -172,11 +172,10 @@ from .displaycontext import InvalidOverlayError
 
 OVERLAY_TYPES = td.TypeDict({
 
-    'Image'        : ['volume',     'mask',  'rgbvector',
-                      'linevector', 'label', 'sh', 'tensor'],
-    'TriangleMesh' : ['mesh'],
-    'GiftiSurface' : ['giftimesh'],
-    'DTIFitTensor' : ['tensor', 'rgbvector', 'linevector'],
+    'Image'          : ['volume',     'mask',  'rgbvector',
+                        'linevector', 'label', 'sh', 'tensor'],
+    'Mesh'           : ['mesh'],
+    'DTIFitTensor'   : ['tensor', 'rgbvector', 'linevector'],
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
@@ -194,20 +193,20 @@ dictionary for more details.
 """
 
 
-DISPLAY_OPTS_MAP = {
-    'volume'     : VolumeOpts,
-    'rgbvector'  : RGBVectorOpts,
-    'linevector' : LineVectorOpts,
-    'mask'       : MaskOpts,
-    'mesh'       : MeshOpts,
-    'giftimesh'  : GiftiOpts,
-    'label'      : LabelOpts,
-    'tensor'     : TensorOpts,
-    'sh'         : SHOpts,
-}
-"""This dictionary provides a mapping between each overlay type, and
-the :class:`DisplayOpts` subclass which contains overlay type-specific
-display options.
+DISPLAY_OPTS_MAP = td.TypeDict({
+    'Nifti.volume'        : VolumeOpts,
+    'Nifti.rgbvector'     : RGBVectorOpts,
+    'Nifti.linevector'    : LineVectorOpts,
+    'Nifti.mask'          : MaskOpts,
+    'Nifti.label'         : LabelOpts,
+    'Nifti.tensor'        : TensorOpts,
+    'Nifti.sh'            : SHOpts,
+    'VTKMesh.mesh'        : MeshOpts,
+    'GiftiMesh.mesh'      : GiftiOpts,
+})
+"""This dictionary provides a mapping between each (overlay type,
+:attr:`.Display.overlayType`) pair, and the :class:`DisplayOpts` subclass
+which contains overlay type-specific display options.
 """
 
 

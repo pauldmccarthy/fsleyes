@@ -124,7 +124,6 @@ be displayed as:
    ~fsleyes.gl.gllinevector.GLLineVector
    ~fsleyes.gl.glrgbvector.GLRGBVector
    ~fsleyes.gl.glmesh.GLMesh
-   ~fsleyes.gl.glgiftimesh.GLGiftiMesh
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
 
