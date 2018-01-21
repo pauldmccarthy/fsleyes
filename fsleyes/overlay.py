@@ -561,10 +561,14 @@ def findMeshReferenceImage(overlayList, overlay):
     overlay, or ``None`` if one can't be found.
     """
 
-    import fsl.data.mesh as fslmesh
+    import fsl.data.vtkmesh as fslvtk
+
+
+    if not isinstance(overlay, fslvtk.VTKMesh):
+        return None
 
     try:
-        prefix = fslmesh.getFIRSTPrefix(overlay.dataSource)
+        prefix = fslvtk.getFIRSTPrefix(overlay.dataSource)
 
         for ovl in overlayList:
             if prefix.startswith(ovl.name):
