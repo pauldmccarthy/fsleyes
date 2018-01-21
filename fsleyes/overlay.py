@@ -561,7 +561,7 @@ def findMeshReferenceImage(overlayList, overlay):
     overlay, or ``None`` if one can't be found.
     """
 
-    import fsl.data.vtkmesh as fslvtk
+    import fsl.data.vtk as fslvtk
 
 
     if not isinstance(overlay, fslvtk.VTKMesh):
