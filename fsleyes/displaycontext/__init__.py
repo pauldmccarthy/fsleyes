@@ -203,6 +203,7 @@ DISPLAY_OPTS_MAP = td.TypeDict({
     'Nifti.label'         : LabelOpts,
     'Nifti.tensor'        : TensorOpts,
     'Nifti.sh'            : SHOpts,
+    'Mesh.mesh'           : MeshOpts,
     'VTKMesh.mesh'        : MeshOpts,
     'GiftiMesh.mesh'      : GiftiOpts,
     'FreesurferMesh.mesh' : FreesurferOpts,
