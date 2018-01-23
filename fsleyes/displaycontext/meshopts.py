@@ -209,7 +209,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__vertexDataRange = None
 
         nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'vertexData'])
+        nounbind.extend(['refImage', 'coordSpace', 'vertexData', 'vertexSet'])
         kwargs['nounbind'] = nounbind
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
@@ -251,6 +251,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self.addListener('vertexData',
                              self.name,
                              self.__vertexDataChanged,
+                             immediate=True)
+
+            self.addListener('vertexSet',
+                             self.name,
+                             self.__vertexSetChanged,
                              immediate=True)
 
             self.__overlayListChanged()
@@ -571,6 +576,20 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         else:                    self.refImage = None
 
         imgProp.setChoices(imgOptions, instance=self)
+
+
+    def __vertexSetChanged(self, *a):
+        """Called when the :attr:`.MeshOpts.vertexSet` property changes.
+        Updates the current vertex set on the :class:`.Mesh` overlay, and
+        the overlay bounds.
+        """
+
+        if self.vertexSet not in self.overlay.vertexSets():
+            self.overlay.loadVertices(self.vertexSet, fixWinding=True)
+        else:
+            self.overlay.vertices = self.vertexSet
+
+        self.__updateBounds()
 
 
     def __vertexDataChanged(self, *a):

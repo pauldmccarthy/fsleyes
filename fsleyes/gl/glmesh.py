@@ -246,6 +246,7 @@ class GLMesh(globject.GLObject):
         def refresh(*a):
             self.notify()
 
+        self.overlay.register(name, vertices, 'vertices')
         opts   .addListener('bounds',           name, vertices,    weak=False)
         opts   .addListener('colour',           name, shader,      weak=False)
         opts   .addListener('outline',          name, refresh,     weak=False)
@@ -280,6 +281,7 @@ class GLMesh(globject.GLObject):
         """Called by :meth:`destroy`. Removes all of the listeners added by
         the :meth:`addListeners` method.
         """
+        self.overlay.deregister(self.name, 'vertices')
         self.opts   .removeListener('bounds',           self.name)
         self.opts   .removeListener('colour',           self.name)
         self.opts   .removeListener('outline',          self.name)

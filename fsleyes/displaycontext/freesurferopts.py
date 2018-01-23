@@ -25,13 +25,15 @@ class FreesurferOpts(meshopts.MeshOpts):
         All arguments are passed to the :class:`.MeshOpts` constructor.
         """
 
+        self.getProp('coordSpace').setAttribute(self, 'default', 'affine')
+        self.coordSpace = 'affine'
+
         # Find surface files that
         # contain other vertex sets
         vertFiles  = [overlay.dataSource] + \
-                     fslfs.relatedFiles(overlay.dataSource,
-                                        fslfs.GEOMETRY_EXTENSIONS)
+                     fslfs.relatedGeometryFiles(overlay.dataSource)
 
-        vdataFiles = [None] + fslfs.relatedFiles(overlay.dataSource)
+        vdataFiles = [None] + fslfs.relatedVertexDataFiles(overlay.dataSource)
 
         self.getProp('vertexSet') .setChoices(vertFiles,  instance=self)
         self.getProp('vertexData').setChoices(vdataFiles, instance=self)

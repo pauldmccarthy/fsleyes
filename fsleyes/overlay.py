@@ -497,7 +497,7 @@ def guessDataSourceType(path):
             return fslvtk.VTKMesh, path
         elif fslpath.hasExt(path, fslgifti.ALLOWED_EXTENSIONS):
             return fslgifti.GiftiMesh, path
-        elif fslpath.hasExt(path, fslfs.GEOMETRY_EXTENSIONS):
+        elif fslfs.isGeometryFile(path):
             return fslfs.FreesurferMesh, path
         elif fslpath.hasExt(path, fslmgh.ALLOWED_EXTENSIONS):
             return fslmgh.MGHImage, path
@@ -563,6 +563,7 @@ def findMeshReferenceImage(overlayList, overlay):
 
     import fsl.data.vtk as fslvtk
 
+    # TODO support for gifti/freesurfer
 
     if not isinstance(overlay, fslvtk.VTKMesh):
         return None

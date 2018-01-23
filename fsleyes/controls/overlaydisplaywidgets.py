@@ -259,7 +259,7 @@ def _initPropertyList_FreesurferOpts(threedee):
     return []
 
 
-def _init3DPropertyList_FreesurferOpts(threedee):
+def _init3DPropertyList_FreesurferOpts():
     return []
 
 
