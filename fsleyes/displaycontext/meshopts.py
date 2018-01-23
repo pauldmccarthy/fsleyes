@@ -252,11 +252,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                              self.name,
                              self.__vertexDataChanged,
                              immediate=True)
-
             self.addListener('vertexSet',
                              self.name,
                              self.__vertexSetChanged,
                              immediate=True)
+            overlay.register(self.name,
+                             self.__overlayVerticesChanged,
+                             'vertices')
 
             self.__overlayListChanged()
             self.__updateBounds()
@@ -285,6 +287,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self.overlayList.removeListener('overlays', self.name)
             self.display    .removeListener('alpha',    self.name)
             self            .removeListener('colour',   self.name)
+            self.overlay    .deregister(self.name, 'vertices')
 
             for overlay in self.overlayList:
 
@@ -363,6 +366,21 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         paths     = paths + [p for p in newPaths if p not in paths]
 
         vdataProp.setChoices(paths, instance=self)
+
+
+    def addVertexSetOptions(self, paths):
+        """Adds the given sequence of paths as options to the
+        :attr:`vertexSet` property. It is assumed that the paths refer
+        to valid vertex files for the overlay associated with this
+        ``MeshOpts`` instance.
+        """
+
+        vsetProp = self.getProp('vertexSet')
+        newPaths = paths
+        paths    = vsetProp.getChoices(instance=self)
+        paths    = paths + [p for p in newPaths if p not in paths]
+
+        vsetProp.setChoices(paths, instance=self)
 
 
     def getConstantColour(self):
@@ -578,6 +596,19 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         imgProp.setChoices(imgOptions, instance=self)
 
 
+    def __overlayVerticesChanged(self, *a):
+        """Called when the :attr:`.Mesh.vertices` change. Makes sure that the
+        :attr:`vertexSet` attribute is synchronised.
+        """
+
+        vset   = self.overlay.selectedVertices()
+        vsprop = self.getProp('vertexSet')
+
+        if vset not in vsprop.getChoices(instance=self):
+            self.addVertexSetOptions([vset])
+            self.vertexSet = vset
+
+
     def __vertexSetChanged(self, *a):
         """Called when the :attr:`.MeshOpts.vertexSet` property changes.
         Updates the current vertex set on the :class:`.Mesh` overlay, and
@@ -585,9 +616,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
 
         if self.vertexSet not in self.overlay.vertexSets():
-            self.overlay.loadVertices(self.vertexSet, fixWinding=True)
+            self.overlay.loadVertices(self.vertexSet)
         else:
-            self.overlay.vertices = self.vertexSet
+            with self.overlay.skip(self.name, 'vertices'):
+                self.overlay.vertices = self.vertexSet
 
         self.__updateBounds()
 

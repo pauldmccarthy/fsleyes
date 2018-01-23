@@ -253,6 +253,10 @@ messages = TypeDict({
 
     'LoadVertexDataAction.loadVertexData' :
     'Select a vertex data file for {}',
+
+    'LoadVertexDataAction.loadVertices' :
+    'Select a vertex file for {}',
+
     'LoadVertexDataAction.error' :
     'An error occurred while loading the vertex data for {}',
 
@@ -637,6 +641,7 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
     'OverlayDisplayPanel.loadVertexData' : 'Load data',
+    'OverlayDisplayPanel.loadVertices'   : 'Load vertices',
 
     'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
 

@@ -944,10 +944,24 @@ def _MeshOpts_vertexSetWidget(
     which opens a file dialog, allowing the user to select other
     data.
     """
+
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                vertices=True)
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadVertices'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
     vdata = getWidgetSpecs(target, threedee)['vertexSet']
     vdata = props.buildGUI(parent, target, vdata)
 
-    return vdata, [vdata]
+    sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+
+    return sizer, [vdata]
 
 
 def _MeshOpts_LutWidget(
