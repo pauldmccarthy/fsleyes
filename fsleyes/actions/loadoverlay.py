@@ -109,19 +109,20 @@ def makeWildcard(allowedExts=None, descs=None):
     # files with multiple extensions (e.g. .nii.gz).
     # So I'm adding support for '.gz' and '.gii'
     # extensions here.
-    if allowedExts is None: allowedExts  = fslimage.ALLOWED_EXTENSIONS     + \
-                                           fslvtk  .ALLOWED_EXTENSIONS     + \
-                                           fslmgh  .ALLOWED_EXTENSIONS     + \
-                                           fslgifti.ALLOWED_EXTENSIONS     + \
-                                           fslfs   .GEOMETRY_EXTENSIONS    + \
-                                           ['.gz', '.gii']
-    if descs       is None: descs        = fslimage.EXTENSION_DESCRIPTIONS + \
-                                           fslvtk  .EXTENSION_DESCRIPTIONS + \
-                                           fslmgh  .EXTENSION_DESCRIPTIONS + \
-                                           fslgifti.EXTENSION_DESCRIPTIONS + \
-                                           fslfs   .EXTENSION_DESCRIPTIONS + \
-                                           ['Compressed images',
-                                            'GIFTI surfaces']
+    if allowedExts is None:
+        allowedExts  = (fslimage.ALLOWED_EXTENSIONS  +
+                        fslvtk  .ALLOWED_EXTENSIONS  +
+                        fslmgh  .ALLOWED_EXTENSIONS  +
+                        fslgifti.ALLOWED_EXTENSIONS  +
+                        fslfs   .CORE_GEOMETRY_FILES +
+                        ['.gz', '.gii'])
+    if descs is None:
+        descs        = (fslimage.EXTENSION_DESCRIPTIONS     +
+                        fslvtk  .EXTENSION_DESCRIPTIONS     +
+                        fslmgh  .EXTENSION_DESCRIPTIONS     +
+                        fslgifti.EXTENSION_DESCRIPTIONS     +
+                        fslfs   .CORE_GEOMETRY_DESCRIPTIONS +
+                        ['Compressed images', 'GIFTI surfaces'])
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]
     exts  = [';'.join(exts)]        + exts
