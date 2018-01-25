@@ -121,9 +121,9 @@ class Volume3DOpts(object):
         # step down the quality so it's
         # a bit faster.
         if fslplatform.inSSHSession:
-            self.numSteps    = 40
-            self.resolution  = 40
-            self.blendFactor = 0.4
+            self.numSteps    = 60
+            self.resolution  = 70
+            self.blendFactor = 0.3
 
         self.clipPosition[:]    = 10 * [50]
         self.clipAzimuth[:]     = 10 * [0]
