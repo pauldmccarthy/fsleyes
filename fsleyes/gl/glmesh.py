@@ -434,8 +434,11 @@ class GLMesh(globject.GLObject):
         # If vertexData is set, we ignore
         # the outline setting - meshes can
         # only be coloured by vertexData
-        # in outline mode
-        outline = opts.outline or opts.vertexData is not None
+        # in outline mode. We also can't
+        # draw outlines if trimesh is not
+        # present.
+        outline = (overlay.trimesh is not None) and \
+                  (opts.outline or opts.vertexData is not None)
 
         # Mesh is 2D, and is
         # perpendicular to
