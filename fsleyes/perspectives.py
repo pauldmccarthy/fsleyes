@@ -85,7 +85,7 @@ def loadPerspective(frame, name, **kwargs):
     if persp is None:
         raise ValueError('No perspective named "{}" exists'.format(name))
 
-    log.debug('Serialised perspective:\n{}'.format(persp))
+    log.debug('Applying perspective:\n{}'.format(persp))
     applyPerspective(frame, name, persp, **kwargs)
 
 
