@@ -21,6 +21,8 @@ chronological order.
 * It is now possible to associate multiple vertex files with mesh overlays.
   For Freesurfer/GIFTI surfaces, if other vertex files are found (e.g. pial,
   white matter, inflated), they will be added as options.
+* Docked FSLeyes control panels can now be minimised by dragging the dock
+  separator.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
 
