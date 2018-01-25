@@ -409,10 +409,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                     .CloseButton(closeable)  \
                     .FloatingPosition(panePos)
 
-
         self.__auiMgr.AddPane(window, paneInfo)
         self.__panels[panelType] = window
-        self.__auiMgrUpdate()
+        self.__auiMgrUpdate(newPanel=window)
 
 
     def isPanelOpen(self, panelType):
@@ -567,47 +566,81 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__profileManager.changeProfile(self.profile)
 
 
-    def __auiMgrUpdate(self, *a):
+    def __auiMgrUpdate(self, *args, **kwargs):
         """Called whenever a panel is added/removed to/from this ``ViewPanel``.
 
         Calls the ``Update`` method on the ``AuiManager`` instance that is
         managing this panel.
+
+        :arg newPanel: Must be passed as a keyword argument. When a new panel
+                       is added, it should be passed here.
         """
 
-        # When a panel is added/removed from the AuiManager,
-        # the position of floating panels seems to get reset
-        # to their original position, when they were created.
-        # Here, we explicitly set the position of each
-        # floating frame, so the AuiManager doesn't move our
-        # windows about the place.
+        newPanel = kwargs.pop('newPanel', None)
+
+        # This method makes sure that size hints
+        # for all existing and new panels are
+        # set on their AuiPaneInfo objects, and
+        # then calls AuiManager.Update.
+
+        # We first loop through all panels, and
+        # figure out their best sizes. Each entry
+        # in this list is a tuple containing:
         #
-        # We also explicitly tell the AuiManager what the
-        # current minimum and best sizes are for every panel
+        #    - Panel
+        #    - AuiPaneInfo instance
+        #    - Dock direction (None for floating panels)
+        #    - Layer number (None for floating panels)
+        #    - Minimum size
+        bestSizes = []
+
         for panel in self.__panels.values():
 
             if isinstance(panel, fsltoolbar.FSLeyesToolBar):
                 continue
 
-            paneInfo = self.__auiMgr.GetPane(panel)
-            parent   = panel.GetParent()
+            pinfo = self.__auiMgr.GetPane(panel)
 
             # If the panel is floating, use its
             # current size as its 'best' size,
-            # as otherwise it will immediately
-            # resize the panel to its best size
-            if paneInfo.IsFloating():
-                bestSize = panel.GetSize()   .Get()
-                minSize  = panel.GetMinSize().Get()
+            # as otherwise the AuiManager will
+            # immediately resize the panel to
+            # its best size.
+            if pinfo.IsFloating():
+                dockDir  = None
+                layer    = None
+                bestSize = panel.GetSize().Get()
 
-                # Unless it's current size is less
-                # than its minimum size (which probably
-                # means that it has just been added)
-                if bestSize[0] < minSize[0] or \
-                   bestSize[1] < minSize[1]:
+                # Unless its current size is tiny
+                # (which probably means that it has
+                # just been added)
+                if bestSize[0] <= 20 or \
+                   bestSize[1] <= 20:
                     bestSize = panel.GetBestSize().Get()
 
             else:
+                dockDir  = pinfo.dock_direction
+                layer    = pinfo.dock_layer
                 bestSize = panel.GetBestSize().Get()
+
+            bestSizes.append((panel, pinfo, dockDir, layer, bestSize))
+
+        # Now we loop through one final time, and
+        # set all of the necessary size hints on
+        # the AuiPaneInfo instances.
+        for panel, pinfo, dockDir, layer, bestSize in bestSizes:
+
+            parent = panel.GetParent()
+
+            # When a panel is added/removed from the AuiManager,
+            # the position of floating panels seems to get reset
+            # to their original position, when they were created.
+            # Here, we explicitly set the position of each
+            # floating frame, so the AuiManager doesn't move our
+            # windows about the place.
+            if pinfo.IsFloating() and \
+               isinstance(parent, aui.AuiFloatingFrame):
+                pinfo.FloatingPosition(parent.GetScreenPosition())
 
             # See comments in __init__ about
             # this silly 'float offset' thing
@@ -618,15 +651,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                       'best: {}, float: {}'.format(
                           type(panel).__name__, bestSize, floatSize))
 
-            paneInfo.MinSize(     (1, 1))  \
-                    .BestSize(    bestSize) \
-                    .FloatingSize(floatSize)
+            pinfo.MinSize(     (1, 1))  \
+                 .BestSize(    bestSize) \
+                 .FloatingSize(floatSize)
 
-            # Re-position floating panes, otherwise
-            # the AuiManager will reset their position
-            if paneInfo.IsFloating() and \
-               isinstance(parent, aui.AuiFloatingFrame):
-                paneInfo.FloatingPosition(parent.GetScreenPosition())
+            # This is a terrible hack which forces
+            # the AuiManager to grow a dock when a
+            # new panel is added, which is bigger
+            # than the existing dock contents.
+            if panel is newPanel and not pinfo.IsFloating():
+                docks = aui.FindDocks(self.__auiMgr._docks, dockDir, layer)
+                for d in docks:
+                    d.size = 0
 
         self.__auiMgr.Update()
 
