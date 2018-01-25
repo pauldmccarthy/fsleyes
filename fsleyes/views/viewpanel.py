@@ -590,14 +590,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             paneInfo = self.__auiMgr.GetPane(panel)
             parent   = panel.GetParent()
-            minSize  = panel.GetMinSize().Get()
 
             # If the panel is floating, use its
             # current size as its 'best' size,
             # as otherwise it will immediately
             # resize the panel to its best size
             if paneInfo.IsFloating():
-                bestSize = panel.GetSize().Get()
+                bestSize = panel.GetSize()   .Get()
+                minSize  = panel.GetMinSize().Get()
 
                 # Unless it's current size is less
                 # than its minimum size (which probably
@@ -614,11 +614,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             floatSize = (bestSize[0] + self.__floatOffset[0],
                          bestSize[1] + self.__floatOffset[1])
 
-            log.debug('New size for panel {} - min: {}, '
+            log.debug('New size for panel {} - '
                       'best: {}, float: {}'.format(
-                          type(panel).__name__, minSize, bestSize, floatSize))
+                          type(panel).__name__, bestSize, floatSize))
 
-            paneInfo.MinSize(     minSize)  \
+            paneInfo.MinSize(     (1, 1))  \
                     .BestSize(    bestSize) \
                     .FloatingSize(floatSize)
 
