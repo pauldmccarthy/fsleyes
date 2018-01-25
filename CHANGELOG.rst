@@ -18,6 +18,9 @@ chronological order.
   dependent on the presence of the `Trimesh
   <https://github.com/mikedh/trimesh/>`_ library, a new optional dependency.
 * Mesh vertex data is now shown on the histogram panel.
+* It is now possible to associate multiple vertex files with mesh overlays.
+  For Freesurfer/GIFTI surfaces, if other vertex files are found (e.g. pial,
+  white matter, inflated), they will be added as options.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
 
