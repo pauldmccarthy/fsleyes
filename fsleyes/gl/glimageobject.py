@@ -20,7 +20,6 @@ import fsleyes.displaycontext.volume3dopts as volume3dopts
 import fsleyes.colourmaps                  as fslcmaps
 import fsleyes.gl.globject                 as globject
 import fsleyes.gl.routines                 as glroutines
-import fsleyes.gl.trimesh                  as trimesh
 
 
 class GLImageObject(globject.GLObject):
@@ -410,17 +409,25 @@ class GLImageObject(globject.GLObject):
         a 1D ``numpy`` array containing vertex indices.
 
         See the :meth:`get3DClipPlane` and :meth:`drawClipPlanes` methods.
+
+        .. note:: This method depends on the ``trimesh`` library - if it is
+                  not present, two empty arrays are returned.
         """
 
         origin, normal = self.get3DClipPlane(planeIdx)
         vertices       = self.generateVertices3D(bbox=bbox)[0]
         indices        = np.arange(vertices.shape[0]).reshape(-1, 3)
 
+        try:
+            import trimesh
+            import trimesh.intersections as tmint
+        except ImportError:
+            return np.zeros((0, 3)), np.zeros((0,))
+
         # Calculate the intersection of the clip
         # plane with the image bounding box
-        lines = trimesh.mesh_plane(
-            vertices,
-            indices,
+        lines = tmint.mesh_plane(
+            trimesh.Trimesh(vertices, indices),
             plane_normal=normal,
             plane_origin=origin)
 
