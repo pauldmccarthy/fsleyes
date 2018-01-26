@@ -396,15 +396,17 @@ class GLMesh(globject.GLObject):
         opts    = self.opts
         overlay = self.overlay
 
-        return (overlay.trimesh is not None) and opts.outline
+        return ((overlay.trimesh is not None) and
+                (opts.outline or opts.vertexData is not None))
 
 
     def needShader(self):
-        """Returns ``True`` if a shader should be loaded, ``False``
-        otherwise.
+        """Returns ``True`` if a shader should be loaded, ``False`` otherwise.
+        Relevant for both 2D and 3D rendering.
         """
-        return self.threedee or (self.draw2DOutlineEnabled() and
-                                 self.opts.vertexData is not None)
+        return (self.threedee or
+                (self.draw2DOutlineEnabled() and
+                 self.opts.vertexData is not None))
 
 
     def preDraw(self, xform=None, bbox=None):
@@ -414,7 +416,6 @@ class GLMesh(globject.GLObject):
         current viewport size.
         """
 
-        flat       = self.opts.vertexData is None
         useShader  = self.needShader()
         outline    = self.draw2DOutlineEnabled()
         useTexture = not (self.threedee or outline)
@@ -424,7 +425,7 @@ class GLMesh(globject.GLObject):
         if useShader:
             fslgl.glmesh_funcs.preDraw(self)
 
-            if not flat:
+            if self.opts.vertexData is not None:
                 if self.opts.useLut:
                     self.lutTexture.bindTexture(gl.GL_TEXTURE0)
                 else:
