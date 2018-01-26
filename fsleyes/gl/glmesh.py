@@ -859,8 +859,10 @@ class GLMesh(globject.GLObject):
         origin[zax] = zpos
         normal[zax] = 1
 
-        origin    = opts.transformCoords(origin, 'display', 'mesh')
         vertXform = opts.getTransform(           'mesh',    'display')
+        origin    = opts.transformCoords(origin, 'display', 'mesh')
+        normal    = opts.transformCoords(normal, 'display', 'mesh',
+                                         vector=True)
 
         # TODO use bbox to constrain? This
         #      would be nice, but is not
