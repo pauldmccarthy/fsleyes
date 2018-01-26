@@ -388,6 +388,25 @@ class GLMesh(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
+    def draw2DOutlineEnabled(self):
+        """Only relevent for 2D rendering. Returns ``True`` if outline mode
+        should be used, ``False`` otherwise.
+        """
+
+        opts    = self.opts
+        overlay = self.overlay
+
+        return (overlay.trimesh is not None) and opts.outline
+
+
+    def needShader(self):
+        """Returns ``True`` if a shader should be loaded, ``False``
+        otherwise.
+        """
+        return self.threedee or (self.draw2DOutlineEnabled() and
+                                 self.opts.vertexData is not None)
+
+
     def preDraw(self, xform=None, bbox=None):
         """Overrides :meth:`.GLObject.preDraw`. Performs some pre-drawing
         configuration, which might involve loading shaders, and/or setting the
@@ -395,11 +414,13 @@ class GLMesh(globject.GLObject):
         current viewport size.
         """
 
-        opts       = self.opts
         flat       = self.opts.vertexData is None
-        useShader  = self.threedee or (opts.vertexData is not None)
-        useTexture = not (self.threedee or opts.outline or useShader)
+        useShader  = self.needShader()
+        outline    = self.draw2DOutlineEnabled()
+        useTexture = not (self.threedee or outline)
 
+        # A shader program is used either in 3D, or
+        # in 2D when some vertex data is being shown
         if useShader:
             fslgl.glmesh_funcs.preDraw(self)
 
@@ -410,6 +431,8 @@ class GLMesh(globject.GLObject):
                     self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
                     self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
+        # An off-screen texture is used when
+        # drawing off-screen textures in 2D
         if useTexture:
             size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
             width  = size[2]
@@ -427,18 +450,9 @@ class GLMesh(globject.GLObject):
         """
 
         overlay       = self.overlay
-        opts          = self.opts
         lo,  hi       = self.getDisplayBounds()
         xax, yax, zax = axes
-
-        # If vertexData is set, we ignore
-        # the outline setting - meshes can
-        # only be coloured by vertexData
-        # in outline mode. We also can't
-        # draw outlines if trimesh is not
-        # present.
-        outline = (overlay.trimesh is not None) and \
-                  (opts.outline or opts.vertexData is not None)
+        outline       = self.draw2DOutlineEnabled()
 
         # Mesh is 2D, and is
         # perpendicular to
@@ -528,10 +542,7 @@ class GLMesh(globject.GLObject):
         :func:`.gl21.glmesh_funcs.postDraw` function.
         """
 
-        opts      = self.opts
-        useShader = self.threedee or (opts.vertexData is not None)
-
-        if useShader:
+        if self.needShader():
             fslgl.glmesh_funcs.postDraw(self)
 
             if self.opts.vertexData is not None:
@@ -605,7 +616,7 @@ class GLMesh(globject.GLObject):
 
         opts      = self.opts
         vdata     = opts.getVertexData()
-        useShader = vdata is not None
+        useShader = self.needShader()
         vertices  = self.vertices
         faces     = self.indices
 
