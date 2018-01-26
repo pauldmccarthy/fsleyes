@@ -23,8 +23,13 @@ chronological order.
   white matter, inflated), they will be added as options.
 * Docked FSLeyes control panels can now be minimised by dragging the dock
   separator.
+* A small bugfix to 2D mesh outline drawing with weird reference image
+  orientations.
+* Default 3D volume settings have been increased when running in an SSH/X11
+  environment.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
+
 
 0.20.1 (Friday January 11th 2017)
 ---------------------------------
