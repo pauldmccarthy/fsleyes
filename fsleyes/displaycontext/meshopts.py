@@ -489,6 +489,33 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return opts.transformCoords(coords, from_, to, vector=vector)
 
 
+    def getTransform(self, from_, to):
+        """Return a matrix which may be used to transform coordinates from
+        ``from_`` to ``to``.
+
+        The following values are accepted for the ``from_`` and ``to``
+        parameters:
+
+          - ``'world'``:  World coordinate system
+          - ``'display'`` Display coordinate system
+          - ``'mesh'``    The coordinate system of this mesh.
+        """
+
+        if from_ not in ('world', 'display', 'mesh') or \
+           to    not in ('world', 'display', 'mesh'):
+            raise ValueError('Invalid space(s): {} -> {}'.format(from_, to))
+
+        if self.refImage is None:
+            return np.eye(4)
+
+        opts = self.displayCtx.getOpts(self.refImage)
+
+        if from_ == 'mesh': from_ = self.coordSpace
+        if to    == 'mesh': to    = self.coordSpace
+
+        return opts.getTransform(from_, to)
+
+
     def __transformChanged(self, value, valid, ctx, name):
         """Called when the :attr:`.NiftiOpts.transform` property of the current
         :attr:`refImage` changes. Calls :meth:`__updateBounds`.

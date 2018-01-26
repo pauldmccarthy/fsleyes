@@ -859,17 +859,8 @@ class GLMesh(globject.GLObject):
         origin[zax] = zpos
         normal[zax] = 1
 
-        if opts.refImage is not None:
-
-            ropts  = opts.displayCtx.getOpts(opts.refImage)
-            origin = ropts.transformCoords(origin,
-                                           ropts.transform,
-                                           opts.coordSpace)
-
-            vertXform = ropts.getTransform(opts.coordSpace, ropts.transform)
-
-        else:
-            vertXform = None
+        origin    = opts.transformCoords(origin, 'display', 'mesh')
+        vertXform = opts.getTransform(           'mesh',    'display')
 
         # TODO use bbox to constrain? This
         #      would be nice, but is not
@@ -887,7 +878,6 @@ class GLMesh(globject.GLObject):
         self.overlayList.setData(overlay,
                                  'crosssection_{}'.format(zax),
                                  (lines, faces))
-
 
         faces = overlay.indices[faces]
 
