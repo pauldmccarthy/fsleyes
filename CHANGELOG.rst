@@ -28,6 +28,7 @@ chronological order.
 * Default 3D volume settings have been increased when running in an SSH/X11
   environment.
 * The 3D view now has a toolbar, and standard panels when it is opened.
+* Fixed some bugs with mask outline view.
 * The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
   can now be used on systems which do not have a display, and without Xvfb.
 
