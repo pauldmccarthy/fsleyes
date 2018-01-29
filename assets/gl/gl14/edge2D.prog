@@ -24,7 +24,9 @@
 {{ arb_temp('isEdgeBack')   }}
 {{ arb_temp('isEdgeFront')  }}
 
-MOV {{ isEdgeBack  }}, 0;
+MOV {{ back        }}, 0;
+MOV {{ front       }}, 0;
+MOV {{ isEdgeFront }}, 0;
 MOV {{ isEdgeFront }}, 0;
 
 # TODO make this a user-settable constant,
@@ -52,13 +54,26 @@ MOV {{ tempCoord }}, {{ texCoord }};
 SUB {{ tempCoord }}, {{ tempCoord }}, {{ off }};
 TEX {{ front     }}, {{ tempCoord }}, {{ texture }}, 2D;
 
+# Calculate absolute difference between the
+# central value and the front/back values.
 SUB {{ back  }}, {{ back  }}, {{ val }};
 SUB {{ front }}, {{ front }}, {{ val }};
 ABS {{ back  }}, {{ back  }};
 ABS {{ front }}, {{ front }};
 
-SLT {{ isEdgeBack  }}.{{ tchan }}, {{ tol }}, {{ back  }};
-SLT {{ isEdgeFront }}.{{ tchan }}, {{ tol }}, {{ front }};
+# Set back.x/front.x if there
+# is an edge on any channel
+MAX {{ back  }}.x, {{ back  }}.x, {{ back  }}.y;
+MAX {{ back  }}.x, {{ back  }}.x, {{ back  }}.z;
+MAX {{ back  }}.x, {{ back  }}.x, {{ back  }}.a;
+MAX {{ front }}.x, {{ front }}.x, {{ front }}.y;
+MAX {{ front }}.x, {{ front }}.x, {{ front }}.z;
+MAX {{ front }}.x, {{ front }}.x, {{ front }}.a;
+
+# Set the isEdgeBack/Front flags if the
+# difference is greater than the tolerance
+SLT {{ isEdgeBack  }}.{{ tchan }}, {{ tol }}, {{ back  }}.x;
+SLT {{ isEdgeFront }}.{{ tchan }}, {{ tol }}, {{ front }}.x;
 
 # Set out_isEdge.i if there was an
 # edge on any side of the i axis.
