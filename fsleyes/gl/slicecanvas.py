@@ -200,6 +200,9 @@ class SliceCanvas(object):
         self.displayCtx .addListener('bounds',
                                      self.name,
                                      self._overlayBoundsChanged)
+        self.displayCtx .addListener('displaySpace',
+                                     self.name,
+                                     self._displaySpaceChanged)
         self.displayCtx .addListener('syncOverlayDisplay',
                                      self.name,
                                      self._syncOverlayDisplayChanged)
@@ -232,6 +235,7 @@ class SliceCanvas(object):
 
         self.overlayList.removeListener('overlays',     self.name)
         self.displayCtx .removeListener('bounds',       self.name)
+        self.displayCtx .removeListener('displaySpace', self.name)
         self.displayCtx .removeListener('overlayOrder', self.name)
 
         for overlay in self.overlayList:
@@ -955,6 +959,13 @@ class SliceCanvas(object):
         # effective zoom stays the same
         with props.suppress(opts, 'zoom'):
             opts.zoom = self.scaleToZoom(scale)
+
+
+    def _displaySpaceChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.displaySpace` changes. Resets
+        the display bounds and zoom.
+        """
+        self.resetDisplay()
 
 
     def _zoomChanged(self, *a):
