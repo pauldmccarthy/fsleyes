@@ -968,12 +968,15 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         drange = VolumeOpts.getInitialDisplayRange()
 
         if self.__registered and drange is not None:
+
             if   overlay.ndims == 3: sample = overlay[:]
-            elif overlay.ndims == 4: sample = overlay[:, 0]
+            elif overlay.ndims == 4: sample = overlay[..., 0]
 
             drange = np.percentile(sample[sample != 0], drange)
+            crange = [drange[0], overlay.dataRange[1]]
+
             self.displayRange  = drange
-            self.clippingRange = drange
+            self.clippingRange = crange
 
         cmapopts .ColourMapOpts.__init__(self)
         vol3dopts.Volume3DOpts .__init__(self)
