@@ -238,8 +238,7 @@ class ColourMapOpts(object):
         # to the parent.
         if (not self.__registered) or \
            (not self.isSyncedToParent('displayRange')):
-            self.updateDataRange()
-
+            self.updateDataRange(False, False)
 
 
     def getColourMapOptsListenerName(self):
@@ -332,10 +331,15 @@ class ColourMapOpts(object):
                       property will be reset to the data range returned
                       by :meth:`getDataRange`. Otherwise the existing
                       value will be preserved.
+
         :arg resetCR: If ``True`` (the default), the :attr:`clippingRange`
                       property will be reset to the clipping range returned
                       by :meth:`getClippingRange`. Otherwise the existing
                       value will be preserved.
+
+        Note that both of these flags will be ignored if the existing low/high
+        :attr:`displayRange`/:attr:`clippingRange` values and limits are equal
+        to each other.
         """
 
         dataMin, dataMax = self.getDataRange()
@@ -372,11 +376,13 @@ class ColourMapOpts(object):
             # If display/clipping limit range
             # is 0, we assume that they haven't
             # yet been set
-            drUnset = self.displayRange .xmin == self.displayRange .xmax
-            crUnset = self.clippingRange.xmin == self.clippingRange.xmax
-            crGrow  = self.clippingRange.xhi  == self.clippingRange.xmax
-            drUnset = resetDR or drUnset
-            crUnset = resetCR or crUnset
+            drUnset = (self.displayRange .xmin == self.displayRange .xmax and
+                       self.displayRange .xlo  == self.displayRange .xhi)
+            crUnset = (self.clippingRange.xmin == self.clippingRange.xmax and
+                       self.clippingRange.xlo  == self.clippingRange.xhi)
+            crGrow  =  self.clippingRange.xhi  == self.clippingRange.xmax
+            drUnset =  resetDR or drUnset
+            crUnset =  resetCR or crUnset
 
             log.debug('[{}] Updating range limits [dr: {} - {}, ''cr: '
                       '{} - {}]'.format(id(self), drmin, drmax, crmin, crmax))

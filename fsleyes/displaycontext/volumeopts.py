@@ -865,6 +865,46 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
     """
 
 
+    @classmethod
+    def getInitialDisplayRange(cls):
+        """This class method returns a tuple containing ``(low, high)``
+        percentile values which are used to set the initial values for the
+        :attr:`.ColourMapOpts.displayRange` and
+        :attr:`.ColourMapOpts.clippingRange` properties. If the initial
+        display range has not yet been set (via the
+        :meth:`setInitialDisplayRange` method), ``None`` is returned.
+        """
+        try:
+            return cls.__initialDisplayRange
+        except AttributeError:
+            return None
+
+
+    @classmethod
+    def setInitialDisplayRange(cls, drange):
+        """Sets the initial values for the :attr:`.ColourMapOpts.displayRange`
+        and :attr:`.ColourMapOpts.clippingRange` to be used for new
+        :class:`VolumeOpts` instances.
+
+        :arg drange: A tuple containing ``(low, high)`` display range values
+                     as percentiles of the image data range. May be ``None``,
+                     in which case the initial display range will be set to the
+                     image data range.
+        """
+
+        if drange is not None:
+            low, high = drange
+            if not all((low < high,
+                        low >= 0,
+                        low <= 100,
+                        high >= 0,
+                        high <= 100)):
+                raise ValueError('Invalid initial display '
+                                 'range: {}'.format(drange))
+
+        cls.__initialDisplayRange = drange
+
+
     def __init__(self,
                  overlay,
                  display,
@@ -916,6 +956,25 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
                            overlayList,
                            displayCtx,
                            **kwargs)
+
+        # Some things only happen
+        # on the parent instance
+        self.__registered = self.getParent() is None
+
+        # Configure the initial display
+        # range for new images, from the
+        # initialDisplayRange percentiles.
+        # We do this before ColourMapOpts.init
+        drange = VolumeOpts.getInitialDisplayRange()
+
+        if self.__registered and drange is not None:
+            if   overlay.ndims == 3: sample = overlay[:]
+            elif overlay.ndims == 4: sample = overlay[:, 0]
+
+            drange = np.percentile(sample[sample != 0], drange)
+            self.displayRange  = drange
+            self.clippingRange = drange
+
         cmapopts .ColourMapOpts.__init__(self)
         vol3dopts.Volume3DOpts .__init__(self)
 
@@ -953,7 +1012,6 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         # will change the display data range. These
         # cannot be unbound between parent/children,
         # so only the parent needs to listen.
-        self.__registered = self.getParent() is None
         if self.__registered:
             overlayList.addListener('overlays',
                                     self.name,
