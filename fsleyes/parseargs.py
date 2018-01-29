@@ -44,10 +44,24 @@ This module provides the following functions:
    :nosignatures:
 
    parseArgs
+   applyMainArgs
    applySceneArgs
    applyOverlayArgs
    generateSceneArgs
    generateOverlayArgs
+
+
+-----
+Usage
+-----
+
+
+Call the :func:`parseArgs` function to parse all command line arguments.  Then
+create a :class:`.DisplayContext` and :class:`.OverlayList`, and pass them,
+along with the ``argparse.Namespace`` object, to the :func:`applyMainArgs`,
+:func:`applySceneArgs` and :func:`applyOverlayArgs`
+functions. :func:`applyMainArgs` should be called first, but the order of the
+latter two does not matter.
 
 
 --------------------------
@@ -2270,6 +2284,32 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
     return args
 
 
+def applyMainArgs(args, overlayList, displayCtx):
+    """Applies top-level arguments that are not specific to the scene or
+    any overlays. This should be called before either :func:`applySceneArgs`
+    or :func:`applyOverlayArgs`.
+
+    :arg args:        :class:`argparse.Namespace` object containing the parsed
+                      command line arguments.
+
+    :arg overlayList: A :class:`.OverlayList` instance.
+
+    :arg displayCtx:  A :class:`.DisplayContext` instance.
+    """
+
+    if args.initialDisplayRange is not None:
+        from fsleyes.displaycontext.volumeopts import VolumeOpts
+        VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
+
+    if args.bigmem is not None:
+        displayCtx.loadInMemory = args.bigmem
+
+    if args.neuroOrientation is not None:
+        displayCtx.radioOrientation = not args.neuroOrientation
+
+    displayCtx.autoDisplay = args.autoDisplay
+
+
 def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     """Configures the scene displayed by the given :class:`.DisplayContext`
     instance according to the arguments that were passed in on the command
@@ -2293,13 +2333,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
     """
 
     def apply():
-
-        # Set VolumeOpts initial display
-        # range first, as it will affect
-        # any standard images that are loaded
-        if args.initialDisplayRange is not None:
-            from fsleyes.displaycontext.volumeopts import VolumeOpts
-            VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
 
         # Load standard underlays next,
         # as they will affect the display
@@ -2328,12 +2361,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # First apply all command line options
         # related to the display context...
 
-        if args.bigmem is not None:
-            displayCtx.loadInMemory = args.bigmem
-
-        if args.neuroOrientation is not None:
-            displayCtx.radioOrientation = not args.neuroOrientation
-
         # Display space may be a string,
         # or a path to an image
         displaySpace = None
@@ -2352,9 +2379,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
         if displaySpace is not None:
             displayCtx.displaySpace = displaySpace
-
-        # Auto display
-        displayCtx.autoDisplay = args.autoDisplay
 
         # voxel/world location
         if (args.worldLoc or args.voxelLoc) and \

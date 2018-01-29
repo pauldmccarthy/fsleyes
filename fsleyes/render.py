@@ -178,6 +178,9 @@ def makeDisplayContext(namespace):
 
     # Load the overlays specified on the command
     # line, and configure their display properties
+    parseargs.applyMainArgs(   namespace,
+                               overlayList,
+                               masterDisplayCtx)
     parseargs.applyOverlayArgs(namespace,
                                overlayList,
                                masterDisplayCtx,
