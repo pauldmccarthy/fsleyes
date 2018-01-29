@@ -23,14 +23,16 @@ chronological order.
   white matter, inflated), they will be added as options.
 * Docked FSLeyes control panels can now be minimised by dragging the dock
   separator.
+* The 3D view now has a toolbar, and standard panels when it is opened.
+* The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
+  can now be used on systems which do not have a display, and without Xvfb.
+* Initial display range for all ``volume`` overlays can now be set as a
+  percentile, via the global ``--initialDisplayRange`` command line argument.
 * A small bugfix to 2D mesh outline drawing with weird reference image
   orientations.
 * Default 3D volume settings have been increased when running in an SSH/X11
   environment.
-* The 3D view now has a toolbar, and standard panels when it is opened.
 * Fixed some bugs with mask outline view.
-* The ``--version``, ``--help`` and ``--fullhelp`` command line arguments
-  can now be used on systems which do not have a display, and without Xvfb.
 
 
 0.20.1 (Friday January 11th 2017)
