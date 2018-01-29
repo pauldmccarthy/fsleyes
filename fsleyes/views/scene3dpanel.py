@@ -19,6 +19,7 @@ import fsl.utils.transform                as transform
 import fsleyes.displaycontext.scene3dopts as scene3dopts
 import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
 import fsleyes.actions                    as actions
+import fsleyes.controls.scene3dtoolbar    as s3dtoolbar
 from . import                                canvaspanel
 
 
@@ -107,7 +108,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         canvaspanel.CanvasPanel.destroy(self)
 
 
-
     def getGLCanvases(self):
         """Returns all of the :class:`.SliceCanvas` instances contained
         within this ``Scene3DPanel``.
@@ -135,6 +135,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.toggleCanvasSettingsPanel,
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
+                   self.toggleScene3DToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,
@@ -166,6 +167,14 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         method.
         """
         self.getCurrentProfile().resetDisplay()
+
+
+    @actions.toggleControlAction(s3dtoolbar.Scene3DToolBar)
+    def toggleScene3DToolBar(self):
+        """Shows/hides a :class:`.Scene3DToolBar`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        self.togglePanel(s3dtoolbar.Scene3DToolBar, panel=self)
 
 
     def getMovieFrame(self, overlay, opts):

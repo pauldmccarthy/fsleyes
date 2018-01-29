@@ -17,6 +17,7 @@ import fsleyes_props       as props
 import fsl.utils.transform as transform
 import fsl.utils.idle      as idle
 import fsleyes.profiles    as profiles
+import fsleyes.actions     as actions
 
 
 log = logging.getLogger(__name__)
@@ -64,6 +65,7 @@ class Scene3DViewProfile(profiles.Profile):
         return [self.__canvas]
 
 
+    @actions.action
     def resetDisplay(self):
         """Resets the :class:`.Scene3DCanvas` camera settings to their
         defaults.

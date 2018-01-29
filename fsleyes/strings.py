@@ -330,6 +330,7 @@ titles = TypeDict({
     'LightBoxToolBar'           : 'Lightbox view toolbar',
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
+    'Scene3DToolBar'            : '3D view toolbar',
 
     'PlotListPanel'             : 'Plot list',
     'TimeSeriesControlPanel'    : 'Time series control',

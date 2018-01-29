@@ -37,7 +37,7 @@ class Scene3DOpts(sceneopts.SceneOpts):
         """Create a ``Scene3DCanvasOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
         """
-        self.setAttribute('zoom',     'minval',  1)
+        self.setAttribute('zoom',     'minval',  75)
         self.setAttribute('zoom',     'default', 75)
         self.setAttribute('zoom',     'maxval',  5000)
         self.setAttribute('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))

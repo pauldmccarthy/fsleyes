@@ -416,6 +416,9 @@ properties = TypeDict({
     'OrthoToolBar.showCursorAndLabels' :
     'Show/hide the location cursor and anatomical labels',
 
+    'Scene3DToolBar.showCursorAndLegend' :
+    'Show/hide the location cursor and anatomical legend',
+
     'LightBoxOpts.zoom'           : 'Zoom level - this controls how many '
                                     'slices to display.',
     'LightBoxOpts.sliceSpacing'   : 'The spacing between adjacent slices. '
@@ -753,6 +756,9 @@ actions = TypeDict({
 
     'OrthoEditProfile.pasteSelection' :
     'Paste the contents of the clipboard into the currently selected image.',
+
+    'Scene3DViewProfile.resetDisplay' :
+    'Reset the zoom, pan, and rotation',
 
     # Items in the OverlayListPanel
     'ListItemWidget.save'  : 'Save this overlay to a file',

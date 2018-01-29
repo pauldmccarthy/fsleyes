@@ -469,6 +469,7 @@ def deserialisePerspective(persp):
         PowerSpectrumControlPanel
     from fsleyes.controls.powerspectrumtoolbar       import \
         PowerSpectrumToolBar
+    from fsleyes.controls.scene3dtoolbar             import Scene3DToolBar
     from fsleyes.controls.timeseriescontrolpanel     import \
         TimeSeriesControlPanel
     from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
@@ -504,6 +505,7 @@ def deserialisePerspective(persp):
         'PlotToolBar'                : PlotToolBar,
         'PowerSpectrumControlPanel'  : PowerSpectrumControlPanel,
         'PowerSpectrumToolBar'       : PowerSpectrumToolBar,
+        'Scene3DToolBar'             : Scene3DToolBar,
         'TimeSeriesControlPanel'     : TimeSeriesControlPanel,
         'TimeSeriesToolBar'          : TimeSeriesToolBar,
     }
@@ -625,6 +627,7 @@ def _addControlPanel(viewPanel, panelType):
     from fsleyes.controls.orthoeditactiontoolbar     import \
         OrthoEditActionToolBar
     from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
+
     from fsleyes.controls.orthotoolbar               import OrthoToolBar
     from fsleyes.controls.overlaydisplaytoolbar      import \
         OverlayDisplayToolBar
@@ -635,6 +638,7 @@ def _addControlPanel(viewPanel, panelType):
         PowerSpectrumControlPanel
     from fsleyes.controls.powerspectrumtoolbar       import \
         PowerSpectrumToolBar
+    from fsleyes.controls.scene3dtoolbar             import Scene3DToolBar
     from fsleyes.controls.timeseriescontrolpanel     import \
         TimeSeriesControlPanel
     from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
@@ -653,6 +657,7 @@ def _addControlPanel(viewPanel, panelType):
         PlotToolBar                : {'plotPanel'   : viewPanel},
         PowerSpectrumControlPanel  : {'plotPanel'   : viewPanel},
         PowerSpectrumToolBar       : {'psPanel'     : viewPanel},
+        Scene3DToolBar             : {'panel'       : viewPanel},
         TimeSeriesControlPanel     : {'plotPanel'   : viewPanel},
         TimeSeriesToolBar          : {'tsPanel'     : viewPanel},
     }
