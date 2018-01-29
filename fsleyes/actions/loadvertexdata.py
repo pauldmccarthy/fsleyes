@@ -128,7 +128,7 @@ class LoadVertexDataAction(base.Action):
             func(overlay, self.__displayCtx, path)
 
 
-def loadVertexData(overlay, displayCtx, filename):
+def loadVertexData(overlay, displayCtx, filename, select=True):
     """Attempt to load the specified vertex data for the given overlay.
 
     :arg overlay:    The overlay (assumed to be a :class:`.Mesh` instance)
@@ -136,6 +136,10 @@ def loadVertexData(overlay, displayCtx, filename):
     :arg displayCtx: The :class:`.DisplayContext`
 
     :arg filename:   Path to the vertex data file that is to be loaded.
+
+    :arg select:     If ``True`` (the default), the
+                     :attr:`.MeshOpts.vertexData` is set to the
+                     newly loaded file.
 
     :returns:        The path that was actually used - it will have been
                      converted to an absolute path if necessary.
@@ -160,11 +164,14 @@ def loadVertexData(overlay, displayCtx, filename):
     # Add the file as an
     # option, then select it.
     opts.addVertexDataOptions([filename])
-    opts.vertexData = filename
+
+    if select:
+        opts.vertexData = filename
+
     return filename
 
 
-def loadVertices(overlay, displayCtx, filename):
+def loadVertices(overlay, displayCtx, filename, select=True):
     """Attempt to load the specified vertexz file for the given overlay.
 
     :arg overlay:    The overlay (assumed to be a :class:`.Mesh` instance)
@@ -172,6 +179,10 @@ def loadVertices(overlay, displayCtx, filename):
     :arg displayCtx: The :class:`.DisplayContext`
 
     :arg filename:   Path to the vertex file that is to be loaded.
+
+    :arg select:     If ``True`` (the default), the
+                     :attr:`.MeshOpts.vertexSet` is set to the
+                     newly loaded file.
 
     :returns:        The path that was actually used - it will have been
                      converted to an absolute path if necessary.
@@ -184,5 +195,8 @@ def loadVertices(overlay, displayCtx, filename):
     # as in loadVertexData above
     overlay.loadVertices(filename, select=False)
     opts.addVertexSetOptions([filename])
-    overlay.vertices = filename
+
+    if select:
+        overlay.vertices = filename
+
     return filename

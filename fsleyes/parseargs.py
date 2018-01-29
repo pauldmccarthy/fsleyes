@@ -519,6 +519,7 @@ OPTIONS = td.TypeDict({
     'RGBVectorOpts'  : ['interpolation'],
     'MeshOpts'       : ['vertexData',
                         'vertexDataIndex',
+                        'vertexSet',
                         'colour',
                         'outline',
                         'outlineWidth',
@@ -804,6 +805,7 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.coordSpace'      : ('s',   'coordSpace',      True),
     'MeshOpts.vertexData'      : ('vd',  'vertexData',      True),
     'MeshOpts.vertexDataIndex' : ('vdi', 'vertexDataIndex', True),
+    'MeshOpts.vertexSet'       : ('vs',  'vertexSet',       True),
     'MeshOpts.useLut'          : ('ul',  'useLut',          False),
     'MeshOpts.lut'             : ('l',   'lut',             True),
     'MeshOpts.discardClipped'  : ('dc',  'discardClipped',  False),
@@ -1039,13 +1041,15 @@ HELP = td.TypeDict({
     'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
                               '(relative to reference image)',
     'MeshOpts.vertexData' :
-    'A file (GIFTI functional, shape, label, or time series file, or '
-    'a plain text file) containing one or more values for each vertex '
-    'in the mesh.',
+    'A file (e.g. Freesurfer .curv file, GIFTI functional, shape, label, '
+    'or time series file, or a plain text file) containing one or more values '
+    'for each vertex in the mesh.',
     'MeshOpts.vertexDataIndex' :
     'If the vertex data (-vd/--vertexData) file contains more than '
     'one value per vertex, specify the the index of the data to '
     'display.',
+    'MeshOpts.vertexSet' :
+    'A file containing an additional (compatible) mesh definition.',
     'MeshOpts.useLut' :
     'Use a lookup table instead of colour map(S) when colouring the mesh '
     'with vertex data.',
@@ -1154,6 +1158,9 @@ def getExtra(target, propName, default=None):
         'action'  : 'append',
     }
 
+    # Same for MeshOpts.vertexSet
+    vertexSetSettings = dict(vertexDataSettings)
+
     # VolumeOpts.clippingRange and displayRange are
     # manually applied with special apply functions,
     # but if an invalid value is passed in, we want the
@@ -1221,6 +1228,9 @@ def getExtra(target, propName, default=None):
         (fsldisplay.MeshOpts,       'vertexData')    : vertexDataSettings,
         (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
         (fsldisplay.FreesurferOpts, 'vertexData')    : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'vertexSet')     : vertexSetSettings,
+        (fsldisplay.GiftiOpts,      'vertexSet')     : vertexSetSettings,
+        (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
     }
 
     # Add (str, propname) versions
@@ -3011,8 +3021,19 @@ def _applySpecial_MeshOpts_vertexData(
     vertexData = list(args.vertexData)
     for i, vd in enumerate(vertexData):
         vertexData[i] = loadvertexdata.loadVertexData(
-            target.overlay, displayCtx, vd)
+            target.overlay, displayCtx, vd, select=False)
     target.vertexData = vertexData[0]
+
+
+def _applySpecial_MeshOpts_vertexSet(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.MeshOpts.vertexSet` option. """
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+    # Vertex set files need to be pre-
+    # loaded, similar to vertex data
+    for i, vd in enumerate(args.vertexSet):
+        loadvertexdata.loadVertices(
+            target.overlay, displayCtx, vd, select=False)
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(
