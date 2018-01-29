@@ -400,6 +400,7 @@ OPTIONS = td.TypeDict({
                        'neuroOrientation',
                        'standard',
                        'standard1mm',
+                       'initialDisplayRange',
                        'bigmem',
                        'bumMode',
                        'fontSize'],
@@ -668,26 +669,27 @@ def groupEpilog(target):
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'             : ('h',      'help',             False),
-    'Main.fullhelp'         : ('fh',     'fullhelp',         False),
-    'Main.verbose'          : ('v',      'verbose',          False),
-    'Main.version'          : ('V',      'version',          False),
-    'Main.skipfslcheck'     : ('S',      'skipfslcheck',     False),
-    'Main.updatecheck'      : ('U',      'updatecheck',      False),
-    'Main.noisy'            : ('n',      'noisy',            False),
-    'Main.glversion'        : ('gl',     'glversion',        True),
-    'Main.scene'            : ('s',      'scene',            True),
-    'Main.voxelLoc'         : ('vl',     'voxelLoc',         True),
-    'Main.worldLoc'         : ('wl',     'worldLoc',         True),
-    'Main.selectedOverlay'  : ('o',      'selectedOverlay',  True),
-    'Main.autoDisplay'      : ('ad',     'autoDisplay',      False),
-    'Main.displaySpace'     : ('ds',     'displaySpace',     True),
-    'Main.neuroOrientation' : ('no',     'neuroOrientation', False),
-    'Main.standard'         : ('std',    'standard',         False),
-    'Main.standard1mm'      : ('std1mm', 'standard1mm',      False),
-    'Main.bigmem'           : ('b',      'bigmem',           False),
-    'Main.bumMode'          : ('bums',   'bumMode',          False),
-    'Main.fontSize'         : ('fs',     'fontSize',         True),
+    'Main.help'                : ('h',      'help',                False),
+    'Main.fullhelp'            : ('fh',     'fullhelp',            False),
+    'Main.verbose'             : ('v',      'verbose',             False),
+    'Main.version'             : ('V',      'version',             False),
+    'Main.skipfslcheck'        : ('S',      'skipfslcheck',        False),
+    'Main.updatecheck'         : ('U',      'updatecheck',         False),
+    'Main.noisy'               : ('n',      'noisy',               False),
+    'Main.glversion'           : ('gl',     'glversion',           True),
+    'Main.scene'               : ('s',      'scene',               True),
+    'Main.voxelLoc'            : ('vl',     'voxelLoc',            True),
+    'Main.worldLoc'            : ('wl',     'worldLoc',            True),
+    'Main.selectedOverlay'     : ('o',      'selectedOverlay',     True),
+    'Main.autoDisplay'         : ('ad',     'autoDisplay',         False),
+    'Main.displaySpace'        : ('ds',     'displaySpace',        True),
+    'Main.neuroOrientation'    : ('no',     'neuroOrientation',    False),
+    'Main.standard'            : ('std',    'standard',            False),
+    'Main.standard1mm'         : ('std1mm', 'standard1mm',         False),
+    'Main.initialDisplayRange' : ('idr',    'initialDisplayRange', True),
+    'Main.bigmem'              : ('b',      'bigmem',              False),
+    'Main.bumMode'             : ('bums',   'bumMode',             False),
+    'Main.fontSize'            : ('fs',     'fontSize',            True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -874,6 +876,12 @@ HELP = td.TypeDict({
                               'underlay (only if $FSLDIR is set).',
     'Main.standard1mm'      : 'Add the MNI152 1mm standard image as an '
                               'underlay (only if $FSLDIR is set).',
+
+    'Main.initialDisplayRange' :
+    'Initial display range to use for volume overlays, expressed as '
+    '(low, high) percentiles of the image data range (calculated on '
+    'all non-zero voxels).',
+
     'Main.bigmem'           : 'Load all images into memory, '
                               'regardless of size.',
     'Main.bumMode'          : 'Make the coronal icon look like a bum',
@@ -1518,6 +1526,12 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['standard1mm'],
                             action='store_true',
                             help=mainHelp['standard1mm'])
+
+    mainParser.add_argument(*mainArgs['initialDisplayRange'],
+                            metavar=('LO', 'HI'),
+                            type=int,
+                            nargs=2,
+                            help=mainHelp['initialDisplayRange'])
 
     mainParser.add_argument(*mainArgs['bigmem'],
                             action='store_true',
@@ -2270,8 +2284,14 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     def apply():
 
+        # Set VolumeOpts initial display
+        # range first, as it will affect
+        # any standard images that are loaded
+        if args.initialDisplayRange is not None:
+            from fsleyes.displaycontext.volumeopts import VolumeOpts
+            VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
 
-        # Load standard underlays first,
+        # Load standard underlays next,
         # as they will affect the display
         # space/location stuff below.
         fsldir = fslplatform.fsldir
