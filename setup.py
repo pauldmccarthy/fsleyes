@@ -255,6 +255,9 @@ class build_standalone(Command):
         import jinja2.utils    # noqa
         import jinja2.runtime  # noqa
 
+        logging.getLogger('py2app')    .setLevel(logging.CRITICAL)
+        logging.getLogger('setuptools').setLevel(logging.CRITICAL)
+
         # Build user documentation
         self.run_command('userdoc')
 
