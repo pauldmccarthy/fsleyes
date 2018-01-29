@@ -357,7 +357,7 @@ class GLMask(glimageobject.GLImageObject):
         else:
             # Run the texture through an edge detection
             # filter, drawing the result to screen
-            self.edgeFilter.set(texture=1, offsets=offsets)
+            self.edgeFilter.set(offsets=offsets, outline=1)
             self.edgeFilter.apply(
                 self.renderTexture,
                 zpos, xmin, xmax, ymin, ymax, xax, yax,
