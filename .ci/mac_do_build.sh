@@ -2,9 +2,12 @@
 
 set -e
 
-python3.5 -m venv fsleyes-build-venv
-. fsleyes-build-venv/bin/activate
+VENV_DIR=fsleyes-venv/path/to/an/environment/with/a/very/long/name/to/make/sure/that/py2app/does/not/complain/fsleyes-build-venv
+
+python3.5 -m venv $VENV_DIR
+. $VENV_DIR/bin/activate
 pip install numpy
+pip install --no-binary scipy "scipy>=0.18,<2"
 pip install --pre "$WXPYTHON_VERSION"
 pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
 pip install -r requirements.txt
@@ -33,4 +36,4 @@ dist/FSLeyes.app/Contents/MacOS/fsleyes render -of file.png -sz 572 386 -hc -hl 
 python tests/compare_images.py file.png tests/testdata/test_screenshot_ortho.png 1000
 
 deactivate
-rm -r fsleyes-build-venv
+rm -r fsleyes-venv
