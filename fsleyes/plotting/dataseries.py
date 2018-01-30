@@ -139,11 +139,14 @@ class DataSeries(props.HasProperties):
 
     def destroy(self):
         """This method must be called when this ``DataSeries`` instance is no
-        longer needed. This implementation does nothing, but it should be
-        overridden by sub-classes which need to perform any clean-up
-        operations.
+        longer needed. This implementation may be overridden by sub-classes
+        which need to perform any clean-up operations. Sub-class
+        implementations should call this implementation.
         """
-        pass
+        self.__overlay     = None
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__plotPanel   = None
 
 
     def redrawProperties(self):

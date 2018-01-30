@@ -113,8 +113,8 @@ class HistogramSeries(dataseries.DataSeries):
 
         self.__dataCache.clear()
         self.__histCache.clear()
-        self.__dataCache = None
-        self.__histCache = None
+        self.__dataCache          = None
+        self.__histCache          = None
         self.__nvals              = 0
         self.__dataKey            = None
         self.__xdata              = None
@@ -123,6 +123,7 @@ class HistogramSeries(dataseries.DataSeries):
         self.__nonZeroData        = None
         self.__clippedFiniteData  = None
         self.__clippedNonZeroData = None
+        dataseries.DataSeries.destroy(self)
 
 
     def setHistogramData(self, data, key):
