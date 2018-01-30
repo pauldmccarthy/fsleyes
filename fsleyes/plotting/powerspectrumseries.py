@@ -66,7 +66,6 @@ class PowerSpectrumSeries(dataseries.DataSeries):
         """Must be called when this ``PowerSpectrumSeries`` is no longer
         needed.
         """
-        self.displayCtx = None
         dataseries.DataSeries.destroy(self)
 
 
