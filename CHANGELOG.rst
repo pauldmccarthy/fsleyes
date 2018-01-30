@@ -5,8 +5,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.21.0 (Under development)
---------------------------
+0.21.0 (Tuesday January 30th 2017)
+----------------------------------
 
 
 * FSLeyes is now able to load Freesurfer surface files, and ``mgh`` / ``mgz``
