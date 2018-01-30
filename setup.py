@@ -392,6 +392,7 @@ class py2app(orig_py2app):
                                     'certifi',
                                     'wxnat',
                                     'nibabel',
+                                    'trimesh',
                                     'xnat']
         self.matplotlib_backends = ['wx_agg']
         self.excludes            = ['IPython', 'ipykernel', 'Cython']
@@ -480,13 +481,17 @@ class pyinstaller(Command):
         extrabins = ['glut',
                      'OSMesa',
                      'SDL-1.2',
-                     'notify']
+                     'notify',
+                     'spatialindex',
+                     'spatialindex_c']
+
 
         extrabins = [find_library(b)  for b in extrabins]
         extrabins = ['{}:.'.format(b) for b in extrabins]
 
-        extrafiles  = self.include_package('xnat')
-        extrafiles += self.include_package('nibabel')
+        extrafiles  = self.include_package('nibabel')
+        extrafiles += self.include_package('xnat')
+        extrafiles += self.include_package('trimesh', ['.template'])
 
         cmd = [
             'pyinstaller',
@@ -531,6 +536,20 @@ class pyinstaller(Command):
         os.symlink(op.basename(libglut[0]),
                    op.join(distdir, 'FSLeyes', 'glut'))
 
+        # Similarly, something is wrong with
+        # the way that rtree tries to access
+        # libspatialindex...
+        libsi  = glob.glob(op.join(distdir, 'FSLeyes', 'libspatialindex.*'))
+        libsic = glob.glob(op.join(distdir, 'FSLeyes', 'libspatialindex_c.*'))
+        if len(libsi) != 1 or len(libsic) != 1:
+            raise RuntimeError('Cannot identify libspatialindex/_c')
+
+        os.symlink(op.basename(libsi[0]),
+                   op.join(distdir, 'FSLeyes', 'libspatialindex.so'))
+        os.symlink(op.basename(libsic[0]),
+                   op.join(distdir, 'FSLeyes', 'libspatialindex_c.so'))
+
+
         # pyinstaller tends to include lots
         # of things that will be provided
         # by the running OS, so we can remove
@@ -554,6 +573,7 @@ class pyinstaller(Command):
                         'libgdk*',
                         'libgio*',
                         'libGL.*',
+                        'libGLU*',
                         'libglib*',
                         'libglapi*',
                         'libgmodule*',
@@ -566,6 +586,7 @@ class pyinstaller(Command):
                         'libjbig*',
                         'libharfbuzz*',
                         'libICE*',
+                        'libicu*',
                         'libk5crypto*',
                         'libkeyutils*',
                         'libkrb*',
@@ -622,7 +643,12 @@ class pyinstaller(Command):
                 shutil.copy(src, dirname)
 
 
-    def include_package(self, pkgname):
+    def include_package(self, pkgname, ftypes=None):
+
+        if ftypes is None:
+            ftypes = []
+
+        ftypes.insert(0, '.py')
 
         pkg     = importlib.import_module(pkgname)
         pkgpath = pkg.__path__[0]
@@ -631,19 +657,20 @@ class pyinstaller(Command):
 
         for dirpath, _, filenames in os.walk(pkgpath):
 
-            filenames = [f for f in filenames if f.endswith('.py')]
+            filenames = [f for f in filenames
+                         if any([f.endswith(ft) for ft in ftypes])]
 
             dest = op.relpath(dirpath, op.join(pkgpath, '..'))
 
             for filename in filenames:
 
-                srcfile    = op.join(dirpath, filename)
-                srccmpfile = srcfile + 'c'
+                srcfile = op.join(dirpath, filename)
+                extrafiles.append('{}:{}'.format(srcfile, dest))
 
-                py_compile.compile(srcfile, srccmpfile)
-
-                extrafiles.append('{}:{}'.format(srcfile,    dest))
-                extrafiles.append('{}:{}'.format(srccmpfile, dest))
+                if srcfile.endswith('.py'):
+                    srccmpfile = srcfile + 'c'
+                    py_compile.compile(srcfile, srccmpfile)
+                    extrafiles.append('{}:{}'.format(srccmpfile, dest))
 
         return extrafiles
 
@@ -673,7 +700,8 @@ def find_library(name):
                   '/lib/',
                   '/usr/lib64/',
                   '/usr/lib/',
-                  '/usr/lib/x86_64-linux-gnu']
+                  '/usr/lib/x86_64-linux-gnu',
+                  '/usr/local/lib/']
     for sd in searchDirs:
         searchPath = op.join(sd, path)
         if op.exists(searchPath):
