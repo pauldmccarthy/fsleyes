@@ -255,9 +255,6 @@ class build_standalone(Command):
         import jinja2.utils    # noqa
         import jinja2.runtime  # noqa
 
-        logging.getLogger('py2app')    .setLevel(logging.CRITICAL)
-        logging.getLogger('setuptools').setLevel(logging.CRITICAL)
-
         # Build user documentation
         self.run_command('userdoc')
 
@@ -381,6 +378,7 @@ class py2app(orig_py2app):
         plist       = op.join(assetdir, 'build', 'Info.plist')
         assets      = build_asset_list(False)
 
+        self.verbose             = False
         self.quiet               = True
         self.argv_emulation      = True
         self.no_chdir            = True
@@ -866,6 +864,18 @@ def main():
 
 
 if __name__ == '__main__':
-
     logging.basicConfig()
+
+    def dummy_log(*args, **kwargs):
+        pass
+
+    # some things are awfully loud, and
+    # distutils does its own logging.
+    import distutils.log as dul
+    dul._global_log._log = dummy_log
+
+    logging.getLogger('py2app')    .setLevel(logging.CRITICAL)
+    logging.getLogger('distutils') .setLevel(logging.CRITICAL)
+    logging.getLogger('setuptools').setLevel(logging.CRITICAL)
+
     main()
