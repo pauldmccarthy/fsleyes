@@ -67,7 +67,6 @@ This module also provides a few convenience classes and functions:
    :nosignatures:
 
    ProxyImage
-   PropCache
    guessDataSourceType
    findFEATImage
 """
@@ -76,6 +75,7 @@ This module also provides a few convenience classes and functions:
 import os.path as op
 import            logging
 import            weakref
+import            deprecation
 
 import fsl.utils.path as fslpath
 import fsl.data.image as fslimage
@@ -344,7 +344,9 @@ class ProxyImage(fslimage.Image):
 
 
 class PropCache(object):
-    """A little convenience class which can be used to track and cache
+    """Deprecated - use :class:`fsleyes_props.PropCache` instead.
+
+    A little convenience class which can be used to track and cache
     property values, related to each overlay in the :class:`.OverlayList`,
     on some :class:`.HasProperties` object.
 
@@ -356,6 +358,9 @@ class PropCache(object):
     """
 
 
+    @deprecation.deprecated(deprecated_in='0.22.0',
+                            removed_in='1.0.0',
+                            details='Use fsleyes_props.PropCache instead')
     def __init__(self, overlayList, displayCtx, target, propNames):
         """Create a ``PropCache``.
 

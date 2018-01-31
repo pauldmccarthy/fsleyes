@@ -15,7 +15,6 @@ import numpy                        as np
 import fsl.data.image               as fslimage
 import fsl.utils.idle               as idle
 import fsleyes_props                as props
-import fsleyes.overlay              as fsloverlay
 import fsleyes.displaycontext       as fsldisplay
 import fsleyes.actions              as actions
 import fsleyes.actions.copyoverlay  as copyoverlay
@@ -297,14 +296,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # on a per-overlay basis. When an
         # overlay is re-selected, its values
         # are restored from the cache.
-        self.__cache = fsloverlay.PropCache(
-            overlayList,
-            displayCtx,
+        self.__cache = props.PropCache(
             self,
             ['targetImage',
              'intensityThres',
              'intensityThresLimit',
-             'searchRadius'])
+             'searchRadius'],
+            self.currentOverlay,
+            [(overlayList, 'overlays'),
+             (displayCtx,  'selectedOverlay')])
 
         orthoviewprofile.OrthoViewProfile.__init__(
             self,
@@ -425,6 +425,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__xcurAnnotation = None
         self.__ycurAnnotation = None
         self.__zcurAnnotation = None
+
+
+    def currentOverlay(self):
+        """Returns the overlay that is currently registered with this
+        ``OrthoEditProfile``.
+        """
+        return self.__currentOverlay
 
 
     @actions.action
