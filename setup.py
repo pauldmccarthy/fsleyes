@@ -483,6 +483,7 @@ class pyinstaller(Command):
                      'SDL-1.2',
                      'notify',
                      'spatialindex',
+                     'xcb-dri3',
                      'spatialindex_c']
 
 
@@ -564,11 +565,13 @@ class pyinstaller(Command):
                         'libdatrie*',
                         'libdbus*',
                         'libdrm*',
+                        'libEGL*',
                         'libenchant*',
                         'libffi*',
                         'libFLAC*',
                         'libfontconfig*',
                         'libgailutil*',
+                        'libgbm*',
                         'libgcc_s*',
                         'libgdk*',
                         'libgio*',
@@ -591,6 +594,7 @@ class pyinstaller(Command):
                         'libkeyutils*',
                         'libkrb*',
                         'libncurses*',
+                        'libnotify*',
                         'libogg*',
                         'libpango*',
                         'libpcre*',
@@ -608,10 +612,9 @@ class pyinstaller(Command):
                         'libuuid*',
                         'libvorbis*',
                         'libwrap*',
-                        'libxcb*',
+                        'libxcb-shm*',
                         'libxml*',
                         'libxslt*',
-                        'libxshm*',
                         'libX*']
 
         # libGLU is not present
