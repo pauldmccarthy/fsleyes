@@ -5,7 +5,15 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.21.0 (Tuesday January 30th 2017)
+0.21.1 (Monday February 5th 2018)
+---------------------------------
+
+
+* Adjustments to standalone linux builds, hopefully fixing the ``module 'wx'
+  has no attribute '__version__'`` issue.
+
+
+0.21.0 (Tuesday January 30th 2018)
 ----------------------------------
 
 
@@ -35,7 +43,7 @@ chronological order.
 * Fixed some bugs with mask outline view.
 
 
-0.20.1 (Friday January 11th 2017)
+0.20.1 (Friday January 11th 2018)
 ---------------------------------
 
 
@@ -46,7 +54,7 @@ chronological order.
 * Adjustments to standalone build environment.
 
 
-0.20.0 (Wednesday January 10th 2017)
+0.20.0 (Wednesday January 10th 2018)
 ------------------------------------
 
 
@@ -67,7 +75,7 @@ chronological order.
   keyboard events, instead of only notifying via sub-class methods.
 
 
-0.19.1 (Wednesday January 3rd 2017)
+0.19.1 (Wednesday January 3rd 2018)
 -----------------------------------
 
 
@@ -75,7 +83,7 @@ chronological order.
 * Adjustments to per-view volume linking.
 
 
-0.19.0 (Wednesday January 3rd 2017)
+0.19.0 (Wednesday January 3rd 2018)
 -----------------------------------
 
 
