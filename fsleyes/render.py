@@ -66,7 +66,7 @@ def main(args=None):
     # Parse arguments, and
     # configure logging/debugging
     namespace = parseArgs(args)
-    fsleyes.configLogging(namespace)
+    fsleyes.configLogging(namespace.verbose, namespace.noisy)
 
     # Initialise the fsleyes.gl modules
     fslgl.bootstrap(namespace.glversion)

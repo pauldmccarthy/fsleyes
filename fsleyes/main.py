@@ -239,7 +239,7 @@ def main(args=None):
         # Configure logging (this has to be done
         # after cli arguments have been parsed,
         # but before initialise is called).
-        fsleyes.configLogging(namespace[0])
+        fsleyes.configLogging(namespace[0].verbose, namespace[0].noisy)
 
         # Initialise sub-modules/packages. The
         # buildGui function is passed through

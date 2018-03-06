@@ -293,15 +293,22 @@ def initialise():
                            'Searched: {}'.format(options))
 
 
-def configLogging(namespace):
+def configLogging(verbose=0, noisy=None):
     """Configures *FSLeyes* ``logging``.
 
     .. note:: All logging calls are usually stripped from frozen
               versions of *FSLeyes*, so this function does nothing
               when we are running a frozen version.
+
+    :arg verbose: A number between 0 and 3, indicating the verbosity level.
+    :arg noisy:   A sequence of module names - logging will be enabled on these
+                  modules.
     """
 
     global log
+
+    if noisy is None:
+        noisy = []
 
     # make numpy/matplotlib/nibabel quiet
     warnings.filterwarnings('ignore',  module='matplotlib')
@@ -336,11 +343,7 @@ def configLogging(namespace):
         return
 
     # Now we can set up logging
-    # as requested by the user.
-    if namespace.noisy is None:
-        namespace.noisy = []
-
-    if namespace.verbose == 1:
+    if verbose == 1:
         log.setLevel(logging.DEBUG)
 
         # make some noisy things quiet
@@ -348,16 +351,16 @@ def configLogging(namespace):
         logging.getLogger('fsleyes.views')  .setLevel(logging.WARNING)
         logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
         logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
-    elif namespace.verbose == 2:
+    elif verbose == 2:
         log.setLevel(logging.DEBUG)
         logging.getLogger('fsleyes_props')  .setLevel(logging.WARNING)
         logging.getLogger('fsleyes_widgets').setLevel(logging.WARNING)
-    elif namespace.verbose == 3:
+    elif verbose == 3:
         log.setLevel(logging.DEBUG)
         logging.getLogger('fsleyes_props')  .setLevel(logging.DEBUG)
         logging.getLogger('fsleyes_widgets').setLevel(logging.DEBUG)
 
-    for mod in namespace.noisy:
+    for mod in noisy:
         logging.getLogger(mod).setLevel(logging.DEBUG)
 
     # The trace module monkey-patches some
