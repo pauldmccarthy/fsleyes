@@ -1,6 +1,8 @@
 include           LICENSE
 include           COPYRIGHT
 include           requirements.txt
+include           requirements-dev.txt
+include           requirements-extra.txt
 recursive-include userdoc                     *
 recursive-include apidoc                      *
 recursive-include assets                      *
