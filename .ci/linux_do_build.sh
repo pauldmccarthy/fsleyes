@@ -17,7 +17,7 @@ mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-"$OSNAME".tar.gz
 # test. Sleep between calls to xvfb
 # otherwise it gets upset.
 apt-get remove -y freeglut3 || yum remove -y freeglut
-xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes -V
+dist/FSLeyes/fsleyes -V
 sleep 5
 xvfb-run -s "-screen 0 640x482x24" dist/FSLeyes/fsleyes -S -r .ci/build_test.py
 sleep 5
