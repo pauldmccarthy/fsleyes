@@ -144,9 +144,6 @@ def main(args=None):
         render.main(args[1:])
         sys.exit(0)
 
-    # Implement various hacks and workarounds
-    hacksAndWorkarounds()
-
     # the fsleyes.initialise function figures
     # out the path to asset files (e.g. cmaps)
     fsleyes.initialise()
@@ -294,49 +291,6 @@ def main(args=None):
     app.MainLoop()
     shutdown()
     return exitCode[0]
-
-
-def hacksAndWorkarounds():
-    """Called by :func:`main`. Implements hacks and workarounds for
-    various things.
-    """
-
-    # Under wxPython/Phoenix, the
-    # wx.html package must be imported
-    # before a wx.App has been created
-    import wx.html  # noqa
-
-    # PyInstaller 3.2.1 forces matplotlib to use a
-    # temporary directory for its settings and font
-    # cache, and then deletes the directory on exit.
-    # This is silly, because the font cache can take
-    # a long time to create.  Clearing the environment
-    # variable should cause matplotlib to use
-    # $HOME/.matplotlib (or, failing that, a temporary
-    # directory).
-    #
-    # https://matplotlib.org/faq/environment_variables_faq.html#\
-    #   envvar-MPLCONFIGDIR
-    #
-    # https://github.com/pyinstaller/pyinstaller/blob/v3.2.1/\
-    #   PyInstaller/loader/rthooks/pyi_rth_mplconfig.py
-    #
-    # n.b. This will cause issues if building FSLeyes
-    #      with the pyinstaller '--onefile' option, as
-    #      discussed in the above pyinstaller file.
-    if fslplatform.frozen:
-        os.environ.pop('MPLCONFIGDIR', None)
-
-    # OSX sometimes sets the local environment
-    # variables to non-standard values, which
-    # breaks the python locale module.
-    #
-    # http://bugs.python.org/issue18378
-    try:
-        import locale
-        locale.getdefaultlocale()
-    except:
-        os.environ['LC_ALL'] = 'C.UTF-8'
 
 
 def initialise(splash, namespace, callback):

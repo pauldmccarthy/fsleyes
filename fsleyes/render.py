@@ -18,7 +18,6 @@ import fsleyes_widgets.utils.layout          as fsllayout
 import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
 import                                          fsleyes
-import fsleyes.main                          as fsleyesmain
 import fsleyes.version                       as version
 import fsleyes.overlay                       as fsloverlay
 import fsleyes.colourmaps                    as fslcm
@@ -58,7 +57,6 @@ def main(args=None):
 
     # Initialise FSLeyes and implement hacks
     fsleyes.initialise()
-    fsleyesmain.hacksAndWorkarounds()
 
     # Initialise colour maps module
     fslcm.init()
