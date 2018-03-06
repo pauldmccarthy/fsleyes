@@ -194,7 +194,9 @@ def makeGif(overlayList,
             ctx.images[0].save(filename,
                                format='gif',
                                save_all=True,
-                               append_images=ctx.images[1:])
+                               append_images=ctx.images[1:],
+                               duration=50,
+                               loop=0)
         shutil.rmtree(tempdir)
 
         if onfinish is not None:
