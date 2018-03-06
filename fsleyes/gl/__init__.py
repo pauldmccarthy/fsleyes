@@ -317,7 +317,7 @@ def bootstrap(glVersion=None):
         verstr = '1.4'
         glpkg  = gl14
     else: raise RuntimeError('OpenGL 1.4 or newer is required '
-                             '(detected version: {:0.1f}'.format(glVersion))
+                             '(detected version: {:0.1f})'.format(glVersion))
 
     # The gl21 implementation depends on a
     # few extensions - if they're not present,
