@@ -33,8 +33,9 @@ import wx
 
 from fsl.utils.platform import platform as fslplatform
 
-import                   fsleyes
-import fsleyes.splash as fslsplash
+import                       fsleyes
+import fsleyes.splash     as fslsplash
+import fsleyes.colourmaps as colourmaps
 
 
 log = logging.getLogger(__name__)
@@ -146,6 +147,16 @@ def main(args=None):
     # Implement various hacks and workarounds
     hacksAndWorkarounds()
 
+    # the fsleyes.initialise function figures
+    # out the path to asset files (e.g. cmaps)
+    fsleyes.initialise()
+
+    # initialise colour maps - this must be
+    # done before parsing arguments, as if
+    # the user asks for help, available
+    # colourmaps/luts will be listed.
+    colourmaps.init()
+
     # Function to bootstrap the GUI - keep
     # reading below.
     def initgui():
@@ -153,7 +164,6 @@ def main(args=None):
         # First thing's first. Create a wx.App,
         # and initialise the FSLeyes package.
         app = FSLeyesApp()
-        fsleyes.initialise()
 
         # Create a splash screen frame
         splash = fslsplash.FSLeyesSplash(None)
@@ -347,11 +357,8 @@ def initialise(splash, namespace, callback):
     import fsl.utils.settings as fslsettings
     import fsleyes_props      as props
     import fsleyes.gl         as fslgl
-    import fsleyes.colourmaps as colourmaps
 
     props.initGUI()
-
-    colourmaps.init()
 
     # The save/load directory defaults
     # to the current working directory.
