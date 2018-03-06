@@ -19,17 +19,15 @@ Installation
 ------------
 
 
-FSLeyes is a `wxPython <https://www.wxpython.org>`_ application. As of January
-2018, the latest version of wxPython is in pre-release, so it cannot be
-installed like any other Python package.
+FSLeyes is a `wxPython <https://www.wxpython.org>`_ application.  If you are
+on Linux, you will need to install wxPython first - head to
+https://extras.wxpython.org/wxPython4/extras/linux/ and find the directory
+that matches your OS. Then run this command (change the URL accordingly)::
 
-
- - **macOS**: ``pip install --pre wxpython``
- - **Linux** (change the URL for your specific platform): ``pip install --only-binary wxpython -f https://extras.wxpython.org/wxPython4/extras/linux/gtk2/ubuntu-16.04/ wxpython``
+    pip install --only-binary wxpython -f https://extras.wxpython.org/wxPython4/extras/linux/gtk2/ubuntu-16.04/ wxpython
 
 
 Once ``wxPython`` has been installed, you can install FSLeyes like so::
-
 
     pip install fsleyes
 
