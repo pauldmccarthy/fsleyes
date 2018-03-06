@@ -1997,6 +1997,15 @@ def parseArgs(mainParser,
         # the parent Namespace object.
         namespace.overlays.append(optArgs)
 
+    # if logging is disabled, the logging
+    # options were not added to the parser.
+    # So we fudge the Namespace attributes
+    # so none of the FSLeyes code needs to
+    # know.
+    if fsleyes.disableLogging:
+        namespace.verbose = 0
+        namespace.noisy   = []
+
     return namespace
 
 
