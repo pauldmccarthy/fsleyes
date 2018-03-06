@@ -14,10 +14,10 @@
 #    4. dev-build: Building standalone distributions for development
 #                  versions.
 #
-#    5. build:     Building source distributions, wheels, and standalone
+#    5. build:     Building source, wheel, conda, and standalone
 #                  distributions for releases
 #
-#    6. deploy:    Uploading the source and wheel distributions to pypi,
+#    6. deploy:    Uploading the source, conda and wheel distributions
 #                  and the documentation and standalone distributions to a
 #                  hosting server.
 #
@@ -81,6 +81,9 @@ stages:
 #   - SSH_PRIVATE_KEY_BUILD_DEPLOY   - private key for standalone builds
 #                                      to remote host (BUILD_HOST)
 #
+#   - SSH_PRIVATE_KEY_CONDA_DEPLOY   - private key for rsyncing conda builds
+#                                      to remote host (CONDA_HOST)
+#
 #   - SSH_SERVER_HOSTKEYS            - List of trusted SSH hosts
 #
 #   - APIDOC_HOST:                   - Username@host to upload API
@@ -94,6 +97,12 @@ stages:
 #   - BUILD_HOST                     - Username@host to upload release
 #                                      standalone builds to
 #                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - CONDA_HOST:                    - Username@host to upload conda build to
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - CONDA_CHANNELS                 - List of additional conda channels to
+#                                      use for conda build.
 #
 #   - TWINE_USERNAME:                - Username to use when uploading to pypi
 #
@@ -281,6 +290,25 @@ build-pypi-dist:
       - dist/*whl
 
 
+build-conda-dist:
+  <<: *only_releases
+  <<: *patch_version
+
+  stage: build
+  image: continuumio/miniconda3
+
+  tags:
+    - docker
+
+  script:
+   - bash ./.ci/build_conda_dist.sh fsleyes "$CI_COMMIT_REF_NAME"
+
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - dist/conda-bld
+
+
 .linux_do_build: &linux_do_build
   tags:
     - docker
@@ -447,6 +475,23 @@ deploy-pypi:
 
   script:
     - bash ./.ci/deploy_pypi.sh
+
+
+deploy-conda:
+  <<: *only_releases
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python:3.5
+
+  tags:
+    - docker
+
+  dependencies:
+    - build-conda-dist
+
+  script:
+    - bash ./.ci/deploy_conda.sh
 
 
 deploy-builds:
