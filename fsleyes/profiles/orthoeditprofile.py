@@ -369,7 +369,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             editor.destroy()
 
         self.__destroyAnnotations()
-        self.__cache.destroy()
 
         self.__editors         = None
         self.__xcanvas         = None
