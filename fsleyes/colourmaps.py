@@ -1238,7 +1238,7 @@ class LookupTable(notifier.Notifier):
 
         def wrapper(self, *args, **kwargs):
             if not self.__parsed and self.__toParse is not None:
-                self.__parse(self.__toParse)
+                self.__parse(*self.__toParse)
                 self.__toParse = None
                 self.__parsed  = True
             return func(self, *args, **kwargs)
@@ -1414,11 +1414,11 @@ class LookupTable(notifier.Notifier):
         self.saved = True
 
 
-    def __parse(self, lut):
+    def __parse(self, lut, names):
         """Parses ``lut``, a numpy array containing a LUT. """
 
-        labels = [LutLabel(l, name.decode('utf-8'), (r, g, b), l > 0)
-                  for (l, r, g, b, name) in lut]
+        labels = [LutLabel(l, name, (r, g, b), l > 0)
+                  for ((l, r, g, b), name) in zip(lut, names)]
 
         self.__labels = labels
 
@@ -1431,15 +1431,21 @@ class LookupTable(notifier.Notifier):
         from the given file.
         """
 
-        lut = np.loadtxt(
-            lutFile,
-            delimiter=' ',
-            dtype={
-                'names'   : ('label', 'r', 'g', 'b', 'name'),
-                'formats' : (np.int, np.float, np.float, np.float, '|S100')})
+        with open(lutFile, 'rt') as f:
+            lut = np.genfromtxt(
+                f,
+                usecols=(0, 1, 2, 3),
+                dtype={
+                    'formats' : (np.int, np.float, np.float, np.float),
+                    'names'   : ('label', 'r', 'g', 'b')})
+            f.seek(0)
+            names = [l.split(maxsplit=4)[4].strip() for l in f]
 
-        lut.sort(order='label')
-        return lut
+        order = lut.argsort(order='label')
+        lut   = lut[order]
+        names = [names[o] for o in order]
+
+        return lut, names
 
 
     def __labelChanged(self, value, valid, label, propName):
