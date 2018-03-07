@@ -214,10 +214,6 @@ remaining columns give the label name. For example::
         3  1.00000 0.85490 0.72549 Superior Frontal Gyrus
 
 
-.. important:: The labels specified in a ``.lut`` file must be specified
-               in ascending order.
-
-
 FSLeyes manages lookup table files in the same manner as described for
 :ref:`colour maps <customising_colour_maps>`. Built-in lookup table files can
 be located under the FSLeyes ``assets/luts/`` directory. A file called
