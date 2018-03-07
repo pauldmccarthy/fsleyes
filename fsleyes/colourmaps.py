@@ -1450,8 +1450,8 @@ class LookupTable(notifier.Notifier):
                 lval  = label.value
 
                 if (last is not None) and (lval <= last):
-                    raise ValueError('{} file is not in ascending '
-                                     'order!'.format(lutFile))
+                    raise ValueError('{} file is not in ascending order! '
+                                     '{} <= {}'.format(lutFile, lval, last))
 
                 labels.append(label)
                 last = lval

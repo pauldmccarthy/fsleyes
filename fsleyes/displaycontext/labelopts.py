@@ -62,7 +62,7 @@ class LabelOpts(volumeopts.NiftiOpts):
         aux_file = overlay.strval('aux_file').lower()
 
         if aux_file.startswith('mgh'):
-            aux_file = 'mgh-cma-freesurfer'
+            aux_file = 'freesurfercolorlut'
 
         # Check to see if any registered lookup table
         # has an ID that starts with the aux_file value.
