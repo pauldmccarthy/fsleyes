@@ -160,37 +160,43 @@ def saveOverlay(overlay, display=None):
     # If this image has been loaded from a file,
     # ask the user whether they want to overwrite
     # that file, or save the image to a new file.
+    #
     if overlay.dataSource is not None:
 
-        msg   = strings.messages['SaveOverlayAction.overwrite'].format(
-            overlay.dataSource)
-        title = strings.titles[  'SaveOverlayAction.overwrite'].format(
-            overlay.dataSource)
+        # If the data source is not nifti (e.g.
+        # mgz), we are not going to overwrite it,
+        # so we don't ask.
+        if fslimage.looksLikeImage(overlay.dataSource):
 
-        dlg = wx.MessageDialog(
-            wx.GetTopLevelWindows()[0],
-            message=msg,
-            caption=title,
-            style=(wx.ICON_WARNING  |
-                   wx.YES_NO        |
-                   wx.CANCEL        |
-                   wx.NO_DEFAULT))
-        dlg.SetYesNoCancelLabels(
-            strings.labels['SaveOverlayAction.overwrite'],
-            strings.labels['SaveOverlayAction.saveNew'],
-            strings.labels['SaveOverlayAction.cancel'])
+            msg   = strings.messages['SaveOverlayAction.overwrite'].format(
+                overlay.dataSource)
+            title = strings.titles[  'SaveOverlayAction.overwrite'].format(
+                overlay.dataSource)
 
-        response = dlg.ShowModal()
+            dlg = wx.MessageDialog(
+                wx.GetTopLevelWindows()[0],
+                message=msg,
+                caption=title,
+                style=(wx.ICON_WARNING  |
+                       wx.YES_NO        |
+                       wx.CANCEL        |
+                       wx.NO_DEFAULT))
+            dlg.SetYesNoCancelLabels(
+                strings.labels['SaveOverlayAction.overwrite'],
+                strings.labels['SaveOverlayAction.saveNew'],
+                strings.labels['SaveOverlayAction.cancel'])
 
-        # Cancel == cancel the save
-        # Yes    == overwrite the existing file
-        # No     == save to a new file (prompt the user for the file name)
-        if response == wx.ID_CANCEL:
-            return
+            response = dlg.ShowModal()
 
-        if response == wx.ID_YES:
-            doSave(overlay)
-            return
+            # Cancel == cancel the save
+            # Yes    == overwrite the existing file
+            # No     == save to a new file (prompt the user for the file name)
+            if response == wx.ID_CANCEL:
+                return
+
+            if response == wx.ID_YES:
+                doSave(overlay)
+                return
 
         fromDir  = op.dirname(overlay.dataSource)
         filename = fslimage.removeExt(op.basename(overlay.dataSource))
