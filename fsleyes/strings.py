@@ -98,6 +98,10 @@ messages = TypeDict({
     'A lookup table with that name already exists - choose a different name.',
     'LookupTablePanel.installerror' :
     'An error occurred while installing the lookup table.',
+    'LookupTablePanel.labelExists' :
+    'The {} LUT already contains a label with value {}',
+    'LookupTablePanel.loadError' :
+    'An error occurred while loading {}',
 
     'actions.copyoverlay.createMask'  : 'Create empty mask image '
                                         'with same dimensions',
@@ -135,9 +139,6 @@ messages = TypeDict({
     'PlotPanel.preparingData'          : 'Preparing data - please wait...',
 
     'HistogramPanel.calcHist'           : 'Calculating histogram for {} ...',
-
-    'LookupTablePanel.labelExists' : 'The {} LUT already contains a '
-                                     'label with value {}',
 
     'ClusterPanel.noOverlays'     : 'Add a FEAT overlay',
     'ClusterPanel.notFEAT'        : 'Choose a FEAT overlay',
@@ -354,6 +355,7 @@ titles = TypeDict({
     'LookupTablePanel.loadLut'      : 'Select a lookup table file',
     'LookupTablePanel.labelExists'  : 'Label already exists',
     'LookupTablePanel.installerror' : 'Error installing lookup table',
+    'LookupTablePanel.loadError'    : 'Error loading lut file',
 
     'MelodicClassificationPanel.loadDialog' : 'Load FIX/Melview file...',
     'MelodicClassificationPanel.saveDialog' : 'Save FIX/Melview file...',

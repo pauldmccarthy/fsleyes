@@ -512,11 +512,14 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
             return
 
         # Register the lut
-        lut = fslcmaps.registerLookupTable(lutFile,
-                                           self.overlayList,
-                                           self.displayCtx,
-                                           key=lutKey,
-                                           name=lutName)
+        errTitle = strings.titles[  self, 'loadError']
+        errMsg   = strings.messages[self, 'loadError'].format(lutFile)
+        with status.reportIfError(errTitle, errMsg):
+            lut = fslcmaps.registerLookupTable(lutFile,
+                                               self.overlayList,
+                                               self.displayCtx,
+                                               key=lutKey,
+                                               name=lutName)
 
         # Save the directory for next time
         fslsettings.write('fsleyes.loadlutdir', lutDir)
