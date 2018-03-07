@@ -140,8 +140,6 @@ This list of label, colour, and name mappings is used to create a
 :class:`LookupTable` instance, which can be used to access the colours and
 names associated with each label value.
 
-.. note:: The labels specified in a ``.lut`` file must be in ascending order.
-
 
 Once created, ``LookupTable`` instances may be modified - labels can be
 added/removed, and the name/colour of existing labels can be modified.  The
@@ -1220,28 +1218,30 @@ class LookupTable(notifier.Notifier):
         self.key      = key
         self.name     = name
         self.__labels = []
-        self.__saved  = False
         self.__name   = 'LookupTable({})_{}'.format(self.name, id(self))
 
-        # The LUT is loaded lazily on first access
-        self.__loaded = False
-        self.__toLoad = lutFile
+        # The LUT is loaded now, but parsed
+        # lazily on first access
+        self.__saved   = False
+        self.__parsed  = False
+        self.__toParse = None
+
+        if lutFile is not None:
+            self.__toParse = self.__load(lutFile)
+            self.__savbed  = True
 
 
-    def lazyload(func):
-        """Decorator which is used to lazy-load the LUT file only when it is
+    def lazyparse(func):
+        """Decorator which is used to lazy-parse the LUT file only when it is
         first needed.
         """
 
         def wrapper(self, *args, **kwargs):
-
-            if not self.__loaded and self.__toLoad is not None:
-                self.__load(self.__toLoad)
-                self.__toLoad = None
-                self.__loaded = True
-
+            if not self.__parsed and self.__toParse is not None:
+                self.__parse(self.__toParse)
+                self.__toParse = None
+                self.__parsed  = True
             return func(self, *args, **kwargs)
-
         return wrapper
 
 
@@ -1255,13 +1255,13 @@ class LookupTable(notifier.Notifier):
         return self.name
 
 
-    @lazyload
+    @lazyparse
     def __len__(self):
         """Returns the number of labels in this ``LookupTable``. """
         return len(self.__labels)
 
 
-    @lazyload
+    @lazyparse
     def __getitem__(self, i):
         """Access the ``LutLabel`` at index ``i``. Use the :meth:`get` method
         to determine the index of a ``LutLabel`` from its value.
@@ -1269,7 +1269,7 @@ class LookupTable(notifier.Notifier):
         return self.__labels[i]
 
 
-    @lazyload
+    @lazyparse
     def max(self):
         """Returns the maximum current label value in this ``LookupTable``. """
         if len(self.__labels) == 0: return 0
@@ -1294,7 +1294,7 @@ class LookupTable(notifier.Notifier):
         self.notify(topic='saved')
 
 
-    @lazyload
+    @lazyparse
     def index(self, value):
         """Returns the index in this ``LookupTable`` of the ``LutLabel`` with
         the specified value. Raises a :exc:`ValueError` if no ``LutLabel``
@@ -1309,7 +1309,7 @@ class LookupTable(notifier.Notifier):
         return self.__labels.index(value)
 
 
-    @lazyload
+    @lazyparse
     def labels(self):
         """Returns an iterator over all :class:`LutLabel` instances in this
         ``LookupTable``.
@@ -1317,7 +1317,7 @@ class LookupTable(notifier.Notifier):
         return iter(self.__labels)
 
 
-    @lazyload
+    @lazyparse
     def get(self, value):
         """Returns the :class:`LutLabel` instance associated with the given
         ``value``, or ``None`` if there is no label.
@@ -1326,7 +1326,7 @@ class LookupTable(notifier.Notifier):
         except ValueError: return None
 
 
-    @lazyload
+    @lazyparse
     def getByName(self, name):
         """Returns the :class:`LutLabel` instance associated with the given
         ``name``, or ``None`` if there is no ``LutLabel``. The name comparison
@@ -1341,7 +1341,7 @@ class LookupTable(notifier.Notifier):
         return None
 
 
-    @lazyload
+    @lazyparse
     def new(self, name=None, colour=None, enabled=None):
         """Add a new :class:`LutLabel` with value ``max() + 1``, and add it
         to this ``LookupTable``.
@@ -1349,7 +1349,7 @@ class LookupTable(notifier.Notifier):
         return self.insert(self.max() + 1, name, colour, enabled)
 
 
-    @lazyload
+    @lazyparse
     def insert(self, value, name=None, colour=None, enabled=None):
         """Create a new :class:`LutLabel` associated with the given
         ``value`` and insert it into this ``LookupTable``. Internally, the
@@ -1378,7 +1378,7 @@ class LookupTable(notifier.Notifier):
         return label
 
 
-    @lazyload
+    @lazyparse
     def delete(self, value):
         """Removes the label with the given value from the lookup table.
 
@@ -1395,7 +1395,7 @@ class LookupTable(notifier.Notifier):
         self.saved = False
 
 
-    @lazyload
+    @lazyparse
     def save(self, lutFile):
         """Saves this ``LookupTable`` instance to the specified ``lutFile``.
         """
@@ -1414,53 +1414,32 @@ class LookupTable(notifier.Notifier):
         self.saved = True
 
 
+    def __parse(self, lut):
+        """Parses ``lut``, a numpy array containing a LUT. """
+
+        labels = [LutLabel(l, name.decode('utf-8'), (r, g, b), l > 0)
+                  for (l, r, g, b, name) in lut]
+
+        self.__labels = labels
+
+        for label in labels:
+            label.addGlobalListener(self.__name, self.__labelChanged)
+
+
     def __load(self, lutFile):
         """Called by :meth:`__init__`. Loads a ``LookupTable`` specification
         from the given file.
         """
 
-        # Calling insert() to add new labels is very
-        # slow, because the labels are inserted in
-        # ascending order. But because we require
-        # .lut files to be sorted, we can create the
-        # lookup table much faster.
-        def parseLabel(line):
-            tkns = line.split()
+        lut = np.loadtxt(
+            lutFile,
+            delimiter=' ',
+            dtype={
+                'names'   : ('label', 'r', 'g', 'b', 'name'),
+                'formats' : (np.int, np.float, np.float, np.float, '|S100')})
 
-            label = int(     tkns[0])
-            r     = float(   tkns[1])
-            g     = float(   tkns[2])
-            b     = float(   tkns[3])
-            lName = ' '.join(tkns[4:])
-
-            return LutLabel(label, lName, (r, g, b), label > 0)
-
-        with open(lutFile, 'rt') as f:
-
-            last   = None
-            lines  = [l.strip() for l in f.readlines()]
-            labels = []
-
-            for line in lines:
-
-                if line == '':
-                    continue
-
-                label = parseLabel(line)
-                lval  = label.value
-
-                if (last is not None) and (lval <= last):
-                    raise ValueError('{} file is not in ascending order! '
-                                     '{} <= {}'.format(lutFile, lval, last))
-
-                labels.append(label)
-                last = lval
-
-            self.__labels = labels
-            self.saved    = True
-
-            for label in labels:
-                label.addGlobalListener(self.__name, self.__labelChanged)
+        lut.sort(order='label')
+        return lut
 
 
     def __labelChanged(self, value, valid, label, propName):
