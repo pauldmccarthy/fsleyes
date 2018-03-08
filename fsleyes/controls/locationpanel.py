@@ -1209,7 +1209,7 @@ def loadLocationHistory(filename):
                 continue
 
             try:
-                parts = line.split(' ', 3)
+                parts = line.split(None, 3)
                 loc   = [float(parts[0]),
                          float(parts[1]),
                          float(parts[2])]
