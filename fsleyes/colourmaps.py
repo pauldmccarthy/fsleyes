@@ -1439,7 +1439,7 @@ class LookupTable(notifier.Notifier):
                     'formats' : (np.int, np.float, np.float, np.float),
                     'names'   : ('label', 'r', 'g', 'b')})
             f.seek(0)
-            names = [l.split(maxsplit=4)[4].strip() for l in f]
+            names = [l.split(' ', 4)[4].strip() for l in f]
 
         order = lut.argsort(order='label')
         lut   = lut[order]
