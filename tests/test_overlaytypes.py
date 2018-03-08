@@ -21,7 +21,7 @@ from . import              (run_with_orthopanel,
 datadir = op.join(op.dirname(__file__), 'testdata')
 
 
-def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay):
+def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay, **kwargs):
 
     import matplotlib.image           as mplimg
     import fsleyes.actions.screenshot as screenshot
@@ -33,22 +33,25 @@ def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay):
 
     overlayList.append(overlay, overlayType=ovltype)
 
-    if True: # with tempdir():
+    opts = displayCtx.getOpts(overlay)
+    for k, v in kwargs.items():
+        setattr(opts, k, v)
 
-        fname = 'test_overlaytype_{}_{}.png'.format(ovltype, type(panel).__name__)
+    with tempdir.tempdir():
+
+        fname = 'screenshot_{}_{}.png'.format(
+            ovltype, type(panel).__name__)
 
         realYield(100)
         idle.idle(screenshot.screenshot, panel, fname)
         realYield()
-
-        return
 
         benchmark  = op.join(datadir, 'test_overlaytype_{}_{}.png'.format(
             ovltype, type(panel).__name__))
         screenshot = mplimg.imread(fname)
         benchmark  = mplimg.imread(benchmark)
 
-        # assert compare_images(screenshot, benchmark, 50)[0]
+        assert compare_images(screenshot, benchmark, 50)[0]
 
 def test_volume():
     ovl = fslimage.Image(op.join(datadir, '3d'))
@@ -60,7 +63,7 @@ def test_mask():
 
 def test_label():
     ovl = fslimage.Image(op.join(datadir, '3d'))
-    run_with_orthopanel(_test_overlaytype, 'label', ovl)
+    run_with_orthopanel(_test_overlaytype, 'label', ovl, lut='random')
 
 def test_rgbvector():
     ovl = fsldti.DTIFitTensor(op.join(datadir, 'dti'))
