@@ -483,14 +483,22 @@ class Texture2D(Texture):
 
         self.bindTexture(textureUnit)
         gl.glClientActiveTexture(textureUnit)
-
         gl.glTexEnvf(gl.GL_TEXTURE_ENV,
                      gl.GL_TEXTURE_ENV_MODE,
                      gl.GL_REPLACE)
 
-        with glroutines.enabled((gl.GL_TEXTURE_2D,
-                                 gl.GL_TEXTURE_COORD_ARRAY,
-                                 gl.GL_VERTEX_ARRAY)):
+
+        glfeatures = [gl.GL_TEXTURE_2D, gl.GL_VERTEX_ARRAY]
+
+        # Only enable texture coordinates if we know
+        # that there are texture coordinates. Some GL
+        # platforms will crash if texcoords are
+        # enabled on a texture unit, but no texcoords
+        # are loaded.
+        if vertices is not None:
+            glfeatures.append(gl.GL_TEXTURE_COORD_ARRAY)
+
+        with glroutines.enabled(glfeatures):
 
             if vertices is not None:
                 gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)

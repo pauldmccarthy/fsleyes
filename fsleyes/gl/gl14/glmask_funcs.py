@@ -87,6 +87,7 @@ def drawAll(self, axes, zposes, xforms):
     :func:`.glvolume_funcs.drawAll` function.
     """
     self.shader.load()
+    self.shader.loadAtts()
     glvolume_funcs.drawAll(self, axes, zposes, xforms)
     self.shader.unloadAtts()
     self.shader.unload()
