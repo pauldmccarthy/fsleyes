@@ -483,7 +483,6 @@ class pyinstaller(Command):
                      'SDL-1.2',
                      'notify',
                      'spatialindex',
-                     'xcb-dri3',
                      'spatialindex_c']
 
 
@@ -594,7 +593,6 @@ class pyinstaller(Command):
                         'libkeyutils*',
                         'libkrb*',
                         'libncurses*',
-                        'libnotify*',
                         'libogg*',
                         'libpango*',
                         'libpcre*',
