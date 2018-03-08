@@ -79,13 +79,15 @@ def run_with_fsleyes(func, *args, **kwargs):
     raised = [None]
     frame  = [None]
     app    = [None]
+    glver  = os.environ.get('FSLEYES_TEST_GL', '2.1')
+    glver  = [int(v) for v in glver.split('.')]
 
     def init():
         fsleyes.initialise()
         props.initGUI()
         colourmaps.init()
         initialised[0] = True
-        fslgl.bootstrap((2, 1))
+        fslgl.bootstrap(glver)
         wx.CallAfter(run)
 
     def finish():
@@ -114,6 +116,7 @@ def run_with_fsleyes(func, *args, **kwargs):
                                  **kwargs)
 
         except Exception as e:
+            raise
             traceback.print_exc()
             raised[0] = e
 

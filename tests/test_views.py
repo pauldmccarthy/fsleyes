@@ -17,7 +17,7 @@ datadir = op.join(op.dirname(__file__), 'testdata')
 
 def _test_view(frame, overlayList, displayCtx, vtype):
 
-    img = fslimage.Image(op.join(datadir, 'av'))
+    img = fslimage.Image(op.join(datadir, '4d'))
     overlayList.append(img)
 
     frame.addViewPanel(vtype)

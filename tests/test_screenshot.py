@@ -54,19 +54,19 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
 
 
 def test_screenshot_ortho():
-    run_with_orthopanel(_test_screenshot, 'ortho', 'MNI152_T1_2mm_brain')
+    run_with_orthopanel(_test_screenshot, 'ortho', '3d')
 
 def test_screenshot_lightbox():
-    run_with_lightboxpanel(_test_screenshot, 'lightbox', 'MNI152_T1_2mm_brain')
+    run_with_lightboxpanel(_test_screenshot, 'lightbox', '3d')
 
 def test_screenshot_3d():
-    run_with_scene3dpanel(_test_screenshot, '3d', 'MNI152_T1_2mm_brain')
+    run_with_scene3dpanel(_test_screenshot, '3d', '3d')
 
 def test_screenshot_timeseries():
-    run_with_timeseriespanel(_test_screenshot, 'timeseries', 'av')
+    run_with_timeseriespanel(_test_screenshot, 'timeseries', '4d')
 
 def test_screenshot_histogram():
-    run_with_histogrampanel(_test_screenshot, 'histogram', 'av')
+    run_with_histogrampanel(_test_screenshot, 'histogram', '4d')
 
 def test_screenshot_powerspectrum():
-    run_with_powerspectrumpanel(_test_screenshot, 'powerspectrum', 'av')
+    run_with_powerspectrumpanel(_test_screenshot, 'powerspectrum', '4d')

@@ -19,7 +19,7 @@ datadir = op.join(op.dirname(__file__), 'testdata')
 
 
 def _test_perspective(frame, overlayList, displayCtx, persp):
-    img = fslimage.Image(op.join(datadir, 'av'))
+    img = fslimage.Image(op.join(datadir, '4d'))
     overlayList.append(img)
     perspectives.loadPerspective(frame, persp)
     realYield(100)
