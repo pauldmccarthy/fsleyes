@@ -116,7 +116,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     """
 
 
-    usePixdim = props.Boolean(default=True)
+    usePixdim = props.Boolean(default=False)
     """If ``True``, the X axis data is scaled by the pixdim value of the
     selected overlay (which, for FMRI time series data is typically set
     to the TR time).
