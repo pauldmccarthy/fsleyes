@@ -321,6 +321,7 @@ class FlirtFileDialog(wx.Dialog):
 
         wx.Dialog.__init__(self,
                            parent,
+                           title=strings.titles[self],
                            style=(wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP))
 
         if refOpts     is None: refOpts     = []

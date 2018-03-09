@@ -222,12 +222,12 @@ messages = TypeDict({
     'Calculating correlation values for seed voxel [{}, {}, {}] ...',
 
     'EditTransformPanel.saveFlirt.error' :
-    'An error occurred saving the FLIRT matrix.',
+    'An error occurred saving the affine matrix.',
 
     'SaveFlirtXfmAction.error' :
-    'An error occurred saving the FLIRT matrix.',
+    'An error occurred saving the affine matrix.',
 
-    'FlirtFileDialog.matFile'    : 'Select FLIRT transformation matrix file',
+    'FlirtFileDialog.matFile'    : 'Select affine transformation matrix file',
     'FlirtFileDialog.refFile'    : 'Select FLIRT reference image',
 
     'CropImagePanel.saveCrop'  : 'Select a file to save the crop parameters',
@@ -332,6 +332,7 @@ titles = TypeDict({
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
     'Scene3DToolBar'            : '3D view toolbar',
+    'FlirtFileDialog'           : 'Load affine transformation',
 
     'PlotListPanel'             : 'Plot list',
     'TimeSeriesControlPanel'    : 'Time series control',
@@ -399,7 +400,7 @@ titles = TypeDict({
 
     'LoadVertexDataAction.error' : 'Error loading vertex data',
 
-    'SaveFlirtXfmAction.error' : 'Error saving theFLIRT matrix',
+    'SaveFlirtXfmAction.error' : 'Error saving affine matrix',
 
     'ClearSettingsAction.confirm' : 'Clear all settings?',
 
@@ -447,8 +448,8 @@ actions = TypeDict({
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',
     'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
-    'ApplyFlirtXfmAction'      : 'Load FLIRT transformation',
-    'SaveFlirtXfmAction'       : 'Export FLIRT transformation',
+    'ApplyFlirtXfmAction'      : 'Load affine transformation',
+    'SaveFlirtXfmAction'       : 'Export affine transformation',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
     'ResampleAction'           : 'Resample image',
 
@@ -771,19 +772,17 @@ labels = TypeDict({
     'EditTransformPanel.rotate'      : 'Rotate',
     'EditTransformPanel.apply'       : 'Apply',
     'EditTransformPanel.reset'       : 'Reset',
-    'EditTransformPanel.loadFlirt'   : 'Load FLIRT',
-    'EditTransformPanel.saveFlirt'   : 'Save FLIRT',
+    'EditTransformPanel.loadFlirt'   : 'Load affine',
+    'EditTransformPanel.saveFlirt'   : 'Save affine',
     'EditTransformPanel.cancel'      : 'Close',
 
     'DisplaySpaceWarning.changeDS'    : 'Change display space',
 
     'FlirtFileDialog.load.message' :
-    'Select a FLIRT transformation matrix\n'
-    'and the corresponding reference image.',
+    'Select an affine transformation matrix file',
 
     'FlirtFileDialog.save.message' :
-    'Specify a file name for the FLIRT transformation\n'
-    'matrix, and choose the corresponding reference image.',
+    'Specify a file name for the affine transformation',
 
     'FlirtFileDialog.source'              : 'Source image:\n{}',
     'FlirtFileDialog.refChoiceSelectFile' : 'Select file manually',
