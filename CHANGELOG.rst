@@ -23,6 +23,8 @@ Changed
 ^^^^^^^
 
 
+* The x-axis in a time series view now defaults to showing volumes, rather
+  than being scaled by time.
 * MGH images should no longer be displayed as unsaved. When an MGH image
   is copied/edited and saved, it will be saved as a NIfTI image.
 * Labels in FSLeyes ``.lut`` files no longer need to be in ascending order.
