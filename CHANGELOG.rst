@@ -5,6 +5,58 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.22.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* New Freesurfer lookup table (``freesurfercolorlut.lut``) to replace the
+  incomplete ``mgh-cma-freesurfer.lut`` lookup table (provided by Vincent
+  Koppelmans).
+* Infrastructure for buildling FSLeyes ``conda`` packages.
+
+
+Changed
+^^^^^^^
+
+
+* MGH images should no longer be displayed as unsaved. When an MGH image
+  is copied/edited and saved, it will be saved as a NIfTI image.
+* Labels in FSLeyes ``.lut`` files no longer need to be in ascending order.
+* The FSLeyes settings directory should now be compatible across Python 2
+  and 3.
+* An error message is now displayed on attempts to load an invalid lookup
+  table file.
+* Adjustments to standalone Linux builds, hopefully fixing ``libxcb`` related
+  compatibility issues.
+
+
+Fixed
+^^^^^
+
+
+* FSLeyes should now run on macOS systems which have FreeGLUT installed.
+* Fixed a bug where viewing outlines of mask or label overlays would cause
+  a ``GLXBadRenderRequest`` error.
+* Fixed a bug where mask overlays were not shown in a lightbox view over a
+  SSH/X11 connection.
+* Fixed a problem with colour maps/luts not being listed in command line help.
+* Fixed a bug with the location panel *History* tab when running under
+  Python 2.
+
+
+Deprecated
+^^^^^^^^^^
+
+
+* :class:`fsleyes.overlay.PropCache` - an equivalent class is now available
+  in |props_doc|.
+
+
+
 0.21.1 (Monday February 5th 2018)
 ---------------------------------
 
