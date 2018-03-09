@@ -36,8 +36,8 @@ from . import                 base
 
 class ApplyFlirtXfmAction(base.Action):
     """The ``ApplyFlirtXfmAction`` class is an action which allows the user to
-    load a FLIRT transformation matrix and apply it to the currently selected
-    overlay, if it is an :class:`.Image` instance.
+    load a FLIRT transformation matrix (or other affine file) and apply it to
+    the currently selected overlay, if it is an :class:`.Image` instance.
 
 
     A :class:`FlirtFileDialog` is used to prompt the user to select a
@@ -87,14 +87,17 @@ class ApplyFlirtXfmAction(base.Action):
         overlayList = self.__overlayList
         overlay     = displayCtx.getSelectedOverlay()
 
-        matFile, refFile = promptForFlirtFiles(
+        affType, matFile, refFile = promptForFlirtFiles(
             self.__frame, overlay, overlayList, displayCtx)
 
-        if matFile is None or refFile is None:
+        if any((affType is None, matFile is None, refFile is None)):
             return
 
-        xform = calculateTransform(
-            overlay, overlayList, displayCtx, matFile, refFile)
+        if affType == 'flirt':
+            xform = calculateTransform(
+                overlay, overlayList, displayCtx, matFile, refFile)
+        else:
+            xform = np.loadtxt(matFile)
 
         overlay.voxToWorldMat = xform
 
@@ -139,6 +142,17 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     :arg overlayList: The :class:`.OverlayList` instance.
     :arg displayCtx:  The :class:`.DisplayContext` instance.
     :arg save:        Prompt the user to save a transformation matrix instead.
+
+    :returns: A tuple containing:
+
+              - The affine type  currently one of ``'flirt'``, indicating a
+                FLIRT matrix, or ``'v2w'``, indicating a "raw" voxel-to-world
+                matrix.
+              - The selected matrix file.
+              - The selected reference image file.
+
+             If the user cancelled the dialog, all elements of this tuple will
+             be ``None``.
     """
 
     import wx
@@ -182,12 +196,10 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
     dlg.Fit()
     dlg.CentreOnParent()
 
-    # TODO A checkbox/dropdown box allowing
-    #      the user to load a 'raw' transform,
-    #      instead of a FLIRT one?
-
-    if dlg.ShowModal() == wx.ID_OK: return dlg.GetMatFile(), dlg.GetRefFile()
-    else:                           return None, None
+    if dlg.ShowModal() == wx.ID_OK:
+        return dlg.GetAffineType(), dlg.GetMatFile(), dlg.GetRefFile()
+    else:
+        return None, None, None
 
 
 def guessFlirtFiles(path):
