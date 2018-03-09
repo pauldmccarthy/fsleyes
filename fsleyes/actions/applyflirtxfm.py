@@ -280,9 +280,9 @@ def guessFlirtFiles(path):
 
 
 class FlirtFileDialog(wx.Dialog):
-    """The ``FlirtFileDialog`` class is a ``wx.Dialog`` which prompts the
-    user to select a FLIRT transformation matrix and reference image associated
-    with a source image.
+    """The ``FlirtFileDialog`` class is a ``wx.Dialog`` which prompts the user to
+    select a FLIRT (or other affine) transformation matrix and reference image
+    associated with a source image.
 
     The user can select a reference image either from a drop down box, or
     by selecting a file in the file system.
@@ -334,11 +334,17 @@ class FlirtFileDialog(wx.Dialog):
         self.__matFile     = None
         self.__refFile     = None
         self.__save        = save
+        self.__affineTypes = ['flirt', 'v2w']
+
+        affTypeOpts = [strings.labels[self, 'affType', at]
+                       for at in self.__affineTypes]
 
         refOpts = list(refOpts) + [strings.labels[self, 'refChoiceSelectFile']]
 
         overlayName    = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
         label          = wx.StaticText(self, style=wx.ALIGN_CENTRE_HORIZONTAL)
+        affType        = wx.Choice(self, choices=affTypeOpts)
+        affTypeLabel   = wx.StaticText(self)
         refChoiceLabel = wx.StaticText(self)
         matFileLabel   = wx.StaticText(self)
         refFileLabel   = wx.StaticText(self)
@@ -350,17 +356,20 @@ class FlirtFileDialog(wx.Dialog):
         okButton       = wx.Button(self, wx.ID_OK)
         cancelButton   = wx.Button(self, wx.ID_CANCEL)
 
-        self.__matFileText   = matFileText
-        self.__refFileText   = refFileText
-        self.__refFileLabel  = refFileLabel
-        self.__refFileButton = refFileButton
-        self.__refChoice     = refChoice
+        self.__matFileText    = matFileText
+        self.__refFileText    = refFileText
+        self.__refFileLabel   = refFileLabel
+        self.__refFileButton  = refFileButton
+        self.__refChoiceLabel = refChoiceLabel
+        self.__refChoice      = refChoice
+        self.__affType        = affType
 
         srcName = op.basename(srcFile)
         srcName = fslimage.removeExt(srcFile)
 
         overlayName   .SetLabel(strings.labels[self, 'source'].format(srcName))
-        refChoiceLabel.SetLabel(strings.labels[self, 'refFile'])
+        affTypeLabel  .SetLabel(strings.labels[self, 'affType'])
+        refChoiceLabel.SetLabel(strings.labels[self, 'refImage'])
         matFileLabel  .SetLabel(strings.labels[self, 'matFile'])
         refFileLabel  .SetLabel(strings.labels[self, 'refFile'])
         matFileButton .SetLabel(strings.labels[self, 'selectFile'])
@@ -380,7 +389,7 @@ class FlirtFileDialog(wx.Dialog):
             refFileText.SetInsertionPointEnd()
 
         sizer       = wx.BoxSizer(wx.VERTICAL)
-        widgetSizer = wx.FlexGridSizer(3, 3, 0, 0)
+        widgetSizer = wx.FlexGridSizer(4, 3, 0, 0)
         btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
 
         widgetSizer.AddGrowableCol(1)
@@ -394,6 +403,10 @@ class FlirtFileDialog(wx.Dialog):
         sizer.Add((1, 10),     flag=wx.EXPAND)
         sizer.Add(btnSizer,    flag=wx.EXPAND | wx.LEFT | wx.RIGHT, border=10)
         sizer.Add((1, 10),     flag=wx.EXPAND)
+
+        widgetSizer.Add(affTypeLabel, flag=wx.ALL,    border=3)
+        widgetSizer.Add(affType,      flag=wx.EXPAND, proportion=1)
+        widgetSizer.Add((-1, -1))
 
         if refOpts is not None:
             widgetSizer.Add(refChoiceLabel, flag=wx.ALL,    border=3)
@@ -427,6 +440,7 @@ class FlirtFileDialog(wx.Dialog):
         cancelButton .Bind(wx.EVT_BUTTON, self.__onCancelButton)
         matFileButton.Bind(wx.EVT_BUTTON, self.__onMatFileButton)
         refFileButton.Bind(wx.EVT_BUTTON, self.__onRefFileButton)
+        affType      .Bind(wx.EVT_CHOICE, self.__onAffType)
         refChoice    .Bind(wx.EVT_CHOICE, self.__onRefChoice)
 
         if len(refOpts) == 1:
@@ -434,6 +448,14 @@ class FlirtFileDialog(wx.Dialog):
             refChoiceLabel.Disable()
         else:
             self.__onRefChoice(None)
+
+
+    def GetAffineType(self):
+        """Return the currently selected affine type - currently either
+        ``'flirt'`` (indicating a FSL FLIRT matrix file), or ``'v2w'``
+        (indicating a "raw" voxel-to-world affine).
+        """
+        return self.__affineTypes[self.__affType.GetSelection()]
 
 
     def GetMatFile(self):
@@ -475,6 +497,22 @@ class FlirtFileDialog(wx.Dialog):
         self.__matFileText.SetValue('')
         self.__refFileText.SetValue('')
         self.EndModal(wx.ID_CANCEL)
+
+
+    def __onAffType(self, ev):
+        """Called when the user changes the affine type. Enables/disables
+        widgets related to the reference image (as they are only used for
+        FLIRT affines).
+        """
+
+        affType = self.__affineTypes[self.__affType.GetSelection()]
+        isFlirt = affType == 'flirt'
+
+        self.__refChoice     .Enable(isFlirt)
+        self.__refChoiceLabel.Enable(isFlirt)
+        self.__refFileLabel  .Enable(isFlirt)
+        self.__refFileText   .Enable(isFlirt)
+        self.__refFileButton .Enable(isFlirt)
 
 
     def __onRefChoice(self, ev):
