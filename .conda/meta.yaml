@@ -1,0 +1,37 @@
+{% set data = load_setup_py_data() %}
+package:
+  name: fsleyes
+  version: {{ data['version']}}
+
+build:
+  noarch: python
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+source:
+  path: ../
+
+requirements:
+  build:
+    - python {{ python }}
+    - setuptools
+    {% for package in data.get('setup_requires', {}) %}
+    - {{ package.lower() }}
+    {% endfor %}
+
+  run:
+    - python
+    {% for package in data.get('install_requires', {}) %}
+    - {{ package.lower() }}
+    {% endfor %}
+
+  run_constrained:
+    - indexed_gzip >=0.7.0,<1
+    - trimesh >=2.22.28,<3
+    - rtree 0.8
+    - pip:
+      - xnat >=0.3.3,<1
+      - wxnatpy >=0.3.0,<1
+
+
+about:
+  license_file: LICENSE
