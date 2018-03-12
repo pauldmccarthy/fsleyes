@@ -8,7 +8,7 @@ python3.5 -m venv $VENV_DIR
 . $VENV_DIR/bin/activate
 pip install numpy
 pip install --no-binary scipy "scipy>=0.18,<2"
-pip install --pre "$WXPYTHON_VERSION"
+pip install "$WXPYTHON_VERSION"
 pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
 pip install -r requirements.txt
 pip install -r requirements-extra.txt
