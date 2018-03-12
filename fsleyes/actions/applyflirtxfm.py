@@ -90,13 +90,13 @@ class ApplyFlirtXfmAction(base.Action):
         affType, matFile, refFile = promptForFlirtFiles(
             self.__frame, overlay, overlayList, displayCtx)
 
-        if any((affType is None, matFile is None, refFile is None)):
+        if all((affType is None, matFile is None, refFile is None)):
             return
 
         if affType == 'flirt':
             xform = calculateTransform(
                 overlay, overlayList, displayCtx, matFile, refFile)
-        else:
+        elif affType == 'v2w':
             xform = np.loadtxt(matFile)
 
         overlay.voxToWorldMat = xform
@@ -149,7 +149,8 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
                 FLIRT matrix, or ``'v2w'``, indicating a "raw" voxel-to-world
                 matrix.
               - The selected matrix file.
-              - The selected reference image file.
+              - The selected reference image file (``None`` if
+                ``affType is 'v2w'``)
 
              If the user cancelled the dialog, all elements of this tuple will
              be ``None``.

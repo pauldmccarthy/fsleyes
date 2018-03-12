@@ -48,11 +48,11 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
     attribute.
 
 
-    This panel also has buttons which allow the user to load/save a FLIRT
+    This panel also has buttons which allow the user to load/save the
     transformation matrix - they use functions in the :mod:`.applyflirtxfm`
-    and :mod:`.saveflirtxfm` modules to load, save, and calculate FLIRT
-    transformation matrices. When the user loads a FLIRT matrix, it is used in
-    place of the :attr:`.Image.voxToWorldMat` transformation.
+    and :mod:`.saveflirtxfm` modules to load, save, and calculate
+    transformation matrices. When the user loads a matrix, it is used in place
+    of the :attr:`.Image.voxToWorldMat` transformation.
 
     .. note:: The effect of editing the transformation will only be visible
               if the :attr:`.DisplayContext.displaySpace` is set to
@@ -539,23 +539,27 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        overlayList      = self.overlayList
-        displayCtx       = self.displayCtx
-        matFile, refFile = applyflirtxfm.promptForFlirtFiles(
+        overlayList               = self.overlayList
+        displayCtx                = self.displayCtx
+        affType, matFile, refFile = applyflirtxfm.promptForFlirtFiles(
             self,
             overlay,
             overlayList,
             displayCtx)
 
-        if matFile is None or refFile is None:
+        if all((affType is None, matFile is None, refFile is None)):
             return
 
-        xform = applyflirtxfm.calculateTransform(
-            overlay,
-            overlayList,
-            displayCtx,
-            matFile,
-            refFile)
+        if affType == 'flirt':
+            xform = applyflirtxfm.calculateTransform(
+                overlay,
+                overlayList,
+                displayCtx,
+                matFile,
+                refFile)
+
+        elif affType == 'v2w':
+            xform = np.loadtxt(matFile)
 
         self.__extraXform = xform
         self.__xformChanged()
