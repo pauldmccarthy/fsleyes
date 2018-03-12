@@ -412,13 +412,21 @@ class py2app(orig_py2app):
         plist       = op.join(contentsdir, 'Info.plist')
         resourcedir = op.join(contentsdir, 'Resources')
 
+        dylibs = []
+
+        # libspatialindex isn't on mac by default
+        dylibs.append(find_library('spatialindex'))
+        dylibs.append(find_library('spatialindex_c'))
+
         # py2app (and pyinstaller) seem to
         # get the wrong version of libpng,
         # which causes render to segfault
         pildir = package_path('PIL')
-        dylib  = op.join(pildir, 'PIL', '.dylibs', 'libpng16.16.dylib')
-        if op.exists(dylib):
-            shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
+        dylibs.append(op.join(pildir, 'PIL', '.dylibs', 'libpng16.16.dylib'))
+
+        for dylib in dylibs:
+            if op.exists(dylib):
+                shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
 
         # copy the application document iconset
         shutil.copy(self.dociconfile, resourcedir)
@@ -685,6 +693,8 @@ def find_library(name):
 
     if path is None:
         raise RuntimeError('Library {} not found'.format(name))
+
+    path = op.realpath(path)
 
     # Under mac, find_library
     # returns the full path
