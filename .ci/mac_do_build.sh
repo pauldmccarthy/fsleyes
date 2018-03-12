@@ -48,7 +48,7 @@ mv dist/FSLeyes*.tar.gz dist/FSLeyes-"$CI_COMMIT_REF_NAME"-macos.tar.gz
 # FSLeyes. Assuming here that we have a
 # display on the mac build environment
 dist/FSLeyes.app/Contents/MacOS/fsleyes -V
-dist/FSLeyes.app/Contents/MacOS/fsleyes render -of file.png -sz 572 386 -hc -hl tests/testdata/MNI152_T1_2mm_brain
+dist/FSLeyes.app/Contents/MacOS/fsleyes render -of file.png -sz 572 386 -hc -hl tests/testdata/3d
 python tests/compare_images.py file.png tests/testdata/test_screenshot_ortho.png 1000
 
 deactivate
