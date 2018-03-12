@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 class SaveFlirtXfmAction(base.Action):
     """The :class:`SaveFlirtXfmAction` class is an :class:`.Action` which
-    allows the user to save an :class:`.Image` transformation to disk for
-    use with FLIRT.
+    allows the user to save an :class:`.Image` transformation to disk, either
+    as a FLIRT matrix, or a voxel-to-world matrix.
     """
 
 
@@ -84,14 +84,17 @@ class SaveFlirtXfmAction(base.Action):
         overlayList = self.__overlayList
         overlay     = displayCtx.getSelectedOverlay()
 
-        matFile, refFile = applyflirtxfm.promptForFlirtFiles(
+        affType, matFile, refFile = applyflirtxfm.promptForFlirtFiles(
             self.__frame, overlay, overlayList, displayCtx, save=True)
 
-        if matFile is None or refFile is None:
+        if all((affType is None, matFile is None, refFile is None)):
             return
 
-        xform = calculateTransform(
-            overlay, overlayList, displayCtx, refFile)
+        if affType == 'flirt':
+            xform = calculateTransform(
+                overlay, overlayList, displayCtx, refFile)
+        else:
+            xform = overlay.voxToWorldMat
 
         errtitle = strings.titles[  self, 'error']
         errmsg   = strings.messages[self, 'error']

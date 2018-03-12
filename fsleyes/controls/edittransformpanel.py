@@ -575,16 +575,16 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        overlayList      = self.overlayList
-        displayCtx       = self.displayCtx
-        matFile, refFile = applyflirtxfm.promptForFlirtFiles(
+        overlayList               = self.overlayList
+        displayCtx                = self.displayCtx
+        affType, matFile, refFile = applyflirtxfm.promptForFlirtFiles(
             self,
             overlay,
             overlayList,
             displayCtx,
             save=True)
 
-        if matFile is None or refFile is None:
+        if all((affType is None, matFile is None, refFile is None)):
             return
 
         if self.__extraXform is None: v2wXform = overlay.voxToWorldMat
@@ -593,12 +593,15 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         newXform = self.__getCurrentXform()
         v2wXform = transform.concat(newXform, v2wXform)
 
-        xform = saveflirtxfm.calculateTransform(
-            overlay,
-            overlayList,
-            displayCtx,
-            refFile,
-            srcXform=v2wXform)
+        if affType == 'flirt':
+            xform = saveflirtxfm.calculateTransform(
+                overlay,
+                overlayList,
+                displayCtx,
+                refFile,
+                srcXform=v2wXform)
+        elif affType == 'v2w':
+            xform = v2wXform
 
         try:
             np.savetxt(matFile, xform, fmt='%0.10f')
