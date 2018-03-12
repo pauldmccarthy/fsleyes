@@ -7,6 +7,7 @@
 
 
 import os.path           as op
+import                      pytest
 import fsl.utils.tempdir as tempdir
 import fsl.utils.idle    as idle
 import fsl.data.image    as fslimage
@@ -19,6 +20,11 @@ from . import              (run_with_orthopanel,
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
+
+
+def haveGL21():
+    from fsl.utils.platform import platform as fslplatform
+    return float(fslplatform.glVersion) >= 2.1
 
 
 def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay, **kwargs):
@@ -39,19 +45,23 @@ def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay, **kwargs
 
     with tempdir.tempdir():
 
-        fname = 'screenshot_{}_{}.png'.format(
+        fname = 'test_overlaytype_{}_{}.png'.format(
             ovltype, type(panel).__name__)
 
         realYield(100)
         idle.idle(screenshot.screenshot, panel, fname)
         realYield()
 
-        benchmark  = op.join(datadir, 'test_overlaytype_{}_{}.png'.format(
+        bfname    = op.join(datadir, 'test_overlaytype_{}_{}.png'.format(
             ovltype, type(panel).__name__))
         screenshot = mplimg.imread(fname)
-        benchmark  = mplimg.imread(benchmark)
+        benchmark  = mplimg.imread(bfname)
 
-        assert compare_images(screenshot, benchmark, 50)[0]
+        result, diff = compare_images(screenshot, benchmark, 50)
+
+        print('Comparing {} with {}: {}'.format(fname, bfname, diff))
+
+        assert result
 
 def test_volume():
     ovl = fslimage.Image(op.join(datadir, '3d'))
@@ -73,21 +83,19 @@ def test_linevector():
     ovl = fsldti.DTIFitTensor(op.join(datadir, 'dti'))
     run_with_orthopanel(_test_overlaytype, 'linevector', ovl)
 
+@pytest.mark.skipif('not haveGL21()')
 def test_tensor():
     ovl = fsldti.DTIFitTensor(op.join(datadir, 'dti'))
     run_with_orthopanel(_test_overlaytype, 'tensor', ovl)
 
+@pytest.mark.skipif('not haveGL21()')
 def test_sh():
-    from fsl.utils.platform import platform as fslplatform
-    if float(fslplatform.glVersion) < 2.1:
-        return
     ovl = fslimage.Image(op.join(datadir, 'sh'))
     run_with_orthopanel(_test_overlaytype, 'sh', ovl)
 
 def test_mesh():
     ovl = fslvtk.VTKMesh(op.join(datadir, 'mesh.vtk'), fixWinding=True)
     run_with_orthopanel(_test_overlaytype, 'mesh', ovl)
-
 
 def test_volume_3d():
     ovl = fslimage.Image(op.join(datadir, '3d'))

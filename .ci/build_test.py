@@ -74,7 +74,7 @@ try:
 
     # frame.SetSize((int(round(0.9 * 640)), int(round(0.9 * 480))))
 
-    overlayList.append(Image('tests/testdata/MNI152_T1_2mm_brain'))
+    overlayList.append(Image('tests/testdata/3d'))
     ortho = frame.addViewPanel(OrthoPanel)
 
     ortho.sceneOpts.showLabels = False
