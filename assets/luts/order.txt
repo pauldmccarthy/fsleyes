@@ -2,5 +2,6 @@ random                     Random
 harvard-oxford-cortical    Harvard/Oxford cortical
 harvard-oxford-subcortical Harvard/Oxford subcortical
 freesurfercolorlut         FreeSurferColorLut
+mgh-cma-freesurfer         MGH/CMA/Freesurfer
 melodic-classes            Melodic IC classification
 random_big                 Random (big)
