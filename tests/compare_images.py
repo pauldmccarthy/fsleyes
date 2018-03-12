@@ -56,9 +56,6 @@ def compare_images(img1, img2, threshold):
     img1 = ndi.gaussian_filter(img1, sigma=(2, 2, 0), order=0)
     img2 = ndi.gaussian_filter(img2, sigma=(2, 2, 0), order=0)
 
-    mplimg.imsave('img1.png', img1)
-    mplimg.imsave('img2.png', img2)
-
     flat1   = img1.reshape(-1, 3)
     flat2   = img2.reshape(-1, 3)
 

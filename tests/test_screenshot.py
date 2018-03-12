@@ -40,17 +40,21 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
 
     with tempdir():
 
-        fname = 'screenshot_{}.png'.format(stype)
+        fname = 'test_screenshot_{}.png'.format(stype)
 
         realYield(100)
         idle.idle(screenshot.screenshot, panel, fname)
         realYield()
 
-        benchmark  = op.join(datadir, 'test_screenshot_{}.png'.format(stype))
+        bfname     = op.join(datadir, 'test_screenshot_{}.png'.format(stype))
         screenshot = mplimg.imread(fname)
-        benchmark  = mplimg.imread(benchmark)
+        benchmark  = mplimg.imread(bfname)
 
-        assert compare_images(screenshot, benchmark, 50)[0]
+        result, diff = compare_images(screenshot, benchmark, 50)
+
+        print('Comparing {} with {}: {}'.format(fname, bfname, diff))
+
+        assert result
 
 
 def test_screenshot_ortho():

@@ -116,7 +116,6 @@ def run_with_fsleyes(func, *args, **kwargs):
                                  **kwargs)
 
         except Exception as e:
-            raise
             traceback.print_exc()
             raised[0] = e
 
