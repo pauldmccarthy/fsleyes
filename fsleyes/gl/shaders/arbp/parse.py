@@ -824,7 +824,7 @@ def _render(src, env, includePath):
             for k, v in args.items():
                 if not isinstance(v, six.string_types):
                     continue
-                match = passThroughExpr.fullmatch(v)
+                match = passThroughExpr.match(v)
                 if match:
                     callEnv[k] = oce[match.group(1).strip()]
 
