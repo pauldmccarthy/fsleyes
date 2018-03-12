@@ -16,6 +16,22 @@ pip install -r requirements-dev.txt
 pip install "py2app==0.14"
 pip install sphinx sphinx-rtd-theme mock
 
+# make sure libspatialindex is available
+# This is commented out because spatialindex
+# is already available on our mac CI machine
+#
+# mkdir $VENV_DIR/spatialindex_build
+# pushd $VENV_DIR/spatialindex_build > /dev/null
+# curl -O http://download.osgeo.org/libspatialindex/spatialindex-src-1.8.5.tar.bz2
+# tar xf spatialindex-src-1.8.5.tar.bz2
+# pushd spatialindex-src-1.8.5 > /dev/null
+# ./configure --prefix=`pwd`
+# make
+# make install
+# popd > /dev/null
+# popd > /dev/null
+# export DYLD_LIBRARY_PATH=$VENV_DIR/spatialindex_build/lib:$DYLD_LIBRARY_PATH
+
 # Patch/rebuild py2app (see setup.py docstring)
 PY2APP=`python -c "import py2app; print(py2app.__file__)"`
 BUILDDIR=`pwd`
