@@ -694,12 +694,10 @@ def find_library(name):
     if path is None:
         raise RuntimeError('Library {} not found'.format(name))
 
-    path = op.realpath(path)
-
     # Under mac, find_library
     # returns the full path
     if platform == 'darwin':
-        return path
+        return op.realpath(path)
 
     print('Searching for: {}'.format(path))
 
