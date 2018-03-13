@@ -74,7 +74,8 @@ try:
 
     # frame.SetSize((int(round(0.9 * 640)), int(round(0.9 * 480))))
 
-    overlayList.append(Image('tests/testdata/3d'))
+    ovl = Image('tests/testdata/3d')
+    overlayList.append(ovl)
     ortho = frame.addViewPanel(OrthoPanel)
 
     ortho.sceneOpts.showLabels = False
@@ -99,6 +100,10 @@ try:
 
         print('Image difference: {}'.format(result))
 
+    def set_loc():
+        ortho.displayCtx.worldLocation.xyz = [0, -20, 22]
+
+    idle.idle(set_loc, after=2)
     idle.idle(do_test, after=5)
 
     while code[0] is None:
