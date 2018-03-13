@@ -92,7 +92,7 @@ try:
         screenshot = imread('file.png')
         benchmark  = imread(benchmark)
 
-        result = compare_images(screenshot, benchmark, 500)
+        result = compare_images(screenshot, benchmark, 1000)
 
         if result[0]: code[0] = 0
         else:         code[0] = 1
