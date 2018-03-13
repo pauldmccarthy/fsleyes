@@ -195,6 +195,12 @@ altHandlerMap = {
         # The OrthoEditProfile is in
         # 'nav' mode by default.
 
+        # View keyboard navigation
+        # works in major edit modes
+        (('sel',    'Char'),  ('nav', 'Char')),
+        (('desel',  'Char'),  ('nav', 'Char')),
+        (('selint', 'Char'),  ('nav', 'Char')),
+
         # When in select mode, the right
         # mouse button allows the user
         # to deselect voxels.
