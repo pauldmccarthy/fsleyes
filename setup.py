@@ -618,7 +618,7 @@ class pyinstaller(Command):
                         'libuuid*',
                         'libvorbis*',
                         'libwrap*',
-                        'libxcb-shm*',
+                        'libxcb*',
                         'libxml*',
                         'libxslt*',
                         'libX*']
