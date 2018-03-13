@@ -5,8 +5,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.22.0 (Monday March 12th 2018)
--------------------------------
+0.22.0 (Tuesday March 13th 2018)
+--------------------------------
 
 
 Added
@@ -18,6 +18,7 @@ Added
   Koppelmans).
 * FSLeyes can now load and save non-FLIRT affine transformation files.
 * Infrastructure for buildling FSLeyes ``conda`` packages.
+* Ortho view keyboard navigation shortcuts now work in edit mode.
 
 
 Changed
