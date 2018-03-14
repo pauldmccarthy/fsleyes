@@ -11,15 +11,11 @@
 #
 #    3. doc:       Building user and API documentation
 #
-#    4. dev-build: Building standalone distributions for development
-#                  versions.
-#
-#    5. build:     Building source, wheel, conda, and standalone
-#                  distributions for releases
+#    4. build:     Building source, wheel and conda distributions for
+#                  releases
 #
 #    6. deploy:    Uploading the source, conda and wheel distributions
-#                  and the documentation and standalone distributions to a
-#                  hosting server.
+#                  and the documentation to hosting servers.
 #
 # Custom docker images are used for several jobs - these images are
 # available at:
@@ -34,19 +30,12 @@
 # The build and deploy stages are only executed on release tags on
 # the upstream repository.
 #
-# Development builds can be manually executed on any branch of any
-# repository.
-#
-# Standalons distributions (py2app/pyinstaller) are built for several
-# platforms for release tags.
-#
 # Source and wheel distributions are deployed to pypi for release tags.
+#
+# Conda distributions are deployed to a hosting server for release tags.
 #
 # User and API documentation is deployed to a hosting server for all
 # branches.
-#
-# Standalone distributions are deployed to a hosting server for release
-# tags.
 ###########################################################################
 
 
@@ -55,7 +44,6 @@ stages:
  - style
  - doc
  - build
- - build-dev
  - deploy
 
 
@@ -78,9 +66,6 @@ stages:
 #   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
 #                                      to remote host (USERDOC_HOST)
 #
-#   - SSH_PRIVATE_KEY_BUILD_DEPLOY   - private key for standalone builds
-#                                      to remote host (BUILD_HOST)
-#
 #   - SSH_PRIVATE_KEY_CONDA_DEPLOY   - private key for rsyncing conda builds
 #                                      to remote host (CONDA_HOST)
 #
@@ -93,10 +78,6 @@ stages:
 #   - USERDOC_HOST:                  - Username@host to upload user
 #                                      documentation to (e.g.
 #                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
-#
-#   - BUILD_HOST                     - Username@host to upload release
-#                                      standalone builds to
-#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
 #
 #   - CONDA_HOST:                    - Username@host to upload conda build to
 #                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
@@ -265,9 +246,9 @@ build-apidoc:
       - apidoc/$CI_COMMIT_REF_NAME
 
 
-###################
-# Build[-dev] stage
-###################
+#############
+# Build stage
+#############
 
 
 build-pypi-dist:
@@ -307,134 +288,6 @@ build-conda-dist:
     expire_in: 1 day
     paths:
       - dist/conda-bld
-
-
-.linux_do_build: &linux_do_build
-  tags:
-    - docker
-
-  script:
-    - bash ./.ci/linux_do_build.sh
-
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - dist/FSLeyes*.tar.gz
-
-
-.mac_do_build: &mac_do_build
-  tags:
-    - macOS
-
-  script:
-    - bash ./.ci/mac_do_build.sh
-
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - dist/FSLeyes*.tar.gz
-
-
-# build-dev jobs
-################
-
-.build_dev_template: &build_dev_template
-  stage:  build-dev
-  when:   manual
-  <<: *except_releases
-
-build-dev-centos6:
-  image: pauldmccarthy/fsleyes-centos6
-  <<: *build_dev_template
-  <<: *linux_do_build
-  variables:
-    OSNAME: "centos6"
-
-
-build-dev-centos7:
-  image: pauldmccarthy/fsleyes-centos7
-  <<: *build_dev_template
-  <<: *linux_do_build
-  variables:
-    OSNAME: "centos7"
-
-
-build-dev-ubuntu1404:
-  image: pauldmccarthy/fsleyes-ubuntu1404
-  <<: *build_dev_template
-  <<: *linux_do_build
-  variables:
-    OSNAME: "ubuntu1404"
-
-
-build-dev-ubuntu1604:
-  image: pauldmccarthy/fsleyes-ubuntu1404
-  <<: *build_dev_template
-  <<: *linux_do_build
-  variables:
-    OSNAME: "ubuntu1604"
-
-
-build-dev-macos:
-  <<: *build_dev_template
-  <<: *mac_do_build
-
-
-# build jobs
-############
-
-build-macos:
-  stage: build
-  <<: *only_releases
-  <<: *patch_version
-  <<: *mac_do_build
-
-
-build-centos6:
-  stage: build
-  image: pauldmccarthy/fsleyes-centos6
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_do_build
-  variables:
-    OSNAME: "centos6"
-
-
-build-centos7:
-  stage: build
-  image: pauldmccarthy/fsleyes-centos7
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_do_build
-  variables:
-    OSNAME: "centos7"
-
-
-build-ubuntu1404:
-  stage: build
-  image: pauldmccarthy/fsleyes-ubuntu1404
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_do_build
-  variables:
-    OSNAME: "ubuntu1404"
-
-
-build-ubuntu1604:
-  stage: build
-  image: pauldmccarthy/fsleyes-ubuntu1604
-  <<: *only_releases
-  <<: *patch_version
-  <<: *linux_do_build
-  variables:
-    OSNAME: "ubuntu1604"
-
-
-build-macos:
-  stage: build
-  <<: *only_releases
-  <<: *patch_version
-  <<: *mac_do_build
 
 
 ##############
@@ -492,23 +345,3 @@ deploy-conda:
 
   script:
     - bash ./.ci/deploy_conda.sh
-
-
-deploy-builds:
-  <<: *only_releases
-  <<: *setup_ssh
-  stage: deploy
-  when:  manual
-  image: python:3.5
-  tags:
-    - docker
-
-  dependencies:
-    - build-centos6
-    - build-centos7
-    - build-ubuntu1404
-    - build-ubuntu1604
-    - build-macos
-
-  script:
-    - bash ./.ci/deploy_builds.sh
