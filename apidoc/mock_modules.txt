@@ -22,6 +22,7 @@ fsl.data.dtifit
 fsl.data.featanalysis
 fsl.data.featimage
 fsl.data.fixlabels
+fsl.data.freesurfer
 fsl.data.gifti
 fsl.data.image
 fsl.data.imagewrapper
@@ -36,6 +37,7 @@ fsl.utils.callfsl
 fsl.utils.idle
 fsl.utils.memoize
 fsl.utils.notifier
+fsl.utils.path
 fsl.utils.platform
 fsl.utils.settings
 fsl.utils.transform
@@ -57,6 +59,7 @@ fsleyes_widgets.texttag
 fsleyes_widgets.utils
 fsleyes_widgets.utils.colourbarbitmap
 fsleyes_widgets.utils.layout
+fsleyes_widgets.utils.progress
 fsleyes_widgets.utils.status
 fsleyes_widgets.utils.typedict
 fsleyes_widgets.widgetgrid
