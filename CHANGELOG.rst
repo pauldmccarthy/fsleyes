@@ -5,6 +5,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.23.0 (Under development)
+--------------------------
+
+
+Removed
+^^^^^^^
+
+
+* Removed all code and resources related to standalone versions of FSLeyes -
+  this is now managed in a `separate project
+  <https://git.fmrib.ox.ac.uk/fsl/fsleyes/build/>`_.
+
+
+
 0.22.0 (Tuesday March 13th 2018)
 --------------------------------
 
