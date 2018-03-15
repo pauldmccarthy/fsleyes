@@ -19,13 +19,9 @@ from __future__ import print_function
 
 import               os
 import               shutil
-import               fnmatch
-import               logging
-import itertools  as it
+import               contextlib
 import os.path    as op
-
-from collections import defaultdict
-from io          import open
+from io import       open
 
 from setuptools import setup
 from setuptools import find_packages
@@ -37,6 +33,24 @@ from distutils.command.build import build
 # The directory in which this
 # setup.py file is contained.
 basedir = op.dirname(op.abspath(__file__))
+
+
+@contextlib.contextmanager
+def templinks(targets, dests):
+    """Used by the ``custom_build`` class to create temporary symlinks to
+    non-python files, so they get included in built-distributions.
+    """
+    try:
+        for target, dest in zip(targets, dests):
+            if not op.exists(dest):
+                os.symlink(target, dest)
+
+        yield
+
+    finally:
+        for dest in dests:
+            if op.exists(dest):
+                os.remove(dest)
 
 
 class docbuilder(Command):
@@ -115,68 +129,16 @@ class custom_build(build):
         # linking the assets and userdocs into the
         # fsleyes package directory, to trick setuptools
         # into including them in bdists and installations.
-        linkins = ['assets', 'userdoc']
+        #
+        # I can't believe that this is so difficult to
+        # accomplish.
+        targets = ['assets', op.join('userdoc', 'html')]
+        dests   = ['assets', 'userdoc']
+        targets = [op.join(basedir, t)            for t in targets]
+        dests   = [op.join(basedir, 'fsleyes', d) for d in dests]
 
-        for l in linkins:
-
-            target = op.join(basedir, l)
-            link   = op.join(basedir, 'fsleyes', l)
-
-            if not op.exists(link):
-                os.symlink(target, link)
-
-        build.run(self)
-
-
-def list_all_files(in_dir):
-    """List all files ``in_dir``. """
-
-    for dirname, dirs, files in os.walk(in_dir):
-        for filename in files:
-            yield op.join(dirname, filename)
-
-
-def build_asset_list(flat):
-    """Build and return a list of all the FSLeyes non-source-code files that
-    should be included in a distribution. The file paths are made relative
-    to the FSLeyes base directory.
-
-    :arg flat: If ``True``, a list is returned. Othewrise, a list of the form::
-
-                   [ (dest_directory, [files_to_put_in_dest_directory]),
-                     ...
-                   ]
-
-               is returned.
-    """
-
-    assetdir = op.join(basedir, 'assets')
-    docdir   = op.join(basedir, 'userdoc', 'html')
-
-    excludePatterns = [
-        op.join(assetdir, 'icons', 'app_icon', '*'),
-        op.join(assetdir, 'icons', 'splash', 'sources', '*'),
-        op.join(assetdir, 'icons', 'sources', '*'),
-        op.join(assetdir, 'build', '*'),
-        op.join('*', '.DS_Store'),
-    ]
-
-    flist      = defaultdict(list)
-    docfiles   = list_all_files(docdir)
-    assetfiles = list_all_files(assetdir)
-
-    for filename in it.chain(docfiles, assetfiles):
-
-        exclude = any([fnmatch.fnmatch(filename, p) for p in excludePatterns])
-
-        if not exclude:
-            destdir = op.relpath(op.dirname(filename), basedir)
-            flist[destdir].append(filename)
-
-    if flat:
-        return list(it.chain(*[flist[k] for k in flist.keys()]))
-    else:
-        return list(flist.items())
+        with templinks(targets, dests):
+            build.run(self)
 
 
 def get_fsleyes_version():
@@ -226,22 +188,13 @@ def get_fsleyes_dev_deps():
 
 def main():
 
-    packages  = find_packages(
-        exclude=('userdoc', 'apidoc', 'assets', 'build', 'dist'))
-
+    packages         = find_packages(exclude=('tests', ))
     version          = get_fsleyes_version()
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
     extras_require   = get_fsleyes_extra_deps()
     setup_requires   = get_fsleyes_dev_deps()
     tests_require    = setup_requires
-    assets           = build_asset_list(True)
-
-    # When building/installing, all asset files
-    # are placed within the fsleyes package
-    # directory. Some related ugliness is present
-    # in the custom_build command.
-    assets = {'fsleyes' : assets}
 
     setup(
 
@@ -273,8 +226,10 @@ def main():
         setup_requires=setup_requires,
         tests_require=tests_require,
 
+        # This is needed to ensure that non-python
+        # files are included in built distributions
         include_package_data=True,
-        package_data=assets,
+
         test_suite='tests',
 
         cmdclass={
@@ -293,18 +248,4 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
-
-    def dummy_log(*args, **kwargs):
-        pass
-
-    # some things are awfully loud, and
-    # distutils does its own logging.
-    import distutils.log as dul
-    dul._global_log._log = dummy_log
-
-    logging.getLogger('py2app')    .setLevel(logging.CRITICAL)
-    logging.getLogger('distutils') .setLevel(logging.CRITICAL)
-    logging.getLogger('setuptools').setLevel(logging.CRITICAL)
-
     main()

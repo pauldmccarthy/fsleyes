@@ -1,17 +1,24 @@
+include           README.rst
 include           LICENSE
 include           COPYRIGHT
 include           requirements.txt
 include           requirements-dev.txt
 include           requirements-extra.txt
+recursive-include tests                       *
 recursive-include userdoc                     *
 recursive-include apidoc                      *
 recursive-include assets                      *
 recursive-exclude userdoc/html                *
 recursive-exclude apidoc/html                 *
-recursive-exclude assets/build                *
-recursive-exclude assets/icons/app_icon       *
-recursive-exclude assets/icons/sources        *
 recursive-exclude assets/icons/splash/sources *
-global-exclude    *.py[cod]
-global-exclude    __pycache__
-global-exclude    *.xcf
+recursive-exclude assets/icons/sources        *
+recursive-exclude assets/icons/app_icon       *
+
+# these directories are temporarily
+# created for built distributions
+recursive-include fsleyes/userdoc *
+recursive-include fsleyes/assets  *
+
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.xcf
