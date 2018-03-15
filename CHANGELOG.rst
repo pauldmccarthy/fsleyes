@@ -19,6 +19,19 @@ Removed
 
 
 
+0.22.1 (Thursday March 15th 2018)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an error which was being raised on attempts to add ("hold") a data
+  series to a plot.
+
+
+
 0.22.0 (Tuesday March 13th 2018)
 --------------------------------
 
