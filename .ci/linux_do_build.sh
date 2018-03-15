@@ -21,5 +21,5 @@ dist/FSLeyes/fsleyes -V
 sleep 5
 xvfb-run -s "-screen 0 640x482x24" dist/FSLeyes/fsleyes -S -r .ci/build_test.py
 sleep 5
-xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes render -wl 0 -20 22 -of file.png -sz 572 386 -hc -hl tests/testdata/3d
+xvfb-run -s "-screen 0 640x480x24" dist/FSLeyes/fsleyes render -vl 8 6 6 -of file.png -sz 572 386 -hc -hl tests/testdata/3d || true
 python tests/compare_images.py file.png tests/testdata/test_screenshot_ortho.png 1000
