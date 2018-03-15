@@ -1242,7 +1242,10 @@ class OverlayPlotPanel(PlotPanel):
         # a dumb copy.
         for i, ds  in enumerate(toAdd):
 
-            copy           = plotting.DataSeries(ds.overlay)
+            copy           = plotting.DataSeries(ds.overlay,
+                                                 self.overlayList,
+                                                 self.displayCtx,
+                                                 self)
             toAdd[i]       = copy
 
             copy.alpha     = ds.alpha
