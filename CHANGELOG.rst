@@ -67,9 +67,9 @@ Added
 ^^^^^
 
 
-* New Freesurfer lookup table (``freesurfercolorlut.lut``) to replace the
-  incomplete ``mgh-cma-freesurfer.lut`` lookup table (provided by Vincent
-  Koppelmans).
+* New Freesurfer lookup table (``freesurfercolorlut.lut``, provided by Vincent
+  Koppelmans) to replace the incomplete ``mgh-cma-freesurfer.lut`` lookup
+  table.
 * FSLeyes can now load and save non-FLIRT affine transformation files.
 * Infrastructure for buildling FSLeyes ``conda`` packages.
 * Ortho view keyboard navigation shortcuts now work in edit mode.
