@@ -21,11 +21,11 @@ FSLeyes colour maps and lookup tables are stored in the following locations:
    - ``[settingsbase]/luts/``
 
 
-where ``[fsleyesbase]`` is the location of the FSLeyes assets directory (see
+where ``[assetsbase]`` is the location of the FSLeyes assets directory (see
 the :attr:`fsleyes.assetDir` attribute), and ``[settingsbase]`` is the base
 directory use by the :mod:`fsl.utils.settings` module for storing FSLeyes
 application settings and data. "Built-in" colour maps and lookup tables are
-stored underneath ``[fsleyesbase]``, and user-added ones are stored under
+stored underneath ``[assetsbase]``, and user-added ones are stored under
 ``[settingsbase]``.
 
 
