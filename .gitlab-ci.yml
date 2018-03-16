@@ -1,7 +1,7 @@
 ###########################################################################
 # This file defines the build process for fsleyes, as hosted at:
 #
-#    https://git.fmrib.ox.ac.uk/fsl/fsleyes
+#    https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 #
 # The build pipeline currently comprises the following stages:
 #
