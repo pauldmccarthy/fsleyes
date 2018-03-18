@@ -421,8 +421,8 @@ class py2app(orig_py2app):
         # py2app (and pyinstaller) seem to
         # get the wrong version of libpng,
         # which causes render to segfault
-        pildir = package_path('PIL')
-        dylibs.append(op.join(pildir, 'PIL', '.dylibs', 'libpng16.16.dylib'))
+        pildir = package_path('matplotlib')
+        dylibs.append(op.join(pildir, 'matplotlib', '.dylibs', 'libpng16.16.dylib'))
 
         for dylib in dylibs:
             if op.exists(dylib):
