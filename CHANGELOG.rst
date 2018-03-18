@@ -18,6 +18,16 @@ Removed
   <https://git.fmrib.ox.ac.uk/fsl/fsleyes/build/>`_.
 
 
+0.22.2 (Sunday March 18th 2018)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an error with the *Override data range* not being applied correctly.
+
 
 0.22.1 (Thursday March 15th 2018)
 ---------------------------------
