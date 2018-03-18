@@ -526,6 +526,9 @@ class GLVolume(glimageobject.GLImageObject):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
 
+        if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
+        else:                            normRange = None
+
         self.imageTexture = glresources.get(
             texName,
             textures.ImageTexture,
@@ -533,6 +536,7 @@ class GLVolume(glimageobject.GLImageObject):
             self.image,
             interp=interp,
             volume=opts.index()[3:],
+            normaliseRange=normRange,
             notify=False)
 
         self.imageTexture.register(self.name, self.__texturesChanged)
@@ -846,7 +850,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.VolumeOpts.enableOverrideDataRange` property
         changes. Calls :meth:`_volumeChanged`.
         """
-        self._volumeChanged()
+        self._volumeChanged(volRefresh=True)
 
 
     def _overrideDataRangeChanged(self, *a):
@@ -855,7 +859,7 @@ class GLVolume(glimageobject.GLImageObject):
         :attr:`.VolumeOpts.enableOverrideDataRange` is ``True``.
         """
         if self.opts.enableOverrideDataRange:
-            self._volumeChanged()
+            self._volumeChanged(volRefresh=True)
 
 
     def _volumeChanged(self, *a, **kwa):
