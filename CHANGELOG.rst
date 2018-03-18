@@ -5,6 +5,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.22.2 (Sunday March 18th 2018)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an error with the *Override data range* not being applied correctly.
+
+
 0.22.1 (Thursday March 15th 2018)
 ---------------------------------
 
