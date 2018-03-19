@@ -343,7 +343,7 @@ class GLMesh(globject.GLObject):
         vertices = overlay.vertices
         indices  = overlay.indices
         normals  = self.overlay.vnormals
-        xform    = self.opts.getCoordSpaceTransform()
+        xform    = self.opts.getTransform('mesh', 'display')
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = transform.transform(vertices, xform)
@@ -374,7 +374,7 @@ class GLMesh(globject.GLObject):
         # transform, thus we are assuming that
         # the MVP matrix does not have any
         # negative scales.
-        xform = self.opts.getCoordSpaceTransform()
+        xform = self.opts.getTransform('mesh', 'display')
 
         if npla.det(xform) > 0: return gl.GL_CCW
         else:                   return gl.GL_CW
@@ -725,7 +725,7 @@ class GLMesh(globject.GLObject):
         # has a negative determinant, it means
         # the back faces will be facing the camera,
         # so we need to render the back faces first.
-        if npla.det(opts.getCoordSpaceTransform()) > 0:
+        if npla.det(opts.getTransform('mesh', 'display')) > 0:
             faceOrder = [gl.GL_FRONT, gl.GL_BACK]
         else:
             faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
