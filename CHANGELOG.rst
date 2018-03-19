@@ -5,6 +5,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.22.3 (Tuesday March 19th 2018)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with display alignemnt of freesurfer surfaces.
+
+
 0.22.2 (Sunday March 18th 2018)
 -------------------------------
 
