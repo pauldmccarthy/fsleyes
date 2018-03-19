@@ -737,7 +737,14 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return voxels
 
 
-    def transformCoords(self, coords, from_, to_, vround=False, vector=False):
+    def transformCoords(self,
+                        coords,
+                        from_,
+                        to_,
+                        vround=False,
+                        vector=False,
+                        pre=None,
+                        post=None):
         """Transforms the given coordinates from ``from_`` to ``to_``.
 
         The ``from_`` and ``to_`` parameters must be those accepted by the
@@ -751,9 +758,17 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                      integer.
         :arg vector: Defaults to ``False``. If ``True``, the coordinates
                      are treated as vectors.
+        :arg pre:    Transformation to apply before the ``from_``-to-``to``
+                     transformation.
+        :arg post:   Transformation to apply after the ``from_``-to-``to``
+                     transformation.
         """
 
-        xform  = self.getTransform(from_, to_)
+        xform = self.getTransform(from_, to_)
+
+        if pre  is not None: xform = transform.concat(xform, pre)
+        if post is not None: xform = transform.concat(post, xform)
+
         coords = np.array(coords)
         coords = transform.transform(coords, xform, vector=vector)
 
