@@ -148,8 +148,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     # This property is implicitly tightly-coupled to
     # the NiftiOpts.getTransform method - the choices
     # defined in this property are assumed to be valid
-    # inputs to that method.
-    coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id'),
+    # inputs to that method (with the exception of
+    # ``'torig'``).
+    coordSpace = props.Choice(('torig', 'affine', 'pixdim', 'pixdim-flip',
+                               'id'),
                               default='pixdim-flip')
     """If :attr:`refImage` is not ``None``, this property defines the
     reference image coordinate space in which the mesh coordinates are
@@ -158,6 +160,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     =============== =========================================================
     ``affine``      The mesh coordinates are defined in the reference image
                     world coordinate system.
+
+    ``torig``       Equivalent to ``'affine'``, except for
+                    :class:`.FreesurferOpts`  sub-classes.
 
     ``id``          The mesh coordinates are defined in the reference image
                     voxel coordinate system.
@@ -469,8 +474,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         if space not in ('world', 'display', 'mesh'):
             raise ValueError('Invalid space: {}'.format(space))
 
-        if space == 'mesh': return self.coordSpace
-        else:               return space
+        if space == 'mesh':  space = self.coordSpace
+        if space == 'torig': space = 'affine'
+
+        return space
 
 
     def transformCoords(self, coords, from_, to, *args, **kwargs):

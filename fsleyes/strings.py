@@ -1116,7 +1116,8 @@ choices = TypeDict({
 
     'MeshOpts.refImage.none'     : 'No reference image',
 
-    'MeshOpts.coordSpace' : {'affine'      : 'World coordinates',
+    'MeshOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
+                             'affine'      : 'World coordinates',
                              'pixdim'      : 'Scaled voxels',
                              'pixdim-flip' : 'Scaled voxels forced to '
                                              'radiological orientation',
