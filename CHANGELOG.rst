@@ -22,11 +22,20 @@ Removed
 --------------------------------
 
 
-Fixed
+Added
 ^^^^^
 
 
-* Fixed an issue with display alignemnt of freesurfer surfaces.
+* A new option for the :attr:`.MeshOpts.coordSpace` property - this fixes an
+  issue with display alignemnt of freesurfer surfaces.
+
+
+Deprecated
+^^^^^^^^^^
+
+
+* :meth:`.MeshOpts.getCoordSpaceTransform` - the
+  :meth:`.MeshOpts.getTransform` should be used instead.
 
 
 0.22.2 (Sunday March 18th 2018)
