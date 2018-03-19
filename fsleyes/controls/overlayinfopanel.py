@@ -595,7 +595,7 @@ class OverlayInfoPanel(fslpanel.FSLeyesPanel):
                 'coordSpace', opts.coordSpace].format(refImg.name)
             mesh2worldXform = transform.concat(
                 refOpts.getTransform('display', 'world'),
-                opts.getCoordSpaceTransform())
+                opts.getTransform('mesh', 'display'))
 
             if refOpts.transform == 'reference':
                 dsDisplay    = self.displayCtx.getDisplay(dsImg)

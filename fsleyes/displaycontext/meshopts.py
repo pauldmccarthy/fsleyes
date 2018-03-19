@@ -11,6 +11,8 @@ for displaying :class:`.Mesh` overlays.
 
 import logging
 
+import deprecation
+
 import numpy as np
 
 import fsl.data.image       as fslimage
@@ -417,6 +419,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return self.refImage
 
 
+    @deprecation.deprecated(deprecated_in='0.22.3',
+                            removed_in='1.0.0',
+                            details='Use getTransform instead')
     def getCoordSpaceTransform(self):
         """Returns a transformation matrix which can be used to transform
         the :class:`.Mesh` vertex coordinates into the display
@@ -457,14 +462,27 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         else:
             return None
 
+    def normaliseSpace(self, space):
+        """Used by :meth:`transformCoords` and :meth:`getTransform` to
+        normalise their ``from_`` and ``to`` parameters.
+        """
+        if space not in ('world', 'display', 'mesh'):
+            raise ValueError('Invalid space: {}'.format(space))
 
-    def transformCoords(self, coords, from_, to, vector=False):
+        if space == 'mesh': return self.coordSpace
+        else:               return space
+
+
+    def transformCoords(self, coords, from_, to, *args, **kwargs):
         """Transforms the given ``coords`` from ``from_`` to ``to``.
 
         :arg coords: Coordinates to transform.
         :arg from_:  Space that the coordinates are in
         :arg to:     Space to transform the coordinates to
-        :arg vector: Assume the coordinates are vectors.
+
+        All other parameters are passed through to the
+        :meth:`.NiftiOpts.transformCoords` method of the reference image
+        ``DisplayOpts``.
 
         The following values are accepted for the ``from_`` and ``to``
         parameters:
@@ -474,19 +492,15 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'mesh'``    The coordinate system of this mesh.
         """
 
-        if from_ not in ('world', 'display', 'mesh') or \
-           to    not in ('world', 'display', 'mesh'):
-            raise ValueError('Invalid space(s): {} -> {}'.format(from_, to))
+        from_ = self.normaliseSpace(from_)
+        to    = self.normaliseSpace(to)
 
         if self.refImage is None:
             return coords
 
         opts = self.displayCtx.getOpts(self.refImage)
 
-        if from_ == 'mesh': from_ = self.coordSpace
-        if to    == 'mesh': to    = self.coordSpace
-
-        return opts.transformCoords(coords, from_, to, vector=vector)
+        return opts.transformCoords(coords, from_, to, *args, **kwargs)
 
 
     def getTransform(self, from_, to):
@@ -501,17 +515,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'mesh'``    The coordinate system of this mesh.
         """
 
-        if from_ not in ('world', 'display', 'mesh') or \
-           to    not in ('world', 'display', 'mesh'):
-            raise ValueError('Invalid space(s): {} -> {}'.format(from_, to))
+        from_ = self.normaliseSpace(from_)
+        to    = self.normaliseSpace(to)
 
         if self.refImage is None:
             return np.eye(4)
 
         opts = self.displayCtx.getOpts(self.refImage)
-
-        if from_ == 'mesh': from_ = self.coordSpace
-        if to    == 'mesh': to    = self.coordSpace
 
         return opts.getTransform(from_, to)
 
@@ -570,7 +580,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
 
         lo, hi = self.overlay.bounds
-        xform  = self.getCoordSpaceTransform()
+        xform  = self.getTransform('mesh', 'display')
 
         lohi   = transform.transform([lo, hi], xform)
         lohi.sort(axis=0)
