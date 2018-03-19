@@ -9,6 +9,6 @@ PyOpenGL-accelerate>=3.1.0,<4.0
 pyparsing==2.*
 scipy>=0.18,<2
 wxPython>=3.0.2.0,<4.1
-fslpy>=1.7,<2
+fslpy>=1.7.2,<2
 fsleyes-props>=1.5,<2
 fsleyes-widgets>=0.5,<1
