@@ -227,7 +227,8 @@ This error is occurring because FSLeyes depends on some features provided by
 [GLUT](https://www.opengl.org/resources/libraries/glut/), which is not
 necessarily present on linux systems. You can avoid this error simply by
 installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
-available through your package manager.
+available through your package manager (e.g. ``yum install freeglut`` under
+CentOS, or ``apt-get install freeglut3`` under Ubuntu).
 
 
 

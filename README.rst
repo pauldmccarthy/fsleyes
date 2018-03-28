@@ -101,3 +101,9 @@ Daniel Ruijters and Philippe Thévenaz,
 GPU Prefilter for Accurate Cubic B-Spline Interpolation,
 The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
 http://dannyruijters.nl/docs/cudaPrefilter3.pdf
+
+The GLSL parser is based on code by Nicolas P . Rougier, available at
+https://github.com/rougier/glsl-parser, and released under the BSD license.
+
+DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix
+(https://github.com/rordenlab/dcm2niix).
