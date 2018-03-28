@@ -722,7 +722,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # The image data is flattened, with fortran dimension
             # ordering, so the data, as stored on the GPU, has its
             # first dimension as the fastest changing.
-            data = data.flatten(order='F')
+            data = data.reshape(-1, order='F')
 
             if not bound:
                 self.bindTexture()

@@ -1446,6 +1446,8 @@ about = {
 
     Cubic/spline interpolation routines used in FSLeyes are provided by Daniel Ruijters and Philippe Th\u00E9venaz, described at http://www.dannyruijters.nl/cubicinterpolation/.
 
+    The GLSL parser is based on code by Nicolas P . Rougier, available at https://github.com/rougier/glsl-parser, and released under the BSD license.
+
     Some of the icons used in FSLeyes are derived from the Freeline icon set, by Enes Dal, available at https://www.iconfinder.com/Enesdal, and released under the Creative Commons (Attribution 3.0 Unported) license.
 
     DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix (https://github.com/rordenlab/dcm2niix).
