@@ -388,7 +388,7 @@ class GLSH(glvector.GLVectorBase):
         # So here we are calculating a suitable
         # 3D shape in which the radius values can
         # be stored. The shape may end up being
-
+        # larger than necessary, if the number of
         # voxels cannot easily be divided/dispersed
         # across the other dimensions.
         radTexShape = np.array([radii.size, 1, 1])
