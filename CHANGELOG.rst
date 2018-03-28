@@ -18,6 +18,17 @@ Removed
   <https://git.fmrib.ox.ac.uk/fsl/fsleyes/build/>`_.
 
 
+0.22.4 (Thursday March 28th 2018)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a couple of bugs in FOD rendering.
+
+
 0.22.3 (Tuesday March 19th 2018)
 --------------------------------
 
