@@ -18,7 +18,7 @@ Removed
   <https://git.fmrib.ox.ac.uk/fsl/fsleyes/build/>`_.
 
 
-0.22.4 (Thursday March 28th 2018)
+0.22.4 (Thursday March 29th 2018)
 ---------------------------------
 
 
