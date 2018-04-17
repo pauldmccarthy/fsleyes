@@ -409,6 +409,7 @@ class py2app(orig_py2app):
 
         distdir     = op.join(basedir, 'dist')
         contentsdir = op.join(distdir, 'FSLeyes.app', 'Contents')
+        fwdir       = op.join(contentsdir, 'Frameworks')
         plist       = op.join(contentsdir, 'Info.plist')
         resourcedir = op.join(contentsdir, 'Resources')
 
@@ -427,6 +428,28 @@ class py2app(orig_py2app):
         for dylib in dylibs:
             if op.exists(dylib):
                 shutil.copy(dylib, op.join(contentsdir, 'Frameworks'))
+
+        # make sure spatialindex_c dependency paths
+        # are correct - we're assuming here that
+        # spatialindex 1.8.5 was installed via homebrew
+        spatialindex   = op.join(fwdir, 'libspatialindex.4.dylib')
+        spatialindex_c = op.join(fwdir, 'libspatialindex_c.4.dylib')
+        sp.call(['chmod', '644', spatialindex_c])
+        sp.call([
+            'install_name_tool',
+            '-change',
+            '/usr/local/Cellar/spatialindex/1.8.5/lib/libspatialindex.4.dylib',
+            '@loader_path/libspatialindex.4.dylib',
+            spatialindex_c])
+
+        # rtree doesn't look up spatialindex
+        # dylibs correcty.
+        for lib in [spatialindex, spatialindex_c]:
+            filename = op.basename(lib)
+            dirname  = op.dirname(lib)
+            basename = filename.split('.')[0]
+            linkname = op.join(dirname, '{}.dylib'.format(basename))
+            os.symlink(filename, linkname)
 
         # copy the application document iconset
         shutil.copy(self.dociconfile, resourcedir)
