@@ -18,6 +18,18 @@ Removed
   <https://git.fmrib.ox.ac.uk/fsl/fsleyes/build/>`_.
 
 
+0.22.5 (Tuesday April 17th 2018)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with macOS standalone builds (problems with
+  `libspatialindex`).
+
+
 0.22.4 (Thursday March 29th 2018)
 ---------------------------------
 
