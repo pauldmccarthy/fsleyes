@@ -6,11 +6,14 @@ VENV_DIR=fsleyes-venv/path/to/an/environment/with/a/very/long/name/to/make/sure/
 
 python3.5 -m venv $VENV_DIR
 . $VENV_DIR/bin/activate
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
 pip install numpy
 pip install --no-binary scipy "scipy>=0.18,<2"
 pip install "$WXPYTHON_VERSION"
 pip install --no-binary ":all:" "pyopengl>=3.1.0,<4.0" "pyopengl-accelerate>=3.1.0,<4.0"
 pip install -r requirements.txt
+pip install pytest-runner
 pip install -r requirements-extra.txt
 pip install -r requirements-dev.txt
 pip install "py2app==0.14"
