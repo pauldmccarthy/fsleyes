@@ -5,6 +5,13 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.22.6 (Wednesday April 18th 2018)
+----------------------------------
+
+
+* Fixed more `libspatialindex` issues with macOS standalone builds.
+
+
 0.22.5 (Tuesday April 17th 2018)
 --------------------------------
 
