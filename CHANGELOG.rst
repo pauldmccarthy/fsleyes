@@ -14,6 +14,7 @@ Added
 
 
 * The *Nudge* tool now allows users to change the centre of rotation.
+* New gamma correction display setting for volume and mesh overlays.
 
 
 Removed
