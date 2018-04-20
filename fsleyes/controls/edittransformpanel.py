@@ -442,8 +442,6 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         rotations = [r * np.pi / 180 for r in rotations]
 
-        print('Rotation centre:', centre)
-
         if centre == 'volume':
             # We need to figure out the centre
             # of the image in world coordinates
