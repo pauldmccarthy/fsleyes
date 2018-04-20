@@ -123,6 +123,12 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
             'style'    : 0
         }
 
+        # rotate about the centre of the image,
+        # or the current world location
+        centreOpts   = ['volume', 'cursor']
+        centreLabels = [strings.labels[self, 'centre.options'][o]
+                        for o in centreOpts]
+
         self.__overlayName = wx.StaticText(self)
         self.__dsWarning   = dswarning.DisplaySpaceWarning(
             self,
@@ -144,10 +150,12 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__xrotate = fslider.SliderSpinPanel(self, label='X', **rotArgs)
         self.__yrotate = fslider.SliderSpinPanel(self, label='Y', **rotArgs)
         self.__zrotate = fslider.SliderSpinPanel(self, label='Z', **rotArgs)
+        self.__centre  = wx.Choice(self)
 
         self.__scaleLabel  = wx.StaticText(self)
         self.__offsetLabel = wx.StaticText(self)
         self.__rotateLabel = wx.StaticText(self)
+        self.__centreLabel = wx.StaticText(self)
 
         self.__oldXformLabel = wx.StaticText(self)
         self.__oldXform      = wx.StaticText(self)
@@ -164,6 +172,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__scaleLabel   .SetLabel(strings.labels[self, 'scale'])
         self.__offsetLabel  .SetLabel(strings.labels[self, 'offset'])
         self.__rotateLabel  .SetLabel(strings.labels[self, 'rotate'])
+        self.__centreLabel  .SetLabel(strings.labels[self, 'centre'])
         self.__apply        .SetLabel(strings.labels[self, 'apply'])
         self.__reset        .SetLabel(strings.labels[self, 'reset'])
         self.__loadFlirt    .SetLabel(strings.labels[self, 'loadFlirt'])
@@ -171,6 +180,9 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__cancel       .SetLabel(strings.labels[self, 'cancel'])
         self.__oldXformLabel.SetLabel(strings.labels[self, 'oldXform'])
         self.__newXformLabel.SetLabel(strings.labels[self, 'newXform'])
+
+        self.__centre.Set(centreLabels)
+        self.__centreOpts = centreOpts
 
         # Populate the xform labels with a
         # dummy xform, so an appropriate
@@ -212,6 +224,8 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__controlSizer.Add(self.__xrotate)
         self.__controlSizer.Add(self.__yrotate)
         self.__controlSizer.Add(self.__zrotate)
+        self.__controlSizer.Add(self.__centreLabel)
+        self.__controlSizer.Add(self.__centre)
 
         self.__xformSizer.Add((1, 1), flag=wx.EXPAND, proportion=1)
         self.__xformSizer.Add(self.__oldXformLabel)
@@ -245,6 +259,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__xrotate.Bind(fslider.EVT_SSP_VALUE, self.__xformChanged)
         self.__yrotate.Bind(fslider.EVT_SSP_VALUE, self.__xformChanged)
         self.__zrotate.Bind(fslider.EVT_SSP_VALUE, self.__xformChanged)
+        self.__centre .Bind(wx.EVT_CHOICE,         self.__xformChanged)
 
         self.__apply    .Bind(wx.EVT_BUTTON, self.__onApply)
         self.__reset    .Bind(wx.EVT_BUTTON, self.__onReset)
@@ -306,10 +321,11 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         overlay = self.__overlay
 
-        scales, offsets, rotations = self.__getCurrentXformComponents()
-        extra                      = self.__extraXform
+        scales, offsets, rotations, centre = self.__getCurrentXformComponents()
+        extra                              = self.__extraXform
 
-        self.__cachedXforms[overlay] = scales, offsets, rotations, extra
+        self.__cachedXforms[overlay] = (scales, offsets, rotations,
+                                        centre, extra)
 
         self.__overlay    = None
         self.__extraXform = None
@@ -359,9 +375,9 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
 
         self.__registerOverlay(overlay)
 
-        xform                             = overlay.voxToWorldMat
-        scales, offsets, rotations, extra = self.__cachedXforms.get(
-            overlay, ((1, 1, 1), (0, 0, 0), (0, 0, 0), None))
+        xform                                     = overlay.voxToWorldMat
+        scales, offsets, rotations, centre, extra = self.__cachedXforms.get(
+            overlay, ((1, 1, 1), (0, 0, 0), (0, 0, 0), 'volume', None))
 
         self.__extraXform = extra
 
@@ -377,6 +393,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__xrotate.SetValue(rotations[0])
         self.__yrotate.SetValue(rotations[1])
         self.__zrotate.SetValue(rotations[2])
+        self.__centre .SetSelection(self.__centreOpts.index(centre))
 
         self.__xformChanged()
 
@@ -411,8 +428,9 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         rotations = [self.__xrotate.GetValue(),
                      self.__yrotate.GetValue(),
                      self.__zrotate.GetValue()]
+        centre    = self.__centreOpts[self.__centre.GetSelection()]
 
-        return scales, offsets, rotations
+        return scales, offsets, rotations, centre
 
 
     def __getCurrentXform(self):
@@ -420,16 +438,21 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         offset, and rotation widgets.
         """
 
-        scales, offsets, rotations = self.__getCurrentXformComponents()
+        scales, offsets, rotations, centre = self.__getCurrentXformComponents()
 
         rotations = [r * np.pi / 180 for r in rotations]
 
-        # We need to figure out the centre
-        # of the image in world coordinates
-        # to define the origin of rotation.
-        shape  = self.__overlay.shape
-        lo, hi = transform.axisBounds(shape, self.__overlay.voxToWorldMat)
-        origin = [l + (h - l) / 2.0 for h, l in zip(hi, lo)]
+        print('Rotation centre:', centre)
+
+        if centre == 'volume':
+            # We need to figure out the centre
+            # of the image in world coordinates
+            # to define the origin of rotation.
+            shape  = self.__overlay.shape
+            lo, hi = transform.axisBounds(shape, self.__overlay.voxToWorldMat)
+            origin = [l + (h - l) / 2.0 for h, l in zip(hi, lo)]
+        else:
+            origin = self.displayCtx.worldLocation
 
         return transform.compose(scales, offsets, rotations, origin)
 

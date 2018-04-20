@@ -770,11 +770,17 @@ labels = TypeDict({
     'EditTransformPanel.scale'       : 'Scale',
     'EditTransformPanel.offset'      : 'Translate',
     'EditTransformPanel.rotate'      : 'Rotate',
+    'EditTransformPanel.centre'      : 'Centre of rotation',
     'EditTransformPanel.apply'       : 'Apply',
     'EditTransformPanel.reset'       : 'Reset',
     'EditTransformPanel.loadFlirt'   : 'Load affine',
     'EditTransformPanel.saveFlirt'   : 'Save affine',
     'EditTransformPanel.cancel'      : 'Close',
+
+    'EditTransformPanel.centre.options' : {
+        'volume' : 'Rotate around centre of image volume',
+        'cursor' : 'Rotate around current cursor location'
+    },
 
     'DisplaySpaceWarning.changeDS'    : 'Change display space',
 
