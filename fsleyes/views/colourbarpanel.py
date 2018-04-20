@@ -116,6 +116,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                     opts   .removeListener('negativeCmap',    self.name)
                     opts   .removeListener('useNegativeCmap', self.name)
                     opts   .removeListener('invert',          self.name)
+                    opts   .removeListener('gamma',           self.name)
                     opts   .removeListener('cmapResolution',  self.name)
                     display.removeListener('name',            self.name)
 
@@ -162,6 +163,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
                 opts   .removeListener('negativeCmap',    self.name)
                 opts   .removeListener('useNegativeCmap', self.name)
                 opts   .removeListener('invert',          self.name)
+                opts   .removeListener('gamma',           self.name)
                 opts   .removeListener('cmapResolution',  self.name)
                 display.removeListener('name',            self.name)
 
@@ -211,6 +213,9 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         opts   .addListener('cmapResolution',
                             self.name,
                             self.__refreshColourBar)
+        opts   .addListener('gamma',
+                            self.name,
+                            self.__refreshColourBar)
         display.addListener('name',
                             self.name,
                             self.__refreshColourBar)
@@ -225,6 +230,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         negativeCmap    = None
         useNegativeCmap = False
         cmapResolution  = 256
+        gamma           = 1
         invert          = False
         dmin, dmax      = 0.0, 0.0
         label           = ''
@@ -238,6 +244,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
             negativeCmap    = opts.negativeCmap
             useNegativeCmap = opts.useNegativeCmap
             cmapResolution  = opts.cmapResolution
+            gamma           = opts.gamma
             invert          = opts.invert
             dmin, dmax      = opts.displayRange.x
             label           = display.name
@@ -248,6 +255,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
             self.__cbCanvas.useNegativeCmap = useNegativeCmap
             self.__cbCanvas.cmapResolution  = cmapResolution
             self.__cbCanvas.invert          = invert
+            self.__cbCanvas.gamma           = gamma
             self.__cbCanvas.vrange          = dmin, dmax
             self.__cbCanvas.label           = label
 

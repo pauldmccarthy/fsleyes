@@ -15,7 +15,8 @@ import collections
 import numpy     as np
 import OpenGL.GL as gl
 
-from . import       texture
+from . import                texture
+import fsleyes.colourmaps as fslcm
 
 
 log = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class ColourMapTexture(texture.Texture):
        setAlpha
        setInvert
        setResolution
+       setGamma
        setInterp
        setBorder
     """
@@ -74,6 +76,7 @@ class ColourMapTexture(texture.Texture):
         self.__cmap         = None
         self.__invert       = False
         self.__interp       = None
+        self.__gamma        = None
         self.__alpha        = None
         self.__displayRange = None
         self.__border       = None
@@ -110,6 +113,14 @@ class ColourMapTexture(texture.Texture):
     def setInvert(self, invert):
         """Invert the values in the colour map. """
         self.set(invert=invert)
+
+
+    def setGamma(self, gamma):
+        """Gamma correction - uses ``gamma`` as an exponent to weight the
+        colour map towards the low or high end. Only applied if the
+        colour map (see :meth:`setColourMap`) is specified as a function.
+        """
+        self.set(gamma=gamma)
 
 
     def setInterp(self, interp):
@@ -152,6 +163,7 @@ class ColourMapTexture(texture.Texture):
         ``interp``       See :meth:`setInterp`.
         ``alpha``        See :meth:`setAlpha`.
         ``resolution``   See :meth:`setResolution`.
+        ``gamma``        See :meth:`setGamma`.
         ``displayRange`` See :meth:`setDisplayRange`.
         ``border``       See :meth:`setBorder`.
         ================ ============================
@@ -165,6 +177,7 @@ class ColourMapTexture(texture.Texture):
         interp       = kwargs.get('interp',       self)
         alpha        = kwargs.get('alpha',        self)
         resolution   = kwargs.get('resolution',   self)
+        gamma        = kwargs.get('gamma',        self)
         displayRange = kwargs.get('displayRange', self)
         border       = kwargs.get('border',       self)
 
@@ -175,6 +188,7 @@ class ColourMapTexture(texture.Texture):
         if displayRange is not self: self.__displayRange = displayRange
         if border       is not self: self.__border       = border
         if resolution   is not self: self.__resolution   = resolution
+        if gamma        is not self: self.__gamma        = gamma
 
         self.__refresh()
 
@@ -197,6 +211,7 @@ class ColourMapTexture(texture.Texture):
         invert = self.__invert
         interp = self.__interp
         res    = self.__resolution
+        gamma  = self.__gamma
         border = self.__border
 
         if drange is None: drange = [0.0, 1.0]
@@ -204,6 +219,7 @@ class ColourMapTexture(texture.Texture):
         if interp is None: interp = gl.GL_NEAREST
         if cmap   is None: cmap   = np.zeros((4, 4), dtype=np.float32)
         if res    is None: res    = 256
+        if gamma  is None: gamma  = 1
 
         # The fsleyes.colourmaps module creates
         # ListedColormap instances. If the given
@@ -219,7 +235,11 @@ class ColourMapTexture(texture.Texture):
         # containing RGB/RGBA colours.  Crop the RGB
         # colours, as global alpha takes precedence
         if isinstance(cmap, collections.Callable):
-            cmap = cmap(np.linspace(0.0, 1.0, res))
+
+            # Apply gamma scaling to weight
+            # towards one end of the colour map
+            idxs = np.linspace(0.0, 1.0, res) ** gamma
+            cmap = cmap(idxs)
             cmap = cmap[:, :3]
 
         # If RGB, turn into RGBA. If an RGBA cmap

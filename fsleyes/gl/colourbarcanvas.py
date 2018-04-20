@@ -13,6 +13,7 @@ See the :mod:`~fsleyes_widgets.colourbarbitmap` module for details on how
 the colour bar is created.
 """
 
+import copy
 import logging
 
 import OpenGL.GL as gl
@@ -20,6 +21,7 @@ import numpy     as np
 
 import fsleyes_props                         as props
 import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
+import fsleyes.displaycontext.colourmapopts  as cmapopts
 import fsleyes.gl.textures                   as textures
 
 
@@ -30,25 +32,12 @@ class ColourBarCanvas(props.HasProperties):
     """Contains logic to render a colour bar as an OpenGL texture.
     """
 
-    cmap = props.ColourMap()
-    """The :mod:`matplotlib` colour map to use."""
-
-
-    negativeCmap = props.ColourMap()
-    """Negative colour map to use, if :attr:`useNegativeCmap` is ``True``."""
-
-
-    useNegativeCmap = props.Boolean(default=False)
-    """Whether or not to use the :attr:`negativeCmap`.
-    """
-
-
-    cmapResolution = props.Int(minval=2, maxval=1024, default=256)
-    """Number of discrete colours to use in the colour bar. """
-
-
-    invert = props.Boolean(default=False)
-    """Invert the colour map(s). """
+    cmap            = copy.copy(cmapopts.ColourMapOpts.cmap)
+    negativeCmap    = copy.copy(cmapopts.ColourMapOpts.negativeCmap)
+    useNegativeCmap = copy.copy(cmapopts.ColourMapOpts.useNegativeCmap)
+    cmapResolution  = copy.copy(cmapopts.ColourMapOpts.cmapResolution)
+    gamma           = copy.copy(cmapopts.ColourMapOpts.gamma)
+    invert          = copy.copy(cmapopts.ColourMapOpts.invert)
 
 
     vrange = props.Bounds(ndims=1)
@@ -157,6 +146,7 @@ class ColourBarCanvas(props.HasProperties):
                 cmap=self.cmap,
                 negCmap=negCmap,
                 invert=self.invert,
+                gamma=self.gamma,
                 ticks=ticks,
                 ticklabels=ticklabels,
                 tickalign=tickalign,
