@@ -263,6 +263,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('cmapResolution',   name, refreshCmap, weak=False)
         opts   .addListener('interpolateCmaps', name, refreshCmap, weak=False)
         opts   .addListener('invert',           name, refreshCmap, weak=False)
+        opts   .addListener('gamma',            name, refreshCmap, weak=False)
         opts   .addListener('displayRange',     name, refreshCmap, weak=False)
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
@@ -298,6 +299,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('cmapResolution',   self.name)
         self.opts   .removeListener('interpolateCmaps', self.name)
         self.opts   .removeListener('invert',           self.name)
+        self.opts   .removeListener('gamma',            self.name)
         self.opts   .removeListener('displayRange',     self.name)
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
@@ -935,6 +937,7 @@ class GLMesh(globject.GLObject):
         interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
         negCmap = opts.negativeCmap
+        gamma   = opts.gamma
         invert  = opts.invert
         dmin    = opts.displayRange[0]
         dmax    = opts.displayRange[1]
@@ -946,6 +949,7 @@ class GLMesh(globject.GLObject):
                              invert=invert,
                              alpha=alpha,
                              resolution=res,
+                             gamma=gamma,
                              interp=interp,
                              displayRange=(dmin, dmax))
 
@@ -953,6 +957,7 @@ class GLMesh(globject.GLObject):
                                 invert=invert,
                                 alpha=alpha,
                                 resolution=res,
+                                gamma=gamma,
                                 interp=interp,
                                 displayRange=(dmin, dmax))
 

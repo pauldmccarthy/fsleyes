@@ -332,6 +332,7 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .addListener('invertClipping',   name,
                              self._invertClippingChanged)
         opts    .addListener('cmap',             name, self._cmapChanged)
+        opts    .addListener('gamma',            name, self._cmapChanged)
         opts    .addListener('interpolateCmaps', name, self._cmapChanged)
         opts    .addListener('negativeCmap',     name, self._cmapChanged)
         opts    .addListener('cmapResolution',   name, self._cmapChanged)
@@ -408,6 +409,7 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener(          'clipImage',               name)
         opts    .removeListener(          'invertClipping',          name)
         opts    .removeListener(          'cmap',                    name)
+        opts    .removeListener(          'gamma',                   name)
         opts    .removeListener(          'interpolateCmaps',        name)
         opts    .removeListener(          'negativeCmap',            name)
         opts    .removeListener(          'useNegativeCmap',         name)
@@ -626,6 +628,7 @@ class GLVolume(glimageobject.GLImageObject):
         cmap    = opts.cmap
         interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
+        gamma   = opts.gamma
         negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]
@@ -638,6 +641,7 @@ class GLVolume(glimageobject.GLImageObject):
                                invert=invert,
                                alpha=alpha,
                                resolution=res,
+                               gamma=gamma,
                                interp=interp,
                                displayRange=(dmin, dmax))
 
@@ -645,6 +649,7 @@ class GLVolume(glimageobject.GLImageObject):
                                   invert=invert,
                                   alpha=alpha,
                                   resolution=res,
+                                  gamma=gamma,
                                   interp=interp,
                                   displayRange=(dmin, dmax))
 

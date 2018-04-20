@@ -226,6 +226,7 @@ def _initPropertyList_MeshOpts(threedee):
              'custom_lut',
              'custom_cmap',
              'cmapResolution',
+             'gamma',
              'interpolateCmaps',
              'invert',
              'invertClipping',
