@@ -9,6 +9,13 @@ chronological order.
 --------------------------
 
 
+Added
+^^^^^
+
+
+* The *Nudge* tool now allows users to change the centre of rotation.
+
+
 Removed
 ^^^^^^^
 
