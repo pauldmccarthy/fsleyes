@@ -150,6 +150,7 @@ def _initPropertyList_VolumeOpts(threedee):
             'interpolation',
             'custom_cmap',
             'cmapResolution',
+            'gamma',
             'interpolateCmaps',
             'invert',
             'invertClipping',
@@ -316,6 +317,11 @@ def _initWidgetSpec_ColourMapOpts(threedee):
         'invertClipping'   : props.Widget('invertClipping'),
         'linkLowRanges'    : props.Widget('linkLowRanges'),
         'linkHighRanges'   : props.Widget('linkHighRanges'),
+        'gamma'            : props.Widget(
+            'gamma',
+            showLimits=False,
+            slider=True,
+            spin=True),
         'displayRange'     : props.Widget(
             'displayRange',
             showLimits=False,

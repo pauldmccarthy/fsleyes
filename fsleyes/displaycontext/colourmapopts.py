@@ -109,6 +109,12 @@ class ColourMapOpts(object):
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
 
+    gamma = props.Real(minval=0.1, maxval=4, clamped=True, default=1)
+    """Gamma correction factor - exponentially weights the :attr:`cmap`
+    and :attr:`negCmap` towards the low or high ends.
+    """
+
+
     cmapResolution = props.Int(minval=2, maxval=1024, default=256)
     """Resolution for the colour map, i.e. the number of colours to use. """
 
