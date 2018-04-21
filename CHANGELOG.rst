@@ -1,4 +1,7 @@
 .. |right_arrow| unicode:: U+21D2
+.. |command_key| unicode:: U+2318
+.. |control_key| unicode:: U+2303
+.. |eye_icon|    image::   images/eye_icon.png
 
 
 This document contains the ``fsleyes`` release history in reverse
@@ -15,6 +18,25 @@ Added
 
 * The *Nudge* tool now allows users to change the centre of rotation.
 * New gamma correction display setting for volume and mesh overlays.
+
+
+Changed
+^^^^^^^
+
+
+* Plot view interaction changed - left click to pan, right click to zoom, and
+  hold down |control_key| (|command_key| under macOS) and click for secondary
+  behaviour (e.g. changing the current volume on a time series panel).
+
+
+Fixed
+^^^^^
+
+
+* Show/hide button in a plot view's overlay list no longer toggles overlay
+  visibility on other (e.g. ortho) views.
+* Selecting an item in a plot view's overlay list no longer shows/hides
+  its data plot - the |eye_icon| button needs to be clicked.
 
 
 Removed
