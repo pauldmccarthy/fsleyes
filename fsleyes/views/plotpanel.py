@@ -1131,9 +1131,6 @@ class OverlayPlotPanel(PlotPanel):
         self            .addListener('dataSeries',
                                      self.__name,
                                      self.__dataSeriesChanged)
-        self.displayCtx .addListener('selectedOverlay',
-                                     self.__name,
-                                     self.__selectedOverlayChanged)
         self.overlayList.addListener('overlays',
                                      self.__name,
                                      self.__overlayListChanged)
@@ -1146,9 +1143,8 @@ class OverlayPlotPanel(PlotPanel):
         """Must be called when this ``OverlayPlotPanel`` is no longer needed.
         Removes some property listeners, and calls :meth:`PlotPanel.destroy`.
         """
-        self.overlayList.removeListener('overlays',        self.__name)
-        self.displayCtx .removeListener('selectedOverlay', self.__name)
-        self            .removeListener('dataSeries',      self.__name)
+        self.overlayList.removeListener('overlays',   self.__name)
+        self            .removeListener('dataSeries', self.__name)
 
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
@@ -1477,7 +1473,7 @@ class OverlayPlotPanel(PlotPanel):
                          showVis=True,
                          showSave=False,
                          showGroup=False,
-                         propagateSelect=False,
+                         propagateSelect=True,
                          elistboxStyle=(elistbox.ELB_REVERSE      |
                                         elistbox.ELB_TOOLTIP_DOWN |
                                         elistbox.ELB_NO_ADD       |
@@ -1503,26 +1499,6 @@ class OverlayPlotPanel(PlotPanel):
         the :meth:`removeDataSeries` action accordingly.
         """
         self.removeDataSeries.enabled = len(self.dataSeries) > 0
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-
-        If a :class:`.DataSeries` instance for the newly selected overlay
-        exists, and is not currently enabled, it is enabled.
-        """
-
-        overlay = self.displayCtx.getSelectedOverlay()
-
-        if overlay is None:
-            return
-
-        ds = self.getDataSeries(overlay)
-
-        if ds is not None and not ds.enabled:
-            ds.enabled = True
-        else:
-            self.asyncDraw()
 
 
     def __overlayListChanged(self, *a, **kwa):
