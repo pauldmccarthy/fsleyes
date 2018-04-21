@@ -15,6 +15,7 @@ import numpy              as np
 import matplotlib.patches as patches
 
 import fsleyes_props      as props
+import fsl.utils.idle     as idle
 import fsl.data.image     as fslimage
 
 import fsleyes.overlay    as fsloverlay
@@ -302,17 +303,16 @@ class RangePolygon(patches.Polygon):
         """
         patches.Polygon.__init__(self, *args, **kwargs)
 
-
         # Dodgily trying to avoid collisions
         # with any patches.Polygon attributes
         self._rp_hs      = hs
         self._rp_hsPanel = hsPanel
         self._rp_name    = '{}_{}'.format(type(self).__name__, id(self))
 
-        hs.addGlobalListener(           self._rp_name, self.updatePolygon)
-        hsPanel.addListener('smooth',   self._rp_name, self.updatePolygon)
-        hsPanel.addListener('histType', self._rp_name, self.updatePolygon)
-        hsPanel.addListener('plotType', self._rp_name, self.updatePolygon)
+        hs.addGlobalListener(           self._rp_name, self.asyncUpdatePolygon)
+        hsPanel.addListener('smooth',   self._rp_name, self.asyncUpdatePolygon)
+        hsPanel.addListener('histType', self._rp_name, self.asyncUpdatePolygon)
+        hsPanel.addListener('plotType', self._rp_name, self.asyncUpdatePolygon)
 
         self.updatePolygon()
 
@@ -336,6 +336,46 @@ class RangePolygon(patches.Polygon):
 
         self._rp_hs      = None
         self._rp_hsPanel = None
+
+
+    def asyncUpdatePolygon(self, *a, **kwa):
+        """Asynchronously schedule :meth:`updatePolygon` via
+        :func:`.idle.idle`.
+        """
+
+        # We need to make sure, if the histogram
+        # data has changed, that the data plot is
+        # updated before the polygon is updated.
+        #
+        # This is subtly complicated, and is tightly
+        # coupled to the OverlayPlotPanel internals.
+        #
+        # 1. OverlayPlotPanel draws via asyncDraw(),
+        #    which schedules draw() on the idle loop
+        #    (the idle.idle call below makes sure
+        #     we get scheduled after this).
+        #
+        # 2. draw() prepares data on a TaskThread
+        #    (the OPP draw queue; waitUntilIdle
+        #     is run on a separate thread which
+        #     blocks until the draw queue is empty).
+        #
+        # 3. When data is prepared, __drawDataSeries()
+        #    is scheduled on idle loop (the onFinish
+        #    function below - updatePolygon - is
+        #    schduled on idle after this).
+        #
+        # We need to wait until all of the above has
+        # completed before updating the range polygon.
+
+        q        = self._rp_hsPanel.getDrawQueue()
+        taskName = '{}.draw'.format(id(self))
+
+        idle.idle(idle.run,
+                  q.waitUntilIdle,
+                  onFinish=self.updatePolygon,
+                  name=taskName,
+                  dropIfQueued=True)
 
 
     def updatePolygon(self, *a, **kwa):
