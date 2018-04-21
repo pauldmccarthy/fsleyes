@@ -309,7 +309,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
 
     def getDrawQueue(self):
-        """Returns the :class`.async.DrawQueue` instance used for data
+        """Returns the :class`.idle.TaskThread` instance used for data
         preparation.
         """
         return self.__drawQueue

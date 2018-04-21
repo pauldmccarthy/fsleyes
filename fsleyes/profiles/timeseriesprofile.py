@@ -41,8 +41,6 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
                                          displayCtx,
                                          ['volume'])
 
-        self.mode = 'volume'
-
         self.__volumeLine = None
 
 

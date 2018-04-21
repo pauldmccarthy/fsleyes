@@ -59,8 +59,6 @@ class HistogramProfile(plotprofile.PlotProfile):
                                          displayCtx,
                                          ['overlayRange'])
 
-        self.mode = 'overlayRange'
-
         self.__currentHs     = None
         self.__rangePolygons = {}
         self.__rangeOverlays = {}
@@ -370,7 +368,7 @@ class RangePolygon(patches.Polygon):
                 y        = hsArtist.get_ydata()
                 vertices = np.array([x, y]).T
 
-            except:
+            except Exception:
                 vertices = np.zeros(0)
 
         # Otherwise we can get the data
@@ -405,8 +403,8 @@ class RangePolygon(patches.Polygon):
 
             histx, histy = hs.getData()
 
-            try:    xidx = np.where(histx[:] < hi)[0][-1]
-            except: xidx = len(histy) - 1
+            try:              xidx = np.where(histx[:] < hi)[0][-1]
+            except Exception: xidx = len(histy) - 1
 
             if xidx >= len(histy):
                 xidx = -1

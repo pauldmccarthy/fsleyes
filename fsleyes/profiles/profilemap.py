@@ -127,11 +127,11 @@ tempModeMap = {
     # Can't use shift on mpl
     # canvases for some reason.
     TimeSeriesProfile : OrderedDict((
-        (('volume', wx.WXK_CONTROL), 'panzoom'),
+        (('panzoom', wx.WXK_CONTROL), 'volume'),
     )),
 
     HistogramProfile : OrderedDict((
-        (('overlayRange', wx.WXK_CONTROL), 'panzoom'),
+        (('panzoom', wx.WXK_CONTROL), 'overlayRange'),
     )),
 
     Scene3DViewProfile : OrderedDict((
