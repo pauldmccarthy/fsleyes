@@ -1365,8 +1365,7 @@ class OverlayPlotPanel(PlotPanel):
             ds.destroy()
 
         for t, p in zip(targets, propNames):
-            try:    t.removeListener(p, self.__name)
-            except: pass
+            t.removeListener(p, self.__name)
 
 
     def updateDataSeries(self, initialState=None):
@@ -1410,7 +1409,7 @@ class OverlayPlotPanel(PlotPanel):
                 # "Disable" overlays which don't have any data
                 # to plot. We do this mostly so the overlay
                 # appears greyed out in the OverlayListPanel.
-                self.displayCtx.getDisplay(ovl).enabled = False
+                display.enabled = False
                 continue
 
             # Display.enabled == DataSeries.enabled
@@ -1555,7 +1554,7 @@ class OverlayPlotPanel(PlotPanel):
             # to toggle on/off overlay plots. We don't want
             # this to interfere with CanvasPanels, which
             # use Display.enabled to toggle on/off overlays.
-            display.unsyncFromParent('enabled')
+            display.detachFromParent('enabled')
 
         self.updateDataSeries(initialState=initialState)
         self.asyncDraw()

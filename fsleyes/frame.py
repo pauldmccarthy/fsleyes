@@ -226,7 +226,7 @@ class FSLeyesFrame(wx.Frame):
                     self.__statusBar.SetLabel(msg)
                     self.__statusBar.Refresh()
                     self.__statusBar.Update()
-                except:
+                except Exception:
                     pass
 
             wx.CallAfter(realUpdate)
@@ -1271,7 +1271,7 @@ class FSLeyesFrame(wx.Frame):
                         'fsleyes.frame.layout',
                         layout,
                         message=strings.messages[self, 'restoringLayout'])
-                except:
+                except Exception:
                     log.warn('Previous layout could not be restored - '
                              'falling back to default layout.')
                     log.debug('Layout restore error', exc_info=True)
