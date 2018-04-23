@@ -341,8 +341,8 @@ class OrthoViewProfile(profiles.Profile):
         if len(self.overlayList) == 0:
             return False
 
-        try:    ch = chr(key)
-        except: ch = None
+        try:              ch = chr(key)
+        except Exception: ch = None
 
         dirs  = [0, 0, 0]
         copts = canvas.opts
@@ -456,8 +456,8 @@ class OrthoViewProfile(profiles.Profile):
         of the target canvas.
         """
 
-        try:    ch = chr(key)
-        except: ch = None
+        try:              ch = chr(key)
+        except Exception: ch = None
 
         zoom = 0
 

@@ -310,7 +310,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                     if overlay is self.refImage:
                         opts.removeListener('transform', self.name)
 
-                except:
+                except Exception:
                     pass
 
         self.__oldRefImage = None
@@ -459,10 +459,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             xyz = self.displayCtx.location.xyz
             xyz = self.transformCoords(xyz, 'display', 'mesh')
 
+        vert = None
         vidx = self.displayCtx.vertexIndex
-        vert = self.overlay.vertices[vidx, :]
 
-        if np.all(np.isclose(vert, xyz)):
+        if vidx >= 0 and vidx <= self.overlay.nvertices:
+            vert = self.overlay.vertices[vidx, :]
+
+        if vert is not None and np.all(np.isclose(vert, xyz)):
             return vidx
         else:
             return None

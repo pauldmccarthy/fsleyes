@@ -706,6 +706,8 @@ labels = TypeDict({
     'World coordinates ({})',
     'OverlayInfoPanel.Mesh.coordSpace.display'     :
     'Display coordinate system',
+    'OverlayInfoPanel.Mesh.coordSpace.torig'      :
+    'Freesurfer coordinates',
 
     'OverlayInfoPanel.VTKMesh'        : 'VTK model',
     'OverlayInfoPanel.GiftiMesh'      : 'GIFTI surface',
