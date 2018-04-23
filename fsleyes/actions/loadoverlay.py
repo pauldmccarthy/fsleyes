@@ -109,12 +109,13 @@ def makeWildcard(allowedExts=None, descs=None):
     # files with multiple extensions (e.g. .nii.gz).
     # So I'm adding support for '.gz' and '.gii'
     # extensions here.
+    fsfiles = [op.splitext(f)[1] for f in fslfs.CORE_GEOMETRY_FILES]
     if allowedExts is None:
         allowedExts  = (fslimage.ALLOWED_EXTENSIONS  +
                         fslvtk  .ALLOWED_EXTENSIONS  +
                         fslmgh  .ALLOWED_EXTENSIONS  +
                         fslgifti.ALLOWED_EXTENSIONS  +
-                        fslfs   .CORE_GEOMETRY_FILES +
+                        fsfiles                      +
                         ['.gz', '.gii'])
     if descs is None:
         descs        = (fslimage.EXTENSION_DESCRIPTIONS     +
