@@ -146,20 +146,25 @@ def _initPropertyList_Display(threedee):
 
 
 def _initPropertyList_VolumeOpts(threedee):
-    return ['custom_volume',
-            'interpolation',
-            'custom_cmap',
-            'cmapResolution',
-            'gamma',
-            'interpolateCmaps',
-            'invert',
-            'invertClipping',
-            'linkLowRanges',
-            'linkHighRanges',
-            'displayRange',
-            'clippingRange',
-            'clipImage',
-            'custom_overrideDataRange']
+    plist = ['custom_volume',
+             'interpolation',
+             'custom_cmap',
+             'cmapResolution',
+             'gamma',
+             'interpolateCmaps',
+             'invert',
+             'invertClipping',
+             'linkLowRanges',
+             'linkHighRanges',
+             'displayRange',
+             'clippingRange',
+             'clipImage',
+             'custom_overrideDataRange']
+
+    if threedee:
+        plist.remove('clipImage')
+
+    return plist
 
 
 def _init3DPropertyList_VolumeOpts():
@@ -239,8 +244,8 @@ def _initPropertyList_MeshOpts(threedee):
     # Remove outline
     # options for 3D
     if threedee:
-        plist.pop(3)
-        plist.pop(2)
+        plist.remove('outlineWidth')
+        plist.remove('outline')
 
     return plist
 

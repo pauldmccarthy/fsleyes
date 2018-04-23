@@ -15,8 +15,7 @@ import collections
 import numpy     as np
 import OpenGL.GL as gl
 
-from . import                texture
-import fsleyes.colourmaps as fslcm
+from . import texture
 
 
 log = logging.getLogger(__name__)
