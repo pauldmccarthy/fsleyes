@@ -356,8 +356,9 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('numSteps',        name, self._numStepsChanged)
             opts.addListener('numInnerSteps',   name,
                              self._numInnerStepsChanged)
-            opts.addListener('resolution',   name,    self._resolutionChanged)
+            opts.addListener('resolution',      name,  self._resolutionChanged)
             opts.addListener('blendFactor',     name, self._blendFactorChanged)
+            opts.addListener('smoothing',       name, self._smoothingChanged)
             opts.addListener('showClipPlanes',  name,
                              self._showClipPlanesChanged)
             opts.addListener('numClipPlanes',
@@ -424,8 +425,12 @@ class GLVolume(glimageobject.GLImageObject):
 
         if self.threedee:
             opts.removeListener('numSteps',        name)
-            opts.removeListener('numClipPlanes',   name)
+            opts.removeListener('numInnerSteps',   name)
+            opts.removeListener('resolution',      name)
+            opts.removeListener('blendFactor',     name)
+            opts.removeListener('smoothing',       name)
             opts.removeListener('showClipPlanes',  name)
+            opts.removeListener('numClipPlanes',   name)
             opts.removeListener('clipMode',        name)
             opts.removeListener('clipPosition',    name)
             opts.removeListener('clipAzimuth',     name)
@@ -964,6 +969,13 @@ class GLVolume(glimageobject.GLImageObject):
 
     def _blendFactorChanged(self, *a):
         """Called when the :attr:`.Volume3DOpts.showClipPlanes` property
+        changes.
+        """
+        self.updateShaderState(alwaysNotify=True)
+
+
+    def _smoothingChanged(self, *a):
+        """Called when the :attr:`.Volume3DOpts.smoothing` property
         changes.
         """
         self.updateShaderState(alwaysNotify=True)

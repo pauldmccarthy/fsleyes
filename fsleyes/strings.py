@@ -985,6 +985,7 @@ properties = TypeDict({
 
     'Volume3DOpts.numSteps'                : 'Number of samples',
     'Volume3DOpts.blendFactor'             : 'Blending',
+    'Volume3DOpts.smoothing'               : 'Smoothing',
     'Volume3DOpts.resolution'              : 'Quality',
     'Volume3DOpts.numClipPlanes'           : 'Number of clipping planes',
     'Volume3DOpts.showClipPlanes'          : 'Show clipping planes',

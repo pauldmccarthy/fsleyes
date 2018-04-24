@@ -138,6 +138,11 @@ properties = TypeDict({
     'in the final volume colour being blended from samples which are deeper '
     'in the volume.',
 
+    'Volume3DOpts.smoothing' :
+    'This setting controls the amount of smoothing applied to the volume. '
+    'When the smoothing is greater than zero, a gaussian smoothing filter is '
+    'applied, with the filter radius (in pixels) controlled by this setting.',
+
     'Volume3DOpts.resolution' :
     'This setting controls the quality (resolution) at which the volume is '
     'shown on screen. Higher values look better, but lower values will be '

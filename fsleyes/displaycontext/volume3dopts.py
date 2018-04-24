@@ -68,6 +68,12 @@ class Volume3DOpts(object):
     """
 
 
+    smoothing = props.Int(minval=0, maxval=10, default=1, clamped=True)
+    """Amount of smoothing to apply to the rendered volume - this setting
+    controls the smoothing filter radius, in pixels.
+    """
+
+
     numClipPlanes = props.Int(minval=0, maxval=5, default=0, clamped=True)
     """Number of active clip planes. """
 
