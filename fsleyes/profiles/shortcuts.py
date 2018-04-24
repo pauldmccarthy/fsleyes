@@ -59,6 +59,8 @@ actions = td.TypeDict({
     'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
 
     'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
+    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
+    'Scene3DPanel.toggleScene3DToolBar'     : 'Ctrl-Alt-8',
 
     'CanvasPanel.toggleMovieMode'           : 'Alt-M',
     'CanvasPanel.toggleDisplaySync'         : 'Alt-S',
@@ -73,9 +75,6 @@ actions = td.TypeDict({
     'OrthoPanel.toggleYCanvas'              : 'Alt-Y',
     'OrthoPanel.toggleZCanvas'              : 'Alt-Z',
     'OrthoPanel.pearsonCorrelation'         : 'Alt-I',
-
-
-    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
 
     'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',

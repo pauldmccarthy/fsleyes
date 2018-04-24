@@ -505,7 +505,8 @@ actions = TypeDict({
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
-    'Scene3DPanel.resetDisplay' : 'Reset camera',
+    'Scene3DPanel.resetDisplay'         : 'Reset camera',
+    'Scene3DPanel.toggleScene3DToolBar' : '3D toolbar',
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
     'PlotPanel.importDataSeries'                    : 'Import ...',
