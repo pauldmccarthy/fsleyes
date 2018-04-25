@@ -87,7 +87,7 @@ class RenderTexture(texture.Texture2D):
     as the depth attachment. The resulting depth values created after
     drawing to the ``RenderTexture`` may be used in subsequent processing.
     You can either access the depth texture directly via the
-    :meth:`getDepthTexture` method, or you can draw the contents of the
+    :meth:`depthTexture` method, or you can draw the contents of the
     ``RenderTexture``, with depth information, by passing the ``useDepth``
     flag to either the :meth:`draw` or :meth:`drawOnBounds` methods.
     """

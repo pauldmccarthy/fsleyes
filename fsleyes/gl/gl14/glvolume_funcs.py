@@ -230,7 +230,7 @@ def draw3D(self, xform=None, bbox=None):
         for i in range(outerLoop):
 
             settings    = list(settings)
-            dtex        = src.getDepthTexture()
+            dtex        = src.depthTexture
             settings[1] = i * opts.numInnerSteps
 
             if i == outerLoop - 1: settings[2] =  1

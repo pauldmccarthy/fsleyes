@@ -492,6 +492,7 @@ OPTIONS = td.TypeDict({
                         'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
+                        'gamma',
                         'invertClipping',
                         'cmap',
                         'negativeCmap',
@@ -501,6 +502,7 @@ OPTIONS = td.TypeDict({
                         'invert'],
     'Volume3DOpts'   : ['numSteps',
                         'blendFactor',
+                        'smoothing',
                         'resolution',
                         'dithering',
                         'numInnerSteps',
@@ -546,6 +548,7 @@ OPTIONS = td.TypeDict({
                         'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
+                        'gamma',
                         'discardClipped',
                         'invertClipping',
                         'cmap',
@@ -764,6 +767,7 @@ ARGUMENTS = td.TypeDict({
     'ColourMapOpts.cmapResolution'   : ('cmr', 'cmapResolution',   True),
     'ColourMapOpts.interpolateCmaps' : ('inc', 'interpolateCmaps', False),
     'ColourMapOpts.invert'           : ('i',   'invert',           False),
+    'ColourMapOpts.gamma'            : ('g',   'gamma',            True),
     'ColourMapOpts.linkLowRanges'    : ('ll',  'unlinkLowRanges',  True),
     'ColourMapOpts.linkHighRanges'   : ('lh',  'linkHighRanges',   True),
 
@@ -773,6 +777,7 @@ ARGUMENTS = td.TypeDict({
 
     'Volume3DOpts.numSteps'      : ('ns',  'numSteps',      True),
     'Volume3DOpts.blendFactor'   : ('bf',  'blendFactor',   True),
+    'Volume3DOpts.smoothing'     : ('s',   'smoothing',     True),
     'Volume3DOpts.resolution'    : ('r',   'resolution',    True),
     'Volume3DOpts.dithering'     : ('dt',  'dithering',     True),
     'Volume3DOpts.numInnerSteps' : ('nis', 'numInnerSteps', True),
@@ -979,6 +984,7 @@ HELP = td.TypeDict({
     'ColourMapOpts.interpolateCmaps'  : 'Interpolate between colours '
                                         'in colour maps',
     'ColourMapOpts.invert'            : 'Invert colour map',
+    'ColourMapOpts.gamma'             : 'Gamma correction (0.1-5, default=1)',
     'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 
@@ -996,6 +1002,8 @@ HELP = td.TypeDict({
     '3D only. Maximum number of samples per pixel',
     'Volume3DOpts.blendFactor' :
     '3D only Sample blending factor [0.001-1, default: 0.2]',
+    'Volume3DOpts.smoothing' :
+    '3D only. Smoothing radius [0-10, default: 1]',
     'Volume3DOpts.resolution' :
     '3D only. Resolution [1-100, default: 100]',
     'Volume3DOpts.dithering' :
@@ -2250,8 +2258,8 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
                            fsldisplay.RGBVectorOpts,
                            fsldisplay.TensorOpts,
                            fsldisplay.SHOpts)):
-        try:    propNames.remove('volume')
-        except: pass
+        try:               propNames.remove('volume')
+        except ValueError: pass
 
     longArgs  = {name : ARGUMENTS[source, name][1] for name in propNames}
     xforms    = {}
@@ -2382,7 +2390,7 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
                 displaySpace = _findOrLoad(overlayList,
                                            args.displaySpace,
                                            fslimage.Image)
-            except:
+            except Exception:
                 log.warning('Unrecognised value for display space: {}'.format(
                     args.displaySpace))
 
