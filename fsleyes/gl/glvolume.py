@@ -731,15 +731,27 @@ class GLVolume(glimageobject.GLImageObject):
         # enable depth-testing, otherwise
         # depth values will not get written
         # to the depth buffer!
+        #
+        # The glvolume_funcs.draw3D function
+        # will put the final render into
+        # renderTexture1
         with glroutines.enabled((gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
             fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
 
-        # renderTexture1 should now
-        # contain the final result -
-        # draw it to the screen.
+        # Apply smoothing if needed. If smoothing
+        # is enabled, the final final render will
+        # be in renderTexture2
+        if opts.smoothing > 0:
+            self.smoothFilter.set(kernSize=opts.smoothing * 2,
+                                  offsets=[1.0 / w, 1.0 / h])
+            self.smoothFilter.osApply(self.renderTexture1,
+                                      self.renderTexture2)
+
+        # We now have the final result
+        # - draw it to the screen.
         verts = np.array([[-1, -1, 0],
                           [-1,  1, 0],
                           [ 1, -1, 0],
@@ -754,8 +766,26 @@ class GLVolume(glimageobject.GLImageObject):
             w, h = self.canvas.GetSize()
             gl.glViewport(0, 0, w, h)
 
-        with glroutines.enabled((gl.GL_DEPTH_TEST)):
-            self.renderTexture1.draw(verts, useDepth=True)
+        with glroutines.enabled(gl.GL_DEPTH_TEST):
+
+            # If smoothing was not applied, rt1
+            # contains the final render. Otherwise,
+            # rt2 contains the final render, but rt1
+            # contains the depth information. So we
+            # need to # temporarily replace rt2.depth
+            # with rt1.depth.
+            if opts.smoothing > 0:
+                src    = self.renderTexture2
+                olddep = self.renderTexture2.depthTexture
+                dep    = self.renderTexture1.depthTexture
+            else:
+                src    = self.renderTexture1
+                olddep = self.renderTexture1.depthTexture
+                dep    = olddep
+
+            src.depthTexture = dep
+            src.draw(verts, useDepth=True)
+            src.depthTexture = olddep
 
 
     def drawAll(self, *args, **kwargs):

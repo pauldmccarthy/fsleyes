@@ -18,14 +18,16 @@ other situations throughout FSLeyes. See also the
 import logging
 import contextlib
 
+import deprecation
+
 import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
 import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-from  fsl.utils.platform import platform as fslplatform
-import fsleyes.gl.routines               as glroutines
-import fsleyes.gl.shaders                as shaders
-from . import                               texture
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes.gl.routines                as glroutines
+import fsleyes.gl.shaders                 as shaders
+from . import                                texture
 
 
 log = logging.getLogger(__name__)
@@ -213,12 +215,45 @@ class RenderTexture(texture.Texture2D):
                                   'instances'.format(type(self).__name__))
 
 
+    @deprecation.deprecated(deprecated_in='0.23.0',
+                            removed_in='1.0.0',
+                            details='Use depthTexture instead')
     def getDepthTexture(self):
+        """Deprecated - use :meth:`depthTexture` instead. """
+        return self.__depthTexture
+
+
+    @property
+    def depthTexture(self):
         """Returns the ``Texture2D`` instance used as the depth buffer. Returns
         ``None`` if this ``RenderTexture`` was not configured with ``'cd'``
         (see :meth:`__init__`).
         """
         return self.__depthTexture
+
+
+    @depthTexture.setter
+    def depthTexture(self, dtex):
+        """Replace the depth texture currently used by this ``RenderTexture``.
+
+        A :exc:`ValueError` is raised if ``dtex`` is not compatible with this
+        ``RenderTexture``.
+
+        :arg dtex: A :class:`.Texture2D` with data type
+                   ``GL_DEPTH_COMPONENT24``, and the same size as this
+                   ``RenderTexture``.
+        """
+
+        if self.__depthTexture is None:
+            raise ValueError('This RenderTexture is not '
+                             'configured to use a depth texture')
+
+        if not isinstance(dtex, texture.Texture2D)   or \
+           dtex.dtype     != gl.GL_DEPTH_COMPONENT24 or \
+           dtex.getSize() != self.getSize():
+            raise ValueError('Incompatible depth texture')
+
+        self.__depthTexture = dtex
 
 
     def setSize(self, width, height):
@@ -228,7 +263,7 @@ class RenderTexture(texture.Texture2D):
 
         # We have to size the depth texture first,
         # because calling setSize on ourselves will
-        # result in refresh being called, whcih
+        # result in refresh being called, which
         # expects the depth texture to be ready to go.
         if self.__depthTexture is not None:
             self.__depthTexture.setSize(width, height)

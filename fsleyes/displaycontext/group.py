@@ -71,6 +71,7 @@ class OverlayGroup(props.HasProperties):
                             'numInnerSteps',
                             'resolution',
                             'numClipPlanes',
+                            'clipMode',
                             'clipPosition',
                             'clipAzimuth',
                             'clipInclination'],

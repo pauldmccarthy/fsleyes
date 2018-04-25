@@ -296,6 +296,13 @@ class Texture2D(Texture):
         return intFmt, extFmt, ndtype, size
 
 
+    @property
+    def dtype(self):
+        """Returns the internal GL data format to use for this texture. """
+
+        return self.__dtype
+
+
     def getSize(self):
         """Return the current ``(width, height)`` of this ``Texture2D``. """
         return self.__width, self.__height
