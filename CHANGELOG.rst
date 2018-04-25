@@ -18,6 +18,7 @@ Added
 
 * The *Nudge* tool now allows users to change the centre of rotation.
 * New gamma correction display setting for volume and mesh overlays.
+* New smoothing option for 3D volume rendering.
 
 
 Changed
@@ -33,6 +34,8 @@ Fixed
 ^^^^^
 
 
+* Freesurfer surface files could not be selectd in macOS open file dialogs.
+* Freesurfer surfaces were causing an error in overlay information panel.
 * Show/hide button in a plot view's overlay list no longer toggles overlay
   visibility on other (e.g. ortho) views.
 * Selecting an item in a plot view's overlay list no longer shows/hides
