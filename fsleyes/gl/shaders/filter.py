@@ -47,8 +47,8 @@ class Filter(object):
 
         :arg texture:    Number of the texture unit that the filter input
                          texture will be bound to. This must be specified
-                         specified when the shader program is compiled,
-                         to support OpenGL 1.4.
+                         when the shader program is compiled, to support
+                         OpenGL 1.4.
         """
 
         filterName     = 'filter_{}'.format(filterName)
@@ -106,7 +106,7 @@ class Filter(object):
               xax,
               yax,
               xform=None,
-              textureUnit=None):
+              **kwargs):
         """Apply the filter to the given ``source`` texture, and render the
         results according to the given bounds.
 
@@ -122,8 +122,9 @@ class Filter(object):
         :arg yax:         Display space axis which maps to the vertical screen
                           axis.
         :arg xform:       Transformation matrix to appply to vertices.
-        :arg textureUnit: Texture unit to bind to. Defaults to
-                          ``gl.GL_TEXTURE0``.
+
+        All other keyword arguments are passed through to the
+        :meth:`.Texture2D.draw` method of the ``source`` texture.
         """
 
         shader    = self.__shader
@@ -137,11 +138,10 @@ class Filter(object):
 
         if float(fslplatform.glVersion) >= 2.1:
             shader.setAtt('vertex', vertices)
-            source.draw(textureUnit=textureUnit)
         else:
             gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-            source.draw(textureUnit=textureUnit)
 
+        source.draw(**kwargs)
         shader.unloadAtts()
         shader.unload()
 
@@ -163,15 +163,9 @@ class Filter(object):
         All other arguments are passed to the :meth:`apply` method.
         """
 
-        dest.bindAsRenderTarget()
-        dest.setRenderViewport(0, 1, (0, 0, 0), (1, 1, 1))
-
-        if clearDest:
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT |
-                       gl.GL_DEPTH_BUFFER_BIT |
-                       gl.GL_STENCIL_BUFFER_BIT)
-
-        self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, **kwargs)
-
-        dest.unbindAsRenderTarget()
-        dest.restoreViewport()
+        with dest.bound(0, 1, (0, 0, 0), (1, 1, 1)):
+            if clearDest:
+                gl.glClear(gl.GL_COLOR_BUFFER_BIT |
+                           gl.GL_DEPTH_BUFFER_BIT |
+                           gl.GL_STENCIL_BUFFER_BIT)
+            self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, **kwargs)

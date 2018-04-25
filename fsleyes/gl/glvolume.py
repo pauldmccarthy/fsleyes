@@ -20,6 +20,7 @@ import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
 import fsleyes.gl                         as fslgl
 import fsleyes.gl.routines                as glroutines
+import fsleyes.gl.shaders.filter          as glfilter
 from . import                                textures
 from . import                                glimageobject
 from . import resources                   as glresources
@@ -114,11 +115,17 @@ class GLVolume(glimageobject.GLImageObject):
     from the 'camera' through the image texture. The resulting colour
     is generated from sampling points along the ray.
 
+    The ``glvolume_funcs`` modules are expected to perform this rendering
+    off-screen, using two :class:`.RenderTexture` instances, available as
+    attributes ``renderTexture1`` and``renderTexture2``.  After a call to
+    ``draw3D``, the final result is assuemd to be contained in
+    ``renderTexture1``.
+
 
     **Textures**
 
 
-    The ``GLVolume`` class uses three textures:
+    The ``GLVolume`` class uses the following textures:
 
      - An :class:`.ImageTexture`, a 3D texture which contains image data.
        This is bound to texture unit 0.
@@ -137,6 +144,11 @@ class GLVolume(glimageobject.GLImageObject):
        texture will not be bound - in this case, the image texture is used
        for clipping.
 
+     - Two :class:`.RenderTexture` instances which are used for 3D rendering.
+       Both of these textures have depth buffers. When one of these textures
+       is being drawn it is bound to texture units 4 (for RGBA) and 5 (for
+       depth).
+
 
     **Attributes**
 
@@ -153,6 +165,10 @@ class GLVolume(glimageobject.GLImageObject):
                          colour map.
     ``negColourTexture`` The :class:`.ColourMapTexture` used to store the
                          negative colour map.
+    ``renderTexture1``   The first :class:`.RenderTexture` used for 3D
+                         rendering.
+    ``renderTexture2``   The first :class:`.RenderTexture` used for 3D
+                         rendering.
     ``texName``          A name used for the ``imageTexture``,
                          ``colourTexture``, and ``negColourTexture`. The
                          name for the latter is suffixed with ``'_neg'``.
@@ -173,7 +189,6 @@ class GLVolume(glimageobject.GLImageObject):
         :arg canvas:      The canvas doing the drawing.
 
         :arg threedee:    Set up for 2D or 3D rendering.
-
         """
 
         glimageobject.GLImageObject.__init__(self,
@@ -199,7 +214,7 @@ class GLVolume(glimageobject.GLImageObject):
         # Ref to an OpenGL shader program -
         # the glvolume_funcs module will
         # create this for us.
-        self.shader   = None
+        self.shader = None
 
         # References to the clip image and
         # associated DisplayOpts instance,
@@ -215,6 +230,7 @@ class GLVolume(glimageobject.GLImageObject):
             '{}_neg'.format(self.texName))
 
         if self.threedee:
+            self.smoothFilter   = glfilter.Filter('smooth', texture=0)
             self.renderTexture1 = textures.RenderTexture(
                 self.name, gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(
@@ -274,8 +290,10 @@ class GLVolume(glimageobject.GLImageObject):
         if self.threedee:
             self.renderTexture1.destroy()
             self.renderTexture2.destroy()
+            self.smoothFilter  .destroy()
             self.renderTexture1 = None
             self.renderTexture2 = None
+            self.smoothFilter   = None
 
         fslgl.glvolume_funcs       .destroy(self)
         glimageobject.GLImageObject.destroy(self)
@@ -701,10 +719,9 @@ class GLVolume(glimageobject.GLImageObject):
             if rt.getSize() != (w, h):
                 rt.setSize(w, h)
 
-            rt.bindAsRenderTarget()
-            gl.glClearColor(0, 0, 0, 0)
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-            rt.unbindAsRenderTarget()
+            with rt.bound():
+                gl.glClearColor(0, 0, 0, 0)
+                gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
         if opts.resolution != 100:
             gl.glViewport(0, 0, w, h)
