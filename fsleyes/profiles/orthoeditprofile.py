@@ -61,7 +61,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 grow the selected region based on its intensity.
 
     ``fill``    Fill mode. The user can click on a voxel and set its
-                selected state, and the state of adjacent voxels.
+                selected state, and the state of adjacent voxels. Restricted
+                to 2D (see :attr:`selectionIs3D`).
 
     ``chthres`` Change-threshold mode. The user can change the
                 :attr:`intensityThres` via the mouse wheel.
@@ -330,6 +331,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.addListener('targetImage',
                          self.name,
                          self.__targetImageChanged)
+        self.addListener('mode',
+                         self.name,
+                         self.__modeChanged)
         self.addListener('drawMode',
                          self.name,
                          self.__drawModeChanged)
@@ -653,14 +657,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                display.overlayType in ('volume', 'mask', 'label')
 
 
+    def __modeChanged(self, *a):
+        """Called when the :attr:`.Profile.mode` changes. If the mode is
+        changed to ``'fill'``, the :attr:`selectionIs3D` option is set to
+        ``False``.
+        """
+
+        if self.mode == 'fill':
+            self.selectionIs3D = False
+
+
     def __drawModeChanged(self, *a):
         """Called when the :attr:`drawMode` changes. Updates the enabled
         state of various actions that are irrelevant when in draw mode.
         """
 
-        # The only possible profile modes
-        # when drawMode==True are sel/desel.
-        if self.drawMode and self.mode not in ('nav', 'sel', 'desel'):
+        # The only possible profile modes when
+        # drawMode==True are sel/desel/fill.
+        if self.drawMode and self.mode not in ('nav', 'sel', 'desel', 'fill'):
             self.mode = 'sel'
 
         if self.drawMode: self.getProp('mode').disableChoice('selint', self)
@@ -1421,7 +1435,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
-
         return voxel is not None
 
 
@@ -1836,9 +1849,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor        = self.__editors[self.__currentOverlay]
         selection     = editor.getSelection()
 
-        editor.startChangeGroup()
-        selection.invertRegion(voxel, restrict=restrict)
-        editor.endChangeGroup()
+        # draw mode - works in essentially the
+        # same manner as select-by-intensity,
+        # but we use a threshold of 0.5
+        # (intended for binary masks), and
+        # immediately fill the selected region.
+        if self.drawMode:
+            editor.startChangeGroup()
+            selected, offset = selection.selectByValue(
+                voxel,
+                precision=0.5,
+                local=True,
+                restrict=restrict)
+            editor.fillSelection(self.fillValue)
+            selection.clearSelection(restrict=restrict)
+            editor.endChangeGroup()
+
+        # select mode - we invert the select
+        # state of the clicked-on region.
+        else:
+            selection.invertRegion(voxel, restrict=restrict)
 
         self.__dynamicRefreshCanvases(ev, canvas, mousePos, canvasPos)
 
