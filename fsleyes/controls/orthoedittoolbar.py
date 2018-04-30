@@ -95,7 +95,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
             self.displayCtx,
             self.frame,
             strings.messages[self, 'dsWarning'],
-            'not overlay',
+            'not like overlay',
             'overlay')
 
         ortho.addListener('profile', self.name, self.__profileChanged)

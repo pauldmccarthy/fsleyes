@@ -49,8 +49,8 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
 
         :arg msg:           Message to display
 
-        :arg warnCondition: One of ``'world'``, ``'overlay'``, or
-                            ``'not overlay'``
+        :arg warnCondition: One of ``'world'``, ``'overlay'``,
+                            ``'not overlay'``, or ``'not like overlay'``
 
         :arg changeTo:      One of ``'world'`` or ``'overlay'``
         """
@@ -126,7 +126,18 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         if   condition == 'overlay':     show = displaySpace is overlay
         elif condition == 'not overlay': show = displaySpace is not overlay
         elif condition == 'world':       show = displaySpace == 'world'
-        else:                            show = False
+        elif condition == 'like overlay':
+            if displaySpace == 'world':
+                show = False
+            else:
+                show = overlay.sameSpace(displaySpace)
+        elif condition == 'not like overlay':
+            if displaySpace == 'world':
+                show = True
+            else:
+                show = not overlay.sameSpace(displaySpace)
+        else:
+            show = False
 
         if show:
             log.debug('Showing display space warning ({} / {})'.format(
