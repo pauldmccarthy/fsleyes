@@ -57,7 +57,11 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     ``chsize``  Change-size mode. The use can change the :attr:`selectionSize`
                 attribute via the mouse wheel.
 
-    ``selint``  Select by intensity mode.
+    ``selint``  Select by intensity mode. The user can select a voxel, and
+                grow the selected region based on its intensity.
+
+    ``fill``    Fill mode. The user can click on a voxel and set its
+                selected state, and the state of adjacent voxels.
 
     ``chthres`` Change-threshold mode. The user can change the
                 :attr:`intensityThres` via the mouse wheel.
@@ -311,7 +315,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['sel', 'desel', 'chsize', 'selint', 'chthres', 'chrad'])
+            ['sel', 'desel', 'chsize', 'selint',
+             'fill', 'chthres', 'chrad'])
 
         self.mode = 'nav'
 
@@ -1796,6 +1801,48 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         self.__hideCursorAnnotation()
         self.__dynamicRefreshCanvases(ev, canvas)
+
+
+    def _fillModeMouseMove(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse motion events in ``fill`` mode. Draws a selection
+        annotation at the current location (see
+        :meth:`__drawCursorAnnotation`).
+        """
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel, 1)
+            self.__dynamicRefreshCanvases(ev,  canvas)
+
+        return voxel is not None
+
+
+    def _fillModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse down events in ``fill`` mode. Calls
+        :meth:`.Selection.invertRegion` at the current location.
+        """
+
+        if self.__currentOverlay is None:
+            return False
+
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        if voxel is None:
+            return False
+
+        zax           = canvas.opts.zax
+        restrict      = [slice(None, None, None) for i in range(3)]
+        restrict[zax] = slice(voxel[zax], voxel[zax] + 1)
+        editor        = self.__editors[self.__currentOverlay]
+        selection     = editor.getSelection()
+
+        editor.startChangeGroup()
+        selection.invertRegion(voxel, restrict=restrict)
+        editor.endChangeGroup()
+
+        self.__dynamicRefreshCanvases(ev, canvas, mousePos, canvasPos)
+
+        return True
 
 
     def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):
