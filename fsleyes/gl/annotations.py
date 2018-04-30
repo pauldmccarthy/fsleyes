@@ -179,11 +179,11 @@ class Annotations(object):
         """
 
         if hold:
-            try:    self.__holdq.remove(obj)
-            except: pass
+            try:               self.__holdq.remove(obj)
+            except ValueError: pass
         else:
-            try:    self.__q.remove(obj)
-            except: pass
+            try:               self.__q.remove(obj)
+            except ValueError: pass
 
 
     def clear(self):
@@ -617,39 +617,27 @@ class VoxelSelection(AnnotationObject):
     def __init__(self,
                  annot,
                  selection,
-                 displayToVoxMat,
-                 voxToDisplayMat,
-                 voxToTexMat,
+                 opts,
                  offsets=None,
                  *args,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
 
-        :arg annot:           The :class:`Annotations` object that owns this
-                              ``VoxelSelection``.
+        :arg annot:     The :class:`Annotations` object that owns this
+                        ``VoxelSelection``.
 
-        :arg selection:       A :class:`.Selection` instance which defines
-                              the voxels to be highlighted.
+        :arg selection: A :class:`.Selection` instance which defines
+                        the voxels to be highlighted.
 
-        :arg displayToVoxMat: A transformation matrix which transforms from
-                              display space coordinates into voxel space
-                              coordinates.
+        :arg opts:      A :class:`.NiftiOpts` instance which is used
+                        for its voxel-to-display transformation matrices.
 
-        :arg voxToDisplayMat: A transformation matrix which transforms from
-                              voxel coordinates into display space
-                              coordinates.
-
-        :arg voxToTexMat:     Transformation matrix which transforms from
-                              voxel coordinates to equivalent texture
-                              coordinates.
-
-        :arg offsets:         If ``None`` (the default), the ``selection``
-                              must have the same shape as the image data
-                              being annotated. Alternately, you may set
-                              ``offsets`` to a sequence of three values,
-                              which are used as offsets for the xyz voxel
-                              values. This is to allow for a sub-space of
-                              the full image space to be annotated.
+        :arg offsets:   If ``None`` (the default), the ``selection`` must have
+                        the same shape as the image data being
+                        annotated. Alternately, you may set ``offsets`` to a
+                        sequence of three values, which are used as offsets
+                        for the xyz voxel values. This is to allow for a
+                        sub-space of the full image space to be annotated.
 
         All other arguments are passed through to the
         :meth:`AnnotationObject.__init__` method.
@@ -660,15 +648,13 @@ class VoxelSelection(AnnotationObject):
         if offsets is None:
             offsets = [0, 0, 0]
 
-        self.selection       = selection
-        self.displayToVoxMat = displayToVoxMat
-        self.voxToDisplayMat = voxToDisplayMat
-        self.voxToTexMat     = voxToTexMat
-        self.offsets         = offsets
+        self.__selection = selection
+        self.__opts      = opts
+        self.__offsets   = offsets
 
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
-        self.texture = glresources.get(
+        self.__texture = glresources.get(
             texName,
             textures.SelectionTexture,
             texName,
@@ -679,28 +665,33 @@ class VoxelSelection(AnnotationObject):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
-        glresources.delete(self.texture.getTextureName())
-        self.texture = None
+        glresources.delete(self.__texture.getTextureName())
+        self.__texture = None
+        self.__opts    = None
 
 
     def draw2D(self, zpos, axes):
         """Draws this ``VoxelSelection``."""
 
-        xax, yax = axes[:2]
-        shape    = self.selection.getSelection().shape
+        xax, yax     = axes[:2]
+        opts         = self.__opts
+        texture      = self.__texture
+        shape        = self.__selection.getSelection().shape
+        displayToVox = opts.getTransform('display', 'voxel')
+        voxToDisplay = opts.getTransform('voxel',   'display')
+        voxToTex     = opts.getTransform('voxel',   'texture')
+        verts, voxs  = glroutines.slice2D(shape,
+                                          xax,
+                                          yax,
+                                          zpos,
+                                          voxToDisplay,
+                                          displayToVox)
 
-        verts, voxs = glroutines.slice2D(shape,
-                                         xax,
-                                         yax,
-                                         zpos,
-                                         self.voxToDisplayMat,
-                                         self.displayToVoxMat)
-
-        texs  = transform.transform(voxs, self.voxToTexMat)
+        texs  = transform.transform(voxs, voxToTex)
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
-        self.texture.bindTexture(gl.GL_TEXTURE0)
+        texture.bindTexture(gl.GL_TEXTURE0)
 
         gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
 
@@ -714,7 +705,7 @@ class VoxelSelection(AnnotationObject):
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
         gl.glDisable(gl.GL_TEXTURE_3D)
 
-        self.texture.unbindTexture()
+        texture.unbindTexture()
 
 
 class Text(AnnotationObject):

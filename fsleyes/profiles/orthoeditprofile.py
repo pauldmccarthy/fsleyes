@@ -994,9 +994,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             sels.append(annotations.VoxelSelection(
                 c.getAnnotations(),
                 editor.getSelection(),
-                opts.getTransform('display', 'voxel'),
-                opts.getTransform('voxel',   'display'),
-                opts.getTransform('voxel',   'texture'),
+                opts,
                 colour=self.selectionOverlayColour))
 
             curs.append(annotations.Rect(
