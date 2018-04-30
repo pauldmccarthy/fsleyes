@@ -231,6 +231,10 @@ _ICONS = {
             fslicons.findImageFile('eraserHighlight24'),
             fslicons.findImageFile('eraser24'),
         ],
+        'fill' : [
+            fslicons.findImageFile('bucketHighlight24'),
+            fslicons.findImageFile('bucket24'),
+        ],
         'selint' : [
             fslicons.findImageFile('selectByIntensityHighlight24'),
             fslicons.findImageFile('selectByIntensity24'),
@@ -301,13 +305,15 @@ _TOOLBAR_SPECS  = [
         'mode',
         icons=_ICONS['mode'],
         tooltip=_TOOLTIPS['mode'],
-        fixChoices=['nav', 'sel', 'desel', 'selint']),
+        fixChoices=['nav', 'sel', 'desel', 'fill', 'selint']),
     'div',
     props.Widget(
         'selectionIs3D',
         icon=_ICONS['selectionIs3D'],
         tooltip=_TOOLTIPS['selectionIs3D'],
-        toggle=False),
+        toggle=False,
+        dependencies=['mode'],
+        enabledWhen=lambda p, m: m != 'fill'),
     props.Widget(
         'limitToRadius',
         icon=_ICONS['limitToRadius'],
