@@ -452,15 +452,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         name    = '{}_mask'.format(display.name)
         data    = editor.getSelection().getSelection()
         data    = np.array(data, dtype=overlay.dtype)
-
-        copyoverlay.copyImage(self.overlayList,
-                              self.displayCtx,
-                              self.__currentOverlay,
-                              createMask=True,
-                              copy4D=False,
-                              copyDisplay=False,
-                              name=name,
-                              data=data)
+        mask    = copyoverlay.copyImage(self.overlayList,
+                                        self.displayCtx,
+                                        self.__currentOverlay,
+                                        createMask=True,
+                                        copy4D=False,
+                                        copyDisplay=False,
+                                        name=name,
+                                        data=data)
+        self.displayCtx.selectOverlay(mask)
 
 
     @actions.action
