@@ -20,12 +20,6 @@ import fsleyes.actions  as actions
 import fsleyes.strings  as strings
 
 
-BUM_MODE = False
-"""If ``True``, the icon used for the coronal toggle button is made to look
-like a bum.
-"""
-
-
 class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
     """The ``OrthoToolBar`` is a :class:`.FSLeyesToolBar` for use with the
     :class:`.OrthoPanel`. An ``OrthoToolBar`` looks something like this:
@@ -117,10 +111,8 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         orthoOpts = ortho.sceneOpts
         profile   = ortho.getCurrentProfile()
 
-        if BUM_MODE: coronalIcon          = 'coronalBumSlice24'
-        else:        coronalIcon          = 'coronalSlice24'
-        if BUM_MODE: coronalHighlightIcon = 'coronalBumSliceHighlight24'
-        else:        coronalHighlightIcon = 'coronalSliceHighlight24'
+        coronalIcon          = 'coronalSlice24'
+        coronalHighlightIcon = 'coronalSliceHighlight24'
 
         icons = {
             'screenshot'       : fslicons.findImageFile('camera24'),

@@ -352,10 +352,8 @@ def initialise(splash, namespace, callback):
 
     # Initialise silly things
     if namespace.bumMode:
-        import fsleyes.controls.orthotoolbar    as ot
-        import fsleyes.controls.lightboxtoolbar as lbt
-        ot .BUM_MODE = True
-        lbt.BUM_MODE = True
+        import fsleyes.icons as icons
+        icons.BUM_MODE = True
 
     # This is called by fsleyes.gl.getGLContext
     # when the GL context is ready to be used.
@@ -370,7 +368,7 @@ def initialise(splash, namespace, callback):
         # canvas created by the gl.getWXGLContext function.
         fslgl.getGLContext(parent=splash, ready=realCallback)
 
-    except:
+    except Exception:
         log.error('Unable to initialise OpenGL!', exc_info=True)
         splash.Destroy()
         sys.exit(1)

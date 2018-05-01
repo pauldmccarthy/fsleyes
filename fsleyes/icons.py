@@ -29,6 +29,10 @@ import wx
 import fsleyes
 
 
+BUM_MODE = False
+"""If ``True``, all icons are made to look like bums. """
+
+
 def getIconDir():
     """Returns the directory which contains all of the icons used in
      *FSLeyes*.
@@ -39,6 +43,12 @@ def getIconDir():
 def findImageFile(iconId):
     """Returns the full path to the icon with the given ``iconId``.
     """
+    if BUM_MODE and iconId[-2:] in ('16', '24'):
+        size = iconId[-2:]
+        if 'Highlight' in iconId:
+            iconId = 'coronalBumSliceHighlight{}'.format(size)
+        else:
+            iconId = 'coronalBumSlice{}'.format(size)
     return op.join(getIconDir(), '{}.png'.format(iconId))
 
 
