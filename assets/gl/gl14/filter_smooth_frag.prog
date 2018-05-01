@@ -1,0 +1,85 @@
+!!ARBfp1.0
+OPTION ARB_precision_hint_nicest;
+#
+# Fragment program used for smoothing filter - see the
+# fsleyes.gl.shaders.filter module.
+#
+# This is to be used with the filter_vert.prog vertex shader.
+#
+# See gl21/filter_smooth_frag.glsl for more details.
+#
+# Input constants:
+#
+#   kernSize - Size of the smoothing kernel - a square kernel of size
+#              (kernSize, kernSize) will be used. If kernSize is even, it
+#              will be forced to be odd.
+#
+# Input uniforms:
+#   {{ param_offsets  }} - Distance between adjacent fragments, in texture
+#                          coordinates.
+#
+# Input varyings:
+#   {{ varying_texCoord }} - Texture coordinates for this fragment
+#
+# Input textures:
+#   {{ texture_texture  }} - 2D texture containing the filter input
+
+
+TEMP dist;
+TEMP point;
+TEMP temp;
+
+TEMP off;
+TEMP val;
+TEMP cumdist;
+TEMP rgba;
+TEMP half;
+
+MOV half,    0.5;
+MOV rgba,    0;
+MOV cumdist, 0;
+
+{% if kernSize % 2 == 0 %}
+{% set nsteps = kernSize + 1 %}
+{% else %}
+{% set nsteps = kernSize %}
+{% endif %}
+
+{% set midstep = nsteps // 2 %}
+
+{% if midstep == 0 %}
+{% set maxdist = 1 %}
+{% else %}
+{% set maxdist = (2 * midstep ** 2) ** 0.5 %}
+{% endif %}
+
+{% for xi in range(nsteps) %}
+{% for yi in range(nsteps) %}
+
+# look up this voxel
+MOV off, { {{ xi - midstep }}, {{ yi - midstep }}, 0, 0 };
+MAD point, off, {{ param_offsets }}, {{ varying_texCoord }};
+TEX val, point, {{ texture_texture }}, 2D;
+
+# calculate inverse distance from
+# this voxel to the target voxel
+DP3 dist.x, off, 0;
+POW dist.x, dist.x, half.x;
+SUB dist.x, {{ maxdist }}, dist.x;
+
+# ignore this voxel if val.a is 0
+MUL temp.x, val.a, -1;
+CMP dist.x, temp.x, dist.x, 0;
+
+# accumulate colour and distance count
+ADD cumdist.x, cumdist.x, dist.x;
+MAD rgba, val, dist.x, rgba;
+
+{% endfor %}
+{% endfor %}
+
+RCP cumdist.x,    cumdist.x;
+MUL rgba, rgba,   cumdist.x;
+MOV result.color, rgba;
+
+END

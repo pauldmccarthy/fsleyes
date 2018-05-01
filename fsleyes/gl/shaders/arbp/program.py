@@ -55,9 +55,11 @@ class ARBPShader(object):
        load
        unload
        destroy
+       recompile
        setVertParam
        setFragParam
        setAtt
+       setConstant
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -72,7 +74,7 @@ class ARBPShader(object):
             'dataTexture'      : 1
         }
 
-        program = GLSLShader(vertSrc, fragSrc, textures)
+        program = ARBPShader(vertSrc, fragSrc, textures)
 
         # Load the program, and
         # enable program attributes
@@ -110,6 +112,7 @@ class ARBPShader(object):
     GLSL shader programs.
     """
 
+
     def __init__(self,
                  vertSrc,
                  fragSrc,
@@ -128,7 +131,8 @@ class ARBPShader(object):
 
         :arg constants:   A dictionary of ``{name : values}`` mappings,
                           specifying any constant parameters required by the
-                          programs.
+                          programs. It is assumed that constant parameters are
+                          shared by the vertex and fragment programs.
 
         :arg includePath: Path to a directory which contains any additional
                           files that may be included in the given source
@@ -142,8 +146,9 @@ class ARBPShader(object):
 
         decs = parse.parseARBP(vertSrc, fragSrc)
 
-        vParams = decs['vertParam']
-        fParams = decs['fragParam']
+        vParams      = decs['vertParam']
+        fParams      = decs['fragParam']
+        constantDecs = decs['constant']
 
         if constants is None: constants      = {}
         if len(vParams) > 0:  vParams, vLens = zip(*vParams)
@@ -154,15 +159,21 @@ class ARBPShader(object):
         vLens = {name : length for name, length in zip(vParams, vLens)}
         fLens = {name : length for name, length in zip(fParams, fLens)}
 
-        self.clean         = True
-        self.includePath   = includePath
-        self.vertParams    = vParams
-        self.vertParamLens = vLens
-        self.fragParams    = fParams
-        self.fragParamLens = fLens
-        self.textures      = decs['texture']
-        self.attrs         = decs['attr']
-        self.constants     = dict(constants)
+        self.vertexSource    = vertSrc
+        self.fragmentSource  = fragSrc
+        self.includePath     = includePath
+        self.vertexProgram   = None
+        self.fragmentProgram = None
+        self.clean           = clean
+        self.includePath     = includePath
+        self.vertParams      = vParams
+        self.vertParamLens   = vLens
+        self.fragParams      = fParams
+        self.fragParamLens   = fLens
+        self.textures        = decs['texture']
+        self.attrs           = decs['attr']
+        self.constants       = constantDecs
+        self.constantVals    = dict(constants)
 
         # See the setAtt method for
         # information about this dict
@@ -176,21 +187,7 @@ class ARBPShader(object):
         self.texturePositions   = texPoses
         self.attrPositions      = attrPoses
 
-        vertSrc, fragSrc = parse.fillARBP(vertSrc,
-                                          fragSrc,
-                                          self.vertParamPositions,
-                                          self.vertParamLens,
-                                          self.fragParamPositions,
-                                          self.fragParamLens,
-                                          self.constants,
-                                          self.texturePositions,
-                                          self.attrPositions,
-                                          includePath)
-
-        vp, fp = self.__compile(vertSrc, fragSrc)
-
-        self.vertexProgram   = vp
-        self.fragmentProgram = fp
+        self.recompile()
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -203,8 +200,48 @@ class ARBPShader(object):
 
     def destroy(self):
         """Deletes all GL resources managed by this ``ARBPShader``. """
-        arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
-        arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
+
+        if self.vertexProgram is not None:
+            arbvp.glDeleteProgramsARB(1, gltypes.GLuint(self.vertexProgram))
+        if self.fragmentProgram is not None:
+            arbfp.glDeleteProgramsARB(1, gltypes.GLuint(self.fragmentProgram))
+
+        self.vertexProgram   = None
+        self.fragmentProgram = None
+
+
+    def recompile(self):
+        """(Re-)generates the vertex and fragment program source code, and
+        recompiles the programs.
+        """
+
+        # As we are compiling new
+        # vertex/fragment programs,
+        # we need to invalidate any
+        # cached parameter values.
+        # Constants are ok.
+        self.setVertParam.invalidate()
+        self.setFragParam.invalidate()
+
+        vertSrc, fragSrc = parse.fillARBP(self.vertexSource,
+                                          self.fragmentSource,
+                                          self.vertParamPositions,
+                                          self.vertParamLens,
+                                          self.fragParamPositions,
+                                          self.fragParamLens,
+                                          self.constantVals,
+                                          self.texturePositions,
+                                          self.attrPositions,
+                                          self.includePath)
+
+        # Compile the new version, but
+        # only discard the old version
+        # if compilation succeeds
+        vp, fp = self.__compile(vertSrc, fragSrc)
+
+        self.destroy()
+        self.vertexProgram   = vp
+        self.fragmentProgram = fp
 
 
     def load(self):
@@ -289,6 +326,21 @@ class ARBPShader(object):
             arbfp.glProgramLocalParameter4fARB(
                 arbfp.GL_FRAGMENT_PROGRAM_ARB, pos + i,
                 row[0], row[1], row[2], row[3])
+
+
+    @memoize.Instanceify(memoize.skipUnchanged)
+    def setConstant(self, name, value):
+        """Updates the value of a constant parameter used by the program.
+
+        The :meth:`recompile` method must be called after changing a constant
+        value.
+        """
+        if name not in self.constants:
+            raise ValueError('Unknown constant: {}'.format(name))
+
+        log.debug('Setting vertex constant {} = {}'.format(name, value))
+
+        self.constantVals[name] = value
 
 
     def setAtt(self, name, value):
@@ -458,14 +510,14 @@ class ARBPShader(object):
                                      len(vertSrc),
                                      vertSrc)
 
-        except:
+        except Exception:
 
             position = gl.glGetIntegerv(arbvp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbvp.GL_PROGRAM_ERROR_STRING_ARB)
             message  = message.decode('ascii')
 
-            raise RuntimeError('Error compiling vertex program '
-                               '({}): {}'.format(position, message))
+            raise RuntimeError('Error compiling vertex program ({}): '
+                               '{}\n{}'.format(position, message, vertSrc))
 
         # fragment program
         try:
@@ -476,13 +528,13 @@ class ARBPShader(object):
                                      arbfp.GL_PROGRAM_FORMAT_ASCII_ARB,
                                      len(fragSrc),
                                      fragSrc)
-        except:
+        except Exception:
             position = gl.glGetIntegerv(arbfp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbfp.GL_PROGRAM_ERROR_STRING_ARB)
             message  = message.decode('ascii')
 
-            raise RuntimeError('Error compiling fragment program '
-                               '({}): {}'.format(position, message))
+            raise RuntimeError('Error compiling fragment program ({}): '
+                               '{}\n{}'.format(position, message, fragSrc))
 
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)

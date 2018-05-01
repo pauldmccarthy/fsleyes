@@ -17,8 +17,12 @@ Added
 
 
 * The *Nudge* tool now allows users to change the centre of rotation.
-* New gamma correction display setting for volume and mesh overlays.
-* New smoothing option for 3D volume rendering.
+* New *gamma correction* display setting for volume and mesh overlays.
+* New *smoothing* display setting for 3D volume rendering.
+* New *normalise* display setting for SH FODs, to normalise individual
+  FODs to voxel size.
+* New *fill* tool in orthographic edit mode, which allows a bounded region to
+  be filled or selected.
 
 
 Changed

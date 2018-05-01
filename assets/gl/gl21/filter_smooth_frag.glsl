@@ -15,7 +15,7 @@ uniform sampler2D texture;
 uniform vec2 offsets;
 
 /*
- * nSize of the smoothing kernel - a square kernel of size (kernSize, kernSize)
+ * Size of the smoothing kernel - a square kernel of size (kernSize, kernSize)
  * will be used. If kernSize is even, it will be forced to be odd.
  */
 uniform int kernSize;
