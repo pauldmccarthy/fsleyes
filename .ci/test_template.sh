@@ -20,9 +20,8 @@ pip install -r requirements-dev.txt
 pip install git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
 pip install git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
 pip install git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
-
-# All other deps can be installed as normal.
-pip install -r requirements.txt
+cat requirements.txt | grep -v "fsl" > ci-requirements.txt
+pip install -r ci-requirements.txt
 pip install -r requirements-extra.txt
 
 
