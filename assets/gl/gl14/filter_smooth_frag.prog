@@ -1,0 +1,29 @@
+!!ARBfp1.0
+#
+# Fragment program used for smoothing filter - see the
+# fsleyes.gl.shaders.filter module.
+#
+# This is to be used with the filter_vert.prog vertex shader.
+#
+# Input constants:
+#   {{ param_kernSize }}
+#
+# Input uniforms:
+#   {{ param_offsets  }} - how far away to search for edge (see edge2D.prog)
+#   {{ param_outline  }} - If == 1, edges are drawn and non-edges are clipped.
+#                          If == 0, edges are clipped and non-edges are drawn.
+#
+#
+# Input varyings:
+#   {{ varying_texCoord }} - Texture coordinates for this fragment
+#
+# Input textures:
+#   {{ texture_texture  }} - 2D texture containing the filter input
+
+TEMP colour;
+
+TEX colour, {{ varying_texCoord }}, {{ texture_texture }}, 2D;
+
+MOV result.color, colour;
+
+END
