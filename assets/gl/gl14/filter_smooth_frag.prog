@@ -33,7 +33,9 @@ TEMP off;
 TEMP val;
 TEMP cumdist;
 TEMP rgba;
+TEMP half;
 
+MOV half,    0.5;
 MOV rgba,    0;
 MOV cumdist, 0;
 
@@ -62,7 +64,7 @@ TEX val, point, {{ texture_texture }}, 2D;
 # calculate inverse distance from
 # this voxel to the target voxel
 DP3 dist.x, off, 0;
-POW dist.x, dist.x, 0.5;
+POW dist.x, dist.x, half.x;
 SUB dist.x, {{ maxdist }}, dist.x;
 
 # ignore this voxel if val.a is 0
