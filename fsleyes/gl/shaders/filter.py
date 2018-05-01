@@ -10,10 +10,26 @@ to loading and running simple filter shader programs, which require a
 """
 
 
+import collections
+
+
 import OpenGL.GL                          as gl
 
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes.gl.shaders                 as shaders
+
+
+GL14_CONSTANTS = collections.defaultdict(dict, {
+    'smooth' : ['kernSize']
+})
+"""This dictionary contains the names of any constant parameters that are
+required by GL14 filter implementations. It is used by the :meth:`Filter.set`
+method.
+
+The :meth:`Filter.set` method allows both uniform and constant paramters to be
+updated, but when a constant parameter is updated, the shader needs to be
+recompiled.
+"""
 
 
 class Filter(object):
@@ -51,18 +67,23 @@ class Filter(object):
                          OpenGL 1.4.
         """
 
-        filterName     = 'filter_{}'.format(filterName)
-        vertSrc        = shaders.getVertexShader( 'filter')
-        fragSrc        = shaders.getFragmentShader(filterName)
-        self.__texture = texture
+        basename        = filterName
+        filterName      = 'filter_{}'.format(filterName)
+        vertSrc         = shaders.getVertexShader( 'filter')
+        fragSrc         = shaders.getFragmentShader(filterName)
+        self.__texture  = texture
+        self.__basename = basename
 
         if float(fslplatform.glVersion) >= 2.1:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
         else:
-            self.__shader = shaders.ARBPShader(vertSrc,
-                                               fragSrc,
-                                               shaders.getShaderDir(),
-                                               {'texture' : texture})
+            constants = {n : 1 for n in GL14_CONSTANTS[basename]}
+            self.__shader = shaders.ARBPShader(
+                vertSrc,
+                fragSrc,
+                shaders.getShaderDir(),
+                {'texture' : texture},
+                constants=constants)
 
 
     def destroy(self):
@@ -81,19 +102,35 @@ class Filter(object):
         The filter parameters vary depending on the specific filter that is
         used.
         """
-        self.__shader.load()
 
-        kwargs = dict(kwargs)
-        glver  = float(fslplatform.glVersion)
+        shader   = self.__shader
+        texture  = self.__texture
+        basename = self.__basename
+
+        shader.load()
+
+        kwargs        = dict(kwargs)
+        glver         = float(fslplatform.glVersion)
+        needRecompile = False
 
         if glver >= 2.1:
-            kwargs['texture'] = self.__texture
+            kwargs['texture'] = texture
 
         for name, value in kwargs.items():
-            if glver >= 2.1: self.__shader.set(         name, value)
-            else:            self.__shader.setFragParam(name, value)
+            if glver >= 2.1:
+                shader.set(name, value)
+            else:
+                if name in GL14_CONSTANTS[basename]:
+                    needRecompile = (needRecompile or
+                                     shader.setConstant(name, value))
+                else:
+                    shader.setFragParam(name, value)
 
-        self.__shader.unload()
+        if needRecompile:
+            print('recompile')
+            shader.recompile()
+
+        shader.unload()
 
 
     def apply(self,

@@ -316,6 +316,7 @@ class ARBPShader(object):
                 row[0], row[1], row[2], row[3])
 
 
+    @memoize.Instanceify(memoize.skipUnchanged)
     def setConstant(self, name, value):
         """Updates the value of a constant parameter used by the program.
 
