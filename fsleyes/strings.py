@@ -1052,6 +1052,7 @@ properties = TypeDict({
     'TensorOpts.tensorScale'       : 'Tensor size',
 
     'SHOpts.lighting'        : 'Lighting effects',
+    'SHOpts.normalise'       : 'Normalise FOD sizes',
     'SHOpts.size'            : 'FOD size',
     'SHOpts.radiusThreshold' : 'Radius threshold',
     'SHOpts.shResolution'    : 'FOD quality',
