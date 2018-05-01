@@ -651,6 +651,14 @@ def fillARBP(vertSrc,
                         files that may be included in the given source files.
     """
 
+    vertParams    = dict(vertParams)
+    vertParamLens = dict(vertParamLens)
+    fragParams    = dict(fragParams)
+    fragParamLens = dict(fragParamLens)
+    constants     = dict(constants)
+    textures      = dict(textures)
+    attrs         = dict(attrs)
+
     vertVars = _findDeclaredVariables(vertSrc)
     fragVars = _findDeclaredVariables(fragSrc)
 
