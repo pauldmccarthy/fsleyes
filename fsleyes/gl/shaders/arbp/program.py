@@ -55,9 +55,11 @@ class ARBPShader(object):
        load
        unload
        destroy
+       recompile
        setVertParam
        setFragParam
        setAtt
+       setConstant
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -213,7 +215,13 @@ class ARBPShader(object):
         recompiles the programs.
         """
 
-        self.destroy()
+        # As we are compiling new
+        # vertex/fragment programs,
+        # we need to invalidate any
+        # cached parameter values.
+        # Constants are ok.
+        self.setVertParam.invalidate()
+        self.setFragParam.invalidate()
 
         vertSrc, fragSrc = parse.fillARBP(self.vertexSource,
                                           self.fragmentSource,
@@ -226,8 +234,12 @@ class ARBPShader(object):
                                           self.attrPositions,
                                           self.includePath)
 
+        # Compile the new version, but
+        # only discard the old version
+        # if compilation succeeds
         vp, fp = self.__compile(vertSrc, fragSrc)
 
+        self.destroy()
         self.vertexProgram   = vp
         self.fragmentProgram = fp
 

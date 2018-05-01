@@ -745,8 +745,7 @@ class GLVolume(glimageobject.GLImageObject):
         # is enabled, the final final render will
         # be in renderTexture2
         if opts.smoothing > 0:
-            self.smoothFilter.set(kernSize=opts.smoothing * 2,
-                                  offsets=[1.0 / w, 1.0 / h])
+            self.smoothFilter.set(offsets=[1.0 / w, 1.0 / h])
             self.smoothFilter.osApply(self.renderTexture1,
                                       self.renderTexture2)
 
@@ -1025,7 +1024,8 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.Volume3DOpts.smoothing` property
         changes.
         """
-        self.updateShaderState(alwaysNotify=True)
+        self.smoothFilter.set(kernSize=self.opts.smoothing * 2)
+        self.notify()
 
 
     def _imageSyncChanged(self, *a):

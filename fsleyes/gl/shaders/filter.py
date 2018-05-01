@@ -127,7 +127,6 @@ class Filter(object):
                     shader.setFragParam(name, value)
 
         if needRecompile:
-            print('recompile')
             shader.recompile()
 
         shader.unload()
