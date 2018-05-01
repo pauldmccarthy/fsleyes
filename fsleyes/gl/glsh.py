@@ -14,6 +14,7 @@ coefficients which represent fibre orientation distributions (FODs).  The
 
 
 import               logging
+import               warnings
 
 import numpy      as np
 
@@ -176,8 +177,9 @@ class GLSH(glvector.GLVectorBase):
         opts.addListener('size',            name, self.updateShaderState)
         opts.addListener('lighting',        name, self.updateShaderState)
         opts.addListener('orientFlip',      name, self.updateShaderState)
-        opts.addListener('radiusThreshold', name, self.notify)
         opts.addListener('colourMode',      name, self.updateShaderState)
+        opts.addListener('radiusThreshold', name, self.notify)
+        opts.addListener('normalise',       name, self.notify)
 
 
     def removeListeners(self):
@@ -195,8 +197,9 @@ class GLSH(glvector.GLVectorBase):
         opts.removeListener('size',            name)
         opts.removeListener('lighting',        name)
         opts.removeListener('orientFlip',      name)
-        opts.removeListener('radiusThreshold', name)
         opts.removeListener('colourMode',      name)
+        opts.removeListener('radiusThreshold', name)
+        opts.removeListener('normalise',       name)
 
 
     def compileShaders(self, *a):
@@ -328,6 +331,10 @@ class GLSH(glvector.GLVectorBase):
         which all radii are less than the threshold are removed from the
         ``voxels`` array.
 
+        If :attr:`.SHOpts.normalise` is ``True``, the radii within each voxel
+        are normalised to lie between 0 and 0.5, so that they fit within the
+        voxel.
+
         This function returns a tuple containing:
 
           - The ``voxels`` array. If ``SHOpts.radiusThreshold == 0``,
@@ -374,6 +381,14 @@ class GLSH(glvector.GLVectorBase):
         # No voxels - nothing to do
         if voxels.shape[0] == 0:
             return [], [0, 0, 0]
+
+        # Normalise within voxel if necessary
+        if opts.normalise:
+            rmin = radii.min(axis=1)
+            rmax = radii.max(axis=1)
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+                radii = ((radii.T - rmin) / (2 * (rmax - rmin))).T
 
         # The radii are interpreted as a 1D vector
         # containing the radii for every vertex

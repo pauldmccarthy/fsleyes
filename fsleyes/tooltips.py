@@ -363,6 +363,8 @@ properties = TypeDict({
 
     'SHOpts.lighting'         : 'If enabled, a simple lighting model is used '
                                 'to highlight the FODs',
+    'SHOpts.normalise'        : 'If enabled, the size of each FOD is '
+                                'normalised to fit within a voxel.',
     'SHOpts.size'             : 'This setting allows the FOD size to be '
                                 'scaled up or down',
     'SHOpts.radiusThreshold'  : 'This setting allows FODs with small radius '

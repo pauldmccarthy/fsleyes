@@ -30,7 +30,7 @@ SH_COEFFICIENT_TYPE = {
     169 : ('asym', 12),
     225 : ('asym', 14),
     289 : ('asym', 16),
-    1   : ('sym',  0),
+    # 1   : ('sym',  0),  # same as asym, 0
     6   : ('sym',  2),
     15  : ('sym',  4),
     28  : ('sym',  6),
@@ -93,7 +93,7 @@ class SHOpts(vectoropts.VectorOpts):
     """
 
 
-    size = props.Percentage(minval=10, maxval=500, default=100)
+    size = props.Percentage(minval=0.1, maxval=500, default=100)
     """Display size - this is simply a linear scaling factor. """
 
 
@@ -103,6 +103,13 @@ class SHOpts(vectoropts.VectorOpts):
 
     radiusThreshold = props.Real(minval=0.0, maxval=1.0, default=0.05)
     """FODs with a maximum radius that is below this threshold are not shown.
+    """
+
+
+    normalise = props.Boolean(default=False)
+    """If ``True``, the size of each FOD is scaled to fit within a
+    voxel. Otherwise the size of each FOD is scaled relative to the entire
+    image.
     """
 
 

@@ -283,6 +283,7 @@ def _initPropertyList_SHOpts(threedee):
             'shOrder',
             'orientFlip',
             'lighting',
+            'normalise',
             'size',
             'radiusThreshold',
             'colourMode']
@@ -566,6 +567,7 @@ def _initWidgetSpec_SHOpts(threedee):
         'shOrder'    : props.Widget('shOrder'),
         'orientFlip' : props.Widget('orientFlip'),
         'lighting'   : props.Widget('lighting'),
+        'normalise'  : props.Widget('normalise'),
         'size'       : props.Widget(
             'size',
             spin=False,
