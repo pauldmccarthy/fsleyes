@@ -14,10 +14,17 @@ fi;
 
 source /test.venv/bin/activate
 
+# Make sure we have master branches of the
+# core dependencies
+pip install -r requirements-dev.txt
+pip install git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
+pip install git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+pip install git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
+
 # All other deps can be installed as normal.
 pip install -r requirements.txt
 pip install -r requirements-extra.txt
-pip install -r requirements-dev.txt
+
 
 # style stage
 if [ "$TEST_STYLE"x != "x" ]; then pip install pylint flake8; fi;
