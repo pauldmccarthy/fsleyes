@@ -72,7 +72,7 @@ class ARBPShader(object):
             'dataTexture'      : 1
         }
 
-        program = GLSLShader(vertSrc, fragSrc, textures)
+        program = ARBPShader(vertSrc, fragSrc, textures)
 
         # Load the program, and
         # enable program attributes
@@ -458,7 +458,7 @@ class ARBPShader(object):
                                      len(vertSrc),
                                      vertSrc)
 
-        except:
+        except Exception:
 
             position = gl.glGetIntegerv(arbvp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbvp.GL_PROGRAM_ERROR_STRING_ARB)
@@ -476,7 +476,7 @@ class ARBPShader(object):
                                      arbfp.GL_PROGRAM_FORMAT_ASCII_ARB,
                                      len(fragSrc),
                                      fragSrc)
-        except:
+        except Exception:
             position = gl.glGetIntegerv(arbfp.GL_PROGRAM_ERROR_POSITION_ARB)
             message  = gl.glGetString(  arbfp.GL_PROGRAM_ERROR_STRING_ARB)
             message  = message.decode('ascii')
