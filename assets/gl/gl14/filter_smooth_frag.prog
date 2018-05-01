@@ -51,14 +51,8 @@ MOV cumdist, 0;
 {% set maxdist = (2 * midstep ** 2) ** 0.5 %}
 {% endif %}
 
-# nsteps:  {{ nsteps }}
-# midstep: {{ midstep }}
-# maxdist: {{ maxdist }}
-
 {% for xi in range(nsteps) %}
 {% for yi in range(nsteps) %}
-
-# iteration {{ xi * 3 + yi }}
 
 # look up this voxel
 MOV off, { {{ xi - midstep }}, {{ yi - midstep }}, 0, 0 };

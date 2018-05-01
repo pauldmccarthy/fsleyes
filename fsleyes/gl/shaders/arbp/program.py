@@ -516,8 +516,8 @@ class ARBPShader(object):
             message  = gl.glGetString(  arbvp.GL_PROGRAM_ERROR_STRING_ARB)
             message  = message.decode('ascii')
 
-            raise RuntimeError('Error compiling vertex program '
-                               '({}): {}'.format(position, message))
+            raise RuntimeError('Error compiling vertex program ({}): '
+                               '{}\n{}'.format(position, message, vertSrc))
 
         # fragment program
         try:
@@ -533,8 +533,8 @@ class ARBPShader(object):
             message  = gl.glGetString(  arbfp.GL_PROGRAM_ERROR_STRING_ARB)
             message  = message.decode('ascii')
 
-            raise RuntimeError('Error compiling fragment program '
-                               '({}): {}'.format(position, message))
+            raise RuntimeError('Error compiling fragment program ({}): '
+                               '{}\n{}'.format(position, message, fragSrc))
 
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
         gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
