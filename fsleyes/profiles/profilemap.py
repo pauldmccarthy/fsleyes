@@ -102,12 +102,15 @@ tempModeMap = {
         (('sel',     wx.WXK_SHIFT),                  'slice'),
         (('desel',   wx.WXK_SHIFT),                  'slice'),
         (('selint',  wx.WXK_SHIFT),                  'slice'),
+        (('fill',    wx.WXK_SHIFT),                  'slice'),
         (('sel',     wx.WXK_ALT),                    'pan'),
         (('desel',   wx.WXK_ALT),                    'pan'),
         (('selint',  wx.WXK_ALT),                    'pan'),
+        (('fill',    wx.WXK_ALT),                    'pan'),
         (('sel',     wx.WXK_CONTROL),                'zoom'),
         (('desel',   wx.WXK_CONTROL),                'zoom'),
         (('selint',  wx.WXK_CONTROL),                'zoom'),
+        (('fill',    wx.WXK_CONTROL),                'zoom'),
         (('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
         (('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chsize'),
         (('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'chthres'),
@@ -200,6 +203,7 @@ altHandlerMap = {
         (('sel',    'Char'),  ('nav', 'Char')),
         (('desel',  'Char'),  ('nav', 'Char')),
         (('selint', 'Char'),  ('nav', 'Char')),
+        (('fill',   'Char'),  ('nav', 'Char')),
 
         # When in select mode, the right
         # mouse button allows the user
@@ -212,6 +216,11 @@ altHandlerMap = {
         (('desel',  'RightMouseDown'),  ('sel',    'LeftMouseDown')),
         (('desel',  'RightMouseDrag'),  ('sel',    'LeftMouseDrag')),
         (('desel',  'RightMouseUp'),    ('sel',    'LeftMouseUp')),
+
+        # Same for fill mode
+        (('fill',   'RightMouseDown'),  ('desel',  'LeftMouseDown')),
+        (('fill',   'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
+        (('fill',   'RightMouseUp'),    ('desel',  'LeftMouseUp')),
 
         # TODO Need a way to navigate?
         (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
