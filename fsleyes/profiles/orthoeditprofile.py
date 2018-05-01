@@ -57,7 +57,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     ``chsize``  Change-size mode. The use can change the :attr:`selectionSize`
                 attribute via the mouse wheel.
 
-    ``selint``  Select by intensity mode.
+    ``selint``  Select by intensity mode. The user can select a voxel, and
+                grow the selected region based on its intensity.
+
+    ``fill``    Fill mode. The user can click on a voxel and set its
+                selected state, and the state of adjacent voxels. Restricted
+                to 2D (see :attr:`selectionIs3D`).
 
     ``chthres`` Change-threshold mode. The user can change the
                 :attr:`intensityThres` via the mouse wheel.
@@ -311,7 +316,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['sel', 'desel', 'chsize', 'selint', 'chthres', 'chrad'])
+            ['sel', 'desel', 'chsize', 'selint',
+             'fill', 'chthres', 'chrad'])
 
         self.mode = 'nav'
 
@@ -325,6 +331,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.addListener('targetImage',
                          self.name,
                          self.__targetImageChanged)
+        self.addListener('mode',
+                         self.name,
+                         self.__modeChanged)
         self.addListener('drawMode',
                          self.name,
                          self.__drawModeChanged)
@@ -447,15 +456,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         name    = '{}_mask'.format(display.name)
         data    = editor.getSelection().getSelection()
         data    = np.array(data, dtype=overlay.dtype)
-
-        copyoverlay.copyImage(self.overlayList,
-                              self.displayCtx,
-                              self.__currentOverlay,
-                              createMask=True,
-                              copy4D=False,
-                              copyDisplay=False,
-                              name=name,
-                              data=data)
+        mask    = copyoverlay.copyImage(self.overlayList,
+                                        self.displayCtx,
+                                        self.__currentOverlay,
+                                        createMask=True,
+                                        copy4D=False,
+                                        copyDisplay=False,
+                                        name=name,
+                                        data=data)
+        self.displayCtx.selectOverlay(mask)
 
 
     @actions.action
@@ -648,14 +657,24 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                display.overlayType in ('volume', 'mask', 'label')
 
 
+    def __modeChanged(self, *a):
+        """Called when the :attr:`.Profile.mode` changes. If the mode is
+        changed to ``'fill'``, the :attr:`selectionIs3D` option is set to
+        ``False``.
+        """
+
+        if self.mode == 'fill':
+            self.selectionIs3D = False
+
+
     def __drawModeChanged(self, *a):
         """Called when the :attr:`drawMode` changes. Updates the enabled
         state of various actions that are irrelevant when in draw mode.
         """
 
-        # The only possible profile modes
-        # when drawMode==True are sel/desel.
-        if self.drawMode and self.mode not in ('nav', 'sel', 'desel'):
+        # The only possible profile modes when
+        # drawMode==True are sel/desel/fill.
+        if self.drawMode and self.mode not in ('nav', 'sel', 'desel', 'fill'):
             self.mode = 'sel'
 
         if self.drawMode: self.getProp('mode').disableChoice('selint', self)
@@ -1416,7 +1435,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self.__drawCursorAnnotation(canvas, voxel)
             self.__dynamicRefreshCanvases(ev,  canvas, mousePos, canvasPos)
 
-
         return voxel is not None
 
 
@@ -1796,6 +1814,65 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         """
         self.__hideCursorAnnotation()
         self.__dynamicRefreshCanvases(ev, canvas)
+
+
+    def _fillModeMouseMove(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse motion events in ``fill`` mode. Draws a selection
+        annotation at the current location (see
+        :meth:`__drawCursorAnnotation`).
+        """
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        if voxel is not None:
+            self.__drawCursorAnnotation(canvas, voxel, 1)
+            self.__dynamicRefreshCanvases(ev,  canvas)
+
+        return voxel is not None
+
+
+    def _fillModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse down events in ``fill`` mode. Calls
+        :meth:`.Selection.invertRegion` at the current location.
+        """
+
+        if self.__currentOverlay is None:
+            return False
+
+        voxel = self.__getVoxelLocation(canvasPos)
+
+        if voxel is None:
+            return False
+
+        zax           = canvas.opts.zax
+        restrict      = [slice(None, None, None) for i in range(3)]
+        restrict[zax] = slice(voxel[zax], voxel[zax] + 1)
+        editor        = self.__editors[self.__currentOverlay]
+        selection     = editor.getSelection()
+
+        # draw mode - works in essentially the
+        # same manner as select-by-intensity,
+        # but we use a threshold of 0.5
+        # (intended for binary masks), and
+        # immediately fill the selected region.
+        if self.drawMode:
+            editor.startChangeGroup()
+            selected, offset = selection.selectByValue(
+                voxel,
+                precision=0.5,
+                local=True,
+                restrict=restrict)
+            editor.fillSelection(self.fillValue)
+            selection.clearSelection(restrict=restrict)
+            editor.endChangeGroup()
+
+        # select mode - we invert the select
+        # state of the clicked-on region.
+        else:
+            selection.invertRegion(voxel, restrict=restrict)
+
+        self.__dynamicRefreshCanvases(ev, canvas, mousePos, canvasPos)
+
+        return True
 
 
     def _chthresModeMouseWheel(self, ev, canvas, wheel, mousePos, canvasPos):

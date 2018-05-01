@@ -208,6 +208,8 @@ def copyImage(overlayList,
                       Must match the shape dictated by the other arguments
                       (i.e. ``copy4D`` and ``roi``). If ``data`` is provided,
                       the ``createMask`` argument is ignored.
+
+    :returns:         The newly created :class:`.Image` object.
     """
 
     ovlIdx = overlayList.index(overlay)
@@ -288,3 +290,5 @@ def copyImage(overlayList,
 
             val = getattr(srcOpts, prop)
             setattr(destOpts, prop, val)
+
+    return copy

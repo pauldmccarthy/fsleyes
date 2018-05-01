@@ -82,7 +82,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             displayCtx,
             frame,
             strings.messages[self, 'dsWarning'],
-            'not overlay',
+            'not like overlay',
             'overlay')
 
         self.__cropLabel       = wx.StaticText(self)

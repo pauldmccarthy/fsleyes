@@ -59,6 +59,12 @@ class Selection(notifier.Notifier):
     editor.
 
 
+    The related :meth:`invertRegion` method, given a seed location, will
+    invert the selected state of all voxels adjacent to that location. This
+    approach allows a *fill holes* type approach, where a region outline is
+    delineated, and then the interior inverted to select it.
+
+
     A ``Selection`` object keeps track of the most recent change made through
     any of the above methods. The most recent change can be retrieved through
     the :meth:`getLastChange` method. The ``Selection`` class inherits from
@@ -516,6 +522,27 @@ class Selection(notifier.Notifier):
                                       restrict)
 
         self.replaceSelection(block, offset, combine)
+
+        return block, offset
+
+
+    def invertRegion(self, seedLoc, restrict=None):
+        """Inverts the selected state of the region adjacent to ``seedLoc``.
+
+        See the :func:`selectByValue` function for details on the other
+        arguments.
+        """
+
+        data = self.__selection
+        val  = data[tuple(seedLoc)]
+        block, offset = selectByValue(data,
+                                      seedLoc,
+                                      0.5,
+                                      local=True,
+                                      restrict=restrict)
+
+        if val == 0: self.addToSelection(     block, offset)
+        else:        self.removeFromSelection(block, offset)
 
         return block, offset
 

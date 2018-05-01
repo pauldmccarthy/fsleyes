@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #
-# orthoeditpanel.py -
+# orthoeditactiontoolbar.py - Ortho edit mode action toolbar.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
+"""This module provides the :class:`OrthoEditActionToolbar`, a toolbar used
+by the :class:`.OrthoPanel` in edit mode, which contains various buttons
+allowing the user to run various edit-related actions.
 """
 
 import wx
@@ -18,6 +20,14 @@ import fsleyes.tooltips as fsltooltips
 
 
 class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
+    """The ``OrthoEditActionToolBar`` is a toolbar used by the
+    :class:`.OrthoPanel`, which contains buttons allowing the user to:
+
+     - Open the :class:`.OrthoEditSettingsPanel`
+     - Create a new :class:`.Image`
+     - Undo/redo the last change
+     - Clear/fill/erase the current selection
+    """
 
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``OrthoEditActionToolBar``.
