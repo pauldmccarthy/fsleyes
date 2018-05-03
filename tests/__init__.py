@@ -5,25 +5,32 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-import          os
-import          gc
-import          time
-import          shutil
-import          logging
-import          tempfile
-import          traceback
-import          contextlib
+import            os
+import os.path as op
+import            gc
+import            re
+import            time
+import             shutil
+import            hashlib
+import            logging
+import            tempfile
+import            traceback
+import            contextlib
 
-import          wx
+import            wx
+import            six
 
 import matplotlib as mpl
 mpl.use('WxAgg')  # noqa
+
+import matplotlib.image as mplimg
 
 import fsleyes_props                as props
 import fsl.utils.idle               as idle
 import                                 fsleyes
 import fsleyes.frame                as fslframe
 import fsleyes.main                 as fslmain
+import fsleyes.render               as fslrender
 import fsleyes.actions.frameactions as frameactions  # noqa
 import fsleyes.gl                   as fslgl
 import fsleyes.colourmaps           as colourmaps
@@ -34,12 +41,22 @@ import fsleyes.overlay              as fsloverlay
 from .compare_images import compare_images
 
 
+
+
 # Under GTK, a single call to
 # yield just doesn't cut it
 def realYield(centis=10):
     for i in range(int(centis)):
         wx.YieldIfNeeded()
         time.sleep(0.01)
+
+def calchash(value):
+    if isinstance(value, six.string_types):
+        value = value.encode('utf-8')
+
+    hashObj = hashlib.md5()
+    hashObj.update(value)
+    return hashObj.hexdigest()
 
 
 @contextlib.contextmanager
@@ -153,6 +170,66 @@ def run_with_fsleyes(func, *args, **kwargs):
         raise raised[0]
 
     return result[0]
+
+
+
+def run_render_test(
+        args,
+        outfile,
+        benchmark,
+        size=(640, 480),
+        scene='ortho',
+        threshold=50):
+
+    args = '-of {}'   .format(outfile).split() + \
+           '-sz {} {}'.format(*size)  .split() + \
+           '-s  {}'   .format(scene)  .split() + \
+           list(args)
+
+    curdir  = os.getcwd()
+    datadir = op.join(op.dirname(__file__), 'testdata')
+
+    try:
+        os.chdir(datadir)
+
+        fslrender.main(args)
+
+        testimg  = mplimg.imread(outfile)
+        benchimg = mplimg.imread(benchmark)
+
+        result, diff = compare_images(testimg, benchimg, threshold)
+    finally:
+        os.chdir(curdir)
+
+    assert result
+
+
+def run_cli_tests(prefix, tests):
+
+    tests     = [t.strip()             for t in tests.split('\n')]
+    tests     = [t                     for t in tests if t != '' and t[0] != '#']
+    tests     = [re.sub('\s+', ' ', t) for t in tests]
+    tests     = [re.sub('#.*', '',  t) for t in tests]
+    tests     = [t.strip()             for t in tests]
+    allpassed = True
+
+    benchdir = op.join(op.dirname(__file__), 'testdata', 'cli_tests')
+
+    with tempdir() as td:
+        for test in tests:
+            fname     = '{}_{}.png'.format(prefix, calchash(test))
+            benchmark = op.join(benchdir, fname)
+            testfile  = op.join(td,       fname)
+
+            try:
+                run_render_test(list(test.split()), testfile, benchmark)
+                print('CLI test passed [{}]: {}'.format(benchmark, test))
+
+            except AssertionError:
+                allpassed = False
+                print('CLI test failed [{}]: {}'.format(benchmark, test))
+
+    assert allpassed
 
 
 def run_with_viewpanel(func, vptype, *args, **kwargs):
