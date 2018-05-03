@@ -11,7 +11,6 @@ import            gc
 import            re
 import            time
 import             shutil
-import            hashlib
 import            logging
 import            tempfile
 import            traceback
@@ -51,12 +50,7 @@ def realYield(centis=10):
         time.sleep(0.01)
 
 def calchash(value):
-    if isinstance(value, six.string_types):
-        value = value.encode('utf-8')
-
-    hashObj = hashlib.md5()
-    hashObj.update(value)
-    return hashObj.hexdigest()
+    return value.replace(' ', '_')
 
 
 @contextlib.contextmanager
@@ -179,7 +173,8 @@ def run_render_test(
         benchmark,
         size=(640, 480),
         scene='ortho',
-        threshold=50):
+        threshold=50,
+        extras=None):
 
     args = '-of {}'   .format(outfile).split() + \
            '-sz {} {}'.format(*size)  .split() + \
@@ -223,11 +218,11 @@ def run_cli_tests(prefix, tests):
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark)
-                print('CLI test passed [{}]: {}'.format(benchmark, test))
+                print('CLI test passed [{}] {}'.format(prefix, test))
 
             except AssertionError:
                 allpassed = False
-                print('CLI test failed [{}]: {}'.format(benchmark, test))
+                print('CLI test failed [{}] {}'.format(prefix, test))
 
     assert allpassed
 
