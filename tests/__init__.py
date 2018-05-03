@@ -9,6 +9,7 @@ import            os
 import os.path as op
 import            gc
 import            re
+import            sys
 import            time
 import            shutil
 import            logging
@@ -17,7 +18,8 @@ import            traceback
 import            contextlib
 
 import            wx
-import            six
+
+from six import StringIO
 
 import matplotlib as mpl
 mpl.use('WxAgg')  # noqa
@@ -51,6 +53,47 @@ def realYield(centis=10):
     for i in range(int(centis)):
         wx.YieldIfNeeded()
         time.sleep(0.01)
+
+class CaptureStdout(object):
+    """Context manager which captures stdout and stderr. """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.__mock_stdout = StringIO('')
+        self.__mock_stderr = StringIO('')
+
+    def __enter__(self):
+        self.__real_stdout = sys.stdout
+        self.__real_stderr = sys.stderr
+
+        sys.stdout = self.__mock_stdout
+        sys.stderr = self.__mock_stderr
+
+
+    def __exit__(self, *args, **kwargs):
+        sys.stdout = self.__real_stdout
+        sys.stderr = self.__real_stderr
+
+        if args[0] is not None:
+            print('Error')
+            print('stdout:')
+            print(self.stdout)
+            print('stderr:')
+            print(self.stderr)
+
+        return False
+
+    @property
+    def stdout(self):
+        self.__mock_stdout.seek(0)
+        return self.__mock_stdout.read()
+
+    @property
+    def stderr(self):
+        self.__mock_stderr.seek(0)
+        return self.__mock_stderr.read()
 
 
 @contextlib.contextmanager
@@ -248,7 +291,10 @@ def run_cli_tests(prefix, tests, extras=None):
             except Exception as e:
                 allpassed = False
                 print('CLI test failed [{}] {}: {}'.format(prefix, test, e))
-                shutil.copy(testfile, datadir)
+
+                if op.exists(testfile):
+                    print('Copying {} to {}'.format(testfile, datadir))
+                    shutil.copy(testfile, datadir)
 
     assert allpassed
 
