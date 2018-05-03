@@ -40,6 +40,9 @@ import fsleyes.overlay              as fsloverlay
 from .compare_images import compare_images
 
 
+def haveGL21():
+    from fsl.utils.platform import platform as fslplatform
+    return float(fslplatform.glVersion) >= 2.1
 
 
 # Under GTK, a single call to
@@ -48,8 +51,6 @@ def realYield(centis=10):
     for i in range(int(centis)):
         wx.YieldIfNeeded()
         time.sleep(0.01)
-
-
 
 
 @contextlib.contextmanager
@@ -174,7 +175,11 @@ def run_render_test(
         scene='ortho',
         threshold=50):
 
-    args = '-of {}'   .format(outfile).split() + \
+    glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
+    glver = [int(v) for v in glver.split('.')]
+
+    args = '-gl {} {}'.format(*glver) .split() + \
+           '-of {}'   .format(outfile).split() + \
            '-sz {} {}'.format(*size)  .split() + \
            '-s  {}'   .format(scene)  .split() + \
            list(args)
@@ -196,6 +201,14 @@ def run_cli_tests(prefix, tests, extras=None):
 
     if extras is None:
         extras = {}
+
+    glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
+    glver = [int(v) for v in glver.split('.')]
+
+    if tuple(glver) < (2, 1):
+        exclude = ['tensor', ' sh', '_sh', 'spline']
+    else:
+        exclude = []
 
     tests     = [t.strip()             for t in tests.split('\n')]
     tests     = [t                     for t in tests if t != '' and t[0] != '#']
@@ -219,6 +232,9 @@ def run_cli_tests(prefix, tests, extras=None):
             os.symlink(op.join(datadir, f), op.join(td, f))
 
         for test in tests:
+
+            if any([exc in test for exc in exclude]):
+                print('CLI test skipped [{}] {}'.format(prefix, test))
 
             test      = fill_test(test)
             fname     = '{}_{}.png'.format(prefix, test.replace(' ', '_'))

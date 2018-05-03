@@ -16,15 +16,11 @@ import fsl.data.vtk      as fslvtk
 from . import              (run_with_orthopanel,
                             run_with_scene3dpanel,
                             compare_images,
-                            realYield)
+                            realYield,
+                            haveGL21)
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
-
-
-def haveGL21():
-    from fsl.utils.platform import platform as fslplatform
-    return float(fslplatform.glVersion) >= 2.1
 
 
 def _test_overlaytype(panel, overlayList, displayCtx, ovltype, overlay, **kwargs):
