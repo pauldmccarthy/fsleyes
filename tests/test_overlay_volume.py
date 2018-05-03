@@ -6,14 +6,19 @@
 #
 
 
+import os.path as op
+
 import pytest
+
+import numpy as np
+
+import fsl.data.image      as fslimage
+import fsl.utils.transform as transform
+
+from . import run_cli_tests
 
 
 pytestmark = pytest.mark.overlaytest
-
-import fsl.data.image as fslimage
-
-from . import run_cli_tests
 
 
 cli_tests = """
@@ -31,72 +36,71 @@ cli_tests = """
 3d.nii.gz -cr 20 80%
 
 {{zero_centre('3d.nii.gz')}} -cm hot
-{{zero_centre('3d.nii.gz')}} -cm hot
-{{zero_centre('3d.nii.gz')}} -cm hot -nc cool
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be ignored (TODO I should change this)
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un
-{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr -1000 3000
-{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  0    3000
-{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 3000
-"""
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr -1000 2000
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  0    2000
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000
 
-_ = """
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500 -ll
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500 -lh
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500 -ll -lh
 
+-xz 750 -yz 750 -zz 750 3d.nii.gz -in none
+-xz 750 -yz 750 -zz 750 3d.nii.gz -in linear
+-xz 750 -yz 750 -zz 750 3d.nii.gz -in spline
 
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000 -ll
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000 -lh
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000 -ll -lh
+4d.nii.gz -v 0 -b 40 -c 90
+4d.nii.gz -v 1 -b 40 -c 90
+4d.nii.gz -v 2 -b 40 -c 90
+4d.nii.gz -v 3 -b 40 -c 90
+4d.nii.gz -v 4 -b 40 -c 90
 
--sortho -xz 750 -yz 750 -zz 750 MNI152_T1_2mm.nii.gz -in none
--sortho -xz 750 -yz 750 -zz 750 MNI152_T1_2mm.nii.gz -in linear
--sortho -xz 750 -yz 750 -zz 750 MNI152_T1_2mm.nii.gz -in spline
+3d.nii.gz                              -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000
+3d.nii.gz                              -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000 -ic
+{{zero_centre('3d.nii.gz')}}           -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000 -cm hot -nc cool -un
+{{zero_centre('3d.nii.gz')}}           -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000 -cm hot -nc cool -un -ic
+{{gen_indices('3d.nii.gz')}} 3d.nii.gz -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000
 
--sortho MNI152_T1_2mm_4D.nii.gz -v 0
--sortho MNI152_T1_2mm_4D.nii.gz -v 1
--sortho MNI152_T1_2mm_4D.nii.gz -v 2
--sortho MNI152_T1_2mm_4D.nii.gz -v 3
--sortho MNI152_T1_2mm_4D.nii.gz -v 4
+3d.nii.gz                    -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot
+3d.nii.gz                    -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot -ic
+{{zero_centre('3d.nii.gz')}} -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot -nc cool -un
+{{zero_centre('3d.nii.gz')}} -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot -nc cool -un -ic
 
--sortho MNI152_T1_2mm.nii.gz             -cl MNI152_T1_2mm_indices.nii.gz -cr 500000 1000000
--sortho MNI152_T1_2mm.nii.gz             -cl MNI152_T1_2mm_indices.nii.gz -cr 500000 1000000 -ic
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cl MNI152_T1_2mm_indices.nii.gz -cr 500000 1000000 -cm hot -nc cool -un
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cl MNI152_T1_2mm_indices.nii.gz -cr 500000 1000000 -cm hot -nc cool -un -ic
+3d.nii.gz -cm hot -cmr 256
+3d.nii.gz -cm hot -cmr 128
+3d.nii.gz -cm hot -cmr 64
+3d.nii.gz -cm hot -cmr 32
+3d.nii.gz -cm hot -cmr 16
+3d.nii.gz -cm hot -cmr 8
+3d.nii.gz -cm hot -cmr 4
+3d.nii.gz -cm hot -cmr 16  -i
+3d.nii.gz -cm hot -cmr 8   -i
+3d.nii.gz -cm hot -cmr 4   -i
+3d.nii.gz -cm hot -cmr 256 -inc
+3d.nii.gz -cm hot -cmr 128 -inc
+3d.nii.gz -cm hot -cmr 64  -inc
+3d.nii.gz -cm hot -cmr 32  -inc
+3d.nii.gz -cm hot -cmr 16  -inc
+3d.nii.gz -cm hot -cmr 8   -inc
+3d.nii.gz -cm hot -cmr 4   -inc
 
--sortho MNI152_T1_2mm.nii.gz             -cl MNI152_T1_2mm_offset.nii.gz  -cr 1600   10000   -cm hot
--sortho MNI152_T1_2mm.nii.gz             -cl MNI152_T1_2mm_offset.nii.gz  -cr 1600   10000   -cm hot -ic
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cl MNI152_T1_2mm_offset.nii.gz  -cr 1600   10000   -cm hot -nc cool -un
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cl MNI152_T1_2mm_offset.nii.gz  -cr 1600   10000   -cm hot -nc cool -un -ic
+{{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6
+{{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -i
+{{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc
+{{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc -i
 
--sortho MNI152_T1_2mm_indices.nii.gz MNI152_T1_2mm.nii.gz -cl MNI152_T1_2mm_indices.nii.gz -cr 500000 1000000
-
-
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 256
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 128
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 64
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 32
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 16
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 8
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 4
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 16  -i
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 8   -i
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 4   -i
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 256 -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 128 -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 64  -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 32  -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 16  -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 8   -inc
--sortho MNI152_T1_2mm.nii.gz -cm hot -cmr 4   -inc
-
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm red-yellow -un -nc blue-lightblue -cmr 6
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm red-yellow -un -nc blue-lightblue -cmr 6 -i
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc -i
+3d.nii.gz -cm hot -g 0.1
+3d.nii.gz -cm hot -g 1
+3d.nii.gz -cm hot -g 2
+3d.nii.gz -cm hot -g 3
+3d.nii.gz -cm hot -g 5
 """
 
 
 def zero_centre(infile):
-    basename = fslimage.removeExt(infile)
+    basename = fslimage.removeExt(op.basename(infile))
     outfile  = '{}_zero_centre.nii.gz'.format(basename)
     img      = fslimage.Image(infile)
     data     = img[:]
@@ -107,7 +111,38 @@ def zero_centre(infile):
     return outfile
 
 
+def gen_indices(infile):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_indices.nii.gz'.format(basename)
+    img      = fslimage.Image(infile, loadData=False)
+    shape    = img.shape
+    data     = np.arange(np.prod(shape)).reshape(shape)
+
+    fslimage.Image(data, header=img.header).save(outfile)
+
+    return outfile
+
+
+def translate(infile, x, y, z):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_translated_{}_{}_{}.nii.gz'.format(basename, x, y, z)
+    img      = fslimage.Image(infile)
+    xform    = img.voxToWorldMat
+
+    shift             = transform.scaleOffsetXform(1, (x, y, z))
+    xform             = transform.concat(shift, xform)
+    img.voxToWorldMat = xform
+
+    img.save(outfile)
+
+    return outfile
+
+
+
 def test_overlay_volume():
-    run_cli_tests('test_overlay_volume',
-                  cli_tests,
-                  extras={'zero_centre' : zero_centre})
+    extras = {
+        'gen_indices' : gen_indices,
+        'zero_centre' : zero_centre,
+        'translate'   : translate
+    }
+    run_cli_tests('test_overlay_volume', cli_tests, extras=extras)

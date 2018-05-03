@@ -10,7 +10,7 @@ import os.path as op
 import            gc
 import            re
 import            time
-import             shutil
+import            shutil
 import            logging
 import            tempfile
 import            traceback
@@ -223,11 +223,7 @@ def run_cli_tests(prefix, tests, extras=None):
             test      = fill_test(test)
             fname     = '{}_{}.png'.format(prefix, test.replace(' ', '_'))
             benchmark = op.join(benchdir, fname)
-
-            if op.exists(benchmark):
-                testfile  = op.join(td, fname)
-            else:
-                testfile  = op.join(datadir, fname)
+            testfile  = op.join(td, fname)
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark)
@@ -236,6 +232,7 @@ def run_cli_tests(prefix, tests, extras=None):
             except Exception as e:
                 allpassed = False
                 print('CLI test failed [{}] {}: {}'.format(prefix, test, e))
+                shutil.copy(testfile, datadir)
 
     assert allpassed
 
