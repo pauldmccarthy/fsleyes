@@ -49,8 +49,7 @@ def realYield(centis=10):
         wx.YieldIfNeeded()
         time.sleep(0.01)
 
-def calchash(value):
-    return value.replace(' ', '_')
+
 
 
 @contextlib.contextmanager
@@ -173,8 +172,7 @@ def run_render_test(
         benchmark,
         size=(640, 480),
         scene='ortho',
-        threshold=50,
-        extras=None):
+        threshold=50):
 
     args = '-of {}'   .format(outfile).split() + \
            '-sz {} {}'.format(*size)  .split() + \
@@ -184,22 +182,20 @@ def run_render_test(
     curdir  = os.getcwd()
     datadir = op.join(op.dirname(__file__), 'testdata')
 
-    try:
-        os.chdir(datadir)
+    fslrender.main(args)
 
-        fslrender.main(args)
+    testimg  = mplimg.imread(outfile)
+    benchimg = mplimg.imread(benchmark)
 
-        testimg  = mplimg.imread(outfile)
-        benchimg = mplimg.imread(benchmark)
-
-        result, diff = compare_images(testimg, benchimg, threshold)
-    finally:
-        os.chdir(curdir)
+    result, diff = compare_images(testimg, benchimg, threshold)
 
     assert result
 
 
-def run_cli_tests(prefix, tests):
+def run_cli_tests(prefix, tests, extras=None):
+
+    if extras is None:
+        extras = {}
 
     tests     = [t.strip()             for t in tests.split('\n')]
     tests     = [t                     for t in tests if t != '' and t[0] != '#']
@@ -208,21 +204,38 @@ def run_cli_tests(prefix, tests):
     tests     = [t.strip()             for t in tests]
     allpassed = True
 
+    datadir  = op.join(op.dirname(__file__), 'testdata')
     benchdir = op.join(op.dirname(__file__), 'testdata', 'cli_tests')
 
+    def fill_test(t):
+        templates = re.findall('{{(.*?)}}', t)
+        for temp in templates:
+            t = t.replace('{{' + temp + '}}', eval(temp, {}, extras))
+        return t
+
     with tempdir() as td:
+
+        for f in os.listdir(datadir):
+            os.symlink(op.join(datadir, f), op.join(td, f))
+
         for test in tests:
-            fname     = '{}_{}.png'.format(prefix, calchash(test))
+
+            test      = fill_test(test)
+            fname     = '{}_{}.png'.format(prefix, test.replace(' ', '_'))
             benchmark = op.join(benchdir, fname)
-            testfile  = op.join(td,       fname)
+
+            if op.exists(benchmark):
+                testfile  = op.join(td, fname)
+            else:
+                testfile  = op.join(datadir, fname)
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark)
                 print('CLI test passed [{}] {}'.format(prefix, test))
 
-            except AssertionError:
+            except Exception as e:
                 allpassed = False
-                print('CLI test failed [{}] {}'.format(prefix, test))
+                print('CLI test failed [{}] {}: {}'.format(prefix, test, e))
 
     assert allpassed
 

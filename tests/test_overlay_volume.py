@@ -11,32 +11,36 @@ import pytest
 
 pytestmark = pytest.mark.overlaytest
 
+import fsl.data.image as fslimage
 
 from . import run_cli_tests
 
 
 cli_tests = """
-3d.nii.gz -dr -5000 500
-3d.nii.gz -dr -5000 500 -i
-3d.nii.gz -dr -5000 500 -b 1 -c 5 # -dr should override -b/-c
-3d.nii.gz -dr -5000 500 -cr -3000  1000
-3d.nii.gz -dr -5000 500 -cr -3000 -1000 -ic
-3d.nii.gz -dr -5000 500 -cr -3000 -1000 -ll   # low ranges are linked - -cr overrides -dr
-3d.nii.gz -dr -5000 500 -cr -3000 -1000 -ll -ic
-3d.nii.gz -dr -5000 500 -cr -3000 -1000 -ll -lh  # high ranges are linked - -cr overrides -dr
-3d.nii.gz -dr -5000 500 -cr -3000 -1000 -ll -lh -ic
+3d.nii.gz -dr 2000 7500
+3d.nii.gz -dr 2000 7500 -i
+3d.nii.gz -dr 2000 7500 -b 1 -c 5 # -dr should override -b/-c
+3d.nii.gz -dr 2000 7500 -cr 4000 8000
+3d.nii.gz -dr 2000 7500 -cr 4000 6000 -ic
+3d.nii.gz -dr 2000 7500 -cr 4000 6000 -ll   # low ranges are linked - -cr overrides -dr
+3d.nii.gz -dr 2000 7500 -cr 4000 6000 -ll -ic
+3d.nii.gz -dr 2000 7500 -cr 4000 6000 -ll -lh  # high ranges are linked - -cr overrides -dr
+3d.nii.gz -dr 5000 7500 -cr 4000 6000 -ll -lh -ic
+
+3d.nii.gz -dr 20 80%
+3d.nii.gz -cr 20 80%
+
+{{zero_centre('3d.nii.gz')}} -cm hot
+{{zero_centre('3d.nii.gz')}} -cm hot
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr -1000 3000
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  0    3000
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 3000
 """
 
 _ = """
--sortho MNI152_T1_2mm.nii.gz -dr 20 80%
--sortho MNI152_T1_2mm.nii.gz -cr 20 80%
 
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr -1000 3000
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  0    3000
--sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000
 
 -sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000
 -sortho MNI152_T1_2mm_zero_centre.nii.gz -cm hot -nc cool -un -dr  1000 3000 -cr 500 4000 -ll
@@ -91,6 +95,19 @@ _ = """
 """
 
 
+def zero_centre(infile):
+    basename = fslimage.removeExt(infile)
+    outfile  = '{}_zero_centre.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+    data     = img[:]
+    img[:]   = data - data.mean()
+
+    img.save(outfile)
+
+    return outfile
+
 
 def test_overlay_volume():
-    run_cli_tests('test_overlay_volume', cli_tests)
+    run_cli_tests('test_overlay_volume',
+                  cli_tests,
+                  extras={'zero_centre' : zero_centre})
