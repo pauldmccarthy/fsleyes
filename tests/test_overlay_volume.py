@@ -35,6 +35,9 @@ cli_tests = """
 3d.nii.gz -dr 20 80%
 3d.nii.gz -cr 20 80%
 
+3d.nii.gz -cm {{gen_cmap(custom_cmap)}}
+3d.nii.gz -cm {{gen_cmap(custom_cmap)}} -inc
+
 {{zero_centre('3d.nii.gz')}} -cm hot
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be ignored (TODO I should change this)
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un
@@ -138,11 +141,25 @@ def translate(infile, x, y, z):
     return outfile
 
 
+custom_cmap = np.array([
+    [0, 0, 0],
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 1]])
+
+
+def gen_cmap(cmap):
+    np.savetxt('custom.cmap', cmap)
+    return 'custom.cmap'
+
 
 def test_overlay_volume():
     extras = {
         'gen_indices' : gen_indices,
         'zero_centre' : zero_centre,
-        'translate'   : translate
+        'translate'   : translate,
+        'gen_cmap'    : gen_cmap,
+        'custom_cmap' : custom_cmap,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
