@@ -8,8 +8,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.23.0 (Under development)
---------------------------
+0.23.0 (Friday May 4th 2018)
+----------------------------
 
 
 Added
@@ -32,6 +32,7 @@ Changed
 * Plot view interaction changed - left click to pan, right click to zoom, and
   hold down |control_key| (|command_key| under macOS) and click for secondary
   behaviour (e.g. changing the current volume on a time series panel).
+* In edit mode, when a new image is created, it is now selected.
 
 
 Fixed
