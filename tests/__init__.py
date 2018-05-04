@@ -44,7 +44,10 @@ from .compare_images import compare_images
 
 def haveGL21():
     from fsl.utils.platform import platform as fslplatform
-    return float(fslplatform.glVersion) >= 2.1
+    try:
+        return float(fslplatform.glVersion) >= 2.1
+    except:
+        return False
 
 
 # Under GTK, a single call to
@@ -119,6 +122,8 @@ initialised = [False]
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
+    from fsl.utils.platform import platform as fslplatform
+
     logging.getLogger().setLevel(logging.WARNING)
 
     gc.collect()
@@ -191,10 +196,15 @@ def run_with_fsleyes(func, *args, **kwargs):
     dummy.Show()
 
     if not initialised[0]:
-        wx.CallLater(startingDelay,
-                     fslgl.getGLContext,
-                     parent=panel,
-                     ready=init)
+
+        # gl already initialised
+        if fslplatform.glVersion is not None:
+            wx.CallLater(startingDelay, init)
+        else:
+            wx.CallLater(startingDelay,
+                         fslgl.getGLContext,
+                         parent=panel,
+                         ready=init)
     else:
         wx.CallLater(startingDelay, run)
 
