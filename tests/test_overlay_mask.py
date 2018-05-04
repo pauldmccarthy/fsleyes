@@ -58,25 +58,29 @@ cli_tests = """
 4d.nii.gz -ot mask -t 6800 11000 -v 3
 4d.nii.gz -ot mask -t 6800 11000 -v 4
 
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o -ow 5
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask          -in linear
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o       -in linear
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o -ow 5 -in linear
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask          -in spline
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o       -in spline
-{{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -o -ow 5 -in spline
+# scaling by 255 because linux has a problem with
+# interpolating between 0 and 1 in uint8 textures.
+# Understandable, really.
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask          -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o       -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5 -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask          -in spline
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o       -in spline
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5 -in spline
 """
 
 
 
-def binarise(infile, low, high):
+def binarise(infile, low, high, scale=1):
 
     basename = fslimage.removeExt(op.basename(infile))
-    outfile  = '{}_binarised.nii.gz'.format(basename)
+    outfile  = '{}_binarised_{}_{}_{}.nii.gz'.format(
+        basename, low, high, scale)
     img      = fslimage.Image(infile)
     data     = img[:]
-    binned   = ((data > low) & (data < high)).astype(np.uint8)
+    binned   = ((data > low) & (data < high)).astype(np.uint8) * scale
 
     fslimage.Image(binned, header=img.header).save(outfile)
 
