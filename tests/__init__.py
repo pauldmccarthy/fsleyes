@@ -288,6 +288,7 @@ def run_cli_tests(prefix, tests, extras=None):
 
             if any([exc in test for exc in exclude]):
                 print('CLI test skipped [{}] {}'.format(prefix, test))
+                continue
 
             test      = fill_test(test)
             fname     = '{}_{}.png'.format(prefix, test.replace(' ', '_'))
