@@ -5,18 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-
-import os.path as op
-
 import pytest
-
-import numpy as np
-
-import nibabel as nib
-
-import fsl.data.vtk        as fslvtk
-import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
+import fsl.data.image as fslimage
 
 from . import run_cli_tests
 

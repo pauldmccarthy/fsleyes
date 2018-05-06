@@ -291,7 +291,8 @@ def run_cli_tests(prefix, tests, extras=None):
                 continue
 
             test      = fill_test(test)
-            fname     = '{}_{}.png'.format(prefix, test.replace(' ', '_'))
+            fname     = test.replace(' ', '_').replace('/', '_')
+            fname     = '{}_{}.png'.format(prefix, fname)
             benchmark = op.join(benchdir, fname)
             testfile  = op.join(td, fname)
 
