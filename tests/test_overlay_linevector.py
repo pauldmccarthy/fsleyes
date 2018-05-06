@@ -6,9 +6,8 @@
 #
 
 import pytest
-import fsl.data.image as fslimage
 
-from . import run_cli_tests
+from . import run_cli_tests, roi
 
 
 pytestmark = pytest.mark.overlaytest
@@ -35,19 +34,6 @@ dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -ld -ls 500 -lw 3
 {{roi('dti/dti_V1', (0, 8, 4, 5, 4, 5))}} -ot linevector
 {{roi('dti/dti_V1', (0, 8, 0, 8, 4, 5))}} -ot linevector
 """
-
-def roi(fname, roi):
-    base    = fslimage.removeExt(fname)
-    outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
-
-    img = fslimage.Image(fname)
-    xs, xe, ys, ye, zs, ze = roi
-    data = img[xs:xe, ys:ye, zs:ze, ...]
-    img = fslimage.Image(data, header=img.header)
-
-    img.save(outfile)
-
-    return outfile
 
 
 def test_overlay_linevector():

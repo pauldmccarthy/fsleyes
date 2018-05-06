@@ -384,3 +384,18 @@ def fliporient(filename):
 
     img.save(outfile)
     return outfile
+
+
+
+def roi(fname, roi):
+    base    = fslimage.removeExt(fname)
+    outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
+
+    img = fslimage.Image(fname)
+    xs, xe, ys, ye, zs, ze = roi
+    data = img[xs:xe, ys:ye, zs:ze, ...]
+    img = fslimage.Image(data, header=img.header)
+
+    img.save(outfile)
+
+    return outfile
