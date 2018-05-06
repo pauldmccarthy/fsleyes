@@ -9,7 +9,7 @@ import numpy as np
 import fsl.data.image      as fslimage
 import fsl.utils.transform as transform
 
-from . import run_cli_tests
+from . import run_cli_tests, discretise
 
 
 pytestmark = pytest.mark.overlaytest
@@ -38,28 +38,6 @@ cli_tests = """
 """
 
 
-
-def discretise(infile, stepsize, min=None, max=None):
-    basename = fslimage.removeExt(op.basename(infile))
-    img      = fslimage.Image(infile)
-    data     = img[:]
-
-    if min is None:
-        min = data.min()
-    if max is None:
-        max = data.max()
-
-    outfile  = '{}_discretised_{}_{}_{}.nii.gz'.format(
-        basename, stepsize, min, max)
-
-    for i, li in enumerate(range(min, max, stepsize)):
-        data[(data >= li) & (data < (li + stepsize))] = i
-
-    img[:] = data
-
-    img.save(outfile)
-
-    return outfile
 
 custom_lut = {
     1 : ([1, 0,     0], 'one'),
