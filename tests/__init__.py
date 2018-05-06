@@ -28,6 +28,7 @@ import matplotlib.image as mplimg
 
 import fsleyes_props                as props
 import fsl.utils.idle               as idle
+import fsl.data.image               as fslimage
 import                                 fsleyes
 import fsleyes.frame                as fslframe
 import fsleyes.main                 as fslmain
@@ -364,3 +365,22 @@ def run_with_powerspectrumpanel(func, *args, **kwargs):
     """
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     return run_with_viewpanel(func, PowerSpectrumPanel, *args, **kwargs)
+
+
+
+
+def fliporient(filename):
+    base    = fslimage.removeExt(filename)
+    outfile = '{}_flipped'.format(base)
+
+    img = fslimage.Image(filename)
+
+    aff       = img.voxToWorldMat
+    aff[0, 0] = -aff[0, 0]
+    aff[0, 3] =  aff[0, 3] - (img.shape[0] - 1) * img.pixdim[0]
+
+    img.voxToWorldMat = aff
+    img[:]            = img[::-1, ...]
+
+    img.save(outfile)
+    return outfile

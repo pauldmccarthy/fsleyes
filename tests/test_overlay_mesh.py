@@ -8,7 +8,7 @@
 import pytest
 import fsl.data.image as fslimage
 
-from . import run_cli_tests
+from . import run_cli_tests, fliporient
 
 
 pytestmark = pytest.mark.overlaytest
@@ -62,23 +62,6 @@ mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100 -dc
 """
-
-
-def fliporient(filename):
-    base    = fslimage.removeExt(filename)
-    outfile = '{}_flipped'.format(base)
-
-    img = fslimage.Image(filename)
-
-    aff       = img.voxToWorldMat
-    aff[0, 0] = -aff[0, 0]
-    aff[0, 3] =  aff[0, 3] - (img.shape[0] - 1) * img.pixdim[0]
-
-    img.voxToWorldMat = aff
-    img[:]            = img[::-1, ...]
-
-    img.save(outfile)
-    return outfile
 
 
 def test_overlay_mesh():
