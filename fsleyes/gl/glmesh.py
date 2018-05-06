@@ -180,7 +180,7 @@ class GLMesh(globject.GLObject):
 
     def destroy(self):
         """Must be called when this ``GLMesh`` is no longer needed. Removes
-        some property listeners and destroys the colour map texturtes and
+        some property listeners and destroys the colour map textures and
         off-screen :class:`.RenderTexture`.
         """
 

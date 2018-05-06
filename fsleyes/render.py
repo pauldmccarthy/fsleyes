@@ -330,6 +330,11 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
         canvasBmps.append(c.getBitmap())
 
+    # destroy the canvases
+    for c in canvases:
+        c.destroy()
+    canvases = None
+
     # layout the bitmaps
     if namespace.scene in ('lightbox', '3d'):
         layout = fsllayout.Bitmap(canvasBmps[0])
