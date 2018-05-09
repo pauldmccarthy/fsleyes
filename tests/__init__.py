@@ -238,9 +238,6 @@ def run_render_test(
            '-s  {}'   .format(scene)  .split() + \
            list(args)
 
-    curdir  = os.getcwd()
-    datadir = op.join(op.dirname(__file__), 'testdata')
-
     fslrender.main(args)
 
     testimg  = mplimg.imread(outfile)
@@ -251,7 +248,7 @@ def run_render_test(
     assert result
 
 
-def run_cli_tests(prefix, tests, extras=None):
+def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
 
     if extras is None:
         extras = {}
@@ -298,7 +295,8 @@ def run_cli_tests(prefix, tests, extras=None):
             testfile  = op.join(td, fname)
 
             try:
-                run_render_test(list(test.split()), testfile, benchmark)
+                run_render_test(list(test.split()), testfile, benchmark,
+                                scene=scene)
                 print('CLI test passed [{}] {}'.format(prefix, test))
 
             except Exception as e:
