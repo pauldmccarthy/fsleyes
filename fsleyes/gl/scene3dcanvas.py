@@ -61,6 +61,7 @@ class Scene3DCanvas(object):
         opts.addListener('zoom',         self.__name, self.Refresh)
         opts.addListener('offset',       self.__name, self.Refresh)
         opts.addListener('rotation',     self.__name, self.Refresh)
+        opts.addListener('highDpi',      self.__name, self.__highDpiChanged)
 
 
     def destroy(self):
@@ -333,6 +334,13 @@ class Scene3DCanvas(object):
                 self.__registerOverlay(ovl)
 
 
+    def __highDpiChanged(self, *a):
+        """Called when the :attr:`.Scene3DCanvasOpts.highDpi` property
+        changes. Calls the :meth:`.GLCanvasTarget.EnableHighDPI` method.
+        """
+        self.EnableHighDPI(self.opts.highDpi)
+
+
     def __displayBoundsChanged(self, *a):
         """Called when the :attr:`.DisplayContext.bounds` change. Resets
         the :attr:`.Scene3DCanvasOpts.lightPos` property.
@@ -441,16 +449,18 @@ class Scene3DCanvas(object):
         self.Refresh()
 
 
-    def __genViewMatrix(self):
+    def __genViewMatrix(self, w, h):
         """Generate and return a transformation matrix to be used as the
         model-view matrix. This includes applying the current :attr:`zoom`,
         :attr:`rotation` and :attr:`offset` settings, and configuring
         the camera. This method is called by :meth:`__setViewport`.
+
+        :arg w: Canvas width in pixels
+        :arg h: Canvas height in pixels
         """
 
         opts   = self.opts
         b      = self.__displayCtx.bounds
-        w, h   = self.GetSize()
         centre = [b.xlo + 0.5 * b.xlen,
                   b.ylo + 0.5 * b.ylen,
                   b.zlo + 0.5 * b.zlen]
@@ -513,7 +523,7 @@ class Scene3DCanvas(object):
                   ``False`` otherwise.
         """
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
         b             = self.__displayCtx.bounds
         blo           = [b.xlo, b.ylo, b.zlo]
         bhi           = [b.xhi, b.yhi, b.zhi]
@@ -529,7 +539,7 @@ class Scene3DCanvas(object):
             return False
 
         # Generate the view and projection matrices
-        self.__genViewMatrix()
+        self.__genViewMatrix(width, height)
         projmat, viewport     = glroutines.ortho(blo, bhi, width, height, zoom)
         self.__projMat        = projmat
         self.__viewport       = viewport

@@ -832,6 +832,12 @@ class OffScreenCanvasTarget(object):
         pass
 
 
+    def EnableHighDPI(self):
+        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
+        """
+        pass
+
+
     def draw(self):
         """Calls the :meth:`_draw` method, which must be provided by
         subclasses.
@@ -918,6 +924,7 @@ class WXGLCanvasTarget(object):
         self.__glReady           = False
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
+        self.__dpiscale          = 1.0
         self.__context           = context
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
@@ -1056,6 +1063,21 @@ class WXGLCanvasTarget(object):
         return self.GetClientSize().Get()
 
 
+    def GetScale(self):
+        """Returns the current DPI scaling factor. """
+        return self.__dpiscale
+
+
+    def GetScaledSize(self):
+        """Returns the current canvas size, scaled by the current DPI scaling
+        factor.
+        """
+        w, h = self.GetSize()
+        s    = self.GetScale()
+
+        return int(round(w * s)), int(round(h * s))
+
+
     def Refresh(self, *a):
         """Triggers a redraw via the :meth:`_draw` method. """
         self.__realDraw()
@@ -1092,6 +1114,25 @@ class WXGLCanvasTarget(object):
         if not self.__freezeSwapBuffers:
             if self._setGLContext():
                 super(WXGLCanvasTarget, self).SwapBuffers()
+
+
+    def EnableHighDPI(self, enable=True):
+        """Attempts to enable/disable high-resolution rendering.
+        """
+        self.__dpiscale = 1.0
+        if self._setGLContext():
+
+            try:
+                import objc
+            except ImportError:
+                return
+
+            nsview = objc.objc_object(c_void_p=self.GetHandle())
+            nsview.setWantsBestResolutionOpenGLSurface_(enable)
+
+            # TODO get real scaling factor
+            if enable: self.__dpiscale = 2.0
+            else:      self.__dpiscale = 1.0
 
 
     def getBitmap(self):

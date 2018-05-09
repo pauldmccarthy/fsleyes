@@ -711,7 +711,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Calls the version dependent ``draw3D`` function. """
 
         opts = self.opts
-        w, h = self.canvas.GetSize()
+        w, h = self.canvas.GetScaledSize()
         res  = self.opts.resolution / 100.0
         w    = int(np.ceil(w * res))
         h    = int(np.ceil(h * res))
