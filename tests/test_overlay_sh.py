@@ -76,6 +76,7 @@ sh -ot sh -m radius -cm hot
 """
 
 
+@pytest.mark.skipif('not haveGL21()')
 def test_overlay_sh():
     extras = {
     }

@@ -6,9 +6,8 @@
 #
 
 import pytest
-import fsl.data.image as fslimage
 
-from . import run_cli_tests
+from . import run_cli_tests, haveGL21
 
 
 pytestmark = pytest.mark.overlaytest
@@ -19,17 +18,21 @@ cli_tests = """
 dti -ot rgbvector
 dti -ot linevector
 
-dti -dl
-dti -tr 4
-dti -tr 10
-dti -tr 20
+# default should be tensor
+dti
 
-dti -s 50
-dti -s 100
-dti -s 600
+dti -ot tensor -dl
+dti -ot tensor -tr 4
+dti -ot tensor -tr 10
+dti -ot tensor -tr 20
+
+dti -ot tensor -s 50
+dti -ot tensor -s 100
+dti -ot tensor -s 600
 """
 
 
+@pytest.mark.skipif('not haveGL21()')
 def test_overlay_tensor():
     extras = {
     }
