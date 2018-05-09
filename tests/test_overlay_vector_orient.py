@@ -51,15 +51,16 @@ cli_tests = """
 
 def flipdir(dirname):
     newdir = '{}_flipdir'.format(dirname.strip(op.sep))
-    print('newdir', newdir)
 
     if op.exists(newdir):
         return newdir
 
     os.mkdir(newdir)
     for f in os.listdir(dirname):
-        flipped = fslimage.addExt(fliporient(op.join(dirname, f)))
-        print('moving {} to {}'.format(flipped, op.join(newdir, f)))
+        if not op.exists(op.join(dirname, f)):
+            continue
+        flipped = fliporient(op.join(dirname, f))
+        flipped = fslimage.addExt(flipped)
         shutil.move(flipped, op.join(newdir, f))
 
     return newdir

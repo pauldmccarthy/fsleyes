@@ -93,30 +93,25 @@ sh -ot sh       -b 75
 sh -ot sh       -b 75 -c 25
 sh -ot sh             -c 25
 
+gifti/white.surf.gii          -mc 1 0 0
+gifti/white.surf.gii -ot mesh -mc 1 0 0
+gifti/white.surf.gii -ot mesh -mc 1 0 0  -d
+gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50
+gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50 -b 75
+gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50 -b 75 -c 25
+gifti/white.surf.gii -ot mesh -mc 1 0 0        -b 75
+gifti/white.surf.gii -ot mesh -mc 1 0 0        -b 75 -c 25
+gifti/white.surf.gii -ot mesh -mc 1 0 0              -c 25
 
-# TODO unresolevd bug causes gifti/
-# freesurfertests to fail if included
-# with other mesh tests
-
-# gifti/white.surf.gii          -mc 1 0 0
-# gifti/white.surf.gii -ot mesh -mc 1 0 0
-# gifti/white.surf.gii -ot mesh -mc 1 0 0  -d
-# gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50
-# gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50 -b 75
-# gifti/white.surf.gii -ot mesh -mc 1 0 0  -a 50 -b 75 -c 25
-# gifti/white.surf.gii -ot mesh -mc 1 0 0        -b 75
-# gifti/white.surf.gii -ot mesh -mc 1 0 0        -b 75 -c 25
-# gifti/white.surf.gii -ot mesh -mc 1 0 0              -c 25
-
-# freesurfer/lh.pial          -mc 1 0 0
-# freesurfer/lh.pial -ot mesh -mc 1 0 0
-# freesurfer/lh.pial -ot mesh -mc 1 0 0 -d
-# freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50
-# freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50 -b 75
-# freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50 -b 75 -c 25
-# freesurfer/lh.pial -ot mesh -mc 1 0 0       -b 75
-# freesurfer/lh.pial -ot mesh -mc 1 0 0       -b 75 -c 25
-# freesurfer/lh.pial -ot mesh -mc 1 0 0             -c 25
+freesurfer/lh.pial          -mc 1 0 0
+freesurfer/lh.pial -ot mesh -mc 1 0 0
+freesurfer/lh.pial -ot mesh -mc 1 0 0 -d
+freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50
+freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50 -b 75
+freesurfer/lh.pial -ot mesh -mc 1 0 0 -a 50 -b 75 -c 25
+freesurfer/lh.pial -ot mesh -mc 1 0 0       -b 75
+freesurfer/lh.pial -ot mesh -mc 1 0 0       -b 75 -c 25
+freesurfer/lh.pial -ot mesh -mc 1 0 0             -c 25
 """
 
 
