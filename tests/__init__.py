@@ -282,8 +282,8 @@ def run_cli_tests(prefix, tests, extras=None):
 
     with tempdir() as td:
 
-        for f in os.listdir(datadir):
-            os.symlink(op.join(datadir, f), op.join(td, f))
+        shutil.copytree(datadir, op.join(td, 'testdata'))
+        os.chdir('testdata')
 
         for test in tests:
 
