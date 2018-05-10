@@ -9,7 +9,7 @@ import numpy as np
 
 import fsl.data.image      as fslimage
 
-from . import run_cli_tests
+from . import run_cli_tests, haveGL21
 
 
 pytestmark = pytest.mark.overlaytest
