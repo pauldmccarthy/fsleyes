@@ -17,11 +17,11 @@ cli_tests = """
 -s3d gifti/white.surf.gii -mc 0.7 0.7 0.7
 -s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -wf
 
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3D.txt
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3D.txt -cr 50 100
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3D.txt -cr 50 100 -ic
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3D.txt -cr 50 100     -dc
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3D.txt -cr 50 100 -ic -dc
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100 -ic
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100     -dc
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100 -ic -dc
 """
 
 
