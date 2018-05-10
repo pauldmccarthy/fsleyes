@@ -5,25 +5,34 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-import          os
-import          gc
-import          time
-import          shutil
-import          logging
-import          tempfile
-import          traceback
-import          contextlib
+import            os
+import os.path as op
+import            gc
+import            re
+import            sys
+import            time
+import            shutil
+import            logging
+import            tempfile
+import            traceback
+import            contextlib
 
-import          wx
+import            wx
+
+from six import StringIO
 
 import matplotlib as mpl
 mpl.use('WxAgg')  # noqa
 
+import matplotlib.image as mplimg
+
 import fsleyes_props                as props
 import fsl.utils.idle               as idle
+import fsl.data.image               as fslimage
 import                                 fsleyes
 import fsleyes.frame                as fslframe
 import fsleyes.main                 as fslmain
+import fsleyes.render               as fslrender
 import fsleyes.actions.frameactions as frameactions  # noqa
 import fsleyes.gl                   as fslgl
 import fsleyes.colourmaps           as colourmaps
@@ -34,12 +43,61 @@ import fsleyes.overlay              as fsloverlay
 from .compare_images import compare_images
 
 
+def haveGL21():
+    from fsl.utils.platform import platform as fslplatform
+    try:
+        return float(fslplatform.glVersion) >= 2.1
+    except:
+        return False
+
+
 # Under GTK, a single call to
 # yield just doesn't cut it
 def realYield(centis=10):
     for i in range(int(centis)):
         wx.YieldIfNeeded()
         time.sleep(0.01)
+
+class CaptureStdout(object):
+    """Context manager which captures stdout and stderr. """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.__mock_stdout = StringIO('')
+        self.__mock_stderr = StringIO('')
+
+    def __enter__(self):
+        self.__real_stdout = sys.stdout
+        self.__real_stderr = sys.stderr
+
+        sys.stdout = self.__mock_stdout
+        sys.stderr = self.__mock_stderr
+
+
+    def __exit__(self, *args, **kwargs):
+        sys.stdout = self.__real_stdout
+        sys.stderr = self.__real_stderr
+
+        if args[0] is not None:
+            print('Error')
+            print('stdout:')
+            print(self.stdout)
+            print('stderr:')
+            print(self.stderr)
+
+        return False
+
+    @property
+    def stdout(self):
+        self.__mock_stdout.seek(0)
+        return self.__mock_stdout.read()
+
+    @property
+    def stderr(self):
+        self.__mock_stderr.seek(0)
+        return self.__mock_stderr.read()
 
 
 @contextlib.contextmanager
@@ -64,6 +122,8 @@ initialised = [False]
 
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
+
+    from fsl.utils.platform import platform as fslplatform
 
     logging.getLogger().setLevel(logging.WARNING)
 
@@ -137,10 +197,15 @@ def run_with_fsleyes(func, *args, **kwargs):
     dummy.Show()
 
     if not initialised[0]:
-        wx.CallLater(startingDelay,
-                     fslgl.getGLContext,
-                     parent=panel,
-                     ready=init)
+
+        # gl already initialised
+        if fslplatform.glVersion is not None:
+            wx.CallLater(startingDelay, init)
+        else:
+            wx.CallLater(startingDelay,
+                         fslgl.getGLContext,
+                         parent=panel,
+                         ready=init)
     else:
         wx.CallLater(startingDelay, run)
 
@@ -153,6 +218,96 @@ def run_with_fsleyes(func, *args, **kwargs):
         raise raised[0]
 
     return result[0]
+
+
+
+def run_render_test(
+        args,
+        outfile,
+        benchmark,
+        size=(640, 480),
+        scene='ortho',
+        threshold=50):
+
+    glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
+    glver = [int(v) for v in glver.split('.')]
+
+    args = '-gl {} {}'.format(*glver) .split() + \
+           '-of {}'   .format(outfile).split() + \
+           '-sz {} {}'.format(*size)  .split() + \
+           '-s  {}'   .format(scene)  .split() + \
+           list(args)
+
+    fslrender.main(args)
+
+    testimg  = mplimg.imread(outfile)
+    benchimg = mplimg.imread(benchmark)
+
+    result, diff = compare_images(testimg, benchimg, threshold)
+
+    assert result
+
+
+def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
+
+    if extras is None:
+        extras = {}
+
+    glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
+    glver = [int(v) for v in glver.split('.')]
+
+    if tuple(glver) < (2, 1):
+        exclude = ['tensor', ' sh', '_sh', 'spline']
+    else:
+        exclude = []
+
+    tests     = [t.strip()             for t in tests.split('\n')]
+    tests     = [t                     for t in tests if t != '' and t[0] != '#']
+    tests     = [re.sub('\s+', ' ', t) for t in tests]
+    tests     = [re.sub('#.*', '',  t) for t in tests]
+    tests     = [t.strip()             for t in tests]
+    allpassed = True
+
+    datadir  = op.join(op.dirname(__file__), 'testdata')
+    benchdir = op.join(op.dirname(__file__), 'testdata', 'cli_tests')
+
+    def fill_test(t):
+        templates = re.findall('{{(.*?)}}', t)
+        for temp in templates:
+            t = t.replace('{{' + temp + '}}', eval(temp, {}, extras))
+        return t
+
+    with tempdir() as td:
+
+        shutil.copytree(datadir, op.join(td, 'testdata'))
+        os.chdir('testdata')
+
+        for test in tests:
+
+            if any([exc in test for exc in exclude]):
+                print('CLI test skipped [{}] {}'.format(prefix, test))
+                continue
+
+            test      = fill_test(test)
+            fname     = test.replace(' ', '_').replace('/', '_')
+            fname     = '{}_{}.png'.format(prefix, fname)
+            benchmark = op.join(benchdir, fname)
+            testfile  = op.join(td, fname)
+
+            try:
+                run_render_test(list(test.split()), testfile, benchmark,
+                                scene=scene)
+                print('CLI test passed [{}] {}'.format(prefix, test))
+
+            except Exception as e:
+                allpassed = False
+                print('CLI test failed [{}] {}: {}'.format(prefix, test, e))
+
+                if op.exists(testfile):
+                    print('Copying {} to {}'.format(testfile, datadir))
+                    shutil.copy(testfile, datadir)
+
+    assert allpassed
 
 
 def run_with_viewpanel(func, vptype, *args, **kwargs):
@@ -208,3 +363,59 @@ def run_with_powerspectrumpanel(func, *args, **kwargs):
     """
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     return run_with_viewpanel(func, PowerSpectrumPanel, *args, **kwargs)
+
+
+
+
+def fliporient(filename):
+    base    = fslimage.removeExt(filename)
+    outfile = '{}_flipped'.format(base)
+
+    img = fslimage.Image(filename)
+
+    aff       = img.voxToWorldMat
+    aff[0, 0] = -aff[0, 0]
+    aff[0, 3] =  aff[0, 3] - (img.shape[0] - 1) * img.pixdim[0]
+
+    img.voxToWorldMat = aff
+    img[:]            = img[::-1, ...]
+
+    img.save(outfile)
+    return outfile
+
+
+
+def roi(fname, roi):
+    base    = fslimage.removeExt(fname)
+    outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
+
+    img = fslimage.Image(fname)
+    xs, xe, ys, ye, zs, ze = roi
+    data = img[xs:xe, ys:ye, zs:ze, ...]
+    img = fslimage.Image(data, header=img.header)
+
+    img.save(outfile)
+
+    return outfile
+
+def discretise(infile, stepsize, min=None, max=None):
+    basename = fslimage.removeExt(op.basename(infile))
+    img      = fslimage.Image(infile)
+    data     = img[:]
+
+    if min is None:
+        min = data.min()
+    if max is None:
+        max = data.max()
+
+    outfile  = '{}_discretised_{}_{}_{}.nii.gz'.format(
+        basename, stepsize, min, max)
+
+    for i, li in enumerate(range(min, max, stepsize)):
+        data[(data >= li) & (data < (li + stepsize))] = i
+
+    img[:] = data
+
+    img.save(outfile)
+
+    return outfile

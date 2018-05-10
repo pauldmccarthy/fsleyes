@@ -230,7 +230,10 @@ class GLVolume(glimageobject.GLImageObject):
             '{}_neg'.format(self.texName))
 
         if self.threedee:
-            self.smoothFilter   = glfilter.Filter('smooth', texture=0)
+
+            self.smoothFilter = glfilter.Filter('smooth', texture=0)
+            self.smoothFilter.set(kernSize=self.opts.smoothing * 2)
+
             self.renderTexture1 = textures.RenderTexture(
                 self.name, gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(

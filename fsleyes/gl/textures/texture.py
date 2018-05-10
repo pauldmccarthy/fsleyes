@@ -336,7 +336,7 @@ class Texture2D(Texture):
         if not bound:
             self.unbindTexture()
 
-        data = np.fromstring(data, dtype=ndtype)
+        data = np.frombuffer(data, dtype=ndtype)
         data = data.reshape((self.__height, self.__width, size))
         data = np.flipud(data)
 

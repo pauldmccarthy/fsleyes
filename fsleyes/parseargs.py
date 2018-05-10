@@ -570,6 +570,7 @@ OPTIONS = td.TypeDict({
                         'shResolution',
                         'shOrder',
                         'size',
+                        'normalise',
                         'lighting',
                         'radiusThreshold',
                         'colourMode']
@@ -838,6 +839,7 @@ ARGUMENTS = td.TypeDict({
     'SHOpts.shOrder'         : ('so', 'shOrder',         True),
     'SHOpts.size'            : ('s',  'size',            True),
     'SHOpts.lighting'        : ('l',  'lighting',        False),
+    'SHOpts.normalise'       : ('no', 'normalise',       False),
     'SHOpts.orientFlip'      : ('of', 'orientFlip',      False),
     'SHOpts.radiusThreshold' : ('t',  'radiusThreshold', True),
     'SHOpts.colourMode'      : ('m',  'colourMode',      True),
@@ -1098,6 +1100,7 @@ HELP = td.TypeDict({
                                'determined from image [up to 16], '
                                'default: maximum)',
     'SHOpts.size'            : 'FOD size (10-500, default: 100)',
+    'SHOpts.normalise'       : 'Normalise FOD sizes',
     'SHOpts.lighting'        : 'Enable dodgy lighting effect',
     'SHOpts.radiusThreshold' : 'Hide FODs with radius less than this '
                                '(min: 0, max: 1, default: 0.05)',
