@@ -2,6 +2,8 @@
 
 set -e
 
+apt-get install -y bc
+
 # If running on a fork repository, we merge in the
 # upstream/master branch. This is done so that merge
 # requests from fork to the parent repository will
@@ -32,13 +34,13 @@ if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || t
 if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 
 # Run the tests  - test overlay types for GL14 as well
-FSLEYES_TEST_GL=2.1 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "not overlaytest"
+FSLEYES_TEST_GL=2.1 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "not overlaytest" || true
 failed=$?
 sleep 5
-FSLEYES_TEST_GL=2.1 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest"
+FSLEYES_TEST_GL=2.1 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest" || true
 failed=`echo "$? + $failed" | bc`
 sleep 5
-FSLEYES_TEST_GL=1.4 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest"
+FSLEYES_TEST_GL=1.4 MPLBACKEND='wxagg' xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest" || true
 failed=`echo "$? + $failed" | bc`
 
 python -m coverage report
