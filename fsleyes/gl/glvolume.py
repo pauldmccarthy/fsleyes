@@ -713,21 +713,21 @@ class GLVolume(glimageobject.GLImageObject):
         opts = self.opts
         w, h = self.canvas.GetScaledSize()
         res  = self.opts.resolution / 100.0
-        w    = int(np.ceil(w * res))
-        h    = int(np.ceil(h * res))
+        sw   = int(np.ceil(w * res))
+        sh   = int(np.ceil(h * res))
 
         # Initialise and resize
         # the offscreen textures
         for rt in [self.renderTexture1, self.renderTexture2]:
-            if rt.getSize() != (w, h):
-                rt.setSize(w, h)
+            if rt.getSize() != (sw, sh):
+                rt.setSize(sw, sh)
 
             with rt.bound():
                 gl.glClearColor(0, 0, 0, 0)
                 gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
         if opts.resolution != 100:
-            gl.glViewport(0, 0, w, h)
+            gl.glViewport(0, 0, sw, sh)
 
         # Do the render. Even though we're
         # drawing off-screen,  we need to
@@ -748,7 +748,7 @@ class GLVolume(glimageobject.GLImageObject):
         # is enabled, the final final render will
         # be in renderTexture2
         if opts.smoothing > 0:
-            self.smoothFilter.set(offsets=[1.0 / w, 1.0 / h])
+            self.smoothFilter.set(offsets=[1.0 / sw, 1.0 / sh])
             self.smoothFilter.osApply(self.renderTexture1,
                                       self.renderTexture2)
 
@@ -765,7 +765,6 @@ class GLVolume(glimageobject.GLImageObject):
         verts   = transform.transform(verts, invproj)
 
         if opts.resolution != 100:
-            w, h = self.canvas.GetSize()
             gl.glViewport(0, 0, w, h)
 
         with glroutines.enabled(gl.GL_DEPTH_TEST):
