@@ -1065,6 +1065,15 @@ class WXGLCanvasTarget(object):
 
     def GetScale(self):
         """Returns the current DPI scaling factor. """
+
+        scale = float(self.GetContentScaleFactor())
+
+        # Reset scaling factor in case the canvas
+        # window has moved between displays with
+        # different scaling factors
+        if scale == 1 and self.__dpiscale != 1:
+            self.EnableHighDPI(False)
+
         return self.__dpiscale
 
 
@@ -1119,28 +1128,36 @@ class WXGLCanvasTarget(object):
     def EnableHighDPI(self, enable=True):
         """Attempts to enable/disable high-resolution rendering.
         """
+
+        if not self._setGLContext():
+            return
+
         self.__dpiscale = 1.0
-        if self._setGLContext():
 
-            try:
-                import objc
-            except ImportError:
-                return
+        # If the display can't scale,
+        # there's no point in trying.
+        scale  = float(self.GetContentScaleFactor())
+        enable = enable and scale > 1
 
-            nsview = objc.objc_object(c_void_p=self.GetHandle())
-            nsview.setWantsBestResolutionOpenGLSurface_(enable)
+        # TODO Support other platforms
+        try:
+            import objc
+        except ImportError:
+            return
 
-            # TODO get real scaling factor
-            if enable: self.__dpiscale = 2.0
-            else:      self.__dpiscale = 1.0
+        nsview = objc.objc_object(c_void_p=self.GetHandle())
+        nsview.setWantsBestResolutionOpenGLSurface_(enable)
+
+        if enable: self.__dpiscale = scale
+        else:      self.__dpiscale = 1.0
 
 
     def getBitmap(self):
         """Return a (width*height*4) shaped numpy array containing the
         rendered scene as an RGBA bitmap.
         """
-        import OpenGL.GL        as gl
-        import numpy            as np
+        import OpenGL.GL as gl
+        import numpy     as np
 
         self._setGLContext()
 
