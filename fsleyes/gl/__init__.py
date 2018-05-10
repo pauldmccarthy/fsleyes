@@ -1161,7 +1161,7 @@ class WXGLCanvasTarget(object):
 
         self._setGLContext()
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
 
         # Make sure we're reading
         # from the front buffer
@@ -1173,7 +1173,7 @@ class WXGLCanvasTarget(object):
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE)
 
-        bmp = np.fromstring(bmp, dtype=np.uint8)
+        bmp = np.frombuffer(bmp, dtype=np.uint8)
         bmp = bmp.reshape((height, width, 4))
         bmp = np.flipud(bmp)
 
