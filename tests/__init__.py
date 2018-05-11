@@ -54,6 +54,11 @@ def haveGL21():
         return False
 
 
+def haveFSL():
+    path = op.expandvars('$FSLDIR/data/standard/MNI152_T1_2mm.nii.gz')
+    return op.exists(path)
+
+
 # Under GTK, a single call to
 # yield just doesn't cut it
 def realYield(centis=10):
@@ -451,6 +456,18 @@ def rotate(infile, rx, ry, rz):
     rot               = transform.axisAnglesToRotMat(rx, ry, rz)
     rot               = transform.rotMatToAffine(rot)
     img.voxToWorldMat = transform.concat(rot, img.voxToWorldMat)
+
+    img.save(outfile)
+
+    return outfile
+
+
+def zero_centre(infile):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_zero_centre.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+    data     = img[:]
+    img[:]   = data - data.mean()
 
     img.save(outfile)
 

@@ -14,7 +14,7 @@ import numpy as np
 
 import fsl.data.image      as fslimage
 
-from . import run_cli_tests, translate
+from . import run_cli_tests, translate, zero_centre
 
 
 pytestmark = pytest.mark.clitest
@@ -99,18 +99,6 @@ cli_tests = """
 3d.nii.gz -cm hot -g 3
 3d.nii.gz -cm hot -g 5
 """
-
-
-def zero_centre(infile):
-    basename = fslimage.removeExt(op.basename(infile))
-    outfile  = '{}_zero_centre.nii.gz'.format(basename)
-    img      = fslimage.Image(infile)
-    data     = img[:]
-    img[:]   = data - data.mean()
-
-    img.save(outfile)
-
-    return outfile
 
 
 def gen_indices(infile):
