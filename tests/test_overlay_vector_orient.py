@@ -16,7 +16,7 @@ import fsl.data.image as fslimage
 from . import run_cli_tests, fliporient
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.clitest
 
 
 cli_tests = """

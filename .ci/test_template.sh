@@ -36,18 +36,18 @@ if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 # Run the tests  - test overlay types for GL14 as well
 export MPLBACKEND=wxagg
 export FSLEYES_TEST_GL=2.1
-((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "not overlaytest" && echo "0" > status) || echo "1" > status) || true
+((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "not clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=$status
 sleep 5
 
-((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest" && echo "0" > status) || echo "1" > status) || true
+((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 sleep 5
 
 export FSLEYES_TEST_GL=1.4
-((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "overlaytest" && echo "0" > status) || echo "1" > status) || true
+((xvfb-run -s "-screen 0 640x480x24" pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 

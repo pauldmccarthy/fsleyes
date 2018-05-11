@@ -11,7 +11,7 @@ import fsl.data.image as fslimage
 from . import run_cli_tests
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.clitest
 
 
 cli_tests = """
