@@ -19,6 +19,8 @@ import            contextlib
 
 import            wx
 
+import numpy   as np
+
 from six import StringIO
 
 import matplotlib as mpl
@@ -28,6 +30,7 @@ import matplotlib.image as mplimg
 
 import fsleyes_props                as props
 import fsl.utils.idle               as idle
+import fsl.utils.transform          as transform
 import fsl.data.image               as fslimage
 import                                 fsleyes
 import fsleyes.frame                as fslframe
@@ -415,6 +418,39 @@ def discretise(infile, stepsize, min=None, max=None):
         data[(data >= li) & (data < (li + stepsize))] = i
 
     img[:] = data
+
+    img.save(outfile)
+
+    return outfile
+
+
+def translate(infile, x, y, z):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_translated_{}_{}_{}.nii.gz'.format(basename, x, y, z)
+    img      = fslimage.Image(infile)
+    xform    = img.voxToWorldMat
+
+    shift             = transform.scaleOffsetXform(1, (x, y, z))
+    xform             = transform.concat(shift, xform)
+    img.voxToWorldMat = xform
+
+    img.save(outfile)
+
+    return outfile
+
+
+def rotate(infile, rx, ry, rz):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_rotated_{}_{}_{}.nii.gz'.format(basename, rx, ry, rz)
+    img      = fslimage.Image(infile)
+
+    rx = rx * np.pi / 180
+    ry = ry * np.pi / 180
+    rz = rz * np.pi / 180
+
+    rot               = transform.axisAnglesToRotMat(rx, ry, rz)
+    rot               = transform.rotMatToAffine(rot)
+    img.voxToWorldMat = transform.concat(rot, img.voxToWorldMat)
 
     img.save(outfile)
 
