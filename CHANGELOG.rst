@@ -8,6 +8,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.24.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* Support for high-resolution (e.g. retina) displays under macOS.
+
+
 0.23.0 (Friday May 4th 2018)
 ----------------------------
 
@@ -41,6 +52,8 @@ Fixed
 
 * Freesurfer surface files could not be selectd in macOS open file dialogs.
 * Freesurfer surfaces were causing an error in overlay information panel.
+* Fixed issue where edit mode selection overlay could become out of date when
+  display space was changed.
 * Show/hide button in a plot view's overlay list no longer toggles overlay
   visibility on other (e.g. ortho) views.
 * Selecting an item in a plot view's overlay list no longer shows/hides

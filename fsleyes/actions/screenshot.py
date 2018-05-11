@@ -237,6 +237,9 @@ def _patchInCanvases(canvasPanel, containerPanel, data, bgColour):
     glCanvases = cpanel.getGLCanvases()
     glCanvases.append(cpanel.colourBarCanvas)
 
+    # Note: These values are not scaled by the
+    # display DPI (e.g. if using a retina display).
+    # Hackiness below handles this situation.
     totalWidth, totalHeight = panel.GetClientSize().Get()
     absPosx,    absPosy     = panel.GetScreenPosition()
 
@@ -253,11 +256,16 @@ def _patchInCanvases(canvasPanel, containerPanel, data, bgColour):
         if not glCanvas.IsShown():
             continue
 
-        width, height = glCanvas.GetClientSize().Get()
+        scale         = glCanvas.GetScale()
+        width, height = glCanvas.GetScaledSize()
         posx, posy    = glCanvas.GetScreenPosition()
 
+        # make sure canvas position is scaled
+        # by the display scaling factor.
         posx -= absPosx
         posy -= absPosy
+        posx  = int(posx * scale)
+        posy  = int(posy * scale)
 
         log.debug('Canvas {} position: ({}, {}); size: ({}, {})'.format(
             type(glCanvas).__name__, posx, posy, width, height))
@@ -278,6 +286,11 @@ def _patchInCanvases(canvasPanel, containerPanel, data, bgColour):
         #
         # n.b. This is why I initialise the bitmap array
         #      to the canvas panel background colour.
+        #
+        # n.b. This code also (as a byproduct) handles
+        #      high-DPI scaling, where the panel size
+        #      is in unscaled pixels, but the canvas
+        #      sizes/positions are scaled.
         if xend > totalWidth:
 
             oldWidth    = totalWidth

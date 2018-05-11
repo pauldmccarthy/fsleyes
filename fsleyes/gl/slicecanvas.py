@@ -188,6 +188,7 @@ class SliceCanvas(object):
         opts.addListener('invertY',       self.name, self.Refresh)
         opts.addListener('zoom',          self.name, self._zoomChanged)
         opts.addListener('renderMode',    self.name, self._renderModeChange)
+        opts.addListener('highDpi',       self.name, self._highDpiChange)
 
         # When the overlay list changes, refresh the
         # display, and update the display bounds
@@ -232,6 +233,7 @@ class SliceCanvas(object):
         opts.removeListener('invertY',         self.name)
         opts.removeListener('zoom',            self.name)
         opts.removeListener('renderMode',      self.name)
+        opts.removeListener('highDpi',         self.name)
 
         self.overlayList.removeListener('overlays',     self.name)
         self.displayCtx .removeListener('bounds',       self.name)
@@ -632,6 +634,13 @@ class SliceCanvas(object):
         # Off-screen or prerender rendering - update
         # the render textures for every GLObject
         self._updateRenderTextures()
+
+
+    def _highDpiChange(self, *a):
+        """Called when the :attr:`.SliceCanvasOpts.highDpi` property
+        changes. Calls the :meth:`.GLCanvasTarget.EnableHighDPI` method.
+        """
+        self.EnableHighDPI(self.opts.highDpi)
 
 
     def _syncOverlayDisplayChanged(self, *a):
@@ -1197,22 +1206,20 @@ class SliceCanvas(object):
                   display coordinate system bounding box.
         """
 
-        opts = self.opts
-        xax  = opts.xax
-        yax  = opts.yax
-        zax  = opts.zax
-        xmin = opts.displayBounds.xlo
-        xmax = opts.displayBounds.xhi
-        ymin = opts.displayBounds.ylo
-        ymax = opts.displayBounds.yhi
-        zmin = self.displayCtx.bounds.getLo(zax)
-        zmax = self.displayCtx.bounds.getHi(zax)
-        size = self.GetSize()
+        opts          = self.opts
+        xax           = opts.xax
+        yax           = opts.yax
+        zax           = opts.zax
+        xmin          = opts.displayBounds.xlo
+        xmax          = opts.displayBounds.xhi
+        ymin          = opts.displayBounds.ylo
+        ymax          = opts.displayBounds.yhi
+        zmin          = self.displayCtx.bounds.getLo(zax)
+        zmax          = self.displayCtx.bounds.getHi(zax)
+        width, height = self.GetScaledSize()
 
         if invertX is None: invertX = opts.invertX
         if invertY is None: invertY = opts.invertY
-
-        width, height = size
 
         # If there are no images to be displayed,
         # or no space to draw, do nothing

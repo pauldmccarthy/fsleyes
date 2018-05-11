@@ -111,6 +111,13 @@ class SliceCanvasOpts(props.HasProperties):
     See the :class:`.SliceCanvas` for more details.
     """
 
+
+    highDpi = props.Boolean(default=False)
+    """If FSLeyes is being displayed on a high-DPI screen, try to display
+    the scene at full resolution.
+    """
+
+
     def __init__(self):
         """Create a ``SliceCanvasOpts`` instance. """
 
@@ -214,6 +221,7 @@ class Scene3DCanvasOpts(props.HasProperties):
     cursorColour = copy.copy(SliceCanvasOpts.cursorColour)
     bgColour     = copy.copy(SliceCanvasOpts.bgColour)
     zoom         = copy.copy(SliceCanvasOpts.zoom)
+    highDpi      = copy.copy(SliceCanvasOpts.highDpi)
 
 
     showLegend = props.Boolean(default=True)

@@ -104,6 +104,7 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
                           spin=False,
                           showLimits=False,
                           labels=strings.choices['SceneOpts.performance'])),
+            ('highDpi', props.Widget('highDpi')),
             ('showColourBar', props.Widget('showColourBar')),
             ('colourBarLabelSide',
              props.Widget('colourBarLabelSide',

@@ -181,7 +181,6 @@ import platform
 import fsl.utils.idle                     as idle
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
-import fsleyes_props                      as props
 
 
 log = logging.getLogger(__name__)
@@ -693,7 +692,7 @@ class GLContext(object):
         # though. This does mean that we don't have
         # control over depth/stencil buffer sizes,
         # under these remote desktop environments.
-        except:
+        except Exception:
             self.__canvas = wxgl.GLCanvas(self.__parent)
             self.__canvas.SetSize((0, 0))
 
@@ -803,6 +802,11 @@ class OffScreenCanvasTarget(object):
         return self.__width, self.__height
 
 
+    def GetScaledSize(self):
+        """Returns a tuple containing the canvas width and height."""
+        return self.GetSize()
+
+
     def Refresh(self, *a):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
@@ -827,6 +831,12 @@ class OffScreenCanvasTarget(object):
 
 
     def ThawSwapBuffers(self):
+        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
+        """
+        pass
+
+
+    def EnableHighDPI(self):
         """Does nothing. This canvas is for static (i.e. unchanging) rendering.
         """
         pass
@@ -918,6 +928,7 @@ class WXGLCanvasTarget(object):
         self.__glReady           = False
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
+        self.__dpiscale          = 1.0
         self.__context           = context
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
@@ -1056,6 +1067,35 @@ class WXGLCanvasTarget(object):
         return self.GetClientSize().Get()
 
 
+    def GetScale(self):
+        """Returns the current DPI scaling factor. """
+
+        # GetContentScaleFactor does not
+        # exist in wxpython 3.0.2.0
+        try:
+            scale = float(self.GetContentScaleFactor())
+        except AttributeError:
+            scale = 1.0
+
+        # Reset scaling factor in case the canvas
+        # window has moved between displays with
+        # different scaling factors
+        if scale == 1 and self.__dpiscale != 1:
+            self.EnableHighDPI(False)
+
+        return self.__dpiscale
+
+
+    def GetScaledSize(self):
+        """Returns the current canvas size, scaled by the current DPI scaling
+        factor.
+        """
+        w, h = self.GetSize()
+        s    = self.GetScale()
+
+        return int(round(w * s)), int(round(h * s))
+
+
     def Refresh(self, *a):
         """Triggers a redraw via the :meth:`_draw` method. """
         self.__realDraw()
@@ -1094,16 +1134,52 @@ class WXGLCanvasTarget(object):
                 super(WXGLCanvasTarget, self).SwapBuffers()
 
 
+    def EnableHighDPI(self, enable=True):
+        """Attempts to enable/disable high-resolution rendering.
+        """
+
+        if not self._setGLContext():
+            return
+
+        self.__dpiscale = 1.0
+
+        # GetContentScaleFactor does not
+        # exist in wxpython 3.0.2.0
+        try:
+            scale = self.GetContentScaleFactor()
+
+        except AttributeError:
+            return
+
+        # If the display can't scale,
+        # (scale == 1) there's no point
+        # in enabling it.
+        scale  = float(scale)
+        enable = enable and scale > 1
+
+        # TODO Support other platforms
+        try:
+            import objc
+        except ImportError:
+            return
+
+        nsview = objc.objc_object(c_void_p=self.GetHandle())
+        nsview.setWantsBestResolutionOpenGLSurface_(enable)
+
+        if enable: self.__dpiscale = scale
+        else:      self.__dpiscale = 1.0
+
+
     def getBitmap(self):
         """Return a (width*height*4) shaped numpy array containing the
         rendered scene as an RGBA bitmap.
         """
-        import OpenGL.GL        as gl
-        import numpy            as np
+        import OpenGL.GL as gl
+        import numpy     as np
 
         self._setGLContext()
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
 
         # Make sure we're reading
         # from the front buffer
@@ -1115,7 +1191,7 @@ class WXGLCanvasTarget(object):
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE)
 
-        bmp = np.fromstring(bmp, dtype=np.uint8)
+        bmp = np.frombuffer(bmp, dtype=np.uint8)
         bmp = bmp.reshape((height, width, 4))
         bmp = np.flipud(bmp)
 

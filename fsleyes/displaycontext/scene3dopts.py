@@ -51,7 +51,9 @@ class Scene3DOpts(sceneopts.SceneOpts):
 
 
     def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Currently
-        does nothing.
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
+        value of the :attr:`highDpi` property according to the performance
+        setting.
         """
-        pass
+
+        self.highDpi = self.performance == 3 and self.highDpi

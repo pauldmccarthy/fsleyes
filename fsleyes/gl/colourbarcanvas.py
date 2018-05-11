@@ -67,6 +67,10 @@ class ColourBarCanvas(props.HasProperties):
     """Colour to use for the background. """
 
 
+    highDpi = props.Boolean(default=False)
+    """Scale colour bar canvas for high-resolution screens. """
+
+
     def __init__(self):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
@@ -75,7 +79,19 @@ class ColourBarCanvas(props.HasProperties):
         self._tex  = None
         self._name = '{}_{}'.format(self.__class__.__name__, id(self))
 
-        self.addGlobalListener(self._name, self.__updateTexture)
+        self.addListener('cmap',            self._name, self.__updateTexture)
+        self.addListener('negativeCmap',    self._name, self.__updateTexture)
+        self.addListener('useNegativeCmap', self._name, self.__updateTexture)
+        self.addListener('cmapResolution',  self._name, self.__updateTexture)
+        self.addListener('gamma',           self._name, self.__updateTexture)
+        self.addListener('invert',          self._name, self.__updateTexture)
+        self.addListener('vrange',          self._name, self.__updateTexture)
+        self.addListener('label',           self._name, self.__updateTexture)
+        self.addListener('orientation',     self._name, self.__updateTexture)
+        self.addListener('labelSide',       self._name, self.__updateTexture)
+        self.addListener('textColour',      self._name, self.__updateTexture)
+        self.addListener('bgColour',        self._name, self.__updateTexture)
+        self.addListener('highDpi',         self._name, self.__highDpiChanged)
 
 
     def __updateTexture(self, *a):
@@ -91,6 +107,14 @@ class ColourBarCanvas(props.HasProperties):
         Generates the colour bar texture.
         """
         self._genColourBarTexture()
+
+
+    def __highDpiChanged(self, *a):
+        """Called when the :attr:`highDpi` property changes. Calls the
+        :meth:`.GLCanvasTarget.EnableHighDPI` method.
+        """
+        self.EnableHighDPI(self.highDpi)
+        self.__updateTexture()
 
 
     def destroy(self):
@@ -153,6 +177,7 @@ class ColourBarCanvas(props.HasProperties):
                 width=w,
                 height=h,
                 label=self.label,
+                scale=self.GetScale(),
                 orientation=self.orientation,
                 labelside=labelSide,
                 textColour=self.textColour,
@@ -177,7 +202,7 @@ class ColourBarCanvas(props.HasProperties):
         if self._tex is None or not self._setGLContext():
             return
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
 
         # viewport
         gl.glViewport(0, 0, width, height)

@@ -207,6 +207,9 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yopts.bindProps('renderMode',   sceneOpts)
         zopts.bindProps('renderMode',   sceneOpts)
 
+        xopts.bindProps('highDpi',      sceneOpts)
+        yopts.bindProps('highDpi',      sceneOpts)
+        zopts.bindProps('highDpi',      sceneOpts)
 
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout', name, self.__refreshLayout)

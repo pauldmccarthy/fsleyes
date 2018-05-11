@@ -431,7 +431,8 @@ OPTIONS = td.TypeDict({
                        'showColourBar',
                        'colourBarLocation',
                        'colourBarLabelSide',
-                       'performance'],
+                       'performance',
+                       'highDpi'],
     'OrthoOpts'     : ['xzoom',
                        'yzoom',
                        'zzoom',
@@ -718,6 +719,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
     'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
     'SceneOpts.performance'        : ('p',   'performance',        True),
+    'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
 
     'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
     'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
@@ -920,6 +922,9 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
+    'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
+                                     'display, render at the full display '
+                                     'resolution',
 
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
