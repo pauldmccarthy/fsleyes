@@ -181,7 +181,6 @@ import platform
 import fsl.utils.idle                     as idle
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
-import fsleyes_props                      as props
 
 
 log = logging.getLogger(__name__)
@@ -693,7 +692,7 @@ class GLContext(object):
         # though. This does mean that we don't have
         # control over depth/stencil buffer sizes,
         # under these remote desktop environments.
-        except:
+        except Exception:
             self.__canvas = wxgl.GLCanvas(self.__parent)
             self.__canvas.SetSize((0, 0))
 
@@ -801,6 +800,11 @@ class OffScreenCanvasTarget(object):
     def GetSize(self):
         """Returns a tuple containing the canvas width and height."""
         return self.__width, self.__height
+
+
+    def GetScaledSize(self):
+        """Returns a tuple containing the canvas width and height."""
+        return self.GetSize()
 
 
     def Refresh(self, *a):
