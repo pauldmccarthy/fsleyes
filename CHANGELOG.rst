@@ -8,6 +8,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.24.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* Support for high-resolution (e.g. retina) displays under macOS.
+
+
 0.23.0 (Friday May 4th 2018)
 ----------------------------
 
