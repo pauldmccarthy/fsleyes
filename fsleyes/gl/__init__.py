@@ -1066,7 +1066,12 @@ class WXGLCanvasTarget(object):
     def GetScale(self):
         """Returns the current DPI scaling factor. """
 
-        scale = float(self.GetContentScaleFactor())
+        # GetContentScaleFactor does not
+        # exist in wxpython 3.0.2.0
+        try:
+            scale = float(self.GetContentScaleFactor())
+        except AttributeError:
+            scale = 1.0
 
         # Reset scaling factor in case the canvas
         # window has moved between displays with
@@ -1134,9 +1139,18 @@ class WXGLCanvasTarget(object):
 
         self.__dpiscale = 1.0
 
+        # GetContentScaleFactor does not
+        # exist in wxpython 3.0.2.0
+        try:
+            scale = self.GetContentScaleFactor()
+
+        except AttributeError:
+            return
+
         # If the display can't scale,
-        # there's no point in trying.
-        scale  = float(self.GetContentScaleFactor())
+        # (scale == 1) there's no point
+        # in enabling it.
+        scale  = float(scale)
         enable = enable and scale > 1
 
         # TODO Support other platforms
