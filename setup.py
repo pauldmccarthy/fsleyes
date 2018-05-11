@@ -20,6 +20,7 @@ from __future__ import print_function
 import               os
 import               shutil
 import               contextlib
+import               platform
 import os.path    as op
 from io import       open
 
@@ -33,6 +34,10 @@ from distutils.command.build import build
 # The directory in which this
 # setup.py file is contained.
 basedir = op.dirname(op.abspath(__file__))
+
+
+# Expected to be "darwin" or "linux"
+platform = platform.system().lower()
 
 
 @contextlib.contextmanager
@@ -173,10 +178,20 @@ def get_fsleyes_deps():
 
 
 def get_fsleyes_extra_deps():
-    """Returns a dict specifying the extra FSLeyes dependencies."""
+    """Returns a dict specifying the extra and platform-specific FSLeyes
+    dependencies.
+    """
     with open(op.join(basedir, 'requirements-extra.txt'), 'rt') as f:
-        extras_require = f.readlines()
-    return {'extras' : [r.strip() for r in extras_require]}
+        extras_require = [r.strip() for r in f.readlines()]
+
+    platform_requires = []
+    platform_file = op.join(basedir, 'requirements-{}.txt'.format(platform))
+
+    if op.exists(platform_file):
+        with open(platform_file, 'rt') as f:
+            platform_requires = [r.strip() for r in f.readlines()]
+
+    return {'extras' : extras_require + platform_requires}
 
 
 def get_fsleyes_dev_deps():
