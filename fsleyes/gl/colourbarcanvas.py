@@ -114,6 +114,7 @@ class ColourBarCanvas(props.HasProperties):
         :meth:`.GLCanvasTarget.EnableHighDPI` method.
         """
         self.EnableHighDPI(self.highDpi)
+        self.__updateTexture()
 
 
     def destroy(self):
@@ -134,7 +135,7 @@ class ColourBarCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        w, h = self.GetScaledSize()
+        w, h = self.GetSize()
 
         if w < 50 or h < 50:
             return
@@ -176,6 +177,7 @@ class ColourBarCanvas(props.HasProperties):
                 width=w,
                 height=h,
                 label=self.label,
+                scale=self.GetScale(),
                 orientation=self.orientation,
                 labelside=labelSide,
                 textColour=self.textColour,
