@@ -387,9 +387,8 @@ under Python3/wxPython-Phoenix, we need to derive from ``wx.Panel``.
 
 
 FSLeyesPanelMeta = None
-"""Under Python3/wxPython-Phoenix, we need to specify a custom meta-class
-which derives from ``wx.siplib.wrappertype``, and the
-``props.PropertyOwner``. This is not necessary under Python2/wxPython.
+"""Under Python3/wxPython-Phoenix, we need to specify the meta-class as
+``wx.siplib.wrappertype``. This is not necessary under Python2/wxPython.
 """
 
 # wxPython/Phoenix
@@ -397,15 +396,12 @@ if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
 
     import wx.siplib as sip
 
-    class PhoenixMeta(props.PropertyOwner, sip.wrappertype):
-        pass
-
-    FSLeyesPanelMeta = PhoenixMeta
+    FSLeyesPanelMeta = sip.wrappertype
     FSLeyesPanelBase = wx.Panel
 
 # Old wxPython
 else:
-    FSLeyesPanelMeta = props.PropertyOwner
+    FSLeyesPanelMeta = type
     FSLeyesPanelBase = wx.PyPanel
 
 

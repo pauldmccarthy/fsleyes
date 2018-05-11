@@ -866,23 +866,18 @@ class OffScreenCanvasTarget(object):
 
 
 WXGLMetaClass = None
-"""Under Python3/wxPython-Phoenix, we must specify a meta-class which derives
-from the ``wx.siplib.wrappertype``, and from the :class:`.props.PropertyOwner`
-meta-class.  This is not necessary under Python2/wxPython.
+"""Under Python3/wxPython-Phoenix, we must specify ``wx.siplib.wrappertype``
+as the meta-class.  This is not necessary under Python2/wxPython.
 """
 
 
 if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
 
     import wx.siplib as sip
-
-    class PhoenixMeta(props.PropertyOwner, sip.wrappertype):
-        pass
-
-    WXGLMetaClass = PhoenixMeta
+    WXGLMetaClass = sip.wrappertype
 
 else:
-    WXGLMetaClass = props.PropertyOwner
+    WXGLMetaClass = type
 
 
 class WXGLCanvasTarget(object):
