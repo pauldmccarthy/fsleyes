@@ -17,7 +17,7 @@ import fsl.data.image      as fslimage
 from . import run_cli_tests, translate, zero_centre
 
 
-pytestmark = pytest.mark.clitest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """

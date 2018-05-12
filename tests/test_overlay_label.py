@@ -12,7 +12,7 @@ import fsl.utils.transform as transform
 from . import run_cli_tests, discretise
 
 
-pytestmark = pytest.mark.clitest
+pytestmark = pytest.mark.overlayclitest
 
 cli_tests = """
 {{discretise('3d.nii.gz', 500)}} -ot label

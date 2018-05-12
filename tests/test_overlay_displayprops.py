@@ -11,7 +11,7 @@ import pytest
 from . import run_cli_tests, discretise
 
 
-pytestmark = pytest.mark.clitest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """

@@ -248,6 +248,10 @@ def run_render_test(
 
     fslrender.main(args)
 
+    # gaaargh, why is macos case insensitive??
+    if not op.exists(benchmark):
+        benchmark = benchmark.lower()
+
     testimg  = mplimg.imread(outfile)
     benchimg = mplimg.imread(benchmark)
 

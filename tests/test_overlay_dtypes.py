@@ -15,7 +15,7 @@ import numpy as np
 from . import run_cli_tests
 
 
-pytestmark = pytest.mark.clitest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """
