@@ -23,8 +23,11 @@ from __future__ import print_function
 import __future__          as futures
 import                        os
 import os.path             as op
+import                        sys
+import                        types
 import                        logging
 import                        textwrap
+import                        functools
 import                        collections
 
 import fsl.utils.settings  as fslsettings
@@ -191,6 +194,8 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     import fsl.data.vtk                         as fslvtk
     import fsl.data.gifti                       as fslgifti
     import fsl.data.freesurfer                  as fslfs
+    import fsl.wrappers                         as wrappers
+    import fsl.utils.fslsub                     as fslsub
 
     def load(filename):
         """Load the specified file into FSLeyes. """
@@ -273,7 +278,6 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
             if   propName in dispProps: setattr(display, propName, value)
             elif propName in optProps:  setattr(opts,    propName, value)
 
-
     _locals = collections.OrderedDict((
         ('np',                 np),
         ('sp',                 sp),
@@ -306,6 +310,57 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('load',               load),
         ('run',                run),
         ('help',               help),
+        ('submit',             fslsub.submit),
+        ('info',               fslsub.info),
+        ('output',             fslsub.output),
     ))
+
+
+    # We are assuming that all callable
+    # things in the wrappers module
+    # are decorated with one of the
+    # @fileOrImage or @fileOrArray
+    # decorators, found in wrapperutils.
+    def loadOutputDecorator(func):
+        def wrapper(*args, **kwargs):
+
+            # All wrapper functions return a dict
+            # with an attribute called "output".
+            result = func(*args, **kwargs)
+
+            # Submitted as a cluster job?
+            # The output contains the job ID.
+            if 'submit' in kwargs:
+                return result.output
+
+            # Called directly? The output
+            # contains stdout/stderr.
+            stdout, stderr = result.output
+
+            print(stdout)
+            print(stderr, file=sys.stderr)
+
+            # Any image arguments which were
+            # specified as LOAD are loaded
+            # into FSLeyes.
+            for name, val in result.items():
+                if isinstance(val, fslimage.Image):
+                    overlayList.append(val)
+
+            # We return nothing, as images
+            # will either have been loaded
+            # or saved to disk, and stdout
+            # got printed above.
+
+        return functools.update_wrapper(wrapper, func)
+
+    for att in dir(wrappers):
+        val = getattr(wrappers, att)
+        if att[0] == '_' or isinstance(val, types.ModuleType):
+            continue
+
+        if callable(val):
+            val = loadOutputDecorator(val)
+        _locals[att] = val
 
     return globals(), _locals
