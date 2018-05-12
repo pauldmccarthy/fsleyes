@@ -60,10 +60,11 @@ class ShellPanel(viewpanel.ViewPanel):
         """.format(version.__version__, sys.version.split()[0]))
 
         overrideDocs = {
-            'np'  : 'numpy',
-            'sp'  : 'scipy',
-            'mpl' : 'matplotlib',
-            'plt' : 'matplotlib.pyplot',
+            'np'   : 'numpy',
+            'sp'   : 'scipy',
+            'mpl'  : 'matplotlib',
+            'plt'  : 'matplotlib.pyplot',
+            'LOAD' : 'Load the output from a FSL wrapper function',
         }
 
         localVars  = list(_locals.keys())
