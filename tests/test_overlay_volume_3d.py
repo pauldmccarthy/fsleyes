@@ -10,7 +10,7 @@ import pytest
 from . import run_cli_tests
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """

@@ -12,7 +12,7 @@ import fsl.data.image      as fslimage
 from . import run_cli_tests, haveGL21
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.overlayclitest
 
 
 # 3d.nii.gz min - max: 1993 - 7641

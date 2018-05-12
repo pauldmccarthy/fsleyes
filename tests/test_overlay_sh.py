@@ -12,7 +12,7 @@ import pytest
 from . import run_cli_tests, haveGL21
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """

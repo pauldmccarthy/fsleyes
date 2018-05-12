@@ -2322,9 +2322,8 @@ def applyMainArgs(args, overlayList, displayCtx):
     :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
 
-    if args.initialDisplayRange is not None:
-        from fsleyes.displaycontext.volumeopts import VolumeOpts
-        VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
+    from fsleyes.displaycontext.volumeopts import VolumeOpts
+    VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
 
     if args.bigmem is not None:
         displayCtx.loadInMemory = args.bigmem

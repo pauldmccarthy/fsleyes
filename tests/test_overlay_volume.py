@@ -13,12 +13,11 @@ import pytest
 import numpy as np
 
 import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
 
-from . import run_cli_tests
+from . import run_cli_tests, translate, zero_centre
 
 
-pytestmark = pytest.mark.overlaytest
+pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """
@@ -102,18 +101,6 @@ cli_tests = """
 """
 
 
-def zero_centre(infile):
-    basename = fslimage.removeExt(op.basename(infile))
-    outfile  = '{}_zero_centre.nii.gz'.format(basename)
-    img      = fslimage.Image(infile)
-    data     = img[:]
-    img[:]   = data - data.mean()
-
-    img.save(outfile)
-
-    return outfile
-
-
 def gen_indices(infile):
     basename = fslimage.removeExt(op.basename(infile))
     outfile  = '{}_indices.nii.gz'.format(basename)
@@ -122,21 +109,6 @@ def gen_indices(infile):
     data     = np.arange(np.prod(shape)).reshape(shape)
 
     fslimage.Image(data, header=img.header).save(outfile)
-
-    return outfile
-
-
-def translate(infile, x, y, z):
-    basename = fslimage.removeExt(op.basename(infile))
-    outfile  = '{}_translated_{}_{}_{}.nii.gz'.format(basename, x, y, z)
-    img      = fslimage.Image(infile)
-    xform    = img.voxToWorldMat
-
-    shift             = transform.scaleOffsetXform(1, (x, y, z))
-    xform             = transform.concat(shift, xform)
-    img.voxToWorldMat = xform
-
-    img.save(outfile)
 
     return outfile
 
