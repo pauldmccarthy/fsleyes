@@ -449,6 +449,7 @@ actions = TypeDict({
     'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
     'ApplyFlirtXfmAction'      : 'Load affine transformation',
     'SaveFlirtXfmAction'       : 'Export affine transformation',
+    'NotebookAction'           : 'Open notebook',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
     'ResampleAction'           : 'Resample image',
 

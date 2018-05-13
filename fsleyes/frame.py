@@ -1670,11 +1670,13 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
         from fsleyes.actions.resample      import ResampleAction
+        from fsleyes.actions.notebook      import NotebookAction
 
         actionz = [
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
             ResampleAction,
+            NotebookAction,
         ]
 
         for action in actionz:
