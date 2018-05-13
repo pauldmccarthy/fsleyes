@@ -351,8 +351,9 @@ def configLogging(verbose=0, noisy=None):
     warnings.filterwarnings('ignore',  module='mpl_toolkits')
     warnings.filterwarnings('ignore',  module='numpy')
     warnings.filterwarnings('ignore',  module='trimesh')
-    logging.getLogger('nibabel').setLevel(logging.CRITICAL)
-    logging.getLogger('trimesh').setLevel(logging.CRITICAL)
+    logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
+    logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
+    logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
     # Show deprecations
     warnings.filterwarnings('default', category=DeprecationWarning)

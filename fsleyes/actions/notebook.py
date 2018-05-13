@@ -18,6 +18,7 @@ import os
 import atexit
 import logging
 import tempfile
+import warnings
 import threading
 
 import fsl.utils.idle as idle
@@ -92,34 +93,39 @@ class BackgroundIPythonKernel(threading.Thread):
         self.connfile  = None
         self.ioloop    = None
         self.kernel    = None
-        self.heartbeat = heartbeat.Heartbeat(zmq.Context(), (transport, ip, 0))
 
-        self.heartbeat.start()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
 
-        # empty key to disable message signing
-        session = jcsession.Session(key=b'')
-        context = zmq.Context.instance()
+            self.heartbeat = heartbeat.Heartbeat(
+                zmq.Context(), (transport, ip, 0))
 
-        # create sockets for kernel communication
-        shell_socket   = context.socket(zmq.ROUTER)
-        iopub_socket   = context.socket(zmq.PUB)
-        control_socket = context.socket(zmq.ROUTER)
+            self.heartbeat.start()
 
-        shell_port   = shell_socket.bind_to_random_port(addr)
-        iopub_port   = iopub_socket.bind_to_random_port(addr)
-        control_port = control_socket.bind_to_random_port(addr)
-        hb_port      = self.heartbeat.port
+            # empty key to disable message signing
+            session = jcsession.Session(key=b'')
+            context = zmq.Context.instance()
 
-        shell_stream   = zmqstream.ZMQStream(shell_socket)
-        control_stream = zmqstream.ZMQStream(control_socket)
+            # create sockets for kernel communication
+            shell_socket   = context.socket(zmq.ROUTER)
+            iopub_socket   = context.socket(zmq.PUB)
+            control_socket = context.socket(zmq.ROUTER)
 
-        # Create the kernel
-        self.kernel = ipkernel.IPythonKernel(
-            session=session,
-            shell_streams=[shell_stream, control_stream],
-            iopub_socket=iopub_socket,
-            user_ns=env,
-            log=logging.getLogger('ipykernel.kernelbase'))
+            shell_port   = shell_socket.bind_to_random_port(addr)
+            iopub_port   = iopub_socket.bind_to_random_port(addr)
+            control_port = control_socket.bind_to_random_port(addr)
+            hb_port      = self.heartbeat.port
+
+            shell_stream   = zmqstream.ZMQStream(shell_socket)
+            control_stream = zmqstream.ZMQStream(control_socket)
+
+            # Create the kernel
+            self.kernel = ipkernel.IPythonKernel(
+                session=session,
+                shell_streams=[shell_stream, control_stream],
+                iopub_socket=iopub_socket,
+                user_ns=env,
+                log=logging.getLogger('ipykernel.kernelbase'))
 
         # write connection file to a temp dir
         hd, fname = tempfile.mkstemp(
