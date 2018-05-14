@@ -5,42 +5,59 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`NotebookAction` class, an action which
-starts a Jupyter notebook server and opens a notebook which allows the user
-to interact with FSLeyes.
+starts a Jupyter notebook server, allowing the user
+to interact with FSLeyes via jupyter notebooks.
 
-refs
-
-https://github.com/ebanner/extipy
 """
 
 
-import os
-import atexit
-import logging
-import tempfile
-import warnings
-import threading
+import               os
+import os.path    as op
+import subprocess as sp
+import               atexit
+import               socket
+import               logging
+import               tempfile
+import               textwrap
+import               warnings
+import               threading
+import               webbrowser
 
 import fsl.utils.idle as idle
 
+import        fsleyes
 from . import base
 from . import runscript
 
 try:
-    import                            zmq
-    import zmq.eventloop.zmqstream as zmqstream
-    import tornado.ioloop          as ioloop
+    import                                            traitlets
+    import                                            zmq
 
-    import ipykernel.ipkernel      as ipkernel
-    import ipykernel.heartbeat     as heartbeat
+    import zmq.eventloop.zmqstream                 as zmqstream
+    import tornado.gen                             as gen
+    import tornado.ioloop                          as ioloop
 
-    import jupyter_client          as jc
-    import jupyter_client.session  as jcsession
+    import ipykernel.ipkernel                      as ipkernel
+    import ipykernel.heartbeat                     as heartbeat
+
+    import jupyter_client                          as jc
+    import jupyter_client.session                  as jcsession
+
+    import notebook.services.kernels.kernelmanager as nbkm
 
     ENABLED = True
 
 except ImportError:
     ENABLED = False
+
+    class MockThing(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+    nbkm                      = MockThing()
+    nbkm.MappingKernelManager = MockThing
+    traitlets                 = MockThing()
+    traitlets.Unicode         = MockThing
 
 
 log = logging.getLogger(__name__)
@@ -50,12 +67,11 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-
 class NotebookAction(base.Action):
     """The ``NotebookAction`` is an :class:`.Action` which (if necessary)
-    starts a jupyter notebook server and an embedded IPython kernel, and then
-    opens a notebook in a web browser allowing the user to interact with
-    FSLeyes.
+    starts an embedded IPython kernel and a jupyter notebook server, and
+    opens the server home page in a web browser allowing the user to interact
+    with FSLeyes via notebooks.
     """
 
 
@@ -63,19 +79,22 @@ class NotebookAction(base.Action):
         """Create a ``NotebookAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg displayCtx:  The master :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__openNotebook)
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, self.__openNotebooks)
 
-        self.__kernel  = None
-        self.enabled = ENABLED
+        # permanently disable if any
+        # dependnecies are not present
+        self.enabled        = ENABLED
+        self.__frame        = frame
+        self.__overlayList  = overlayList
+        self.__displayCtx   = displayCtx
+        self.__kernelThread = None
+        self.__nbserver     = None
 
 
-    def __openNotebook(self):
+    def __openNotebooks(self):
         """Called when this ``NotebookAction`` is invoked. Starts the
         server and kernel if necessary, then opens a new notebook in a
         web browser.
@@ -86,21 +105,38 @@ class NotebookAction(base.Action):
             self.__overlayList,
             self.__displayCtx)[1]
 
-        if self.__kernel is None:
-            self.__kernel = BackgroundIPythonKernel(env)
-            self.__kernel.start()
+        # TODO check kernel/notebook status,
+        #      kill/restart if necessary
+
+        # Start kernel if not already started
+        if self.__kernelThread is None:
+            self.__kernelThread = BackgroundIPythonKernel(env)
+            self.__kernelThread.start()
+
+        # choose a suitable TCP port for the server
+
+        # start nb server if not already started
+        if self.__nbserver is None:
+            self.__nbserver = NotebookServer(self.__kernelThread.connfile)
+            self.__nbserver.start()
+
+        # open the nbserver home page,
+        # after a short delay to allow
+        # the server time to start up
+        addr = 'http://localhost:{}'.format(self.__nbserver.port)
+        idle.idle(webbrowser.open, addr, after=0.5)
 
 
 class BackgroundIPythonKernel(threading.Thread):
     """The BackgroundIPythonKernel creates an IPython jupyter kernel and makes
-    it accessible over tcp, on the local machine only. The ``zmq`` event loop
+    it accessible over tcp (on the local machine only). The ``zmq`` event loop
     is run on a separate thread, but the kernel handles events on the main
     thread, via :func:`.idle.idle`.
 
 
     The Jupyter/IPython documentation is quite fragmented at this point in
     time; `this github issue <https://github.com/ipython/ipython/issues/8097>`_
-    was useful in figuring out the details.
+    was useful in figuring out the implementation details.
     """
 
 
@@ -115,8 +151,7 @@ class BackgroundIPythonKernel(threading.Thread):
 
         threading.Thread.__init__(self)
 
-        self.daemon = True
-
+        self.daemon     = True
         ip              = '127.0.0.1'
         transport       = 'tcp'
         addr            = '{}://{}'.format(transport, ip)
@@ -158,7 +193,7 @@ class BackgroundIPythonKernel(threading.Thread):
 
         # write connection file to a temp dir
         hd, fname = tempfile.mkstemp(
-            prefix='kernel-fsleyes-{}.json'.format(os.getpid()),
+            prefix='fsleyes-kernel-{}.json'.format(os.getpid()),
             suffix='.json')
         os.close(hd)
 
@@ -175,6 +210,12 @@ class BackgroundIPythonKernel(threading.Thread):
             ip=ip)
 
         atexit.register(os.remove, self.__connfile)
+
+
+    @property
+    def kernel(self):
+        """The ``IPythonKernel`` object. """
+        return self.__kernel
 
 
     @property
@@ -208,3 +249,132 @@ class BackgroundIPythonKernel(threading.Thread):
                                  self.__kernelDispatch)
         self.__ioloop.start()
 
+
+class NotebookServer(threading.Thread):
+    """Thread which starts a jupyter notebook server, and waits until
+    it dies or is killed.
+
+    The server is configured such that all notebooks will connect to
+    the same kernel, specified by the ``kernelFile`` parameter to
+    :meth:`__init__`.
+    """
+
+    def __init__(self, kernelFile):
+        """Create a ``NotebookServer`` thread.
+
+        :arg kernelFile: JSON connection file of the jupyter kernel
+                         to which all notebooks should connect.
+        """
+
+        threading.Thread.__init__(self)
+        self.daemon       = True
+        self.__kernelFile = kernelFile
+        self.__port       = None
+
+
+    @property
+    def port(self):
+
+        if self.__port is None:
+
+            # choose a random port. Obviously
+            # this is not robust.
+            s = socket.socket()
+            s.bind(('127.0.0.1', 0))
+            self.__port = s.getsockname()[1]
+            s.close()
+
+        return self.__port
+
+
+    def run(self):
+        """
+        """
+
+        # write a config file
+        hd, cfgfile = tempfile.mkstemp(
+            prefix='fsleyes-jupyter-config-{}'.format(os.getpid()),
+            suffix='.py')
+        os.close(hd)
+
+        cfg = textwrap.dedent("""
+        c.Session.key = b''
+        c.NotebookApp.port = {}
+        c.NotebookApp.token = ''
+        c.NotebookApp.password = ''
+        c.NotebookApp.kernel_manager_class = \
+            'fsleyes.actions.notebook.FSLeyesNotebookKernelManager'
+        c.ContentsManager.untitled_notebook = "FSLeyes_notebook"
+
+        from fsleyes.actions.notebook \
+            import FSLeyesNotebookKernelManager as FNKM
+        FNKM.connfile = '{}'
+        """.format(self.__port, self.__kernelFile))
+
+        with open(cfgfile, 'wt') as f:
+            f.write(cfg)
+
+        # command to start the notebook
+        # server in a sub-process
+        cmd = ['jupyter-notebook',
+               '-y',
+               '--config={}'.format(cfgfile),
+               '--no-browser',
+               '--notebook-dir={}'.format(op.expanduser('~'))]
+
+        # make sure FSLeyes is on the PYTHONPATH so
+        # our custom bits and pieces will be found
+        env               = dict(os.environ)
+        fsleyespath       = op.join(op.dirname(fsleyes.__file__), '..')
+        fsleyespath       = op.abspath(fsleyespath)
+        pythonpath        = env['PYTHONPATH']
+        env['PYTHONPATH'] = os.pathsep.join((fsleyespath, pythonpath))
+
+        self.__nbproc = sp.Popen(cmd,
+                                 stdout=sp.DEVNULL,
+                                 stderr=sp.DEVNULL,
+                                 env=env)
+
+        def killServer():
+            # We need two CTRL+Cs to kill
+            # the notebook server
+            self.__nbproc.terminate()
+            self.__nbproc.terminate()
+
+        # kill the server when we get killed
+        atexit.register(killServer)
+
+        # wait forever
+        self.__nbproc.wait()
+
+
+class FSLeyesNotebookKernelManager(nbkm.MappingKernelManager):
+    """
+
+    https://github.com/ebanner/extipy
+    """
+
+    connfile = ''
+
+    def __init__(self, *args, **kwargs):
+        super(FSLeyesNotebookKernelManager, self).__init__(*args, **kwargs)
+
+
+    def __patch_connection(self, kernel):
+        kernel.hb_port      = 0
+        kernel.shell_port   = 0
+        kernel.stdin_port   = 0
+        kernel.iopub_port   = 0
+        kernel.control_port = 0
+        kernel.load_connection_file(self.connfile)
+
+
+    @gen.coroutine
+    def start_kernel(self, **kwargs):
+        """
+        """
+        kid = super(FSLeyesNotebookKernelManager, self)\
+                  .start_kernel(**kwargs).result()
+        kernel = self._kernels[kid]
+        self.__patch_connection(kernel)
+        raise gen.Return(kid)
