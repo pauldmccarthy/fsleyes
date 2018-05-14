@@ -1425,6 +1425,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.loadatlas          import LoadAtlasAction
         from fsleyes.actions.browsexnat         import BrowseXNATAction
         from fsleyes.actions.runscript          import RunScriptAction
+        from fsleyes.actions.notebook           import NotebookAction
 
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
@@ -1432,6 +1433,7 @@ class FSLeyesFrame(wx.Frame):
                        LoadDicomAction,
                        BrowseXNATAction,
                        LoadAtlasAction,
+                       NotebookAction,
                        RunScriptAction]
 
         for action in fileActions:
@@ -1670,13 +1672,11 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
         from fsleyes.actions.resample      import ResampleAction
-        from fsleyes.actions.notebook      import NotebookAction
 
         actionz = [
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
             ResampleAction,
-            NotebookAction,
         ]
 
         for action in actionz:

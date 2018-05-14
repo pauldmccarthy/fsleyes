@@ -4,12 +4,12 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`NotebookAction` class, ...
-
+"""This module provides the :class:`NotebookAction` class, an action which
+starts a Jupyter notebook server and opens a notebook which allows the user
+to interact with FSLeyes.
 
 refs
 
-https://github.com/ipython/ipython/issues/8097
 https://github.com/ebanner/extipy
 """
 
@@ -37,8 +37,10 @@ try:
     import jupyter_client          as jc
     import jupyter_client.session  as jcsession
 
+    ENABLED = True
+
 except ImportError:
-    pass
+    ENABLED = False
 
 
 log = logging.getLogger(__name__)
@@ -50,6 +52,11 @@ log.setLevel(logging.DEBUG)
 
 
 class NotebookAction(base.Action):
+    """The ``NotebookAction`` is an :class:`.Action` which (if necessary)
+    starts a jupyter notebook server and an embedded IPython kernel, and then
+    opens a notebook in a web browser allowing the user to interact with
+    FSLeyes.
+    """
 
 
     def __init__(self, overlayList, displayCtx, frame):
@@ -64,66 +71,88 @@ class NotebookAction(base.Action):
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
 
-        self.kernel = None
+        self.__kernel  = None
+        self.enabled = ENABLED
 
 
     def __openNotebook(self):
+        """Called when this ``NotebookAction`` is invoked. Starts the
+        server and kernel if necessary, then opens a new notebook in a
+        web browser.
+        """
 
         env = runscript.fsleyesScriptEnvironment(
             self.__frame,
             self.__overlayList,
             self.__displayCtx)[1]
 
-        if self.kernel is None:
-            self.kernel = BackgroundIPythonKernel(env)
-            self.kernel.start()
+        if self.__kernel is None:
+            self.__kernel = BackgroundIPythonKernel(env)
+            self.__kernel.start()
 
 
 class BackgroundIPythonKernel(threading.Thread):
+    """The BackgroundIPythonKernel creates an IPython jupyter kernel and makes
+    it accessible over tcp, on the local machine only. The ``zmq`` event loop
+    is run on a separate thread, but the kernel handles events on the main
+    thread, via :func:`.idle.idle`.
+
+
+    The Jupyter/IPython documentation is quite fragmented at this point in
+    time; `this github issue <https://github.com/ipython/ipython/issues/8097>`_
+    was useful in figuring out the details.
+    """
+
 
     def __init__(self, env):
+        """Set up the kernel and ``zmq`` ports. A jupyter connection file
+        containing the information needed to connect to the kernel is saved
+        to a temporary file - its path is accessed as an attribute
+        called :meth:`connfile`.
+
+        :arg env: Dictionary to be used as the kernel namespace.
+        """
 
         threading.Thread.__init__(self)
 
         self.daemon = True
 
-        ip             = '127.0.0.1'
-        transport      = 'tcp'
-        addr           = '{}://{}'.format(transport, ip)
-        self.connfile  = None
-        self.ioloop    = None
-        self.kernel    = None
+        ip              = '127.0.0.1'
+        transport       = 'tcp'
+        addr            = '{}://{}'.format(transport, ip)
+        self.__connfile = None
+        self.__ioloop   = None
+        self.__kernel   = None
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
 
-            self.heartbeat = heartbeat.Heartbeat(
+            self.__heartbeat = heartbeat.Heartbeat(
                 zmq.Context(), (transport, ip, 0))
+            self.__heartbeat.start()
 
-            self.heartbeat.start()
-
-            # empty key to disable message signing
+            # Use an empty key to disable message signing
             session = jcsession.Session(key=b'')
             context = zmq.Context.instance()
 
             # create sockets for kernel communication
-            shell_socket   = context.socket(zmq.ROUTER)
-            iopub_socket   = context.socket(zmq.PUB)
-            control_socket = context.socket(zmq.ROUTER)
+            shellsock   = context.socket(zmq.ROUTER)
+            iopubsock   = context.socket(zmq.PUB)
+            controlsock = context.socket(zmq.ROUTER)
 
-            shell_port   = shell_socket.bind_to_random_port(addr)
-            iopub_port   = iopub_socket.bind_to_random_port(addr)
-            control_port = control_socket.bind_to_random_port(addr)
-            hb_port      = self.heartbeat.port
+            shellport   = shellsock  .bind_to_random_port(addr)
+            iopubport   = iopubsock  .bind_to_random_port(addr)
+            controlport = controlsock.bind_to_random_port(addr)
+            hbport      = self.__heartbeat.port
 
-            shell_stream   = zmqstream.ZMQStream(shell_socket)
-            control_stream = zmqstream.ZMQStream(control_socket)
+            shellstrm   = zmqstream.ZMQStream(shellsock)
+            controlstrm = zmqstream.ZMQStream(controlsock)
 
             # Create the kernel
-            self.kernel = ipkernel.IPythonKernel(
+            self.__kernel = ipkernel.IPythonKernel(
                 session=session,
-                shell_streams=[shell_stream, control_stream],
-                iopub_socket=iopub_socket,
+                shell_streams=[shellstrm, controlstrm],
+                iopub_socket=iopubsock,
                 user_ns=env,
                 log=logging.getLogger('ipykernel.kernelbase'))
 
@@ -133,44 +162,49 @@ class BackgroundIPythonKernel(threading.Thread):
             suffix='.json')
         os.close(hd)
 
-        self.connfile = fname
+        self.__connfile = fname
 
         log.debug('IPython kernel connection file: %s', fname)
 
         jc.write_connection_file(
             fname,
-            shell_port=shell_port,
-            iopub_port=iopub_port,
-            control_port=control_port,
-            hb_port=hb_port,
+            shell_port=shellport,
+            iopub_port=iopubport,
+            control_port=controlport,
+            hb_port=hbport,
             ip=ip)
-        atexit.register(self.__deleteConnectionFile)
+
+        atexit.register(os.remove, self.__connfile)
 
 
-    def __deleteConnectionFile(self):
+    @property
+    def connfile(self):
+        """The jupyter connection file containing information to connect
+        to the IPython kernel.
         """
-        """
-        try:
-            if self.connfile is not None:
-                os.remove(self.connfile)
-                self.connfile = None
-        except Exception:
-            pass
+        return self.__connfile
 
 
-    def kernelDispatch(self):
+    def __kernelDispatch(self):
+        """Event loop used for the IPython kernel. Submits the kernel function
+        to the :func:`.idle.idle` loop, and schedules another call to this
+        method on the ``zmq`` event loop.
+
+        This means that, while the ``zmq`` loop runs in its own thread, the
+        IPython kernel is executed on the main thread.
         """
-        """
-        idle.idle(self.kernel.do_one_iteration)
-        self.ioloop.call_later(self.kernel._poll_interval, self.kernelDispatch)
+        idle.idle(self.__kernel.do_one_iteration)
+        self.__ioloop.call_later(self.__kernel._poll_interval,
+                                 self.__kernelDispatch)
 
 
     def run(self):
-        """
-        """
-        self.ioloop = ioloop.IOLoop()
+        """Start the IPython kernel and Run the ``zmq`` event loop. """
 
-        self.ioloop.make_current()
-        self.kernel.start()
-        self.ioloop.call_later(self.kernel._poll_interval, self.kernelDispatch)
-        self.ioloop.start()
+        self.__ioloop = ioloop.IOLoop()
+        self.__ioloop.make_current()
+        self.__kernel.start()
+        self.__ioloop.call_later(self.__kernel._poll_interval,
+                                 self.__kernelDispatch)
+        self.__ioloop.start()
+
