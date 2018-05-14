@@ -26,8 +26,9 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 import            os
 import os.path as op
 import            sys
-import            textwrap
+import            signal
 import            logging
+import            textwrap
 
 import wx
 
@@ -44,13 +45,13 @@ log = logging.getLogger(__name__)
 class FSLeyesApp(wx.App):
     """FSLeyes-specific sub-class of ``wx.App``. """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         """Create a ``FSLeyesApp``. """
 
         self.__overlayList = None
         self.__displayCtx  = None
 
-        wx.App.__init__(self, *args, **kwargs)
+        wx.App.__init__(self, clearSigInt=False)
 
         self.SetAppName('FSLeyes')
 
@@ -280,6 +281,17 @@ def main(args=None):
                          showUpToDateMessage=False,
                          showErrorMessage=False,
                          ignorePoint=False)
+
+    # Shut down cleanly on sigint/sigterm.
+    # We do this so that any functions
+    # registered with atexit will actually
+    # get called.
+    def sigHandler(signo, frame):
+        exitCode[0] = signo
+        app.ExitMainLoop()
+
+    signal.signal(signal.SIGINT,  sigHandler)
+    signal.signal(signal.SIGTERM, sigHandler)
 
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
@@ -578,7 +590,12 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     def onFrameDestroy(ev):
         ev.Skip()
-        splash.Close()
+
+        # splash screen may already
+        # have been destroyed
+        try:              splash.Close()
+        except Exception: pass
+
     frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
 
     status.update('Setting up scene...')
