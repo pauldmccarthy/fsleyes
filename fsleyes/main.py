@@ -287,6 +287,7 @@ def main(args=None):
     # registered with atexit will actually
     # get called.
     def sigHandler(signo, frame):
+        log.debug('Signal received - FSLeyes is shutting down...')
         exitCode[0] = signo
         app.ExitMainLoop()
 
