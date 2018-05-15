@@ -286,6 +286,11 @@ messages = TypeDict({
     'An error occurred while scanning the DICOM directory',
     'loadDicom.loadError' :
     'An error occurred while loading DICOM data',
+
+    'NotebookAction.init.kernel' : 'Initialising IPython kernel...',
+    'NotebookAction.init.server' : 'Starting Jupyter notebook server...',
+    'NotebookAction.init.error' :
+    'An error occurred initialising IPython/Jupyter! ',
 })
 
 
@@ -422,6 +427,9 @@ titles = TypeDict({
     'loadDicom.scanError' : 'Error reading DICOM directory',
     'loadDicom.loadError' : 'Error loading DICOM series',
     'BrowseDicomDialog'   : 'Select DICOM series',
+
+    'NotebookAction.init.error' :
+    'Error initialising IPython/Jupyter',
 })
 
 

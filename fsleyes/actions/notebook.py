@@ -14,6 +14,7 @@ to interact with FSLeyes via jupyter notebooks.
 import               os
 import os.path    as op
 import subprocess as sp
+import               time
 import               atexit
 import               logging
 import               tempfile
@@ -22,12 +23,17 @@ import               warnings
 import               threading
 import               webbrowser
 
-import fsl.utils.idle     as idle
-import fsl.utils.settings as settings
+import               wx
 
-import        fsleyes
-from . import base
-from . import runscript
+import fsleyes_widgets.utils.progress as progress
+import fsleyes_widgets.utils.status   as status
+import fsl.utils.settings             as settings
+import fsl.utils.idle                 as idle
+
+import                                   fsleyes
+import fsleyes.strings                as strings
+from . import                            base
+from . import                            runscript
 
 try:
     import                                            traitlets
@@ -85,13 +91,13 @@ class NotebookAction(base.Action):
         base.Action.__init__(self, self.__openNotebooks)
 
         # permanently disable if any
-        # dependnecies are not present
+        # dependencies are not present
         self.enabled        = ENABLED
         self.__frame        = frame
         self.__overlayList  = overlayList
         self.__displayCtx   = displayCtx
-        self.__kernelThread = None
-        self.__nbserver     = None
+        self.__kernel       = None
+        self.__server       = None
 
 
     def __openNotebooks(self):
@@ -100,31 +106,95 @@ class NotebookAction(base.Action):
         web browser.
         """
 
+        # have the kernel or server threads crashed?
+        if self.__kernel is not None and not self.__kernel.is_alive():
+            self.__kernel = None
+        if self.__server is not None and not self.__server.is_alive():
+            self.__server = None
+
+        # show a progress dialog if we need
+        # to initialise the kernel or server
+        if self.__kernel is None or self.__server is None:
+            progdlg = progress.Bounce()
+        else:
+            progdlg = None
+
+        try:
+            # start the kernel/server, and show
+            # an error if something goes wrong
+            errt = strings.titles[  self, 'init.error']
+            errm = strings.messages[self, 'init.error']
+            with status.reportIfError(errt, errm):
+                if self.__kernel is None:
+                    self.__kernel = self.__startKernel(progdlg)
+                if self.__server is None:
+                    self.__server = self.__startServer(progdlg)
+
+        finally:
+            if progdlg is not None:
+                progdlg.Destroy()
+                progdlg = None
+
+        # if all is well, open the
+        # notebook server homepage
+        webbrowser.open('http://localhost:{}'.format(self.__server.port))
+
+
+    def __bounce(self, secs, progdlg):
+        """Used by :meth:`__startKernel` and :meth:`__startServer`. Blocks for
+        from ipykernel.kernelapp import IPKernelApp``secs``, bouncing
+        the :class:`.Progress` dialog ten times per second, and yielding to
+        the ``wx`` main loop.
+        """
+        for i in range(int(secs * 10)):
+            progdlg.DoBounce()
+            wx.Yield()
+            time.sleep(0.1)
+
+
+    def __startKernel(self, progdlg):
+        """Attempts to create and start a :class:`BackgroundIPythonKernel`.
+
+        :returns: the kernel if it was started.
+
+        :raises: A :exc:`RuntimeError` if the kernel did not start.
+        """
+
         env = runscript.fsleyesScriptEnvironment(
             self.__frame,
             self.__overlayList,
             self.__displayCtx)[1]
 
-        # TODO check kernel/notebook status,
-        #      kill/restart if necessary
+        progdlg.UpdateMessage(strings.messages[self, 'init.kernel'])
+        kernel = BackgroundIPythonKernel(env)
+        kernel.start()
+        self.__bounce(1, progdlg)
 
-        # Start kernel if not already started
-        if self.__kernelThread is None:
-            self.__kernelThread = BackgroundIPythonKernel(env)
-            self.__kernelThread.start()
+        if not kernel.is_alive():
+            raise RuntimeError('Could not start IPython kernel: '
+                               '{}'.format(kernel.error))
 
-        # choose a suitable TCP port for the server
+        return kernel
 
-        # start nb server if not already started
-        if self.__nbserver is None:
-            self.__nbserver = NotebookServer(self.__kernelThread.connfile)
-            self.__nbserver.start()
 
-        # open the nbserver home page,
-        # after a short delay to allow
-        # the server time to start up
-        addr = 'http://localhost:{}'.format(self.__nbserver.port)
-        idle.idle(webbrowser.open, addr, after=0.5)
+    def __startServer(self, progdlg):
+        """Attempts to create and start a :class:`NotebookServer`.
+
+        :returns: the server if it was started.
+
+        :raises: A :exc:`RuntimeError` if the serer did not start.
+        """
+
+        progdlg.UpdateMessage(strings.messages[self, 'init.server'])
+        server = NotebookServer(self.__kernel.connfile)
+        server.start()
+        self.__bounce(1.5, progdlg)
+
+        if not server.is_alive():
+            raise RuntimeError('Could not start notebook server: '
+                               '{}'.format(server.stderr))
+
+        return server
 
 
 class BackgroundIPythonKernel(threading.Thread):
@@ -158,6 +228,7 @@ class BackgroundIPythonKernel(threading.Thread):
         self.__connfile = None
         self.__ioloop   = None
         self.__kernel   = None
+        self.__error    = None
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -226,6 +297,14 @@ class BackgroundIPythonKernel(threading.Thread):
         return self.__connfile
 
 
+    @property
+    def error(self):
+        """If an error occurs on the background thread causing it to crash,
+        a reference to the ``Exception`` is stored here.
+        """
+        return self.__error
+
+
     def __kernelDispatch(self):
         """Event loop used for the IPython kernel. Submits the kernel function
         to the :func:`.idle.idle` loop, and schedules another call to this
@@ -234,6 +313,7 @@ class BackgroundIPythonKernel(threading.Thread):
         This means that, while the ``zmq`` loop runs in its own thread, the
         IPython kernel is executed on the main thread.
         """
+
         idle.idle(self.__kernel.do_one_iteration)
         self.__ioloop.call_later(self.__kernel._poll_interval,
                                  self.__kernelDispatch)
@@ -242,12 +322,18 @@ class BackgroundIPythonKernel(threading.Thread):
     def run(self):
         """Start the IPython kernel and Run the ``zmq`` event loop. """
 
-        self.__ioloop = ioloop.IOLoop()
-        self.__ioloop.make_current()
-        self.__kernel.start()
-        self.__ioloop.call_later(self.__kernel._poll_interval,
-                                 self.__kernelDispatch)
-        self.__ioloop.start()
+        try:
+            self.__ioloop = ioloop.IOLoop()
+            self.__ioloop.make_current()
+            self.__kernel.start()
+            self.__ioloop.call_later(self.__kernel._poll_interval,
+                                     self.__kernelDispatch)
+            self.__ioloop.start()
+
+        except Exception as e:
+            self.__error = e
+            raise
+
 
 
 class NotebookServer(threading.Thread):
@@ -259,6 +345,7 @@ class NotebookServer(threading.Thread):
     :meth:`__init__`.
     """
 
+
     def __init__(self, kernelFile):
         """Create a ``NotebookServer`` thread.
 
@@ -269,94 +356,131 @@ class NotebookServer(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon       = True
         self.__kernelFile = kernelFile
+        self.__stdout     = None
+        self.__stderr     = None
         self.__port       = settings.read('fsleyes.notebook.port', 8888)
 
 
     @property
     def port(self):
+        """Returns the TCP port that the notebook server is listening on. """
+
         return self.__port
+
+    @property
+    def stdout(self):
+        """After the server has died, returns its standard output. While the
+        server is still running, returns ``None``.
+        """
+        return self.__stdout
+
+
+    @property
+    def stderr(self):
+        """After the server has died, returns its standard error. While the
+        server is still running, returns ``None``.
+        """
+        return self.__stderr
 
 
     def run(self):
-        """
+        """Sets up a server configuration file, and then calls
+        ``jupyer-notebook`` via ``subprocess.Popen``. Waits until
+        the notebook process dies.
         """
 
-        # make sure FSLeyes is on the PYTHONPATH,
-        # and JUPYTER_CONFIG_DIR is set, so our
+        # Set up the environment in which the
+        # server will run - make sure FSLeyes
+        # is on the PYTHONPATH, and
+        # JUPYTER_CONFIG_DIR is set, so our
         # custom bits and pieces will be found.
-        env               = dict(os.environ)
-        fsleyespath       = op.join(op.dirname(fsleyes.__file__), '..')
-        fsleyespath       = op.abspath(fsleyespath)
-        cfgdir            = op.join(fsleyes.assetDir, 'assets', 'jupyter')
-        pythonpath        = env['PYTHONPATH']
-        env['PYTHONPATH'] = os.pathsep.join((fsleyespath, pythonpath))
+        env         = dict(os.environ)
+        fsleyespath = op.join(op.dirname(fsleyes.__file__), '..')
+        fsleyespath = op.abspath(fsleyespath)
+        cfgdir      = op.join(fsleyes.assetDir, 'assets', 'jupyter')
+        pythonpath  = os.pathsep.join((fsleyespath, env['PYTHONPATH']))
+
+        env['PYTHONPATH']         = pythonpath
         env['JUPYTER_CONFIG_DIR'] = cfgdir
 
-        # write a config file
-        hd, cfgfile = tempfile.mkstemp(
-            prefix='fsleyes-jupyter-config-{}'.format(os.getpid()),
-            suffix='.py')
-        os.close(hd)
-
-
+        # Generate a jupyer-notebook configuration
         cfg = textwrap.dedent("""
-        c.Session.key = b''
-        c.NotebookApp.port = {}
-        c.NotebookApp.token = ''
-        c.NotebookApp.password = ''
-        c.NotebookApp.kernel_manager_class = \
-            'fsleyes.actions.notebook.FSLeyesNotebookKernelManager'
         c.ContentsManager.untitled_notebook = "FSLeyes_notebook"
-        c.NotebookApp.extra_static_paths = ['{}']
+        c.Session.key                       = b''
+        c.NotebookApp.port                  = {}
+        c.NotebookApp.port_retries          = 0
+        c.NotebookApp.token                 = ''
+        c.NotebookApp.password              = ''
+        c.NotebookApp.notebook_dir          = '{}'
+        c.NotebookApp.extra_static_paths    = ['{}']
+        c.NotebookApp.answer_yes            = True
+        c.NotebookApp.open_browser          = False
+        c.NotebookApp.kernel_manager_class  = \
+            'fsleyes.actions.notebook.FSLeyesNotebookKernelManager'
+
+        # inject our kernel connection
+        # file into the kernel manager
         from fsleyes.actions.notebook \
             import FSLeyesNotebookKernelManager as FNKM
         FNKM.connfile = '{}'
         """.format(self.__port,
+                   op.expanduser('~'),
                    cfgdir,
                    self.__kernelFile))
 
-        with open(cfgfile, 'wt') as f:
-            f.write(cfg)
+        # write the config to
+        # a temporary file
+        hd, cfgfile = tempfile.mkstemp(
+            prefix='fsleyes-jupyter-config-{}'.format(os.getpid()),
+            suffix='.py')
+
+        try:     os.write(hd, cfg.encode())
+        finally: os.close(hd)
 
         # command to start the notebook
         # server in a sub-process
-        cmd = ['jupyter-notebook',
-               '-y',
-               '--config={}'.format(cfgfile),
-               '--no-browser',
-               '--notebook-dir={}'.format(op.expanduser('~'))]
+        cmd = ['jupyter-notebook', '-y', '--config={}'.format(cfgfile)]
 
-        self.__nbproc = sp.Popen(cmd,
-                                 stdout=sp.DEVNULL,
-                                 stderr=sp.DEVNULL,
-                                 env=env)
+        self.__nbproc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, env=env)
+        # self.__nbproc = sp.Popen(cmd, env=env)
 
         def killServer():
             # We need two CTRL+Cs to kill
             # the notebook server
             self.__nbproc.terminate()
             self.__nbproc.terminate()
+            os.remove(cfgfile)
 
         # kill the server when we get killed
         atexit.register(killServer)
 
         # wait forever
-        self.__nbproc.wait()
+        o, e          = self.__nbproc.communicate()
+        self.__stdout = o.decode()
+        self.__stderr = e.decode()
 
 
 class FSLeyesNotebookKernelManager(nbkm.MappingKernelManager):
+    """Custom jupter ``MappingKernelManager`` which forces every notebook
+    to connect to the embedded FSLeyes IPython kernel.
+
+    See https://github.com/ebanner/extipy
     """
 
-    https://github.com/ebanner/extipy
-    """
 
     connfile = ''
+    """Path to the IPython kernel connection file that all notebooks should
+    connect to.
+    """
 
     def __init__(self, *args, **kwargs):
         super(FSLeyesNotebookKernelManager, self).__init__(*args, **kwargs)
 
 
     def __patch_connection(self, kernel):
+        """Connects the given kernel to the IPython kernel specified by
+        ``connfile``.
+        """
         kernel.hb_port      = 0
         kernel.shell_port   = 0
         kernel.stdin_port   = 0
@@ -367,7 +491,8 @@ class FSLeyesNotebookKernelManager(nbkm.MappingKernelManager):
 
     @gen.coroutine
     def start_kernel(self, **kwargs):
-        """
+        """Overrides ``MappingKernelManager.start_kernel``. Connects
+        all new kernels to the IPython kernel specified by ``connfile``.
         """
         kid = super(FSLeyesNotebookKernelManager, self)\
                   .start_kernel(**kwargs).result()
