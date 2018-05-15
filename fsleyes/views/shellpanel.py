@@ -9,14 +9,11 @@ which contains an interactive Python shell.
 """
 
 
-import re
 import sys
-import textwrap
 
 import wx.py.shell       as wxshell
 import wx.py.interpreter as wxinterpreter
 
-import fsleyes.version           as version
 import fsleyes.actions.runscript as runscript
 from . import                       viewpanel
 
@@ -49,53 +46,10 @@ class ShellPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        _globals, _locals = runscript.fsleyesScriptEnvironment(
-            frame,
-            overlayList,
-            frame.displayCtx)
-
-        introText = textwrap.dedent("""
-          FSLeyes {} python shell (Python {})
-
-        Available items:
-        """.format(version.__version__, sys.version.split()[0]))
-
-        overrideDocs = {
-            'np'   : 'numpy',
-            'sp'   : 'scipy',
-            'mpl'  : 'matplotlib',
-            'plt'  : 'matplotlib.pyplot',
-            'LOAD' : 'Load the output from a FSL wrapper function',
-        }
-
-        localVars  = list(_locals.keys())
-        localDescs = [_locals[k].__doc__
-                      if k not in overrideDocs
-                      else overrideDocs[k]
-                      for k in localVars]
-
-        descWidth   = 60
-        varWidth    = max([len(v) for v in localVars])
-
-        localDescs = [d[:descWidth + 30]   for d in localDescs]
-        localDescs = [d.replace('\n', ' ') for d in localDescs]
-        localDescs = [re.sub(' +', ' ', d) for d in localDescs]
-        localDescs = [d[:descWidth]        for d in localDescs]
-
-        shortFmtStr = '  - {{:{:d}s}} : {{}}\n'   .format(varWidth)
-        longFmtStr  = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
-
-        for lvar, ldesc in zip(localVars, localDescs):
-
-            if len(ldesc) >= descWidth: fmt = longFmtStr
-            else:                       fmt = shortFmtStr
-
-            introText = introText + fmt.format(lvar, ldesc)
-
-        introText = introText + textwrap.dedent("""
-
-        Type help(item) for additional details on a specific item.
-        """)
+        _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
+                                                               overlayList,
+                                                               displayCtx)
+        introText = runscript.fsleyesShellHelpText(_globals, _locals)
 
         shell = wxshell.Shell(
             self,

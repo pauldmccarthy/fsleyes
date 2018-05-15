@@ -15,6 +15,7 @@ available for other purposes:
 
     runScript
     fsleyesScriptEnvironment
+    fsleyesShellHelpText
 """
 
 
@@ -23,6 +24,7 @@ from __future__ import print_function
 import __future__          as futures
 import                        os
 import os.path             as op
+import                        re
 import                        sys
 import                        types
 import                        logging
@@ -32,6 +34,7 @@ import                        collections
 
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
+import fsleyes.version     as version
 from . import                 base
 
 
@@ -364,3 +367,54 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         _locals[att] = val
 
     return globals(), _locals
+
+
+def fsleyesShellHelpText(_globals, _locals):
+    """Generates some help text that can be shown at the top of an interactive
+    FSLLeyes shell.
+    """
+
+    introText = textwrap.dedent("""
+      FSLeyes {} python shell (Python {})
+
+    Available items:
+    """.format(version.__version__, sys.version.split()[0]))
+
+    overrideDocs = {
+        'np'   : 'numpy',
+        'sp'   : 'scipy',
+        'mpl'  : 'matplotlib',
+        'plt'  : 'matplotlib.pyplot',
+        'LOAD' : 'Load the output from a FSL wrapper function',
+    }
+
+    localVars  = list(_locals.keys())
+    localDescs = [_locals[k].__doc__
+                  if k not in overrideDocs
+                  else overrideDocs[k]
+                  for k in localVars]
+
+    descWidth   = 60
+    varWidth    = max([len(v) for v in localVars])
+
+    localDescs = [d[:descWidth + 30]   for d in localDescs]
+    localDescs = [d.replace('\n', ' ') for d in localDescs]
+    localDescs = [re.sub(' +', ' ', d) for d in localDescs]
+    localDescs = [d[:descWidth]        for d in localDescs]
+
+    shortFmtStr = '  - {{:{:d}s}} : {{}}\n'   .format(varWidth)
+    longFmtStr  = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
+
+    for lvar, ldesc in zip(localVars, localDescs):
+
+        if len(ldesc) >= descWidth: fmt = longFmtStr
+        else:                       fmt = shortFmtStr
+
+        introText = introText + fmt.format(lvar, ldesc)
+
+    introText = introText + textwrap.dedent("""
+
+    Type help(item) for additional details on a specific item.
+    """)
+
+    return introText
