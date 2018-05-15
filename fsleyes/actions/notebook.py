@@ -15,7 +15,6 @@ import               os
 import os.path    as op
 import subprocess as sp
 import               atexit
-import               socket
 import               logging
 import               tempfile
 import               textwrap
@@ -23,7 +22,8 @@ import               warnings
 import               threading
 import               webbrowser
 
-import fsl.utils.idle as idle
+import fsl.utils.idle     as idle
+import fsl.utils.settings as settings
 
 import        fsleyes
 from . import base
@@ -269,21 +269,11 @@ class NotebookServer(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon       = True
         self.__kernelFile = kernelFile
-        self.__port       = None
+        self.__port       = settings.read('fsleyes.notebook.port', 8888)
 
 
     @property
     def port(self):
-
-        if self.__port is None:
-
-            # choose a random port. Obviously
-            # this is not robust.
-            s = socket.socket()
-            s.bind(('127.0.0.1', 0))
-            self.__port = s.getsockname()[1]
-            s.close()
-
         return self.__port
 
 
@@ -291,11 +281,23 @@ class NotebookServer(threading.Thread):
         """
         """
 
+        # make sure FSLeyes is on the PYTHONPATH,
+        # and JUPYTER_CONFIG_DIR is set, so our
+        # custom bits and pieces will be found.
+        env               = dict(os.environ)
+        fsleyespath       = op.join(op.dirname(fsleyes.__file__), '..')
+        fsleyespath       = op.abspath(fsleyespath)
+        cfgdir            = op.join(fsleyes.assetDir, 'assets', 'jupyter')
+        pythonpath        = env['PYTHONPATH']
+        env['PYTHONPATH'] = os.pathsep.join((fsleyespath, pythonpath))
+        env['JUPYTER_CONFIG_DIR'] = cfgdir
+
         # write a config file
         hd, cfgfile = tempfile.mkstemp(
             prefix='fsleyes-jupyter-config-{}'.format(os.getpid()),
             suffix='.py')
         os.close(hd)
+
 
         cfg = textwrap.dedent("""
         c.Session.key = b''
@@ -305,11 +307,13 @@ class NotebookServer(threading.Thread):
         c.NotebookApp.kernel_manager_class = \
             'fsleyes.actions.notebook.FSLeyesNotebookKernelManager'
         c.ContentsManager.untitled_notebook = "FSLeyes_notebook"
-
+        c.NotebookApp.extra_static_paths = ['{}']
         from fsleyes.actions.notebook \
             import FSLeyesNotebookKernelManager as FNKM
         FNKM.connfile = '{}'
-        """.format(self.__port, self.__kernelFile))
+        """.format(self.__port,
+                   cfgdir,
+                   self.__kernelFile))
 
         with open(cfgfile, 'wt') as f:
             f.write(cfg)
@@ -321,14 +325,6 @@ class NotebookServer(threading.Thread):
                '--config={}'.format(cfgfile),
                '--no-browser',
                '--notebook-dir={}'.format(op.expanduser('~'))]
-
-        # make sure FSLeyes is on the PYTHONPATH so
-        # our custom bits and pieces will be found
-        env               = dict(os.environ)
-        fsleyespath       = op.join(op.dirname(fsleyes.__file__), '..')
-        fsleyespath       = op.abspath(fsleyespath)
-        pythonpath        = env['PYTHONPATH']
-        env['PYTHONPATH'] = os.pathsep.join((fsleyespath, pythonpath))
 
         self.__nbproc = sp.Popen(cmd,
                                  stdout=sp.DEVNULL,
