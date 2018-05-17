@@ -420,9 +420,6 @@ class NotebookServer(threading.Thread):
         # directory to a temporary location that
         # will be deleted on exit.
         cfgdir = op.join(tempfile.mkdtemp(prefix='fsleyes-jupyter'), 'config')
-
-        cfgdir = '/Users/paulmc/Projects/fsleyes/config-{}'.format(os.getpid())
-
         shutil.copytree(op.join(fsleyes.assetDir, 'assets', 'jupyter'), cfgdir)
 
         self.__initConfigDir(cfgdir)
@@ -441,8 +438,8 @@ class NotebookServer(threading.Thread):
         # command to start the notebook
         # server in a sub-process
         self.__nbproc = sp.Popen(['jupyter-notebook'],
-                                 # stdout=sp.PIPE,
-                                 # stderr=sp.PIPE,
+                                 stdout=sp.PIPE,
+                                 stderr=sp.PIPE,
                                  cwd=cfgdir,
                                  env=env)
 
@@ -451,7 +448,7 @@ class NotebookServer(threading.Thread):
             # the notebook server
             self.__nbproc.terminate()
             self.__nbproc.terminate()
-            # shutil.rmtree(op.abspath(op.join(cfgdir, '..')))
+            shutil.rmtree(op.abspath(op.join(cfgdir, '..')))
 
         # kill the server when we get killed
         atexit.register(killServer)
