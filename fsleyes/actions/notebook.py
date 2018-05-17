@@ -25,15 +25,20 @@ import               webbrowser
 import               wx
 import jinja2     as j2
 
-import fsleyes_widgets.utils.progress as progress
-import fsleyes_widgets.utils.status   as status
-import fsl.utils.settings             as settings
-import fsl.utils.idle                 as idle
+import fsleyes_widgets.utils.progress  as progress
+import fsleyes_widgets.utils.status    as status
+import fsl.utils.settings              as settings
+import fsl.utils.idle                  as idle
 
-import                                   fsleyes
-import fsleyes.strings                as strings
-from . import                            base
-from . import                            runscript
+import                                    fsleyes
+import fsleyes.strings                 as strings
+import fsleyes.perspectives            as perspectives
+import fsleyes.views.canvaspanel       as canvaspanel
+import fsleyes.actions.showcommandline as showcommandline
+
+
+from . import                             base
+from . import                             runscript
 
 try:
     import                            zmq
@@ -44,8 +49,6 @@ try:
     import ipykernel.ipkernel      as ipkernel
     import ipykernel.zmqshell      as zmqshell
     import ipykernel.heartbeat     as heartbeat
-
-    import IPython.core.magic      as magic
 
     import jupyter_client          as jc
     import jupyter_client.session  as jcsession
@@ -61,11 +64,6 @@ log = logging.getLogger(__name__)
 
 # Debug during development
 log.setLevel(logging.DEBUG)
-
-
-logging.getLogger('jupyter_client').setLevel(logging.DEBUG)
-# logging.getLogger('ipykernel')     .setLevel(logging.DEBUG)
-logging.getLogger('notebook')      .setLevel(logging.DEBUG)
 
 
 class NotebookAction(base.Action):
@@ -156,9 +154,9 @@ class NotebookAction(base.Action):
         """
         progdlg.UpdateMessage(strings.messages[self, 'init.kernel'])
         kernel = BackgroundIPythonKernel(
-            self.__frame,
             self.__overlayList,
-            self.__displayCtx)
+            self.__displayCtx,
+            self.__frame)
         kernel.start()
         self.__bounce(1, progdlg)
 
@@ -178,7 +176,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel.connfile,
+        server = NotebookServer(self.__kernel,
                                 self.__overlayList,
                                 self.__displayCtx,
                                 self.__frame)
@@ -226,11 +224,10 @@ class BackgroundIPythonKernel(threading.Thread):
         self.__ioloop      = None
         self.__kernel      = None
         self.__error       = None
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
         self.__frame       = frame
-        self.__overlayList = frame
-        self.__displayCtx  = frame
-
-        env = runscript.fsleyesScriptEnvironment(
+        self.__env         = runscript.fsleyesScriptEnvironment(
             frame,
             overlayList,
             displayCtx)[1]
@@ -265,7 +262,7 @@ class BackgroundIPythonKernel(threading.Thread):
                 session=session,
                 shell_streams=[shellstrm, controlstrm],
                 iopub_socket=iopubsock,
-                user_ns=env,
+                user_ns=self.__env,
                 log=logging.getLogger('ipykernel.kernelbase'))
 
         # write connection file to a temp dir
@@ -289,17 +286,16 @@ class BackgroundIPythonKernel(threading.Thread):
         atexit.register(os.remove, self.__connfile)
 
 
-    @magic.line_magic
-    def fsleyes_init(self):
-        """
-        """
-        pass
-
-
     @property
     def kernel(self):
         """The ``IPythonKernel`` object. """
         return self.__kernel
+
+
+    @property
+    def env(self):
+        """"""
+        return self.__env
 
 
     @property
@@ -372,11 +368,10 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, kernelFile, overlayList, displayCtx, frame):
+    def __init__(self, kernel, overlayList, displayCtx, frame):
         """Create a ``NotebookServer`` thread.
 
-        :arg kernelFile:  JSON connection file of the jupyter kernel
-                          to which all notebooks should connect.
+        :arg kernel:      ...
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The master :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
@@ -384,7 +379,7 @@ class NotebookServer(threading.Thread):
 
         threading.Thread.__init__(self)
         self.daemon        = True
-        self.__kernelFile  = kernelFile
+        self.__kernel      = kernel
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__frame       = frame
@@ -467,7 +462,6 @@ class NotebookServer(threading.Thread):
         self.__stderr = e.decode()
 
 
-
     def __initConfigDir(self, cfgdir):
         """
         """
@@ -479,14 +473,54 @@ class NotebookServer(threading.Thread):
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : op.join(cfgdir, 'nbextensions'),
-            'fsleyes_kernel_connfile'     : self.__kernelFile,
+            'fsleyes_kernel_connfile'     : self.__kernel.connfile,
         }
+
+        frame       = self.__frame
+        overlayList = self.__overlayList
+
+        persp  = perspectives.serialisePerspective(frame)
+        panels = [p for p in frame.viewPanels
+                  if isinstance(p, canvaspanel.CanvasPanel)]
+        cli    = []
+
+        for i, panel in enumerate(panels):
+
+            argv = showcommandline.genCommandLineArgs(
+                overlayList,
+                panel.displayCtx,
+                panel)
+
+            argv = ['\'{}\''.format(a) for a in argv]
+
+            codeargs = ['overlayList',
+                        'displayCtx',
+                        'panel=frame.viewPanels[{}]'.format(i),
+                        'applyOverlayArgs={}'.format(i == 0),
+                        'applySceneArgs=True',
+                        'argv=[{}]'.format(', '.join(argv))]
+
+            cli.append('applyCommandLineArgs({})'.format(', '.join(codeargs)))
+
+        lines = [
+            'from fsleyes.perspectives             '
+            'import applyPerspective',
+            'from fsleyes.actions.applycommandline '
+            'import applyCommandLineArgs',
+            'applyPerspective(frame, \'name\', \'{}\')'.format(persp)] + cli
+
+        lines = [l.replace('\n', '\\\\n').replace('"', '\\"') for l in lines]
+
+        init_code = '\\n'.join(lines)
+
+        intro = runscript.fsleyesShellHelpText({}, self.__kernel.env)
+        intro = intro.replace('\n', '\\n').replace('"',  '\\"')
 
         # Environment for generating the
         # notebook template extension
         extenv = {
-            'fsleyes_md_intro'  : '# FSLeyes notebook',
-            'fsleyes_code_init' : 'print(\'hi!\')',
+            'fsleyes_md_intro'  : intro,
+            'fsleyes_code_init' : init_code,
         }
 
         cfgfile = op.join(cfgdir, 'jupyter_notebook_config.py')

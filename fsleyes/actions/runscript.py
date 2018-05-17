@@ -375,7 +375,7 @@ def fsleyesShellHelpText(_globals, _locals):
     """
 
     introText = textwrap.dedent("""
-      FSLeyes {} python shell (Python {})
+    ## FSLeyes {} python shell (Python {})
 
     Available items:
     """.format(version.__version__, sys.version.split()[0]))
@@ -402,8 +402,8 @@ def fsleyesShellHelpText(_globals, _locals):
     localDescs = [re.sub(' +', ' ', d) for d in localDescs]
     localDescs = [d[:descWidth]        for d in localDescs]
 
-    shortFmtStr = '  - {{:{:d}s}} : {{}}\n'   .format(varWidth)
-    longFmtStr  = '  - {{:{:d}s}} : {{}}...\n'.format(varWidth)
+    shortFmtStr = '  - `{{:{:d}s}}` : {{}}\n'   .format(varWidth)
+    longFmtStr  = '  - `{{:{:d}s}}` : {{}}...\n'.format(varWidth)
 
     for lvar, ldesc in zip(localVars, localDescs):
 
