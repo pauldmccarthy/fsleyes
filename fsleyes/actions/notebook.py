@@ -13,6 +13,7 @@ to interact with FSLeyes via a jupyter notebook.
 import               os
 import os.path    as op
 import subprocess as sp
+import               sys
 import               time
 import               atexit
 import               shutil
@@ -20,6 +21,7 @@ import               logging
 import               tempfile
 import               warnings
 import               threading
+import               contextlib
 import               webbrowser
 
 import               wx
@@ -47,6 +49,7 @@ try:
     import tornado.ioloop          as ioloop
 
     import ipykernel.ipkernel      as ipkernel
+    import ipykernel.iostream      as iostream
     import ipykernel.zmqshell      as zmqshell
     import ipykernel.heartbeat     as heartbeat
 
@@ -235,33 +238,50 @@ class BackgroundIPythonKernel(threading.Thread):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=DeprecationWarning)
 
-            self.__heartbeat = heartbeat.Heartbeat(
-                zmq.Context(), (transport, ip, 0))
-            self.__heartbeat.start()
-
             # Use an empty key to disable message signing
             session = jcsession.Session(key=b'')
             context = zmq.Context.instance()
 
             # create sockets for kernel communication
             shellsock   = context.socket(zmq.ROUTER)
-            iopubsock   = context.socket(zmq.PUB)
+            stdinsock   = context.socket(zmq.ROUTER)
             controlsock = context.socket(zmq.ROUTER)
-
-            shellport   = shellsock  .bind_to_random_port(addr)
-            iopubport   = iopubsock  .bind_to_random_port(addr)
-            controlport = controlsock.bind_to_random_port(addr)
-            hbport      = self.__heartbeat.port
+            iopubsock   = context.socket(zmq.PUB)
 
             shellstrm   = zmqstream.ZMQStream(shellsock)
             controlstrm = zmqstream.ZMQStream(controlsock)
 
+            # I/O and heartbeat communication
+            # are managed by separate threads.
+            self.__iopub     = iostream.IOPubThread(iopubsock)
+            self.__heartbeat = heartbeat.Heartbeat(zmq.Context(),
+                                                   (transport, ip, 0))
+            iopubsock = self.__iopub.background_socket
+
+            self.__heartbeat.start()
+            self.__iopub.start()
+
+            # Streams which redirect stdout/
+            # stderr to the iopub socket
+            stdout = iostream.OutStream(session, self.__iopub, u'stdout')
+            stderr = iostream.OutStream(session, self.__iopub, u'stderr')
+
+            # TCP ports for all sockets
+            shellport   = shellsock  .bind_to_random_port(addr)
+            stdinport   = stdinsock  .bind_to_random_port(addr)
+            controlport = controlsock.bind_to_random_port(addr)
+            iopubport   = iopubsock  .bind_to_random_port(addr)
+            hbport      = self.__heartbeat.port
+
             # Create the kernel
-            self.__kernel = ipkernel.IPythonKernel.instance(
+            self.__kernel = FSLeyesIPythonKernel.instance(
+                stdout,
+                stderr,
                 shell_class=FSLeyesIPythonShell,
                 session=session,
                 shell_streams=[shellstrm, controlstrm],
                 iopub_socket=iopubsock,
+                stdin_socket=stdinsock,
                 user_ns=self.__env,
                 log=logging.getLogger('ipykernel.kernelbase'))
 
@@ -278,6 +298,7 @@ class BackgroundIPythonKernel(threading.Thread):
         jc.write_connection_file(
             fname,
             shell_port=shellport,
+            stdin_port=stdinport,
             iopub_port=iopubport,
             control_port=controlport,
             hb_port=hbport,
@@ -294,7 +315,7 @@ class BackgroundIPythonKernel(threading.Thread):
 
     @property
     def env(self):
-        """"""
+        """The namespace passed to the kernel."""
         return self.__env
 
 
@@ -342,6 +363,50 @@ class BackgroundIPythonKernel(threading.Thread):
         except Exception as e:
             self.__error = e
             raise
+
+
+class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
+    """Custom IPython kernel used by FSLeyes. All this class does is ensure
+    that the ``sys.stdout`` and ``sys.stderr`` streams are set appropriately
+    when the kernel is executing code.
+    """
+
+    def __init__(self, stdout, stderr, *args, **kwargs):
+        self.__stdout = stdout
+        self.__stderr = stderr
+        super(FSLeyesIPythonKernel, self).__init__(*args, **kwargs)
+
+    @contextlib.contextmanager
+    def __patch_streams(self):
+
+        stdout     = sys.stdout
+        stderr     = sys.stderr
+        sys.stdout = self.__stdout
+        sys.stderr = self.__stderr
+
+        try:
+            yield
+        finally:
+
+            sys.stdout = stdout
+            sys.stderr = stderr
+            self.__stdout.flush()
+            self.__stderr.flush()
+
+    def execute_request(self, *args, **kwargs):
+        with self.__patch_streams():
+            return super(FSLeyesIPythonKernel, self).execute_request(
+                *args, **kwargs)
+
+    def dispatch_control(self, *args, **kwargs):
+        with self.__patch_streams():
+            return super(FSLeyesIPythonKernel, self).dispatch_control(
+                *args, **kwargs)
+
+    def dispatch_shell(self, *args, **kwargs):
+        with self.__patch_streams():
+            return super(FSLeyesIPythonKernel, self).dispatch_shell(
+                *args, **kwargs)
 
 
 class FSLeyesIPythonShell(zmqshell.ZMQInteractiveShell):
@@ -460,7 +525,8 @@ class NotebookServer(threading.Thread):
 
 
     def __initConfigDir(self, cfgdir):
-        """
+        """Creates a copy of the FSLeyes ``/assets/jupyter/`` configuration
+        directory in ``$TMPDIR``, and customises its settings accordingly.
         """
 
         # Environment for generating a jupyter
