@@ -395,9 +395,9 @@ def parseArgs(argv):
     :arg argv: command line arguments for ``fsleyes``.
     """
 
-    import fsleyes.parseargs    as parseargs
-    import fsleyes.perspectives as perspectives
-    import fsleyes.version      as version
+    import fsleyes.parseargs as parseargs
+    import fsleyes.layouts   as layouts
+    import fsleyes.version   as version
 
     parser = parseargs.ArgumentParser(
         add_help=False,
@@ -408,21 +408,21 @@ def parseArgs(argv):
                         help='Run custom FSLeyes script')
 
     # We include the list of available
-    # perspectives in the help description
-    persps      = list(perspectives.BUILT_IN_PERSPECTIVES.keys()) + \
-                  list(perspectives.getAllPerspectives())
+    # layouts in the help description
+    allLayouts  = list(layouts.BUILT_IN_LAYOUTS.keys()) + \
+                  list(layouts.getAllLayouts())
     name        = 'fsleyes'
     prolog      = 'FSLeyes version {}\n'.format(version.__version__)
     description = textwrap.dedent("""\
         FSLeyes - the FSL image viewer.
 
-        Use the '--scene' option to load a saved perspective ({persps}).
+        Use the '--scene' option to load a saved layout ({layouts}).
 
         If no '--scene' is specified, a default layout is shown or the
         previous layout is restored. If a script is provided via
         the '--runscript' argument, it is assumed that the script sets
         up the scene.
-        """.format(persps=', '.join(persps)))
+        """.format(layouts=', '.join(allLayouts)))
 
     # Options for configuring the scene are
     # managed by the parseargs module
@@ -529,13 +529,13 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     import fsleyes.actions.frameactions as frameactions  # noqa
 
     import fsleyes.displaycontext       as fsldisplay
-    import fsleyes.perspectives         as perspectives
+    import fsleyes.layouts              as layouts
     import fsleyes.views.canvaspanel    as canvaspanel
 
-    # Set up the frame scene (a.k.a. layout, perspective)
+    # Set up the frame scene (a.k.a. layout)
     # The scene argument can be:
     #
-    #   - The name of a saved (or built-in) perspective
+    #   - The name of a saved (or built-in) layout
     #
     #   - None, in which case the default or previous
     #     layout is restored, unless a custom script
@@ -543,7 +543,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     script = namespace.runscript
     scene  = namespace.scene
 
-    # If a scene/perspective or custom script
+    # If a scene/layout or custom script
     # has not been specified, the default
     # behaviour is to restore the previous
     # frame layout.
@@ -590,10 +590,10 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         fsldisplay.SceneOpts.performance.setAttribute(
             None, 'default', namespace.performance)
 
-    # If a perspective has been specified,
-    # we load the perspective
+    # If a layout has been specified,
+    # we load the layout
     if namespace.scene is not None:
-        perspectives.loadPerspective(frame, namespace.scene)
+        layouts.loadLayout(frame, namespace.scene)
 
     # Apply any view-panel specific arguments
     viewPanels = frame.viewPanels
