@@ -181,12 +181,12 @@ def saveLayout(frame, name):
 
     log.debug('Saving current layout with name {}'.format(name))
 
-    persp = serialiseLayout(frame)
-    fslsettings.write('fsleyes.layouts.{}'.format(name), persp)
+    layout = serialiseLayout(frame)
+    fslsettings.write('fsleyes.layouts.{}'.format(name), layout)
 
     _addToLayoutList(name)
 
-    log.debug('Serialised layout:\n{}'.format(persp))
+    log.debug('Serialised layout:\n{}'.format(layout))
 
 
 def removeLayout(name):
@@ -693,65 +693,121 @@ def _getPanelProps(panel):
     """
 
     import fsleyes.views.canvaspanel as canvaspanel
+    import fsleyes.views.plotpanel   as plotpanel
 
-    if not isinstance(panel, canvaspanel.CanvasPanel):
+    if not isinstance(panel, (canvaspanel.CanvasPanel, plotpanel.PlotPanel)):
         return {}, {}
 
-    panelType = type(panel).__name__
-    opts      = panel.sceneOpts
+    panelType  = type(panel).__name__
+    panelProps = VIEWPANEL_PROPS[panelType]
+    sceneProps = {}
 
-    panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
+    if isinstance(panel, canvaspanel.CanvasPanel):
+        opts                   = panel.sceneOpts
+        panelProps, sceneProps = panelProps
+        sceneProps = {name : opts .serialise(name) for name in sceneProps}
 
     panelProps = {name : panel.serialise(name) for name in panelProps}
-    sceneProps = {name : opts .serialise(name) for name in sceneProps}
 
     return panelProps, sceneProps
 
 
 VIEWPANEL_PROPS = {
-    'OrthoPanel'    : [['syncLocation',
-                        'syncOverlayOrder',
-                        'syncOverlayDisplay',
-                        'movieRate'],
-                       ['showCursor',
-                        'bgColour',
-                        'fgColour',
-                        'cursorColour',
-                        'cursorGap',
-                        'showColourBar',
-                        'colourBarLocation',
-                        'colourBarLabelSide',
-                        'showXCanvas',
-                        'showYCanvas',
-                        'showZCanvas',
-                        'showLabels',
-                        'layout']
-                       ],
-    'LightBoxPanel' : [['syncLocation',
-                        'syncOverlayOrder',
-                        'syncOverlayDisplay',
-                        'movieRate'],
-                       ['showCursor',
-                        'bgColour',
-                        'fgColour',
-                        'cursorColour',
-                        'showColourBar',
-                        'colourBarLocation',
-                        'colourBarLabelSide',
-                        'zax',
-                        'showGridLines',
-                        'highlightSlice']],
-    'Scene3DPanel'  : [['syncLocation',
-                        'syncOverlayOrder',
-                        'syncOverlayDisplay'],
-                       ['showCursor',
-                        'bgColour',
-                        'fgColour',
-                        'cursorColour',
-                        'showColourBar',
-                        'colourBarLocation',
-                        'colourBarLabelSide',
-                        'showLegend']]}
+    'OrthoPanel'        : [['syncLocation',
+                            'syncOverlayOrder',
+                            'syncOverlayDisplay',
+                            'syncOverlayVolume',
+                            'movieRate',
+                            'movieAxis'],
+                           ['showCursor',
+                            'bgColour',
+                            'fgColour',
+                            'cursorColour',
+                            'cursorGap',
+                            'showColourBar',
+                            'colourBarLocation',
+                            'colourBarLabelSide',
+                            'showXCanvas',
+                            'showYCanvas',
+                            'showZCanvas',
+                            'showLabels',
+                            'labelSize',
+                            'layout',
+                            'xzoom',
+                            'yzoom',
+                            'zzoom',
+                            'highDpi']],
+    'LightBoxPanel'     : [['syncLocation',
+                            'syncOverlayOrder',
+                            'syncOverlayDisplay',
+                            'syncOverlayVolume',
+                            'movieRate',
+                            'movieAxis'],
+                           ['showCursor',
+                            'bgColour',
+                            'fgColour',
+                            'cursorColour',
+                            'showColourBar',
+                            'colourBarLocation',
+                            'colourBarLabelSide',
+                            'zax',
+                            'showGridLines',
+                            'highlightSlice',
+                            'highDpi']],
+    'Scene3DPanel'      : [['syncLocation',
+                            'syncOverlayOrder',
+                            'syncOverlayDisplay',
+                            'syncOverlayVolume'],
+                           ['showCursor',
+                            'bgColour',
+                            'fgColour',
+                            'cursorColour',
+                            'showColourBar',
+                            'colourBarLocation',
+                            'colourBarLabelSide',
+                            'occlusion',
+                            'light',
+                            'lightPos',
+                            'offset',
+                            'rotation',
+                            'showLegend']],
+    'TimeSeriesPanel'    : ['legend',
+                            'xAutoScale',
+                            'yAutoScale',
+                            'xLogScale',
+                            'yLogScale',
+                            'ticks',
+                            'grid',
+                            'gridColour',
+                            'bgColour',
+                            'smooth',
+                            'usePixdim',
+                            'plotMode',
+                            'plotMelodicICs'],
+    'HistogramPanel'     : ['legend',
+                            'xAutoScale',
+                            'yAutoScale',
+                            'xLogScale',
+                            'yLogScale',
+                            'ticks',
+                            'grid',
+                            'gridColour',
+                            'bgColour',
+                            'smooth',
+                            'histType',
+                            'plotType'],
+    'PowerSpectrumPanel' : ['legend',
+                            'xAutoScale',
+                            'yAutoScale',
+                            'xLogScale',
+                            'yLogScale',
+                            'ticks',
+                            'grid',
+                            'gridColour',
+                            'bgColour',
+                            'smooth',
+                            'plotMelodicICs',
+                            'plotFrequencies']}
 
 
 # The order in which properties are defined in
