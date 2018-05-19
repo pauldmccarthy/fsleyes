@@ -17,6 +17,7 @@ Added
 
 
 * Support for high-resolution (e.g. retina) displays under macOS.
+* ``fslpy`` FSL wrapper functions are now available in the Python shell.
 
 
 Changed
@@ -26,6 +27,9 @@ Changed
 * The :mod:`fsleyes.perspectives` module  has been renamed to
   :mod:`fsleyes.layouts`. All associated functions and classes have been
   renamed accordingly.
+* The :mod:`fsleyes.state` module has been re-written - the :func:`.getState`
+  and :func:`.setState` functions can be used to save/restore the full
+  FSLeyes state (layout and overlays).
 
 
 Deprecated
