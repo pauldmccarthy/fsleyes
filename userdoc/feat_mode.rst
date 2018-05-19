@@ -25,14 +25,14 @@ Loading a FEAT analysis
 
              - The directory name must end in ``.feat``
              - The directory must contain the following files:
-               
+
               - ``filtered_func_data``: a NIFTI image containing the
                 pre-processed input data (the file extension does not
                 matter)
               - ``design.fsf``: FEAT configuration file
               - ``design.mat``: FEAT design matrix file
               - ``design.con``: FEAT contrast vector file
-             
+
 
 You can load a FEAT analysis in a few different ways [*]_:
 
@@ -42,7 +42,7 @@ You can load a FEAT analysis in a few different ways [*]_:
       fsleyes path/to/my_analysis.feat
 
   Or the ``filtered_func_data`` image::
-    
+
       fsleyes path/to/my_analysis.feat/filtered_func_data
 
 - Via *File* |right_arrow| *Add overlay from directory* - select your
@@ -66,13 +66,13 @@ view :ref:`time series and model fits
        functionality for working with group analyses.
 
 
-.. _feat_mode_the_feat_perspective:
+.. _feat_mode_the_feat_layout:
 
-The FEAT perspective
---------------------
+The FEAT layout
+---------------
 
 
-The FEAT perspective arranges the FSLeyes interface for viewing FEAT analyses.
+The FEAT layout arranges the FSLeyes interface for viewing FEAT analyses.
 
 
 .. image:: images/feat_mode_feat_perspective.png
@@ -80,22 +80,22 @@ The FEAT perspective arranges the FSLeyes interface for viewing FEAT analyses.
    :align: center
 
 
-The FEAT perspective simply adds a :ref:`cluster panel
+The FEAT layout simply adds a :ref:`cluster panel
 <feat_mode_viewing_clusters_the_cluster_panel>`, and a :ref:`time series panel
 <feat_mode_viewing_model_fits_in_the_time_series_panel>` to the :ref:`default
-perspective <overview_default_perspective>`.
+layout <overview_default_layout>`.
 
 
-You can activate the FEAT perspective via the *View* |right_arrow|
-*Perspectives* |right_arrow| *FEAT mode* menu item. Or you can tell FSLeyes to
-start up with the FEAT perspective via the :ref:`command line <command_line>`
+You can activate the FEAT layout via the *View* |right_arrow|
+*Layouts* |right_arrow| *FEAT mode* menu item. Or you can tell FSLeyes to
+start up with the FEAT layout via the :ref:`command line <command_line>`
 (the ``-s`` flag is short for ``--scene``)::
-   
+
     fsleyes -s feat path/to/my_analysis.feat
 
 
 .. _feat_mode_viewing_clusters_the_cluster_panel:
-   
+
 Viewing clusters (the cluster panel)
 ------------------------------------
 
@@ -168,23 +168,23 @@ settings allowing you to control what is plotted. See the :ref:`GLM refresher
 
 - **Plot data** This setting is selected by default. When selected, the input
   data for the current voxel is plotted.
-  
+
 - **Plot full model fit** This setting is selected by default. When selected,
   the full model fit at the current voxel is plotted.
-  
+
 - **Plot residuals** When selected, the residuals of the full model fit (the
   noise) at the current voxel is plotted.
-  
+
 - **Plot reduced data against** This setting allows you to plot a "reduced"
   version of the data at the current voxel, against any of the PEs or COPEs in
   the analysis.
-  
+
 - **Plot EV** A checkbox is added for each EV in your design, allowing you to
   plot them alongside the data.
-   
+
 - **Plot PE fit** A checkbox is added for each PE in the analysis, allowing
   you to plot the model fit for any of them at the current voxel.
-  
+
 - **Plot COPE fit** A checkbox is added for each COPE in the analysis,
   allowing you to plot the model fit for any of them at the current voxel.
 
@@ -226,7 +226,7 @@ following equation:
 This is equivalent to finding the minimum value for the residual error
 :math:`\boldsymbol{\epsilon}`.
 
-      
+
 With a single EV (i.e. :math:`\boldsymbol{X}` is a column vector), we end up
 with a single PE :math:`\boldsymbol{\beta}`. With :math:`p` EVs
 (i.e. :math:`\boldsymbol{X}` is a :math:`p\times n` matrix),
@@ -252,7 +252,7 @@ vector :math:`\boldsymbol{C}` and the parameter estimates
 
 .. math::
 
-   
+
    COPE_1 &= 1 \times \beta_1 + 0 \times \beta_2 + 0 \times \beta_3 \\
           &= \beta_1
 
@@ -296,7 +296,7 @@ options are straightforward to interpret:
 .. _feat_mode_full_and_partial_model_fits:
 
 Full and partial model fits
-^^^^^^^^^^^^^^^^^^^^^^^^^^^             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 The *Plot full model fit*, *Plot PE fit* and *Plot COPE fit* options all work
@@ -315,36 +315,36 @@ at time :math:`t` is calculated as:
 where:
 
 - :math:`p` is the number of EVs in the design matrix,
-  
+
 - :math:`X_e^t` is the value in the design matrix for EV :math:`e` at time
   :math:`t`,
-        
+
 - :math:`\beta_e` is the parameter estimate for EV :math:`e`, and
-  
+
 - :math:`|C_e|` is the absolute value in the contrast vector for EV :math:`e`.
   The absolute value is used because the parameter estimate :math:`\beta_e`
   should already have an appropriate sign.
 
 
 The contrast vector :math:`\boldsymbol{C}` is defined as follows:
-  
+
 - For the *Plot full model fit* option, the contrast :math:`\boldsymbol{C}`
   is simply a vector of ones.
 
 - For the *Plot PE fit* options, :math:`\boldsymbol{C}` is a vector
   containing a one for the EV corresponding to the PE, and zeros everywhere
-  else. 
+  else.
 
 - For the *Plot COPE fit* options, the contrast is the contrast vector that
   was used in the FEAT analysis.
 
-     
+
 A few further steps are applied to the above process:
-  
+
 - The contrast vectors are normalised before the model fit is calculated:
 
   .. math::
-     
+
      \boldsymbol{C} = \frac{\sqrt{n_\boldsymbol{C}}\boldsymbol{C}}{\sqrt{\sum_{e=1}^{p}{C_e^2}}}
 
   where :math:`n_\boldsymbol{C}` is the number of non-zero elements in the

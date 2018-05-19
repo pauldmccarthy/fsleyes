@@ -19,6 +19,24 @@ Added
 * Support for high-resolution (e.g. retina) displays under macOS.
 
 
+Changed
+^^^^^^^
+
+
+* The :mod:`fsleyes.perspectives` module  has been renamed to
+  :mod:`fsleyes.layouts`. All associated functions and classes have been
+  renamed accordingly.
+
+
+Deprecated
+^^^^^^^^^^
+
+
+* The :mod:`fsleyes.perspectives`, :mod:`fsleyes.actions.clearperspective`,
+  :mod:`fsleyes.actions.loadperspective`, and
+  :mod:`fsleyes.actions.saveperspective` modules.
+
+
 0.23.0 (Friday May 4th 2018)
 ----------------------------
 

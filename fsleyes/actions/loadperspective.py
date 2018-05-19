@@ -1,32 +1,22 @@
 #!/usr/bin/env python
 #
-# loadperspective.py -
+# loadperspective.py - deprecated.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
-"""
+"""Deprecated - see :mod:`.loadlayout`. """
 
 
-import fsleyes.perspectives as perspectives
-from . import                  base
+import deprecation
 
 
-class LoadPerspectiveAction(base.Action):
-    """
-    """
-
-    def __init__(self, frame, perspective):
-        """
-        """
-
-        self.__frame       = frame
-        self.__perspective = perspective
-
-        base.Action.__init__(self, self.__loadPerspective)
+from . import loadlayout
 
 
-    def __loadPerspective(self):
-        """
-        """
-        perspectives.loadPerspective(self.__frame, self.__perspective)
+class LoadPerspectiveAction(loadlayout.LoadLayoutAction):
+
+    @deprecation.deprecated(deprecated_in='0.24.0',
+                            removed_in='1.0.0',
+                            details='use LoadLayoutAction')
+    def __init__(self, *args, **kwargs):
+        loadlayout.LoadLayoutAction.__init__(self, *args, **kwargs)

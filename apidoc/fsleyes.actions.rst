@@ -11,7 +11,7 @@
    fsleyes.actions.applycommandline
    fsleyes.actions.applyflirtxfm
    fsleyes.actions.browsexnat
-   fsleyes.actions.clearperspective
+   fsleyes.actions.clearlayouts
    fsleyes.actions.clearsettings
    fsleyes.actions.copyoverlay
    fsleyes.actions.correlate
@@ -23,7 +23,7 @@
    fsleyes.actions.loadcolourmap
    fsleyes.actions.loadoverlay
    fsleyes.actions.loadoverlayfromdir
-   fsleyes.actions.loadperspective
+   fsleyes.actions.loadlayout
    fsleyes.actions.loadstandard
    fsleyes.actions.loadvertexdata
    fsleyes.actions.reloadoverlay
@@ -33,7 +33,7 @@
    fsleyes.actions.runscript
    fsleyes.actions.saveflirtxfm
    fsleyes.actions.saveoverlay
-   fsleyes.actions.saveperspective
+   fsleyes.actions.savelayout
    fsleyes.actions.screenshot
    fsleyes.actions.showcommandline
    fsleyes.actions.togglecontrolpanel
