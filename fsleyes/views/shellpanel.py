@@ -49,9 +49,10 @@ class ShellPanel(viewpanel.ViewPanel):
         viewpanel.ViewPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
-                                                               overlayList,
-                                                               displayCtx)
+        _globals, _locals = runscript.fsleyesScriptEnvironment(
+            frame,
+            overlayList,
+            frame.displayCtx)
 
         introText = textwrap.dedent("""
           FSLeyes {} python shell (Python {})
