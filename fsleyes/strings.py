@@ -24,7 +24,7 @@ into the following categories:
  :data:`nifti`        Labels for NIFTI header fields.
  :data:`feat`         FEAT specific names and labels.
  :data:`melodic`      MELODIC specific names and labels.
- :data:`perspectives` Perspective labels.
+ :data:`layouts`      Layout labels.
  :data:`tensor`       Tensor overlay labels.
  :data:`plotLabels`   Labels to use for plot data loaded from known files.
  :data:`about`        Strings used in the *FSLeyes* about dialog.
@@ -49,7 +49,7 @@ messages = TypeDict({
     'FSLeyesFrame.unsavedOverlays'     : 'You have unsaved images - are '
                                          'you sure you want to exit?',
 
-    'perspectives.applyingPerspective' : 'Applying {} perspective ...',
+    'layout.applyingLayout' : 'Applying {} layout ...',
 
     'SavePerspectiveAction.enterName'        : 'Enter a name for the '
                                                'perspective',
@@ -214,7 +214,7 @@ messages = TypeDict({
 
     'ClearSettingsAction.confirm' :
     'Are you sure you want to clear all FSLeyes settings? All preferences, '
-    'saved perspectives, colour maps, lookup tables, and loaded atlases will '
+    'saved layouts, colour maps, lookup tables, and loaded atlases will '
     'be lost!\n\nYou will need to restart FSLeyes for some changes to take '
     'effect.',
 
@@ -1387,7 +1387,7 @@ melodic = TypeDict({
     'report'         : 'Link to report',
 })
 
-perspectives = {
+layouts = {
     'default'  : 'Default layout',
     'melodic'  : 'MELODIC mode',
     'feat'     : 'FEAT mode',
@@ -1395,6 +1395,7 @@ perspectives = {
     'lightbox' : 'Plain lightbox',
     '3d'       : 'Plain 3D',
 }
+
 
 tensor = {
     'v1' : 'First eigenvector image',

@@ -31,7 +31,7 @@ import fsleyes.profiles.shortcuts         as shortcuts
 
 from . import actions
 from . import tooltips
-from . import perspectives
+from . import layouts
 from . import displaycontext
 
 
@@ -72,7 +72,7 @@ class FSLeyesFrame(wx.Frame):
     they can be restored the next time a ``FSLeyesFrame`` is opened. The
     settings are saved using the :class:`~fsl.utils.settings` module.
     Currently, the frame position, size, and layout (see the
-    :mod:`.perspectives` module) are saved.
+    :mod:`.layout` module) are saved.
 
 
     **Programming interface**
@@ -96,7 +96,7 @@ class FSLeyesFrame(wx.Frame):
        viewPanelDefaultLayout
        removeViewPanel
        removeAllViewPanels
-       refreshPerspectiveMenu
+       refreshLayoutMenu
        runScript
        populateMenu
        Close
@@ -255,7 +255,7 @@ class FSLeyesFrame(wx.Frame):
 
         # Refs to menus
         self.__menuBar        = None
-        self.__perspMenu      = None
+        self.__layoutMenu     = None
         self.__recentPathMenu = None
 
         # The recent paths manager notifies us when
@@ -475,7 +475,7 @@ class FSLeyesFrame(wx.Frame):
 
         # The PaneInfo Name contains the panel
         # class name - this is used for saving
-        # and restoring perspectives .
+        # and restoring layouts .
         name  = '{} {}'.format(panelCls.__name__,        panelId)
         title = '{} {}'.format(strings.titles[panelCls], panelId)
 
@@ -599,9 +599,17 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleLocationPanel()
 
 
+    def refreshLayoutMenu(self):
+        """Re-creates the *View -> Layouts* sub-menu. """
+        self.__makeLayoutMenu()
+
+
+    @deprecation.deprecated(deprecated_in='0.24.0',
+                            removed_in='1.0.0',
+                            details='Use refreshLayoutMenu')
     def refreshPerspectiveMenu(self):
-        """Re-creates the *View -> Perspectives* sub-menu. """
-        self.__makePerspectiveMenu()
+        """Deprecated."""
+        self.refreshLayoutMenu()
 
 
     def runScript(self, script=None):
@@ -1138,7 +1146,7 @@ class FSLeyesFrame(wx.Frame):
                                   not dlg.CheckBoxState())
 
             if save:
-                layout   = perspectives.serialisePerspective(self)
+                layout   = layouts.serialiseLayout(self)
                 size     = self.GetSize().Get()
                 position = self.GetScreenPosition().Get()
 
@@ -1266,7 +1274,7 @@ class FSLeyesFrame(wx.Frame):
                 log.debug('Restoring previous layout: {}'.format(layout))
 
                 try:
-                    perspectives.applyPerspective(
+                    layouts.applyLayout(
                         self,
                         'fsleyes.frame.layout',
                         layout,
@@ -1278,7 +1286,7 @@ class FSLeyesFrame(wx.Frame):
                     layout = None
 
             if layout is None:
-                perspectives.loadPerspective(self, 'default')
+                layouts.loadLayout(self, 'default')
 
 
     def __makeMenuBar(self):
@@ -1311,15 +1319,15 @@ class FSLeyesFrame(wx.Frame):
         else:
             fsleyesMenu = None
 
-        fileMenu        = wx.Menu()
-        overlayMenu     = wx.Menu()
-        viewMenu        = wx.Menu()
-        perspectiveMenu = wx.Menu()
-        settingsMenu    = wx.Menu()
-        toolsMenu       = wx.Menu()
+        fileMenu     = wx.Menu()
+        overlayMenu  = wx.Menu()
+        viewMenu     = wx.Menu()
+        layoutMenu   = wx.Menu()
+        settingsMenu = wx.Menu()
+        toolsMenu    = wx.Menu()
 
-        self.__menuBar   = menuBar
-        self.__perspMenu = perspectiveMenu
+        self.__menuBar    = menuBar
+        self.__layoutMenu = layoutMenu
 
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(overlayMenu,  'Overlay')
@@ -1353,10 +1361,10 @@ class FSLeyesFrame(wx.Frame):
 
         self.__makeViewPanelMenu(viewMenu)
 
-        # Perspectives
+        # Layouts
         viewMenu.AppendSeparator()
-        viewMenu.AppendSubMenu(perspectiveMenu, 'Perspectives')
-        self.__makePerspectiveMenu()
+        viewMenu.AppendSubMenu(layoutMenu, 'Layouts')
+        self.__makeLayoutMenu()
 
 
     def __makeFSLeyesMenu(self, menu):
@@ -1535,67 +1543,67 @@ class FSLeyesFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, action, item)
 
 
-    def __makePerspectiveMenu(self):
-        """Called by :meth:`__makeMenuBar` and :meth:`refreshPerspectiveMenu`.
-        Re-creates the *View->Perspectives* menu.
+    def __makeLayoutMenu(self):
+        """Called by :meth:`__makeMenuBar` and :meth:`refreshLayoutMenu`.
+        Re-creates the *View->Layouts* menu.
         """
 
         from fsleyes.actions.loadperspective  import LoadPerspectiveAction
         from fsleyes.actions.saveperspective  import SavePerspectiveAction
         from fsleyes.actions.clearperspective import ClearPerspectiveAction
 
-        perspMenu = self.__perspMenu
+        layoutMenu = self.__layoutMenu
 
         # Remove any existing menu items
-        for item in perspMenu.GetMenuItems():
-            perspMenu.Delete(item.GetId())
+        for item in layoutMenu.GetMenuItems():
+            layoutMenu.Delete(item.GetId())
 
-        builtIns = list(perspectives.BUILT_IN_PERSPECTIVES.keys())
-        saved    = perspectives.getAllPerspectives()
+        builtIns = list(layouts.BUILT_IN_LAYOUTS.keys())
+        saved    = layouts.getAllLayouts()
 
-        # Add a menu item to load each built-in perspectives
-        for persp in builtIns:
+        # Add a menu item to load each built-in layouts
+        for layout in builtIns:
 
-            title    = strings.perspectives.get(persp, persp)
-            shortcut = shortcuts.actions.get((self, 'perspectives', persp),
+            title    = strings.layouts.get(layout, layout)
+            shortcut = shortcuts.actions.get((self, 'layouts', layout),
                                              None)
 
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
 
-            menuItem = perspMenu.Append(wx.ID_ANY, title)
+            menuItem = layoutMenu.Append(wx.ID_ANY, title)
 
-            actionObj = LoadPerspectiveAction(self, persp)
+            actionObj = LoadPerspectiveAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         if len(builtIns) > 0:
-            perspMenu.AppendSeparator()
+            layoutMenu.AppendSeparator()
 
-        # Add a menu item to load each saved perspective
-        for persp in saved:
+        # Add a menu item to load each saved layout
+        for layout in saved:
 
-            menuItem  = perspMenu.Append(
-                wx.ID_ANY, strings.perspectives.get(persp, persp))
-            actionObj = LoadPerspectiveAction(self, persp)
+            menuItem  = layoutMenu.Append(
+                wx.ID_ANY, strings.layouts.get(layout, layout))
+            actionObj = LoadPerspectiveAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
-        # Add menu items for other perspective
-        # operations, but separate them from the
-        # existing perspectives
+        # Add menu items for other layout
+        # operations, but separate them
+        # from the existing layouts
         if len(saved) > 0:
-            perspMenu.AppendSeparator()
+            layoutMenu.AppendSeparator()
 
-        # TODO: Delete a single perspective?
+        # TODO: Delete a single layout?
         #       Save to/load from file?
-        perspActions = [SavePerspectiveAction,
-                        ClearPerspectiveAction]
+        layoutActions = [SavePerspectiveAction,
+                         ClearPerspectiveAction]
 
-        for pa in perspActions:
+        for la in layoutActions:
 
-            actionObj     = pa(self)
-            perspMenuItem = perspMenu.Append(wx.ID_ANY, strings.actions[pa])
+            actionObj      = la(self)
+            layoutMenuItem = layoutMenu.Append(wx.ID_ANY, strings.actions[la])
 
-            actionObj.bindToWidget(self, wx.EVT_MENU, perspMenuItem)
+            actionObj.bindToWidget(self, wx.EVT_MENU, layoutMenuItem)
 
 
     def __makeOverlayMenu(self, menu):
