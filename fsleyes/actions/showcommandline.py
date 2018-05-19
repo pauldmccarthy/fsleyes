@@ -81,14 +81,15 @@ def showCommandLineArgs(overlayList, displayCtx, canvas):
     dlg.ShowModal()
 
 
-def genCommandLineArgs(overlayList, displayCtx, canvas):
+def genCommandLineArgs(overlayList, displayCtx, canvas=None):
     """Called by the :func:`showCommandLineArgs` function. Generates
     command line arguments which can be used to re-create the scene
     currently shown on the given :class:`CanvasPanel`.
 
     :arg overlayList: A :class:`.OverlayList` .
     :arg displayCtx:  A :class:`.DisplayContext` instance.
-    :arg canvas:      A :class:`CanvasPanel` instance.
+    :arg canvas:      A :class:`CanvasPanel` instance. If ``None``,
+                      scene arguments are not generated.
 
     :returns:         A list of command line arguments.
     """
@@ -96,12 +97,13 @@ def genCommandLineArgs(overlayList, displayCtx, canvas):
     argv = ['fsleyes']
 
     # Add scene options
-    sceneOpts = canvas.sceneOpts
-    argv += parseargs.generateSceneArgs(
-        overlayList,
-        displayCtx,
-        sceneOpts,
-        exclude=['performance'])
+    if canvas is not None:
+        sceneOpts = canvas.sceneOpts
+        argv += parseargs.generateSceneArgs(
+            overlayList,
+            displayCtx,
+            sceneOpts,
+            exclude=['performance'])
 
     # Add display options for each overlay
     for overlay in displayCtx.getOrderedOverlays():
