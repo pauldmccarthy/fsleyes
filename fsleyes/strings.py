@@ -51,18 +51,17 @@ messages = TypeDict({
 
     'layout.applyingLayout' : 'Applying {} layout ...',
 
-    'SavePerspectiveAction.enterName'        : 'Enter a name for the '
-                                               'perspective',
-    'SavePerspectiveAction.nameIsBuiltIn'    : '"{}" is a reserved '
-                                               'perspective name - '
-                                               'enter a different name.',
-    'SavePerspectiveAction.confirmOverwrite' : 'A perspective with the name '
-                                               '"{}" already exists - do '
-                                               'you want to replace it?',
+    'SaveLayoutAction.enterName' :
+    'Enter a name for the layout',
+    'SaveLayoutAction.nameIsBuiltIn' :
+    '"{}" is a reserved layout name - enter a different name.',
+    'SaveLayoutAction.confirmOverwrite' :
+    'A layout with the name "{}" already exists - do '
+    'you want to replace it?',
 
-    'ClearPerspectiveAction.confirmClear' : 'All saved perspectives will be '
-                                            'cleared! Are you sure you want '
-                                            'to continue?',
+    'ClearLayoutsAction.confirmClear' : 'All saved layouts will be '
+                                        'cleared! Are you sure you want '
+                                        'to continue?',
 
     'FSLeyesApp.openURLError' : 'An error occurred loading the URL.',
 
@@ -365,7 +364,7 @@ titles = TypeDict({
 
     'ScreenshotAction.screenshot'          : 'Save screenshot',
     'ScreenshotAction.error'               : 'Error saving screenshot',
-    'ClearPerspectiveAction.confirmClear'  : 'Clear all perspectives?',
+    'ClearLayoutsAction.confirmClear'      : 'Clear all layouts?',
     'DiagnosticReportAction.saveReport'    : 'Save diagnostic report',
     'SaveOverlayAction.overwrite'          : 'Overwrite existing file?',
     'SaveOverlayAction.saveFile'           : 'Save overlay to file',
@@ -442,8 +441,8 @@ actions = TypeDict({
     'RemoveOverlayAction'      : 'Remove',
     'RemoveAllOverlaysAction'  : 'Remove all',
     'LoadColourMapAction'      : 'Load custom colour map',
-    'SavePerspectiveAction'    : 'Save current perspective',
-    'ClearPerspectiveAction'   : 'Clear all perspectives',
+    'SaveLayoutAction'         : 'Save current layout',
+    'ClearLayoutsAction'       : 'Clear all layouts',
     'DiagnosticReportAction'   : 'Diagnostic report',
     'RunScriptAction'          : 'Run script',
     'AboutAction'              : 'About FSLeyes',

@@ -1548,9 +1548,9 @@ class FSLeyesFrame(wx.Frame):
         Re-creates the *View->Layouts* menu.
         """
 
-        from fsleyes.actions.loadperspective  import LoadPerspectiveAction
-        from fsleyes.actions.saveperspective  import SavePerspectiveAction
-        from fsleyes.actions.clearperspective import ClearPerspectiveAction
+        from fsleyes.actions.loadlayout   import LoadLayoutAction
+        from fsleyes.actions.savelayout   import SaveLayoutAction
+        from fsleyes.actions.clearlayouts import ClearLayoutsAction
 
         layoutMenu = self.__layoutMenu
 
@@ -1573,7 +1573,7 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = layoutMenu.Append(wx.ID_ANY, title)
 
-            actionObj = LoadPerspectiveAction(self, layout)
+            actionObj = LoadLayoutAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         if len(builtIns) > 0:
@@ -1584,7 +1584,7 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem  = layoutMenu.Append(
                 wx.ID_ANY, strings.layouts.get(layout, layout))
-            actionObj = LoadPerspectiveAction(self, layout)
+            actionObj = LoadLayoutAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         # Add menu items for other layout
@@ -1595,8 +1595,8 @@ class FSLeyesFrame(wx.Frame):
 
         # TODO: Delete a single layout?
         #       Save to/load from file?
-        layoutActions = [SavePerspectiveAction,
-                         ClearPerspectiveAction]
+        layoutActions = [SaveLayoutAction,
+                         ClearLayoutsAction]
 
         for la in layoutActions:
 

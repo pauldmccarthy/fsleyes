@@ -327,7 +327,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Otherwise, create a new panel of the specified type.
         # The PaneInfo Name is the control panel class name -
-        # this is used for saving and restoring perspectives.
+        # this is used for saving and restoring layouts.
         paneInfo  = aui.AuiPaneInfo().Name(panelType.__name__)
         window    = panelType(self,
                               self.overlayList,
