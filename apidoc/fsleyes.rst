@@ -14,11 +14,11 @@
    fsleyes.frame
    fsleyes.gl
    fsleyes.icons
+   fsleyes.layouts
    fsleyes.main
    fsleyes.overlay
    fsleyes.panel
    fsleyes.parseargs
-   fsleyes.perspectives
    fsleyes.plotting
    fsleyes.profiles
    fsleyes.render

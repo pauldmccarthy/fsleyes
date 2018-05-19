@@ -1,6 +1,6 @@
 .. |right_arrow|   unicode:: U+21D2
 
-.. |left_arrow_2|  unicode:: U+2190 
+.. |left_arrow_2|  unicode:: U+2190
 .. |up_arrow_2|    unicode:: U+2191
 .. |right_arrow_2| unicode:: U+2192
 .. |down_arrow_2|  unicode:: U+2193
@@ -36,13 +36,13 @@ Loading a MELODIC analysis
              - The directory name must end in ``.ica``.
 
              - The directory must contain the following files:
-               
+
                - ``melodic_IC``: A 4D NIFTI image containing one spatial
                  component map in each 3D volume.
                - ``melodic_mix``: The component time courses
                - ``melodic_FTmix``: The component power spectra
 
-             
+
 You can load a MELODIC analysis in a few different ways:
 
 
@@ -52,7 +52,7 @@ You can load a MELODIC analysis in a few different ways:
       fsleyes path/to/my_analysis.ica
 
   Or the ``melodic_IC`` image::
-    
+
       fsleyes path/to/my_analysis.ica/melodic_IC
 
 - Via *File* |right_arrow| *Add overlay from directory* - select your
@@ -61,20 +61,20 @@ You can load a MELODIC analysis in a few different ways:
 - Via *File* |right_arrow| *Add overlay from file* - select the
   ``melodic_IC`` image located in your ``.ica`` analysis directory.
 
-  
+
 .. [*] If you are working with a single-subject analysis generated via the
        MELODIC GUI, there will be two levels of directories ending in
        ``.ica``. You need to pass the path to the inner directory to FSLeyes -
        this is typically called ``filtered_func_data.ica``.
 
-  
-.. _ic_classification_the_melodic_perspective:
 
-The MELODIC perspective
------------------------
+.. _ic_classification_the_melodic_layout:
+
+The MELODIC layout
+------------------
 
 
-The MELODIC perspective arranges the FSLeyes interface in a layout inspired by
+The MELODIC layout arranges the FSLeyes interface in a layout inspired by
 Melview, to assist in manual component classification.
 
 
@@ -83,7 +83,7 @@ Melview, to assist in manual component classification.
            :align: center
 
 
-The MELODIC perspective comprises a :ref:`lightbox view
+The MELODIC layout comprises a :ref:`lightbox view
 <ortho_lightbox_views_lightbox>`, a :ref:`time series
 <plot_views_time_series_view>` and :ref:`power spectrum
 <plot_views_power_spectrum_view>` view, and an IC classification panel
@@ -91,14 +91,14 @@ The MELODIC perspective comprises a :ref:`lightbox view
 <ic_classification_classifying_components_with_the_classification_panel>`).
 
 
-You can activate the MELODIC perspective via the *View* |right_arrow|
-*Perspectives* |right_arrow| *MELODIC mode* menu item. Or you can tell FSLeyes
-to start up with the MELODIC perspective via the :ref:`command line
+You can activate the MELODIC layout via the *View* |right_arrow|
+*Layouts* |right_arrow| *MELODIC mode* menu item. Or you can tell FSLeyes
+to start up with the MELODIC layout via the :ref:`command line
 <command_line>`::
-   
+
     fsleyes -s melodic path/to/my_analysis.ica
 
-    
+
 .. _component_time_series_and_power_spectra:
 
 Component time series and power spectra
@@ -122,7 +122,7 @@ accessed through the :ref:`plot control panel
 
 .. image:: images/ic_classification_time_series_settings.png
    :width: 65%
-   :align: center 
+   :align: center
 
 
 .. image:: images/ic_classification_power_spectrum_settings.png
@@ -168,18 +168,18 @@ The buttons along the bottom of the panel allow you to:
 
 - **Load labels** Load a set of classifications from a file (see the section
   on the :ref:`label file format <ic_classification_file_format>` below).
-  
+
 - **Save labels** Save your labels to a file. These files can be used as
   inputs to `FIX <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIX>`_.
-  
+
 - **Clear labels** Clear all of the existing labels - each component will be
   given a label of *Unknown*.
 
 
 When working in the *Components* list, each row contains the labels for one
 component, corresponding to one volume in the ``melodic_IC`` file [*]_. If you
-are using the :ref:`MELODIC perspective
-<ic_classification_the_melodic_perspective>`, when you select a row in the
+are using the :ref:`MELODIC layout
+<ic_classification_the_melodic_layout>`, when you select a row in the
 component list, the lightbox, time series, and power spectrum views will
 update to display the volume, time course, and power spectrum corresponding to
 the selected component.
@@ -197,25 +197,25 @@ the selected component.
 
 
 .. sidebar:: Available labels
-             
+
              The following classification labels are built into FSLeyes, but
              you are free to type in your own. You may also customise this
              list by modifying the ``melodic-classes`` lookup table - see the
              page on :ref:`customising FSLeyes <customising>` for more
              details:
 
-             - Signal 
-             - Unknown 
-             - Unclassified noise 
-             - Movement 
-             - Cardiac 
-             - White matter 
-             - Non-brain 
-             - MRI 
-             - Susceptibility-motion 
-             - Sagittal sinus 
-             - Respiratory 
-       
+             - Signal
+             - Unknown
+             - Unclassified noise
+             - Movement
+             - Cardiac
+             - White matter
+             - Non-brain
+             - MRI
+             - Susceptibility-motion
+             - Sagittal sinus
+             - Respiratory
+
 
 The classification panel is designed to be used entirely with the keyboard
 [*]_:
@@ -282,18 +282,18 @@ The file format comprises three sections:
 - The first line of the file contains the name of the MELODIC directory which
   the label file corresponds to (specified as a path relative to the location
   of the label file).
-  
+
 - Then, one line is present for each component. Each component line contains
   the following, separated by commas:
 
   - The component index (starting from 1).
-    
+
   - One or more labels for the component (multiple labels are separated with a
     comma).
-    
+
   - ``True`` if the component has been classified as a *bad* component [*]_,
     ``False`` otherwise.
-    
+
 - The last line of the file contains the indices (starting from 1) of all
   *bad* components. These indices are separated with commas, and contained
   within square brackets.
@@ -306,7 +306,7 @@ brackets. For example::
 
   [2, 5, 6, 7]
 
-  
+
 This is also valid::
 
   2, 5, 6, 7

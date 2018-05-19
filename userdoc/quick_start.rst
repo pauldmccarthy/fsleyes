@@ -300,7 +300,7 @@ Classify ICA components?
 
 
 Load your ``.ica`` directory (or the ``.ica/melodic_IC`` image file), then
-open the melodic perspective (the *View* |right_arrow| *Perspectives*
+open the melodic layout (the *View* |right_arrow| *Layouts*
 |right_arrow| *MELODIC mode* menu option). See :ref:`ic_classification` for
 more information.
 
@@ -309,8 +309,7 @@ Save the current view/control panel layout?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-You can save a layout at any time by defining a new :ref:`perspective
-<overview_layout_and_perspectives>`: Choose the *View* |right_arrow|
-*Perspectives* |right_arrow| *Save current perspective* menu item, and give
+You can save a layout at any time: Choose the *View* |right_arrow|
+*Layouts* |right_arrow| *Save current layout* menu item, and give
 your layout a name. You can then restore it at any time by selecting it in the
-*View* |right_arrow| *Perspectives* menu.
+*View* |right_arrow| *Layouts* menu.

@@ -68,7 +68,7 @@ the :ref:`command line help <command_line_help>`.
 
 - :ref:`Auto display <command_line_auto_display>`
 - :ref:`Add standard <command_line_add_standard>`
-- :ref:`Perspectives <command_line_perspectives>`
+- :ref:`Layouts <command_line_layouts>`
 - :ref:`Font size <command_line_font_size>`
 - :ref:`Neurological orientation <command_line_neurological_orientation>`
 - :ref:`Force-load images <command_line_force_load_images>`
@@ -117,10 +117,10 @@ your command line environment has been correctly configured to use FSL
 (e.g. the ``$FSLDIR`` environment variable is set).
 
 
-.. _command_line_perspectives:
+.. _command_line_layouts:
 
-Perspectives
-^^^^^^^^^^^^
+Layouts
+^^^^^^^
 
 ::
 
@@ -137,8 +137,8 @@ Perspectives
 
 
 The ``--scene`` option allows you to tell FSLeyes to start up with a specific
-:ref:`perspective <overview_layout_and_perspectives>`. If you have saved your
-own custom perspective, you can also load it, by name, using the ``--scene``
+:ref:`layout <overview_layouts>`. If you have saved your
+own custom layout, you can also load it, by name, using the ``--scene``
 option.
 
 
@@ -369,7 +369,7 @@ You may also specify the size of the generated image, in pixels::
 
 
 When using the off-screen renderer, the ``--scene`` option, normally used to
-:ref:`specify a perspective <command_line_perspectives>`, allows you to choose
+:ref:`specify a layout <command_line_layouts>`, allows you to choose
 between generating a screenshot with an :ref:`orthographic
 <ortho_lightbox_views_ortho>`, :ref:`lightbox
 <ortho_lightbox_views_lightbox>`, or :ref:`3D <3d_view>` view::

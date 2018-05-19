@@ -144,10 +144,10 @@ Views and controls are described in more detail in the pages on
 views <plot_views>`, and the :ref:`3D view <3d_view>`.
 
 
-.. _overview_layout_and_perspectives:
+.. _overview_layouts:
 
-Layout and perspectives
------------------------
+Layouts
+-------
 
 
 FSLeyes allows you to lay out your view and control panels in any way you
@@ -174,34 +174,33 @@ whenever you click and drag the title bar of a view or control panel:
 
 
 
-FSLeyes refers to a specific view and control panel arrangement as a
-*perspective*.  If you have a layout which you like, or use frequently, you
-can save it as a perspective, and restore it later on.  All of the options for
-managing perspectives can be found in the *View* |right_arrow| *Perspectives*
-sub-menu:
+FSLeyes refers to a specific view and control panel arrangement as a *layout*.
+If you have a layout which you like, or use frequently, you can save it, and
+restore it later on.  All of the options for managing layouts can be
+found in the *View* |right_arrow| *layouts* sub-menu:
 
-.. image:: images/overview_perspectives_menu.png
+.. image:: images/overview_layouts_menu.png
    :width: 50%
    :align: center
 
 
-.. _overview_built_in_perspectives:
+.. _overview_built_in_layouts:
 
-Built-in perspectives
----------------------
-
-
-FSLeyes comes with a few built-in perspectives, described below.
+Built-in layouts
+----------------
 
 
-.. _overview_default_perspective:
-
-Default perspective
-^^^^^^^^^^^^^^^^^^^
+FSLeyes comes with a few built-in layouts, described below.
 
 
-This is the default FSLeyes perspective, which provides a layout inspired by
-`FSLView <http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_, useful for general image
+.. _overview_default_layout:
+
+Default layout
+^^^^^^^^^^^^^^
+
+
+This is the default FSLeyes layout, inspired by `FSLView
+<http://fsl.fmrib.ox.ac.uk/fsl/fslview/>`_, and useful for general image
 viewing and editing.
 
 
@@ -214,7 +213,7 @@ MELODIC mode
 ^^^^^^^^^^^^
 
 
-This perspective is designed to assist in manual classification of ICA
+This layout is designed to assist in manual classification of ICA
 components. It provides functionality similar to that of the `Melview
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Melview>`_ tool, comprising a lightbox
 view and plot panels which display the :ref:`time course
@@ -236,7 +235,7 @@ FEAT mode
 ^^^^^^^^^
 
 
-This perspective is designed to assist in exploring the results of a `FEAT
+This layout is designed to assist in exploring the results of a `FEAT
 <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis. The :ref:`cluster
 panel <feat_mode_viewing_clusters_the_cluster_panel>` displays a table of
 clusters for each contrast (for analyses which used cluster thresholding), and
@@ -254,7 +253,7 @@ Plain orthographic/lightbox/3D
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-These perspectives simply display a plain orthographic, lightbox, or 3D view,
+These layouts simply display a plain orthographic, lightbox, or 3D view,
 respectively.
 
 
