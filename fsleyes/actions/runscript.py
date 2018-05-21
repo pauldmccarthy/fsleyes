@@ -219,9 +219,10 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
                                         overlayList,
                                         displayCtx)
 
-        loadoverlay.loadOverlays([filename],
-                                 onLoad=onLoad,
-                                 inmem=displayCtx.loadInMemory)
+        return loadoverlay.loadOverlays([filename],
+                                        onLoad=onLoad,
+                                        inmem=displayCtx.loadInMemory,
+                                        blocking=True)[0]
 
     def scaledVoxels():
         """Display all NIFTI images in true scaled voxels (but

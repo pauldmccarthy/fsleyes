@@ -139,7 +139,8 @@ def loadOverlays(paths,
                  errorFunc='default',
                  saveDir=True,
                  onLoad=None,
-                 inmem=False):
+                 inmem=False,
+                 blocking=False):
     """Loads all of the overlays specified in the sequence of files
     contained in ``paths``.
 
@@ -173,8 +174,14 @@ def loadOverlays(paths,
                     force-loaded into memory. Otherwise, large compressed
                     files may be kept on disk. Defaults to ``False``.
 
-    :returns:       A list of overlay objects - just a regular ``list``,
-                    not an :class:`OverlayList`.
+    :arg blocking:  Defaults to ``False``. If ``True``, overlays are loaded
+                    immediately (and the ``onLoad`` function is called
+                    directly. Otherwise, overlays and the ``onLoad`` are loaded
+                    loaded/called on the :func:`.idle.idle` loop.
+
+    :returns:       If ``blocking is False`` (the default), returns ``None``.
+                    Otherwise returns a list containing the loaded overlay
+                    objects.
     """
 
     import fsl.data.image as fslimage
@@ -246,12 +253,19 @@ def loadOverlays(paths,
     if errorFunc == 'default': errorFunc = defaultErrorFunc
 
     overlays = []
+    funcs    = []
 
     # Load the images
     for path in paths:
-        idle.idle(loadPath, path)
+        funcs.append(loadPath, path)
+    funcs.append(realOnLoad)
 
-    idle.idle(realOnLoad)
+    for func in funcs:
+        if blocking: func[0](*func[1:])
+        else:        idle.idle(func[0], func[1:])
+
+    if blocking: return overlays
+    else:        return None
 
 
 def loadImage(dtype, path, inmem=False):
