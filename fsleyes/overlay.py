@@ -293,6 +293,9 @@ class OverlayList(props.HasProperties):
         self.__initOverlayType.pop(item, None)
         self.overlays.remove(item)
 
+    def clear(self):
+        del self[:]
+
     def insert(self, index, item, overlayType=None):
 
         with props.suppress(self, 'overlays', notify=True):

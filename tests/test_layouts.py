@@ -12,6 +12,14 @@ import fsl.data.image as fslimage
 
 import fsleyes.layouts as layouts
 
+
+from fsleyes.views.orthopanel                   import OrthoPanel
+from fsleyes.controls.atlaspanel                import AtlasPanel
+from fsleyes.controls.lookuptablepanel          import LookupTablePanel
+from fsleyes.views.powerspectrumpanel           import PowerSpectrumPanel
+from fsleyes.controls.plotlistpanel             import PlotListPanel
+from fsleyes.controls.powerspectrumcontrolpanel import PowerSpectrumControlPanel  # noqa
+
 from . import run_with_fsleyes, realYield
 
 
@@ -47,3 +55,46 @@ def test_melodic():
 
 def test_feat():
     run_with_fsleyes(_test_layout, 'feat')
+
+
+
+
+def _test_custom(frame, overlayList, displayCtx):
+
+    ortho = frame.addViewPanel(OrthoPanel)
+    ps    = frame.addViewPanel(PowerSpectrumPanel)
+
+    ortho.toggleAtlasPanel()
+    ortho.toggleLookupTablePanel()
+
+    ps.togglePlotList()
+    ps.togglePowerSpectrumControl()
+
+    realYield(50)
+    layouts.saveLayout(frame, 'custom_custom')
+    frame.removeAllViewPanels()
+    realYield(50)
+
+    layouts.loadLayout(frame, 'custom_custom')
+
+    realYield(50)
+
+    ortho, ps = frame.viewPanels
+
+    assert isinstance(ortho, OrthoPanel)
+    assert isinstance(ps,    PowerSpectrumPanel)
+
+    orthoctrls = ortho.getPanels()
+    psctrls    = ps   .getPanels()
+
+    assert len(orthoctrls) == 2
+    assert len(psctrls)    == 2
+
+    assert AtlasPanel                in [type(p) for p in orthoctrls]
+    assert LookupTablePanel          in [type(p) for p in orthoctrls]
+    assert PlotListPanel             in [type(p) for p in psctrls]
+    assert PowerSpectrumControlPanel in [type(p) for p in psctrls]
+
+
+def test_custom():
+    run_with_fsleyes(_test_custom)

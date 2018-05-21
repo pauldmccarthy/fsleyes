@@ -2488,7 +2488,11 @@ def generateOverlayArgs(overlay, overlayList, displayCtx):
     return args
 
 
-def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
+def applyOverlayArgs(args,
+                     overlayList,
+                     displayCtx,
+                     loadOverlays=True,
+                     **kwargs):
     """Loads and configures any overlays which were specified on the
     command line.
 
@@ -2500,17 +2504,22 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
                  :func:`.loadoverlay.loadOverlays` documentation for more
                  details.
 
-    :arg args:        A :class:`~argparse.Namespace` instance, as returned
-                      by the :func:`parseArgs` function.
+    :arg args:         A :class:`~argparse.Namespace` instance, as returned
+                       by the :func:`parseArgs` function.
 
-    :arg overlayList: An :class:`.OverlayList` instance, to which the
-                      overlays should be added.
+    :arg overlayList:  An :class:`.OverlayList` instance, to which the
+                       overlays should be added.
 
-    :arg displayCtx:  A :class:`.DisplayContext` instance, which manages the
-                      scene and overlay display.
+    :arg displayCtx:   A :class:`.DisplayContext` instance, which manages the
+                       scene and overlay display.
 
-    :arg kwargs:      Passed through to the :func:`.loadoverlay.loadOverlays`
-                      function.
+    :arg loadOverlays: Defaults to ``True``.  If ``False``, it is assumed that
+                       the overlays are already loaded - in this case, the
+                       arguments are applied synchronously.
+
+    All other keyword arguments are passed through to the
+    :func:`.loadoverlay.loadOverlays` function (unless ``loadOverlays``is
+    ``False``).
     """
 
     import fsleyes.actions.loadoverlay as loadoverlay
@@ -2536,7 +2545,8 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
         # trigger the DisplayContext to create
         # Display/DisplayOpts instances for each
         # overlay.
-        overlayList.extend(overlays, overlayTypes=overlayTypes)
+        if loadOverlays:
+            overlayList.extend(overlays, overlayTypes=overlayTypes)
 
         # Select the last image in the list
         selovl = args.selectedOverlay
@@ -2557,7 +2567,6 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
             # Figure out how many arguments
             # were passed in for this overlay
-
             allArgs = [v for k, v in vars(optArgs).items()
                        if k != 'overlayType']
             nArgs   = len([a for a in allArgs if a is not None])
@@ -2639,11 +2648,16 @@ def applyOverlayArgs(args, overlayList, displayCtx, **kwargs):
 
     paths = [o.overlay for o in args.overlays]
 
-    if len(paths) > 0:
+    if len(paths) == 0:
+        return
+
+    if loadOverlays:
         loadoverlay.loadOverlays(paths,
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory,
                                  **kwargs)
+    else:
+        onLoad(overlayList[:])
 
 
 def wasSpecified(namespace, obj, propName):

@@ -95,10 +95,31 @@ class ApplyCLIExit(Exception):
         return '\n'.join((self.stderr, self.stdout))
 
 
-def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
+def applyCommandLineArgs(overlayList,
+                         displayCtx,
+                         argv,
+                         panel=None,
+                         applyOverlayArgs=True,
+                         loadOverlays=True):
     """Applies the command line arguments stored in ``argv`` to the
     :class:`.CanvasPanel` ``panel``. If ``panel is None``, it is assumed
     that ``argv`` only contains overlay arguments.
+
+    :arg overlayList:      The :class:`.OverlayList`.
+
+    :arg displayCtx:       The :class:`.DisplayContext`. If a ``panel`` is
+                           provided, this should be the ``DisplayContext``
+                           associated with that panel.
+
+    :arg argv:             List of command line arguments to apply.
+    :arg panel:            Optional :class:`.CanvasPanel` to apply the
+                           arguments to.
+
+    :arg applyOverlayArgs: If ``False``, overlay arguments are not applied.
+
+    :arg loadOverlays:     If ``False``, overlays are not loaded, but arguments
+                           are still applied (unless ``applyOverlayArgs`` is
+                           also ``False``).
     """
 
     # We patch sys.stdout/stderr
@@ -127,11 +148,10 @@ def applyCommandLineArgs(overlayList, displayCtx, argv, panel=None):
         sys.stdout = real_stdout
         sys.stderr = real_stderr
 
-    parseargs.applyOverlayArgs(namespace, overlayList, displayCtx)
+    if applyOverlayArgs:
+        parseargs.applyOverlayArgs(
+            namespace, overlayList, displayCtx, loadOverlays)
 
-    # No panel, no need to do anything else
-    if panel is None:
-        return
-
-    sceneOpts = panel.sceneOpts
-    parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
+    if panel is not None:
+        sceneOpts = panel.sceneOpts
+        parseargs.applySceneArgs(namespace, overlayList, displayCtx, sceneOpts)
