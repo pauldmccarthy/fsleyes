@@ -30,10 +30,12 @@ import jinja2     as j2
 import fsleyes_widgets.utils.progress  as progress
 import fsleyes_widgets.utils.status    as status
 import fsl.utils.settings              as settings
+import fsl.utils.tempdir               as tempdir
 import fsl.utils.idle                  as idle
 
 import                                    fsleyes
 import fsleyes.strings                 as strings
+import fsleyes.actions.screenshot      as screenshot
 
 
 from . import                             base
@@ -49,6 +51,8 @@ try:
     import ipykernel.iostream      as iostream
     import ipykernel.zmqshell      as zmqshell
     import ipykernel.heartbeat     as heartbeat
+
+    import IPython.display         as display
 
     import jupyter_client          as jc
     import jupyter_client.session  as jcsession
@@ -233,6 +237,8 @@ class BackgroundIPythonKernel(threading.Thread):
             overlayList,
             displayCtx)[1]
 
+        self.__env['screenshot'] = self.__screenshot
+
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=DeprecationWarning)
 
@@ -331,6 +337,13 @@ class BackgroundIPythonKernel(threading.Thread):
         a reference to the ``Exception`` is stored here.
         """
         return self.__error
+
+
+    def __screenshot(self, view):
+        """Insert a screenshot of the given view into the notebook. """
+        with tempdir.tempdir():
+            screenshot.screenshot(view, 'screenshot.png')
+            return display.Image('screenshot.png')
 
 
     def __kernelDispatch(self):

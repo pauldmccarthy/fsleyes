@@ -1,3 +1,6 @@
+![banner](/custom/banner.png)
+
+
 # FSLeyes Jupyter notebook
 
 
@@ -18,7 +21,7 @@ The `overlayList` is a list which contains all of the overlays that have been
 loaded into FSLeyes.  You can load overlays by using the `load` function,
 e.g.:
 
-    load('MNI152_T1_2mm.nii.gz')
+    std = load('MNI152_T1_2mm.nii.gz')
 
 
 You can remove an overlay simply by removing it from the `overlayList`:
@@ -71,6 +74,21 @@ To submit a command as a cluster job, use the `submit` flag:
     fnirt('src.nii.gz', 'ref.nii.gz', submit=True)
 
 
+## User interface
+
+
+You can access the current views in FSLeyes through the ``frame`` object:
+
+    ortho = frame.viewPanels[0]
+
+
+You also can add/remove views through the ``frame``:
+
+
+    frame.removeViewPanel(ortho)
+    frame.addViewPanel(Scene3DPanel)
+
+
 ## Screenshots
 
 
@@ -105,7 +123,7 @@ the current FSLeyes setup:
 Now copy the string that `getState` generates, and then at the top of your
 notebook add a call to `setState`, passing in that string, e.g.:
 
-    fsleyesState = 'OrthoPanel\nlayout2|name=OrthoPanel 1;caption=...'
+    fsleyesState = 'OrthoPanel\\nlayout2|name=OrthoPanel 1;caption=...'
     setState(fsleyesState)
 
 
