@@ -189,6 +189,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     from   fsleyes.views.shellpanel         import ShellPanel
     from   fsleyes.actions.screenshot       import screenshot
     from   fsleyes.actions.moviegif         import makeGif
+    import fsleyes.state                        as state
     import fsl.data.image                       as fslimage
     import fsl.data.featimage                   as featimage
     import fsl.data.melodicimage                as melimage
@@ -252,6 +253,16 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         print(textwrap.dedent(obj.__doc__).strip())
 
 
+    def getState():
+        """Get the current FSLeyes state. """
+        return state.getState(frame)
+
+
+    def setState(state):
+        """Set the current FSLeyes state. """
+        return state.setState(frame, state)
+
+
     def setprop(substr, propName, value, testName=False):
         """Set the given property value for all overlays which have the
         given ``substr`` in their file path.
@@ -310,6 +321,8 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('trueScaledVoxels',   trueScaledVoxels),
         ('rawVoxels',          rawVoxels),
         ('setprop',            setprop),
+        ('getState',           getState),
+        ('setState',           setState),
         ('load',               load),
         ('run',                run),
         ('help',               help),
