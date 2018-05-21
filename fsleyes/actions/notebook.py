@@ -34,9 +34,6 @@ import fsl.utils.idle                  as idle
 
 import                                    fsleyes
 import fsleyes.strings                 as strings
-import fsleyes.perspectives            as perspectives
-import fsleyes.views.canvaspanel       as canvaspanel
-import fsleyes.actions.showcommandline as showcommandline
 
 
 from . import                             base
@@ -111,7 +108,8 @@ class NotebookAction(base.Action):
         # show a progress dialog if we need
         # to initialise the kernel or server
         if self.__kernel is None or self.__server is None:
-            progdlg = progress.Bounce()
+            title   = strings.titles[self, 'init']
+            progdlg = progress.Bounce(title)
         else:
             progdlg = None
 
@@ -487,6 +485,8 @@ class NotebookServer(threading.Thread):
         cfgdir = op.join(tempfile.mkdtemp(prefix='fsleyes-jupyter'), 'config')
         shutil.copytree(op.join(fsleyes.assetDir, 'assets', 'jupyter'), cfgdir)
 
+        log.debug('Copied notebook configuration to %s', cfgdir)
+
         self.__initConfigDir(cfgdir)
 
         # Set up the environment in which the
@@ -529,61 +529,25 @@ class NotebookServer(threading.Thread):
         directory in ``$TMPDIR``, and customises its settings accordingly.
         """
 
+        nbextdir = op.join(cfgdir, 'nbextensions')
+
         # Environment for generating a jupyter
         # notebook server configuration file
         cfgenv = {
             'fsleyes_nbserver_port'       : self.__port,
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
-            'fsleyes_nbextension_dir'     : op.join(cfgdir, 'nbextensions'),
+            'fsleyes_nbextension_dir'     : nbextdir,
             'fsleyes_kernel_connfile'     : self.__kernel.connfile,
         }
 
-        frame       = self.__frame
-        overlayList = self.__overlayList
-
-        persp  = perspectives.serialisePerspective(frame)
-        panels = [p for p in frame.viewPanels
-                  if isinstance(p, canvaspanel.CanvasPanel)]
-        cli    = []
-
-        for i, panel in enumerate(panels):
-
-            argv = showcommandline.genCommandLineArgs(
-                overlayList,
-                panel.displayCtx,
-                panel)
-
-            argv = ['\'{}\''.format(a) for a in argv]
-
-            codeargs = ['overlayList',
-                        'displayCtx',
-                        'panel=frame.viewPanels[{}]'.format(i),
-                        'applyOverlayArgs={}'.format(i == 0),
-                        'applySceneArgs=True',
-                        'argv=[{}]'.format(', '.join(argv))]
-
-            cli.append('applyCommandLineArgs({})'.format(', '.join(codeargs)))
-
-        lines = [
-            'from fsleyes.perspectives             '
-            'import applyPerspective',
-            'from fsleyes.actions.applycommandline '
-            'import applyCommandLineArgs',
-            'applyPerspective(frame, \'name\', \'{}\')'.format(persp)] + cli
-
-        lines = [l.replace('\n', '\\\\n').replace('"', '\\"') for l in lines]
-
-        init_code = '\\n'.join(lines)
-
-        intro = runscript.fsleyesShellHelpText({}, self.__kernel.env)
-        intro = intro.replace('\n', '\\n').replace('"',  '\\"')
+        with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:
+            intro = f.read()
 
         # Environment for generating the
         # notebook template extension
         extenv = {
-            'fsleyes_md_intro'  : intro,
-            'fsleyes_code_init' : init_code,
+            'intro' : intro.replace('\n', '\\n'),
         }
 
         cfgfile = op.join(cfgdir, 'jupyter_notebook_config.py')

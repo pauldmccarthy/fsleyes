@@ -428,6 +428,7 @@ titles = TypeDict({
     'loadDicom.loadError' : 'Error loading DICOM series',
     'BrowseDicomDialog'   : 'Select DICOM series',
 
+    'NotebookAction.init' : 'Starting Jupyter',
     'NotebookAction.init.error' :
     'Error initialising IPython/Jupyter',
 })
