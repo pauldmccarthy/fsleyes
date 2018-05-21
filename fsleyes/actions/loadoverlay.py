@@ -234,7 +234,7 @@ def loadOverlays(paths,
 
     # This function gets called after
     # all overlays have been loaded
-    def realOnLoad():
+    def realOnLoad(*a):
 
         if saveDir and len(paths) > 0:
             fslsettings.write('loadSaveOverlayDir', op.dirname(paths[-1]))
@@ -257,12 +257,12 @@ def loadOverlays(paths,
 
     # Load the images
     for path in paths:
-        funcs.append(loadPath, path)
+        funcs.append(lambda : loadPath(path))
     funcs.append(realOnLoad)
 
     for func in funcs:
-        if blocking: func[0](*func[1:])
-        else:        idle.idle(func[0], func[1:])
+        if blocking: func()
+        else:        idle.idle(func)
 
     if blocking: return overlays
     else:        return None

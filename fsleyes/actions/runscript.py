@@ -259,9 +259,9 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         return state.getState(frame)
 
 
-    def setState(state):
+    def setState(s):
         """Set the current FSLeyes state. """
-        return state.setState(frame, state)
+        return state.setState(frame, s)
 
 
     def setprop(substr, propName, value, testName=False):

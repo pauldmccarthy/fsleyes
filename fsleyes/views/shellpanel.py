@@ -11,6 +11,8 @@ which contains an interactive Python shell.
 
 import sys
 
+import deprecation
+
 import wx.py.shell       as wxshell
 import wx.py.interpreter as wxinterpreter
 
@@ -29,6 +31,9 @@ class ShellPanel(viewpanel.ViewPanel):
     that owns this ``ShellPanel``.
     """
 
+    @deprecation.deprecated(deprecated_in='0.24.0',
+                            removed_in='1.0.0',
+                            details='Use Jupyter notebooks instead')
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ShellPanel``.
 
@@ -49,7 +54,14 @@ class ShellPanel(viewpanel.ViewPanel):
         _globals, _locals = runscript.fsleyesScriptEnvironment(frame,
                                                                overlayList,
                                                                displayCtx)
-        introText = runscript.fsleyesShellHelpText(_globals, _locals)
+
+        introText  = 'The FSLeyes Python shell is deprecated and will be\n' \
+                     'removed in a future version. Use the integrated\n' \
+                     'Jupyter notebook instead (File -> Open notebooks).'
+        introText += '\n\n'
+        introText += runscript.fsleyesShellHelpText(_globals, _locals)
+
+
 
         shell = wxshell.Shell(
             self,

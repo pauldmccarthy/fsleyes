@@ -287,10 +287,20 @@ def main(args=None):
     # We do this so that any functions
     # registered with atexit will actually
     # get called.
+    nsignals = [0]
+
     def sigHandler(signo, frame):
         log.debug('Signal received - FSLeyes is shutting down...')
-        exitCode[0] = signo
-        app.ExitMainLoop()
+
+        # first signal - try to exit cleanly
+        if nsignals[0] == 0:
+            nsignals[0] += 1
+            exitCode[0]  = signo
+            app.ExitMainLoop()
+
+        # subsequent signals - exit immediately
+        else:
+            sys.exit(signo)
 
     signal.signal(signal.SIGINT,  sigHandler)
     signal.signal(signal.SIGTERM, sigHandler)
@@ -369,6 +379,9 @@ def initialise(splash, namespace, callback):
     if namespace.bumMode:
         import fsleyes.icons as icons
         icons.BUM_MODE = True
+
+    # Set notebook server port
+    fslsettings.write('fsleyes.notebook.port', namespace.notebookPort)
 
     # This is called by fsleyes.gl.getGLContext
     # when the GL context is ready to be used.

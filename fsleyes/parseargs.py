@@ -417,7 +417,8 @@ OPTIONS = td.TypeDict({
                        'initialDisplayRange',
                        'bigmem',
                        'bumMode',
-                       'fontSize'],
+                       'fontSize',
+                       'notebookPort'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -710,6 +711,7 @@ ARGUMENTS = td.TypeDict({
     'Main.bigmem'              : ('b',      'bigmem',              False),
     'Main.bumMode'             : ('bums',   'bumMode',             False),
     'Main.fontSize'            : ('fs',     'fontSize',            True),
+    'Main.notebookPort'        : ('nbp',    'notebookPort',        True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -911,6 +913,7 @@ HELP = td.TypeDict({
                               'regardless of size.',
     'Main.bumMode'          : 'Make the coronal icon look like a bum',
     'Main.fontSize'         : 'Application font size',
+    'Main.notebookPort'     : 'Jupyter notebook server port',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -1582,6 +1585,10 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['fontSize'],
                             type=int,
                             help=mainHelp['fontSize'])
+    mainParser.add_argument(*mainArgs['notebookPort'],
+                            type=int,
+                            help=mainHelp['notebookPort'],
+                            default=8888)
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):
