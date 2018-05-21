@@ -31,6 +31,7 @@ import            logging
 import            textwrap
 
 import wx
+import appnope
 
 from fsl.utils.platform import platform as fslplatform
 
@@ -301,6 +302,7 @@ def main(args=None):
     # already created the splash screen, so
     # all is well.
     wx.CallAfter(init, splash)
+    appnope.nope()
     app.MainLoop()
     shutdown()
     return exitCode[0]
