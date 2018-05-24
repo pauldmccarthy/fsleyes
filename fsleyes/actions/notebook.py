@@ -53,6 +53,8 @@ try:
     import ipykernel.zmqshell      as zmqshell
     import ipykernel.heartbeat     as heartbeat
 
+    import notebook.notebookapp    as notebookapp
+
     import IPython.display         as display
 
     import jupyter_client          as jc
@@ -462,13 +464,23 @@ class NotebookServer(threading.Thread):
         self.__frame       = frame
         self.__stdout      = None
         self.__stderr      = None
-        self.__port        = settings.read('fsleyes.notebook.port', 8888)
+        self.__port        = None
         self.__token       = binascii.hexlify(os.urandom(24)).decode('ascii')
 
 
     @property
     def port(self):
-        """Returns the TCP port that the notebook server is listening on. """
+        """Returns the TCP port that the notebook server is listening on.
+        Will return ``None`` before the server has started.
+        """
+        if self.__port is not None:
+            return self.__port
+
+        for server in notebookapp.list_running_servers():
+            if server['token'] == self.__token:
+                self.__port = server['port']
+                break
+
         return self.__port
 
 
@@ -477,12 +489,13 @@ class NotebookServer(threading.Thread):
         """Returns an authentication token to use for connectng to the
         notebook server.
         """
-        return self.__port
+        return self.__token
 
 
     @property
     def url(self):
-        return 'http://localhost:{}?token={}'.format(self.__port, self.__token)
+        """Returns the URL to use to connect to this server. """
+        return 'http://localhost:{}?token={}'.format(self.port, self.token)
 
 
     @property
@@ -562,7 +575,7 @@ class NotebookServer(threading.Thread):
         # Environment for generating a jupyter
         # notebook server configuration file
         cfgenv = {
-            'fsleyes_nbserver_port'       : self.__port,
+            'fsleyes_nbserver_port'       : 8888,
             'fsleyes_nbserver_token'      : self.__token,
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,

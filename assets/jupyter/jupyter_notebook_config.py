@@ -1,7 +1,7 @@
 c.ContentsManager.untitled_notebook   = 'FSLeyes_notebook'
 c.Session.key                         = b''
 c.NotebookApp.port                    = {{ fsleyes_nbserver_port }}
-c.NotebookApp.port_retries            = 0
+c.NotebookApp.port_retries            = 50
 c.NotebookApp.token                   = '{{ fsleyes_nbserver_token }}'
 c.NotebookApp.password                = ''
 c.NotebookApp.notebook_dir            = '{{ fsleyes_nbserver_dir }}'
