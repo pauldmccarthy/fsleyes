@@ -18,6 +18,7 @@ import               time
 import               atexit
 import               shutil
 import               logging
+import               binascii
 import               tempfile
 import               warnings
 import               threading
@@ -135,7 +136,7 @@ class NotebookAction(base.Action):
 
         # if all is well, open the
         # notebook server homepage
-        webbrowser.open('http://localhost:{}'.format(self.__server.port))
+        webbrowser.open(self.__server.url)
 
 
     def __bounce(self, secs, progdlg):
@@ -447,7 +448,7 @@ class NotebookServer(threading.Thread):
     def __init__(self, kernel, overlayList, displayCtx, frame):
         """Create a ``NotebookServer`` thread.
 
-        :arg kernel:      ...
+        :arg kernel:      The :class:`BackgroundIPythonKernel` to connect to.
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The master :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
@@ -462,12 +463,26 @@ class NotebookServer(threading.Thread):
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = settings.read('fsleyes.notebook.port', 8888)
+        self.__token       = binascii.hexlify(os.urandom(24)).decode('ascii')
 
 
     @property
     def port(self):
         """Returns the TCP port that the notebook server is listening on. """
         return self.__port
+
+
+    @property
+    def token(self):
+        """Returns an authentication token to use for connectng to the
+        notebook server.
+        """
+        return self.__port
+
+
+    @property
+    def url(self):
+        return 'http://localhost:{}?token={}'.format(self.__port, self.__token)
 
 
     @property
@@ -548,6 +563,7 @@ class NotebookServer(threading.Thread):
         # notebook server configuration file
         cfgenv = {
             'fsleyes_nbserver_port'       : self.__port,
+            'fsleyes_nbserver_token'      : self.__token,
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : nbextdir,
