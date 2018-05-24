@@ -722,7 +722,21 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # The image data is flattened, with fortran dimension
             # ordering, so the data, as stored on the GPU, has its
             # first dimension as the fastest changing.
-            data = data.reshape(-1, order='F')
+            data = np.ascontiguousarray(data.reshape(-1, order='F'))
+
+            # PyOpenGL needs the data array
+            # to be writeable, as it uses
+            # PyArray_ISCARRAY to check
+            # for contiguousness. but if the
+            # data has come from a nibabel
+            # ArrayProxy, the writeable flag
+            # will be set to False for some
+            # reason.
+            #
+            # TODO: If this turns out to be a problem
+            #       then you will have to bite the
+            #       bullet and copy the data.
+            data.flags.writeable = True
 
             if not bound:
                 self.bindTexture()
