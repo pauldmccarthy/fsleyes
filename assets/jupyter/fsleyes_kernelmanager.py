@@ -50,3 +50,8 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
         kernel = self._kernels[kid]
         self.__patch_connection(kernel)
         raise gen.Return(kid)
+
+
+    def restart_kernel(self, *args, **kwargs):
+        """Overrides ``MappingKernelManager.restart_kernel``. Does nothing. """
+        pass

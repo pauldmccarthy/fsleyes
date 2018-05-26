@@ -100,7 +100,7 @@ def applyCommandLineArgs(overlayList,
                          argv,
                          panel=None,
                          applyOverlayArgs=True,
-                         loadOverlays=True):
+                         **kwargs):
     """Applies the command line arguments stored in ``argv`` to the
     :class:`.CanvasPanel` ``panel``. If ``panel is None``, it is assumed
     that ``argv`` only contains overlay arguments.
@@ -117,9 +117,8 @@ def applyCommandLineArgs(overlayList,
 
     :arg applyOverlayArgs: If ``False``, overlay arguments are not applied.
 
-    :arg loadOverlays:     If ``False``, overlays are not loaded, but arguments
-                           are still applied (unless ``applyOverlayArgs`` is
-                           also ``False``).
+    All other keyword arguments are passed to the
+    :func:`.parseargs.applyOverlayArgs`  function.
     """
 
     # We patch sys.stdout/stderr
@@ -150,7 +149,7 @@ def applyCommandLineArgs(overlayList,
 
     if applyOverlayArgs:
         parseargs.applyOverlayArgs(
-            namespace, overlayList, displayCtx, loadOverlays)
+            namespace, overlayList, displayCtx, **kwargs)
 
     if panel is not None:
         sceneOpts = panel.sceneOpts
