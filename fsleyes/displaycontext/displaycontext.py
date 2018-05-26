@@ -993,7 +993,7 @@ class DisplayContext(props.SyncableHasProperties):
         # If overlays have been added to
         # the overlay list, add indices
         # for them to the overlayOrder list
-        elif len(self.overlayOrder) < len(self.__overlayList):
+        elif len(oldList) < len(self.__overlayList):
 
             newOrder      = []
             newOverlayIdx = len(oldList)
@@ -1013,7 +1013,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         # Otherwise, if overlays have been
         # removed from the overlay list ...
-        elif len(self.overlayOrder) > len(self.__overlayList):
+        elif len(oldList) > len(self.__overlayList):
 
             # Remove the corresponding indices
             # from the overlayOrder list
