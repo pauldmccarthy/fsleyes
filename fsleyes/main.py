@@ -40,6 +40,15 @@ import fsleyes.splash     as fslsplash
 import fsleyes.colourmaps as colourmaps
 
 
+# wx.ModalDialogHook does not exist in wxPython < 4
+if fslplatform.wxFlavour == fslplatform.WX_PYTHON:
+    class ModalDialogHook(object):
+        def Register(self):
+            pass
+
+    wx.ModalDialogHook = ModalDialogHook
+
+
 log = logging.getLogger(__name__)
 
 

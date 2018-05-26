@@ -68,10 +68,6 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-# Debug during development
-log.setLevel(logging.DEBUG)
-
-
 class NotebookAction(base.Action):
     """The ``NotebookAction`` is an :class:`.Action` which (if necessary)
     starts an embedded IPython kernel and a jupyter notebook server, and
