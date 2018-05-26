@@ -46,18 +46,53 @@ log = logging.getLogger(__name__)
 class FSLeyesApp(wx.App):
     """FSLeyes-specific sub-class of ``wx.App``. """
 
+
+    class ModalHook(wx.ModalDialogHook):
+        """Keeps track of any modal dialogs/windows that are opened.
+
+        Modal dialogs can interfere with shutdown, as they run their own event
+        loop. Therefore we keep a reference is kept to all opened modal
+        dialogs, so we can manually shut them down if needed (see the
+        :func:`main` function).
+        """
+
+        def __init__(self, *args, **kwargs):
+            wx.ModalDialogHook.__init__(self, *args, **kwargs)
+            self.modals = set()
+
+        def Enter(self, dlg):
+            self.modals.add(dlg)
+            return wx.ID_NONE
+
+        def Exit(self, dlg):
+            self.modals.remove(dlg)
+
+
     def __init__(self):
         """Create a ``FSLeyesApp``. """
 
         self.__overlayList = None
         self.__displayCtx  = None
 
+        self.__modalHook = FSLeyesApp.ModalHook()
+        self.__modalHook.Register()
+
         wx.App.__init__(self, clearSigInt=False)
 
         self.SetAppName('FSLeyes')
 
 
+    @property
+    def modals(self):
+        """Returns a list of all currently open modal windows. """
+        return list(self.__modalHook.modals)
+
+
     def SetOverlayListAndDisplayContext(self, overlayList, displayCtx):
+        """References to the :class:`.OverlayList` and master
+        :class:`.DisplayContext` must be passed to the ``FSLeyesApp`` via this
+        method.
+        """
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
 
@@ -296,7 +331,13 @@ def main(args=None):
         if nsignals[0] == 0:
             nsignals[0] += 1
             exitCode[0]  = signo
-            app.ExitMainLoop()
+
+            # kill any modal windows
+            # that are open
+            for mdlg in app.modals:
+                mdlg.EndModal(wx.ID_CANCEL)
+
+            wx.CallAfter(app.ExitMainLoop)
 
         # subsequent signals - exit immediately
         else:

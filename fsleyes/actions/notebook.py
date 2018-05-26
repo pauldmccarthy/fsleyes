@@ -28,19 +28,18 @@ import               webbrowser
 import               wx
 import jinja2     as j2
 
-import fsleyes_widgets.utils.progress  as progress
-import fsleyes_widgets.utils.status    as status
-import fsl.utils.settings              as settings
-import fsl.utils.tempdir               as tempdir
-import fsl.utils.idle                  as idle
+import fsleyes_widgets.utils.progress as progress
+import fsleyes_widgets.utils.status   as status
+import fsl.utils.settings             as settings
+import fsl.utils.tempdir              as tempdir
+import fsl.utils.idle                 as idle
 
-import                                    fsleyes
-import fsleyes.strings                 as strings
-import fsleyes.actions.screenshot      as screenshot
+import                                   fsleyes
+import fsleyes.strings                as strings
+import fsleyes.actions.screenshot     as screenshot
 
-
-from . import                             base
-from . import                             runscript
+from . import                            base
+from . import                            runscript
 
 try:
     import                            zmq
@@ -554,6 +553,14 @@ class NotebookServer(threading.Thread):
             # the notebook server
             self.__nbproc.terminate()
             self.__nbproc.terminate()
+
+            # Give it a little time, then
+            # force kill if needed
+            try:
+                self.__nbproc.wait(0.25)
+            except sp.TimeoutExpired:
+                self.__nbproc.kill()
+
             shutil.rmtree(op.abspath(op.join(cfgdir, '..')))
 
         # kill the server when we get killed
@@ -570,12 +577,13 @@ class NotebookServer(threading.Thread):
         directory in ``$TMPDIR``, and customises its settings accordingly.
         """
 
-        nbextdir = op.join(cfgdir, 'nbextensions')
+        nbextdir    = op.join(cfgdir, 'nbextensions')
+        defaultPort = settings.read('fsleyes.notebook.port', 8888)
 
         # Environment for generating a jupyter
         # notebook server configuration file
         cfgenv = {
-            'fsleyes_nbserver_port'       : 8888,
+            'fsleyes_nbserver_port'       : defaultPort,
             'fsleyes_nbserver_token'      : self.__token,
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
