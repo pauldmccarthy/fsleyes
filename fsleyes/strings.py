@@ -1453,7 +1453,9 @@ about = {
      - fsleyes-widgets [{}] (https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets)
      - fslpy [{}] (https://git.fmrib.ox.ac.uk/fsl/fslpy)
      - indexed_gzip [{}] (https://github.com/pauldmccarthy/indexed_gzip/)
+     - IPython [{}] (https://ipython.org/)
      - jinja2 [{}] (http://jinja.pocoo.org)
+     - Jupyter notebook [{}] (https://jupyter.org)
      - matplotlib [{}] (http://www.matplotlib.org)
      - nibabel [{}] (http://nipy.org/nibabel)
      - numpy [{}] (http://www.numpy.org)
@@ -1486,9 +1488,10 @@ about = {
     # each of them, and inserts them into the above
     # string.
     'libs' : ['fsleyes_props', 'fsleyes_widgets',    'fsl.version',
-              'indexed_gzip',  'jinja2',             'matplotlib',
-              'nibabel',       'numpy',              'PIL',
-              'OpenGL',        'pyparsing',          'scipy',
-              'six',           'fsleyes.gl.trimesh', 'wx',
-              'wxnat',         'xnat'],
+              'indexed_gzip',  'IPython',            'jinja2',
+              'notebook',      'matplotlib',         'nibabel',
+              'numpy',         'PIL',                'OpenGL',
+              'pyparsing',     'scipy',              'six',
+              'trimesh',       'wx',                 'wxnat',
+              'xnat'],
 }
