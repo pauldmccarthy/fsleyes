@@ -257,7 +257,7 @@ def loadOverlays(paths,
 
     # Load the images
     for path in paths:
-        funcs.append(lambda : loadPath(path))
+        funcs.append(lambda p=path: loadPath(p))
     funcs.append(realOnLoad)
 
     for func in funcs:
