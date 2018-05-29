@@ -27,14 +27,16 @@ import            functools
 
 import            wx
 
-import fsl.utils.idle                     as idle
-import fsleyes_props                      as props
-import fsleyes_widgets                    as fwidgets
-import fsleyes_widgets.utils.typedict     as td
-import fsleyes.strings                    as strings
-import fsleyes.colourmaps                 as fslcm
-import fsleyes.actions.loadcolourmap      as loadcmap
-import fsleyes.actions.loadvertexdata     as loadvdata
+import fsl.utils.idle                 as idle
+import fsleyes_props                  as props
+import fsleyes_widgets                as fwidgets
+import fsleyes_widgets.imagepanel     as imagepanel
+import fsleyes_widgets.utils.typedict as td
+import fsleyes.strings                as strings
+import fsleyes.colourmaps             as fslcm
+import fsleyes.controls.colourbar     as cbar
+import fsleyes.actions.loadcolourmap  as loadcmap
+import fsleyes.actions.loadvertexdata as loadvdata
 
 
 _PROPERTIES      = td.TypeDict()
@@ -779,19 +781,50 @@ def _ColourMapOpts_ColourMapWidget(
     negCmap    = getWidgetSpecs(target, threedee)['negativeCmap']
     useNegCmap = getWidgetSpecs(target, threedee)['useNegativeCmap']
 
+    cbpanel    = imagepanel.ImagePanel(parent)
+    cbpanel.SetMinSize((-1, 30))
+    colourbar  = cbar.ColourBar(overlayList, displayCtx)
+
+    colourbar.bgColour  = (0, 0, 0, 0)
+    colourbar.showLabel = False
+    colourbar.showTicks = False
+
+    def cbarUpdate(*a):
+        w, h = cbpanel.GetSize().Get()
+
+        if w < 20 or h < 20:
+            return
+
+        bmp = colourbar.colourBar(w, h)
+
+        if bmp is None:
+            return
+
+        if fwidgets.wxversion() == fwidgets.WX_PHOENIX:
+            bmp = wx.Bitmap.FromBufferRGBA(w, h, bmp.transpose(1, 0, 2))
+        else:
+            bmp = wx.BitmapFromBufferRGBA( w, h, bmp.transpose(1, 0, 2))
+
+        cbpanel.SetImage(bmp.ConvertToImage())
+
+    colourbar.register('ab', cbarUpdate)
+    cbpanel.Bind(wx.EVT_SIZE, cbarUpdate)
+    cbarUpdate()
+
     cmap       = props.buildGUI(parent, target, cmap)
     negCmap    = props.buildGUI(parent, target, negCmap)
     useNegCmap = props.buildGUI(parent, target, useNegCmap)
 
     useNegCmap.SetLabel(strings.properties[target, 'useNegativeCmap'])
 
-    sizer = wx.FlexGridSizer(2, 2, 0, 0)
+    sizer = wx.GridBagSizer()
     sizer.AddGrowableCol(0)
 
-    sizer.Add(cmap,       flag=wx.EXPAND)
-    sizer.Add(loadButton, flag=wx.EXPAND)
-    sizer.Add(negCmap,    flag=wx.EXPAND)
-    sizer.Add(useNegCmap, flag=wx.EXPAND)
+    sizer.Add(cbpanel,    (0, 0), (1, 2), flag=wx.EXPAND)
+    sizer.Add(cmap,       (1, 0), (1, 1), flag=wx.EXPAND)
+    sizer.Add(loadButton, (1, 1), (1, 1), flag=wx.EXPAND)
+    sizer.Add(negCmap,    (2, 0), (1, 1), flag=wx.EXPAND)
+    sizer.Add(useNegCmap, (2, 1), (1, 1), flag=wx.EXPAND)
 
     return sizer, [cmap, negCmap, useNegCmap]
 

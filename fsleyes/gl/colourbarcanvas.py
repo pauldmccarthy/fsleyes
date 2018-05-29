@@ -17,6 +17,7 @@ colour bar is created.
 
 import logging
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes_props                         as props
@@ -100,9 +101,18 @@ class ColourBarCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
-        w, h   = self.GetSize()
+        w, h = self.GetSize()
+
+        if w < 50 or h < 50:
+            return
+
         scale  = self.GetScale()
         bitmap = self.__cbar.colourBar(w, h, scale)
+
+        # The bitmap has shape W*H*4, but
+        # Texture2D instances need it in
+        # shape 4*W*H
+        bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
 
         if bitmap is None:
             return

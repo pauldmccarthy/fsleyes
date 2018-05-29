@@ -9,8 +9,6 @@ rendering of a colour bar.
 """
 
 
-import numpy as np
-
 import fsl.utils.notifier                    as notifier
 import fsleyes_props                         as props
 import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
@@ -46,6 +44,14 @@ class ColourBar(props.HasProperties, notifier.Notifier):
 
     bgColour = props.Colour(default=(0, 0, 0, 1))
     """Colour to use for the background. """
+
+
+    showLabel = props.Boolean(default=True)
+    """Toggle the colour bar label (the :attr:`.Display.name` property). """
+
+
+    showTicks = props.Boolean(default=True)
+    """Toggle the tick labels (the :attr:`.ColourMapOpts.displayRange`). """
 
 
     def __init__(self, overlayList, displayCtx):
@@ -195,7 +201,7 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         self.notify()
 
 
-    def colourBar(self, w, h, scale=None):
+    def colourBar(self, w, h, scale=1):
         """Returns a bitmap containing the rendered colour bar, rendering it if
         necessary.
 
@@ -207,8 +213,8 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         if self.__opts is None:
             return None
 
-        if w < 40 or h < 40:
-            return None
+        if w < 20: w = 20
+        if h < 20: h = 20
 
         if (w, h, scale) == self.__size and self.__colourBar is not None:
             return self.__colourBar
@@ -231,8 +237,6 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             if  self.labelSide == 'top-left': labelSide = 'left'
             else:                             labelSide = 'right'
 
-        bitmap = np.zeros((w, h, 4), dtype=np.uint8)
-
         if useNegCmap:
             ticks      = [0.0, 0.49, 0.51, 1.0]
             ticklabels = ['{:0.2f}'.format(-dmax),
@@ -246,6 +250,12 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             tickalign  = ['left', 'right']
             ticklabels = ['{:0.2f}'.format(dmin),
                           '{:0.2f}'.format(dmax)]
+
+        if not self.showLabel:
+            label = None
+        if not self.showTicks:
+            ticks      = None
+            ticklabels = None
 
         bitmap = cbarbmp.colourBarBitmap(
             cmap=cmap,
@@ -264,11 +274,6 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             textColour=self.textColour,
             bgColour=self.bgColour,
             cmapResolution=cmapResolution)
-
-        # The bitmap has shape W*H*4, but
-        # Texture2D instances need it in
-        # shape 4*W*H
-        bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
 
         self.__size      = (w, h, scale)
         self.__colourBar = bitmap
