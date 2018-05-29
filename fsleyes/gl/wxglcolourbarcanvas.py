@@ -30,11 +30,11 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
     .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
               :meth:`.ColourBarCanvas._genColourBarTexture` method.
     """
-    def __init__(self, parent):
+    def __init__(self, parent, overlayList, displayCtx):
 
         wxgl.GLCanvas             .__init__(self, parent)
         fslgl.WXGLCanvasTarget    .__init__(self)
-        cbarcanvas.ColourBarCanvas.__init__(self)
+        cbarcanvas.ColourBarCanvas.__init__(self, overlayList, displayCtx)
 
         def onsize(ev):
             self._genColourBarTexture()

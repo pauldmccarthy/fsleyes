@@ -6,22 +6,21 @@
 #
 """This module provides the :class:`ColourBarCanvas`.
 
-The :class:`ColourBarCanvas` contains logic to draw a colour bar (with
-labels), and then renders said colour bar as a texture using OpenGL.
+The :class:`ColourBarCanvas` uses a :class:`.ColourBar` draw a colour bar
+(with labels), and then renders said colour bar as a texture using OpenGL.
 
-See the :mod:`~fsleyes_widgets.colourbarbitmap` module for details on how
-the colour bar is created.
+See the :mod:`~fsleyes.controls.colourbar` and
+:mod:`fsleyes_widgets.utils.colourbarbitmap` modules for details on how the
+colour bar is created.
 """
 
-import copy
+
 import logging
 
 import OpenGL.GL as gl
-import numpy     as np
 
 import fsleyes_props                         as props
-import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
-import fsleyes.displaycontext.colourmapopts  as cmapopts
+import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl.textures                   as textures
 
 
@@ -29,72 +28,36 @@ log = logging.getLogger(__name__)
 
 
 class ColourBarCanvas(props.HasProperties):
-    """Contains logic to render a colour bar as an OpenGL texture.
-    """
-
-    cmap            = copy.copy(cmapopts.ColourMapOpts.cmap)
-    negativeCmap    = copy.copy(cmapopts.ColourMapOpts.negativeCmap)
-    useNegativeCmap = copy.copy(cmapopts.ColourMapOpts.useNegativeCmap)
-    cmapResolution  = copy.copy(cmapopts.ColourMapOpts.cmapResolution)
-    gamma           = copy.copy(cmapopts.ColourMapOpts.gamma)
-    invert          = copy.copy(cmapopts.ColourMapOpts.invert)
-
-
-    vrange = props.Bounds(ndims=1)
-    """The minimum/maximum values to display."""
-
-
-    label = props.String()
-    """A label to display under the centre of the colour bar."""
-
-
-    orientation = props.Choice(('horizontal', 'vertical'))
-    """Whether the colour bar should be vertical or horizontal. """
-
-
-    labelSide = props.Choice(('top-left', 'bottom-right'))
-    """Whether the colour bar labels should be on the top/left, or bottom/right
-    of the colour bar (depending upon whether the colour bar orientation is
-    horizontal/vertical).
-    """
-
-
-    textColour = props.Colour(default=(1, 1, 1, 1))
-    """Colour to use for the colour bar label. """
-
-
-    bgColour = props.Colour(default=(0, 0, 0, 1))
-    """Colour to use for the background. """
+    """Contains logic to render a colour bar as an OpenGL texture. """
 
 
     highDpi = props.Boolean(default=False)
     """Scale colour bar canvas for high-resolution screens. """
 
 
-    def __init__(self):
+    def __init__(self, overlayList, displayCtx):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
         """
 
-        self._tex  = None
-        self._name = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__tex  = None
+        self.__name = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__cbar = cbar.ColourBar(overlayList, displayCtx)
+        self.__cbar.register(self.__name, self.__updateTexture)
 
-        self.addListener('cmap',            self._name, self.__updateTexture)
-        self.addListener('negativeCmap',    self._name, self.__updateTexture)
-        self.addListener('useNegativeCmap', self._name, self.__updateTexture)
-        self.addListener('cmapResolution',  self._name, self.__updateTexture)
-        self.addListener('gamma',           self._name, self.__updateTexture)
-        self.addListener('invert',          self._name, self.__updateTexture)
-        self.addListener('vrange',          self._name, self.__updateTexture)
-        self.addListener('label',           self._name, self.__updateTexture)
-        self.addListener('orientation',     self._name, self.__updateTexture)
-        self.addListener('labelSide',       self._name, self.__updateTexture)
-        self.addListener('textColour',      self._name, self.__updateTexture)
-        self.addListener('bgColour',        self._name, self.__updateTexture)
-        self.addListener('highDpi',         self._name, self.__highDpiChanged)
+        self.addListener('highDpi', self.__name, self.__highDpiChanged)
+
+
+    @property
+    def colourBar(self):
+        """Returns a reference to the :class:`.ColourBar` object that actually
+        generates the colour bar bitmap.
+        """
+        return self.__cbar
 
 
     def __updateTexture(self, *a):
+        """Called whenever the colour bar texture needs to be updated. """
         self._genColourBarTexture()
         self.Refresh()
 
@@ -119,87 +82,43 @@ class ColourBarCanvas(props.HasProperties):
 
     def destroy(self):
         """Should be called when this ``ColourBarCanvas`` is no longer needed.
-        Destroys the :class:`.Texture2D` instance used to render the colour
-        bar.
+        Destroys the :class:`.Texture2D` and :class:`.ColourBar` instances
+        used to render the colour bar.
         """
-        self.removeGlobalListener(self._name)
-        self._tex.destroy()
-        self._tex = None
+        self.__cbar.deregister(self.__name)
+        self.__cbar.destroy()
+        self.__tex.destroy()
+        self.__tex  = None
+        self.__cbar = None
 
 
     def _genColourBarTexture(self):
-        """Generates a texture containing an image of the colour bar,
-        according to the current property values.
+        """Retrieves a colour bar bitmap from the :class:`.ColourBar`, and
+        copies it to a :class:`.Texture2D`.
         """
 
         if not self._setGLContext():
             return
 
-        w, h = self.GetSize()
+        w, h   = self.GetSize()
+        scale  = self.GetScale()
+        bitmap = self.__cbar.colourBar(w, h, scale)
 
-        if w < 50 or h < 50:
+        if bitmap is None:
             return
 
-        if self.orientation == 'horizontal':
-            if  self.labelSide == 'top-left': labelSide = 'top'
-            else:                             labelSide = 'bottom'
-        else:
-            if  self.labelSide == 'top-left': labelSide = 'left'
-            else:                             labelSide = 'right'
-
-        if self.cmap is None:
-            bitmap = np.zeros((w, h, 4), dtype=np.uint8)
-        else:
-
-            if self.useNegativeCmap:
-                negCmap    = self.negativeCmap
-                ticks      = [0.0, 0.49, 0.51, 1.0]
-                ticklabels = ['{:0.2f}'.format(-self.vrange.xhi),
-                              '{:0.2f}'.format(-self.vrange.xlo),
-                              '{:0.2f}'.format( self.vrange.xlo),
-                              '{:0.2f}'.format( self.vrange.xhi)]
-                tickalign  = ['left', 'right', 'left', 'right']
-            else:
-                negCmap    = None
-                ticks      = [0.0, 1.0]
-                tickalign  = ['left', 'right']
-                ticklabels = ['{:0.2f}'.format(self.vrange.xlo),
-                              '{:0.2f}'.format(self.vrange.xhi)]
-
-            bitmap = cbarbmp.colourBarBitmap(
-                cmap=self.cmap,
-                negCmap=negCmap,
-                invert=self.invert,
-                gamma=cmapopts.ColourMapOpts.realGamma(self.gamma),
-                ticks=ticks,
-                ticklabels=ticklabels,
-                tickalign=tickalign,
-                width=w,
-                height=h,
-                label=self.label,
-                scale=self.GetScale(),
-                orientation=self.orientation,
-                labelside=labelSide,
-                textColour=self.textColour,
-                cmapResolution=self.cmapResolution)
-
-        if self._tex is None:
-            self._tex = textures.Texture2D('{}_{}'.format(
+        if self.__tex is None:
+            self.__tex = textures.Texture2D('{}_{}'.format(
                 type(self).__name__, id(self)), gl.GL_LINEAR)
 
-        # The bitmap has shape W*H*4, but the
-        # Texture2D instance needs it in shape
-        # 4*W*H
-        bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
-
-        self._tex.setData(bitmap)
-        self._tex.refresh()
+        self.__tex.setData(bitmap)
+        self.__tex.refresh()
 
 
     def _draw(self):
         """Renders the colour bar texture using all available canvas space."""
 
-        if self._tex is None or not self._setGLContext():
+        if self.__tex is None or not self._setGLContext():
             return
 
         width, height = self.GetScaledSize()
@@ -212,10 +131,10 @@ class ColourBarCanvas(props.HasProperties):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
 
-        gl.glClearColor(*self.bgColour)
+        gl.glClearColor(*self.__cbar.bgColour)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glShadeModel(gl.GL_FLAT)
 
-        self._tex.drawOnBounds(0, 0, 1, 0, 1, 0, 1)
+        self.__tex.drawOnBounds(0, 0, 1, 0, 1, 0, 1)

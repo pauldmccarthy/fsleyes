@@ -635,10 +635,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
             if self.__colourBar is not None:
                 sopts.unbindProps('colourBarLabelSide',
-                                  self.__colourBar,
+                                  self.__colourBar.colourBar,
                                   'labelSide')
-                sopts.unbindProps('highDpi',
-                                  self.__colourBar.getCanvas())
+                sopts.unbindProps('highDpi', self.__colourBar.canvas)
                 self.__colourBar.destroy()
                 self.__colourBar.Destroy()
                 self.__colourBar = None
@@ -657,16 +656,18 @@ class CanvasPanel(viewpanel.ViewPanel):
 
             bg = sopts.bgColour
             fg = sopts.fgColour
-            self.__colourBar.getCanvas().textColour = fg
-            self.__colourBar.getCanvas().bgColour   = bg
+            self.__colourBar.colourBar.textColour = fg
+            self.__colourBar.colourBar.bgColour   = bg
 
-        sopts.bindProps('colourBarLabelSide', self.__colourBar, 'labelSide')
-        sopts.bindProps('highDpi', self.__colourBar.getCanvas())
+        sopts.bindProps('colourBarLabelSide',
+                        self.__colourBar.colourBar,
+                        'labelSide')
+        sopts.bindProps('highDpi', self.__colourBar.canvas)
 
         if   sopts.colourBarLocation in ('top', 'bottom'):
-            self.__colourBar.orientation = 'horizontal'
+            self.__colourBar.colourBar.orientation = 'horizontal'
         elif sopts.colourBarLocation in ('left', 'right'):
-            self.__colourBar.orientation = 'vertical'
+            self.__colourBar.colourBar.orientation = 'vertical'
 
         if sopts.colourBarLocation in ('top', 'bottom'):
             sizer = wx.BoxSizer(wx.VERTICAL)
@@ -714,10 +715,11 @@ class CanvasPanel(viewpanel.ViewPanel):
         cpanel.SetForegroundColour([c * 255 for c in fg])
 
         if self.__colourBar is not None:
-            cbCanvas = self.__colourBar.getCanvas()
-            cbCanvas.textColour = fg
-            cbCanvas.bgColour   = bg
-            canvases.append(cbCanvas)
+            canvas = self.__colourBar.canvas
+            cbar   = self.__colourBar.colourBar
+            cbar.textColour = fg
+            cbar.bgColour   = bg
+            canvases.append(canvas)
 
         if refresh:
             self.Refresh()
