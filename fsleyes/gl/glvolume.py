@@ -654,7 +654,7 @@ class GLVolume(glimageobject.GLImageObject):
         cmap    = opts.cmap
         interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
-        gamma   = opts.gamma
+        gamma   = opts.realGamma(opts.gamma)
         negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]

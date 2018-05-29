@@ -170,7 +170,7 @@ class ColourBarCanvas(props.HasProperties):
                 cmap=self.cmap,
                 negCmap=negCmap,
                 invert=self.invert,
-                gamma=self.gamma,
+                gamma=cmapopts.ColourMapOpts.realGamma(self.gamma),
                 ticks=ticks,
                 ticklabels=ticklabels,
                 tickalign=tickalign,

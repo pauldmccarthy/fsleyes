@@ -991,7 +991,7 @@ HELP = td.TypeDict({
     'ColourMapOpts.interpolateCmaps'  : 'Interpolate between colours '
                                         'in colour maps',
     'ColourMapOpts.invert'            : 'Invert colour map',
-    'ColourMapOpts.gamma'             : 'Gamma correction (0.1-5, default=1)',
+    'ColourMapOpts.gamma'             : 'Gamma correction [-1-+1, default: 0]',
     'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 

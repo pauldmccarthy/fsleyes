@@ -230,7 +230,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         negativeCmap    = None
         useNegativeCmap = False
         cmapResolution  = 256
-        gamma           = 1
+        gamma           = 0
         invert          = False
         dmin, dmax      = 0.0, 0.0
         label           = ''

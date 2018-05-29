@@ -109,9 +109,20 @@ class ColourMapOpts(object):
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
 
-    gamma = props.Real(minval=0.1, maxval=5, clamped=True, default=1)
+    gamma = props.Real(minval=-1, maxval=1, clamped=True, default=0)
     """Gamma correction factor - exponentially weights the :attr:`cmap`
     and :attr:`negCmap` towards the low or high ends.
+
+    This property takes values between -1 and +1. The exponential weight
+    that should actually be used to apply gamma correction should be derived
+    as follows:
+
+      - -1 corresponds to a gamma of 0.01
+      -  0 corresponds to a gamma of 1
+      - +1 corresponds to a gamma of 10
+
+    The :meth:`realGamma` method will apply this scaling and return the
+    exponent to be used.
     """
 
 
@@ -163,6 +174,23 @@ class ColourMapOpts(object):
     """If ``True``, the high bounds on both the :attr:`displayRange` and
     :attr:`clippingRange` ranges will be linked together.
     """
+
+
+    @staticmethod
+    def realGamma(gamma):
+        """Return the value of ``gamma`` property, scaled appropriately.
+        for use as an exponent.
+        """
+
+        # a gamma in the range [-1, 0]
+        # gets scaled to [0.01, 1]
+        if gamma < 0:
+            return (gamma + 1.01) * 0.99
+
+        # a gamma in the range [0, 1]
+        # gets scaled to [1, 10]
+        else:
+            return 1 + 9 * gamma
 
 
     def __init__(self):
