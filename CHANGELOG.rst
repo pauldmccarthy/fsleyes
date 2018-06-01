@@ -18,12 +18,14 @@ Added
 
 * Support for high-resolution (e.g. retina) displays under macOS.
 * ``fslpy`` FSL wrapper functions are now available in the Python shell.
+* A colour bar preview is now shown in the overlay display panel.
 
 
 Changed
 ^^^^^^^
 
 
+* The *gamma* display setting now accepts values between -1 and +1.
 * The :mod:`fsleyes.perspectives` module  has been renamed to
   :mod:`fsleyes.layouts`. All associated functions and classes have been
   renamed accordingly.
@@ -39,6 +41,13 @@ Deprecated
 * The :mod:`fsleyes.perspectives`, :mod:`fsleyes.actions.clearperspective`,
   :mod:`fsleyes.actions.loadperspective`, and
   :mod:`fsleyes.actions.saveperspective` modules.
+
+
+Fixed
+^^^^^
+
+
+* Regression in handling 3D textures from on-disk image files.
 
 
 0.23.0 (Friday May 4th 2018)
