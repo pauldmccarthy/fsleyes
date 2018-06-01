@@ -102,7 +102,7 @@ class CorrelateAction(base.Action):
         self.enabled = isCorrOvl or  \
                        ((ovl is not None)               and
                         isinstance(ovl, fslimage.Image) and
-                        ovl.ndims > 3)
+                        ovl.ndim > 3)
 
 
     def __overlayListChanged(self, *a):

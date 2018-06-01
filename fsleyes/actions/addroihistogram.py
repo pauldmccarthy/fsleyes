@@ -119,8 +119,8 @@ class AddROIHistogramAction(base.Action):
         maskimg = roiOptions[dlg.GetChoice()]
         mask    = maskimg[:] > 0
 
-        if overlay.ndims > 3: data = overlay[opts.index()][mask]
-        else:                 data = overlay[mask]
+        if overlay.ndim > 3: data = overlay[opts.index()][mask]
+        else:                data = overlay[mask]
 
         count           = self.__plotPanel.histType == 'count'
         drange          = (np.nanmin(data), np.nanmax(data))

@@ -93,11 +93,11 @@ cli_tests = """
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc -i
 
-3d.nii.gz -cm hot -g 0.1
-3d.nii.gz -cm hot -g 1
-3d.nii.gz -cm hot -g 2
-3d.nii.gz -cm hot -g 3
-3d.nii.gz -cm hot -g 5
+3d.nii.gz -cm hot -g -0.909
+3d.nii.gz -cm hot -g 0
+3d.nii.gz -cm hot -g 0.1111
+3d.nii.gz -cm hot -g 0.2222
+3d.nii.gz -cm hot -g 0.4444
 """
 
 

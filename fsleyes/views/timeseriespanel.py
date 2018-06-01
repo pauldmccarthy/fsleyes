@@ -340,7 +340,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # bog-standard 4D voxel data
         # (listening to volumeDim for
         # images with >4 dimensions)
-        elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
+        elif isinstance(overlay, fslimage.Image) and overlay.ndim > 3:
             ts        = plotting.VoxelTimeSeries(*tsargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]

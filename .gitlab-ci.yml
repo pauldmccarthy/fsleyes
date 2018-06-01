@@ -69,6 +69,9 @@ stages:
 #   - SSH_PRIVATE_KEY_CONDA_DEPLOY   - private key for rsyncing conda builds
 #                                      to remote host (CONDA_HOST)
 #
+#   - SSH_PRIVATE_KEY_CONDA_INDEX    - private key for updating conda channel
+#                                      (on CONDA_HOST)
+#
 #   - SSH_SERVER_HOSTKEYS            - List of trusted SSH hosts
 #
 #   - APIDOC_HOST:                   - Username@host to upload API

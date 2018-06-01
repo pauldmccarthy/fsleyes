@@ -57,7 +57,7 @@ class ImageTexture(texture3d.Texture3D):
         # For 4D textures, the image must have a shape of the form:
         #   (x, y, z, [1, [1, [1, [1, ]]]] nvals)
         if nvals > 1:
-            ndims        = image.ndims
+            ndims        = image.ndim
             expShape     = list(image.shape[:3])
             expShape    += [1] * (ndims - 3)
             expShape[-1] = nvals
@@ -95,7 +95,7 @@ class ImageTexture(texture3d.Texture3D):
         specifies the indices for the fourth and above dimensions with which
         to extract the 3D texture data. If the image has four dimensions, this
         may be a scalar, otherwise it must be a sequence of
-        (``Image.ndims - 3``) the correct length.
+        (``Image.ndim - 3``) the correct length.
         """
         self.set(volume=volume)
 
@@ -165,7 +165,7 @@ class ImageTexture(texture3d.Texture3D):
         volRefresh = kwargs.pop('volRefresh',     True)
         image      = self.image
         nvals      = self.__nvals
-        ndims      = image.ndims
+        ndims      = image.ndim
 
         if normRange is None:
             normRange = image.dataRange

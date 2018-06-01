@@ -89,8 +89,8 @@ class ResampleAction(base.Action):
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
         name      = '{}_resampled'.format(ovl.name)
 
-        if ovl.ndims == 3: slc = None
-        else:              slc = opts.index()
+        if ovl.ndim == 3: slc = None
+        else:             slc = opts.index()
 
         resampled, xform = ovl.resample(newShape,
                                         sliceobj=slc,

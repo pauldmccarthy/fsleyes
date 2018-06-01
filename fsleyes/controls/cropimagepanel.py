@@ -189,7 +189,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__overlay = overlay
 
         display = self.displayCtx.getDisplay(overlay)
-        is4D    = overlay.ndims >= 4
+        is4D    = overlay.ndim >= 4
 
         if is4D:
             self.__volumeWidget.SetLimits(0, overlay.shape[3])
@@ -266,7 +266,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         thi     = self.__volumeWidget.GetHigh()
         tlen    = thi - tlo
 
-        if overlay.ndims >= 4:
+        if overlay.ndim >= 4:
             label = strings.labels[self, 'cropSize4d']
             label = label.format(xlen, ylen, zlen, tlen)
         else:
@@ -326,7 +326,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
             params     = loadCropParameters(filePath, overlay)
             cropBox[:] = params[:6]
 
-            if overlay.ndims >= 4:
+            if overlay.ndim >= 4:
                 tlo, thi = params[6:]
                 self.__volumeWidget.SetLow(tlo)
                 self.__volumeWidget.SetHigh(thi)
@@ -367,7 +367,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
                   cropBox.zlo,
                   cropBox.zhi - cropBox.zlo]
 
-        if overlay.ndims >= 4:
+        if overlay.ndim >= 4:
             tlo     = self.__volumeWidget.GetLow()
             thi     = self.__volumeWidget.GetHigh()
             params.extend((tlo, thi - tlo))
@@ -410,7 +410,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
                        cropBox.y,
                        cropBox.z]
 
-        if overlay.ndims >= 4:
+        if overlay.ndim >= 4:
             roi.append(self.__volumeWidget.GetRange())
 
         copyoverlay.copyImage(
@@ -443,7 +443,7 @@ def loadCropParameters(filename, overlay):
     :returns:      A sequence of ``lo, hi`` crop parameters.
     """
 
-    is4D   = overlay.ndims >= 4
+    is4D   = overlay.ndim >= 4
     shape  = overlay.shape[:4]
     params = list(np.loadtxt(filename).flatten())
 

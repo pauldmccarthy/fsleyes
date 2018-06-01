@@ -937,7 +937,7 @@ class GLMesh(globject.GLObject):
         interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
         negCmap = opts.negativeCmap
-        gamma   = opts.gamma
+        gamma   = opts.realGamma(opts.gamma)
         invert  = opts.invert
         dmin    = opts.displayRange[0]
         dmax    = opts.displayRange[1]
