@@ -472,7 +472,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         # than three dimensions, and bind
         # the widget to the volume property
         # of  the associated NiftiOpts instance
-        if isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3:
+        if isinstance(overlay, fslimage.Nifti) and overlay.ndim > 3:
 
             props.bindWidget(self.__volume,
                              opts,
@@ -532,7 +532,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         for p in boundPropNames: opts.removeListener(p, self.name)
         for p in infoPropNames:  opts.removeListener(p, self.name)
 
-        if isinstance(overlay, fslimage.Nifti) and overlay.ndims > 3:
+        if isinstance(overlay, fslimage.Nifti) and overlay.ndim > 3:
             props.unbindWidget(self.__volume,
                                opts,
                                'volume',

@@ -78,7 +78,7 @@ class AddMaskDataSeriesAction(base.Action):
 
         self.enabled = (len(self.__overlayList) > 0         and
                         isinstance(overlay, fslimage.Image) and
-                        overlay.ndims > 3                   and
+                        overlay.ndim > 3                    and
                         len(self.__maskOptions) > 0)
 
         if self.enabled:

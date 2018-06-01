@@ -225,7 +225,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if self.__child:
 
             # is this a >3D volume?
-            ndims = self.overlay.ndims
+            ndims = self.overlay.ndim
 
             # We store indices for every dimension
             # past the XYZ dims. Whenever the volumeDim
@@ -304,7 +304,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         value of ``volume`` for the new ``volumeDim``.
         """
 
-        if self.overlay.ndims <= 3:
+        if self.overlay.ndim <= 3:
             return
 
         # Here we disable volumeDim listeners on all
@@ -841,10 +841,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if slc is None:
             slc = [slice(None), slice(None), slice(None)]
 
-        if self.overlay.ndims <= 3:
+        if self.overlay.ndim <= 3:
             return tuple(slc)
 
-        newSlc      = [None] * self.overlay.ndims
+        newSlc      = [None] * self.overlay.ndim
         newSlc[:3]  = slc
         newSlc[ 3:] = self.getAttribute('volume', 'cache')
 
@@ -984,8 +984,8 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
 
         if self.__registered and drange is not None:
 
-            if   overlay.ndims == 3: sample = overlay[:]
-            elif overlay.ndims == 4: sample = overlay[..., 0]
+            if   overlay.ndim == 3: sample = overlay[:]
+            elif overlay.ndim == 4: sample = overlay[..., 0]
 
             drange = np.percentile(sample[sample != 0], drange)
             crange = [drange[0], overlay.dataRange[1]]

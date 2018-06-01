@@ -186,7 +186,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
-        elif isinstance(overlay, fslimage.Image) and overlay.ndims > 3:
+        elif isinstance(overlay, fslimage.Image) and overlay.ndim > 3:
 
             ps        = psseries.VoxelPowerSpectrumSeries(*psargs)
             opts      = displayCtx.getOpts(overlay)

@@ -358,13 +358,13 @@ def _initWidgetSpec_VolumeOpts(threedee):
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3,
+            enabledWhen=lambda o: o.overlay.ndim > 3,
             spinWidth=6),
         'volumeDim'      : props.Widget(
             'volumeDim',
             showLimits=False,
             slider=False,
-            enabledWhen=lambda o: o.overlay.ndims > 4,
+            enabledWhen=lambda o: o.overlay.ndim > 4,
             spinWidth=2),
         'interpolation'  : props.Widget(
             'interpolation',
@@ -419,13 +419,13 @@ def _initWidgetSpec_MaskOpts(threedee):
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3,
+            enabledWhen=lambda o: o.overlay.ndim > 3,
             spinWidth=6),
         'volumeDim'      : props.Widget(
             'volumeDim',
             showLimits=False,
             slider=False,
-            enabledWhen=lambda o: o.overlay.ndims > 4,
+            enabledWhen=lambda o: o.overlay.ndim > 4,
             spinWidth=2),
         'interpolation'  : props.Widget(
             'interpolation',
@@ -447,13 +447,13 @@ def _initWidgetSpec_LabelOpts(threedee):
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
-            enabledWhen=lambda o: o.overlay.ndims > 3,
+            enabledWhen=lambda o: o.overlay.ndim > 3,
             spinWidth=6),
         'volumeDim'      : props.Widget(
             'volumeDim',
             showLimits=False,
             slider=False,
-            enabledWhen=lambda o: o.overlay.ndims > 4,
+            enabledWhen=lambda o: o.overlay.ndim > 4,
             spinWidth=2),
     }
 
