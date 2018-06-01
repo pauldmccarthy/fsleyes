@@ -807,8 +807,16 @@ def _ColourMapOpts_ColourMapWidget(
 
         cbpanel.SetImage(bmp.ConvertToImage())
 
-    colourbar.register('ab', cbarUpdate)
-    cbpanel.Bind(wx.EVT_SIZE, cbarUpdate)
+    lname = 'ColourBarWidget_{}'.format(colourbar)
+
+    def onDestroy(ev):
+        colourbar.deregister(lname)
+        colourbar.destroy()
+
+    colourbar.register(lname,           cbarUpdate)
+    cbpanel.Bind(wx.EVT_SIZE,           cbarUpdate)
+    cbpanel.Bind(wx.EVT_WINDOW_DESTROY, onDestroy)
+
     cbarUpdate()
 
     cmap       = props.buildGUI(parent, target, cmap)

@@ -101,6 +101,11 @@ class ColourBarCanvas(props.HasProperties):
         if not self._setGLContext():
             return
 
+        # we may have already
+        # been destroyed
+        if self.__cbar is None:
+            return
+
         w, h = self.GetSize()
 
         if w < 50 or h < 50:
