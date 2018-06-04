@@ -119,6 +119,7 @@ varying vec4 fragColourFactor;
 void main(void) {
 
     vec4 colour;
+    float voxValue;
 
     /*
      * Skip voxels that are out of the image bounds
@@ -127,7 +128,7 @@ void main(void) {
         discard;
     }
 
-    if (!sample_volume(fragTexCoord, fragClipTexCoord, colour)) {
+    if (!sample_volume(fragTexCoord, fragClipTexCoord, voxValue, colour)) {
         discard;
     }
 

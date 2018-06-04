@@ -26,6 +26,7 @@
 
 TEMP killTest;
 TEMP colour;
+TEMP voxValue;
 
 {{ arb_include('textest.prog')         }}
 {{ arb_include('texture_border.prog')  }}
@@ -58,7 +59,8 @@ arb_call('glvolume_common.prog',
          colourTexture='{{ texture_colourTexture }}',
          negColourTexture='{{ texture_negColourTexture }}',
          out_kill='killTest',
-         out_colour='colour')
+         out_colour='colour',
+         out_voxValue='voxValue')
 }}
 
 MOV result.color, colour;

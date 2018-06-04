@@ -31,8 +31,9 @@ OPTION ARB_precision_hint_nicest;
 #        y: Starting iteration on a multi-pass render. Used to determine
 #           the initial texture coordinates (texCoord + start * rayStep)
 #
-#        z: +1 if the output transparency should be clobbered, -1 otherwise.
-#        w: Output transparency to use if y == +1
+#        z: +1 if the output transparency should be adjusted by the
+#           global transparency, -1 otherwise.
+#        w: global transparency to use if y == +1
 #
 #   {{ param5_clipPlanes }} - Up to five clipping plane equations.
 #
@@ -79,6 +80,7 @@ TEMP  tempVar;
 TEMP  texCoord;
 TEMP  clipTexCoord;
 TEMP  colour;
+TEMP  voxValue;
 TEMP  tempColour;
 TEMP  finalColour;
 
@@ -144,7 +146,8 @@ arb_call('glvolume_common.prog',
          colourTexture='{{ texture_colourTexture }}',
          negColourTexture='{{ texture_negColourTexture }}',
          out_kill='skipTest',
-         out_colour='colour')
+         out_colour='colour',
+         out_voxValue='voxValue')
 }}
 
 
@@ -206,16 +209,25 @@ MAD tempVar.x,  tempVar.x,     2.0, -1;
 MIN skipTest.x, skipTest.x,    tempVar.x;
 
 
+# Adjust the sample opacity - it is
+# a function of the (normalised)
+# voxel intensity and the blend factor.
+
+# Clamp voxValue to [0, 1]
+# (MOV_SAT does not work for me)
+MIN colour.a, voxValue.x, 1;
+MAX colour.a, colour.a,   0;
+
+SUB colour.a, 1, colour.a;
+POW colour.a, colour.a, {{ param_settings }}.x;
+SUB colour.a, 1, colour.a;
+MUL colour.rgb, colour, colour.a;
+
 # Blend the sample into the
 # accumulated colour, storing
-# the result in tempColour
-
-# tempVar.x contains (1 - finalColour.a) * blendFactor
-SUB tempVar.x, 1,               finalColour.a;
-MUL tempVar.x, tempVar.x,    {{ param_settings }}.x;
-
-MAD tempColour.rgb, tempVar.x,   colour, finalColour;
-ADD tempColour.a,   tempVar.x,           finalColour.a;
+# the result in tempColour.
+SUB tempVar.x, 1, finalColour.a;
+MAD tempColour, tempVar.x, colour, finalColour;
 
 
 # Calculate the screen depth of
@@ -265,7 +277,6 @@ ADD clipTexCoord.xyz, clipTexCoord, {{ param_rayStep }};
 {% endfor %}
 
 
-
 # If startingColour.a == 0 and
 #    finalColour.a    == 0,
 #
@@ -277,8 +288,9 @@ MUL tempVar.x, tempVar.x, -1;
 CMP tempVar.x, tempVar.x,  1, -1;
 KIL tempVar.x;
 
-# Clobber alpha if requested
-CMP finalColour.a, {{ param_settings }}.z, finalColour.a, {{ param_settings }}.w;
+# Finalise alpha if requested
+MUL tempColour.a, finalColour.a, {{ param_settings }}.w;
+CMP finalColour.a, {{ param_settings }}.z, finalColour.a, tempColour.a;
 
 MOV result.color, finalColour;
 MOV result.depth, depth.x;

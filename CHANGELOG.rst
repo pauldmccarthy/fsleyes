@@ -29,6 +29,7 @@ Changed
 
 
 * The *gamma* display setting now accepts values between -1 and +1.
+* Minor improvements to 3D volumetric raycasting.
 * The :mod:`fsleyes.perspectives` module  has been renamed to
   :mod:`fsleyes.layouts`. All associated functions and classes have been
   renamed accordingly.

@@ -6,13 +6,17 @@
  * clipping and colouring.  It returns false if the fragment should be
  * discarded, otherwise it returns true.
  *
+ * The voxValue output is normalised to the range [0, 1] according to the
+ * current display range.
+ *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
-bool sample_volume(vec3 texCoord, vec3 clipTexCoord, out vec4 finalColour) {
+bool sample_volume(vec3      texCoord,
+                   vec3      clipTexCoord,
+                   out float voxValue,
+                   out vec4  finalColour) {
 
-  float voxValue;
   float clipValue;
-  vec4  normVoxValue;
   bool  negCmap = false;
 
   /*
@@ -29,11 +33,9 @@ bool sample_volume(vec3 texCoord, vec3 clipTexCoord, out vec4 finalColour) {
     return false;
   }
 
-
   /*
    * Look up the clipping value
    */
-
   if (imageIsClip)
     clipValue = voxValue;
 
@@ -84,10 +86,10 @@ bool sample_volume(vec3 texCoord, vec3 clipTexCoord, out vec4 finalColour) {
    * Transform the voxel value to a colour map texture
    * coordinate, and look up the colour for the voxel value
    */
-  normVoxValue = img2CmapXform * vec4(voxValue, 0, 0, 1);
+  voxValue = (img2CmapXform * vec4(voxValue, 0, 0, 1)).x;
 
-  if (negCmap) finalColour = texture1D(negColourTexture, normVoxValue.x);
-  else         finalColour = texture1D(colourTexture,    normVoxValue.x);
+  if (negCmap) finalColour = texture1D(negColourTexture, voxValue);
+  else         finalColour = texture1D(colourTexture,    voxValue);
 
   return true;
 }
