@@ -29,7 +29,7 @@ class Volume3DOpts(object):
     """
 
 
-    blendFactor = props.Real(minval=0.001, maxval=1, default=0.2)
+    blendFactor = props.Real(minval=0.001, maxval=1, default=0.1)
     """Controls how much each sampled point on each ray contributes to the
     final colour.
     """
@@ -68,7 +68,7 @@ class Volume3DOpts(object):
     """
 
 
-    smoothing = props.Int(minval=0, maxval=10, default=1, clamped=True)
+    smoothing = props.Int(minval=0, maxval=10, default=0, clamped=True)
     """Amount of smoothing to apply to the rendered volume - this setting
     controls the smoothing filter radius, in pixels.
     """
