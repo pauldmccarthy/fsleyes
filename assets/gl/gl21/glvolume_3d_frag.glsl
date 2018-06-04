@@ -239,10 +239,14 @@ void main(void) {
        */
       if (sample_volume(texCoord, clipTexCoord, voxValue, colour)) {
 
-
-        finalColour.rgb += (1 - finalColour.a) * blendFactor * colour.rgb;
-        finalColour.a   += (1 - finalColour.a) * blendFactor;
-        nsamples        += 1;
+        /*
+         * weight the sample opacity by the voxel intensity
+         * (normalised w.r.t. the current display range)
+         */
+        colour.a     = 1.0 - pow(1.0 - clamp(voxValue, 0, 1), blendFactor);
+        colour.rgb  *= colour.a;
+        finalColour += (1 - finalColour.a) * colour;
+        nsamples    += 1;
 
         /*
          * If this is the first sample on the ray,
@@ -256,9 +260,9 @@ void main(void) {
 
     if (nsamples > 0) {
 
-      finalColour.a = alpha;
-      gl_FragDepth  = depth.z;
-      gl_FragColor  = finalColour;
+      finalColour.a *= alpha;
+      gl_FragDepth   = depth.z;
+      gl_FragColor   = finalColour;
     }
     else {
       discard;
