@@ -170,14 +170,15 @@ varying vec3 fragClipTexCoord;
 
 void main(void) {
 
-    vec3 texCoord         = fragTexCoord;
-    vec3 clipTexCoord     = fragClipTexCoord;
-    vec4 colour           = vec4(0);
-    vec4 finalColour      = vec4(0);
-    vec4 depth            = vec4(0);
-    int  nsamples         = 0;
-    int  activeClipPlanes = 0;
-    int  clipIdx;
+    vec3  texCoord         = fragTexCoord;
+    vec3  clipTexCoord     = fragClipTexCoord;
+    vec4  colour           = vec4(0);
+    vec4  finalColour      = vec4(0);
+    vec4  depth            = vec4(0);
+    int   nsamples         = 0;
+    int   activeClipPlanes = 0;
+    float voxValue;
+    int   clipIdx;
 
     /*
      * Dither by applying a random offset
@@ -236,7 +237,8 @@ void main(void) {
        * voxel was not clipped and was
        * not NaN.
        */
-      if (sample_volume(texCoord, clipTexCoord, colour)) {
+      if (sample_volume(texCoord, clipTexCoord, voxValue, colour)) {
+
 
         finalColour.rgb += (1 - finalColour.a) * blendFactor * colour.rgb;
         finalColour.a   += (1 - finalColour.a) * blendFactor;
