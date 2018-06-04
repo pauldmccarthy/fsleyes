@@ -26,10 +26,12 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 import            os
 import os.path as op
 import            sys
-import            textwrap
+import            signal
 import            logging
+import            textwrap
 
 import wx
+import appnope
 
 from fsl.utils.platform import platform as fslplatform
 
@@ -38,24 +40,68 @@ import fsleyes.splash     as fslsplash
 import fsleyes.colourmaps as colourmaps
 
 
+# wx.ModalDialogHook does not exist in wxPython < 4
+if fslplatform.wxFlavour == fslplatform.WX_PYTHON:
+    class ModalDialogHook(object):
+        def Register(self):
+            pass
+
+    wx.ModalDialogHook = ModalDialogHook
+
+
 log = logging.getLogger(__name__)
 
 
 class FSLeyesApp(wx.App):
     """FSLeyes-specific sub-class of ``wx.App``. """
 
-    def __init__(self, *args, **kwargs):
+
+    class ModalHook(wx.ModalDialogHook):
+        """Keeps track of any modal dialogs/windows that are opened.
+
+        Modal dialogs can interfere with shutdown, as they run their own event
+        loop. Therefore we keep a reference is kept to all opened modal
+        dialogs, so we can manually shut them down if needed (see the
+        :func:`main` function).
+        """
+
+        def __init__(self, *args, **kwargs):
+            wx.ModalDialogHook.__init__(self, *args, **kwargs)
+            self.modals = set()
+
+        def Enter(self, dlg):
+            self.modals.add(dlg)
+            return wx.ID_NONE
+
+        def Exit(self, dlg):
+            self.modals.remove(dlg)
+
+
+    def __init__(self):
         """Create a ``FSLeyesApp``. """
 
         self.__overlayList = None
         self.__displayCtx  = None
 
-        wx.App.__init__(self, *args, **kwargs)
+        self.__modalHook = FSLeyesApp.ModalHook()
+        self.__modalHook.Register()
+
+        wx.App.__init__(self, clearSigInt=False)
 
         self.SetAppName('FSLeyes')
 
 
+    @property
+    def modals(self):
+        """Returns a list of all currently open modal windows. """
+        return list(self.__modalHook.modals)
+
+
     def SetOverlayListAndDisplayContext(self, overlayList, displayCtx):
+        """References to the :class:`.OverlayList` and master
+        :class:`.DisplayContext` must be passed to the ``FSLeyesApp`` via this
+        method.
+        """
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
 
@@ -281,6 +327,34 @@ def main(args=None):
                          showErrorMessage=False,
                          ignorePoint=False)
 
+    # Shut down cleanly on sigint/sigterm.
+    # We do this so that any functions
+    # registered with atexit will actually
+    # get called.
+    nsignals = [0]
+
+    def sigHandler(signo, frame):
+        log.debug('Signal received - FSLeyes is shutting down...')
+
+        # first signal - try to exit cleanly
+        if nsignals[0] == 0:
+            nsignals[0] += 1
+            exitCode[0]  = signo
+
+            # kill any modal windows
+            # that are open
+            for mdlg in app.modals:
+                mdlg.EndModal(wx.ID_CANCEL)
+
+            wx.CallAfter(app.ExitMainLoop)
+
+        # subsequent signals - exit immediately
+        else:
+            sys.exit(signo)
+
+    signal.signal(signal.SIGINT,  sigHandler)
+    signal.signal(signal.SIGTERM, sigHandler)
+
     # Note: If no wx.Frame is created, the
     # wx.MainLoop call will exit immediately,
     # even if we have scheduled something via
@@ -288,6 +362,7 @@ def main(args=None):
     # already created the splash screen, so
     # all is well.
     wx.CallAfter(init, splash)
+    appnope.nope()
     app.MainLoop()
     shutdown()
     return exitCode[0]
@@ -354,6 +429,9 @@ def initialise(splash, namespace, callback):
     if namespace.bumMode:
         import fsleyes.icons as icons
         icons.BUM_MODE = True
+
+    # Set notebook server port
+    fslsettings.write('fsleyes.notebook.port', namespace.notebookPort)
 
     # This is called by fsleyes.gl.getGLContext
     # when the GL context is ready to be used.
@@ -578,7 +656,12 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
 
     def onFrameDestroy(ev):
         ev.Skip()
-        splash.Close()
+
+        # splash screen may already
+        # have been destroyed
+        try:              splash.Close()
+        except Exception: pass
+
     frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
 
     status.update('Setting up scene...')

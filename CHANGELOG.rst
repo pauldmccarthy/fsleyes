@@ -16,8 +16,11 @@ Added
 ^^^^^
 
 
+* Integration with `Jupyter Notebook <https://jupyter.org/>`_ is now
+  available via the *File* |right_arrow| *Open notebooks* menu option.
 * Support for high-resolution (e.g. retina) displays under macOS.
-* ``fslpy`` FSL wrapper functions are now available in the Python shell.
+* ``fslpy`` FSL wrapper functions are now available in the Python shell
+  and Jupyter notebooks.
 * A colour bar preview is now shown in the overlay display panel.
 
 
@@ -41,6 +44,8 @@ Deprecated
 * The :mod:`fsleyes.perspectives`, :mod:`fsleyes.actions.clearperspective`,
   :mod:`fsleyes.actions.loadperspective`, and
   :mod:`fsleyes.actions.saveperspective` modules.
+* The :mod:`fsleyes.views.shellpanel` has been deprecated in favour of
+  using Jupyter notebooks.
 
 
 Fixed

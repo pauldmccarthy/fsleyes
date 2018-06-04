@@ -31,9 +31,11 @@ Amongst other things, *FSLeyes* provides the following features:
 
   - Orthographic view  (:mod:`.orthopanel`)
   - Lightbox view (:mod:`.lightboxpanel`)
+  - 3D view (:mod:`.scene3dpanel`)
   - Time series plotting (:mod:`.timeseriespanel`)
   - Histogram plotting (:mod:`.histogrampanel`)
   - Power spectrum plotting (:mod:`.powerspectrumpanel`)
+  - Jupyter notebook integration (:mod:`.notebook`)
   - FSL atlas explorer (:mod:`.atlaspanel`)
   - FEAT cluster results explorer (:mod:`.clusterpanel`)
   - Melodic component classification (:mod:`.melodicclassificationpanel`)
@@ -325,7 +327,7 @@ def _hacksAndWorkarounds():
     try:
         import locale
         locale.getdefaultlocale()
-    except:
+    except ValueError:
         os.environ['LC_ALL'] = 'C.UTF-8'
 
 
@@ -346,13 +348,16 @@ def configLogging(verbose=0, noisy=None):
     if noisy is None:
         noisy = []
 
-    # make numpy/matplotlib/nibabel quiet
+    # make numpy/matplotlib/nibabel/etc quiet
     warnings.filterwarnings('ignore',  module='matplotlib')
     warnings.filterwarnings('ignore',  module='mpl_toolkits')
     warnings.filterwarnings('ignore',  module='numpy')
+    warnings.filterwarnings('ignore',  module='h5py')
+    warnings.filterwarnings('ignore',  module='notebook')
     warnings.filterwarnings('ignore',  module='trimesh')
-    logging.getLogger('nibabel').setLevel(logging.CRITICAL)
-    logging.getLogger('trimesh').setLevel(logging.CRITICAL)
+    logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
+    logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
+    logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
     # Show deprecations
     warnings.filterwarnings('default', category=DeprecationWarning)

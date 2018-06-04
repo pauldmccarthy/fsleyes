@@ -1425,6 +1425,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.loadatlas          import LoadAtlasAction
         from fsleyes.actions.browsexnat         import BrowseXNATAction
         from fsleyes.actions.runscript          import RunScriptAction
+        from fsleyes.actions.notebook           import NotebookAction
 
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
@@ -1432,6 +1433,7 @@ class FSLeyesFrame(wx.Frame):
                        LoadDicomAction,
                        BrowseXNATAction,
                        LoadAtlasAction,
+                       NotebookAction,
                        RunScriptAction]
 
         for action in fileActions:

@@ -33,7 +33,7 @@ tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . 
 cat requirements.txt | grep -v "fsl" > requirements-ci.txt
 pip install $PIPARGS -r requirements-ci.txt
 pip install $PIPARGS -r requirements-extra.txt
-
+pip install $PIPARGS -r requirements-notebook.txt
 
 # style stage
 if [ "$TEST_STYLE"x != "x" ]; then pip install $PIPARGS pylint flake8; fi;

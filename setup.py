@@ -81,7 +81,7 @@ class docbuilder(Command):
 
         try:
             import unittest.mock as mock
-        except:
+        except ImportError:
             import mock
 
         # Sigh. Why can't I mock a package?
@@ -184,6 +184,9 @@ def get_fsleyes_extra_deps():
     with open(op.join(basedir, 'requirements-extra.txt'), 'rt') as f:
         extras_require = [r.strip() for r in f.readlines()]
 
+    with open(op.join(basedir, 'requirements-notebook.txt'), 'rt') as f:
+        nb_require = [r.strip() for r in f.readlines()]
+
     platform_requires = []
     platform_file = op.join(basedir, 'requirements-{}.txt'.format(platform))
 
@@ -191,7 +194,7 @@ def get_fsleyes_extra_deps():
         with open(platform_file, 'rt') as f:
             platform_requires = [r.strip() for r in f.readlines()]
 
-    return {'extras' : extras_require + platform_requires}
+    return {'extras' : extras_require + nb_require + platform_requires}
 
 
 def get_fsleyes_dev_deps():

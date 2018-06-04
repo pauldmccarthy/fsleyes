@@ -1,0 +1,6 @@
+pyzmq==17.0.*
+tornado==5.0.*
+ipykernel==4.8.*
+ipython==5.*
+jupyter_client==5.2.*
+notebook==5.5.*

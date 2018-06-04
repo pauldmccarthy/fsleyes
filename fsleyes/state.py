@@ -11,7 +11,6 @@ These functions may be used to get/set the state of *FSLeyes*.
 
 import logging
 
-import fsl.utils.idle                   as idle
 import fsleyes.actions.showcommandline  as showcommandline
 import fsleyes.actions.applycommandline as applycommandline
 import fsleyes.views.canvaspanel        as canvaspanel
@@ -91,33 +90,28 @@ def setState(frame, state):
     cli    = bits[1:]
     cli    = [c.split(CLISEP) for c in cli]
 
-    def applyViewArgs():
-        panels = [p for p in frame.viewPanels
-                  if isinstance(p, canvaspanel.CanvasPanel)]
-        for i, panel in enumerate(panels, 1):
-            applycommandline.applyCommandLineArgs(
-                overlayList,
-                panel.displayCtx,
-                cli[i],
-                panel,
-                loadOverlays=False)
+    # First clear the current state
+    frame.removeAllViewPanels()
+    overlayList.clear()
 
-    def loadOverlays():
+    # Then load all new overlays
+    applycommandline.applyCommandLineArgs(
+        overlayList,
+        displayCtx,
+        cli[0],
+        blocking=True)
+
+    # After overlays have been loaded,
+    # apply the new layout, and apply
+    # view-specific overlay arguments.
+    layouts.applyLayout(frame, 'state', layout)
+
+    panels = [p for p in frame.viewPanels
+              if isinstance(p, canvaspanel.CanvasPanel)]
+    for i, panel in enumerate(panels, 1):
         applycommandline.applyCommandLineArgs(
             overlayList,
-            displayCtx,
-            cli[0])
-
-        # After overlays have been loaded,
-        # apply the new layout, and apply
-        # view-specific overlay arguments.
-        idle.idle(layouts.applyLayout, frame, 'state', layout)
-        idle.idle(applyViewArgs)
-
-    # First clear the current state
-    idle.idle(frame.removeAllViewPanels)
-    idle.idle(overlayList.clear)
-
-    # Then load overlays
-    # from the new state.
-    idle.idle(loadOverlays)
+            panel.displayCtx,
+            cli[i],
+            panel,
+            loadOverlays=False)
