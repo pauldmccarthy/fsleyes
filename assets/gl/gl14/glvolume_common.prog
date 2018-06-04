@@ -38,7 +38,11 @@
 #   {{ out_kill }} - X component is set to <0 if the fragment should be
 #      killed (it was NaN or clipped), >0 otherwise.
 #
+#   {{ out_voxValue }} - Fragment voxel value, normalised to the range [0, 1]
+#      according to the current display range.
+#
 #   {{ out_colour }} - Final colour to use for this fragment.
+
 #
 #
 # Constants:
@@ -207,3 +211,6 @@ CMP {{ out_colour }}, {{ useNegCmap }}.x, {{ negColour }}, {{ out_colour }};
 # Normalise out_kill
 # to either -1 or +1
 CMP {{ out_kill }}.x, {{ out_kill }}.x, -1, 1;
+
+# Output the voxel value
+MOV {{ out_voxValue }}, {{ voxValue }};

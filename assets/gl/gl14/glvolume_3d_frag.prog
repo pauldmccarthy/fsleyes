@@ -79,6 +79,7 @@ TEMP  tempVar;
 TEMP  texCoord;
 TEMP  clipTexCoord;
 TEMP  colour;
+TEMP  voxValue;
 TEMP  tempColour;
 TEMP  finalColour;
 
@@ -144,7 +145,8 @@ arb_call('glvolume_common.prog',
          colourTexture='{{ texture_colourTexture }}',
          negColourTexture='{{ texture_negColourTexture }}',
          out_kill='skipTest',
-         out_colour='colour')
+         out_colour='colour',
+         out_voxValue='voxValue')
 }}
 
 
