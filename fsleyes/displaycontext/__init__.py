@@ -81,7 +81,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.vectoropts.LineVectorOpts
    ~fsleyes.displaycontext.meshopts.MeshOpts
    ~fsleyes.displaycontext.giftiopts.GiftiOpts
-   ~fsleyes.displaycontext.freesurfer.FreesurferOpts
+   ~fsleyes.displaycontext.freesurferopts.FreesurferOpts
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts

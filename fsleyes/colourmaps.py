@@ -156,7 +156,7 @@ access and manage :class:`LookupTable` instances:
    scanLookupTables
    getLookupTables
    getLookupTable
-   getLookpuTableFile
+   getLookupTableFile
    registerLookupTable
    installLookupTable
    isLookupTableRegistered

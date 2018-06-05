@@ -85,7 +85,7 @@ class FSLeyesFrame(wx.Frame):
        :nosignatures:
 
        overlayList
-       displayContext
+       displayCtx
        viewPanels
        focusedViewPanel
        auiManager
