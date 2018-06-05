@@ -236,9 +236,11 @@ def ortho(lo, hi, width, height, zoom):
                       clipping plane locations.
 
     :returns: A tuple containing:
-                - The ``(4, 4)`` projection matrix
-                - A list of three ``(min, max)`` tuples, defining the limits
-                  for each axis.
+
+               - The ``(4, 4)`` projection matrix
+
+               - A list of three ``(min, max)`` tuples, defining the limits
+                 for each axis.
     """
 
     lo = np.array(lo, copy=False)

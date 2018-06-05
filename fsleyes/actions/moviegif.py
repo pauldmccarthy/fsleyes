@@ -67,7 +67,7 @@ class MovieGifAction(base.Action):
 
 
     def destroy(self):
-        """Must be called when this ``MovieGifAction` is no longer neded.
+        """Must be called when this ``MovieGifAction`` is no longer neded.
         Removes some property listeners.
         """
         self.__overlayList.removeListener('overlays',        self.__name)

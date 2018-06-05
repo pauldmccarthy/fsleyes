@@ -89,19 +89,22 @@ class docbuilder(Command):
         mockedModules = open(op.join(docdir, 'mock_modules.txt')).readlines()
         mockedClasses = open(op.join(docdir, 'mock_classes.txt')).readlines()
         mockedModules = {m.strip() : mockobj for m in mockedModules}
-        mockedClasses = [l.strip() for l in mockedClasses]
+        mockedClasses = {l.strip() : None    for l in mockedClasses}
 
-        class MockClass(object):
-            def __init__(self, *args, **kwargs):
-                pass
+        # a different mock class for each mocked class
+        for clsname in mockedClasses.keys():
+            class MockClass(object):
+                def __init__(self, *args, **kwargs):
+                    pass
+            mockedClasses[clsname] = MockClass
 
         class MockType(type):
             pass
 
-        patches = [mock.patch.dict('sys.modules', **mockedModules)] + \
+        patches = [mock.patch.dict('sys.modules', **mockedModules)]    + \
                   [mock.patch('wx.lib.newevent.NewEvent',
-                              return_value=(mockobj, mockobj))]     + \
-                  [mock.patch(c, MockClass) for c in mockedClasses]    + \
+                              return_value=(mockobj, mockobj))]        + \
+                  [mock.patch(n, c) for n, c in mockedClasses.items()] + \
                   [mock.patch('fsleyes_props.PropertyOwner', MockType)]
 
         [p.start() for p in patches]

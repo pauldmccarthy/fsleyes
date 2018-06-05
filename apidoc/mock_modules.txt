@@ -27,6 +27,7 @@ fsl.data.gifti
 fsl.data.image
 fsl.data.imagewrapper
 fsl.data.melodicimage
+fsl.data.mghimage
 fsl.data.mesh
 fsl.data.vest
 fsl.data.volumelabels
@@ -40,6 +41,7 @@ fsl.utils.notifier
 fsl.utils.path
 fsl.utils.platform
 fsl.utils.settings
+fsl.utils.tempdir
 fsl.utils.transform
 fsl.version
 fsleyes_props

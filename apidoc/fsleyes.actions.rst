@@ -26,6 +26,8 @@
    fsleyes.actions.loadlayout
    fsleyes.actions.loadstandard
    fsleyes.actions.loadvertexdata
+   fsleyes.actions.moviegif
+   fsleyes.actions.notebook
    fsleyes.actions.reloadoverlay
    fsleyes.actions.removealloverlays
    fsleyes.actions.removeoverlay
