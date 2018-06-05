@@ -194,6 +194,16 @@ test:3.6:
   <<: *test_template
 
 
+test:build-pypi-dist:
+  stage: test
+  image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
+
+  <<: *except_releases
+  script:
+   - source /test.venv/bin/activate
+   - bash ./.ci/build_pypi_dist.sh
+
+
 #############
 # Style stage
 #############
