@@ -62,6 +62,17 @@ try:
     ENABLED = True
 
 except ImportError:
+
+    class mock(object):
+        pass
+
+    # so the sub-class defs in
+    # this module do not error
+    zmqshell                     = mock()
+    zmqshell.ZMQInteractiveShell = mock
+    ipkernel                     = mock()
+    ipkernel.IPythonKernel       = mock
+
     ENABLED = False
 
 
