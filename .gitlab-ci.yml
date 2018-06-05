@@ -197,8 +197,11 @@ test:3.6:
 test:build-pypi-dist:
   stage: test
   image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
-
   <<: *except_releases
+
+  tags:
+    - docker
+
   script:
    - source /test.venv/bin/activate
    - bash ./.ci/build_pypi_dist.sh
