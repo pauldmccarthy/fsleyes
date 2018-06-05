@@ -7,13 +7,13 @@ python setup.py sdist
 python setup.py bdist_wheel
 
 
-python3.5 -m venv test.venv
-source activate test.venv
+python3.5 -m venv pypi_test.venv
+source activate pypi_test.venv
 pip install dist/*whl
 deactivate
 
-rm -r test.venv
-python3.5 -m venv test.venv
-source activate test.venv
+rm -r pypi_test.venv
+python3.5 -m venv pypi_test.venv
+source activate pypi_test.venv
 pip install dist/*tar.gz
 deactivate
