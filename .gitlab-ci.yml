@@ -272,7 +272,7 @@ build-pypi-dist:
   <<: *patch_version
 
   stage: build
-  image: python:3.5
+  image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
 
   tags:
     - docker
