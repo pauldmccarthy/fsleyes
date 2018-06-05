@@ -10,6 +10,7 @@
    fsleyes.controls.atlaspanel
    fsleyes.controls.canvassettingspanel
    fsleyes.controls.clusterpanel
+   fsleyes.controls.colourbar
    fsleyes.controls.componentgrid
    fsleyes.controls.cropimagepanel
    fsleyes.controls.displayspacewarning
