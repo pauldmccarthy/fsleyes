@@ -31,7 +31,6 @@ import            logging
 import            textwrap
 
 import wx
-import appnope
 
 from fsl.utils.platform import platform as fslplatform
 
@@ -370,7 +369,20 @@ def main(args=None):
     # already created the splash screen, so
     # all is well.
     wx.CallAfter(init, splash)
-    appnope.nope()
+
+    # under mac, use appnope to make sure
+    # we don't get put to sleep. This is
+    # primarily for the jupyter notebook
+    # integration - if the user is working
+    # with a notebook in the web browser,
+    # macos might put FSLeyes to sleep,
+    # causing the kernel to become
+    # unresponsive.
+    try:
+        import appnope
+        appnope.nope()
+    except ImportError:
+        pass
     app.MainLoop()
     shutdown()
     return exitCode[0]
