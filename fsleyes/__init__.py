@@ -345,6 +345,10 @@ def configLogging(verbose=0, noisy=None):
 
     global log
 
+    # already configured
+    if log is not None:
+        return
+
     if noisy is None:
         noisy = []
 
