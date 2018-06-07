@@ -8,6 +8,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.24.2 (Friday June 8th 2018)
+-----------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Changed the Jupyter notebook server management so it can be easily
+  run within a frozen version of FSLeyes.
+
+
 0.24.1 (Wednesday June 6th 2018)
 --------------------------------
 

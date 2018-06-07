@@ -28,18 +28,19 @@ import               webbrowser
 import               wx
 import jinja2     as j2
 
-import fsleyes_widgets.utils.progress as progress
-import fsleyes_widgets.utils.status   as status
-import fsl.utils.settings             as settings
-import fsl.utils.tempdir              as tempdir
-import fsl.utils.idle                 as idle
+import fsleyes_widgets.utils.progress     as progress
+import fsleyes_widgets.utils.status       as status
+import fsl.utils.settings                 as settings
+from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.tempdir                  as tempdir
+import fsl.utils.idle                     as idle
 
-import                                   fsleyes
-import fsleyes.strings                as strings
-import fsleyes.actions.screenshot     as screenshot
+import                                       fsleyes
+import fsleyes.strings                    as strings
+import fsleyes.actions.screenshot         as screenshot
 
-from . import                            base
-from . import                            runscript
+from . import                                base
+from . import                                runscript
 
 try:
     import                            zmq
@@ -190,10 +191,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel,
-                                self.__overlayList,
-                                self.__displayCtx,
-                                self.__frame)
+        server = NotebookServer(self.__kernel.connfile)
         server.start()
         self.__bounce(1.5, progdlg)
 
@@ -453,21 +451,15 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, kernel, overlayList, displayCtx, frame):
+    def __init__(self, connfile):
         """Create a ``NotebookServer`` thread.
 
-        :arg kernel:      The :class:`BackgroundIPythonKernel` to connect to.
-        :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The master :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
+        :arg connfile: Connection file of the IPython kernel to connect to.
         """
 
         threading.Thread.__init__(self)
         self.daemon        = True
-        self.__kernel      = kernel
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        self.__connfile    = connfile
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
@@ -549,11 +541,32 @@ class NotebookServer(threading.Thread):
 
         # command to start the notebook
         # server in a sub-process
-        self.__nbproc = sp.Popen(['jupyter-notebook'],
-                                 stdout=sp.PIPE,
-                                 stderr=sp.PIPE,
-                                 cwd=cfgdir,
-                                 env=env)
+
+        # With frozen FSLeyes versions, there
+        # probbaly isn't a 'jupyter-notebook'
+        # executable. So we use a hook in
+        # fsleyes.main to run the server.
+        if fslplatform.frozen:
+            exe = op.join(op.dirname(sys.executable), 'fsleyes')
+            log.debug('Running notebook server via %s notebook', sys.argv[0])
+
+            # py2app manipulates the PYTHONPATH, so we
+            # pass it through as a command-line argument.
+            self.__nbproc = sp.Popen([exe, 'notebook', cfgdir],
+                                     stdout=sp.PIPE,
+                                     stderr=sp.PIPE,
+                                     cwd=cfgdir,
+                                     env=env)
+
+        # Otherwise we can call
+        # it in the usual manner.
+        else:
+            log.debug('Running notebook server via jupyter-notebook')
+            self.__nbproc = sp.Popen(['jupyter-notebook'],
+                                     stdout=sp.PIPE,
+                                     stderr=sp.PIPE,
+                                     cwd=cfgdir,
+                                     env=env)
 
         def killServer():
             # We need two CTRL+Cs to kill
@@ -595,7 +608,7 @@ class NotebookServer(threading.Thread):
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : nbextdir,
-            'fsleyes_kernel_connfile'     : self.__kernel.connfile,
+            'fsleyes_kernel_connfile'     : self.__connfile,
         }
 
         with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:
