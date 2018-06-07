@@ -190,10 +190,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel,
-                                self.__overlayList,
-                                self.__displayCtx,
-                                self.__frame)
+        server = NotebookServer(self.__kernel.connfile)
         server.start()
         self.__bounce(1.5, progdlg)
 
@@ -453,21 +450,15 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, kernel, overlayList, displayCtx, frame):
+    def __init__(self, connfile):
         """Create a ``NotebookServer`` thread.
 
-        :arg kernel:      The :class:`BackgroundIPythonKernel` to connect to.
-        :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The master :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
+        :arg connfile: Connection file of the IPython kernel to connect to.
         """
 
         threading.Thread.__init__(self)
         self.daemon        = True
-        self.__kernel      = kernel
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        self.__connfile    = connfile
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
@@ -595,7 +586,7 @@ class NotebookServer(threading.Thread):
             'fsleyes_nbserver_dir'        : op.expanduser('~'),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : nbextdir,
-            'fsleyes_kernel_connfile'     : self.__kernel.connfile,
+            'fsleyes_kernel_connfile'     : self.__connfile,
         }
 
         with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:
