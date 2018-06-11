@@ -193,9 +193,14 @@ class NotebookAction(base.Action):
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
         server = NotebookServer(self.__kernel.connfile)
         server.start()
-        self.__bounce(1.5, progdlg)
 
-        if not server.is_alive():
+        elapsed = 0
+
+        while elapsed < 5 and not server.ready:
+            self.__bounce(0.5, progdlg)
+            elapsed += 0.5
+
+        if elapsed >= 5 or not server.is_alive():
             raise RuntimeError('Could not start notebook server: '
                                '{}'.format(server.stderr))
 
@@ -474,12 +479,23 @@ class NotebookServer(threading.Thread):
         if self.__port is not None:
             return self.__port
 
+        self.__port = self.__readPort()
+        return self.__port
+
+
+    def __readPort(self):
         for server in notebookapp.list_running_servers():
             if server['token'] == self.__token:
-                self.__port = server['port']
-                break
+                return server['port']
+        return None
 
-        return self.__port
+
+    @property
+    def ready(self):
+        """Returns ``True`` if the server is running and ready, ``False``
+        otherwise.
+        """
+        return self.__readPort() is not None
 
 
     @property
