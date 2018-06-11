@@ -12,6 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import os.path as op
+import sys
 import datetime
 
 date = datetime.date.today()
@@ -60,7 +62,9 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-# The short X.Y version.
+# make sure fsleyes base dir is on the pythonpath
+sys.path.insert(0, op.join(op.dirname(__file__), '..'))
+
 import setup
 version = setup.get_fsleyes_version()
 release = version
