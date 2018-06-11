@@ -8,6 +8,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+0.24.3 (Monday June 11th 2018)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Further fixes to Jupyter notebook server and kernel management for
+  running within frozen versions of FSLeyes.
+* Fixed a sizing issue in the FSLeyes about dialog.
+
+
+
 0.24.2 (Friday June 8th 2018)
 -----------------------------
 
