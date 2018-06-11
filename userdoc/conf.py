@@ -12,7 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
+import os.path as op
 import sys
 import datetime
 
@@ -49,7 +49,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+# source_encoding = 'utf-8-sig'
 
 # The master toctree document.
 master_doc = 'index'
@@ -66,6 +66,10 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # The fsleyes setup.py file contains a function called get_fsleyes_version(),
 # so we'll use that instead of importing fsleyes.
 #
+
+# make sure fsleyes base dir is on the pythonpath
+sys.path.insert(0, op.join(op.dirname(__file__), '..'))
+
 import setup
 version = setup.get_fsleyes_version()
 release = version
