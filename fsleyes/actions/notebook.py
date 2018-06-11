@@ -550,7 +550,7 @@ class NotebookServer(threading.Thread):
         # JUPYTER_CONFIG_DIR is set, so our
         # custom bits and pieces will be found.
         env        = dict(os.environ)
-        pythonpath = os.pathsep.join((cfgdir, env['PYTHONPATH']))
+        pythonpath = os.pathsep.join((cfgdir, env.get('PYTHONPATH', '')))
 
         env['JUPYTER_CONFIG_DIR'] = cfgdir
         env['PYTHONPATH']         = pythonpath
