@@ -190,22 +190,17 @@ def main(args=None):
         render.main(args[1:])
         sys.exit(0)
 
-    # Hook which allows us to run a jupyter
-    # notebook server  within a frozen version
-    # of FSLeyes
-    if len(args) == 2 and args[0] == 'notebook' and fslplatform.frozen:
-        from notebook.notebookapp import main
-
-        # second argument is a path
-        # to add to the PYTHONPATH.
-        # See fsleyes.actions.notebook.NotebookServer.run.
-        sys.path.insert(0, args[1])
-        fsleyes.configLogging()
-        sys.exit(main(argv=[]))
-
     # the fsleyes.initialise function figures
     # out the path to asset files (e.g. cmaps)
     fsleyes.initialise()
+
+    # Hook which allows us to run a jupyter
+    # notebook server  within a frozen version
+    # of FSLeyes
+    if len(args) >= 1 and args[0] == 'notebook' and fslplatform.frozen:
+        from fsleyes.actions.notebook import nbmain
+        fsleyes.configLogging()
+        sys.exit(nbmain(args))
 
     # initialise colour maps - this must be
     # done before parsing arguments, as if
