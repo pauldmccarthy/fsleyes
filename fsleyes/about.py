@@ -38,6 +38,8 @@ class AboutDialog(wx.Dialog):
 
         # Create all the widgets
         splashPanel = imagepanel.ImagePanel(self, splashimg)
+        splashPanel.SetMinSize(splashimg.GetSize())
+
         textPanel   = wx.TextCtrl(self,
                                   size=(-1, 200),
                                   style=(wx.TE_LEFT      |
@@ -72,7 +74,7 @@ class AboutDialog(wx.Dialog):
                     swVer = str(mod.PILLOW_VERSION)
                 else:
                     swVer = str(mod.__version__)
-            except:
+            except Exception:
                 swVer = ''
 
             swVersions.append(swVer)
@@ -92,7 +94,7 @@ class AboutDialog(wx.Dialog):
         try:
             with open(licenseFile, 'rt') as f:
                 licenseStr = f.read()
-        except:
+        except Exception:
             licenseStr = ''
 
         swStr = swStr + '\n\n' + licenseStr

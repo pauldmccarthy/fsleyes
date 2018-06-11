@@ -193,9 +193,14 @@ class NotebookAction(base.Action):
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
         server = NotebookServer(self.__kernel.connfile)
         server.start()
-        self.__bounce(1.5, progdlg)
 
-        if not server.is_alive():
+        elapsed = 0
+
+        while elapsed < 5 and not server.ready:
+            self.__bounce(0.5, progdlg)
+            elapsed += 0.5
+
+        if elapsed >= 5 or not server.is_alive():
             raise RuntimeError('Could not start notebook server: '
                                '{}'.format(server.stderr))
 
@@ -474,12 +479,23 @@ class NotebookServer(threading.Thread):
         if self.__port is not None:
             return self.__port
 
+        self.__port = self.__readPort()
+        return self.__port
+
+
+    def __readPort(self):
         for server in notebookapp.list_running_servers():
             if server['token'] == self.__token:
-                self.__port = server['port']
-                break
+                return server['port']
+        return None
 
-        return self.__port
+
+    @property
+    def ready(self):
+        """Returns ``True`` if the server is running and ready, ``False``
+        otherwise.
+        """
+        return self.__readPort() is not None
 
 
     @property
@@ -534,7 +550,7 @@ class NotebookServer(threading.Thread):
         # JUPYTER_CONFIG_DIR is set, so our
         # custom bits and pieces will be found.
         env        = dict(os.environ)
-        pythonpath = os.pathsep.join((cfgdir, env['PYTHONPATH']))
+        pythonpath = os.pathsep.join((cfgdir, env.get('PYTHONPATH', '')))
 
         env['JUPYTER_CONFIG_DIR'] = cfgdir
         env['PYTHONPATH']         = pythonpath
@@ -552,7 +568,7 @@ class NotebookServer(threading.Thread):
 
             # py2app manipulates the PYTHONPATH, so we
             # pass it through as a command-line argument.
-            self.__nbproc = sp.Popen([exe, 'notebook', cfgdir],
+            self.__nbproc = sp.Popen([exe, 'notebook', 'server', cfgdir],
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
                                      cwd=cfgdir,
@@ -629,3 +645,39 @@ class NotebookServer(threading.Thread):
         for fn, e in zip(files, envs):
             with open(fn, 'rt') as f: template = j2.Template(f.read())
             with open(fn, 'wt') as f: f.write(template.render(**e))
+
+
+def nbmain(argv):
+    """Notebook entry point used when FSLeyes is running as a frozen
+    application.
+
+    Used to start notebook server and kernel processes.
+    """
+
+    if not fslplatform.frozen:
+        raise RuntimeError('nbmain can only be used in '
+                           'frozen versions of FSLeyes')
+
+    if argv[0] != 'notebook':
+        raise RuntimeError('argv does not look like nbmain arguments '
+                           '(first arg is not \'notebook\')')
+
+    argv = argv[1:]
+
+    # run the notebook server
+    if argv[0] == 'server':
+        from notebook.notebookapp import main
+
+        # second argument is a path
+        # to add to the PYTHONPATH.
+        # See NotebookServer.run.
+        sys.path.insert(0, argv[1])
+        return main(argv=[])
+
+    # run a kernel (in place of ipykernel_launcher}
+    elif argv[0] == 'kernel':
+        from ipykernel.kernelapp import IPKernelApp
+
+        app = IPKernelApp.instance()
+        app.initialize(argv[1:])
+        return app.start()
