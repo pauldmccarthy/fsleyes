@@ -11,5 +11,4 @@ scipy>=0.18,<2
 wxPython>=3.0.2.0,<4.1
 fslpy>=1.9.0,<2
 fsleyes-props>=1.6.2,<2
-fsleyes-widgets>=0.6.2,<1
-appnope==0.1.*
+fsleyes-widgets>=0.6.*,<1

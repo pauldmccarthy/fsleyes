@@ -1357,10 +1357,11 @@ class LookupTable(notifier.Notifier):
 
         :returns: The newly created ``LutLabel`` instance.
         """
-        if not isinstance(value, six.integer_types) or \
+        if not isinstance(value, six.integer_types + (np.integer,)) or \
            value < 0 or value > 65535:
             raise ValueError('Lookup table values must be '
-                             '16 bit unsigned integers.')
+                             '16 bit unsigned integers ({}: {}).'.format(
+                                 type(value), value))
 
         if self.get(value) is not None:
             raise ValueError('Value {} is already in '
