@@ -354,8 +354,8 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
             # contains stdout/stderr.
             stdout, stderr = result.output
 
-            print(stdout)
-            print(stderr, file=sys.stderr)
+            if stdout.strip() != '': print(stdout)
+            if stderr.strip() != '': print(stderr, file=sys.stderr)
 
             # Any image arguments which were
             # specified as LOAD are loaded
@@ -364,10 +364,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
                 if isinstance(val, fslimage.Image):
                     overlayList.append(val)
 
-            # We return nothing, as images
-            # will either have been loaded
-            # or saved to disk, and stdout
-            # got printed above.
+            return result
 
         return functools.update_wrapper(wrapper, func)
 
