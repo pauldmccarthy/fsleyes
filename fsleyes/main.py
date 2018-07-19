@@ -73,7 +73,7 @@ class FSLeyesApp(wx.App):
             return wx.ID_NONE
 
         def Exit(self, dlg):
-            self.modals.remove(dlg)
+            self.modals.discard(dlg)
 
 
     def __init__(self):
