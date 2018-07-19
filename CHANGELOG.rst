@@ -8,6 +8,28 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.24.4 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an error caused when loading a Melodic IC label file containing
+  unrecognised labels.
+
+
+Changed
+^^^^^^^
+
+
+* ``fslpy`` wrapper functions now return a value (e.g. if output files are
+  marked for loading) when called from a Jupyter notebook or the FSLeyes
+  python shell.
+* The ``appnope`` library is only a dependency on macOS.
+
+
 
 0.24.3 (Monday June 11th 2018)
 ------------------------------
