@@ -522,7 +522,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         try:
             with status.reportIfError(msg=emsg, title=etitle):
                 melDir, allLabels = fixlabels.loadLabelFile(filename)
-        except:
+        except Exception:
             return
 
         # Ok we've got the labels, now
