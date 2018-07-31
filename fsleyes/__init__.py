@@ -363,8 +363,11 @@ def configLogging(verbose=0, noisy=None):
     logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
     logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
-    # Show deprecations
-    warnings.filterwarnings('default', category=DeprecationWarning)
+    # Show deprecations if running from code
+    if fslplatform.frozen:
+        warnings.filterwarnings('default', category=DeprecationWarning)
+    else:
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
