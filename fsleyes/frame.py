@@ -1803,7 +1803,7 @@ class FSLeyesFrame(wx.Frame):
 
             if name == '':
                 name = strings.labels[self, 'noName']
-            self.__overlayNameMenuItem.SetText(name)
+            self.__overlayNameMenuItem.SetItemLabel(name)
 
             if not self.__display.hasListener('name', self.__name):
                 self.__display.addListener('name',
@@ -1811,4 +1811,4 @@ class FSLeyesFrame(wx.Frame):
                                            self.__selectedOverlayChanged)
         else:
             name = strings.labels[self, 'noOverlays']
-            self.__overlayNameMenuItem.SetText(name)
+            self.__overlayNameMenuItem.SetItemLabel(name)
