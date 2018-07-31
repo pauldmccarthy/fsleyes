@@ -334,6 +334,11 @@ def main(args=None):
                          showErrorMessage=False,
                          ignorePoint=False)
 
+        # start notebook server
+        if namespace[0].notebook:
+            from fsleyes.actions.notebook import NotebookAction
+            frame.menuActions[NotebookAction]()
+
     # Shut down cleanly on sigint/sigterm.
     # We do this so that any functions
     # registered with atexit will actually
