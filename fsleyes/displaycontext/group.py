@@ -125,6 +125,10 @@ class OverlayGroup(props.HasProperties):
             LabelOpts,
             TensorOpts)
 
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__overlayListChanged)
+
         # Add all of the properties listed
         # in the _groupBindings dict as
         # properties of this OverlayGroup
@@ -163,6 +167,31 @@ class OverlayGroup(props.HasProperties):
         return '[{}]'.format(', '.join([str(o) for o in self.overlays]))
 
 
+    def __contains__(self, ovl):
+        """Returns ``True`` if ``ovl`` is in this ``OverlayGroup``,
+        :attr:`False` otherwise.
+        """
+        return ovl in self.overlays
+
+
+    def __len__(self):
+        """Returns the number of overlays in this ``OverlayGroup``. """
+        return len(self.overlays)
+
+
+    def destroy(self):
+        """Must be called when this ``OverlayGroup`` is no longer needed.
+        Removes all overlays from the group, and removes property listeners.
+        """
+        for overlay in list(self.overlays):
+            self.removeOverlay(overlay)
+
+        self.__overlayList.removeListener('overlays', self.__name)
+
+        self.__overlayList = None
+        self.__displayCtx  = None
+
+
     def addOverlay(self, overlay):
         """Add an overlay to this ``OverlayGroup``.
 
@@ -171,6 +200,9 @@ class OverlayGroup(props.HasProperties):
         the overlay display properties are set to those of this
         ``OverlayGroup``.
         """
+
+        if overlay in self.overlays:
+            return
 
         self.overlays.append(overlay)
 
@@ -191,10 +223,19 @@ class OverlayGroup(props.HasProperties):
     def removeOverlay(self, overlay):
         """Remove the given overlay from this ``OverlayGroup``. """
 
+        if overlay not in self.overlays:
+            return
+
+        from . import InvalidOverlayError
+
         self.overlays.remove(overlay)
 
-        display = self.__displayCtx.getDisplay(overlay)
-        opts    = display.opts
+        try:
+            display = self.__displayCtx.getDisplay(overlay)
+        except InvalidOverlayError:
+            return
+
+        opts = display.opts
 
         log.debug('Removing overlay {} from group {}'.format(
             overlay.name, self.__name))
@@ -261,6 +302,16 @@ class OverlayGroup(props.HasProperties):
                                 otherName,
                                 bindatt=False,
                                 unbind=unbind)
+
+
+    def __overlayListChanged(self, *a):
+        """Called when overlays are added/removed to/from the
+        :class:`.OverlayList` . Makes sure that the :attr:`overlays` list for
+        this group does not contain any overlays that have been removed.
+        """
+        for ovl in self.overlays:
+            if ovl not in self.__overlayList:
+                self.removeOverlay(ovl)
 
 
     def __overlayTypeChanged(self, value, valid, display, name):
