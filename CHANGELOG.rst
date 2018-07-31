@@ -8,8 +8,35 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.24.4 (Under development)
+0.24.5 (Under development)
 --------------------------
+
+
+Added
+^^^^^
+
+
+* New command line flag  ``--notebook``/``-nb``, which starts the Jupyter
+  notebook server automatically.
+
+
+Changed
+^^^^^^^
+
+
+* Overlays loaded from ``fslpy`` wrapper functions are now named accordingly.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a memory leak in the :mod:`fsleyes.displaycontext.group` module.
+* Suppresed some deprecation warnings when running frozen versions of FSLeyes.
+
+
+0.24.4 (Thursday July 19th 2018)
+--------------------------------
 
 
 Fixed
