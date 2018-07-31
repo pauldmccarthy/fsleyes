@@ -418,6 +418,7 @@ OPTIONS = td.TypeDict({
                        'bigmem',
                        'bumMode',
                        'fontSize',
+                       'notebook',
                        'notebookPort'],
 
     # From here on, all of the keys are
@@ -711,6 +712,7 @@ ARGUMENTS = td.TypeDict({
     'Main.bigmem'              : ('b',      'bigmem',              False),
     'Main.bumMode'             : ('bums',   'bumMode',             False),
     'Main.fontSize'            : ('fs',     'fontSize',            True),
+    'Main.notebook'            : ('nb',     'notebook',            False),
     'Main.notebookPort'        : ('nbp',    'notebookPort',        True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
@@ -913,6 +915,7 @@ HELP = td.TypeDict({
                               'regardless of size.',
     'Main.bumMode'          : 'Make the coronal icon look like a bum',
     'Main.fontSize'         : 'Application font size',
+    'Main.notebook'         : 'Start the Jupyter notebook server',
     'Main.notebookPort'     : 'Jupyter notebook server port',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
@@ -1585,6 +1588,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['fontSize'],
                             type=int,
                             help=mainHelp['fontSize'])
+    mainParser.add_argument(*mainArgs['notebook'],
+                            action='store_true',
+                            help=mainHelp['notebook'])
     mainParser.add_argument(*mainArgs['notebookPort'],
                             type=int,
                             help=mainHelp['notebookPort'],
