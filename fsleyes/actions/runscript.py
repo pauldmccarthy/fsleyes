@@ -363,6 +363,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
             for name, val in result.items():
                 if isinstance(val, fslimage.Image):
                     overlayList.append(val)
+                    displayCtx.getDisplay(val).name = name
 
             return result
 

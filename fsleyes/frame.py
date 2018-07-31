@@ -258,6 +258,11 @@ class FSLeyesFrame(wx.Frame):
         self.__layoutMenu     = None
         self.__recentPathMenu = None
 
+        # Refs to Action objects that
+        # are bound to menu options,
+        # as { type : instance } mappings
+        self.__menuActions   = {}
+
         # The recent paths manager notifies us when
         # they change. See the __makeFileMenu and
         # __makeRecentPathsMenu methods
@@ -334,6 +339,14 @@ class FSLeyesFrame(wx.Frame):
 
             focused = focused.GetParent()
         return None
+
+
+    @property
+    def menuActions(self):
+        """Returns a dictionary containing all globa :class:`.Action` objects
+        that are bound to menu items.
+        """
+        return dict(self.__menuActions)
 
 
     @deprecation.deprecated(deprecated_in='0.16.0',
@@ -1168,6 +1181,8 @@ class FSLeyesFrame(wx.Frame):
         for panel in self.__viewPanels:
             panel.destroy()
 
+        self.__menuActions = None
+
         # Deregister loadoverlay listener
         # (registered in __init__)
         import fsleyes.actions.loadoverlay as loadoverlay
@@ -1450,6 +1465,8 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = action(self.__overlayList, self.__displayCtx, self)
+
+            self.__menuActions[action] = actionObj
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
