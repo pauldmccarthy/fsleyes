@@ -401,6 +401,10 @@ class DisplayContext(props.SyncableHasProperties):
             self.removeListener('location',           self.__name)
             self.removeListener('worldLocation',      self.__name)
             self.removeListener('vertexIndex',        self.__name)
+        else:
+            for g in list(self.overlayGroups):
+                self.overlayGroups.remove(g)
+                g.destroy()
 
         for overlay, display in displays.items():
             display.destroy()
