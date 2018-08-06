@@ -498,6 +498,12 @@ def guessDataSourceType(path):
 
     path = op.abspath(path)
 
+    # Accept images sans-extension
+    try:
+        path = fslimage.addExt(path, mustExist=True)
+    except fslimage.PathError:
+        pass
+
     if op.isfile(path):
 
         # Some types are easy - just check the extensions
@@ -527,16 +533,9 @@ def guessDataSourceType(path):
         elif dtifit.isDTIFitPath(path):
             return dtifit.DTIFitTensor, path
 
-    # Last-ditch effort - is it an
-    # incomplete path to an image?
-    try:
-        path = fslimage.addExt(path, mustExist=True)
-        return fslimage.Image, path
-
     # Otherwise, I don't
     # know what to do
-    except fslimage.PathError:
-        return None, path
+    return None, path
 
 
 def findFEATImage(overlayList, overlay):
