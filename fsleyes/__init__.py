@@ -365,9 +365,9 @@ def configLogging(verbose=0, noisy=None):
 
     # Show deprecations if running from code
     if fslplatform.frozen:
-        warnings.filterwarnings('default', category=DeprecationWarning)
-    else:
         warnings.filterwarnings('ignore', category=DeprecationWarning)
+    else:
+        warnings.filterwarnings('default', category=DeprecationWarning)
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
