@@ -18,6 +18,7 @@ Fixed
 
 * Fixed a small bug in detection of image/analysis types from command line
   arguments.
+* Fixed deprecation warning suppression in standalone versions of FSLeyes.
 
 
 0.24.5 (Wednesday August 1st 2018)
