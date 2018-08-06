@@ -8,6 +8,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.24.6 (Monday August 6th 2018)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a small bug in detection of image/analysis types from command line
+  arguments.
+
+
 0.24.5 (Wednesday August 1st 2018)
 ----------------------------------
 
