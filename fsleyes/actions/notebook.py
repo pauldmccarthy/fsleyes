@@ -156,7 +156,7 @@ class NotebookAction(base.Action):
         """
         for i in range(int(secs * 10)):
             progdlg.DoBounce()
-            wx.Yield()
+            wx.GetApp().Yield()
             time.sleep(0.1)
 
 

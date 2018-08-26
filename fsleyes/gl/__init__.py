@@ -729,7 +729,7 @@ class GLContext(object):
             # until the dummy canvas is
             # physically shown on the screen.
             while not self.__canvas.IsShownOnScreen():
-                wx.Yield()
+                wx.GetApp().Yield()
 
             self.__context.SetCurrent(self.__canvas)
 
