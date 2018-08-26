@@ -85,6 +85,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.labelopts.LabelOpts
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts
+   ~fsleyes.displaycontext.mipopts.MIPOpts
 
 
 --------------
@@ -168,6 +169,7 @@ from .freesurferopts import FreesurferOpts
 from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
 from .shopts         import SHOpts
+from .mipopts        import MIPOpts
 
 from .displaycontext import InvalidOverlayError
 
@@ -175,7 +177,8 @@ from .displaycontext import InvalidOverlayError
 OVERLAY_TYPES = td.TypeDict({
 
     'Image'          : ['volume',     'mask',  'rgbvector',
-                        'linevector', 'label', 'sh', 'tensor'],
+                        'linevector', 'label', 'sh', 'tensor',
+                        'mip'],
     'Mesh'           : ['mesh'],
     'DTIFitTensor'   : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -203,6 +206,7 @@ DISPLAY_OPTS_MAP = td.TypeDict({
     'Nifti.label'         : LabelOpts,
     'Nifti.tensor'        : TensorOpts,
     'Nifti.sh'            : SHOpts,
+    'Nifti.mip'           : MIPOpts,
     'Mesh.mesh'           : MeshOpts,
     'VTKMesh.mesh'        : MeshOpts,
     'GiftiMesh.mesh'      : GiftiOpts,

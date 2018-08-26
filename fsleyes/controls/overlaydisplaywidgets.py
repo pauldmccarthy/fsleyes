@@ -291,6 +291,10 @@ def _initPropertyList_SHOpts(threedee):
             'colourMode']
 
 
+def _initPropertyList_MIPOpts(threedee):
+    return []
+
+
 def _initWidgetSpec_Display(threedee):
     return {
         'name'        : props.Widget('name'),
@@ -750,6 +754,10 @@ def _init3DWidgetSpec_GiftiOpts():
 def _initWidgetSpec_FreesurferOpts(threedee):
     return {}
 def _init3DWidgetSpec_FreesurferOpts():
+    return {}
+
+
+def _initWidgetSpec_MIPOpts(threedee):
     return {}
 
 

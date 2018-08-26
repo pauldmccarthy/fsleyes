@@ -64,6 +64,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeFreesurferOptsTools
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
+       _OverlayDisplayToolBar__makeMIPOptsTools
     """
 
     def __init__(self, parent, overlayList, displayCtx, frame, viewPanel):
@@ -544,6 +545,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         nav.extend(  [sizeWidget, radWidget])
 
         return tools, nav
+
+
+    def _makeMIPOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.MIPOpts` instance.
+        """
+        return [], []
 
 
 def _imageLabel(img):

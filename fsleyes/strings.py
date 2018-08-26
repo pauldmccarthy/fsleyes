@@ -650,6 +650,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.MeshOpts'       : 'Mesh settings',
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
+    'OverlayDisplayPanel.MIPOpts'        : 'MIP settings',
 
     'OverlayDisplayPanel.3d'             : '3D display settings',
 
@@ -1169,12 +1170,14 @@ choices = TypeDict({
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
         'mask'           : '3D/4D mask image',
+        'mip'            : 'Max intensity projection',
         'label'          : 'Label image',
         'rgbvector'      : '3-direction vector image (RGB)',
         'linevector'     : '3-direction vector image (Line)',
         'mesh'           : '3D mesh',
         'tensor'         : 'Diffusion tensor',
-        'sh'             : 'Diffusion SH'},
+        'sh'             : 'Diffusion SH',
+    },
 
     'HistogramPanel.histType' : {'probability' : 'Probability',
                                  'count'       : 'Count'},
