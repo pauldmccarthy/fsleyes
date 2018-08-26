@@ -17,3 +17,4 @@ from . import glmask_funcs         # noqa
 from . import gllabel_funcs        # noqa
 from . import gltensor_funcs       # noqa
 from . import glsh_funcs           # noqa
+from . import glmip_funcs          # noqa

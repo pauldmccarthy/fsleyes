@@ -14,6 +14,7 @@ from . import gllinevector_funcs  # noqa
 from . import glmesh_funcs        # noqa
 from . import glmask_funcs        # noqa
 from . import gllabel_funcs       # noqa
+from . import glmip_funcs         # noqa
 
 gltensor_funcs = None
 glsh_funcs     = None

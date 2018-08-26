@@ -126,6 +126,7 @@ be displayed as:
    ~fsleyes.gl.glmesh.GLMesh
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
+   ~fsleyes.gl.glsh.GLMIP
 
 
 These objects are created and destroyed automatically by the canvas classes
@@ -275,6 +276,9 @@ def bootstrap(glVersion=None):
 
     ``glsh_funcs``         The version-specific module containing functions for
                            rendering :class:`.GLSH` instances.
+
+    ``glmip_funcs``        The version-specific module containing functions for
+                           rendering :class:`.GLMIP` instances.
     ====================== ====================================================
 
 
@@ -397,6 +401,7 @@ def bootstrap(glVersion=None):
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod.glsh_funcs         = glpkg.glsh_funcs
+    thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
     fslplatform.glVersion      = thismod.GL_VERSION
     fslplatform.glRenderer     = thismod.GL_RENDERER
