@@ -434,6 +434,7 @@ OPTIONS = td.TypeDict({
                        'colourBarLocation',
                        'colourBarLabelSide',
                        'performance',
+                       'movieSyncRefresh',
                        'highDpi'],
     'OrthoOpts'     : ['xzoom',
                        'yzoom',
@@ -724,6 +725,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
     'SceneOpts.performance'        : ('p',   'performance',        True),
     'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
+    'SceneOpts.movieSyncRefresh'   : ('ms',  'movieSync',          False),
 
     'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
     'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
@@ -931,6 +933,8 @@ HELP = td.TypeDict({
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
                                      'display, render at the full display '
                                      'resolution',
+    'SceneOpts.movieSyncRefresh'   : 'Toggle the canvas refresh strategy in '
+                                     'movie mode.',
 
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
@@ -2251,8 +2255,9 @@ def _applyArgs(args,
     for name in list(propNames):
         applied = False
         if _isSpecialApplyOption(target, name) or not hasattr(target, name):
+
             applied = not _applySpecialOption(
-                args, overlayList, displayCtx, target, name)
+                args, overlayList, displayCtx, target, name, longArgs[name])
 
         if not applied:
             props.applyArguments(target,
@@ -2754,7 +2759,12 @@ def _configSpecialOption(target,
     cfgFunc(target, parser, shortArg, longArg, helpText)
 
 
-def _applySpecialOption(args, overlayList, displayCtx, target, optName):
+def _applySpecialOption(args,
+                        overlayList,
+                        displayCtx,
+                        target,
+                        optName,
+                        longArg):
     """Called by the ``_applyArgs`` function for any options which do
     not map directly to a :class:`.SceneOpts` or :class:`.DisplayOpts`
     property. Calls the ``_applySpecial`` function for the option.
@@ -2765,6 +2775,7 @@ def _applySpecialOption(args, overlayList, displayCtx, target, optName):
     :arg displayCtx:  The ``DisplayContext`` instance
     :arg target:      The ``Opts`` instance with which the option is associated
     :arg optNmae:     Name of the option
+    :arg longArg:     Name of the corresponding command line argument
     """
 
     cls       = type(target)
@@ -2775,7 +2786,7 @@ def _applySpecialOption(args, overlayList, displayCtx, target, optName):
             'Could not find apply function for special '
             'argument {} to {}'.format(optName, cls.__name__))
 
-    if getattr(args, optName) is None:
+    if getattr(args, longArg) is None:
         return
 
     log.debug('Applying special argument {} to {}'
@@ -2955,6 +2966,14 @@ def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
     y    = -1 + 2 * (y - ylo) / ylen
 
     return ['{: 0.5f}'.format(x), '{: 0.5f}'.format(y)]
+
+
+def _applySpecial_SceneOpts_movieSyncRefresh(
+        args, overlayList, displayCtx, target):
+    """Applies the ``SceneOpts.movieSyncRefresh`` option. """
+
+    if args.movieSync:
+        target.movieSyncRefresh = not target.defaultMovieSyncRefresh
 
 
 def _configSpecial_Volume3DOpts_clipPlane(
