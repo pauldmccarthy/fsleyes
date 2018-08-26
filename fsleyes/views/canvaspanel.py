@@ -15,7 +15,6 @@ import deprecation
 import wx
 
 import fsl.utils.idle                              as idle
-from   fsl.utils.platform import platform          as fslplatform
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
@@ -284,30 +283,12 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__movieGifAction = moviegif.MovieGifAction(
             overlayList, displayCtx, self)
 
+        self.bindProps('movieSyncRefresh', sceneOpts)
+
         self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
         self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
         self.toggleVolumeSync .bindProps('toggled', self, 'syncOverlayVolume')
         self.movieGif         .bindProps('enabled', self.__movieGifAction)
-
-        # In movie mode, the canvas refreshes are
-        # performed by the __syncMovieRefresh or
-        # __unsyncMovieRefresh methods. Some
-        # platforms/GL drivers/environments
-        # seem to have a problem with separate
-        # renders/buffer swaps, so we have to use
-        # a shitty unsynchronised update routine.
-        #
-        # These heuristics are not perfect, so the
-        # movieSyncRefresh property can be
-        # overridden.
-        #
-        # TODO Ideally, figure out a refresh regime
-        #      that works across all drivers.
-        renderer        = fslplatform.glRenderer.lower()
-        unsyncRenderers = ['gallium', 'mesa dri intel(r)']
-        unsync          = any([r in renderer for r in unsyncRenderers])
-
-        self.movieSyncRefresh = not unsync
 
         # the __movieModeChanged method is called
         # when movieMode changes, but also when
