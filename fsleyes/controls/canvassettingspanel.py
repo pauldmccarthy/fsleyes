@@ -88,11 +88,13 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
             ('syncOverlayDisplay', props.Widget('syncOverlayDisplay')),
             ('syncOverlayVolume',  props.Widget('syncOverlayVolume')),
             ('movieMode',          props.Widget('movieMode')),
+            ('movieSyncRefresh',   props.Widget('movieSyncRefresh')),
             ('movieAxis',
              props.Widget('movieAxis',
                           labels=strings.choices[canvasPanel, 'movieAxis'])),
             ('movieRate',
              props.Widget('movieRate', spin=False, showLimits=False))))
+
 
         sceneOptsProps = collections.OrderedDict((
             ('showCursor',   props.Widget('showCursor')),

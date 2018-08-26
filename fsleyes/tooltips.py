@@ -500,6 +500,11 @@ properties = TypeDict({
     'The axis to loop through. You can choose to run a movie through any '
     'axis of an image (X, Y, Z, or volume/time).',
 
+    'CanvasPanel.movieSyncRefresh' :
+    'In movie mode, refresh all orthographic canvases in a synchronous '
+    'manner. This is not possible under certain platforms/environments, '
+    'where the canvas updates cannot be synchronised.',
+
     'PlotPanel.legend'     : 'Show / hide a legend for series which have '
                              'been added to the plot.',
     'PlotPanel.xAutoScale' : 'If checked, the plot X axis limits are '
