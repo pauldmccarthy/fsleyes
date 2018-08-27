@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 #
-# glmip.py -
+# glmip.py -  Maximum intensity projection
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""The :class:`GLMIP` class can be used to render
+maximum-intensity-projections of an :class:`.Image` overlay onto a 2D canvas.
+"""
 
 
-import numpy                     as np
 import OpenGL.GL                 as gl
 
 import fsl.utils.idle            as idle
@@ -18,8 +20,36 @@ from . import                       glimageobject
 
 
 class GLMIP(glimageobject.GLImageObject):
+    """The ``GLMIP`` class is a :class:`.GLImageObject` which can be used to
+    render maximum-intensity-projections of an :class:`.Image` overlay onto a
+    2D canvas.
+
+    There is no support for rending a MIP onto a 3D canvas, as the
+    :class:`.GLVolume` can be used to achieve a MIP-like effect.
+
+    To use the ``GLMIP``, the :class:`.Display.overlayType` attribute for the
+    image must be set to ``'mip'``. See the :class:`.MIPOpts` class for more
+    details.
+
+    The ``GLMIP`` class uses functions defined in the :mod:`.gl21.glmip_funcs`
+    module - there is currently no support for OpenGL 1.4.
+    """
+
 
     def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+        """Create a ``GLMIP``.
+
+        :arg image:       An :class:`.Image` object.
+
+        :arg overlayList: The :class:`.OverlayList`
+
+        :arg displayCtx:  The :class:`.DisplayContext` object managing the
+                          scene.
+
+        :arg canvas:      The canvas doing the drawing.
+
+        :arg threedee:    Set up for 2D or 3D rendering.
+        """
 
         glimageobject.GLImageObject.__init__(self,
                                              image,
@@ -31,7 +61,6 @@ class GLMIP(glimageobject.GLImageObject):
         self.shader         = None
         self.imageTexture   = None
         self.cmapTexture    = textures.ColourMapTexture(self.name)
-        self.negCmapTexture = textures.ColourMapTexture(self.name)
 
         self.addDisplayListeners()
         self.refreshImageTexture()
@@ -45,9 +74,9 @@ class GLMIP(glimageobject.GLImageObject):
 
 
     def destroy(self):
+        """Clears up resources used by the ``GLMIP``. """
 
-        self.cmapTexture   .destroy()
-        self.negCmapTexture.destroy()
+        self.cmapTexture.destroy()
 
         self.removeDisplayListeners()
         self.imageTexture.deregister(self.name)
@@ -58,14 +87,13 @@ class GLMIP(glimageobject.GLImageObject):
 
         self.shader         = None
         self.cmapTexture    = None
-        self.negCmapTexture = None
         self.imageTexture   = None
 
 
     def addDisplayListeners(self):
         """Adds a bunch of listeners to the :class:`.Display` object, and the
-        associated :class:`.MaskOpts` instance, which define how the mask
-        image should be displayed.
+        associated :class:`.MIPOpts` instance, which define how the image
+        should be displayed.
         """
         display = self.display
         opts    = self.opts
@@ -106,6 +134,7 @@ class GLMIP(glimageobject.GLImageObject):
 
 
     def removeDisplayListeners(self):
+        """Removes all listeners added by :meth:`addDisplayListeners`. """
 
         display = self.display
         opts    = self.opts
@@ -170,6 +199,9 @@ class GLMIP(glimageobject.GLImageObject):
 
 
     def refreshCmapTextures(self):
+        """Updates the colour map texture in line with the current
+        :class:`.Display` and :class:`MIPOpts` settings.
+        """
         display = self.display
         opts    = self.opts
         alpha   = display.alpha / 100.0
@@ -177,7 +209,6 @@ class GLMIP(glimageobject.GLImageObject):
         interp  = opts.interpolateCmaps
         res     = opts.cmapResolution
         gamma   = opts.realGamma(opts.gamma)
-        negCmap = opts.negativeCmap
         invert  = opts.invert
         dmin    = opts.displayRange[0]
         dmax    = opts.displayRange[1]
@@ -193,18 +224,9 @@ class GLMIP(glimageobject.GLImageObject):
                              interp=interp,
                              displayRange=(dmin, dmax))
 
-        self.negCmapTexture.set(cmap=negCmap,
-                                invert=invert,
-                                alpha=alpha,
-                                resolution=res,
-                                gamma=gamma,
-                                interp=interp,
-                                displayRange=(dmin, dmax))
-
 
     def updateShaderState(self, *args, **kwargs):
-        """Calls :func:`.gl14.glmip_funcs.updateShaderState` or
-        :func:`.gl21.glmip_funcs.updateShaderState`, and
+        """Calls :func:`.gl21.glmip_funcs.updateShaderState`, and
         :meth:`.Notifier.notify`. Uses :func:`.idle.idleWhen` to ensure that
         they don't get called until :meth:`ready` returns ``True``.
         """
@@ -235,26 +257,31 @@ class GLMIP(glimageobject.GLImageObject):
 
 
     def preDraw(self, xform=None, bbox=None):
-        self.imageTexture  .bindTexture(gl.GL_TEXTURE0)
-        self.cmapTexture   .bindTexture(gl.GL_TEXTURE1)
-        self.negCmapTexture.bindTexture(gl.GL_TEXTURE2)
+        """Binds textures. """
+        self.imageTexture.bindTexture(gl.GL_TEXTURE0)
+        self.cmapTexture .bindTexture(gl.GL_TEXTURE1)
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
+        """Calls :func:`.gl21.glmip_funcs.draw2D`. """
         fslgl.glmip_funcs.draw2D(self, zpos, axes, xform, bbox)
 
 
     def draw3D(self, xform=None, bbox=None):
+        """Does nothing. """
         pass
 
 
     def postDraw(self, xform=None, bbox=None):
+        """Unbinds textures. """
         self.imageTexture  .unbindTexture()
         self.cmapTexture   .unbindTexture()
-        self.negCmapTexture.unbindTexture()
 
 
     def __volumeChanged(self, *a):
+        """Called when the :attr:`.NiftiOpts.volume` property changes. Updates
+        the image texture accordingly.
+        """
         self.imageTexture.set(volume=self.opts.index()[3:])
 
 

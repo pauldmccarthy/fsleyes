@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# glmip_funcs.py -
+# glmip_funcs.py - Functions used by GLMIP for rendering in an OpenGL 2.1
+# environment.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains functions used by the :class:`.GLMIP` class for
+rendering in an OpenGL 2.1 environment.
+"""
 
 import numpy as np
 
@@ -13,17 +17,20 @@ from . import                 glvolume_funcs
 
 
 def init(self):
+    """Initialise the shader programs. """
     self.shader = None
     compileShaders(   self)
     updateShaderState(self)
 
 
 def destroy(self):
+    """Destroy the shader programs. """
     self.shader.destroy()
     self.shader = None
 
 
 def compileShaders(self):
+    """Compiles vertex and fragment shaders. """
     if self.shader is not None:
         self.shader.destroy()
 
@@ -34,6 +41,9 @@ def compileShaders(self):
 
 
 def updateShaderState(self):
+    """Updates the vertex/fragment shader state based on the current
+    state of the :class:`.MIPOpts` instance.
+    """
 
     if not self.ready():
         return
@@ -43,10 +53,8 @@ def updateShaderState(self):
 
     vmin, vmax = self.overlay.dataRange
 
-    # The clipping range options are in the voxel value
-    # range, but the shader needs them to be in image
-    # texture value range (0.0 - 1.0). So let's scale
-    # them.
+    # Convert clipping values from voxel value
+    # range totexture value range (0.0 - 1.0).
     imgXform   = self.imageTexture.invVoxValXform
     clipLow    = opts.clippingRange[0] * imgXform[0, 0] + imgXform[0, 3]
     clipHigh   = opts.clippingRange[1] * imgXform[0, 0] + imgXform[0, 3]
