@@ -380,6 +380,17 @@ properties = TypeDict({
                                 'disabled when you choose to colour the FODs '
                                 'by another image (e.g. a FA map).',
 
+    # MIPOpts
+    'MIPOpts.window'  :
+    'Length of the window, as a proportion of the image length, along which '
+    'the MIP is calculated.',
+    'MIPOpts.minimum' :
+    'Use the minimum intensity, rather than the maximum intensity, in the '
+    'projection.',
+    'MIPOpts.absolute' :
+    'Use the absolute intensity, rather than the maximum intensity, in the '
+    'projection.',
+
     # SceneOpts
 
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '

@@ -17,7 +17,13 @@ from . import                                volumeopts
 class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
 
 
-    window = props.Real(minval=0, maxval=1, clamped=True)
+    window = props.Percentage(clamped=True, default=50)
+
+
+    minimum = props.Boolean(default=False)
+
+
+    absolute = props.Boolean(default=False)
 
 
     interpolation = props.Choice(('none', 'linear', 'spline'))

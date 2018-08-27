@@ -6,8 +6,8 @@
 #
 
 
+import numpy                     as np
 import OpenGL.GL                 as gl
-
 
 import fsl.utils.idle            as idle
 
@@ -73,14 +73,14 @@ class GLMIP(glimageobject.GLImageObject):
 
         def shader(*a):
             self.updateShaderState()
-            self.notify()
 
         def cmap(*a):
             self.refreshCmapTextures()
-            self.updateShaderState()
-            self.notify()
+            self.updateShaderState(alwaysNotify=True)
 
         opts    .addListener('window',           name, shader,  weak=False)
+        opts    .addListener('minimum',          name, shader,  weak=False)
+        opts    .addListener('absolute',         name, shader,  weak=False)
         opts    .addListener('displayRange',     name, cmap,    weak=False)
         opts    .addListener('clippingRange',    name, shader,  weak=False)
         opts    .addListener('invertClipping',   name, shader,  weak=False)
@@ -115,6 +115,8 @@ class GLMIP(glimageobject.GLImageObject):
             opts.removeSyncChangeListener('volume', name)
 
         opts    .removeListener('window',           name)
+        opts    .removeListener('minimum',          name)
+        opts    .removeListener('absolute',         name)
         opts    .removeListener('displayRange',     name)
         opts    .removeListener('clippingRange',    name)
         opts    .removeListener('invertClipping',   name)
