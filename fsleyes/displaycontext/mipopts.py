@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 #
-# mipopts.py -
+# mipopts.py - The MIPOpts class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`MIPOpts` class, a :class:`.DisplayOpts`
+class containing options for rendering maximum intensity projections of
+:class:`.Image` overlays. The :class:`MIPOpts` class corresponds to the
+``'mip'`` overlay type.
+
+MIP overlays are rendered via the :class:`.GLMIP` class.
+"""
 
 
 import numpy as np
@@ -17,15 +24,25 @@ from . import                                volumeopts
 
 
 class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
+    """The ``MIPOpts`` class is used for rendering maximum intensity
+    projections of .Image overlays.
+    """
 
 
     window = props.Percentage(minval=1, clamped=True, default=50)
+    """Window over which the MIP is calculated, as a proportion of the image
+    length. The window is centered at the current display location.
+    """
 
 
     minimum = props.Boolean(default=False)
+    """Display a minimum intensity projection, rather than maximum. """
 
 
     absolute = props.Boolean(default=False)
+    """Display an absolute maximum intensity projection. This setting
+    overrides the :attr:`minimum` setting.
+    """
 
 
     interpolation = props.Choice(('none', 'linear', 'spline'))
@@ -35,12 +52,12 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
     """
 
 
-    def __init__(self,
-                 overlay,
-                 display,
-                 overlayList,
-                 displayCtx,
-                 **kwargs):
+    def __init__(self, *args, **kwargs):
+        """Create a ``MIPOpts`` object.
+
+        All arguments are passed through to the :class:`.NiftiOpts` init
+        function.
+        """
 
         # We need GL >= 2.1 for
         # spline interpolation
@@ -49,20 +66,14 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])
 
-        volumeopts.NiftiOpts.__init__(self,
-                                      overlay,
-                                      display,
-                                      overlayList,
-                                      displayCtx,
-                                      **kwargs)
+        volumeopts.NiftiOpts.__init__(self, *args, **kwargs)
         cmapopts .ColourMapOpts.__init__(self)
-
 
         # calculate the approximate number
         # of voxels along the longest diagonal
         # of the image - we use this as the
         # maximum number of samples to take
-        x, y, z  = overlay.shape
+        x, y, z  = self.overlay.shape
         xy       = (x * y, (x, y))
         xz       = (x * z, (x, z))
         yz       = (y * z, (y, z))
@@ -71,20 +82,21 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
 
 
     def destroy(self):
-        """
-        """
+        """Must be called when this ``MIPOpts`` object is no longer needed. """
         cmapopts  .ColourMapOpts.destroy(self)
         volumeopts.NiftiOpts    .destroy(self)
 
 
     def getDataRange(self):
-        """
+        """Overrides :meth:`.ColourMapOpts.getDataRange`. Returns the
+        :attr:`.Image.dataRange` of the image.
         """
         return self.overlay.dataRange
 
 
     def calculateRayCastSettings(self, viewmat):
-        """
+        """Calculates a camera direction and ray casting step vector, based
+        on the given view matrix.
         """
 
         d2tmat  = self.getTransform('display', 'texture')
