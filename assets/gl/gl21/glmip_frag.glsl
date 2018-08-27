@@ -21,10 +21,6 @@ uniform sampler3D imageTexture;
  */
 uniform sampler1D cmapTexture;
 
-/*
- * Texture containing the negative colour map.
- */
-uniform sampler1D negCmapTexture;
 
 /*
  * Matrix which can be used to transform a texture value
@@ -38,11 +34,6 @@ uniform mat4 img2CmapXform;
  */
 uniform vec3 imageShape;
 
-/*
- * Flag which determines whether to
- * use the negative colour map.
- */
-uniform bool useNegCmap;
 
 /*
  * Use spline interpolation?
@@ -61,14 +52,8 @@ uniform float clipLow;
  */
 uniform float clipHigh;
 
-/*
- * Value in the image texture data range which corresponds
- * to zero - this is used to determine whether to use the
- * regular, or the negative colour texture (if useNegCmap
- * is true).
- */
-uniform float texZero;
 
+/*
 /*
  * Invert clipping behaviour - clip voxels
  * that are inside the clipLow/High bounds.
@@ -76,23 +61,34 @@ uniform float texZero;
 uniform bool invertClip;
 
 
+/*
+ * Camera direction vector, normalised to unit length.
+ */
 uniform vec3 cameraDir;
+
+
+/*
+ * Ray cast vector - the ray is shifted by this much on each
+ * iteration of the loop.
+ */
 uniform vec3 rayStep;
 
 
 /*
- *
+ * Proportion of image (between 0 and 1) to sample from.
  */
 uniform float window;
 
 
 /*
- *
+ * Perform a minimum intensity projection, rather than maximum.
  */
 uniform bool useMinimum;
 
+
 /*
- *
+ * Perform an absolute-maximum intensity projection - overrides
+ * the useMinimum flag.
  */
 uniform bool useAbsolute;
 
@@ -109,17 +105,41 @@ varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
 
 
-bool compare(float value, float maxValue) {
+/*
+ * Sample the volume at the given texCoord, returning true if
+ * the sampled value should be used as the new maximum.
+ */
+bool sample_volume(vec3 texCoord, float maxValue, out float value) {
 
-    bool minimum = useMinimum;
+    bool usemin = useMinimum;
 
-    if (useAbsolute) {
-        value    = abs(value);
-        maxValue = abs(maxValue);
-        minimum  = false;
+    /* sample the volume */
+    if (useSpline)
+        value = spline_interp(imageTexture, texCoord, imageShape, 0);
+    else
+        value = texture3D(    imageTexture, texCoord).r;
+
+    /* Skip nan values */
+    if (value != value) {
+        return false;
     }
 
-    if (minimum) {
+    /* only consider in-clipping-range values */
+    if ((!invertClip && (value <= clipLow || value >= clipHigh)) ||
+        ( invertClip && (value >= clipLow && value <= clipHigh))) {
+        return false;
+    }
+
+    /*
+     * figure out if we should replace the
+     * current max value with this value
+     */
+    if (useAbsolute) {
+        value  = abs(value);
+        usemin = false;
+    }
+
+    if (usemin) {
         if (value < maxValue) {
             return true;
         }
@@ -138,7 +158,6 @@ void main(void) {
     vec3  startCoord;
     vec3  endCoord;
     vec3  dither;
-    bool  negCmap = false;
     float value;
     float maxValue;
 
@@ -146,17 +165,29 @@ void main(void) {
         discard;
     }
 
-    // jitter starting coord to
-    // prevent wood grain effect
+    /*
+     * Figure out the start and
+     * end sampling locations
+     * based on the current window.
+     *
+     * randomly offset starting coord
+     * to prevent wood grain effect.
+     */
     dither     = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
     startCoord = fragTexCoord - (cameraDir * window) / 2 - dither;
     endCoord   = fragTexCoord + (cameraDir * window) / 2 - dither;
 
-    // TODO set to sensible values based on texture
-    // value limits (is it always [0, 1]?)
+
+    // TODO set to sensible values based
+    //      on texture value limits
     if (useMinimum) maxValue =  99999;
     else            maxValue = -99999;
 
+    /*
+     * Sample the volume along a ray,
+     * stopping when we have gone past
+     * the end texture coordinates
+     */
     for (texCoord = startCoord;
          dot(endCoord - startCoord, endCoord - texCoord) > 0;
          texCoord += rayStep) {
@@ -165,33 +196,8 @@ void main(void) {
             continue;
         }
 
-        /* sample the volume */
-        if (useSpline) value = spline_interp(imageTexture,
-                                             texCoord,
-                                             imageShape,
-                                             0);
-        else           value = texture3D(    imageTexture, texCoord).r;
-
-        /* Skip nan values */
-        if (value != value) {
-            continue;
-        }
-
-        /* if using a negative colour map, we may
-         * need to invert the voxel value
-          */
-        if (useNegCmap && value <= texZero) {
-
-            negCmap = true;
-            value   = texZero + (texZero - value);
-        }
-
-        /* only consider in-clipping-range values */
-        if ((!invertClip && (value > clipLow && value < clipHigh)) ||
-            ( invertClip && (value < clipLow || value > clipHigh))) {
-            if (compare(value, maxValue)) {
-                maxValue = value;
-            }
+        if (sample_volume(texCoord, maxValue, value)) {
+            maxValue = value;
         }
     }
 
@@ -199,8 +205,10 @@ void main(void) {
         discard;
     }
 
+    /*
+     * Turn the mip voxel value into
+     * an appropriate colour
+     */
     maxValue = (img2CmapXform * vec4(maxValue, 0, 0, 1)).x;
-
-    if (negCmap) gl_FragColor = texture1D(negCmapTexture, maxValue);
-    else         gl_FragColor = texture1D(cmapTexture,    maxValue);
+    gl_FragColor = texture1D(cmapTexture, maxValue);
 }
