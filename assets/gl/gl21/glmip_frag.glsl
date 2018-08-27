@@ -7,6 +7,7 @@
 
 #pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
+#pragma include rand.glsl
 
 
 /*
@@ -74,10 +75,33 @@ uniform float texZero;
  */
 uniform bool invertClip;
 
+
+uniform vec3 cameraDir;
+uniform vec3 rayStep;
+
+
+/*
+ *
+ */
+uniform float window;
+
+
+/*
+ *
+ */
+uniform bool useMinimum;
+
+/*
+ *
+ */
+uniform bool useAbsolute;
+
+
 /*
  * Image voxel coordinates.
  */
 varying vec3 fragVoxCoord;
+
 
 /*
  * Corresponding image texture coordinates.
@@ -85,11 +109,95 @@ varying vec3 fragVoxCoord;
 varying vec3 fragTexCoord;
 
 
+bool compare(float value, float maxValue) {
+
+    bool minimum = useMinimum;
+
+    if (useAbsolute) {
+        value    = abs(value);
+        maxValue = abs(maxValue);
+        minimum  = false;
+    }
+
+    if (minimum) {
+        if (value < maxValue) {
+            return true;
+        }
+    }
+    else if (value > maxValue) {
+        return true;
+    }
+
+    return false;
+}
+
+
 void main(void) {
 
-    if (!test_in_bounds(fragVoxCoord, imageShape)) {
+    vec3  texCoord;
+    vec3  endCoord;
+    vec3  dither;
+    bool  negCmap = false;
+    float value;
+    float maxValue;
+
+    if (!textest(fragTexCoord)) {
         discard;
     }
 
-    gl_FragColor = vec4(0, 0, 1, 0.5);
+    // jitter starting coord to
+    // prevent wood grain effect
+    dither   = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
+    texCoord = fragTexCoord - (cameraDir * window) / 2 - dither;
+    endCoord = fragTexCoord + (cameraDir * window) / 2 - dither;
+
+    // TODO set to sensible values based on texture
+    // value limits (is it always [0, 1]?)
+    if (useMinimum) maxValue =  99999;
+    else            maxValue = -99999;
+
+    for (; distance(texCoord, endCoord) > 0.001; texCoord += rayStep) {
+
+        if (!textest(texCoord)) {
+            continue;
+        }
+
+        /* sample the volume */
+        if (useSpline) value = spline_interp(imageTexture,
+                                             texCoord,
+                                             imageShape,
+                                             0);
+        else           value = texture3D(    imageTexture, texCoord).r;
+
+        /* Skip nan values */
+        if (value != value) {
+            continue;
+        }
+
+        /* if using a negative colour map, we may
+         * need to invert the voxel value
+          */
+        if (useNegCmap && value <= texZero) {
+
+            negCmap = true;
+            value   = texZero + (texZero - value);
+        }
+
+        /* only consider in-clipping-range values */
+        if ((!invertClip && (value > clipLow && value < clipHigh)) ||
+            ( invertClip && (value < clipLow || value > clipHigh))) {
+            if (compare(value, maxValue)) {
+                maxValue = value;
+            }
+        }
+    }
+
+    if (maxValue == 99999 || maxValue == -99999) {
+        discard;
+    }
+
+    maxValue = (img2CmapXform * vec4(maxValue, 0, 0, 1)).x;
+
+    if (negCmap) gl_FragColor = texture1D(negCmapTexture, maxValue);
+    else         gl_FragColor = texture1D(cmapTexture,    maxValue);
 }

@@ -45,7 +45,6 @@ def updateShaderState(self):
     # texture value range (0.0 - 1.0). So let's scale
     # them.
     imgXform   = self.imageTexture.invVoxValXform
-
     clipLow    = opts.clippingRange[0] * imgXform[0, 0] + imgXform[0, 3]
     clipHigh   = opts.clippingRange[1] * imgXform[0, 0] + imgXform[0, 3]
     texZero    = 0.0                   * imgXform[0, 0] + imgXform[0, 3]
@@ -74,6 +73,9 @@ def updateShaderState(self):
     changed |= shader.set('clipHigh',         clipHigh)
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
+    changed |= shader.set('window',           opts.window / 100.0)
+    changed |= shader.set('useMinimum',       opts.minimum)
+    changed |= shader.set('useAbsolute',      opts.absolute)
 
     shader.unload()
 
@@ -85,6 +87,23 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     :func:`.glvolume_funcs.draw2D` function.
     """
     self.shader.load()
+
+    import numpy as np
+    np.set_printoptions(precision=4, suppress=True)
+
+    viewmat       = self.canvas.viewMatrix
+    cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
+
+    # print('zax',     axes[-1])
+    # print('cdir',    cdir)
+    # print('rayStep', rayStep, flush=True)
+    # print()
+    # print(mvmat)
+    # print('stepSize', rayStep)
+
+    self.shader.set('cameraDir', cdir)
+    self.shader.set('rayStep',   rayStep)
+
     glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
     self.shader.unloadAtts()
     self.shader.unload()

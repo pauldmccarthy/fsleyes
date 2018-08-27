@@ -6,8 +6,10 @@
 #
 
 
-from   fsl.utils.platform import platform as fslplatform
+import numpy as np
 
+from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.transform                as transform
 import fsleyes_props                      as props
 
 from . import colourmapopts               as cmapopts
@@ -67,3 +69,27 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
         """
         """
         return self.overlay.dataRange
+
+
+    def calculateRayCastSettings(self, viewmat):
+        """
+        """
+
+        # the projection matrix encodes
+        # scaling and potential horizontal/vertical
+        # inversion
+
+        # the mv matrix encodes 90 degree rotations
+        d2tmat = self.getTransform('display', 'texture')
+        xform  = transform.concat(d2tmat, viewmat)
+        cdir   = np.array([0, 0, 1])
+        cdir   = transform.transform(cdir, xform, vector=True)
+        cdir   = transform.normalise(cdir)
+
+        # t2dmat = self.getTransform('texture', 'display')
+        # xform  = transform.concat(viewmat, t2dmat)
+
+        # rayStep = np.sqrt(3) * cdir / self.numSteps
+        rayStep = 0.02 * cdir
+
+        return cdir, rayStep
