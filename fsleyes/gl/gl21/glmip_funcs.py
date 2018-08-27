@@ -41,6 +41,8 @@ def updateShaderState(self):
     opts   = self.opts
     shader = self.shader
 
+    vmin, vmax = self.overlay.dataRange
+
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale
@@ -48,6 +50,8 @@ def updateShaderState(self):
     imgXform   = self.imageTexture.invVoxValXform
     clipLow    = opts.clippingRange[0] * imgXform[0, 0] + imgXform[0, 3]
     clipHigh   = opts.clippingRange[1] * imgXform[0, 0] + imgXform[0, 3]
+    textureMin = vmin                  * imgXform[0, 0] + imgXform[0, 3]
+    textureMax = vmax                  * imgXform[0, 0] + imgXform[0, 3]
     imageShape = self.image.shape[:3]
 
     # Create a single transformation matrix
@@ -68,6 +72,8 @@ def updateShaderState(self):
 
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('cmapTexture',      1)
+    changed |= shader.set('textureMin',       textureMin)
+    changed |= shader.set('textureMax',       textureMax)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('imageShape',       imageShape)
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')

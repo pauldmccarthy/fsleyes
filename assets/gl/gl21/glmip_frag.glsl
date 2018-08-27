@@ -5,13 +5,14 @@
  */
 #version 120
 
+
 #pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
 #pragma include rand.glsl
 
 
 /*
- * image data texture, used for colouring.
+ * image data texture.
  */
 uniform sampler3D imageTexture;
 
@@ -23,14 +24,26 @@ uniform sampler1D cmapTexture;
 
 
 /*
+ * Minimum value in the image texture.
+ */
+uniform float textureMin;
+
+
+/*
+ * Maximum value in the image texture.
+ */
+uniform float textureMax;
+
+
+/*
  * Matrix which can be used to transform a texture value
  * from the imageTexture into a texture coordinate for
- * the colourTexture.
+ * the cmapTexture.
  */
 uniform mat4 img2CmapXform;
 
 /*
- * Shape of the imageTexture/clipTexture.
+ * Shape of the imageTexture.
  */
 uniform vec3 imageShape;
 
@@ -177,11 +190,13 @@ void main(void) {
     startCoord = fragTexCoord - (cameraDir * window) / 2 - dither;
     endCoord   = fragTexCoord + (cameraDir * window) / 2 - dither;
 
-
-    // TODO set to sensible values based
-    //      on texture value limits
-    if (useMinimum) maxValue =  99999;
-    else            maxValue = -99999;
+    /*
+     * initialise max value to something
+     * that we won't encounter in the
+     * image data
+     */
+    if (useMinimum) maxValue = textureMax + 1;
+    else            maxValue = textureMin - 1;
 
     /*
      * Sample the volume along a ray,
@@ -201,7 +216,8 @@ void main(void) {
         }
     }
 
-    if (maxValue == 99999 || maxValue == -99999) {
+    /* No voxels were sampled */
+    if (maxValue > textureMax || maxValue < textureMin) {
         discard;
     }
 
