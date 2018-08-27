@@ -383,16 +383,20 @@ properties = TypeDict({
     # MIPOpts
     'MIPOpts.window'  :
     'Length of the window, as a proportion of the image length, along which '
-    'the MIP is calculated.',
+    'the MIP is calculated. The window is centred at the current display '
+    'location.',
     'MIPOpts.minimum' :
     'Use the minimum intensity, rather than the maximum intensity, in the '
     'projection.',
     'MIPOpts.absolute' :
     'Use the absolute intensity, rather than the maximum intensity, in the '
-    'projection.',
+    'projection. This overrides the minimum intensity setting.',
+    'MIPOpts.interpolation' :
+    'Interpolate the MIP data on the display. You can choose no  '
+    'interpolation (equivalent to nearest neighbour interpolation), linear '
+    'interpolation, or third-order spline (cubic) interpolation.',
 
     # SceneOpts
-
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
                                      'the current location.',
     'SceneOpts.cursorGap'          : 'Show a gap at the cursor centre.',

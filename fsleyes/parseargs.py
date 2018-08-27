@@ -578,7 +578,20 @@ OPTIONS = td.TypeDict({
                         'lighting',
                         'radiusThreshold',
                         'colourMode'],
-    'MIPOpts'        : [],
+    'MIPOpts'        : ['linkLowRanges',
+                        'linkHighRanges',
+                        'displayRange',
+                        'clippingRange',
+                        'gamma',
+                        'invertClipping',
+                        'cmap',
+                        'cmapResolution',
+                        'interpolation',
+                        'interpolateCmaps',
+                        'invert',
+                        'window',
+                        'minimum',
+                        'absolute'],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -858,6 +871,11 @@ ARGUMENTS = td.TypeDict({
     'SHOpts.xColour'         : ('xc', 'xColour',         True),
     'SHOpts.yColour'         : ('yc', 'yColour',         True),
     'SHOpts.zColour'         : ('zc', 'zColour',         True),
+
+    'MIPOpts.window'         : ('w',  'window',        False),
+    'MIPOpts.minimum'        : ('m',  'minimum',       False),
+    'MIPOpts.absolute'       : ('ab', 'absolute',      False),
+    'MIPOpts.interpolation'  : ('in', 'interpolation', False),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1128,6 +1146,17 @@ HELP = td.TypeDict({
     'SHOpts.xColour'         : 'X colour, if colouring by \'direction\'',
     'SHOpts.yColour'         : 'Y colour, if colouring by \'direction\'',
     'SHOpts.zColour'         : 'Z colour, if colouring by \'direction\'',
+
+    'MIPOpts.window'         :
+    'Length of the window along which the MIP is calculated. Specified as '
+    'a proportion of the image length. The window is centred at the '
+    'current display location.' ,
+    'MIPOpts.minimum'        :
+    'Use the minimum intensity, rather than the maximum intensity, in the '
+    'projection.',
+    'MIPOpts.absolute'       :
+    'Use the absolute intensity, rather than the maximum intensity, in the '
+    'projection. This overrides the minimum intensity setting.',
 })
 """This dictionary defines the help text for all command line options."""
 
