@@ -12,8 +12,9 @@ settings used by :class:`.CanvasPanel` instances.
 import copy
 import logging
 
-import fsleyes_props      as props
-import fsleyes.colourmaps as fslcm
+from   fsl.utils.platform import platform  as fslplatform
+import fsleyes_props                       as props
+import fsleyes.colourmaps                  as fslcm
 
 from . import canvasopts
 
@@ -82,6 +83,13 @@ class SceneOpts(props.HasProperties):
     """
 
 
+    movieSyncRefresh = props.Boolean(default=True)
+    """Whether, when in movie mode, to synchronise the refresh for GL
+    canvases. This is not possible in some platforms/environments. See
+    :attr:`.CanvasPanel.movieSyncRefresh`.
+    """
+
+
     def __init__(self, panel):
         """Create a ``SceneOpts`` instance.
 
@@ -91,9 +99,36 @@ class SceneOpts(props.HasProperties):
 
         self.__panel = panel
         self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+
+        self.movieSyncRefresh = self.defaultMovieSyncRefresh
+
         self.addListener('performance', self.__name, self._onPerformanceChange)
         self.addListener('bgColour',    self.__name, self.__onBgColourChange)
         self._onPerformanceChange()
+
+
+    @property
+    def defaultMovieSyncRefresh(self):
+        """
+        # In movie mode, the canvas refreshes are
+        # performed by the __syncMovieRefresh or
+        # __unsyncMovieRefresh methods of the
+        # CanvasPanel class. Some platforms/GL
+        # drivers/environments seem to have a
+        # problem with separate renders/buffer
+        # swaps, so we have to use a shitty
+        # unsynchronised update routine.
+        #
+        # These heuristics are not perfect - the
+        # movieSyncRefresh property can therefore
+        # be overridden by the user.
+
+        """
+        renderer        = fslplatform.glRenderer.lower()
+        unsyncRenderers = ['gallium', 'mesa dri intel(r)']
+        unsync          = any([r in renderer for r in unsyncRenderers])
+
+        return not unsync
 
 
     @property

@@ -863,6 +863,7 @@ properties = TypeDict({
     'CanvasPanel.movieMode'          : 'Movie mode',
     'CanvasPanel.movieRate'          : 'Movie update rate',
     'CanvasPanel.movieAxis'          : 'Movie axis',
+    'CanvasPanel.movieSyncRefresh'   : 'Synchronise movie updates',
     'CanvasPanel.profile'            : 'Mode',
 
     'SceneOpts.showCursor'         : 'Show location cursor',

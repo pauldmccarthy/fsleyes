@@ -15,7 +15,6 @@ import deprecation
 import wx
 
 import fsl.utils.idle                              as idle
-from   fsl.utils.platform import platform          as fslplatform
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
@@ -221,6 +220,12 @@ class CanvasPanel(viewpanel.ViewPanel):
     """
 
 
+    movieSyncRefresh = props.Boolean(default=True)
+    """Whether, when in movie mode, to synchronise the refresh for GL
+    canvases. This is not possible in some platforms/environments.
+    """
+
+
     def __init__(self, parent, overlayList, displayCtx, frame, sceneOpts):
         """Create a ``CanvasPanel``.
 
@@ -277,6 +282,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__contentPanel   = wx.Panel(self.__containerPanel)
         self.__movieGifAction = moviegif.MovieGifAction(
             overlayList, displayCtx, self)
+
+        self.bindProps('movieSyncRefresh', sceneOpts)
 
         self.toggleMovieMode  .bindProps('toggled', self, 'movieMode')
         self.toggleDisplaySync.bindProps('toggled', self, 'syncOverlayDisplay')
@@ -990,23 +997,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         rate = (rateMin + (rateMax - rate)) / 1000.0
 
-        # The canvas refreshes are performed by the
-        # __syncMovieRefresh or __unsyncMovieRefresh
-        # methods. Gallium seems to have a problem
-        # with separate renders/buffer swaps, so we
-        # have to use a shitty unsynchronised update
-        # routine.
-        #
-        # TODO Ideally, figure out a refresh
-        #      regime that works across all
-        #      drivers. Failing this, make
-        #      this switch user controllable.
-        renderer = fslplatform.glRenderer.lower()
-        unsyncRenderers = ['gallium', 'mesa dri intel(r)']
-        useSync = not any([r in renderer for r in unsyncRenderers])
-
-        if useSync: update = self.__syncMovieRefresh
-        else:       update = self.__unsyncMovieRefresh
+        # Use sync or unsync refresh regime
+        if self.movieSyncRefresh: update = self.__syncMovieRefresh
+        else:                     update = self.__unsyncMovieRefresh
 
         # Refresh the canvases when all
         # GLObjects are ready to be drawn.

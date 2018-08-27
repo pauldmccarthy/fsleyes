@@ -106,7 +106,7 @@ class ScreenshotAction(base.Action):
         # the screenshot gets taken
         dlg.Close()
         dlg.Destroy()
-        wx.Yield()
+        wx.GetApp().Yield()
 
         # Show an error if the screenshot
         # function raises an error

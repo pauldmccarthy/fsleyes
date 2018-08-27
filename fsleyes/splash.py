@@ -91,7 +91,7 @@ class FSLeyesSplash(wx.Frame):
         # will be drawn, during which time we can't do
         # anything which would block the application loop.
         for i in range(10):
-            wx.Yield()
+            wx.GetApp().Yield()
             time.sleep(0.025)
 
 

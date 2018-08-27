@@ -8,6 +8,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.25.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+* A new movie mode option to change the canvas refresh regime between
+  synchronised and unsynchronised, as the default synchromnised regime does
+  not work in some environments/platforms.
+
+
 0.24.6 (Monday August 6th 2018)
 -------------------------------
 
