@@ -135,6 +135,7 @@ bool compare(float value, float maxValue) {
 void main(void) {
 
     vec3  texCoord;
+    vec3  startCoord;
     vec3  endCoord;
     vec3  dither;
     bool  negCmap = false;
@@ -147,16 +148,18 @@ void main(void) {
 
     // jitter starting coord to
     // prevent wood grain effect
-    dither   = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
-    texCoord = fragTexCoord - (cameraDir * window) / 2 - dither;
-    endCoord = fragTexCoord + (cameraDir * window) / 2 - dither;
+    dither     = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
+    startCoord = fragTexCoord - (cameraDir * window) / 2 - dither;
+    endCoord   = fragTexCoord + (cameraDir * window) / 2 - dither;
 
     // TODO set to sensible values based on texture
     // value limits (is it always [0, 1]?)
     if (useMinimum) maxValue =  99999;
     else            maxValue = -99999;
 
-    for (; distance(texCoord, endCoord) > 0.001; texCoord += rayStep) {
+    for (texCoord = startCoord;
+         dot(endCoord - startCoord, endCoord - texCoord) > 0;
+         texCoord += rayStep) {
 
         if (!textest(texCoord)) {
             continue;

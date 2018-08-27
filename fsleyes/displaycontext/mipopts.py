@@ -19,7 +19,7 @@ from . import                                volumeopts
 class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
 
 
-    window = props.Percentage(clamped=True, default=50)
+    window = props.Percentage(minval=1, clamped=True, default=50)
 
 
     minimum = props.Boolean(default=False)
@@ -58,6 +58,18 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
         cmapopts .ColourMapOpts.__init__(self)
 
 
+        # calculate the approximate number
+        # of voxels along the longest diagonal
+        # of the image - we use this as the
+        # maximum number of samples to take
+        x, y, z  = overlay.shape
+        xy       = (x * y, (x, y))
+        xz       = (x * z, (x, z))
+        yz       = (y * z, (y, z))
+        ax0, ax1 = max((xy, xz, yz))[1]
+        self.numSteps = np.ceil(np.sqrt(ax0 ** 2 + ax1 ** 2))
+
+
     def destroy(self):
         """
         """
@@ -75,21 +87,15 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
         """
         """
 
-        # the projection matrix encodes
-        # scaling and potential horizontal/vertical
-        # inversion
+        d2tmat  = self.getTransform('display', 'texture')
+        xform   = transform.concat(d2tmat, viewmat)
+        cdir    = np.array([0, 0, 1])
+        cdir    = transform.transform(cdir, xform, vector=True)
+        cdir    = transform.normalise(cdir)
 
-        # the mv matrix encodes 90 degree rotations
-        d2tmat = self.getTransform('display', 'texture')
-        xform  = transform.concat(d2tmat, viewmat)
-        cdir   = np.array([0, 0, 1])
-        cdir   = transform.transform(cdir, xform, vector=True)
-        cdir   = transform.normalise(cdir)
-
-        # t2dmat = self.getTransform('texture', 'display')
-        # xform  = transform.concat(viewmat, t2dmat)
-
-        # rayStep = np.sqrt(3) * cdir / self.numSteps
-        rayStep = 0.02 * cdir
+        # sqrt(3) so the maximum number
+        # of samplews is taken along the
+        # diagonal of a cube
+        rayStep = np.sqrt(3) * cdir / self.numSteps
 
         return cdir, rayStep

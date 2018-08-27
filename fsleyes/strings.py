@@ -1075,7 +1075,7 @@ properties = TypeDict({
     'SHOpts.yColour'         : 'Y direction colour',
     'SHOpts.zColour'         : 'Z direction colour',
 
-    'MIPOpts.window'         : 'MIP window length',
+    'MIPOpts.window'         : 'MIP window length (%)',
     'MIPOpts.minimum'        : 'Minimum intensity',
     'MIPOpts.absolute'       : 'Absolute intensity',
 })

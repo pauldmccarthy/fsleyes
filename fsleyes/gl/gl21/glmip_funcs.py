@@ -5,6 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import numpy as np
 
 import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
@@ -58,6 +59,10 @@ def updateShaderState(self):
         self.cmapTexture.getCoordinateTransform(),
         self.imageTexture.voxValXform)
 
+    # sqrt(3) so the window is 100%
+    # along the diagonal of a cube
+    window = np.sqrt(3) * opts.window / 100.0
+
     shader.load()
 
     changed = False
@@ -70,10 +75,11 @@ def updateShaderState(self):
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
     changed |= shader.set('clipLow',          clipLow)
+
     changed |= shader.set('clipHigh',         clipHigh)
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
-    changed |= shader.set('window',           opts.window / 100.0)
+    changed |= shader.set('window',           window)
     changed |= shader.set('useMinimum',       opts.minimum)
     changed |= shader.set('useAbsolute',      opts.absolute)
 
@@ -88,18 +94,8 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     """
     self.shader.load()
 
-    import numpy as np
-    np.set_printoptions(precision=4, suppress=True)
-
     viewmat       = self.canvas.viewMatrix
     cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
-
-    # print('zax',     axes[-1])
-    # print('cdir',    cdir)
-    # print('rayStep', rayStep, flush=True)
-    # print()
-    # print(mvmat)
-    # print('stepSize', rayStep)
 
     self.shader.set('cameraDir', cdir)
     self.shader.set('rayStep',   rayStep)
