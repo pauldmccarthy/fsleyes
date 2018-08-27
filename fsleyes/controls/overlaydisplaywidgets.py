@@ -294,7 +294,7 @@ def _initPropertyList_SHOpts(threedee):
 def _initPropertyList_MIPOpts(threedee):
     return ['custom_volume',
             'interpolation',
-            'custom_cmap',
+            'cmap',
             'cmapResolution',
             'gamma',
             'interpolateCmaps',
