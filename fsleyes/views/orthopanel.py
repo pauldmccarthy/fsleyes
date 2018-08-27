@@ -711,7 +711,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
             display = self.displayCtx.getDisplay(selOverlay)
             isImage = isinstance(selOverlay, fslimage.Image) and \
-                      display.overlayType in ('volume', 'mask', 'label')
+                      display.overlayType in ('volume', 'mask', 'label', 'mip')
         else:
             isImage = False
 

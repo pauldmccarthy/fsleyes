@@ -476,6 +476,18 @@ class SliceCanvas(object):
         return self.__viewport
 
 
+    @property
+    def viewMatrix(self):
+        """Returns the current model view matrix. """
+        return gl.glGetFloat(gl.GL_MODELVIEW_MATRIX)
+
+
+    @property
+    def projectionMatrix(self):
+        """Returns the current projection matrix. """
+        return gl.glGetFloat(gl.GL_PROJECTION_MATRIX)
+
+
     def _initGL(self):
         """Call the :meth:`_overlayListChanged` method - it will generate
         any necessary GL data for each of the overlays.
