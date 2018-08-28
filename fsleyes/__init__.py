@@ -257,6 +257,13 @@ def initialise():
     # matplotlib.pyplot is imported.
     mpl.use('WxAgg')
 
+    # The fsleyes.actions.frameactions module
+    # monkey-patches some things into the
+    # FSLeyesFrame class, so it must be
+    # imported immediately after fsleyes.frame.
+    import fsleyes.frame                 # noqa
+    import fsleyes.actions.frameactions  # noqa
+
     fsleyesDir = op.dirname(__file__)
     assetDir   = None
     options    = []

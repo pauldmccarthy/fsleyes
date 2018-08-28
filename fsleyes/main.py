@@ -623,14 +623,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     import fsl.utils.idle               as idle
     import fsleyes_widgets.utils.status as status
     import fsleyes.parseargs            as parseargs
-
-    # The fsleyes.actions.frameactions module
-    # monkey-patches some things into the
-    # FSLeyesFrame class, so it must be
-    # imported immediately after fsleyes.frame.
     import fsleyes.frame                as fsleyesframe
-    import fsleyes.actions.frameactions as frameactions  # noqa
-
     import fsleyes.displaycontext       as fsldisplay
     import fsleyes.layouts              as layouts
     import fsleyes.views.canvaspanel    as canvaspanel
