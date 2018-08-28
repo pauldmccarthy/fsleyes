@@ -8,12 +8,13 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.25.0 (Under development)
---------------------------
+0.25.0 (Tuesday 28th August 2018)
+---------------------------------
 
 
 Added
 ^^^^^
+
 
 * New MIP overlay type, for displaying 2D maximum intensity projections (not
   available over SSH/X11).
