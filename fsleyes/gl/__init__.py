@@ -425,7 +425,7 @@ def bootstrap(glVersion=None):
         dc.SceneOpts.performance.setAttribute(None, 'default', 1)
 
 
-def getGLContext(*args, **kwargs):
+def getGLContext(**kwargs):
     """Create and return a GL context object for on- or off-screen OpenGL
     rendering.
 
@@ -445,9 +445,16 @@ def getGLContext(*args, **kwargs):
 
     # A context has already been created
     if hasattr(thismod, '_glContext'):
+
+        # If a callback was provided,
+        # make sure it gets called.
+        callback = kwargs.pop('ready', None)
+        if callback is not None:
+            idle.idle(callback)
+
         return thismod._glContext
 
-    thismod._glContext = GLContext(*args, **kwargs)
+    thismod._glContext = GLContext(**kwargs)
 
     return thismod._glContext
 

@@ -125,7 +125,8 @@ class FSLeyesFrame(wx.Frame):
                  displayCtx,
                  restore=False,
                  save=True,
-                 fontSize=None):
+                 fontSize=None,
+                 menu=True):
         """Create a ``FSLeyesFrame``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -140,6 +141,8 @@ class FSLeyesFrame(wx.Frame):
         :arg save:        Save current layout when closed.
 
         :arg fontSize:    Application-wide font size to use. Defaults to 10.
+
+        :arg menu:        Whether or not to create a menu bar.
         """
 
         wx.Frame.__init__(self, parent, title='FSLeyes')
@@ -254,6 +257,7 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelTools  = collections.OrderedDict()
 
         # Refs to menus
+        self.__haveMenu       = menu
         self.__menuBar        = None
         self.__layoutMenu     = None
         self.__recentPathMenu = None
@@ -747,6 +751,9 @@ class FSLeyesFrame(wx.Frame):
         :arg panel: The newly created ``ViewPanel`` instance.
         :arg title: The name given to the ``panel``.
         """
+
+        if not self.__haveMenu:
+            return
 
         actionz = panel.getActions()
 
@@ -1307,6 +1314,9 @@ class FSLeyesFrame(wx.Frame):
     def __makeMenuBar(self):
         """Constructs a bunch of menu items for this ``FSLeyesFrame``."""
 
+        if not self.__haveMenu:
+            return
+
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
@@ -1373,7 +1383,6 @@ class FSLeyesFrame(wx.Frame):
 
         self.__makeOverlayMenu(overlayMenu)
         self.__makeToolsMenu(toolsMenu)
-
         self.__makeViewPanelMenu(viewMenu)
 
         # Layouts
@@ -1486,6 +1495,9 @@ class FSLeyesFrame(wx.Frame):
         :class:`.RecentPathManager` when paths are added.
         """
 
+        if not self.__haveMenu:
+            return
+
         import fsleyes.actions.loadoverlay as loadoverlay
 
         for path in self.__recentPathsMenu.GetMenuItems():
@@ -1566,6 +1578,9 @@ class FSLeyesFrame(wx.Frame):
         """Called by :meth:`__makeMenuBar` and :meth:`refreshLayoutMenu`.
         Re-creates the *View->Layouts* menu.
         """
+
+        if not self.__haveMenu:
+            return
 
         from fsleyes.actions.loadlayout   import LoadLayoutAction
         from fsleyes.actions.savelayout   import SaveLayoutAction
@@ -1714,6 +1729,9 @@ class FSLeyesFrame(wx.Frame):
         menu.
         """
 
+        if not self.__haveMenu:
+            return
+
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
         from fsleyes.views.scene3dpanel       import Scene3DPanel
@@ -1792,6 +1810,9 @@ class FSLeyesFrame(wx.Frame):
         self.selectNextOverlay      .enabled = haveOverlays
         self.selectPreviousOverlay  .enabled = haveOverlays
         self.toggleOverlayVisibility.enabled = haveOverlays
+
+        if not self.__haveMenu:
+            return
 
         if haveOverlays:
 

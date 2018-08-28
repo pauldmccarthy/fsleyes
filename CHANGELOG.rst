@@ -15,10 +15,13 @@ chronological order.
 Added
 ^^^^^
 
-* New MIP overlay type, for displaying 2D maximum intensity projections.
+* New MIP overlay type, for displaying 2D maximum intensity projections (not
+  available over SSH/X11).
 * A new movie mode option to change the canvas refresh regime between
   synchronised and unsynchronised, as the default synchromnised regime does
   not work in some environments/platforms.
+* New :func:`fsleyes.main.embed` function, allowing a FSLeyes frame to be
+  opened from within an existing application.
 
 
 0.24.6 (Monday August 6th 2018)
