@@ -15,6 +15,7 @@ chronological order.
 Added
 ^^^^^
 
+* New MIP overlay type, for displaying 2D maximum intensity projections.
 * A new movie mode option to change the canvas refresh regime between
   synchronised and unsynchronised, as the default synchromnised regime does
   not work in some environments/platforms.
