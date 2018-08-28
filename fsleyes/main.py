@@ -6,6 +6,11 @@
 #
 """This module provides the entry point to *FSLeyes*, the FSL image viewer.
 
+Call the :func:`main` function to start the main FSLeyes application.
+
+The :func:`embed` function can be called to open a :class:`.FSLeyesFrame`
+within an existing application.
+
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 
 
@@ -391,6 +396,45 @@ def main(args=None):
     app.MainLoop()
     shutdown()
     return exitCode[0]
+
+
+def embed(parent, callback=None, **kwargs):
+    """Initialise FSLeyes and create a :class:`.FSLeyesFrame`, when
+    running within another application.
+
+    :arg parent:   ``wx`` parent object
+    :arg callback: A function which will be called when FSLeyes
+                   is ready. Must accept three positional arguments:
+                     - The :class:`.OverlayList`
+                     - The master :class:`.DisplayContext`
+                     - The :class:`.FSLeyesFrame`
+
+    All other arguments are passed to :meth:`.FSLeyesFrame.__init__`.
+    """
+
+    import fsleyes_props          as props
+    import fsleyes.gl             as fslgl
+    import fsleyes.frame          as fslframe
+    import fsleyes.overlay        as fsloverlay
+    import fsleyes.displaycontext as fsldc
+
+    fsleyes.initialise()
+    colourmaps.init()
+    props.initGUI()
+
+    def ready():
+        fslgl.bootstrap()
+
+        overlayList = fsloverlay.OverlayList()
+        displayCtx  = fsldc.DisplayContext(overlayList)
+
+        frame = fslframe.FSLeyesFrame(
+            parent, overlayList, displayCtx, **kwargs)
+
+        if callback is not None:
+            callback(overlayList, displayCtx, frame)
+
+    fslgl.getGLContext(parent=parent, ready=ready)
 
 
 def initialise(splash, namespace, callback):
