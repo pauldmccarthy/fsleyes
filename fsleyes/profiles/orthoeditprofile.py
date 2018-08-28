@@ -612,7 +612,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             change = editor.undo()
 
         if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
-            self.__xselAnnotation.texture.refresh()
+            if not self.__xselAnnotation.destroyed():
+                self.__xselAnnotation.texture.refresh()
 
         self.__refreshCanvases()
 
@@ -632,7 +633,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             change = editor.redo()
 
         if any([isinstance(c, fsleditor.SelectionChange) for c in change]):
-            self.__xselAnnotation.texture.refresh()
+            if not self.__xselAnnotation.destroyed():
+                self.__xselAnnotation.texture.refresh()
 
         self.__refreshCanvases()
 
