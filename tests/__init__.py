@@ -269,7 +269,7 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
     glver = [int(v) for v in glver.split('.')]
 
     if tuple(glver) < (2, 1):
-        exclude = ['tensor', ' sh', '_sh', 'spline']
+        exclude = ['tensor', ' sh', '_sh', 'spline', 'mip']
     else:
         exclude = []
 
