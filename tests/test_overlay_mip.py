@@ -16,6 +16,7 @@ pytestmark = pytest.mark.overlayclitest
 
 cli_tests = """
                3d.nii.gz     -ot mip
+               4d.nii.gz     -ot mip
                3d.nii.gz     -ot mip -in linear
                3d.nii.gz     -ot mip -in spline
 {{zero_centre('3d.nii.gz')}} -ot mip -m
