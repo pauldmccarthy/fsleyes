@@ -73,7 +73,7 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
         # of voxels along the longest diagonal
         # of the image - we use this as the
         # maximum number of samples to take
-        x, y, z  = self.overlay.shape
+        x, y, z  = self.overlay.shape[:3]
         xy       = (x * y, (x, y))
         xz       = (x * z, (x, z))
         yz       = (y * z, (y, z))
