@@ -17,3 +17,4 @@ from . import gllabel_funcs       # noqa
 
 gltensor_funcs = None
 glsh_funcs     = None
+glmip_funcs    = None

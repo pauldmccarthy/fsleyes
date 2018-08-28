@@ -50,6 +50,7 @@ def getGLObjectType(overlayType):
     from . import gllabel
     from . import gltensor
     from . import glsh
+    from . import glmip
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -59,7 +60,8 @@ def getGLObjectType(overlayType):
         'mesh'       : glmesh      .GLMesh,
         'label'      : gllabel     .GLLabel,
         'tensor'     : gltensor    .GLTensor,
-        'sh'         : glsh        .GLSH
+        'sh'         : glsh        .GLSH,
+        'mip'        : glmip       .GLMIP,
     }
 
     return typeMap.get(overlayType, None)

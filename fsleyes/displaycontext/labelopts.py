@@ -10,12 +10,9 @@ atlas images, tissue segmentation images, and so on.
 """
 
 
-import copy
-
-import fsleyes_props                      as props
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes.colourmaps                 as colourmaps
-from . import                                volumeopts
+import fsleyes_props      as props
+import fsleyes.colourmaps as colourmaps
+from . import                volumeopts
 
 
 class LabelOpts(volumeopts.NiftiOpts):

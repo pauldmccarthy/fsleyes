@@ -50,11 +50,10 @@ maximum SH order that was used in generating the coefficients.
 
 
 class SHOpts(vectoropts.VectorOpts):
-    """The ``SHOpts`` is used for rendering class for rendering :class:`.Image`
-    instances which contain fibre orientation distributions (FODs) in the form
-    of spherical harmonic (SH) coefficients. A ``SHOpts`` instance will be
-    used for ``Image`` overlays with a :attr:`.Displaty.overlayType` set to
-    ``'sh'``.
+    """The ``SHOpts`` is used for rendering :class:`.Image` instances which
+    contain fibre orientation distributions (FODs) in the form of spherical
+    harmonic (SH) coefficients. A ``SHOpts`` instance will be used for
+    ``Image`` overlays with a :attr:`.Displaty.overlayType` set to ``'sh'``.
 
 
     A collection of pre-calculated SH basis function parameters are stored in

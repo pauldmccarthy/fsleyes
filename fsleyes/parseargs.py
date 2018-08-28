@@ -577,7 +577,21 @@ OPTIONS = td.TypeDict({
                         'normalise',
                         'lighting',
                         'radiusThreshold',
-                        'colourMode']
+                        'colourMode'],
+    'MIPOpts'        : ['linkLowRanges',
+                        'linkHighRanges',
+                        'displayRange',
+                        'clippingRange',
+                        'gamma',
+                        'invertClipping',
+                        'cmap',
+                        'cmapResolution',
+                        'interpolation',
+                        'interpolateCmaps',
+                        'invert',
+                        'window',
+                        'minimum',
+                        'absolute'],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -606,6 +620,7 @@ GROUPNAMES = td.TypeDict({
     'LabelOpts'      : 'Label options',
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
+    'MIPOpts'        : 'MIP options',
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
@@ -642,6 +657,7 @@ GROUPDESCS = td.TypeDict({
     'MeshOpts'       : 'These options are applied to \'mesh\' overlays.',
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
+    'MIPOpts'        : 'These options are applied to \'mip\' overlays.',
 })
 """This dictionary contains descriptions for each argument group. """
 
@@ -855,6 +871,11 @@ ARGUMENTS = td.TypeDict({
     'SHOpts.xColour'         : ('xc', 'xColour',         True),
     'SHOpts.yColour'         : ('yc', 'yColour',         True),
     'SHOpts.zColour'         : ('zc', 'zColour',         True),
+
+    'MIPOpts.window'         : ('w',  'window',        False),
+    'MIPOpts.minimum'        : ('m',  'minimum',       False),
+    'MIPOpts.absolute'       : ('ab', 'absolute',      False),
+    'MIPOpts.interpolation'  : ('in', 'interpolation', False),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1125,6 +1146,17 @@ HELP = td.TypeDict({
     'SHOpts.xColour'         : 'X colour, if colouring by \'direction\'',
     'SHOpts.yColour'         : 'Y colour, if colouring by \'direction\'',
     'SHOpts.zColour'         : 'Z colour, if colouring by \'direction\'',
+
+    'MIPOpts.window'         :
+    'Length of the window along which the MIP is calculated. Specified as '
+    'a proportion of the image length. The window is centred at the '
+    'current display location.' ,
+    'MIPOpts.minimum'        :
+    'Use the minimum intensity, rather than the maximum intensity, in the '
+    'projection.',
+    'MIPOpts.absolute'       :
+    'Use the absolute intensity, rather than the maximum intensity, in the '
+    'projection. This overrides the minimum intensity setting.',
 })
 """This dictionary defines the help text for all command line options."""
 
@@ -1271,6 +1303,8 @@ def getExtra(target, propName, default=None):
         (fsldisplay.MeshOpts,       'vertexSet')     : vertexSetSettings,
         (fsldisplay.GiftiOpts,      'vertexSet')     : vertexSetSettings,
         (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
+        (fsldisplay.MIPOpts,        'cmap')          : cmapSettings,
+        (fsldisplay.MIPOpts,        'negativeCmap')  : cmapSettings,
     }
 
     # Add (str, propname) versions
@@ -1643,13 +1677,14 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     FreesurferOpts = fsldisplay.FreesurferOpts
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
+    MIPOpts        = fsldisplay.MIPOpts
 
     # A parser is created and returned
     # for each one of these types.
     parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
                    MeshOpts, GiftiOpts, FreesurferOpts,
                    LineVectorOpts, RGBVectorOpts,
-                   TensorOpts, SHOpts]
+                   TensorOpts, SHOpts, MIPOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use

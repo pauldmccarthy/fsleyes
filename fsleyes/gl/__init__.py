@@ -126,6 +126,7 @@ be displayed as:
    ~fsleyes.gl.glmesh.GLMesh
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
+   ~fsleyes.gl.glsh.GLMIP
 
 
 These objects are created and destroyed automatically by the canvas classes
@@ -275,6 +276,9 @@ def bootstrap(glVersion=None):
 
     ``glsh_funcs``         The version-specific module containing functions for
                            rendering :class:`.GLSH` instances.
+
+    ``glmip_funcs``        The version-specific module containing functions for
+                           rendering :class:`.GLMIP` instances.
     ====================== ====================================================
 
 
@@ -352,13 +356,15 @@ def bootstrap(glVersion=None):
                                'cannot run on the available graphics '
                                'hardware.'.format(', '.join(exts)))
 
-        # Tensor/SH overlays are not available in GL14
+        # Tensor/SH/MIP overlays are not available in GL14
         import fsleyes.displaycontext as dc
         dc.ALL_OVERLAY_TYPES            .remove('tensor')
         dc.ALL_OVERLAY_TYPES            .remove('sh')
+        dc.ALL_OVERLAY_TYPES            .remove('mip')
         dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('sh')
         dc.OVERLAY_TYPES['Image']       .remove('tensor')
+        dc.OVERLAY_TYPES['Image']       .remove('mip')
 
     renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
@@ -397,6 +403,7 @@ def bootstrap(glVersion=None):
     thismod.gllabel_funcs      = glpkg.gllabel_funcs
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod.glsh_funcs         = glpkg.glsh_funcs
+    thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
     fslplatform.glVersion      = thismod.GL_VERSION
     fslplatform.glRenderer     = thismod.GL_RENDERER

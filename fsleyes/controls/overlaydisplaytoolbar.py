@@ -64,6 +64,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
        _OverlayDisplayToolBar__makeFreesurferOptsTools
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
+       _OverlayDisplayToolBar__makeMIPOptsTools
     """
 
     def __init__(self, parent, overlayList, displayCtx, frame, viewPanel):
@@ -519,7 +520,6 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         sizeSpec = _TOOLBAR_PROPS[opts, 'size']
         radSpec  = _TOOLBAR_PROPS[opts, 'radiusThreshold']
 
-
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(2, 2, 0, 0)
 
@@ -542,6 +542,30 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
 
         tools.extend([panel])
         nav.extend(  [sizeWidget, radWidget])
+
+        return tools, nav
+
+
+    def __makeMIPOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.MIPOpts` instance.
+        """
+        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
+        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
+        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
+
+        cmapPanel = wx.Panel(self)
+
+        rangeWidget = props.buildGUI(self,      opts, rangeSpec)
+        resetWidget = props.buildGUI(self,      opts, resetSpec)
+        cmapWidget  = props.buildGUI(cmapPanel, opts, cmapSpec)
+
+        cmapSizer = wx.BoxSizer(wx.VERTICAL)
+        cmapPanel.SetSizer(cmapSizer)
+        cmapSizer.Add(cmapWidget)
+
+        tools = [resetWidget, rangeWidget, cmapPanel]
+        nav   = [resetWidget, rangeWidget, cmapWidget]
 
         return tools, nav
 
@@ -582,6 +606,7 @@ _TOOLTIPS = td.TypeDict({
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
 
     'LabelOpts.lut'          : fsltooltips.properties['LabelOpts.lut'],
+
     'LabelOpts.outline'      : fsltooltips.properties['LabelOpts.outline'],
     'LabelOpts.outlineWidth' : fsltooltips.properties['LabelOpts.'
                                                       'outlineWidth'],
@@ -776,6 +801,25 @@ _TOOLBAR_PROPS = td.TypeDict({
         spin=False,
         showLimits=False,
         tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
+
+
+    'MIPOpts.resetDisplayRange' : actions.ActionButton(
+        'resetDisplayRange',
+        icon=icons.findImageFile('verticalReset32')
+    ),
+
+    'MIPOpts.displayRange' : props.Widget(
+        'displayRange',
+        slider=False,
+        showLimits=False,
+        spinWidth=10,
+        tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
+        labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                strings.choices['ColourMapOpts.displayRange.max']]),
+    'MIPOpts.cmap' : props.Widget(
+        'cmap',
+        labels=fslcm.getColourMapLabel,
+        tooltip=_TOOLTIPS['VolumeOpts.cmap']),
 })
 """This dictionary defines specifications for all controls shown on an
 :class:`OverlayDisplayToolBar`.

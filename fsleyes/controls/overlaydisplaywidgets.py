@@ -291,6 +291,24 @@ def _initPropertyList_SHOpts(threedee):
             'colourMode']
 
 
+def _initPropertyList_MIPOpts(threedee):
+    return ['custom_volume',
+            'interpolation',
+            'cmap',
+            'cmapResolution',
+            'gamma',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'linkLowRanges',
+            'linkHighRanges',
+            'displayRange',
+            'clippingRange',
+            'window',
+            'minimum',
+            'absolute']
+
+
 def _initWidgetSpec_Display(threedee):
     return {
         'name'        : props.Widget('name'),
@@ -751,6 +769,33 @@ def _initWidgetSpec_FreesurferOpts(threedee):
     return {}
 def _init3DWidgetSpec_FreesurferOpts():
     return {}
+
+
+def _initWidgetSpec_MIPOpts(threedee):
+
+    return {
+        'custom_volume' : _NiftiOpts_VolumeWidget,
+        'volume'         : props.Widget(
+            'volume',
+            showLimits=False,
+            enabledWhen=lambda o: o.overlay.ndim > 3,
+            spinWidth=6),
+        'volumeDim'      : props.Widget(
+            'volumeDim',
+            showLimits=False,
+            slider=False,
+            enabledWhen=lambda o: o.overlay.ndim > 4,
+            spinWidth=2),
+        'interpolation'  : props.Widget(
+            'interpolation',
+            labels=strings.choices['VolumeOpts.interpolation']),
+        'window' : props.Widget(
+            'window',
+            showLimits=False,
+            slider=True),
+        'minimum'  : props.Widget('minimum'),
+        'absolute' : props.Widget('absolute'),
+    }
 
 
 def _ColourMapOpts_ColourMapWidget(
