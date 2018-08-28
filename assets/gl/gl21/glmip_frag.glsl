@@ -174,7 +174,7 @@ void main(void) {
     float value;
     float maxValue;
 
-    if (!textest(fragTexCoord)) {
+    if (!test_in_bounds(fragVoxCoord, imageShape)) {
         discard;
     }
 
