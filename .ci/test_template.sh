@@ -35,6 +35,9 @@ pip install $PIPARGS -r requirements-ci.txt
 pip install $PIPARGS -r requirements-extra.txt
 pip install $PIPARGS -r requirements-notebook.txt
 
+# print environment
+pip freeze
+
 # style stage
 if [ "$TEST_STYLE"x != "x" ]; then pip install $PIPARGS pylint flake8; fi;
 if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || true; fi;
