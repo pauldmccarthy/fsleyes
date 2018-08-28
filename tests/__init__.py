@@ -376,7 +376,53 @@ def run_with_powerspectrumpanel(func, *args, **kwargs):
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     return run_with_viewpanel(func, PowerSpectrumPanel, *args, **kwargs)
 
+# stype:
+#   0 for single click
+#   1 for double click
+#   2 for separatemouse down/up events
+def simclick(sim, target, btn=wx.MOUSE_BTN_LEFT, pos=None, stype=0):
 
+    GTK = any(['gtk' in p.lower() for p in wx.PlatformInfo])
+
+    class FakeEv(object):
+        def __init__(self, evo):
+            self.evo = evo
+
+        def GetEventObject(self):
+            return self.evo
+
+    parent = target.GetParent()
+    if GTK:
+
+        if type(target).__name__ == 'StaticTextTag' and \
+           type(parent).__name__ == 'TextTagPanel':
+            parent._TextTagPanel__onTagLeftDown(FakeEv(target))
+            realYield()
+            return
+
+        if type(target).__name__ == 'StaticText' and \
+           type(parent).__name__ == 'TogglePanel':
+            parent.Toggle(FakeEv(target))
+            realYield()
+            return
+
+    w, h = target.GetClientSize().Get()
+    x, y = target.GetScreenPosition()
+
+    if pos is None:
+        pos = [0.5, 0.5]
+
+    x += w * pos[0]
+    y += h * pos[1]
+
+    sim.MouseMove(x, y)
+    realYield()
+    if   stype == 0: sim.MouseClick(btn)
+    elif stype == 1: sim.MouseDblClick(btn)
+    else:
+        sim.MouseDown(btn)
+        sim.MouseUp(btn)
+    realYield()
 
 
 def fliporient(filename):
