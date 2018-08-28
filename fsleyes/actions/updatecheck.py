@@ -82,7 +82,10 @@ class UpdateCheckAction(base.Action):
         errMsg   = strings.messages[self, 'newVersionError']
         errTitle = strings.titles[  self, 'newVersionError']
 
-        with status.reportIfError(errTitle, errMsg, report=showErrorMessage):
+        with status.reportIfError(errTitle,
+                                  errMsg,
+                                  raiseError=False,
+                                  report=showErrorMessage):
 
             log.debug('Checking for FSLeyes updates ({})'.format(
                 _FSLEYES_VERSION_URL))
