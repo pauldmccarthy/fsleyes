@@ -8,7 +8,25 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.25.0 (Tuesday 28th August 2018)
+0.26.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* The ``render`` tool has a new ``--crop`` option, to auto-crop screenshots.
+
+
+Fixed
+^^^^^
+
+
+* Fixed small bug in the :class:`.HistogramSeries` class.
+
+
+0.25.0 (Tuesday August 28th 2018)
 ---------------------------------
 
 
@@ -19,7 +37,7 @@ Added
 * New MIP overlay type, for displaying 2D maximum intensity projections (not
   available over SSH/X11).
 * A new movie mode option to change the canvas refresh regime between
-  synchronised and unsynchronised, as the default synchromnised regime does
+  synchronised and unsynchronised, as the default synchronised regime does
   not work in some environments/platforms.
 * New :func:`fsleyes.main.embed` function, allowing a FSLeyes frame to be
   opened from within an existing application.
