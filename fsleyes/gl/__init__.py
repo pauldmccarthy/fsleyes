@@ -652,7 +652,8 @@ class GLContext(object):
         """Set the given ``WXGLCanvasTarget`` or ``OffScreenCanvasTarget`` as
         the target for GL rendering with this context.
         """
-        if not self.__offscreen:
+        import wx.glcanvas as wxgl
+        if not self.__offscreen and isinstance(target, wxgl.GLCanvas):
             self.__context.SetCurrent(target)
 
 
