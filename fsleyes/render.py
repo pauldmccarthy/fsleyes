@@ -14,6 +14,8 @@ import            sys
 import            logging
 import            textwrap
 
+import numpy as np
+
 import fsleyes_widgets.utils.layout          as fsllayout
 import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
@@ -75,7 +77,10 @@ def main(args=None):
     import matplotlib.image as mplimg
 
     # Render that scene, and save it to file
-    bitmap = render(namespace, overlayList, displayCtx, sceneOpts)
+    bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
+
+    if namespace.crop is not None:
+        bitmap = autocrop(bitmap, bg, namespace.crop)
     mplimg.imsave(namespace.outfile, bitmap)
 
 
@@ -95,6 +100,12 @@ def parseArgs(argv):
     mainParser.add_argument('-of',
                             '--outfile',
                             help='Output image file name'),
+    mainParser.add_argument('-c',
+                            '--crop',
+                            type=int,
+                            metavar='BORDER',
+                            help='Auto-crop image, leaving a '
+                                 'border on each side')
     mainParser.add_argument('-sz',
                             '--size',
                             type=int, nargs=2,
@@ -112,17 +123,17 @@ def parseArgs(argv):
         ('ortho'), lightbox ('lightbox'), or 3D ('3d') views.
         """)
 
-    namespace = parseargs.parseArgs(mainParser,
-                                    argv,
-                                    name,
-                                    prolog=prolog,
-                                    desc=description,
-                                    usageProlog=optStr,
-                                    argOpts=['-of',
-                                             '--outfile',
-                                             '-sz',
-                                             '--size'],
-                                    shortHelpExtra=['--outfile', '--size'])
+    namespace = parseargs.parseArgs(
+        mainParser,
+        argv,
+        name,
+        prolog=prolog,
+        desc=description,
+        usageProlog=optStr,
+        argOpts=['-of', '--outfile',
+                 '-sz', '--size',
+                 '-c',  '--crop'],
+        shortHelpExtra=['--outfile', '--size', '--crop'])
 
     if namespace.outfile is None:
         log.error('outfile is required')
@@ -235,7 +246,8 @@ def makeDisplayContext(namespace):
 
 
 def render(namespace, overlayList, displayCtx, sceneOpts):
-    """Renders the scene, and returns a bitmap.
+    """Renders the scene, and returns a tuple containing the bitmap and the
+    background colour.
 
     :arg namespace:   ``argparse.Namespace`` object containing command line
                       arguments.
@@ -364,8 +376,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                            sceneOpts.colourBarLabelSide)
 
     # Turn the layout tree into a bitmap image
-    return fsllayout.layoutToBitmap(
-        layout, [c * 255 for c in sceneOpts.bgColour])
+    bgColour = [c * 255 for c in sceneOpts.bgColour]
+    return fsllayout.layoutToBitmap(layout, bgColour), bgColour
 
 
 def createLightBoxCanvas(namespace,
@@ -740,6 +752,49 @@ def calculateOrthoCanvasSizes(overlayList,
                                width,
                                height)
 
+
+def autocrop(data, bgColour, border=0):
+    """Crops the given bitmap image on all sides where the ``bgColour`` is
+    the only colour present.
+
+    If the image is completely empty. it is not cropped.
+
+    :arg data:     ``numpy`` array of shape ``(w, h, 4)`` containing the image.
+    :arg bgColour: Sequence of length 4 containing the background colour to
+                   crop.
+    :arg border:   Number of pixels to leave around each side.
+    """
+
+    w, h = data.shape[:2]
+
+    low, hiw = 0, w
+    loh, hih = 0, h
+
+    for i in range(w):
+        if np.all(data[i, :] == bgColour): low = i
+        else:                              break
+    for i in range(w - 1, 0, -1):
+        if np.all(data[i, :] == bgColour): hiw = i + 1
+        else:                              break
+    for i in range(h):
+        if np.all(data[:, i] == bgColour): loh = i
+        else:                              break
+    for i in range(h - 1, 0, -1):
+        if np.all(data[:, i] == bgColour): hih = i + 1
+        else:                              break
+
+    if low < hiw and loh < hih:
+        data = data[low:hiw, loh:hih, :]
+
+        if border > 0:
+            w, h, c = data.shape
+            new = np.zeros((w + 2 * border, h + 2 * border, c),
+                           dtype=data.dtype)
+            new[:, :] = bgColour
+            new[border:-border, border:-border, :] = data
+            data = new
+
+    return data
 
 
 class MockSliceCanvas(object):
