@@ -770,18 +770,10 @@ def autocrop(data, bgColour, border=0):
     low, hiw = 0, w
     loh, hih = 0, h
 
-    for i in range(w):
-        if np.all(data[i, :] == bgColour): low = i
-        else:                              break
-    for i in range(w - 1, 0, -1):
-        if np.all(data[i, :] == bgColour): hiw = i + 1
-        else:                              break
-    for i in range(h):
-        if np.all(data[:, i] == bgColour): loh = i
-        else:                              break
-    for i in range(h - 1, 0, -1):
-        if np.all(data[:, i] == bgColour): hih = i + 1
-        else:                              break
+    while np.all(data[low,     :] == bgColour): low += 1
+    while np.all(data[hiw - 1, :] == bgColour): hiw -= 1
+    while np.all(data[:, loh]     == bgColour): loh += 1
+    while np.all(data[:, hih - 1] == bgColour): hih -= 1
 
     if low < hiw and loh < hih:
         data = data[low:hiw, loh:hih, :]
