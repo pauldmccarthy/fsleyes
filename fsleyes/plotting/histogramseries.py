@@ -445,7 +445,7 @@ class ImageHistogramSeries(HistogramSeries):
         and re-registers property listeners as needed.
         """
         oldOpts     = self.__opts
-        newOpts     = self.__displayCtx.getOpts(self.overlay)
+        newOpts     = self.displayCtx.getOpts(self.overlay)
         self.__opts = newOpts
 
         oldOpts.removeListener('volume',    self.name)

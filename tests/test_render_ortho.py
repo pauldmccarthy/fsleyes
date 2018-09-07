@@ -59,6 +59,9 @@ cli_tests = """
          -no -ls 96 3d.nii.gz # Neuro orientation
 -lo grid     -ls 96 3d.nii.gz # Sagittal plane should be a/p flipped
 -lo grid -no -ls 96 3d.nii.gz # Neuro orientation, and sagittal plane should be a/p flipped
+
+-hl -z 50 -c 0  -bg 0.2 0.2 0.2 3d.nii.gz
+-hl -z 50 -c 10 -bg 0.2 0.2 0.2 3d.nii.gz
 """
 
 
