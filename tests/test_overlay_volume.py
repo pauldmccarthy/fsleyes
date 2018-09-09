@@ -158,6 +158,4 @@ def silly_range():
     data[5, 5, 4:6] *=  10e10
 
     fslimage.Image(data).save('silly_range.nii.gz')
-    import shutil
-    shutil.copy('silly_range.nii.gz', '/Users/paulmc/Projects/fsleyes/')
     return 'silly_range.nii.gz'
