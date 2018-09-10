@@ -10,6 +10,11 @@ import os.path as op
 
 import pytest
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 import numpy as np
 
 import fsl.data.image      as fslimage
@@ -135,3 +140,22 @@ def test_overlay_volume():
         'custom_cmap' : custom_cmap,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
+
+
+def test_overlay_volume_silly_range():
+    with mock.patch('fsleyes.gl.textures.Texture3D.canUseFloatTextures',
+                    return_value=(False, None, None)):
+        run_cli_tests('test_overlay_volume_silly_range',
+                      '{{silly_range()}}',
+                      extras={'silly_range' : silly_range})
+
+
+def silly_range():
+
+    data = np.arange(1000, dtype=np.float32).reshape((10, 10, 10))
+
+    data[4, 4, 4:6] *= -10e10
+    data[5, 5, 4:6] *=  10e10
+
+    fslimage.Image(data).save('silly_range.nii.gz')
+    return 'silly_range.nii.gz'

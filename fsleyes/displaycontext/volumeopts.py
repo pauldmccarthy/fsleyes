@@ -976,6 +976,29 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         # on the parent instance
         self.__registered = self.getParent() is None
 
+        # Check whether the data range for this
+        # image is silly. If it is, and we are
+        # on a platform that cannot use floating
+        # point textures, we turn on the override
+        # data range option.
+        if self.__registered and np.issubdtype(overlay.dtype, np.floating):
+            import fsleyes.gl.textures.texture3d as t3d
+            if not t3d.Texture3D.canUseFloatTextures()[0]:
+
+                dmin, dmax = overlay.dataRange
+
+                # a range of greater than 10e7
+                # is defined as being "silly"
+                if abs(dmax - dmin) > 10e7:
+
+                    if   overlay.ndim == 3: sample = overlay[:]
+                    elif overlay.ndim == 4: sample = overlay[..., 0]
+
+                    drange = np.percentile(sample[sample != 0], [1, 99])
+
+                    self.overrideDataRange       = drange
+                    self.enableOverrideDataRange = True
+
         # Configure the initial display
         # range for new images, from the
         # initialDisplayRange percentiles.
