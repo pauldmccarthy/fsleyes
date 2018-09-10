@@ -18,4 +18,68 @@ render2t         Render2t
 render3          Render3
 subcortical      MGH Sub-cortical
 cortical         MGH Cortical
-random           Random
+random                           Random
+brain_colours_1hot               Hot [Brain colours]
+brain_colours_1hot_iso           Hot [Brain colours] (iso)
+brain_colours_2winter            Winter [Brain colours]
+brain_colours_2winter_iso        Winter [Brain colours] (iso)
+brain_colours_3warm              Warm [Brain colours]
+brain_colours_3warm_iso          Warm [Brain colours] (iso)
+brain_colours_4cool              Cool [Brain colours]
+brain_colours_4cool_iso          Cool [Brain colours] (iso)
+brain_colours_5redyell           Red-yellow [Brain colours]
+brain_colours_5redyell_iso       Red-yellow [Brain colours] (iso)
+brain_colours_6bluegrn           Blue-green [Brain colours]
+brain_colours_6bluegrn_iso       Blue-green [Brain colours] (iso)
+brain_colours_actc               ACTC [Brain colours]
+brain_colours_actc_iso           ACTC [Brain colours] (iso)
+brain_colours_blackbdy           Blackbdy [Brain colours]
+brain_colours_blackbdy_iso       Blackbdy [Brain colours] (iso)
+brain_colours_bluegray           Blue-gray [Brain colours]
+brain_colours_bluegray_iso       Blue-gray [Brain colours] (iso)
+brain_colours_bone               Bone [Brain colours]
+brain_colours_bone_iso           Bone [Brain colours] (iso)
+brain_colours_cardiac            Cardiac [Brain colours]
+brain_colours_cardiac_iso        Cardiac [Brain colours] (iso)
+brain_colours_cortex             Cortex [Brain colours]
+brain_colours_cortex_iso         Cortex [Brain colours] (iso)
+brain_colours_diverging_bgy      Diverging BlGnYl [Brain colours]
+brain_colours_diverging_bgy_iso  Diverging BlGnYl [Brain colours] (iso)
+brain_colours_diverging_bwr      Diverging BlWtRd [Brain colours]
+brain_colours_diverging_bwr_iso  Diverging BlWtRd [Brain colours] (iso)
+brain_colours_flow               Flow [Brain colours]
+brain_colours_flow_iso           Flow [Brain colours] (iso)
+brain_colours_french             French [Brain colours]
+brain_colours_french_iso         French [Brain colours] (iso)
+brain_colours_ge_color           GE [Brain colours]
+brain_colours_ge_color_iso       GE [Brain colours] (iso)
+brain_colours_gold               Gold [Brain colours]
+brain_colours_gold_iso           Gold [Brain colours] (iso)
+brain_colours_gooch              Gooch [Brain colours]
+brain_colours_gooch_iso          Gooch [Brain colours] (iso)
+brain_colours_greengray          Green-gray [Brain colours]
+brain_colours_greengray_iso      Green-gray [Brain colours] (iso)
+brain_colours_hotiron            Hot-iron [Brain colours]
+brain_colours_hotiron_iso        Hot-iron [Brain colours] (iso)
+brain_colours_nih                NIH [Brain colours]
+brain_colours_nih_iso            NIH [Brain colours] (iso)
+brain_colours_nih_fire           NIH-fire [Brain colours]
+brain_colours_nih_fire_iso       NIH-fire [Brain colours] (iso)
+brain_colours_nih_ice            NIH-ice [Brain colours]
+brain_colours_nih_ice_iso        NIH-ice [Brain colours] (iso)
+brain_colours_nih_new            NIH-new [Brain colours]
+brain_colours_nih_new_iso        NIH-new [Brain colours] (iso)
+brain_colours_pink               Pink [Brain colours]
+brain_colours_pink_iso           Pink [Brain colours] (iso)
+brain_colours_rainramp           Rain-ramp [Brain colours]
+brain_colours_rainramp_iso       Rain-ramp [Brain colours] (iso)
+brain_colours_redgray            Red-gray [Brain colours]
+brain_colours_redgray_iso        Red-gray [Brain colours] (iso)
+brain_colours_spectrum           Spectrum [Brain colours]
+brain_colours_spectrum_iso       Spectrum [Brain colours] (iso)
+brain_colours_surface            Surface [Brain colours]
+brain_colours_surface_iso        Surface [Brain colours] (iso)
+brain_colours_x_hot              X-hot [Brain colours]
+brain_colours_x_hot_iso          X-hot [Brain colours] (iso)
+brain_colours_x_rain             X-rain [Brain colours]
+brain_colours_x_rain_iso         X-rain [Brain colours] (iso)
