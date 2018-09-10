@@ -429,15 +429,15 @@ class Selection(notifier.Notifier):
         # to make indexing easier. The last/current
         # slice objects are defined relative to the
         # combined space of both.
-        cmbSlices  = [slice(lo, hi) for lo, hi in cmbIdxs]
+        cmbSlices  = tuple([slice(lo, hi) for lo, hi in cmbIdxs])
 
-        lastSlices = [slice(lLo - cmLo, lHi - cmLo)
-                      for ((lLo, lHi), (cmLo, cmHi))
-                      in zip(lastIdxs, cmbIdxs)]
+        lastSlices = tuple([slice(lLo - cmLo, lHi - cmLo)
+                            for ((lLo, lHi), (cmLo, cmHi))
+                            in zip(lastIdxs, cmbIdxs)])
 
-        currSlices = [slice(cuLo - cmLo, cuHi - cmLo)
-                      for ((cuLo, cuHi), (cmLo, cmHi))
-                      in zip(currIdxs, cmbIdxs)]
+        currSlices = tuple([slice(cuLo - cmLo, cuHi - cmLo)
+                            for ((cuLo, cuHi), (cmLo, cmHi))
+                            in zip(currIdxs, cmbIdxs)])
 
         cmbOld    = np.array(self.__selection[cmbSlices])
         cmbNew    = np.array(cmbOld)
@@ -698,7 +698,7 @@ def fixSlices(slices):
         if s is None:
             slices[i] = slice(None)
 
-    return slices
+    return tuple(slices)
 
 
 def selectByValue(data,
@@ -835,7 +835,7 @@ def selectByValue(data,
 
         # Extract the search space, and
         # create the ellipsoid mask
-        searchSpace  = data[slices]
+        searchSpace  = data[tuple(slices)]
         searchOffset = [so + r[0] for so, r in zip(searchOffset, ranges)]
         searchMask   = dists <= 1
 
