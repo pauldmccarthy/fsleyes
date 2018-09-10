@@ -1,0 +1,4 @@
+The brain_colours colour maps are originally from MRICron
+(https://www.nitrc.org/projects/mricron). They were adjusted by Cyril Pernet
+(http://www.sbirc.ed.ac.uk/cyril/) to normalise the luminosity across the
+colour range. They are available at https://github.com/CPernet/brain_colours/.
