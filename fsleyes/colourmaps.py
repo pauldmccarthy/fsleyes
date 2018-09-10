@@ -450,12 +450,21 @@ def init(force=False):
         allFiles = builtinFiles + userFiles
         allFiles = {mid : mfile for mid, mfile in zip(allIDs, allFiles)}
 
-        # Read order/display names from order.txt
-        # (for builtins), and from fslsettings
-        # (for user-added). Any user-added maps
-        # with the same as a builtin will override
+        # Read order/display names from order.txt -
+        # if an order.txt file exists in the user
+        # dir, it takes precednece over built-in
+        # order/display names.
+        #
+        # User-added display names may also be in
+        # fslsettings. Any user-added maps with
+        # the same ID as a builtin will override
         # the builtin.
-        names = readOrderTxt(op.join(builtinDir, 'order.txt'))
+        builtinOrder = op.join(builtinDir, 'order.txt')
+        userOrder    = op.join(userDir,    'order.txt')
+
+        if op.exists(userOrder): names = readOrderTxt(userOrder)
+        else:                    names = readOrderTxt(builtinOrder)
+
         names.update(readDisplayNames(mapType))
 
         # any maps which did not have a name
