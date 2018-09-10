@@ -20,6 +20,18 @@ Added
 * The :attr:`.VolumeOpts.overrideDataRange` is now automatically enabled for
   images with an extreme data range, on platforms that do not support floating
   point textures.
+* New ``brain_colour`` colour maps provided by `MRICron
+  <https://www.nitrc.org/projects/mricron>`_ and `Cyril Pernet
+  <https://github.com/CPernet/brain_colours>`_.
+
+
+Changed
+^^^^^^^
+
+
+* User-added and built-in colour map/lookup table names and display order can
+  now be customised by adding a file called ``order.txt`` to the FSLeyes user
+  configuration directory.
 
 
 Fixed

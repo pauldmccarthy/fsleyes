@@ -1,9 +1,9 @@
 FSLeyes lookup tables
 ---------------------
 
-All files in this directory ending with '.lut' will be loaded by FSLeyes,
-interpreted as a lookup table, and added as an option for 'label' image
-overlays.
+All files in this directory, and its sub-directories, ending with '.lut' will
+be loaded by FSLeyes, interpreted as a lookup table, and added as an option
+for 'label' image overlays.
 
  Each line in a ``.lut`` file must specify the label value, RGB colour, and
 associated label name.  The first column (where columns are space-separated)
@@ -16,5 +16,3 @@ tables.
 
 Add an entry in the order.txt file if you want the lookup table to have a
 specific name, and to appear in a specific location in the drop down list.
-
-
