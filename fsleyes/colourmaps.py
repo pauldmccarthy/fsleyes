@@ -201,13 +201,13 @@ colours:
 """
 
 
-import os.path as op
-import            os
-import            glob
-import            bisect
-import            string
-import            logging
-import            colorsys
+import itertools as it
+import os.path   as op
+import              os
+import              bisect
+import              string
+import              logging
+import              colorsys
 
 from collections import OrderedDict
 
@@ -236,11 +236,50 @@ def getLutDir():
     return op.join(fsleyes.assetDir, 'assets', 'luts')
 
 
+def _walk(dirname, suffix):
+    """Recursively searches ``dirname``, returning a list of all files with the
+    specified ``suffix``.
+    """
+    matches = []
+    for dirpath, dirnames, filenames in os.walk(dirname):
+        for filename in filenames:
+            if filename.endswith(suffix):
+                matches.append(op.join(dirpath, filename))
+    return matches
+
+
+def _find(mapid, dirname):
+    """Finds the file associated with the given (built-in) colour map or lookup
+    table ID.
+    """
+
+    divs     = [i for i, c in enumerate(mapid) if c == '_']
+    pathopts = it.chain(*[it.combinations(divs, n)
+                          for n in range(len(divs) + 1)])
+
+    for pathidxs in pathopts:
+
+        path = mapid
+        for i in pathidxs:
+            path = path[:i] + op.sep + path[i + 1:]
+
+        path = op.join(dirname, path)
+
+        if op.exists(path):
+            return path
+
+    raise ValueError('Cannot find {} in {}'.format(mapid, dirname))
+
+
 def scanBuiltInCmaps():
     """Returns a list of IDs for all built-in colour maps. """
 
-    cmapIDs  = glob.glob(op.join(getCmapDir(), '*.cmap'))
-    cmapIDs  = [op.splitext(op.basename(f))[0] for f in cmapIDs]
+    basedir = getCmapDir()
+    cmapIDs = _walk(basedir, '.cmap')
+    cmapIDs = [op.splitext(i)[0]      for i in cmapIDs]
+    cmapIDs = [op.relpath(i, basedir) for i in cmapIDs]
+    cmapIDs = [i.replace(op.sep, '_') for i in cmapIDs]
+
 
     return cmapIDs
 
@@ -248,8 +287,11 @@ def scanBuiltInCmaps():
 def scanBuiltInLuts():
     """Returns a list of IDs for all built-in lookup tables. """
 
-    lutIDs = glob.glob(op.join(getLutDir(), '*.lut'))
-    lutIDs = [op.splitext(op.basename(f))[0] for f in lutIDs]
+    basedir = getLutDir()
+    lutIDs  = _walk(basedir, '.lut')
+    lutIDs  = [op.splitext(i)[0]      for i in lutIDs]
+    lutIDs  = [op.relpath(i, basedir) for i in lutIDs]
+    lutIDs  = [i.replace(op.sep, '_') for i in lutIDs]
 
     return lutIDs
 
@@ -399,7 +441,7 @@ def init(force=False):
             mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
 
         builtinFiles = ['{}.{}'.format(m, mapType) for m in builtinIDs]
-        builtinFiles = [op.join(builtinDir, m)     for m in builtinFiles]
+        builtinFiles = [_find(m, builtinDir)       for m in builtinFiles]
         userFiles    = ['{}.{}'.format(m, mapType) for m in userIDs]
         userFiles    = [op.join(userDir, m)        for m in userFiles]
         userFiles    = [fslsettings.filePath(m)    for m in userFiles]
@@ -998,7 +1040,7 @@ def _caseInsensitiveLookup(d, k, default=None):
 
     try:
         idx = lKeys.index(k.lower())
-    except:
+    except Exception:
         if default is not None: return default
         else:                   raise  KeyError(k)
 
