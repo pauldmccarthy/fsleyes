@@ -85,9 +85,13 @@ Display name and ordering
 For built-in colour maps, a file named ``[assetsbase]/colourmaps/order.txt``
 is assumed to contain a list of colour map names, and colour map identifiers,
 defining the order in which the colour maps should be displayed to the
-user. Any colour maps which are present in ``[assetsbase/colourmaps/``, but
+user. Any colour maps which are present in ``[assetsbase]/colourmaps/``, but
 are not listed in the ``order.txt``, file will be appended to the end of the
 list, and their name will be derived from the file name.
+
+
+If a file ``[settingsbase]/colourmaps/order.txt`` exists, then it will be used
+in place of the ``order.txt`` file in ``[assetsbase]``.
 
 
 User-added colour maps
