@@ -23,8 +23,8 @@ Overview
 <.overlay>`. All overlays are stored in a single list, the
 :class:`.OverlayList`. Only one ``OverlayList`` ever exists - this list is
 shared throughout the application.  The primary overlay type is the NIFTI
-image format, but other overlay types are supported (VTK models), and more
-will be supported in the future (e.g. surfaces).
+image format; and a range of other formats are also supported including MGH
+volumes, GIFTI and Freesurfer surface files, and VTK triangle meshes.
 
 
 Amongst other things, *FSLeyes* provides the following features:
@@ -40,11 +40,11 @@ Amongst other things, *FSLeyes* provides the following features:
   - FEAT cluster results explorer (:mod:`.clusterpanel`)
   - Melodic component classification (:mod:`.melodicclassificationpanel`)
   - NIFTI image editing (:mod:`.editor`)
-  - A comprehensive command line interface (:mod:`.fsleyes_parseargs`)
+  - A comprehensive command line interface (:mod:`.parseargs`)
 
 
-*FSLeyes* makes heavy use of the :mod:`props` project, which is an
-event-based framework.
+*FSLeyes* makes heavy use of the :mod:`fsleyes_props` project, which is an
+event-based programming framework.
 
 
 ------------
@@ -73,8 +73,9 @@ to display overlays, and :class:`.PlotPanel` views, which use
 View panels may contain one or more *control* panels which provide an
 interface allowing the user to control some aspect of the view (e.g. the
 :class:`.OverlayDisplayToolBar`), or to display some other data associated
-with the overlays (e.g. the :class:`.ClusterPanel`).  All controls are defined
-in the :mod:`.controls` sub-package.
+with the overlays (e.g. the :class:`.ClusterPanel`).  All controls are
+sub-classes of the :class:`.ControlPanel` or :class:`.ControlToolBar` classes,
+and all built-in controls are defined in the :mod:`.controls` sub-package.
 
 
 The view/control panel class hierarchy is shown below:
@@ -91,25 +92,27 @@ The view/control panel class hierarchy is shown below:
 
      rankdir="BT";
      1  [label="panel.FSLeyesPanel"];
-     3  [label="views.viewpanel.ViewPanel"];
+     2  [label="views.viewpanel.ViewPanel"];
+     3  [label="controls.controlpanel.ControlPanel"];
      4  [label="views.plotpanel.PlotPanel"];
      5  [label="views.canvaspanel.CanvasPanel"];
-     6  [label="views.orthopanel.OrthoPanel"];
-     7  [label="<other canvas panels>"];
-     8  [label="views.histogrampanel.HistogramPanel"];
-     9  [label="<other plot panels>"];
+     6  [label="views.histogrampanel.HistogramPanel"];
+     7  [label="<other plot panels>"];
+     8  [label="views.orthopanel.OrthoPanel"];
+     9  [label="<other canvas panels>"];
      10 [label="controls.overlaylistpanel.OverlayListPanel"];
      11 [label="<other control panels>"];
 
+     2  -> 1;
      3  -> 1;
-     4  -> 3;
-     5  -> 3;
-     6  -> 5;
-     7  -> 5;
-     8  -> 4;
-     9  -> 4;
-     10 -> 1;
-     11 -> 1;
+     4  -> 2;
+     5  -> 2;
+     6  -> 4;
+     7  -> 4;
+     8  -> 5;
+     9  -> 5;
+     10 -> 3;
+     11 -> 3;
    }
 
 All toolbars inherit from the :class:`.FSLeyesToolBar` base class:
@@ -125,14 +128,16 @@ All toolbars inherit from the :class:`.FSLeyesToolBar` base class:
            fontname="sans"];
 
      rankdir="BT";
-     2  [label="toolbar.FSLeyesToolBar"];
-     12 [label="controls.overlaydisplaytoolbar.OverlayDisplayToolBar"];
-     13 [label="controls.lightboxtoolbar.LightBoxToolBar"];
-     14 [label="<other toolbars>"];
+     1 [label="toolbar.FSLeyesToolBar"];
+     2 [label="controls.controlpanel.ControlToolBar"];
+     3 [label="controls.overlaydisplaytoolbar.OverlayDisplayToolBar"];
+     4 [label="controls.lightboxtoolbar.LightBoxToolBar"];
+     5 [label="<other toolbars>"];
 
-     12 -> 2;
-     13 -> 2;
-     14 -> 2;
+     2 -> 1;
+     3 -> 2;
+     4 -> 2;
+     5 -> 2;
    }
 
 
