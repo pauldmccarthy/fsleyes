@@ -4,15 +4,14 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`FSLeyesPanel` and
-:class:`FSLeyesSettingsPanel` classes.
+"""This module provides the :class:`FSLeyesPanel` class.
 
 
-A :class:`FSLeyesPanel` object is a :class:`wx.PyPanel` which provides some
-sort of view of a collection of overlay objects, contained within an
-:class:`.OverlayList`.  The :class:`FSLeyesSettingsPanel` is a convenience
-class for certain *FSLeyes* control panels (see the ::mod:`fsleyes`
-documentation).
+A :class:`FSLeyesPanel` object is a :class:`wx.Panel` which provides some sort
+of view of a collection of overlay objects, contained within an
+:class:`.OverlayList`. The :class:`FSLeyesPanel` is the base class for all GUI
+panels in FSLeyes - see also the :class:`.ViewPanel` and :class:`.ControlPanel`
+classes.
 
 
 ``FSLeyesPanel`` instances are also :class:`.ActionProvider` instances - any
@@ -46,16 +45,14 @@ should be made available available to the user can be added as
 
 
 import logging
-
+import warnings
 import six
 import deprecation
 
-import                   wx
-import wx.lib.agw.aui as wxaui
+import wx
 
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
-import fsleyes_widgets.widgetlist         as widgetlist
 import fsleyes_widgets.floatspin          as floatspin
 import fsleyes_widgets.floatslider        as floatslider
 import fsleyes_widgets.rangeslider        as rangeslider
@@ -197,7 +194,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
         # Some other widget that we
         # don't care about has focus.
-        except:
+        except Exception:
             ev.Skip()
             return
 
@@ -350,7 +347,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         probably be output to the log (see :meth:`__del__`). This
         implememtation should be called **after** the subclass has performed
         its own clean-up, as this method expliciltly clears the
-        ``_overlayList`` and ``_displayCtx`` references.
+        ``__overlayList`` and ``__displayCtx`` references.
         """
         actions.ActionProvider.destroy(self)
         self.__frame       = None
@@ -372,7 +369,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
     def __del__(self):
         """If the :meth:`destroy` method has not been called, a warning message
-        logged.
+        is logged.
         """
         if not self.__destroyed:
             log.warning('The {}.destroy() method has not been called '
@@ -410,6 +407,8 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
                                       FSLeyesPanelBase)):
     """The ``FSLeyesPanel`` is the base class for all view and control panels
     in *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
+
+    See also the :class:`.ViewPanel` and :class:`.ControlPanel` classes.
     """
 
     def __init__(self,
@@ -419,6 +418,16 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
                  frame,
                  *args,
                  **kwargs):
+
+        from fsleyes.views.viewpanel       import ViewPanel
+        from fsleyes.controls.controlpanel import ControlPanel
+        from fsleyes.controls.controlpanel import ControlToolBar
+
+        if not isinstance(self, (ViewPanel, ControlPanel, ControlToolBar)):
+            warnings.warn('All FSLeyesPanels should be a sub-class of '
+                          'ViewPanel, ControlPanel, or ControlToolBar.',
+                          stacklevel=2,
+                          category=DeprecationWarning)
 
         # Slightly ugly way of supporting the _FSLeyesPanel
         # kbFocus argument. In order to catch keyboard events,
@@ -437,45 +446,21 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
 
 
 class FSLeyesSettingsPanel(FSLeyesPanel):
-    """The ``FSLeyesSettingsPanel`` is a convenience class for *FSLeyes*
-    control panels which use a :class:`fsleyes_widgets.WidgetList` to display a
-    collection of controls for the user.  When displayed as a dialog/floating
-    frame, the ``FSLeyesSettingsPanel`` will automatically resize itself to
-    fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
+    """The ``FSLeyesSettingsPanel`` is deprecated - it has been replaced
+    with the :class:`.controls.controlpanel.SettingsPanel`.
     """
+    @deprecation.deprecated(deprecated_in='0.26.0',
+                            removed_in='1.0.0',
+                            details='Use controls.controlpanel.SettingsPanel '
+                                    'instead')
+    def __init__(self, parent, *args, **kwargs):
+        FSLeyesPanel.__init__(self, parent, *args, **kwargs)
 
+        from fsleyes.controls.controlpanel import SettingsPanel
 
-    def __init__(self, *args, **kwargs):
-        """Create an ``FSLeyesSettingsPanel``.  All arguments are passed to
-        the :meth:`FSLeyesPanel.__init__` method.
-        """
-
-        FSLeyesPanel.__init__(self, *args, **kwargs)
-
-        self.__widgets = widgetlist.WidgetList(self)
-        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
-
+        self.__sizer = wx.BoxSizer(wx.VERTICAL)
+        self.__panel = SettingsPanel(self, *args, **kwargs)
+        self.__sizer.Add(self.__panel, flag=wx.EXPAND, proportion=1)
         self.SetSizer(self.__sizer)
-
-        self.__sizer.Add(self.__widgets, flag=wx.EXPAND, proportion=1)
-
-        self.SetMinSize((300, 80))
-
-        self.__widgets.Bind(widgetlist.EVT_WL_CHANGE_EVENT,
-                            self.__widgetListChange)
-
-
     def getWidgetList(self):
-        """Returns the :class:`fsleyes_widgets.WidgetList` which should be used
-        by sub-classes to display content to the user.
-        """
-        return self.__widgets
-
-
-    def __widgetListChange(self, ev):
-        """Called whenever the widget list contents change. If this panel
-        is floating, its parent is autmatically resized.
-        """
-        if isinstance(self.GetTopLevelParent(), wxaui.AuiFloatingFrame):
-            self.SetInitialSize(self.__widgets.GetBestSize())
-            self.GetTopLevelParent().Fit()
+        return self.__panel.getWidgetList()

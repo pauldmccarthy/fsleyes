@@ -28,6 +28,9 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
     The ``FSLeyesToolBar`` is a regular :class:`wx.PyPanel` which to which a
     group of *tools* can be added, where a tool may be any ``wx`` control.
 
+    See also the :class:`.ControlToolBar`, which is the true base-class for
+    all toolbars that are added to FSLeyes view panels.
+
     Tools can be added to a ``FSLeyesToolBar`` with the following methods:
 
       .. autosummary::
