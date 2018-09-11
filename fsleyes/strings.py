@@ -462,6 +462,7 @@ actions = TypeDict({
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
     'ResampleAction'           : 'Resample image',
 
+    'FSLeyesFrame.removeViewPanel'         : 'Close',
     'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',

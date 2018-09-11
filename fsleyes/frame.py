@@ -62,6 +62,9 @@ class FSLeyesFrame(wx.Frame):
                for each visible ``ViewPanel``. All ``ViewPanel`` classes
                inherit from the :class:`.ActionProvider` class - any actions
                that have been defined are added as menu items here.
+    *Tools*    Options which invoke some sort of tool - some global tools are
+               added to this menu, along with tools that are specific to each
+               active view.
     ========== ==============================================================
 
 
@@ -774,15 +777,11 @@ class FSLeyesFrame(wx.Frame):
         if len(actionz) > 0:
             menu.AppendSeparator()
 
-        title = strings.actions[self, 'removeFocusedViewPanel']
-        shortcut = shortcuts.actions.get((self, 'removeFocusedViewPanel'))
-
-        if shortcut is not None:
-            title = '{}\t{}'.format(title, shortcut)
-
+        title     = strings.actions[self, 'removeViewPanel']
         closeItem = menu.Append(wx.ID_ANY, title)
-        self.removeFocusedViewPanel.bindToWidget(self, wx.EVT_MENU, closeItem)
+        func      = ft.partial(self.removeViewPanel, panel)
 
+        self.Bind(wx.EVT_MENU, lambda ev: func(), closeItem)
         self.__refreshToolsMenu()
 
 
