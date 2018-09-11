@@ -68,3 +68,12 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
 
         nav = [togControl, togList] + self.getCommonNavOrder() + [mode]
         self.setNavOrder(nav)
+
+
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``TimeSeriesToolBar`` is only intended to be added to
+        :class:`.TimeSeriesPanel` views.
+        """
+        from fsleyes.views.timeseriespanel import TimeSeriesPanel
+        return [TimeSeriesPanel]

@@ -45,6 +45,15 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         plotcontrol.PlotControlPanel.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``PowerSpectrumControlPanel`` is only intended to be added to
+        :class:`.PowerSpectrumPanel` views.
+        """
+        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+        return [PowerSpectrumPanel]
+
+
     def generateCustomPlotPanelWidgets(self, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomPlotPanelWidgets`.
 

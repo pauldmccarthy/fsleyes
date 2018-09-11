@@ -68,6 +68,15 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``Scene3DToolBar`` is only intended to be added to
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.scene3dpanel import Scene3DPanel
+        return [Scene3DPanel]
+
+
     def __makeTools(self):
         """Called by :meth:`__init__`. Creates the toolbar widgets. """
 

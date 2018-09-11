@@ -42,6 +42,15 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
         self.__makeTools()
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditSettingsPanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
     def __makeTools(self):
         """Generates all of the tools and adds them to the :class:`.WidgetList`
         (see :class:`.SettingsPanel`),

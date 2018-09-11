@@ -181,6 +181,15 @@ class CropImagePanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``CropImagePanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
     def __registerOverlay(self, overlay):
         """Called by :meth:`__selectedOverlayChanged`. Registers the
         given overlay.

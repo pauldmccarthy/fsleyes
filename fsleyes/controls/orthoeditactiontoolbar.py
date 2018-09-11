@@ -65,6 +65,15 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditActionToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
     def __profileChanged(self, *a):
         """Called when the :attr:`.ViewPanel.profile` property of the
         :class:`.OrthoPanel` changes. Shows/hides edit controls accordingly.

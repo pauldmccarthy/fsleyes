@@ -76,6 +76,15 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         plotcontrolpanel.PlotControlPanel.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``TimeSeriesControlPanel`` is only intended to be added to
+        :class:`.TimeSeriesPanel` views.
+        """
+        from fsleyes.views.timeseriespanel import TimeSeriesPanel
+        return [TimeSeriesPanel]
+
+
     def generateCustomPlotPanelWidgets(self, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomPlotPanelWidgets`.
 

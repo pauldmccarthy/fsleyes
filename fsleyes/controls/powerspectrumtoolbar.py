@@ -60,3 +60,12 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         nav = [togControl, togList] + self.getCommonNavOrder()
 
         self.setNavOrder(nav)
+
+
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``PowerSpectrumToolBar`` is only intended to be added to
+        :class:`.PowerSpectrumPanel` views.
+        """
+        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
+        return [PowerSpectrumPanel]

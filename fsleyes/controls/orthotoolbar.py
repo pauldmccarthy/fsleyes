@@ -101,6 +101,15 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
     def __makeTools(self, *a):
         """Called by :meth:`__init__`, and whenever the
         :attr:`.ViewPanel.profile` property changes.

@@ -128,6 +128,18 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OverlayDisplayToolBar`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+
+
     def __showTools(self, overlay):
         """Creates and shows a set of controls allowing the user to change
         the display settings of the specified ``overlay``.

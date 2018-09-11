@@ -111,6 +111,18 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         ctrlpanel.SettingsPanel.destroy(self)
 
 
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OverlayDisplayPanel`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+
+
     def __selectedOverlayChanged(self, *a):
         """Called when the :class:`.OverlayList` or
         :attr:`.DisplayContext.selectedOverlay` changes. Refreshes this

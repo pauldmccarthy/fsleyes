@@ -179,3 +179,12 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
 
         self.SetTools(tools)
         self.setNavOrder(nav)
+
+
+    def supportedViews(self):
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``LightBoxToolBar`` is only intended to be added to
+        :class:`.LightBoxPanel` views.
+        """
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        return [LightBoxPanel]
