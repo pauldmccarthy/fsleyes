@@ -40,7 +40,6 @@ import logging
 import collections
 import pkg_resources
 
-import fsleyes.strings               as strings
 import fsleyes.actions.base          as base
 import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.controls.controlpanel as ctrlpanel

@@ -1720,6 +1720,17 @@ class FSLeyesFrame(wx.Frame):
         that are not bound to a specific ``ViewPanel`` (and which are always
         present).
         """
+
+        def addTool(cls, name):
+            shortcut  = shortcuts.actions.get(cls)
+            actionObj = cls(self.__overlayList, self.__displayCtx, self)
+
+            if shortcut is not None:
+                name = '{}\t{}'.format(name, shortcut)
+
+            menuItem = menu.Append(wx.ID_ANY, name)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+
         from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
         from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
         from fsleyes.actions.resample      import ResampleAction
@@ -1731,16 +1742,17 @@ class FSLeyesFrame(wx.Frame):
         ]
 
         for action in actionz:
+            addTool(action, strings.actions[action])
 
-            title     = strings.actions[action]
-            shortcut  = shortcuts.actions.get(action)
-            actionObj = action(self.__overlayList, self.__displayCtx, self)
+        pluginTools = plugins.listTools()
 
-            if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
+        if len(pluginTools) == 0:
+            return
 
-            menuItem = menu.Append(wx.ID_ANY, title)
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+        menu.AppendSeparator()
+
+        for name, cls in pluginTools.items():
+            addTool(cls, name)
 
 
     def __refreshToolsMenu(self):
@@ -1781,6 +1793,9 @@ class FSLeyesFrame(wx.Frame):
                    HistogramPanel,
                    PowerSpectrumPanel,
                    ShellPanel]
+        for p in panels:
+            if type(p) not in vpOrder:
+                vpOrder.append(type(p))
         panels  = sorted(panels, key=lambda p: vpOrder.index(type(p)))
 
         for panel in panels:
