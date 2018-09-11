@@ -11,15 +11,16 @@ allowing the user to run various edit-related actions.
 
 import wx
 
-import fsleyes_props    as props
+import fsleyes_props                 as props
 
-import fsleyes.actions  as actions
-import fsleyes.icons    as fslicons
-import fsleyes.toolbar  as fsltoolbar
-import fsleyes.tooltips as fsltooltips
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.actions               as actions
+import fsleyes.icons                 as fslicons
+import fsleyes.tooltips              as fsltooltips
 
 
-class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
+class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
     """The ``OrthoEditActionToolBar`` is a toolbar used by the
     :class:`.OrthoPanel`, which contains buttons allowing the user to:
 
@@ -39,14 +40,14 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           orient=wx.VERTICAL,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          orient=wx.VERTICAL,
+                                          kbFocus=True)
 
         self.__ortho = ortho
 
@@ -58,10 +59,10 @@ class OrthoEditActionToolBar(fsltoolbar.FSLeyesToolBar):
     def destroy(self):
         """Must be called when this ``OrthoEditAction`` is no longer
         needed. Removes property listeners, and calls the
-        :meth:`.FSLeyesToolBar.destroy` method.
+        :meth:`.ControlToolBar.destroy` method.
         """
         self.__ortho.removeListener('profile', self.name)
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
 
 
     def __profileChanged(self, *a):

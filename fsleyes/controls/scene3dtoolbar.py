@@ -9,15 +9,17 @@
 import wx
 
 
-import fsleyes_props    as props
-import fsleyes.strings  as strings
-import fsleyes.actions  as actions
-import fsleyes.icons    as fslicons
-import fsleyes.tooltips as fsltooltips
-import fsleyes.toolbar  as fsltoolbar
+import fsleyes_props                 as props
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.strings               as strings
+import fsleyes.actions               as actions
+import fsleyes.icons                 as fslicons
+import fsleyes.tooltips              as fsltooltips
 
 
-class Scene3DToolBar(fsltoolbar.FSLeyesToolBar):
+
+class Scene3DToolBar(ctrlpanel.ControlToolBar):
     """
     """
 
@@ -39,13 +41,13 @@ class Scene3DToolBar(fsltoolbar.FSLeyesToolBar):
         :arg panel:       The :class:`.Scene3DPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.panel = panel
 
@@ -63,7 +65,7 @@ class Scene3DToolBar(fsltoolbar.FSLeyesToolBar):
         """
         self.removeListener('showCursorAndLegend', self.name)
 
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
 
 
     def __makeTools(self):

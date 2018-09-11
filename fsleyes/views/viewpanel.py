@@ -16,15 +16,16 @@ import deprecation
 import                   wx
 import wx.lib.agw.aui as aui
 
-import fsl.data.image         as fslimage
-import fsleyes_props          as props
+import fsl.data.image                as fslimage
+import fsleyes_props                 as props
 
-import fsleyes.panel          as fslpanel
-import fsleyes.toolbar        as fsltoolbar
-import fsleyes.profiles       as profiles
-import fsleyes.displaycontext as fsldisplay
-import fsleyes.strings        as strings
-import fsleyes.actions        as actions
+import fsleyes.panel                 as fslpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.profiles              as profiles
+import fsleyes.displaycontext        as fsldisplay
+import fsleyes.strings               as strings
+import fsleyes.actions               as actions
 
 
 log = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     state of a secondary panel (i.e. whether one is open or not) can be
     queried with the :meth:`isPanelOpen` method, and existing secondary panels
     can be accessed via the :meth:`getPanel` method.  Secondary panels must be
-    derived from either the :class:`.FSLeyesPanel` or :class:`.FSLeyesToolBar`
+    derived from either the :class:`.ControlPanel` or :class:`.ControlToolBar`
     base-classes.
 
 
@@ -291,7 +292,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         constructor.
 
         .. note::       The ``panelType`` type must be a sub-class of
-                        :class:`.FSLeyesPanel` or :class:`.FSLeyesToolBar`,
+                        :class:`.ControlPanel` or :class:`.ControlToolBar`,
                         which can be created like so::
 
                             panel = panelType(parent,
@@ -335,7 +336,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                               self.frame,
                               *args,
                               **kwargs)
-        isToolbar = isinstance(window, fsltoolbar.FSLeyesToolBar)
+        isToolbar = isinstance(window, ctrlpanel.ControlToolBar)
 
         if isToolbar:
 
@@ -356,7 +357,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # layers of all other existing toolbars
 
             for p in self.__panels.values():
-                if isinstance(p, fsltoolbar.FSLeyesToolBar):
+                if isinstance(p, ctrlpanel.ControlToolBar):
                     info = self.__auiMgr.GetPane(p)
 
                     # This is nasty - the agw.aui.AuiPaneInfo
@@ -596,7 +597,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         for panel in self.__panels.values():
 
-            if isinstance(panel, fsltoolbar.FSLeyesToolBar):
+            if isinstance(panel, ctrlpanel.ControlToolBar):
                 continue
 
             pinfo = self.__auiMgr.GetPane(panel)
@@ -670,7 +671,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     def __onPaneClose(self, ev=None, panel=None):
         """Called when the user closes a control (a.k.a. secondary) panel.
         Calls the
-        :class:`.FSLeyesPanel.destroy`/:class:`.FSLeyesToolBar.destroy`
+        :class:`.ControlPanel.destroy`/:class:`.ControlToolBar.destroy`
         method on the panel.
         """
 
@@ -692,8 +693,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         for panel in list(panels):
 
-            if isinstance(panel, (fslpanel  .FSLeyesPanel,
-                                  fsltoolbar.FSLeyesToolBar)):
+            if isinstance(panel, (ctrlpanel.ControlPanel,
+                                  ctrlpanel.ControlToolBar)):
 
                 # WTF AUI. Sometimes this method gets called
                 # twice for a panel, the second time with a
@@ -703,7 +704,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 if self.__panels.pop(type(panel), None) is None:
                     panels.remove(panel)
 
-                # calling fslpanel.FSLeyesPanel.destroy()
+                # calling ControlPanel.destroy()
                 # here -  wx.Destroy is done below
                 else:
                     log.debug('Panel closed: {}'.format(type(panel).__name__))

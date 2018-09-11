@@ -15,9 +15,9 @@ import collections
 
 import fsleyes_props                  as props
 
+import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
-import fsleyes.panel                  as fslpanel
 
 from . import overlaydisplaywidgets   as odwidgets
 
@@ -25,8 +25,8 @@ from . import overlaydisplaywidgets   as odwidgets
 log = logging.getLogger(__name__)
 
 
-class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
-    """The ``OverlayDisplayPanel`` is a :Class:`.FSLeyesPanel` which allows
+class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
+    """The ``OverlayDisplayPanel`` is a :class:`.SettingsPanel` which allows
     the user to change the display settings of the currently selected
     overlay (which is defined by the :attr:`.DisplayContext.selectedOverlay`
     property). The display settings for an overlay are contained in the
@@ -66,12 +66,12 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
 
         from fsleyes.views.scene3dpanel import Scene3DPanel
 
-        fslpanel.FSLeyesSettingsPanel.__init__(self,
-                                               parent,
-                                               overlayList,
-                                               displayCtx,
-                                               frame,
-                                               kbFocus=True)
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         frame,
+                                         kbFocus=True)
 
         displayCtx .addListener('selectedOverlay',
                                  self.name,
@@ -91,7 +91,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
     def destroy(self):
         """Must be called when this ``OverlayDisplayPanel`` is no longer
         needed. Removes property listeners, and calls the
-        :meth:`.FSLeyesPanel.destroy` method.
+        :meth:`.SettingsPanel.destroy` method.
         """
 
         self.displayCtx .removeListener('selectedOverlay', self.name)
@@ -108,7 +108,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         self.__widgets        = None
         self.__currentOverlay = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.SettingsPanel.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):
@@ -181,7 +181,7 @@ class OverlayDisplayPanel(fslpanel.FSLeyesSettingsPanel):
         allWidgets = self.__widgets.items()
         allWidgets = functools.reduce(lambda a, b: a + b, allWidgets)
 
-        fslpanel.FSLeyesSettingsPanel.setNavOrder(self, allWidgets)
+        ctrlpanel.SettingsPanel.setNavOrder(self, allWidgets)
 
 
     def __ovlTypeChanged(self, *a):

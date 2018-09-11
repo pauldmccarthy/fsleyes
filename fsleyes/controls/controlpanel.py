@@ -56,14 +56,14 @@ class ControlToolBar(fsltoolbar.FSLeyesToolBar, ControlMixin):
 class SettingsPanel(ControlPanel):
     """The ``SettingsPanel`` is a convenience class for *FSLeyes* control
     panels which use a :class:`fsleyes_widgets.WidgetList` to display a
-    collection of controls for the user.  When displayed as a dialog/floating
-    frame, the ``FSLeyesSettingsPanel`` will automatically resize itself to
-    fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
+    collection of controls for the user.  When displayed as a dialog/
+    floating frame, the ``SettingsPanel`` will automatically resize itself
+    to fit its contents. See the :class:`.CanvasSettingsPanel` for an example.
     """
 
 
     def __init__(self, *args, **kwargs):
-        """Create an ``FSLeyesSettingsPanel``.  All arguments are passed to
+        """Create a ``SettingsPanel``.  All arguments are passed to
         the :meth:`FSLeyesPanel.__init__` method.
         """
 

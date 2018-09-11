@@ -26,26 +26,26 @@ import            logging
 
 import wx
 
-import fsl.utils.idle               as idle
-import fsl.utils.settings           as fslsettings
-import fsl.data.melodicimage        as fslmelimage
+import fsl.utils.idle                as idle
+import fsl.utils.settings            as fslsettings
+import fsl.data.melodicimage         as fslmelimage
 
-import fsleyes_props                as props
-import fsleyes_widgets.elistbox     as elistbox
-import fsleyes_widgets.utils.status as status
+import fsleyes_props                 as props
+import fsleyes_widgets.elistbox      as elistbox
+import fsleyes_widgets.utils.status  as status
 
-import fsleyes.panel                as fslpanel
-import fsleyes.displaycontext       as displayctx
-import fsleyes.colourmaps           as fslcmaps
-import fsleyes.strings              as strings
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.displaycontext        as displayctx
+import fsleyes.colourmaps            as fslcmaps
+import fsleyes.strings               as strings
 
 
 
 log = logging.getLogger(__name__)
 
 
-class LookupTablePanel(fslpanel.FSLeyesPanel):
-    """A ``LookupTablePanel`` is a :class:`.FLSEyesPanel` which allows users
+class LookupTablePanel(ctrlpanel.ControlPanel):
+    """A ``LookupTablePanel`` is a :class:`.ControlPanel` which allows users
     to manage ``LookupTable`` instances. A ``LookupTablePanel`` looks
     something like this:
 
@@ -84,7 +84,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__controlCol = wx.Panel(self)
@@ -188,7 +188,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
     def destroy(self):
         """Must be called when this ``LookupTablePanel`` is no longer needed.
         Removes some property listeners, and calls the
-        :meth:`FSLeyesPanel.destroy` method.
+        :meth:`ControlPanel.destroy` method.
         """
 
         self.overlayList.removeListener('overlays',        self.name)
@@ -215,7 +215,7 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         self.__selectedOpts    = None
         self.__selectedLut     = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def __updateLutChoices(self):
@@ -232,8 +232,8 @@ class LookupTablePanel(fslpanel.FSLeyesPanel):
         luts     = fslcmaps.getLookupTables()
         newNames = [l.name for l in luts]
 
-        try:    newSelection = oldNames.index(oldNames[oldSelection])
-        except: newSelection = 0
+        try:              newSelection = oldNames.index(oldNames[oldSelection])
+        except Exception: newSelection = 0
 
         self.__lutChoice.SetItems(newNames)
         self.__lutChoice.SetSelection(newSelection)

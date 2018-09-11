@@ -8,27 +8,27 @@
 panel for viewing cluster results from a FEAT analysis.
 """
 
-import                                 logging
-import                                 wx
-import                                 six
+import                                  logging
+import                                  wx
+import                                  six
 
-import fsl.utils.idle               as idle
-import fsl.data.image               as fslimage
-import fsl.data.featimage           as featimage
-import fsl.data.featanalysis        as featanalysis
+import fsl.utils.idle                as idle
+import fsl.data.image                as fslimage
+import fsl.data.featimage            as featimage
+import fsl.data.featanalysis         as featanalysis
 
-import fsleyes_widgets              as fwidgets
-import fsleyes_widgets.utils.status as status
-import fsleyes_widgets.widgetgrid   as widgetgrid
-import fsleyes.panel                as fslpanel
-import fsleyes.strings              as strings
-import fsleyes.autodisplay          as autodisplay
+import fsleyes_widgets               as fwidgets
+import fsleyes_widgets.utils.status  as status
+import fsleyes_widgets.widgetgrid    as widgetgrid
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.strings               as strings
+import fsleyes.autodisplay           as autodisplay
 
 
 log = logging.getLogger(__name__)
 
 
-class ClusterPanel(fslpanel.FSLeyesPanel):
+class ClusterPanel(ctrlpanel.ControlPanel):
     """The ``ClusterPanel`` shows a table of cluster results from the analysis
     associated with a :class:`.FEATImage` overlay. A ``ClusterPanel`` looks
     something like the following:
@@ -81,7 +81,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
 
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__disabledText = wx.StaticText(
@@ -157,7 +157,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
     def destroy(self):
         """Must be called when this ``ClusterPanel`` is no longer needed.
         Removes some property listeners, and calls
-        :meth:`.FSLeyesPanel.destroy`.
+        :meth:`.ControlPanel.destroy`.
         """
 
         for grids in self.__clusterGrids.values():
@@ -171,7 +171,7 @@ class ClusterPanel(fslpanel.FSLeyesPanel):
         self.overlayList.removeListener('overlays',        self.name)
         self.displayCtx .removeListener('selectedOverlay', self.name)
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def __calcMinSize(self):

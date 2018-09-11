@@ -17,27 +17,27 @@ import          logging
 import numpy as np
 import          wx
 
-import fsl.data.image               as fslimage
-import fsl.data.atlases             as atlases
-import fsl.data.constants           as constants
-import fsl.utils.idle               as idle
+import fsl.data.image                as fslimage
+import fsl.data.atlases              as atlases
+import fsl.data.constants            as constants
+import fsl.utils.idle                as idle
 
-import fsleyes_props                as props
-import fsleyes_widgets.notebook     as notebook
-import fsleyes_widgets.utils.status as status
+import fsleyes_props                 as props
+import fsleyes_widgets.notebook      as notebook
+import fsleyes_widgets.utils.status  as status
 
-import fsleyes.panel                as fslpanel
-import fsleyes.strings              as strings
-from . import                          atlasmanagementpanel
-from . import                          atlasoverlaypanel
-from . import                          atlasinfopanel
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.strings               as strings
+from . import                           atlasmanagementpanel
+from . import                           atlasoverlaypanel
+from . import                           atlasinfopanel
 
 
 log = logging.getLogger(__name__)
 
 
-class AtlasPanel(fslpanel.FSLeyesPanel):
-    """An ``AtlasPanel`` is a :class:`.FSLeyesPanel` which allows the user to
+class AtlasPanel(ctrlpanel.ControlPanel):
+    """An ``AtlasPanel`` is a :class:`.ControlPanel` which allows the user to
     view atlas information, and to browse through the atlases that come shipped
     with FSL. The ``AtlasPanel`` interface is provided by some sub-panels,
     which are displayed in a :class:`fsleyes_widgets.Notebook` panel. The
@@ -153,7 +153,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         # Make sure the atlas
@@ -207,7 +207,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         Calls the ``destroy`` methods of the :class:`.AtlasInfoPanel` and
         :class:`.AtlasOverlayPanel`, and then calls
-        :meth:`.FSLeyesPanel.destroy`.
+        :meth:`.ControlPanel.destroy`.
         """
         self.__loadedAtlases   = None
         self.__enabledOverlays = None
@@ -217,7 +217,7 @@ class AtlasPanel(fslpanel.FSLeyesPanel):
 
         self.overlayList.removeListener('overlays', self.name)
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def Enable(self, enable=True):

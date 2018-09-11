@@ -12,15 +12,15 @@ views.
 
 import wx
 
-import fsleyes_props          as props
+import fsleyes_props                 as props
 
-import fsleyes.panel          as fslpanel
-import fsleyes.tooltips       as fsltooltips
-import fsleyes.displaycontext as fsldisplay
-import fsleyes.strings        as strings
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.displaycontext        as fsldisplay
+import fsleyes.strings               as strings
 
 
-class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
+class PlotControlPanel(ctrlpanel.SettingsPanel):
     """The ``PlotControlPanel`` is a *FSLeyes control* panel which allows
     the user to control a :class:`.OverlayPlotPanel`. The ``PlotControlPanel``
     may be used as is, or may be sub-classed for more customisation.
@@ -74,12 +74,12 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
                           ``PlotControlPanel``.
         """
 
-        fslpanel.FSLeyesSettingsPanel.__init__(self,
-                                               parent,
-                                               overlayList,
-                                               displayCtx,
-                                               frame,
-                                               kbFocus=True)
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         frame,
+                                         kbFocus=True)
 
         self.__plotPanel = plotPanel
 
@@ -139,7 +139,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
     def destroy(self):
         """Must be called when this ``PlotControlPanel`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLeyesPanel.destroy` method.
+        :meth:`.SettingsPanel.destroy` method.
         """
         self.displayCtx .removeListener('selectedOverlay', self.name)
         self.overlayList.removeListener('overlays',        self.name)
@@ -152,7 +152,7 @@ class PlotControlPanel(fslpanel.FSLeyesSettingsPanel):
             display = self.displayCtx.getDisplay(self.__selectedOverlay)
             display.removeListener('name', self.name)
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.SettingsPanel.destroy(self)
 
 
     def getPlotPanel(self):

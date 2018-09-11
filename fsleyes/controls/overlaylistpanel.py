@@ -20,7 +20,7 @@ import fsleyes_props                 as props
 import fsleyes_widgets.bitmaptoggle  as bmptoggle
 import fsleyes_widgets.elistbox      as elistbox
 
-import fsleyes.panel                 as fslpanel
+import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.icons                 as icons
 import fsleyes.autodisplay           as autodisplay
 import fsleyes.strings               as strings
@@ -33,7 +33,7 @@ import fsleyes.actions.removeoverlay as removeoverlay
 log = logging.getLogger(__name__)
 
 
-class OverlayListPanel(fslpanel.FSLeyesPanel):
+class OverlayListPanel(ctrlpanel.ControlPanel):
     """The ``OverlayListPanel`` displays all overlays in the
     :class:`.OverlayList`, and allows the user to add, remove, and re-order
     overlays. An ``OverlayListPanel`` looks something like this:
@@ -111,7 +111,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         if filterFunc is None:
             filterFunc = defaultFilter
 
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__showVis         = showVis
@@ -181,7 +181,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
     def destroy(self):
         """Must be called when this ``OverlayListPanel`` is no longer needed.
         Removes some property listeners, and calls
-        :meth:`.FSLeyesPanel.destroy`.
+        :meth:`.ControlPanel.destroy`.
         """
 
         self.overlayList.removeListener('overlays',        self.name)
@@ -197,7 +197,7 @@ class OverlayListPanel(fslpanel.FSLeyesPanel):
         self.__filterFunc = None
         self.__listBox.Clear()
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def __selectedOverlayChanged(self, *a):
