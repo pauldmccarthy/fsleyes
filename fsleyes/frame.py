@@ -14,6 +14,7 @@ from __future__ import division
 import logging
 import collections
 import deprecation
+import functools as ft
 import six
 
 import wx
@@ -26,6 +27,7 @@ import fsleyes_widgets.dialog             as fsldlg
 import fsleyes_widgets.utils.status       as status
 
 import fsleyes.strings                    as strings
+import fsleyes.plugins                    as plugins
 import fsleyes.autodisplay                as autodisplay
 import fsleyes.profiles.shortcuts         as shortcuts
 
@@ -474,11 +476,15 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
 
 
-    def addViewPanel(self, panelCls, **kwargs):
+    def addViewPanel(self, panelCls, title=None, **kwargs):
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
 
         :arg panelCls: The :class:`.ViewPanel` type to be added.
+
+        :arg title: Title to give the view. If not provided, it is assumed
+                    that a name is present for the view type in
+                    :attr:`.strings.titles`.
 
         :returns: The newly created ``ViewPanel``.
 
@@ -488,6 +494,9 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.views.plotpanel  as plotpanel
         import fsleyes.views.shellpanel as shellpanel
 
+        if title is None:
+            title = strings.titles[panelCls]
+
         if len(self.__viewPanelIDs) == 0:
             panelId = 1
         else:
@@ -496,8 +505,8 @@ class FSLeyesFrame(wx.Frame):
         # The PaneInfo Name contains the panel
         # class name - this is used for saving
         # and restoring layouts .
-        name  = '{} {}'.format(panelCls.__name__,        panelId)
-        title = '{} {}'.format(strings.titles[panelCls], panelId)
+        name  = '{} {}'.format(panelCls.__name__, panelId)
+        title = '{} {}'.format(title,             panelId)
 
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
@@ -1571,6 +1580,17 @@ class FSLeyesFrame(wx.Frame):
 
             item = menu.Append(wx.ID_ANY, title)
             self.Bind(wx.EVT_MENU, action, item)
+
+        pluginViews = plugins.listViews()
+
+        if len(pluginViews) == 0:
+            return
+
+        menu.AppendSeparator()
+        for name, cls in pluginViews.items():
+            func = ft.partial(self.addViewPanel, cls, title=name)
+            item = menu.Append(wx.ID_ANY, name)
+            self.Bind(wx.EVT_MENU, lambda ev : func(), item)
 
 
     def __makeLayoutMenu(self):
