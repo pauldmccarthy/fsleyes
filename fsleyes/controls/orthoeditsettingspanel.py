@@ -42,7 +42,8 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
         self.__makeTools()
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``OrthoEditSettingsPanel`` is only intended to be added to
         :class:`.OrthoPanel` views.

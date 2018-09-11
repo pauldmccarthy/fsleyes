@@ -65,7 +65,8 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``OrthoEditActionToolBar`` is only intended to be added to
         :class:`.OrthoPanel` views.

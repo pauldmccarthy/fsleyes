@@ -68,7 +68,8 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``Scene3DToolBar`` is only intended to be added to
         :class:`.Scene3DPanel` views.

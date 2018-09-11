@@ -128,7 +128,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``OverlayDisplayToolBar`` is only intended to be added to
         :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or

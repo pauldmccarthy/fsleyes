@@ -181,7 +181,8 @@ class CropImagePanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``CropImagePanel`` is only intended to be added to
         :class:`.OrthoPanel` views.

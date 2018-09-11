@@ -70,7 +70,8 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
         self.setNavOrder(nav)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``TimeSeriesToolBar`` is only intended to be added to
         :class:`.TimeSeriesPanel` views.

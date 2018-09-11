@@ -45,7 +45,8 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         plotcontrol.PlotControlPanel.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``PowerSpectrumControlPanel`` is only intended to be added to
         :class:`.PowerSpectrumPanel` views.

@@ -36,7 +36,8 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``HistogramControlPanel`` is only intended to be added to
         :class:`.HistogramPanel` views.

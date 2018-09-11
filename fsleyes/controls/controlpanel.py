@@ -29,7 +29,8 @@ class ControlMixin(object):
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
-    def supportedViws(self):
+    @staticmethod
+    def supportedViews():
         """Return the views that this control supports.
 
         This method may be overridden by sub-classes to return a list of

@@ -62,7 +62,8 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         self.setNavOrder(nav)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``PowerSpectrumToolBar`` is only intended to be added to
         :class:`.PowerSpectrumPanel` views.

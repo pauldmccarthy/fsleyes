@@ -299,7 +299,8 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``EditTransformPanel`` is only intended to be added to
         :class:`.OrthoPanel` views.

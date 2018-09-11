@@ -319,6 +319,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
 
+        supported = panelType.supportedViews()
+        if supported is not None and type(self) not in supported:
+            raise ValueError(
+                '{} views are not supported by {} controls'.format(
+                    type(self).__name__, panelType.__name__))
+
         window = self.__panels.get(panelType, None)
 
         # The panel is already open - close it

@@ -111,7 +111,8 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         ctrlpanel.SettingsPanel.destroy(self)
 
 
-    def supportedViews(self):
+    @staticmethod
+    def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``OverlayDisplayPanel`` is only intended to be added to
         :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
