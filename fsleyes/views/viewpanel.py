@@ -288,6 +288,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         the panel - either ``wx.TOP``, ``wx.BOTTOM``,
                         ``wx.LEFT``, or ``wx.RIGHT. Defaults to ``wx.BOTTOM``.
 
+        :arg title:     Title to give the control. If not provided, it is
+                        assumed that a title for ``panelType`` is in
+                        :attr:`.strings.titles`.
+
         :arg kwargs:    All keyword arguments, apart from ``floatPane`` and
                         ``location``, are passed to the ``panelType``
                         constructor.
@@ -315,7 +319,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         floatPane = kwargs.pop('floatPane', False)
         floatOnly = kwargs.pop('floatOnly', False)
         closeable = kwargs.pop('closeable', True)
+        title     = kwargs.pop('title',     None)
         floatPos  = kwargs.pop('floatPos',  (0.5, 0.5))
+
+        if title is None:
+            title = strings.titles.get(panelType, type(panelType).__name__)
 
         if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
@@ -382,7 +390,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # toolbar's new size is accommodated
             window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
 
-        paneInfo.Caption(strings.titles[window])
+        paneInfo.Caption(title)
 
         # Dock the pane at the position specified
         # by the location parameter
