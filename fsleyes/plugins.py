@@ -67,8 +67,11 @@ def _listEntryPoints(group):
     items = collections.OrderedDict()
     for plugin in listPlugins():
         for name, ep in pkg_resources.get_entry_map(plugin, group).items():
+            if name in items:
+                log.debug('Overriding entry point %s [%s] with entry point '
+                          'of the same name from %s', name, group, plugin)
             items[name] = ep.load()
-        return items
+    return items
 
 
 def listViews():
