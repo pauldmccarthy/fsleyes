@@ -1,0 +1,1 @@
+fsleyes_plugin_example
