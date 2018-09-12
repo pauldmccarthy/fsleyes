@@ -85,16 +85,29 @@ def listViews():
     return views
 
 
-def listControls():
+def listControls(viewType=None):
     """Returns a dictionary of ``{name : ControlPanel}`` mappings containing
     the custom controls provided by all installed FSLeyes plugins.
+
+    :arg viewType: Sub-class of :class:`.ViewPanel` - if provided, only
+                   controls which are compatible with this view type are
+                   returned (as determined by
+                   :meth:`.ControlMixin.supportedViews.`).
     """
     ctrls = _listEntryPoints('fsleyes_controls')
+
     for name, cls in list(ctrls.items()):
         if not issubclass(cls, (ctrlpanel.ControlPanel,
                                 ctrlpanel.ControlToolBar)):
             log.debug('Ignoring fsleyes_controls entry point {} - '
                       'not a ControlPanel/ToolBar'.format(name))
+            ctrls.pop(name)
+            continue
+
+        supported = cls.supportedViews()
+        if viewType  is not None and \
+           supported is not None and \
+           viewType  not in supported:
             ctrls.pop(name)
             continue
     return ctrls
