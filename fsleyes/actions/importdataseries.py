@@ -62,7 +62,7 @@ class ImportDataSeriesAction(base.Action):
 
             # Assuming that the data series
             # to plot are stored as columns
-            data = np.loadtxt(filePath).T
+            data = np.loadtxt(filePath, dtype=np.float).T
 
             # Make sure the data is 2D, to
             # make code below easier and
@@ -88,7 +88,8 @@ class ImportDataSeriesAction(base.Action):
 
         if overlay is not None                 and \
            isinstance(overlay, fslimage.Nifti) and \
-           len(overlay.shape) == 4:
+           len(overlay.shape) == 4             and \
+           self.__plotPanel.usePixdim:
             xscale = overlay.pixdim[3]
 
         else:
@@ -119,7 +120,8 @@ class ImportDataSeriesAction(base.Action):
             xdata = data[0,  :]
             ydata = data[1:, :]
         else:
-            xdata = np.arange(0, data.shape[1] * xscale, xscale)
+            xdata = np.arange(0, data.shape[1] * xscale, xscale,
+                              dtype=np.float)
             ydata = data
 
         for i, ydata in enumerate(ydata):
@@ -130,7 +132,10 @@ class ImportDataSeriesAction(base.Action):
             x   = x[fin]
             y   = y[fin]
 
-            ds = plotting.DataSeries(None)
+            ds = plotting.DataSeries(None,
+                                     self.__overlayList,
+                                     self.__displayCtx,
+                                     self.__plotPanel)
             ds.setData(x, y)
 
             # If we recognise the file name,
