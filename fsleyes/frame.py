@@ -11,10 +11,12 @@ for FSLeyes.
 
 from __future__ import division
 
-import logging
-import collections
-import deprecation
 import functools as ft
+import              re
+import              logging
+import              collections
+import              deprecation
+
 import six
 
 import wx
@@ -684,8 +686,31 @@ class FSLeyesFrame(wx.Frame):
                           if name is not None else None
                           for name in actionNames]
 
-        def configureActionItem(menu, actionName, actionObj):
-            title    = strings  .actions.get((target, actionName), actionName)
+        actionNames = list(actionNames)
+        actionObjs  = list(actionObjs)
+        actionTitles = [strings.actions.get((target, n), n)
+                        for n in actionNames]
+
+        pluginCtrls = plugins.listControls(type(target))
+
+        if len(pluginCtrls) > 0:
+            actionObjs  .append(None)
+            actionNames .append(None)
+            actionTitles.append(None)
+
+            for ctrlName, ctrlType in pluginCtrls.items():
+                func = ft.partial(target.togglePanel, ctrlType, title=ctrlName)
+                name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
+                act  = actions.ToggleAction(func, name=ctrlName)
+
+                setattr(target, name, act)
+
+                actionObjs  .append(act)
+                actionNames .append(name)
+                actionTitles.append(ctrlName)
+
+        def configureActionItem(menu, actionName, actionObj, title):
+
             shortcut = shortcuts.actions.get((target, actionName))
 
             if shortcut is not None:
@@ -727,7 +752,8 @@ class FSLeyesFrame(wx.Frame):
             return menuItem
 
         items = []
-        for actionName, actionObj in zip(actionNames, actionObjs):
+        for actionName, actionObj, actionTitle in zip(
+                actionNames, actionObjs, actionTitles):
 
             # If actionObj is None, this is a
             # hacky hint to insert a separator
@@ -736,21 +762,24 @@ class FSLeyesFrame(wx.Frame):
                 items.append(menu.AppendSeparator())
                 continue
 
-            # If actionObj is a list, this is a4
+            # If actionObj is a list, this is a
             # hacky hint to insert a sub-menu.
             elif isinstance(actionObj, list):
                 names, objs = list(zip(*actionObj))
+                titles = [strings.actions.get((target, n), n) for n in names]
                 currentMenu = wx.Menu()
                 items.append(menu.AppendSubMenu(currentMenu, actionName))
 
+            # A single normal action <-> menu item
             else:
-
                 currentMenu = menu
                 names       = [actionName]
                 objs        = [actionObj]
+                titles      = [actionTitle]
 
-            for name, obj in zip(names, objs):
-                items.append(configureActionItem(currentMenu, name, obj))
+            for name, obj, title in zip(names, objs, titles):
+                items.append(
+                    configureActionItem(currentMenu, name, obj, title))
 
         return items
 
