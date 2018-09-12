@@ -4,14 +4,20 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides access to installed FSLeyes plugins. FSLeyes uses
-``setuptools`` `entry points
+"""This module provides access to installed FSLeyes plugins.
+
+FSLeyes uses a simple plugin architecture for loading custom views, controls,
+and tools. Plugins can be installed from Python libraries (e.g. as hosted on
+`PyPi <https://pypi.org/>`_), or installed directly from a ``.py`` file.
+
+In both cases, FSLeyes uses ``setuptools`` `entry points
 <https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`_
-to provide a simple plugin architecture for loading custom views, controls,
-and tools.
+to locate the items provided by plugin library/files.
+
 
 Things plugins can provide
 --------------------------
+
 
 FSLeyes plugins can provide custom *views*, *controls* and *tools*:
 
@@ -29,18 +35,121 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    and the :class:`.ResampleAction`.
 
 
+Installing a FSLeyes plugin
+---------------------------
+
+
+There are two ways to install a plugin into FSLeyes.
+
+
+ - Any Python libraries (e.g. installed from ``PyPi``) which are present the
+   environment that FSLeyes is running in, and which have a name beginning
+   with ``fsleyes-plugin-`` will automatically be detected by FSLeyes.
+
+ - A ``.py`` file which contains view, control, and/or tool definitions
+   can be passed to the :func:`installPlugin` function. This file will be saved
+   into the FSLeyes settings directory (e.g. ``~/.fsleyes/plugins/``).
+
+
 Writing your own FSLeyes plugin
 -------------------------------
 
-TODO
+
+.. note:: A minimal example of a FSLeyes plugin library can be found in
+          ``tests/testdata/fsleyes_example_plugin/``.
+
+
+A FSLeyes plugin is a Python library, or ``.py`` file which contains
+definitions for custom views, controls, and tools.
+
+ - Views must be sub-classes of the :class:`.ViewPanel` class.
+
+ - Controls must be sub-classes of the :class:`.ControlPanel` class. If your
+   custom control is designed to only work with a specific view, you should
+   override the :mod:`.ControlMixin.supportedViews` static method to return
+   the views that your control supports.
+
+ - Tools must be sub-classes of the :class:`.Action` class.
+
+
+To release a FSLeyes plugin as a library, you need to organise your code
+as a Python library. Minimally, this requires:
+
+ - Arranging your ``.py`` file(s) into a Python package.
+
+ - Writing a - ``setup.py`` file.
+
+ - Exposing your custom views, controls, and tools as `entry points
+   <https://packaging.python.org/specifications/entry-points/>`_, within the
+   ``setup.py`` file.
+
+A minimal ``setup.py`` file for a FSLeyes plugin might look like this:
+
+```
+import setuptools
+
+setup(
+    # the name must begin with "fsleyes-plugin-"
+    name='fsleyes-plugin-my-cool-plugin',
+
+    # Views, controls, and tools must be exposed
+    # as entry points within groups called
+    # "fsleyes_views", "fsleyes_controls" and
+    # "fsleyes_tools" respectively.
+    entry_points={
+        'fsleyes_views' : [
+            'My cool view = myplugin:MyView'
+        ]
+        'fsleyes_controls' : [
+            'My cool control = myplugin:MyControl'
+        ]
+        'fsleyes_tools' : [
+            'My cool tool = myplugin:MyTool'
+        ]
+    }
+)
+```
+
+See the `Python Packaging guide
+<https://packaging.python.org/tutorials/packaging-projects/>`_ for more
+details on writing a ``setup.py`` file.
+
+
+Module contents
+---------------
+
+
+The following functions can be used to access installed/loaded plugins:
+
+.. autosummary::
+   :nosignatures:
+
+   listPlugins
+   listViews
+   listControls
+   listTools
+
+
+The following functions can be used to load/install new plugins:
+
+.. autosummary::
+   :nosignatures:
+
+   initialise
+   loadPlugin
+   installPlugin
 """
 
 
-import logging
-import collections
-import pkg_resources
+import importlib.util as imputil
+import os.path        as op
+import                   sys
+import                   logging
+import                   collections
+import                   pkg_resources
 
-import fsleyes.actions.base          as base
+import fsl.utils.settings            as fslsettings
+import fsleyes.actions               as actions
 import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.controls.controlpanel as ctrlpanel
 
@@ -48,12 +157,20 @@ import fsleyes.controls.controlpanel as ctrlpanel
 log = logging.getLogger(__name__)
 
 
+def initialise():
+    """Calls :func:`loadPlugin` on all plugin files in the FSLeyes settings
+    directory.
+    """
+    for filename in fslsettings.listFiles('plugins/*.py'):
+        loadPlugin(filename)
+
+
 def listPlugins():
     """Returns a list containing the names of all installed FSLeyes plugins.
     """
     plugins = []
     for dist in pkg_resources.working_set:
-        if dist.project_name.startswith('fsleyes-plugin'):
+        if dist.project_name.startswith('fsleyes-plugin-'):
             plugins.append(dist.project_name)
     return list(sorted(plugins))
 
@@ -122,9 +239,98 @@ def listTools():
     """
     tools = _listEntryPoints('fsleyes_tools')
     for name, cls in list(tools.items()):
-        if not issubclass(cls, base.Action):
+        if not issubclass(cls, actions.Action):
             log.debug('Ignoring fsleyes_tools entry point '
                       '{} - not an Action'.format(name))
             tools.pop(name)
             continue
     return tools
+
+
+def _findEntryPoints(filename, modname):
+    """Used by :func:`loadPlugin`. Imports the given Python file (setting the
+    module name to ``modname``), and finds the FSLeyes entry points (views,
+    controls, or tools) that are defined within.
+    """
+
+    log.debug('Importing %s as %s', filename, modname)
+
+    entryPoints = collections.defaultdict(dict)
+    spec        = imputil.spec_from_file_location(modname, filename)
+    mod         = imputil.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    sys.modules[modname] = mod
+
+    for name in dir(mod):
+
+        item  = getattr(mod, name)
+        group = None
+
+        if not isinstance(item, type):
+            continue
+
+        if   issubclass(item, viewpanel.ViewPanel):    group = 'views'
+        elif issubclass(item, ctrlpanel.ControlPanel): group = 'controls'
+        elif issubclass(item, actions.Action):         group = 'tools'
+
+        if group is not None:
+            log.debug('Found %s entry point: %s', group, name)
+            entryPoints['fsleyes_{}'.format(group)][name] = item
+
+    return entryPoints
+
+
+def loadPlugin(filename):
+    """Loads the given Python file as a FSLeyes plugin. """
+
+    name     = op.splitext(op.basename(filename))[0]
+    modname  = 'fsleyes_plugin_{}'.format(name)
+    distname = 'fsleyes-plugin-{}'.format(name)
+
+    if distname in listPlugins():
+        return
+
+    dist = pkg_resources.Distribution(
+        project_name=distname,
+        location=op.dirname(filename),
+        version='0.0.0')
+
+    entryPoints = _findEntryPoints(filename, modname)
+
+    # Here I'm relying on the fact that
+    # Distribution.get_entry_map returns
+    # the actual dict that it uses to
+    # store entry points.
+    entryMap = dist.get_entry_map()
+
+    for group, entries in entryPoints.items():
+        entryMap[group] = {}
+
+        for name, item in entries.items():
+            ep = '{} = {}:{}'.format(name, modname, name)
+            ep = pkg_resources.EntryPoint.parse(ep, dist=dist)
+            entryMap[group][name] = ep
+
+    pkg_resources.working_set.add(dist)
+
+
+def installPlugin(filename):
+    """Copies the given Python file into the FSLeyes settings directory,
+    within a sub-directory called ``plugins``. After the file has been
+    copied, the path to the copy is passed to :func:`loadPlugin`.
+    """
+
+    basename = op.splitext(op.basename(filename))[0]
+    dest     = 'plugins/{}.py'.format(basename)
+
+    with open(filename, 'rt')              as inf, \
+         fslsettings.writeFile(dest, 'wt') as outf:
+        outf.write(inf.read())
+
+    dest = fslsettings.filePath(dest)
+
+    try:
+        loadPlugin(dest)
+    except Exception:
+        fslsettings.deleteFile(dest)
+        raise
