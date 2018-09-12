@@ -7,14 +7,17 @@
 
 import sys
 
+import textwrap as tw
+
 import os.path as op
 
 import pkg_resources
 
-import fsleyes.plugins as plugins
+import fsl.utils.tempdir as tempdir
+import fsleyes.plugins   as plugins
 
 
-plugindirs = ['fsleyes_plugin_example','fsleyes_plugin_bad_example']
+plugindirs = ['fsleyes_plugin_example', 'fsleyes_plugin_bad_example']
 plugindirs = [op.join(op.dirname(__file__), 'testdata', d) for d in plugindirs]
 plugindirs = [op.abspath(d)                                for d in plugindirs]
 
@@ -61,3 +64,35 @@ def test_listTools():
     tools = dict(plugins.listTools())
 
     assert tools == {'Plugin tool' : PluginTool}
+
+
+def test_loadPlugin():
+
+    code = tw.dedent("""
+    from fsleyes.views.viewpanel       import ViewPanel
+    from fsleyes.controls.controlpanel import ControlPanel
+    from fsleyes.actions               import Action
+
+    class MyView(ViewPanel):
+        pass
+
+    class MyControl(ControlPanel):
+        pass
+
+    class MyTool(Action):
+        pass
+    """).strip()
+
+
+    with tempdir.tempdir():
+        with open('myplugin.py', 'wt') as f:
+            f.write(code)
+
+        plugins.loadPlugin('myplugin.py')
+
+        mod = sys.modules['fsleyes_plugin_myplugin']
+
+        assert 'fsleyes-plugin-myplugin' in plugins.listPlugins()
+        assert plugins.listTools()[   'MyTool']    is mod.MyTool
+        assert plugins.listControls()['MyControl'] is mod.MyControl
+        assert plugins.listViews()[   'MyView']    is mod.MyView
