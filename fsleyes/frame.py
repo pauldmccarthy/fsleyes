@@ -767,7 +767,7 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return
 
-        actionz = panel.getActions()
+        actionz = [name for (name, obj) in panel.getActions()]
 
         if len(actionz) == 0:
             return
@@ -776,21 +776,17 @@ class FSLeyesFrame(wx.Frame):
         submenu = self.__settingsMenu.AppendSubMenu(menu, title)
         self.__viewPanelMenus[panel] = submenu
 
-        # Most of the work is
-        # done in populateMenu
-        self.populateMenu(menu, panel)
-
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
-        if len(actionz) > 0:
-            menu.AppendSeparator()
+        if 'removeFromFrame' not in actionz:
+            actionz.append(None)
+            actionz.append('removeFromFrame')
 
-        title     = strings.actions[self, 'removeViewPanel']
-        closeItem = menu.Append(wx.ID_ANY, title)
-        func      = ft.partial(self.removeViewPanel, panel)
+        # Most of the work is
+        # done in populateMenu
+        self.populateMenu(menu, panel, actionNames=actionz)
 
-        self.Bind(wx.EVT_MENU, lambda ev: func(), closeItem)
         self.__refreshToolsMenu()
 
 

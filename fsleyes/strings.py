@@ -462,8 +462,6 @@ actions = TypeDict({
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
     'ResampleAction'           : 'Resample image',
 
-    'FSLeyesFrame.removeViewPanel'         : 'Close',
-    'FSLeyesFrame.removeFocusedViewPanel'  : 'Close',
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
     'FSLeyesFrame.addScene3DPanel'         : '3D view',
@@ -478,6 +476,7 @@ actions = TypeDict({
     'FSLeyesFrame.toggleOverlayVisibility' : 'Show/hide',
 
     'ViewPanel.removeAllPanels'             : 'Remove all panels',
+    'ViewPanel.removeFromFrame'             : 'Close',
 
     'CanvasPanel.screenshot'                : 'Take screenshot',
     'CanvasPanel.movieGif'                  : 'Save animated GIF',

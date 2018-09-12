@@ -85,6 +85,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
        getPanel
        getPanels
        getTools
+       removeFromFrame
        removeAllPanels
        getPanelInfo
        auiManager
@@ -442,6 +443,16 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         for panelType, instance in list(self.__panels.items()):
             self.togglePanel(panelType)
+
+
+    @actions.action
+    def removeFromFrame(self):
+        """Remove this ``ViewPanel`` from the :class:`.FSLeyesFrame`.
+
+        Will raise an error if this ``ViewPanel`` is not in a
+        ``FSLeyesFrame``.
+        """
+        self.frame.removeViewPanel(self)
 
 
     def getPanels(self):
