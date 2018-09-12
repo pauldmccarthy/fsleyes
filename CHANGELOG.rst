@@ -27,6 +27,7 @@ Fixed
 
 
 * Fixed small bug in the :class:`.HistogramSeries` class.
+* Fixed a bug in the :class:`.ImportDataSeriesAction` class.
 
 
 0.25.0 (Tuesday August 28th 2018)
