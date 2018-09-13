@@ -141,12 +141,11 @@ The following functions can be used to load/install new plugins:
 """
 
 
-import importlib.util as imputil
-import os.path        as op
-import                   sys
-import                   logging
-import                   collections
-import                   pkg_resources
+import os.path as op
+import            sys
+import            logging
+import            collections
+import            pkg_resources
 
 import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
@@ -260,6 +259,7 @@ def _findEntryPoints(filename, modname):
 
     # Ugh.
     if pyver >= (3, 5):
+        import importlib.util as imputil
         spec = imputil.spec_from_file_location(modname, filename)
         mod  = imputil.module_from_spec(spec)
         spec.loader.exec_module(mod)
