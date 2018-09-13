@@ -35,20 +35,34 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    and the :class:`.ResampleAction`.
 
 
-Installing a FSLeyes plugin
----------------------------
+Loading/installing FSLeyes plugins
+----------------------------------
 
 
-There are two ways to install a plugin into FSLeyes.
+FSLeyes plugins are loaded into a running FSLeyes as follows:
+
+ - Any Python libraries (e.g. installed from ``PyPi``) which are present the
+   environment that FSLeyes is running in, and which have a name beginning
+   with ``fsleyes-plugin-`` will automatically be detected by FSLeyes.
+
+ - Plugin ``.py`` files, which contain view, control, and/or tool definitions,
+   can be passed directly to the :func:`loadPlugin` function.
+
+ - Plugin ``.py`` files which are present in the FSLeyes settings directory,
+   or which are found in the ``FSLEYES_PLUGIN_PATH`` environment variable, will
+   be loaded by the :func:`initialise` function.
+
+
+A plugin can be installed permanently into FSLeyes as follows:
 
 
  - Any Python libraries (e.g. installed from ``PyPi``) which are present the
    environment that FSLeyes is running in, and which have a name beginning
    with ``fsleyes-plugin-`` will automatically be detected by FSLeyes.
 
- - A ``.py`` file which contains view, control, and/or tool definitions
-   can be passed to the :func:`installPlugin` function. This file will be saved
-   into the FSLeyes settings directory (e.g. ``~/.fsleyes/plugins/``).
+ - ``.py`` plugin files can be passed to the :func:`installPlugin`
+   function. This file will be saved into the FSLeyes settings directory
+   (e.g. ``~/.fsleyes/plugins/``).
 
 
 Writing a FSLeyes plugin
@@ -127,17 +141,6 @@ Module contents
 ---------------
 
 
-The following functions can be used to access installed/loaded plugins:
-
-.. autosummary::
-   :nosignatures:
-
-   listPlugins
-   listViews
-   listControls
-   listTools
-
-
 The following functions can be used to load/install new plugins:
 
 .. autosummary::
@@ -146,11 +149,24 @@ The following functions can be used to load/install new plugins:
    initialise
    loadPlugin
    installPlugin
+
+
+The following functions can be used to access plugins:
+
+.. autosummary::
+   :nosignatures:
+
+   listPlugins
+   listViews
+   listControls
+   listTools
 """
 
 
 import os.path as op
+import            os
 import            sys
+import            glob
 import            logging
 import            collections
 import            pkg_resources
@@ -166,10 +182,20 @@ log = logging.getLogger(__name__)
 
 def initialise():
     """Calls :func:`loadPlugin` on all plugin files in the FSLeyes settings
-    directory.
+    directory, and found on the ``FSLEYES_PLUGIN_PATH`` environment variable.
     """
-    for filename in fslsettings.listFiles('plugins/*.py'):
-        loadPlugin(filename)
+    pluginFiles = list(fslsettings.listFiles('plugins/*.py'))
+    fpp         = os.environ.get('FSLEYES_PLUGIN_PATH', None)
+
+    if fpp is not None:
+        for dirname in fpp.split(op.pathsep):
+            pluginFiles.extend(glob.glob(op.join(dirname, '*.py')))
+
+    for fname in pluginFiles:
+        try:
+            loadPlugin(fname)
+        except Exception as e:
+            log.warning('Failed to load plugin file %s: %s', fname, e)
 
 
 def listPlugins():
@@ -309,7 +335,10 @@ def loadPlugin(filename):
     distname = 'fsleyes-plugin-{}'.format(name)
 
     if distname in listPlugins():
+        log.debug('Plugin %s is already in environment - skipping', distname)
         return
+
+    log.debug('Loading plugin %s [dist name %s]', filename, distname)
 
     dist = pkg_resources.Distribution(
         project_name=distname,
@@ -343,6 +372,8 @@ def installPlugin(filename):
 
     basename = op.splitext(op.basename(filename))[0]
     dest     = 'plugins/{}.py'.format(basename)
+
+    log.debug('Installing plugin %s', filename)
 
     with open(filename, 'rt')        as inf, \
          fslsettings.writeFile(dest) as outf:
