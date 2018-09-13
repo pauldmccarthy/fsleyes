@@ -56,7 +56,7 @@ Writing your own FSLeyes plugin
 
 
 .. note:: A minimal example of a FSLeyes plugin library can be found in
-          ``tests/testdata/fsleyes_example_plugin/``.
+          ``tests/testdata/fsleyes_plugin_example/``.
 
 
 A FSLeyes plugin is a Python library, or ``.py`` file which contains
@@ -256,9 +256,22 @@ def _findEntryPoints(filename, modname):
     log.debug('Importing %s as %s', filename, modname)
 
     entryPoints = collections.defaultdict(dict)
-    spec        = imputil.spec_from_file_location(modname, filename)
-    mod         = imputil.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    pyver       = sys.version_info[:2]
+
+    # Ugh.
+    if pyver >= (3, 5):
+        spec = imputil.spec_from_file_location(modname, filename)
+        mod  = imputil.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+    elif pyver == (3, 4):
+        from importlib.machinery import SourceFileLoader
+        mod = SourceFileLoader(modname, filename).load_module()
+
+    else:
+        import imp
+        mod = imp.load_source(modname, filename)
+
     sys.modules[modname] = mod
 
     for name in dir(mod):
