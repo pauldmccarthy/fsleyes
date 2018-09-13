@@ -266,7 +266,13 @@ class FSLeyesFrame(wx.Frame):
         # Refs to menus
         self.__haveMenu       = menu
         self.__menuBar        = None
+        self.__fsleyesMenu    = None
+        self.__overlayMenu    = None
+        self.__fileMenu       = None
+        self.__viewMenu       = None
         self.__layoutMenu     = None
+        self.__settingsMenu   = None
+        self.__toolsMenu      = None
         self.__recentPathMenu = None
 
         # Refs to Action objects that
@@ -582,7 +588,7 @@ class FSLeyesFrame(wx.Frame):
 
     def viewPanelDefaultLayout(self, viewPanel):
         """After a :class:`.ViewPanel` is added via a menu item (see the
-        :meth:`__makeViewPanelMenu` method), this a method is called to
+        :meth:`__makeViewMenu` method), this a method is called to
         perform some basic initialisation on the panel. This basically amounts
         to adding toolbars.
         """
@@ -632,8 +638,24 @@ class FSLeyesFrame(wx.Frame):
 
     def refreshLayoutMenu(self):
         """Re-creates the *View -> Layouts* sub-menu. """
+        # Remove any existing menu items
+        for item in self.__layoutMenu.GetMenuItems():
+            self.__layoutMenu.Delete(item.GetId())
         self.__makeLayoutMenu()
 
+
+    def refreshViewMenu(self):
+        """Re-creates the *View* menu."""
+
+        layoutMenu = self.__layoutMenu
+        viewMenu   = self.__viewMenu
+
+        # Remove any existing menu items
+        for item in layoutMenu.GetMenuItems():
+            layoutMenu.Delete(item.GetId())
+        for item in viewMenu.GetMenuItems():
+            viewMenu.Delete(item.GetId())
+        self.__makeViewMenu()
 
     @deprecation.deprecated(deprecated_in='0.24.0',
                             removed_in='1.0.0',
@@ -1380,12 +1402,8 @@ class FSLeyesFrame(wx.Frame):
         fileMenu     = wx.Menu()
         overlayMenu  = wx.Menu()
         viewMenu     = wx.Menu()
-        layoutMenu   = wx.Menu()
         settingsMenu = wx.Menu()
         toolsMenu    = wx.Menu()
-
-        self.__menuBar    = menuBar
-        self.__layoutMenu = layoutMenu
 
         menuBar.Append(fileMenu,     'File')
         menuBar.Append(overlayMenu,  'Overlay')
@@ -1393,14 +1411,16 @@ class FSLeyesFrame(wx.Frame):
         menuBar.Append(settingsMenu, 'Settings')
         menuBar.Append(toolsMenu,    'Tools')
 
+        self.__menuBar      = menuBar
         self.__fsleyesMenu  = fsleyesMenu
         self.__overlayMenu  = overlayMenu
         self.__fileMenu     = fileMenu
         self.__viewMenu     = viewMenu
+        self.__layoutMenu   = None
         self.__settingsMenu = settingsMenu
         self.__toolsMenu    = toolsMenu
 
-        self.__makeFileMenu(fileMenu)
+        self.__makeFileMenu()
 
         # We have a FSLeyes menu
         if fsleyesMenu is not None:
@@ -1414,14 +1434,9 @@ class FSLeyesFrame(wx.Frame):
             fileMenu.AppendSeparator()
             self.__makeFSLeyesMenu(fileMenu)
 
-        self.__makeOverlayMenu(overlayMenu)
-        self.__makeToolsMenu(toolsMenu)
-        self.__makeViewPanelMenu(viewMenu)
-
-        # Layouts
-        viewMenu.AppendSeparator()
-        viewMenu.AppendSubMenu(layoutMenu, 'Layouts')
-        self.__makeLayoutMenu()
+        self.__makeOverlayMenu()
+        self.__makeToolsMenu()
+        self.__makeViewMenu()
 
 
     def __makeFSLeyesMenu(self, menu):
@@ -1472,7 +1487,7 @@ class FSLeyesFrame(wx.Frame):
             action.bindToWidget(self, wx.EVT_MENU, item)
 
 
-    def __makeFileMenu(self, menu):
+    def __makeFileMenu(self):
         """Called by :meth:`__makeMenuBar`. Creates the *File* menu. """
 
         from fsleyes.actions.loadoverlay        import LoadOverlayAction
@@ -1484,6 +1499,8 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.runscript          import RunScriptAction
         from fsleyes.actions.loadplugin         import LoadPluginAction
         from fsleyes.actions.notebook           import NotebookAction
+
+        menu = self.__fileMenu
 
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
@@ -1583,8 +1600,10 @@ class FSLeyesFrame(wx.Frame):
                                  inmem=self.__displayCtx.loadInMemory)
 
 
-    def __makeViewPanelMenu(self, menu):
+    def __makeViewMenu(self):
         """Called by :meth:`__makeMenuBar`. Creates the view panel menu. """
+
+        menu = self.__viewMenu
 
         # Shortcuts to open a new view panel
         vpActions = [self.addOrthoPanel,
@@ -1608,16 +1627,20 @@ class FSLeyesFrame(wx.Frame):
             item = menu.Append(wx.ID_ANY, title)
             self.Bind(wx.EVT_MENU, action, item)
 
+        # Views provided by FSLeyes plugins
         pluginViews = plugins.listViews()
+        if len(pluginViews) > 0:
+            menu.AppendSeparator()
+            for name, cls in pluginViews.items():
+                func = ft.partial(self.addViewPanel, cls, title=name)
+                item = menu.Append(wx.ID_ANY, name)
+                self.Bind(wx.EVT_MENU, lambda ev : func(), item)
 
-        if len(pluginViews) == 0:
-            return
-
+        # Layout menu
+        self.__layoutMenu = wx.Menu()
         menu.AppendSeparator()
-        for name, cls in pluginViews.items():
-            func = ft.partial(self.addViewPanel, cls, title=name)
-            item = menu.Append(wx.ID_ANY, name)
-            self.Bind(wx.EVT_MENU, lambda ev : func(), item)
+        menu.AppendSubMenu(self.__layoutMenu, 'Layouts')
+        self.__makeLayoutMenu()
 
 
     def __makeLayoutMenu(self):
@@ -1632,11 +1655,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.savelayout   import SaveLayoutAction
         from fsleyes.actions.clearlayouts import ClearLayoutsAction
 
-        layoutMenu = self.__layoutMenu
-
-        # Remove any existing menu items
-        for item in layoutMenu.GetMenuItems():
-            layoutMenu.Delete(item.GetId())
+        menu = self.__layoutMenu
 
         builtIns = list(layouts.BUILT_IN_LAYOUTS.keys())
         saved    = layouts.getAllLayouts()
@@ -1651,18 +1670,18 @@ class FSLeyesFrame(wx.Frame):
             if shortcut is not None:
                 title = '{}\t{}'.format(title, shortcut)
 
-            menuItem = layoutMenu.Append(wx.ID_ANY, title)
+            menuItem = menu.Append(wx.ID_ANY, title)
 
             actionObj = LoadLayoutAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
         if len(builtIns) > 0:
-            layoutMenu.AppendSeparator()
+            menu.AppendSeparator()
 
         # Add a menu item to load each saved layout
         for layout in saved:
 
-            menuItem  = layoutMenu.Append(
+            menuItem  = menu.Append(
                 wx.ID_ANY, strings.layouts.get(layout, layout))
             actionObj = LoadLayoutAction(self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
@@ -1671,7 +1690,7 @@ class FSLeyesFrame(wx.Frame):
         # operations, but separate them
         # from the existing layouts
         if len(saved) > 0:
-            layoutMenu.AppendSeparator()
+            menu.AppendSeparator()
 
         # TODO: Delete a single layout?
         #       Save to/load from file?
@@ -1681,12 +1700,12 @@ class FSLeyesFrame(wx.Frame):
         for la in layoutActions:
 
             actionObj      = la(self)
-            layoutMenuItem = layoutMenu.Append(wx.ID_ANY, strings.actions[la])
+            layoutMenuItem = menu.Append(wx.ID_ANY, strings.actions[la])
 
             actionObj.bindToWidget(self, wx.EVT_MENU, layoutMenuItem)
 
 
-    def __makeOverlayMenu(self, menu):
+    def __makeOverlayMenu(self):
         """Called by :meth:`__makeMenuBar`. Creates/configures the *Overlay*
         menu.
         """
@@ -1696,6 +1715,8 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.saveoverlay       import SaveOverlayAction
         from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
         from fsleyes.actions.removeoverlay     import RemoveOverlayAction
+
+        menu = self.__overlayMenu
 
         fileActions = ['selectNextOverlay',
                        'selectPreviousOverlay',
@@ -1742,11 +1763,13 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
 
-    def __makeToolsMenu(self, menu):
+    def __makeToolsMenu(self):
         """Called by :meth:`__init__`. Populates the *Tools* menu with tools
         that are not bound to a specific ``ViewPanel`` (and which are always
         present).
         """
+
+        menu = self.__toolsMenu
 
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
