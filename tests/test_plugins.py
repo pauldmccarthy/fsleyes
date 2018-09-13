@@ -13,8 +13,9 @@ import os.path as op
 
 import pkg_resources
 
-import fsl.utils.tempdir as tempdir
-import fsleyes.plugins   as plugins
+import fsl.utils.tempdir  as tempdir
+import fsl.utils.settings as fslsettings
+import fsleyes.plugins    as plugins
 
 
 plugindirs = ['fsleyes_plugin_example', 'fsleyes_plugin_bad_example']
@@ -66,33 +67,52 @@ def test_listTools():
     assert tools == {'Plugin tool' : PluginTool}
 
 
+code = tw.dedent("""
+from fsleyes.views.viewpanel       import ViewPanel
+from fsleyes.controls.controlpanel import ControlPanel
+from fsleyes.actions               import Action
+
+class {prefix}View(ViewPanel):
+    pass
+
+class {prefix}Control(ControlPanel):
+    pass
+
+class {prefix}Tool(Action):
+    pass
+""").strip()
+
+
 def test_loadPlugin():
-
-    code = tw.dedent("""
-    from fsleyes.views.viewpanel       import ViewPanel
-    from fsleyes.controls.controlpanel import ControlPanel
-    from fsleyes.actions               import Action
-
-    class MyView(ViewPanel):
-        pass
-
-    class MyControl(ControlPanel):
-        pass
-
-    class MyTool(Action):
-        pass
-    """).strip()
-
-
     with tempdir.tempdir(changeto=False) as td:
-        with open(op.join(td, 'myplugin.py'), 'wt') as f:
-            f.write(code)
+        with open(op.join(td, 'test_loadplugin.py'), 'wt') as f:
+            f.write(code.format(prefix='Load'))
 
-        plugins.loadPlugin(op.join(td, 'myplugin.py'))
+        plugins.loadPlugin(op.join(td, 'test_loadplugin.py'))
 
-        mod = sys.modules['fsleyes_plugin_myplugin']
+        mod = sys.modules['fsleyes_plugin_test_loadplugin']
 
-        assert 'fsleyes-plugin-myplugin' in plugins.listPlugins()
-        assert plugins.listTools()[   'MyTool']    is mod.MyTool
-        assert plugins.listControls()['MyControl'] is mod.MyControl
-        assert plugins.listViews()[   'MyView']    is mod.MyView
+        assert 'fsleyes-plugin-test-loadplugin' in plugins.listPlugins()
+        assert plugins.listTools()[   'LoadTool']    is mod.LoadTool
+        assert plugins.listControls()['LoadControl'] is mod.LoadControl
+        assert plugins.listViews()[   'LoadView']    is mod.LoadView
+
+
+def test_installPlugin():
+    with tempdir.tempdir() as td:
+
+        with open('test_installplugin.py', 'wt') as f:
+            f.write(code.format(prefix='Install'))
+
+        s = fslsettings.Settings('test_plugins', cfgdir=td, writeOnExit=False)
+        with fslsettings.use(s):
+
+            plugins.installPlugin('test_installplugin.py')
+
+            mod = sys.modules['fsleyes_plugin_test_installplugin']
+
+            assert 'fsleyes-plugin-test-installplugin' in plugins.listPlugins()
+            assert plugins.listTools()[   'InstallTool']    is mod.InstallTool
+            assert plugins.listControls()['InstallControl'] is mod.InstallControl
+            assert plugins.listViews()[   'InstallView']    is mod.InstallView
+            assert op.exists(op.join(td, 'plugins', 'test_installplugin.py'))
