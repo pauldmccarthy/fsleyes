@@ -51,15 +51,15 @@ There are two ways to install a plugin into FSLeyes.
    into the FSLeyes settings directory (e.g. ``~/.fsleyes/plugins/``).
 
 
-Writing your own FSLeyes plugin
--------------------------------
+Writing a FSLeyes plugin
+------------------------
 
 
 .. note:: A minimal example of a FSLeyes plugin library can be found in
           ``tests/testdata/fsleyes_plugin_example/``.
 
 
-A FSLeyes plugin is a Python library, or ``.py`` file which contains
+A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
 definitions for custom views, controls, and tools.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
@@ -72,16 +72,24 @@ definitions for custom views, controls, and tools.
  - Tools must be sub-classes of the :class:`.Action` class.
 
 
+To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
+define your views, controls, and tools in the file. The file path can then
+be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
+
+
 To release a FSLeyes plugin as a library, you need to organise your code
-as a Python library. Minimally, this requires:
+as a Python library. Minimally, this requires the following:
 
- - Arranging your ``.py`` file(s) into a Python package.
+ - Arrange your ``.py`` file(s) into a Python package.
 
- - Writing a - ``setup.py`` file.
+ - Write a ``setup.py`` file.
 
- - Exposing your custom views, controls, and tools as `entry points
-   <https://packaging.python.org/specifications/entry-points/>`_, within the
-   ``setup.py`` file.
+ - Give your library a name (the ``name`` argument to the ``setup``
+   function) which begins with ``'fsleyes-plugin-``.
+
+ - Expose your custom views, controls, and tools as `entry points
+   <https://packaging.python.org/specifications/entry-points/>`_ (the
+   ``entry_points`` argument to the ``setup`` function).
 
 A minimal ``setup.py`` file for a FSLeyes plugin might look like this:
 
@@ -336,8 +344,8 @@ def installPlugin(filename):
     basename = op.splitext(op.basename(filename))[0]
     dest     = 'plugins/{}.py'.format(basename)
 
-    with open(filename, 'rt')              as inf, \
-         fslsettings.writeFile(dest, 'wt') as outf:
+    with open(filename, 'rt')        as inf, \
+         fslsettings.writeFile(dest) as outf:
         outf.write(inf.read())
 
     dest = fslsettings.filePath(dest)
