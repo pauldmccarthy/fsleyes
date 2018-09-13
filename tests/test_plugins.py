@@ -84,11 +84,11 @@ def test_loadPlugin():
     """).strip()
 
 
-    with tempdir.tempdir():
-        with open('myplugin.py', 'wt') as f:
+    with tempdir.tempdir(changeto=False) as td:
+        with open(op.join(td, 'myplugin.py'), 'wt') as f:
             f.write(code)
 
-        plugins.loadPlugin('myplugin.py')
+        plugins.loadPlugin(op.join(td, 'myplugin.py'))
 
         mod = sys.modules['fsleyes_plugin_myplugin']
 
