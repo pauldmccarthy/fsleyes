@@ -13,6 +13,11 @@ import os.path as op
 
 import pkg_resources
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 import fsl.utils.tempdir  as tempdir
 import fsl.utils.settings as fslsettings
 import fsleyes.plugins    as plugins
@@ -116,3 +121,36 @@ def test_installPlugin():
             assert plugins.listControls()['InstallControl'] is mod.InstallControl
             assert plugins.listViews()[   'InstallView']    is mod.InstallView
             assert op.exists(op.join(td, 'plugins', 'test_installplugin.py'))
+
+
+def test_initialise():
+
+    with tempdir.tempdir(changeto=False) as td1, \
+         tempdir.tempdir(changeto=False) as td2:
+        with open(op.join(td1, 'plugin1.py'), 'wt') as f:
+            f.write(code.format(prefix='Plugin1'))
+        with open(op.join(td2, 'plugin2.py'), 'wt') as f:
+            f.write(code.format(prefix='Plugin2'))
+
+        with mock.patch.dict(
+                'os.environ',
+                {'FSLEYES_PLUGIN_PATH' : op.pathsep.join((td1, td2))}):
+
+            plugins.initialise()
+
+            assert 'fsleyes-plugin-plugin1' in plugins.listPlugins()
+            assert 'fsleyes-plugin-plugin2' in plugins.listPlugins()
+
+            p1 = sys.modules['fsleyes_plugin_plugin1']
+            p2 = sys.modules['fsleyes_plugin_plugin2']
+
+            views = plugins.listViews()
+            ctrls = plugins.listControls()
+            tools = plugins.listTools()
+
+            assert views['Plugin1View']    is p1.Plugin1View
+            assert views['Plugin2View']    is p2.Plugin2View
+            assert ctrls['Plugin1Control'] is p1.Plugin1Control
+            assert ctrls['Plugin2Control'] is p2.Plugin2Control
+            assert tools['Plugin1Tool']    is p1.Plugin1Tool
+            assert tools['Plugin2Tool']    is p2.Plugin2Tool
