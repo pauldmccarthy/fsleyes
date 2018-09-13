@@ -291,6 +291,15 @@ messages = TypeDict({
     'NotebookAction.init.server' : 'Starting Jupyter notebook server...',
     'NotebookAction.init.error' :
     'An error occurred initialising IPython/Jupyter! ',
+
+    'LoadPluginAction.loadPlugin' :
+    'Choose a FSLeyes plugin file',
+    'LoadPluginAction.installPlugin' :
+    'Do you want to install this plugin permanently?',
+    'LoadPluginAction.loadError'  :
+    'An error occurred loading the plugin file.',
+    'LoadPluginAction.installError'  :
+    'An error occurred installing the plugin file.',
 })
 
 
@@ -431,6 +440,10 @@ titles = TypeDict({
     'NotebookAction.init' : 'Starting Jupyter',
     'NotebookAction.init.error' :
     'Error initialising IPython/Jupyter',
+
+    'LoadPluginAction.loadError'     : 'Error loading plugin file',
+    'LoadPluginAction.installPlugin' : 'Install plugin?',
+    'LoadPluginAction.installError'  : 'Error installing plugin file',
 })
 
 
@@ -461,6 +474,7 @@ actions = TypeDict({
     'NotebookAction'           : 'Open notebooks',
     'PCACorrelateAction'       : 'Seed correlation (PCA)',
     'ResampleAction'           : 'Resample image',
+    'LoadPluginAction'         : 'Load plugin',
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
