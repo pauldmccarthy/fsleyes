@@ -16,8 +16,15 @@ capable of loading the following types of data:
 
  - `NIFTI <https://nifti.nimh.nih.gov/>`_ image files (``.nii``, ``.nii.gz``).
 
+ - `MGH <http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/MghFormat>`_
+   image files (``.mgh``, ``.mgz``).
+
  - `GIFTI <http://www.nitrc.org/projects/gifti/>`_ surface files
    (``.surf.gii``, ``.gii``).
+
+ - `Freesurfer
+   <http://www.grahamwideman.com/gw/brain/fs/surfacefileformats.htm>`_ surface
+   files (``lh.orig``, ``lh.pial``, ``lh.white``, etc).
 
  - `FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis directories
    (``.feat``).
@@ -35,11 +42,11 @@ capable of loading the following types of data:
    tool.
 
 
-NIFTI images can be displayed in a variety of different ways, depending on the
-nature of the image data, and on how you want to display it. The way in which
-an overlay is displayed is called the *overlay type* or the *display type*.
-The most conventional overlay/display type for a NIFTI image is the
-:ref:`volume <overlays_volume>`; the other types are described :ref:`below
+Volumetric images can be displayed in a variety of different ways, depending
+on the nature of the image data, and on how you want to display it. The way in
+which an overlay is displayed is called the *overlay type* or the *display
+type*.  The most conventional overlay/display type for a volumetric image is
+the :ref:`volume <overlays_volume>`; the other types are described :ref:`below
 <overlays_overlay_type>`.
 
 
@@ -51,18 +58,21 @@ Loading an overlay
 
 You can load an overlay by doing one of the following:
 
-1. The *File* |right_arrow| *Add overlay from file* menu option allows you to
-   choose a file to load (e.g. a ``.nii``, ``.nii.gz``, or ``.gii`` file).
+1. The *File* |right_arrow| *Add from file* menu option allows you to choose a
+   file to load (e.g. a ``.nii``, ``.nii.gz``, or ``.gii`` file).
 
-2. The *File* |right_arrow| *Add overlay from directory* menu option allows
-   you to choose a directory to load (e.g. a ``.feat``, ``.ica``, or ``dtifit``
+2. The *File* |right_arrow| *Add from directory* menu option allows you to
+   choose a directory to load (e.g. a ``.feat``, ``.ica``, or ``dtifit``
    directory).
 
 3. The *File* |right_arrow| *Add standard* menu option allows you to choose a
    file from the ``$FSLDIR/data/standard/`` directory to load [*]_.
 
-4. The *File* |right_arrow| *Add overlay from XNAT* menu option allows you to
+4. The *File* |right_arrow| *Add from XNAT* menu option allows you to
    connect to, and download files from, XNAT server.
+
+5. The *File* |right_arrow| *Add from DICOM* menu option allows you to load
+   volumetric data from a DICOM directory [*]_.
 
 5. The + button on the :ref:`overlay list <ortho_lightbox_views_overlay_list>`
    allows you to choose a file to load.
@@ -70,6 +80,11 @@ You can load an overlay by doing one of the following:
 
 .. [*] The *File* |right_arrow| *Add standard* menu option will be disabled
        if your FSL environment is not configured correctly.
+
+
+.. [*] The *Add from DICOM* option will only be available if Chris Rorden's
+       ``dcm2niix`` is present on your system - it is available `here
+       <https://github.com/rordenlab/dcm2niix>`_.
 
 
 .. _overlays_overlay_display_settings:
@@ -180,10 +195,10 @@ overlay. The settings available for each overlay type are covered :ref:`below
 <overlays_overlay_type>` [*]_.
 
 
- .. [*] In the `3D view <3d_view>`, the overlay display panel contains a third
-        section containing 3d-specific settings. These settings are described
-        separately in the `3D view <3d_view_overlay_display_settings>`
-        section.
+ .. [*] In the :ref:`3D view <3d_view>`, the overlay display panel contains a
+        third section containing 3d-specific settings. These settings are
+        described separately in the :ref:`3D view
+        <3d_view_overlay_display_settings>` section.
 
 
 .. _overlays_overlay_information_panel:
@@ -287,6 +302,11 @@ The following settings are available for volume overlays:
   colour map file (see the section on :ref:`colour maps
   <customising_colour_maps>`) contains 256 colours, and you set the resolution
   to 128, only half of the colours from the colour map will be used.
+
+
+- **Gamma correction** This setting allows you to apply a weighting to the
+  display range, so that either lower or higher values will take up more
+  of the colour range.
 
 
 - **Interpolate colour maps** This setting allows you to enable linear
@@ -445,6 +465,54 @@ Mask overlays have the following settings:
 - **Threshold** This range defines which voxels are included in the
   mask. Voxels which are within the range are included, and those outside of
   the range are excluded.
+
+
+- **Interpolation** This setting allows to interpolate the mask overaly on the
+  display.
+
+
+- **Show outline only** This setting will cause only the mask outline to be
+  displayed (according to the current threshold), rather than showing it
+  "filled".
+
+
+- **Outline width** If the *Show outline only* option is enabled, this
+  setting allows you to control the outline width.
+
+
+
+.. _overlays_mip:
+
+Maximum intensity projection (MIP)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+   .. image:: images/overlays_mip1.png
+      :width: 25%
+      :align: right
+
+
+Selecting this overlay type enables an X-ray-like effect, where the maximum
+values present in the image, along a ray perpendicular to the viewing
+plane, is displayed. The :ref:`Nudge <tools_adjust_image_transform>` tool can
+be applied to MIP overlays to give you a 3D effect.
+
+
+In addition to many options shared with the :ref:`volume <overlays_volume>`
+overlay type, the following settings are available for MIP overlays:
+
+- **MIP window length** This setting allows you to control the window over
+  which the MIP is calculated. It is calculated over a window centered at the
+  current display location, and of a length specified as a proportion of the
+  image - setting the window length to **1** will cause the MIP to be
+  calculated over the entire image.
+
+- **Minimum intensity** This setting allows you to display the minimum
+  intensity, rather than the maximum intensity.
+
+- **Absolute intensity** This setting allows you to display the absolute
+  maximum intensity, rather than the maximum intensity. This setting will
+  override the *Minimum intensity* setting.
 
 
 .. _overlays_vector:
@@ -725,6 +793,9 @@ on diffusion SH overlays:
 
 - **Lighting effects** This setting toggles an FOD lighting model [*]_.
 
+- **Normalise FOD sizes** This setting normalises the size of each FOD
+  to be the same. This is useful for data which contains extreme values.
+
 - **FOD size** This setting allows you to scale the size of each FOD by a
   constant factor.
 
@@ -783,19 +854,17 @@ FSLeyes can display 3D triangle mesh data loaded from:
   - `GIFTI files <http://www.nitrc.org/projects/gifti/>`_ which contain
     surface data (a ``NIFTI_INTENT_POINTSET`` array containing vertices,
     and a ``NIFTI_INTENT_TRIANGLE`` array containing triangles [*]_.
-
+  - `Freesurfer <http://www.grahamwideman.com/gw/brain/fs/surfacefileformats.htm>`_
+    surface files.
   - `VTK legacy files
     <http://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf>`_ which
-    specify a triangle mesh in the ``POLYDATA`` data format [*]_. Files of
-    this type are generated by the `FIRST
+    specify a triangle mesh in the ``POLYDATA`` data format. Files of this
+    type are generated by the `FIRST
     <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIRST>`_ sub-cortical segmentation
     tool, to represent sub-cortical structures.
 
-.. [*] Future versions of FSLeyes will include more comprehensive GIFTI
-       support.
-
-.. [*] Future versions of FSLeyes will include support for more VTK data
-       formats.
+.. [*] Future versions of FSLeyes will hopefuolly include more comprehensive
+       GIFTI support, and support for more VTK data formats.
 
 
 On :ref:`orthographic and lightbox views <ortho_lightbox_views>`, FSLeyes
@@ -821,6 +890,10 @@ The following display settings are available for mesh overlays:
   controls the outline width.
 
 - **Colour** The colour to use for the mesh.
+
+- **Surface definition** If there are multiple definitions for your mesh (e.g.
+  a white matter mesh, pial mesh, and mid-thickness mesh), this setting allows
+  you to select the surface definition to use.
 
 - **Vertex data** You can use this setting to select some data associated with
   the mesh vertices (either plain `.txt` files, or `.func.gii`, `.shape.gii`,

@@ -31,8 +31,9 @@ images [*]_.  These files can be displayed in a variety of different ways -
 see the page on :ref:`overlays <overlays>` for more information.
 
 
-.. [*] FSLeyes |version| is able to load NIFTI, GIFTI, and VTK files.
-       Future versions of FSLeyes will be able to load more file types.
+.. [*] FSLeyes |version| is able to load NIFTI, MGH, GIFTI, Freesurfer, and
+       VTK files.  Future versions of FSLeyes will be able to load more file
+       types.
 
 
 .. sidebar:: Modifier keys
@@ -124,6 +125,7 @@ All available views are listed in the *View* menu:
 
 
 .. image:: images/overview_view_menu.png
+   :width: 25%
    :align: center
 
 
@@ -142,6 +144,21 @@ view. For example, the settings menu for an :ref:`orthographic
 Views and controls are described in more detail in the pages on
 :ref:`orthographic/lightbox views <ortho_lightbox_views>`, :ref:`plotting
 views <plot_views>`, and the :ref:`3D view <3d_view>`.
+
+
+.. _ovewview_tools:
+
+Tools
+-----
+
+
+Under the *Tools* menu, you can find a set of options which allow you to
+perform various actions, typically affecting the currently selected overlay.
+Some tools are always present, whereas others are associated with a specific
+view, and will only be present if you have one of those views open.
+
+More information on the FSLeyes tools can be found on the :ref:`tools <tools>`
+page.
 
 
 .. _overview_layouts:

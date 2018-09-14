@@ -1,22 +1,34 @@
-.. _python_shell:
+.. |right_arrow| unicode:: U+21D2
 
-Python shell
-============
+
+.. _fsleyes_notebook:
+
+FSLeyes and Jupyter Notebook
+============================
 
 
 FSLeyes is written primarily in the `Python <https://www.python.org>`_
 programming language.  Much of the internal state of FSLeyes can be queried
-and modified through a programming interface, which may be accessed through
-the Python shell [*]_.
+and modified through a programming interface, which may be accessed through a
+Jupyter Notebook. You can start a Jupyter Notebook server which may be used to
+interact with FSLeyes via the *File* |right_arrow| *Open notebooks* menu item.
 
-
-.. image:: images/python_shell.png
-   :width: 80%
+.. image:: images/fsleyes_notebook.png
+   :width: 50%
    :align: center
 
 
-This page conatins a very brief overview of the FSLeyes programming
-interface. Refer to the :ref:`links below <python_shell_further_reading>` for
+FSLeyes also has an integrated Python shell which offers the same programming
+interface. This can be accessed via the *Views* |right_arrow| *Python shell*
+menu item
+
+.. image:: images/python_shell.png
+   :width: 50%
+   :align: center
+
+
+This page contains a very brief overview of the FSLeyes programming
+interface. Refer to the :ref:`links below <fsleyes_api_further_reading>` for
 more comprehensive documentation.
 
 
@@ -30,8 +42,9 @@ more comprehensive documentation.
 Help
 ----
 
-Use the built-in ``help`` function to get help on anything in the shell
-environment, whether it is a module, function, class, or object::
+Use the built-in ``help`` function to get help on anything in the
+notebook/shell environment, whether it is a module, function, class, or
+object::
 
   >>> help(load)
   Help on function load in module fsleyes.actions.runscript:
@@ -73,6 +86,24 @@ python ``list``::
 
               image = Image('path/to/my_image.nii.gz')
               overlayList.append(image)
+
+
+FSL tools
+---------
+
+
+If you have FSL installed, you can call some FSL tools [*]_ through Python
+functions, e.g.::
+
+  >>> struc = load('/path/to/my/T1.nii.gz')
+  >>> bet(struc, LOAD)
+
+The special ``LOAD`` symbol will cause the result to be loaded into FSLeyes.
+
+.. [*] The FSL wrapper functions are provided by the |fslpy_doc| library -
+       check out the ``fsl.wrappers`` package documentation to see what is
+       available.
+
 
 Display settings
 ----------------
@@ -123,37 +154,36 @@ FSLeyes interface
 -----------------
 
 You can programmatically modify the FSLeyes interface and layout through the
-python shell. The FSLeyes interface is contained within a single object, the
-``FSLeyesFrame``. This is available in the shell environment as the
-``frame``.
+notebook/shell. The FSLeyes interface is contained within a single object, the
+``FSLeyesFrame``. This is available in the environment as the ``frame``.
 
 
 You can add and remove :ref:`views <overview_views_and_controls>` to and from
 the ``frame``::
 
   >>> frame.addViewPanel(views.OrthoPanel)
-  >>> frame.getViewPanels()
+  >>> frame.viewPanels
   [<fsleyes.views.shellpanel.ShellPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11b4b4c90> >,
    <fsleyes.views.orthopanel.OrthoPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11593dba0> >]
 
-  >>> ortho = frame.getViewPanels()[1]
+  >>> ortho = frame.viewPanels[1]
   >>> frame.removeViewPanel(ortho)
 
 
 You can also access the view settings for a specific view::
 
   >>> frame.addViewPanel(views.OrthoPanel)
-  >>> frame.getViewPanels()
+  >>> frame.viewPanels
   [<fsleyes.views.shellpanel.ShellPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11b4b4c90> >,
    <fsleyes.views.orthopanel.OrthoPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11593dba0> >]
 
-  >>> ortho                = frame.getViewPanels()[1]
+  >>> ortho                = frame.viewPanels[1]
   >>> orthoOpts            = ortho.getSceneOptions()
   >>> orthoOpts.layout     = 'grid'
   >>> orthoOpts.showLabels = False
 
 
-.. _python_shell_further_reading:
+.. _fsleyes_api_further_reading:
 
 Further reading
 ---------------

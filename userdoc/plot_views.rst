@@ -90,7 +90,7 @@ settings specific to time series plots:
   normalise it to the range ``[-1, 1]``, or scale it to
   percent-signal-changed (suitable for FMRI BOLD data).
 
-- **Use pixdims** This setting is enabled by default. When enabled, the
+- **Use pixdims** This setting is disabled by default. When enabled, the
   ``pixdim`` field of the time dimension in the NIFTI header is assumed to
   contain the TR time, and is used to scale the time series data along the X
   axis. Effectively, this means that the X axis will show seconds. When
@@ -262,7 +262,7 @@ from a text file, and export the data series that are plotted.
 The overlay list
 ^^^^^^^^^^^^^^^^
 
-The overlay list which is available on plotting views slightly different to
+The overlay list which is available on plotting views is slightly different to
 the :ref:`one available in orthographic/lightbox views
 <ortho_lightbox_views_overlay_list>`. It simply displays a list of all loaded
 overlays, and allows you to toggle on and off the data series associated with
@@ -394,7 +394,10 @@ series are to be scaled on the X axis:
 
 If the first column in your data file contains the X axis data, click the
 *First column is X data* button. Otherwise, FSLeyes will set the X axis data
-according to the value that you enter.
+according to the value that you enter [*]_.
+
+.. [*] On time series views, make sure that the **Use pixdims** option is set
+       appropriately for your X-axis scaling.
 
 
 The *Export data series* button |export_data_series_icon| on the :ref:`plot
