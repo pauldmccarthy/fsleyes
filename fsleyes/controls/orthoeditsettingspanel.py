@@ -57,7 +57,7 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         generalProps = [
             props.Widget('mode',
                          labels=strings.choices[profile, 'mode'],
-                         fixChoices=['nav', 'sel', 'desel', 'selint']),
+                         fixChoices=['nav', 'sel', 'desel', 'fill', 'selint']),
             props.Widget('drawMode'),
             props.Widget('selectionIs3D'),
             props.Widget('selectionSize',
