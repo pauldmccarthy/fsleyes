@@ -202,9 +202,10 @@ import os.path as op
 import            logging
 import            warnings
 
-from   .                  import             version
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.settings                 as fslsettings
+import fsleyes.version                    as version
+import fsleyes.plugins                    as plugins
 
 
 # The logger is assigned in
@@ -256,6 +257,10 @@ def initialise():
 
     # Initialise the fsl.utils.settings module
     fslsettings.initialise('fsleyes')
+
+    # initialise FSLeyes plugins (will discover
+    # any plugins saved in the settings dir)
+    plugins.initialise()
 
     # Tell matplotlib what backend to use.
     # n.b. this must be called before

@@ -185,6 +185,7 @@ def initialise():
     directory, and found on the ``FSLEYES_PLUGIN_PATH`` environment variable.
     """
     pluginFiles = list(fslsettings.listFiles('plugins/*.py'))
+    pluginFiles = [fslsettings.filePath(p) for p in pluginFiles]
     fpp         = os.environ.get('FSLEYES_PLUGIN_PATH', None)
 
     if fpp is not None:
