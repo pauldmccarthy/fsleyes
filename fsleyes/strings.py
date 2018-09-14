@@ -1107,6 +1107,7 @@ choices = TypeDict({
     'OrthoEditProfile.mode' : {'nav'    : 'Navigate',
                                'sel'    : 'Draw/select',
                                'desel'  : 'Erase/deselect',
+                               'fill'   : 'Bucket fill',
                                'selint' : 'Select by intensity'},
 
     'CanvasPanel.movieAxis' : {0 : 'X',
