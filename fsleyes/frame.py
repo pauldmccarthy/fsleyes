@@ -654,7 +654,15 @@ class FSLeyesFrame(wx.Frame):
 
     def refreshSettingsMenu(self):
         """Re-creates the *Settings* menu. """
-        pass
+        for menu in self.__viewPanelMenus.values():
+            menu = menu.GetSubMenu()
+            for item in menu.GetMenuItems():
+                menu.Remove(item.GetId())
+        for item in self.__settingsMenu.GetMenuItems():
+            self.__settingsMenu.Remove(item.GetId())
+        self.__viewPanelMenus = {}
+        for panel, title in self.__viewPanelTitles.items():
+            self.__addViewPanelMenu(panel, title)
 
 
     def refreshToolsMenu(self):
@@ -678,7 +686,12 @@ class FSLeyesFrame(wx.Frame):
         self.refreshLayoutMenu()
 
 
-    def populateMenu(self, menu, target, actionNames=None, **kwargs):
+    def populateMenu(self,
+                     menu,
+                     target,
+                     actionNames=None,
+                     actionTitles=None,
+                     **kwargs):
         """Creates menu items for every :class:`.Action` available on the
         given ``target``, or for every named action in the ``actionNames``
         list.
@@ -687,15 +700,20 @@ class FSLeyesFrame(wx.Frame):
         for new :class:`.ViewPanel` instances, but can also be called for
         other purposes.
 
-        :arg menu:        The ``wx.Menu`` to be populated.
+        :arg menu:         The ``wx.Menu`` to be populated.
 
-        :arg target:      The object which has actions to be bound to the
-                          menu items.
+        :arg target:       The object which has actions to be bound to the
+                           menu items.
 
-        :arg actionNames: If provided, only menu items for the actions named
-                          in this list will be created. May contain ``None``,
-                          which indicates that a menu separator should be
-                          added at that point.
+        :arg actionNames:  If provided, only menu items for the actions named
+                           in this list will be created. May contain ``None``,
+                           which indicates that a menu separator should be
+                           added at that point.
+
+        :arg actionTitles: Optional dict containing ``{name : title}`` mappings
+                           for some actions. If not provided, it is assumed
+                           that a name for the action exists in
+                           :attr:`.strings.actions`.
 
         All other keyword arguments are passed through to the
         :meth:`__onViewPanelMenuItem` method.
@@ -703,6 +721,8 @@ class FSLeyesFrame(wx.Frame):
         :returns: A list containing the ``wx.MenuItem`` objects that were
                   added to the menu.
         """
+        if actionTitles is None:
+            actionTitles = {}
 
         if actionNames is None:
             actionNames, actionObjs = list(zip(*target.getActions()))
@@ -711,28 +731,10 @@ class FSLeyesFrame(wx.Frame):
                           if name is not None else None
                           for name in actionNames]
 
-        actionNames = list(actionNames)
-        actionObjs  = list(actionObjs)
-        actionTitles = [strings.actions.get((target, n), n)
-                        for n in actionNames]
-
-        pluginCtrls = plugins.listControls(type(target))
-
-        if len(pluginCtrls) > 0:
-            actionObjs  .append(None)
-            actionNames .append(None)
-            actionTitles.append(None)
-
-            for ctrlName, ctrlType in pluginCtrls.items():
-                func = ft.partial(target.togglePanel, ctrlType, title=ctrlName)
-                name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
-                act  = actions.ToggleAction(func, name=ctrlName)
-
-                setattr(target, name, act)
-
-                actionObjs  .append(act)
-                actionNames .append(name)
-                actionTitles.append(ctrlName)
+        actionNames  = list(actionNames)
+        actionObjs   = list(actionObjs)
+        actionTitles = [actionTitles.get(
+            n, strings.actions.get((target, n), n)) for n in actionNames]
 
         def configureActionItem(menu, actionName, actionObj, title):
 
@@ -821,9 +823,29 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return
 
-        actionz = [name for (name, obj) in panel.getActions()]
+        actionNames  = [name for (name, obj) in panel.getActions()]
+        actionTitles = {}
+        pluginCtrls = plugins.listControls(type(panel))
 
-        if len(actionz) == 0:
+        if len(pluginCtrls) > 0:
+            actionNames.append(None)
+
+            # A bit hacky, For each plugin control, we
+            # create a ToggleAction, and add it as an
+            # attribute on the view panel. Then it will
+            # work with the ActionProvider interface,
+            # and hence the populateMenu method.
+            for ctrlName, ctrlType in pluginCtrls.items():
+                func = ft.partial(panel.togglePanel, ctrlType, title=ctrlName)
+                name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
+                act  = actions.ToggleAction(func, name=ctrlName)
+
+                setattr(panel, name, act)
+
+                actionNames .append(name)
+                actionTitles[name] = ctrlName
+
+        if len(actionNames) == 0:
             return
 
         menu    = wx.Menu()
@@ -833,13 +855,16 @@ class FSLeyesFrame(wx.Frame):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
-        if 'removeFromFrame' not in actionz:
-            actionz.append(None)
-            actionz.append('removeFromFrame')
+        if 'removeFromFrame' not in actionNames:
+            actionNames.append(None)
+            actionNames.append('removeFromFrame')
 
         # Most of the work is
         # done in populateMenu
-        self.populateMenu(menu, panel, actionNames=actionz)
+        self.populateMenu(menu,
+                          panel,
+                          actionNames=actionNames,
+                          actionTitles=actionTitles)
 
         self.refreshToolsMenu()
 

@@ -70,13 +70,15 @@ class LoadPluginAction(base.Action):
             self.__frame,
             caption=strings.titles[  self, 'installPlugin'],
             message=strings.messages[self, 'installPlugin'],
-            style=wx.YES_NO)
+            style=wx.YES_NO | wx.CANCEL)
 
-        if dlg.ShowModal() == wx.ID_YES:
+        result = dlg.ShowModal()
+
+        if result == wx.ID_YES:
             etitle = strings.titles[  self, 'installError']
             emsg   = strings.messages[self, 'installError']
             func   = plugins.installPlugin
-        elif dlg.ShowModal() == wx.ID_NO:
+        elif result == wx.ID_NO:
             etitle = strings.titles[  self, 'loadError']
             emsg   = strings.messages[self, 'loadError']
             func   = plugins.loadPlugin
@@ -86,4 +88,6 @@ class LoadPluginAction(base.Action):
         with status.reportIfError(title=etitle, msg=emsg, raiseError=False):
             func(fname)
 
-        # TODO refresh frame menus
+        self.__frame.refreshViewMenu()
+        self.__frame.refreshToolsMenu()
+        self.__frame.refreshSettingsMenu()
