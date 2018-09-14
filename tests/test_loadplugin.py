@@ -20,6 +20,8 @@ import fsl.utils.settings         as fslsettings
 import fsleyes.actions.loadplugin as loadplugin
 import fsleyes.plugins            as plugins
 
+from . import run_with_fsleyes
+
 
 code = """
 import fsleyes.views.viewpanel as vp
@@ -30,8 +32,10 @@ class MyViewPanel(vp.ViewPanel):
 
 
 def test_LoadPluginAction():
+    run_with_fsleyes(_test_LoadPluginAction)
+def _test_LoadPluginAction(frame, overlayList, displayCtx):
 
-    act = loadplugin.LoadPluginAction(None, None, None)
+    act = loadplugin.LoadPluginAction(overlayList, displayCtx, frame)
 
     class FileDialog(object):
         ShowModal_return = wx.ID_OK
