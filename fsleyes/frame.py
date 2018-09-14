@@ -14,7 +14,6 @@ from __future__ import division
 import functools as ft
 import              re
 import              logging
-import              collections
 import              deprecation
 
 import six
@@ -103,7 +102,10 @@ class FSLeyesFrame(wx.Frame):
        viewPanelDefaultLayout
        removeViewPanel
        removeAllViewPanels
+       refreshViewMenu
        refreshLayoutMenu
+       refreshSettingsMenu
+       refreshToolsMenu
        populateMenu
        Close
 
@@ -254,13 +256,6 @@ class FSLeyesFrame(wx.Frame):
         self.__viewPanelMenus  = {}
         self.__viewPanelIDs    = {}
         self.__viewPanelTitles = {}
-
-        # There is a bug somewhere in wxPython
-        # 3.0.2.0 which causes segfaults when
-        # menu items are removed (in
-        # __refreshToolsMenu). Avoided if we
-        # remove items in order.
-        self.__viewPanelTools  = collections.OrderedDict()
 
         # Refs to menus
         self.__haveMenu       = menu
@@ -635,14 +630,6 @@ class FSLeyesFrame(wx.Frame):
             viewPanel.toggleLocationPanel()
 
 
-    def refreshLayoutMenu(self):
-        """Re-creates the *View -> Layouts* sub-menu. """
-        # Remove any existing menu items
-        for item in self.__layoutMenu.GetMenuItems():
-            self.__layoutMenu.Delete(item.GetId())
-        self.__makeLayoutMenu()
-
-
     def refreshViewMenu(self):
         """Re-creates the *View* menu."""
 
@@ -655,6 +642,33 @@ class FSLeyesFrame(wx.Frame):
         for item in viewMenu.GetMenuItems():
             viewMenu.Delete(item.GetId())
         self.__makeViewMenu()
+
+
+    def refreshLayoutMenu(self):
+        """Re-creates the *View -> Layouts* sub-menu. """
+        # Remove any existing menu items
+        for item in self.__layoutMenu.GetMenuItems():
+            self.__layoutMenu.Delete(item.GetId())
+        self.__makeLayoutMenu()
+
+
+    def refreshSettingsMenu(self):
+        """Re-creates the *Settings* menu. """
+        pass
+
+
+    def refreshToolsMenu(self):
+        """Re-creates the *Tools* menu. """
+
+        menu = self.__toolsMenu
+
+        # We call menu.Remove, not menu.Delete,
+        # because the Action objects will
+        # delete the menu items
+        for item in menu.GetMenuItems():
+            menu.Remove(item.GetId())
+        self.__makeToolsMenu()
+
 
     @deprecation.deprecated(deprecated_in='0.24.0',
                             removed_in='1.0.0',
@@ -827,7 +841,7 @@ class FSLeyesFrame(wx.Frame):
         # done in populateMenu
         self.populateMenu(menu, panel, actionNames=actionz)
 
-        self.__refreshToolsMenu()
+        self.refreshToolsMenu()
 
 
     def __onViewPanelMenuItem(self,
@@ -991,7 +1005,7 @@ class FSLeyesFrame(wx.Frame):
         if menu is not None:
             self.__settingsMenu.Remove(menu.GetId())
 
-        self.__refreshToolsMenu()
+        self.refreshToolsMenu()
 
         # Calling fslpanel.FSLeyesPanel.destroy()
         # and DisplayContext.destroy() - the
@@ -1785,16 +1799,15 @@ class FSLeyesFrame(wx.Frame):
 
         pluginTools = plugins.listTools()
 
-        if len(pluginTools) == 0:
-            return
+        if len(pluginTools) > 0:
+            menu.AppendSeparator()
+            for name, cls in pluginTools.items():
+                addTool(cls, name)
 
-        menu.AppendSeparator()
-
-        for name, cls in pluginTools.items():
-            addTool(cls, name)
+        self.__makeViewPanelTools()
 
 
-    def __refreshToolsMenu(self):
+    def __makeViewPanelTools(self):
         """Called when a view panel is added or removed. Refreshes the *Tools*
         menu.
         """
@@ -1811,14 +1824,6 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.views.shellpanel         import ShellPanel
 
         menu = self.__toolsMenu
-
-        # Remove all old tools
-        for vpType, items in list(self.__viewPanelTools.items()):
-            for i, (item, tool) in enumerate(items):
-                menu.Remove(item.GetId())
-                if tool is not None:
-                    tool.unbindWidget(item)
-            self.__viewPanelTools.pop(vpType)
 
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
@@ -1837,6 +1842,8 @@ class FSLeyesFrame(wx.Frame):
                 vpOrder.append(type(p))
         panels  = sorted(panels, key=lambda p: vpOrder.index(type(p)))
 
+        vpTypesAdded = set()
+
         for panel in panels:
 
             vpType    = type(panel)
@@ -1846,8 +1853,10 @@ class FSLeyesFrame(wx.Frame):
 
             # Only the first panel for each type
             # has its tools added to the menu.
-            if len(tools) == 0 or vpType in self.__viewPanelTools:
+            if len(tools) == 0 or vpType in vpTypesAdded:
                 continue
+
+            vpTypesAdded.add(vpType)
 
             # Each view panel added to the tools list
             # gets its own section, starting with a
@@ -1859,8 +1868,6 @@ class FSLeyesFrame(wx.Frame):
             items.extend(self.populateMenu(menu, panel, toolNames))
 
             tools = [None, None] + tools
-
-            self.__viewPanelTools[vpType] = zip(items, tools)
 
 
     def __selectedOverlayChanged(self, *a):
