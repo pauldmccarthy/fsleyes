@@ -104,7 +104,6 @@ class FSLeyesFrame(wx.Frame):
        removeViewPanel
        removeAllViewPanels
        refreshLayoutMenu
-       runScript
        populateMenu
        Close
 
@@ -278,7 +277,7 @@ class FSLeyesFrame(wx.Frame):
         # Refs to Action objects that
         # are bound to menu options,
         # as { type : instance } mappings
-        self.__menuActions   = {}
+        self.__menuActions = {}
 
         # The recent paths manager notifies us when
         # they change. See the __makeFileMenu and
@@ -663,16 +662,6 @@ class FSLeyesFrame(wx.Frame):
     def refreshPerspectiveMenu(self):
         """Deprecated."""
         self.refreshLayoutMenu()
-
-
-    def runScript(self, script=None):
-        """Runs a custom python script, via a :class:`.RunScriptAction`. """
-
-        from fsleyes.actions.runscript import RunScriptAction
-
-        rsa = RunScriptAction(self.__overlayList, self.__displayCtx, self)
-
-        rsa(script)
 
 
     def populateMenu(self, menu, target, actionNames=None, **kwargs):
