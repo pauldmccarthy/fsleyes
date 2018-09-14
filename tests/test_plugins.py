@@ -36,10 +36,8 @@ def setup_module():
 
 
 def test_listPlugins():
-    # this will break if more plugins
-    # are installed in the test environment
-    assert sorted(plugins.listPlugins()) == [
-        'fsleyes-plugin-bad-example', 'fsleyes-plugin-example']
+    for plugin in ['fsleyes-plugin-bad-example', 'fsleyes-plugin-example']:
+        assert plugin in plugins.listPlugins()
 
 
 def test_listViews():
@@ -47,7 +45,7 @@ def test_listViews():
 
     views = dict(plugins.listViews())
 
-    assert views == {'Plugin view' : PluginView}
+    assert views['Plugin view'] is PluginView
 
 
 def test_listControls():
@@ -59,9 +57,9 @@ def test_listControls():
     ctrlsortho = dict(plugins.listControls(OrthoPanel))
     ctrlsts    = dict(plugins.listControls(TimeSeriesPanel))
 
-    assert ctrls      == {'Plugin control' : PluginControl}
-    assert ctrlsortho == {'Plugin control' : PluginControl}
-    assert ctrlsts    == {}
+    assert ctrls['Plugin control']      is PluginControl
+    assert ctrlsortho['Plugin control'] is PluginControl
+    assert 'Plugin control' not in ctrlsts
 
 
 def test_listTools():
@@ -69,7 +67,7 @@ def test_listTools():
 
     tools = dict(plugins.listTools())
 
-    assert tools == {'Plugin tool' : PluginTool}
+    assert tools['Plugin tool'] is PluginTool
 
 
 code = tw.dedent("""

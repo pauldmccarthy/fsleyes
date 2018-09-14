@@ -90,10 +90,10 @@ def _test_LoadPluginAction(frame, overlayList, displayCtx):
 
         with tempdir.tempdir(changeto=False) as td, \
              fslsettings.use(fslsettings.Settings(cfgdir=td)):
-            with open(op.join(td, 'test_loadplugin.py'), 'wt') as f:
+            with open(op.join(td, 'test_loadpluginaction.py'), 'wt') as f:
                 f.write(code)
 
-            FileDialog.GetPath_return = op.join(td, 'test_loadplugin.py')
+            FileDialog.GetPath_return = op.join(td, 'test_loadpluginaction.py')
             act()
 
-            assert 'fsleyes-plugin-test-loadplugin' in plugins.listPlugins()
+            assert 'fsleyes-plugin-test-loadpluginaction' in plugins.listPlugins()
