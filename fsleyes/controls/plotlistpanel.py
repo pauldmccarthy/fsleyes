@@ -14,15 +14,15 @@ import numpy as np
 
 import wx
 
-import fsleyes_props            as props
-import fsleyes_widgets.elistbox as elistbox
+import fsleyes_props                 as props
+import fsleyes_widgets.elistbox      as elistbox
 
-import fsleyes.panel            as fslpanel
-import fsleyes.tooltips         as fsltooltips
-import fsleyes.strings          as strings
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.strings               as strings
 
 
-class PlotListPanel(fslpanel.FSLeyesPanel):
+class PlotListPanel(ctrlpanel.ControlPanel):
     """The ``PlotListPanel`` is a *FSLeyes control* panel for use with
     :class:`.OverlayPlotPanel` views. It allows the user to add and remove
     :class:`.DataSeries` instances from the :attr:`.PlotPanel.dataSeries`
@@ -54,7 +54,7 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
                           ``PlotListPanel``.
         """
 
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__plotPanel = plotPanel
@@ -85,13 +85,13 @@ class PlotListPanel(fslpanel.FSLeyesPanel):
     def destroy(self):
         """Must be called when this ``PlotListPanel`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLeyesPanel.destroy` method.
+        :meth:`.ControlPanel.destroy` method.
         """
 
         self.__plotPanel.removeListener('dataSeries', self.name)
         self.__plotPanel = None
         self.__dsList.Clear()
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def __dataSeriesChanged(self, *a):

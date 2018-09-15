@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoToolBar` class, which is a
-:class:`.FSLeyesToolBar` for use with the :class:`.OrthoPanel`.
+:class:`.ControlToolBar` for use with the :class:`.OrthoPanel`.
 """
 
 
@@ -13,15 +13,16 @@ import wx
 
 import fsleyes_props    as props
 
-import fsleyes.toolbar  as fsltoolbar
-import fsleyes.icons    as fslicons
-import fsleyes.tooltips as fsltooltips
-import fsleyes.actions  as actions
-import fsleyes.strings  as strings
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.icons                 as fslicons
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.actions               as actions
+import fsleyes.strings               as strings
 
 
-class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
-    """The ``OrthoToolBar`` is a :class:`.FSLeyesToolBar` for use with the
+class OrthoToolBar(ctrlpanel.ControlToolBar):
+    """The ``OrthoToolBar`` is a :class:`.ControlToolBar` for use with the
     :class:`.OrthoPanel`. An ``OrthoToolBar`` looks something like this:
 
 
@@ -64,13 +65,13 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.orthoPanel = ortho
 
@@ -97,7 +98,17 @@ class OrthoToolBar(fsltoolbar.FSLeyesToolBar):
         self.orthoPanel.removeListener('profile',             self.name)
         self           .removeListener('showCursorAndLabels', self.name)
 
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
 
 
     def __makeTools(self, *a):

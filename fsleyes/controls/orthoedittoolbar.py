@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoEditToolBar`, a
-:class:`.FSLeyesToolBar` which displays controls for editing :class:`.Image`
+:class:`.ControlToolBar` which displays controls for editing :class:`.Image`
 instances in an :class:`.OrthoPanel`.
 """
 
@@ -14,11 +14,12 @@ import logging
 
 import wx
 
-import fsleyes_props    as props
-import fsleyes.toolbar  as fsltoolbar
-import fsleyes.icons    as fslicons
-import fsleyes.tooltips as fsltooltips
-import fsleyes.strings  as strings
+import fsleyes_props                 as props
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.icons                 as fslicons
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.strings               as strings
 
 import fsleyes.controls.displayspacewarning  as dswarning
 from   fsleyes.profiles.orthoeditprofile import OrthoEditProfile
@@ -27,8 +28,8 @@ from   fsleyes.profiles.orthoeditprofile import OrthoEditProfile
 log = logging.getLogger(__name__)
 
 
-class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
-    """The ``OrthoEditToolBar`` is a :class:`.FSLeyesToolBar` which displays
+class OrthoEditToolBar(ctrlpanel.ControlToolBar):
+    """The ``OrthoEditToolBar`` is a :class:`.ControlToolBar` which displays
     controls for editing :class:`.Image` instances in an :class:`.OrthoPanel`.
 
     An ``OrthoEditToolBar`` looks something like this:
@@ -80,13 +81,13 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.__orthoPanel = ortho
         self.__dsWarning = dswarning.DisplaySpaceWarning(
@@ -106,7 +107,7 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
     def destroy(self):
         """Must be called when this ``OrthoEditToolBar`` is no longer
         needed. Removes property listeners, and calls the
-        :meth:`.FSLeyesToolBar.destroy` method.
+        :meth:`.ControlToolBar.destroy` method.
         """
         self.__orthoPanel.removeListener('profile', self.name)
         self.__dsWarning.destroy()
@@ -114,7 +115,17 @@ class OrthoEditToolBar(fsltoolbar.FSLeyesToolBar):
         self.__orthoPanel = None
         self.__dsWarning  = None
 
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
 
 
     def __profileChanged(self, *a):

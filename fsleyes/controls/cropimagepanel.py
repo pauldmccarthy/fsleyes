@@ -26,14 +26,14 @@ import fsleyes_props                        as props
 import fsleyes_widgets.rangeslider          as rslider
 import fsleyes_widgets.utils.status         as status
 
-import fsleyes.panel                        as fslpanel
+import fsleyes.controls.controlpanel        as ctrlpanel
 import fsleyes.displaycontext               as displaycontext
 import fsleyes.strings                      as strings
 import fsleyes.actions.copyoverlay          as copyoverlay
 import fsleyes.controls.displayspacewarning as dswarning
 
 
-class CropImagePanel(fslpanel.FSLeyesPanel):
+class CropImagePanel(ctrlpanel.ControlPanel):
     """The ``CropImagePanel`` class is a FSLeyes control for use in an
     :class:`.OrthoPanel`, with the associated :class:`.CropImageProfile`.  It
     contains controls allowing the user to define a cropping box for the
@@ -51,7 +51,7 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         profile = ortho.getCurrentProfile()
@@ -178,7 +178,17 @@ class CropImagePanel(fslpanel.FSLeyesPanel):
         self.__dsWarning = None
 
         dsWarning.destroy()
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``CropImagePanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
 
 
     def __registerOverlay(self, overlay):

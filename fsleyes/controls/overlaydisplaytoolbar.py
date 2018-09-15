@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 
 """This module provides the :class:`OverlyDisplyaToolBar`, a
-:class:`.FSLeyesToolBar` containing controls for changing the display settings
+:class:`.ControlToolBar` containing controls for changing the display settings
 of the currently selected overlay.
 """
 
@@ -18,6 +18,7 @@ import wx
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 
+import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.toolbar                as fsltoolbar
 import fsleyes.icons                  as icons
 import fsleyes.tooltips               as fsltooltips
@@ -29,8 +30,8 @@ import fsleyes.strings                as strings
 log = logging.getLogger(__name__)
 
 
-class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
-    """The ``OverlyDisplyaToolBar`` is a :class:`.FSLeyesToolBar` containing
+class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
+    """The ``OverlyDisplyaToolBar`` is a :class:`.ControlToolBar` containing
     controls which allow the user to change the display settings of the
     currently selected overlay (as defined by the
     :attr:`.DisplayContext.selectedOverlay` property). The display settings
@@ -82,13 +83,13 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
                           ``OverlayDisplayToolBar`` is owned by.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.__viewPanel      = viewPanel
         self.__currentOverlay = None
@@ -108,7 +109,7 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
     def destroy(self):
         """Must be called when this ``OverlyDisplyaToolBar`` is no longer
         needed. Removes some property listeners, and calls the
-        :meth:`.FSLeyesToolBar.destroy` method.
+        :meth:`.ControlToolBar.destroy` method.
         """
 
         self.overlayList.removeListener('overlays',        self.name)
@@ -124,7 +125,20 @@ class OverlayDisplayToolBar(fsltoolbar.FSLeyesToolBar):
         self.__currentOverlay = None
         self.__viewPanel      = None
 
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OverlayDisplayToolBar`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
 
 
     def __showTools(self, overlay):

@@ -82,3 +82,13 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
               [togOverlay, mode]
 
         self.setNavOrder(nav)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``HistogramToolBar`` is only intended to be added to
+        :class:`.HistogramPanel` views.
+        """
+        from fsleyes.views.histogrampanel import HistogramPanel
+        return [HistogramPanel]

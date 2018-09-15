@@ -11,14 +11,14 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 
 import collections
 
-import fsl.data.image      as fslimage
-import fsleyes_props       as props
-import fsleyes.panel       as fslpanel
-import fsleyes.tooltips    as fsltooltips
-import fsleyes.strings     as strings
+import fsl.data.image                as fslimage
+import fsleyes_props                 as props
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.strings               as strings
 
 
-class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
+class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
     """The ``CanvasSettingsPanel`` is a *FSLeyes control* which displays
     settings for a :class:`.CanvasPanel` instance. A ``CanvasSettingsPanel``
     looks something like this:
@@ -57,12 +57,12 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
 
-        fslpanel.FSLeyesSettingsPanel.__init__(self,
-                                               parent,
-                                               overlayList,
-                                               displayCtx,
-                                               frame,
-                                               kbFocus=True)
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         frame,
+                                         kbFocus=True)
 
         self.__canvasPanel = canvasPanel
         self.__makeTools()
@@ -74,6 +74,19 @@ class CanvasSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         """
         self.__canvasPanel = None
         super(CanvasSettingsPanel, self).destroy()
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``CanvasSettingsPanel`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
 
 
     def __makeTools(self):

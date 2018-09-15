@@ -23,7 +23,7 @@ import fsl.utils.transform                  as transform
 import fsleyes_props                        as props
 import fsleyes_widgets.floatslider          as fslider
 
-import fsleyes.panel                        as fslpanel
+import fsleyes.controls.controlpanel        as ctrlpanel
 import fsleyes.displaycontext               as displaycontext
 import fsleyes.strings                      as strings
 import fsleyes.actions.applyflirtxfm        as applyflirtxfm
@@ -34,7 +34,7 @@ import fsleyes.controls.displayspacewarning as dswarning
 log = logging.getLogger(__name__)
 
 
-class EditTransformPanel(fslpanel.FSLeyesPanel):
+class EditTransformPanel(ctrlpanel.ControlPanel):
     """The :class:`EditTransformPanel` class is a FSLeyes control panel which
     allows the user to adjust the ``voxToWorldMat`` of an :class:`.Image`
     overlay.
@@ -72,7 +72,7 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
 
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__ortho = ortho
@@ -296,7 +296,17 @@ class EditTransformPanel(fslpanel.FSLeyesPanel):
         self.__dsWarning    = None
 
         dsWarning.destroy()
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``EditTransformPanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
 
 
     def __registerOverlay(self, overlay):

@@ -36,6 +36,16 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
 
 
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``HistogramControlPanel`` is only intended to be added to
+        :class:`.HistogramPanel` views.
+        """
+        from fsleyes.views.histogrampanel import HistogramPanel
+        return [HistogramPanel]
+
+
     def generateCustomPlotPanelWidgets(self, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomPlotPanelWidgets`.
         Adds some widgets to control properties of the

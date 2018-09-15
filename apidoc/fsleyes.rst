@@ -20,6 +20,7 @@
    fsleyes.panel
    fsleyes.parseargs
    fsleyes.plotting
+   fsleyes.plugins
    fsleyes.profiles
    fsleyes.render
    fsleyes.splash

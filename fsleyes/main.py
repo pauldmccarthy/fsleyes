@@ -761,8 +761,9 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
     # script on idle (which is a queue), the
     # script can assume that all overlays have
     # already been loaded.
+    from fsleyes.actions.runscript import RunScriptAction
     if script is not None:
-        idle.idle(frame.runScript, script)
+        idle.idle(frame.menuActions[RunScriptAction], script)
 
     return frame
 

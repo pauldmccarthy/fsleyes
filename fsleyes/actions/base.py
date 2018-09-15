@@ -76,17 +76,27 @@ class Action(props.HasProperties):
     """
 
 
-    def __init__(self, func, instance=None):
+    def __init__(self, func, instance=None, name=None):
         """Create an ``Action``.
 
         :arg func:     The action function.
 
         :arg instance: Object associated with the function, if this ``Action``
                        is encapsulating an instance method.
+
+        :arg name:     Action name. Defaults to ``func.__name__``.
+
+        .. note:: If an ``Action`` encapsulates a method of an
+                  :class:`.ActionProvider` instance, it is assumed that the
+                  ``name`` is the name of the method on the instance.
         """
+
+        if name is None:
+            name = func.__name__
+
         self.__instance     = instance
         self.__func         = func
-        self.__name         = func.__name__
+        self.__name         = name
         self.__boundWidgets = []
 
         self.addListener('enabled',
@@ -300,5 +310,5 @@ class ToggleAction(Action):
 
                 self.__setState(bw.widget)
 
-            except:
+            except Exception:
                 self.unbindWidget(bw.widget)

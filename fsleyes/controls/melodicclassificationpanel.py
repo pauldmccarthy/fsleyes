@@ -16,29 +16,29 @@ import logging
 
 import wx
 
-import fsl.utils.settings           as fslsettings
-import fsl.data.volumelabels        as vollabels
-import fsl.data.fixlabels           as fixlabels
-import fsl.data.image               as fslimage
-import fsl.data.melodicimage        as fslmelimage
+import fsl.utils.settings            as fslsettings
+import fsl.data.volumelabels         as vollabels
+import fsl.data.fixlabels            as fixlabels
+import fsl.data.image                as fslimage
+import fsl.data.melodicimage         as fslmelimage
 
-import fsleyes_props                as props
-import fsleyes_widgets.notebook     as notebook
-import fsleyes_widgets.utils.status as status
+import fsleyes_props                 as props
+import fsleyes_widgets.notebook      as notebook
+import fsleyes_widgets.utils.status  as status
 
-import fsleyes.displaycontext       as displaycontext
-import fsleyes.colourmaps           as fslcm
-import fsleyes.panel                as fslpanel
-import fsleyes.autodisplay          as autodisplay
-import fsleyes.strings              as strings
-from . import componentgrid         as componentgrid
-from . import labelgrid             as labelgrid
+import fsleyes.displaycontext        as displaycontext
+import fsleyes.colourmaps            as fslcm
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.autodisplay           as autodisplay
+import fsleyes.strings               as strings
+from . import componentgrid          as componentgrid
+from . import labelgrid              as labelgrid
 
 
 log = logging.getLogger(__name__)
 
 
-class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
+class MelodicClassificationPanel(ctrlpanel.ControlPanel):
     """The ``MelodicClassificationPanel`` allows the user to view and modify
     classification labels associated with the volumes of an :class:`.Image`,
     most typically the components of a :class:`.MelodicImage` (but any 4D
@@ -79,7 +79,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         :arg canvasPanel: The :class:`.CanvasPanel` that owns this
                           classification panel.
         """
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         self.__disabledText = wx.StaticText(
@@ -197,7 +197,7 @@ class MelodicClassificationPanel(fslpanel.FSLeyesPanel):
         self.__overlay        = None
         self.__lut            = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
     def __enable(self, enable=True, message=''):

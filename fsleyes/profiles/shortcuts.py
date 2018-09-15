@@ -23,7 +23,6 @@ actions = td.TypeDict({
 
     'FSLeyesFrame.closeFSLeyes'           : 'Ctrl-Q',
     'FSLeyesFrame.openHelp'               : 'Ctrl-?',
-    'FSLeyesFrame.removeFocusedViewPanel' : 'Ctrl-W',
 
     'FSLeyesFrame.layouts.default'        : 'Ctrl-Shift-D',
 
@@ -41,12 +40,12 @@ actions = td.TypeDict({
 
     # Shortcuts for next/prev volume
 
-
     # ViewPanel actions must use one
     # of CTRL, ALT or Shift due to
     # hacky things in FSLeyesFrame
     # (see __onViewPanelMenuItem)
 
+    'ViewPanel.removeFromFrame'             : 'Ctrl-W',
     'ViewPanel.removeAllPanels'             : 'Ctrl-Alt-X',
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',

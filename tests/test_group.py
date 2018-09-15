@@ -9,7 +9,7 @@ import os.path as op
 
 import fsl.data.image as fslimage
 
-from . import run_with_orthopanel
+from . import run_with_fsleyes
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
@@ -46,4 +46,4 @@ def _test_group(frame, overlayList, displayCtx):
 
 
 def test_group():
-    run_with_orthopanel(_test_group)
+    run_with_fsleyes(_test_group)

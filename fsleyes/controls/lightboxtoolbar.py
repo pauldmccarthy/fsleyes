@@ -5,23 +5,24 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`LightBoxToolBar` class, which is a
-:class:`.FSLeyesToolBar` for use with the :class:`.LightBoxPanel`.
+:class:`.ControlToolBar` for use with the :class:`.LightBoxPanel`.
 """
 
 
 import wx
 
-import fsleyes_props    as props
+import fsleyes_props                 as props
 
-import fsleyes.toolbar  as fsltoolbar
-import fsleyes.actions  as actions
-import fsleyes.icons    as fslicons
-import fsleyes.tooltips as fsltooltips
-import fsleyes.strings  as strings
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.toolbar               as fsltoolbar
+import fsleyes.actions               as actions
+import fsleyes.icons                 as fslicons
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.strings               as strings
 
 
-class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
-    """The ``LightBoxToolBar`` is a :class:`.FSLeyesToolBar` for use with the
+class LightBoxToolBar(ctrlpanel.ControlToolBar):
+    """The ``LightBoxToolBar`` is a :class:`.ControlToolBar` for use with the
     :class:`.LightBoxPanel`. A ``LightBoxToolBar`` looks something like this:
 
 
@@ -47,13 +48,13 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
         :arg lb:          The :class:`.LightBoxPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.lightBoxPanel = lb
 
@@ -178,3 +179,13 @@ class LightBoxToolBar(fsltoolbar.FSLeyesToolBar):
 
         self.SetTools(tools)
         self.setNavOrder(nav)
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``LightBoxToolBar`` is only intended to be added to
+        :class:`.LightBoxPanel` views.
+        """
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        return [LightBoxPanel]

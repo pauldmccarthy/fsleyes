@@ -15,7 +15,8 @@ chronological order.
 Added
 ^^^^^
 
-
+* New :mod:`.plugin` architecture, for adding custom panels and tools to
+  FSLeyes.
 * The ``render`` tool has a new ``--crop`` option, to auto-crop screenshots.
 * The :attr:`.VolumeOpts.overrideDataRange` is now automatically enabled for
   images with an extreme data range, on platforms that do not support floating

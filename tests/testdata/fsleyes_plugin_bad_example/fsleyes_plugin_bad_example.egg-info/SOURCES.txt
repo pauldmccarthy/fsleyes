@@ -1,0 +1,8 @@
+setup.py
+fsleyes_plugin_bad_example/__init__.py
+fsleyes_plugin_bad_example/plugin.py
+fsleyes_plugin_bad_example.egg-info/PKG-INFO
+fsleyes_plugin_bad_example.egg-info/SOURCES.txt
+fsleyes_plugin_bad_example.egg-info/dependency_links.txt
+fsleyes_plugin_bad_example.egg-info/entry_points.txt
+fsleyes_plugin_bad_example.egg-info/top_level.txt

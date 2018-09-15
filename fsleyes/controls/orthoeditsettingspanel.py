@@ -9,13 +9,13 @@ control panel which contains settings to manage an
 :class:`.OrthoEditProfile`.
 """
 
-import fsleyes_props    as props
-import fsleyes.strings  as strings
-import fsleyes.tooltips as fsltooltips
-import fsleyes.panel    as fslpanel
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes_props                 as props
+import fsleyes.strings               as strings
+import fsleyes.tooltips              as fsltooltips
 
 
-class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
+class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
     """The ``OrthoEditSettingsPanel`` is a *FSLeyes* control panel which
     displays widgets allowing the user to adjust properties of an
     :class:`.OrthoEditProfile`.
@@ -31,20 +31,30 @@ class OrthoEditSettingsPanel(fslpanel.FSLeyesSettingsPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
-        fslpanel.FSLeyesSettingsPanel.__init__(self,
-                                               parent,
-                                               overlayList,
-                                               displayCtx,
-                                               frame,
-                                               kbFocus=True)
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         frame,
+                                         kbFocus=True)
 
         self.__ortho = ortho
         self.__makeTools()
 
 
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditSettingsPanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
     def __makeTools(self):
         """Generates all of the tools and adds them to the :class:`.WidgetList`
-        (see :class:`.FSLeyesSettingsPanel`),
+        (see :class:`.SettingsPanel`),
         """
 
         ortho   = self.__ortho

@@ -12,6 +12,7 @@
    fsleyes.controls.clusterpanel
    fsleyes.controls.colourbar
    fsleyes.controls.componentgrid
+   fsleyes.controls.controlpanel
    fsleyes.controls.cropimagepanel
    fsleyes.controls.displayspacewarning
    fsleyes.controls.edittransformpanel

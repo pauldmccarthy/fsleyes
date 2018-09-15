@@ -41,6 +41,10 @@ def test_embed():
     sim    = wx.UIActionSimulator()
     ncalls = [0]
 
+    def finish():
+        frame[0].Close()
+        app.ExitMainLoop()
+
     def embedded(overlayList, displayCtx, fframe):
 
         print('Embedded call', ncalls[0])
@@ -57,10 +61,7 @@ def test_embed():
             wx.CallLater(2500, simclick, sim, btn)
         else:
             print('Done - closing')
-            wx.CallLater(1500, app.ExitMainLoop)
-            wx.CallLater(2500, frame.Close)
-            frame[0] = None
-
+            wx.CallLater(1500, finish)
 
     def open_fsleyes(ev):
         fslmain.embed(frame[0],

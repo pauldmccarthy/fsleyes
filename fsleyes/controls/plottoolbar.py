@@ -11,13 +11,13 @@ an :class:`.OverlayPlotPanel`.
 
 import fsleyes_props    as props
 
-import fsleyes.icons    as icons
-import fsleyes.actions  as actions
-import fsleyes.tooltips as tooltips
-import fsleyes.toolbar  as fsltoolbar
+import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.icons                 as icons
+import fsleyes.actions               as actions
+import fsleyes.tooltips              as tooltips
 
 
-class PlotToolBar(fsltoolbar.FSLeyesToolBar):
+class PlotToolBar(ctrlpanel.ControlToolBar):
     """The ``PlotToolBar`` is a toolbar for use with an
     :class:`.OverlayPlotPanel`. It creates toolbar controls which
     are common to all :class:`.OverlayPlotPanel` types.
@@ -33,13 +33,13 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         :arg plotPanel:   The :class:`.PlotPanel` instance.
         """
 
-        fsltoolbar.FSLeyesToolBar.__init__(self,
-                                           parent,
-                                           overlayList,
-                                           displayCtx,
-                                           frame,
-                                           height=24,
-                                           kbFocus=True)
+        ctrlpanel.ControlToolBar.__init__(self,
+                                          parent,
+                                          overlayList,
+                                          displayCtx,
+                                          frame,
+                                          height=24,
+                                          kbFocus=True)
 
         self.__plotPanel = plotPanel
 
@@ -84,7 +84,7 @@ class PlotToolBar(fsltoolbar.FSLeyesToolBar):
         self.__commonNav   = None
         self.__plotPanel   = None
 
-        fsltoolbar.FSLeyesToolBar.destroy(self)
+        ctrlpanel.ControlToolBar.destroy(self)
 
 
     def getCommonTools(self):

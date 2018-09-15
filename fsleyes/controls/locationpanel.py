@@ -30,6 +30,7 @@ import fsleyes_widgets.elistbox       as elistbox
 import fsleyes_widgets.utils.status   as status
 import fsleyes_widgets.utils.typedict as td
 
+import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.panel                  as fslpanel
 import fsleyes.strings                as strings
 
@@ -37,7 +38,7 @@ import fsleyes.strings                as strings
 log = logging.getLogger(__name__)
 
 
-class LocationPanel(fslpanel.FSLeyesPanel):
+class LocationPanel(ctrlpanel.ControlPanel):
     """The ``LocationPanel`` is a panel which contains controls allowing the
     user to view and modify the :attr:`.DisplayContext.location` property.
 
@@ -82,7 +83,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         :arg showHistory: Defaults to ``False``. If ``True``, create and
                           display a :class:`LocationHistoryPanel`.
         """
-        fslpanel.FSLeyesPanel.__init__(
+        ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
         # only use a notebook if showing history panel
@@ -131,7 +132,7 @@ class LocationPanel(fslpanel.FSLeyesPanel):
         self.__info    = None
         self.__history = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
+        ctrlpanel.ControlPanel.destroy(self)
 
 
 class LocationInfoPanel(fslpanel.FSLeyesPanel):
