@@ -60,8 +60,8 @@ looks like this:
 
 
 This is slightly boring, so let's load an image. Select the *File*
-|right_arrow| *Add overlay from file* menu option, and choose a ``.nii.gz``
-image to load.
+|right_arrow| *Add from file* menu option, and choose a ``.nii.gz`` image to
+load.
 
 
 Now things are a bit more interesting:
@@ -94,8 +94,8 @@ The view
 
 The view is where your overlays are displayed. By default, an
 :ref:`orthographic view <ortho_lightbox_views_ortho>` is shown; you can also
-select a :ref:`lightbox view <ortho_lightbox_views_lightbox>`, or some
-:ref:`plot views <plot_views>`, from the *View* menu.
+select a :ref:`lightbox view <ortho_lightbox_views_lightbox>`, a :ref:`3D view
+<3d_view>`, or some :ref:`plot views <plot_views>`, from the *View* menu.
 
 
 Let's stick with the orthographic view for now. It displays your overlay on
@@ -250,13 +250,13 @@ or the *Settings* |right_arrow| *<view name>* |right_arrow| *View settings
 panel* menu option), as the *Link overlay display settings* check box.
 
 
-Link the volumes on two or more 4D images?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Link/unlink the volumes on two or more 4D images?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-If you want to view the same volumes from two or more 4D NIFTI images, click
-the |chainlink_icon| buttons, for each image, in the :ref:`overlay list
-<ortho_lightbox_views_overlay_list>`.
+If you want to view the same volumes from two or more 4D NIFTI images, make
+sure the |chainlink_icon| button, in the :ref:`overlay list
+<ortho_lightbox_views_overlay_list>`, is enabled for each image.
 
 
 Set up a positive/negative colour map for Z statistics?
@@ -273,15 +273,6 @@ You can also set up a negative colour map through the :ref:`overlay display
 panel <overlays_overlay_display_panel>` (the |gear_icon| button on the
 :ref:`overlay display toolbar <overlays_overlay_display_toolbar>`). See the
 section on :ref:`volume display settings <overlays_volume>` for more details.
-
-
-My image is tilted/oblique! How do I make it oriented/rectangular?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
-|spanner_icon| button) and set the *Display space* to the image which you want
-oriented.
 
 
 Edit a NIFTI image?

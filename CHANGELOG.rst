@@ -8,14 +8,14 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.26.0 (Under development)
---------------------------
+0.26.0 (Sunday September 16th 2018)
+-----------------------------------
 
 
 Added
 ^^^^^
 
-* New :mod:`.plugin` architecture, for adding custom panels and tools to
+* New :mod:`.plugins` architecture, for adding custom panels and tools to
   FSLeyes.
 * The ``render`` tool has a new ``--crop`` option, to auto-crop screenshots.
 * The :attr:`.VolumeOpts.overrideDataRange` is now automatically enabled for
@@ -39,6 +39,7 @@ Fixed
 ^^^^^
 
 
+* Updated user documentation.
 * Fixed a bug in the :class:`.HistogramSeries` class.
 * Fixed a bug in the :class:`.ImportDataSeriesAction` class.
 * Fixed a bug in the :class:`.AddMaskDataSeriesAction` class.

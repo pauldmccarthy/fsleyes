@@ -45,10 +45,10 @@ You can load a FEAT analysis in a few different ways [*]_:
 
       fsleyes path/to/my_analysis.feat/filtered_func_data
 
-- Via *File* |right_arrow| *Add overlay from directory* - select your
+- Via *File* |right_arrow| *Add from directory* - select your
   ``.feat`` analysis directory.
 
-- Via *File* |right_arrow| *Add overlay from file* - select the
+- Via *File* |right_arrow| *Add from file* - select the
   ``filtered_func_data`` image located in your ``.feat`` analysis directory.
 
 

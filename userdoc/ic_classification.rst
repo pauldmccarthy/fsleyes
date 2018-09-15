@@ -55,10 +55,10 @@ You can load a MELODIC analysis in a few different ways:
 
       fsleyes path/to/my_analysis.ica/melodic_IC
 
-- Via *File* |right_arrow| *Add overlay from directory* - select your
+- Via *File* |right_arrow| *Add from directory* - select your
   ``.ica`` analysis directory.
 
-- Via *File* |right_arrow| *Add overlay from file* - select the
+- Via *File* |right_arrow| *Add from file* - select the
   ``melodic_IC`` image located in your ``.ica`` analysis directory.
 
 

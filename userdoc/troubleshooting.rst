@@ -1,5 +1,7 @@
 .. |right_arrow| unicode:: U+21D2
 
+.. |spanner_icon| image:: images/spanner_icon.png
+
 .. _troubleshooting:
 
 
@@ -93,6 +95,35 @@ or correct the orientation information in the NIFTI file header. In the
 future, you will be able to do this from within FSLeyes, but as of version
 |version|, you must do this with an external program such as ``fslcpgeom`` or
 ``fsledithd``.
+
+
+My image is tilted/oblique! How do I make it oriented/rectangular?
+------------------------------------------------------------------
+
+Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
+|spanner_icon| button) and set the *Display space* to the image which you want
+oriented.
+
+
+There are weird striping artifacts in my image!
+-----------------------------------------------
+
+.. image:: images/troubleshooting_striping.png
+   :width: 10%
+   :align: right
+
+Those are slice boundaries - your image is being displayed obliquely to the
+display, and FSLeyes is using nearest-neighbour interpolation to draw the
+image to the screen. Change the interpolation (in the :ref:`overlay display
+panel <overlays_overlay_display_panel>`) to *linear* or *spline*.
+
+
+Movie mode gives me a black/flickering screen
+---------------------------------------------
+
+
+Try changing the **Synchronise movie updates** setting, in the view settings
+panel (the |spanner_icon| button).
 
 
 .. _troubleshooting_vector_orientation:

@@ -322,15 +322,32 @@ corresponding voxel location (and volume index, for 4D images) is also shown.
        details on the different coordinate systems used in FSLeyes.
 
 
+Location history
+^^^^^^^^^^^^^^^^
+
+Clicking the *History* tab on the left of the location panel will bring up a
+list of all of the locations that you have visited, recorded in world
+coordinates.
+
+.. image:: images/ortho_lightbox_views_location_panel.png
+   :width: 50%
+   :align: center
+
+Clicking on a location will take you back to that location. You can also
+double-click on an entry to add a comment about that location. You can save
+the location history out to a text file, and load in a previously saved
+history using the buttons along the top.
+
+
 .. _ortho_lightbox_views_view_settings:
 
 Ortho/lightbox view settings
 ----------------------------
 
 
-Ortho and lightbox views both have a view settings panel, which contain
-various settings. Many of the settings in this panel are common to both ortho
-and lightbox views, and are described here.
+Ortho and lightbox views (and the :ref:`3D view <3d_view>`) have a view
+settings panel, which contain various settings. Many of the settings in this
+panel are common to both ortho and lightbox views, and are described here.
 
 
 .. image:: images/ortho_lightbox_views_view_settings.png
@@ -343,23 +360,27 @@ settings panel:
 
  - **Show location cursor** The location cursor can be toggled on/off.
 
- - The **Location cursor colour** can be changed.
-
  - The canvas **Background colour** can be changed.
 
  - The canvas **Foreground colour** can be changed. This controls the font
    colour. Note that the foreground colour will be automatically adjusted
    whenever you change the background colour.
 
- - **Display in radiological orientation** The view orientation can be toggled
-   between radiological and neurological [*]_.
+ - The **Location cursor colour** can be changed.
 
  - The **Rendering performance** setting allows you to adjust how FSLeyes
    draws overlays; if you are using an old or low-performance computer, you
    may wish to choose a lower (faster) performance setting here.
 
+ - If you are using a mac with a retina display, you can turn on the **Enable
+   high-DPI rendering** option to take full advantage of your display's
+   resolution.
+
  - You can change the **Display space** reference overlay - the display space
    is further described :ref:`here <display_space>`.
+
+ - **Display in radiological orientation** The view orientation can be toggled
+   between radiological and neurological [*]_.
 
 
  .. [*] When radiological orientation is enabled, the subject's left will be
@@ -401,6 +422,9 @@ you can choose to have various properties between them linked or unlinked.
         available through the :ref:`overlay list
         <ortho_lightbox_views_overlay_list>`.
 
+- **Link overlay volume settings** When this setting is selected, the volume
+  for 4D overlays will be linked across views.
+
 
 .. _ortho_lightbox_views_view_settings_movie_mode:
 
@@ -417,6 +441,10 @@ alignment in a collection of T1 MRI images. The **Movie update rate** setting
 will adjust the speed at which the movie frames change. You can also change
 the image axis (X, Y, Z, or time/volume), to loop through via the **Movie
 axis** setting.
+
+
+.. note:: If movie mode is not working for you, try changing the **Synchronise
+          movie updates** setting.
 
 
 .. _ortho_lightbox_views_view_settings_colour_bar:

@@ -345,7 +345,8 @@ titles = TypeDict({
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
     'Scene3DToolBar'            : '3D view toolbar',
-    'FlirtFileDialog'           : 'Load affine transformation',
+    'FlirtFileDialog.load'      : 'Load affine transformation',
+    'FlirtFileDialog.save'      : 'Save affine transformation',
 
     'PlotListPanel'             : 'Plot list',
     'TimeSeriesControlPanel'    : 'Time series control',

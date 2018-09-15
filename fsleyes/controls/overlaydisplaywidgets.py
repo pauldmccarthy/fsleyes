@@ -171,7 +171,6 @@ def _initPropertyList_VolumeOpts(threedee):
 
 def _init3DPropertyList_VolumeOpts():
     return ['blendFactor',
-            'smoothing',
             'numSteps',
             'resolution',
             'custom_clipPlanes']
@@ -409,8 +408,6 @@ def _init3DWidgetSpec_VolumeOpts():
         'numSteps'          : props.Widget('numSteps',
                                            showLimits=False),
         'blendFactor'       : props.Widget('blendFactor',
-                                           showLimits=False),
-        'smoothing'         : props.Widget('smoothing',
                                            showLimits=False),
         'resolution'        : props.Widget('resolution',
                                            showLimits=False),

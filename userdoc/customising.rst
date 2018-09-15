@@ -10,6 +10,10 @@
 This page contains details on customising various aspects of FSLeyes.
 
 
+.. note:: If you are a Python developer, and want to develop custom plugins
+          for FSLeyes, check out the page on :ref:`plugins <fsleyes_plugins>`.
+
+
 .. _customising_fsleyes_settings_directory:
 
 FSLeyes settings directory
@@ -127,6 +131,11 @@ map (as a :ref:`RGB file <customising_rgb_colour_map_files>`) under the
 a sub-directory called ``colourmaps/``), renaming the file so it ends with
 ``.cmap``. In the FSLeyes interface, all user-added colour maps will appear
 after the built-in colour maps.
+
+
+You can also create your own ``order.txt`` file and store it alongside the
+user-added colour map files - it will be used in place of the built-in
+``order.txt`` file.
 
 
 .. _customising_rgb_colour_map_files:

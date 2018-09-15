@@ -12,6 +12,7 @@
 .. |pencil_button|               image:: images/editing_images_pencil_button.png
 .. |eraser_button|               image:: images/editing_images_eraser_button.png
 .. |selint_button|               image:: images/editing_images_selint_button.png
+.. |bucket_button|               image:: images/editing_images_bucket_button.png
 .. |copy_button|                 image:: images/editing_images_copy_button.png
 .. |undo_button|                 image:: images/editing_images_undo_button.png
 .. |redo_button|                 image:: images/editing_images_redo_button.png
@@ -43,7 +44,7 @@ menu option.
 
 .. image:: images/editing_images_edit_mode_menu.png
    :align: center
-   :width: 70%
+   :width: 30%
 
 
 Overview
@@ -130,6 +131,10 @@ and drag on the image:
    :ref:`select mode <editing_images_select_mode>` this tool allows you to
    remove voxels from the current selection.
 
+ - |bucket_button| **Bucket** This tool allows you to fill closed regions - in
+   draw mode, regions in the image can be filled, and in select mode, regions
+   in the selection can be filled.
+
  - |selint_button| **Select by intensity** This tool (only available in
    :ref:`select mode <editing_images_select_mode>`) allows you to
    automatically select voxels based on their intensity.
@@ -149,6 +154,8 @@ mode*. In draw mode, you can:
  - |pencil_button| Use the *pencil* tool to change voxel values.
 
  - |eraser_button| Use the *eraser* tool to erase voxels.
+
+ - |bucket_button| Use the *bucket* tool to fill in regions.
 
  - |undo_button| |redo_button| Use the *undo* and *redo* buttons to undo/redo
    changes that you have made to the currently selected image.
@@ -173,9 +180,15 @@ the |command_key| and |shift_key| keys and spin the mouse wheel to
 increase/decrease the pencil size.
 
 
+The *bucket* tool can be used to fill in holes. Use the pencil tool to draw a
+loop around the region you wish to fill, making sure that the loop is closed.
+Then select the bucket tool, and click inside the region - all of the voxels
+within the loop will be filled.
+
+
 The |2D_3D_buttons| buttons allow you to switch between using a 2D selection
 region in slice, and using a 3D selection which extends across multiple
-slices.
+slices. The bucket tool only works in 2D mode.
 
 
 .. _editing_images_select_mode:
@@ -191,8 +204,8 @@ editing an image is a two-step process:
    1. Select the voxels you wish to change. You can do this in one of two ways:
 
       - By :ref:`manually drawing <editing_images_manual_selection>` your
-        selection with the pencil |pencil_button| and eraser |eraser_button|
-        tools.
+        selection with the pencil |pencil_button|, eraser |eraser_button|,
+        and |bucket_button| tools.
 
       - By using the :ref:`select by intensity
         <editing_images_select_by_intensity>` tool |selint_button| to
@@ -226,8 +239,8 @@ Manual selection
 ----------------
 
 
-In select mode, the pencil |pencil_button| and eraser |eraser_button|
-tools are respectively used to select and deselect voxels.
+In select mode, the pencil |pencil_button|, eraser |eraser_button|, and bucket
+|bucket_button| tools are respectively used to select and deselect voxels.
 
 
 Using the pencil tool, left-clicking will select voxels under the selection
@@ -235,6 +248,12 @@ cursor. Selected voxels are highlighted in pink (you can change the selection
 colour in the :ref:`edit settings panel
 <editing_images_edit_settings_panel>`).  Left clicking with the eraser tool
 will remove voxels from the selection [*]_.
+
+
+In the same manner as with draw mode, you can fill regions in the selection
+using the bucket tool. Draw a loop with the pencil tool, then switch to the
+bucket tool and click inside the loop - all voxels within the loop will be
+added to the selection.
 
 
 You can adjust the selection cursor size via the *Selection size* control in
@@ -407,7 +426,7 @@ tool, and to configure some options and settings:
    <editing_images_select_mode>`.
 
 2. **Edit tool** These buttons allow you to choose the current tool -
-   *navigate*, *pencil*, *eraser* or *select by intensity*.
+   *navigate*, *pencil*, *eraser*, *bucket*, or *select by intensity*.
 
 3. **2D/3D mode** You can toggle between selecting voxels in the current
    slice (2D), or selecting voxels across multiple slices (3D).

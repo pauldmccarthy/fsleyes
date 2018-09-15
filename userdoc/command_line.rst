@@ -212,8 +212,8 @@ FSLeyes has a programming interface which you can use to programmatically set
 up complex scenes. The ``--runscript`` option allows you to execute a Python
 script when FSLeyes starts, which can load overlays and configure their
 display properties, and set up the FSLeyes interface.  These scripts have
-access to the same environment that is available in the :ref:`Python shell
-<python_shell>`.
+access to the same environment that is available via the :ref:`FSLeyes-Jupyter
+notebook <fsleyes_notebook>`.
 
 
 .. _command_line_generating_arguments:

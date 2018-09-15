@@ -332,9 +332,11 @@ class FlirtFileDialog(wx.Dialog):
                           be prompted to load an existing FLIRT matrix.
         """
 
+        titleKey = {True : 'save', False : 'load'}[save]
+
         wx.Dialog.__init__(self,
                            parent,
-                           title=strings.titles[self],
+                           title=strings.titles[self, titleKey],
                            style=(wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP))
 
         if refOpts     is None: refOpts     = []

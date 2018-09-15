@@ -24,7 +24,7 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    :caption: Table of contents
    :maxdepth: 1
 
-   self
+   install
    quick_start
    overview
    overlays
@@ -37,9 +37,10 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    ic_classification
    tools
    command_line
-   python_shell
+   fsleyes_notebook
    display_space
    customising
+   plugins
    troubleshooting
    changelog
 
