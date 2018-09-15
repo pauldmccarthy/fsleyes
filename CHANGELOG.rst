@@ -15,7 +15,7 @@ chronological order.
 Added
 ^^^^^
 
-* New :mod:`.plugin` architecture, for adding custom panels and tools to
+* New :mod:`.plugins` architecture, for adding custom panels and tools to
   FSLeyes.
 * The ``render`` tool has a new ``--crop`` option, to auto-crop screenshots.
 * The :attr:`.VolumeOpts.overrideDataRange` is now automatically enabled for
@@ -38,7 +38,7 @@ Changed
 Fixed
 ^^^^^
 
-
+* Updated user documentation.
 * Fixed a bug in the :class:`.HistogramSeries` class.
 * Fixed a bug in the :class:`.ImportDataSeriesAction` class.
 * Fixed a bug in the :class:`.AddMaskDataSeriesAction` class.
