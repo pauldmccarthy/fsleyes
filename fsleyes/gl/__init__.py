@@ -304,7 +304,7 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glVer        = gl.glGetString(gl.GL_VERSION).decode('ascii').split()[0]
+        glVer = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
         major, minor = [int(v) for v in glVer.split('.')][:2]
     else:
         major, minor = glVersion
@@ -366,7 +366,7 @@ def bootstrap(glVersion=None):
         dc.OVERLAY_TYPES['Image']       .remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('mip')
 
-    renderer = gl.glGetString(gl.GL_RENDERER).decode('ascii')
+    renderer = gl.glGetString(gl.GL_RENDERER).decode('latin1')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
