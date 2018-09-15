@@ -822,6 +822,9 @@ class PlotPanel(viewpanel.ViewPanel):
                           ds.overlay.name, len(xdata), len(ydata)))
             return (0, 0), (0, 0)
 
+        xdata = np.asarray(xdata, dtype=np.float)
+        ydata = np.asarray(ydata, dtype=np.float)
+
         log.debug('Drawing {} for {}'.format(type(ds).__name__, ds.overlay))
 
         # Note to self: If the smoothed data is

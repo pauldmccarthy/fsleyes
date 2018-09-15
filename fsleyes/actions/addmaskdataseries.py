@@ -76,18 +76,17 @@ class AddMaskDataSeriesAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
-        self.enabled = (len(self.__overlayList) > 0         and
-                        isinstance(overlay, fslimage.Image) and
-                        overlay.ndim > 3                    and
-                        len(self.__maskOptions) > 0)
+        if (len(self.__overlayList) == 0 or
+           (not isinstance(overlay, fslimage.Image))):
+            self.enabled = False
+            return
 
-        if self.enabled:
-            self.__maskOptions = [o for o in self.__overlayList if
-                                  isinstance(o, fslimage.Image) and
-                                  o is not overlay              and
-                                  o.sameSpace(overlay)]
-        else:
-            self.__maskOptions = []
+        self.__maskOptions = [o for o in self.__overlayList if
+                              isinstance(o, fslimage.Image) and
+                              o is not overlay              and
+                              o.sameSpace(overlay)]
+
+        self.enabled = (overlay.ndim > 3 and len(self.__maskOptions) > 0)
 
 
     def __addMaskDataSeries(self):
@@ -118,7 +117,10 @@ class AddMaskDataSeriesAction(base.Action):
 
         maskimg   = options[dlg.GetChoice()]
         weight    = dlg.GetCheckBox()
-        ds        = dataseries.DataSeries(overlay)
+        ds        = dataseries.DataSeries(overlay,
+                                          self.__overlayList,
+                                          self.__displayCtx,
+                                          self.__plotPanel)
 
         data     = overlay.nibImage.get_data()[opts.index(atVolume=False)]
         mask     = maskimg.nibImage.get_data()
@@ -232,6 +234,30 @@ class MaskDialog(wx.Dialog):
         self.Layout()
         self.Fit()
         self.CentreOnParent()
+
+
+    @property
+    def okButton(self):
+        """Returns the OK button. """
+        return self.__okButton
+
+
+    @property
+    def cancelButton(self):
+        """Returns the cancel button. """
+        return self.__cancelButton
+
+
+    @property
+    def checkbox(self):
+        """Returns the checkbox. """
+        return self.__checkbox
+
+
+    @property
+    def choice(self):
+        """Returns the choice widget. """
+        return self.__choice
 
 
     def GetChoice(self):

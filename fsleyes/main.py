@@ -45,7 +45,8 @@ import fsleyes.colourmaps as colourmaps
 
 
 # wx.ModalDialogHook does not exist in wxPython < 4
-if fslplatform.wxFlavour == fslplatform.WX_PYTHON:
+
+if fslplatform.wxFlavour in (fslplatform.WX_PYTHON, fslplatform.WX_UNKNOWN):
     class ModalDialogHook(object):
         def Register(self):
             pass

@@ -79,17 +79,18 @@ class AddROIHistogramAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
-        self.enabled = (len(self.__overlayList) > 0         and
-                        len(self.__roiOptions)  > 0         and
-                        isinstance(overlay, fslimage.Image))
+        if (len(self.__overlayList) == 0 or
+           (not isinstance(overlay, fslimage.Image))):
+            self.enabled = False
+            return
 
-        if self.enabled:
-            self.__roiOptions = [o for o in self.__overlayList if
-                                 isinstance(o, fslimage.Image) and
-                                 o is not overlay              and
-                                 o.sameSpace(overlay)]
-        else:
-            self.__roiOptions = []
+        self.__roiOptions = [o for o in self.__overlayList if
+                             isinstance(o, fslimage.Image) and
+                             o is not overlay              and
+                             o.sameSpace(overlay)]
+
+        self.enabled = len(self.__roiOptions)  > 0
+
 
 
     def __addROIHistogram(self):
@@ -132,7 +133,10 @@ class AddROIHistogramAction(base.Action):
                                                     includeOutliers=False,
                                                     count=count)
 
-        ds           = dataseries.DataSeries(overlay)
+        ds           = dataseries.DataSeries(overlay,
+                                             self.__overlayList,
+                                             self.__displayCtx,
+                                             self.__plotPanel)
         ds.colour    = self.__plotPanel.getOverlayPlotColour(overlay)
         ds.alpha     = 1
         ds.lineWidth = 1
