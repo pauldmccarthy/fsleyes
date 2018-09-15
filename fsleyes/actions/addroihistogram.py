@@ -79,14 +79,18 @@ class AddROIHistogramAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
+        if (len(self.__overlayList) == 0 or
+           (not isinstance(overlay, fslimage.Image))):
+            self.enabled = False
+            return
+
         self.__roiOptions = [o for o in self.__overlayList if
                              isinstance(o, fslimage.Image) and
                              o is not overlay              and
                              o.sameSpace(overlay)]
 
-        self.enabled = (len(self.__overlayList) > 0         and
-                        len(self.__roiOptions)  > 0         and
-                        isinstance(overlay, fslimage.Image))
+        self.enabled = len(self.__roiOptions)  > 0
+
 
 
     def __addROIHistogram(self):
