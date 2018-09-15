@@ -234,6 +234,30 @@ class MaskDialog(wx.Dialog):
         self.CentreOnParent()
 
 
+    @property
+    def okButton(self):
+        """Returns the OK button. """
+        return self.__okButton
+
+
+    @property
+    def cancelButton(self):
+        """Returns the cancel button. """
+        return self.__cancelButton
+
+
+    @property
+    def checkbox(self):
+        """Returns the checkbox. """
+        return self.__checkbox
+
+
+    @property
+    def choice(self):
+        """Returns the choice widget. """
+        return self.__choice
+
+
     def GetChoice(self):
         """Returns the index of the currently selected choice."""
         return self.__choice.GetSelection()
