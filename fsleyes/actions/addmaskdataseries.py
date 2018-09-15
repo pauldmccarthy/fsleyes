@@ -76,18 +76,15 @@ class AddMaskDataSeriesAction(base.Action):
 
         overlay = self.__displayCtx.getSelectedOverlay()
 
+        self.__maskOptions = [o for o in self.__overlayList if
+                              isinstance(o, fslimage.Image) and
+                              o is not overlay              and
+                              o.sameSpace(overlay)]
+
         self.enabled = (len(self.__overlayList) > 0         and
                         isinstance(overlay, fslimage.Image) and
                         overlay.ndim > 3                    and
                         len(self.__maskOptions) > 0)
-
-        if self.enabled:
-            self.__maskOptions = [o for o in self.__overlayList if
-                                  isinstance(o, fslimage.Image) and
-                                  o is not overlay              and
-                                  o.sameSpace(overlay)]
-        else:
-            self.__maskOptions = []
 
 
     def __addMaskDataSeries(self):
@@ -118,7 +115,10 @@ class AddMaskDataSeriesAction(base.Action):
 
         maskimg   = options[dlg.GetChoice()]
         weight    = dlg.GetCheckBox()
-        ds        = dataseries.DataSeries(overlay)
+        ds        = dataseries.DataSeries(overlay,
+                                          self.__overlayList,
+                                          self.__displayCtx,
+                                          self.__plotPanel)
 
         data     = overlay.nibImage.get_data()[opts.index(atVolume=False)]
         mask     = maskimg.nibImage.get_data()
