@@ -44,6 +44,7 @@ Fixed
 * Fixed a bug in the :class:`.ImportDataSeriesAction` class.
 * Fixed a bug in the :class:`.AddMaskDataSeriesAction` class.
 * Fixed a bug in the :class:`.AddROIHistogramAction` class.
+* :mod:`.gl` initialisation can now handle non-ASCII OpenGL renderer strings.
 
 
 0.25.0 (Tuesday August 28th 2018)
