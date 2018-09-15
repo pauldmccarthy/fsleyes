@@ -39,8 +39,10 @@ Fixed
 ^^^^^
 
 
-* Fixed small bug in the :class:`.HistogramSeries` class.
+* Fixed a bug in the :class:`.HistogramSeries` class.
 * Fixed a bug in the :class:`.ImportDataSeriesAction` class.
+* Fixed a bug in the :class:`.AddMaskDataSeriesAction` class.
+* Fixed a bug in the :class:`.AddROIHistogramAction` class.
 
 
 0.25.0 (Tuesday August 28th 2018)
