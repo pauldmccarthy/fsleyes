@@ -109,7 +109,7 @@ There are weird striping artifacts in my image!
 -----------------------------------------------
 
 .. image:: images/troubleshooting_striping.png
-   :width: 30%
+   :width: 10%
    :align: right
 
 Those are slice boundaries - your image is being displayed obliquely to the

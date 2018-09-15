@@ -10,8 +10,8 @@
 This page contains details on customising various aspects of FSLeyes.
 
 
-If you are a Python developer, and want to develop custom plugins for FSLeyes,
-check out the page on :ref:`plugins <fsleyes_plugins>`.
+.. note:: If you are a Python developer, and want to develop custom plugins
+          for FSLeyes, check out the page on :ref:`plugins <fsleyes_plugins>`.
 
 
 .. _customising_fsleyes_settings_directory:
