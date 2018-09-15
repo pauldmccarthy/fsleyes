@@ -8,8 +8,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.26.0 (Under development)
---------------------------
+0.26.0 (Sunday September 16th 2018)
+-----------------------------------
 
 
 Added
@@ -37,6 +37,7 @@ Changed
 
 Fixed
 ^^^^^
+
 
 * Updated user documentation.
 * Fixed a bug in the :class:`.HistogramSeries` class.
