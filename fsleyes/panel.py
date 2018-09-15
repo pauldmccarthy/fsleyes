@@ -45,7 +45,6 @@ should be made available available to the user can be added as
 
 
 import logging
-import warnings
 import six
 import deprecation
 
@@ -418,16 +417,6 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
                  frame,
                  *args,
                  **kwargs):
-
-        from fsleyes.views.viewpanel       import ViewPanel
-        from fsleyes.controls.controlpanel import ControlPanel
-        from fsleyes.controls.controlpanel import ControlToolBar
-
-        if not isinstance(self, (ViewPanel, ControlPanel, ControlToolBar)):
-            warnings.warn('All FSLeyesPanels should be a sub-class of '
-                          'ViewPanel, ControlPanel, or ControlToolBar.',
-                          stacklevel=2,
-                          category=DeprecationWarning)
 
         # Slightly ugly way of supporting the _FSLeyesPanel
         # kbFocus argument. In order to catch keyboard events,
