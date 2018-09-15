@@ -24,7 +24,6 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    :caption: Table of contents
    :maxdepth: 1
 
-   self
    install
    quick_start
    overview
