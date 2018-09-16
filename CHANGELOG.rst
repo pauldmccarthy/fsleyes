@@ -8,6 +8,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.26.1 (Sunday September 16th 2018)
+-----------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Reduced user documentation image sizes.
+
+
 0.26.0 (Sunday September 16th 2018)
 -----------------------------------
 
