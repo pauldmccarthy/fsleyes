@@ -47,8 +47,13 @@ All of the core dependencies of FSLeyes are listed in `requirements.txt
 <requirements.txt>`_.
 
 
-Some extra dependencies, which provide additional functionality, are listed
-in `requirements-extras.txt <requirements-extras.txt>`_.
+Some extra dependencies, which provide additional functionality, are listed in
+`requirements-extras.txt <requirements-extras.txt>`_ and
+`requirements-notebook.txt <requirements-notebook.txt>`_.
+
+
+Dependencies for running tests and building the documentation are listed
+in `requirements-dev.txt <requirements-dev.txt>`_.
 
 
 Being an OpenGL application, FSLeyes can only be used on computers with
@@ -80,6 +85,7 @@ Documentation
 The FSLeyes user and API documentation is written in ReStructuredText, and can
 be built using `sphinx <http://www.sphinx-doc.org/>`_::
 
+    pip install -r requirements-dev.txt
     python setup.py userdoc
     python setup.py apidoc
 
