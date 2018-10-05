@@ -214,8 +214,6 @@ def main():
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
     extras_require   = get_fsleyes_extra_deps()
-    setup_requires   = get_fsleyes_dev_deps()
-    tests_require    = setup_requires
 
     setup(
 
@@ -244,8 +242,6 @@ def main():
 
         install_requires=install_requires,
         extras_require=extras_require,
-        setup_requires=setup_requires,
-        tests_require=tests_require,
 
         # This is needed to ensure that non-python
         # files are included in built distributions

@@ -8,6 +8,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.26.2 (Friday October 5th 2018)
+--------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Development (test and documentation dependencies) are no longer listed
+  in ``setup.py`` - they now need to be installed manually.
+* Removed conda build infrastructure.
+
+
 0.26.1 (Sunday September 16th 2018)
 -----------------------------------
 
