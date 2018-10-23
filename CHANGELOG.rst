@@ -8,6 +8,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.26.3 (Tuesday October 23rd 2018)
+----------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in the :class:`.DiagnosticReportAction` (the *FSLeyes*
+  |right_arrow| *Diagnostic Report* menu item).
+
+
 0.26.2 (Friday October 5th 2018)
 --------------------------------
 
