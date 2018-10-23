@@ -364,7 +364,7 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def menuActions(self):
-        """Returns a dictionary containing all globa :class:`.Action` objects
+        """Returns a dictionary containing all global :class:`.Action` objects
         that are bound to menu items.
         """
         return dict(self.__menuActions)
@@ -1562,6 +1562,8 @@ class FSLeyesFrame(wx.Frame):
 
             item = menu.Append(wxid, title)
             action.bindToWidget(self, wx.EVT_MENU, item)
+
+            self.__menuActions[type(action)] = action
 
 
     def __makeFileMenu(self):
