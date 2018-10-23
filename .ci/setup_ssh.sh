@@ -33,9 +33,6 @@ if [[ -f /.dockerenv ]]; then
   if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
     echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
     echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
-    echo "$SSH_PRIVATE_KEY_BUILD_DEPLOY"   > $HOME/.ssh/id_build_deploy;
-    echo "$SSH_PRIVATE_KEY_CONDA_DEPLOY"   > $HOME/.ssh/id_conda_deploy;
-    echo "$SSH_PRIVATE_KEY_CONDA_INDEX"    > $HOME/.ssh/id_conda_index;
   fi
 
   chmod go-rwx $HOME/.ssh/id_*;
@@ -45,11 +42,11 @@ if [[ -f /.dockerenv ]]; then
   if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
     ssh-add $HOME/.ssh/id_apidoc_deploy;
     ssh-add $HOME/.ssh/id_userdoc_deploy;
-    ssh-add $HOME/.ssh/id_build_deploy;
-    ssh-add $HOME/.ssh/id_conda_deploy;
   fi
 
-  echo "$SSH_SERVER_HOSTKEYS" > $HOME/.ssh/known_hosts;
+  ssh-keyscan ${UPSTREAM_URL##*@} >> $HOME/.ssh/known_hosts;
+  ssh-keyscan ${USERDOC_HOST##*@} >> $HOME/.ssh/known_hosts;
+  ssh-keyscan ${APIDOC_HOST##*@}  >> $HOME/.ssh/known_hosts;
 
   touch $HOME/.ssh/config;
 
@@ -60,27 +57,11 @@ if [[ -f /.dockerenv ]]; then
   echo "Host userdocdeploy"                            >> $HOME/.ssh/config;
   echo "    HostName ${USERDOC_HOST##*@}"              >> $HOME/.ssh/config;
   echo "    User ${USERDOC_HOST%@*}"                   >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_userdoc_deploy" >> $HOME/.ssh/config;
 
   echo "Host apidocdeploy"                             >> $HOME/.ssh/config;
   echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
   echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
   echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
-
-  echo "Host builddeploy"                              >> $HOME/.ssh/config;
-  echo "    HostName ${BUILD_HOST##*@}"                >> $HOME/.ssh/config;
-  echo "    User ${BUILD_HOST%@*}"                     >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_build_deploy"   >> $HOME/.ssh/config;
-
-  echo "Host condadeploy"                              >> $HOME/.ssh/config;
-  echo "    HostName ${CONDA_HOST##*@}"                >> $HOME/.ssh/config;
-  echo "    User ${CONDA_HOST%@*}"                     >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_conda_deploy"   >> $HOME/.ssh/config;
-
-  echo "Host condaindex"                             >> $HOME/.ssh/config;
-  echo "    HostName ${CONDA_HOST##*@}"              >> $HOME/.ssh/config;
-  echo "    User ${CONDA_HOST%@*}"                   >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_conda_index"  >> $HOME/.ssh/config;
 
   echo "Host *"                                        >> $HOME/.ssh/config;
   echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;
