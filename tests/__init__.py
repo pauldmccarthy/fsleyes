@@ -391,15 +391,14 @@ def MockFileDialog():
         def __init__(self, *args, **kwargs):
             pass
         def ShowModal(self):
-            return MockDlg.ShowModal.retval
+            return MockDlg.ShowModal_retval
         def GetPath(self):
-            return MockDlg.GetPath.retval
+            return MockDlg.GetPath_retval
         def GetPaths(self):
-            return MockDlg.GetPaths.retval
-        ShowModal.retval = wx.ID_OK
-        GetPath.retval   = ''
-        GetPaths.retval  = []
-
+            return MockDlg.GetPaths_retval
+        ShowModal_retval = wx.ID_OK
+        GetPath_retval   = ''
+        GetPaths_retval  = []
 
     with mock.patch('wx.FileDialog', MockDlg):
         yield MockDlg

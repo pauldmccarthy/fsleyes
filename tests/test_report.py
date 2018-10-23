@@ -24,8 +24,8 @@ def _test_report(panel, overlayList, displayCtx):
     realYield()
 
     with tempdir(), MockFileDialog() as dlg:
-        dlg.ShowModal.retval = wx.ID_OK
-        dlg.GetPath.retval   = 'report.txt'
+        dlg.ShowModal_retval = wx.ID_OK
+        dlg.GetPath_retval   = 'report.txt'
         panel.frame.menuActions[report.DiagnosticReportAction]()
 
         assert op.exists('report.txt')
