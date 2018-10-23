@@ -174,10 +174,10 @@ class Filter(object):
 
         if float(fslplatform.glVersion) >= 2.1:
             shader.setAtt('vertex', vertices)
+            source.draw(**kwargs)
         else:
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            source.draw(vertices=vertices, **kwargs)
 
-        source.draw(**kwargs)
         shader.unloadAtts()
         shader.unload()
 
