@@ -442,6 +442,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         return self.__currentOverlay
 
 
+    def editor(self, overlay):
+        """Return the :class:`.Editor` associated with the given overlay.
+        Raises a :exc:`KeyError` if there is no editor fo the overlay.
+        """
+        return self.__editors[overlay]
+
+
     @actions.action
     def createMask(self):
         """Create a 3D mask which has the same size as the currently selected
