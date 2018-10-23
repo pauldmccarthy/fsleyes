@@ -14,7 +14,7 @@ import logging
 import numpy as np
 
 import fsl.data.image                     as fslimage
-import fsl.utils.callfsl                  as callfsl
+import fsl.utils.run                      as fslrun
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
 import fsleyes.actions                    as actions
@@ -179,7 +179,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         try:
-            result = callfsl.callFSL(
+            result = fslrun.runfsl(
                 'robustfov', '-i', self.__overlay.dataSource)
 
             # robustfov returns two lines, the last

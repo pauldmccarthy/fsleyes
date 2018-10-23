@@ -95,7 +95,7 @@ def enabled(capabilities, enable=True):
 
     for c in capabilities:
 
-        if gl.glIsEnabled(c) == enable:
+        if bool(gl.glIsEnabled(c)) == enable:
             pre  = noop
             post = noop
         else:

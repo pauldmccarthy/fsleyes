@@ -26,6 +26,14 @@ from six import StringIO
 import matplotlib as mpl
 mpl.use('WxAgg')  # noqa
 
+# python 3
+try:
+    from unittest import mock
+
+# python 2
+except ImportError:
+    import mock
+
 import matplotlib.image as mplimg
 
 import fsleyes_props                as props
@@ -375,6 +383,26 @@ def run_with_powerspectrumpanel(func, *args, **kwargs):
     """
     from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     return run_with_viewpanel(func, PowerSpectrumPanel, *args, **kwargs)
+
+
+@contextlib.contextmanager
+def MockFileDialog():
+    class MockDlg(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        def ShowModal(self):
+            return MockDlg.ShowModal_retval
+        def GetPath(self):
+            return MockDlg.GetPath_retval
+        def GetPaths(self):
+            return MockDlg.GetPaths_retval
+        ShowModal_retval = wx.ID_OK
+        GetPath_retval   = ''
+        GetPaths_retval  = []
+
+    with mock.patch('wx.FileDialog', MockDlg):
+        yield MockDlg
+
 
 # stype:
 #   0 for single click
