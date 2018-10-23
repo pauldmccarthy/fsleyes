@@ -692,7 +692,7 @@ class VoxelSelection(AnnotationObject):
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
         texture.bindTexture(gl.GL_TEXTURE0)
-
+        gl.glClientActiveTexture(gl.GL_TEXTURE0)
         gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
 
         with glroutines.enabled((gl.GL_TEXTURE_3D,
