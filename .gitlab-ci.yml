@@ -64,8 +64,6 @@ stages:
 #   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
 #                                      to remote host (USERDOC_HOST)
 #
-#   - SSH_SERVER_HOSTKEYS            - List of trusted SSH hosts
-#
 #   - APIDOC_HOST:                   - Username@host to upload API
 #                                      documentation to (e.g.
 #                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
