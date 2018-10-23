@@ -329,7 +329,7 @@ Clicking the *History* tab on the left of the location panel will bring up a
 list of all of the locations that you have visited, recorded in world
 coordinates.
 
-.. image:: images/ortho_lightbox_views_location_panel.png
+.. image:: images/ortho_lightbox_views_location_history.png
    :width: 50%
    :align: center
 

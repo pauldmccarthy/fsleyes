@@ -456,7 +456,7 @@ actions = TypeDict({
     'LoadDicomAction'          : 'Add from DICOM',
     'BrowseXNATAction'         : 'Add from XNAT',
     'CopyOverlayAction'        : 'Copy',
-    'LoadAtlasAction'          : 'Add atlas',
+    'LoadAtlasAction'          : 'Import new atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
     'UpdateCheckAction'        : 'Check for updates',
     'SaveOverlayAction'        : 'Save',

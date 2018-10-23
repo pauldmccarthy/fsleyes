@@ -57,6 +57,7 @@ if [[ -f /.dockerenv ]]; then
   echo "Host userdocdeploy"                            >> $HOME/.ssh/config;
   echo "    HostName ${USERDOC_HOST##*@}"              >> $HOME/.ssh/config;
   echo "    User ${USERDOC_HOST%@*}"                   >> $HOME/.ssh/config;
+  echo "    IdentityFile $HOME/.ssh/id_userdoc_deploy" >> $HOME/.ssh/config;
 
   echo "Host apidocdeploy"                             >> $HOME/.ssh/config;
   echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
