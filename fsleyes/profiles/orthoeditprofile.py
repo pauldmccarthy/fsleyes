@@ -763,10 +763,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         compatibleOverlays = [None]
         if not self.drawMode:
             for ovl in self.overlayList:
-
-                if all((ovl is not overlay,
-                        self.isEditable(ovl),
-                        overlay.sameSpace(ovl))):
+                if ovl is not overlay   and \
+                   self.isEditable(ovl) and \
+                   overlay.sameSpace(ovl):
                     compatibleOverlays.append(ovl)
 
         self.getProp('targetImage').setChoices(compatibleOverlays,
