@@ -11,8 +11,6 @@ which contains an interactive Python shell.
 
 import sys
 
-import deprecation
-
 import wx.py.shell       as wxshell
 import wx.py.interpreter as wxinterpreter
 
@@ -31,9 +29,7 @@ class ShellPanel(viewpanel.ViewPanel):
     that owns this ``ShellPanel``.
     """
 
-    @deprecation.deprecated(deprecated_in='0.24.0',
-                            removed_in='1.0.0',
-                            details='Use Jupyter notebooks instead')
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ShellPanel``.
 
@@ -104,7 +100,7 @@ class ShellPanel(viewpanel.ViewPanel):
 # The wx.Shell code was written many years ago,
 # and there are loads of things wrong with it.
 #
-# The Interpreter_* function is monkey-patched
+# This Interpreter_* function is monkey-patched
 # into the wx.py.interpreter.Interpreter class,
 # because the original version is unable to
 # execute multi-line statements.
