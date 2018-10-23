@@ -5,7 +5,7 @@ include           requirements.txt
 include           requirements-dev.txt
 include           requirements-extra.txt
 include           requirements-notebook.txt
-recursive-exclude tests                       *
+recursive-include tests                       *
 recursive-include userdoc                     *
 recursive-include apidoc                      *
 recursive-exclude userdoc/html                *
