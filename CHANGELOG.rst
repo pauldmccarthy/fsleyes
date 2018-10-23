@@ -16,6 +16,8 @@ Fixed
 ^^^^^
 
 
+* Fixed a bug in edit mode where the selection overlay would sometimes
+  not be displayed.
 * Fixed a bug in the :class:`.DiagnosticReportAction` (the *FSLeyes*
   |right_arrow| *Diagnostic Report* menu item).
 
