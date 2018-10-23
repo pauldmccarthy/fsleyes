@@ -695,15 +695,12 @@ class VoxelSelection(AnnotationObject):
 
         gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
 
-        gl.glEnable(gl.GL_TEXTURE_3D)
-        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-        gl.glVertexPointer(  3, gl.GL_FLOAT, 0, verts)
-        gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texs)
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
-
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glDisable(gl.GL_TEXTURE_3D)
+        with glroutines.enabled((gl.GL_TEXTURE_3D,
+                                 gl.GL_TEXTURE_COORD_ARRAY,
+                                 gl.GL_VERTEX_ARRAY)):
+            gl.glVertexPointer(  3, gl.GL_FLOAT, 0, verts)
+            gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texs)
+            gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
         texture.unbindTexture()
 
