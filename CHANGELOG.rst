@@ -8,6 +8,25 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.26.4 (Tuesday October 23rd 2018)
+----------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Renamed the *File* |right_arrow| *Add atlas* menu item to *Import new atlas*.
+
+
+Removed
+^^^^^^^
+
+
+* Test data is not included in the FSLeyes source distribution, as it is too
+  large for PyPi.
+
+
 0.26.3 (Tuesday October 23rd 2018)
 ----------------------------------
 
