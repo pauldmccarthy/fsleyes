@@ -111,11 +111,7 @@ class DiagnosticReportAction(base.Action):
         report['Version']     = version.__version__
         report['OpenGL']      = self.__openGLReport()
         report['Settings']    = self.__settingsReport()
-
-        state = fslstate.save(self.__frame)
-
-        for k, v in state.items():
-            report[k] = v
+        report['State']       = fslstate.getState(self.__frame)
 
         return report
 
