@@ -670,6 +670,14 @@ class VoxelSelection(AnnotationObject):
         self.__opts    = None
 
 
+    @property
+    def texture(self):
+        """Return the :class:`.SelectionTexture` used by this
+        ``VoxelSelection``.
+        """
+        return self.__texture
+
+
     def draw2D(self, zpos, axes):
         """Draws this ``VoxelSelection``."""
 
