@@ -13,7 +13,6 @@ import logging
 import copy
 
 import fsleyes_props      as props
-import fsleyes.colourmaps as fslcm
 
 from . import sceneopts
 from . import canvasopts
@@ -55,10 +54,6 @@ class OrthoOpts(sceneopts.SceneOpts):
     """If ``True``, labels showing anatomical orientation are displayed on
     each of the canvases.
     """
-
-
-    labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
-    """Label font size."""
 
 
     layout = props.Choice(('horizontal', 'vertical', 'grid'))
