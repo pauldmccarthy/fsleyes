@@ -54,6 +54,10 @@ class ColourBar(props.HasProperties, notifier.Notifier):
     """Toggle the tick labels (the :attr:`.ColourMapOpts.displayRange`). """
 
 
+    fontSize = props.Int(minval=4, maxval=96, default=10)
+    """Size of the font used for the text on the colour bar."""
+
+
     def __init__(self, overlayList, displayCtx):
         """Create a ``ColourBar``.
 
@@ -272,6 +276,7 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             orientation=self.orientation,
             labelside=labelSide,
             textColour=self.textColour,
+            fontsize=self.fontSize,
             bgColour=self.bgColour,
             cmapResolution=cmapResolution)
 

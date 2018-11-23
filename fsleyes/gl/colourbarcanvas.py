@@ -21,6 +21,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes_props                         as props
+import fsl.utils.idle                        as idle
 import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl.textures                   as textures
 
@@ -44,7 +45,7 @@ class ColourBarCanvas(props.HasProperties):
         self.__tex  = None
         self.__name = '{}_{}'.format(self.__class__.__name__, id(self))
         self.__cbar = cbar.ColourBar(overlayList, displayCtx)
-        self.__cbar.register(self.__name, self.__updateTexture)
+        self.__cbar.register(self.__name, self.updateColourBarTexture)
 
         self.addListener('highDpi', self.__name, self.__highDpiChanged)
 
@@ -57,10 +58,16 @@ class ColourBarCanvas(props.HasProperties):
         return self.__cbar
 
 
-    def __updateTexture(self, *a):
+    def updateColourBarTexture(self, *a):
         """Called whenever the colour bar texture needs to be updated. """
-        self._genColourBarTexture()
-        self.Refresh()
+
+        def update():
+            self.__genColourBarTexture()
+            self.Refresh()
+
+        name = '{}_updateColourBarTexture'.format(id(self))
+
+        idle.idle(update, name=name, skipIfQueued=True)
 
 
     def _initGL(self):
@@ -70,7 +77,7 @@ class ColourBarCanvas(props.HasProperties):
 
         Generates the colour bar texture.
         """
-        self._genColourBarTexture()
+        self.__genColourBarTexture()
 
 
     def __highDpiChanged(self, *a):
@@ -78,7 +85,7 @@ class ColourBarCanvas(props.HasProperties):
         :meth:`.GLCanvasTarget.EnableHighDPI` method.
         """
         self.EnableHighDPI(self.highDpi)
-        self.__updateTexture()
+        self.updateColourBarTexture()
 
 
     def destroy(self):
@@ -93,7 +100,7 @@ class ColourBarCanvas(props.HasProperties):
         self.__cbar = None
 
 
-    def _genColourBarTexture(self):
+    def __genColourBarTexture(self):
         """Retrieves a colour bar bitmap from the :class:`.ColourBar`, and
         copies it to a :class:`.Texture2D`.
         """
