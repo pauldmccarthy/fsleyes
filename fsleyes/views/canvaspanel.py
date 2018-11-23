@@ -329,6 +329,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.__opts.addListener('fgColour',
                                 self.__name,
                                 self.__bgfgColourChanged)
+        self.__opts.addListener('labelSize',
+                                self.__name,
+                                self.__labelSizeChanged)
+
 
         idle.idle(self.__bgfgColourChanged)
 
@@ -349,6 +353,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.sceneOpts  .removeListener('showColourBar',     self.__name)
         self.sceneOpts  .removeListener('bgColour',          self.__name)
         self.sceneOpts  .removeListener('fgColour',          self.__name)
+        self.sceneOpts  .removeListener('labelSize',         self.__name)
         self.__movieGifAction.destroy()
 
         self.__opts           = None
@@ -666,10 +671,10 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.__colourBar.colourBar.textColour = fg
             self.__colourBar.colourBar.bgColour   = bg
 
-        sopts.bindProps('colourBarLabelSide',
-                        self.__colourBar.colourBar,
-                        'labelSide')
-        sopts.bindProps('highDpi', self.__colourBar.canvas)
+            sopts.bindProps('colourBarLabelSide',
+                            self.__colourBar.colourBar,
+                            'labelSide')
+            sopts.bindProps('highDpi', self.__colourBar.canvas)
 
         if   sopts.colourBarLocation in ('top', 'bottom'):
             self.__colourBar.colourBar.orientation = 'horizontal'
@@ -696,6 +701,17 @@ class CanvasPanel(viewpanel.ViewPanel):
         :class:`.SceneOpts`). Calls :meth:`canvasPanelLayout`.
         """
         self.centrePanelLayout()
+
+
+    def __labelSizeChanged(self, *a, **kwa):
+        """Called when the :class:`.SceneOpts.lablSize` changes.  If a colour
+        bar is being displayed, it is updated, and the panel layout is
+        refreshed.
+        """
+        sopts = self.sceneOpts
+        if self.__colourBar is not None:
+            self.__colourBar.canvas.colourBar.fontSize = sopts.labelSize
+        wx.CallAfter(self.Layout)
 
 
     def __bgfgColourChanged(self, *a, **kwa):

@@ -51,6 +51,10 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         self.__cbCanvas.colourBar.addListener(
             'orientation', self.name, self.__layout)
+        self.__cbCanvas.colourBar.addListener(
+            'fontSize', self.name, self.__layout)
+        self.__cbCanvas.colourBar.addListener(
+            'barSize', self.name, self.__layout)
         self.__layout()
 
 
@@ -81,6 +85,8 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Must be called when this ``ColourBarPanel`` is no longer needed. """
 
         self.__cbCanvas.colourBar.removeListener('orientation', self.name)
+        self.__cbCanvas.colourBar.removeListener('fontSize',    self.name)
+        self.__cbCanvas.colourBar.removeListener('barSize',     self.name)
         self.__cbCanvas.destroy()
         self.__cbCanvas = None
 
@@ -91,11 +97,26 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Called when this ``ColourBarPanel`` needs to be laid out.
         Sets the panel size, and calls the :meth:`__refreshColourBar` method.
         """
+        canvas  = self.__cbCanvas
+        w, h = self.GetClientSize().Get()
 
-        # Fix the minor axis of the colour bar to 75 pixels
-        if self.__cbCanvas.colourBar.orientation == 'horizontal':
-            self.__cbCanvas.SetSizeHints(-1, 60, -1, 60, -1, -1)
+        # Figure out the font size in pixels
+        # (font points are 1/72th of an inch,
+        # and we're using inside knowledge
+        # that the colourbarbitmap module
+        # uses 96 dpi, and a paddingd of 6
+        # pixels).
+        fontSize = canvas.colourBar.fontSize
+        fontSize = 6 + 96 * canvas.GetScale() * (fontSize / 72.)
+
+        # Fix the minor axis of the colour bar,
+        # # according to the font size, and a
+        # constant size for the colour bar
+        size = 2 * fontSize + 40
+
+        if canvas.colourBar.orientation == 'horizontal':
+            canvas.SetSizeHints(-1, size, -1, size, -1, -1)
         else:
-            self.__cbCanvas.SetSizeHints(60, -1, 60, -1, -1, -1)
+            canvas.SetSizeHints(size, -1, size, -1, -1, -1)
 
-        self.Layout()
+        wx.CallAfter(self.Layout)
