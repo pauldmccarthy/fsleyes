@@ -48,14 +48,24 @@ def templinks(targets, dests):
     try:
         for target, dest in zip(targets, dests):
             if not op.exists(dest):
-                os.symlink(target, dest)
+                if hasattr(os, 'symlink'):
+                    os.symlink(target, dest)
+                elif op.isfile(target):
+                    shutil.copy(target, dest)
+                elif op.isdir(target):
+                    shutil.copytree(target, dest)
 
         yield
 
     finally:
         for dest in dests:
             if op.exists(dest):
-                os.remove(dest)
+                if hasattr(os, 'symlink'):
+                    os.remove(dest)
+                elif op.isfile(dest):
+                    os.remove(dest)
+                elif op.isdir(dest):
+                    shutil.rmtree(dest)
 
 
 class docbuilder(Command):
