@@ -135,7 +135,8 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
              props.Widget(
                  'colourBarSize',
                  showLimits=False,
-                 spin=False))))
+                 slider=True,
+                 spin=True))))
 
         def _displaySpaceOptionName(opt):
 
