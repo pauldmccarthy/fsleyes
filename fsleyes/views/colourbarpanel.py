@@ -53,8 +53,6 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
             'orientation', self.name, self.__layout)
         self.__cbCanvas.colourBar.addListener(
             'fontSize', self.name, self.__layout)
-        self.__cbCanvas.colourBar.addListener(
-            'barSize', self.name, self.__layout)
         self.__layout()
 
 
@@ -86,7 +84,6 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         self.__cbCanvas.colourBar.removeListener('orientation', self.name)
         self.__cbCanvas.colourBar.removeListener('fontSize',    self.name)
-        self.__cbCanvas.colourBar.removeListener('barSize',     self.name)
         self.__cbCanvas.destroy()
         self.__cbCanvas = None
 

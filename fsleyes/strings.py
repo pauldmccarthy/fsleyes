@@ -893,6 +893,7 @@ properties = TypeDict({
     'SceneOpts.highDpi'            : 'Enable high-DPI rendering',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label side',
+    'SceneOpts.colourBarSize'      : 'Colour bar size',
 
     'LightBoxOpts.zax'            : 'Z axis',
     'LightBoxOpts.highlightSlice' : 'Highlight slice',

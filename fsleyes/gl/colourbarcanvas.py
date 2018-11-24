@@ -37,6 +37,12 @@ class ColourBarCanvas(props.HasProperties):
     """Scale colour bar canvas for high-resolution screens. """
 
 
+    barSize = props.Percentage(default=100)
+    """Size of the colour bar along its major axis, as a proportion of
+    the available space.
+    """
+
+
     def __init__(self, overlayList, displayCtx):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
@@ -47,6 +53,7 @@ class ColourBarCanvas(props.HasProperties):
         self.__cbar = cbar.ColourBar(overlayList, displayCtx)
         self.__cbar.register(self.__name, self.updateColourBarTexture)
 
+        self.addListener('barSize', self.__name, self.updateColourBarTexture)
         self.addListener('highDpi', self.__name, self.__highDpiChanged)
 
 
