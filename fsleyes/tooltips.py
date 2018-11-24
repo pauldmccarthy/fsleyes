@@ -414,6 +414,9 @@ properties = TypeDict({
     'SceneOpts.colourBarLocation'  : 'Where to display the colour bar.',
     'SceneOpts.colourBarLabelSide' : 'What side of the colour bar to draw the '
                                      'colour bar labels.',
+    'SceneOpts.colourBarSize'      : 'Size of the major axis of the colour '
+                                     'bar, as a proportion of the available '
+                                     'space.',
     'SceneOpts.performance'        : 'Rendering performance - 1 gives the '
                                      'fastest, but at the cost of lower '
                                      'display quality, and some display '

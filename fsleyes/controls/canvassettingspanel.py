@@ -130,7 +130,12 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
              props.Widget(
                  'colourBarLocation',
                  labels=strings.choices['SceneOpts.colourBarLocation'],
-                 enabledWhen=lambda o: o.showColourBar))))
+                 enabledWhen=lambda o: o.showColourBar)),
+            ('colourBarSize',
+             props.Widget(
+                 'colourBarSize',
+                 showLimits=False,
+                 spin=False))))
 
         def _displaySpaceOptionName(opt):
 

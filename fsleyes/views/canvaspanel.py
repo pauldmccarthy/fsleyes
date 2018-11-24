@@ -649,7 +649,11 @@ class CanvasPanel(viewpanel.ViewPanel):
                 sopts.unbindProps('colourBarLabelSide',
                                   self.__colourBar.colourBar,
                                   'labelSide')
+                sopts.unbindProps('colourBarSize',
+                                  self.__colourBar.canvas,
+                                  'barSize')
                 sopts.unbindProps('highDpi', self.__colourBar.canvas)
+
                 self.__colourBar.destroy()
                 self.__colourBar.Destroy()
                 self.__colourBar = None
@@ -674,6 +678,9 @@ class CanvasPanel(viewpanel.ViewPanel):
             sopts.bindProps('colourBarLabelSide',
                             self.__colourBar.colourBar,
                             'labelSide')
+            sopts.bindProps('colourBarSize',
+                            self.__colourBar.canvas,
+                            'barSize')
             sopts.bindProps('highDpi', self.__colourBar.canvas)
 
         if   sopts.colourBarLocation in ('top', 'bottom'):
