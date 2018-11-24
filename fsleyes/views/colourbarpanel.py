@@ -94,8 +94,8 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Called when this ``ColourBarPanel`` needs to be laid out.
         Sets the panel size, and calls the :meth:`__refreshColourBar` method.
         """
-        canvas  = self.__cbCanvas
-        w, h = self.GetClientSize().Get()
+        canvas = self.__cbCanvas
+        w, h   = self.GetClientSize().Get()
 
         # Figure out the font size in pixels
         # (font points are 1/72th of an inch,
@@ -104,7 +104,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         # uses 96 dpi, and a paddingd of 6
         # pixels).
         fontSize = canvas.colourBar.fontSize
-        fontSize = 6 + 96 * canvas.GetScale() * (fontSize / 72.)
+        fontSize = 6 + 96 * fontSize / 72.
 
         # Fix the minor axis of the colour bar,
         # # according to the font size, and a
