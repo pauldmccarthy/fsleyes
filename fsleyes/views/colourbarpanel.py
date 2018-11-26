@@ -13,6 +13,7 @@ import wx
 
 import fsleyes.panel                  as fslpanel
 import fsleyes.gl.wxglcolourbarcanvas as cbarcanvas
+import fsleyes.controls.colourbar     as cbar
 
 
 class ColourBarPanel(fslpanel.FSLeyesPanel):
@@ -94,26 +95,13 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Called when this ``ColourBarPanel`` needs to be laid out.
         Sets the panel size, and calls the :meth:`__refreshColourBar` method.
         """
-        canvas = self.__cbCanvas
-        w, h   = self.GetClientSize().Get()
-
-        # Figure out the font size in pixels
-        # (font points are 1/72th of an inch,
-        # and we're using inside knowledge
-        # that the colourbarbitmap module
-        # uses 96 dpi, and a paddingd of 6
-        # pixels).
-        fontSize = canvas.colourBar.fontSize
-        fontSize = 6 + 96 * fontSize / 72.
-
-        # Fix the minor axis of the colour bar,
-        # # according to the font size, and a
-        # constant size for the colour bar
-        size = 2 * fontSize + 40
+        canvas   = self.__cbCanvas
+        w, h     = self.GetClientSize().Get()
+        cbarSize = cbar.colourBarMinorAxisSize(canvas.colourBar.fontSize)
 
         if canvas.colourBar.orientation == 'horizontal':
-            canvas.SetSizeHints(-1, size, -1, size, -1, -1)
+            canvas.SetSizeHints(-1, cbarSize, -1, cbarSize, -1, -1)
         else:
-            canvas.SetSizeHints(size, -1, size, -1, -1, -1)
+            canvas.SetSizeHints(cbarSize, -1, cbarSize, -1, -1, -1)
 
         wx.CallAfter(self.Layout)
