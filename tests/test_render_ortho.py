@@ -37,6 +37,8 @@ cli_tests = """
 -lo vertical       -yh -zh   3d.nii.gz
 -lo vertical           -zh   3d.nii.gz
 
+-cb -ls 20 3d.nii.gz
+
 -cg -xz 2000 -yz 2000 -zz 2000 3d.nii.gz
 
 -hl                        3d.nii.gz

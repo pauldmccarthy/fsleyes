@@ -24,6 +24,8 @@ cli_tests = """
 -zx Y 3d.nii.gz
 -zx Z 3d.nii.gz
 
+-cb -ls 20 3d.nii.gz
+
 -sg     3d.nii.gz
     -hs 3d.nii.gz
 -sg -hs 3d.nii.gz
