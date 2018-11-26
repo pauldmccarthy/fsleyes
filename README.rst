@@ -1,14 +1,17 @@
 FSLeyes
 =======
 
+.. image:: https://img.shields.io/pypi/v/fsleyes.svg
+   :target: https://pypi.python.org/pypi/fsleyes/
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1470761.svg
+   :target: https://doi.org/10.5281/zenodo.1470761
+
 .. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/build.svg
    :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
 
 .. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/coverage.svg
    :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
-
-.. image:: https://img.shields.io/pypi/v/fsleyes.svg
-   :target: https://pypi.python.org/pypi/fsleyes/
 
 
 `FSLeyes <https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes>`_ is the `FSL
