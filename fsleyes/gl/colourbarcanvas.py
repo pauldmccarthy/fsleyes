@@ -102,7 +102,13 @@ class ColourBarCanvas(props.HasProperties):
         """
         self.__cbar.deregister(self.__name)
         self.__cbar.destroy()
-        self.__tex.destroy()
+
+        if self.__tex is not None:
+            self.__tex.destroy()
+
+        self.removeListener('barSize', self.__name)
+        self.removeListener('highDpi', self.__name)
+
         self.__tex  = None
         self.__cbar = None
 

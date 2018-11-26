@@ -672,8 +672,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
             bg = sopts.bgColour
             fg = sopts.fgColour
+            fs = sopts.labelSize
             self.__colourBar.colourBar.textColour = fg
             self.__colourBar.colourBar.bgColour   = bg
+            self.__colourBar.colourBar.fontSize   = fs
 
             sopts.bindProps('colourBarLabelSide',
                             self.__colourBar.colourBar,
