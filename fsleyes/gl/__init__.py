@@ -1068,7 +1068,8 @@ class WXGLCanvasTarget(object):
         This method should be called before any OpenGL operations related to
         this canvas take place (e.g. texture/data creation, drawing, etc).
         """
-        if not self.IsShownOnScreen(): return False
+        if not (fwidgets.isalive(self) and self.IsShownOnScreen()):
+            return False
 
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
