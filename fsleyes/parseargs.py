@@ -433,6 +433,7 @@ OPTIONS = td.TypeDict({
                        'showColourBar',
                        'colourBarLocation',
                        'colourBarLabelSide',
+                       'colourBarSize',
                        'labelSize',
                        'performance',
                        'movieSyncRefresh',
@@ -738,6 +739,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.cursorColour'       : ('cc',  'cursorColour',       True),
     'SceneOpts.colourBarLocation'  : ('cbl', 'colourBarLocation',  True),
     'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
+    'SceneOpts.colourBarSize'      : ('cbi', 'colourBarSize',      True),
     'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
     'SceneOpts.performance'        : ('p',   'performance',        True),
     'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
@@ -950,6 +952,7 @@ HELP = td.TypeDict({
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
+    'SceneOpts.colourBarSize'      : 'Colour bar size (%)',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
