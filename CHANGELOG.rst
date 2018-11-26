@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.26.6 (Monday November 26th 2018)
+----------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with Zenodo DOI registration.
+
+
+
 0.26.5 (Monday November 26th 2018)
 ----------------------------------
 
