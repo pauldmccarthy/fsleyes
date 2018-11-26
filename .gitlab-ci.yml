@@ -331,4 +331,4 @@ deploy-zenodo:
     - build-pypi-dist
 
   script:
-    - bash ./.ci/zenodo_deposit.sh "$ZENODO_URL" "$ZENODO_TOKEN" "$ZENODO_DEPOSIT_ID"
+    - bash ./.ci/zenodo_deposit.sh fsleyes "$ZENODO_URL" "$ZENODO_TOKEN" "$ZENODO_DEPOSIT_ID"

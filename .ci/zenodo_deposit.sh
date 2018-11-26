@@ -5,9 +5,10 @@ pushd $tmp > /dev/null
 thisdir=`pwd`
 popd > /dev/null
 
-zenodo_url=$1
-zenodo_tkn=$2
-zenodo_depid=$3
+name=$1
+zenodo_url=$2
+zenodo_tkn=$3
+zenodo_depid=$4
 
 version=`python setup.py -V`
 upfile=`pwd`/dist/fslpy-"$version".tar.gz
