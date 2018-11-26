@@ -695,7 +695,7 @@ def adjustSizeForColourBar(width,
 
     if showColourBar:
 
-        cbarWidth = cbar.colourBarMinorAxisSize(fontSize)
+        cbarWidth = int(round(cbar.colourBarMinorAxisSize(fontSize)))
         if colourBarLocation in ('top', 'bottom'):
             height     = height - cbarWidth
             cbarHeight = cbarWidth
