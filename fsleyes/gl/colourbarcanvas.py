@@ -125,6 +125,9 @@ class ColourBarCanvas(props.HasProperties):
         if w < 50 or h < 50:
             return
 
+        if self.__cbar.orientation == 'vertical': h = h * self.barSize / 100.0
+        else:                                     w = w * self.barSize / 100.0
+
         scale  = self.GetScale()
         bitmap = self.__cbar.colourBar(w, h, scale)
 
@@ -166,4 +169,15 @@ class ColourBarCanvas(props.HasProperties):
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glShadeModel(gl.GL_FLAT)
 
-        self.__tex.drawOnBounds(0, 0, 1, 0, 1, 0, 1)
+        xmin, xmax = 0, 1
+        ymin, ymax = 0, 1
+        off        = (100 - self.barSize) / 100.0
+
+        if self.colourBar.orientation == 'vertical':
+            ymin += off / 2.0
+            ymax -= off / 2.0
+        else:
+            xmin += off / 2.0
+            xmax -= off / 2.0
+
+        self.__tex.drawOnBounds(0, xmin, xmax, ymin, ymax, 0, 1)
