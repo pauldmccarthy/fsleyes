@@ -28,6 +28,7 @@ import fsleyes.displaycontext                as displaycontext
 import fsleyes.displaycontext.orthoopts      as orthoopts
 import fsleyes.displaycontext.lightboxopts   as lightboxopts
 import fsleyes.displaycontext.scene3dopts    as scene3dopts
+import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl                            as fslgl
 import fsleyes.gl.ortholabels                as ortholabels
 import fsleyes.gl.offscreenslicecanvas       as slicecanvas
@@ -35,12 +36,7 @@ import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
 import fsleyes.gl.offscreenscene3dcanvas     as scene3dcanvas
 
 
-
 log = logging.getLogger(__name__)
-
-
-CBAR_SIZE  = 75
-"""Height/width, in pixels, of a colour bar. """
 
 
 def main(args=None):
@@ -265,7 +261,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
         adjustSizeForColourBar(width,
                                height,
                                sceneOpts.showColourBar,
-                               sceneOpts.colourBarLocation)
+                               sceneOpts.colourBarLocation,
+                               sceneOpts.labelSize)
 
     # Lightbox view -> only one canvas
     if namespace.scene == 'lightbox':
@@ -368,7 +365,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        sceneOpts.colourBarLocation,
                                        sceneOpts.colourBarLabelSide,
                                        sceneOpts.bgColour,
-                                       sceneOpts.fgColour)
+                                       sceneOpts.fgColour,
+                                       sceneOpts.labelSize)
         if cbarBmp is not None:
             layout  = buildColourBarLayout(layout,
                                            cbarBmp,
@@ -565,7 +563,8 @@ def buildColourBarBitmap(overlayList,
                          cbarLocation,
                          cbarLabelSide,
                          bgColour,
-                         fgColour):
+                         fgColour,
+                         labelSize):
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
@@ -586,6 +585,8 @@ def buildColourBarBitmap(overlayList,
     :arg bgColour:      RGBA background colour.
 
     :arg fgColour:      RGBA foreground (text) colour.
+
+    :arg labelSize:     Label size in points.
     """
 
     overlay = displayCtx.getSelectedOverlay()
@@ -635,6 +636,7 @@ def buildColourBarBitmap(overlayList,
         labelside=labelSide,
         bgColour=bgColour,
         textColour=fgColour,
+        fontsize=labelSize,
         cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4
@@ -672,7 +674,11 @@ def buildColourBarLayout(canvasLayout,
     elif cbarLocation in ('left', 'right'): return fsllayout.HBox(items)
 
 
-def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
+def adjustSizeForColourBar(width,
+                           height,
+                           showColourBar,
+                           colourBarLocation,
+                           fontSize):
     """Calculates the widths and heights of the image display space, and the
     colour bar if it is enabled.
 
@@ -686,6 +692,8 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
     :arg colourBarLocation: Colour bar location (see
                             :func:`buildColourBarBitmap`).
 
+    :arg fontSize           Font size (points) used in colour bar labels.
+
     :returns:               Two tuples - the first tuple contains the
                             ``(width, height)`` of the available canvas space,
                             and the second contains the ``(width, height)`` of
@@ -694,7 +702,7 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
 
     if showColourBar:
 
-        cbarWidth = CBAR_SIZE
+        cbarWidth = cbar.colourBarMinorAxisSize(fontSize)
         if colourBarLocation in ('top', 'bottom'):
             height     = height - cbarWidth
             cbarHeight = cbarWidth
