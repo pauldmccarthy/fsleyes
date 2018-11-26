@@ -77,6 +77,12 @@ stages:
 #   - TWINE_PASSWORD:                - Password to use when uploading to pypi
 #
 #   - TWINE_REPOSITORY_URL:          - Pypi repository to upload to
+#
+#   - ZENODO_URL:                    - Zenodo URL to deposit release file to.
+#
+#   - ZENODO_TOKEN:                  - Zenodo access token.
+#
+#   - ZENODO_DEPOSIT_ID:             - Deposit ID of previous Zenodo deposit.
 ###############################################################################
 
 
@@ -309,3 +315,20 @@ deploy-pypi:
 
   script:
     - bash ./.ci/deploy_pypi.sh
+
+
+deploy-zenodo:
+  <<: *only_releases
+  <<: *setup_ssh
+  stage: deploy
+  when:  manual
+  image: python:3.6
+
+  tags:
+    - docker
+
+  dependencies:
+    - build-pypi-dist
+
+  script:
+    - bash ./.ci/zenodo_deposit.sh "$ZENODO_URL" "$ZENODO_TOKEN" "$ZENODO_DEPOSIT_ID"

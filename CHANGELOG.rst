@@ -1,11 +1,36 @@
-.. |right_arrow| unicode:: U+21D2
-.. |command_key| unicode:: U+2318
-.. |control_key| unicode:: U+2303
-.. |eye_icon|    image::   images/eye_icon.png
+.. |right_arrow|  unicode:: U+21D2
+.. |command_key|  unicode:: U+2318
+.. |control_key|  unicode:: U+2303
+.. |eye_icon|     image::   images/eye_icon.png
+.. |spanner_icon| image::   images/spanner_icon.png
 
 
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
+
+
+0.26.5 (Monday November 26th 2018)
+----------------------------------
+
+
+Added
+^^^^^
+
+* New option to change the colour bar width/height - this is available in the
+  ortho/lightbox/3D settings panel (the |spanner_icon| button).
+* The *Label size* option now adjusts the colour bar font size, in addition to
+  the orientation label font size.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in the time series panel when viewing a FEAT analysis with voxelwise
+  confound EVs.
+* Fixed a bug in the FEAT cluster panel when viewing a FEAT analysis which had
+  not used cluster-based thresholding.
+
 
 
 0.26.4 (Tuesday October 23rd 2018)

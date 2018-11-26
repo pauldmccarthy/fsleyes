@@ -17,6 +17,29 @@ import fsleyes.displaycontext                as fsldc
 import fsleyes.displaycontext.colourmapopts  as cmapopts
 
 
+def colourBarMinorAxisSize(fontSize):
+    """Calculates a good size for the minor axis of a colour bar.
+
+    The minor axis is the axis perpendicular to the colour bar axis.
+
+    :arg fontSize: Font size of colour bar labels, in points.
+    """
+
+    # Figure out the font size in pixels
+    # (font points are 1/72th of an inch,
+    # and we're using inside knowledge
+    # that the colourbarbitmap module
+    # uses 96 dpi, and a padding of 6
+    # pixels).
+    fontSize = fontSize
+    fontSize = 6 + 96 * fontSize / 72.
+
+    # Fix the minor axis of the colour bar,
+    # according to the font size, and a
+    # constant size for the colour bar
+    return 2 * fontSize + 40
+
+
 class ColourBar(props.HasProperties, notifier.Notifier):
     """A ``ColourBar`` is an object which listens to the properties of a
     :class:`.ColourMapOpts` instance, and automatically generates a colour
@@ -52,6 +75,10 @@ class ColourBar(props.HasProperties, notifier.Notifier):
 
     showTicks = props.Boolean(default=True)
     """Toggle the tick labels (the :attr:`.ColourMapOpts.displayRange`). """
+
+
+    fontSize = props.Int(minval=4, maxval=96, default=12)
+    """Size of the font used for the text on the colour bar."""
 
 
     def __init__(self, overlayList, displayCtx):
@@ -272,6 +299,7 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             orientation=self.orientation,
             labelside=labelSide,
             textColour=self.textColour,
+            fontsize=self.fontSize,
             bgColour=self.bgColour,
             cmapResolution=cmapResolution)
 

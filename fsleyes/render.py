@@ -28,6 +28,7 @@ import fsleyes.displaycontext                as displaycontext
 import fsleyes.displaycontext.orthoopts      as orthoopts
 import fsleyes.displaycontext.lightboxopts   as lightboxopts
 import fsleyes.displaycontext.scene3dopts    as scene3dopts
+import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl                            as fslgl
 import fsleyes.gl.ortholabels                as ortholabels
 import fsleyes.gl.offscreenslicecanvas       as slicecanvas
@@ -35,12 +36,7 @@ import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
 import fsleyes.gl.offscreenscene3dcanvas     as scene3dcanvas
 
 
-
 log = logging.getLogger(__name__)
-
-
-CBAR_SIZE  = 75
-"""Height/width, in pixels, of a colour bar. """
 
 
 def main(args=None):
@@ -265,7 +261,8 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
         adjustSizeForColourBar(width,
                                height,
                                sceneOpts.showColourBar,
-                               sceneOpts.colourBarLocation)
+                               sceneOpts.colourBarLocation,
+                               sceneOpts.labelSize)
 
     # Lightbox view -> only one canvas
     if namespace.scene == 'lightbox':
@@ -365,10 +362,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        displayCtx,
                                        cbarWidth,
                                        cbarHeight,
-                                       sceneOpts.colourBarLocation,
-                                       sceneOpts.colourBarLabelSide,
-                                       sceneOpts.bgColour,
-                                       sceneOpts.fgColour)
+                                       sceneOpts)
         if cbarBmp is not None:
             layout  = buildColourBarLayout(layout,
                                            cbarBmp,
@@ -562,10 +556,7 @@ def buildColourBarBitmap(overlayList,
                          displayCtx,
                          width,
                          height,
-                         cbarLocation,
-                         cbarLabelSide,
-                         bgColour,
-                         fgColour):
+                         sceneOpts):
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
@@ -578,19 +569,23 @@ def buildColourBarBitmap(overlayList,
 
     :arg height:        Colour bar height in pixels.
 
-    :arg cbarLocation:  One of  ``'top'``, ``'bottom'``, ``'left'``, or
-                        ``'right'``.
-
-    :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
-
-    :arg bgColour:      RGBA background colour.
-
-    :arg fgColour:      RGBA foreground (text) colour.
+    :arg sceneOpts:     :class:`.SceneOpts` instance containing display
+                        settings.
     """
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)
     opts    = display.opts
+
+    cbarLocation  = sceneOpts.colourBarLocation
+    cbarLabelSide = sceneOpts.colourBarLabelSide
+    cbarSize      = sceneOpts.colourBarSize
+    bgColour      = sceneOpts.bgColour
+    fgColour      = sceneOpts.fgColour
+    labelSize     = sceneOpts.labelSize
+
+    if   cbarLocation in ('top', 'bottom'): width  = width  * cbarSize / 100.0
+    elif cbarLocation in ('left', 'right'): height = height * cbarSize / 100.0
 
     if not isinstance(opts, displaycontext.ColourMapOpts):
         return None
@@ -604,7 +599,6 @@ def buildColourBarBitmap(overlayList,
     elif cbarLabelSide == 'bottom-right':
         if orient == 'horizontal': labelSide = 'bottom'
         else:                      labelSide = 'right'
-
 
     if opts.useNegativeCmap:
         negCmap    = opts.negativeCmap
@@ -635,6 +629,7 @@ def buildColourBarBitmap(overlayList,
         labelside=labelSide,
         bgColour=bgColour,
         textColour=fgColour,
+        fontsize=labelSize,
         cmapResolution=opts.cmapResolution)
 
     # The colourBarBitmap function returns a w*h*4
@@ -672,7 +667,11 @@ def buildColourBarLayout(canvasLayout,
     elif cbarLocation in ('left', 'right'): return fsllayout.HBox(items)
 
 
-def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
+def adjustSizeForColourBar(width,
+                           height,
+                           showColourBar,
+                           colourBarLocation,
+                           fontSize):
     """Calculates the widths and heights of the image display space, and the
     colour bar if it is enabled.
 
@@ -686,6 +685,8 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
     :arg colourBarLocation: Colour bar location (see
                             :func:`buildColourBarBitmap`).
 
+    :arg fontSize           Font size (points) used in colour bar labels.
+
     :returns:               Two tuples - the first tuple contains the
                             ``(width, height)`` of the available canvas space,
                             and the second contains the ``(width, height)`` of
@@ -694,7 +695,7 @@ def adjustSizeForColourBar(width, height, showColourBar, colourBarLocation):
 
     if showColourBar:
 
-        cbarWidth = CBAR_SIZE
+        cbarWidth = int(round(cbar.colourBarMinorAxisSize(fontSize)))
         if colourBarLocation in ('top', 'bottom'):
             height     = height - cbarWidth
             cbarHeight = cbarWidth

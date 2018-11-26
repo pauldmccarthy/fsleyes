@@ -28,7 +28,7 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
     you should use a ``WXGLColourBarCanvas``.
 
     .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
-              :meth:`.ColourBarCanvas._genColourBarTexture` method.
+              :meth:`.ColourBarCanvas.updateColourBarTexture` method.
     """
     def __init__(self, parent, overlayList, displayCtx):
 
@@ -37,8 +37,7 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         cbarcanvas.ColourBarCanvas.__init__(self, overlayList, displayCtx)
 
         def onsize(ev):
-            self._genColourBarTexture()
-            self.Refresh()
+            self.updateColourBarTexture()
             ev.Skip()
 
         self.Bind(wx.EVT_SIZE, onsize)

@@ -20,6 +20,8 @@ cli_tests = """
 -z 1500 3d.nii.gz
 -he     3d.nii.gz
 
+-cb -fs 20 3d.nii.gz
+
      3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
 -noc 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
 

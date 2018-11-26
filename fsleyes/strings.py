@@ -893,6 +893,8 @@ properties = TypeDict({
     'SceneOpts.highDpi'            : 'Enable high-DPI rendering',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label side',
+    'SceneOpts.colourBarSize'      : 'Colour bar size',
+    'SceneOpts.labelSize'          : 'Label size (points)',
 
     'LightBoxOpts.zax'            : 'Z axis',
     'LightBoxOpts.highlightSlice' : 'Highlight slice',
@@ -904,7 +906,7 @@ properties = TypeDict({
     'OrthoOpts.showYCanvas' : 'Show Y canvas',
     'OrthoOpts.showZCanvas' : 'Show Z canvas',
     'OrthoOpts.showLabels'  : 'Show labels',
-    'OrthoOpts.labelSize'   : 'Label size (pixels)',
+
     'OrthoOpts.layout'      : 'Layout',
     'OrthoOpts.xzoom'       : 'X zoom',
     'OrthoOpts.yzoom'       : 'Y zoom',

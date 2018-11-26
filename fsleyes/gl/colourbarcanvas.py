@@ -21,6 +21,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes_props                         as props
+import fsl.utils.idle                        as idle
 import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl.textures                   as textures
 
@@ -36,6 +37,12 @@ class ColourBarCanvas(props.HasProperties):
     """Scale colour bar canvas for high-resolution screens. """
 
 
+    barSize = props.Percentage(default=100)
+    """Size of the colour bar along its major axis, as a proportion of
+    the available space.
+    """
+
+
     def __init__(self, overlayList, displayCtx):
         """Adds a few listeners to the properties of this object, to update
         the colour bar when they change.
@@ -44,8 +51,9 @@ class ColourBarCanvas(props.HasProperties):
         self.__tex  = None
         self.__name = '{}_{}'.format(self.__class__.__name__, id(self))
         self.__cbar = cbar.ColourBar(overlayList, displayCtx)
-        self.__cbar.register(self.__name, self.__updateTexture)
+        self.__cbar.register(self.__name, self.updateColourBarTexture)
 
+        self.addListener('barSize', self.__name, self.updateColourBarTexture)
         self.addListener('highDpi', self.__name, self.__highDpiChanged)
 
 
@@ -57,10 +65,16 @@ class ColourBarCanvas(props.HasProperties):
         return self.__cbar
 
 
-    def __updateTexture(self, *a):
+    def updateColourBarTexture(self, *a):
         """Called whenever the colour bar texture needs to be updated. """
-        self._genColourBarTexture()
-        self.Refresh()
+
+        def update():
+            self.__genColourBarTexture()
+            self.Refresh()
+
+        name = '{}_updateColourBarTexture'.format(id(self))
+
+        idle.idle(update, name=name, skipIfQueued=True)
 
 
     def _initGL(self):
@@ -70,7 +84,7 @@ class ColourBarCanvas(props.HasProperties):
 
         Generates the colour bar texture.
         """
-        self._genColourBarTexture()
+        self.__genColourBarTexture()
 
 
     def __highDpiChanged(self, *a):
@@ -78,7 +92,7 @@ class ColourBarCanvas(props.HasProperties):
         :meth:`.GLCanvasTarget.EnableHighDPI` method.
         """
         self.EnableHighDPI(self.highDpi)
-        self.__updateTexture()
+        self.updateColourBarTexture()
 
 
     def destroy(self):
@@ -88,12 +102,18 @@ class ColourBarCanvas(props.HasProperties):
         """
         self.__cbar.deregister(self.__name)
         self.__cbar.destroy()
-        self.__tex.destroy()
+
+        if self.__tex is not None:
+            self.__tex.destroy()
+
+        self.removeListener('barSize', self.__name)
+        self.removeListener('highDpi', self.__name)
+
         self.__tex  = None
         self.__cbar = None
 
 
-    def _genColourBarTexture(self):
+    def __genColourBarTexture(self):
         """Retrieves a colour bar bitmap from the :class:`.ColourBar`, and
         copies it to a :class:`.Texture2D`.
         """
@@ -110,6 +130,9 @@ class ColourBarCanvas(props.HasProperties):
 
         if w < 50 or h < 50:
             return
+
+        if self.__cbar.orientation == 'vertical': h = h * self.barSize / 100.0
+        else:                                     w = w * self.barSize / 100.0
 
         scale  = self.GetScale()
         bitmap = self.__cbar.colourBar(w, h, scale)
@@ -152,4 +175,15 @@ class ColourBarCanvas(props.HasProperties):
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glShadeModel(gl.GL_FLAT)
 
-        self.__tex.drawOnBounds(0, 0, 1, 0, 1, 0, 1)
+        xmin, xmax = 0, 1
+        ymin, ymax = 0, 1
+        off        = (100 - self.barSize) / 100.0
+
+        if self.colourBar.orientation == 'vertical':
+            ymin += off / 2.0
+            ymax -= off / 2.0
+        else:
+            xmin += off / 2.0
+            xmax -= off / 2.0
+
+        self.__tex.drawOnBounds(0, xmin, xmax, ymin, ymax, 0, 1)

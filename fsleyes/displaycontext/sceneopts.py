@@ -67,6 +67,18 @@ class SceneOpts(props.HasProperties):
     """
 
 
+    colourBarSize = props.Percentage(default=100)
+    """Size of the major axis of the colour bar, as a proportion of the
+    available space.
+    """
+
+
+    labelSize = props.Int(minval=4, maxval=96, default=12, clamped=True)
+    """Font size used for any labels drawn on the canvas, including
+    orthographic labels, and colour bar labels.
+    """
+
+
     # NOTE: If you change the maximum performance value,
     #       make sure you update all references to
     #       performance because, for example, the

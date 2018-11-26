@@ -38,6 +38,11 @@ cli_tests = """
 -cb -cbl bottom -cbs bottom-right 3d.nii.gz -cm hot
 -cb -cbl bottom -cbs top-left     3d.nii.gz -cm hot
 
+-cb -ls 4  3d.nii.gz
+-cb -ls 10 3d.nii.gz
+-cb -ls 20 3d.nii.gz
+-cb -ls 40 3d.nii.gz
+
 -cb {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue
 -cb {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -i
 -cb {{zero_centre('3d.nii.gz')}} -cm hot -cmr 4

@@ -13,6 +13,7 @@ import wx
 
 import fsleyes.panel                  as fslpanel
 import fsleyes.gl.wxglcolourbarcanvas as cbarcanvas
+import fsleyes.controls.colourbar     as cbar
 
 
 class ColourBarPanel(fslpanel.FSLeyesPanel):
@@ -51,6 +52,8 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
 
         self.__cbCanvas.colourBar.addListener(
             'orientation', self.name, self.__layout)
+        self.__cbCanvas.colourBar.addListener(
+            'fontSize', self.name, self.__layout)
         self.__layout()
 
 
@@ -81,6 +84,7 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Must be called when this ``ColourBarPanel`` is no longer needed. """
 
         self.__cbCanvas.colourBar.removeListener('orientation', self.name)
+        self.__cbCanvas.colourBar.removeListener('fontSize',    self.name)
         self.__cbCanvas.destroy()
         self.__cbCanvas = None
 
@@ -91,11 +95,13 @@ class ColourBarPanel(fslpanel.FSLeyesPanel):
         """Called when this ``ColourBarPanel`` needs to be laid out.
         Sets the panel size, and calls the :meth:`__refreshColourBar` method.
         """
+        canvas   = self.__cbCanvas
+        w, h     = self.GetClientSize().Get()
+        cbarSize = cbar.colourBarMinorAxisSize(canvas.colourBar.fontSize)
 
-        # Fix the minor axis of the colour bar to 75 pixels
-        if self.__cbCanvas.colourBar.orientation == 'horizontal':
-            self.__cbCanvas.SetSizeHints(-1, 60, -1, 60, -1, -1)
+        if canvas.colourBar.orientation == 'horizontal':
+            canvas.SetSizeHints(-1, cbarSize, -1, cbarSize, -1, -1)
         else:
-            self.__cbCanvas.SetSizeHints(60, -1, 60, -1, -1, -1)
+            canvas.SetSizeHints(cbarSize, -1, cbarSize, -1, -1, -1)
 
-        self.Layout()
+        wx.CallAfter(self.Layout)
