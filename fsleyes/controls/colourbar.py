@@ -54,7 +54,7 @@ class ColourBar(props.HasProperties, notifier.Notifier):
     """Toggle the tick labels (the :attr:`.ColourMapOpts.displayRange`). """
 
 
-    fontSize = props.Int(minval=4, maxval=96, default=10)
+    fontSize = props.Int(minval=4, maxval=96, default=12)
     """Size of the font used for the text on the colour bar."""
 
 

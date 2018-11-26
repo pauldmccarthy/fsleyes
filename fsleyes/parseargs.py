@@ -433,6 +433,7 @@ OPTIONS = td.TypeDict({
                        'showColourBar',
                        'colourBarLocation',
                        'colourBarLabelSide',
+                       'labelSize',
                        'performance',
                        'movieSyncRefresh',
                        'highDpi'],
@@ -441,7 +442,6 @@ OPTIONS = td.TypeDict({
                        'zzoom',
                        'cursorGap',
                        'showLabels',
-                       'labelSize',
                        'layout',
                        'showXCanvas',
                        'showYCanvas',
@@ -742,6 +742,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.performance'        : ('p',   'performance',        True),
     'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
     'SceneOpts.movieSyncRefresh'   : ('ms',  'movieSync',          False),
+    'SceneOpts.labelSize'          : ('ls',  'labelSize',          True),
 
     'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
     'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
@@ -752,7 +753,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
     'OrthoOpts.showZCanvas' : ('zh', 'hidez',      False),
     'OrthoOpts.showLabels'  : ('hl', 'hideLabels', False),
-    'OrthoOpts.labelSize'   : ('ls', 'labelSize',  True),
+
 
     'OrthoOpts.xcentre'     : ('xc', 'xcentre', True),
     'OrthoOpts.ycentre'     : ('yc', 'ycentre', True),
@@ -956,6 +957,8 @@ HELP = td.TypeDict({
                                      'resolution',
     'SceneOpts.movieSyncRefresh'   : 'Toggle the canvas refresh strategy in '
                                      'movie mode.',
+    'SceneOpts.labelSize'          : 'Orientation/colour bar label font size '
+                                     '(4-96, default: 12)',
 
     'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
     'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
@@ -966,8 +969,7 @@ HELP = td.TypeDict({
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
-    'OrthoOpts.labelSize'   : 'Orientation label font size '
-                              '(4-96, default: 14)',
+
 
     'OrthoOpts.xcentre'     : 'X canvas centre ([-1, 1])',
     'OrthoOpts.ycentre'     : 'Y canvas centre ([-1, 1])',

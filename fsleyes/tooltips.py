@@ -428,6 +428,9 @@ properties = TypeDict({
     'to display the scene at the high-DPI resolution. This will have an '
     'effect on performance.',
 
+    'SceneOpts.labelSize'   : 'Scale the label font size.',
+
+
     'OrthoOpts.showXCanvas' : 'Show / hide the X canvas '
                               '(sagittal in MNI space).',
     'OrthoOpts.showYCanvas' : 'Show / hide the Y canvas '
@@ -438,7 +441,6 @@ properties = TypeDict({
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI '
                               'image, show / hide anatomical orientation '
                               'labels.',
-    'OrthoOpts.labelSize'   : 'Scale the label font size.',
     'OrthoOpts.layout'      : 'How to lay out each of the three canvases.',
     'OrthoOpts.zoom'        : 'Zoom level for all three canvases.',
 
