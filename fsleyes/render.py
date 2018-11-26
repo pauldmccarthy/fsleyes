@@ -362,11 +362,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
                                        displayCtx,
                                        cbarWidth,
                                        cbarHeight,
-                                       sceneOpts.colourBarLocation,
-                                       sceneOpts.colourBarLabelSide,
-                                       sceneOpts.bgColour,
-                                       sceneOpts.fgColour,
-                                       sceneOpts.labelSize)
+                                       sceneOpts)
         if cbarBmp is not None:
             layout  = buildColourBarLayout(layout,
                                            cbarBmp,
@@ -560,11 +556,7 @@ def buildColourBarBitmap(overlayList,
                          displayCtx,
                          width,
                          height,
-                         cbarLocation,
-                         cbarLabelSide,
-                         bgColour,
-                         fgColour,
-                         labelSize):
+                         sceneOpts):
     """If the currently selected overlay has a display range,
     creates and returns a bitmap containing a colour bar. Returns
     ``None`` otherwise.
@@ -577,21 +569,23 @@ def buildColourBarBitmap(overlayList,
 
     :arg height:        Colour bar height in pixels.
 
-    :arg cbarLocation:  One of  ``'top'``, ``'bottom'``, ``'left'``, or
-                        ``'right'``.
-
-    :arg cbarLabelSide: One of ``'top-left'`` or ``'bottom-right'``.
-
-    :arg bgColour:      RGBA background colour.
-
-    :arg fgColour:      RGBA foreground (text) colour.
-
-    :arg labelSize:     Label size in points.
+    :arg sceneOpts:     :class:`.SceneOpts` instance containing display
+                        settings.
     """
 
     overlay = displayCtx.getSelectedOverlay()
     display = displayCtx.getDisplay(overlay)
     opts    = display.opts
+
+    cbarLocation  = sceneOpts.colourBarLocation
+    cbarLabelSide = sceneOpts.colourBarLabelSide
+    cbarSize      = sceneOpts.colourBarSize
+    bgColour      = sceneOpts.bgColour
+    fgColour      = sceneOpts.fgColour
+    labelSize     = sceneOpts.labelSize
+
+    if   cbarLocation in ('top', 'bottom'): width  = width  * cbarSize / 100.0
+    elif cbarLocation in ('left', 'right'): height = height * cbarSize / 100.0
 
     if not isinstance(opts, displaycontext.ColourMapOpts):
         return None
@@ -605,7 +599,6 @@ def buildColourBarBitmap(overlayList,
     elif cbarLabelSide == 'bottom-right':
         if orient == 'horizontal': labelSide = 'bottom'
         else:                      labelSide = 'right'
-
 
     if opts.useNegativeCmap:
         negCmap    = opts.negativeCmap
