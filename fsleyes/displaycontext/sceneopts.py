@@ -73,7 +73,7 @@ class SceneOpts(props.HasProperties):
     """
 
 
-    labelSize = props.Int(minval=4, maxval=96, default=14, clamped=True)
+    labelSize = props.Int(minval=4, maxval=96, default=12, clamped=True)
     """Font size used for any labels drawn on the canvas, including
     orthographic labels, and colour bar labels.
     """

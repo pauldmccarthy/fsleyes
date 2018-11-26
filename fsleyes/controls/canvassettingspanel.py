@@ -136,7 +136,10 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                  'colourBarSize',
                  showLimits=False,
                  slider=True,
-                 spin=True))))
+                 spin=True)),
+            ('labelSize', props.Widget('labelSize',
+                                       spin=True,
+                                       showLimits=False))))
 
         def _displaySpaceOptionName(opt):
 
@@ -159,11 +162,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                           labels=strings.choices['OrthoOpts.layout'])),
             ('zoom',        props.Widget('zoom', showLimits=False)),
             ('showLabels',  props.Widget('showLabels')),
-            ('labelSize',   props.Widget('labelSize',
-                                         spin=True,
-                                         showLimits=False,
-                                         dependencies=['showLabels'],
-                                         enabledWhen=lambda i, s: s)),
             ('cursorGap',   props.Widget('cursorGap')),
             ('showXCanvas', props.Widget('showXCanvas')),
             ('showYCanvas', props.Widget('showYCanvas')),
