@@ -822,4 +822,8 @@ misc = TypeDict({
     'voxels. This setting has no effect when using nearest neighbour '
     'interpolation, and is only applied along axes which are being '
     'down-sampled.',
+    'ResampleDialog.allVolumes' :
+    'For images with more than three dimensions, this checkbox controls '
+    'whether all volumes are resampled, or just the currently selected '
+    'volume.',
 })
