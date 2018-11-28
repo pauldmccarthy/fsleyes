@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.27.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* The Tools |right_arrow| *Resample image* menu option now supports images
+  with more than three dimensions.
+
+
 0.26.6 (Monday November 26th 2018)
 ----------------------------------
 
