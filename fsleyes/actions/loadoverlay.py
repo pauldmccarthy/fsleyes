@@ -167,8 +167,11 @@ def loadOverlays(paths,
                     later on as the default load directory.
 
     :arg onLoad:    Optional function to call when all overlays have been
-                    loaded. Must accept two parameters - a list of paths,
-                    and a list of corresponding overlays that were loaded.
+                    loaded. Must accept two parameters:
+                      - a list of indices, one for each overlay, into the
+                        ``paths`` parameter, indicating, for each overlay, the
+                        path from which it was loaded.
+                      - a list of the overlays that were loaded
 
     :arg inmem:     If ``True``, all :class:`.Image` overlays are
                     force-loaded into memory. Otherwise, large compressed
@@ -182,6 +185,7 @@ def loadOverlays(paths,
     :returns:       If ``blocking is False`` (the default), returns ``None``.
                     Otherwise returns a list containing the loaded overlay
                     objects.
+
     """
 
     import fsl.data.image as fslimage
@@ -202,11 +206,10 @@ def loadOverlays(paths,
             e)
 
     # A function which loads a single overlay
-    def loadPath(path):
+    def loadPath(path, idx):
 
         loadFunc(path)
 
-        origPath    = path
         dtype, path = fsloverlay.guessDataSourceType(path)
 
         if dtype is None:
@@ -224,8 +227,8 @@ def loadOverlays(paths,
             else:
                 loaded = [dtype(path)]
 
-            overlays   .extend(loaded)
-            loadedPaths.extend([origPath] * len(loaded))
+            overlays.extend(loaded)
+            pathIdxs.extend([idx] * len(loaded))
 
         except Exception as e:
             errorFunc(path, e)
@@ -242,7 +245,7 @@ def loadOverlays(paths,
             fslsettings.write('loadSaveOverlayDir', op.dirname(paths[-1]))
 
         if onLoad is not None:
-            onLoad(loadedPaths, overlays)
+            onLoad(pathIdxs, overlays)
 
     # If loadFunc or errorFunc are explicitly set to
     # None, use these no-op load/error functions
@@ -254,13 +257,13 @@ def loadOverlays(paths,
     if loadFunc  == 'default': loadFunc  = defaultLoadFunc
     if errorFunc == 'default': errorFunc = defaultErrorFunc
 
-    loadedPaths = []
-    overlays    = []
-    funcs       = []
+    pathIdxs = []
+    overlays = []
+    funcs    = []
 
     # Load the images
-    for path in paths:
-        funcs.append(lambda p=path: loadPath(p))
+    for idx, path in enumerate(paths):
+        funcs.append(lambda p=path, i=idx: loadPath(p, i))
     funcs.append(realOnLoad)
 
     for func in funcs:

@@ -2582,8 +2582,8 @@ def applyOverlayArgs(args,
 
     import fsleyes.actions.loadoverlay as loadoverlay
 
-    paths       = [ns.overlay      for ns in args.overlays]
-    overlayArgs = {ns.overlay : ns for ns in args.overlays}
+    overlayArgs = args.overlays
+    paths       = [ns.overlay for ns in overlayArgs]
 
     if len(paths) == 0:
         return
@@ -2592,7 +2592,7 @@ def applyOverlayArgs(args,
     # works asynchronously - this function will
     # get called once all of the overlays have
     # been loaded.
-    def onLoad(paths, overlays):
+    def onLoad(pathIdxs, overlays):
 
         # Do an initial pass through the overlays and their
         # respective arguments, and build a dictionary of
@@ -2600,8 +2600,8 @@ def applyOverlayArgs(args,
 
         overlayTypes = {}
 
-        for path, overlay in zip(paths, overlays):
-            optArgs     = overlayArgs[path]
+        for idx, overlay in zip(pathIdxs, overlays):
+            optArgs     = overlayArgs[idx]
             overlayType = getattr(optArgs, 'overlayType', None)
 
             if overlayType is not None:
@@ -2621,12 +2621,12 @@ def applyOverlayArgs(args,
         else:
             displayCtx.selectedOverlay = selovl
 
-        for path, overlay in zip(paths, overlays):
+        for idx, overlay in zip(pathIdxs, overlays):
 
             status.update('Applying display settings '
                           'to {}...'.format(overlay.name))
 
-            optArgs = overlayArgs[path]
+            optArgs = overlayArgs[idx]
             display = displayCtx.getDisplay(overlay)
 
             if hasattr(optArgs, 'overlay'):
