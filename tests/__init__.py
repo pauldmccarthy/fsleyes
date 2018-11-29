@@ -37,6 +37,7 @@ except ImportError:
 import matplotlib.image as mplimg
 
 import fsleyes_props                as props
+from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
 import fsl.utils.transform          as transform
 import fsl.data.image               as fslimage
@@ -65,6 +66,42 @@ def haveGL21():
 def haveFSL():
     path = op.expandvars('$FSLDIR/data/standard/MNI152_T1_2mm.nii.gz')
     return op.exists(path)
+
+
+def touch(fname):
+    with open(fname, 'wt') as f:
+        pass
+
+
+@contextlib.contextmanager
+def mockFSLDIR(**kwargs):
+
+    from fsl.utils.platform import platform as fslplatform
+
+    oldfsldir    = fslplatform.fsldir
+    oldfsldevdir = fslplatform.fsldevdir
+
+    try:
+        with tempdir() as td:
+            fsldir = op.join(td, 'fsl')
+            bindir = op.join(fsldir, 'bin')
+            os.makedirs(bindir)
+            for subdir, files in kwargs.items():
+                subdir = op.join(fsldir, subdir)
+                if not op.isdir(subdir):
+                    os.makedirs(subdir)
+                for fname in files:
+                    touch(op.join(subdir, fname))
+            fslplatform.fsldir = fsldir
+            fslplatform.fsldevdir = None
+
+            path = op.pathsep.join((bindir, os.environ['PATH']))
+
+            with mock.patch.dict(os.environ, {'PATH': path}):
+                yield fsldir
+    finally:
+        fslplatform.fsldir    = oldfsldir
+        fslplatform.fsldevdir = oldfsldevdir
 
 
 # Under GTK, a single call to

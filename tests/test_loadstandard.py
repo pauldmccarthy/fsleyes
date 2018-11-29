@@ -14,11 +14,15 @@ try:
 except ImportError:
     import mock
 
+import numpy as np
+
 import wx
 
+import fsl.data.image as fslimage
+from fsl.utils.tempdir import tempdir
 import fsleyes.actions.loadstandard as ls
 
-from . import run_with_orthopanel, realYield, MockFileDialog
+from . import run_with_orthopanel, realYield, MockFileDialog, mockFSLDIR
 
 
 def test_LoadStandardAction():
@@ -26,19 +30,25 @@ def test_LoadStandardAction():
 
 def _test_LoadStandardAction(panel, overlayList, displayCtx):
 
-    frame = panel.frame
-    act   = ls.LoadStandardAction(overlayList, displayCtx, frame)
+    with mockFSLDIR(), MockFileDialog() as dlg:
 
-    with MockFileDialog() as dlg:
+        fsldir = os.environ['FSLDIR']
+        stddir = op.join(fsldir, 'data', 'standard')
+        fname  = op.join(stddir, 'image.nii.gz')
+        img    = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        frame  = panel.frame
+
+        os.makedirs(stddir)
+        img.save(fname)
+
+        act = ls.LoadStandardAction(overlayList, displayCtx, frame)
         dlg.ShowModal_retval = wx.ID_CANCEL
         act()
         assert len(overlayList) == 0
 
         dlg.ShowModal_retval = wx.ID_OK
-        dlg.GetPath_retval   = op.expandvars(
-            '$FSLDIR/data/standard/MNI152_T1_2mm')
-        dlg.GetPaths_retval  = [op.expandvars(
-            '$FSLDIR/data/standard/MNI152_T1_2mm')]
+        dlg.GetPath_retval   =  fname
+        dlg.GetPaths_retval  = [fname]
 
         act()
         realYield(50)
