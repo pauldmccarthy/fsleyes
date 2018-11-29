@@ -396,6 +396,10 @@ def MockFileDialog():
             return MockDlg.GetPath_retval
         def GetPaths(self):
             return MockDlg.GetPaths_retval
+        def Close(self):
+            pass
+        def Destroy(self):
+            pass
         ShowModal_retval = wx.ID_OK
         GetPath_retval   = ''
         GetPaths_retval  = []
@@ -450,6 +454,40 @@ def simclick(sim, target, btn=wx.MOUSE_BTN_LEFT, pos=None, stype=0):
     else:
         sim.MouseDown(btn)
         sim.MouseUp(btn)
+    realYield()
+
+
+def simtext(sim, target, text, enter=True):
+
+    GTK = any(['gtk' in p.lower() for p in wx.PlatformInfo])
+
+    target.SetFocus()
+    parent = target.GetParent()
+
+    # The EVT_TEXT_ENTER event
+    # does not seem to occur
+    # under docker/GTK so we
+    # have to hack. EVT_TEXT
+    # does work though.
+    if GTK and type(parent).__name__ == 'FloatSpinCtrl':
+        if enter:
+            target.ChangeValue(text)
+            parent._FloatSpinCtrl__onText(None)
+        else:
+            target.SetValue(text)
+
+    elif GTK and type(parent).__name__ == 'AutoTextCtrl':
+        if enter:
+            target.ChangeValue(text)
+            parent._AutoTextCtrl__onEnter(None)
+        else:
+            target.SetValue(text)
+    else:
+        target.SetValue(text)
+
+        if enter:
+            sim.KeyDown(wx.WXK_RETURN)
+
     realYield()
 
 
