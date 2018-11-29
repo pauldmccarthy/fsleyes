@@ -952,7 +952,7 @@ HELP = td.TypeDict({
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
-    'SceneOpts.colourBarSize'      : 'Colour bar size (%)',
+    'SceneOpts.colourBarSize'      : 'Colour bar size (%%)',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
