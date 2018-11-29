@@ -27,7 +27,6 @@ when new files have been loaded.
 
 
 import            logging
-import            collections
 import            os
 import os.path as op
 
@@ -317,7 +316,8 @@ def loadImage(dtype, path, inmem=False):
     image    = None
 
     # Complex images are split into two separate overlays
-    if (dtype is fslimage.Image) and np.issubdtype(imgdtype, np.complex):
+    if (dtype is fslimage.Image) and \
+       np.issubdtype(imgdtype, np.complexfloating):
         return _loadComplexImage(path)
     else:
         return [_loadNonComplexImage(dtype, path, nbytes, inmem)]
@@ -436,7 +436,7 @@ def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
                             style=wx.FD_OPEN | wx.FD_MULTIPLE)
 
     if dlg.ShowModal() != wx.ID_OK:
-        return []
+        return
 
     if dirdlg: paths = [dlg.GetPath()]
     else:      paths =  dlg.GetPaths()
