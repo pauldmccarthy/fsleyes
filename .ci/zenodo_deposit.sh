@@ -11,7 +11,7 @@ zenodo_tkn=$3
 zenodo_depid=$4
 
 version=`python setup.py -V`
-upfile=`pwd`/dist/fslpy-"$version".tar.gz
+upfile=`pwd`/dist/"$name"-"$version".tar.gz
 metafile=`pwd`/.ci/zenodo_meta.json.jinja2
 date=`date +"%Y-%m-%d"`
 

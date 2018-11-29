@@ -86,11 +86,15 @@ class ResampleAction(base.Action):
         interp    = dlg.GetInterpolation()
         dtype     = dlg.GetDataType()
         smoothing = dlg.GetSmoothing()
+        allvols   = dlg.GetAllVolumes()
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
         name      = '{}_resampled'.format(ovl.name)
 
-        if ovl.ndim == 3: slc = None
-        else:             slc = opts.index()
+        if allvols or ovl.ndim == 3: slc = None
+        else:                        slc = opts.index()
+
+        if allvols and ovl.ndim > 3:
+            newShape = list(newShape) + list(ovl.shape[3:])
 
         resampled, xform = ovl.resample(newShape,
                                         sliceobj=slc,
@@ -117,8 +121,8 @@ class ResampleDialog(wx.Dialog):
 
         :arg parent: ``wx`` parent object
         :arg title:  Dialog title
-        :arg shape:  The original image shape (a tuple of three integers)
-        :arg pixdim: The original image pixdims (a tuple of three floats)
+        :arg shape:  The original image shape (a tuple of integers)
+        :arg pixdim: The original image pixdims (a tuple of floats)
         """
 
         wx.Dialog.__init__(self,
@@ -188,17 +192,25 @@ class ResampleDialog(wx.Dialog):
         self.__interpLabel = wx.StaticText(self)
         self.__dtypeLabel  = wx.StaticText(self)
         self.__smoothLabel = wx.StaticText(self)
+        self.__allVolLabel = wx.StaticText(self)
         self.__interp      = wx.Choice(self, choices=self.__interpLabels)
         self.__dtype       = wx.Choice(self, choices=self.__dtypeLabels)
         self.__smooth      = wx.CheckBox(self)
+        self.__allVolumes  = wx.CheckBox(self)
 
-        self.__interp.SetSelection(0)
-        self.__dtype .SetSelection(0)
-        self.__smooth.SetValue(True)
+        if len(shape) <= 3:
+            self.__allVolumes .Disable()
+            self.__allVolLabel.Disable()
+
+        self.__interp    .SetSelection(0)
+        self.__dtype     .SetSelection(0)
+        self.__smooth    .SetValue(True)
+        self.__allVolumes.SetValue(True)
 
         self.__interpLabel.SetLabel(strings.labels[self, 'interpolation'])
         self.__dtypeLabel .SetLabel(strings.labels[self, 'dtype'])
         self.__smoothLabel.SetLabel(strings.labels[self, 'smoothing'])
+        self.__allVolLabel.SetLabel(strings.labels[self, 'allVolumes'])
 
         self.__interp     .SetToolTip(
             wx.ToolTip(tooltips.misc[self, 'interpolation']))
@@ -212,6 +224,10 @@ class ResampleDialog(wx.Dialog):
             wx.ToolTip(tooltips.misc[self, 'smoothing']))
         self.__smoothLabel.SetToolTip(
             wx.ToolTip(tooltips.misc[self, 'smoothing']))
+        self.__allVolumes .SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'allVolumes']))
+        self.__allVolLabel.SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'allVolumes']))
 
         self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
@@ -220,6 +236,7 @@ class ResampleDialog(wx.Dialog):
         self.__interpSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__dtypeSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__smoothSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__allVolSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
         self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
 
@@ -288,6 +305,13 @@ class ResampleDialog(wx.Dialog):
         self.__smoothSizer.Add((10, 1),            flag=wx.EXPAND,
                                proportion=1)
 
+        self.__allVolSizer.Add((50, 1),            flag=wx.EXPAND)
+        self.__allVolSizer.Add(self.__allVolLabel, flag=wx.EXPAND)
+        self.__allVolSizer.Add((10, 1),            flag=wx.EXPAND)
+        self.__allVolSizer.Add(self.__allVolumes,  flag=wx.EXPAND)
+        self.__allVolSizer.Add((10, 1),            flag=wx.EXPAND,
+                               proportion=1)
+
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
         self.__btnSizer.Add(self.__ok,     flag=wx.EXPAND)
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
@@ -308,6 +332,8 @@ class ResampleDialog(wx.Dialog):
         self.__mainSizer.Add(self.__dtypeSizer,  flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__smoothSizer, flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__allVolSizer, flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__btnSizer,    flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
@@ -409,6 +435,14 @@ class ResampleDialog(wx.Dialog):
         ``True``, or ``False``.
         """
         return self.__smooth.GetValue()
+
+
+    def GetAllVolumes(self):
+        """Returns ``True``, or ``False``, indicating whether all
+        volumes of an image with more than three dimensions should be
+        resampled.
+        """
+        return self.__allVolumes.GetValue()
 
 
     def GetPixdims(self):

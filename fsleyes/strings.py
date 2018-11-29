@@ -835,6 +835,7 @@ labels = TypeDict({
     'ResampleDialog.cancel'        : 'Cancel',
     'ResampleDialog.interpolation' : 'Interpolation',
     'ResampleDialog.smoothing'     : 'Smoothing',
+    'ResampleDialog.allVolumes'    : 'All volumes',
     'ResampleDialog.dtype'         : 'Data type',
     'ResampleDialog.nearest'       : 'Nearest neighbour',
     'ResampleDialog.linear'        : 'Linear',
