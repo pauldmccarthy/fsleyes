@@ -2582,18 +2582,26 @@ def applyOverlayArgs(args,
 
     import fsleyes.actions.loadoverlay as loadoverlay
 
+    paths       = [ns.overlay      for ns in args.overlays]
+    overlayArgs = {ns.overlay : ns for ns in args.overlays}
+
+    if len(paths) == 0:
+        return
+
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
     # get called once all of the overlays have
     # been loaded.
-    def onLoad(overlays):
+    def onLoad(paths, overlays):
 
         # Do an initial pass through the overlays and their
         # respective arguments, and build a dictionary of
         # initial overlay types where they have been specified
+
         overlayTypes = {}
 
-        for overlay, optArgs in zip(overlays, args.overlays):
+        for path, overlay in zip(paths, overlays):
+            optArgs     = overlayArgs[path]
             overlayType = getattr(optArgs, 'overlayType', None)
 
             if overlayType is not None:
@@ -2613,15 +2621,16 @@ def applyOverlayArgs(args,
         else:
             displayCtx.selectedOverlay = selovl
 
-        for i, overlay in enumerate(overlays):
+        for path, overlay in zip(paths, overlays):
 
             status.update('Applying display settings '
                           'to {}...'.format(overlay.name))
 
+            optArgs = overlayArgs[path]
             display = displayCtx.getDisplay(overlay)
-            optArgs = args.overlays[i]
 
-            delattr(optArgs, 'overlay')
+            if hasattr(optArgs, 'overlay'):
+                delattr(optArgs, 'overlay')
 
             # Figure out how many arguments
             # were passed in for this overlay
@@ -2704,18 +2713,14 @@ def applyOverlayArgs(args,
                        gen=False,
                        overlay=overlay)
 
-    paths = [o.overlay for o in args.overlays]
-
-    if len(paths) == 0:
-        return
-
     if loadOverlays:
         loadoverlay.loadOverlays(paths,
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory,
                                  **kwargs)
     else:
-        onLoad(overlayList[:])
+        paths = [o.dataSource for o in overlayList]
+        onLoad(paths, overlayList[:])
 
 
 def wasSpecified(namespace, obj, propName):

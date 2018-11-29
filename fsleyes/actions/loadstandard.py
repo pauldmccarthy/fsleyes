@@ -75,7 +75,7 @@ class LoadStandardAction(base.Action):
         :attr:`.DisplayContext.selectedOverlay` accordingly.
         """
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return

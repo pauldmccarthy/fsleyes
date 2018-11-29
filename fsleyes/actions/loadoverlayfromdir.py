@@ -46,7 +46,7 @@ class LoadOverlayFromDirAction(base.Action):
         of each new overlay.
         """
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return

@@ -162,7 +162,7 @@ class FSLeyesApp(wx.App):
         import fsleyes.actions.loadoverlay as loadoverlay
         import fsleyes.autodisplay         as autodisplay
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return

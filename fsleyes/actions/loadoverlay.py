@@ -27,6 +27,7 @@ when new files have been loaded.
 
 
 import            logging
+import            collections
 import            os
 import os.path as op
 
@@ -74,7 +75,7 @@ class LoadOverlayAction(base.Action):
         of each new overlay.
         """
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return
@@ -167,8 +168,8 @@ def loadOverlays(paths,
                     later on as the default load directory.
 
     :arg onLoad:    Optional function to call when all overlays have been
-                    loaded. Must accept one parameter - a list containing
-                    the overlays that were loaded.
+                    loaded. Must accept two parameters - a list of paths,
+                    and a list of corresponding overlays that were loaded.
 
     :arg inmem:     If ``True``, all :class:`.Image` overlays are
                     force-loaded into memory. Otherwise, large compressed
@@ -206,6 +207,7 @@ def loadOverlays(paths,
 
         loadFunc(path)
 
+        origPath    = path
         dtype, path = fsloverlay.guessDataSourceType(path)
 
         if dtype is None:
@@ -217,13 +219,14 @@ def loadOverlays(paths,
 
         try:
             if   issubclass(dtype, fslimage.Image):
-                overlay = loadImage(dtype, path, inmem=inmem)
+                loaded = loadImage(dtype, path, inmem=inmem)
             elif issubclass(dtype, fslmesh.Mesh):
-                overlay = dtype(path, fixWinding=True)
+                loaded = [dtype(path, fixWinding=True)]
             else:
-                overlay = dtype(path)
+                loaded = [dtype(path)]
 
-            overlays.append(overlay)
+            overlays   .extend(loaded)
+            loadedPaths.extend([origPath] * len(loaded))
 
         except Exception as e:
             errorFunc(path, e)
@@ -240,7 +243,7 @@ def loadOverlays(paths,
             fslsettings.write('loadSaveOverlayDir', op.dirname(paths[-1]))
 
         if onLoad is not None:
-            onLoad(overlays)
+            onLoad(loadedPaths, overlays)
 
     # If loadFunc or errorFunc are explicitly set to
     # None, use these no-op load/error functions
@@ -252,8 +255,9 @@ def loadOverlays(paths,
     if loadFunc  == 'default': loadFunc  = defaultLoadFunc
     if errorFunc == 'default': errorFunc = defaultErrorFunc
 
-    overlays = []
-    funcs    = []
+    loadedPaths = []
+    overlays    = []
+    funcs       = []
 
     # Load the images
     for path in paths:
@@ -275,17 +279,24 @@ def loadImage(dtype, path, inmem=False):
     kept on disk, and the initial image data range may be calculated
     from the whole image, or from a sample.
 
+    This function returns a sequence, most likely containing a single
+    :class:`.Image` instance. But in some circumstances (e.g. image files with
+    a complex data type), more than one :class:`.Image` will be created and
+    returned.
+
     :arg dtype: Overlay type (``Image``, or a sub-class of ``Image``).
     :arg path:  Path to the overlay file.
     :arg inmem: If ``True``, ``Image`` overlays are loaded into memory.
+
+    :returns:   A sequence of :class:`.Image` instances that were loaded.
     """
 
-    rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
-    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
+    import fsl.data.image as fslimage
 
     # We're going to load the file
     # twice - first to get its
-    # dimensions, and then for real.
+    # dimensions/data type, and
+    # then for real.
     #
     # TODO It is annoying that you have to create a 'dtype'
     #      instance twice, as e.g. the MelodicImage does a
@@ -300,18 +311,38 @@ def loadImage(dtype, path, inmem=False):
                   calcRange=False,
                   indexed=False,
                   threaded=False)
-    nbytes = np.prod(image.shape) * image.dtype.itemsize
-    image  = None
+
+    imgdtype = image.dtype
+    nbytes   = np.prod(image.shape) * image.dtype.itemsize
+    image    = None
+
+    # Complex images are split into two separate overlays
+    if (dtype is fslimage.Image) and np.issubdtype(imgdtype, np.complex):
+        return _loadComplexImage(path)
+    else:
+        return [_loadNonComplexImage(dtype, path, nbytes, inmem)]
+
+
+def _loadNonComplexImage(dtype, path, nbytes, inmem):
+    """Loads an image with a non-complex data type.
+
+    :arg dtype:  Overlay type - :class:`.Image`, or a sub-class of ``Image``.
+    :arg path:   Path to the image file
+    :arg nbytes: Number of bytes that the image data takes up.
+    :arg inmem:  If ``True``, the file is loaded into memory.
+    """
 
     # If the file is compressed (gzipped),
     # index the file if its compressed size
     # is greater than the index threshold.
-    indexed = nbytes > idxthres
-    image   = dtype(path,
-                    loadData=inmem,
-                    calcRange=False,
-                    indexed=indexed,
-                    threaded=indexed)
+    rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
+    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
+    indexed    = nbytes > idxthres
+    image      = dtype(path,
+                       loadData=inmem,
+                       calcRange=False,
+                       indexed=indexed,
+                       threaded=indexed)
 
     # If the image is bigger than the
     # index threshold, keep it on disk.
@@ -329,6 +360,31 @@ def loadImage(dtype, path, inmem=False):
     image.calcRange(rangethres)
 
     return image
+
+
+def _loadComplexImage(path):
+    """Loads the specified ``path`` assumed to be a NIFTI image
+    with complex data.
+
+    The image is loaded as two separate :class:`.Image` instances,
+    containing the real and imaginary components respectively.
+    """
+
+    import nibabel        as nib
+    import fsl.data.image as fslimage
+
+    image = nib.load(path)
+    hdr   = image.header
+    data  = image.get_data()
+
+    name  = op.basename(fslimage.removeExt(path))
+    rname = '{} [real]'.format(name)
+    iname = '{} [imag]'.format(name)
+
+    real = fslimage.Image(np.real(data), name=rname, header=hdr)
+    imag = fslimage.Image(np.imag(data), name=iname, header=hdr)
+
+    return real, imag
 
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
