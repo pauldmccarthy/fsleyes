@@ -73,6 +73,18 @@ def touch(fname):
         pass
 
 
+def waitUntilIdle():
+
+    called = [False]
+    def flag():
+        called[0] = True
+
+    idle.idle(flag)
+
+    while not called[0]:
+        realYield(50)
+
+
 @contextlib.contextmanager
 def mockFSLDIR(**kwargs):
 
