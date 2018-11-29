@@ -37,9 +37,11 @@ import            textwrap
 
 import wx
 
-from fsl.utils.platform import platform as fslplatform
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets.utils.status       as status
 
 import                       fsleyes
+import fsleyes.strings    as strings
 import fsleyes.splash     as fslsplash
 import fsleyes.colourmaps as colourmaps
 
@@ -288,7 +290,11 @@ def main(args=None):
         # module will raise SystemExit.
         try:
             if namespace[0] is None:
-                namespace[0] = parseArgs(args)
+
+                errmsg   = strings.messages['main.parseArgs.error']
+                errtitle = strings.titles[  'main.parseArgs.error']
+                with status.reportIfError(errtitle, errmsg, raiseError=True):
+                    namespace[0] = parseArgs(args)
 
         # But the wx.App.MainLoop eats SystemExit
         # exceptions for unknown reasons, and
@@ -297,9 +303,9 @@ def main(args=None):
         # (e.g. code coverage) impossible. So I'm
         # catching SystemExit here, and then
         # telling the wx.App to exit gracefully.
-        except SystemExit as e:
+        except (SystemExit, Exception) as e:
             app.ExitMainLoop()
-            exitCode[0] = e.code
+            exitCode[0] = getattr(e, 'code', 1)
             return
 
         # Configure logging (this has to be done
