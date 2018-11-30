@@ -25,6 +25,7 @@ Changed
 ^^^^^^^
 
 
+* FSLeyes is no longer tested against Python 2, or wxPython 3.
 * The *Tools* |right_arrow| *Resample image* menu option now supports images
   with more than three dimensions.
 * Increased range of colour bar tick labels.
