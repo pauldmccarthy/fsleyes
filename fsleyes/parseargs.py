@@ -2719,8 +2719,7 @@ def applyOverlayArgs(args,
                                  inmem=displayCtx.loadInMemory,
                                  **kwargs)
     else:
-        paths = [o.dataSource for o in overlayList]
-        onLoad(paths, overlayList[:])
+        onLoad(range(len(overlayList)), overlayList[:])
 
 
 def wasSpecified(namespace, obj, propName):
