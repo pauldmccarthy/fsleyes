@@ -317,6 +317,7 @@ titles = TypeDict({
 
     'FSLeyesFrame.saveLayout'      : 'Save layout',
     'FSLeyesFrame.unsavedOverlays' : 'Unsaved images',
+    'FSLeyesFrame.setFSLDIR'       : 'Select FSL installation directory',
 
     'FSLeyesApp.openURLError' : 'Error loading URL',
 
@@ -490,6 +491,7 @@ actions = TypeDict({
     'FSLeyesFrame.addPowerSpectrumPanel'   : 'Power spectra',
     'FSLeyesFrame.addShellPanel'           : 'Python shell',
     'FSLeyesFrame.openHelp'                : 'Help',
+    'FSLeyesFrame.setFSLDIR'               : 'Set $FSLDIR',
     'FSLeyesFrame.closeFSLeyes'            : 'Close',
     'FSLeyesFrame.selectNextOverlay'       : 'Next',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Previous',
