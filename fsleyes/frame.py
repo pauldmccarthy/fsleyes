@@ -1658,7 +1658,7 @@ class FSLeyesFrame(wx.Frame):
 
         path = self.__recentPathsMenu.GetLabel(ev.GetId())
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return

@@ -357,6 +357,84 @@ class ResampleDialog(wx.Dialog):
         self.CentreOnParent()
 
 
+    @property
+    def okButton(self):
+        """Returns a reference to the OK button. """
+        return self.__ok
+
+
+    @property
+    def resetButton(self):
+        """Returns a reference to the reset button. """
+        return self.__reset
+
+
+    @property
+    def cancelButton(self):
+        """Returns a reference to the cancel button. """
+        return self.__cancel
+
+
+    @property
+    def voxXCtrl(self):
+        """Returns a reference to the X voxel coordinate spin control. """
+        return self.__voxx
+
+
+    @property
+    def voxYCtrl(self):
+        """Returns a reference to the Y voxel coordinate spin control. """
+        return self.__voxy
+
+
+    @property
+    def voxZCtrl(self):
+        """Returns a reference to the Z voxel coordinate spin control. """
+        return self.__voxz
+
+
+    @property
+    def pixXCtrl(self):
+        """Returns a reference to the X pixdim spin control. """
+        return self.__pixx
+
+
+    @property
+    def pixYCtrl(self):
+        """Returns a reference to the Y pixdim spin control. """
+        return self.__pixy
+
+
+    @property
+    def pixZCtrl(self):
+        """Returns a reference to the Z pixdim spin control. """
+        return self.__pixz
+
+
+    @property
+    def interpCtrl(self):
+        """Returns a reference to the interpolation dropdown box. """
+        return self.__interp
+
+
+    @property
+    def dtypeCtrl(self):
+        """Returns a reference to the data type dropdown box. """
+        return self.__dtype
+
+
+    @property
+    def smoothCtrl(self):
+        """Returns a reference to the smoothing checkbox. """
+        return self.__smooth
+
+
+    @property
+    def allVolumesCtrl(self):
+        """Returns a reference to the all volumes checkbox. """
+        return self.__allVolumes
+
+
     def __onVoxel(self, ev):
         """Called when the user changes a voxel value. Updates the pixdim
         values accordingly.

@@ -15,25 +15,34 @@ if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
 fi;
 
 source /test.venv/bin/activate
+pip install --upgrade pip
 
 PIPARGS="--retries 10 --timeout 30"
 
 # Make sure we have master branches of the
 # core dependencies
-pip install $PIPARGS -r requirements-dev.txt
-
 wget https://git.fmrib.ox.ac.uk/fsl/fslpy/-/archive/master/fslpy-master.tar.bz2
 wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets/-/archive/master/widgets-master.tar.bz2
 wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.tar.bz2
 
-tar xf fslpy-master.tar.bz2   && pushd fslpy-master   && pip install $PIPARGS . && popd
-tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
-tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
+pip install $PIPARGS -r requirements-dev.txt
 
-cat requirements.txt | grep -v "fsl" > requirements-ci.txt
+# Install back to front - if we install
+# our master versions of the core packages
+# first, they might get downgraded during
+# a subsequent installation.
+#
+# pyopengl-accelerate is not currently
+# compatible with python 3.7. And it's
+# not necessary for testing.
+cat requirements.txt | grep -v "fsl" | grep -iv "pyopengl-accel" > requirements-ci.txt
 pip install $PIPARGS -r requirements-ci.txt
 pip install $PIPARGS -r requirements-extra.txt
 pip install $PIPARGS -r requirements-notebook.txt
+
+tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
+tar xf fslpy-master.tar.bz2   && pushd fslpy-master   && pip install $PIPARGS . && popd
+tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
 
 # print environment
 pip freeze

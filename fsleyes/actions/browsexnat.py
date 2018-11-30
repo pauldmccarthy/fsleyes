@@ -86,7 +86,7 @@ class BrowseXNATAction(base.Action):
         fslsettings.write('fsleyes.xnat.hosts',    hosts)
         fslsettings.write('fsleyes.xnat.accounts', accounts)
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
 
             if len(overlays) == 0:
                 return

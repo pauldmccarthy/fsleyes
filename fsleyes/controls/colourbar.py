@@ -264,19 +264,25 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             if  self.labelSide == 'top-left': labelSide = 'left'
             else:                             labelSide = 'right'
 
-        if useNegCmap:
+        if useNegCmap and dmin == 0.0:
+            ticks      = [0.0, 0.5, 1.0]
+            ticklabels = ['{:0.3G}'.format(-dmax),
+                          '{:0.3G}'.format( dmin),
+                          '{:0.3G}'.format( dmax)]
+            tickalign  = ['left', 'center', 'right']
+        elif useNegCmap:
             ticks      = [0.0, 0.49, 0.51, 1.0]
-            ticklabels = ['{:0.2f}'.format(-dmax),
-                          '{:0.2f}'.format(-dmin),
-                          '{:0.2f}'.format( dmin),
-                          '{:0.2f}'.format( dmax)]
+            ticklabels = ['{:0.3G}'.format(-dmax),
+                          '{:0.3G}'.format(-dmin),
+                          '{:0.3G}'.format( dmin),
+                          '{:0.3G}'.format( dmax)]
             tickalign  = ['left', 'right', 'left', 'right']
         else:
             negCmap    = None
             ticks      = [0.0, 1.0]
             tickalign  = ['left', 'right']
-            ticklabels = ['{:0.2f}'.format(dmin),
-                          '{:0.2f}'.format(dmax)]
+            ticklabels = ['{:0.3G}'.format(dmin),
+                          '{:0.3G}'.format(dmax)]
 
         if not self.showLabel:
             label = None

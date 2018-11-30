@@ -42,6 +42,9 @@ messages = TypeDict({
 
     'FSLeyesSplash.default' : 'Loading ...',
 
+    'main.parseArgs.error' :
+    'An error occurred loading the command-line arguments.',
+
     'FSLeyesFrame.restoringLayout'     : 'Restoring layout from last '
                                          'session ...',
     'FSLeyesFrame.saveLayout'          : 'Save this layout for next time?',
@@ -309,6 +312,8 @@ titles = TypeDict({
     'interactiveLoadOverlays.dirDialog'  : 'Open overlay directories',
 
     'loadOverlays.error'  : 'Error loading overlay',
+
+    'main.parseArgs.error' : 'Error loading command line arguments',
 
     'FSLeyesFrame.saveLayout'      : 'Save layout',
     'FSLeyesFrame.unsavedOverlays' : 'Unsaved images',

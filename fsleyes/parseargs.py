@@ -952,7 +952,7 @@ HELP = td.TypeDict({
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
-    'SceneOpts.colourBarSize'      : 'Colour bar size (%)',
+    'SceneOpts.colourBarSize'      : 'Colour bar size (%%)',
     'SceneOpts.performance'        : 'Rendering performance '
                                      '(1=fastest, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
@@ -2582,18 +2582,26 @@ def applyOverlayArgs(args,
 
     import fsleyes.actions.loadoverlay as loadoverlay
 
+    overlayArgs = args.overlays
+    paths       = [ns.overlay for ns in overlayArgs]
+
+    if len(paths) == 0:
+        return
+
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
     # get called once all of the overlays have
     # been loaded.
-    def onLoad(overlays):
+    def onLoad(pathIdxs, overlays):
 
         # Do an initial pass through the overlays and their
         # respective arguments, and build a dictionary of
         # initial overlay types where they have been specified
+
         overlayTypes = {}
 
-        for overlay, optArgs in zip(overlays, args.overlays):
+        for idx, overlay in zip(pathIdxs, overlays):
+            optArgs     = overlayArgs[idx]
             overlayType = getattr(optArgs, 'overlayType', None)
 
             if overlayType is not None:
@@ -2613,15 +2621,16 @@ def applyOverlayArgs(args,
         else:
             displayCtx.selectedOverlay = selovl
 
-        for i, overlay in enumerate(overlays):
+        for idx, overlay in zip(pathIdxs, overlays):
 
             status.update('Applying display settings '
                           'to {}...'.format(overlay.name))
 
+            optArgs = overlayArgs[idx]
             display = displayCtx.getDisplay(overlay)
-            optArgs = args.overlays[i]
 
-            delattr(optArgs, 'overlay')
+            if hasattr(optArgs, 'overlay'):
+                delattr(optArgs, 'overlay')
 
             # Figure out how many arguments
             # were passed in for this overlay
@@ -2704,18 +2713,13 @@ def applyOverlayArgs(args,
                        gen=False,
                        overlay=overlay)
 
-    paths = [o.overlay for o in args.overlays]
-
-    if len(paths) == 0:
-        return
-
     if loadOverlays:
         loadoverlay.loadOverlays(paths,
                                  onLoad=onLoad,
                                  inmem=displayCtx.loadInMemory,
                                  **kwargs)
     else:
-        onLoad(overlayList[:])
+        onLoad(range(len(overlayList)), overlayList[:])
 
 
 def wasSpecified(namespace, obj, propName):

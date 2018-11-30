@@ -37,6 +37,7 @@ except ImportError:
 import matplotlib.image as mplimg
 
 import fsleyes_props                as props
+from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
 import fsl.utils.transform          as transform
 import fsl.data.image               as fslimage
@@ -65,6 +66,54 @@ def haveGL21():
 def haveFSL():
     path = op.expandvars('$FSLDIR/data/standard/MNI152_T1_2mm.nii.gz')
     return op.exists(path)
+
+
+def touch(fname):
+    with open(fname, 'wt') as f:
+        pass
+
+
+def waitUntilIdle():
+
+    called = [False]
+    def flag():
+        called[0] = True
+
+    idle.idle(flag)
+
+    while not called[0]:
+        realYield(50)
+
+
+@contextlib.contextmanager
+def mockFSLDIR(**kwargs):
+
+    from fsl.utils.platform import platform as fslplatform
+
+    oldfsldir    = fslplatform.fsldir
+    oldfsldevdir = fslplatform.fsldevdir
+
+    try:
+        with tempdir() as td:
+            fsldir = op.join(td, 'fsl')
+            bindir = op.join(fsldir, 'bin')
+            os.makedirs(bindir)
+            for subdir, files in kwargs.items():
+                subdir = op.join(fsldir, subdir)
+                if not op.isdir(subdir):
+                    os.makedirs(subdir)
+                for fname in files:
+                    touch(op.join(subdir, fname))
+            fslplatform.fsldir = fsldir
+            fslplatform.fsldevdir = None
+
+            path = op.pathsep.join((bindir, os.environ['PATH']))
+
+            with mock.patch.dict(os.environ, {'PATH': path}):
+                yield fsldir
+    finally:
+        fslplatform.fsldir    = oldfsldir
+        fslplatform.fsldevdir = oldfsldevdir
 
 
 # Under GTK, a single call to
@@ -396,6 +445,10 @@ def MockFileDialog():
             return MockDlg.GetPath_retval
         def GetPaths(self):
             return MockDlg.GetPaths_retval
+        def Close(self):
+            pass
+        def Destroy(self):
+            pass
         ShowModal_retval = wx.ID_OK
         GetPath_retval   = ''
         GetPaths_retval  = []
@@ -450,6 +503,40 @@ def simclick(sim, target, btn=wx.MOUSE_BTN_LEFT, pos=None, stype=0):
     else:
         sim.MouseDown(btn)
         sim.MouseUp(btn)
+    realYield()
+
+
+def simtext(sim, target, text, enter=True):
+
+    GTK = any(['gtk' in p.lower() for p in wx.PlatformInfo])
+
+    target.SetFocus()
+    parent = target.GetParent()
+
+    # The EVT_TEXT_ENTER event
+    # does not seem to occur
+    # under docker/GTK so we
+    # have to hack. EVT_TEXT
+    # does work though.
+    if GTK and type(parent).__name__ == 'FloatSpinCtrl':
+        if enter:
+            target.ChangeValue(text)
+            parent._FloatSpinCtrl__onText(None)
+        else:
+            target.SetValue(text)
+
+    elif GTK and type(parent).__name__ == 'AutoTextCtrl':
+        if enter:
+            target.ChangeValue(text)
+            parent._AutoTextCtrl__onEnter(None)
+        else:
+            target.SetValue(text)
+    else:
+        target.SetValue(text)
+
+        if enter:
+            sim.KeyDown(wx.WXK_RETURN)
+
     realYield()
 
 

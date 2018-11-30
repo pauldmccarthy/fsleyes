@@ -13,12 +13,33 @@ chronological order.
 --------------------------
 
 
+Added
+^^^^^
+
+
+* Complex image types are now supported - the real and imaginary components
+  are loaded as separate overlays.
+
+
 Changed
 ^^^^^^^
 
 
-* The Tools |right_arrow| *Resample image* menu option now supports images
+* FSLeyes is no longer tested against Python 2, or wxPython 3.
+* The *Tools* |right_arrow| *Resample image* menu option now supports images
   with more than three dimensions.
+* Increased range of colour bar tick labels.
+* When the negative colour map is enabled, and the display range minimum is
+  0.0, only a single central tick label is displayed on the colour bar.
+
+
+Fixed
+^^^^^
+
+
+* FSLeyes should fail more gracefully when unrecognised files/directories are
+  specified on the command line.
+* Fixed a bug in the ``--fullhelp``/``-fh`` command line option.
 
 
 0.26.6 (Monday November 26th 2018)

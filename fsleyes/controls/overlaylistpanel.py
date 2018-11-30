@@ -301,7 +301,7 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
         Calls the :func:`.loadoverlay.interactiveLoadOverlays` method.
         """
 
-        def onLoad(overlays):
+        def onLoad(paths, overlays):
             if len(overlays) == 0:
                 return
 

@@ -29,3 +29,32 @@ def test_version():
 
     assert exitcode == 0
     assert capture.stdout.strip() == expected
+
+
+def test_help():
+
+    capture  = CaptureStdout()
+    exitcode = -1
+
+    try:
+        with capture:
+            fm.main(['-h'])
+
+    except SystemExit as e:
+        exitcode = e.code
+
+    # only checking the first line of output
+    expected = 'FSLeyes version {}'.format(fv.__version__)
+    assert exitcode == 0
+    assert capture.stdout.split('\n')[0].strip() == expected
+
+    capture.reset()
+    try:
+        with capture:
+            fm.main(['-fh'])
+
+    except SystemExit as e:
+        exitcode = e.code
+
+    assert exitcode == 0
+    assert capture.stdout.split('\n')[0].strip() == expected
