@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=FSLeyes
+Comment=The FSL image viewer
+TryExec=fsleyes
+Exec=fsleyes -S %F
+Icon=fsleyes
+Categories=Science;DataVisualization;
