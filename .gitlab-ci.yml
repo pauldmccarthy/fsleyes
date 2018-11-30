@@ -154,24 +154,6 @@ variables:
     - bash ./.ci/test_template.sh
 
 
-test:wxpython3:
-  stage: test
-  image: pauldmccarthy/fsleyes-py27-wxpy3-gtk2
-  <<: *test_template
-
-
-test:2.7:
-  stage: test
-  image: pauldmccarthy/fsleyes-py27-wxpy4-gtk2
-  <<: *test_template
-
-
-test:3.4:
-  stage: test
-  image: pauldmccarthy/fsleyes-py34-wxpy4-gtk2
-  <<: *test_template
-
-
 test:3.5:
   stage: test
   image: pauldmccarthy/fsleyes-py35-wxpy4-gtk2
@@ -181,6 +163,12 @@ test:3.5:
 test:3.6:
   stage: test
   image: pauldmccarthy/fsleyes-py36-wxpy4-gtk2
+  <<: *test_template
+
+
+test:3.7:
+  stage: test
+  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk2
   <<: *test_template
 
 
