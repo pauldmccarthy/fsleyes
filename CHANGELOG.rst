@@ -19,6 +19,7 @@ Added
 
 * Complex image types are now supported - the real and imaginary components
   are loaded as separate overlays.
+* New *Set $FSLDIR* menu option, for updating the FSL installation directory.
 
 
 Changed

@@ -10,10 +10,12 @@ monkey-patched into the :class:`.FSLeyesFrame` class.
 """
 
 
+import            os
 import os.path as op
 
 import                      fsleyes
 import fsleyes.actions   as actions
+import fsleyes.strings   as strings
 from   fsleyes.frame import FSLeyesFrame
 
 
@@ -142,6 +144,35 @@ def openHelp(self, *args, **kwargs):
         webpage.openPage(url)
 
 
+def setFSLDIR(self, *args, **kwargs):
+    """Opens a directory dialog allowing the user to select a value for
+    ``$FSLDIR``.
+    """
+
+    import wx
+    from   fsl.utils.platform import platform
+    import fsl.utils.settings as     settings
+
+    fsldir = platform.fsldir
+
+    if fsldir is None:
+        fsldir = os.getcwd()
+
+    msg = strings.titles[self, 'setFSLDIR']
+
+    dlg = wx.DirDialog(self,
+                       message=msg,
+                       defaultPath=fsldir,
+                       style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+
+    if dlg.ShowModal() != wx.ID_OK:
+        return
+
+    fsldir                 = dlg.GetPath()
+    platform.fsldir        = fsldir
+    settings.write('fsldir', fsldir)
+
+
 def closeFSLeyes(self, *args, **kwargs):
     """Closes FSLeyes. """
     self.Close()
@@ -159,4 +190,5 @@ FSLeyesFrame.selectNextOverlay       = actions.action(selectNextOverlay)
 FSLeyesFrame.selectPreviousOverlay   = actions.action(selectPreviousOverlay)
 FSLeyesFrame.toggleOverlayVisibility = actions.action(toggleOverlayVisibility)
 FSLeyesFrame.openHelp                = actions.action(openHelp)
+FSLeyesFrame.setFSLDIR               = actions.action(setFSLDIR)
 FSLeyesFrame.closeFSLeyes            = actions.action(closeFSLeyes)
