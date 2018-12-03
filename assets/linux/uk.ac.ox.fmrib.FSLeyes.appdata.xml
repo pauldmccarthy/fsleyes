@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> -->
+<component type="desktop">
+  <id>uk.ac.ox.fmrib.FSLeyes.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>FSLeyes</name>
+  <summary>FSLeyes, the FSL image viewer</summary>
+  <description>
+    <p>
+        FSLeyes is the FSL image viewer, a wxPython application for visualising neuroimaging data.
+        FSLeyes is developed at the Wellcome Centre for Integrative Neuroimaging (FMRIB), at the University of Oxford.
+    </p>
+    <p>
+        Please cite FSLeyes using doi.org/10.5281/zenodo.1470761 .
+    </p>
+  </description>
+  <!--
+  <screenshots>
+  </screenshots>
+  -->
+  <url type="homepage">https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes</url>
+  <update_contact>pauldmccarthy AT gmail DOT com</update_contact>
+</component>
