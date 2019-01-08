@@ -12,10 +12,9 @@ which encapsulate overlay display settings.
 import logging
 import inspect
 
-import deprecation
-
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
+import fsl.utils.deprecated           as deprecated
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 
@@ -198,9 +197,7 @@ class Display(props.SyncableHasProperties):
         self.__overlay     = None
 
 
-    @deprecation.deprecated(deprecated_in='0.14.3',
-                            removed_in='1.0.0',
-                            details='Use overlay instead')
+    @deprecated.deprecated('0.14.3', '1.0.0', 'Use overlay instead')
     def getOverlay(self):
         """Deprecated - use :meth:`overlay` instead."""
         return self.__overlay
@@ -236,9 +233,7 @@ class Display(props.SyncableHasProperties):
         return self.__displayOpts
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use opts instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use opts instead')
     def getDisplayOpts(self):
         """Return the :class:`.DisplayOpts` instance associated with this
         ``Display``, which contains overlay type specific display settings.
@@ -568,9 +563,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         return None
 
 
-    @deprecation.deprecated(deprecated_in='0.14.3',
-                            removed_in='1.0.0',
-                            details='Use referenceImage instead')
+    @deprecated.deprecated('0.14.3', '1.0.0', 'Use referenceImage instead')
     def getReferenceImage(self):
         """Deprecated - use :meth:`referenceImage` instead. """
         return self.referenceImage

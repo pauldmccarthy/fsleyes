@@ -15,7 +15,6 @@ import functools as ft
 import itertools as it
 import              re
 import              logging
-import              deprecation
 
 import six
 
@@ -24,6 +23,7 @@ import wx.lib.agw.aui                     as aui
 
 import fsl.utils.idle                     as idle
 import fsl.utils.settings                 as fslsettings
+import fsl.utils.deprecated               as deprecated
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets.dialog             as fsldlg
 import fsleyes_widgets.utils.status       as status
@@ -370,9 +370,7 @@ class FSLeyesFrame(wx.Frame):
         return dict(self.__menuActions)
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use overlayList instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
     def getOverlayList(self):
         """Returns the :class:`.OverlayList` which contains the overlays
         being displayed by this ``FSLeyesFrame``.
@@ -380,9 +378,7 @@ class FSLeyesFrame(wx.Frame):
         return self.__overlayList
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use displayCtx instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
     def getDisplayContext(self):
         """Returns the top-level :class:`.DisplayContext` associated with this
         ``FSLeyesFrame``.
@@ -390,9 +386,7 @@ class FSLeyesFrame(wx.Frame):
         return self.__displayCtx
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use viewPanels instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanels instead')
     def getViewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLeyesFrame``.
@@ -400,9 +394,7 @@ class FSLeyesFrame(wx.Frame):
         return list(self.__viewPanels)
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use focusedViewPanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use focusedViewPanel instead')
     def getFocusedViewPanel(self):
         """Returns the :class:`.ViewPanel` which currently has focus, or
         ``None`` if no ``ViewPanel`` has focus.
@@ -439,9 +431,7 @@ class FSLeyesFrame(wx.Frame):
         return self.__auiManager
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use auiManager instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use auiManager instead')
     def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
         the layout of this ``FSLeyesFrame``.
@@ -719,9 +709,7 @@ class FSLeyesFrame(wx.Frame):
         self.__toolsMenuActions = self.__makeToolsMenu()
 
 
-    @deprecation.deprecated(deprecated_in='0.24.0',
-                            removed_in='1.0.0',
-                            details='Use refreshLayoutMenu')
+    @deprecated.deprecated('0.24.0', '1.0.0', 'Use refreshLayoutMenu')
     def refreshPerspectiveMenu(self):
         """Deprecated."""
         self.refreshLayoutMenu()

@@ -11,12 +11,11 @@ for displaying :class:`.Mesh` overlays.
 
 import logging
 
-import deprecation
-
 import numpy as np
 
 import fsl.data.image       as fslimage
 import fsl.utils.transform  as transform
+import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
 
 import fsleyes.colourmaps   as colourmaps
@@ -424,9 +423,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return self.refImage
 
 
-    @deprecation.deprecated(deprecated_in='0.22.3',
-                            removed_in='1.0.0',
-                            details='Use getTransform instead')
+    @deprecated.deprecated('0.22.3', '1.0.0', 'Use getTransform instead')
     def getCoordSpaceTransform(self):
         """Returns a transformation matrix which can be used to transform
         the :class:`.Mesh` vertex coordinates into the display

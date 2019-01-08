@@ -8,12 +8,11 @@
 use with :class:`.DisplayOpts` classes.
 """
 
-import deprecation
-
 import numpy as np
 
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.transform                as transform
+import fsl.utils.deprecated               as deprecated
 import fsleyes_props                      as props
 
 
@@ -157,9 +156,8 @@ class Volume3DOpts(object):
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.17.0',
-                            removed_in='1.0.0',
-                            details='Dithering is automatically calculated')
+    @deprecated.deprecated(
+        '0.17.0', '1.0.0', 'Dithering is automatically calculated')
     def dithering(self):
         """Deprecated."""
         pass

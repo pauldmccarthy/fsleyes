@@ -18,13 +18,13 @@ other situations throughout FSLeyes. See also the
 import logging
 import contextlib
 
-import deprecation
 
 import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
 import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
 from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.deprecated               as deprecated
 import fsleyes.gl.routines                as glroutines
 import fsleyes.gl.shaders                 as shaders
 from . import                                texture
@@ -215,9 +215,7 @@ class RenderTexture(texture.Texture2D):
                                   'instances'.format(type(self).__name__))
 
 
-    @deprecation.deprecated(deprecated_in='0.23.0',
-                            removed_in='1.0.0',
-                            details='Use depthTexture instead')
+    @deprecated.deprecated('0.23.0', '1.0.0', 'Use depthTexture instead')
     def getDepthTexture(self):
         """Deprecated - use :meth:`depthTexture` instead. """
         return self.__depthTexture

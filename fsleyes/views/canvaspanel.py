@@ -10,11 +10,11 @@ class for all panels which display overlays using ``OpenGL``.
 
 
 import logging
-import deprecation
 
 import wx
 
 import fsl.utils.idle                              as idle
+import fsl.utils.deprecated                        as deprecated
 import fsleyes_props                               as props
 
 import fsleyes.actions                             as actions
@@ -561,9 +561,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return None
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use sceneOpts instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use sceneOpts instead')
     def getSceneOptions(self):
         """Returns the :class:`.SceneOpts` instance used by this
         ``CanvasPanel``.
@@ -571,9 +569,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__opts
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use contentPanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use contentPanel instead')
     def getContentPanel(self):
         """Returns the ``wx.Panel`` to which sub-classes must add their content.
         See the note on :ref:`adding content <canvaspanel-adding-content>`.
@@ -581,9 +577,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__contentPanel
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use containerPanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use containerPanel instead')
     def getContainerPanel(self):
         """Returns the ``wx.Panel`` which contains the
         :class:`.ColourBarPanel` if it is being displayed, and the content
@@ -593,9 +587,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         return self.__containerPanel
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use colourBarCanvas instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use colourBarCanvas instead')
     def getColourBarCanvas(self):
         """If a colour bar is being displayed, this method returns
         the :class:`.ColourBarCanvas` instance which is used by the
