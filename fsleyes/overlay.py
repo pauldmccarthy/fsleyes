@@ -75,11 +75,11 @@ This module also provides a few convenience classes and functions:
 import os.path as op
 import            logging
 import            weakref
-import            deprecation
 
 import fsl.utils.path as fslpath
 import fsl.data.image as fslimage
 import fsleyes_props  as props
+import fsl.utils.deprecated as deprecated
 
 
 log = logging.getLogger(__name__)
@@ -361,9 +361,8 @@ class PropCache(object):
     """
 
 
-    @deprecation.deprecated(deprecated_in='0.22.0',
-                            removed_in='1.0.0',
-                            details='Use fsleyes_props.PropCache instead')
+    @deprecated.deprecated(
+        '0.22.0', '1.0.0', 'Use fsleyes_props.PropCache instead')
     def __init__(self, overlayList, displayCtx, target, propNames):
         """Create a ``PropCache``.
 
@@ -582,7 +581,7 @@ def findMeshReferenceImage(overlayList, overlay):
             if prefix.startswith(ovl.name):
                 return ovl
 
-    except:
+    except Exception:
         pass
 
     return None

@@ -7,7 +7,7 @@
 """Deprecated - see :mod:`.savelayout`. """
 
 
-import deprecation
+import fsl.utils.deprecated as deprecated
 
 
 from . import savelayout
@@ -15,8 +15,6 @@ from . import savelayout
 
 class SavePerspectiveAction(savelayout.SaveLayoutAction):
 
-    @deprecation.deprecated(deprecated_in='0.24.0',
-                            removed_in='1.0.0',
-                            details='use SaveLayoutAction')
+    @deprecated.deprecated('0.24.0', '1.0.0', 'use SaveLayoutAction')
     def __init__(self, *args, **kwargs):
         savelayout.SaveLayoutAction.__init__(self, *args, **kwargs)

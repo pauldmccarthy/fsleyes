@@ -45,13 +45,13 @@ defines global *FSLeyes* keyboard shortcuts.
 import logging
 import inspect
 import collections
-import deprecation
 
 import wx
 
 import matplotlib.backend_bases as mplbackend
 
 from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.deprecated               as deprecated
 import fsleyes_props                      as props
 import fsleyes.actions                    as actions
 
@@ -564,33 +564,25 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use viewPanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanel instead')
     def _viewPanel(self):
         return self.__viewPanel
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use name instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use name instead')
     def _name(self):
         return self.__name
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use displayCtx instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
     def _displayCtx(self):
         return self.__displayCtx
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use overlayList instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
     def _overlayList(self):
         return self.__overlayList
 

@@ -11,12 +11,12 @@ documentation for more details.
 
 
 import logging
-import deprecation
 
 import                   wx
 import wx.lib.agw.aui as aui
 
 import fsl.data.image                as fslimage
+import fsl.utils.deprecated          as deprecated
 import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
@@ -226,9 +226,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__centrePanel
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use centrePanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use centrePanel instead')
     def getCentrePanel(self):
         """Returns the primary (centre) panel on this ``ViewPanel``.
         """
@@ -251,9 +249,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__centrePanel = panel
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use centrePanel instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use centrePanel instead')
     def setCentrePanel(self, panel):
         """Set the primary centre panel for this ``ViewPanel``. This method
         is only intended to be called by sub-classes.
@@ -485,9 +481,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__auiMgr
 
 
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use auiManager instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use auiManager instead')
     def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
         layout of this ``ViewPanel``.

@@ -7,16 +7,14 @@
 """Deprecated - see the :mod:`.layouts` module. """
 
 
-import deprecation
+import fsl.utils.deprecated as deprecated
 
 from . import layouts
 
 
 def deprecate(func):
-    return deprecation.deprecated(
-        deprecated_in='0.24.0',
-        removed_in='1.0.0',
-        details='Use the fsleyes.layout module')(func)
+    return deprecated.deprecated(
+        '0.24.0', '1.0.0', 'Use the fsleyes.layout module')(func)
 
 
 getAllPerspectives     = deprecate(layouts.getAllLayouts)

@@ -46,11 +46,11 @@ should be made available available to the user can be added as
 
 import logging
 import six
-import deprecation
 
 import wx
 
 from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.deprecated               as deprecated
 import fsleyes_props                      as props
 import fsleyes_widgets.floatspin          as floatspin
 import fsleyes_widgets.floatslider        as floatslider
@@ -259,40 +259,30 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use overlayList instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
     def _overlayList(self):
         return self.__overlayList
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use displayCtx instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
     def _displayCtx(self):
         return self.__displayCtx
 
 
     @property
-    @deprecation.deprecated(deprecated_in='0.16.0',
-                            removed_in='1.0.0',
-                            details='Use name instead')
+    @deprecated.deprecated('0.16.0', '1.0.0', 'Use name instead')
     def _name(self):
         return self.__name
 
 
-    @deprecation.deprecated(deprecated_in='0.15.2',
-                            removed_in='1.0.0',
-                            details='Use name instead')
+    @deprecated.deprecated('0.15.2', '1.0.0', 'Use name instead')
     def getName(self):
         """Returns a unique name associated with this ``_FSLeyesPanel``. """
         return self.__name
 
 
-    @deprecation.deprecated(deprecated_in='0.15.2',
-                            removed_in='1.0.0',
-                            details='Use frame instead')
+    @deprecated.deprecated('0.15.2', '1.0.0', 'Use frame instead')
     def getFrame(self):
         """Returns the :class:`.FSLeyesFrame` which created this
         ``_FSLeyesPanel``. May be ``None``, if this panel was not created
@@ -301,9 +291,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__frame
 
 
-    @deprecation.deprecated(deprecated_in='0.15.2',
-                            removed_in='1.0.0',
-                            details='Use displayCtx instead')
+    @deprecated.deprecated('0.15.2', '1.0.0', 'Use displayCtx instead')
     def getDisplayContext(self):
         """Returns a reference to the :class:`.DisplayContext` that is
         associated with this ``_FSLeyesPanel``.
@@ -311,9 +299,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__displayCtx
 
 
-    @deprecation.deprecated(deprecated_in='0.15.2',
-                            removed_in='1.0.0',
-                            details='Use overlayList instead')
+    @deprecated.deprecated('0.15.2', '1.0.0', 'Use overlayList instead')
     def getOverlayList(self):
         """Returns a reference to the :class:`.OverlayList`. """
         return self.__overlayList
@@ -438,10 +424,8 @@ class FSLeyesSettingsPanel(FSLeyesPanel):
     """The ``FSLeyesSettingsPanel`` is deprecated - it has been replaced
     with the :class:`.controls.controlpanel.SettingsPanel`.
     """
-    @deprecation.deprecated(deprecated_in='0.26.0',
-                            removed_in='1.0.0',
-                            details='Use controls.controlpanel.SettingsPanel '
-                                    'instead')
+    @deprecated.deprecated(
+        '0.26.0', '1.0.0', 'Use controls.controlpanel.SettingsPanel instead')
     def __init__(self, parent, *args, **kwargs):
         FSLeyesPanel.__init__(self, parent, *args, **kwargs)
 
