@@ -9,6 +9,32 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.28.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* Added metadata to allow better integration with Linux desktop environments.
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes no longer depends on the ``deprecation`` library.
+
+
+Fixed
+^^^^^
+
+
+* Jupyter Notebook integration has been updated to work with newer versions
+  of the ``ipykernel`` library.
+
+
 0.27.0 (Monday December 3rd 2018)
 ---------------------------------
 
