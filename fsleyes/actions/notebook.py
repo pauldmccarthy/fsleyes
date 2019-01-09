@@ -46,7 +46,6 @@ try:
     import                            zmq
 
     import zmq.eventloop.zmqstream as zmqstream
-    import tornado.ioloop          as ioloop
 
     import ipykernel.ipkernel      as ipkernel
     import ipykernel.iostream      as iostream
@@ -150,9 +149,8 @@ class NotebookAction(base.Action):
 
     def __bounce(self, secs, progdlg):
         """Used by :meth:`__startKernel` and :meth:`__startServer`. Blocks for
-        from ipykernel.kernelapp import IPKernelApp``secs``, bouncing
-        the :class:`.Progress` dialog ten times per second, and yielding to
-        the ``wx`` main loop.
+        ``secs``, bouncing the :class:`.Progress` dialog ten times per second,
+        and yielding to the ``wx`` main loop.
         """
         for i in range(int(secs * 10)):
             progdlg.DoBounce()
@@ -207,12 +205,21 @@ class NotebookAction(base.Action):
         return server
 
 
-class BackgroundIPythonKernel(threading.Thread):
+class BackgroundIPythonKernel(object):
     """The BackgroundIPythonKernel creates an IPython jupyter kernel and makes
-    it accessible over tcp (on the local machine only). The ``zmq`` event loop
-    is run on a separate thread, but the kernel handles events on the main
-    thread, via :func:`.idle.idle`.
+    it accessible over tcp (on the local machine only).
 
+    Before FSLeyes 0.28.0, this class derived from ``threading.Thread``, and
+    ran its own ``IOLoop`` which was used to run the IPython kernel.  But now
+    the IPython kernel is run on the main thread, by repeatedly scheduling
+    calls to ``IPythonKernel.do_one_iteration`` on :func:`.idle.idle`.
+
+    This update was necessary due to changes in ``ipykernel`` from version 4
+    to version 5, namely that ipykernel 5 uses ``asyncio`` co-routines, making
+    it difficult to transfer execution between threads.
+
+    Because the ``BackgroundIPythonKernel`` used to be a thread, it is still
+    necessary to call its :meth:`start` method to start the kernel loop.
 
     The Jupyter/IPython documentation is quite fragmented at this point in
     time; `this github issue <https://github.com/ipython/ipython/issues/8097>`_
@@ -231,16 +238,13 @@ class BackgroundIPythonKernel(threading.Thread):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        threading.Thread.__init__(self)
-
-        self.daemon        = True
         ip                 = '127.0.0.1'
         transport          = 'tcp'
         addr               = '{}://{}'.format(transport, ip)
         self.__connfile    = None
-        self.__ioloop      = None
         self.__kernel      = None
         self.__error       = None
+        self.__lastIter    = 0
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__frame       = frame
@@ -323,6 +327,24 @@ class BackgroundIPythonKernel(threading.Thread):
         atexit.register(os.remove, self.__connfile)
 
 
+    def is_alive(self):
+        """Returns ``True`` if the kernel loop appears to be running, ``False``
+        otherwise
+        """
+        # We check that the last kernel
+        # iteration was not too long ago,
+        # that an error hasn't occurred,
+        # and that the worker threads are
+        # alive.
+        now   = time.time()
+        delta = 1.0
+
+        return (now - self.__lastIter) < delta and \
+               self.__error is None            and \
+               self.__iopub.thread.is_alive()  and \
+               self.__heartbeat.is_alive()
+
+
     @property
     def kernel(self):
         """The ``IPythonKernel`` object. """
@@ -345,8 +367,8 @@ class BackgroundIPythonKernel(threading.Thread):
 
     @property
     def error(self):
-        """If an error occurs on the background thread causing it to crash,
-        a reference to the ``Exception`` is stored here.
+        """If an error occurs on the kernel loop causing it to crash, a
+        reference to the ``Exception`` is stored here.
         """
         return self.__error
 
@@ -359,33 +381,32 @@ class BackgroundIPythonKernel(threading.Thread):
 
 
     def __kernelDispatch(self):
-        """Event loop used for the IPython kernel. Submits the kernel function
-        to the :func:`.idle.idle` loop, and schedules another call to this
-        method on the ``zmq`` event loop.
-
-        This means that, while the ``zmq`` loop runs in its own thread, the
-        IPython kernel is executed on the main thread.
+        """Event loop used for the IPython kernel. Calls
+        IPythonKernel.do_one_iteration, and then schedules a future call to
+        ``__kernelDispatch`` via :func:`.idle.idle` loop.
         """
-
-        idle.idle(self.__kernel.do_one_iteration)
-        self.__ioloop.call_later(self.__kernel._poll_interval,
-                                 self.__kernelDispatch)
-
-
-    def run(self):
-        """Start the IPython kernel and Run the ``zmq`` event loop. """
-
         try:
-            self.__ioloop = ioloop.IOLoop()
-            self.__ioloop.make_current()
-            self.__kernel.start()
-            self.__ioloop.call_later(self.__kernel._poll_interval,
-                                     self.__kernelDispatch)
-            self.__ioloop.start()
+            self.__kernel.do_one_iteration()
+            idle.idle(self.__kernelDispatch,
+                      after=self.__kernel._poll_interval)
+
+            # save the time on each iteration,
+            # so the is_alive method has an
+            # idea of whether the kernel is
+            # still running
+            self.__lastIter = time.time()
 
         except Exception as e:
             self.__error = e
             raise
+
+
+    def start(self):
+        """Start the IPython kernel loop. This method returns immediately - the
+        kernel loop is executed on :func:`.idle.idle`.
+        """
+        self.__kernel.start()
+        idle.idle(self.__kernelDispatch, after=self.__kernel._poll_interval)
 
 
 class FSLeyesIPythonKernel(ipkernel.IPythonKernel):

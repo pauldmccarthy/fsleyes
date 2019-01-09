@@ -7,9 +7,6 @@ FSLeyes
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1470761.svg
    :target: https://doi.org/10.5281/zenodo.1470761
 
-.. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/build.svg
-   :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
-
 .. image:: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/badges/master/coverage.svg
    :target: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/commits/master/
 
@@ -20,6 +17,12 @@ FSLeyes
 
 Installation
 ------------
+
+
+These instructions pertain to manual installation of FSLeyes into a Python
+environment. Standalone versions of FSLeyes can be downloaded from
+https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes.
+
 
 
 FSLeyes is a `wxPython <https://www.wxpython.org>`_ application.  If you are
