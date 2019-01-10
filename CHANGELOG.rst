@@ -35,6 +35,14 @@ Fixed
   of the ``ipykernel`` library.
 
 
+Deprecated
+^^^^^^^^^^
+
+
+* The :func:`fsleyes.overlay.guessDataSourceType` function has been deprecated,
+  as it has been replaced by the :func:`fsl.data.utils.guessType` function.
+
+
 0.27.0 (Monday December 3rd 2018)
 ---------------------------------
 
