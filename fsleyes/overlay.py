@@ -39,7 +39,7 @@ an overlay type are:
 One further requirement is imposed on overlay types which derive from the
 :class:`.Image` class:
 
- -  The ``__init__`` method fo ll sub-classes of the ``Image`` class must
+ -  The ``__init__`` method for sub-classes of the ``Image`` class must
     accept the ``loadData``, ``calcRange``, ``indexed`` , and ``threaded``
     parameters, and pass them through to the base class ``__init__`` method.
 
@@ -67,7 +67,6 @@ This module also provides a few convenience classes and functions:
    :nosignatures:
 
    ProxyImage
-   guessDataSourceType
    findFEATImage
 """
 
@@ -76,10 +75,10 @@ import os.path as op
 import            logging
 import            weakref
 
-import fsl.utils.path as fslpath
-import fsl.data.image as fslimage
-import fsleyes_props  as props
 import fsl.utils.deprecated as deprecated
+import fsl.data.utils       as dutils
+import fsl.data.image       as fslimage
+import fsleyes_props        as props
 
 
 log = logging.getLogger(__name__)
@@ -472,69 +471,11 @@ class PropCache(object):
                 self.__cache.pop((overlay, prop))
 
 
+@deprecated.deprecated(
+    '0.28.0', '1.0.0', 'Use fsl.data.utils.guessType instead')
 def guessDataSourceType(path):
-    """A convenience function which, given the name of a file or directory,
-    figures out a suitable overlay type.
-
-    Returns a tuple containing two values - a type which should be able to
-    load the path, and the path itself, possibly adjusted. If the type
-    is unrecognised, the first tuple value will be ``None``.
-    """
-
-    import fsl.data.vtk             as fslvtk
-    import fsl.data.gifti           as fslgifti
-    import fsl.data.freesurfer      as fslfs
-    import fsl.data.mghimage        as fslmgh
-    import fsl.data.featimage       as featimage
-    import fsl.data.melodicimage    as melimage
-    import fsl.data.dtifit          as dtifit
-    import fsl.data.melodicanalysis as melanalysis
-    import fsl.data.featanalysis    as featanalysis
-
-    # Support files opened via fsleyes:// URL
-    if path.startswith('fsleyes://'):
-        path = path[10:]
-
-    path = op.abspath(path)
-
-    # Accept images sans-extension
-    try:
-        path = fslimage.addExt(path, mustExist=True)
-    except fslimage.PathError:
-        pass
-
-    if op.isfile(path):
-
-        # Some types are easy - just check the extensions
-        if fslpath.hasExt(path, fslvtk.ALLOWED_EXTENSIONS):
-            return fslvtk.VTKMesh, path
-        elif fslpath.hasExt(path, fslgifti.ALLOWED_EXTENSIONS):
-            return fslgifti.GiftiMesh, path
-        elif fslfs.isGeometryFile(path):
-            return fslfs.FreesurferMesh, path
-        elif fslpath.hasExt(path, fslmgh.ALLOWED_EXTENSIONS):
-            return fslmgh.MGHImage, path
-
-        # Other specialised image types
-        elif melanalysis .isMelodicImage(path):
-            return melimage.MelodicImage, path
-        elif featanalysis.isFEATImage(   path):
-            return featimage.FEATImage,   path
-        elif fslimage.looksLikeImage(path):
-            return fslimage.Image, path
-
-    # Analysis directory?
-    elif op.isdir(path):
-        if melanalysis.isMelodicDir(path):
-            return melimage.MelodicImage, path
-        elif featanalysis.isFEATDir(path):
-            return featimage.FEATImage, path
-        elif dtifit.isDTIFitPath(path):
-            return dtifit.DTIFitTensor, path
-
-    # Otherwise, I don't
-    # know what to do
-    return None, path
+    """Deprecated - use `fsl.data.utils.guessType` instead. """
+    return dutils.guessType(path)
 
 
 def findFEATImage(overlayList, overlay):

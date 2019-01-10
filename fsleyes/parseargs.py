@@ -273,6 +273,7 @@ import six.moves.urllib as urllib
 import numpy            as np
 
 import fsl.data.image                     as fslimage
+import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
 from   fsl.utils.platform import platform as fslplatform
@@ -1920,7 +1921,7 @@ def parseArgs(mainParser,
             continue
 
         # See if the current argument looks like a data source
-        dtype, fname = fsloverlay.guessDataSourceType(argv[i])
+        dtype, fname = dutils.guessType(argv[i])
 
         # If the file name refers to a file that
         # does not exist, assume it is an argument

@@ -35,6 +35,7 @@ import numpy   as np
 import fsl.utils.idle               as idle
 import fsl.utils.notifier           as notifier
 import fsl.utils.settings           as fslsettings
+import fsl.data.utils               as dutils
 import fsleyes_widgets.utils.status as status
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.strings              as strings
@@ -210,7 +211,7 @@ def loadOverlays(paths,
 
         loadFunc(path)
 
-        dtype, path = fsloverlay.guessDataSourceType(path)
+        dtype, path = dutils.guessType(path)
 
         if dtype is None:
             errorFunc(path, strings.messages['loadOverlays.unknownType'])
