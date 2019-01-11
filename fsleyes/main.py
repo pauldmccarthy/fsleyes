@@ -707,6 +707,8 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         fontSize=namespace.fontSize)
     # Make sure the new frame is shown
     # before destroying the splash screen
+    dt = fsleyesframe.OverlayDropTarget(overlayList, displayCtx)
+    frame.SetDropTarget(dt)
     frame.Show(True)
     frame.Refresh()
     frame.Update()

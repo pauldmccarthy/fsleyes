@@ -62,6 +62,7 @@ class OverlayDropTarget(wx.FileDropTarget):
                                         self.__displayCtx)
 
     def OnDropFiles(self, x, y, filenames):
+        import fsleyes.actions.loadoverlay as loadoverlay
         if filenames is not None:
             print(filenames)
             # app.MacOpenFiles(filenames)
