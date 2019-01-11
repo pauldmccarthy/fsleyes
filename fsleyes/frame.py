@@ -42,6 +42,37 @@ from . import displaycontext
 log = logging.getLogger(__name__)
 
 
+class OverlayDropTarget(wx.FileDropTarget):
+    def __init__(self, overlayList, displayCtx):
+        wx.FileDropTarget.__init__(self)
+        self.__overlayList = overlayList
+        self.__displayCtx = displayCtx
+
+    def onLoad(self, paths, overlays):
+
+        if len(overlays) == 0:
+            return
+
+        self.__overlayList.extend(overlays)
+
+        if self.__displayCtx.autoDisplay:
+            for overlay in overlays:
+                autodisplay.autoDisplay(overlay,
+                                        self.__overlayList,
+                                        self.__displayCtx)
+
+    def OnDropFiles(self, x, y, filenames):
+        if filenames is not None:
+            print(filenames)
+            # app.MacOpenFiles(filenames)
+            loadoverlay.loadOverlays(
+                filenames,
+                onLoad=self.onLoad,
+                inmem=self.__displayCtx.loadInMemory)
+            return True
+        else:
+            return False
+
 class FSLeyesFrame(wx.Frame):
     """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
     container for :class:`.ViewPanel` instances.
@@ -127,7 +158,6 @@ class FSLeyesFrame(wx.Frame):
               keep file sizes down.
     """
 
-
     def __init__(self,
                  parent,
                  overlayList,
@@ -153,9 +183,7 @@ class FSLeyesFrame(wx.Frame):
 
         :arg menu:        Whether or not to create a menu bar.
         """
-
         wx.Frame.__init__(self, parent, title='FSLeyes')
-
         tooltips.initTooltips()
 
         # Default application font - this is

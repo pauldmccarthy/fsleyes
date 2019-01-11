@@ -705,7 +705,6 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         restore,
         True,
         fontSize=namespace.fontSize)
-
     # Make sure the new frame is shown
     # before destroying the splash screen
     frame.Show(True)
