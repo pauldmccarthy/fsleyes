@@ -226,7 +226,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # Load all vertex data and vertex
         # sets on the parent opts instance
         if not self.__registered:
-            # TODO vertex sets
+            self.addVertexSetOptions( overlay.vertexSets())
             self.addVertexDataOptions(overlay.vertexDataSets())
 
         # The master MeshOpts instance is just a
