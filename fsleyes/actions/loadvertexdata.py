@@ -135,7 +135,9 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
 
     :arg displayCtx: The :class:`.DisplayContext`
 
-    :arg filename:   Path to the vertex data file that is to be loaded.
+    :arg filename:   Path to the vertex data file that is to be loaded, or key
+                     for vertex data that is already loaded (see the
+                     :class:`.Mesh` class).
 
     :arg select:     If ``True`` (the default), the
                      :attr:`.MeshOpts.vertexData` is set to the
@@ -154,16 +156,16 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
     # we want to load some data from a file that is not in
     # the possible values, we need to add the file as an
     # option before selecting it. A bit silly.
+    if filename not in overlay.vertexDataSets():
+        # Force the overlay to load
+        # the vertex data. This will
+        # throw an error if the file
+        # is unrecognised.
+        overlay.loadVertexData(filename)
 
-    # Force the overlay to load
-    # the vertex data. This will
-    # throw an error if the file
-    # is unrecognised.
-    overlay.loadVertexData(filename)
-
-    # Add the file as an
-    # option, then select it.
-    opts.addVertexDataOptions([filename])
+        # Add the file as an
+        # option, then select it.
+        opts.addVertexDataOptions([filename])
 
     if select:
         opts.vertexData = filename
@@ -178,7 +180,9 @@ def loadVertices(overlay, displayCtx, filename, select=True):
 
     :arg displayCtx: The :class:`.DisplayContext`
 
-    :arg filename:   Path to the vertex file that is to be loaded.
+    :arg filename:   Path to the vertex file that is to be loaded, or key
+                     for vertex data that is already loaded (see the
+                     :class:`.Mesh` class).
 
     :arg select:     If ``True`` (the default), the
                      :attr:`.MeshOpts.vertexSet` is set to the
@@ -193,8 +197,9 @@ def loadVertices(overlay, displayCtx, filename, select=True):
 
     # We follow the same process
     # as in loadVertexData above
-    overlay.loadVertices(filename, select=False)
-    opts.addVertexSetOptions([filename])
+    if filename not in overlay.vertexSets():
+        overlay.loadVertices(filename, select=False)
+        opts.addVertexSetOptions([filename])
 
     if select:
         overlay.vertices = filename

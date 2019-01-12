@@ -282,7 +282,6 @@ import fsleyes_props                      as props
 import fsleyes_widgets.utils.typedict     as td
 import fsleyes_widgets.utils.status       as status
 
-from . import overlay        as fsloverlay
 from . import displaycontext as fsldisplay
 from . import                   colourmaps
 from . import                   autodisplay
@@ -3155,12 +3154,12 @@ def _applySpecial_MeshOpts_vertexData(
         args, overlayList, displayCtx, target):
     """Applies the :attr:`.MeshOpts.vertexData` option. """
     import fsleyes.actions.loadvertexdata as loadvertexdata
-
     # Vertex data files need to be pre-loaded
     vertexData = list(args.vertexData)
+    last       = len(args.vertexData) - 1
     for i, vd in enumerate(vertexData):
         vertexData[i] = loadvertexdata.loadVertexData(
-            target.overlay, displayCtx, vd, select=False)
+            target.overlay, displayCtx, vd, select=(i == last))
     target.vertexData = vertexData[0]
 
 
@@ -3170,9 +3169,10 @@ def _applySpecial_MeshOpts_vertexSet(
     import fsleyes.actions.loadvertexdata as loadvertexdata
     # Vertex set files need to be pre-
     # loaded, similar to vertex data
+    last = len(args.vertexSet) - 1
     for i, vd in enumerate(args.vertexSet):
         loadvertexdata.loadVertices(
-            target.overlay, displayCtx, vd, select=False)
+            target.overlay, displayCtx, vd, select=(i == last))
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(

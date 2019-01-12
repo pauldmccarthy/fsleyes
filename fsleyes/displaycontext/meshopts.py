@@ -657,7 +657,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if vset not in vsprop.getChoices(instance=self):
             self.addVertexSetOptions([vset])
-            self.vertexSet = vset
+        self.vertexSet = vset
 
 
     def __vertexSetChanged(self, *a):
