@@ -3,6 +3,7 @@
 # frame.py - A wx.Frame which implements a 3D image viewer.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
+# Author: Taylor Hanayik <taylor.hanayik@ndcn.ox.ac.uk>
 #
 """This module provides the :class:`FSLeyesFrame` which is the top level frame
 for FSLeyes.
@@ -41,38 +42,6 @@ from . import displaycontext
 
 log = logging.getLogger(__name__)
 
-
-class OverlayDropTarget(wx.FileDropTarget):
-    def __init__(self, overlayList, displayCtx):
-        wx.FileDropTarget.__init__(self)
-        self.__overlayList = overlayList
-        self.__displayCtx = displayCtx
-
-    def onLoad(self, paths, overlays):
-
-        if len(overlays) == 0:
-            return
-
-        self.__overlayList.extend(overlays)
-
-        if self.__displayCtx.autoDisplay:
-            for overlay in overlays:
-                autodisplay.autoDisplay(overlay,
-                                        self.__overlayList,
-                                        self.__displayCtx)
-
-    def OnDropFiles(self, x, y, filenames):
-        import fsleyes.actions.loadoverlay as loadoverlay
-        if filenames is not None:
-            print(filenames)
-            # app.MacOpenFiles(filenames)
-            loadoverlay.loadOverlays(
-                filenames,
-                onLoad=self.onLoad,
-                inmem=self.__displayCtx.loadInMemory)
-            return True
-        else:
-            return False
 
 class FSLeyesFrame(wx.Frame):
     """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
@@ -2026,3 +1995,61 @@ class FSLeyesFrame(wx.Frame):
         else:
             name = strings.labels[self, 'noOverlays']
             self.__overlayNameMenuItem.SetItemLabel(name)
+
+
+class OverlayDropTarget(wx.FileDropTarget):
+    """The ``OverlayDropTarget`` class allows overly files to be dragged and
+    dropped onto a ``wx`` window. It uses the :func:`.loadOverlays` function.
+
+    Associate an ``OverlayDropTarget`` `dt`` with a window ``w`` like so::
+
+        w.SetDropTarget(dt)
+    """
+
+
+    def __init__(self, overlayList, displayCtx):
+        """Create an ``OverlayDropTarget``. The master
+        :class:`.DissplayContext` should be passed in, as opposed to any child
+        instances.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  Thw master :class:`.DisplayConext`.
+        """
+        wx.FileDropTarget.__init__(self)
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+
+
+    def __onLoad(self, paths, overlays):
+        """Called by :func:`.loadOverlays` (which is called in
+        :meth:`OnDropFiles`) when the dropped overlay files have been loaded.
+        Adds the overlays to the :class:`.OverlayList`.
+        """
+
+        if len(overlays) == 0:
+            return
+
+        self.__overlayList.extend(overlays)
+
+        if self.__displayCtx.autoDisplay:
+            for overlay in overlays:
+                autodisplay.autoDisplay(overlay,
+                                        self.__overlayList,
+                                        self.__displayCtx)
+
+
+    def OnDropFiles(self, x, y, filenames):
+        """Overrides ``wx.FileDropTarget.OnDropFiles``. Called when files
+        are dropped onto the window. Passes the files to :func:`.loadOverlays`,
+        along with :meth:`__onLoad` as a callback.
+        """
+        import fsleyes.actions.loadoverlay as loadoverlay
+
+        if filenames is not None:
+            loadoverlay.loadOverlays(
+                filenames,
+                onLoad=self.onLoad,
+                inmem=self.__displayCtx.loadInMemory)
+            return True
+        else:
+            return False
