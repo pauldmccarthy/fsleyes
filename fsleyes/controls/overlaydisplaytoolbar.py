@@ -19,7 +19,6 @@ import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.controls.controlpanel  as ctrlpanel
-import fsleyes.toolbar                as fsltoolbar
 import fsleyes.icons                  as icons
 import fsleyes.tooltips               as fsltooltips
 import fsleyes.actions                as actions
