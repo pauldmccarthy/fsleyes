@@ -18,6 +18,7 @@ Added
 
 
 * Added metadata to allow better integration with Linux desktop environments.
+* Added ability to drag-and-drop files onto the FSLeyes window to open them.
 
 
 Changed

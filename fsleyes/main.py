@@ -706,6 +706,11 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         True,
         fontSize=namespace.fontSize)
 
+    # Allow files to be dropped
+    # onto FSLeyes to open them
+    dt = fsleyesframe.OverlayDropTarget(overlayList, displayCtx)
+    frame.SetDropTarget(dt)
+
     # Make sure the new frame is shown
     # before destroying the splash screen
     frame.Show(True)
