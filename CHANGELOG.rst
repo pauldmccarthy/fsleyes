@@ -19,6 +19,9 @@ Added
 
 * Added metadata to allow better integration with Linux desktop environments.
 * Added ability to drag-and-drop files onto the FSLeyes window to open them.
+* The ``--vertexSet`` and ``--vertexData`` command-line options now cause the
+  last vertex set/data to be selected, and also support GIFTI surface files
+  which contain multiple vertex sets dand vertex data.
 
 
 Changed
