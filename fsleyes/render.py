@@ -179,7 +179,8 @@ def makeDisplayContext(namespace):
         log.info('Loading overlay {} ...'.format(ovl))
 
     def error(ovl, error):
-        log.info('Error loading overlay {}: '.format(ovl, error))
+        log.error('Error loading overlay {}: {}'.format(ovl, error))
+        raise error
 
     # Load the overlays specified on the command
     # line, and configure their display properties

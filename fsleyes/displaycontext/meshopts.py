@@ -221,11 +221,18 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
 
+        self.__registered = self.getParent() is not None
+
+        # Load all vertex data and vertex
+        # sets on the parent opts instance
+        if not self.__registered:
+            self.addVertexSetOptions( overlay.vertexSets())
+            self.addVertexDataOptions(overlay.vertexDataSets())
+
         # The master MeshOpts instance is just a
         # sync-slave, so we only need to register
         # property listeners on child instances
-        self.__registered = self.getParent() is not None
-        if self.__registered:
+        else:
 
             self.overlayList.addListener('overlays',
                                          self.name,
@@ -650,7 +657,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if vset not in vsprop.getChoices(instance=self):
             self.addVertexSetOptions([vset])
-            self.vertexSet = vset
+        self.vertexSet = vset
 
 
     def __vertexSetChanged(self, *a):
