@@ -463,6 +463,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
+                   self.toggleFileTreePanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,

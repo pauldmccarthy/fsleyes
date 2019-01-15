@@ -370,6 +370,8 @@ titles = TypeDict({
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
 
+    'FileTreePanel'              : 'File tree',
+
     'LocationHistoryPanel.loadError' : 'Error loading location file',
     'LocationHistoryPanel.saveError' : 'Error saving location file',
 
@@ -518,6 +520,7 @@ actions = TypeDict({
     'CanvasPanel.toggleClusterPanel'        : 'Cluster browser',
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
     'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
+    'CanvasPanel.toggleFileTreePanel'       : 'File tree',
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
@@ -879,6 +882,9 @@ labels = TypeDict({
 
     'BrowseDicomDialog.load'       : 'Load',
     'BrowseDicomDialog.cancel'     : 'Cancel',
+
+    'FileTreePanel.loadDir'    : 'Load directory',
+    'FileTreePanel.customTree' : 'Load tree file',
 })
 
 

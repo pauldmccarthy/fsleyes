@@ -137,6 +137,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleScene3DToolBar,
+                   self.toggleFileTreePanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,

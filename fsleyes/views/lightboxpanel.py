@@ -199,6 +199,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleLightBoxToolBar,
+                   self.toggleFileTreePanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,
