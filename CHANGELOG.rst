@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.27.1 (Friday 18th January 2019)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Updated the ``render`` command so it incoporates the recent enhancments to
+  colour bar display.
+
+
 0.27.0 (Monday December 3rd 2018)
 ---------------------------------
 
