@@ -577,12 +577,8 @@ def buildColourBarBitmap(overlayList,
     display = displayCtx.getDisplay(overlay)
     opts    = display.opts
 
-    cbarLocation  = sceneOpts.colourBarLocation
-    cbarLabelSide = sceneOpts.colourBarLabelSide
-    cbarSize      = sceneOpts.colourBarSize
-    bgColour      = sceneOpts.bgColour
-    fgColour      = sceneOpts.fgColour
-    labelSize     = sceneOpts.labelSize
+    cbarLocation = sceneOpts.colourBarLocation
+    cbarSize     = sceneOpts.colourBarSize
 
     if   cbarLocation in ('top', 'bottom'): width  = width  * cbarSize / 100.0
     elif cbarLocation in ('left', 'right'): height = height * cbarSize / 100.0
@@ -593,44 +589,14 @@ def buildColourBarBitmap(overlayList,
     if   cbarLocation in ('top', 'bottom'): orient = 'horizontal'
     elif cbarLocation in ('left', 'right'): orient = 'vertical'
 
-    if   cbarLabelSide == 'top-left':
-        if orient == 'horizontal': labelSide = 'top'
-        else:                      labelSide = 'left'
-    elif cbarLabelSide == 'bottom-right':
-        if orient == 'horizontal': labelSide = 'bottom'
-        else:                      labelSide = 'right'
+    cb = cbar.ColourBar(overlayList, displayCtx)
+    cb.orientation = orient
+    cb.labelSide   = sceneOpts.colourBarLabelSide
+    cb.bgColour    = sceneOpts.bgColour
+    cb.textColour  = sceneOpts.fgColour
+    cb.fontSize    = sceneOpts.labelSize
 
-    if opts.useNegativeCmap:
-        negCmap    = opts.negativeCmap
-        ticks      = [0.0, 0.49, 0.51, 1.0]
-        ticklabels = ['{:0.2f}'.format(-opts.displayRange.xhi),
-                      '{:0.2f}'.format(-opts.displayRange.xlo),
-                      '{:0.2f}'.format( opts.displayRange.xlo),
-                      '{:0.2f}'.format( opts.displayRange.xhi)]
-        tickalign  = ['left', 'right', 'left', 'right']
-    else:
-        negCmap    = None
-        ticks      = [0.0, 1.0]
-        tickalign  = ['left', 'right']
-        ticklabels = ['{:0.2f}'.format(opts.displayRange.xlo),
-                      '{:0.2f}'.format(opts.displayRange.xhi)]
-
-    cbarBmp = cbarbitmap.colourBarBitmap(
-        cmap=opts.cmap,
-        width=width,
-        height=height,
-        negCmap=negCmap,
-        invert=opts.invert,
-        ticks=ticks,
-        ticklabels=ticklabels,
-        tickalign=tickalign,
-        label=display.name,
-        orientation=orient,
-        labelside=labelSide,
-        bgColour=bgColour,
-        textColour=fgColour,
-        fontsize=labelSize,
-        cmapResolution=opts.cmapResolution)
+    cbarBmp = cb.colourBar(width, height)
 
     # The colourBarBitmap function returns a w*h*4
     # array, but the fsleyes_widgets.utils.layout.Bitmap
