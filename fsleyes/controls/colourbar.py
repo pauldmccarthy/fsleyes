@@ -284,6 +284,9 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             ticklabels = ['{:0.3G}'.format(dmin),
                           '{:0.3G}'.format(dmax)]
 
+        ticks = np.array(ticks)
+        ticks[np.isclose(ticks , 0)] = 0
+
         if not self.showLabel:
             label = None
         if not self.showTicks:
