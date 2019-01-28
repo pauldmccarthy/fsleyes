@@ -9,6 +9,8 @@ rendering of a colour bar.
 """
 
 
+import numpy as np
+
 import fsl.utils.notifier                    as notifier
 import fsleyes_props                         as props
 import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
