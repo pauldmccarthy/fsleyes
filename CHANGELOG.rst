@@ -47,6 +47,17 @@ Deprecated
   as it has been replaced by the :func:`fsl.data.utils.guessType` function.
 
 
+0.27.2 (Friday 8th February 2019)
+---------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Small display range values are forced to 0 on the colour bar.
+
+
 0.27.1 (Friday 18th January 2019)
 ---------------------------------
 
