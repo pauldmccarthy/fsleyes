@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.27.3 (Friday 8th February 2019)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed initialisation bug on platforms with a non-English language.
+
+
 0.27.2 (Friday 8th February 2019)
 ---------------------------------
 
