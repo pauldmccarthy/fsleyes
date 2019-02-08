@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.27.2 (Friday 8th February 2019)
+---------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Small display range values are forced to 0 on the colour bar.
+
+
 0.27.1 (Friday 18th January 2019)
 ---------------------------------
 
