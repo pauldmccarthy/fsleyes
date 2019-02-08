@@ -788,12 +788,19 @@ class FSLeyesFrame(wx.Frame):
             # the fsleyes.profiles.shortcuts module.
             if shortcut is not None:
 
-                shortcut     = menuItem.GetAccel().ToString()
-                shortcutList = self.__viewPanelShortcuts.get(shortcut, {})
+                # If a shortcut uses characters
+                # which are not in th platform
+                # language, wx.MenuItem.GetAccel
+                # returns None.
+                accel = menuItem.GetAccel()
 
-                shortcutList[target] = actionName
+                if accel is not None:
+                    shortcut     = menuItem.GetAccel().ToString()
+                    shortcutList = self.__viewPanelShortcuts.get(shortcut, {})
 
-                self.__viewPanelShortcuts[shortcut] = shortcutList
+                    shortcutList[target] = actionName
+
+                    self.__viewPanelShortcuts[shortcut] = shortcutList
 
             # The __onViewPanelMenuItem method
             # needs to know which view panel/action
