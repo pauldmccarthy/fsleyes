@@ -47,6 +47,17 @@ Deprecated
   as it has been replaced by the :func:`fsl.data.utils.guessType` function.
 
 
+0.27.3 (Friday 8th February 2019)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed initialisation bug on platforms with a non-English language.
+
+
 0.27.2 (Friday 8th February 2019)
 ---------------------------------
 
