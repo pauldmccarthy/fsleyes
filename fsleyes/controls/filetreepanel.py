@@ -241,7 +241,7 @@ class FileTypePanel(elb.EditableListBox):
         active    = []
 
         for ft, tog in zip(filetypes, toggles):
-            if tog:
+            if tog.GetValue():
                 active.append(ft)
 
         return active
@@ -344,7 +344,9 @@ class FileListPanel(wx.Panel):
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.__grid = wgrid.WidgetGrid(
             self,
-            style=(wgrid.WG_KEY_NAVIGATION  |
+            style=(wx   .HSCROLL            |
+                   wx   .VSCROLL            |
+                   wgrid.WG_KEY_NAVIGATION  |
                    wgrid.WG_SELECTABLE_ROWS |
                    wgrid.WG_DRAGGABLE_COLUMNS))
 
@@ -362,12 +364,13 @@ class FileListPanel(wx.Panel):
         print('fixed')
         print(fixed)
 
+        grid  = self.__grid
+
         nrows = np.prod([len(vals) for vals in varyings.values()])
         ncols = len(varyings)
 
         collabels = [var for var in varyings.keys()]
 
-        #
         for ft in ftypes:
             ftvars = fixed[ft]
             ftcols = list(it.product(*[vals for vals in ftvars.values()]))
@@ -383,8 +386,15 @@ class FileListPanel(wx.Panel):
         print('col labels')
         print('\n'.join(collabels))
 
-        self.__grid.ClearGrid()
-        self.__grid.SetGridSize(nrows, ncols)
-        self.__grid.SetColLabels(collabels)
-        self.__grid.ShowColLabels()
-        self.__grid.Refresh()
+        grid.ClearGrid()
+        grid.SetGridSize(nrows, ncols)
+        grid.SetColLabels(collabels)
+        grid.ShowColLabels()
+
+        rowvals = list(it.product(*varyings.values()))
+
+        for rowi, vals in enumerate(rowvals):
+            for coli, (var, val) in enumerate(zip(varyings.keys(), vals)):
+                grid.SetText(rowi, coli, val)
+
+        grid.Refresh()

@@ -526,7 +526,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Toggles a :class:`.FileTreePanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(filetreepanel.FileTreePanel, location=wx.BOTTOM)
+        self.togglePanel(filetreepanel.FileTreePanel, location=wx.RIGHT)
 
 
     @property
