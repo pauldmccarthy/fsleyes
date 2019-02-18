@@ -39,7 +39,6 @@ import fsl.data.utils               as dutils
 import fsleyes_widgets.utils.status as status
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.strings              as strings
-import fsleyes.overlay              as fsloverlay
 from . import                          base
 
 
@@ -243,7 +242,8 @@ def loadOverlays(paths,
     def realOnLoad(*a):
 
         if saveDir and len(paths) > 0:
-            fslsettings.write('loadSaveOverlayDir', op.dirname(paths[-1]))
+            ovlDir = op.abspath(op.dirname(paths[-1]))
+            fslsettings.write('loadSaveOverlayDir', ovlDir)
 
         if onLoad is not None:
             onLoad(pathIdxs, overlays)

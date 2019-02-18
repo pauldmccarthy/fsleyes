@@ -37,6 +37,7 @@ Fixed
 
 * Jupyter Notebook integration has been updated to work with newer versions
   of the ``ipykernel`` library.
+* Fixed bug with initial directory shown in open file dialogs.
 
 
 Deprecated
