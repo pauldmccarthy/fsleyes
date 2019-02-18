@@ -304,6 +304,8 @@ messages = TypeDict({
     'An error occurred loading the plugin file.',
     'LoadPluginAction.installError'  :
     'An error occurred installing the plugin file.',
+
+    'FileTreePanel.loadDir' : 'Load directory',
 })
 
 
@@ -885,6 +887,11 @@ labels = TypeDict({
 
     'FileTreePanel.loadDir'    : 'Load directory',
     'FileTreePanel.customTree' : 'Load tree file',
+
+    'VariablePanel.value.none' : '<none>',
+    'VariablePanel.value.any'  : '<any>',
+    'VariablePanel.value.all'  : '<all>',
+
 })
 
 
