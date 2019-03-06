@@ -392,6 +392,13 @@ class FileListPanel(wx.Panel):
         """
         """
 
+        # Force a constsient ordering
+        # of the varying variables
+        _varyings = collections.OrderedDict()
+        for var in sorted(varyings.keys()):
+            _varyings[var] = varyings[var]
+        varyings = _varyings
+
         # example template for one row
         # sub=X, ses=Y, T1
         #               T2
@@ -483,6 +490,7 @@ class FileListPanel(wx.Panel):
 
         grid.ClearGrid()
         grid.SetGridSize(nrows, ncols)
+        grid.SetDragLimit(len(varcols) - 1)
         grid.SetColLabels(collabels)
         grid.ShowColLabels()
 
