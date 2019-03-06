@@ -9,6 +9,7 @@
 import os.path   as op
 import itertools as it
 import              logging
+import              collections
 
 import wx
 
@@ -57,10 +58,10 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__dirName      = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         self.__mainSplitter = wx.SplitterWindow(
             self,
-            style=wx.SP_LIVE_UPDATE | wx.SP_3D)
+            style=wx.SP_LIVE_UPDATE)
         self.__leftSplitter = wx.SplitterWindow(
             self.__mainSplitter,
-            style=wx.SP_LIVE_UPDATE | wx.SP_3D)
+            style=wx.SP_LIVE_UPDATE)
         self.__varPanel     = VariablePanel(self.__leftSplitter, self)
         self.__fileTypes    = FileTypePanel(self.__leftSplitter, self)
         self.__fileList     = FileListPanel(self.__mainSplitter, self)
@@ -71,7 +72,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
                                               self.__varPanel)
         self.__mainSplitter.SplitVertically(  self.__leftSplitter,
                                               self.__fileList)
-        self.__mainSplitter.SetSashGravity(0.4)
+        self.__mainSplitter.SetSashGravity(0.3)
         self.__leftSplitter.SetSashGravity(0.4)
 
         treefiles  = filetree.list_all_trees()
@@ -107,27 +108,39 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             return
 
         flist    = self.__fileList
+        query    = self.__query
         ftypes   = self.__fileTypes.GetFileTypes()
-        allvars  = self.__query.variables()
+        allvars  = query.variables()
         varyings = self.__varPanel.GetVaryings()
 
         fixed    = self.__varPanel.GetFixed()
         ftfixed  = {}
+
         for ftype in ftypes:
             ftvars = self.__query.variables(ftype)
             ftfixed[ftype] = {}
             for var in fixed:
                 if var in ftvars:
                     ftfixed[ftype][var] = allvars[var]
+
         fixed    = ftfixed
 
-        hits     = {ft : self.__query.query(ft, **varyings) for ft in ftypes}
-
         for var, val in list(varyings.items()):
-            if val == '*': varyings[var] = allvars[var]
-            else:          varyings.pop(var)
+
+            if not any([var in query.variables(ft) for ft in ftypes]):
+                varyings.pop(var)
+                continue
+
+            elif val == '*':
+                varyings[var] = allvars[var]
+            else:
+                varyings[var] = [val]
 
         flist.ResetGrid(ftypes, varyings, fixed)
+
+
+    def GetFile(self, ftype, **vars):
+        return self.__query.query(ftype, **vars)
 
 
 
@@ -145,7 +158,9 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             tree       = filetree.FileTree.read(treename, directory=dirname)
             query      = filetree.FileTreeQuery(tree)
             allvars    = query.variables()
-            shortnames = query.short_names
+            allvars    = [(var, vals) for var, vals in allvars.items()]
+            allvars    = collections.OrderedDict(list(sorted(allvars)))
+            shortnames = list(sorted(query.short_names))
 
         self.__tree  = tree
         self.__query = query
@@ -350,51 +365,140 @@ class FileListPanel(wx.Panel):
                    wgrid.WG_SELECTABLE_ROWS |
                    wgrid.WG_DRAGGABLE_COLUMNS))
 
+        self.__varcols  = []
+        self.__ftcols   = []
+        self.__rows     = []
+        self.__rowfiles = []
+
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
         self.SetSizer(self.__sizer)
+
+        self.__grid.Bind(wgrid.EVT_WG_SELECT, self.__onSelect)
+
+
+    def __onSelect(self, ev):
+
+        vars  = self.__rows[    ev.row]
+        files = self.__rowfiles[ev.row]
+
+        print('Selecting on vars')
+        for var, val in vars.items():
+            print('  ', var, val)
+        for f in files:
+            for ff in f:
+                print('  ', ff)
 
 
     def ResetGrid(self, ftypes, varyings, fixed):
         """
         """
 
-        print('ftypes', ftypes)
-        print('Varyings')
-        print(varyings)
-        print('fixed')
-        print(fixed)
+        # example template for one row
+        # sub=X, ses=Y, T1
+        #               T2
+        #               surface[surf=mid]
+        #               surface[surf=pial]
+        #               surface[surf=white]
 
-        grid  = self.__grid
-
-        nrows = np.prod([len(vals) for vals in varyings.values()])
-        ncols = len(varyings)
-
-        collabels = [var for var in varyings.keys()]
+        # Build a list of all columns:
+        #
+        #  - one column for each varying variable
+        #  - one column for each file type that doesn't have any fixed
+        #    variables
+        #  - one column for each file type and set of fixed variable values,
+        #    for file types which do have fixed variables
+        #
+        # varcols: list of varying variable names
+        # ftcols:  list of (ftype, {var : val}) tuples for all file types/fixed
+        #          variables
+        #
+        grid      = self.__grid
+        varcols   = [var for var, vals in varyings.items() if len(vals) > 1]
+        ftcols    = []
+        collabels = list(varcols)
 
         for ft in ftypes:
+
             ftvars = fixed[ft]
-            ftcols = list(it.product(*[vals for vals in ftvars.values()]))
-            ncols += len(ftcols)
+            ftvars.update({col : varyings[col] for col in varcols if
+                           len(varyings[col]) == 1})
+            ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
 
-            for ftvals in ftcols:
-                collabels += [ft + '[' + ','.join(
-                    ['{}={}'.format(var, val)
-                     for var, val in zip(ftvars, ftvals)]) + ']']
+            for ftvals in ftvarprod:
 
-        print('Num rows', nrows)
-        print('Num cols', ncols)
-        print('col labels')
-        print('\n'.join(collabels))
+                ftvals = {var : val for var, val in zip(ftvars, ftvals)}
+
+                ftcols.append((ft, ftvals))
+
+                if len(ftvals) == 0:
+                    lbl = ft
+                else:
+                    lbl = ft + '[' + ','.join(
+                        ['{}={}'.format(var, val)
+                         for var, val in ftvals.items()]) + ']'
+                collabels.append(lbl)
+
+        # Build a list of all rows:
+        #  - rows:     a {var : val} dict for each row, containing all
+        #              varyings
+        #
+        #  - rowfiles: a [(ftype, {var : val}, file)] list for each row,
+        #              containing all fixed variables for each file type
+        #              The file will be None if there is no fike of this
+        #              type for these variable values
+        rows     = []
+        rowfiles = []
+
+        # loop through all possible combinations of varying values
+        valprod = list(it.product(*[varyings[c] for c in varcols]))
+        for rowi, vals in enumerate(valprod):
+
+            rowivals  = {var : val for var, val in zip(varcols, vals)}
+            rowifiles = []
+            nfiles    = 0
+
+            for ftype, ftvars in ftcols:
+
+                ftvars = dict(ftvars)
+                ftvars.update(rowivals)
+                ftfile = self.__ftpanel.GetFile(ftype, **ftvars).reshape((-1,))
+
+                try:
+                    ftfile  = ftfile[0].filename
+                    nfiles += 1
+                except Exception:
+                    ftfile = None
+
+                rowifiles.append((ftype, ftvars, ftfile))
+
+            # Drop rows which have no files
+            if nfiles > 0:
+                rows    .append(rowivals)
+                rowfiles.append(rowifiles)
+
+        nrows = len(rows)
+        ncols = len(varcols) + len(ftcols)
+
+        self.__varcols  = varcols
+        self.__ftcols   = ftcols
+        self.__rows     = rows
+        self.__rowfiles = rowfiles
+
+        # TODO session=None
 
         grid.ClearGrid()
         grid.SetGridSize(nrows, ncols)
         grid.SetColLabels(collabels)
         grid.ShowColLabels()
 
-        rowvals = list(it.product(*varyings.values()))
+        for rowi, (vals, files) in enumerate(zip(rows, rowfiles)):
 
-        for rowi, vals in enumerate(rowvals):
-            for coli, (var, val) in enumerate(zip(varyings.keys(), vals)):
-                grid.SetText(rowi, coli, val)
+            for coli, col in enumerate(varcols):
+                grid.SetText(rowi, coli, vals[col])
+
+            for coli, (ftype, ftvars, ftfile) in enumerate(files,
+                                                           len(varcols)):
+                if ftfile is not None:
+                    grid.SetText(rowi, coli, '\u2022')
 
         grid.Refresh()
