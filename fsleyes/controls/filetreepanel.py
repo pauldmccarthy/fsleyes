@@ -112,7 +112,6 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         ftypes   = self.__fileTypes.GetFileTypes()
         allvars  = query.variables()
         varyings = self.__varPanel.GetVaryings()
-
         fixed    = self.__varPanel.GetFixed()
         ftfixed  = {}
 
@@ -123,7 +122,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
                 if var in ftvars:
                     ftfixed[ftype][var] = allvars[var]
 
-        fixed    = ftfixed
+        fixed = ftfixed
 
         for var, val in list(varyings.items()):
 
@@ -408,9 +407,9 @@ class FileListPanel(wx.Panel):
         #  - one column for each file type and set of fixed variable values,
         #    for file types which do have fixed variables
         #
-        # varcols: list of varying variable names
+        # varcols: list of varying variable names that map to grid columns
         # ftcols:  list of (ftype, {var : val}) tuples for all file types/fixed
-        #          variables
+        #          variables, each of which maps to one column
         #
         grid      = self.__grid
         varcols   = [var for var, vals in varyings.items() if len(vals) > 1]
@@ -419,9 +418,7 @@ class FileListPanel(wx.Panel):
 
         for ft in ftypes:
 
-            ftvars = fixed[ft]
-            ftvars.update({col : varyings[col] for col in varcols if
-                           len(varyings[col]) == 1})
+            ftvars    = fixed[ft]
             ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
 
             for ftvals in ftvarprod:
@@ -450,10 +447,10 @@ class FileListPanel(wx.Panel):
         rowfiles = []
 
         # loop through all possible combinations of varying values
-        valprod = list(it.product(*[varyings[c] for c in varcols]))
+        valprod = list(it.product(*varyings.values()))
         for rowi, vals in enumerate(valprod):
 
-            rowivals  = {var : val for var, val in zip(varcols, vals)}
+            rowivals  = {var : val for var, val in zip(varyings.keys(), vals)}
             rowifiles = []
             nfiles    = 0
 
@@ -484,8 +481,6 @@ class FileListPanel(wx.Panel):
         self.__rows     = rows
         self.__rowfiles = rowfiles
 
-        # TODO session=None
-
         grid.ClearGrid()
         grid.SetGridSize(nrows, ncols)
         grid.SetColLabels(collabels)
@@ -494,7 +489,10 @@ class FileListPanel(wx.Panel):
         for rowi, (vals, files) in enumerate(zip(rows, rowfiles)):
 
             for coli, col in enumerate(varcols):
-                grid.SetText(rowi, coli, vals[col])
+                val = vals[col]
+                if val is None:
+                    val = NONELBL
+                grid.SetText(rowi, coli, val)
 
             for coli, (ftype, ftvars, ftfile) in enumerate(files,
                                                            len(varcols)):
