@@ -60,21 +60,21 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__mainSplitter = wx.SplitterWindow(
             self,
             style=wx.SP_LIVE_UPDATE)
-        self.__leftSplitter = wx.SplitterWindow(
-            self.__mainSplitter,
-            style=wx.SP_LIVE_UPDATE)
-        self.__varPanel     = VariablePanel(self.__leftSplitter, self)
-        self.__fileTypes    = FileTypePanel(self.__leftSplitter, self)
+        self.__leftPanel    = wx.Panel(self.__mainSplitter)
+        self.__leftSizer    = wx.BoxSizer(wx.VERTICAL)
+
+        self.__varPanel     = VariablePanel(self.__leftPanel,    self)
+        self.__fileTypes    = FileTypePanel(self.__leftPanel,    self)
         self.__fileList     = FileListPanel(self.__mainSplitter, self)
 
-        self.__leftSplitter.SetMinimumPaneSize(50)
+        self.__leftSizer.Add(self.__fileTypes, flag=wx.EXPAND, proportion=1)
+        self.__leftSizer.Add(self.__varPanel,  flag=wx.EXPAND)
+        self.__leftPanel.SetSizer(self.__leftSizer)
+
         self.__mainSplitter.SetMinimumPaneSize(50)
-        self.__leftSplitter.SplitHorizontally(self.__fileTypes,
-                                              self.__varPanel)
-        self.__mainSplitter.SplitVertically(  self.__leftSplitter,
+        self.__mainSplitter.SplitVertically(  self.__leftPanel,
                                               self.__fileList)
         self.__mainSplitter.SetSashGravity(0.3)
-        self.__leftSplitter.SetSashGravity(0.4)
 
         treefiles  = filetree.list_all_trees()
         treelabels = [op.basename(tf) for tf in treefiles]
@@ -174,6 +174,8 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__dirName  .SetLabel(dirname or '')
         self.__varPanel .SetVariables(allvars)
         self.__fileTypes.SetFileTypes(shortnames)
+
+        self.__leftPanel.Layout()
 
         self.UpdateMatches()
 
