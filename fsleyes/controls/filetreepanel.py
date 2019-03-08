@@ -8,6 +8,7 @@
 
 import os.path   as op
 import itertools as it
+import functools as ft
 import              logging
 import              collections
 
@@ -107,6 +108,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         if self.__tree is None or self.__query is None:
             return
 
+
         flist    = self.__fileList
         query    = self.__query
         ftypes   = self.__fileTypes.GetFileTypes()
@@ -114,6 +116,11 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         varyings = self.__varPanel.GetVaryings()
         fixed    = self.__varPanel.GetFixed()
         ftfixed  = {}
+
+        for ft in ftypes:
+            print('axes for', ft)
+            for v in query.variables(ft):
+                print('  ', v)
 
         for ftype in ftypes:
             ftvars = self.__query.variables(ftype)
@@ -372,7 +379,8 @@ class FileListPanel(wx.Panel):
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
         self.SetSizer(self.__sizer)
 
-        self.__grid.Bind(wgrid.EVT_WG_SELECT, self.__onSelect)
+        self.__grid.Bind(wgrid.EVT_WG_SELECT,  self.__onSelect)
+        self.__grid.Bind(wgrid.EVT_WG_REORDER, self.__onReorder)
 
 
     def __onSelect(self, ev):
@@ -380,12 +388,44 @@ class FileListPanel(wx.Panel):
         vars  = self.__rows[    ev.row]
         files = self.__rowfiles[ev.row]
 
-        print('Selecting on vars')
-        for var, val in vars.items():
-            print('  ', var, val)
-        for f in files:
-            for ff in f:
-                print('  ', ff)
+        print('Selected row')
+        for ftype, ftvars, files in files:
+            for var, val in ftvars.items():
+                print('  ', var, val)
+            print('  ', ftype, files)
+
+
+    def __onReorder(self, ev):
+        """
+        """
+        varcols = self.__grid.GetColLabels()[:len(self.__varcols)]
+        print('Old order', self.__varcols)
+        print('New order', varcols)
+        self.__varcols = varcols
+
+        def cmp(r1, r2):
+            r1 = self.__rows[r1]
+            r2 = self.__rows[r2]
+            for col in varcols:
+                v1 = r1[col]
+                v2 = r2[col]
+                if   v1 > v2: return  1
+                elif v1 < v2: return -1
+            return 0
+
+        rowidxs = list(range(len(self.__rows)))
+        rowidxs = sorted(rowidxs, key=ft.cmp_to_key(cmp))
+
+        self.__rows     = [self.__rows[    i] for i in rowidxs]
+        self.__rowfiles = [self.__rowfiles[i] for i in rowidxs]
+
+
+        for ri in range(len(self.__rows)):
+            for ci in range(len(self.__varcols)):
+                val = self.__rows[ri][varcols[ci]]
+                self.__grid.GetWidget(ri, ci).SetLabel(val)
+
+
 
 
     def ResetGrid(self, ftypes, varyings, fixed):
