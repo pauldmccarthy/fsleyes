@@ -399,9 +399,6 @@ class FileListPanel(wx.Panel):
         """
         """
         varcols = self.__grid.GetColLabels()[:len(self.__varcols)]
-        print('Old order', self.__varcols)
-        print('New order', varcols)
-        self.__varcols = varcols
 
         def cmp(r1, r2):
             r1 = self.__rows[r1]
@@ -409,23 +406,36 @@ class FileListPanel(wx.Panel):
             for col in varcols:
                 v1 = r1[col]
                 v2 = r2[col]
-                if   v1 > v2: return  1
-                elif v1 < v2: return -1
+                if   v1 == v2:   continue
+                elif v1 is None: return  1
+                elif v2 is None: return -1
+                elif v1 > v2:    return  1
+                elif v1 < v2:    return -1
             return 0
 
-        rowidxs = list(range(len(self.__rows)))
-        rowidxs = sorted(rowidxs, key=ft.cmp_to_key(cmp))
+        grid     = self.__grid
+        rowidxs  = list(range(len(self.__rows)))
+        rowidxs  = sorted(rowidxs, key=ft.cmp_to_key(cmp))
+        rows     = [self.__rows[    i] for i in rowidxs]
+        rowfiles = [self.__rowfiles[i] for i in rowidxs]
 
-        self.__rows     = [self.__rows[    i] for i in rowidxs]
-        self.__rowfiles = [self.__rowfiles[i] for i in rowidxs]
+        self.__varcols  = varcols
+        self.__rows     = rows
+        self.__rowfiles = rowfiles
 
+        for ri in range(len(rows)):
+            vals  = rows[    ri]
+            files = rowfiles[ri]
 
-        for ri in range(len(self.__rows)):
-            for ci in range(len(self.__varcols)):
-                val = self.__rows[ri][varcols[ci]]
-                self.__grid.GetWidget(ri, ci).SetLabel(val)
+            for ci in range(len(varcols)):
+                val = vals[varcols[ci]]
+                if val is None:
+                    val = NONELBL
+                grid.SetText(ri, ci, val)
 
-
+            for ci, (ftype, ftvars, ftfile) in enumerate(files, len(varcols)):
+                if ftfile is not None: grid.SetText(ri, ci, '\u2022')
+                else:                  grid.SetText(ri, ci, '')
 
 
     def ResetGrid(self, ftypes, varyings, fixed):
@@ -463,21 +473,21 @@ class FileListPanel(wx.Panel):
         ftcols    = []
         collabels = list(varcols)
 
-        for ft in ftypes:
+        for ftype in ftypes:
 
-            ftvars    = fixed[ft]
+            ftvars    = fixed[ftype]
             ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
 
             for ftvals in ftvarprod:
 
                 ftvals = {var : val for var, val in zip(ftvars, ftvals)}
 
-                ftcols.append((ft, ftvals))
+                ftcols.append((ftype, ftvals))
 
                 if len(ftvals) == 0:
-                    lbl = ft
+                    lbl = ftype
                 else:
-                    lbl = ft + '[' + ','.join(
+                    lbl = ftype + '[' + ','.join(
                         ['{}={}'.format(var, val)
                          for var, val in ftvals.items()]) + ']'
                 collabels.append(lbl)
@@ -544,7 +554,7 @@ class FileListPanel(wx.Panel):
 
             for coli, (ftype, ftvars, ftfile) in enumerate(files,
                                                            len(varcols)):
-                if ftfile is not None:
-                    grid.SetText(rowi, coli, '\u2022')
+                if ftfile is not None: grid.SetText(rowi, coli, '\u2022')
+                else:                  grid.SetText(rowi, coli, '')
 
         grid.Refresh()
