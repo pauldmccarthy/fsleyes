@@ -23,6 +23,7 @@ import fsleyes_widgets.widgetlist    as wlist
 import fsleyes_widgets.widgetgrid    as wgrid
 import fsleyes_widgets.elistbox      as elb
 
+import fsleyes.actions.loadoverlay   as loadoverlay
 import fsleyes.strings               as strings
 import fsleyes.controls.controlpanel as ctrlpanel
 
@@ -50,8 +51,9 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        self.__tree  = None
-        self.__query = None
+        self.__tree     = None
+        self.__query    = None
+        self.__overlays = None
 
         self.__loadDir      = wx.Button(self)
         self.__customTree   = wx.Button(self)
@@ -148,6 +150,31 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     def GetFile(self, ftype, **vars):
         return self.__query.query(ftype, **vars)
 
+
+    def ShowFiles(self, vars, ftypes, ftvars, files):
+
+        overlayList = self.overlayList
+        overlays    = self.__overlays
+
+        keys = [(ftype, ) + tuple(sorted(v.items()))
+                for ftype, v in zip(ftypes, ftvars)]
+
+        if overlays is not None:
+            idxs = {k : overlayList.index(v) for k, v in overlays.items()}
+        else:
+            idxs = {}
+
+        def onLoad(ovlidxs, ovls):
+            for key, ovl in zip(keys, ovls):
+                idx = idxs.get(key, None)
+                if idx is None: overlayList.append(ovl)
+                else:           overlayList[idx] = ovl
+
+                print('overlay', ovl, 'key', key)
+
+            self.__overlays = {k : o for k, o in zip(keys, ovls)}
+
+        loadoverlay.loadOverlays(files, onLoad=onLoad)
 
 
     def __loadTree(self, treename, dirname):
@@ -390,11 +417,9 @@ class FileListPanel(wx.Panel):
         vars  = self.__rows[    ev.row]
         files = self.__rowfiles[ev.row]
 
-        print('Selected row')
-        for ftype, ftvars, files in files:
-            for var, val in ftvars.items():
-                print('  ', var, val)
-            print('  ', ftype, files)
+        ftypes, ftvars, files = zip(*files)
+
+        self.__ftpanel.ShowFiles(vars, ftypes, ftvars, files)
 
 
     def __onReorder(self, ev):
@@ -516,6 +541,9 @@ class FileListPanel(wx.Panel):
             for ftype, ftvars in ftcols:
 
                 ftvars = dict(ftvars)
+
+                # Should you only be storing
+                # the fixed vars here?
                 ftvars.update(rowivals)
                 ftfile = self.__ftpanel.GetFile(ftype, **ftvars).reshape((-1,))
 
