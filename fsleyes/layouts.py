@@ -479,6 +479,7 @@ def deserialiseLayout(layout):
     from fsleyes.controls.timeseriescontrolpanel     import \
         TimeSeriesControlPanel
     from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
+    from fsleyes.controls.filetreepanel              import FileTreePanel
 
     views = {
         'OrthoPanel'         : OrthoPanel,
@@ -514,6 +515,7 @@ def deserialiseLayout(layout):
         'Scene3DToolBar'             : Scene3DToolBar,
         'TimeSeriesControlPanel'     : TimeSeriesControlPanel,
         'TimeSeriesToolBar'          : TimeSeriesToolBar,
+        'FileTreePanel'              : FileTreePanel,
     }
 
     lines = layout.split('\n')
