@@ -23,9 +23,11 @@ import fsleyes_widgets.widgetlist    as wlist
 import fsleyes_widgets.widgetgrid    as wgrid
 import fsleyes_widgets.elistbox      as elb
 
-import fsleyes.actions.loadoverlay   as loadoverlay
-import fsleyes.strings               as strings
-import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.displaycontext.meshopts as meshopts
+import fsleyes.actions.loadoverlay     as loadoverlay
+import fsleyes.actions.copyoverlay     as copyoverlay
+import fsleyes.strings                 as strings
+import fsleyes.controls.controlpanel   as ctrlpanel
 
 
 log = logging.getLogger(__name__)
@@ -154,10 +156,19 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     def ShowFiles(self, vars, ftypes, ftvars, files):
 
         overlayList = self.overlayList
+        displayCtx  = self.displayCtx
         overlays    = self.__overlays
 
-        keys = [(ftype, ) + tuple(sorted(v.items()))
-                for ftype, v in zip(ftypes, ftvars)]
+        keys = []
+        for ftype, v in zip(ftypes, ftvars):
+
+            if len(v) == 0:
+                key = ftype
+            else:
+                key = ftype + '[' + ','.join(
+                    ['{}={}'.format(var, val)
+                     for var, val in sorted(v.items())]) + ']'
+            keys.append('[filetree] ' + key)
 
         if overlays is not None:
             idxs = {k : overlayList.index(v) for k, v in overlays.items()}
@@ -165,14 +176,55 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             idxs = {}
 
         def onLoad(ovlidxs, ovls):
-            for key, ovl in zip(keys, ovls):
+
+            order   = list(displayCtx.overlayOrder)
+            ovls    = collections.OrderedDict(zip(keys, ovls))
+            oldOvls = []
+
+            for key, ovl in ovls.items():
+                ovl.name = key
+
+            for key, ovl in ovls.items():
+                if key in idxs:
+                    oldovl  = overlayList[idxs[key]]
+                    ovlType = displayCtx.getDisplay(oldovl).overlayType
+                else:
+                    ovlType = None
+                overlayList.append(ovl, overlayType=ovlType)
+
+
+            for key, ovl in ovls.items():
+                ovl.name = key
                 idx = idxs.get(key, None)
-                if idx is None: overlayList.append(ovl)
-                else:           overlayList[idx] = ovl
+                if idx is not None:
+                    oldOvl = overlayList[idx]
+                    opts   = displayCtx.getOpts(ovl)
+                    oldOvls.append(oldOvl)
 
-                print('overlay', ovl, 'key', key)
+                    optExcl = ['bounds', 'transform']
+                    optArgs = {}
 
-            self.__overlays = {k : o for k, o in zip(keys, ovls)}
+                    if isinstance(opts, meshopts.MeshOpts):
+                        optExcl += ['vertexData', 'vertexSet']
+                        ref = opts.refImage
+
+                        if ref is not None and ref.name in ovls:
+                            optArgs['refImage'] =  ovls[ref.name]
+
+                    copyoverlay.copyDisplayProperties(
+                        displayCtx,
+                        oldOvl,
+                        ovl,
+                        optExclude=optExcl,
+                        optArgs=optArgs)
+
+            for oldOvl in set(oldOvls):
+                overlayList.remove(oldOvl)
+
+            if len(order) > 0:
+                displayCtx.overlayOrder = order
+
+            self.__overlays = ovls
 
         loadoverlay.loadOverlays(files, onLoad=onLoad)
 
@@ -544,8 +596,8 @@ class FileListPanel(wx.Panel):
 
                 # Should you only be storing
                 # the fixed vars here?
-                ftvars.update(rowivals)
-                ftfile = self.__ftpanel.GetFile(ftype, **ftvars).reshape((-1,))
+                ftfile = self.__ftpanel.GetFile(ftype, **ftvars, **rowivals)
+                ftfile = ftfile.reshape((-1,))
 
                 try:
                     ftfile  = ftfile[0].filename
