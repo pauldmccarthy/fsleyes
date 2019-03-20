@@ -36,6 +36,7 @@ import            logging
 import            textwrap
 
 import wx
+import wx.adv
 
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets.utils.status       as status
@@ -90,12 +91,17 @@ class FSLeyesApp(wx.App):
         self.__overlayList = None
         self.__displayCtx  = None
 
+
         self.__modalHook = FSLeyesApp.ModalHook()
         self.__modalHook.Register()
 
         wx.App.__init__(self, clearSigInt=False)
 
         self.SetAppName('FSLeyes')
+
+        self.__icon = wx.adv.TaskBarIcon(iconType=wx.adv.TBI_DOCK)
+        self.__icon.SetIcon(wx.Icon(
+            op.join(fsleyes.assetDir, 'assets', 'icons', 'app_icon.png')))
 
 
     @property
