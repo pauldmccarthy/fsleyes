@@ -267,8 +267,10 @@ def main():
 
         entry_points={
             'console_scripts' : [
-                'fsleyes = fsleyes.main:main',
                 'render  = fsleyes.render:main',
+            ],
+            'gui_scripts' : [
+                'fsleyes = fsleyes.main:main',
             ]
         }
     )
