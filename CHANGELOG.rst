@@ -21,7 +21,7 @@ Added
 * Added ability to drag-and-drop files onto the FSLeyes window to open them.
 * The ``--vertexSet`` and ``--vertexData`` command-line options now cause the
   last vertex set/data to be selected, and also support GIFTI surface files
-  which contain multiple vertex sets dand vertex data.
+  which contain multiple vertex sets and vertex data.
 
 
 Changed
@@ -38,6 +38,8 @@ Fixed
 * Jupyter Notebook integration has been updated to work with newer versions
   of the ``ipykernel`` library.
 * Fixed bug with initial directory shown in open file dialogs.
+* Fixed a bug which would sometimes cause 4D image data display to be
+  corrupted on macOS.
 
 
 Deprecated

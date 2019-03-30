@@ -772,6 +772,13 @@ class Texture3D(texture.Texture, notifier.Notifier):
                                gl.GL_TEXTURE_WRAP_R,
                                gl.GL_CLAMP_TO_EDGE)
 
+            # The macOS GL driver sometimes corrupts
+            # the texture data if we don't generate
+            # mipmaps
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_GENERATE_MIPMAP,
+                               gl.GL_TRUE)
+
             # create the texture according to
             # the format determined by the
             # _determineTextureType method.
