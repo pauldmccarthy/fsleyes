@@ -500,6 +500,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
                   disappear in the future.
         """
 
+        data = np.asarray(data)
+
+        if len(data.shape) != 3:
+            newshape = list(data.shape) + [1] * (3 - len(data.shape))
+            data     = data.reshape(newshape)
+
         data  = self.__realPrepareTextureData(data)[0]
         shape = data.shape
         data  = data.flatten(order='F')
