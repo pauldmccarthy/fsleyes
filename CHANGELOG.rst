@@ -40,6 +40,8 @@ Fixed
 * Fixed bug with initial directory shown in open file dialogs.
 * Fixed a bug which would sometimes cause 4D image data display to be
   corrupted on macOS.
+* Fixed a bug which was preventing image textures from being updated when
+  non-3D data regions were changed.
 
 
 Deprecated
