@@ -50,14 +50,16 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    # Create a GL context
-    fslgl.getGLContext(offscreen=True, createApp=True)
-
-    # Initialise FSLeyes and implement hacks
+    # Initialise FSLeyes and implement hacks.
+    # This must come first as, amongst other
+    # things, it sets the fsleyes.assetDir.
     fsleyes.initialise()
 
     # Initialise colour maps module
     fslcm.init()
+
+    # Create a GL context
+    fslgl.getGLContext(offscreen=True, createApp=True)
 
     # Parse arguments, and
     # configure logging/debugging
