@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.28.0 (Under development)
---------------------------
+0.28.0 (Friday April 5th 2019)
+------------------------------
 
 
 Added
@@ -22,6 +22,9 @@ Added
 * The ``--vertexSet`` and ``--vertexData`` command-line options now cause the
   last vertex set/data to be selected, and also support GIFTI surface files
   which contain multiple vertex sets and vertex data.
+* New :meth:`.ControlMixin.defaultLayout` method, which can be overridden by
+  control panels (including plugins) to customise the default panel
+  positioning/layout.
 
 
 Changed
@@ -52,7 +55,7 @@ Deprecated
   as it has been replaced by the :func:`fsl.data.utils.guessType` function.
 
 
-0.27.3 (Friday 8th February 2019)
+0.27.3 (Friday February 8th 2019)
 ---------------------------------
 
 
@@ -63,7 +66,7 @@ Fixed
 * Fixed initialisation bug on platforms with a non-English language.
 
 
-0.27.2 (Friday 8th February 2019)
+0.27.2 (Friday February 8th 2019)
 ---------------------------------
 
 
@@ -74,7 +77,7 @@ Changed
 * Small display range values are forced to 0 on the colour bar.
 
 
-0.27.1 (Friday 18th January 2019)
+0.27.1 (Friday January 18th 2019)
 ---------------------------------
 
 
