@@ -871,7 +871,21 @@ class FSLeyesFrame(wx.Frame):
             # work with the ActionProvider interface,
             # and hence the populateMenu method.
             for ctrlName, ctrlType in pluginCtrls.items():
-                func = ft.partial(panel.togglePanel, ctrlType, title=ctrlName)
+
+                # Use default arguments to togglePanel
+                # if the class specifies them
+                kwargs = ctrlType.defaultLayout()
+                if kwargs is None:
+                    kwargs = {}
+
+                # If defaultLayout specifies a
+                # title, it takes precedence.
+                if 'title' not in kwargs:
+                    kwargs['title'] = ctrlName
+                else:
+                    ctrlName = kwargs['title']
+
+                func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
                 name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
                 act  = actions.ToggleAction(func, name=ctrlName)
 

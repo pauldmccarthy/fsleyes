@@ -44,6 +44,19 @@ class ControlMixin(object):
         return None
 
 
+    @staticmethod
+    def defaultLayout():
+        """Return default options for :meth:`.ViewPanel.togglePanel`.
+
+        This method may be overridden by sub-classes to return a ``dict``
+        containing keyword arguments to be used by the
+        :meth:`.ViewPanel.togglePanel` method when a control panel of this
+        type is added. When ``togglePanel`` is called, if any arguments are
+        provided, the arguments returned by this method are not used.
+        """
+        return None
+
+
 class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
     """The ``ControlPanel`` is the base class for all FSLeyes controls. """
     pass

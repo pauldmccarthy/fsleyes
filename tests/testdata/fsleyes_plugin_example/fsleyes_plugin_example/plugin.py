@@ -29,6 +29,13 @@ class PluginControl(ctrlpanel.ControlPanel):
 
 
     @staticmethod
+    def defaultLayout():
+        return {
+            'location' : wx.LEFT,
+        }
+
+
+    @staticmethod
     def supportedViews():
         from fsleyes.views.orthopanel import OrthoPanel
         return [OrthoPanel]

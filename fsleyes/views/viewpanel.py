@@ -261,6 +261,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """Add/remove the secondary panel of the specified type to/from this
         ``ViewPanel``.
 
+        If no keyword argunents are specified, the arguments returned by the
+        :meth:`.ControlMixin.defaultLayout` method are returned.
+
         :arg panelType: Type of the secondary panel.
 
         :arg args:      All positional arguments are passed to the
@@ -288,9 +291,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         assumed that a title for ``panelType`` is in
                         :attr:`.strings.titles`.
 
-        :arg kwargs:    All keyword arguments, apart from ``floatPane`` and
-                        ``location``, are passed to the ``panelType``
-                        constructor.
+        :arg kwargs:    All other keyword arguments, are passed to the
+                        ``panelType`` constructor.
 
         .. note::       The ``panelType`` type must be a sub-class of
                         :class:`.ControlPanel` or :class:`.ControlToolBar`,
@@ -310,6 +312,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         those names will get eaten by this method before they
                         can be passed to the constructor.
         """
+
+        if len(kwargs) == 0:
+            kwargs = panelType.defaultLayout()
+            if kwargs is None:
+                kwargs = {}
 
         location  = kwargs.pop('location',  None)
         floatPane = kwargs.pop('floatPane', False)
