@@ -130,12 +130,25 @@ definitions for custom views, controls, and tools.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
- - Controls must be sub-classes of the :class:`.ControlPanel` class. If your
-   custom control is designed to only work with a specific view, you should
-   override the :mod:`.ControlMixin.supportedViews` static method to return
-   the views that your control supports.
+ - Controls must be sub-classes of the :class:`.ControlPanel` class.
 
  - Tools must be sub-classes of the :class:`.Action` class.
+
+
+.. sidebar:: Customising control panels
+
+             If you are writing a custom control panel which is designed to
+             only work with a specific view (e.g. an ortho view), you can
+             override the :mod:`.ControlMixin.supportedViews` static method to
+             limit the views that your control supports.
+
+             Furthermore, if you want to customise how your custom control is
+             displayed (e.g. on the bottom, left, right, or top, or as a
+             separate floating panel), you can override the
+             :mod:`.ControlMixin.defaultLayout` static method to return
+             default layout options that will be passed to the
+             :meth:`.ViewPanel.togglePanel` method when your control panel
+             is opened.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
