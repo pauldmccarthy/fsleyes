@@ -124,9 +124,9 @@ be displayed as:
    ~fsleyes.gl.gllinevector.GLLineVector
    ~fsleyes.gl.glrgbvector.GLRGBVector
    ~fsleyes.gl.glmesh.GLMesh
+   ~fsleyes.gl.glmip.GLMIP
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
-   ~fsleyes.gl.glsh.GLMIP
 
 
 These objects are created and destroyed automatically by the canvas classes

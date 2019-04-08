@@ -418,9 +418,12 @@ def embed(parent, callback=None, **kwargs):
     :arg parent:   ``wx`` parent object
     :arg callback: A function which will be called when FSLeyes
                    is ready. Must accept three positional arguments:
-                     - The :class:`.OverlayList`
-                     - The master :class:`.DisplayContext`
-                     - The :class:`.FSLeyesFrame`
+
+                    - The :class:`.OverlayList`
+
+                    - The master :class:`.DisplayContext`
+
+                    - The :class:`.FSLeyesFrame`
 
     All other arguments are passed to :meth:`.FSLeyesFrame.__init__`.
     """
