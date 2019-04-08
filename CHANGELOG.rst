@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.28.1 (Monday April 8th 2019)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in drag-and-drop functionality.
+
+
 0.28.0 (Friday April 5th 2019)
 ------------------------------
 
