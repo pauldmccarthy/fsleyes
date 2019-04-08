@@ -4,6 +4,9 @@ FSLeyes
 .. image:: https://img.shields.io/pypi/v/fsleyes.svg
    :target: https://pypi.python.org/pypi/fsleyes/
 
+.. image:: https://anaconda.org/conda-forge/fsleyes/badges/version.svg
+   :target: https://anaconda.org/conda-forge/fsleyes
+
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1470761.svg
    :target: https://doi.org/10.5281/zenodo.1470761
 
