@@ -168,10 +168,12 @@ def loadOverlays(paths,
 
     :arg onLoad:    Optional function to call when all overlays have been
                     loaded. Must accept two parameters:
-                      - a list of indices, one for each overlay, into the
-                        ``paths`` parameter, indicating, for each overlay, the
-                        path from which it was loaded.
-                      - a list of the overlays that were loaded
+
+                     - a list of indices, one for each overlay, into the
+                       ``paths`` parameter, indicating, for each overlay, the
+                       path from which it was loaded.
+
+                     - a list of the overlays that were loaded
 
     :arg inmem:     If ``True``, all :class:`.Image` overlays are
                     force-loaded into memory. Otherwise, large compressed
@@ -312,7 +314,6 @@ def loadImage(dtype, path, inmem=False):
     image = dtype(path,
                   loadData=False,
                   calcRange=False,
-                  indexed=False,
                   threaded=False)
 
     imgdtype = image.dtype
@@ -337,20 +338,26 @@ def _loadNonComplexImage(dtype, path, nbytes, inmem):
     """
 
     # If the file is compressed (gzipped),
-    # index the file if its compressed size
-    # is greater than the index threshold.
+    # tell the image to use a separate
+    # thread for data range calculation.
+    #
+    # The "idxthres" is so-named because
+    # it previously controlled whether
+    # gzipped images where kept on disk,
+    # and accessed via indexed_gzip. This
+    # is now determined automatically for
+    # us by nibabel.
     rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
     idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
-    indexed    = nbytes > idxthres
+    threaded   = nbytes > idxthres
     image      = dtype(path,
                        loadData=inmem,
                        calcRange=False,
-                       indexed=indexed,
-                       threaded=indexed)
+                       threaded=threaded)
 
     # If the image is bigger than the
     # index threshold, keep it on disk.
-    if inmem or (not indexed):
+    if inmem or (not threaded):
         log.debug('Loading {} into memory'.format(path))
         image.loadData()
     else:
