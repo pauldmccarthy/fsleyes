@@ -11,7 +11,7 @@ and tools. Plugins can be installed from Python libraries (e.g. as hosted on
 `PyPi <https://pypi.org/>`_), or installed directly from a ``.py`` file.
 
 In both cases, FSLeyes uses ``setuptools`` `entry points
-<https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`_
+<https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`__
 to locate the items provided by plugin library/files.
 
 
@@ -99,38 +99,38 @@ as a Python library. Minimally, this requires the following:
  - Write a ``setup.py`` file.
 
  - Give your library a name (the ``name`` argument to the ``setup``
-   function) which begins with ``'fsleyes-plugin-``.
+   function) which begins with ``fsleyes-plugin-``.
 
  - Expose your custom views, controls, and tools as `entry points
-   <https://packaging.python.org/specifications/entry-points/>`_ (the
+   <https://packaging.python.org/specifications/entry-points/>`__ (the
    ``entry_points`` argument to the ``setup`` function).
 
-A minimal ``setup.py`` file for a FSLeyes plugin might look like this:
 
-```
-import setuptools
+A minimal ``setup.py`` file for a FSLeyes plugin might look like this::
 
-setup(
-    # the name must begin with "fsleyes-plugin-"
-    name='fsleyes-plugin-my-cool-plugin',
+    import setuptools
 
-    # Views, controls, and tools must be exposed
-    # as entry points within groups called
-    # "fsleyes_views", "fsleyes_controls" and
-    # "fsleyes_tools" respectively.
-    entry_points={
-        'fsleyes_views' : [
-            'My cool view = myplugin:MyView'
-        ]
-        'fsleyes_controls' : [
-            'My cool control = myplugin:MyControl'
-        ]
-        'fsleyes_tools' : [
-            'My cool tool = myplugin:MyTool'
-        ]
-    }
-)
-```
+    setup(
+        # the name must begin with "fsleyes-plugin-"
+        name='fsleyes-plugin-my-cool-plugin',
+
+        # Views, controls, and tools must be exposed
+        # as entry points within groups called
+        # "fsleyes_views", "fsleyes_controls" and
+        # "fsleyes_tools" respectively.
+        entry_points={
+            'fsleyes_views' : [
+                'My cool view = myplugin:MyView'
+            ]
+            'fsleyes_controls' : [
+                'My cool control = myplugin:MyControl'
+            ]
+            'fsleyes_tools' : [
+                'My cool tool = myplugin:MyTool'
+            ]
+        }
+    )
+
 
 See the `Python Packaging guide
 <https://packaging.python.org/tutorials/packaging-projects/>`_ for more
@@ -160,6 +160,7 @@ The following functions can be used to access plugins:
    listViews
    listControls
    listTools
+
 """
 
 
