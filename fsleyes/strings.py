@@ -1513,7 +1513,7 @@ about = {
 
     FSLeyes is released under Version 2.0 of the Apache Software License. Source code for FSLeyes is available at https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 
-    Copyright 2016-2017 University of Oxford, Oxford, UK.
+    Copyright 2016-2019 University of Oxford, Oxford, UK.
     """).strip(),
 
     # This is a list of all the libraries listed
