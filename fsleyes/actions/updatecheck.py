@@ -11,7 +11,8 @@ if a new version of FSLeyes is available.
 
 import logging
 
-from six.moves.urllib import request
+import urllib.request as request
+import ssl
 
 import wx
 
@@ -90,7 +91,11 @@ class UpdateCheckAction(base.Action):
             log.debug('Checking for FSLeyes updates ({})'.format(
                 _FSLEYES_VERSION_URL))
 
-            f        = request.urlopen(_FSLEYES_VERSION_URL)
+            ctx                = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode    = ssl.CERT_NONE
+
+            f        = request.urlopen(_FSLEYES_VERSION_URL, context=ctx)
             latest   = f.read().decode('utf-8').strip()
             current  = version.__version__
             upToDate = fslversion.compareVersions(latest,
@@ -155,6 +160,8 @@ class UrlDialog(wx.Dialog):
         ok  = wx.Button(    self, label='Ok', id=wx.ID_OK)
         msg = wx.StaticText(self, label=msg)
 
+        self.__ok = ok
+
         if urlMsg is not None:
             urlMsg = wx.StaticText(self, label=urlMsg)
         if url is not None:
@@ -186,3 +193,9 @@ class UrlDialog(wx.Dialog):
         self.SetSizer(sizer)
         self.Layout()
         self.Fit()
+
+
+    @property
+    def ok(self):
+        """Return a reference to the OK button. """
+        return self.__ok
