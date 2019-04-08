@@ -18,6 +18,7 @@ fsl
 fsl.data
 fsl.data.atlases
 fsl.data.constants
+fsl.data.dicom
 fsl.data.dtifit
 fsl.data.featanalysis
 fsl.data.featimage
@@ -29,6 +30,7 @@ fsl.data.imagewrapper
 fsl.data.melodicimage
 fsl.data.mghimage
 fsl.data.mesh
+fsl.data.utils
 fsl.data.vest
 fsl.data.volumelabels
 fsl.utils
@@ -41,6 +43,7 @@ fsl.utils.memoize
 fsl.utils.notifier
 fsl.utils.path
 fsl.utils.platform
+fsl.utils.run
 fsl.utils.settings
 fsl.utils.tempdir
 fsl.utils.transform
@@ -86,6 +89,7 @@ scipy.ndimage.measurements
 scipy.spatial
 scipy.spatial.distance
 wx
+wx.adv
 wx.glcanvas
 wx.html
 wx.lib
