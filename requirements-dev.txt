@@ -1,6 +1,6 @@
-sphinx==1.6.*
-sphinx_rtd_theme==0.*
-mock==2.*
-coverage==4.*
-pytest==3.*
-pytest-cov==2.*
+sphinx>=1.7
+sphinx_rtd_theme
+mock
+coverage
+pytest
+pytest-cov
