@@ -2069,7 +2069,7 @@ class OverlayDropTarget(wx.FileDropTarget):
         if filenames is not None:
             loadoverlay.loadOverlays(
                 filenames,
-                onLoad=self.onLoad,
+                onLoad=self.__onLoad,
                 inmem=self.__displayCtx.loadInMemory)
             return True
         else:
