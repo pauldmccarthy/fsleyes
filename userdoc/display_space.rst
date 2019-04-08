@@ -67,8 +67,8 @@ system.
 FSLeyes allows you to choose between displaying your overlays in terms of one
 :ref:`reference image <display_space_reference_image_space>`, or displaying
 all overlays in :ref:`world space <display_space_world_space>`. This setting
-is called the *display space*, and you can change independently for each open
-view it via the :ref:`view settings panel
+is called the *display space*, and you can change it independently for each
+open view via the :ref:`view settings panel
 <ortho_lightbox_views_view_settings>`.
 
 

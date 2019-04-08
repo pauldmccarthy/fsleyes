@@ -87,7 +87,7 @@ class docbuilder(Command):
         if op.exists(destdir):
             shutil.rmtree(destdir)
 
-        import sphinx
+        import sphinx.cmd.build as sphinx_build
 
         try:
             import unittest.mock as mock
@@ -118,7 +118,7 @@ class docbuilder(Command):
                   [mock.patch('fsleyes_props.PropertyOwner', MockType)]
 
         [p.start() for p in patches]
-        sphinx.build_main(['sphinx-build', docdir, destdir])
+        sphinx_build.main([docdir, destdir])
         [p.stop() for p in patches]
 
 
