@@ -75,7 +75,7 @@ release = version
 # quote in the documentation go here.
 rst_epilog = """
 
-.. |fsl_version|     replace:: 5.0.10
+.. |fsl_version|     replace:: 6.0.1
 
 .. |fsleyes_homepage| replace:: FSLeyes
 .. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes

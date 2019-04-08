@@ -35,6 +35,7 @@ fsl.utils
 fsl.utils.async
 fsl.utils.cache
 fsl.utils.callfsl
+fsl.utils.deprecated
 fsl.utils.idle
 fsl.utils.memoize
 fsl.utils.notifier

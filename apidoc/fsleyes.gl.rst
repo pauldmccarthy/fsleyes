@@ -13,6 +13,7 @@
    fsleyes.gl.gllinevector
    fsleyes.gl.glmask
    fsleyes.gl.glmesh
+   fsleyes.gl.glmip
    fsleyes.gl.globject
    fsleyes.gl.glrgbvector
    fsleyes.gl.glsh
