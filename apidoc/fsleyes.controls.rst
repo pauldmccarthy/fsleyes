@@ -37,6 +37,7 @@
    fsleyes.controls.plottoolbar
    fsleyes.controls.powerspectrumcontrolpanel
    fsleyes.controls.powerspectrumtoolbar
+   fsleyes.controls.scene3dtoolbar
    fsleyes.controls.timeseriescontrolpanel
    fsleyes.controls.timeseriestoolbar
 
