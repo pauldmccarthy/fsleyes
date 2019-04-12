@@ -63,7 +63,7 @@ For developers
 
 For both types of plugin (Python libraries and ``.py`` files),, FSLeyes uses
 ``setuptools`` `entry points
-<https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`_
+<https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`__
 to locate the items provided by plugin library/files.
 
 
@@ -167,7 +167,7 @@ as a Python library. Minimally, this requires the following:
    function) which begins with ``'fsleyes-plugin-``.
 
  - Expose your custom views, controls, and tools as `entry points
-   <https://packaging.python.org/specifications/entry-points/>`_ (the
+   <https://packaging.python.org/specifications/entry-points/>`__ (the
    ``entry_points`` argument to the ``setup`` function).
 
 A minimal ``setup.py`` file for a FSLeyes plugin might look like this::
