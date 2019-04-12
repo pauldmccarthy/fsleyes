@@ -10,7 +10,7 @@
 
 
 import logging
-import collections
+import collections.abc as abc
 
 import numpy     as np
 import OpenGL.GL as gl
@@ -233,7 +233,7 @@ class ColourMapTexture(texture.Texture):
         # and converts said values into a numpy array
         # containing RGB/RGBA colours.  Crop the RGB
         # colours, as global alpha takes precedence
-        if isinstance(cmap, collections.Callable):
+        if isinstance(cmap, abc.Callable):
 
             # Apply gamma scaling to weight
             # towards one end of the colour map
