@@ -14,6 +14,7 @@ import logging
 import numpy as np
 
 import fsl.data.image       as fslimage
+import fsl.data.utils       as dutils
 import fsl.utils.transform  as transform
 import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
@@ -699,6 +700,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
                 if len(vdata.shape) == 1:
                     vdata = vdata.reshape(-1, 1)
+
+                vdata = dutils.makeWriteable(vdata)
 
         except Exception as e:
 

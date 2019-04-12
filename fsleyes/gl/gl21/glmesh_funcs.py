@@ -132,6 +132,8 @@ def draw(self,
 
     shader = self.activeShader
 
+    # for 3D, shader attributes are
+    # configured in updateShaderState
     if self.threedee:
         vertices = None
         normals  = None
