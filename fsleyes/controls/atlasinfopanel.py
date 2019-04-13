@@ -292,6 +292,10 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
             text.SetPage(strings.messages['AtlasInfoPanel.atlasDisabled'])
             return
 
+        if len(self.overlayList) == 0:
+            text.SetPage(strings.messages['AtlasInfoPanel.noOverlays'])
+            return
+
         if overlay is None or \
            overlay.getXFormCode() != constants.NIFTI_XFORM_MNI_152:
             topText = strings.messages['AtlasInfoPanel.notMNISpace']
