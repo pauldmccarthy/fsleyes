@@ -8,12 +8,14 @@
    fsleyes.displaycontext.colourmapopts
    fsleyes.displaycontext.display
    fsleyes.displaycontext.displaycontext
+   fsleyes.displaycontext.freesurferopts
    fsleyes.displaycontext.giftiopts
    fsleyes.displaycontext.group
    fsleyes.displaycontext.labelopts
    fsleyes.displaycontext.lightboxopts
    fsleyes.displaycontext.maskopts
    fsleyes.displaycontext.meshopts
+   fsleyes.displaycontext.mipopts
    fsleyes.displaycontext.orthoopts
    fsleyes.displaycontext.sceneopts
    fsleyes.displaycontext.scene3dopts

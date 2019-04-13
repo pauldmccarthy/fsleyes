@@ -4,6 +4,7 @@
 .. toctree::
    :hidden:
 
+   fsleyes.gl.shaders.filter
    fsleyes.gl.shaders.arbp
    fsleyes.gl.shaders.glsl
 

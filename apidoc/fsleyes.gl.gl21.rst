@@ -7,6 +7,7 @@
    fsleyes.gl.gl21.gllabel_funcs
    fsleyes.gl.gl21.gllinevector_funcs
    fsleyes.gl.gl21.glmesh_funcs
+   fsleyes.gl.gl21.glmip_funcs
    fsleyes.gl.gl21.glrgbvector_funcs
    fsleyes.gl.gl21.glsh_funcs
    fsleyes.gl.gl21.gltensor_funcs

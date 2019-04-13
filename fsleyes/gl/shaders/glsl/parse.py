@@ -101,8 +101,8 @@ IDENTIFIER = pp.Word(pp.alphas + '_', pp.alphanums + '_')
 TYPE       = pp.Word(pp.alphas + '_', pp.alphanums + "_")
 END        = pp.Literal(";").suppress()
 INT        = pp.Word(pp.nums)
-FLOAT      = pp.Regex('[+-]?(((\d+\.\d*)|(\d*\.\d+))'
-                      '([eE][-+]?\d+)?)|(\d*[eE][+-]?\d+)')
+FLOAT      = pp.Regex(r'[+-]?(((\d+\.\d*)|(\d*\.\d+))'
+                      r'([eE][-+]?\d+)?)|(\d*[eE][+-]?\d+)')
 STORAGE    = pp.Regex('|'.join(STORAGE.split(' ')))
 PRECISION  = pp.Regex('|'.join(PRECISION.split(' ')))
 STRUCT     = pp.Literal("struct").suppress()

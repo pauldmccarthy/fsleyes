@@ -1,6 +1,3 @@
-.. _display_space:
-
-
 .. |FSL| replace:: FSL
 .. _FSL: http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/
 
@@ -22,6 +19,8 @@
 .. |nibabel| replace:: ``nibabel``
 .. _nibabel: http://nipy.org/nibabel/
 
+
+.. _display_space:
 
 The display space
 =================

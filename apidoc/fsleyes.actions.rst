@@ -21,6 +21,7 @@
    fsleyes.actions.importdataseries
    fsleyes.actions.loadatlas
    fsleyes.actions.loadcolourmap
+   fsleyes.actions.loaddicom
    fsleyes.actions.loadoverlay
    fsleyes.actions.loadoverlayfromdir
    fsleyes.actions.loadlayout

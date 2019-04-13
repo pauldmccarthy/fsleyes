@@ -129,6 +129,7 @@ messages = TypeDict({
 
     'AtlasInfoPanel.chooseAnAtlas' : 'Choose an atlas!',
     'AtlasInfoPanel.atlasDisabled' : 'Atlases are not available',
+    'AtlasInfoPanel.noOverlays'    : 'Load an image!',
 
     'AtlasInfoPanel.loadAtlasError' : 'An error occurred while trying '
                                       'to load the atlas "{}":\nDetails: {}',

@@ -152,12 +152,10 @@ bool sample_volume(vec3 texCoord, float maxValue, out float value) {
         usemin = false;
     }
 
-    if (usemin) {
-        if (value < maxValue) {
-            return true;
-        }
+    if (usemin && (value < maxValue)) {
+      return true;
     }
-    else if (value > maxValue) {
+    else if ((!usemin) && (value > maxValue)) {
         return true;
     }
 

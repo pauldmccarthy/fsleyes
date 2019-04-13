@@ -16,6 +16,7 @@ import OpenGL.GL                          as gl
 import OpenGL.extensions                  as glexts
 import OpenGL.GL.ARB.texture_float        as arbtf
 
+import fsl.data.utils                     as dutils
 import fsl.utils.notifier                 as notifier
 import fsl.utils.memoize                  as memoize
 import fsl.utils.idle                     as idle
@@ -738,11 +739,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
             # ArrayProxy, the writeable flag
             # will be set to False for some
             # reason.
-            #
-            # TODO: If this turns out to be a problem
-            #       then you will have to bite the
-            #       bullet and copy the data.
-            data.flags.writeable = True
+            data = dutils.makeWriteable(data)
 
             if not bound:
                 self.bindTexture()
