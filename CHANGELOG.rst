@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.28.2 (Saturday 13th April 2019)
----------------------------------
+0.28.2 (Sunday 14th April 2019)
+-------------------------------
 
 
 Changed
@@ -24,6 +24,7 @@ Fixed
 ^^^^^
 
 
+* Fixed an issue with the MIP overlay on macOS.
 * Workarounds for the inability of PyOpenGL to accept read-only ``numpy``
   arrays.
 * Minimum required ``fslpy`` version is now 2.1, so that "compressed"
