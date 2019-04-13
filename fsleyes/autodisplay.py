@@ -65,7 +65,7 @@ def _isStatImage(overlay):
     basename = op.basename(overlay.dataSource)
     basename = fslimage.removeExt(basename)
     tokens   = ['zstat', 'tstat', 'fstat', 'zfstat']
-    pattern  = '({})\d+'.format('|'.join(tokens))
+    pattern  = r'({})\d+'.format('|'.join(tokens))
 
     return re.search(pattern, basename) is not None
 
@@ -77,7 +77,7 @@ def _isPEImage(overlay):
     basename = op.basename(overlay.dataSource)
     basename = fslimage.removeExt(basename)
     tokens   = ['cope', 'pe']
-    pattern  = '^({})\d+'.format('|'.join(tokens))
+    pattern  = r'^({})\d+'.format('|'.join(tokens))
 
     return re.search(pattern, basename) is not None
 
