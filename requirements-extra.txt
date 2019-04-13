@@ -1,5 +1,5 @@
 indexed_gzip>=0.7.0
 xnat>=0.3.3
 wxnatpy>=0.3.0
-trimesh>=2.22.28
+trimesh>=2.37.29
 rtree==0.8.3
