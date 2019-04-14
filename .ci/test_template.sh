@@ -4,16 +4,6 @@ set -e
 
 apt-get install -y bc
 
-# If running on a fork repository, we merge in the
-# upstream/master branch. This is done so that merge
-# requests from fork to the parent repository will
-# have unit tests run on the merged code, something
-# which gitlab CE does not currently do for us.
-if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
-  git fetch upstream;
-  git merge --no-commit --no-ff upstream/master;
-fi;
-
 source /test.venv/bin/activate
 pip install --upgrade pip
 
@@ -31,11 +21,17 @@ pip install $PIPARGS -r requirements-dev.txt
 # our master versions of the core packages
 # first, they might get downgraded during
 # a subsequent installation.
-#
+
+cat requirements.txt | grep -v "fsl" > tmp.txt
+
 # pyopengl-accelerate is not currently
-# compatible with python 3.7. And it's
-# not necessary for testing.
-cat requirements.txt | grep -v "fsl" | grep -iv "pyopengl-accel" > requirements-ci.txt
+# compatible with python 3.7.
+if [[ `python -V` == "Python 3.7"* ]]; then
+  cat tmp.txt | grep -iv "pyopengl-accel" > requirements-ci.txt
+else
+  mv tmp.txt requirements-ci.txt
+fi
+
 pip install $PIPARGS -r requirements-ci.txt
 pip install $PIPARGS -r requirements-extra.txt
 pip install $PIPARGS -r requirements-notebook.txt
