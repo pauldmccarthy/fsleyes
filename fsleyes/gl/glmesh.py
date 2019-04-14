@@ -14,6 +14,7 @@ import numpy.linalg as npla
 import OpenGL.GL    as gl
 
 from . import                 globject
+import fsl.data.utils      as dutils
 import fsl.utils.transform as transform
 import fsleyes.gl          as fslgl
 import fsleyes.gl.routines as glroutines
@@ -356,6 +357,9 @@ class GLMesh(globject.GLObject):
 
         self.vertices = np.asarray(vertices,          dtype=np.float32)
         self.indices  = np.asarray(indices.flatten(), dtype=np.uint32)
+
+        self.vertices = dutils.makeWriteable(self.vertices)
+        self.indices  = dutils.makeWriteable(self.indices)
 
         if self.threedee:
             self.normals = np.array(normals, dtype=np.float32)
