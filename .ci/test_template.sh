@@ -4,16 +4,6 @@ set -e
 
 apt-get install -y bc
 
-# If running on a fork repository, we merge in the
-# upstream/master branch. This is done so that merge
-# requests from fork to the parent repository will
-# have unit tests run on the merged code, something
-# which gitlab CE does not currently do for us.
-if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
-  git fetch upstream;
-  git merge --no-commit --no-ff upstream/master;
-fi;
-
 source /test.venv/bin/activate
 pip install --upgrade pip
 
