@@ -71,8 +71,8 @@ def updateShaderState(self, **kwargs):
         dshader.set('lighting', copts.light)
         dshader.set('lightPos', kwargs['lightPos'])
 
-        dshader.setAtt('vertex',     self.vertices)
-        dshader.setAtt('normal',     self.normals)
+        dshader.setAtt('vertex', self.vertices)
+        dshader.setAtt('normal', self.normals)
 
         if vdata is not None:
 
