@@ -31,11 +31,17 @@ pip install $PIPARGS -r requirements-dev.txt
 # our master versions of the core packages
 # first, they might get downgraded during
 # a subsequent installation.
-#
+
+cat requirements.txt | grep -v "fsl" > tmp.txt
+
 # pyopengl-accelerate is not currently
-# compatible with python 3.7. And it's
-# not necessary for testing.
-cat requirements.txt | grep -v "fsl" | grep -iv "pyopengl-accel" > requirements-ci.txt
+# compatible with python 3.7.
+if [[ `python -V` == "Python 3.7"* ]]; then
+  cat tmp.txt | grep -iv "pyopengl-accel" > requirements-ci.txt
+else
+  mv tmp.txt requirements-ci.txt
+fi
+
 pip install $PIPARGS -r requirements-ci.txt
 pip install $PIPARGS -r requirements-extra.txt
 pip install $PIPARGS -r requirements-notebook.txt
