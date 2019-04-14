@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.28.3 (Sunday 14th April 2019)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* More PyOpenGL / read-only ``numpy`` array workarounds.
+
+
 0.28.2 (Sunday 14th April 2019)
 -------------------------------
 
