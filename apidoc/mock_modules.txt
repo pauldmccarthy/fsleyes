@@ -82,6 +82,7 @@ numpy
 numpy.fft
 numpy.linalg
 pyparsing
+PIL
 scipy
 scipy.interpolate
 scipy.ndimage
