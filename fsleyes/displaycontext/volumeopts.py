@@ -680,7 +680,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             daxes = list(range(3))
 
         shape = self.overlay.shape[:3]
-        ornts = self.overlay.axisMapping(self.getTransform('voxel', 'display'))
+        ornts = self.overlay.axisMapping(self.getTransform('display', 'voxel'))
 
         # We start by truncating the precision
         # of the coordinates, so that values

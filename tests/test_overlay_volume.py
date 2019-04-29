@@ -17,6 +17,7 @@ except ImportError:
 
 import numpy as np
 
+import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 
 from . import run_cli_tests, translate, zero_centre
@@ -138,6 +139,7 @@ def test_overlay_volume():
         'translate'   : translate,
         'gen_cmap'    : gen_cmap,
         'custom_cmap' : custom_cmap,
+        'swapdim'     : swapdim,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
 
@@ -150,6 +152,12 @@ def test_overlay_volume_silly_range():
                       extras={'silly_range' : silly_range})
 
 
+def test_overlay_volume_swapdim():
+    run_cli_tests('test_overlay_volume_swapdim',
+                  "3d.nii.gz {{swapdim('3d.nii.gz')}} -a 50 -cm hot",
+                  extras={'swapdim' : swapdim})
+
+
 def silly_range():
 
     data = np.arange(1000, dtype=np.float32).reshape((10, 10, 10))
@@ -159,3 +167,28 @@ def silly_range():
 
     fslimage.Image(data).save('silly_range.nii.gz')
     return 'silly_range.nii.gz'
+
+
+
+
+
+def swapdim(infile):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_swapdim.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+
+    data     = img.data
+    affine   = img.voxToWorldMat
+
+    data = data.transpose((2, 0, 1))
+    rot  = transform.rotMatToAffine(transform.concat(
+        transform.axisAnglesToRotMat(np.pi / 2, 0, 0),
+        transform.axisAnglesToRotMat(0, 0, 3 * np.pi / 2)))
+    affine = transform.concat(
+        affine,
+        transform.scaleOffsetXform((1, -1, -1), (0, 0, 0)),
+        rot)
+
+    fslimage.Image(data, xform=affine, header=img.header).save(outfile)
+
+    return outfile
