@@ -413,7 +413,9 @@ OPTIONS = td.TypeDict({
                        'displaySpace',
                        'neuroOrientation',
                        'standard',
+                       'standard_brain',
                        'standard1mm',
+                       'standard1mm_brain',
                        'initialDisplayRange',
                        'bigmem',
                        'bumMode',
@@ -709,29 +711,31 @@ def groupEpilog(target):
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'                : ('h',      'help',                False),
-    'Main.fullhelp'            : ('fh',     'fullhelp',            False),
-    'Main.verbose'             : ('v',      'verbose',             False),
-    'Main.version'             : ('V',      'version',             False),
-    'Main.skipfslcheck'        : ('S',      'skipfslcheck',        False),
-    'Main.updatecheck'         : ('U',      'updatecheck',         False),
-    'Main.noisy'               : ('n',      'noisy',               False),
-    'Main.glversion'           : ('gl',     'glversion',           True),
-    'Main.scene'               : ('s',      'scene',               True),
-    'Main.voxelLoc'            : ('vl',     'voxelLoc',            True),
-    'Main.worldLoc'            : ('wl',     'worldLoc',            True),
-    'Main.selectedOverlay'     : ('o',      'selectedOverlay',     True),
-    'Main.autoDisplay'         : ('ad',     'autoDisplay',         False),
-    'Main.displaySpace'        : ('ds',     'displaySpace',        True),
-    'Main.neuroOrientation'    : ('no',     'neuroOrientation',    False),
-    'Main.standard'            : ('std',    'standard',            False),
-    'Main.standard1mm'         : ('std1mm', 'standard1mm',         False),
-    'Main.initialDisplayRange' : ('idr',    'initialDisplayRange', True),
-    'Main.bigmem'              : ('b',      'bigmem',              False),
-    'Main.bumMode'             : ('bums',   'bumMode',             False),
-    'Main.fontSize'            : ('fs',     'fontSize',            True),
-    'Main.notebook'            : ('nb',     'notebook',            False),
-    'Main.notebookPort'        : ('nbp',    'notebookPort',        True),
+    'Main.help'                : ('h',       'help',                False),
+    'Main.fullhelp'            : ('fh',      'fullhelp',            False),
+    'Main.verbose'             : ('v',       'verbose',             False),
+    'Main.version'             : ('V',       'version',             False),
+    'Main.skipfslcheck'        : ('S',       'skipfslcheck',        False),
+    'Main.updatecheck'         : ('U',       'updatecheck',         False),
+    'Main.noisy'               : ('n',       'noisy',               False),
+    'Main.glversion'           : ('gl',      'glversion',           True),
+    'Main.scene'               : ('s',       'scene',               True),
+    'Main.voxelLoc'            : ('vl',      'voxelLoc',            True),
+    'Main.worldLoc'            : ('wl',      'worldLoc',            True),
+    'Main.selectedOverlay'     : ('o',       'selectedOverlay',     True),
+    'Main.autoDisplay'         : ('ad',      'autoDisplay',         False),
+    'Main.displaySpace'        : ('ds',      'displaySpace',        True),
+    'Main.neuroOrientation'    : ('no',      'neuroOrientation',    False),
+    'Main.standard'            : ('std',     'standard',            False),
+    'Main.standard_brain'      : ('stdb',    'standard_brain',      False),
+    'Main.standard1mm'         : ('std1mm',  'standard1mm',         False),
+    'Main.standard1mm_brain'   : ('std1mmb', 'standard1mm_brain',   False),
+    'Main.initialDisplayRange' : ('idr',     'initialDisplayRange', True),
+    'Main.bigmem'              : ('b',       'bigmem',              False),
+    'Main.bumMode'             : ('bums',    'bumMode',             False),
+    'Main.fontSize'            : ('fs',      'fontSize',            True),
+    'Main.notebook'            : ('nb',      'notebook',            False),
+    'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -927,10 +931,19 @@ HELP = td.TypeDict({
                               'can be "world", or a NIFTI image.',
     'Main.neuroOrientation' : 'Display images in neurological orientation '
                               '(default: radiological)',
-    'Main.standard'         : 'Add the MNI152 2mm standard image as an '
-                              'underlay (only if $FSLDIR is set).',
-    'Main.standard1mm'      : 'Add the MNI152 1mm standard image as an '
-                              'underlay (only if $FSLDIR is set).',
+
+    'Main.standard' :
+    'Add the MNI152 2mm standard image as an underlay (only if $FSLDIR is '
+    'set).',
+    'Main.standard_brain' :
+    'Add the MNI152 brain-extracted 2mm standard image as an underlay (only '
+    'if $FSLDIR is set).',
+    'Main.standard1mm' :
+    'Add the MNI152 1mm standard image as an underlay (only if $FSLDIR is '
+    'set).',
+    'Main.standard1mm_brain' :
+    'Add the MNI152 brain-extracted 1mm standard image as an underlay (only '
+    'if $FSLDIR is set).',
 
     'Main.initialDisplayRange' :
     'Initial display range to use for volume overlays, expressed as '
@@ -1612,9 +1625,15 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['standard'],
                             action='store_true',
                             help=mainHelp['standard'])
+    mainParser.add_argument(*mainArgs['standard_brain'],
+                            action='store_true',
+                            help=mainHelp['standard_brain'])
     mainParser.add_argument(*mainArgs['standard1mm'],
                             action='store_true',
                             help=mainHelp['standard1mm'])
+    mainParser.add_argument(*mainArgs['standard1mm_brain'],
+                            action='store_true',
+                            help=mainHelp['standard1mm_brain'])
 
     mainParser.add_argument(*mainArgs['initialDisplayRange'],
                             metavar=('LO', 'HI'),
@@ -2420,25 +2439,24 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         # as they will affect the display
         # space/location stuff below.
         fsldir = fslplatform.fsldir
-        if any((args.standard, args.standard1mm)) and fsldir is None:
-            log.warning('$FSLDIR not set: -std/-std1mm '
+        if any((args.standard,
+                args.standard_brain,
+                args.standard1mm,
+                args.standard1mm_brain)) and fsldir is None:
+            log.warning('$FSLDIR not set: -std/-stdb/-std1mm/-std1mmb '
                         'arguments will be ignored')
 
-        if args.standard and fslplatform.fsldir is not None:
-            filename = op.join(fslplatform.fsldir,
-                               'data',
-                               'standard',
-                               'MNI152_T1_2mm')
-            std = fslimage.Image(filename)
-            overlayList.insert(0, std)
+        if fslplatform.fsldir is not None:
+            stds = []
+            if args.standard:          stds.append('MNI152_T1_2mm')
+            if args.standard_brain:    stds.append('MNI152_T1_2mm_brain')
+            if args.standard1mm:       stds.append('MNI152_T1_1mm')
+            if args.standard1mm_brain: stds.append('MNI152_T1_1mm_brain')
 
-        if args.standard1mm and fslplatform.fsldir is not None:
-            filename = op.join(fslplatform.fsldir,
-                               'data',
-                               'standard',
-                               'MNI152_T1_1mm')
-            std = fslimage.Image(filename)
-            overlayList.insert(0, std)
+            for std in stds:
+                std = op.join(fslplatform.fsldir, 'data', 'standard', std)
+                std = fslimage.Image(std)
+                overlayList.insert(0, std)
 
         # First apply all command line options
         # related to the display context...
