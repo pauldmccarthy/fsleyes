@@ -15,7 +15,6 @@ import logging
 import                   wx
 import wx.lib.agw.aui as aui
 
-import fsl.data.image                as fslimage
 import fsl.utils.deprecated          as deprecated
 import fsleyes_props                 as props
 
@@ -23,7 +22,6 @@ import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.profiles              as profiles
-import fsleyes.displaycontext        as fsldisplay
 import fsleyes.strings               as strings
 import fsleyes.actions               as actions
 
@@ -137,16 +135,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         lName = 'ViewPanel_{}'.format(self.name)
 
         self.addListener('profile', lName, self.__profileChanged)
-
-        overlayList.addListener('overlays',
-                                lName,
-                                self.__selectedOverlayChanged)
-        displayCtx .addListener('selectedOverlay',
-                                lName,
-                                self.__selectedOverlayChanged)
-
-        self.__selectedOverlay = None
-        self.__selectedOverlayChanged()
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -502,84 +490,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         :class:`.FSLeyesFrame` *Tools* menu.
         """
         return []
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :class:`.OverlayList` or
-        :attr:`.DisplayContext.selectedOverlay` changes.
-
-        This method is slightly hard-coded and hacky. For the time being,
-        profiles called ``edit`` profiles are only supported for ``volume``
-        overlay types. This method checks the type of the selected overlay,
-        and disables the ``edit`` profile option (if it is an option), so the
-        user can only choose an ``edit`` profile on ``volume`` overlay types.
-        """
-
-        lName   = 'ViewPanel_{}'.format(self.name)
-        overlay = self.displayCtx.getSelectedOverlay()
-
-        if self.__selectedOverlay not in (None, overlay):
-            try:
-                d = self.displayCtx.getDisplay(self.__selectedOverlay)
-
-                d.removeListener('overlayType', lName)
-
-            # The overlay has been removed
-            except fsldisplay.InvalidOverlayError:
-                pass
-
-        self.__selectedOverlay = overlay
-
-        if overlay is None:
-            return
-
-        # If the overlay is of a compatible type,
-        # register for overlay type changes, as
-        # these will affect the profile property
-        if isinstance(overlay, fslimage.Image):
-            display = self.displayCtx.getDisplay(overlay)
-            display.addListener('overlayType',
-                                lName,
-                                self.__configureProfile,
-                                overwrite=True)
-
-        self.__configureProfile()
-
-
-    def __configureProfile(self, *a):
-        """Called by the :meth:`__selectedOverlayChanged` method. Implements
-        the hacky logic described in the documentation for that method.
-        """
-
-        overlay     = self.__selectedOverlay
-        display     = self.displayCtx.getDisplay(overlay)
-        profileProp = self.getProp('profile')
-
-        # edit profile is not an option -
-        # nothing to be done
-        if 'edit' not in profileProp.getChoices(self):
-            return
-
-        if not isinstance(overlay, fslimage.Image) or \
-           display.overlayType not in ('volume', 'label', 'mask'):
-
-            # change profile if needed,
-            if self.profile == 'edit':
-                self.profile = 'view'
-
-            # and disable edit profile
-            log.debug('{}: disabling edit profile for '
-                      'selected overlay {}'.format(
-                          type(self).__name__, overlay))
-            profileProp.disableChoice('edit', self)
-
-        # Otherwise make sure edit
-        # is enabled for volume images
-        else:
-            log.debug('{}: Enabling edit profile for '
-                      'selected overlay {}'.format(
-                          type(self).__name__, overlay))
-            profileProp.enableChoice('edit', self)
 
 
     def __profileChanged(self, *a):
