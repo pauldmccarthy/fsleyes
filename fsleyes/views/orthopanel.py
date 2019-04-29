@@ -722,6 +722,11 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
 
+        # Kill edit mode if a non-
+        # image has been selected
+        if (self.profile == 'edit') and (not isImage):
+            self.profile = 'view'
+
 
     def __onResize(self, ev):
         """Called whenever the panel is resized. Makes sure that the
