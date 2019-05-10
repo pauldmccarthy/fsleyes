@@ -439,7 +439,7 @@ class ResampleDialog(wx.Dialog):
 
 
     @property
-    def refChoice(self):
+    def refCtrl(self):
         """Returns a reference to the reference image dropdown. """
         return self.__refChoice
 
@@ -478,6 +478,12 @@ class ResampleDialog(wx.Dialog):
     def pixZCtrl(self):
         """Returns a reference to the Z pixdim spin control. """
         return self.__pixz
+
+
+    @property
+    def originCtrl(self):
+        """Returns a reference to the origin dropdown box. """
+        return self.__origin
 
 
     @property
