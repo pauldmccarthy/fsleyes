@@ -809,6 +809,8 @@ misc = TypeDict({
     'PlotControlPanel.xlim'   : 'X axis data limits.',
     'PlotControlPanel.ylim'   : 'Y axis data limits.',
 
+    'ResampleDialog.reference' :
+    'Resample the image to the same dimensions as this reference.',
     'ResampleDialog.interpolation' :
     'The interpolation approach to use when resampling.',
     'ResampleDialog.dtype' :

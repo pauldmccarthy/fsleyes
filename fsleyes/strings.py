@@ -853,6 +853,7 @@ labels = TypeDict({
     'ResampleDialog.sint'          : 'Signed int',
     'ResampleDialog.float'         : 'Float',
     'ResampleDialog.double'        : 'Double',
+    'ResampleDialog.reference'     : 'Resample to reference',
     'ResampleDialog.origVoxels'    : 'Old shape',
     'ResampleDialog.origPixdims'   : 'Old pixdims',
     'ResampleDialog.newVoxels'     : 'New shape',

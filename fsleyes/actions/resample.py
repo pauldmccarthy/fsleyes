@@ -8,6 +8,7 @@
 which allows the user to resample an image to a different resolution.
 """
 
+import collections
 
 import          wx
 import numpy as np
@@ -118,13 +119,15 @@ class ResampleDialog(wx.Dialog):
     options for interpolation, data type, and smoothing.
     """
 
-    def __init__(self, parent, title, shape, pixdim):
+    def __init__(self, parent, title, shape, pixdim, refs):
         """Create a ``ResampleDialog``.
 
         :arg parent: ``wx`` parent object
         :arg title:  Dialog title
         :arg shape:  The original image shape (a tuple of integers)
         :arg pixdim: The original image pixdims (a tuple of floats)
+        :arg refs:   A sequence of :class:`.Image` objects which can
+                     be selected as references.
         """
 
         wx.Dialog.__init__(self,
@@ -132,12 +135,14 @@ class ResampleDialog(wx.Dialog):
                            title=title,
                            style=wx.DEFAULT_DIALOG_STYLE)
 
-        self.__oldShape  = tuple(shape)
-        self.__oldPixdim = tuple(pixdim)
+        self.__oldShape   = tuple(shape)
+        self.__oldPixdim  = tuple(pixdim)
+        self.__references = collections.OrderedDict(
+            [('None', None)] + [(r.name, r) for r in refs])
 
-        self.__ok     = wx.Button(self, id=wx.ID_OK)
-        self.__reset  = wx.Button(self)
-        self.__cancel = wx.Button(self, id=wx.ID_CANCEL)
+        self.__ok        = wx.Button(self, id=wx.ID_OK)
+        self.__reset     = wx.Button(self)
+        self.__cancel    = wx.Button(self, id=wx.ID_CANCEL)
 
         self.__ok    .SetLabel(strings.labels[self, 'ok'])
         self.__reset .SetLabel(strings.labels[self, 'reset'])
@@ -155,11 +160,13 @@ class ResampleDialog(wx.Dialog):
         strvox = ['{:d}'   .format(p) for p in shape]
         strpix = ['{:0.2f}'.format(p) for p in pixdim]
 
+        self.__refLabel     = wx.StaticText(self)
         self.__origVoxLabel = wx.StaticText(self)
         self.__origPixLabel = wx.StaticText(self)
         self.__voxLabel     = wx.StaticText(self)
         self.__pixLabel     = wx.StaticText(self)
 
+        self.__refLabel    .SetLabel(strings.labels[self, 'reference'])
         self.__origVoxLabel.SetLabel(strings.labels[self, 'origVoxels'])
         self.__origPixLabel.SetLabel(strings.labels[self, 'origPixdims'])
         self.__voxLabel    .SetLabel(strings.labels[self, 'newVoxels'])
@@ -171,6 +178,10 @@ class ResampleDialog(wx.Dialog):
         self.__origPixx = wx.StaticText(self, label=strpix[0])
         self.__origPixy = wx.StaticText(self, label=strpix[1])
         self.__origPixz = wx.StaticText(self, label=strpix[2])
+
+        self.__refChoice = wx.Choice(self,
+                                     choices=list(self.__references.keys()))
+        self.__refChoice.Enable(len(self.__references) > 1)
 
         self.__voxx = floatspin.FloatSpinCtrl(self, value=shape[ 0], **voxargs)
         self.__voxy = floatspin.FloatSpinCtrl(self, value=shape[ 1], **voxargs)
@@ -214,6 +225,8 @@ class ResampleDialog(wx.Dialog):
         self.__smoothLabel.SetLabel(strings.labels[self, 'smoothing'])
         self.__allVolLabel.SetLabel(strings.labels[self, 'allVolumes'])
 
+        self.__refChoice.SetToolTip(
+            wx.ToolTip(tooltips.misc[self, 'reference']))
         self.__interp     .SetToolTip(
             wx.ToolTip(tooltips.misc[self, 'interpolation']))
         self.__interpLabel.SetToolTip(
@@ -231,6 +244,7 @@ class ResampleDialog(wx.Dialog):
         self.__allVolLabel.SetToolTip(
             wx.ToolTip(tooltips.misc[self, 'allVolumes']))
 
+        self.__refSizer    = wx.BoxSizer(wx.HORIZONTAL)
         self.__labelSizer  = wx.BoxSizer(wx.HORIZONTAL)
         self.__xrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
         self.__yrowSizer   = wx.BoxSizer(wx.HORIZONTAL)
@@ -241,6 +255,12 @@ class ResampleDialog(wx.Dialog):
         self.__allVolSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__btnSizer    = wx.BoxSizer(wx.HORIZONTAL)
         self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
+
+        self.__refSizer.Add((10, 10),         flag=wx.EXPAND)
+        self.__refSizer.Add(self.__refLabel,  flag=wx.EXPAND, proportion=1)
+        self.__refSizer.Add((10, 10),         flag=wx.EXPAND)
+        self.__refSizer.Add(self.__refChoice, flag=wx.EXPAND, proportion=1)
+        self.__refSizer.Add((10, 10),         flag=wx.EXPAND)
 
         self.__labelSizer.Add((10, 10),            flag=wx.EXPAND)
         self.__labelSizer.Add(self.__origVoxLabel, flag=wx.EXPAND,
@@ -323,6 +343,8 @@ class ResampleDialog(wx.Dialog):
         self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
 
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
+        self.__mainSizer.Add(self.__refSizer,    flag=wx.EXPAND)
+        self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__labelSizer,  flag=wx.EXPAND)
         self.__mainSizer.Add((10, 10),           flag=wx.EXPAND)
         self.__mainSizer.Add(self.__xrowSizer,   flag=wx.EXPAND)
@@ -342,15 +364,16 @@ class ResampleDialog(wx.Dialog):
 
         self.SetSizer(self.__mainSizer)
 
-        self.__ok    .Bind(wx.EVT_BUTTON,           self.__onOk)
-        self.__reset .Bind(wx.EVT_BUTTON,           self.__onReset)
-        self.__cancel.Bind(wx.EVT_BUTTON,           self.__onCancel)
-        self.__voxx  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
-        self.__voxy  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
-        self.__voxz  .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
-        self.__pixx  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
-        self.__pixy  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
-        self.__pixz  .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
+        self.__ok       .Bind(wx.EVT_BUTTON,           self.__onOk)
+        self.__reset    .Bind(wx.EVT_BUTTON,           self.__onRef)
+        self.__cancel   .Bind(wx.EVT_BUTTON,           self.__onCancel)
+        self.__refChoice.Bind(wx.EVT_CHOICE,           self.__onRef)
+        self.__voxx     .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
+        self.__voxy     .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
+        self.__voxz     .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
+        self.__pixx     .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
+        self.__pixy     .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
+        self.__pixz     .Bind(floatspin.EVT_FLOATSPIN, self.__onPixdim)
 
         self.__ok.SetDefault()
 
@@ -375,6 +398,12 @@ class ResampleDialog(wx.Dialog):
     def cancelButton(self):
         """Returns a reference to the cancel button. """
         return self.__cancel
+
+
+    @property
+    def refChoice(self):
+        """Returns a reference to the reference image dropdown. """
+        return self.__refChoice
 
 
     @property
@@ -435,6 +464,23 @@ class ResampleDialog(wx.Dialog):
     def allVolumesCtrl(self):
         """Returns a reference to the all volumes checkbox. """
         return self.__allVolumes
+
+
+    def __onRef(self, ev):
+        """Called when the user changes the reference image. Enables/
+        disables the voxel/pixdim controls as needed.
+        """
+        ref   = self.__refChoice.GetSelection()
+        ref   = self.__refChoice.GetString(ref)
+        ref   = self.__references[ref]
+        noref = ref is None
+
+        self.__voxx.Enable(noref)
+        self.__voxy.Enable(noref)
+        self.__voxz.Enable(noref)
+        self.__pixx.Enable(noref)
+        self.__pixy.Enable(noref)
+        self.__pixz.Enable(noref)
 
 
     def __onVoxel(self, ev):
@@ -530,6 +576,13 @@ class ResampleDialog(wx.Dialog):
         return (self.__pixx.GetValue(),
                 self.__pixy.GetValue(),
                 self.__pixz.GetValue())
+
+
+    def GetReference(self):
+        """Return the current reference image value. """
+        ref = self.__refChoice.GetSelection()
+        ref = self.__refChoice.GetString(ref)
+        return self.__references[ref]
 
 
     def __derivePixdims(self):
