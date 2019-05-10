@@ -201,8 +201,10 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg.Destroy()
 
     # set options
-    i1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-    i2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+    i1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
+                        name='i1')
+    i2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
+                        name='i2')
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10, 10),
