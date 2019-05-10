@@ -14,6 +14,7 @@ import numpy as np
 
 import wx
 
+import fsl.utils.transform as transform
 import fsl.data.image as fslimage
 
 import fsleyes.actions.resample as resample
@@ -39,6 +40,8 @@ def _test_resample(panel, overlayList, displayCtx):
         GetInterpolation_return = None
         GetDataType_return      = None
         GetSmoothing_return     = None
+        GetOrigin_return        = 'centre'
+        GetReference_return     = None
         GetAllVolumes_return    = None
         def __init__(self, *args, **kwargs):
             pass
@@ -47,8 +50,12 @@ def _test_resample(panel, overlayList, displayCtx):
 
         def GetVoxels(self):
             return ResampleDialog.GetVoxels_return
+        def GetReference(self):
+            return ResampleDialog.GetReference_return
         def GetInterpolation(self):
             return ResampleDialog.GetInterpolation_return
+        def GetOrigin(self):
+            return ResampleDialog.GetOrigin_return
         def GetDataType(self):
             return ResampleDialog.GetDataType_return
         def GetSmoothing(self):
@@ -65,7 +72,6 @@ def _test_resample(panel, overlayList, displayCtx):
 
         img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
         overlayList.append(img)
-
         ResampleDialog.ShowModal_return = wx.ID_CANCEL
         act()
         assert len(overlayList) == 1
@@ -104,6 +110,27 @@ def _test_resample(panel, overlayList, displayCtx):
         assert tuple(resampled.pixdim) == (2, 2, 2)
         assert resampled.dtype         == np.int32
 
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        ref = fslimage.Image(np.random.randint(1, 255, (40, 40, 40)))
+        overlayList.clear()
+        overlayList[:] = [img, ref]
+        ResampleDialog.GetReference_return = ref
+        act()
+        resampled = overlayList[-1]
+        assert resampled.sameSpace(ref)
+
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        overlayList[:] = [img]
+        ResampleDialog.GetReference_return = None
+        ResampleDialog.GetOrigin_return = 'corner'
+        act()
+        res = overlayList[-1]
+        assert np.all(np.isclose(
+            np.array(transform.axisBounds(img.shape, img.voxToWorldMat)),
+            np.array(transform.axisBounds(res.shape, res.voxToWorldMat))))
+
+
+
 
 def test_ResampleDialog():
     run_with_fsleyes(_test_ResampleDialog)
@@ -116,7 +143,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [])
     wx.CallLater(500, simclick, sim, dlg.okButton)
     assert dlg.ShowModal() == wx.ID_OK
 
@@ -124,7 +151,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [])
     wx.CallLater(500, simclick, sim, dlg.cancelButton)
     assert dlg.ShowModal() == wx.ID_CANCEL
 
@@ -132,7 +159,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [])
     wx.CallLater(300,  simtext,  sim, dlg.voxXCtrl.textCtrl, '20')
     wx.CallLater(400,  simtext,  sim, dlg.voxYCtrl.textCtrl, '40')
     wx.CallLater(500,  simtext,  sim, dlg.voxZCtrl.textCtrl, '80')
@@ -147,7 +174,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [])
 
     wx.CallLater(300,  simtext,  sim, dlg.pixXCtrl.textCtrl, '0.5')
     wx.CallLater(400,  simtext,  sim, dlg.pixYCtrl.textCtrl, '0.25')
@@ -162,7 +189,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [])
     wx.CallLater(300,  simtext,  sim, dlg.pixXCtrl.textCtrl, '0.5')
     wx.CallLater(400,  simtext,  sim, dlg.pixYCtrl.textCtrl, '0.25')
     wx.CallLater(500,  simtext,  sim, dlg.pixZCtrl.textCtrl, '0.125')
@@ -174,13 +201,19 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg.Destroy()
 
     # set options
+    i1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
+                        name='i1')
+    i2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
+                        name='i2')
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10, 10),
-                                  (1, 1, 1))
+                                  (1, 1, 1), [i1, i2])
 
     dlg.interpCtrl.SetSelection(1)
     dlg.dtypeCtrl .SetSelection(1)
+    dlg.originCtrl.SetSelection(1)
+    dlg.refCtrl   .SetSelection(2)
 
     origSmooth  = dlg.GetSmoothing()
     origAllVols = dlg.GetAllVolumes()
@@ -192,5 +225,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     assert dlg.GetSmoothing()     == (not origSmooth)
     assert dlg.GetAllVolumes()    == (not origAllVols)
     assert dlg.GetInterpolation() == 'nearest'
+    assert dlg.GetOrigin()        == 'corner'
     assert dlg.GetDataType()      == np.uint8
+    assert dlg.GetReference()     == i2
     dlg.Destroy()
