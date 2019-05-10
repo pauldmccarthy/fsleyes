@@ -75,19 +75,28 @@ class ResampleAction(base.Action):
         ovl  = self.__displayCtx.getSelectedOverlay()
         opts = self.__displayCtx.getOpts(ovl)
 
-        dlg = ResampleDialog(
+        def refCandidate(o):
+            return (isinstance(o, fslimage.Nifti) and
+                    (o is not ovl)                and
+                    not o.sameSpace(ovl))
+
+        refs = [o for o in self.__overlayList if refCandidate(o)]
+        dlg  = ResampleDialog(
             self.__frame,
             title=ovl.name,
             shape=ovl.shape,
-            pixdim=ovl.pixdim)
+            pixdim=ovl.pixdim,
+            refs=refs)
 
         if dlg.ShowModal() != wx.ID_OK:
             return
 
         newShape  = dlg.GetVoxels()
         interp    = dlg.GetInterpolation()
+        origin    = dlg.GetOrigin()
         dtype     = dlg.GetDataType()
         smoothing = dlg.GetSmoothing()
+        ref       = dlg.GetReference()
         allvols   = dlg.GetAllVolumes()
         interp    = {'nearest' : 0, 'linear' : 1, 'cubic' : 3}[interp]
         name      = '{}_resampled'.format(ovl.name)
@@ -98,16 +107,21 @@ class ResampleAction(base.Action):
         if allvols and ovl.ndim > 3:
             newShape = list(newShape) + list(ovl.shape[3:])
 
-        resampled, xform = resample.resample(ovl,
-                                             newShape,
-                                             sliceobj=slc,
-                                             dtype=dtype,
-                                             order=interp,
-                                             smooth=smoothing)
-        resampled        = fslimage.Image(resampled,
-                                          xform=xform,
-                                          header=ovl.header,
-                                          name=name)
+        kwargs = dict(sliceobj=slc,
+                      dtype=dtype,
+                      order=interp,
+                      origin=origin,
+                      smooth=smoothing)
+
+        if ref is not None:
+            resampled, xform = resample.resampleToReference(ovl, ref, **kwargs)
+        else:
+            resampled, xform = resample.resample(ovl, newShape, **kwargs)
+
+        resampled = fslimage.Image(resampled,
+                                   xform=xform,
+                                   header=ovl.header,
+                                   name=name)
 
         self.__overlayList.append(resampled)
 
