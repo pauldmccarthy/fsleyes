@@ -403,7 +403,7 @@ class ResampleDialog(wx.Dialog):
         self.SetSizer(self.__mainSizer)
 
         self.__ok       .Bind(wx.EVT_BUTTON,           self.__onOk)
-        self.__reset    .Bind(wx.EVT_BUTTON,           self.__onRef)
+        self.__reset    .Bind(wx.EVT_BUTTON,           self.__onReset)
         self.__cancel   .Bind(wx.EVT_BUTTON,           self.__onCancel)
         self.__refChoice.Bind(wx.EVT_CHOICE,           self.__onRef)
         self.__voxx     .Bind(floatspin.EVT_FLOATSPIN, self.__onVoxel)
