@@ -19,7 +19,7 @@ Added
 
 * The *Tools* |right_arrow| *Resample image* option now allows an
   image to be resampled to the space of another image.
-* New `-stdb` and `-std1mmb`  command-line options for loading
+* New ``-stdb`` and ``-std1mmb``  command-line options for loading
   brain-extracted versions of the MNI152 templtes.
 
 
@@ -31,7 +31,7 @@ Fixed
   being transformed into the display coordinate system in a slightly
   inaccurate manner.
 * FIxed an issue with orthographic edit mode being incorrectly disabled when
-  the selected overlay is changed..
+  the selected overlay is changed.
 
 
 0.28.3 (Sunday 14th April 2019)
