@@ -14,6 +14,7 @@ import numpy as np
 
 import fsleyes_widgets.floatspin as floatspin
 import fsl.data.image            as fslimage
+import fsl.utils.image.resample  as resample
 import fsleyes.strings           as strings
 import fsleyes.tooltips          as tooltips
 from . import                       base
@@ -96,11 +97,12 @@ class ResampleAction(base.Action):
         if allvols and ovl.ndim > 3:
             newShape = list(newShape) + list(ovl.shape[3:])
 
-        resampled, xform = ovl.resample(newShape,
-                                        sliceobj=slc,
-                                        dtype=dtype,
-                                        order=interp,
-                                        smooth=smoothing)
+        resampled, xform = resample.resample(ovl,
+                                             newShape,
+                                             sliceobj=slc,
+                                             dtype=dtype,
+                                             order=interp,
+                                             smooth=smoothing)
         resampled        = fslimage.Image(resampled,
                                           xform=xform,
                                           header=ovl.header,
