@@ -201,13 +201,17 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg.Destroy()
 
     # set options
+    i1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+    i2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10, 10),
-                                  (1, 1, 1), [])
+                                  (1, 1, 1), [i1, i2])
 
     dlg.interpCtrl.SetSelection(1)
     dlg.dtypeCtrl .SetSelection(1)
+    dlg.originCtrl.SetSelection(1)
+    dlg.refCtrl   .SetSelection(2)
 
     origSmooth  = dlg.GetSmoothing()
     origAllVols = dlg.GetAllVolumes()
@@ -219,5 +223,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     assert dlg.GetSmoothing()     == (not origSmooth)
     assert dlg.GetAllVolumes()    == (not origAllVols)
     assert dlg.GetInterpolation() == 'nearest'
+    assert dlg.GetOrigin()        == 'corner'
     assert dlg.GetDataType()      == np.uint8
+    assert dlg.GetReference()     == i2
     dlg.Destroy()
