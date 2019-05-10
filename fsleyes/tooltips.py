@@ -813,6 +813,10 @@ misc = TypeDict({
     'Resample the image to the same dimensions as this reference.',
     'ResampleDialog.interpolation' :
     'The interpolation approach to use when resampling.',
+    'ResampleDialog.origin' :
+    'The origin common to the original space and the resampled space - .'
+    'either the centre of the corner voxel, or the corner of the corner '
+    'voxel.',
     'ResampleDialog.dtype' :
     'The data type of the resampled image. If you are resampling and '
     'interpolating an image with an integer data type, you may need to select '
