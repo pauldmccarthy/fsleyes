@@ -1023,6 +1023,7 @@ properties = TypeDict({
 
     'VolumeOpts.clipImage'                : 'Clip by',
     'VolumeOpts.interpolation'            : 'Interpolation',
+    'VolumeOpts.channel'                  : 'RGB(A) channel',
     'VolumeOpts.enableOverrideDataRange'  : 'Override image data range',
     'VolumeOpts.overrideDataRange'        : 'Override image data range',
     'VolumeOpts.custom_overrideDataRange' : 'Override image data range',

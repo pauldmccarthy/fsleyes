@@ -153,6 +153,12 @@ class NiftiOpts(fsldisplay.DisplayOpts):
     """
 
 
+    channel = props.Choice(('R', 'G', 'B', 'A'))
+    """For images with the NIfTI ``RGB24`` or ``RGBA32`` data type,
+    this property controls the channel that gets displayed.
+    """
+
+
     transform = props.Choice(
         ('affine', 'pixdim', 'pixdim-flip', 'id', 'reference'),
         default='pixdim-flip')
@@ -237,6 +243,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
             if ndims <= 3:
                 self.setAttribute('volume', 'maxval', 0)
+
+            # Is this a RGB(A) image?
+            nchannels = len(self.overlay.dtype)
+            if nchannels == 0:
+                self.disableProperty('channel')
+            elif nchannels in (3, 4):
+                if nchannels == 3:
+                    prop = self.getProp('channel')
+                    prop.removeChoice('A', self)
 
             self.overlay   .register(   self.name,
                                         self.__overlayTransformChanged,

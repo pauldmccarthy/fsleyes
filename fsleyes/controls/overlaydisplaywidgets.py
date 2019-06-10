@@ -149,6 +149,7 @@ def _initPropertyList_Display(threedee):
 
 def _initPropertyList_VolumeOpts(threedee):
     plist = ['custom_volume',
+             'channel',
              'interpolation',
              'custom_cmap',
              'cmapResolution',
@@ -372,6 +373,7 @@ def _initWidgetSpec_VolumeOpts(threedee):
 
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'channel'        : props.Widget('channel'),
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
