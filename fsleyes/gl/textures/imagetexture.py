@@ -70,6 +70,7 @@ class ImageTexture(texture3d.Texture3D):
         self.image        = image
         self.__nvals      = nvals
         self.__volume     = None
+        self.__channel    = None
 
         kwargs['scales'] = image.pixdim[:3]
 
@@ -98,6 +99,14 @@ class ImageTexture(texture3d.Texture3D):
         (``Image.ndim - 3``) the correct length.
         """
         self.set(volume=volume)
+
+
+    def setChannel(self, channel):
+        """For :class:`.Image` instances with multiple values per voxel, such
+        as ``RGB24`` or ``RGBA32`` images, this option allows the channel
+        to be selected.
+        """
+        self.set(channel=channel)
 
 
     def __imageDataChanged(self, image, topic, sliceobj):
@@ -149,6 +158,8 @@ class ImageTexture(texture3d.Texture3D):
         =============== ======================================================
         ``volume``      See :meth:`setVolume`.
 
+        ``channel``     See :meth:`setChannel`.
+
         ``volRefresh``  If ``True`` (the default), the texture data will be
                         refreshed even if the ``volume`` parameter hasn't
                         changed. Otherwise, if ``volume`` hasn't changed,
@@ -161,6 +172,7 @@ class ImageTexture(texture3d.Texture3D):
 
         kwargs             .pop('data',           None)
         normRange  = kwargs.pop('normaliseRange', None)
+        channel    = kwargs.pop('channel',        self.__channel)
         volume     = kwargs.pop('volume',         self.__volume)
         volRefresh = kwargs.pop('volRefresh',     True)
         image      = self.image
@@ -186,13 +198,22 @@ class ImageTexture(texture3d.Texture3D):
         if (not volRefresh) and volume == self.__volume:
             return
 
-        self.__volume = volume
+        self.__volume  = volume
+        self.__channel = channel
 
         slc = [slice(None), slice(None), slice(None)]
         if volume is not None:
             slc += volume
 
-        kwargs['data']           = self.image[tuple(slc)]
+        if len(self.image.dtype) == 0:
+            data = self.image[tuple(slc)]
+        # structured data (e.g. RGB(A))
+        else:
+            if channel is None:
+                channel = self.image.dtype.names[0]
+            data = self.image.data[channel][tuple(slc)]
+
+        kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
 
         return texture3d.Texture3D.set(self, **kwargs)
