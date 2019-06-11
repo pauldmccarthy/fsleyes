@@ -233,13 +233,17 @@ def getOverlayTypes(overlay):
         return possibleTypes
 
     shape = overlay.shape
+    ndims = len(shape)
+    nvals = len(overlay.dtype)
 
     # Could this image be a vector image?
-    couldBeVector = len(shape) == 4 and shape[-1] == 3
+    couldBeVector = ((ndims == 4 and shape[-1] == 3) or
+                     (ndims == 3 and nvals     == 3))
+
 
     # Or could it be a SH or tensor image?
-    couldBeTensor = len(shape) == 4 and shape[-1] == 6
-    couldBeSH     = len(shape) == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
+    couldBeTensor = ndims == 4 and shape[-1] == 6
+    couldBeSH     = ndims == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
     # Special cases:
     #
@@ -255,7 +259,6 @@ def getOverlayTypes(overlay):
 
     # Otherwise, remove the vector options
     else:
-
         try:               possibleTypes.remove('rgbvector')
         except ValueError: pass
 

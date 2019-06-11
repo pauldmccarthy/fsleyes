@@ -663,8 +663,9 @@ class GLVectorBase(glimageobject.GLImageObject):
 
 class GLVector(GLVectorBase):
     """The ``GLVector`` class is a sub-class of :class:`GLVectorBase`, which
-    contains some additional logic for rendering :class:`.Image` overlays
-    with a shape ``X*Y*Z*3``, and which contain directional data.
+    contains some additional logic for rendering :class:`.Image` overlays with
+    a shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``, and which contain
+    directional data.
 
 
     By default , the ``image`` overlay passed to :meth:`__init__` is assumed
@@ -676,6 +677,7 @@ class GLVector(GLVectorBase):
     This vector image is stored on the GPU as a 3D RGB :class:`.ImageTexture`,
     where the ``R`` channel contains the ``x`` vector values, the ``G``
     channel the ``y`` values, and the ``B`` channel the ``z`` values.
+
 
     This texture is bound to texture unit  ``gl.GL_TEXTURE4`` in the
     :meth:`preDraw` method.
@@ -716,9 +718,16 @@ class GLVector(GLVectorBase):
         prefilter      = kwargs.pop('prefilter',      defaultPrefilter)
         prefilterRange = kwargs.pop('prefilterRange', None)
 
-        if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
-            raise ValueError('Image must be 4 dimensional, with 3 volumes '
-                             'representing the XYZ vector angles')
+        shape = vectorImage.shape
+        ndims = len(shape)
+        nvals = len(vectorImage.dtype)
+        isRGB = (((ndims == 4) and (nvals == 0) and (shape[3] == 3)) or
+                 ((ndims == 3) and (nvals == 3)))
+
+        if not isRGB:
+            raise ValueError('Image must be 4 dimensional with 3 volumes '
+                             'representing the XYZ vector angles, or of '
+                             'type RGB24')
 
         self.vectorImage     = vectorImage
         self.imageTexture    = None
@@ -796,7 +805,17 @@ class GLVector(GLVectorBase):
         # the fourth dimension (the vector directions)
         # must be the fastest changing in the texture data
         def realPrefilter(d):
-            return prefilter(d.transpose((3, 0, 1, 2)))
+
+            # We allow images of shape (X, Y, Z, 3)
+            if len(d.dtype) == 0:
+                return prefilter(d.transpose((3, 0, 1, 2)))
+
+            # Or structured arrays of shape (X, Y, Z)
+            # where each element is assumed to contain
+            # three values, all of the same type
+            else:
+                d = d.view(d.dtype[0]).reshape([3] + list(d.shape))
+                return prefilter(d.transpose((1, 0, 2, 3)))
 
         self.imageTexture = glresources.get(
             texName,

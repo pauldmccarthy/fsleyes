@@ -56,15 +56,23 @@ class ImageTexture(texture3d.Texture3D):
 
         # For 4D textures, the image must have a shape of the form:
         #   (x, y, z, [1, [1, [1, [1, ]]]] nvals)
-        if nvals > 1:
+        if nvals > 1 and len(image.dtype) == 0:
             ndims        = image.ndim
             expShape     = list(image.shape[:3])
             expShape    += [1] * (ndims - 3)
             expShape[-1] = nvals
             if list(image.shape) != expShape:
-                raise RuntimeError('Data shape mismatch: texture '
-                                   'size {} requested for '
-                                   'image shape {}'.format(nvals, image.shape))
+                raise RuntimeError(
+                    'Data shape mismatch: texture size {} requested for '
+                    'image shape {}'.format(nvals, image.shape))
+
+        # Or must be a structured array with
+        # the correct number of values
+        elif nvals > 1 and len(image.dtype) != nvals:
+            raise RuntimeError(
+                'Data shape mismatch: texture size {} requested for '
+                'image with nvals {}'.format(nvals, len(image.dtype)))
+
 
         self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.image        = image
@@ -208,13 +216,11 @@ class ImageTexture(texture3d.Texture3D):
         if volume is not None:
             slc += volume
 
-        if len(self.image.dtype) == 0:
-            data = self.image[tuple(slc)]
         # structured data (e.g. RGB(A))
-        else:
-            if channel is None:
-                channel = self.image.dtype.names[0]
+        if len(self.image.dtype) > 0 and channel is not None:
             data = self.image.data[channel][tuple(slc)]
+        else:
+            data = self.image[tuple(slc)]
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
