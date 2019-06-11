@@ -500,6 +500,7 @@ OPTIONS = td.TypeDict({
                         'displayRange',
                         'clippingRange',
                         'gamma',
+                        'channel',
                         'invertClipping',
                         'cmap',
                         'negativeCmap',
@@ -803,6 +804,7 @@ ARGUMENTS = td.TypeDict({
     'ColourMapOpts.linkLowRanges'    : ('ll',  'unlinkLowRanges',  True),
     'ColourMapOpts.linkHighRanges'   : ('lh',  'linkHighRanges',   True),
 
+    'VolumeOpts.channel'           : ('ch',  'channel',           True),
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
     'VolumeOpts.clipImage'         : ('cl',  'clipImage',         True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
@@ -1044,6 +1046,7 @@ HELP = td.TypeDict({
     'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 
+    'VolumeOpts.channel'           : 'Channel to display, for RGB(A) images',
     'VolumeOpts.overrideDataRange' : 'Override data range. Setting this '
                                      'effectively causes FSLeyes to ignore '
                                      'the actual image data range, and use '
