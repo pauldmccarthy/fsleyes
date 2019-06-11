@@ -361,6 +361,7 @@ class GLVolume(glimageobject.GLImageObject):
                              self._useNegativeCmapChanged)
         opts    .addListener('invert',           name, self._invertChanged)
         opts    .addListener('volume',           name, self._volumeChanged)
+        opts    .addListener('channel',          name, self._channelChanged)
         opts    .addListener('interpolation',    name,
                              self._interpolationChanged)
         opts    .addListener('transform',        name, self._transformChanged)
@@ -391,7 +392,7 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('clipInclination', name, self._clipping3DChanged)
 
         # GLVolume instances need to keep track of whether
-        # the volume property of their corresponding
+        # the volume/channel properties of their corresponding
         # VolumeOpts instance is synced to other VolumeOpts
         # instances - if it is, there an ImageTexture for
         # the image may already exist (i.e. have been
@@ -410,6 +411,9 @@ class GLVolume(glimageobject.GLImageObject):
 
         if self.__syncListenersRegistered:
             opts.addSyncChangeListener('volume',
+                                       name,
+                                       self._imageSyncChanged)
+            opts.addSyncChangeListener('channel',
                                        name,
                                        self._imageSyncChanged)
 
@@ -438,6 +442,7 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener(          'cmapResolution',          name)
         opts    .removeListener(          'invert',                  name)
         opts    .removeListener(          'volume',                  name)
+        opts    .removeListener(          'channel',                 name)
         opts    .removeListener(          'interpolation',           name)
         opts    .removeListener(          'transform',               name)
         opts    .removeListener(          'displayXform',            name)
@@ -458,7 +463,8 @@ class GLVolume(glimageobject.GLImageObject):
             opts.removeListener('clipInclination', name)
 
         if self.__syncListenersRegistered:
-            opts.removeSyncChangeListener('volume', name)
+            opts.removeSyncChangeListener('volume',  name)
+            opts.removeSyncChangeListener('channel', name)
 
 
     def testUnsynced(self):
@@ -469,10 +475,12 @@ class GLVolume(glimageobject.GLImageObject):
         ``GLVolume`` instance needs to create its own image texture;
         returns ``False`` otherwise.
         """
-        is4D = len(self.image.shape) >= 4 and self.image.shape[3] > 1
+        is4D  = len(self.image.shape) >= 4 and self.image.shape[3] > 1
+        isRGB = len(self.image.dtype) >  0
 
-        return (self.opts.getParent() is None or
-                (is4D and not self.opts.isSyncedToParent('volume')))
+        return ((self.opts.getParent() is None)                      or
+                (is4D  and not self.opts.isSyncedToParent('volume')) or
+                (isRGB and not self.opts.isSyncedToParent('channel')))
 
 
     def updateShaderState(self, *args, **kwargs):
@@ -563,6 +571,7 @@ class GLVolume(glimageobject.GLImageObject):
             texName,
             self.image,
             interp=interp,
+            channel=opts.channel,
             volume=opts.index()[3:],
             normaliseRange=normRange,
             notify=False)
@@ -934,12 +943,20 @@ class GLVolume(glimageobject.GLImageObject):
         else:                            normRange = None
 
         self.imageTexture.set(volume=opts.index()[3:],
+                              channel=opts.channel,
                               interp=interp,
                               volRefresh=volRefresh,
                               normaliseRange=normRange)
 
         if self.clipTexture is not None:
             self.clipTexture.set(interp=interp)
+
+
+    def _channelChanged(self, *a, **kwa):
+        """Called when the :attr:`.NiftiOpts.channel` changes.
+        Refreshes the texture.
+        """
+        self._volumeChanged()
 
 
     def _interpolationChanged(self, *a):

@@ -161,9 +161,10 @@ class ImageTexture(texture3d.Texture3D):
         ``channel``     See :meth:`setChannel`.
 
         ``volRefresh``  If ``True`` (the default), the texture data will be
-                        refreshed even if the ``volume`` parameter hasn't
-                        changed. Otherwise, if ``volume`` hasn't changed,
-                        the texture will not be refreshed.
+                        refreshed even if the ``volume`` and ``channel``
+                        parameters haven't changed. Otherwise, if ``volume``
+                        and ``channel`` haven't changed, the texture will not
+                        be refreshed.
         =============== ======================================================
 
         :returns: ``True`` if any settings have changed and the
@@ -195,7 +196,9 @@ class ImageTexture(texture3d.Texture3D):
                 raise ValueError('Invalid volume indices for {} '
                                  'dims: {}'.format(ndims, volume))
 
-        if (not volRefresh) and volume == self.__volume:
+        if (not volRefresh)           and \
+           (volume  == self.__volume) and \
+           (channel == self.__channel):
             return
 
         self.__volume  = volume
