@@ -222,18 +222,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         self.__child = self.getParent() is not None
 
-        if not self.__child:
-
-            # Is this a RGB(A) image?
-            nchannels = len(self.overlay.dtype)
-            if nchannels == 0:
-                self.disableProperty('channel')
-            elif nchannels in (3, 4):
-                if nchannels == 3:
-                    prop = self.getProp('channel')
-                    prop.removeChoice('A', self)
-
-        else:
+        if self.__child:
 
             # is this a >3D volume?
             ndims = self.overlay.ndim
@@ -1032,6 +1021,20 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
 
             self.displayRange  = drange
             self.clippingRange = crange
+
+        # If this is not a RGB(A) image, disable
+        # the channel property. If it's a RGB
+        # image,  remove the "A" option from
+        # the channel property.
+        if not self.__registered:
+
+            nchannels = len(self.overlay.dtype)
+            if nchannels == 0:
+                self.disableProperty('channel')
+            elif nchannels in (3, 4):
+                if nchannels == 3:
+                    prop = self.getProp('channel')
+                    prop.removeChoice('A', self)
 
         cmapopts .ColourMapOpts.__init__(self)
         vol3dopts.Volume3DOpts .__init__(self)
