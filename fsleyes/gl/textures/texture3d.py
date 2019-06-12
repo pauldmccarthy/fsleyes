@@ -486,6 +486,12 @@ class Texture3D(texture.Texture, notifier.Notifier):
         return self.__textureShape
 
 
+    @property
+    def textureDtype(self):
+        """Return the texture data type, as a ``numpy.dtype``. """
+        return self.__data.dtype
+
+
     def patchData(self, data, offset):
         """This is a shortcut method which can be used to replace part
         of the image texture data without having to regenerate the entire
@@ -715,8 +721,8 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             # It is assumed that, for textures with more than one
             # value per voxel (e.g. RGB textures), the data is
-            # arranged accordingly, i.e. with the voxel value
-            # dimension the fastest changing
+            # arranged accordingly, i.e. with the first dimension
+            # containing all values for one voxel
             if len(data.shape) == 4: self.__textureShape = data.shape[1:]
             else:                    self.__textureShape = data.shape
 
@@ -828,7 +834,6 @@ class Texture3D(texture.Texture, notifier.Notifier):
 
             if callback is not None:
                 callback()
-
 
         # Wrap the above functions in a report
         # decorator in case an error occurs

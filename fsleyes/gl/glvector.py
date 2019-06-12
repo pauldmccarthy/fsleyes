@@ -802,20 +802,11 @@ class GLVector(GLVectorBase):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.getTextureName())
 
-        # the fourth dimension (the vector directions)
-        # must be the fastest changing in the texture data
+        # We need to make sure the image has shape
+        # (dir, X, Y, Z) , i.e. the first dimension
+        # contains the vector directions
         def realPrefilter(d):
-
-            # We allow images of shape (X, Y, Z, 3)
-            if len(d.dtype) == 0:
-                return prefilter(d.transpose((3, 0, 1, 2)))
-
-            # Or structured arrays of shape (X, Y, Z)
-            # where each element is assumed to contain
-            # three values, all of the same type
-            else:
-                d = d.view(d.dtype[0]).reshape([3] + list(d.shape))
-                return prefilter(d.transpose((1, 0, 2, 3)))
+            return prefilter(d.transpose((3, 0, 1, 2)))
 
         self.imageTexture = glresources.get(
             texName,

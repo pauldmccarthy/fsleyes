@@ -12,6 +12,8 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 """
 
 
+import numpy as np
+
 import fsl.utils.transform as transform
 import fsleyes.gl.shaders  as shaders
 
@@ -88,7 +90,17 @@ def updateShaderState(self, useSpline=False):
 
     else:
 
-        voxValXform          = self.imageTexture.voxValXform
+        # If the texture data is integral,
+        # it will be automatically normalised
+        # to the range [0-1] for us.
+        if np.issubdtype(self.imageTexture.textureDtype, np.integer):
+            voxValXform = np.eye(4)
+
+        # Otherwise, if it's floating point,
+        # it will not be normalised.
+        else:
+            voxValXform = self.imageTexture.voxValXform
+
         colours, colourXform = self.getVectorColours()
 
         changed |= shader.set('modulateTexture', 0)

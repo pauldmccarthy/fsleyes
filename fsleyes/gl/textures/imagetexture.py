@@ -216,11 +216,33 @@ class ImageTexture(texture3d.Texture3D):
         if volume is not None:
             slc += volume
 
-        # structured data (e.g. RGB(A))
-        if len(self.image.dtype) > 0 and channel is not None:
-            data = self.image.data[channel][tuple(slc)]
-        else:
+        # Normal data - one value per voxel
+        if len(self.image.dtype) == 0:
             data = self.image[tuple(slc)]
+
+        # structured data (e.g. RGB(A)) -
+        # a channel has been specified,
+        # so extract the data for that
+        # channel,
+        elif channel is not None:
+            data = self.image.data[channel][tuple(slc)]
+
+        # Structured data, but no channel
+        # specified - convert the data
+        # into a 4D (X, Y, Z, C) image,
+        # because this is what Texture3D
+        # requires
+        else:
+            data  = self.image[tuple(slc)]
+            shape = list(data.shape)
+
+            if len(shape) != 3:
+                raise RuntimeError('A volume or channel needs to be specified '
+                                   'to load structured data as a 3D texture ')
+
+            data = np.frombuffer(data, dtype=np.uint8)
+            data = data.reshape([3] + shape, order='F')
+            data = data.transpose((1, 2, 3, 0))
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
