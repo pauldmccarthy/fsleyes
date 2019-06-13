@@ -27,15 +27,16 @@ log = logging.getLogger(__name__)
 
 
 class GLLineVector(glvector.GLVector):
-    """The ``GLLineVector`` class encapsulates the logic required to render a
-    ``x*y*z*3`` :class:`.Image` instance as a vector image, where the vector
-    at each voxel is drawn as a line, and coloured in the same way that voxels
-    in the :class:`.GLRGBVector` are coloured.  The ``GLLineVector`` class
-    assumes that the :class:`.Display` instance associated with the ``Image``
-    overlay holds a reference to a :class:`.LineVectorOpts` instance, which
-    contains ``GLLineVector``-specific display settings.  The ``GLLineVector``
-    class is a sub-class of the :class:`.GLVector` class, and uses the
-    functionality provided by ``GLVector``.
+    """The ``GLLineVector`` class encapsulates the logic required to render an
+    :class:`.Image` instance of shape ``x*y*z*3``, or type
+    ``NIFTI_TYPE_RGB24``, as a vector image, where the vector at each voxel is
+    drawn as a line, and coloured in the same way that voxels in the
+    :class:`.GLRGBVector` are coloured.  The ``GLLineVector`` class assumes
+    that the :class:`.Display` instance associated with the ``Image`` overlay
+    holds a reference to a :class:`.LineVectorOpts` instance, which contains
+    ``GLLineVector``-specific display settings.  The ``GLLineVector`` class is
+    a sub-class of the :class:`.GLVector` class, and uses the functionality
+    provided by ``GLVector``.
 
 
     In a similar manner to the :class:`.GLRGBVector`, the ``GLLineVector`` uses
@@ -46,8 +47,8 @@ class GLLineVector(glvector.GLVector):
 
 
     A ``GLLineVector`` instance is rendered in different ways depending upon
-    the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering fb
-    unctionality is implemented in the version-specific modules mentioned
+    the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering
+    functionality is implemented in the version-specific modules mentioned
     above.
     """
 
