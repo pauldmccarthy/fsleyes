@@ -25,10 +25,18 @@ class ImageTexture(texture3d.Texture3D):
     """The ``ImageTexture`` class contains the logic required to create and
     manage a 3D texture which represents a :class:`.Image` instance.
 
-    Once created, the :class:`.Image` instance is available as an attribute
-    of an ``ImageTexture`` object, called ``image``. See the
-    :class:`.Texture3D`
+
+    Once created, the :class:`.Image` instance is available as an attribute of
+    an ``ImageTexture`` object, called ``image``. See the :class:`.Texture3D`
     documentation for more details.
+
+
+    For multi-valued (e.g. RGB) textures, the :class:`.Texture3D` class
+    requires data to be passed as a ``(C, X, Y, Z)`` array (for ``C`` values).
+    If an ``ImageTexture`` is created with an image of type
+    ``NIFTI_TYPE_RGB24`` or ``NIFTI_TYPE_RGBA32``, it will take care of
+    re-arranging the image data so that it has the shape required by the
+    ``Texture3D`` class.
     """
 
 
@@ -54,8 +62,9 @@ class ImageTexture(texture3d.Texture3D):
 
         nvals = kwargs.get('nvals', 1)
 
-        # For 4D textures, the image must have a shape of the form:
-        #   (x, y, z, [1, [1, [1, [1, ]]]] nvals)
+        # For 4D textures, the image must
+        # have a shape of the form:
+        # (x, y, z, [1, [1, [1, [1, ]]]] nvals)
         if nvals > 1 and len(image.dtype) == 0:
             ndims        = image.ndim
             expShape     = list(image.shape[:3])

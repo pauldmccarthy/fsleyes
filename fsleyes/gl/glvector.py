@@ -7,8 +7,8 @@
 """This module provides the :class:`GLVectorBase` and :class:`GLVector`
 classes. The ``GLVectorBase`` class encapsulate the logic for rendering
 overlays which contain directional data, and the ``GLVector`` class
-specifically conatins logic for displaying ``X*Y*Z*3`` :class:`.Image`
-overlays.
+specifically conatins logic for displaying :class:`.Image` overlays with
+shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``.
 """
 
 
@@ -49,7 +49,7 @@ class GLVectorBase(glimageobject.GLImageObject):
        are specified by the :attr:`.VectorOpts.xColour`,
        :attr:`.VectorOpts.yColour`, and :attr:`.VectorOpts.zColour`
        properties. If the image being displayed contains directional data
-       (i.e. is a ``X*Y*Z*3`` vector image), you should use the
+       (e.g. is a ``X*Y*Z*3`` vector image), you should use the
        :class:`GLVector` class.
 
      - Each voxel is coloured according to the values contained in another
@@ -135,7 +135,6 @@ class GLVectorBase(glimageobject.GLImageObject):
         name = self.name
 
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
-
         self.shader          = None
         self.modulateImage   = None
         self.clipImage       = None
@@ -688,8 +687,15 @@ class GLVector(GLVectorBase):
         optional, but if provided, must be passed as keyword arguments. All
         other arguments are passed through to :meth:`GLVectorBase.__init__`.
 
+        The ``image``, (or ``vectorImage``) argument is assumed to be an
+        :class:`.Image` instance of shape ``(X, Y, Z, 3)``, or of type
+        ``NIFTI_TYPE_RGB24``, which contains the vector data. If the former,
+        the vector data is assumed to be in the range ``[-1, 1]``. If the
+        latter, the vector data is, by definition, in the range ``[0, 255]``
+        - this is assumed to map directly to the range ``[-1, 1]``.
 
-        :arg vectorImage:    If ``None``, the ``image`` is assumed to be a 4D
+
+        :arg vectorImage:    If ``None``, the ``image`` is assumed to be an
                              :class:`.Image` instance which contains the
                              vector data. If this is not the case, the
                              ``vectorImage`` parameter can be used to specify
@@ -718,6 +724,14 @@ class GLVector(GLVectorBase):
         prefilter      = kwargs.pop('prefilter',      defaultPrefilter)
         prefilterRange = kwargs.pop('prefilterRange', None)
 
+        # Must be an image of shape (X, Y, Z, 3),
+        # or of type RGB24. If the latter, the
+        # test below will accept any numpy
+        # structured array with three values per
+        # voxel, but we assume elsewhere that
+        # those values are all of type np.uint8
+        # (and thus correspond to the
+        # NIFTI_TYPE_RGB24 type)
         shape = vectorImage.shape
         ndims = len(shape)
         nvals = len(vectorImage.dtype)
@@ -804,7 +818,7 @@ class GLVector(GLVectorBase):
 
         # We need to make sure the image has shape
         # (dir, X, Y, Z) , i.e. the first dimension
-        # contains the vector directions
+        # contains the vector directions.
         def realPrefilter(d):
             return prefilter(d.transpose((3, 0, 1, 2)))
 

@@ -97,6 +97,10 @@ class Texture3D(texture.Texture, notifier.Notifier):
     Furthermore, the ``Texture3D`` class derives from :class:`.Notifier`, so
     listeners can register to be notified when an ``Texture3D`` is ready to
     be used.
+
+    For textures with multiple values per voxel, it is assumed that these
+    values are indexed with the first dimension of the texture data (as passed
+    to :meth:`setData` or :meth:`set`).
     """
 
 
@@ -916,7 +920,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         ==================== ==============================================
         """
 
-        if self.__nvals not in range(1, 5):
+        if self.__nvals not in (1, 3):
             raise ValueError('Cannot create texture representation '
                              'for {} (nvals: {})'.format(self.__data.dtype,
                                                          self.__nvals))
