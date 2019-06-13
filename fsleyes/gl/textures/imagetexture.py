@@ -66,13 +66,13 @@ class ImageTexture(texture3d.Texture3D):
                     'Data shape mismatch: texture size {} requested for '
                     'image shape {}'.format(nvals, image.shape))
 
-        # Or must be a structured array with
-        # the correct number of values
+        # Or must be a structured array
+        # with the correct number of
+        # values per voxel.
         elif nvals > 1 and len(image.dtype) != nvals:
             raise RuntimeError(
                 'Data shape mismatch: texture size {} requested for '
                 'image with nvals {}'.format(nvals, len(image.dtype)))
-
 
         self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.image        = image
@@ -223,15 +223,15 @@ class ImageTexture(texture3d.Texture3D):
         # structured data (e.g. RGB(A)) -
         # a channel has been specified,
         # so extract the data for that
-        # channel,
+        # channel
         elif channel is not None:
             data = self.image.data[channel][tuple(slc)]
 
         # Structured data, but no channel
         # specified - convert the data
-        # into a 4D (X, Y, Z, C) image,
-        # because this is what Texture3D
-        # requires
+        # into a 4D (X, Y, Z, nchannels)
+        # image, because this is what
+        # Texture3D requires
         else:
             data  = self.image[tuple(slc)]
             shape = list(data.shape)
@@ -240,8 +240,10 @@ class ImageTexture(texture3d.Texture3D):
                 raise RuntimeError('A volume or channel needs to be specified '
                                    'to load structured data as a 3D texture ')
 
-            data = np.frombuffer(data, dtype=np.uint8)
-            data = data.reshape([3] + shape, order='F')
+            data = np.ndarray(buffer=data.data,
+                              shape=[nvals] + shape,
+                              order='F',
+                              dtype=np.uint8)
             data = data.transpose((1, 2, 3, 0))
 
         kwargs['data']           = data

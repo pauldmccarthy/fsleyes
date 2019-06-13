@@ -92,9 +92,13 @@ def updateShaderState(self, useSpline=False):
 
         # If the texture data is integral,
         # it will be automatically normalised
-        # to the range [0-1] for us.
+        # to the range [0-1] for us. But we
+        # assume that the original data range
+        # is [-1, 1] (as this is vector data),
+        # so we rescale the data from [0, 1]
+        # back to [-1, 1].
         if np.issubdtype(self.imageTexture.textureDtype, np.integer):
-            voxValXform = np.eye(4)
+            voxValXform = transform.scaleOffsetXform(2, -1)
 
         # Otherwise, if it's floating point,
         # it will not be normalised.
