@@ -251,15 +251,30 @@ class GLLineVertices(object):
 
         opts  = glvec.opts
         image = glvec.vectorImage
+        data  = image.data
         shape = image.shape
 
         # Pull out the xyz components of the
-        # vectors, and calculate vector lengths
-        vertices = np.array(image[:], dtype=np.float32)
-        x        = vertices[:, :, :, 0]
-        y        = vertices[:, :, :, 1]
-        z        = vertices[:, :, :, 2]
-        lens     = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+        # vectors, and calculate vector lengths.
+
+        # The image may either
+        # have shape (X, Y, Z, 3)
+
+        if len(image.dtype) == 0:
+            vertices = np.array(data, dtype=np.float32)
+        # Or (we assume) a RGB
+        # structured array
+        else:
+            vertices         = np.zeros(list(data.shape) + [3],
+                                        dtype=np.float32)
+            vertices[..., 0] = (data['R'].astype(np.float32) / 127.5) - 1
+            vertices[..., 1] = (data['G'].astype(np.float32) / 127.5) - 1
+            vertices[..., 2] = (data['B'].astype(np.float32) / 127.5) - 1
+
+        x    = vertices[..., 0]
+        y    = vertices[..., 1]
+        z    = vertices[..., 2]
+        lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
         # Flip vectors about the x axis if necessary
         if opts.orientFlip:
