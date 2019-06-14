@@ -15,8 +15,9 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
-import fsleyes.gl.routines as glroutines
+import fsl.utils.transform  as transform
+import fsl.utils.deprecated as deprecated
+import fsleyes.gl.routines  as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -82,11 +83,12 @@ class Texture(object):
     """
 
 
-    def __init__(self, name, ndims):
+    def __init__(self, name, ndims, nvals):
         """Create a ``Texture``.
 
         :arg name:  The name of this texture - should be unique.
         :arg ndims: Number of dimensions - must be 1, 2 or 3.
+        :arg ndims: Number of values stored in each texture element.
 
         .. note:: All subclasses must accept a ``name`` as the first parameter
                   to their ``__init__`` method, and must pass said ``name``
@@ -96,8 +98,8 @@ class Texture(object):
         self.__texture     = int(gl.glGenTextures(1))
         self.__name        = name
         self.__ndims       = ndims
+        self.__nvals       = nvals
         self.__bound       = False
-
         self.__textureUnit = None
 
         if   ndims == 1: self.__ttype = gl.GL_TEXTURE_1D
@@ -133,15 +135,42 @@ class Texture(object):
         self.__texture = None
 
 
-    def getTextureName(self):
+    @property
+    def name(self):
         """Returns the name of this texture. This is not the GL texture name,
         rather it is the unique name passed into :meth:`__init__`.
         """
         return self.__name
 
 
-    def getTextureHandle(self):
+    @property
+    def handle(self):
         """Returns the GL texture handle for this texture. """
+        return self.__texture
+
+
+    @property
+    def ndim(self):
+        """Return the number of dimensions of this texture - 1, 2, or 3. """
+        return self.__ndims
+
+
+    @property
+    def nvals(self):
+        """Return the number of values stored at each point in this texture.
+        """
+        return self.__nvals
+
+
+    @deprecated.deprecated('0.30.0', '1.0.0', 'Use Texture.name instead')
+    def getTextureName(self):
+        """Deprecated - use :meth:`name` instead. """
+        return self.__name
+
+
+    @deprecated.deprecated('0.30.0', '1.0.0', 'Use Texture.handle instead')
+    def getTextureHandle(self):
+        """Deprecated - use :meth:`handle` instead. """
         return self.__texture
 
 
@@ -215,7 +244,10 @@ class Texture2D(Texture):
         if dtype not in (gl.GL_RGBA8, gl.GL_DEPTH_COMPONENT24):
             raise ValueError('Invalid dtype: {}'.format(dtype))
 
-        Texture.__init__(self, name, 2)
+        if dtype == gl.GL_RGBA8: nvals = 4
+        else:                    nvals = 1
+
+        Texture.__init__(self, name, 2, nvals)
 
         self.__data      = None
         self.__width     = None

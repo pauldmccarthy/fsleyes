@@ -69,7 +69,7 @@ class ColourMapTexture(texture.Texture):
         :arg name: A unique name for this ``ColourMapTexture``.
         """
 
-        texture.Texture.__init__(self, name, 1)
+        texture.Texture.__init__(self, name, 1, 4)
 
         self.__resolution   = None
         self.__cmap         = None

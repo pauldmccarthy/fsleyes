@@ -141,7 +141,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         if threaded is None:
             threaded = fslplatform.haveGui
 
-        texture.Texture.__init__(self, name, 3)
+        texture.Texture.__init__(self, name, 3, nvals)
 
         self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.__nvals      = nvals

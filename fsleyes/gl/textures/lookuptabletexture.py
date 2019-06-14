@@ -53,7 +53,7 @@ class LookupTableTexture(texture.Texture):
         :arg name: A uniqe name for this ``LookupTableTexture``.
         """
 
-        texture.Texture.__init__(self, name, 1)
+        texture.Texture.__init__(self, name, 1, 4)
 
         self.__lut        = None
         self.__alpha      = None

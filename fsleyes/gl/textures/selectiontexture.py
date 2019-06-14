@@ -40,7 +40,7 @@ class SelectionTexture(texture.Texture):
         :arg selection: The :class:`.Selection` instance.
         """
 
-        texture.Texture.__init__(self, name, 3)
+        texture.Texture.__init__(self, name, 3, 1)
 
         self.__selection = selection
 
