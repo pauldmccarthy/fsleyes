@@ -163,7 +163,7 @@ class Texture3D(texture.Texture, notifier.Notifier):
         # These attributes are modified
         # in the refresh method (which is
         # called via the set method below).
-        self.__ready          = True
+        self.__ready          = False
 
         # These attributes are set by the
         # __refresh, __determineTextureType,

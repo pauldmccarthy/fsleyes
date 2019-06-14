@@ -469,7 +469,6 @@ class GLSH(glvector.GLVectorBase):
         ``False`` otherwise.
         """
         return (self.radTexture is not None and
-                self.radTexture.ready()     and
                 glvector.GLVectorBase.texturesReady(self))
 
 
