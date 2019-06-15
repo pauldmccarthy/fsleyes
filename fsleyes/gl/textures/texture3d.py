@@ -45,7 +45,7 @@ class Texture3D(texture.Texture):
         texture.Texture.__init__(self, name, 3, **kwargs)
 
 
-    def doRefresh(self, data):
+    def doRefresh(self, data=None, shape=None):
         """Overrides :meth:`.Texture.doRefresh`.
 
         (Re-)configures the OpenGL texture.
