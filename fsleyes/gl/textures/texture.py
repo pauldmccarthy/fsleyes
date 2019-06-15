@@ -4,132 +4,104 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Texture` and :class:`Texture2D` classes,
-which are the base classes for all other texture types. See also the
-:class:`.Texture3D` class.
+"""This module provides the :class:`Texture` class, which is the base classes
+for all other FSLeyes texture types. See also the :class:`.Texture2D` and
+:class:`.Texture3D` classes.
 """
 
 
 import logging
+import contextlib
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy                        as np
+import OpenGL.GL                    as gl
 
-import fsl.utils.transform  as transform
-import fsl.utils.deprecated as deprecated
-import fsleyes.gl.routines  as glroutines
+import fsl.utils.idle               as idle
+import fsl.utils.notifier           as notifier
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+from . import data                  as texdata
 
 
 log = logging.getLogger(__name__)
 
 
-class Texture(object):
-    """The ``Texture`` class is the base class for all other texture types in
-    *FSLeyes*. This class is not intended to be used directly - use one of the
-    sub-classes instead. This class provides a few convenience methods for
-    working with textures:
+class TextureBaseMixin(object):
+    """Base mixin class used by the :class:`Texture` class.
+
+    This class provides logic for texture lifecycle management
+    (creation/destruction) and usage.
+
 
     .. autosummary::
        :nosignatures:
 
-       getTextureName
-       getTextureHandle
+       name
+       handle
+       ndim
+       nvals
+       isBound
+       bound
+       bindTexture
+       unbindTexture
 
 
-    The :meth:`bindTexture` and :meth:`unbindTexture` methods allow you to
-    bind a texture object to a GL texture unit. For example, let's say we
-    have a texture object called ``tex``, and we want to use it::
+    The :meth:`bound` method (which uses :meth:`bindTexture` and
+    :meth:`unbindTexture`) method allows you to bind a texture object to a GL
+    texture unit. For example, let's say we have a texture object called
+    ``tex``, and we want to configure and use it::
 
         import OpenGL.GL as gl
-
-
-        # Bind the texture before doing any configuration -
-        # we don't need to specify a texture unit here.
-        tex.bindTexture()
-
-        # Use nearest neighbour interpolation
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           gl.GL_NEAREST)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           gl.GL_NEAREST)
-
-        tex.unbindTexture()
-
-        # ...
 
         # When we want to use the texture in a
         # scene render, we need to bind it to
         # a texture unit.
-        tex.bindTexture(gl.GL_TEXTURE0)
+        with tex.bound(gl.GL_TEXTURE0):
 
-        # ...
-        # Do the render
-        # ...
+            # use linear interpolation
+            tex.interp = gl.GL_LINEAR
 
-        tex.unbindTexture()
-
-
-    .. note:: Despite what is shown in the example above, you shouldn't need
-              to manually configure texture objects with calls to
-              ``glTexParameter`` - most things can be performed through
-              methods of the ``Texture`` sub-classes, for example
-              :class:`.ImageTexture` and :class:`.Texture2D`.
-
-
-    See the :mod:`.resources` module for a method of sharing texture
-    resources.
+            # ...
+            # Do the render
+            # ...
     """
 
 
     def __init__(self, name, ndims, nvals):
-        """Create a ``Texture``.
+        """Create a ``TextureBaseMixin``.
 
         :arg name:  The name of this texture - should be unique.
         :arg ndims: Number of dimensions - must be 1, 2 or 3.
-        :arg ndims: Number of values stored in each texture element.
-
-        .. note:: All subclasses must accept a ``name`` as the first parameter
-                  to their ``__init__`` method, and must pass said ``name``
-                  through to the :meth:`__init__` method.
+        :arg nvals: Number of values stored in each texture element.
         """
+        if   ndims == 1: ttype = gl.GL_TEXTURE_1D
+        elif ndims == 2: ttype = gl.GL_TEXTURE_2D
+        elif ndims == 3: ttype = gl.GL_TEXTURE_3D
+        else:            raise ValueError('Invalid number of dimensions')
 
         self.__texture     = int(gl.glGenTextures(1))
+        self.__ttype       = ttype
         self.__name        = name
         self.__ndims       = ndims
         self.__nvals       = nvals
         self.__bound       = False
         self.__textureUnit = None
 
-        if   ndims == 1: self.__ttype = gl.GL_TEXTURE_1D
-        elif ndims == 2: self.__ttype = gl.GL_TEXTURE_2D
-        elif ndims == 3: self.__ttype = gl.GL_TEXTURE_3D
-
-        else:            raise ValueError('Invalid number of dimensions')
-
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
-        log.debug('Created {} ({}) for {}: {}'.format(type(self).__name__,
-                                                      id(self),
-                                                      self.__name,
-                                                      self.__texture))
-
 
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
 
 
     def destroy(self):
-        """Must be called when this ``Texture`` is no longer needed. Deletes
-        the texture handle.
+        """Must be called when this ``TextureBaseMixin`` is no longer needed.
+        Deletes the texture handle.
         """
 
-        log.debug('Deleting {} ({}) for {}: {}'.format(type(self).__name__,
-                                                       id(self),
-                                                       self.__name,
-                                                       self.__texture))
+        log.debug('Deleting %s (%s) for %s: %s',
+                  type(self).__name__, id(self),
+                  self.__name, self.__texture)
 
         gl.glDeleteTextures(self.__texture)
         self.__texture = None
@@ -162,18 +134,6 @@ class Texture(object):
         return self.__nvals
 
 
-    @deprecated.deprecated('0.30.0', '1.0.0', 'Use Texture.name instead')
-    def getTextureName(self):
-        """Deprecated - use :meth:`name` instead. """
-        return self.__name
-
-
-    @deprecated.deprecated('0.30.0', '1.0.0', 'Use Texture.handle instead')
-    def getTextureHandle(self):
-        """Deprecated - use :meth:`handle` instead. """
-        return self.__texture
-
-
     def isBound(self):
         """Returns ``True`` if this texture is currently bound, ``False``
         otherwise.
@@ -184,12 +144,31 @@ class Texture(object):
         return self.__bound
 
 
+    @contextlib.contextmanager
+    def bound(self, textureUnit=None):
+        """Context manager which can be used to bind and unbind this texture,
+        instead of manually calling :meth:`bindTexture` and
+        :meth:`unbindTexture`
+
+        :arg textureUnit: The texture unit to bind this texture to, e.g.
+                          ``GL_TEXTURE0``.
+        """
+        try:
+            self.bindTexture(textureUnit)
+            yield
+        finally:
+            self.unbindTexture()
+
+
     def bindTexture(self, textureUnit=None):
         """Activates and binds this texture.
 
         :arg textureUnit: The texture unit to bind this texture to, e.g.
                           ``GL_TEXTURE0``.
         """
+
+        if self.__bound:
+            return
 
         if textureUnit is not None:
             gl.glActiveTexture(textureUnit)
@@ -203,6 +182,9 @@ class Texture(object):
     def unbindTexture(self):
         """Unbinds this texture. """
 
+        if not self.__bound:
+            return
+
         if self.__textureUnit is not None:
             gl.glActiveTexture(self.__textureUnit)
 
@@ -212,425 +194,741 @@ class Texture(object):
         self.__textureUnit = None
 
 
-class Texture2D(Texture):
-    """The ``Texture2D`` class represents a two-dimensional RGBA texture. A
-    ``Texture2D`` instance can be used in one of two ways:
+class TextureSettingsMixin(object):
+    """Mixin class used by the :class:`Texture` class.
 
-      - Setting the texture data via the :meth:`setData` method, and then
-        drawing it to a scene via :meth:`draw` or :meth:`drawOnBounds`.
+    This class provides methods to get/set various settings which can
+    be used to manipulate the texture. All of the logic which uses
+    these settings is in the ``Texture`` class.
 
-      - Setting the texture size via :meth:`setSize`, and then drawing to it
-        by some other means (see e.g. the :class:`.RenderTexture` class, a
-        sub-class of ``Texture2D``).
+
+    The following settings can be changed:
+
+    .. autosummary::
+       :nosignatures:
+
+       interp
+       prefilter
+       prefilterRange
+       normalise
+       normaliseRange
+       border
+       scales
+       resolution
     """
 
-    def __init__(self, name, interp=gl.GL_NEAREST, dtype=None):
-        """Create a ``Texture2D`` instance.
-
-        :arg name:   Unique name for this ``Texture2D``.
-
-        :arg interp: Initial interpolation - ``GL_NEAREST`` (the default)
-                     or ``GL_LINEAR``. This can be changed later on via the
-                     :meth:`setInterpolation` method.
-
-        :arg dtype:  Sized internal GL data format to use for the texture.
-                     Currently only ``gl.GL_RGBA8`` (the default) and
-                     ``gl.GL_DEPTH_COMPONENT24`` are supported.
-        """
-
-        if dtype is None:
-            dtype = gl.GL_RGBA8
-
-        if dtype not in (gl.GL_RGBA8, gl.GL_DEPTH_COMPONENT24):
-            raise ValueError('Invalid dtype: {}'.format(dtype))
-
-        if dtype == gl.GL_RGBA8: nvals = 4
-        else:                    nvals = 1
-
-        Texture.__init__(self, name, 2, nvals)
-
-        self.__data      = None
-        self.__width     = None
-        self.__height    = None
-        self.__oldWidth  = None
-        self.__oldHeight = None
-        self.__border    = None
-        self.__interp    = interp
-        self.__dtype     = dtype
-
-
-    def setInterpolation(self, interp):
-        """Change the texture interpolation - valid values are ``GL_NEAREST``
-        or ``GL_LINEAR``.
-        """
-        self.__interp = interp
-        self.refresh()
-
-
-    def setBorder(self, border):
-        """Change the border colour - set to a tuple of four values in the
-        range 0 to 1, or ``None`` for no border (in which case the texture
-        coordinates will be clamped to edges).
-        """
-        self.__border = border
-        self.refresh()
-
-
-    def setSize(self, width, height):
-        """Sets the width/height for this texture.
-
-        This method also clears the data for this texture, if it has been
-        previously set via the :meth:`setData` method.
-        """
-
-        if any((width <= 0, height <= 0)):
-            raise ValueError('Invalid size: {}'.format((width, height)))
-
-        self.__setSize(width, height)
-        self.__data = None
-
-        self.refresh()
-
-
-    def __setSize(self, width, height):
-        """Sets the width/height attributes for this texture, and saves a
-        reference to the old width/height - see comments in the refresh
-        method.
-        """
-        self.__oldWidth  = self.__width
-        self.__oldHeight = self.__height
-        self.__width     = width
-        self.__height    = height
-
-
-    @classmethod
-    def getDataTypeParams(cls, dtype):
-        """Returns a tuple containing information about the given sized
-        internal GL texture data format:
-        - The base GL internal format
-        - The GL external data format
-        - The equivalent ``numpy`` data type
-        - The number of channels
-        """
-
-        if dtype == gl.GL_RGBA8:
-            intFmt = gl.GL_RGBA
-            extFmt = gl.GL_UNSIGNED_BYTE
-            ndtype = np.uint8
-            size   = 4
-
-        elif dtype == gl.GL_DEPTH_COMPONENT24:
-            intFmt = gl.GL_DEPTH_COMPONENT
-            extFmt = gl.GL_UNSIGNED_INT
-            ndtype = np.uint32
-            size   = 1
-
-        return intFmt, extFmt, ndtype, size
+    def __init__(self):
+        """Create a ``TextureSettingsMixin``. """
+        self.__interp         = None
+        self.__prefilter      = None
+        self.__prefilterRange = None
+        self.__normalise      = None
+        self.__normaliseRange = None
+        self.__border         = None
+        self.__resolution     = None
+        self.__scales         = None
 
 
     @property
-    def dtype(self):
-        """Returns the internal GL data format to use for this texture. """
-
-        return self.__dtype
-
-
-    def getSize(self):
-        """Return the current ``(width, height)`` of this ``Texture2D``. """
-        return self.__width, self.__height
+    def interp(self):
+        """Return the current texture interpolation setting - either
+        ``GL_NEAREST`` or ``GL_LINEAR``.
+        """
+        return self.__interp
 
 
-    def setData(self, data):
-        """Sets the data for this texture - the width and height are determined
-        from data shape, which is assumed to be 4*width*height.
+    @interp.setter
+    def interp(self, interp):
+        """Sets the texture interpolation. """
+        self.update(interp=interp)
+
+
+    @property
+    def prefilter(self):
+        """Return the current prefilter function - texture data is passed
+        through this function before being uploaded to the GPU.
+
+        If this function changes the range of the data, you must also
+        provide a ``prefilterRange`` function - see :meth:`prefilterRange`.
+        """
+        return self.__prefilter
+
+
+    @prefilter.setter
+    def prefilter(self, prefilter):
+        """Set the prefilter function """
+        self.update(prefilter=prefilter)
+
+
+    @property
+    def prefilterRange(self):
+        """Return the current prefilter range function - if the ``prefilter``
+        function changes the data range, this function must be provided. It
+        is passed two parameters - the known data minimum and maximum, and
+        must adjust these values so that they reflect the adjusted range of
+        the data that was passed to the ``prefilter`` function.
+        """
+        return self.__prefilterRange
+
+
+    @prefilterRange.setter
+    def prefilterRange(self, prefilterRange):
+        """Set the prefilter range function. """
+        self.update(prefilter=prefilterRange)
+
+
+    @property
+    def normalise(self):
+        """Return the current normalisation state.
+
+        If ``normalise=True``, the data is normalised to lie in the range
+        ``[0, 1]`` (or normalised to the full range, if being stored as
+        integers) before being stored. The data is normalised according to
+        the minimum/maximum of the data, or to a normalise range set via
+        the :meth:`normaliseRange`.
+
+        Set this to ``False`` to disable normalisation.
+
+        .. note:: If the data is not of a type that can be stored natively
+                  as a texture, the data is automatically normalised,
+                  regardless of the value specified here.
+        """
+        return self.__normalise
+
+
+    @normalise.setter
+    def normalise(self, normalise):
+        """Enable/disable normalisation. """
+        self.update(normalise=normalise)
+
+    @property
+    def normaliseRange(self):
+        """Return the current normalise range.
+
+        If normalisation is enabled (see :meth:`normalise`), or necessary,
+        the data is normalised according to either its minimum/maximum, or
+        to the range specified via this method.
+
+        This parameter must be a sequence of two values, containing the
+        ``(min, max)`` normalisation range. The data is then normalised to
+        lie in the range ``[0, 1]`` (or normalised to the full range, if being
+        stored as integers) before being stored.
+
+        If ``None``, the data minimum/maximum are calculated and used.
+        """
+        return self.__normaliseRange
+
+
+    @normaliseRange.setter
+    def normaliseRange(self, normaliseRange):
+        """Set the normalise range. """
+        self.update(normaliseRange=normaliseRange)
+
+
+    @property
+    def border(self):
+        """Return the texture border colour. Set this to a tuple of four values
+        in the range 0 to 1, or ``None`` for no border (in which case the
+        texture coordinates will be clamped to edges).
+        """
+        return self.__border
+
+
+    @border.setter
+    def border(self, border):
+        """Return the texture border colour."""
+        self.update(border=border)
+
+
+    @property
+    def scales(self):
+        """Return the scaling factors for each axis of the texture data.
+
+        These values are solely used to calculate the sub-sampling rate if the
+        resolution (as set by :meth:`resolution`) is in terms of something
+        other than data indices (e.g. :class:`.Image` pixdims).
+        """
+        return self.__scales
+
+
+    @scales.setter
+    def scales(self, scales):
+        """Set the texture data axis scaling factors. """
+        self.update(scales=scales)
+
+
+    @property
+    def resolution(self):
+        """Return the current texture data resolution - this value is passed
+        to the :func:`.routines.subsample` function, in the
+        :func:`.prepareData` function.
+        """
+        return self.__resolution
+
+
+    @resolution.setter
+    def resolution(self, resolution):
+        """Set the texture data resolution. """
+        self.update(resolution=resolution)
+
+
+    def update(self, **kwargs):
+        """Set any parameters on this ``TextureSettingsMixin``. Valid keyword
+        arguments are:
+
+        ================== ==========================
+        ``interp``         See :meth:`interp`.
+        ``prefilter``      See :meth:`prefilter`.
+        ``prefilterRange`` See :meth:`prefilterRange`
+        ``normalise``      See :meth:`normalise.`
+        ``normaliseRange`` See :meth:`normaliseRange`
+        ``border``         See :meth:`border`
+        ``scales``         See :meth:`scales`.
+        ``resolution``     See :meth:`resolution`
+        ================== ==========================
+
+        :returns: A ``dict`` of ``{attr : changed}`` mappings, indicating
+                  which properties have changed value.
         """
 
-        self.__setSize(data.shape[1], data.shape[2])
-        self.__data = data
+        interp         = kwargs.get('interp',         self.interp)
+        prefilter      = kwargs.get('prefilter',      self.prefilter)
+        prefilterRange = kwargs.get('prefilterRange', self.prefilterRange)
+        normalise      = kwargs.get('normalise',      self.normalise)
+        normaliseRange = kwargs.get('normaliseRange', self.normaliseRange)
+        border         = kwargs.get('border',         self.border)
+        scales         = kwargs.get('scales',         self.scales)
+        resolution     = kwargs.get('resolution',     self.resolution)
 
-        self.refresh()
+        changed = {'interp'         : interp         != self.interp,
+                   'prefilter'      : prefilter      != self.prefilter,
+                   'prefilterRange' : prefilterRange != self.prefilterRange,
+                   'normalise'      : normalise      != self.normalise,
+                   'normaliseRange' : normaliseRange != self.normaliseRange,
+                   'border'         : border         != self.border,
+                   'scales'         : scales         != self.scales,
+                   'resolution'     : resolution     != self.resolution}
+
+        self.__interp         = interp
+        self.__prefilter      = prefilter
+        self.__prefilterRange = prefilterRange
+        self.__normalise      = bool(normalise)
+        self.__normaliseRange = normaliseRange
+        self.__border         = border
+        self.__scales         = scales
+        self.__resolution     = resolution
+
+        return changed
 
 
-    def getData(self):
-        """Returns the data stored in this ``Texture2D`` as a ``numpy.uint8``
-        array of shape ``(height, width, 4)``.
+class Texture(notifier.Notifier, TextureBaseMixin, TextureSettingsMixin):
+    """The ``Texture`` class is the base class for all other texture types in
+    *FSLeyes*. This class is not intended to be used directly - use one of the
+    sub-classes instead.
+
+
+    A texture can be bound and unbound via the methods of the
+    :class:`TextureBaseMixin` class. Various texture settings can be changed
+    via the methods of the :class:`TextureSettingsMixin` class. In the majority
+    of cases, in order to draw or configure a texture, it needs to be bound
+    (although this depends on the sub-class).
+
+
+    In order to use a texture, you need to provide some data, either via the
+    :meth:`data` method, or the :meth:`set` method. Calling :meth:`set` will
+    usually cause the texture to be reconfigured and refresh, although you
+    can also force a refresh by calling the :meth:`refresh` method directly.
+
+
+    The following properties can be queried to retrieve information about the
+    tetxure; some will return ``None`` until you have provided some data via
+    the ``set`` method:
+
+    .. autosummary::
+       :nosignatures:
+
+       voxValXform
+       invVoxValXform
+       shape
+       dataDtype
+       textureDtype
+       baseFormat
+       internalFormat
+       data
+       preparedData
+
+
+    When a ``Texture`` is created, and when its settings are changed, it may
+    need to prepare the data to be passed to OpenGL - for large textures, this
+    can be a time consuming process, so this may be performed on a separate
+    thread using the :mod:`.idle` module (unless the ``threaded`` parameter to
+    :meth:`__init__` is set to ``False``). The :meth:`ready` method returns
+    ``True`` or ``False`` to indicate whether the ``Texture`` is ready to be
+    used.
+
+
+    Furthermore, the ``Texture`` class derives from :class:`.Notifier`, so
+    listeners can register to be notified when an ``Texture`` is ready to
+    be used.
+
+
+    For textures with multiple values per voxel, it is assumed that these
+    values are indexed with the first dimension of the texture data (as passed
+    to :meth:`data` or :meth:`set`).
+
+
+    ``Texture`` sub-classes (e.g. :class:`.Texture2D`, :class:`.Texture3D`,
+    :class:`.ColourMapTexture`) must override the :meth:`doRefresh` method
+    such that it performs the GL calls required to configure the textureb.
+
+
+    See the :mod:`.resources` module for a method of sharing texture resources.
+    """
+
+
+    def __init__(self,
+                 name,
+                 ndims,
+                 nvals,
+                 threaded=False,
+                 **kwargs):
+        """Create a ``Texture``.
+
+        :arg name:     The name of this texture - should be unique.
+        :arg ndims:    Number of dimensions - must be 1, 2 or 3.
+        :arg nvals:    Number of values stored in each texture element.
+        :arg threaded: If ``True``, the texture data will be prepared on a
+                       separate thread (on calls to
+                       :meth:`refresh`). If ``False``, the texture data is
+                       prepared on the calling thread, and the
+                       :meth:`refresh` call will block until it has been
+                       prepared.
+
+        All other arguments are passed through to the initial call to
+        :meth:`set`.
+
+        .. note:: All subclasses must accept a ``name`` as the first parameter
+                  to their ``__init__`` method, and must pass said ``name``
+                  through to the :meth:`__init__` method.
         """
 
-        bound = self.isBound()
+        TextureBaseMixin    .__init__(self, name, ndims, nvals)
+        TextureSettingsMixin.__init__(self)
 
-        if not bound:
-            self.bindTexture()
+        self.__ready    = False
+        self.__threaded = threaded
 
-        intFmt, extFmt, ndtype, size = self.getDataTypeParams(self.__dtype)
+        # The data is refreshed on
+        # every call to set or refresh
+        # (the former calls the latter)
+        self.__data         = None
+        self.__preparedData = None
 
-        data = gl.glGetTexImage(gl.GL_TEXTURE_2D, 0, intFmt, extFmt, None)
+        # The data is refreshed on
+        # every call to set or refresh
+        # These attributes are set by the
+        self.__voxValXform    = None
+        self.__invVoxValXform = None
+        self.__textureShape   = None
+        self.__texFmt         = None
+        self.__texIntFmt      = None
+        self.__texDtype       = None
 
-        if not bound:
-            self.unbindTexture()
+        # If threading is enabled, texture
+        # refreshes are performed with an
+        # idle.TaskThread.
+        if threaded:
+            self.__taskThread = idle.TaskThread()
+            self.__taskName   = '{}_{}_refresh'.format(type(self).__name__,
+                                                       id(self))
 
-        data = np.frombuffer(data, dtype=ndtype)
-        data = data.reshape((self.__height, self.__width, size))
-        data = np.flipud(data)
+            self.__taskThread.daemon = True
+            self.__taskThread.start()
+        else:
+            self.__taskThread = None
+            self.__taskName   = None
 
-        return data
+        self.set(**kwargs)
 
 
-    def refresh(self):
-        """Configures this ``Texture2D``. This includes setting up
-        interpolation, and setting the texture size and data.
+    def destroy(self):
+        """Must be called when this ``Texture`` is no longer needed.
+        """
+        TextureBaseMixin.destroy(self)
+
+        if self.__taskThread is not None:
+            self.__taskThread.stop()
+
+        self.__taskThread   = None
+        self.__data         = None
+        self.__preparedData = None
+
+
+
+    def ready(self):
+        """Returns ``True`` if this ``Texture`` is ready to be used,
+        ``False`` otherwise.
+        """
+        return self.__ready
+
+
+    @property
+    def voxValXform(self):
+        """Return a transformation matrix that can be used to transform
+        values read from the texture back to the original data range.
+        """
+        return self.__voxValXform
+
+
+    @property
+    def invVoxValXform(self):
+        """Return a transformation matrix that can be used to transform
+        values in the original data range to values as read from the texture.
+        """
+        return self.__invVoxValXform
+
+
+    @property
+    def shape(self):
+        """Return a tuple containing the texture data shape. """
+        return self.__textureShape
+
+
+    @property
+    def dataDtype(self):
+        """Return the ``numpy`` data type of the texture data."""
+        return self.__data.dtype
+
+
+    @property
+    def textureDtype(self):
+        """Return the texture data type, e.g. ``gl.GL_UNSIGNED_BYTE``. """
+        return self.__texDtype
+
+
+    @property
+    def baseFormat(self):
+        """Return the base texture format, e.g. ``gl.GL_ALPHA``. """
+        return self.__texFmt
+
+
+    @property
+    def internalFormat(self):
+        """Return the sized/internal texture format, e.g. ``gl.GL_ALPHA8``. """
+        return self.__texIntFmt
+
+
+    @property
+    def data(self):
+        """Returns the data that has been passed to the :meth:`set` method. """
+        return self.__data
+
+
+    @data.setter
+    def data(self, data):
+        """Set the texture data - this get passed through to :meth:`set`. """
+        self.set(data=data)
+
+
+    @property
+    def preparedData(self):
+        """Returns the prepared data, i.e. the data as it has been copied
+        to the GPU.
+        """
+        return self.__preparedData
+
+
+    def set(self, **kwargs):
+        """Set any parameters on this ``Texture``. Valid keyword arguments are:
+
+        ================== ==============================================
+        ``interp``         See :meth:`.interp`.
+        ``data``           See :meth:`.data`.
+        ``prefilter``      See :meth:`.prefilter`.
+        ``prefilterRange`` See :meth:`.prefilterRange`
+        ``normalise``      See :meth:`.normalise.`
+        ``normaliseRange`` See :meth:`.normaliseRange`.
+        ``scales``         See :meth:`.scales`.
+        ``resolution``     See :meth:`.resolution`.
+        ``refresh``        If ``True`` (the default), the :meth:`refresh`
+                           function is called (but only if a setting has
+                           changed).
+        ``callback``       Optional function which will be called (via
+                           :func:`.idle.idle`) when the texture has been
+                           refreshed. Only called if ``refresh`` is
+                           ``True``, and a setting has changed.
+        ``notify``         Passed through to the :meth:`refresh` method.
+        ================== ==============================================
+
+        :returns: ``True`` if any settings have changed and the
+                  ``Texture`` is being/needs to be refreshed, ``False``
+                  otherwise.
         """
 
-        if any((self.__width  is None,
-                self.__height is None,
-                self.__width  <= 0,
-                self.__height <= 0)):
-            raise ValueError('Invalid size: {}'.format((self.__width,
-                                                        self.__height)))
+        changed  = TextureSettingsMixin.update(self, **kwargs)
+        data     = kwargs.get('data',     None)
+        refresh  = kwargs.get('refresh',  True)
+        notify   = kwargs.get('notify',   True)
+        callback = kwargs.get('callback', None)
 
-        dtype                  = self.__dtype
-        intFmt, extFmt, ndtype = self.getDataTypeParams(dtype)[:3]
+        changed['data'] = data is not None
 
-        data = self.__data
+        if not any(changed.values()):
+            return False
 
         if data is not None:
-            data = np.array(data.ravel('F'), dtype=ndtype, copy=False)
 
-        self.bindTexture()
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+            self.__data = data
 
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           self.__interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           self.__interp)
+            # If the data is of a type which cannot
+            # be stored natively as an OpenGL texture,
+            # and we don't have support for floating
+            # point textures, the data must be
+            # normalised. See determineType and
+            # prepareData in the data module
+            self.normalise = self.normalise or \
+                (not texdata.canUseFloatTextures()[0] and
+                 (data.dtype not in (np.uint8,
+                                     np.int8,
+                                     np.uint16,
+                                     np.int16)))
 
-        if self.__border is not None:
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_S,
-                               gl.GL_CLAMP_TO_BORDER)
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_T,
-                               gl.GL_CLAMP_TO_BORDER)
-            gl.glTexParameterfv(gl.GL_TEXTURE_2D,
-                                gl.GL_TEXTURE_BORDER_COLOR,
-                                self.__border)
+            # If the caller has not provided
+            # a normalisation range, we have
+            # to calculate it.
+            if self.normalise and (self.normaliseRange is None):
+
+                self.normaliseRange = np.nanmin(data), np.nanmax(data)
+                log.debug('Calculated %s data range for normalisation: '
+                          '[%s - %s]', self.__name, *self.__normaliseRange)
+
+        refreshData = any((changed['data'],
+                           changed['prefilter'],
+                           changed['prefilterRange'],
+                           changed['normaliseRange'] and self.normalise,
+                           changed['resolution'],
+                           changed['scales'],
+                           changed['normalise']))
+
+        if refresh:
+            self.refresh(refreshData=refreshData,
+                         notify=notify,
+                         callback=callback)
+
+        return True
+
+
+    def refresh(self, refreshData=True, notify=True, callback=None):
+        """(Re-)configures the OpenGL texture.
+
+        :arg refreshData:  If ``True`` (the default), the texture data is
+                           refreshed.
+
+        :arg notify:       If ``True`` (the default), a notification is
+                           triggered via the :class:`.Notifier` base-class,
+                           when this ``Texture3D`` has been refreshed, and
+                           is ready to use. Otherwise, the notification is
+                           suppressed.
+
+        :arg callback:     Optional function which will be called (via
+                           :func:`.idle.idle`) when the texture has been
+                           refreshed. Only called if ``refresh`` is
+                           ``True``, and a setting has changed.
+
+        .. note:: The texture data may be generated on a separate thread, using
+                  the :func:`.idle.run` function. This is controlled by the
+                  ``threaded`` parameter,  passed to :meth:`__init__`.
+        """
+
+        # Don't bother if data
+        # hasn't been set
+        if self.__data is None:
+            return
+
+        self.__ready = False
+
+        # This can take a long time for big
+        # data, so we do it in a separate
+        # thread using the idle module.
+        def genData():
+
+            # Another genData function is
+            # already queued - don't run.
+            # The TaskThreadVeto error
+            # will stop the TaskThread from
+            # calling configTexture as well.
+            if self.__taskThread is not None and \
+               self.__taskThread.isQueued(self.__taskName):
+                raise idle.TaskThreadVeto()
+
+            if refreshData:
+                self.__determineTextureType()
+                self.__prepareTextureData()
+
+        # Once genData is finished, we pass the
+        # result (see __prepareTextureData) to
+        # the sub-class doRefresh method.
+        def doRefresh():
+
+            # If destroy() is called, the
+            # preparedData will be blanked
+            # out.
+            if self.__preparedData is None:
+                return
+
+            with self.bound():
+                self.doRefresh(self.__preparedData)
+
+            self.__ready = True
+
+            if notify:
+                self.notify()
+            if callback is not None:
+                callback()
+
+        # Wrap the above functions in a report
+        # decorator in case an error occurs
+        title     = strings.messages[self, 'dataError']
+        msg       = strings.messages[self, 'dataError']
+        genData   = status.reportErrorDecorator(title, msg)(genData)
+        doRefresh = status.reportErrorDecorator(title, msg)(doRefresh)
+
+        if self.__threaded:
+
+            # TODO the task is already queued,
+            #      but a callback function has been
+            #      specified, should you queue the
+            #      callback function?
+
+            # Don't queue the texture
+            # refresh task twice
+            if not self.__taskThread.isQueued(self.__taskName):
+                self.__taskThread.enqueue(genData,
+                                          taskName=self.__taskName,
+                                          onFinish=doRefresh)
+
         else:
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_S,
-                               gl.GL_CLAMP_TO_EDGE)
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_T,
-                               gl.GL_CLAMP_TO_EDGE)
-
-        log.debug('Configuring {} ({}) with size {}x{}'.format(
-            type(self).__name__,
-            self.getTextureHandle(),
-            self.__width,
-            self.__height))
-
-        # If the width and height have not changed,
-        # then we don't need to re-define the texture.
-        if self.__width  == self.__oldWidth  and \
-           self.__height == self.__oldHeight:
-
-            # But we can use glTexSubImage2D
-            # if we have data to upload
-            if data is not None:
-                gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
-                                   0,
-                                   0,
-                                   0,
-                                   self.__width,
-                                   self.__height,
-                                   intFmt,
-                                   extFmt,
-                                   data)
-
-        # If the width and/or height have
-        # changed, we need to re-define
-        # the texture properties
-        else:
-            gl.glTexImage2D(gl.GL_TEXTURE_2D,
-                            0,
-                            dtype,
-                            self.__width,
-                            self.__height,
-                            0,
-                            intFmt,
-                            extFmt,
-                            data)
-        self.unbindTexture()
+            genData()
+            doRefresh()
 
 
-    def __prepareCoords(self, vertices, xform=None):
-        """Called by :meth:`draw`. Prepares vertices, texture coordinates and
-        indices for drawing the texture.
+    def patchData(self, data, offset):
+        """This is a shortcut method which can be used to replace part
+        of the image texture data without having to regenerate the entire
+        texture.
 
-        If ``vertices is None``, it is assumed that the caller has already
-        assigned vertices and texture coordinates, either via a shader, or
-        via vertex/texture coordinate pointers. In this case,
+        The :meth:`set` and :meth:`refresh` methods are quite heavyweight, and
+        are written in such a way that partial texture updates are not
+        possible. This method allows small parts of the image texture to be
+        quickly updated.
+        """
+        data = np.asarray(data)
 
-        :returns: A tuple containing the vertices, texture coordinates, and
-                  indices, or ``(None, None, indices)`` if
-                  ``vertices is None``
+        if len(data.shape) < self.ndim:
+            newshape = list(data.shape) + [1] * (self.ndim - len(data.shape))
+            data     = data.reshape(newshape)
+
+        data = texdata.prepareData(data)[0]
+
+        with self.bound():
+            self.doPatch(data, offset)
+
+        self.notify()
+
+
+    def doRefresh(self, data):
+        """Must be overridden by sub-classes to configure the texture.
+
+        This method is not intended to be called externally - call
+        :meth:`refresh` instead.
+
+        The sub-class implementation can assume that the texture is bound
+        when this method is called.
+        """
+        raise NotImplementedError('Must be implemented by subclasses')
+
+
+    def doPatch(data, offset):
+        """Must be overridden by sub-classes to quickly update part of
+        the texture data.
+
+        This method is not intended to be called externally - call
+        :meth:`patchData` instead.
+
+        The sub-class implementation can assume that the texture is bound
+        when this method is called.
+        """
+        raise NotImplementedError('Must be implemented by subclasses')
+
+
+    def __determineTextureType(self):
+        """Figures out how the texture data should be stored as an OpenGL
+        texture. See the :func:`.data.getTextureType` function.
+
+        This method sets the following attributes on this ``Texture`` instance:
+
+        ==================== ==============================================
+        ``__texFmt``         The texture format (e.g. ``GL_RGB``,
+                             ``GL_LUMINANCE``, etc).
+
+        ``__texIntFmt``      The internal texture format used by OpenGL for
+                             storage (e.g. ``GL_RGB16``, ``GL_LUMINANCE8``,
+                             etc).
+
+        ``__texDtype``       The raw type of the texture data (e.g.
+                             ``GL_UNSIGNED_SHORT``)
+        ==================== ==============================================
         """
 
-        indices = np.arange(6, dtype=np.uint32)
+        if self.nvals not in (1, 3):
+            raise ValueError('Cannot create texture representation for %s '
+                             '(nvals: %s)', self.__data.dtype, self.nvals)
 
-        if vertices is None:
-            return None, None, indices
+        dtype                    = self.__data.dtype
+        normalise                = self.normalise
+        nvals                    = self.nvals
+        texDtype, texFmt, intFmt = texdata.getTextureType(
+            normalise, dtype, nvals)
 
-        if vertices.shape != (6, 3):
-            raise ValueError('Six vertices must be provided')
+        log.debug('Texture (%s) is to be stored as %s/%s/%s '
+                  '(normalised: %s)',
+                  self.name,
+                  texdata.GL_TYPE_NAMES[texDtype],
+                  texdata.GL_TYPE_NAMES[texFmt],
+                  texdata.GL_TYPE_NAMES[intFmt],
+                  normalise)
 
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
-
-        vertices  = np.array(vertices, dtype=np.float32).ravel('C')
-        texCoords = self.generateTextureCoords()        .ravel('C')
-
-        return vertices, texCoords, indices
+        self.__texFmt    = texFmt
+        self.__texIntFmt = intFmt
+        self.__texDtype  = texDtype
 
 
-    def draw(self,
-             vertices=None,
-             xform=None,
-             textureUnit=None):
-        """Draw the contents of this ``Texture2D`` to a region specified by
-        the given vertices. The texture is bound to texture unit 0.
+    def __prepareTextureData(self):
+        """Prepare the texture data.
 
-        :arg vertices:    A ``numpy`` array of shape ``6 * 3`` specifying the
-                          region, made up of two triangles, to which this
-                          ``Texture2D`` should be drawn. If ``None``, it is
-                          assumed that the vertices and texture coordinates
-                          have already been configured (e.g. via a shader
-                          program).
+        This method passes the stored data to the :func:`.data.prepareData`
+        function and then stores references to its return valuesa as
+        attributes on this ``Texture`` instance:
 
-        :arg xform:       A transformation to be applied to the vertices.
-                          Ignored if ``vertices is None``.
+        ==================== =============================================
+        ``__preparedata``    A ``numpy`` array containing the image data,
+                             ready to be copied to the GPU.
 
-        :arg textureUnit: Texture unit to bind to. Defaults to
-                          ``gl.GL_TEXTURE0``.
+        ``__textureShape``   Shape of the texture data.
+
+        ``__voxValXform``    An affine transformation matrix which encodes
+                             an offset and a scale, which may be used to
+                             transform the texture data from the range
+                             ``[0.0, 1.0]`` to its raw data range.
+
+        ``__invVoxValXform`` Inverse of ``voxValXform``.
+
+        ==================== =============================================
         """
+        data, voxValXform, invVoxValXform = texdata.prepareData(self.__data)
+        self.__preparedData   = data
+        self.__voxValXform    = voxValXform
+        self.__invVoxValXform = invVoxValXform
 
-        if textureUnit is None:
-            textureUnit = gl.GL_TEXTURE0
-
-        vertices, texCoords, indices = self.__prepareCoords(vertices, xform)
-
-        self.bindTexture(textureUnit)
-        gl.glClientActiveTexture(textureUnit)
-        gl.glTexEnvf(gl.GL_TEXTURE_ENV,
-                     gl.GL_TEXTURE_ENV_MODE,
-                     gl.GL_REPLACE)
-
-
-        glfeatures = [gl.GL_TEXTURE_2D, gl.GL_VERTEX_ARRAY]
-
-        # Only enable texture coordinates if we know
-        # that there are texture coordinates. Some GL
-        # platforms will crash if texcoords are
-        # enabled on a texture unit, but no texcoords
-        # are loaded.
-        if vertices is not None:
-            glfeatures.append(gl.GL_TEXTURE_COORD_ARRAY)
-
-        with glroutines.enabled(glfeatures):
-
-            if vertices is not None:
-                gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
-                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
-
-            gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, indices)
-
-        self.unbindTexture()
-
-
-    def drawOnBounds(self,
-                     zpos,
-                     xmin,
-                     xmax,
-                     ymin,
-                     ymax,
-                     xax,
-                     yax,
-                     *args,
-                     **kwargs):
-        """Draws the contents of this ``Texture2D`` to a rectangle.  This is a
-        convenience method which creates a set of vertices, and passes them to
-        the :meth:`draw` method.
-
-        :arg zpos:  Position along the Z axis, in the display coordinate
-                    system.
-        :arg xmin:  Minimum X axis coordinate.
-        :arg xmax:  Maximum X axis coordinate.
-        :arg ymin:  Minimum Y axis coordinate.
-        :arg ymax:  Maximum Y axis coordinate.
-        :arg xax:   Display space axis which maps to the horizontal screen
-                    axis.
-        :arg yax:   Display space axis which maps to the vertical screen
-                    axis.
-
-        All other arguments are passed to the :meth:`draw` method.
-        """
-
-        vertices = self.generateVertices(
-            zpos, xmin, xmax, ymin, ymax, xax, yax)
-        self.draw(vertices, *args, **kwargs)
-
-
-    @classmethod
-    def generateVertices(
-            cls, zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
-        """Generates a set of vertices suitable for passing to the
-        :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D
-        canvas.
-
-        :arg zpos:  Position along the Z axis, in the display coordinate
-                    system.
-        :arg xmin:  Minimum X axis coordinate.
-        :arg xmax:  Maximum X axis coordinate.
-        :arg ymin:  Minimum Y axis coordinate.
-        :arg ymax:  Maximum Y axis coordinate.
-        :arg xax:   Display space axis which maps to the horizontal screen
-                    axis.
-        :arg yax:   Display space axis which maps to the vertical screen
-                    axis.
-        :arg xform: Transformation matrix to appply to vertices.
-        """
-
-        zax              = 3 - xax - yax
-        vertices         = np.zeros((6, 3), dtype=np.float32)
-        vertices[:, zax] = zpos
-
-        vertices[ 0, [xax, yax]] = [xmin, ymin]
-        vertices[ 1, [xax, yax]] = [xmin, ymax]
-        vertices[ 2, [xax, yax]] = [xmax, ymin]
-        vertices[ 3, [xax, yax]] = [xmax, ymin]
-        vertices[ 4, [xax, yax]] = [xmin, ymax]
-        vertices[ 5, [xax, yax]] = [xmax, ymax]
-
-        if xform is not None:
-            vertices = transform.transform(vertices, xform)
-
-        return vertices
-
-
-    @classmethod
-    def generateTextureCoords(cls):
-        """Generates a set of texture coordinates for drawing a
-        :class:`Texture2D`. This function is used by the
-        :meth:`Texture2D.draw` method.
-        """
-
-        texCoords       = np.zeros((6, 2), dtype=np.float32)
-        texCoords[0, :] = [0, 0]
-        texCoords[1, :] = [0, 1]
-        texCoords[2, :] = [1, 0]
-        texCoords[3, :] = [1, 0]
-        texCoords[4, :] = [0, 1]
-        texCoords[5, :] = [1, 1]
-
-        return texCoords
+        if len(data.shape) == 4: self.__textureShape = data.shape[1:]
+        else:                    self.__textureShape = data.shape

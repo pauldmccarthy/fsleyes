@@ -27,13 +27,13 @@ from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.deprecated               as deprecated
 import fsleyes.gl.routines                as glroutines
 import fsleyes.gl.shaders                 as shaders
-from . import                                texture
+from . import                                texture2d
 
 
 log = logging.getLogger(__name__)
 
 
-class RenderTexture(texture.Texture2D):
+class RenderTexture(texture2d.Texture2D):
     """The ``RenderTexture`` class is a 2D RGBA texture which manages
     a frame buffer and a render buffer or another ``Texture2D`` which
     is used as the depth+stencil, or depth attachment.
@@ -118,7 +118,7 @@ class RenderTexture(texture.Texture2D):
         if rttype not in ('c', 'cd', 'cds'):
             raise ValueError('Invalid rttype: {}'.format(rttype))
 
-        texture.Texture2D.__init__(self, *args, **kwargs)
+        texture2d.Texture2D.__init__(self, *args, **kwargs)
 
         self.__frameBuffer     = glfbo.glGenFramebuffersEXT(1)
         self.__rttype          = rttype
@@ -138,7 +138,7 @@ class RenderTexture(texture.Texture2D):
         # Or use a texture as the depth
         # attachment (with no stencil attachment)
         elif rttype == 'cd':
-            self.__depthTexture = texture.Texture2D(
+            self.__depthTexture = texture2d.Texture2D(
                 '{}_depth'.format(self.getTextureName()),
                 dtype=gl.GL_DEPTH_COMPONENT24)
 
@@ -185,7 +185,7 @@ class RenderTexture(texture.Texture2D):
         :meth:`.Texture2D.destroy`.
         """
 
-        texture.Texture2D.destroy(self)
+        texture2d.Texture2D.destroy(self)
 
         log.debug('Deleting FBO{} [{}]'.format(
             self.__frameBuffer, self.__rttype))
@@ -246,7 +246,7 @@ class RenderTexture(texture.Texture2D):
             raise ValueError('This RenderTexture is not '
                              'configured to use a depth texture')
 
-        if not isinstance(dtex, texture.Texture2D)   or \
+        if not isinstance(dtex, texture2d.Texture2D)   or \
            dtex.dtype     != gl.GL_DEPTH_COMPONENT24 or \
            dtex.getSize() != self.getSize():
             raise ValueError('Incompatible depth texture')
@@ -266,7 +266,7 @@ class RenderTexture(texture.Texture2D):
         if self.__depthTexture is not None:
             self.__depthTexture.setSize(width, height)
 
-        texture.Texture2D.setSize(self, width, height)
+        texture2d.Texture2D.setSize(self, width, height)
 
 
     @contextlib.contextmanager
@@ -434,7 +434,7 @@ class RenderTexture(texture.Texture2D):
         implementation, and ensures that the frame buffer and render buffer
         of this ``RenderTexture`` are configured correctly.
         """
-        texture.Texture2D.refresh(self)
+        texture2d.Texture2D.refresh(self)
 
         width, height = self.getSize()
 
@@ -514,7 +514,7 @@ class RenderTexture(texture.Texture2D):
             self.__depthTexture.bindTexture(gl.GL_TEXTURE1)
             self.__shader.load()
 
-        texture.Texture2D.draw(self, *args, **kwargs)
+        texture2d.Texture2D.draw(self, *args, **kwargs)
 
         if useDepth:
             self.__shader.unload()

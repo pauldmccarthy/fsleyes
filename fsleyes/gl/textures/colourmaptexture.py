@@ -69,8 +69,6 @@ class ColourMapTexture(texture.Texture):
         :arg name: A unique name for this ``ColourMapTexture``.
         """
 
-        texture.Texture.__init__(self, name, 1, 4)
-
         self.__resolution   = None
         self.__cmap         = None
         self.__invert       = False
@@ -80,6 +78,8 @@ class ColourMapTexture(texture.Texture):
         self.__displayRange = None
         self.__border       = None
         self.__coordXform   = None
+
+        texture.Texture.__init__(self, name, 1, 4)
 
 
     def setColourMap(self, cmap):

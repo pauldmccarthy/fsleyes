@@ -17,7 +17,7 @@ textures for various purposes.
 # All *Texture classes are made available at the
 # textures package level due to these imports
 from .texture            import Texture
-from .texture            import Texture2D
+from .texture2d          import Texture2D
 from .texture3d          import Texture3D
 from .imagetexture       import ImageTexture
 from .colourmaptexture   import ColourMapTexture
