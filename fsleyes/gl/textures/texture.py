@@ -197,6 +197,7 @@ class TextureBaseMixin(object):
 class TextureSettingsMixin(object):
     """Mixin class used by the :class:`Texture` class.
 
+
     This class provides methods to get/set various settings which can
     be used to manipulate the texture. All of the logic which uses
     these settings is in the ``Texture`` class.
@@ -215,18 +216,27 @@ class TextureSettingsMixin(object):
        border
        scales
        resolution
+
+    Additional settings can be added via the ``settings`` argument to
+    :meth:`__init__`. All settings can be changed via the :meth:`update`
+    method.
     """
 
-    def __init__(self):
-        """Create a ``TextureSettingsMixin``. """
-        self.__interp         = None
-        self.__prefilter      = None
-        self.__prefilterRange = None
-        self.__normalise      = None
-        self.__normaliseRange = None
-        self.__border         = None
-        self.__resolution     = None
-        self.__scales         = None
+    def __init__(self, settings=None):
+        """Create a ``TextureSettingsMixin``.
+
+        :arg settings: Sequence of additional settings to make available.
+        """
+
+        defaults = ['interp',
+                    'prefilter', 'prefilterRange',
+                    'normalise', 'normaliseRange',
+                    'border', 'resolution', 'scales']
+
+        if settings is None: settings = defaults
+        else:                settings = defaults + list(settings)
+
+        self.__settings = {s : None for s in settings}
 
 
     @property
@@ -234,7 +244,7 @@ class TextureSettingsMixin(object):
         """Return the current texture interpolation setting - either
         ``GL_NEAREST`` or ``GL_LINEAR``.
         """
-        return self.__interp
+        return self.__settings['interp']
 
 
     @interp.setter
@@ -251,7 +261,7 @@ class TextureSettingsMixin(object):
         If this function changes the range of the data, you must also
         provide a ``prefilterRange`` function - see :meth:`prefilterRange`.
         """
-        return self.__prefilter
+        return self.__settings['prefilter']
 
 
     @prefilter.setter
@@ -268,7 +278,7 @@ class TextureSettingsMixin(object):
         must adjust these values so that they reflect the adjusted range of
         the data that was passed to the ``prefilter`` function.
         """
-        return self.__prefilterRange
+        return self.__settings['prefilterRange']
 
 
     @prefilterRange.setter
@@ -293,13 +303,14 @@ class TextureSettingsMixin(object):
                   as a texture, the data is automatically normalised,
                   regardless of the value specified here.
         """
-        return self.__normalise
+        return self.__settings['normalise']
 
 
     @normalise.setter
     def normalise(self, normalise):
         """Enable/disable normalisation. """
         self.update(normalise=normalise)
+
 
     @property
     def normaliseRange(self):
@@ -316,7 +327,7 @@ class TextureSettingsMixin(object):
 
         If ``None``, the data minimum/maximum are calculated and used.
         """
-        return self.__normaliseRange
+        return self.__settings['normaliseRange']
 
 
     @normaliseRange.setter
@@ -331,7 +342,7 @@ class TextureSettingsMixin(object):
         in the range 0 to 1, or ``None`` for no border (in which case the
         texture coordinates will be clamped to edges).
         """
-        return self.__border
+        return self.__settings['border']
 
 
     @border.setter
@@ -348,7 +359,7 @@ class TextureSettingsMixin(object):
         resolution (as set by :meth:`resolution`) is in terms of something
         other than data indices (e.g. :class:`.Image` pixdims).
         """
-        return self.__scales
+        return self.__settings['scales']
 
 
     @scales.setter
@@ -363,7 +374,7 @@ class TextureSettingsMixin(object):
         to the :func:`.routines.subsample` function, in the
         :func:`.prepareData` function.
         """
-        return self.__resolution
+        return self.__settings['resolution']
 
 
     @resolution.setter
@@ -391,33 +402,12 @@ class TextureSettingsMixin(object):
                   which properties have changed value.
         """
 
-        interp         = kwargs.get('interp',         self.interp)
-        prefilter      = kwargs.get('prefilter',      self.prefilter)
-        prefilterRange = kwargs.get('prefilterRange', self.prefilterRange)
-        normalise      = kwargs.get('normalise',      self.normalise)
-        normaliseRange = kwargs.get('normaliseRange', self.normaliseRange)
-        border         = kwargs.get('border',         self.border)
-        scales         = kwargs.get('scales',         self.scales)
-        resolution     = kwargs.get('resolution',     self.resolution)
-
-        changed = {'interp'         : interp         != self.interp,
-                   'prefilter'      : prefilter      != self.prefilter,
-                   'prefilterRange' : prefilterRange != self.prefilterRange,
-                   'normalise'      : normalise      != self.normalise,
-                   'normaliseRange' : normaliseRange != self.normaliseRange,
-                   'border'         : border         != self.border,
-                   'scales'         : scales         != self.scales,
-                   'resolution'     : resolution     != self.resolution}
-
-        self.__interp         = interp
-        self.__prefilter      = prefilter
-        self.__prefilterRange = prefilterRange
-        self.__normalise      = bool(normalise)
-        self.__normaliseRange = normaliseRange
-        self.__border         = border
-        self.__scales         = scales
-        self.__resolution     = resolution
-
+        changed = {}
+        for s in self.__settings.keys():
+            oldval             = self.__settings[s]
+            newval             = kwargs.get(s, self.__settings[s])
+            changed[s]         = oldval != newval
+            self.__settings[s] = newval
         return changed
 
 
@@ -491,6 +481,7 @@ class Texture(notifier.Notifier, TextureBaseMixin, TextureSettingsMixin):
                  ndims,
                  nvals,
                  threaded=False,
+                 settings=None,
                  **kwargs):
         """Create a ``Texture``.
 
@@ -503,6 +494,8 @@ class Texture(notifier.Notifier, TextureBaseMixin, TextureSettingsMixin):
                        prepared on the calling thread, and the
                        :meth:`refresh` call will block until it has been
                        prepared.
+        :arg settings: Additional settings to make available through the
+                       :class:`TextureSettingsMixin`.
 
         All other arguments are passed through to the initial call to
         :meth:`set`.
@@ -513,7 +506,7 @@ class Texture(notifier.Notifier, TextureBaseMixin, TextureSettingsMixin):
         """
 
         TextureBaseMixin    .__init__(self, name, ndims, nvals)
-        TextureSettingsMixin.__init__(self)
+        TextureSettingsMixin.__init__(self, settings)
 
         self.__ready    = False
         self.__threaded = threaded
