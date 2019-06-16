@@ -132,13 +132,17 @@ class Texture2D(texture.Texture):
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
-            if self.interp is not None:
-                gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                                   gl.GL_TEXTURE_MAG_FILTER,
-                                   self.interp)
-                gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                                   gl.GL_TEXTURE_MIN_FILTER,
-                                   self.interp)
+            interp = self.interp
+
+            if interp is None:
+                interp = gl.GL_NEAREST
+
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_MAG_FILTER,
+                               interp)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_MIN_FILTER,
+                               interp)
 
             if self.border is not None:
                 gl.glTexParameteri(gl.GL_TEXTURE_2D,
@@ -249,7 +253,7 @@ class Texture2D(texture.Texture):
 
         vertices, texCoords, indices = self.__prepareCoords(vertices, xform)
 
-        with self.bound():
+        with self.bound(textureUnit):
             gl.glClientActiveTexture(textureUnit)
             gl.glTexEnvf(gl.GL_TEXTURE_ENV,
                          gl.GL_TEXTURE_ENV_MODE,
