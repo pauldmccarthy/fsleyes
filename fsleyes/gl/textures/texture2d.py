@@ -4,147 +4,131 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Texture2D` class.
+"""This module provides the :class:`Texture2D` and :class:`DepthTexture`
+classes.
 """
 
 
-import numpy as np
+import logging
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform as transform
+import fsleyes.gl.routines as glroutines
+from . import                 texture
 
-from . import texture
+
+log = logging.getLogger(__name__)
 
 
-class Texture2D(texture.Texture):
-    """The ``Texture2D`` class represents a two-dimensional RGBA texture. A
-    ``Texture2D`` instance can be used in one of two ways:
+class DepthTexture(texture.Texture):
+    """The ``DepthTexture`` class is a 2D ``GL_DEPTH_COMPONENT24`` texture
+    which is used by the :class:`.RenderTexture` class.
 
-      - Setting the texture data via the :meth:`setData` method, and then
-        drawing it to a scene via :meth:`draw` or :meth:`drawOnBounds`.
-
-      - Setting the texture size via :meth:`setSize`, and then drawing to it
-        by some other means (see e.g. the :class:`.RenderTexture` class, a
-        sub-class of ``Texture2D``).
+    A ``DepthTexture`` is configured by setting its :meth:`.Texture.shape`
+    property to the desired width/height.
     """
 
 
-    def __init__(self, name, dtype=None, **kwargs):
-        """Create a ``Texture2D`` instance.
+    def __init__(self, name):
+        """Create a ``DepthTexture``
 
-        :arg name:   Unique name for this ``Texture2D``.
+        :arg name: Unique name for this texture
+        """
+        texture.Texture.__init__(self, name, 2, 1)
 
-        :arg dtype:  Sized internal GL data format to use for the texture.
-                     Currently only ``gl.GL_RGBA8`` (the default) and
-                     ``gl.GL_DEPTH_COMPONENT24`` are supported.
+
+    def doRefresh(self):
+        """Refreshes this ``DepthTexture`` based on the current
+        :meth:`.Texture.shape`.
         """
 
-        if dtype is None:
-            dtype = gl.GL_RGBA8
+        width, height = self.shape
+        dtype         = gl.GL_UNSIGNED_INT
+        intFmt        = gl.GL_DEPTH_COMPONENT24
+        baseFmt       = gl.GL_DEPTH_COMPONENT
 
-        if dtype not in (gl.GL_RGBA8, gl.GL_DEPTH_COMPONENT24):
-            raise ValueError('Invalid dtype: {}'.format(dtype))
+        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                           gl.GL_TEXTURE_WRAP_S,
+                           gl.GL_CLAMP_TO_EDGE)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                           gl.GL_TEXTURE_WRAP_T,
+                           gl.GL_CLAMP_TO_EDGE)
+        gl.glTexImage2D(gl.GL_TEXTURE_2D,
+                        0,
+                        dtype,
+                        width,
+                        height,
+                        0,
+                        intFmt,
+                        baseFmt,
+                        None)
 
-        if dtype == gl.GL_RGBA8: nvals = 4
-        else:                    nvals = 1
+
+
+class Texture2D(texture.Texture):
+    """The ``Texture2D`` class represents a 2D texture. A ``Texture2D``
+    instance can be used in one of two ways:
+
+      - Setting the texture data via the :meth:`.Texture.data` method, and then
+        drawing it to a scene via :meth:`draw` or :meth:`drawOnBounds`.
+
+      - Setting the texture size via :meth:`.Texture.shape`, and then drawing
+        to it by some other means (see e.g. the :class:`.RenderTexture` class,
+        a sub-class of ``Texture2D``).
+    """
+
+
+    def __init__(self, name, **kwargs):
+        """Create a ``Texture2D`` instance.
+
+        :arg name: Unique name for this ``Texture2D``.
+        """
+
+        nvals           = kwargs.get('nvals', 4)
+        kwargs['nvals'] = kwargs['nvals']
+
+        if nvals not in (1, 4):
+            raise ValueError('nvals must be 1 or 4')
 
         texture.Texture.__init__(self, name, 2, nvals)
 
-        self.__dtype = dtype
+        # We keep a copy of the current
+        # width/height, so we can detect
+        # whether it has changed, and
+        # skip unnecessary processing
+        self.__width  = None
+        self.__height = None
 
 
-    def setSize(self, width, height):
-        """Sets the width/height for this texture.
-
-        This method also clears the data for this texture, if it has been
-        previously set via the :meth:`setData` method.
+    def doRefresh(self):
+        """Overrides :meth:`.Texture.doRefresh`. Configures this ``Texture2D``.
+        This includes setting up interpolation, and setting the texture size
+        and data.
         """
 
-        if any((width <= 0, height <= 0)):
-            raise ValueError('Invalid size: {}'.format((width, height)))
+        data = self.preparedData
 
-        self.__setSize(width, height)
-        self.__data = None
-
-        self.refresh()
-
-
-    def __setSize(self, width, height):
-        """Sets the width/height attributes for this texture, and saves a
-        reference to the old width/height - see comments in the refresh
-        method.
-        """
-        self.__oldWidth  = self.__width
-        self.__oldHeight = self.__height
-        self.__width     = width
-        self.__height    = height
-
-
-    @classmethod
-    def getDataTypeParams(cls, dtype):
-        """Returns a tuple containing information about the given sized
-        internal GL texture data format:
-        - The base GL internal format
-        - The GL external data format
-        - The equivalent ``numpy`` data type
-        - The number of channels
-        """
-
-        if dtype == gl.GL_RGBA8:
-            intFmt = gl.GL_RGBA
-            extFmt = gl.GL_UNSIGNED_BYTE
-            ndtype = np.uint8
-            size   = 4
-
-        elif dtype == gl.GL_DEPTH_COMPONENT24:
-            intFmt = gl.GL_DEPTH_COMPONENT
-            extFmt = gl.GL_UNSIGNED_INT
-            ndtype = np.uint32
-            size   = 1
-
-        return intFmt, extFmt, ndtype, size
-
-
-    @property
-    def dtype(self):
-        """Returns the internal GL data format to use for this texture. """
-
-        return self.__dtype
-
-
-    def refresh(self):
-        """Configures this ``Texture2D``. This includes setting up
-        interpolation, and setting the texture size and data.
-        """
-
-        if any((self.__width  is None,
-                self.__height is None,
-                self.__width  <= 0,
-                self.__height <= 0)):
-            raise ValueError('Invalid size: {}'.format((self.__width,
-                                                        self.__height)))
-
-        dtype                  = self.__dtype
-        intFmt, extFmt, ndtype = self.getDataTypeParams(dtype)[:3]
-
-        data = self.__data
+        if data is None: width, height = self.shape
+        else:            width, height = data.shape[1:]
 
         if data is not None:
-            data = np.array(data.ravel('F'), dtype=ndtype, copy=False)
+            data = np.array(data.ravel('F'), copy=False)
 
-        self.bindTexture()
         gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
         gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MAG_FILTER,
-                           self.__interp)
+                           self.interp)
         gl.glTexParameteri(gl.GL_TEXTURE_2D,
                            gl.GL_TEXTURE_MIN_FILTER,
-                           self.__interp)
+                           self.interp)
 
-        if self.__border is not None:
+        if self.border is not None:
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_WRAP_S,
                                gl.GL_CLAMP_TO_BORDER)
@@ -153,7 +137,7 @@ class Texture2D(texture.Texture):
                                gl.GL_CLAMP_TO_BORDER)
             gl.glTexParameterfv(gl.GL_TEXTURE_2D,
                                 gl.GL_TEXTURE_BORDER_COLOR,
-                                self.__border)
+                                self.border)
         else:
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_WRAP_S,
@@ -162,44 +146,39 @@ class Texture2D(texture.Texture):
                                gl.GL_TEXTURE_WRAP_T,
                                gl.GL_CLAMP_TO_EDGE)
 
-        log.debug('Configuring {} ({}) with size {}x{}'.format(
-            type(self).__name__,
-            self.getTextureHandle(),
-            self.__width,
-            self.__height))
-
-        # If the width and height have not changed,
-        # then we don't need to re-define the texture.
-        if self.__width  == self.__oldWidth  and \
-           self.__height == self.__oldHeight:
-
-            # But we can use glTexSubImage2D
-            # if we have data to upload
-            if data is not None:
-                gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
-                                   0,
-                                   0,
-                                   0,
-                                   self.__width,
-                                   self.__height,
-                                   intFmt,
-                                   extFmt,
-                                   data)
+        # If the width and height have not
+        # changed, then we don't need to
+        # re-define the texture. But we can
+        # use glTexSubImage2D if we have
+        # data to upload
+        if width  == self.__width  and \
+           height == self.__height and \
+           data is not None:
+            gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
+                               0,
+                               0,
+                               0,
+                               width,
+                               height,
+                               self.internalFormat,
+                               self.baseFormat,
+                               data)
 
         # If the width and/or height have
         # changed, we need to re-define
         # the texture properties
         else:
+            self.__width  = width
+            self.__height = height
             gl.glTexImage2D(gl.GL_TEXTURE_2D,
                             0,
-                            dtype,
-                            self.__width,
-                            self.__height,
+                            self.textureDtype,
+                            width,
+                            height,
                             0,
-                            intFmt,
-                            extFmt,
+                            self.internalFormat,
+                            self.externalFormat,
                             data)
-        self.unbindTexture()
 
 
     def __prepareCoords(self, vertices, xform=None):
@@ -258,32 +237,30 @@ class Texture2D(texture.Texture):
 
         vertices, texCoords, indices = self.__prepareCoords(vertices, xform)
 
-        self.bindTexture(textureUnit)
-        gl.glClientActiveTexture(textureUnit)
-        gl.glTexEnvf(gl.GL_TEXTURE_ENV,
-                     gl.GL_TEXTURE_ENV_MODE,
-                     gl.GL_REPLACE)
+        with self.bound():
+            gl.glClientActiveTexture(textureUnit)
+            gl.glTexEnvf(gl.GL_TEXTURE_ENV,
+                         gl.GL_TEXTURE_ENV_MODE,
+                         gl.GL_REPLACE)
 
+            glfeatures = [gl.GL_TEXTURE_2D, gl.GL_VERTEX_ARRAY]
 
-        glfeatures = [gl.GL_TEXTURE_2D, gl.GL_VERTEX_ARRAY]
-
-        # Only enable texture coordinates if we know
-        # that there are texture coordinates. Some GL
-        # platforms will crash if texcoords are
-        # enabled on a texture unit, but no texcoords
-        # are loaded.
-        if vertices is not None:
-            glfeatures.append(gl.GL_TEXTURE_COORD_ARRAY)
-
-        with glroutines.enabled(glfeatures):
-
+            # Only enable texture coordinates if we know
+            # that there are texture coordinates. Some GL
+            # platforms will crash if texcoords are
+            # enabled on a texture unit, but no texcoords
+            # are loaded.
             if vertices is not None:
-                gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
-                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
+                glfeatures.append(gl.GL_TEXTURE_COORD_ARRAY)
 
-            gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, indices)
+            with glroutines.enabled(glfeatures):
 
-        self.unbindTexture()
+                if vertices is not None:
+                    gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
+                    gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
+
+                gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT,
+                                  indices)
 
 
     def drawOnBounds(self,

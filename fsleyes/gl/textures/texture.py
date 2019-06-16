@@ -789,8 +789,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         def doRefresh():
 
             with self.bound():
-                self.doRefresh(data=self.__preparedData,
-                               shape=self.__shape)
+                self.doRefresh()
 
             self.__ready = True
 
@@ -856,7 +855,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         self.notify()
 
 
-    def doRefresh(self, data=None, shape=None):
+    def doRefresh(self):
         """Must be overridden by sub-classes to configure the texture.
 
         This method is not intended to be called externally - call
@@ -865,13 +864,12 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         The sub-class implementation can assume that the texture is bound
         when this method is called.
 
-        Either the ``data`` argument, or the ``shape`` argument may be
-        provided - if both are provided, ``shape`` should be ignored.
-        If neither are provided, the method should return without doing
-        anything.
+        This method should use the :meth:`preparedData`, or the :meth:`shape`,
+        to configure the texture. Sub-classes can assume that at least one
+        of these will not be ``None``.
 
-        :arg data:  ``numpy`` array containing the texture data
-        :arg shape: Sequence specifying the desired texture shape
+        If ``preparedData`` is not ``None``, the ``shape`` should be ignored,
+        and inferred from ``preparedData``.
         """
         raise NotImplementedError('Must be implemented by subclasses')
 

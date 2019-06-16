@@ -45,19 +45,27 @@ class Texture3D(texture.Texture):
         texture.Texture.__init__(self, name, 3, **kwargs)
 
 
-    def doRefresh(self, data=None, shape=None):
+    def doRefresh(self):
         """Overrides :meth:`.Texture.doRefresh`.
 
         (Re-)configures the OpenGL texture.
         """
 
+        data = self.preparedData
+
+        if data is None:
+            return
+
         log.debug('Configuring 3D texture (id %s) for %s (data shape: %s)',
                   self.name, self.handle, self.shape)
 
-        # The image data is flattened, with fortran dimension
-        # ordering, so the data, as stored on the GPU, has its
-        # first dimension as the fastest changing.
-        data = np.ascontiguousarray(data.reshape(-1, order='F'))
+        # The image data is flattened, with
+        # fortran dimension ordering, so the
+        # data, as stored on the GPU, has its
+        # first dimension as the fastest
+        # changing.
+        shape = data.shape
+        data  = np.array(data.ravel(order='F'), copy=False)
 
         # PyOpenGL needs the data array
         # to be writeable, as it uses
@@ -67,10 +75,9 @@ class Texture3D(texture.Texture):
         # ArrayProxy, the writeable flag
         # will be set to False for some
         # reason.
-        data = dutils.makeWriteable(data)
+        data    = dutils.makeWriteable(data)
 
         interp  = self.interp
-        shape   = self.shape
         intFmt  = self.internalFormat
         baseFmt = self.baseFormat
         dtype   = self.textureDtype

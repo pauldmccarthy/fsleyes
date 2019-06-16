@@ -41,6 +41,7 @@ GL_TYPE_NAMES = {
     gl.GL_RED                 : 'GL_RED',
     gl.GL_LUMINANCE           : 'GL_LUMINANCE',
     gl.GL_RGB                 : 'GL_RGB',
+    gl.GL_RGBA                : 'GL_RGBA',
 
     gl.GL_LUMINANCE8          : 'GL_LUMINANCE8',
     gl.GL_LUMINANCE16         : 'GL_LUMINANCE16',
@@ -53,7 +54,11 @@ GL_TYPE_NAMES = {
 
     gl.GL_RGB8                : 'GL_RGB8',
     gl.GL_RGB16               : 'GL_RGB16',
-    gl.GL_RGB32F              : 'GL_RGB32F' ,
+    gl.GL_RGB32F              : 'GL_RGB32F',
+
+    gl.GL_RGBA8               : 'GL_RGBA8',
+    gl.GL_RGBA16              : 'GL_RGBA16',
+    gl.GL_RGBA32F             : 'GL_RGBA32F',
 }
 
 
@@ -90,9 +95,11 @@ def canUseFloatTextures(nvals=1):
     if rgSupported:
         if   nvals == 1: baseFmt = gl.GL_RED
         elif nvals == 3: baseFmt = gl.GL_RGB
+        elif nvals == 4: baseFmt = gl.GL_RGBA
 
         if   nvals == 1: intFmt  = gl.GL_R32F
         elif nvals == 3: intFmt  = gl.GL_RGB32F
+        elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
         return True, baseFmt, intFmt
 
@@ -100,9 +107,11 @@ def canUseFloatTextures(nvals=1):
 
         if   nvals == 1: baseFmt = gl.GL_LUMINANCE
         elif nvals == 3: baseFmt = gl.GL_RGB
+        elif nvals == 4: baseFmt = gl.GL_RGBA
 
         if   nvals == 1: intFmt  = arbtf.GL_LUMINANCE32F_ARB
         elif nvals == 3: intFmt  = gl.GL_RGB32F
+        elif nvals == 4: intFmt  = gl.GL_RGBA32F
 
         return True, baseFmt, intFmt
 
@@ -199,8 +208,8 @@ def getTextureType(normalise, dtype, nvals):
 
     :arg dtype:     The original data type (e.g. ``np.uint8``)
 
-    :arg nvals:     Number of values per voxel. Must be either ``1`` or
-                    ``3``.
+    :arg nvals:     Number of values per voxel. Must be either ``1``,
+                    ``3``, or ``4``.
 
     :returns:       A tuple containing:
 
@@ -239,6 +248,7 @@ def getTextureType(normalise, dtype, nvals):
     if floatTextures and isFloat: baseFmt = fBaseFmt
     elif nvals == 1:              baseFmt = ocBaseFmt
     elif nvals == 3:              baseFmt = gl.GL_RGB
+    elif nvals == 4:              baseFmt = gl.GL_RGBA
 
     # Internal texture format
     if nvals == 1:
@@ -255,6 +265,14 @@ def getTextureType(normalise, dtype, nvals):
         elif dtype == np.int8:   intFmt = gl.GL_RGB8
         elif dtype == np.uint16: intFmt = gl.GL_RGB16
         elif dtype == np.int16:  intFmt = gl.GL_RGB16
+        elif floatTextures:      intFmt = fIntFmt
+
+    elif nvals == 4:
+        if   normalise:          intFmt = gl.GL_RGBA16
+        elif dtype == np.uint8:  intFmt = gl.GL_RGBA8
+        elif dtype == np.int8:   intFmt = gl.GL_RGBA8
+        elif dtype == np.uint16: intFmt = gl.GL_RGBA16
+        elif dtype == np.int16:  intFmt = gl.GL_RGBA16
         elif floatTextures:      intFmt = fIntFmt
 
     return texDtype, baseFmt, intFmt
