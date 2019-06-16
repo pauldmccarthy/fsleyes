@@ -118,7 +118,7 @@ class GLMask(glimageobject.GLImageObject):
         self.edgeFilter.destroy()
         self.renderTexture.destroy()
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         self.removeDisplayListeners()
         fslgl.glmask_funcs.destroy(self)
@@ -227,11 +227,11 @@ class GLMask(glimageobject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR

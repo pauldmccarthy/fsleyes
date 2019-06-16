@@ -184,7 +184,7 @@ class GLVectorBase(glimageobject.GLImageObject):
                     self.clipTexture,
                     self.colourTexture):
             tex.deregister(self.name)
-            glresources.delete(tex.getTextureName())
+            glresources.delete(tex.name)
 
         self.removeListeners()
         self.deregisterAuxImage('modulate')
@@ -402,7 +402,7 @@ class GLVectorBase(glimageobject.GLImageObject):
 
         if tex is not None:
             tex.deregister(self.name)
-            glresources.delete(tex.getTextureName())
+            glresources.delete(tex.name)
 
         if image is None:
 
@@ -781,7 +781,7 @@ class GLVector(GLVectorBase):
 
         GLVectorBase.destroy(self)
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         self.imageTexture = None
 
@@ -814,7 +814,7 @@ class GLVector(GLVectorBase):
 
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         # We need to make sure the image has shape
         # (dir, X, Y, Z) , i.e. the first dimension

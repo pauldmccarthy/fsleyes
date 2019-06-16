@@ -160,7 +160,7 @@ class GLTensor(glvector.GLVector):
             attrName = '{}Texture'.format(name)
             tex      = getattr(self, attrName)
 
-            glresources.delete(tex.getTextureName())
+            glresources.delete(tex.name)
             setattr(self, attrName, None)
 
 

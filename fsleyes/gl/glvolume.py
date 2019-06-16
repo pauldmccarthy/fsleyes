@@ -276,11 +276,11 @@ class GLVolume(glimageobject.GLImageObject):
         self.removeDisplayListeners()
 
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         if self.clipTexture is not None:
             self.clipTexture.deregister(self.name)
-            glresources.delete(self.clipTexture.getTextureName())
+            glresources.delete(self.clipTexture.name)
 
         self.colourTexture   .destroy()
         self.negColourTexture.destroy()
@@ -553,11 +553,11 @@ class GLVolume(glimageobject.GLImageObject):
 
         if self.imageTexture is not None:
 
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return None
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
@@ -631,7 +631,7 @@ class GLVolume(glimageobject.GLImageObject):
 
         if self.clipTexture is not None:
             self.clipTexture.deregister(self.name)
-            glresources.delete(self.clipTexture.getTextureName())
+            glresources.delete(self.clipTexture.name)
             self.clipTexture = None
 
         if clipImage is None:

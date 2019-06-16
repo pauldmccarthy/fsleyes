@@ -96,7 +96,7 @@ class GLLabel(glimageobject.GLImageObject):
         self.edgeFilter.destroy()
         self.renderTexture.destroy()
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
         self.lutTexture.destroy()
 
         self.removeListeners()
@@ -201,11 +201,11 @@ class GLLabel(glimageobject.GLImageObject):
 
         if self.imageTexture is not None:
 
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return None
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         self.imageTexture = glresources.get(
             texName,

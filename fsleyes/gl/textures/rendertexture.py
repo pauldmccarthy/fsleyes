@@ -138,9 +138,8 @@ class RenderTexture(texture2d.Texture2D):
         # Or use a texture as the depth
         # attachment (with no stencil attachment)
         elif rttype == 'cd':
-            self.__depthTexture = texture2d.Texture2D(
-                '{}_depth'.format(self.getTextureName()),
-                dtype=gl.GL_DEPTH_COMPONENT24)
+            self.__depthTexture = texture2d.DepthTexture(
+                '{}_depth'.format(self.name))
 
             # We also need a shader program in
             # case the creator is intending to
@@ -563,8 +562,8 @@ class GLObjectRenderTexture(RenderTexture):
 
         RenderTexture.__init__(self, name)
 
-        name = '{}_{}'.format(self.getTextureName(), id(self))
         globj.register(name, self.__updateSize)
+        name = '{}_{}'.format(self.name, id(self))
 
         self.__updateSize()
 
@@ -575,7 +574,7 @@ class GLObjectRenderTexture(RenderTexture):
         calls :meth:`.RenderTexture.destroy`.
         """
 
-        name = '{}_{}'.format(self.getTextureName(), id(self))
+        name = '{}_{}'.format(self.name, id(self))
         self.__globj.deregister(name)
         RenderTexture.destroy(self)
 

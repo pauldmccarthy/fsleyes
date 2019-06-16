@@ -665,7 +665,7 @@ class VoxelSelection(AnnotationObject):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
-        glresources.delete(self.__texture.getTextureName())
+        glresources.delete(self.__texture.name)
         self.__texture = None
         self.__opts    = None
 
