@@ -97,7 +97,7 @@ def updateShaderState(self, useSpline=False):
         # is [-1, 1] (as this is vector data),
         # so we rescale the data from [0, 1]
         # back to [-1, 1].
-        if np.issubdtype(self.imageTexture.textureDtype, np.integer):
+        if np.issubdtype(self.imageTexture.textureType, np.integer):
             voxValXform = transform.scaleOffsetXform(2, -1)
 
         # Otherwise, if it's floating point,

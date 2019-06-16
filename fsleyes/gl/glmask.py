@@ -284,7 +284,7 @@ class GLMask(glimageobject.GLImageObject):
         rtex = self.renderTexture
 
         rtex.setSize(w, h)
-        with rtex.bound():
+        with rtex.target():
             gl.glClearColor(0, 0, 0, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
@@ -313,7 +313,7 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw the mask to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # Run the texture through an edge detection
@@ -345,7 +345,7 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw all slices to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
 
         # if no outline, draw the texture directly

@@ -731,7 +731,7 @@ class GLVolume(glimageobject.GLImageObject):
             if rt.getSize() != (sw, sh):
                 rt.setSize(sw, sh)
 
-            with rt.bound():
+            with rt.target():
                 gl.glClearColor(0, 0, 0, 0)
                 gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 

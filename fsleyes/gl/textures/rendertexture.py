@@ -351,7 +351,7 @@ class RenderTexture(texture2d.Texture2D):
 
 
     @contextlib.contextmanager
-    def bound(self, *args, **kwargs):
+    def target(self, *args, **kwargs):
         """Context manager which binds and unbinds this ``RenderTexture`` as
         the render target, via :meth:`bindAsRenderTarget` and
         :meth:`unbindAsRenderTarget`.

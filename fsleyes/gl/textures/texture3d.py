@@ -80,77 +80,78 @@ class Texture3D(texture.Texture):
         interp  = self.interp
         intFmt  = self.internalFormat
         baseFmt = self.baseFormat
-        dtype   = self.textureDtype
+        ttype   = self.textureType
 
-        # Enable storage of tightly packed data of any size (i.e.
-        # our texture shape does not have to be divisible by 4).
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+        with self.bound():
+            # Enable storage of tightly packed data of any size (i.e.
+            # our texture shape does not have to be divisible by 4).
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
-        # set interpolation routine
-        if interp is None:
-            interp = gl.GL_NEAREST
+            # set interpolation routine
+            if interp is None:
+                interp = gl.GL_NEAREST
 
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           interp)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MAG_FILTER,
+                               interp)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_MIN_FILTER,
+                               interp)
 
-        # Clamp texture borders to the edge
-        # values - it is the responsibility
-        # of the rendering logic to not draw
-        # anything outside of the image space
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_S,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_T,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_TEXTURE_WRAP_R,
-                           gl.GL_CLAMP_TO_EDGE)
+            # Clamp texture borders to the edge
+            # values - it is the responsibility
+            # of the rendering logic to not draw
+            # anything outside of the image space
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_TEXTURE_WRAP_R,
+                               gl.GL_CLAMP_TO_EDGE)
 
-        # The macOS GL driver sometimes corrupts
-        # the texture data if we don't generate
-        # mipmaps
-        gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                           gl.GL_GENERATE_MIPMAP,
-                           gl.GL_TRUE)
+            # The macOS GL driver sometimes corrupts
+            # the texture data if we don't generate
+            # mipmaps
+            gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                               gl.GL_GENERATE_MIPMAP,
+                               gl.GL_TRUE)
 
-        # create the texture according to
-        # the format determined by the
-        # determineTextureType method.
-        #
-        # note: The ancient Chromium driver (still
-        #       in use by VirtualBox) will improperly
-        #       create 3D textures without two calls
-        #       (to glTexImage3D and glTexSubImage3D).
-        #       If I specify the texture size and set
-        #       the data in a single call, it seems to
-        #       expect that the data or texture
-        #       dimensions always have even size - odd
-        #       sized images will be displayed
-        #       incorrectly.
-        gl.glTexImage3D(gl.GL_TEXTURE_3D,
-                        0,
-                        intFmt,
-                        shape[0],
-                        shape[1],
-                        shape[2],
-                        0,
-                        baseFmt,
-                        dtype,
-                        None)
-        gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
-                           0, 0, 0, 0,
-                           shape[0],
-                           shape[1],
-                           shape[2],
-                           baseFmt,
-                           dtype,
-                           data)
+            # create the texture according to
+            # the format determined by the
+            # determineTextureType method.
+            #
+            # note: The ancient Chromium driver (still
+            #       in use by VirtualBox) will improperly
+            #       create 3D textures without two calls
+            #       (to glTexImage3D and glTexSubImage3D).
+            #       If I specify the texture size and set
+            #       the data in a single call, it seems to
+            #       expect that the data or texture
+            #       dimensions always have even size - odd
+            #       sized images will be displayed
+            #       incorrectly.
+            gl.glTexImage3D(gl.GL_TEXTURE_3D,
+                            0,
+                            intFmt,
+                            shape[0],
+                            shape[1],
+                            shape[2],
+                            0,
+                            baseFmt,
+                            ttype,
+                            None)
+            gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
+                               0, 0, 0, 0,
+                               shape[0],
+                               shape[1],
+                               shape[2],
+                               baseFmt,
+                               ttype,
+                               data)
 
 
     def doPatch(self, data, offset):
@@ -161,14 +162,15 @@ class Texture3D(texture.Texture):
         shape = data.shape
         data  = np.flatten(order='F')
 
-        gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
-                           0,
-                           offset[0],
-                           offset[1],
-                           offset[2],
-                           shape[0],
-                           shape[1],
-                           shape[2],
-                           self.textureFormat,
-                           self.textureDtype,
-                           data)
+        with self.bound():
+            gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
+                               0,
+                               offset[0],
+                               offset[1],
+                               offset[2],
+                               shape[0],
+                               shape[1],
+                               shape[2],
+                               self.baseFormat,
+                               self.textureType,
+                               data)

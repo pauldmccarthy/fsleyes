@@ -71,7 +71,7 @@ messages = TypeDict({
     'SliceCanvas.globjectError'  :
     'An error occurred initialising the display for {}',
 
-    'Texture3D.dataError'  :
+    'Texture.dataError'  :
     'An error occurred updating the texture data',
 
     'SaveOverlayAction.overwrite'      : 'Do you want to overwrite {}, or '
@@ -331,7 +331,7 @@ titles = TypeDict({
     'ShellPanel'         : 'Python shell',
 
     'SliceCanvas.globjectError'  : 'Error initialising display',
-    'Texture3D.dataError'        : 'Error updating data',
+    'Texture.dataError'          : 'Error updating data',
 
 
     'AtlasInfoPanel'       : 'Atlas information',

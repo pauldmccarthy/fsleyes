@@ -36,7 +36,15 @@ class DepthTexture(texture.Texture):
 
         :arg name: Unique name for this texture
         """
-        texture.Texture.__init__(self, name, 2, 1)
+        texture.Texture.__init__(self, name, 2, 1, dtype=np.uint32)
+
+
+    @texture.Texture.data.setter
+    def data(self, data):
+        """Overrides the :meth:`.Texture.data` setter. Raises an error -
+        you cannot set data on a ``DepthTexture``.
+        """
+        raise NotImplementedError('Cannot set data on a DepthTexture')
 
 
     def doRefresh(self):
@@ -45,27 +53,28 @@ class DepthTexture(texture.Texture):
         """
 
         width, height = self.shape
-        dtype         = gl.GL_UNSIGNED_INT
+        ttype         = gl.GL_UNSIGNED_INT
         intFmt        = gl.GL_DEPTH_COMPONENT24
         baseFmt       = gl.GL_DEPTH_COMPONENT
 
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_WRAP_S,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_WRAP_T,
-                           gl.GL_CLAMP_TO_EDGE)
-        gl.glTexImage2D(gl.GL_TEXTURE_2D,
-                        0,
-                        dtype,
-                        width,
-                        height,
-                        0,
-                        intFmt,
-                        baseFmt,
-                        None)
+        with self.bound():
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_S,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_WRAP_T,
+                               gl.GL_CLAMP_TO_EDGE)
+            gl.glTexImage2D(gl.GL_TEXTURE_2D,
+                            0,
+                            intFmt,
+                            width,
+                            height,
+                            0,
+                            baseFmt,
+                            ttype,
+                            None)
 
 
 
@@ -88,13 +97,12 @@ class Texture2D(texture.Texture):
         :arg name: Unique name for this ``Texture2D``.
         """
 
-        nvals           = kwargs.get('nvals', 4)
-        kwargs['nvals'] = kwargs['nvals']
+        nvals = kwargs.pop('nvals', 4)
 
         if nvals not in (1, 4):
             raise ValueError('nvals must be 1 or 4')
 
-        texture.Texture.__init__(self, name, 2, nvals)
+        texture.Texture.__init__(self, name, 2, nvals, **kwargs)
 
         # We keep a copy of the current
         # width/height, so we can detect
@@ -118,67 +126,71 @@ class Texture2D(texture.Texture):
         if data is not None:
             data = np.array(data.ravel('F'), copy=False)
 
-        gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MAG_FILTER,
-                           self.interp)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                           gl.GL_TEXTURE_MIN_FILTER,
-                           self.interp)
+        with self.bound():
 
-        if self.border is not None:
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_S,
-                               gl.GL_CLAMP_TO_BORDER)
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_T,
-                               gl.GL_CLAMP_TO_BORDER)
-            gl.glTexParameterfv(gl.GL_TEXTURE_2D,
-                                gl.GL_TEXTURE_BORDER_COLOR,
-                                self.border)
-        else:
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_S,
-                               gl.GL_CLAMP_TO_EDGE)
-            gl.glTexParameteri(gl.GL_TEXTURE_2D,
-                               gl.GL_TEXTURE_WRAP_T,
-                               gl.GL_CLAMP_TO_EDGE)
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
-        # If the width and height have not
-        # changed, then we don't need to
-        # re-define the texture. But we can
-        # use glTexSubImage2D if we have
-        # data to upload
-        if width  == self.__width  and \
-           height == self.__height and \
-           data is not None:
-            gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
-                               0,
-                               0,
-                               0,
-                               width,
-                               height,
-                               self.internalFormat,
-                               self.baseFormat,
-                               data)
+            if self.interp is not None:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_MAG_FILTER,
+                                   self.interp)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_MIN_FILTER,
+                                   self.interp)
 
-        # If the width and/or height have
-        # changed, we need to re-define
-        # the texture properties
-        else:
-            self.__width  = width
-            self.__height = height
-            gl.glTexImage2D(gl.GL_TEXTURE_2D,
-                            0,
-                            self.textureDtype,
-                            width,
-                            height,
-                            0,
-                            self.internalFormat,
-                            self.externalFormat,
-                            data)
+            if self.border is not None:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_WRAP_S,
+                                   gl.GL_CLAMP_TO_BORDER)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_WRAP_T,
+                                   gl.GL_CLAMP_TO_BORDER)
+                gl.glTexParameterfv(gl.GL_TEXTURE_2D,
+                                    gl.GL_TEXTURE_BORDER_COLOR,
+                                    self.border)
+            else:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_WRAP_S,
+                                   gl.GL_CLAMP_TO_EDGE)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                                   gl.GL_TEXTURE_WRAP_T,
+                                   gl.GL_CLAMP_TO_EDGE)
+
+            # If the width and height have not
+            # changed, then we don't need to
+            # re-define the texture. But we can
+            # use glTexSubImage2D if we have
+            # data to upload
+            if width  == self.__width  and \
+               height == self.__height and \
+               data is not None:
+                gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
+                                   0,
+                                   0,
+                                   0,
+                                   width,
+                                   height,
+                                   self.baseFormat,
+                                   self.textureType,
+                                   data)
+
+            # If the width and/or height have
+            # changed, we need to re-define
+            # the texture properties
+            else:
+                self.__width  = width
+                self.__height = height
+                gl.glTexImage2D(gl.GL_TEXTURE_2D,
+                                0,
+                                self.internalFormat,
+                                width,
+                                height,
+                                0,
+                                self.baseFormat,
+                                self.textureType,
+                                data)
 
 
     def __prepareCoords(self, vertices, xform=None):
@@ -357,8 +369,8 @@ class Texture2D(texture.Texture):
         """
 
         intFmt        = self.baseFormat
-        extFmt        = self.textureDtype
-        ndtype        = self.dataDtype
+        extFmt        = self.textureType
+        ndtype        = self.dtype
         nvals         = self.nvals
         width, height = self.shape
 

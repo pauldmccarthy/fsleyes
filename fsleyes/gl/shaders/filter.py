@@ -199,7 +199,7 @@ class Filter(object):
         All other arguments are passed to the :meth:`apply` method.
         """
 
-        with dest.bound(0, 1, (0, 0, 0), (1, 1, 1)):
+        with dest.target(0, 1, (0, 0, 0), (1, 1, 1)):
             if clearDest:
                 gl.glClear(gl.GL_COLOR_BUFFER_BIT |
                            gl.GL_DEPTH_BUFFER_BIT |

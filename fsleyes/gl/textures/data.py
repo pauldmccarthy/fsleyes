@@ -17,6 +17,7 @@
 
 
 import logging
+import inspect
 
 import numpy                       as np
 import OpenGL.GL                   as gl
@@ -60,6 +61,15 @@ GL_TYPE_NAMES = {
     gl.GL_RGBA16              : 'GL_RGBA16',
     gl.GL_RGBA32F             : 'GL_RGBA32F',
 }
+
+
+def _makeInstance(dtype):
+    """Used by :func:`oneChannelFormat` and :func:`getTextureType`.  If a
+    ``numpy.dtype`` class is given, converts it into an instance.
+    """
+    if inspect.isclass(dtype):
+        dtype = np.zeros([0], dtype=dtype).dtype
+    return dtype
 
 
 @memoize.memoize
@@ -131,6 +141,10 @@ def oneChannelFormat(dtype):
               types, depending on whether floating point textures are
               supported - see :func:`canUseFloatTextures`.
     """
+
+    # Make sure we have a numpy dtype
+    # *instance*, and not a class.
+    dtype = _makeInstance(dtype)
 
     floatSupported = glexts.hasExtension('GL_ARB_texture_float')
     rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
@@ -222,6 +236,8 @@ def getTextureType(normalise, dtype, nvals):
                      - The internal texture format used by OpenGL for storage
                        (e.g. ``GL_RGB16``, ``GL_LUMINANCE8``, etc).
     """
+
+    dtype = _makeInstance(dtype)
 
     floatTextures, fBaseFmt, fIntFmt = canUseFloatTextures(nvals)
     ocBaseFmt, ocIntFmt              = oneChannelFormat(dtype)

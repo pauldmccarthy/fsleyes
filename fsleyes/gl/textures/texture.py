@@ -425,10 +425,10 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
 
     In order to use a texture, at the very least you need to provide some
-    data, or specify a shape. This can be done either via the
-    :meth:`data`/:meth:`shape` methods, or by the :meth:`set` method. If you
-    specify a shape, any previously specified data will be lost, and vice
-    versa.
+    data, or specify a type and shape. This can be done either via the
+    :meth:`data`/:meth::meth:``shape`/dtype` methods, or by the :meth:`set`
+    method. If you specify a shape and data type, any previously specified
+    data will be lost, and vice versa.
 
 
     Calling :meth:`set` will usually cause the texture to be reconfigured and
@@ -437,8 +437,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
 
     The following properties can be queried to retrieve information about the
-    tetxure; some will return ``None`` until you have provided some data via
-    the ``set`` method:
+    tetxure; some will return ``None`` until you have provided some data (or
+    a shape and type):
 
     .. autosummary::
        :nosignatures:
@@ -446,8 +446,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
        voxValXform
        invVoxValXform
        shape
-       dataDtype
-       textureDtype
+       dtype
+       textureType
        baseFormat
        internalFormat
        data
@@ -517,16 +517,22 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         self.__ready    = False
         self.__threaded = threaded
 
-        # The data and shape are refreshed
-        # on every call to set or refresh
-        # (the former calls the latter)
+        # The data, type and shape are
+        # refreshed on every call to
+        # set or refresh (the former
+        # calls the latter)
         self.__data         = None
+        self.__dtype        = None
         self.__shape        = None
         self.__preparedData = None
 
         # The data is refreshed on
         # every call to set or refresh
-        # These attributes are set by the
+        # These attributes are set by
+        # the __determineTextureType
+        # and __prepareTextureData
+        # methods (which are called
+        # by refresh)
         self.__voxValXform    = None
         self.__invVoxValXform = None
 
@@ -601,13 +607,20 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
 
     @property
-    def dataDtype(self):
+    def dtype(self):
         """Return the ``numpy`` data type of the texture data."""
-        return self.__data.dtype
+        if self.__data is not None: return self.__data.dtype
+        else:                       return self.__dtype
+
+
+    @dtype.setter
+    def dtype(self, dtype):
+        """Set the ``numpy`` data type for the texture data."""
+        self.set(dtype=dtype)
 
 
     @property
-    def textureDtype(self):
+    def textureType(self):
         """Return the texture data type, e.g. ``gl.GL_UNSIGNED_BYTE``. """
         return self.__texDtype
 
@@ -651,6 +664,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         ``interp``         See :meth:`.interp`.
         ``data``           See :meth:`.data`.
         ``shape``          See :meth:`.shape`.
+        ``dtype``          See :meth:`.dtype`.
         ``prefilter``      See :meth:`.prefilter`.
         ``prefilterRange`` See :meth:`.prefilterRange`
         ``normalise``      See :meth:`.normalise.`
@@ -674,20 +688,23 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
         changed  = TextureSettingsMixin.update(self, **kwargs)
         data     = kwargs.get('data',     None)
-        shape    = kwargs.get('shape',    None)
+        shape    = kwargs.get('shape',    self.shape)
+        dtype    = kwargs.get('dtype',    self.dtype)
         refresh  = kwargs.get('refresh',  True)
         notify   = kwargs.get('notify',   True)
         callback = kwargs.get('callback', None)
 
         changed['data']  = data  is not None
-        changed['shape'] = shape is not None
+        changed['shape'] = shape != self.shape
+        changed['dtype'] = dtype != self.dtype
 
         if not any(changed.values()):
             return False
 
         if data is not None:
 
-            self.__data = data
+            self.__data  = data
+            self.__dtype = data.dtype
 
             # The first dimension is assumed to contain the
             # values, for multi-valued (e.g. RGB) textures
@@ -702,10 +719,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             # prepareData in the data module
             self.normalise = self.normalise or \
                 (not texdata.canUseFloatTextures()[0] and
-                 (data.dtype not in (np.uint8,
-                                     np.int8,
-                                     np.uint16,
-                                     np.int16)))
+                 (dtype not in (np.uint8, np.int8, np.uint16, np.int16)))
 
             # If the caller has not provided
             # a normalisation range, we have
@@ -716,8 +730,9 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
                 log.debug('Calculated %s data range for normalisation: '
                           '[%s - %s]', self.__name, *self.__normaliseRange)
 
-        elif shape is not None:
+        elif changed['shape'] or changed['dtype']:
             self.__data  = None
+            self.__dtype = dtype
             self.__shape = shape
 
         refreshData = any((changed['data'],
@@ -759,10 +774,18 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         """
 
         # Don't bother if data
-        # or shape hasn't been set
-        if self.__data is None and self.__shape is None:
+        # or shape/type hasn't
+        # been set
+        data  = self.__data
+        shape = self.__shape
+        dtype = self.__dtype
+
+        # We either need some data, or
+        # we need a shape and data type.
+        if data is None and (shape is None or dtype is None):
             return
 
+        refreshData  = refreshData and (data is not None)
         self.__ready = False
 
         # This can take a long time for big
@@ -779,8 +802,9 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
                self.__taskThread.isQueued(self.__taskName):
                 raise idle.TaskThreadVeto()
 
+            self.__determineTextureType()
+
             if refreshData:
-                self.__determineTextureType()
                 self.__prepareTextureData()
 
         # Once genData is finished, we pass the
@@ -788,8 +812,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         # the sub-class doRefresh method.
         def doRefresh():
 
-            with self.bound():
-                self.doRefresh()
+            self.doRefresh()
 
             self.__ready = True
 
@@ -811,7 +834,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         # data, we run genData on the
         # current thread, because it
         # shouldn't do anything
-        if self.__threaded and (self.__data is not None):
+        if self.__threaded and (data is not None):
 
             # TODO the task is already queued,
             #      but a callback function has been
@@ -826,8 +849,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
                                           onFinish=doRefresh)
 
         else:
-            if self.__data is not None:
-                genData()
+            genData()
             doRefresh()
 
 
@@ -849,8 +871,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
         data = texdata.prepareData(data)[0]
 
-        with self.bound():
-            self.doPatch(data, offset)
+        self.doPatch(data, offset)
 
         self.notify()
 
@@ -860,9 +881,6 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
         This method is not intended to be called externally - call
         :meth:`refresh` instead.
-
-        The sub-class implementation can assume that the texture is bound
-        when this method is called.
 
         This method should use the :meth:`preparedData`, or the :meth:`shape`,
         to configure the texture. Sub-classes can assume that at least one
@@ -880,9 +898,6 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
         This method is not intended to be called externally - call
         :meth:`patchData` instead.
-
-        The sub-class implementation can assume that the texture is bound
-        when this method is called.
         """
         raise NotImplementedError('Must be implemented by subclasses')
 
@@ -906,11 +921,11 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         ==================== ==============================================
         """
 
-        if self.nvals not in (1, 3):
+        if self.nvals not in (1, 3, 4):
             raise ValueError('Cannot create texture representation for %s '
-                             '(nvals: %s)', self.__data.dtype, self.nvals)
+                             '(nvals: %s)', self.dtype, self.nvals)
 
-        dtype                    = self.__data.dtype
+        dtype                    = self.dtype
         normalise                = self.normalise
         nvals                    = self.nvals
         texDtype, texFmt, intFmt = texdata.getTextureType(
