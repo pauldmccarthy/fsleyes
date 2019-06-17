@@ -72,7 +72,7 @@ class GLLabel(glimageobject.GLImageObject):
             '{}_lut'.format(self.name))
         self.edgeFilter   = glfilter.Filter('edge', texture=2)
         self.renderTexture = textures.RenderTexture(
-            self.name, gl.GL_LINEAR, rttype='c')
+            self.name, interp=gl.GL_LINEAR, rttype='c')
 
         self.__lut = self.opts.lut
 
@@ -256,7 +256,7 @@ class GLLabel(glimageobject.GLImageObject):
         w, h = self.canvas.GetSize()
         rtex = self.renderTexture
 
-        rtex.setSize(w, h)
+        rtex.shape = w, h
         with rtex.target():
             gl.glClearColor(0, 0, 0, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
@@ -287,8 +287,7 @@ class GLLabel(glimageobject.GLImageObject):
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
         self.edgeFilter.apply(
-            self.renderTexture,
-            zpos, xmin, xmax, ymin, ymax, xax, yax,
+            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE2)
 
 
@@ -319,8 +318,7 @@ class GLLabel(glimageobject.GLImageObject):
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
         self.edgeFilter.apply(
-            self.renderTexture,
-            max(zposes), xmin, xmax, ymin, ymax, xax, yax,
+            rtex, max(zposes), xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE2)
 
 

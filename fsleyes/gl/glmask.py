@@ -99,7 +99,7 @@ class GLMask(glimageobject.GLImageObject):
         self.imageTexture  = None
         self.edgeFilter    = glfilter.Filter('edge', texture=1)
         self.renderTexture = textures.RenderTexture(
-            self.name, gl.GL_LINEAR, rttype='c')
+            self.name, interp=gl.GL_LINEAR, rttype='c')
 
         self.addDisplayListeners()
         self.refreshImageTexture()
@@ -283,7 +283,7 @@ class GLMask(glimageobject.GLImageObject):
         w, h = self.canvas.GetSize()
         rtex = self.renderTexture
 
-        rtex.setSize(w, h)
+        rtex.shape = w, h
         with rtex.target():
             gl.glClearColor(0, 0, 0, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
@@ -320,8 +320,7 @@ class GLMask(glimageobject.GLImageObject):
         # filter, drawing the result to screen
         self.edgeFilter.set(offsets=offsets, outline=1)
         self.edgeFilter.apply(
-            self.renderTexture,
-            zpos, xmin, xmax, ymin, ymax, xax, yax,
+            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE1)
 
 
@@ -350,7 +349,7 @@ class GLMask(glimageobject.GLImageObject):
 
         # if no outline, draw the texture directly
         if not opts.outline:
-            self.renderTexture.drawOnBounds(
+            rtex.drawOnBounds(
                 zpos, xmin, xmax, ymin, ymax, xax, yax,
                 textureUnit=gl.GL_TEXTURE1)
 
@@ -359,8 +358,7 @@ class GLMask(glimageobject.GLImageObject):
             # filter, drawing the result to screen
             self.edgeFilter.set(offsets=offsets, outline=1)
             self.edgeFilter.apply(
-                self.renderTexture,
-                zpos, xmin, xmax, ymin, ymax, xax, yax,
+                rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
                 textureUnit=gl.GL_TEXTURE1)
 
 

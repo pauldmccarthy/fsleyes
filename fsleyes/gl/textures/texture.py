@@ -84,7 +84,7 @@ class TextureBase(object):
         self.__name        = name
         self.__ndims       = ndims
         self.__nvals       = nvals
-        self.__bound       = False
+        self.__bound       = 0
         self.__textureUnit = None
 
 
@@ -141,7 +141,7 @@ class TextureBase(object):
         .. note:: This method assumes that the :meth:`bindTexture` and
                  :meth:`unbindTexture` methods are called in pairs.
         """
-        return self.__bound
+        return self.__bound > 0
 
 
     @contextlib.contextmanager
@@ -167,31 +167,30 @@ class TextureBase(object):
                           ``GL_TEXTURE0``.
         """
 
-        if self.__bound:
-            return
+        if self.__bound == 0:
 
-        if textureUnit is not None:
-            gl.glActiveTexture(textureUnit)
+            if textureUnit is not None:
+                gl.glActiveTexture(textureUnit)
 
-        gl.glBindTexture(self.__ttype, self.__texture)
+            gl.glBindTexture(self.__ttype, self.__texture)
 
-        self.__bound       = True
-        self.__textureUnit = textureUnit
+            self.__textureUnit = textureUnit
+
+        self.__bound += 1
 
 
     def unbindTexture(self):
         """Unbinds this texture. """
 
-        if not self.__bound:
-            return
+        if self.__bound == 1:
+            if self.__textureUnit is not None:
+                gl.glActiveTexture(self.__textureUnit)
 
-        if self.__textureUnit is not None:
-            gl.glActiveTexture(self.__textureUnit)
+            gl.glBindTexture(self.__ttype, 0)
 
-        gl.glBindTexture(self.__ttype, 0)
+            self.__textureUnit = None
 
-        self.__bound       = False
-        self.__textureUnit = None
+        self.__bound = max(0, self.__bound - 1)
 
 
 class TextureSettingsMixin(object):
@@ -609,8 +608,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
     @property
     def dtype(self):
         """Return the ``numpy`` data type of the texture data."""
-        if self.__data is not None: return self.__data.dtype
-        else:                       return self.__dtype
+        return self.__dtype
 
 
     @dtype.setter
@@ -703,8 +701,14 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
         if data is not None:
 
+            # The dtype attribute is set
+            # later in __prepareTextureData,
+            # as it may be different from
+            # the dtype of the passed-in
+            # data
             self.__data  = data
-            self.__dtype = data.dtype
+            self.__dtype = None
+            dtype        = data.dtype
 
             # The first dimension is assumed to contain the
             # values, for multi-valued (e.g. RGB) textures
@@ -925,7 +929,9 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             raise ValueError('Cannot create texture representation for %s '
                              '(nvals: %s)', self.dtype, self.nvals)
 
-        dtype                    = self.dtype
+        if self.__data is None: dtype = self.__dtype
+        else:                   dtype = self.__data.dtype
+
         normalise                = self.normalise
         nvals                    = self.nvals
         texDtype, texFmt, intFmt = texdata.getTextureType(
@@ -963,7 +969,17 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         ``__invVoxValXform`` Inverse of ``voxValXform``.
         ==================== =============================================
         """
-        data, voxValXform, invVoxValXform = texdata.prepareData(self.__data)
+
+        data, voxValXform, invVoxValXform = texdata.prepareData(
+            self.__data,
+            prefilter=self.prefilter,
+            prefilterRange=self.prefilterRange,
+            resolution=self.resolution,
+            scales=self.scales,
+            normalise=self.normalise,
+            normaliseRange=self.normaliseRange)
+
         self.__preparedData   = data
+        self.__dtype          = data.dtype
         self.__voxValXform    = voxValXform
         self.__invVoxValXform = invVoxValXform

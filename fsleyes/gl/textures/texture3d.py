@@ -59,13 +59,17 @@ class Texture3D(texture.Texture):
         log.debug('Configuring 3D texture (id %s) for %s (data shape: %s)',
                   self.name, self.handle, self.shape)
 
+        # First dimension for multi-
+        # valued textures
+        if self.nvals > 1: shape = data.shape[1:]
+        else:              shape = data.shape
+
         # The image data is flattened, with
         # fortran dimension ordering, so the
         # data, as stored on the GPU, has its
         # first dimension as the fastest
         # changing.
-        shape = data.shape
-        data  = np.array(data.ravel(order='F'), copy=False)
+        data = np.array(data.ravel(order='F'), copy=False)
 
         # PyOpenGL needs the data array
         # to be writeable, as it uses
@@ -82,15 +86,15 @@ class Texture3D(texture.Texture):
         baseFmt = self.baseFormat
         ttype   = self.textureType
 
+        if interp is None:
+            interp = gl.GL_NEAREST
+
         with self.bound():
+
             # Enable storage of tightly packed data of any size (i.e.
             # our texture shape does not have to be divisible by 4).
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-
-            # set interpolation routine
-            if interp is None:
-                interp = gl.GL_NEAREST
 
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MAG_FILTER,
@@ -160,7 +164,7 @@ class Texture3D(texture.Texture):
         """
 
         shape = data.shape
-        data  = np.flatten(order='F')
+        data  = data.flatten(order='F')
 
         with self.bound():
             gl.glTexSubImage3D(gl.GL_TEXTURE_3D,

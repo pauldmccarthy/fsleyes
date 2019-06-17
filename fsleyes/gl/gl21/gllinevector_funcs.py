@@ -107,7 +107,7 @@ def updateShaderState(self):
     opts        = self.opts
 
     # see comments in gl21/glvector_funcs.py
-    if np.issubdtype(self.imageTexture.textureType, np.integer):
+    if np.issubdtype(self.imageTexture.dtype, np.integer):
         vvxMat = transform.scaleOffsetXform(2, -1)
     else:
         vvxMat = self.imageTexture.voxValXform
