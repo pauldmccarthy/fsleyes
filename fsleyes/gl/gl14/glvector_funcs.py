@@ -110,7 +110,7 @@ def updateShaderState(self):
         colours, colourXform = self.getVectorColours()
 
         # See comments in gl21/glvector_funcs.py
-        if np.issubdtype(self.imageTexture.textureType, np.integer):
+        if np.issubdtype(self.imageTexture.dtype, np.integer):
             voxValXform = transform.scaleOffsetXform(2, -1)
         else:
             voxValXform = self.imageTexture.voxValXform
