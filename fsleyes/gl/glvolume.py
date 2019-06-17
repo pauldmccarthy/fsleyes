@@ -235,9 +235,9 @@ class GLVolume(glimageobject.GLImageObject):
             self.smoothFilter.set(kernSize=self.opts.smoothing * 2)
 
             self.renderTexture1 = textures.RenderTexture(
-                self.name, gl.GL_LINEAR, rttype='cd')
+                self.name, interp=gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(
-                self.name, gl.GL_LINEAR, rttype='cd')
+                self.name, interp=gl.GL_LINEAR, rttype='cd')
 
         # This attribute is used by the
         # updateShaderState method to
@@ -728,8 +728,8 @@ class GLVolume(glimageobject.GLImageObject):
         # Initialise and resize
         # the offscreen textures
         for rt in [self.renderTexture1, self.renderTexture2]:
-            if rt.getSize() != (sw, sh):
-                rt.setSize(sw, sh)
+            if rt.shape != (sw, sh):
+                rt.shape = sw, sh
 
             with rt.target():
                 gl.glClearColor(0, 0, 0, 0)

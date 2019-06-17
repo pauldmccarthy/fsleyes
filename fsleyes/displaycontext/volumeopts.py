@@ -988,8 +988,8 @@ class VolumeOpts(cmapopts.ColourMapOpts, vol3dopts.Volume3DOpts, NiftiOpts):
         # point textures, we turn on the override
         # data range option.
         if self.__registered and np.issubdtype(overlay.dtype, np.floating):
-            import fsleyes.gl.textures.texture3d as t3d
-            if not t3d.Texture3D.canUseFloatTextures()[0]:
+            import fsleyes.gl.textures.data as texdata
+            if not texdata.canUseFloatTextures()[0]:
 
                 dmin, dmax = overlay.dataRange
 

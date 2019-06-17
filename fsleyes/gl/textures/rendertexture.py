@@ -234,9 +234,9 @@ class RenderTexture(texture2d.Texture2D):
             raise ValueError('This RenderTexture is not '
                              'configured to use a depth texture')
 
-        if not isinstance(dtex, texture2d.DepthTexture) or \
-           dtex.dtype != gl.GL_DEPTH_COMPONENT24        or \
-           dtex.shape != self.shape:
+        if not isinstance(dtex, texture2d.DepthTexture)    or \
+           dtex.internalFormat != gl.GL_DEPTH_COMPONENT24  or \
+           dtex.shape          != self.shape:
             raise ValueError('Incompatible depth texture')
 
         self.__depthTexture = dtex

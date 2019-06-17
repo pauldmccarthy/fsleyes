@@ -53,12 +53,12 @@ class LookupTableTexture(texture.Texture):
         :arg name: A uniqe name for this ``LookupTableTexture``.
         """
 
-        texture.Texture.__init__(self, name, 1, 4)
-
         self.__lut        = None
         self.__alpha      = None
         self.__brightness = None
         self.__contrast   = None
+
+        texture.Texture.__init__(self, name, 1, 4)
 
 
     def set(self, **kwargs):
@@ -106,7 +106,7 @@ class LookupTableTexture(texture.Texture):
         contrast   = self.__contrast
 
         if lut is None:
-            raise RuntimeError('Lookup table has not been defined')
+            return
 
         if brightness is None: brightness = 0.5
         if contrast   is None: contrast   = 0.5

@@ -39,6 +39,37 @@ class DepthTexture(texture.Texture):
         texture.Texture.__init__(self, name, 2, 1, dtype=np.uint32)
 
 
+    @property
+    def dtype(self):
+        """Overrides :meth:`.Texture.dtype`. """
+        return np.uint32
+
+
+    @dtype.setter
+    def dtype(self):
+        """Overrides the :meth:`.Texture.dtype` setter. Raises
+        ``NotImplementedError``.
+        """
+        raise NotImplementedError()
+
+
+    @property
+    def textureType(self):
+        """Overrides :meth:`.Texture.textureType`. """
+        return gl.GL_UNSIGNED_INT
+
+
+    @property
+    def baseFormat(self):
+        """Overrides :meth:`.Texture.baseFormat`. """
+        return gl.GL_DEPTH_COMPONENT
+
+    @property
+    def internalFormat(self):
+        """Overrides :meth:`.Texture.internalFormat`. """
+        return gl.GL_DEPTH_COMPONENT24
+
+
     @texture.Texture.data.setter
     def data(self, data):
         """Overrides the :meth:`.Texture.data` setter. Raises an error -
@@ -53,9 +84,9 @@ class DepthTexture(texture.Texture):
         """
 
         width, height = self.shape
-        ttype         = gl.GL_UNSIGNED_INT
-        intFmt        = gl.GL_DEPTH_COMPONENT24
-        baseFmt       = gl.GL_DEPTH_COMPONENT
+        ttype         = self.textureType
+        intFmt        = self.internalFormat
+        baseFmt       = self.baseFormat
 
         with self.bound():
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
@@ -75,7 +106,6 @@ class DepthTexture(texture.Texture):
                             baseFmt,
                             ttype,
                             None)
-
 
 
 class Texture2D(texture.Texture):
@@ -120,8 +150,9 @@ class Texture2D(texture.Texture):
 
         data = self.preparedData
 
-        if data is None: width, height = self.shape
-        else:            width, height = data.shape[1:]
+        if   data is None:    width, height = self.shape
+        elif self.nvals == 1: width, height = data.shape
+        else:                 width, height = data.shape[1:]
 
         if data is not None:
             data = np.array(data.ravel('F'), copy=False)
