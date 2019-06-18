@@ -567,7 +567,7 @@ class GLVolume(glimageobject.GLImageObject):
 
         self.imageTexture = glresources.get(
             texName,
-            textures.ImageTexture,
+            textures.createImageTexture,
             texName,
             self.image,
             interp=interp,

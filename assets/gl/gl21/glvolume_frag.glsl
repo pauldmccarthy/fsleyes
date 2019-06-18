@@ -1,5 +1,11 @@
 /*
  * OpenGL fragment shader used for rendering 2D slices of GLVolume instances.
+ * Most of the sampling logic can be found in glvolume_common.glsl.
+ *
+ * The following jinja2 constants can be set to configure the shader:
+ *
+ *  - textureIs2D: If True, the shader is configured to sample from a 2D
+ *                 texture. Otherwise, a 3D texture is assumed.
  *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
@@ -11,7 +17,12 @@
 /*
  * image data texture, used for colouring.
  */
+
+{% if textureIs2D %}
+uniform sampler2D imageTexture;
+{% else %}
 uniform sampler3D imageTexture;
+{% endif %}
 
 /*
  * image data texture, used for clipping.

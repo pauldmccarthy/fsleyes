@@ -33,7 +33,7 @@ policies, either expressed or implied.
 When using this code in a scientific project, please cite one or all of the
 following papers:
 *  Daniel Ruijters and Philippe Thévenaz,
-   GPU Prefilter for Accurate Cubic B-Spline Interpolation, 
+   GPU Prefilter for Accurate Cubic B-Spline Interpolation,
    The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
    http://dannyruijters.nl/docs/cudaPrefilter3.pdf
 *  Daniel Ruijters, Bart M. ter Haar Romeny, and Paul Suetens,
