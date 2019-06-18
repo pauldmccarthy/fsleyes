@@ -141,14 +141,14 @@ class Texture2D(texture.Texture):
         if nvals not in (1, 4):
             raise ValueError('nvals must be 1 or 4')
 
-        texture.Texture.__init__(self, name, 2, nvals, **kwargs)
-
         # We keep a copy of the current
         # width/height, so we can detect
         # whether it has changed, and
         # skip unnecessary processing
         self.__width  = None
         self.__height = None
+
+        texture.Texture.__init__(self, name, 2, nvals, **kwargs)
 
 
     def doRefresh(self):
@@ -165,7 +165,6 @@ class Texture2D(texture.Texture):
 
         if data is not None:
             data = np.array(data.ravel('F'), copy=False)
-
 
         with self.bound():
 
