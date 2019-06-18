@@ -21,6 +21,7 @@ from .texture2d          import Texture2D
 from .texture2d          import DepthTexture
 from .texture3d          import Texture3D
 from .imagetexture       import ImageTexture
+from .imagetexture       import ImageTexture2D
 from .colourmaptexture   import ColourMapTexture
 from .lookuptabletexture import LookupTableTexture
 from .selectiontexture   import SelectionTexture
