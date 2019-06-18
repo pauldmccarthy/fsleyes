@@ -338,6 +338,22 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
 
         c.opts.pos = displayCtx.location
 
+        # HACK If a SliceCanvas/LightBoxCanvas
+        # is rendering the sceen to an off-screen
+        # texture due to the low performance
+        # setting, its internal viewport will not
+        # be set until after all GLObjects have
+        # been rendered. But some GLObjects (e.g.
+        # GLLabel) need to know the current
+        # viewport.
+        #
+        # This is very much an edge case, as who
+        # would be using a low performance setting
+        # for off-screen rendering?
+        if namespace.performance is not None and \
+           int(namespace.performance) < 3:
+            c._setViewport()
+
         c.draw()
 
         canvasBmps.append(c.getBitmap())
