@@ -272,6 +272,10 @@ def copyImage(overlayList,
             if prop == 'name':
                 continue
 
+            if (not srcDisplay .propertyIsEnabled(prop)) or \
+               (not destDisplay.propertyIsEnabled(prop)):
+                continue
+
             val = getattr(srcDisplay, prop)
             setattr(destDisplay, prop, val)
 
@@ -286,6 +290,10 @@ def copyImage(overlayList,
             # properties, as it is (typically) automatically
             # controlled via the DisplayContext.displaySpace
             if prop in ('transform', 'bounds'):
+                continue
+
+            if (not srcOpts .propertyIsEnabled(prop)) or \
+               (not destOpts.propertyIsEnabled(prop)):
                 continue
 
             val = getattr(srcOpts, prop)

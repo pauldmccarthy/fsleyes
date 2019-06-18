@@ -2321,7 +2321,7 @@ def _applyArgs(args,
             applied = not _applySpecialOption(
                 args, overlayList, displayCtx, target, name, longArgs[name])
 
-        if not applied:
+        if not applied and target.propertyIsEnabled(name):
             props.applyArguments(target,
                                  args,
                                  propNames=[name],
@@ -2366,6 +2366,8 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
             if nargs is not False:
                 args += nargs
                 propNames.remove(name)
+        elif not source.propertyIsEnabled(name):
+            propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((source, name), None)
