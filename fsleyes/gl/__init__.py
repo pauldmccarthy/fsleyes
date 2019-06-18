@@ -864,11 +864,10 @@ class OffScreenCanvasTarget(object):
 
         self._setGLContext()
         self._initGL()
-        self.__target.setSize(self.__width, self.__height)
+        self.__target.shape = self.__width, self.__height
 
-        self.__target.bindAsRenderTarget()
-        self._draw()
-        self.__target.unbindAsRenderTarget()
+        with self.__target.target():
+            self._draw()
 
 
     def getBitmap(self):
@@ -879,7 +878,7 @@ class OffScreenCanvasTarget(object):
         """
 
         self._setGLContext()
-        return self.__target.getData()
+        return self.__target.getBitmap()
 
 
     def saveToFile(self, filename):

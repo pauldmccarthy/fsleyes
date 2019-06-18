@@ -374,9 +374,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             self._offscreenRenderTexture = textures.RenderTexture(
                 '{}_{}'.format(type(self).__name__, id(self)),
-                gl.GL_LINEAR)
+                interp=gl.GL_LINEAR)
 
-            self._offscreenRenderTexture.setSize(768, 768)
+            self._offscreenRenderTexture.shape = 768, 768
 
         # The LightBoxCanvas handles pre-render mode
         # the same way as the SliceCanvas - a separate
