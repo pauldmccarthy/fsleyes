@@ -13,15 +13,42 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 import logging
 import collections
 
-import numpy as np
+import numpy     as np
+import OpenGL.GL as gl
 
-
+import fsl.utils.memoize     as memoize
 import fsl.data.imagewrapper as imagewrapper
 from . import                   texture2d
 from . import                   texture3d
 
 
 log = logging.getLogger(__name__)
+
+
+@memoize.memoize
+def createImageTexture(name, image, *args, **kwargs):
+    """Creates and returns an appropriate texture type (either
+    :class:`ImageTexture` or :class:`ImageTexture2D`) for the given image.
+    """
+
+    max3d = gl.glGetInteger(gl.GL_MAX_3D_TEXTURE_SIZE)
+    max2d = gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE)
+
+    def checklim(shape, lim):
+        if any([d > lim for d in shape]):
+            raise RuntimeError(
+                'Cannot create an OpenGL texture for {} - it exceeds '
+                'the hardware limits on this platform (2D: {}, 3D: {}'
+                .format(max2d, max3d))
+
+    shape = image.shape[:3]
+    shape = [d for d in shape if d > 1]
+
+    if len(shape) == 3: checklim(shape, max3d)
+    else:               checklim(shape, max2d)
+
+    if len(shape) == 3: return ImageTexture(  name, image, *args, **kwargs)
+    else:               return ImageTexture2D(name, image, *args, **kwargs)
 
 
 class ImageTextureBase(object):
@@ -136,6 +163,16 @@ class ImageTextureBase(object):
         self.set(channel=channel)
 
 
+    def adjustTexCoords(self, texCoords):
+        """Convenience method which adjusts the given set of texture
+        coordinates so they can be used to index the texture. This is
+        only necessary when using 2D textures - we need to ensure that
+        the two major voxel axes will correspond to texture axes X and
+        Y (as there are three voxel axes, but only two texture axes).
+        """
+        return texCoords
+
+
     def prepareSetArgs(self, **kwargs):
         """Called by sub-classes in their :meth:`.Texture2D.set`/
         :meth:`.Texture3D.set` override.
@@ -188,7 +225,7 @@ class ImageTextureBase(object):
         if (not volRefresh)           and \
            (volume  == self.__volume) and \
            (channel == self.__channel):
-            return
+            return kwargs
 
         self.__volume  = volume
         self.__channel = channel
@@ -226,6 +263,11 @@ class ImageTextureBase(object):
                               order='F',
                               dtype=np.uint8)
             data = data.transpose((1, 2, 3, 0))
+
+        # We might be using a 2D texture,
+        # but the image data will be 3D
+        if data.ndim != self.ndim:
+            data = data.squeeze()
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
@@ -342,7 +384,7 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
         return texture3d.Texture3D.set(self, **self.prepareSetArgs(**kwargs))
 
 
-class ImageTexture2D(texture2d.Texture2D):
+class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
     """The ``ImageTexture2D`` class is the 2D analogue of the
     :class:`ImageTexture` class, for managing a 2D texture which represents an
     :class:`.Image` instance.
@@ -358,7 +400,6 @@ class ImageTexture2D(texture2d.Texture2D):
 
         nvals            = kwargs.get('nvals', 1)
         kwargs['nvals']  = nvals
-        kwargs['ndims']  = 2
         kwargs['scales'] = image.pixdim[:3]
 
         ImageTextureBase   .__init__(self, image, nvals, 2)
@@ -369,6 +410,24 @@ class ImageTexture2D(texture2d.Texture2D):
         """Must be called when this ``ImageTexture2D`` is no longer needed. """
         texture2d.Texture2D.destroy(self)
         ImageTextureBase   .destroy(self)
+
+
+    def adjustTexCoords(self, texCoords):
+        """Overrides :meth:`ImageTextureBase.adjustTexCoords`. Forces the
+        two major voxel axes to be the first two axes in the given set of
+        ``texCoords`` (assumed to be a ``(N, 3)`` array).
+
+        The ``texCoords`` are modified in-place.
+        """
+        shape = self.image.shape[:3]
+
+        if shape[0] == 1:
+            texCoords[:, 0] = texCoords[:, 1]
+            texCoords[:, 1] = texCoords[:, 2]
+        elif shape[1] == 1:
+            texCoords[:, 1] = texCoords[:, 2]
+
+        return texCoords
 
 
     def set(self, **kwargs):

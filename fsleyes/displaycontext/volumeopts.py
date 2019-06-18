@@ -443,8 +443,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         voxToWorldMat   = transform.concat(self.displayXform, voxToWorldMat)
         ds              = self.displayCtx.displaySpace
 
-        # The reference transforms depend on the value of
-        # displaySpace
+        # The reference transforms depend
+        # on the value of displaySpace
         if ds == 'world':
             voxToRefMat = voxToWorldMat
         elif ds is self.overlay:
