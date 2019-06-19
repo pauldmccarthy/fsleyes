@@ -17,6 +17,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.memoize     as memoize
+import fsl.utils.transform   as transform
 import fsl.data.imagewrapper as imagewrapper
 from . import                   texture2d
 from . import                   texture3d
@@ -163,14 +164,22 @@ class ImageTextureBase(object):
         self.set(channel=channel)
 
 
-    def adjustTexCoords(self, texCoords):
-        """Convenience method which adjusts the given set of texture
-        coordinates so they can be used to index the texture. This is
-        only necessary when using 2D textures - we need to ensure that
-        the two major voxel axes will correspond to texture axes X and
-        Y (as there are three voxel axes, but only two texture axes).
+    @property
+    def texCoordXform(self):
+        """Returns a transformation matrix which can be used to adjust a set of
+        3D texture coordinates so they can index the underlying texture, which
+        may be 2D.
+
+        This implementation returns an identity matrix, but it is overridden
+        by ``ImageTexture2D``.
         """
-        return texCoords
+        return np.eye(4)
+
+
+    @property
+    def invTexCoordXform(self):
+        """Returns the inverse of :meth:`texCoordXform`. """
+        return transform.invert(self.texCoordXform)
 
 
     def prepareSetArgs(self, **kwargs):
@@ -412,22 +421,29 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
         ImageTextureBase   .destroy(self)
 
 
-    def adjustTexCoords(self, texCoords):
-        """Overrides :meth:`ImageTextureBase.adjustTexCoords`. Forces the
-        two major voxel axes to be the first two axes in the given set of
-        ``texCoords`` (assumed to be a ``(N, 3)`` array).
-
-        The ``texCoords`` are modified in-place.
+    @property
+    def texCoordXform(self):
+        """Overrides :meth:`ImageTextureBase.texCoordXform`. Returns an
+        affine matrix which encodes a rotation that maps the two major
+        axes of the image voxel coordinate system to the first two axes
+        of the texture coordinate system.
         """
-        shape = self.image.shape[:3]
 
-        if shape[0] == 1:
-            texCoords[:, 0] = texCoords[:, 1]
-            texCoords[:, 1] = texCoords[:, 2]
-        elif shape[1] == 1:
-            texCoords[:, 1] = texCoords[:, 2]
+        scales  = [1, 1, 1]
+        offsets = [0, 0, 0]
+        rots    = [0, 0, 0]
 
-        return texCoords
+        # Here we apply a rotation to the
+        # coordinates to force the two major
+        # voxel axes to map to the first two
+        # texture coordinate axes
+        if self.image.shape[0] == 1:
+            rots      = [0, -np.pi / 2, -np.pi / 2]
+            scales[0] = -1
+        elif self.image.shape[1] == 1:
+            rots = [-np.pi / 2, 0, 0]
+
+        return transform.compose(scales, offsets, rots)
 
 
     def set(self, **kwargs):

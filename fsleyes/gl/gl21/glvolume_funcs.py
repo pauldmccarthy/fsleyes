@@ -178,8 +178,6 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
-    texCoords = self.imageTexture.adjustTexCoords(texCoords)
-
     if xform is not None:
         vertices = transform.transform(vertices, xform)
 
@@ -242,8 +240,6 @@ def drawAll(self, axes, zposes, xforms):
         vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
-
-    texCoords = self.imageTexture.adjustTexCoords(texCoords)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)

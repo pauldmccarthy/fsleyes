@@ -833,9 +833,27 @@ class GLVolume(glimageobject.GLImageObject):
         else:
             clipCoordXform = transform.concat(
                 self.clipOpts.getTransform('display', 'texture'),
-                self.opts    .getTransform('texture', 'display'))
+                self.opts    .getTransform('texture', 'display'),
+                self.imageTexture.invTexCoordXform)
 
         return clipCoordXform
+
+
+    def generateVertices2D(self, zpos, axes, bbox=None):
+        """Overrides :meth:`.GLImageObject.generateVertices2D`.
+
+        Appliies the :meth:`.ImageTextureBase.texCoordXform` to the texture
+        coordinates - this is performed to support 2D images/textures.
+        """
+
+        vertices, voxCoords, texCoords = \
+            glimageobject.GLImageObject.generateVertices2D(
+                self, zpos, axes, bbox)
+
+        texCoords = transform.transform(
+            texCoords, self.imageTexture.texCoordXform)
+
+        return vertices, voxCoords, texCoords
 
 
     def _alphaChanged(self, *a):
