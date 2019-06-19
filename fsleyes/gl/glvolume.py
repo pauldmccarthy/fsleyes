@@ -856,6 +856,22 @@ class GLVolume(glimageobject.GLImageObject):
         return vertices, voxCoords, texCoords
 
 
+    def generateVertices3D(self, bbox=None):
+        """Overrides :meth:`.GLImageObject.generateVertices3D`.
+
+        Appliies the :meth:`.ImageTextureBase.texCoordXform` to the texture
+        coordinates - this is performed to support 2D images/textures.
+        """
+
+        vertices, voxCoords, texCoords = \
+            glimageobject.GLImageObject.generateVertices3D(self, bbox)
+
+        texCoords = transform.transform(
+            texCoords, self.imageTexture.texCoordXform)
+
+        return vertices, voxCoords, texCoords
+
+
     def _alphaChanged(self, *a):
         """Called when the :attr:`.Display.alpha` property changes. """
 

@@ -439,9 +439,9 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
         # texture coordinate axes
         if self.image.shape[0] == 1:
             rots      = [0, -np.pi / 2, -np.pi / 2]
-            scales[0] = -1
         elif self.image.shape[1] == 1:
-            rots = [-np.pi / 2, 0, 0]
+            rots      = [-np.pi / 2, 0, 0]
+            scales[1] = -1
 
         return transform.compose(scales, offsets, rots)
 

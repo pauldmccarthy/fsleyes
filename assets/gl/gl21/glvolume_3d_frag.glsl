@@ -12,7 +12,11 @@
 /*
  * image data texture, used for colouring.
  */
+{% if textureIs2D %}
+uniform sampler2D imageTexture;
+{% else %}
 uniform sampler3D imageTexture;
+{% endif %}
 
 /*
  * image data texture, used for clipping.
@@ -117,7 +121,7 @@ uniform int clipMode;
  * of the ray-cast loop. This is added directly to the
  * image texture coordinates, so must be between 0.0 and
  * 1.0, and must have the same direction as the camera
- * vector the camera vector
+ * vector.
  *
  * Passing in 0.0 will cause an infinite loop, and
  * passing in 1.0 will cause the loop to skip over the
@@ -130,7 +134,6 @@ uniform vec3 rayStep;
  * Length of the rayStep vector.
  */
 uniform float stepLength;
-
 
 
 /*
