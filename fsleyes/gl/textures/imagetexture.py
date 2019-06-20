@@ -16,7 +16,6 @@ import collections
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.memoize     as memoize
 import fsl.utils.transform   as transform
 import fsl.data.imagewrapper as imagewrapper
 from . import                   texture2d
@@ -26,7 +25,6 @@ from . import                   texture3d
 log = logging.getLogger(__name__)
 
 
-@memoize.memoize
 def createImageTexture(name, image, *args, **kwargs):
     """Creates and returns an appropriate texture type (either
     :class:`ImageTexture` or :class:`ImageTexture2D`) for the given image.

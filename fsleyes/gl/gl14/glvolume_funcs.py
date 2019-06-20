@@ -61,7 +61,10 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
-    constants = {'kill_fragments_early' : not self.threedee}
+    constants = {
+        'kill_fragments_early' : not self.threedee,
+        'texture_is_2d'        : self.imageTexture.ndim == 2
+    }
 
     if self.threedee:
 
