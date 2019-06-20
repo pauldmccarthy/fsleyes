@@ -17,7 +17,6 @@ import            textwrap
 import numpy as np
 
 import fsleyes_widgets.utils.layout          as fsllayout
-import fsleyes_widgets.utils.colourbarbitmap as cbarbitmap
 
 import                                          fsleyes
 import fsleyes.version                       as version
@@ -350,7 +349,9 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
         # This is very much an edge case, as who
         # would be using a low performance setting
         # for off-screen rendering?
-        if namespace.performance is not None and \
+
+        if namespace.scene in ('ortho', 'lightbox') and \
+           namespace.performance is not None        and \
            int(namespace.performance) < 3:
             c._setViewport()
 
