@@ -7,7 +7,7 @@
 
 import pytest
 
-from . import run_cli_tests
+from . import run_cli_tests, roi
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -55,11 +55,15 @@ cli_tests = """
 3d -cp 25 0 0  -cp 50 90 45 -cp 50 90 -45 -m intersection
 3d -cp 75 0 0  -cp 50 90 45 -cp 50 90 -45 -m union
 3d -cp 75 0 0  -cp 50 90 45 -cp 50 90 -45 -m complement
+
+-rot -45 -30 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
+-rot 125 -45 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
 """
 
 
 
 def test_overlay_volume_3d():
     extras = {
+        'roi' : roi
     }
     run_cli_tests('test_overlay_volume_3d', cli_tests, extras=extras, scene='3d')
