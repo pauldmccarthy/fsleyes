@@ -15,10 +15,11 @@ import copy
 import fsleyes_props                      as props
 import fsl.data.image                     as fslimage
 from   fsl.utils.platform import platform as fslplatform
+from . import                                niftiopts
 from . import                                volumeopts
 
 
-class VectorOpts(volumeopts.NiftiOpts):
+class VectorOpts(niftiopts.NiftiOpts):
     """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
     :class:`RGBVectorOpts`, :class:`.TensorOpts`, and :class:`.SHOpts`. It
     contains display settings which are common to each of them.
@@ -144,7 +145,7 @@ class VectorOpts(volumeopts.NiftiOpts):
         # value.
         self.orientFlip = image.isNeurological()
 
-        volumeopts.NiftiOpts.__init__(self, image, *args, **kwargs)
+        niftiopts.NiftiOpts.__init__(self, image, *args, **kwargs)
 
         self.__registered = self.getParent() is not None
 
@@ -182,7 +183,7 @@ class VectorOpts(volumeopts.NiftiOpts):
             self            .removeListener('clipImage',     self.name)
             self            .removeListener('modulateImage', self.name)
 
-        volumeopts.NiftiOpts.destroy(self)
+        niftiopts.NiftiOpts.destroy(self)
 
 
     def __clipImageChanged(self, *a):

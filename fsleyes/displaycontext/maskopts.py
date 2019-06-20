@@ -15,12 +15,13 @@ import logging
 import fsleyes_props                      as props
 from   fsl.utils.platform import platform as fslplatform
 from . import                                volumeopts
+from . import                                niftiopts
 
 
 log = logging.getLogger(__name__)
 
 
-class MaskOpts(volumeopts.NiftiOpts):
+class MaskOpts(niftiopts.NiftiOpts):
     """The ``MaskOpts`` class defines settings for displaying an
     :class:`.Image` overlay as a binary mask.
     """
@@ -83,7 +84,7 @@ class MaskOpts(volumeopts.NiftiOpts):
         self.threshold.xlo  = dmin + doff
         self.threshold.xhi  = dmax + doff
 
-        volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
+        niftiopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
 
         overlay.register(self.name,
                          self.__dataRangeChanged,
@@ -116,7 +117,7 @@ class MaskOpts(volumeopts.NiftiOpts):
             self.display.removeListener('alpha',  self.name)
             self        .removeListener('colour', self.name)
 
-        volumeopts.NiftiOpts.destroy(self)
+        niftiopts.NiftiOpts.destroy(self)
 
 
     def __dataRangeChanged(self, *a):
