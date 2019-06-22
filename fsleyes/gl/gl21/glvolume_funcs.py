@@ -87,6 +87,10 @@ def updateShaderState(self):
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
     imageShape = self.image.shape[:3]
+    texShape   = self.imageTexture.shape[:3]
+
+    if len(texShape) < 3:
+        texShape = list(texShape) + [1] * (3 - len(texShape))
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
@@ -105,6 +109,7 @@ def updateShaderState(self):
 
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
     changed |= shader.set('imageShape',       imageShape)
+    changed |= shader.set('texShape',         texShape)
     changed |= shader.set('clipLow',          clipLow)
     changed |= shader.set('clipHigh',         clipHigh)
     changed |= shader.set('texZero',          texZero)

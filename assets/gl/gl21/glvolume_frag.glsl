@@ -47,9 +47,15 @@ uniform sampler1D negColourTexture;
 uniform mat4 img2CmapXform;
 
 /*
- * Shape of the imageTexture/clipTexture.
+ * Shape of the image
  */
 uniform vec3 imageShape;
+
+/*
+ * Shape of the image texture - for 2D images, this may
+ * be different from the imageShape
+ */
+uniform vec3 texShape;
 
 /*
  * Shape of the clipping image.

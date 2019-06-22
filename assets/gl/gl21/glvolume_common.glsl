@@ -32,13 +32,17 @@ bool sample_volume(vec3      texCoord,
    */
   {% if textureIs2D %}
 
-  voxValue = texture2D(imageTexture, texCoord.xy).r;
+  if (useSpline) voxValue = spline_interp(imageTexture,
+                                          texCoord.xy,
+                                          texShape.xy,
+                                          0);
+  else           voxValue = texture2D(imageTexture, texCoord.xy).r;
 
   {% else %}
 
   if (useSpline) voxValue = spline_interp(imageTexture,
                                           texCoord,
-                                          imageShape,
+                                          texShape,
                                           0);
   else           voxValue = texture3D(    imageTexture, texCoord).r;
 
