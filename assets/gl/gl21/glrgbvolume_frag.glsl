@@ -19,12 +19,6 @@ uniform sampler3D imageTexture;
 {% endif %}
 
 /*
- * Transformation matrix which transforms image texture data into
- * its actual data range.
- */
-uniform mat4 voxValXform;
-
-/*
  * Shape of the image texture.
  */
 uniform vec3 imageShape;
@@ -44,6 +38,18 @@ uniform bool useSpline;
  */
 uniform int  nvals;
 
+
+/*
+ * Global alpha value (0-1)
+ */
+uniform float alpha;
+
+
+/*
+ * Scale/offset to apply to the RGB values.
+ */
+uniform vec2 colourAdjust;
+
 /*
  * Voxel coordinates.
  */
@@ -53,7 +59,6 @@ varying vec3 fragVoxCoord;
  * Image texture coordinates.
  */
 varying vec3 fragTexCoord;
-
 
 
 void main(void) {
@@ -88,8 +93,10 @@ void main(void) {
     }
     {% endif %}
 
-    if (nvals == 3)
-      voxValue.a = 1;
+    voxValue.xyz = (voxValue.xyz - 0.5 + colourAdjust.y) * colourAdjust.x + 0.5;
+
+    if (nvals == 3) voxValue.a  = alpha;
+    else            voxValue.a *= alpha;
 
     gl_FragColor = voxValue;
 }

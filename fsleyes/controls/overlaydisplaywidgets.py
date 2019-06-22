@@ -309,6 +309,11 @@ def _initPropertyList_MIPOpts(threedee):
             'absolute']
 
 
+def _initPropertyList_VolumeRGBOpts(threedee):
+    return ['custom_volume',
+            'interpolation']
+
+
 def _initWidgetSpec_Display(threedee):
     return {
         'name'        : props.Widget('name'),
@@ -794,6 +799,28 @@ def _initWidgetSpec_MIPOpts(threedee):
             slider=True),
         'minimum'  : props.Widget('minimum'),
         'absolute' : props.Widget('absolute'),
+    }
+
+
+def _initWidgetSpec_VolumeRGBOpts(threedee):
+
+    return {
+        'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'channel'        : props.Widget('channel'),
+        'volume'         : props.Widget(
+            'volume',
+            showLimits=False,
+            enabledWhen=lambda o: o.overlay.ndim > 3,
+            spinWidth=6),
+        'volumeDim'      : props.Widget(
+            'volumeDim',
+            showLimits=False,
+            slider=False,
+            enabledWhen=lambda o: o.overlay.ndim > 4,
+            spinWidth=2),
+        'interpolation'  : props.Widget(
+            'interpolation',
+            labels=strings.choices['VolumeOpts.interpolation']),
     }
 
 

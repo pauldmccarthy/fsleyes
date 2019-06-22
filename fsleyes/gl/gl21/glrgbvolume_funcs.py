@@ -9,6 +9,7 @@ for rendering RGB(A) :class:`.Image` overlays.
 """
 
 
+import fsleyes.colourmaps as fslcmaps
 import fsleyes.gl.shaders as shaders
 from . import                glvolume_funcs
 
@@ -50,23 +51,28 @@ def updateShaderState(self):
     if not self.ready():
         return
 
+    display    = self.display
     opts       = self.opts
     image      = self.image
     shader     = self.shader
     nvals      = len(image.dtype)
     imageShape = image.shape[:3]
     texShape   = self.imageTexture.shape[:3]
-    vvx        = self.imageTexture.voxValXform
 
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
 
     shader.load()
+
+    colourAdjust = fslcmaps.briconToScaleOffset(
+        display.brightness / 100, display.contrast / 100, 1)
+
     changed  = False
     changed |= shader.set('imageTexture',  0)
-    changed |= shader.set('voxValXform',   vvx)
     changed |= shader.set('imageShape',    imageShape)
     changed |= shader.set('texShape',      texShape)
+    changed |= shader.set('alpha',         display.alpha / 100)
+    changed |= shader.set('colourAdjust',  colourAdjust)
     changed |= shader.set('useSpline',     opts.interpolation == 'spline')
     changed |= shader.set('nvals',         nvals)
     shader.unload()

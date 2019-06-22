@@ -39,8 +39,8 @@ class Texture3D(texture.Texture):
 
         kwargs['nvals'] = kwargs.get('nvals', 1)
 
-        if kwargs['nvals'] not in (1, 3):
-            raise ValueError('nvals must be either 1 or 3')
+        if kwargs['nvals'] not in (1, 3, 4):
+            raise ValueError('nvals must be either 1, 3 or 4')
 
         texture.Texture.__init__(self, name, 3, **kwargs)
 

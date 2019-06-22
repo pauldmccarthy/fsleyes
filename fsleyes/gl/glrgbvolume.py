@@ -45,7 +45,7 @@ class GLRGBVolume(glimageobject.GLImageObject):
         self.shader       = None
         self.imageTexture = None
 
-        self.addDisplayListeners()
+        self.addListeners()
         self.refreshImageTexture()
 
         def init():
@@ -57,46 +57,76 @@ class GLRGBVolume(glimageobject.GLImageObject):
 
     def destroy(self):
         """Must be called when this ``GLRGBVolume`` is no longer needed. """
+        self.removeListeners()
         fslgl.glvolume_funcs.destroy(self)
         glresources.delete(self.imageTexture.name)
         glimageobject.GLImageObject.destroy(self)
         self.imageTexture = None
 
 
-    def addDisplayListeners(self):
+    def addListeners(self):
+        """Adds listeners to :class:`.Display` and :class:`.VolumeRGBOpts`
+        properties which should result in the display being refreshed.
         """
-        """
-        pass
+        display = self.display
+        opts    = self.opts
+        name    = self.name
+
+        def shader(*a):
+            self.updateShaderState()
+
+        def notify(*a):
+            self.notify()
+
+        display.addListener('brightness',    name, shader, weak=False)
+        display.addListener('contrast',      name, shader, weak=False)
+        display.addListener('alpha',         name, shader, weak=False)
+        opts   .addListener('interpolation', name, self._interpChanged)
+        opts   .addListener('transform',     name, notify, weak=False)
+        opts   .addListener('displayXform',  name, notify, weak=False)
 
 
-    def removeDisplayListeners(self):
+    def removeListeners(self):
+        """Removes the property listeners that were added in
+        :meth:`addListeners`.
         """
-        """
-        pass
+
+        display = self.display
+        opts    = self.opts
+        name    = self.name
+
+        display.removeListener('brightness',    name)
+        display.removeListener('contrast',      name)
+        display.removeListener('alpha',         name)
+        opts   .removeListener('interpolation', name)
+        opts   .removeListener('transform',     name)
+        opts   .removeListener('displayXform',  name)
 
 
     def ready(self):
-        """
+        """Returns ``True`` if this ``GLRGBVolume`` is ready to be used,
+        ``False`` otherwise.
         """
         return (self.shader is not None) and self.textureReady()
 
 
     def textureReady(self):
-        """
+        """Returns ``True`` if the image texture is ready to be used,
+        ``False``otherwise.
         """
         return ((self.imageTexture is not None) and
                 (self.imageTexture.ready()))
 
 
     def updateShaderState(self, *args, **kwargs):
-        """
-        """
-        fslgl.glrgbvolume_funcs.updateShaderState()
+        """Calls :func:`.glrgbvolume_funcs.updateShaderState`. """
+        fslgl.glrgbvolume_funcs.updateShaderState(self)
         self.notify()
 
 
     def refreshImageTexture(self):
-        """
+        """(Re-)creates an :class:`.ImageTexture` or :class:`.ImageTexture2D`
+        to store the image data.
         """
 
         texName = '{}_{}' .format(type(self).__name__, id(self.image))
@@ -110,32 +140,49 @@ class GLRGBVolume(glimageobject.GLImageObject):
             nvals=nvals,
             notify=False)
 
+        self.imageTexture.register(self.name, self.__imageTextureChanged)
+
+
+    def _interpChanged(self, *a):
+        """Called when the :attr:`.VolumeRGBOpts.interpolation` changes.
+        Updates the image texture.
+        """
+
+        opts = self.opts
+
+        if opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                            interp = gl.GL_LINEAR
+
+        self.imageTexture.set(interp=interp)
+
+
+    def __imageTextureChanged(self, *a):
+        """Called when the ``imageTexture`` changes. Calls
+        :meth:`updateShaderState`.
+        """
+        self.updateShaderState()
+
 
     def preDraw(self, xform=None, bbox=None):
-        """
-        """
+        """Called before a draw. Binds the image texture. """
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
-        """
-        """
+        """Calls :func:`.glrgbvolume_funcs.draw2D`. """
         fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
 
 
     def drawAll(self, axes, zposes, xforms):
-        """
-        """
+        """Calls :func:`.glrgbvolume_funcs.drawAll`. """
         fslgl.glrgbvolume_funcs.drawAll(self, axes, zposes, xforms)
 
 
     def draw3D(self, xform=None, bbox=None):
-        """
-        """
+        """Does nothing. """
         pass
 
 
     def postDraw(self, xform=None, bbox=None):
-        """
-        """
+        """Called after a draw. Unbinds the image texture. """
         self.imageTexture.unbindTexture()
