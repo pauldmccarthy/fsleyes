@@ -8,7 +8,7 @@
 
 import pytest
 
-from . import run_cli_tests, roi
+from . import run_cli_tests, roi, asrgb
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -53,7 +53,7 @@ cli_tests = """
 {{roi('dti/dti_V1', (4, 5, 4, 5, 0, 8))}} -ot linevector
 
 # onevox
-{{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}}
+{{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -or -1 0
 {{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -ot rgbvector
 {{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -ot linevector
 
@@ -81,7 +81,7 @@ cli_tests = """
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 0, 8)))}} -ot linevector
 
 # onevox
-{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}}
+{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -or 0 20
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -ot linevector
 """
@@ -89,6 +89,7 @@ cli_tests = """
 
 def test_overlay_nifti2d():
     extras = {
-        'roi' : roi,
+        'roi'   : roi,
+        'asrgb' : asrgb
     }
     run_cli_tests('test_overlay_nifti2d', cli_tests, extras=extras)
