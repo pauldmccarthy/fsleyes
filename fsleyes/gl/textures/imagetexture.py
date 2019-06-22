@@ -190,6 +190,15 @@ class ImageTextureBase(object):
         return transform.invert(self.texCoordXform)
 
 
+    def shapeData(self, data):
+        """Shape the data so that it is ready for use as texture data.
+
+        This implementation returns the data unchanged, but it is overridden
+        by ``ImageTexture2D``.
+        """
+        return data
+
+
     def prepareSetArgs(self, **kwargs):
         """Called by sub-classes in their :meth:`.Texture2D.set`/
         :meth:`.Texture3D.set` override.
@@ -251,7 +260,7 @@ class ImageTextureBase(object):
         self.__channel = channel
 
         data = self.__getData(volume, channel)
-        data = self.__shapeData(data)
+        data = self.shapeData(data)
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
@@ -302,42 +311,6 @@ class ImageTextureBase(object):
                               dtype=np.uint8)
 
         return data
-
-
-    def __shapeData(self, data):
-        """Shapes the data, ensuring that it is compatible with the texture
-        type (either a 3D :class:`ImageTexture`, or a 2D
-        :class:`ImageTexture2D`).
-
-        :arg data: numpy array containing the data, as returned by
-                   :meth:`__getData`
-        """
-
-        # For 3D textures, we can use
-        # the data shape as-is
-        if self.ndim == 3:
-            return data
-
-        nvals = self.nvals
-
-        # Otherwise, for scalar, 1D or 2D data,
-        # we need to make sure the data has a
-        # shape compatible with the ImageTexture2D
-        if nvals == 1: oldshape = np.array(data.shape)
-        else:          oldshape = np.array(data.shape[1:])
-
-        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
-        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
-        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
-        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
-        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
-
-        if nvals > 1:
-            newshape = [nvals] + list(newshape)
-
-        return data.reshape(newshape)
 
 
     def __imageDataChanged(self, image, topic, sliceobj):
@@ -500,6 +473,36 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
             scales[1] = -1
 
         return transform.compose(scales, offsets, rots)
+
+
+    def shapeData(self, data):
+        """Overrides :meth:`ImageTexureBase.shapeData`.
+
+        Shapes the data, ensuring that it is compatible with a 2D texture.
+
+        :arg data: numpy array containing the data
+        """
+
+        nvals = self.nvals
+
+        # For scalar, 1D or 2D data, we need
+        # to make sure the data has a shape
+        # compatible with the ImageTexture2D
+        if nvals == 1: oldshape = np.array(data.shape)
+        else:          oldshape = np.array(data.shape[1:])
+
+        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
+        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
+        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
+        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
+        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
+
+        if nvals > 1:
+            newshape = [nvals] + list(newshape)
+
+        return data.reshape(newshape)
 
 
     def set(self, **kwargs):
