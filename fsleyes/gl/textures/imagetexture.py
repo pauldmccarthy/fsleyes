@@ -43,6 +43,9 @@ def createImageTexture(name, image, *args, **kwargs):
     shape = image.shape[:3]
     shape = [d for d in shape if d > 1]
 
+    if   len(shape) == 0: shape = [1, 1]
+    elif len(shape) == 1: shape = [shape[0], 1]
+
     if len(shape) == 3: checklim(shape, max3d)
     else:               checklim(shape, max2d)
 
@@ -74,10 +77,16 @@ class ImageTextureBase(object):
         imgnvals = len(image.dtype)
         imgndims = len(image.shape)
 
-        # For 4D textures, the image must
-        # have a shape of the form:
+        # Anything goes for single-
+        # valued textures
+        if texnvals == 1:
+            return
+
+        # For multi-valued 4D textures,
+        # the image must have a shape
+        # of the form:
         # (x, y, z, [1, [1, [1, [1, ]]]] nvals)
-        if texnvals > 1 and imgnvals == 0:
+        if imgnvals == 0:
             expShape     = list(image.shape[:3])
             expShape    += [1] * (imgndims - 3)
             expShape[-1] = texnvals
@@ -86,10 +95,10 @@ class ImageTextureBase(object):
                     'Data shape mismatch: texture size {} requested for '
                     'image shape {}'.format(texnvals, image.shape))
 
-        # Or must be a structured array
-        # with the correct number of
-        # values per voxel.
-        elif texnvals > 1 and imgnvals != texnvals:
+        # Or must be a structured, i.e.
+        # RGB(A) array with the correct
+        # number of values per voxel.
+        elif imgnvals != texnvals:
             raise RuntimeError(
                 'Data shape mismatch: texture size {} requested for '
                 'image with nvals {}'.format(texnvals, imgnvals))
@@ -213,6 +222,9 @@ class ImageTextureBase(object):
         nvals      = self.nvals
         ndims      = image.ndim
 
+        if len(image.shape) == 3: volume  = None
+        if len(image.dtype) == 0: channel = None
+
         if normRange is None:
             normRange = image.dataRange
 
@@ -237,49 +249,81 @@ class ImageTextureBase(object):
         self.__volume  = volume
         self.__channel = channel
 
-        slc = [slice(None), slice(None), slice(None)]
-        if volume is not None:
-            slc += volume
-
-        # Normal data - one value per voxel
-        if len(self.image.dtype) == 0:
-            data = self.image[tuple(slc)]
-
-        # structured data (e.g. RGB(A)) -
-        # a channel has been specified,
-        # so extract the data for that
-        # channel
-        elif channel is not None:
-            data = self.image.data[channel][tuple(slc)]
-
-        # Structured data, but no channel
-        # specified - convert the data
-        # into a 4D (X, Y, Z, nchannels)
-        # image, because this is what
-        # Texture3D requires
-        else:
-            data  = self.image[tuple(slc)]
-            shape = list(data.shape)
-
-            if len(shape) != 3:
-                raise RuntimeError('A volume or channel needs to be specified '
-                                   'to load structured data as a 3D texture ')
-
-            data = np.ndarray(buffer=data.data,
-                              shape=[nvals] + shape,
-                              order='F',
-                              dtype=np.uint8)
-            data = data.transpose((1, 2, 3, 0))
-
-        # We might be using a 2D texture,
-        # but the image data will be 3D
-        if data.ndim != self.ndim:
-            data = data.squeeze()
+        data = self.__getData(volume, channel)
+        data = self.__shapeData(data)
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
 
         return kwargs
+
+
+    def __getData(self, volume, channel):
+        """
+        """
+
+        image = self.image
+        slc   = [slice(None), slice(None), slice(None)]
+
+        if volume is not None:
+            slc += volume
+
+        if channel is None: data = self.image[              tuple(slc)]
+        else:               data = self.image.data[channel][tuple(slc)]
+
+        # For single-valued textures,
+        # we don't need to do anything
+        if self.nvals == 1:
+            return data
+
+        # Multi-valued texture with a
+        # single-valued 4D image - we
+        # assume that each volume
+        # corresponds to a channel
+        elif len(image.dtype) == 0 and volume is None:
+            data = data.transpose((3, 0, 1, 2))
+
+        # Multi-valued RGB(A) texture
+        # with a multi-valued image -
+        # cast/reshape the image data
+        elif len(image.dtype) > 0 and channel is None:
+            data = np.ndarray(buffer=data.data,
+                              shape=[self.nvals] + list(data.shape),
+                              order='F',
+                              dtype=np.uint8)
+
+
+
+        return data
+
+
+    def __shapeData(self, data):
+        """
+        """
+
+        # For 3D textures, we can use
+        # the data shape as-is
+        if self.ndim == 3:
+            return data
+
+        nvals = self.nvals
+
+        if nvals == 1: oldshape = np.array(data.shape)
+        else:          oldshape = np.array(data.shape[1:])
+
+        if   np.all(oldshape         == [1, 1, 1]): newshape =  (1,  1)
+        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
+        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
+        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
+        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
+
+        if nvals > 1:
+            newshape = [nvals] + list(newshape)
+
+
+        return data.reshape(newshape)
 
 
     def __imageDataChanged(self, image, topic, sliceobj):

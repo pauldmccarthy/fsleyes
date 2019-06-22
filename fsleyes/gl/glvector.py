@@ -816,12 +816,6 @@ class GLVector(GLVectorBase):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        # We need to make sure the image has shape
-        # (dir, X, Y, Z) , i.e. the first dimension
-        # contains the vector directions.
-        def realPrefilter(d):
-            return prefilter(d.transpose((3, 0, 1, 2)))
-
         self.imageTexture = glresources.get(
             texName,
             textures.ImageTexture,
@@ -830,7 +824,7 @@ class GLVector(GLVectorBase):
             nvals=3,
             interp=interp,
             normaliseRange=vecImage.dataRange,
-            prefilter=realPrefilter,
+            prefilter=prefilter,
             prefilterRange=prefilterRange,
             notify=False)
 

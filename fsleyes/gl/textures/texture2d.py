@@ -138,8 +138,8 @@ class Texture2D(texture.Texture):
 
         nvals = kwargs.pop('nvals', 4)
 
-        if nvals not in (1, 4):
-            raise ValueError('nvals must be 1 or 4')
+        if nvals not in (1, 3, 4):
+            raise ValueError('nvals must be 1, 3 or 4')
 
         # We keep a copy of the current
         # width/height, so we can detect
