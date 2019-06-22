@@ -559,13 +559,20 @@ def fliporient(filename):
 
 
 def roi(fname, roi):
-    base    = fslimage.removeExt(fname)
+
+    base    = fslimage.removeExt(op.basename(fname))
     outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
 
     img = fslimage.Image(fname)
     xs, xe, ys, ye, zs, ze = roi
     data = img[xs:xe, ys:ye, zs:ze, ...]
-    img = fslimage.Image(data, header=img.header)
+
+    xform  = img.voxToWorldMat
+    offset = [lo for lo in roi[::2]]
+    offset = transform.scaleOffsetXform([1, 1, 1], offset)
+    xform  = transform.concat(xform, offset)
+
+    img = fslimage.Image(data, xform=xform, header=img.header)
 
     img.save(outfile)
 

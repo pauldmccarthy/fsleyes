@@ -29,11 +29,7 @@ dti/dti_V1 -ot rgbvector -in none   -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in linear -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
 
-{{ndvec('dti/dti_V1', 1)}}        -ot rgbvector
-{{ndvec('dti/dti_V1', 2)}}        -ot rgbvector
-{{asrgb('dti/dti_V1')}}           -ot rgbvector
-{{asrgb(ndvec('dti/dti_V1', 1))}} -ot rgbvector
-{{asrgb(ndvec('dti/dti_V1', 2))}} -ot rgbvector
+{{asrgb('dti/dti_V1')}} -ot rgbvector
 """
 
 def test_overlay_rgbvector():
