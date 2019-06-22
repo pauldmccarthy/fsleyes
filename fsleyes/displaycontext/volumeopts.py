@@ -7,6 +7,7 @@
 """This module defines the :class:`VolumeOpts` class."""
 
 
+import copy
 import logging
 
 import numpy as np
@@ -387,3 +388,34 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
         if updateDR:
             self.updateDataRange(resetDR=False)
+
+
+class VolumeRGBOpts(niftiopts.NiftiOpts):
+    """The ``VolumeRGBOpts`` class is intended for displaying
+    :class:`.Image` instances containing RGB(A) data.
+    """
+
+
+    interpolation = copy.copy(VolumeOpts.interpolation)
+
+
+    def __init__(self,
+                 overlay,
+                 display,
+                 overlayList,
+                 displayCtx,
+                 **kwargs):
+        """Create a :class:`VolumeRGBOpts` instance for the specified
+        ``overlay``, assumed to be an :class:`.Image` instance with type
+        ``NIFTI_TYPE_RGB24`` or ``NIFTI_TYPE_RGBA32``.
+
+        All arguments are passed through to the :class:`.DisplayOpts`
+        constructor.
+        """
+
+        niftiopts.NiftiOpts.__init__(self,
+                                     overlay,
+                                     display,
+                                     overlayList,
+                                     displayCtx,
+                                     **kwargs)

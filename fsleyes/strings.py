@@ -666,6 +666,7 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.Display'        : 'General display settings',
     'OverlayDisplayPanel.VolumeOpts'     : 'Volume settings',
+    'OverlayDisplayPanel.VolumeRGBOpts'  : 'RGB(A) volume settings',
     'OverlayDisplayPanel.MaskOpts'       : 'Mask settings',
     'OverlayDisplayPanel.LabelOpts'      : 'Label settings',
     'OverlayDisplayPanel.RGBVectorOpts'  : 'RGB vector settings',
@@ -1206,6 +1207,7 @@ choices = TypeDict({
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
+        'rgb'            : '3D/4D RGB(A) volume',
         'mask'           : '3D/4D mask image',
         'mip'            : 'Max intensity projection',
         'label'          : 'Label image',

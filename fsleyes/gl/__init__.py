@@ -119,6 +119,7 @@ be displayed as:
 .. autosummary::
 
    ~fsleyes.gl.glvolume.GLVolume
+   ~fsleyes.gl.glrgbvolume.GLRGBVolume
    ~fsleyes.gl.glmask.GLMask
    ~fsleyes.gl.gllabel.GLLabel
    ~fsleyes.gl.gllinevector.GLLineVector
@@ -255,6 +256,9 @@ def bootstrap(glVersion=None):
 
     ``glvolume_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLVolume` instances.
+
+    ``glrgbvolume_funcs``  The version-specific module containing functions for
+                           rendering :class:`.GLRGBVolume` instances.
 
     ``glrgbvector_funcs``  The version-specific module containing functions for
                            rendering :class:`.GLRGBVector` instances.
@@ -396,6 +400,7 @@ def bootstrap(glVersion=None):
     thismod.GL_VERSION         = verstr
     thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
+    thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
     thismod.glmask_funcs       = glpkg.glmask_funcs

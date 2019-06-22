@@ -89,8 +89,8 @@ def updateShaderState(self):
     imageShape = self.image.shape[:3]
     texShape   = self.imageTexture.shape[:3]
 
-    if len(texShape) < 3:
-        texShape = list(texShape) + [1] * (3 - len(texShape))
+    if len(texShape) == 2:
+        texShape = list(texShape) + [1]
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]

@@ -43,6 +43,7 @@ def getGLObjectType(overlayType):
     """
 
     from . import glvolume
+    from . import glrgbvolume
     from . import glmask
     from . import glrgbvector
     from . import gllinevector
@@ -62,6 +63,7 @@ def getGLObjectType(overlayType):
         'tensor'     : gltensor    .GLTensor,
         'sh'         : glsh        .GLSH,
         'mip'        : glmip       .GLMIP,
+        'rgb'        : glrgbvolume .GLRGBVolume,
     }
 
     return typeMap.get(overlayType, None)

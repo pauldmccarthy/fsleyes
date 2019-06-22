@@ -74,6 +74,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 
    ~fsleyes.displaycontext.niftiopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
+   ~fsleyes.displaycontext.volumeopts.VolumeRGBOpts
    ~fsleyes.displaycontext.volume3dopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
@@ -158,6 +159,7 @@ from .scene3dopts    import Scene3DOpts
 from .colourmapopts  import ColourMapOpts
 from .niftiopts      import NiftiOpts
 from .volumeopts     import VolumeOpts
+from .volumeopts     import VolumeRGBOpts
 from .volume3dopts   import Volume3DOpts
 from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts
@@ -178,7 +180,7 @@ OVERLAY_TYPES = td.TypeDict({
 
     'Image'          : ['volume',     'mask',  'rgbvector',
                         'linevector', 'label', 'sh', 'tensor',
-                        'mip'],
+                        'mip', 'rgb'],
     'Mesh'           : ['mesh'],
     'DTIFitTensor'   : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -207,6 +209,7 @@ DISPLAY_OPTS_MAP = td.TypeDict({
     'Nifti.tensor'        : TensorOpts,
     'Nifti.sh'            : SHOpts,
     'Nifti.mip'           : MIPOpts,
+    'Nifti.rgb'           : VolumeRGBOpts,
     'Mesh.mesh'           : MeshOpts,
     'VTKMesh.mesh'        : MeshOpts,
     'GiftiMesh.mesh'      : GiftiOpts,
@@ -240,6 +243,8 @@ def getOverlayTypes(overlay):
     couldBeVector = ((ndims == 4 and shape[-1] == 3) or
                      (ndims == 3 and nvals     == 3))
 
+    # Could this image be a RGB(A) image?
+    couldBeRGB = (nvals in (3, 4)) or (ndims == 4 and shape[-1] in (3, 4))
 
     # Or could it be a SH or tensor image?
     couldBeTensor = ndims == 4 and shape[-1] == 6
@@ -263,6 +268,10 @@ def getOverlayTypes(overlay):
         except ValueError: pass
 
         try:               possibleTypes.remove('linevector')
+        except ValueError: pass
+
+    if not couldBeRGB:
+        try:               possibleTypes.remove('rgb')
         except ValueError: pass
 
     if not couldBeSH:

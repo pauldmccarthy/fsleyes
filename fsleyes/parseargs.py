@@ -596,6 +596,7 @@ OPTIONS = td.TypeDict({
                         'window',
                         'minimum',
                         'absolute'],
+    'VolumeRGBOpts'   : []
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -615,6 +616,7 @@ GROUPNAMES = td.TypeDict({
     'Scene3DOpts'    : '3D display options',
     'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
+    'VolumeRGBOpts'  : 'RGB(A) volume options',
     'MaskOpts'       : 'Mask options',
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
@@ -654,6 +656,7 @@ GROUPDESCS = td.TypeDict({
                      'overlay.',
 
     'VolumeOpts'     : 'These options are applied to \'volume\' overlays.',
+    'VolumeRGBOpts'  : 'These options are applied to \'rgb\' overlays.',
     'MaskOpts'       : 'These options are applied to \'mask\' overlays.',
     'LabelOpts'      : 'These options are applied to \'label\' overlays.',
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
@@ -1695,6 +1698,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
     Display        = fsldisplay.Display
     VolumeOpts     = fsldisplay.VolumeOpts
+    VolumeRGBOpts  = fsldisplay.VolumeRGBOpts
     RGBVectorOpts  = fsldisplay.RGBVectorOpts
     LineVectorOpts = fsldisplay.LineVectorOpts
     TensorOpts     = fsldisplay.TensorOpts
@@ -1708,10 +1712,11 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
     # A parser is created and returned
     # for each one of these types.
-    parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
-                   MeshOpts, GiftiOpts, FreesurferOpts,
-                   LineVectorOpts, RGBVectorOpts,
-                   TensorOpts, SHOpts, MIPOpts]
+    parserTypes = [VolumeOpts, VolumeRGBOpts, MaskOpts,
+                   LabelOpts, MeshOpts, GiftiOpts,
+                   FreesurferOpts, LineVectorOpts,
+                   RGBVectorOpts, TensorOpts, SHOpts,
+                   MIPOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use
