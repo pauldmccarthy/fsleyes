@@ -43,6 +43,7 @@ def createImageTexture(name, image, *args, **kwargs):
     shape = image.shape[:3]
     shape = [d for d in shape if d > 1]
 
+    # force scalar/vector shape to be 2D
     if   len(shape) == 0: shape = [1, 1]
     elif len(shape) == 1: shape = [shape[0], 1]
 
@@ -259,7 +260,15 @@ class ImageTextureBase(object):
 
 
     def __getData(self, volume, channel):
-        """
+        """Extracts data from the :class:`.Image` for use as texture data.
+
+        For textures with multiple values per element (either by volume, or by
+        channel), the data is arranged appropriately, i.e. with the value as
+        the first dimension.
+
+        :arg volume:  Volume index/indices, for images with more than three
+                      dimensions.
+        :arg channel: Channel, for RGB(A) images.
         """
 
         image = self.image
@@ -292,13 +301,16 @@ class ImageTextureBase(object):
                               order='F',
                               dtype=np.uint8)
 
-
-
         return data
 
 
     def __shapeData(self, data):
-        """
+        """Shapes the data, ensuring that it is compatible with the texture
+        type (either a 3D :class:`ImageTexture`, or a 2D
+        :class:`ImageTexture2D`).
+
+        :arg data: numpy array containing the data, as returned by
+                   :meth:`__getData`
         """
 
         # For 3D textures, we can use
@@ -308,10 +320,13 @@ class ImageTextureBase(object):
 
         nvals = self.nvals
 
+        # Otherwise, for scalar, 1D or 2D data,
+        # we need to make sure the data has a
+        # shape compatible with the ImageTexture2D
         if nvals == 1: oldshape = np.array(data.shape)
         else:          oldshape = np.array(data.shape[1:])
 
-        if   np.all(oldshape         == [1, 1, 1]): newshape =  (1,  1)
+        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
         elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
         elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
         elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
@@ -321,7 +336,6 @@ class ImageTextureBase(object):
 
         if nvals > 1:
             newshape = [nvals] + list(newshape)
-
 
         return data.reshape(newshape)
 

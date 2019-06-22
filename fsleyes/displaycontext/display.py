@@ -362,6 +362,9 @@ class Display(props.SyncableHasProperties):
                 if not hasattr(opts, propName):
                     continue
 
+                if not opts.propertyIsEnabled(propName):
+                    continue
+
                 log.debug('Restoring {}.{} = {} [{}]'.format(
                     type(opts).__name__, propName, value, id(self)))
 
