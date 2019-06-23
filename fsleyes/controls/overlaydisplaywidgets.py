@@ -311,7 +311,15 @@ def _initPropertyList_MIPOpts(threedee):
 
 def _initPropertyList_VolumeRGBOpts(threedee):
     return ['custom_volume',
-            'interpolation']
+            'interpolation',
+            'rColour',
+            'gColour',
+            'bColour',
+            'suppressR',
+            'suppressG',
+            'suppressB',
+            'suppressA',
+            'suppressMode']
 
 
 def _initWidgetSpec_Display(threedee):
@@ -806,7 +814,6 @@ def _initWidgetSpec_VolumeRGBOpts(threedee):
 
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
-        'channel'        : props.Widget('channel'),
         'volume'         : props.Widget(
             'volume',
             showLimits=False,
@@ -821,6 +828,14 @@ def _initWidgetSpec_VolumeRGBOpts(threedee):
         'interpolation'  : props.Widget(
             'interpolation',
             labels=strings.choices['VolumeOpts.interpolation']),
+        'rColour'      : props.Widget('rColour'),
+        'gColour'      : props.Widget('gColour'),
+        'bColour'      : props.Widget('bColour'),
+        'suppressR'    : props.Widget('suppressR'),
+        'suppressG'    : props.Widget('suppressG'),
+        'suppressB'    : props.Widget('suppressB'),
+        'suppressA'    : props.Widget('suppressA'),
+        'suppressMode' : props.Widget('suppressMode'),
     }
 
 

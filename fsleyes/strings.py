@@ -1111,6 +1111,17 @@ properties = TypeDict({
     'MIPOpts.window'         : 'MIP window length (%)',
     'MIPOpts.minimum'        : 'Minimum intensity',
     'MIPOpts.absolute'       : 'Absolute intensity',
+
+    'VolumeRGBOpts.interpolation' : 'Interpolation',
+    'VolumeRGBOpts.rColour'       : 'R colour',
+    'VolumeRGBOpts.gColour'       : 'G colour',
+    'VolumeRGBOpts.bColour'       : 'B colour',
+    'VolumeRGBOpts.suppressR'     : 'Suppress R',
+    'VolumeRGBOpts.suppressG'     : 'Suppress G',
+    'VolumeRGBOpts.suppressB'     : 'Suppress B',
+    'VolumeRGBOpts.suppressA'     : 'Suppress A',
+    'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
+
 })
 
 

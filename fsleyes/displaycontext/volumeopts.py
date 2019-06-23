@@ -25,7 +25,6 @@ from . import                  niftiopts
 log = logging.getLogger(__name__)
 
 
-
 class VolumeOpts(cmapopts.ColourMapOpts,
                  vol3dopts.Volume3DOpts,
                  niftiopts.NiftiOpts):
@@ -396,7 +395,40 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
     """
 
 
+    rColour = props.Colour(default=(1, 0, 0))
+    """Colour to use for the red channel. """
+
+
+    gColour = props.Colour(default=(0, 1, 0))
+    """Colour to use for the green channel. """
+
+
+    bColour = props.Colour(default=(0, 0, 1))
+    """Colour to use for the blue channel. """
+
+
+    suppressR = props.Boolean(default=False)
+    """Suppress the R channel. """
+
+
+    suppressG = props.Boolean(default=False)
+    """Suppress the G channel. """
+
+
+    suppressB = props.Boolean(default=False)
+    """Suppress the B channel. """
+
+
+    suppressA = props.Boolean(default=False)
+    """Suppress the A channel. """
+
+
+    suppressMode = props.Choice(('white', 'black', 'transparent'))
+    """How colours should be suppressed. """
+
+
     interpolation = copy.copy(VolumeOpts.interpolation)
+    """See :attr:`VolumeOpts.interpolation`. """
 
 
     def __init__(self,

@@ -40,15 +40,29 @@ uniform int  nvals;
 
 
 /*
- * Global alpha value (0-1)
+ * Colour to use for the red channel
  */
-uniform float alpha;
+uniform vec4 rcolour;
 
 
 /*
- * Scale/offset to apply to the RGB values.
+ * Colour to use for the green channel
  */
-uniform vec2 colourAdjust;
+uniform vec4 gcolour;
+
+
+/*
+ * Colour to use for the blue channel
+ */
+uniform vec4 bcolour;
+
+
+/*
+ * Scale/offset to apply to the final colour,
+ * to adjust brightness/contrast
+ */
+uniform vec2 colourXform;
+
 
 /*
  * Voxel coordinates.
@@ -63,8 +77,9 @@ varying vec3 fragTexCoord;
 
 void main(void) {
 
-    vec3 voxCoord = fragVoxCoord;
-    vec4 voxValue;
+    vec3  voxCoord = fragVoxCoord;
+    vec4  voxValue;
+    float alpha;
 
     if (!test_in_bounds(voxCoord, imageShape)) {
         discard;
@@ -93,10 +108,14 @@ void main(void) {
     }
     {% endif %}
 
-    voxValue.xyz = (voxValue.xyz - 0.5 + colourAdjust.y) * colourAdjust.x + 0.5;
+    alpha        = voxValue.a;
+    voxValue     = (voxValue.r * rcolour) +
+                   (voxValue.g * gcolour) +
+                   (voxValue.b * bcolour);
+    voxValue.rgb = (voxValue.rgb - 0.5 + colourXform.y) * colourXform.x + 0.5;
 
-    if (nvals == 3) voxValue.a  = alpha;
-    else            voxValue.a *= alpha;
+    if (nvals == 4)
+      voxValue.a *= alpha;
 
     gl_FragColor = voxValue;
 }

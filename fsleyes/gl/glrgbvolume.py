@@ -9,6 +9,7 @@ RGB(A) :class:`.Image` overlays.
 """
 
 
+import numpy                as np
 import OpenGL.GL            as gl
 
 import fsl.utils.idle       as idle
@@ -82,6 +83,14 @@ class GLRGBVolume(glimageobject.GLImageObject):
         display.addListener('contrast',      name, shader, weak=False)
         display.addListener('alpha',         name, shader, weak=False)
         opts   .addListener('interpolation', name, self._interpChanged)
+        opts   .addListener('rColour',       name, shader, weak=False)
+        opts   .addListener('gColour',       name, shader, weak=False)
+        opts   .addListener('bColour',       name, shader, weak=False)
+        opts   .addListener('suppressR',     name, shader, weak=False)
+        opts   .addListener('suppressG',     name, shader, weak=False)
+        opts   .addListener('suppressB',     name, shader, weak=False)
+        opts   .addListener('suppressA',     name, shader, weak=False)
+        opts   .addListener('suppressMode',  name, shader, weak=False)
         opts   .addListener('transform',     name, notify, weak=False)
         opts   .addListener('displayXform',  name, notify, weak=False)
 
@@ -99,6 +108,14 @@ class GLRGBVolume(glimageobject.GLImageObject):
         display.removeListener('contrast',      name)
         display.removeListener('alpha',         name)
         opts   .removeListener('interpolation', name)
+        opts   .removeListener('rColour',       name)
+        opts   .removeListener('gColour',       name)
+        opts   .removeListener('bColour',       name)
+        opts   .removeListener('suppressR',     name)
+        opts   .removeListener('suppressG',     name)
+        opts   .removeListener('suppressB',     name)
+        opts   .removeListener('suppressA',     name)
+        opts   .removeListener('suppressMode',  name)
         opts   .removeListener('transform',     name)
         opts   .removeListener('displayXform',  name)
 
@@ -161,6 +178,32 @@ class GLRGBVolume(glimageobject.GLImageObject):
         :meth:`updateShaderState`.
         """
         self.updateShaderState()
+
+
+    def channelColours(self):
+        """Returns a ``numpy`` array of shape ``(3, 4)``, containing the
+        colours to use for each of the three channels.
+        """
+
+        opts     = self.opts
+        display  = self.display
+        alpha    = display.alpha / 100
+
+        colours        = np.zeros((3, 4), dtype=np.float32)
+        colours[0, :3] = opts.rColour[:3]
+        colours[1, :3] = opts.gColour[:3]
+        colours[2, :3] = opts.bColour[:3]
+        colours[:,  3] = alpha
+
+        if   opts.suppressMode == 'white':       suppress = [1, 1, 1, alpha]
+        elif opts.suppressMode == 'black':       suppress = [0, 0, 0, alpha]
+        elif opts.suppressMode == 'transparent': suppress = [0, 0, 0, 0]
+
+        if opts.suppressR: colours[0, :] = suppress
+        if opts.suppressG: colours[1, :] = suppress
+        if opts.suppressB: colours[2, :] = suppress
+
+        return colours
 
 
     def preDraw(self, xform=None, bbox=None):

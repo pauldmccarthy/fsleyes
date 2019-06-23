@@ -51,28 +51,34 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    display    = self.display
-    opts       = self.opts
-    image      = self.image
-    shader     = self.shader
-    nvals      = len(image.dtype)
-    imageShape = image.shape[:3]
-    texShape   = self.imageTexture.shape[:3]
+    display     = self.display
+    opts        = self.opts
+    image       = self.image
+    shader      = self.shader
+    nvals       = len(image.dtype)
+    imageShape  = image.shape[:3]
+    texShape    = self.imageTexture.shape[:3]
+    brightness  = display.brightness / 100
+    contrast    = display.contrast   / 100
+    rc, gc, bc  = self.channelColours()
+    colourXform = fslcmaps.briconToScaleOffset(brightness, contrast, 1)
+
+    if opts.suppressA:
+        nvals = 3
 
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
 
     shader.load()
 
-    colourAdjust = fslcmaps.briconToScaleOffset(
-        display.brightness / 100, display.contrast / 100, 1)
-
     changed  = False
     changed |= shader.set('imageTexture',  0)
     changed |= shader.set('imageShape',    imageShape)
     changed |= shader.set('texShape',      texShape)
-    changed |= shader.set('alpha',         display.alpha / 100)
-    changed |= shader.set('colourAdjust',  colourAdjust)
+    changed |= shader.set('rcolour',       rc)
+    changed |= shader.set('gcolour',       gc)
+    changed |= shader.set('bcolour',       bc)
+    changed |= shader.set('colourXform',   colourXform)
     changed |= shader.set('useSpline',     opts.interpolation == 'spline')
     changed |= shader.set('nvals',         nvals)
     shader.unload()
