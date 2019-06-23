@@ -596,7 +596,15 @@ OPTIONS = td.TypeDict({
                         'window',
                         'minimum',
                         'absolute'],
-    'VolumeRGBOpts'   : []
+    'VolumeRGBOpts'   : ['interpolation',
+                         'rColour',
+                         'gColour',
+                         'bColour',
+                         'suppressR',
+                         'suppressG',
+                         'suppressB',
+                         'suppressA',
+                         'suppressMode']
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -887,7 +895,17 @@ ARGUMENTS = td.TypeDict({
     'MIPOpts.window'         : ('w',  'window',        False),
     'MIPOpts.minimum'        : ('m',  'minimum',       False),
     'MIPOpts.absolute'       : ('ab', 'absolute',      False),
-    'MIPOpts.interpolation'  : ('in', 'interpolation', False),
+    'MIPOpts.interpolation'  : ('in', 'interpolation', True),
+
+    'VolumeRGBOpts.interpolation' : ('in', 'interpolation', True),
+    'VolumeRGBOpts.rColour'       : ('rc', 'rColour',       True),
+    'VolumeRGBOpts.gColour'       : ('gc', 'gColour',       True),
+    'VolumeRGBOpts.bColour'       : ('bc', 'bColour',       True),
+    'VolumeRGBOpts.suppressR'     : ('rs', 'suppressR',     False),
+    'VolumeRGBOpts.suppressG'     : ('gs', 'suppressG',     False),
+    'VolumeRGBOpts.suppressB'     : ('bs', 'suppressB',     False),
+    'VolumeRGBOpts.suppressA'     : ('as', 'suppressA',     False),
+    'VolumeRGBOpts.suppressMode'  : ('sm', 'suppressMode',  True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1181,6 +1199,19 @@ HELP = td.TypeDict({
     'MIPOpts.absolute'       :
     'Use the absolute intensity, rather than the maximum intensity, in the '
     'projection. This overrides the minimum intensity setting.',
+    'MIPOpts.interpolation' : 'Interpolation',
+
+    'VolumeRGBOpts.interpolation' : 'Interpolation',
+    'VolumeRGBOpts.rColour'       : 'R colour (0-1)',
+    'VolumeRGBOpts.gColour'       : 'G colour (0-1)',
+    'VolumeRGBOpts.bColour'       : 'B colour (0-1)',
+    'VolumeRGBOpts.suppressR'     : 'Suppress R channel',
+    'VolumeRGBOpts.suppressG'     : 'Suppress G channel',
+    'VolumeRGBOpts.suppressB'     : 'Suppress B channel',
+    'VolumeRGBOpts.suppressA'     : 'Suppress A channel',
+    'VolumeRGBOpts.suppressMode'  : 'Replace suppressed channels with '
+                                    '\'white\' (default), \'black\', or '
+                                    '\'transparent\'.',
 })
 """This dictionary defines the help text for all command line options."""
 
@@ -1329,6 +1360,9 @@ def getExtra(target, propName, default=None):
         (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
         (fsldisplay.MIPOpts,        'cmap')          : cmapSettings,
         (fsldisplay.MIPOpts,        'negativeCmap')  : cmapSettings,
+        (fsldisplay.VolumeRGBOpts,  'rColour')       : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'gColour')       : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'bColour')       : colourSettings,
     }
 
     # Add (str, propname) versions
