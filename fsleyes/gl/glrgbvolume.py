@@ -149,6 +149,9 @@ class GLRGBVolume(glimageobject.GLImageObject):
         texName = '{}_{}' .format(type(self).__name__, id(self.image))
         nvals   = len(self.overlay.dtype)
 
+        if nvals == 0:
+            nvals = self.overlay.shape[-1]
+
         self.imageTexture = glresources.get(
             texName,
             textures.createImageTexture,
