@@ -734,8 +734,8 @@ class GLVector(GLVectorBase):
         # NIFTI_TYPE_RGB24 type)
         shape = vectorImage.shape
         ndims = len(shape)
-        nvals = len(vectorImage.dtype)
-        isRGB = (((ndims == 4) and (nvals == 0) and (shape[3] == 3)) or
+        nvals = vectorImage.nvals
+        isRGB = (((ndims == 4) and (nvals == 1) and (shape[3] == 3)) or
                  ((ndims == 3) and (nvals == 3)))
 
         if not isRGB:

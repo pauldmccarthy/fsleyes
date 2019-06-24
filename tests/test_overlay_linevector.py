@@ -7,7 +7,7 @@
 
 import pytest
 
-from . import run_cli_tests, roi, ndvec, asrgb
+from . import run_cli_tests, roi, asrgb
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -39,6 +39,5 @@ def test_overlay_linevector():
     extras = {
         'roi'   : roi,
         'asrgb' : asrgb,
-        'ndvec' : ndvec,
     }
     run_cli_tests('test_overlay_linevector', cli_tests, extras=extras)

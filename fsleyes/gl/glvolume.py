@@ -476,7 +476,7 @@ class GLVolume(glimageobject.GLImageObject):
         returns ``False`` otherwise.
         """
         is4D  = len(self.image.shape) >= 4 and self.image.shape[3] > 1
-        isRGB = len(self.image.dtype) >  0
+        isRGB = self.image.nvals > 1
 
         return ((self.opts.getParent() is None)                      or
                 (is4D  and not self.opts.isSyncedToParent('volume')) or

@@ -199,13 +199,12 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # the channel property.
         if not self.__registered:
 
-            nchannels = len(self.overlay.dtype)
-            if nchannels == 0:
+            nchannels = self.overlay.nvals
+            if nchannels == 1:
                 self.disableProperty('channel')
-            elif nchannels in (3, 4):
-                if nchannels == 3:
-                    prop = self.getProp('channel')
-                    prop.removeChoice('A', self)
+            elif nchannels == 3:
+                prop = self.getProp('channel')
+                prop.removeChoice('A', self)
 
         cmapopts .ColourMapOpts.__init__(self)
         vol3dopts.Volume3DOpts .__init__(self)

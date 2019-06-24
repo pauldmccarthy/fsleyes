@@ -75,7 +75,7 @@ class ImageTextureBase(object):
                        compatible with the image
         """
 
-        imgnvals = len(image.dtype)
+        imgnvals = image.nvals
         imgndims = len(image.shape)
 
         # Anything goes for single-
@@ -87,7 +87,7 @@ class ImageTextureBase(object):
         # the image must have a shape
         # of the form:
         # (x, y, z, [1, [1, [1, [1, ]]]] nvals)
-        if imgnvals == 0:
+        if imgnvals == 1:
             expShape     = list(image.shape[:3])
             expShape    += [1] * (imgndims - 3)
             expShape[-1] = texnvals
@@ -233,7 +233,7 @@ class ImageTextureBase(object):
         ndims      = image.ndim
 
         if len(image.shape) == 3: volume  = None
-        if len(image.dtype) == 0: channel = None
+        if image.nvals      == 1: channel = None
 
         if normRange is None:
             normRange = image.dataRange
@@ -298,13 +298,13 @@ class ImageTextureBase(object):
         # single-valued 4D image - we
         # assume that each volume
         # corresponds to a channel
-        elif len(image.dtype) == 0 and volume is None:
+        elif image.nvals == 1 and volume is None:
             data = data.transpose((3, 0, 1, 2))
 
         # Multi-valued RGB(A) texture
         # with a multi-valued image -
         # cast/reshape the image data
-        elif len(image.dtype) > 0 and channel is None:
+        elif image.nvals > 1 and channel is None:
             data = np.ndarray(buffer=data.data,
                               shape=[self.nvals] + list(data.shape),
                               order='F',

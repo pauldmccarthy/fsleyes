@@ -578,28 +578,6 @@ def roi(fname, roi):
 
     return outfile
 
-def ndvec(infile, ndims):
-    basename = fslimage.removeExt(op.basename(infile))
-    outfile  = '{}_ndvec_{}.nii.gz'.format(basename, ndims)
-    img      = fslimage.Image(infile)
-    data     = img.data
-
-    slc   = []
-    shape = []
-    for n in range(ndims):
-        slc.append(slice(None, None, None))
-        shape.append(data.shape[n])
-    for n in range(ndims, len(data.shape) - 1):
-        slc.append(0)
-        shape.append(1)
-    slc.append(slice(None, None, None))
-    shape.append(3)
-
-    img = fslimage.Image(data[slc].reshape(shape), xform=img.voxToWorldMat)
-    img.save(outfile)
-
-    return outfile
-
 
 def asrgb(infile):
     basename = fslimage.removeExt(op.basename(infile))
@@ -618,7 +596,6 @@ def asrgb(infile):
     fslimage.Image(newdata, xform=img.voxToWorldMat).save(outfile)
 
     return outfile
-
 
 
 def discretise(infile, stepsize, min=None, max=None):

@@ -237,7 +237,7 @@ def getOverlayTypes(overlay):
 
     shape = overlay.shape
     ndims = len(shape)
-    nvals = len(overlay.dtype)
+    nvals = overlay.nvals
 
     # Could this image be a vector image?
     couldBeVector = ((ndims == 4 and shape[-1] == 3) or

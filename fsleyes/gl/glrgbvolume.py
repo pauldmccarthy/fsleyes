@@ -147,17 +147,21 @@ class GLRGBVolume(glimageobject.GLImageObject):
         """
 
         texName = '{}_{}' .format(type(self).__name__, id(self.image))
-        nvals   = len(self.overlay.dtype)
+        nvals   = self.overlay.nvals
 
-        if nvals == 0:
+        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                                 interp = gl.GL_LINEAR
+
+        if nvals == 1:
             nvals = self.overlay.shape[-1]
 
         self.imageTexture = glresources.get(
             texName,
             textures.createImageTexture,
             texName,
-            self.image,
+            self.overlay,
             nvals=nvals,
+            interp=interp,
             notify=False)
 
         self.imageTexture.register(self.name, self.__imageTextureChanged)

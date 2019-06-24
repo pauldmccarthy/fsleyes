@@ -260,7 +260,7 @@ class GLLineVertices(object):
         # The image may either
         # have shape (X, Y, Z, 3)
 
-        if len(image.dtype) == 0:
+        if image.nvals == 1:
             vertices = np.array(data, dtype=np.float32)
         # Or (we assume) a RGB
         # structured array

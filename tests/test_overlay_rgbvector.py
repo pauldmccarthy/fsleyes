@@ -8,7 +8,7 @@
 
 import pytest
 
-from . import run_cli_tests, ndvec, asrgb
+from . import run_cli_tests, asrgb
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -35,6 +35,5 @@ dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
 def test_overlay_rgbvector():
     extras = {
         'asrgb' : asrgb,
-        'ndvec' : ndvec,
     }
     run_cli_tests('test_overlay_rgbvector', cli_tests, extras=extras)

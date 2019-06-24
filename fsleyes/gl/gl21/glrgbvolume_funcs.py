@@ -55,8 +55,8 @@ def updateShaderState(self):
     opts        = self.opts
     image       = self.image
     shader      = self.shader
-    nvals       = len(image.dtype)
     imageShape  = image.shape[:3]
+    nvals       = self.imageTexture.nvals
     texShape    = self.imageTexture.shape[:3]
     brightness  = display.brightness / 100
     contrast    = display.contrast   / 100
