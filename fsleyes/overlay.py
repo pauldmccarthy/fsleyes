@@ -58,6 +58,7 @@ Currently (``fsleyes`` version |version|) the only overlay types in existence
    ~fsl.data.vtk.VTKMesh
    ~fsl.data.gifti.GiftiMesh
    ~fsl.data.freesurfer.FreesurferMesh
+   ~fsl.data.bitmap.Bitmap
 
 
 This module also provides a few convenience classes and functions:

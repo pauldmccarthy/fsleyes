@@ -104,26 +104,29 @@ def makeWildcard(allowedExts=None, descs=None):
     import fsl.data.vtk        as fslvtk
     import fsl.data.gifti      as fslgifti
     import fsl.data.freesurfer as fslfs
+    import fsl.data.bitmap     as fslbmp
 
     # Hack - the wx wildcard logic doesn't support
     # files with multiple extensions (e.g. .nii.gz).
-    # So I'm adding support for '.gz' and '.gii'
-    # extensions here.
+    # So I'm adding support for the '.gz' extension
+    # here.
     fsfiles = [op.splitext(f)[1] for f in fslfs.CORE_GEOMETRY_FILES]
     if allowedExts is None:
         allowedExts  = (fslimage.ALLOWED_EXTENSIONS  +
                         fslvtk  .ALLOWED_EXTENSIONS  +
                         fslmgh  .ALLOWED_EXTENSIONS  +
                         fslgifti.ALLOWED_EXTENSIONS  +
+                        fslbmp  .BITMAP_EXTENSIONS   +
                         fsfiles                      +
-                        ['.gz', '.gii'])
+                        ['.gz'])
     if descs is None:
         descs        = (fslimage.EXTENSION_DESCRIPTIONS     +
                         fslvtk  .EXTENSION_DESCRIPTIONS     +
                         fslmgh  .EXTENSION_DESCRIPTIONS     +
                         fslgifti.EXTENSION_DESCRIPTIONS     +
+                        fslbmp  .BITMAP_DESCRIPTIONS        +
                         fslfs   .CORE_GEOMETRY_DESCRIPTIONS +
-                        ['Compressed images', 'GIFTI surfaces'])
+                        ['Compressed images'])
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]
     exts  = [';'.join(exts)]        + exts
@@ -187,11 +190,11 @@ def loadOverlays(paths,
     :returns:       If ``blocking is False`` (the default), returns ``None``.
                     Otherwise returns a list containing the loaded overlay
                     objects.
-
     """
 
-    import fsl.data.image as fslimage
-    import fsl.data.mesh  as fslmesh
+    import fsl.data.image  as fslimage
+    import fsl.data.mesh   as fslmesh
+    import fsl.data.bitmap as fslbmp
 
     # The default load function updates
     # the dialog window created above
@@ -226,6 +229,8 @@ def loadOverlays(paths,
                 loaded = loadImage(dtype, path, inmem=inmem)
             elif issubclass(dtype, fslmesh.Mesh):
                 loaded = [dtype(path, fixWinding=True)]
+            elif issubclass(dtype, fslbmp.Bitmap):
+                loaded = [dtype(path).asImage()]
             else:
                 loaded = [dtype(path)]
 

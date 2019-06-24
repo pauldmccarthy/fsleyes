@@ -197,7 +197,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # the channel property. If it's a RGB
         # image,  remove the "A" option from
         # the channel property.
-        if not self.__registered:
+        if self.__registered:
 
             nchannels = self.overlay.nvals
             if nchannels == 1:

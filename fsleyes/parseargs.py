@@ -273,6 +273,7 @@ import six.moves.urllib as urllib
 import numpy            as np
 
 import fsl.data.image                     as fslimage
+import fsl.data.bitmap                    as fslbmp
 import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
@@ -1992,6 +1993,11 @@ def parseArgs(mainParser,
         # I don't know what to do
         if dtype is None:
             raise RuntimeError('Unrecognised overlay type: {}'.format(fname))
+
+        # Bitmaps are converted to
+        # Images on load (see loadoverlay)
+        if dtype is fslbmp.Bitmap:
+            dtype = fslimage.Image
 
         # Otherwise, it's an overlay
         # file that needs to be loaded
