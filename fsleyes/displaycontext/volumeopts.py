@@ -444,6 +444,13 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
         constructor.
         """
 
+        # We need GL >= 2.1 for
+        # spline interpolation
+        if float(fslplatform.glVersion) < 2.1:
+            interp = self.getProp('interpolation')
+            interp.removeChoice('spline', instance=self)
+            interp.updateChoice('linear', instance=self, newAlt=['spline'])
+
         niftiopts.NiftiOpts.__init__(self,
                                      overlay,
                                      display,

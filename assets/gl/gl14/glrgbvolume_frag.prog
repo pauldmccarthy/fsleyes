@@ -1,0 +1,61 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLRGBVolume instances.
+#
+# Input parameters:
+#
+#    {{ param_rcolour }}
+#    {{ param_gcolour }}
+#    {{ param_bcolour }}
+#    {{ param_colourXform }}
+#    {{ param_nvals }}
+#
+# Input varyings:
+#   {{ varying_texCoord }}
+#
+# Input textures:
+#   {{ texture_imageTexture }}
+#
+# Constants:
+#   texture_is_2d - If True, the imageTexture is assumed to be 2D.
+
+
+{{ arb_include('textest.prog') }}
+
+
+TEMP voxValue;
+TEMP finalColour;
+
+
+# bail if texture coordinates are out of bounds
+# we use voxValue here out of convenience
+{{
+arb_call('textest.prog',
+         texCoord='{{ varying_texCoord }}',
+         out_result='voxValue')
+}}
+KIL voxValue.x;
+
+
+# look up image voxel values
+{% if texture_is_2d %}
+TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 2D;
+{% else %}
+TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
+{% endif %}
+
+
+MUL finalColour, voxValue.x, {{ param_rcolour }};
+MAD finalColour, voxValue.y, {{ param_gcolour }}, finalColour;
+MAD finalColour, voxValue.z, {{ param_bcolour }}, finalColour;
+
+MOV voxValue.x, finalColour.w;
+SUB finalColour, finalColour, 0.5;
+ADD finalColour, finalColour, {{ param_colourXform }}.y;
+MAD finalColour, finalColour, {{ param_colourXform }}.x, 0.5;
+
+# if nvals == 4, use voxValue.w, otherwise use voxValue.x
+
+MOV result.color, finalColour;
+
+END

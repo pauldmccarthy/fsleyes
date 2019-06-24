@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# glrgbvolume_funcs.py - Functions used by the GLRGBVolume class
+# glrgbvolume_funcs.py - GL14/GLRGBVolume functions.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module contains functions used by the :class:`.GLRGBVolume` class
-for rendering RGB(A) :class:`.Image` overlays in an OpenGL 2.1 environment.
+for rendering RGB(A) :class:`.Image` overlays in an OpenGL 1.4 environment.
 """
 
 
@@ -38,11 +38,19 @@ def compileShaders(self):
     vertSrc = shaders.getVertexShader(  'glvolume')
     fragSrc = shaders.getFragmentShader('glrgbvolume')
 
-    constants = {
-        'textureIs2D' : self.imageTexture.ndim == 2
+    textures = {
+        'imageTexture' : 0
     }
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc, constants=constants)
+    constants = {
+        'texture_is_2d' : self.imageTexture.ndim == 2
+    }
+
+    self.shader = shaders.ARBPShader(vertSrc,
+                                     fragSrc,
+                                     shaders.getShaderDir(),
+                                     textureMap=textures,
+                                     constants=constants)
 
 
 def updateShaderState(self):
@@ -72,15 +80,12 @@ def updateShaderState(self):
     shader.load()
 
     changed  = False
-    changed |= shader.set('imageTexture',  0)
-    changed |= shader.set('imageShape',    imageShape)
-    changed |= shader.set('texShape',      texShape)
-    changed |= shader.set('rcolour',       rc)
-    changed |= shader.set('gcolour',       gc)
-    changed |= shader.set('bcolour',       bc)
-    changed |= shader.set('colourXform',   colourXform)
-    changed |= shader.set('useSpline',     opts.interpolation == 'spline')
-    changed |= shader.set('nvals',         nvals)
+    changed |= shader.setFragParam('rcolour',     rc)
+    changed |= shader.setFragParam('gcolour',     gc)
+    changed |= shader.setFragParam('bcolour',     bc)
+    changed |= shader.setFragParam('colourXform', colourXform)
+    changed |= shader.setFragParam('nvals',       nvals)
+
     shader.unload()
 
     return changed
@@ -91,6 +96,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     :func:`.glvolume_funcs.draw2D` function.
     """
     self.shader.load()
+    self.shader.loadAtts()
     glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
     self.shader.unloadAtts()
     self.shader.unload()
@@ -101,6 +107,7 @@ def drawAll(self, axes, zposes, xforms):
     :func:`.glvolume_funcs.drawAll` function.
     """
     self.shader.load()
+    self.shader.loadAtts()
     glvolume_funcs.drawAll(self, axes, zposes, xforms)
     self.shader.unloadAtts()
     self.shader.unload()
