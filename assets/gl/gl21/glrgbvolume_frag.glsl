@@ -34,9 +34,9 @@ uniform vec3 texShape;
 uniform bool useSpline;
 
 /*
- * Number of values in texture (3 or 4)
+ * True if the texture has an alpha channel.
  */
-uniform int  nvals;
+uniform bool hasAlpha;
 
 
 /*
@@ -114,7 +114,7 @@ void main(void) {
                    (voxValue.b * bcolour);
     voxValue.rgb = (voxValue.rgb - 0.5 + colourXform.y) * colourXform.x + 0.5;
 
-    if (nvals == 4)
+    if (hasAlpha)
       voxValue.a *= alpha;
 
     gl_FragColor = voxValue;

@@ -61,18 +61,14 @@ def updateShaderState(self):
 
     display     = self.display
     opts        = self.opts
-    image       = self.image
     shader      = self.shader
-    imageShape  = image.shape[:3]
     nvals       = self.imageTexture.nvals
     texShape    = self.imageTexture.shape[:3]
     brightness  = display.brightness / 100
     contrast    = display.contrast   / 100
     rc, gc, bc  = self.channelColours()
     colourXform = fslcmaps.briconToScaleOffset(brightness, contrast, 1)
-
-    if opts.suppressA:
-        nvals = 3
+    hasAlpha    = [-1 if (nvals == 3 or opts.suppressA) else 1]
 
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
@@ -84,7 +80,7 @@ def updateShaderState(self):
     changed |= shader.setFragParam('gcolour',     gc)
     changed |= shader.setFragParam('bcolour',     bc)
     changed |= shader.setFragParam('colourXform', colourXform)
-    changed |= shader.setFragParam('nvals',       nvals)
+    changed |= shader.setFragParam('hasAlpha',    hasAlpha)
 
     shader.unload()
 
