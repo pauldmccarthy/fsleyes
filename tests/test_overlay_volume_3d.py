@@ -66,4 +66,8 @@ def test_overlay_volume_3d():
     extras = {
         'roi' : roi
     }
-    run_cli_tests('test_overlay_volume_3d', cli_tests, extras=extras, scene='3d')
+    run_cli_tests('test_overlay_volume_3d',
+                  cli_tests,
+                  extras=extras,
+                  scene='3d',
+                  threshold=40)
