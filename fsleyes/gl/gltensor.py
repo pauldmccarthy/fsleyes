@@ -57,8 +57,8 @@ class GLTensor(glvector.GLVector):
         """Create a ``GLTensor``. Prepares the eigenvalue and eigenvector
         textures, and calls the :func:`.gl21.gltensor_funcs.init` function.
 
-        :arg image:       A :class:`.DTIFitTensor` or compatible :class:`.Image`
-                          overlay.
+        :arg image:       A :class:`.DTIFitTensor` or compatible
+                          :class:`.Image` overlay.
 
         :arg overlayList: The :class:`.OverlayList`
 
@@ -107,21 +107,14 @@ class GLTensor(glvector.GLVector):
         # named attributes on this GLTensor
         # instance.
 
-        def vPrefilter(d):
-            return d.transpose((3, 0, 1, 2))
-
         names = ['v1', 'v2', 'v3', 'l1', 'l2', 'l3']
         imgs  = [ v1,   v2,   v3,   l1,   l2,   l3]
 
         for  name, img in zip(names, imgs):
             texName = '{}_{}_{}'.format(type(self).__name__, name, id(img))
 
-            if name[0] == 'v':
-                texPrefilter = vPrefilter
-                nvals        = 3
-            else:
-                texPrefilter = None
-                nvals        = 1
+            if name[0] == 'v': nvals = 3
+            else:              nvals = 1
 
             tex = glresources.get(
                 texName,
@@ -129,8 +122,7 @@ class GLTensor(glvector.GLVector):
                 texName,
                 img,
                 nvals=nvals,
-                normaliseRange=img.dataRange,
-                prefilter=texPrefilter)
+                normaliseRange=img.dataRange)
 
             setattr(self, '{}Texture'.format(name), tex)
 
