@@ -86,7 +86,8 @@ def test_render_sceneopts_ortho():
     run_cli_tests('test_render_sceneopts_ortho',
                   cli_tests,
                   extras=extras,
-                  scene='ortho')
+                  scene='ortho',
+                  threshold=15)
 
 
 def test_render_sceneopts_lightbox():

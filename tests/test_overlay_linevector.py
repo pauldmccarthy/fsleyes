@@ -40,4 +40,7 @@ def test_overlay_linevector():
         'roi'   : roi,
         'asrgb' : asrgb,
     }
-    run_cli_tests('test_overlay_linevector', cli_tests, extras=extras)
+    run_cli_tests('test_overlay_linevector',
+                  cli_tests,
+                  extras=extras,
+                  threshold=35)

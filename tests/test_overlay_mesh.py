@@ -68,4 +68,7 @@ def test_overlay_mesh():
     extras = {
         'fliporient' : fliporient,
     }
-    run_cli_tests('test_overlay_mesh', cli_tests, extras=extras)
+    run_cli_tests('test_overlay_mesh',
+                  cli_tests,
+                  extras=extras,
+                  threshold=20)
