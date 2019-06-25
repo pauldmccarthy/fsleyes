@@ -317,7 +317,7 @@ def run_render_test(
     assert result
 
 
-def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
+def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
 
     if extras is None:
         extras = {}
@@ -365,7 +365,7 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark,
-                                scene=scene)
+                                scene=scene, threshold=threshold)
                 print('CLI test passed [{}] {}'.format(prefix, test))
 
             except Exception as e:
