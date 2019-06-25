@@ -15,6 +15,7 @@ import OpenGL.GL            as gl
 import fsl.utils.idle       as idle
 
 import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
 import fsleyes.gl.textures  as textures
 import fsleyes.gl.resources as glresources
 from . import                  glimageobject
@@ -220,7 +221,11 @@ class GLRGBVolume(glimageobject.GLImageObject):
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
         """Calls :func:`.glrgbvolume_funcs.draw2D`. """
-        fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
+        with glroutines.enabled((gl.GL_CULL_FACE)):
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glCullFace(gl.GL_BACK)
+            gl.glFrontFace(self.frontFace())
+            fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
 
 
     def drawAll(self, axes, zposes, xforms):
