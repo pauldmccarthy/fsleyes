@@ -11,6 +11,7 @@
    fsleyes.controls
    fsleyes.displaycontext
    fsleyes.editor
+   fsleyes.filtermain
    fsleyes.frame
    fsleyes.gl
    fsleyes.icons

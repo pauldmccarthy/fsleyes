@@ -425,7 +425,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
     In order to use a texture, at the very least you need to provide some
     data, or specify a type and shape. This can be done either via the
-    :meth:`data`/:meth::meth:``shape`/dtype` methods, or by the :meth:`set`
+    :meth:`data`/:meth:`shape`/:meth:`dtype` methods, or by the :meth:`set`
     method. If you specify a shape and data type, any previously specified
     data will be lost, and vice versa.
 

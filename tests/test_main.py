@@ -6,9 +6,11 @@
 #
 
 
-import fsleyes.main    as fm
-import fsleyes.version as fv
+from unittest import mock
 
+import fsleyes.main       as fm
+import fsleyes.filtermain as ffm
+import fsleyes.version    as fv
 
 from . import CaptureStdout
 
@@ -58,3 +60,21 @@ def test_help():
 
     assert exitcode == 0
     assert capture.stdout.split('\n')[0].strip() == expected
+
+
+def test_filtermain():
+
+    threads = [mock.MagicMock()] * 2
+
+    with mock.patch('fsleyes.filtermain.filter_stream',
+                    return_value=threads):
+        try:
+            ffm.main(['-V'])
+        except SystemExit as e:
+            assert e.code == 0
+
+
+        try:
+            ffm.main(['-h'])
+        except SystemExit as e:
+            assert e.code == 0

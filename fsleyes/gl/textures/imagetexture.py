@@ -204,7 +204,7 @@ class ImageTextureBase(object):
         :meth:`.Texture3D.set` override.
 
         Prepares arguments to be passed through to the underlying
-        ``set``method.  This method accepts any parameters that are accepted
+        ``set`` method.  This method accepts any parameters that are accepted
         by :meth:`.Texture3D.set`, plus the following:
 
         =============== ======================================================

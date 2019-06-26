@@ -1,0 +1,162 @@
+#!/usr/bin/env python
+#
+# filtermain.py - Wrapper around fsleyes.main
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+"""This module provides an alternate FSLeyes entry point to
+(func:`fsleyes.main.main`).
+
+The :func:`main` function in this module calls :func:`fsleyes.main.main`, but
+additionally intercepts and filters the standard out/error streams, and drops
+useless warnings/errors which originate from underlying libraries.
+"""
+
+
+import os
+import re
+import sys
+import queue
+import warnings
+import threading
+
+
+FILTERS = [
+    r'Adding duplicate image handler',
+    r'Metadata\.framework \[Error\]',
+    r'Class FIFinderSyncExtensionHost',
+    r'_RegisterApplication()',
+    r'FinderKit',
+    r'DeprecationWarning',
+    r'wx.NewId',
+    r'ioloop.install',
+    r'FutureWarning',
+    r'ShimWarning',
+    r'ClientToScreen',
+    r'ScreenToClient',
+    r'Gdk-WARNING',
+    r'Gtk-Message',
+    r'Gtk-CRITICAL',
+    r'Glib-CRITICAL',
+    r'Pango-WARNING',
+    r'Xlib:  extension',
+    r'CRITICAL \*\*',
+    r'No matching fbConfigs',
+    r'failed to load driver: swrast',
+    r'\*\*\* BUG \*\*\*',
+    r'In pixman',
+    r'Set a breakpoint',
+    r'^ *$',
+]
+
+
+def filter_stream(stream, die):
+    """Intercept the given output stream, and filter it according to the
+    filters above. The filter is run on a separate thread.
+
+    :arg stream: File-like to read from and filter.
+
+    :arg die:    ``threading.Event`` object - when it is set the filter
+                 thread will end gracefully.
+    """
+
+    # I only loosely understand how to manipulate
+    # file descriptors. Useful resources:
+    #
+    #  - https://linuxmeerkat.wordpress.com/2011/12/02/\
+    #    file-descriptors-explained/
+    #  - https://stackoverflow.com/a/24277852
+    #  - https://stackoverflow.com/a/17954769
+    #  - https://stackoverflow.com/a/10759061
+
+    # Redirect the stream into a pipe,
+    # and filter the pipe output
+    fd           = stream.fileno()
+    oldfd        = os.dup(fd)
+    piper, pipew = os.pipe()
+    os.dup2(pipew, fd)
+    os.close(pipew)
+
+    fin  = os.fdopen(piper, 'r')
+    fout = os.fdopen(oldfd, 'w')
+
+    # Use a queue to pass lines from
+    # the input stream to the output
+    # stream.
+    q = queue.Queue()
+
+    # The read thread runs forever,
+    # just putting lines in the queue.
+    def read_loop():
+        while True:
+            line = fin.readline()
+            if line == '':
+                break
+            q.put(line)
+
+    # The write thread runs until both
+    # of the following are true:
+    #
+    #  - there are no lines in the queue
+    #  - the die event has been set
+    def write_loop():
+        while True:
+            try:
+                line = q.get(timeout=0.25)
+            except queue.Empty:
+                if die.is_set(): break
+                else:            continue
+
+            if not any([re.search(pat, line) for pat in FILTERS]):
+                fout.write(line)
+
+            fout.flush()
+
+        # Restore the original stream
+        try:
+            os.close(fd)
+            os.close(piper)
+            os.dup2(oldfd, fd)
+            os.close(oldfd)
+        except Exception:
+            pass
+
+    rt = threading.Thread(target=read_loop,  daemon=True)
+    wt = threading.Thread(target=write_loop, daemon=True)
+    rt.start()
+    wt.start()
+
+    return rt, wt
+
+
+def main(args=None):
+    """Alternate FSLeyes entry point.
+
+    Uses the :func:`filter_stream` function to filter the standard
+    output/error streams, then calls :func:`fsleyes.main.main`.
+    """
+
+    warnings.filterwarnings('ignore', module='h5py')
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+    die                = threading.Event()
+    rtstdout, wtstdout = filter_stream(sys.stdout, die)
+    rtstderr, wtstderr = filter_stream(sys.stderr, die)
+
+    import fsleyes.main as fm
+
+    result = 1
+
+    try:
+        result = fm.main(args)
+    finally:
+        pass
+        die.set()
+        wtstderr.join()
+        wtstdout.join()
+
+    sys.exit(result)
+
+
+if __name__ == '__main__':
+    main()

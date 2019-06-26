@@ -16,6 +16,7 @@
    fsleyes.gl.glmip
    fsleyes.gl.globject
    fsleyes.gl.glrgbvector
+   fsleyes.gl.glrgbvolume
    fsleyes.gl.glsh
    fsleyes.gl.gltensor
    fsleyes.gl.glvector

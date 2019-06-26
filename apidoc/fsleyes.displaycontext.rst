@@ -16,6 +16,7 @@
    fsleyes.displaycontext.maskopts
    fsleyes.displaycontext.meshopts
    fsleyes.displaycontext.mipopts
+   fsleyes.displaycontext.niftiopts
    fsleyes.displaycontext.orthoopts
    fsleyes.displaycontext.sceneopts
    fsleyes.displaycontext.scene3dopts
