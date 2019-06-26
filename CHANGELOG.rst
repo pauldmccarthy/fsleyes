@@ -28,10 +28,11 @@ Changed
 ^^^^^^^
 
 
-* The ``fsleyes.gl.textures`` package has been cleaned up and refactored
+* The :mod:`fsleyes.gl.textures` package has been cleaned up and refactored
   without any attempt to preserve backwards compatibility. Much of the texture
-  data handling code is now shared by the ``Texture2D`` and ``Texture3D``
-  classes.
+  data handling code is now shared by the :class:`.Texture2D` and
+  :class:`.Texture3D` classes.
+* The :class:`.NiftiOpts` class has been moved into a separate module.
 * 2D NIfTI images are now displayed with a 2D texture - this means that
   the maximum dimension size for 2D images is now 16384 on typical
   hardware.
