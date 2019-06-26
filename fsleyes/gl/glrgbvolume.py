@@ -130,7 +130,7 @@ class GLRGBVolume(glimageobject.GLImageObject):
 
     def textureReady(self):
         """Returns ``True`` if the image texture is ready to be used,
-        ``False``otherwise.
+        ``False`` otherwise.
         """
         return ((self.imageTexture is not None) and
                 (self.imageTexture.ready()))
