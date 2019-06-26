@@ -129,7 +129,7 @@ def filter_stream(stream, die):
     return rt, wt
 
 
-def main():
+def main(args=None):
     """Alternate FSLeyes entry point.
 
     Uses the :func:`filter_stream` function to filter the standard
@@ -148,7 +148,7 @@ def main():
     result = 1
 
     try:
-        result = fm.main()
+        result = fm.main(args)
     finally:
         pass
         die.set()
