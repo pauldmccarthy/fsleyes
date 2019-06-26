@@ -17,11 +17,11 @@ Added
 ^^^^^
 
 
-* New *RGB(A)* overlay type, for displaying the above image types.
-* FSLeyes can now load bitmap images (e.g. ``.jpg``, ``.png``, etc.).  When a
-  bitmap file is loaded it is internallyconverted into a 2D NIfTI image.
 * The volume overlay type now has support for NIfTI images of type ``RGB24``
   and ``RGBA32``, via a new *Channel* setting.
+* New *RGB(A)* overlay type, for displaying the above image types.
+* FSLeyes can now load bitmap images (e.g. ``.jpg``, ``.png``, etc.).  When a
+  bitmap file is loaded it is internally converted into a 2D NIfTI image.
 
 
 Changed
