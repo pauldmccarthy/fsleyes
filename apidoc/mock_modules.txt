@@ -17,6 +17,7 @@ deprecation
 fsl
 fsl.data
 fsl.data.atlases
+fsl.data.bitmap
 fsl.data.constants
 fsl.data.dicom
 fsl.data.dtifit
@@ -39,6 +40,7 @@ fsl.utils.cache
 fsl.utils.callfsl
 fsl.utils.deprecated
 fsl.utils.idle
+fsl.utils.image
 fsl.utils.memoize
 fsl.utils.notifier
 fsl.utils.path

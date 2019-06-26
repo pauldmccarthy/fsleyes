@@ -22,9 +22,10 @@
    fsleyes.actions.loadatlas
    fsleyes.actions.loadcolourmap
    fsleyes.actions.loaddicom
+   fsleyes.actions.loadlayout
    fsleyes.actions.loadoverlay
    fsleyes.actions.loadoverlayfromdir
-   fsleyes.actions.loadlayout
+   fsleyes.actions.loadplugin
    fsleyes.actions.loadstandard
    fsleyes.actions.loadvertexdata
    fsleyes.actions.moviegif
