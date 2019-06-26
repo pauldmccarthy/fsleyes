@@ -41,6 +41,7 @@ fsl.utils.callfsl
 fsl.utils.deprecated
 fsl.utils.idle
 fsl.utils.image
+fsl.utils.image.resample
 fsl.utils.memoize
 fsl.utils.notifier
 fsl.utils.path
