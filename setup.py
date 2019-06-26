@@ -231,6 +231,7 @@ def main():
         version=version,
         description='FSLeyes, the FSL image viewer',
         long_description=readme,
+        long_description_content_type='text/x-rst',
         url='https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes',
         author='Paul McCarthy',
         author_email='pauldmccarthy@gmail.com',
@@ -241,10 +242,9 @@ def main():
             'Intended Audience :: Developers',
             'Intended Audience :: Science/Research',
             'License :: OSI Approved :: Apache Software License',
-            'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
             'Topic :: Software Development :: Libraries :: Python Modules',
             'Topic :: Scientific/Engineering :: Visualization'],
 
@@ -270,7 +270,8 @@ def main():
                 'render  = fsleyes.render:main',
             ],
             'gui_scripts' : [
-                'fsleyes = fsleyes.main:main',
+                'fsleyes            = fsleyes.filtermain:main',
+                'fsleyes_unfiltered = fsleyes.main:main',
             ]
         }
     )
