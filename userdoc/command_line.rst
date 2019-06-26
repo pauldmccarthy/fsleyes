@@ -73,6 +73,7 @@ the :ref:`command line help <command_line_help>`.
 - :ref:`Neurological orientation <command_line_neurological_orientation>`
 - :ref:`Force-load images <command_line_force_load_images>`
 - :ref:`Run script <command_line_run_script>`
+- :ref:`One FSLeyes instance <command_line_one_instance>`
 
 
 .. _command_line_auto_display:
@@ -214,6 +215,33 @@ script when FSLeyes starts, which can load overlays and configure their
 display properties, and set up the FSLeyes interface.  These scripts have
 access to the same environment that is available via the :ref:`FSLeyes-Jupyter
 notebook <fsleyes_notebook>`.
+
+
+.. _command_line_one_instance:
+
+One FSLeyes instance
+^^^^^^^^^^^^^^^^^^^^
+
+
+By default, when you call ``fsleyes`` on the command line, a new FSLeyes
+instance will be opened. If you would prefer to have just one instance of
+FSLeyes open, you can use the ``--cliserver`` option::
+
+    fsleyes --cliserver ...
+    fsleyes  -cs        ...
+
+
+The first time you call ``fsleyes`` in this way, the FSLeyes application will
+open as normal. Then, on subsequent calls, all of the arguments that you
+specify on the command-line will be passed to that first instance. Note that
+only *overlay* arguments will be applied on subsequent calls - all arguments
+pertaining to the FSLeyes layout or displayed scene will be ignored.
+
+
+If you would like FSLeyes to behave this way permanently, add an alias to
+your shell startup file (e.g. ``~/.bash_profile`` if you are using macOS)::
+
+    alias fsleyes="fsleyes --cliserver"
 
 
 .. _command_line_generating_arguments:

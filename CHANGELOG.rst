@@ -25,6 +25,8 @@ Added
 * New alternative main function :func:`fsleyes.filtermain.main`, which filters
   out useless warnings that originate from underlying libraries (e.g. ``wx``,
   GTK, Cocoa, etc).
+* New ``--cliserver`` option, allowing command-line arguments to be passed
+  to a single FSLeyes instance.
 
 
 Changed
