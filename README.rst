@@ -122,3 +122,6 @@ https://github.com/rougier/glsl-parser, and released under the BSD license.
 
 DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix
 (https://github.com/rordenlab/dcm2niix).
+
+The *brain_colours* colour maps were produced and provided by Cyril Pernet
+(https://doi.org/10.1111/ejn.14430).

@@ -1531,6 +1531,9 @@ about = {
 
     DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix (https://github.com/rordenlab/dcm2niix).
 
+    The "brain_colours" colour maps were produced and provided by Cyril Pernet
+    (https://doi.org/10.1111/ejn.14430).
+
     FSLeyes is released under Version 2.0 of the Apache Software License. Source code for FSLeyes is available at https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 
     Copyright 2016-2019 University of Oxford, Oxford, UK.
