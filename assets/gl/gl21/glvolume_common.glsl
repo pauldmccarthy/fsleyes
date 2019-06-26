@@ -9,6 +9,11 @@
  * The voxValue output is normalised to the range [0, 1] according to the
  * current display range.
  *
+ * The following jinja2 constants can be set to configure the shader:
+ *
+ *  - textureIs2D: If True, the shader is configured to sample from a 2D
+ *                 texture. Otherwise, a 3D texture is assumed.
+ *
  * Author: Paul McCarthy <pauldmccarthy@gmail.com>
  */
 bool sample_volume(vec3      texCoord,
@@ -20,13 +25,28 @@ bool sample_volume(vec3      texCoord,
   bool  negCmap = false;
 
   /*
-   * Look up the voxel value
+   * Look up the voxel value. If using a 2D
+   * texture, we assume that the coordinates
+   * are stored in the first two channels of
+   * the texCoord.
    */
+  {% if textureIs2D %}
+
+  if (useSpline) voxValue = spline_interp(imageTexture,
+                                          texCoord.xy,
+                                          texShape.xy,
+                                          0);
+  else           voxValue = texture2D(imageTexture, texCoord.xy).r;
+
+  {% else %}
+
   if (useSpline) voxValue = spline_interp(imageTexture,
                                           texCoord,
-                                          imageShape,
+                                          texShape,
                                           0);
   else           voxValue = texture3D(    imageTexture, texCoord).r;
+
+  {% endif %}
 
   /* Skip nan values */
   if (voxValue != voxValue) {

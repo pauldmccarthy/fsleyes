@@ -41,6 +41,8 @@ capable of loading the following types of data:
    <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIRST>`_ sub-cortical segmentation
    tool.
 
+ - 2D image files (e.g. ``.png``, ``.bmp``, ``.jpg``, etc).
+
 
 Volumetric images can be displayed in a variety of different ways, depending
 on the nature of the image data, and on how you want to display it. The way in

@@ -80,7 +80,7 @@ class GLMIP(glimageobject.GLImageObject):
 
         self.removeDisplayListeners()
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         fslgl.glmip_funcs.destroy(self)
         glimageobject.GLImageObject.destroy(self)
@@ -177,11 +177,11 @@ class GLMIP(glimageobject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR

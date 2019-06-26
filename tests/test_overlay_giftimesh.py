@@ -70,4 +70,7 @@ def test_overlay_giftimesh():
     extras = {
         'vertexsets' : gen_multiple_vertexSets
     }
-    run_cli_tests('test_overlay_giftimesh', cli_tests, extras=extras)
+    run_cli_tests('test_overlay_giftimesh',
+                  cli_tests,
+                  extras=extras,
+                  threshold=25)

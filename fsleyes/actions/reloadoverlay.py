@@ -152,6 +152,9 @@ class ReloadOverlayAction(base.Action):
 
             for prop, val in displayProps.items():
 
+                if not d.propertyIsEnabled(prop):
+                    continue
+
                 try:
                     setattr(d, prop, val)
                 except props.DisabledError:
@@ -164,6 +167,10 @@ class ReloadOverlayAction(base.Action):
             # may have been re-created).
             o = dctx.getOpts(ovl)
             for prop, val in optProps.items():
+
+                if not o.propertyIsEnabled(prop):
+                    continue
+
                 setattr(o, prop, val)
 
         status.update('{} reloaded.'.format(dataSource))

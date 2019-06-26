@@ -29,4 +29,7 @@ freesurfer/lh.pial -mc 1 0 0 -o -w 10 -cm hot -vd freesurfer/lh.curv
 
 def test_overlay_freesurfermesh():
     extras = {}
-    run_cli_tests('test_overlay_freesurfermesh', cli_tests, extras=extras)
+    run_cli_tests('test_overlay_freesurfermesh',
+                  cli_tests,
+                  extras=extras,
+                  threshold=25)

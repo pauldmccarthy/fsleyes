@@ -157,6 +157,18 @@ class GLSH(glvector.GLVectorBase):
             and glvector.GLVectorBase.ready(self)
 
 
+    def getDataResolution(self, xax, yax):
+        """Overrides :meth:`.GLVector.getDataResolution`. Returns a pixel
+        resolution suitable for off-screen rendering of this ``GLSH``.
+        """
+
+        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
+        res[xax] *= 20
+        res[yax] *= 20
+
+        return res
+
+
     def addListeners(self):
         """Overrides :meth:`.GLVectorBase.addListeners`.
 
@@ -469,7 +481,6 @@ class GLSH(glvector.GLVectorBase):
         ``False`` otherwise.
         """
         return (self.radTexture is not None and
-                self.radTexture.ready()     and
                 glvector.GLVectorBase.texturesReady(self))
 
 

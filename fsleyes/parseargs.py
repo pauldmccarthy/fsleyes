@@ -273,6 +273,7 @@ import six.moves.urllib as urllib
 import numpy            as np
 
 import fsl.data.image                     as fslimage
+import fsl.data.bitmap                    as fslbmp
 import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
 import fsl.utils.transform                as transform
@@ -500,6 +501,7 @@ OPTIONS = td.TypeDict({
                         'displayRange',
                         'clippingRange',
                         'gamma',
+                        'channel',
                         'invertClipping',
                         'cmap',
                         'negativeCmap',
@@ -595,6 +597,15 @@ OPTIONS = td.TypeDict({
                         'window',
                         'minimum',
                         'absolute'],
+    'VolumeRGBOpts'   : ['interpolation',
+                         'rColour',
+                         'gColour',
+                         'bColour',
+                         'suppressR',
+                         'suppressG',
+                         'suppressB',
+                         'suppressA',
+                         'suppressMode']
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -614,6 +625,7 @@ GROUPNAMES = td.TypeDict({
     'Scene3DOpts'    : '3D display options',
     'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
+    'VolumeRGBOpts'  : 'RGB(A) volume options',
     'MaskOpts'       : 'Mask options',
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
@@ -653,6 +665,7 @@ GROUPDESCS = td.TypeDict({
                      'overlay.',
 
     'VolumeOpts'     : 'These options are applied to \'volume\' overlays.',
+    'VolumeRGBOpts'  : 'These options are applied to \'rgb\' overlays.',
     'MaskOpts'       : 'These options are applied to \'mask\' overlays.',
     'LabelOpts'      : 'These options are applied to \'label\' overlays.',
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
@@ -803,6 +816,7 @@ ARGUMENTS = td.TypeDict({
     'ColourMapOpts.linkLowRanges'    : ('ll',  'unlinkLowRanges',  True),
     'ColourMapOpts.linkHighRanges'   : ('lh',  'linkHighRanges',   True),
 
+    'VolumeOpts.channel'           : ('ch',  'channel',           True),
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
     'VolumeOpts.clipImage'         : ('cl',  'clipImage',         True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
@@ -882,7 +896,17 @@ ARGUMENTS = td.TypeDict({
     'MIPOpts.window'         : ('w',  'window',        False),
     'MIPOpts.minimum'        : ('m',  'minimum',       False),
     'MIPOpts.absolute'       : ('ab', 'absolute',      False),
-    'MIPOpts.interpolation'  : ('in', 'interpolation', False),
+    'MIPOpts.interpolation'  : ('in', 'interpolation', True),
+
+    'VolumeRGBOpts.interpolation' : ('in', 'interpolation', True),
+    'VolumeRGBOpts.rColour'       : ('rc', 'rColour',       True),
+    'VolumeRGBOpts.gColour'       : ('gc', 'gColour',       True),
+    'VolumeRGBOpts.bColour'       : ('bc', 'bColour',       True),
+    'VolumeRGBOpts.suppressR'     : ('rs', 'suppressR',     False),
+    'VolumeRGBOpts.suppressG'     : ('gs', 'suppressG',     False),
+    'VolumeRGBOpts.suppressB'     : ('bs', 'suppressB',     False),
+    'VolumeRGBOpts.suppressA'     : ('as', 'suppressA',     False),
+    'VolumeRGBOpts.suppressMode'  : ('sm', 'suppressMode',  True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1044,6 +1068,7 @@ HELP = td.TypeDict({
     'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
 
+    'VolumeOpts.channel'           : 'Channel to display, for RGB(A) images',
     'VolumeOpts.overrideDataRange' : 'Override data range. Setting this '
                                      'effectively causes FSLeyes to ignore '
                                      'the actual image data range, and use '
@@ -1175,6 +1200,19 @@ HELP = td.TypeDict({
     'MIPOpts.absolute'       :
     'Use the absolute intensity, rather than the maximum intensity, in the '
     'projection. This overrides the minimum intensity setting.',
+    'MIPOpts.interpolation' : 'Interpolation',
+
+    'VolumeRGBOpts.interpolation' : 'Interpolation',
+    'VolumeRGBOpts.rColour'       : 'R colour (0-1)',
+    'VolumeRGBOpts.gColour'       : 'G colour (0-1)',
+    'VolumeRGBOpts.bColour'       : 'B colour (0-1)',
+    'VolumeRGBOpts.suppressR'     : 'Suppress R channel',
+    'VolumeRGBOpts.suppressG'     : 'Suppress G channel',
+    'VolumeRGBOpts.suppressB'     : 'Suppress B channel',
+    'VolumeRGBOpts.suppressA'     : 'Suppress A channel',
+    'VolumeRGBOpts.suppressMode'  : 'Replace suppressed channels with '
+                                    '\'white\' (default), \'black\', or '
+                                    '\'transparent\'.',
 })
 """This dictionary defines the help text for all command line options."""
 
@@ -1323,6 +1361,9 @@ def getExtra(target, propName, default=None):
         (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
         (fsldisplay.MIPOpts,        'cmap')          : cmapSettings,
         (fsldisplay.MIPOpts,        'negativeCmap')  : cmapSettings,
+        (fsldisplay.VolumeRGBOpts,  'rColour')       : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'gColour')       : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'bColour')       : colourSettings,
     }
 
     # Add (str, propname) versions
@@ -1692,6 +1733,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
     Display        = fsldisplay.Display
     VolumeOpts     = fsldisplay.VolumeOpts
+    VolumeRGBOpts  = fsldisplay.VolumeRGBOpts
     RGBVectorOpts  = fsldisplay.RGBVectorOpts
     LineVectorOpts = fsldisplay.LineVectorOpts
     TensorOpts     = fsldisplay.TensorOpts
@@ -1705,10 +1747,11 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
     # A parser is created and returned
     # for each one of these types.
-    parserTypes = [VolumeOpts, MaskOpts, LabelOpts,
-                   MeshOpts, GiftiOpts, FreesurferOpts,
-                   LineVectorOpts, RGBVectorOpts,
-                   TensorOpts, SHOpts, MIPOpts]
+    parserTypes = [VolumeOpts, VolumeRGBOpts, MaskOpts,
+                   LabelOpts, MeshOpts, GiftiOpts,
+                   FreesurferOpts, LineVectorOpts,
+                   RGBVectorOpts, TensorOpts, SHOpts,
+                   MIPOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use
@@ -1950,6 +1993,11 @@ def parseArgs(mainParser,
         # I don't know what to do
         if dtype is None:
             raise RuntimeError('Unrecognised overlay type: {}'.format(fname))
+
+        # Bitmaps are converted to
+        # Images on load (see loadoverlay)
+        if dtype is fslbmp.Bitmap:
+            dtype = fslimage.Image
 
         # Otherwise, it's an overlay
         # file that needs to be loaded
@@ -2318,7 +2366,7 @@ def _applyArgs(args,
             applied = not _applySpecialOption(
                 args, overlayList, displayCtx, target, name, longArgs[name])
 
-        if not applied:
+        if not applied and target.propertyIsEnabled(name):
             props.applyArguments(target,
                                  args,
                                  propNames=[name],
@@ -2363,6 +2411,8 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
             if nargs is not False:
                 args += nargs
                 propNames.remove(name)
+        elif not source.propertyIsEnabled(name):
+            propNames.remove(name)
 
     for name in propNames:
         xform = TRANSFORMS.get((source, name), None)

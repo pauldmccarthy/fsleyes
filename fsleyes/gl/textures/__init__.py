@@ -16,13 +16,16 @@ textures for various purposes.
 
 # All *Texture classes are made available at the
 # textures package level due to these imports
-from .texture            import Texture
-from .texture            import Texture2D
-from .texture3d          import Texture3D
-from .imagetexture       import ImageTexture
-from .colourmaptexture   import ColourMapTexture
-from .lookuptabletexture import LookupTableTexture
-from .selectiontexture   import SelectionTexture
-from .rendertexture      import RenderTexture
-from .rendertexture      import GLObjectRenderTexture
-from .rendertexturestack import RenderTextureStack
+from .texture            import Texture                # noqa
+from .texture2d          import Texture2D              # noqa
+from .texture2d          import DepthTexture           # noqa
+from .texture3d          import Texture3D              # noqa
+from .imagetexture       import ImageTexture           # noqa
+from .imagetexture       import ImageTexture2D         # noqa
+from .imagetexture       import createImageTexture     # noqa
+from .colourmaptexture   import ColourMapTexture       # noqa
+from .lookuptabletexture import LookupTableTexture     # noqa
+from .selectiontexture   import SelectionTexture       # noqa
+from .rendertexture      import RenderTexture          # noqa
+from .rendertexture      import GLObjectRenderTexture  # noqa
+from .rendertexturestack import RenderTextureStack     # noqa

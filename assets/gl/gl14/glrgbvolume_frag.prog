@@ -1,0 +1,72 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLRGBVolume instances.
+#
+# Input parameters:
+#
+#    {{ param_rcolour }}       - Colour to use for the red channel
+#    {{ param_gcolour }}       - Colour to use for the green channel
+#    {{ param_bcolour }}       - Colour to use for the blue channel
+#    {{ param_colourXform }}   - Scale/offset to apply to the final colour,
+#                                for brightness/contrast
+#    {{ param_hasAlpha }}      - 1 if the texture has an alpha channel, -1
+#                                otherwise
+#
+# Input varyings:
+#   {{ varying_texCoord }}     - Texture coordinates of this fragment
+#
+# Input textures:
+#   {{ texture_imageTexture }} - Texture containing the RGB(A) data
+#
+# Constants:
+#   texture_is_2d              - If True, the imageTexture is assumed to be 2D.
+
+
+{{ arb_include('textest.prog') }}
+
+
+TEMP voxValue;
+TEMP finalColour;
+
+
+# bail if texture coordinates are out of bounds
+# we use voxValue here out of convenience
+{{
+arb_call('textest.prog',
+         texCoord='{{ varying_texCoord }}',
+         out_result='voxValue')
+}}
+KIL voxValue.x;
+
+
+# look up image voxel values
+{% if texture_is_2d %}
+TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 2D;
+{% else %}
+TEX voxValue, {{ varying_texCoord }}, {{ texture_imageTexture }}, 3D;
+{% endif %}
+
+# Mix the three channels
+MUL finalColour, voxValue.x, {{ param_rcolour }};
+MAD finalColour, voxValue.y, {{ param_gcolour }}, finalColour;
+MAD finalColour, voxValue.z, {{ param_bcolour }}, finalColour;
+
+# Apply bricon scale/offset. Store
+# the unscaled global alpha in
+# voxValue.x, so we can restore it
+# afterwards if necessary.
+MOV voxValue.x, finalColour.w;
+MUL voxValue.w, voxValue.w, finalColour.w;
+SUB finalColour, finalColour, 0.5;
+ADD finalColour, finalColour, {{ param_colourXform }}.y;
+MAD finalColour, finalColour, {{ param_colourXform }}.x, 0.5;
+
+# if hasAlpha, we mix the global
+# alpha (from r/g/bcolour) in with
+# the texture alpha. Otherwise we
+# just use the former.
+CMP finalColour.w, {{ param_hasAlpha }}.x, voxValue.x, voxValue.w;
+
+MOV result.color, finalColour;
+
+END

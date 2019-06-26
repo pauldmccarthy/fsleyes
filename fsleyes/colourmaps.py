@@ -197,6 +197,7 @@ colours:
 
    displayRangeToBricon
    briconToDisplayRange
+   briconToScaleOffset
    applyBricon
    randomColour
    randomBrightColour
@@ -834,7 +835,7 @@ def installLookupTable(key):
 ###############
 
 
-def _briconToScaleOffset(brightness, contrast, drange):
+def briconToScaleOffset(brightness, contrast, drange):
     """Used by the :func:`briconToDisplayRange` and the :func:`applyBricon`
     functions.
 
@@ -887,7 +888,7 @@ def briconToDisplayRange(dataRange, brightness, contrast):
     drange     = dmax - dmin
     dmid       = dmin + 0.5 * drange
 
-    scale, offset = _briconToScaleOffset(brightness, contrast, drange)
+    scale, offset = briconToScaleOffset(brightness, contrast, drange)
 
     # Calculate the new display range, keeping it
     # centered in the middle of the data range
@@ -917,7 +918,7 @@ def displayRangeToBricon(dataRange, displayRange):
         return 0, 0
 
     # These are inversions of the equations in
-    # the _briconToScaleOffset function above,
+    # the briconToScaleOffset function above,
     # which calculate the display ranges from
     # the bricon offset/scale
     offset = dlo + 0.5 * (dhi - dlo) - dmid
@@ -955,7 +956,7 @@ def applyBricon(rgb, brightness, contrast):
     oneColour = len(rgb.shape) == 1
     rgb       = rgb.reshape(-1, rgb.shape[-1])
 
-    scale, offset = _briconToScaleOffset(brightness, contrast, 1)
+    scale, offset = briconToScaleOffset(brightness, contrast, 1)
 
     # The contrast factor scales the existing colour
     # range, but keeps the new range centred at 0.5.

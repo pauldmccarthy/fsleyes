@@ -14,6 +14,7 @@ import OpenGL.GL           as gl
 
 import fsl.data.dtifit     as dtifit
 import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
 import fsleyes.gl.glvector as glvector
 
 
@@ -179,7 +180,11 @@ class GLRGBVector(glvector.GLVector):
         """Overrides :meth:`.GLVector.draw2D`. Calls the OpenGL
         version-specific ``draw2D`` function.
         """
-        fslgl.glrgbvector_funcs.draw2D(self, *args, **kwargs)
+        with glroutines.enabled((gl.GL_CULL_FACE)):
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glCullFace(gl.GL_BACK)
+            gl.glFrontFace(self.frontFace())
+            fslgl.glrgbvector_funcs.draw2D(self, *args, **kwargs)
 
 
     def draw3D(self, *args, **kwargs):

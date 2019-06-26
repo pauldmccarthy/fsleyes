@@ -154,7 +154,8 @@ class GLMesh(globject.GLObject):
         # rendering model cross sections.
         # This texture is kept at display/
         # screen resolution
-        self.renderTexture = textures.RenderTexture(self.name, gl.GL_NEAREST)
+        self.renderTexture = textures.RenderTexture(
+            self.name, interp=gl.GL_NEAREST)
 
         # Mesh overlays are coloured:
         #
@@ -447,8 +448,8 @@ class GLMesh(globject.GLObject):
 
             # We only need to resize the texture when
             # the viewport size/quality changes.
-            if self.renderTexture.getSize() != (width, height):
-                self.renderTexture.setSize(width, height)
+            if self.renderTexture.shape != (width, height):
+                self.renderTexture.shape = width, height
 
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):

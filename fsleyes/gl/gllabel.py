@@ -72,7 +72,7 @@ class GLLabel(glimageobject.GLImageObject):
             '{}_lut'.format(self.name))
         self.edgeFilter   = glfilter.Filter('edge', texture=2)
         self.renderTexture = textures.RenderTexture(
-            self.name, gl.GL_LINEAR, rttype='c')
+            self.name, interp=gl.GL_LINEAR, rttype='c')
 
         self.__lut = self.opts.lut
 
@@ -96,7 +96,7 @@ class GLLabel(glimageobject.GLImageObject):
         self.edgeFilter.destroy()
         self.renderTexture.destroy()
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
         self.lutTexture.destroy()
 
         self.removeListeners()
@@ -201,11 +201,11 @@ class GLLabel(glimageobject.GLImageObject):
 
         if self.imageTexture is not None:
 
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return None
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         self.imageTexture = glresources.get(
             texName,
@@ -256,8 +256,8 @@ class GLLabel(glimageobject.GLImageObject):
         w, h = self.canvas.GetSize()
         rtex = self.renderTexture
 
-        rtex.setSize(w, h)
-        with rtex.bound():
+        rtex.shape = w, h
+        with rtex.target():
             gl.glClearColor(0, 0, 0, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
@@ -281,14 +281,13 @@ class GLLabel(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # draw the label to the offscreen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
         self.edgeFilter.apply(
-            self.renderTexture,
-            zpos, xmin, xmax, ymin, ymax, xax, yax,
+            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE2)
 
 
@@ -313,14 +312,13 @@ class GLLabel(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # draw all slices to the offscreen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
 
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
         self.edgeFilter.apply(
-            self.renderTexture,
-            max(zposes), xmin, xmax, ymin, ymax, xax, yax,
+            rtex, max(zposes), xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE2)
 
 

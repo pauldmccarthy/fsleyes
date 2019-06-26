@@ -20,7 +20,7 @@ import numpy as np
 import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 
-from . import run_cli_tests, translate, zero_centre
+from . import run_cli_tests, translate, zero_centre, asrgb, roi
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -104,7 +104,14 @@ cli_tests = """
 3d.nii.gz -cm hot -g 0.1111
 3d.nii.gz -cm hot -g 0.2222
 3d.nii.gz -cm hot -g 0.4444
-"""
+
+{{asrgb('dti/dti_V1.nii.gz')}}
+{{asrgb('dti/dti_V1.nii.gz')}} -ch R
+{{asrgb('dti/dti_V1.nii.gz')}} -ch G
+{{asrgb('dti/dti_V1.nii.gz')}} -ch B
+
+-vl 0 0 0 -xc 0 0 -yc 0 0 -zc 0 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
+"""  # noqa
 
 
 def gen_indices(infile):
@@ -140,12 +147,14 @@ def test_overlay_volume():
         'gen_cmap'    : gen_cmap,
         'custom_cmap' : custom_cmap,
         'swapdim'     : swapdim,
+        'asrgb'       : asrgb,
+        'roi'         : roi,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
 
 
 def test_overlay_volume_silly_range():
-    with mock.patch('fsleyes.gl.textures.Texture3D.canUseFloatTextures',
+    with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
                     return_value=(False, None, None)):
         run_cli_tests('test_overlay_volume_silly_range',
                       '{{silly_range()}}',

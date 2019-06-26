@@ -51,6 +51,8 @@
 #      or clipped. Otherwise the fragment is not killed, but its status
 #      is passed back via the out_kill output.
 #
+#   texture_is_2d - If True, the imageTexture is assumed to be a 2D texture.
+#
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
@@ -65,7 +67,12 @@
 # look up image voxel value
 # and clipping value from 3D
 # image/clipping textures
+{% if texture_is_2d %}
+TEX {{ voxValue  }}.x, {{ texCoord }},     {{ imageTexture }}, 2D;
+{% else %}
 TEX {{ voxValue  }}.x, {{ texCoord }},     {{ imageTexture }}, 3D;
+{% endif %}
+
 TEX {{ clipValue }}.x, {{ clipTexCoord }}, {{ clipTexture  }}, 3D;
 
 # Discard this fragment if the voxel

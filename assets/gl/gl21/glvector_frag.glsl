@@ -58,9 +58,9 @@ uniform vec4 yColour;
 uniform vec4 zColour;
 
 /*
- * Scale/offset transformation matrix 
- * which scales the voxel value before 
- * it is combined with the direction 
+ * Scale/offset transformation matrix
+ * which scales the voxel value before
+ * it is combined with the direction
  * colours. Used to apply brightness
  * and contrast settings.
  */
@@ -69,14 +69,14 @@ uniform mat4 colourXform;
 /*
  * If the clipping value is outside of
  * this range, the fragment is clipped.
- * These values should be in the texture 
+ * These values should be in the texture
  * data range of the clipTexture.
  */
 uniform float clipLow;
 uniform float clipHigh;
 
-/*  
- * The modulation value is scaled to this 
+/*
+ * The modulation value is scaled to this
  * range before being applied.
  */
 uniform float modLow;
@@ -99,14 +99,14 @@ varying vec3 fragVoxCoord;
 varying vec3 fragVecTexCoord;
 
 /*
- * Texture coordinates for the clipping 
+ * Texture coordinates for the clipping
  * and modulate images.
  */
 varying vec3 fragClipTexCoord;
 varying vec3 fragModTexCoord;
 
 /*
- * The final fragment colour is multiplied by this 
+ * The final fragment colour is multiplied by this
  * scaling factor - this may be used for vertex-based
  * lighting.
  */
@@ -141,10 +141,10 @@ void main(void) {
   /* Clobber the clip values if out of bounds */
   if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
       any(greaterThan(fragClipTexCoord, vec3(1)))) {
-    
+
     clipValue = clipLow + 0.5 * (clipHigh - clipLow);
   }
-  
+
   else {
     if (useSpline) {
       clipValue = spline_interp(clipTexture, fragClipTexCoord, clipImageShape, 0);
@@ -158,21 +158,21 @@ void main(void) {
   if (any(lessThan(   fragModTexCoord, vec3(0))) ||
       any(greaterThan(fragModTexCoord, vec3(1)))) {
 
-    /* 
-     * modValue gets scaled by the mod range down 
-     * below, but if we give it this value, the 
+    /*
+     * modValue gets scaled by the mod range down
+     * below, but if we give it this value, the
      * scaling step will result in a value of 1
      */
     modValue = modHigh - 2 * modLow;
   }
-  
+
   else {
     if (useSpline) {
       modValue = spline_interp(modulateTexture, fragModTexCoord, modImageShape,  0);
     }
     else {
       modValue = texture3D(modulateTexture, fragModTexCoord).x;
-    } 
+    }
   }
 
   /* Knock out voxels where the clipping value is outside the clipping range */
@@ -181,9 +181,9 @@ void main(void) {
   }
 
   /*
-   * Transform the voxel texture 
-   * values into their original 
-   * range, and take the absolute 
+   * Transform the voxel texture
+   * values into their original
+   * range, and take the absolute
    * value.
    */
   voxValue *= voxValXform[0].x;
@@ -195,17 +195,17 @@ void main(void) {
                    voxValue.y * yColour +
                    voxValue.z * zColour;
 
-  /* 
+  /*
    * Apply the colour scale/offset -
    * this affects overall brightness,
-   * and contrast between the three 
+   * and contrast between the three
    * colours.
    */
   voxColour.xyz *= colourXform[0].x;
-  voxColour.xyz += colourXform[3].x; 
+  voxColour.xyz += colourXform[3].x;
 
-  /* 
-   * Scale the modulation value, and 
+  /*
+   * Scale the modulation value, and
    * modulate the colour (but not alpha).
    */
   modValue       = (modValue + modLow) / (modHigh - modLow);

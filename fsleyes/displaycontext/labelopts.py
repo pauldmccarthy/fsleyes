@@ -12,10 +12,10 @@ atlas images, tissue segmentation images, and so on.
 
 import fsleyes_props      as props
 import fsleyes.colourmaps as colourmaps
-from . import                volumeopts
+from . import                niftiopts
 
 
-class LabelOpts(volumeopts.NiftiOpts):
+class LabelOpts(niftiopts.NiftiOpts):
     """The ``LabelOpts`` class defines settings for displaying
     :class:`.Image` overlays as label images., such as anatomical atlas
     images, tissue segmentation images, and so on.
@@ -76,4 +76,4 @@ class LabelOpts(volumeopts.NiftiOpts):
 
         self.lut = lut
 
-        volumeopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)
+        niftiopts.NiftiOpts.__init__(self, overlay, *args, **kwargs)

@@ -27,15 +27,16 @@ log = logging.getLogger(__name__)
 
 
 class GLLineVector(glvector.GLVector):
-    """The ``GLLineVector`` class encapsulates the logic required to render a
-    ``x*y*z*3`` :class:`.Image` instance as a vector image, where the vector
-    at each voxel is drawn as a line, and coloured in the same way that voxels
-    in the :class:`.GLRGBVector` are coloured.  The ``GLLineVector`` class
-    assumes that the :class:`.Display` instance associated with the ``Image``
-    overlay holds a reference to a :class:`.LineVectorOpts` instance, which
-    contains ``GLLineVector``-specific display settings.  The ``GLLineVector``
-    class is a sub-class of the :class:`.GLVector` class, and uses the
-    functionality provided by ``GLVector``.
+    """The ``GLLineVector`` class encapsulates the logic required to render an
+    :class:`.Image` instance of shape ``x*y*z*3``, or type
+    ``NIFTI_TYPE_RGB24``, as a vector image, where the vector at each voxel is
+    drawn as a line, and coloured in the same way that voxels in the
+    :class:`.GLRGBVector` are coloured.  The ``GLLineVector`` class assumes
+    that the :class:`.Display` instance associated with the ``Image`` overlay
+    holds a reference to a :class:`.LineVectorOpts` instance, which contains
+    ``GLLineVector``-specific display settings.  The ``GLLineVector`` class is
+    a sub-class of the :class:`.GLVector` class, and uses the functionality
+    provided by ``GLVector``.
 
 
     In a similar manner to the :class:`.GLRGBVector`, the ``GLLineVector`` uses
@@ -46,8 +47,8 @@ class GLLineVector(glvector.GLVector):
 
 
     A ``GLLineVector`` instance is rendered in different ways depending upon
-    the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering fb
-    unctionality is implemented in the version-specific modules mentioned
+    the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering
+    functionality is implemented in the version-specific modules mentioned
     above.
     """
 
@@ -250,15 +251,30 @@ class GLLineVertices(object):
 
         opts  = glvec.opts
         image = glvec.vectorImage
+        data  = image.data
         shape = image.shape
 
         # Pull out the xyz components of the
-        # vectors, and calculate vector lengths
-        vertices = np.array(image[:], dtype=np.float32)
-        x        = vertices[:, :, :, 0]
-        y        = vertices[:, :, :, 1]
-        z        = vertices[:, :, :, 2]
-        lens     = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+        # vectors, and calculate vector lengths.
+
+        # The image may either
+        # have shape (X, Y, Z, 3)
+
+        if image.nvals == 1:
+            vertices = np.array(data, dtype=np.float32)
+        # Or (we assume) a RGB
+        # structured array
+        else:
+            vertices         = np.zeros(list(data.shape) + [3],
+                                        dtype=np.float32)
+            vertices[..., 0] = (data['R'].astype(np.float32) / 127.5) - 1
+            vertices[..., 1] = (data['G'].astype(np.float32) / 127.5) - 1
+            vertices[..., 2] = (data['B'].astype(np.float32) / 127.5) - 1
+
+        x    = vertices[..., 0]
+        y    = vertices[..., 1]
+        z    = vertices[..., 2]
+        lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
         # Flip vectors about the x axis if necessary
         if opts.orientFlip:

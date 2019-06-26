@@ -11,6 +11,7 @@ a GLSL shader program comprising a vertex shader and a fragment shader.
 
 import logging
 
+import jinja2                         as j2
 import numpy                          as np
 import OpenGL.GL                      as gl
 import OpenGL.raw.GL._types           as gltypes
@@ -97,25 +98,35 @@ class GLSLShader(object):
     """
 
 
-    def __init__(self, vertSrc, fragSrc, indexed=False):
+    def __init__(self, vertSrc, fragSrc, indexed=False, constants=None):
         """Create a ``GLSLShader``.
 
-        :arg vertSrc: String containing vertex shader source code.
+        The source is passed through ``jinja2``, replacing any expressions on
+        the basis of ``constants``.
 
-        :arg fragSrc: String containing fragment shader source code.
+        :arg vertSrc:   String containing vertex shader source code.
 
-        :arg indexed: If ``True``, it is assumed that the vertices processed
-                      by this shader program will be drawn using an index
-                      array.  A vertex buffer object is created to store
-                      vertex indices - this buffer is expected to be populated
-                      via the :meth:`setIndices` method.
+        :arg fragSrc:   String containing fragment shader source code.
+
+        :arg indexed:   If ``True``, it is assumed that the vertices processed
+                        by this shader program will be drawn using an index
+                        array.  A vertex buffer object is created to store
+                        vertex indices - this buffer is expected to be
+                        populated via the :meth:`setIndices` method.
+
+        :arg constants: Key-value pairs to be used when passing the source
+                        through ``jinja2``.
         """
 
-        self.program     = self.__compile(vertSrc, fragSrc)
+        if constants is None:
+            constants = {}
 
-        vertDecs         = parse.parseGLSL(vertSrc)
-        fragDecs         = parse.parseGLSL(fragSrc)
+        vertSrc      = j2.Template(vertSrc).render(**constants)
+        fragSrc      = j2.Template(fragSrc).render(**constants)
+        self.program = self.__compile(vertSrc, fragSrc)
 
+        vertDecs  = parse.parseGLSL(vertSrc)
+        fragDecs  = parse.parseGLSL(fragSrc)
         vertUnifs = vertDecs['uniform']
         vertAtts  = vertDecs['attribute']
         fragUnifs = fragDecs['uniform']

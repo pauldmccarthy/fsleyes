@@ -7,8 +7,8 @@
 """This module provides the :class:`GLVectorBase` and :class:`GLVector`
 classes. The ``GLVectorBase`` class encapsulate the logic for rendering
 overlays which contain directional data, and the ``GLVector`` class
-specifically conatins logic for displaying ``X*Y*Z*3`` :class:`.Image`
-overlays.
+specifically conatins logic for displaying :class:`.Image` overlays with
+shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``.
 """
 
 
@@ -49,7 +49,7 @@ class GLVectorBase(glimageobject.GLImageObject):
        are specified by the :attr:`.VectorOpts.xColour`,
        :attr:`.VectorOpts.yColour`, and :attr:`.VectorOpts.zColour`
        properties. If the image being displayed contains directional data
-       (i.e. is a ``X*Y*Z*3`` vector image), you should use the
+       (e.g. is a ``X*Y*Z*3`` vector image), you should use the
        :class:`GLVector` class.
 
      - Each voxel is coloured according to the values contained in another
@@ -135,7 +135,6 @@ class GLVectorBase(glimageobject.GLImageObject):
         name = self.name
 
         self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
-
         self.shader          = None
         self.modulateImage   = None
         self.clipImage       = None
@@ -185,7 +184,7 @@ class GLVectorBase(glimageobject.GLImageObject):
                     self.clipTexture,
                     self.colourTexture):
             tex.deregister(self.name)
-            glresources.delete(tex.getTextureName())
+            glresources.delete(tex.name)
 
         self.removeListeners()
         self.deregisterAuxImage('modulate')
@@ -403,7 +402,7 @@ class GLVectorBase(glimageobject.GLImageObject):
 
         if tex is not None:
             tex.deregister(self.name)
-            glresources.delete(tex.getTextureName())
+            glresources.delete(tex.name)
 
         if image is None:
 
@@ -663,8 +662,9 @@ class GLVectorBase(glimageobject.GLImageObject):
 
 class GLVector(GLVectorBase):
     """The ``GLVector`` class is a sub-class of :class:`GLVectorBase`, which
-    contains some additional logic for rendering :class:`.Image` overlays
-    with a shape ``X*Y*Z*3``, and which contain directional data.
+    contains some additional logic for rendering :class:`.Image` overlays with
+    a shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``, and which contain
+    directional data.
 
 
     By default , the ``image`` overlay passed to :meth:`__init__` is assumed
@@ -677,6 +677,7 @@ class GLVector(GLVectorBase):
     where the ``R`` channel contains the ``x`` vector values, the ``G``
     channel the ``y`` values, and the ``B`` channel the ``z`` values.
 
+
     This texture is bound to texture unit  ``gl.GL_TEXTURE4`` in the
     :meth:`preDraw` method.
     """
@@ -686,8 +687,15 @@ class GLVector(GLVectorBase):
         optional, but if provided, must be passed as keyword arguments. All
         other arguments are passed through to :meth:`GLVectorBase.__init__`.
 
+        The ``image``, (or ``vectorImage``) argument is assumed to be an
+        :class:`.Image` instance of shape ``(X, Y, Z, 3)``, or of type
+        ``NIFTI_TYPE_RGB24``, which contains the vector data. If the former,
+        the vector data is assumed to be in the range ``[-1, 1]``. If the
+        latter, the vector data is, by definition, in the range ``[0, 255]``
+        - this is assumed to map directly to the range ``[-1, 1]``.
 
-        :arg vectorImage:    If ``None``, the ``image`` is assumed to be a 4D
+
+        :arg vectorImage:    If ``None``, the ``image`` is assumed to be an
                              :class:`.Image` instance which contains the
                              vector data. If this is not the case, the
                              ``vectorImage`` parameter can be used to specify
@@ -716,9 +724,24 @@ class GLVector(GLVectorBase):
         prefilter      = kwargs.pop('prefilter',      defaultPrefilter)
         prefilterRange = kwargs.pop('prefilterRange', None)
 
-        if len(vectorImage.shape) != 4 or vectorImage.shape[3] != 3:
-            raise ValueError('Image must be 4 dimensional, with 3 volumes '
-                             'representing the XYZ vector angles')
+        # Must be an image of shape (X, Y, Z, 3),
+        # or of type RGB24. If the latter, the
+        # test below will accept any numpy
+        # structured array with three values per
+        # voxel, but we assume elsewhere that
+        # those values are all of type np.uint8
+        # (and thus correspond to the
+        # NIFTI_TYPE_RGB24 type)
+        shape = vectorImage.shape
+        ndims = len(shape)
+        nvals = vectorImage.nvals
+        isRGB = (((ndims == 4) and (nvals == 1) and (shape[3] == 3)) or
+                 ((ndims == 3) and (nvals == 3)))
+
+        if not isRGB:
+            raise ValueError('Image must be 4 dimensional with 3 volumes '
+                             'representing the XYZ vector angles, or of '
+                             'type RGB24')
 
         self.vectorImage     = vectorImage
         self.imageTexture    = None
@@ -758,7 +781,7 @@ class GLVector(GLVectorBase):
 
         GLVectorBase.destroy(self)
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         self.imageTexture = None
 
@@ -791,12 +814,7 @@ class GLVector(GLVectorBase):
 
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
-
-        # the fourth dimension (the vector directions)
-        # must be the fastest changing in the texture data
-        def realPrefilter(d):
-            return prefilter(d.transpose((3, 0, 1, 2)))
+            glresources.delete(self.imageTexture.name)
 
         self.imageTexture = glresources.get(
             texName,
@@ -806,7 +824,7 @@ class GLVector(GLVectorBase):
             nvals=3,
             interp=interp,
             normaliseRange=vecImage.dataRange,
-            prefilter=realPrefilter,
+            prefilter=prefilter,
             prefilterRange=prefilterRange,
             notify=False)
 

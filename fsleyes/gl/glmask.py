@@ -99,7 +99,7 @@ class GLMask(glimageobject.GLImageObject):
         self.imageTexture  = None
         self.edgeFilter    = glfilter.Filter('edge', texture=1)
         self.renderTexture = textures.RenderTexture(
-            self.name, gl.GL_LINEAR, rttype='c')
+            self.name, interp=gl.GL_LINEAR, rttype='c')
 
         self.addDisplayListeners()
         self.refreshImageTexture()
@@ -118,7 +118,7 @@ class GLMask(glimageobject.GLImageObject):
         self.edgeFilter.destroy()
         self.renderTexture.destroy()
         self.imageTexture.deregister(self.name)
-        glresources.delete(self.imageTexture.getTextureName())
+        glresources.delete(self.imageTexture.name)
 
         self.removeDisplayListeners()
         fslgl.glmask_funcs.destroy(self)
@@ -227,11 +227,11 @@ class GLMask(glimageobject.GLImageObject):
             texName = '{}_unsync_{}'.format(texName, id(opts))
 
         if self.imageTexture is not None:
-            if self.imageTexture.getTextureName() == texName:
+            if self.imageTexture.name == texName:
                 return
 
             self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.getTextureName())
+            glresources.delete(self.imageTexture.name)
 
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
@@ -283,8 +283,8 @@ class GLMask(glimageobject.GLImageObject):
         w, h = self.canvas.GetSize()
         rtex = self.renderTexture
 
-        rtex.setSize(w, h)
-        with rtex.bound():
+        rtex.shape = w, h
+        with rtex.target():
             gl.glClearColor(0, 0, 0, 0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
@@ -313,15 +313,14 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw the mask to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
         self.edgeFilter.set(offsets=offsets, outline=1)
         self.edgeFilter.apply(
-            self.renderTexture,
-            zpos, xmin, xmax, ymin, ymax, xax, yax,
+            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
             textureUnit=gl.GL_TEXTURE1)
 
 
@@ -345,12 +344,12 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw all slices to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.bound(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
             fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
 
         # if no outline, draw the texture directly
         if not opts.outline:
-            self.renderTexture.drawOnBounds(
+            rtex.drawOnBounds(
                 zpos, xmin, xmax, ymin, ymax, xax, yax,
                 textureUnit=gl.GL_TEXTURE1)
 
@@ -359,8 +358,7 @@ class GLMask(glimageobject.GLImageObject):
             # filter, drawing the result to screen
             self.edgeFilter.set(offsets=offsets, outline=1)
             self.edgeFilter.apply(
-                self.renderTexture,
-                zpos, xmin, xmax, ymin, ymax, xax, yax,
+                rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
                 textureUnit=gl.GL_TEXTURE1)
 
 

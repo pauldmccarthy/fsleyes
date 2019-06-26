@@ -12,7 +12,7 @@ attribute vec3 voxCoord;
 attribute vec3 texCoord;
 
 /*
- * Transformation matrix to transform image texture 
+ * Transformation matrix to transform image texture
  * coordinates into clip image texture coordinates.
  */
 uniform mat4 clipCoordXform;

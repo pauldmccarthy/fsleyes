@@ -7,7 +7,7 @@
 
 import pytest
 
-from . import run_cli_tests, roi
+from . import run_cli_tests, roi, asrgb
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -30,14 +30,17 @@ dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -nu -ls  500 -lw 5
 dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -ld
 dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -ld -ls 500 -lw 3
 
-# Test 1D/2D  vector images
-{{roi('dti/dti_V1', (0, 8, 4, 5, 4, 5))}} -ot linevector
-{{roi('dti/dti_V1', (0, 8, 0, 8, 4, 5))}} -ot linevector
+# test RGB images
+dti/dti_FA.nii.gz {{asrgb('dti/dti_V1.nii.gz')}} -ot linevector
 """
 
 
 def test_overlay_linevector():
     extras = {
-        'roi' : roi,
+        'roi'   : roi,
+        'asrgb' : asrgb,
     }
-    run_cli_tests('test_overlay_linevector', cli_tests, extras=extras)
+    run_cli_tests('test_overlay_linevector',
+                  cli_tests,
+                  extras=extras,
+                  threshold=35)

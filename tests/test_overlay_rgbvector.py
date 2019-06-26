@@ -5,10 +5,10 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-import pytest
-import fsl.data.image as fslimage
 
-from . import run_cli_tests
+import pytest
+
+from . import run_cli_tests, asrgb
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -28,10 +28,12 @@ dti/dti_V1 -ot rgbvector            -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in none   -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in linear -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
-"""
 
+{{asrgb('dti/dti_V1')}} -ot rgbvector
+"""
 
 def test_overlay_rgbvector():
     extras = {
+        'asrgb' : asrgb,
     }
     run_cli_tests('test_overlay_rgbvector', cli_tests, extras=extras)

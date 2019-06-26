@@ -596,7 +596,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         lo, hi = self.overlay.bounds
         xform  = self.getTransform('mesh', 'display')
-
         lohi   = transform.transform([lo, hi], xform)
         lohi.sort(axis=0)
         lo, hi = lohi[0, :], lohi[1, :]

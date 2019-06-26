@@ -1489,7 +1489,7 @@ class SliceCanvas(object):
                           'to off-screen texture'.format(
                               copts.zax, overlay.name))
 
-                with rt.bound(copts.xax, copts.yax, lo, hi),  \
+                with rt.target(copts.xax, copts.yax, lo, hi),  \
                      glroutines.disabled(gl.GL_BLEND):
 
                     glroutines.clear((0, 0, 0, 0))

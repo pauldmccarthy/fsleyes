@@ -40,11 +40,11 @@ class SelectionTexture(texture.Texture):
         :arg selection: The :class:`.Selection` instance.
         """
 
-        texture.Texture.__init__(self, name, 3)
+        texture.Texture.__init__(self, name, 3, 1)
 
         self.__selection = selection
 
-        selection.register(self.getTextureName(), self.__selectionChanged)
+        selection.register(self.name, self.__selectionChanged)
 
         self.__init()
         self.refresh()
@@ -97,7 +97,7 @@ class SelectionTexture(texture.Texture):
         on the :attr:`.Selection.selection` property.
         """
         texture.Texture.destroy(self)
-        self.__selection.deregister(self.getTextureName())
+        self.__selection.deregister(self.name)
         self.__selection = None
 
 

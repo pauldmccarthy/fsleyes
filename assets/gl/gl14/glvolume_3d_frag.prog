@@ -61,6 +61,8 @@ OPTION ARB_precision_hint_nicest;
 #                          2 the union, or 3 the complement of all
 #                          active clipping planes.
 #   kill_fragments_early - must be set to False
+#   texture_is_2d        - If True, the imageTexture is assumed to be a 2D
+#                          texture.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

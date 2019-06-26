@@ -54,10 +54,12 @@ def compileShaders(self):
     if self.threedee: prefix = 'glvolume_3d'
     else:             prefix = 'glvolume'
 
+    env = {'textureIs2D' : self.imageTexture.ndim == 2}
+
     vertSrc = shaders.getVertexShader(  prefix)
     fragSrc = shaders.getFragmentShader(prefix)
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc, constants=env)
 
 
 def updateShaderState(self):
@@ -85,6 +87,10 @@ def updateShaderState(self):
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
     imageShape = self.image.shape[:3]
+    texShape   = self.imageTexture.shape[:3]
+
+    if len(texShape) == 2:
+        texShape = list(texShape) + [1]
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
@@ -103,6 +109,7 @@ def updateShaderState(self):
 
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
     changed |= shader.set('imageShape',       imageShape)
+    changed |= shader.set('texShape',         texShape)
     changed |= shader.set('clipLow',          clipLow)
     changed |= shader.set('clipHigh',         clipHigh)
     changed |= shader.set('texZero',          texZero)
@@ -205,6 +212,11 @@ def draw3D(self, xform=None, bbox=None):
     proj                           = self.canvas.projectionMatrix
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
+
+    rayStep = transform.transformNormal(rayStep,
+                                        self.imageTexture.texCoordXform)
+    texform = transform.concat(         texform,
+                                        self.imageTexture.invTexCoordXform)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)

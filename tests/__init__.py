@@ -317,7 +317,7 @@ def run_render_test(
     assert result
 
 
-def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
+def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
 
     if extras is None:
         extras = {}
@@ -365,7 +365,7 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho'):
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark,
-                                scene=scene)
+                                scene=scene, threshold=threshold)
                 print('CLI test passed [{}] {}'.format(prefix, test))
 
             except Exception as e:
@@ -559,17 +559,44 @@ def fliporient(filename):
 
 
 def roi(fname, roi):
-    base    = fslimage.removeExt(fname)
+
+    base    = fslimage.removeExt(op.basename(fname))
     outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
 
     img = fslimage.Image(fname)
     xs, xe, ys, ye, zs, ze = roi
     data = img[xs:xe, ys:ye, zs:ze, ...]
-    img = fslimage.Image(data, header=img.header)
+
+    xform  = img.voxToWorldMat
+    offset = [lo for lo in roi[::2]]
+    offset = transform.scaleOffsetXform([1, 1, 1], offset)
+    xform  = transform.concat(xform, offset)
+
+    img = fslimage.Image(data, xform=xform, header=img.header)
 
     img.save(outfile)
 
     return outfile
+
+
+def asrgb(infile):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_asrgb.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+    data     = img.nibImage.get_data()
+
+    shape    = data.shape[:3]
+    rgbdtype = np.dtype([('R', 'uint8'), ('G', 'uint8'), ('B', 'uint8')])
+    newdata  = np.zeros(shape, dtype=rgbdtype)
+
+    for c, ci in zip('RGB', range(3)):
+        cd         = (0.5 * data[..., ci] + 0.5) * 255
+        newdata[c] = np.round(cd).astype(np.uint8)
+
+    fslimage.Image(newdata, xform=img.voxToWorldMat).save(outfile)
+
+    return outfile
+
 
 def discretise(infile, stepsize, min=None, max=None):
     basename = fslimage.removeExt(op.basename(infile))

@@ -106,7 +106,12 @@ def updateShaderState(self):
     image       = self.vectorImage
     opts        = self.opts
 
-    vvxMat      = self.imageTexture.voxValXform
+    # see comments in gl21/glvector_funcs.py
+    if np.issubdtype(self.imageTexture.dtype, np.integer):
+        vvxMat = transform.scaleOffsetXform(2, -1)
+    else:
+        vvxMat = self.imageTexture.voxValXform
+
     directed    = opts.directed
     unitLength  = opts.unitLength
     lengthScale = opts.lengthScale / 100.0

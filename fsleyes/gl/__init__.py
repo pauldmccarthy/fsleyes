@@ -119,6 +119,7 @@ be displayed as:
 .. autosummary::
 
    ~fsleyes.gl.glvolume.GLVolume
+   ~fsleyes.gl.glrgbvolume.GLRGBVolume
    ~fsleyes.gl.glmask.GLMask
    ~fsleyes.gl.gllabel.GLLabel
    ~fsleyes.gl.gllinevector.GLLineVector
@@ -255,6 +256,9 @@ def bootstrap(glVersion=None):
 
     ``glvolume_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLVolume` instances.
+
+    ``glrgbvolume_funcs``  The version-specific module containing functions for
+                           rendering :class:`.GLRGBVolume` instances.
 
     ``glrgbvector_funcs``  The version-specific module containing functions for
                            rendering :class:`.GLRGBVector` instances.
@@ -396,6 +400,7 @@ def bootstrap(glVersion=None):
     thismod.GL_VERSION         = verstr
     thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
+    thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
     thismod.gllinevector_funcs = glpkg.gllinevector_funcs
     thismod.glmask_funcs       = glpkg.glmask_funcs
@@ -864,11 +869,10 @@ class OffScreenCanvasTarget(object):
 
         self._setGLContext()
         self._initGL()
-        self.__target.setSize(self.__width, self.__height)
+        self.__target.shape = self.__width, self.__height
 
-        self.__target.bindAsRenderTarget()
-        self._draw()
-        self.__target.unbindAsRenderTarget()
+        with self.__target.target():
+            self._draw()
 
 
     def getBitmap(self):
@@ -879,7 +883,7 @@ class OffScreenCanvasTarget(object):
         """
 
         self._setGLContext()
-        return self.__target.getData()
+        return self.__target.getBitmap()
 
 
     def saveToFile(self, filename):

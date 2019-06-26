@@ -33,7 +33,7 @@ policies, either expressed or implied.
 When using this code in a scientific project, please cite one or all of the
 following papers:
 *  Daniel Ruijters and Philippe Thévenaz,
-   GPU Prefilter for Accurate Cubic B-Spline Interpolation, 
+   GPU Prefilter for Accurate Cubic B-Spline Interpolation,
    The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
    http://dannyruijters.nl/docs/cudaPrefilter3.pdf
 *  Daniel Ruijters, Bart M. ter Haar Romeny, and Paul Suetens,
@@ -86,4 +86,36 @@ float spline_interp(sampler3D tex, vec3 coord, vec3 nrOfVoxels, int comp) {
 	tex001 = mix(tex011, tex001, g0.y);  //weigh along the y-direction
 
 	return mix(tex001, tex000, g0.z);  //weigh along the z-direction
+}
+
+
+float spline_interp(sampler2D tex, vec2 coord, vec2 nrOfVoxels, int comp) {
+  // shift the coordinate from [0,1] to [-0.5, nrOfPixels-0.5]
+  //vec2 nrOfPixels = vec2(textureSize2D(uSampler, 0));
+  vec2 coord_grid = coord * nrOfVoxels - 0.5;
+  vec2 index = floor(coord_grid);
+  vec2 fraction = coord_grid - index;
+  vec2 one_frac = 1.0 - fraction;
+
+  vec2 w0 = 1.0/6.0 * one_frac*one_frac*one_frac;
+  vec2 w1 = 2.0/3.0 - 0.5 * fraction*fraction*(2.0-fraction);
+  vec2 w2 = 2.0/3.0 - 0.5 * one_frac*one_frac*(2.0-one_frac);
+  vec2 w3 = 1.0/6.0 * fraction*fraction*fraction;
+
+  vec2 g0 = w0 + w1;
+  vec2 g1 = w2 + w3;
+  vec2 mult = 1.0 / nrOfVoxels;
+  //h0 = w1/g0 - 1, move from [-0.5, nrOfVoxels-0.5] to [0,1]
+  vec2 h0 = mult * ((w1 / g0) - 0.5 + index);
+  //h1 = w3/g1 + 1, move from [-0.5, nrOfVoxels-0.5] to [0,1]
+  vec2 h1 = mult * ((w3 / g1) + 1.5 + index);
+
+  // fetch the four linear interpolations
+  float tex00 = texture2D(tex, h0)[comp];
+  float tex10 = texture2D(tex, vec2(h1.x, h0.y))[comp];
+  tex00 = mix(tex10, tex00, g0.x);  //weigh along the x-direction
+  float tex01 = texture2D(tex, vec2(h0.x, h1.y))[comp];
+  float  tex11 = texture2D(tex, h1)[comp];
+  tex01 = mix(tex11, tex01, g0.x);  //weigh along the x-direction
+  return mix(tex01, tex00, g0.y);  //weigh along the y-direction
 }

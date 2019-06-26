@@ -61,7 +61,10 @@ def compileShaders(self):
         'clipTexture'      : 3
     }
 
-    constants = {'kill_fragments_early' : not self.threedee}
+    constants = {
+        'kill_fragments_early' : not self.threedee,
+        'texture_is_2d'        : self.imageTexture.ndim == 2
+    }
 
     if self.threedee:
 
@@ -194,10 +197,15 @@ def draw3D(self, xform=None, bbox=None):
     proj    = canvas.projectionMatrix
     src     = self.renderTexture1
     dest    = self.renderTexture2
-    w, h    = src.getSize()
+    w, h    = src.shape
 
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
+
+    rayStep = transform.transformNormal(rayStep,
+                                        self.imageTexture.texCoordXform)
+    texform = transform.concat(         texform,
+                                        self.imageTexture.invTexCoordXform)
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)

@@ -326,6 +326,13 @@ start FSLeyes, try the following::
   fsleyes
 
 
+If you are running FSLeyes within a VNC session, you may need to force
+software-based rendering::
+
+  export LIBGL_ALWAYS_SOFTWARE=1
+  fsleyes
+
+
 Options are missing!
 ^^^^^^^^^^^^^^^^^^^^
 

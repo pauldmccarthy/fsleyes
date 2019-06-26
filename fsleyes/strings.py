@@ -71,7 +71,7 @@ messages = TypeDict({
     'SliceCanvas.globjectError'  :
     'An error occurred initialising the display for {}',
 
-    'Texture3D.dataError'  :
+    'Texture.dataError'  :
     'An error occurred updating the texture data',
 
     'SaveOverlayAction.overwrite'      : 'Do you want to overwrite {}, or '
@@ -331,7 +331,7 @@ titles = TypeDict({
     'ShellPanel'         : 'Python shell',
 
     'SliceCanvas.globjectError'  : 'Error initialising display',
-    'Texture3D.dataError'        : 'Error updating data',
+    'Texture.dataError'          : 'Error updating data',
 
 
     'AtlasInfoPanel'       : 'Atlas information',
@@ -666,6 +666,7 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.Display'        : 'General display settings',
     'OverlayDisplayPanel.VolumeOpts'     : 'Volume settings',
+    'OverlayDisplayPanel.VolumeRGBOpts'  : 'RGB(A) volume settings',
     'OverlayDisplayPanel.MaskOpts'       : 'Mask settings',
     'OverlayDisplayPanel.LabelOpts'      : 'Label settings',
     'OverlayDisplayPanel.RGBVectorOpts'  : 'RGB vector settings',
@@ -1023,6 +1024,7 @@ properties = TypeDict({
 
     'VolumeOpts.clipImage'                : 'Clip by',
     'VolumeOpts.interpolation'            : 'Interpolation',
+    'VolumeOpts.channel'                  : 'RGB(A) channel',
     'VolumeOpts.enableOverrideDataRange'  : 'Override image data range',
     'VolumeOpts.overrideDataRange'        : 'Override image data range',
     'VolumeOpts.custom_overrideDataRange' : 'Override image data range',
@@ -1109,6 +1111,17 @@ properties = TypeDict({
     'MIPOpts.window'         : 'MIP window length (%)',
     'MIPOpts.minimum'        : 'Minimum intensity',
     'MIPOpts.absolute'       : 'Absolute intensity',
+
+    'VolumeRGBOpts.interpolation' : 'Interpolation',
+    'VolumeRGBOpts.rColour'       : 'R colour',
+    'VolumeRGBOpts.gColour'       : 'G colour',
+    'VolumeRGBOpts.bColour'       : 'B colour',
+    'VolumeRGBOpts.suppressR'     : 'Suppress R',
+    'VolumeRGBOpts.suppressG'     : 'Suppress G',
+    'VolumeRGBOpts.suppressB'     : 'Suppress B',
+    'VolumeRGBOpts.suppressA'     : 'Suppress A',
+    'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
+
 })
 
 
@@ -1205,6 +1218,7 @@ choices = TypeDict({
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
+        'rgb'            : '3D/4D RGB(A) volume',
         'mask'           : '3D/4D mask image',
         'mip'            : 'Max intensity projection',
         'label'          : 'Label image',

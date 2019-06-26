@@ -108,8 +108,14 @@ def updateShaderState(self):
     else:
 
         colours, colourXform = self.getVectorColours()
-        voxValXform          = self.imageTexture.voxValXform
-        voxValXform          = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
+
+        # See comments in gl21/glvector_funcs.py
+        if np.issubdtype(self.imageTexture.dtype, np.integer):
+            voxValXform = transform.scaleOffsetXform(2, -1)
+        else:
+            voxValXform = self.imageTexture.voxValXform
+
+        voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
         self.shader.setFragParam('voxValXform',      voxValXform)
         self.shader.setFragParam('mod',              mod)

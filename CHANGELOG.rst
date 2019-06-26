@@ -9,6 +9,35 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.30.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* The volume overlay type now has support for NIfTI images of type ``RGB24``
+  and ``RGBA32``, via a new *Channel* setting.
+* New *RGB(A)* overlay type, for displaying the above image types.
+* FSLeyes can now load bitmap images (e.g. ``.jpg``, ``.png``, etc.).  When a
+  bitmap file is loaded it is internally converted into a 2D NIfTI image.
+
+
+Changed
+^^^^^^^
+
+
+* The :mod:`fsleyes.gl.textures` package has been cleaned up and refactored
+  without any attempt to preserve backwards compatibility. Much of the texture
+  data handling code is now shared by the :class:`.Texture2D` and
+  :class:`.Texture3D` classes.
+* The :class:`.NiftiOpts` class has been moved into a separate module.
+* 2D NIfTI images are now displayed with a 2D texture - this means that
+  the maximum dimension size for 2D images is now 16384 on typical
+  hardware.
+
+
 0.29.0 (Sunday May 12th 2019)
 -----------------------------
 

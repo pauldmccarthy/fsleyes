@@ -286,22 +286,20 @@ class RenderTextureStack(object):
                   'zax {}): {} x {}'.format(idx, zpos, self.__zax,
                                             width, height))
 
-        tex.setSize(width, height)
+        tex.shape = width, height
 
         oldSize       = gl.glGetIntegerv(gl.GL_VIEWPORT)
         oldProjMat    = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
         oldMVMat      = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
 
-        tex.bindAsRenderTarget()
-        glroutines.show2D(xax, yax, width, height, lo, hi)
-        glroutines.clear((0, 0, 0, 0))
+        with tex.target():
+            glroutines.show2D(xax, yax, width, height, lo, hi)
+            glroutines.clear((0, 0, 0, 0))
 
-        with glroutines.disabled(gl.GL_BLEND):
-            globj.preDraw()
-            globj.draw2D(zpos, axes)
-            globj.postDraw()
-
-        tex.unbindAsRenderTarget()
+            with glroutines.disabled(gl.GL_BLEND):
+                globj.preDraw()
+                globj.draw2D(zpos, axes)
+                globj.postDraw()
 
         gl.glViewport(*oldSize)
         gl.glMatrixMode(gl.GL_PROJECTION)

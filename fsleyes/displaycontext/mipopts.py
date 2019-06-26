@@ -20,10 +20,10 @@ import fsl.utils.transform                as transform
 import fsleyes_props                      as props
 
 from . import colourmapopts               as cmapopts
-from . import                                volumeopts
+from . import                                niftiopts
 
 
-class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
+class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
     """The ``MIPOpts`` class is used for rendering maximum intensity
     projections of .Image overlays.
     """
@@ -66,7 +66,7 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])
 
-        volumeopts.NiftiOpts.__init__(self, *args, **kwargs)
+        niftiopts.NiftiOpts    .__init__(self, *args, **kwargs)
         cmapopts .ColourMapOpts.__init__(self)
 
         # calculate the approximate number
@@ -83,8 +83,8 @@ class MIPOpts(cmapopts.ColourMapOpts, volumeopts.NiftiOpts):
 
     def destroy(self):
         """Must be called when this ``MIPOpts`` object is no longer needed. """
-        cmapopts  .ColourMapOpts.destroy(self)
-        volumeopts.NiftiOpts    .destroy(self)
+        cmapopts .ColourMapOpts.destroy(self)
+        niftiopts.NiftiOpts    .destroy(self)
 
 
     def getDataRange(self):
