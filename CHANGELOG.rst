@@ -22,6 +22,9 @@ Added
 * New *RGB(A)* overlay type, for displaying the above image types.
 * FSLeyes can now load bitmap images (e.g. ``.jpg``, ``.png``, etc.).  When a
   bitmap file is loaded it is internally converted into a 2D NIfTI image.
+* New alternative main function :func:`fsleyes.filtermain.main`, which filters
+  out useless warnings that originate from underlying libraries (e.g. ``wx``,
+  GTK, Cocoa, etc).
 
 
 Changed
