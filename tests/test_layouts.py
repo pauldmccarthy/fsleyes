@@ -66,6 +66,7 @@ def _test_custom(frame, overlayList, displayCtx):
 
     ortho.toggleAtlasPanel()
     ortho.toggleLookupTablePanel()
+    ortho.sceneOpts.showColourBar = True
 
     ps.togglePlotList()
     ps.togglePowerSpectrumControl()
@@ -76,6 +77,8 @@ def _test_custom(frame, overlayList, displayCtx):
     realYield(50)
 
     layouts.loadLayout(frame, 'custom_custom')
+
+    overlayList.append(fslimage.Image(op.join(datadir, '3d')))
 
     realYield(50)
 
@@ -94,6 +97,9 @@ def _test_custom(frame, overlayList, displayCtx):
     assert LookupTablePanel          in [type(p) for p in orthoctrls]
     assert PlotListPanel             in [type(p) for p in psctrls]
     assert PowerSpectrumControlPanel in [type(p) for p in psctrls]
+
+    assert ortho.sceneOpts.showColourBar
+    assert ortho.colourBarCanvas is not None
 
 
 def test_custom():
