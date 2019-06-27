@@ -7,6 +7,7 @@
    fsleyes.about
    fsleyes.actions
    fsleyes.autodisplay
+   fsleyes.cliserver
    fsleyes.colourmaps
    fsleyes.controls
    fsleyes.displaycontext
