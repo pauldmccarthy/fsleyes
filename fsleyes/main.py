@@ -28,12 +28,13 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 """
 
 
-import            os
-import os.path as op
-import            sys
-import            signal
-import            logging
-import            textwrap
+import functools as ft
+import os.path   as op
+import              os
+import              sys
+import              signal
+import              logging
+import              textwrap
 
 import wx
 import wx.adv
@@ -578,11 +579,13 @@ def parseArgs(argv):
         add_help=False,
         formatter_class=parseargs.FSLeyesHelpFormatter)
 
+    serveraction = ft.partial(cliserver.CLIServerAction, allArgs=argv)
+
     parser.add_argument('-r', '--runscript',
                         metavar='SCRIPTFILE',
                         help='Run custom FSLeyes script')
     parser.add_argument('-cs', '--cliserver',
-                        action=cliserver.CLIServerAction,
+                        action=serveraction,
                         help='Pass all command-line arguments '
                              'to a single FSLeyes instance')
 
