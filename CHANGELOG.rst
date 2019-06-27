@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.30.0 (Under development)
---------------------------
+0.30.0 (Thursday 27th June 2019)
+--------------------------------
 
 
 Added
@@ -41,6 +41,8 @@ Changed
 * 2D NIfTI images are now displayed with a 2D texture - this means that
   the maximum dimension size for 2D images is now 16384 on typical
   hardware.
+* The *Freesurfer coordinates* coordinate space option is no longer available
+  on non-freesurfer mesh overlays.
 
 
 0.29.0 (Sunday May 12th 2019)
