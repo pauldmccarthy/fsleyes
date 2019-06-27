@@ -10,6 +10,9 @@ try:
 except ImportError:
     import mock
 
+import os
+import os.path as op
+
 import wx
 
 import numpy as np
@@ -92,6 +95,40 @@ def _test_applyCommandLine(panel, overlayList, displayCtx):
             panel.displayCtx,
             ['-lo', 'vertical',
              'image.nii.gz', '-b', '75', '-c', '25', '-g', '-0.5'],
+            panel=panel,
+            blocking=True)
+
+        # scene args are applied asynchronously
+        waitUntilIdle()
+
+        assert len(overlayList) == 1
+        assert np.all(overlayList[0][:] == img[:])
+        img = overlayList[0]
+        assert displayCtx.getDisplay(img).brightness ==  75
+        assert displayCtx.getDisplay(img).contrast   ==  25
+        assert displayCtx.getOpts(   img).gamma      == -0.5
+        assert panel.sceneOpts.layout == 'vertical'
+
+
+def test_applyCommandLine_baseDir():
+    run_with_orthopanel(_test_applyCommandLine)
+def _test_applyCommandLine_baseDir(panel, overlayList, displayCtx):
+
+    displayCtx = panel.displayCtx
+
+    with tempdir():
+        basedir = op.join(*'sub/dir/to/test/base/dir/'.split('/'))
+        os.makedirs(basedir)
+
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img.save(op.join(basedir, 'image.nii.gz'))
+
+        applycommandline.applyCommandLineArgs(
+            overlayList,
+            panel.displayCtx,
+            ['-lo', 'vertical',
+             'image.nii.gz', '-b', '75', '-c', '25', '-g', '-0.5'],
+            baseDir=basedir,
             panel=panel,
             blocking=True)
 
