@@ -189,9 +189,19 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
 
     def __init__(self, overlay, *args, **kwargs):
-        """Create a ``MeshOpts`` instance. All arguments are passed through
-        to the :class:`.DisplayOpts` constructor.
+        """Create a ``MeshOpts`` instance.
+
+        :arg useTorig: If ``False`` (the default), the ``'torig'`` option
+                       from the :attr:`coordSpace` property is removed.
+
+        All other arguments are passed through to the :class:`.DisplayOpts`
+        constructor.
         """
+
+        useTorig = kwargs.pop('useTorig', False)
+
+        if not useTorig:
+            self.getProp('coordSpace').removeChoice('torig', instance=self)
 
         # Set a default colour
         colour      = genMeshColour(overlay)
