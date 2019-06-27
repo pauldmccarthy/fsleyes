@@ -12,9 +12,12 @@ implemented.
 """
 
 
-import sys
-import argparse
-import six
+import os.path as op
+import            os
+import            sys
+import            argparse
+import            contextlib
+import            six
 
 import wx
 
@@ -95,11 +98,33 @@ class ApplyCLIExit(Exception):
         return '\n'.join((self.stderr, self.stdout))
 
 
+@contextlib.contextmanager
+def chdir(dest=None):
+    """Context manager which temporarily changes to the specified ``dest``
+    directory, then restores the current directory afterwards.
+
+    If ``dest is None``, the function yields without doing anything.
+    """
+
+    if dest is None:
+        yield
+        return
+
+    src = os.getcwd()
+    os.chdir(dest)
+
+    try:
+        yield
+    finally:
+        os.chdir(src)
+
+
 def applyCommandLineArgs(overlayList,
                          displayCtx,
                          argv,
                          panel=None,
                          applyOverlayArgs=True,
+                         baseDir=None,
                          **kwargs):
     """Applies the command line arguments stored in ``argv`` to the
     :class:`.CanvasPanel` ``panel``. If ``panel is None``, it is assumed
@@ -112,10 +137,16 @@ def applyCommandLineArgs(overlayList,
                            associated with that panel.
 
     :arg argv:             List of command line arguments to apply.
+
     :arg panel:            Optional :class:`.CanvasPanel` to apply the
                            arguments to.
 
     :arg applyOverlayArgs: If ``False``, overlay arguments are not applied.
+
+    :arg baseDir:          Directory from which to interpret the arguments,
+                           in case this is different from the current working
+                           directory, and overlays have been specified with
+                           relative paths.
 
     All other keyword arguments are passed to the
     :func:`.parseargs.applyOverlayArgs`  function.
@@ -138,7 +169,9 @@ def applyCommandLineArgs(overlayList,
         real_stderr = sys.stderr
         sys.stdout  = stdout
         sys.stderr  = stderr
-        namespace   = parseargs.parseArgs(parser, argv, 'fsleyes')
+
+        with chdir(baseDir):
+            namespace = parseargs.parseArgs(parser, argv, 'fsleyes')
 
     except SystemExit as e:
         raise ApplyCLIExit(e.code, stdout.getvalue(), stderr.getvalue())
@@ -146,6 +179,11 @@ def applyCommandLineArgs(overlayList,
     finally:
         sys.stdout = real_stdout
         sys.stderr = real_stderr
+
+    if baseDir is not None:
+        for o in namespace.overlays:
+            if not op.isabs(o.overlay):
+                o.overlay = op.join(baseDir, o.overlay)
 
     if applyOverlayArgs:
         parseargs.applyOverlayArgs(

@@ -6,11 +6,14 @@
 #
 
 
+import time
+import threading
 from unittest import mock
 
 import fsleyes.main       as fm
 import fsleyes.filtermain as ffm
 import fsleyes.version    as fv
+import fsl.utils.tempdir as tempdir
 
 from . import CaptureStdout
 
@@ -73,8 +76,38 @@ def test_filtermain():
         except SystemExit as e:
             assert e.code == 0
 
-
         try:
             ffm.main(['-h'])
         except SystemExit as e:
             assert e.code == 0
+
+
+def test_filter_stream():
+
+    die = threading.Event()
+
+    with tempdir.tempdir():
+
+        with open('stream.txt', 'wt') as f:
+
+            rt, wt = ffm.filter_stream(f, die, filters=[r'skip this'])
+
+            f.write('skip this 1\n')
+            f.write('keep this 1\n')
+            f.write('skip this 2\n')
+            f.write('keep this 2\n')
+            f.write('skip this 3\n')
+
+            die.set()
+
+        rt.join()
+        wt.join()
+
+        exp = ['keep this 1',
+               'keep this 2']
+        exp = '\n'.join(exp)
+
+        with open('stream.txt', 'rt') as f:
+            got = f.read().strip()
+
+        assert exp == got

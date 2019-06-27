@@ -28,12 +28,13 @@ See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 """
 
 
-import            os
-import os.path as op
-import            sys
-import            signal
-import            logging
-import            textwrap
+import functools as ft
+import os.path   as op
+import              os
+import              sys
+import              signal
+import              logging
+import              textwrap
 
 import wx
 import wx.adv
@@ -44,6 +45,7 @@ import fsleyes_widgets.utils.status       as status
 import                       fsleyes
 import fsleyes.strings    as strings
 import fsleyes.splash     as fslsplash
+import fsleyes.cliserver  as cliserver
 import fsleyes.colourmaps as colourmaps
 
 
@@ -237,10 +239,12 @@ def main(args=None):
         return app, splash
 
     # If it looks like the user is asking for
-    # help, then we parse command line arguments
-    # before creating a wx.App and showing the
-    # splash screen. This means that FSLeyes
-    # help/version information can be retrieved
+    # help, or using cliserver to pass arguments
+    # to an existing FSLeyes instance, then we
+    # parse command line arguments before
+    # creating a wx.App and showing the splash
+    # screen. This means that FSLeyes help/
+    # version information can be retrieved
     # without a display, and hopefully fairly
     # quickly.
     #
@@ -262,9 +266,11 @@ def main(args=None):
     if (len(args) > 0) and (args[0] in ('-V',
                                         '-h',
                                         '-fh',
+                                        '-cs',
                                         '--version',
                                         '--help',
-                                        '--fullhelp')):
+                                        '--fullhelp',
+                                        '--cliserver')):
         namespace   = [parseArgs(args)]
         app, splash = initgui()
 
@@ -359,6 +365,10 @@ def main(args=None):
         if namespace[0].notebook:
             from fsleyes.actions.notebook import NotebookAction
             frame.menuActions[NotebookAction]()
+
+        # start CLI server
+        if namespace[0].cliserver:
+            cliserver.runserver(overlayList, displayCtx)
 
     # Shut down cleanly on sigint/sigterm.
     # We do this so that any functions
@@ -569,9 +579,15 @@ def parseArgs(argv):
         add_help=False,
         formatter_class=parseargs.FSLeyesHelpFormatter)
 
+    serveraction = ft.partial(cliserver.CLIServerAction, allArgs=argv)
+
     parser.add_argument('-r', '--runscript',
                         metavar='SCRIPTFILE',
                         help='Run custom FSLeyes script')
+    parser.add_argument('-cs', '--cliserver',
+                        action=serveraction,
+                        help='Pass all command-line arguments '
+                             'to a single FSLeyes instance')
 
     # We include the list of available
     # layouts in the help description

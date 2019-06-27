@@ -197,6 +197,7 @@ class ResampleDialog(wx.Dialog):
         self.__refChoice = wx.Choice(self,
                                      choices=list(self.__references.keys()))
         self.__refChoice.Enable(len(self.__references) > 1)
+        self.__refChoice.SetSelection(0)
 
         self.__voxx = floatspin.FloatSpinCtrl(self, value=shape[ 0], **voxargs)
         self.__voxy = floatspin.FloatSpinCtrl(self, value=shape[ 1], **voxargs)

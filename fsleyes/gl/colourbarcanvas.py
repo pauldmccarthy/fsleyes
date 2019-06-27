@@ -140,17 +140,16 @@ class ColourBarCanvas(props.HasProperties):
         # The bitmap has shape W*H*4, but
         # Texture2D instances need it in
         # shape 4*W*H
-        bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
-
         if bitmap is None:
             return
 
+        bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
+
         if self.__tex is None:
             self.__tex = textures.Texture2D('{}_{}'.format(
-                type(self).__name__, id(self)), gl.GL_LINEAR)
+                type(self).__name__, id(self)), interp=gl.GL_LINEAR)
 
-        self.__tex.setData(bitmap)
-        self.__tex.refresh()
+        self.__tex.set(data=bitmap)
 
 
     def _draw(self):

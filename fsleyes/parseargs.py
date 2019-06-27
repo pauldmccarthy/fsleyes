@@ -1850,8 +1850,8 @@ def parseArgs(mainParser,
     :arg argv:           The arguments as passed in on the command line.
 
     :arg name:           The name of the tool - this function might be called
-                         by either the :mod:`~fsl.tools.fsleyes` tool or the
-                         :mod:`~fsl.tools.render` tool.
+                         by either :mod:`~fsleyes.main.main`, or
+                         :mod:`~fsleyes.render.main`.
 
     :arg prolog:         A string to print before any usage text is printed.
 

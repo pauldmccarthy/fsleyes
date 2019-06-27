@@ -45,6 +45,8 @@ class FreesurferOpts(meshopts.MeshOpts):
         self.getProp('vertexSet') .setChoices(vertFiles,  instance=self)
         self.getProp('vertexData').setChoices(vdataFiles, instance=self)
 
+        kwargs['useTorig'] = True
+
         meshopts.MeshOpts.__init__(self, overlay, *args, **kwargs)
 
 

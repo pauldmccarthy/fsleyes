@@ -50,15 +50,21 @@ FILTERS = [
 ]
 
 
-def filter_stream(stream, die):
+def filter_stream(stream, die, filters=None):
     """Intercept the given output stream, and filter it according to the
     filters above. The filter is run on a separate thread.
 
-    :arg stream: File-like to read from and filter.
+    :arg stream:  File-like to read from and filter.
 
-    :arg die:    ``threading.Event`` object - when it is set the filter
-                 thread will end gracefully.
+    :arg die:     ``threading.Event`` object - when it is set the filter
+                  thread will end gracefully.
+
+    :arg filters: List of regular expressions to filter. If ``None``, defaults
+                  to :attr:`FILTERS`.
     """
+
+    if filters is None:
+        filters = FILTERS
 
     # I only loosely understand how to manipulate
     # file descriptors. Useful resources:
@@ -107,7 +113,7 @@ def filter_stream(stream, die):
                 if die.is_set(): break
                 else:            continue
 
-            if not any([re.search(pat, line) for pat in FILTERS]):
+            if not any([re.search(pat, line) for pat in filters]):
                 fout.write(line)
 
             fout.flush()
@@ -150,7 +156,6 @@ def main(args=None):
     try:
         result = fm.main(args)
     finally:
-        pass
         die.set()
         wtstderr.join()
         wtstdout.join()
