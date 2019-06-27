@@ -30,10 +30,10 @@ freesurfer/lh.pial -mc 1 0 0 -o -w 10
 freesurfer/lh.pial -mc 1 0 0 -o -w 10 -cm hot -vd freesurfer/lh.curv
 freesurfer/lh.pial -mc 1 0 0 -o -w 10 -cm hot -vd freesurfer/lh.curv
 
-{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -r 3d.mgh -s torig
-{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -r 3d.mgh -s affine
-{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -r 3d.mgh -s pixdim
-{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -r 3d.mgh -s id
+{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -mc 1 0 0 -r 3d.mgh -s torig
+{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -mc 1 0 0 -r 3d.mgh -s affine
+{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -mc 1 0 0 -r 3d.mgh -s pixdim
+{{asmgh('3d.nii.gz')}} freesurfer/lh.pial -mc 1 0 0 -r 3d.mgh -s id
 """
 
 def asmgh(infile):
