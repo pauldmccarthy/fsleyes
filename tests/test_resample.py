@@ -146,6 +146,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
                                   (1, 1, 1), [])
     wx.CallLater(500, simclick, sim, dlg.okButton)
     assert dlg.ShowModal() == wx.ID_OK
+    assert dlg.GetReference() is None
 
     # click cancel
     dlg = resample.ResampleDialog(frame,
