@@ -205,7 +205,6 @@ import            warnings
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.settings                 as fslsettings
 import fsleyes.version                    as version
-import fsleyes.plugins                    as plugins
 
 
 # The logger is assigned in
@@ -250,7 +249,9 @@ def initialise():
 
     global assetDir
 
-    import matplotlib as mpl
+    import matplotlib      as mpl
+    import fsleyes.plugins as plugins
+
 
     # implement various hacks and workarounds
     _hacksAndWorkarounds()
