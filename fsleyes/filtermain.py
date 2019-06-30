@@ -166,6 +166,8 @@ def main(args=None):
 
     try:
         result = fm.main(args)
+    except SystemExit as e:
+        result = e.code
     finally:
         die.set()
         wtstderr.join()
