@@ -370,17 +370,6 @@ def configLogging(verbose=0, noisy=None):
     if noisy is None:
         noisy = []
 
-    # make numpy/matplotlib/nibabel/etc quiet
-    warnings.filterwarnings('ignore',  module='matplotlib')
-    warnings.filterwarnings('ignore',  module='mpl_toolkits')
-    warnings.filterwarnings('ignore',  module='numpy')
-    warnings.filterwarnings('ignore',  module='h5py')
-    warnings.filterwarnings('ignore',  module='notebook')
-    warnings.filterwarnings('ignore',  module='trimesh')
-    logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
-    logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
-    logging.getLogger('traitlets').setLevel(logging.CRITICAL)
-
     # Show deprecations if running from code
     if fslplatform.frozen:
         warnings.filterwarnings('ignore', category=DeprecationWarning)

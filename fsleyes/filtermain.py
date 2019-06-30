@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import queue
+import logging
 import warnings
 import threading
 
@@ -142,8 +143,18 @@ def main(args=None):
     output/error streams, then calls :func:`fsleyes.main.main`.
     """
 
+    warnings.filterwarnings('ignore', module='matplotlib')
+    warnings.filterwarnings('ignore', module='xnat')
+    warnings.filterwarnings('ignore', module='mpl_toolkits')
+    warnings.filterwarnings('ignore', module='numpy')
+    warnings.filterwarnings('ignore', module='h5py')
+    warnings.filterwarnings('ignore', module='notebook')
+    warnings.filterwarnings('ignore', module='trimesh')
     warnings.filterwarnings('ignore', module='h5py')
     warnings.filterwarnings('ignore', category=DeprecationWarning)
+    logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
+    logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
+    logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
     die                = threading.Event()
     rtstdout, wtstdout = filter_stream(sys.stdout, die)
