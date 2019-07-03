@@ -38,7 +38,7 @@ def createImageTexture(name, image, *args, **kwargs):
             raise RuntimeError(
                 'Cannot create an OpenGL texture for {} - it exceeds '
                 'the hardware limits on this platform (2D: {}, 3D: {}'
-                .format(max2d, max3d))
+                .format(shape, max2d, max3d))
 
     shape = image.shape[:3]
     shape = [d for d in shape if d > 1]
@@ -332,10 +332,15 @@ class ImageTextureBase(object):
 
             # Get the new data, and calculate an
             # offset into the full image from the
-            # slice object
+            # slice object.
             data   = np.array(image[sliceobj])
             offset = imagewrapper.sliceObjToSliceTuple(sliceobj, image.shape)
             offset = [o[0] for o in offset]
+
+            # Make sure the data/offset are
+            # compatible with 2D textures
+            data   = self.shapeData(data)
+            offset = transform.transform(offset, self.texCoordXform)
 
             log.debug('{} data changed - refreshing part of '
                       'texture (offset: {}, size: {})'.format(
