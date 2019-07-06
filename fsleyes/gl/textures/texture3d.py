@@ -159,7 +159,7 @@ class Texture3D(texture.Texture):
 
 
     def doPatch(self, data, offset):
-        """Overrides :meth:`.Texture.patchData`. Updates part of the texture
+        """Overrides :meth:`.Texture.doPatch`. Updates part of the texture
         data.
         """
 

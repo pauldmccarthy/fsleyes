@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.31.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Added support for editing 2D images, but only those with dimensions that
+  can fit into a 3D texture - typically a maximum dimension size of 2048.
+
+
 0.30.0 (Thursday 27th June 2019)
 --------------------------------
 

@@ -236,6 +236,25 @@ class Texture2D(texture.Texture):
                                 data)
 
 
+    def doPatch(self, data, offset):
+        """Overrides :meth:`.Texture.doPatch`. Updates part of the texture
+        data.
+        """
+        shape = data.shape
+        data  = data.flatten(order='F')
+
+        with self.bound():
+            gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
+                               0,
+                               offset[0],
+                               offset[1],
+                               shape[0],
+                               shape[1],
+                               self.baseFormat,
+                               self.textureType,
+                               data)
+
+
     def __prepareCoords(self, vertices, xform=None):
         """Called by :meth:`draw`. Prepares vertices, texture coordinates and
         indices for drawing the texture.

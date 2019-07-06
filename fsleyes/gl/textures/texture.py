@@ -896,7 +896,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         raise NotImplementedError('Must be implemented by subclasses')
 
 
-    def doPatch(data, offset):
+    def doPatch(self, data, offset):
         """Must be overridden by sub-classes to quickly update part of
         the texture data.
 
