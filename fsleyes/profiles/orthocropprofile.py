@@ -60,7 +60,7 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
     """
 
 
-    cropBox = props.Bounds(ndims=3, real=False, minDistance=1)
+    cropBox = props.Bounds(ndims=3, real=False, minDistance=1, clamped=False)
     """This property keeps track of the current low/high limits
     of the cropping region, in the voxel coordinate system of the
     currently selected overlay.
