@@ -13,6 +13,13 @@ chronological order.
 --------------------------
 
 
+Changed
+^^^^^^^
+
+* The *Crop* tool can now be used to expand the field-of-view of an image,
+  in addition to cropping an image.
+
+
 Fixed
 ^^^^^
 
