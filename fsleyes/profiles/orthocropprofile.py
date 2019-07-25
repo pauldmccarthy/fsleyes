@@ -333,21 +333,9 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         in the currently selected overlay which corresponds to the
         given canvas position.
         """
-
-        shape = overlay.shape[:3]
-        vox   = self.displayCtx.getOpts(overlay).getVoxel(
+        vox = self.displayCtx.getOpts(overlay).getVoxel(
             canvasPos, clip=False, vround=False)
-
-        vox = np.ceil(vox)
-
-        # The getVoxel method will return out of
-        # bounds voxels (because we asked it to),
-        # so we need to clamp to the image shape
-        for i, (v, s) in enumerate(zip(vox, shape)):
-            if   v <  0: vox[i] = 0
-            elif v >= s: vox[i] = s
-
-        return vox
+        return np.ceil(vox)
 
 
     def _cropModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
@@ -385,15 +373,8 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
             [vox[hax], vlo],
             [vox[hax], vhi]])
 
-        # In case the voxel is out of bounds,
-        # make sure that the crop box boundary
-        # coordinates are actually in the crop
-        # box (or on an edge).
-        boundaries[:, 0] = np.clip(boundaries[:, 0], hlo, hhi)
-        boundaries[:, 1] = np.clip(boundaries[:, 1], vlo, vhi)
-
-        # As the display space is set to
-        # this overlay, the display coordinate
+        # As the display space is (should be) set
+        # to this overlay, the display coordinate
         # system is equivalent to the scaled
         # voxel coordinate system of the
         # overlay. So we can just multiply the
