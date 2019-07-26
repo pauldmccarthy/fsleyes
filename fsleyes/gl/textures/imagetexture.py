@@ -13,11 +13,11 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 import logging
 import collections
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
 import fsl.utils.transform   as transform
 import fsl.data.imagewrapper as imagewrapper
+from . import data           as texdata
 from . import                   texture2d
 from . import                   texture3d
 
@@ -30,28 +30,10 @@ def createImageTexture(name, image, *args, **kwargs):
     :class:`ImageTexture` or :class:`ImageTexture2D`) for the given image.
     """
 
-    max3d = gl.glGetInteger(gl.GL_MAX_3D_TEXTURE_SIZE)
-    max2d = gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE)
+    ndims = texdata.numTextureDims(image.shape[:3])
 
-    def checklim(shape, lim):
-        if any([d > lim for d in shape]):
-            raise RuntimeError(
-                'Cannot create an OpenGL texture for {} - it exceeds '
-                'the hardware limits on this platform (2D: {}, 3D: {}'
-                .format(shape, max2d, max3d))
-
-    shape = image.shape[:3]
-    shape = [d for d in shape if d > 1]
-
-    # force scalar/vector shape to be 2D
-    if   len(shape) == 0: shape = [1, 1]
-    elif len(shape) == 1: shape = [shape[0], 1]
-
-    if len(shape) == 3: checklim(shape, max3d)
-    else:               checklim(shape, max2d)
-
-    if len(shape) == 3: return ImageTexture(  name, image, *args, **kwargs)
-    else:               return ImageTexture2D(name, image, *args, **kwargs)
+    if ndims == 3: return ImageTexture(  name, image, *args, **kwargs)
+    else:          return ImageTexture2D(name, image, *args, **kwargs)
 
 
 class ImageTextureBase(object):
