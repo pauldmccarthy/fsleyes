@@ -35,14 +35,20 @@ to the image data, thus allowing the user to undo/redo any changes.
 """
 
 
-__all__ = ['isEditable', 'Editor', 'Selection']
+__all__ = ['isEditable',
+           'Editor',
+           'Selection',
+           'ValueChange',
+           'SelectionChange']
 
 
 import fsl.data.image         as fslimage
 import fsleyes.displaycontext as fsldisplay
 
-from .editor    import Editor
-from .selection import Selection
+from .selection import  Selection
+from .editor    import (Editor,
+                        ValueChange,
+                        SelectionChange)
 
 
 def isEditable(overlay, displayCtx):
