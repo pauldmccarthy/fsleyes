@@ -126,6 +126,12 @@ class Selection(notifier.Notifier):
             log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
 
 
+    @property
+    def shape(self):
+        """Returns the selection shape. """
+        return self.__selection.shape
+
+
     def getSelection(self):
         """Returns the selection array.
 

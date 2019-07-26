@@ -32,11 +32,12 @@ import time
 import numpy       as np
 import OpenGL.GL   as gl
 
-import fsleyes.gl.globject  as globject
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.resources as glresources
-import fsleyes.gl.textures  as textures
-import fsl.utils.transform  as transform
+import fsleyes.gl.globject       as globject
+import fsleyes.gl.routines       as glroutines
+import fsleyes.gl.resources      as glresources
+import fsleyes.gl.textures       as textures
+import fsleyes.gl.textures.data  as texdata
+import fsl.utils.transform       as transform
 
 
 log = logging.getLogger(__name__)
@@ -654,9 +655,14 @@ class VoxelSelection(AnnotationObject):
 
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
+        ndims = texdata.numTextureDims(selection.shape)
+
+        if ndims == 2: ttype = textures.SelectionTexture2D
+        else:          ttype = textures.SelectionTexture3D
+
         self.__texture = glresources.get(
             texName,
-            textures.SelectionTexture,
+            ttype,
             texName,
             selection)
 
