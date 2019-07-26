@@ -487,20 +487,33 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
                  nvals,
                  threaded=False,
                  settings=None,
+                 textureFormat=None,
+                 internalFormat=None,
                  **kwargs):
         """Create a ``Texture``.
 
-        :arg name:     The name of this texture - should be unique.
-        :arg ndims:    Number of dimensions - must be 1, 2 or 3.
-        :arg nvals:    Number of values stored in each texture element.
-        :arg threaded: If ``True``, the texture data will be prepared on a
-                       separate thread (on calls to
-                       :meth:`refresh`). If ``False``, the texture data is
-                       prepared on the calling thread, and the
-                       :meth:`refresh` call will block until it has been
-                       prepared.
-        :arg settings: Additional settings to make available through the
-                       :class:`TextureSettingsMixin`.
+        :arg name:           The name of this texture - should be unique.
+
+        :arg ndims:          Number of dimensions - must be 1, 2 or 3.
+
+        :arg nvals:          Number of values stored in each texture element.
+
+        :arg threaded:       If ``True``, the texture data will be prepared on
+                             a separate thread (on calls to
+                             :meth:`refresh`). If ``False``, the texture data
+                             is prepared on the calling thread, and the
+                             :meth:`refresh` call will block until it has been
+                             prepared.
+
+        :arg settings:       Additional settings to make available through the
+                             :class:`TextureSettingsMixin`.
+
+        :arg textureFormat:  Texture format to use - if not specified, this is
+                             automatically determined. If specified, an
+                             ``internalFormat`` must also be specified.
+
+        :arg internalFormat: Internal texture format to use - if not specified,
+                             this is automatically determined.
 
         All other arguments are passed through to the initial call to
         :meth:`set`.
@@ -508,10 +521,23 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         .. note:: All subclasses must accept a ``name`` as the first parameter
                   to their ``__init__`` method, and must pass said ``name``
                   through to the :meth:`__init__` method.
+
+        .. note:: In normal cases, the ``textureFormat`` and ``internalFormat``
+                  do not need to be specified - they will be automatically
+                  determined using the :func:`.data.getTextureType` function.
+                  However, there can be instances where a specific texture type
+                  needs to be used. In these instances, it is up to the calling
+                  code to ensure that the texture data can be coerced into
+                  the correct GL data type.
         """
 
         TextureBase         .__init__(self, name, ndims, nvals)
         TextureSettingsMixin.__init__(self, settings)
+
+        if ((textureFormat is not None) and (internalFormat is     None)) or \
+           ((textureFormat is     None) and (internalFormat is not None)):
+            raise ValueError('Both textureFormat and internalFormat '
+                             'must be specified')
 
         self.__ready    = False
         self.__threaded = threaded
@@ -535,8 +561,9 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         self.__voxValXform    = None
         self.__invVoxValXform = None
 
-        self.__texFmt         = None
-        self.__texIntFmt      = None
+        self.__autoTexFmt     = textureFormat is None
+        self.__texFmt         = textureFormat
+        self.__texIntFmt      = internalFormat
         self.__texDtype       = None
 
         # If threading is enabled, texture
@@ -936,6 +963,10 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         nvals                    = self.nvals
         texDtype, texFmt, intFmt = texdata.getTextureType(
             normalise, dtype, nvals)
+
+        if not self.__autoTexFmt:
+            texFmt = self.__texFmt
+            intFmt = self.__texIntFmt
 
         log.debug('Texture (%s) is to be stored as %s/%s/%s '
                   '(normalised: %s)',
