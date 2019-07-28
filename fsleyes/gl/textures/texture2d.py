@@ -246,7 +246,7 @@ class Texture2D(texture.Texture):
         shapes the data, ensuring that it is compatible with a 2D texture.
 
         :arg data:     ``numpy`` array containing the data
-        :arg oldshape: Original data shape; if not provided, is taken from
+        :arg oldShape: Original data shape; if not provided, is taken from
                        ``data``.
         """
 
@@ -256,18 +256,24 @@ class Texture2D(texture.Texture):
         # to make sure the data has a shape
         # compatible with the Texture2D
         if oldShape is None:
-            if nvals == 1: oldShape = np.array(data.shape)
-            else:          oldShape = np.array(data.shape[1:])
+            oldShape = data.shape
+
+        if nvals == 1:
+            datShape = data.shape
         else:
-            oldShape = np.array(oldShape)
+            oldShape = oldShape[1:]
+            datShape = data.shape[1:]
+
+        oldShape = np.array(oldShape)
+        datShape = np.array(datShape)
 
         if   np.all(oldShape         == [1, 1, 1]): newShape = ( 1,  1)
         elif np.all(oldShape[1:]     == [1, 1]):    newShape = (-1,  1)
         elif np.all(oldShape[[0, 2]] == [1, 1]):    newShape = (-1,  1)
         elif np.all(oldShape[:2]     == [1, 1]):    newShape = ( 1, -1)
-        elif        oldShape[2]      == 1:          newShape = oldShape[:2]
-        elif        oldShape[1]      == 1:          newShape = oldShape[[0, 2]]
-        elif        oldShape[0]      == 1:          newShape = oldShape[1:]
+        elif        oldShape[2]      == 1:          newShape = datShape[:2]
+        elif        oldShape[1]      == 1:          newShape = datShape[[0, 2]]
+        elif        oldShape[0]      == 1:          newShape = datShape[1:]
 
         if nvals > 1:
             newShape = [nvals] + list(newShape)
