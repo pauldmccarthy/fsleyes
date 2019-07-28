@@ -17,7 +17,9 @@ import numpy                        as np
 import OpenGL.GL                    as gl
 
 import fsl.utils.idle               as idle
+
 import fsl.utils.notifier           as notifier
+import fsl.utils.transform          as transform
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
 from . import data                  as texdata
@@ -621,6 +623,25 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
 
     @property
+    def texCoordXform(self):
+        """Returns a transformation matrix which can be used to adjust a set of
+        3D texture coordinates so they can index the underlying texture, which
+        may be 2D.
+
+        This implementation returns an identity matrix, but it is overridden
+        by the .Texture2D sub-class, which is sometimes used to store 3D image
+        data.
+        """
+        return np.eye(4)
+
+
+    @property
+    def invTexCoordXform(self):
+        """Returns the inverse of :meth:`texCoordXform`. """
+        return transform.invert(self.texCoordXform)
+
+
+    @property
     def shape(self):
         """Return a tuple containing the texture data shape. """
         return self.__shape
@@ -680,6 +701,16 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         to the GPU.
         """
         return self.__preparedData
+
+
+    def shapeData(self, data):
+        """Shape the data so that it is ready for use as texture data.
+
+        This implementation returns the data unchanged, but it is overridden
+        by the ``Texture2D`` class, which is sometimes used to store 3D image
+        data.
+        """
+        return data
 
 
     def set(self, **kwargs):

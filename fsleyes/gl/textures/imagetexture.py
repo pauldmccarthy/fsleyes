@@ -154,33 +154,6 @@ class ImageTextureBase(object):
         self.set(channel=channel)
 
 
-    @property
-    def texCoordXform(self):
-        """Returns a transformation matrix which can be used to adjust a set of
-        3D texture coordinates so they can index the underlying texture, which
-        may be 2D.
-
-        This implementation returns an identity matrix, but it is overridden
-        by ``ImageTexture2D``.
-        """
-        return np.eye(4)
-
-
-    @property
-    def invTexCoordXform(self):
-        """Returns the inverse of :meth:`texCoordXform`. """
-        return transform.invert(self.texCoordXform)
-
-
-    def shapeData(self, data):
-        """Shape the data so that it is ready for use as texture data.
-
-        This implementation returns the data unchanged, but it is overridden
-        by ``ImageTexture2D``.
-        """
-        return data
-
-
     def prepareSetArgs(self, **kwargs):
         """Called by sub-classes in their :meth:`.Texture2D.set`/
         :meth:`.Texture3D.set` override.
@@ -420,8 +393,7 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
                  name,
                  image,
                  **kwargs):
-        """Create an ``ImageTexture2D``.
-        """
+        """Create an ``ImageTexture2D``. """
 
         nvals            = kwargs.get('nvals', 1)
         kwargs['nvals']  = nvals
@@ -435,61 +407,6 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
         """Must be called when this ``ImageTexture2D`` is no longer needed. """
         texture2d.Texture2D.destroy(self)
         ImageTextureBase   .destroy(self)
-
-
-    @property
-    def texCoordXform(self):
-        """Overrides :meth:`ImageTextureBase.texCoordXform`. Returns an
-        affine matrix which encodes a rotation that maps the two major
-        axes of the image voxel coordinate system to the first two axes
-        of the texture coordinate system.
-        """
-
-        scales  = [1, 1, 1]
-        offsets = [0, 0, 0]
-        rots    = [0, 0, 0]
-
-        # Here we apply a rotation to the
-        # coordinates to force the two major
-        # voxel axes to map to the first two
-        # texture coordinate axes
-        if self.image.shape[0] == 1:
-            rots      = [0, -np.pi / 2, -np.pi / 2]
-        elif self.image.shape[1] == 1:
-            rots      = [-np.pi / 2, 0, 0]
-            scales[1] = -1
-
-        return transform.compose(scales, offsets, rots)
-
-
-    def shapeData(self, data):
-        """Overrides :meth:`ImageTexureBase.shapeData`.
-
-        Shapes the data, ensuring that it is compatible with a 2D texture.
-
-        :arg data: numpy array containing the data
-        """
-
-        nvals = self.nvals
-
-        # For scalar, 1D or 2D data, we need
-        # to make sure the data has a shape
-        # compatible with the ImageTexture2D
-        if nvals == 1: oldshape = np.array(data.shape)
-        else:          oldshape = np.array(data.shape[1:])
-
-        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
-        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
-        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
-        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
-        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
-
-        if nvals > 1:
-            newshape = [nvals] + list(newshape)
-
-        return data.reshape(newshape)
 
 
     def set(self, **kwargs):

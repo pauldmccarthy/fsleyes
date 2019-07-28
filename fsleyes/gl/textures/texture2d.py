@@ -236,6 +236,71 @@ class Texture2D(texture.Texture):
                                 data)
 
 
+    def shapeData(self, data, oldshape=None):
+        """Overrides :meth:`.Texture.shapeData`.
+
+        This method is used by ``Texture2D`` sub-classes which are used to
+        store 3D image data (e.g. the :class:`.ImageTexture2D` class). It
+        shapes the data, ensuring that it is compatible with a 2D texture.
+
+        :arg data:     ``numpy`` array containing the data
+        :arg oldshape: Original data shape; if not provided, is taken from
+                       ``data``.
+        """
+
+        nvals = self.nvals
+
+        # For scalar, 1D or 2D data, we need
+        # to make sure the data has a shape
+        # compatible with the Texture2D
+        if oldshape is None:
+            if nvals == 1: oldshape = np.array(data.shape)
+            else:          oldshape = np.array(data.shape[1:])
+
+        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
+        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
+        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
+        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
+        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
+        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
+
+        if nvals > 1:
+            newshape = [nvals] + list(newshape)
+
+        return data.reshape(newshape)
+
+
+    @property
+    def texCoordXform(self):
+        """Overrides :meth:`.Texture.texCoordXform`.
+
+        Returns an affine matrix which encodes a rotation that maps the two
+        major axes of the image voxel coordinate system to the first two axes
+        of the texture coordinate system.
+
+        This method is used by sub-classes which are being used to store 3D
+        image data, e.g. the :class:`.ImageTexture2D` and
+        :class:`.SelectionTexture2D` classes.
+        """
+
+        scales  = [1, 1, 1]
+        offsets = [0, 0, 0]
+        rots    = [0, 0, 0]
+
+        # Here we apply a rotation to the
+        # coordinates to force the two major
+        # voxel axes to map to the first two
+        # texture coordinate axes
+        if self.image.shape[0] == 1:
+            rots      = [0, -np.pi / 2, -np.pi / 2]
+        elif self.image.shape[1] == 1:
+            rots      = [-np.pi / 2, 0, 0]
+            scales[1] = -1
+
+        return transform.compose(scales, offsets, rots)
+
+
     def doPatch(self, data, offset):
         """Overrides :meth:`.Texture.doPatch`. Updates part of the texture
         data.
