@@ -236,7 +236,7 @@ class Texture2D(texture.Texture):
                                 data)
 
 
-    def shapeData(self, data, oldshape=None):
+    def shapeData(self, data, oldShape=None):
         """Overrides :meth:`.Texture.shapeData`.
 
         This method is used by ``Texture2D`` sub-classes which are used to
@@ -253,22 +253,24 @@ class Texture2D(texture.Texture):
         # For scalar, 1D or 2D data, we need
         # to make sure the data has a shape
         # compatible with the Texture2D
-        if oldshape is None:
-            if nvals == 1: oldshape = np.array(data.shape)
-            else:          oldshape = np.array(data.shape[1:])
+        if oldShape is None:
+            if nvals == 1: oldShape = np.array(data.shape)
+            else:          oldShape = np.array(data.shape[1:])
+        else:
+            oldShape = np.array(oldShape)
 
-        if   np.all(oldshape         == [1, 1, 1]): newshape = ( 1,  1)
-        elif np.all(oldshape[1:]     == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[[0, 2]] == [1, 1]):    newshape = (-1,  1)
-        elif np.all(oldshape[:2]     == [1, 1]):    newshape = ( 1, -1)
-        elif        oldshape[2]      == 1:          newshape = oldshape[:2]
-        elif        oldshape[1]      == 1:          newshape = oldshape[[0, 2]]
-        elif        oldshape[0]      == 1:          newshape = oldshape[1:]
+        if   np.all(oldShape         == [1, 1, 1]): newShape = ( 1,  1)
+        elif np.all(oldShape[1:]     == [1, 1]):    newShape = (-1,  1)
+        elif np.all(oldShape[[0, 2]] == [1, 1]):    newShape = (-1,  1)
+        elif np.all(oldShape[:2]     == [1, 1]):    newShape = ( 1, -1)
+        elif        oldShape[2]      == 1:          newShape = oldShape[:2]
+        elif        oldShape[1]      == 1:          newShape = oldShape[[0, 2]]
+        elif        oldShape[0]      == 1:          newShape = oldShape[1:]
 
         if nvals > 1:
-            newshape = [nvals] + list(newshape)
+            newShape = [nvals] + list(newShape)
 
-        return data.reshape(newshape)
+        return data.reshape(newShape)
 
 
     @property
@@ -282,19 +284,26 @@ class Texture2D(texture.Texture):
         This method is used by sub-classes which are being used to store 3D
         image data, e.g. the :class:`.ImageTexture2D` and
         :class:`.SelectionTexture2D` classes.
+
+        If this texture does not have any data yet, this method will return
+        ``None``.
         """
 
+        shape   = self.shape
         scales  = [1, 1, 1]
         offsets = [0, 0, 0]
         rots    = [0, 0, 0]
+
+        if shape is None:
+            return None
 
         # Here we apply a rotation to the
         # coordinates to force the two major
         # voxel axes to map to the first two
         # texture coordinate axes
-        if self.image.shape[0] == 1:
+        if shape[0] == 1:
             rots      = [0, -np.pi / 2, -np.pi / 2]
-        elif self.image.shape[1] == 1:
+        elif shape[1] == 1:
             rots      = [-np.pi / 2, 0, 0]
             scales[1] = -1
 

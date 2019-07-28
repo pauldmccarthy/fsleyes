@@ -40,6 +40,7 @@ class TextureBase(object):
 
        name
        handle
+       target
        ndim
        nvals
        isBound
@@ -121,6 +122,14 @@ class TextureBase(object):
     def handle(self):
         """Returns the GL texture handle for this texture. """
         return self.__texture
+
+
+    @property
+    def target(self):
+        """Returns the type of this texture - ``GL_TEXTURE_1D``,
+        ``GL_TEXTURE_2D`` or ``GL_TEXTURE_3D``.
+        """
+        return self.__ttype
 
 
     @property
@@ -703,12 +712,16 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         return self.__preparedData
 
 
-    def shapeData(self, data):
+    def shapeData(self, data, oldShape=None):
         """Shape the data so that it is ready for use as texture data.
 
         This implementation returns the data unchanged, but it is overridden
         by the ``Texture2D`` class, which is sometimes used to store 3D image
         data.
+
+        :arg data:     ``numpy`` array containing the data to be shaped
+        :arg oldShape: Original data shape, if this is a sub-array. If not
+                       provided, taken from ``data``.
         """
         return data
 

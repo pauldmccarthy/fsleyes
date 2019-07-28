@@ -294,7 +294,7 @@ class ImageTextureBase(object):
 
             # Make sure the data/offset are
             # compatible with 2D textures
-            data   = self.shapeData(data)
+            data   = self.shapeData(data, oldShape=image.shape)
             offset = transform.transform(offset, self.texCoordXform)
 
             log.debug('{} data changed - refreshing part of '

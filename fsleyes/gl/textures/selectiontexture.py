@@ -18,8 +18,9 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-from . import       texture2d
-from . import       texture3d
+import fsl.utils.transform as transform
+from . import                 texture2d
+from . import                 texture3d
 
 
 log = logging.getLogger(__name__)
@@ -61,14 +62,18 @@ class SelectionTextureBase(object):
         """
 
         old, new, offset = self.__selection.getLastChange()
+        shape            = self.__selection.shape
+
+        def prepare(data, oldShape=None):
+            data = self.shapeData(data, oldShape=oldShape)
+            return (data * 255).astype(np.uint8)
 
         if new is None:
-            data = self.__selection.getSelection()
-            data = (data * 255).astype(np.uint8)
+            data = prepare(self.__selection.getSelection(), shape)
             self.set(data=data)
-
         else:
-            data = (new * 255).astype(np.uint8)
+            data   = prepare(new)
+            offset = transform.transform(offset, self.texCoordXform)
             self.doPatch(data, offset)
 
 
