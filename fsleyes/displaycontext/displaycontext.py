@@ -95,11 +95,11 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     worldLocation = props.Point(ndims=3)
-    """The location property contains the currently selected 3D location (xyz)
-    in the world coordinate system. Whenever the :attr:`location` changes, it
-    gets transformed into the world coordinate system, and propagated to this
-    property. The location of different ``DisplayContext`` instances is
-    synchronised through this property.
+    """The :attr:`location` property contains the currently selected 3D
+    location (xyz) in the current display coordinate system. Whenever the
+    :attr:`location` changes, it gets transformed into the world coordinate
+    system, and propagated to this property. The location of different
+    ``DisplayContext`` instances is synchronised through this property.
 
     .. note:: If any :attr:`.NiftiOpts.transform` properties have been modified
               independently of the :attr:`displaySpace`, this value will be
