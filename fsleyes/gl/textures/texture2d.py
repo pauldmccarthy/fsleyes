@@ -15,6 +15,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform as transform
+import fsl.data.utils      as dutils
 import fsleyes.gl.routines as glroutines
 from . import                 texture
 
@@ -165,16 +166,17 @@ class Texture2D(texture.Texture):
 
         if data is not None:
             data = np.array(data.ravel('F'), copy=False)
+            data = dutils.makeWriteable(data)
+
+        interp = self.interp
+
+        if interp is None:
+            interp = gl.GL_NEAREST
 
         with self.bound():
 
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-
-            interp = self.interp
-
-            if interp is None:
-                interp = gl.GL_NEAREST
 
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_MAG_FILTER,
