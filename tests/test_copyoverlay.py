@@ -69,6 +69,19 @@ def _test_copyImage(panel, overlayList, displayCtx):
     assert np.all(copy[:]    == 0)
     overlayList.remove(copy)
 
+    # new data (createMask should be ignored)
+    data = np.random.randint(1, 100, img3d.shape)
+    copyoverlay.copyImage(overlayList,
+                          displayCtx,
+                          img3d,
+                          createMask=True,
+                          data=data)
+    assert len(overlayList) == 3
+    copy = overlayList[1]
+    assert np.all(copy.shape == img3d.shape)
+    assert np.all(copy[:]    == data)
+    overlayList.remove(copy)
+
     # 4D
     copyoverlay.copyImage(overlayList,
                           displayCtx,
