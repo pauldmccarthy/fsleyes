@@ -24,8 +24,7 @@ Fixed
 ^^^^^
 
 
-* Added support for editing 2D images, but only those with dimensions that
-  can fit into a 3D texture - typically a maximum dimension size of 2048.
+* Added support for editing 2D images.
 
 
 0.30.0 (Thursday 27th June 2019)
