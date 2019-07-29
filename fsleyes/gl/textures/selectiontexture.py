@@ -38,7 +38,7 @@ class SelectionTextureBase(object):
         """
         self.__selection = selection
         selection.register(self.name, self.__selectionChanged)
-        self.__selectionChanged()
+        self.__selectionChanged(init=True)
 
 
     @property
@@ -56,11 +56,12 @@ class SelectionTextureBase(object):
         self.__selection = None
 
 
-    def __selectionChanged(self, *a):
+    def __selectionChanged(self, *a, **kwa):
         """Called when the :attr:`.Selection.selection` changes. Updates
         the texture data via the :meth:`.Texture.doPatch` method.
         """
 
+        init             = kwa.pop('init', False)
         old, new, offset = self.__selection.getLastChange()
         shape            = self.__selection.shape
 
@@ -68,7 +69,7 @@ class SelectionTextureBase(object):
             data = self.shapeData(data, oldShape=oldShape)
             return (data * 255).astype(np.uint8)
 
-        if new is None:
+        if init or (new is None):
             data = prepare(self.__selection.getSelection(), shape)
             self.set(data=data)
         else:

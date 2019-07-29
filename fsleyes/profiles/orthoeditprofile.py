@@ -1648,7 +1648,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if overlay is None:
             return False
 
-        editor = self.__editors[self.__currentOverlay]
+        editor = self.__editors[overlay]
 
         # The searchRadius/intensityThres
         # properties are unclamped, so we
