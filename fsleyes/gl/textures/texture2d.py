@@ -281,8 +281,7 @@ class Texture2D(texture.Texture):
         return data.reshape(newShape)
 
 
-    @property
-    def texCoordXform(self):
+    def texCoordXform(self, origShape):
         """Overrides :meth:`.Texture.texCoordXform`.
 
         Returns an affine matrix which encodes a rotation that maps the two
@@ -297,21 +296,23 @@ class Texture2D(texture.Texture):
         ``None``.
         """
 
-        shape   = self.shape
         scales  = [1, 1, 1]
         offsets = [0, 0, 0]
         rots    = [0, 0, 0]
 
-        if shape is None:
+        if origShape is None:
             return None
+
+        if self.nvals > 1:
+            origShape = origShape[1:]
 
         # Here we apply a rotation to the
         # coordinates to force the two major
         # voxel axes to map to the first two
         # texture coordinate axes
-        if shape[0] == 1:
+        if origShape[0] == 1:
             rots      = [0, -np.pi / 2, -np.pi / 2]
-        elif shape[1] == 1:
+        elif origShape[1] == 1:
             rots      = [-np.pi / 2, 0, 0]
             scales[1] = -1
 

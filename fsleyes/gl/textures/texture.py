@@ -631,8 +631,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         return self.__invVoxValXform
 
 
-    @property
-    def texCoordXform(self):
+    def texCoordXform(self, origShape):
         """Returns a transformation matrix which can be used to adjust a set of
         3D texture coordinates so they can index the underlying texture, which
         may be 2D.
@@ -640,14 +639,15 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         This implementation returns an identity matrix, but it is overridden
         by the .Texture2D sub-class, which is sometimes used to store 3D image
         data.
+
+        :arg origShape: Original data shape.
         """
         return np.eye(4)
 
 
-    @property
-    def invTexCoordXform(self):
+    def invTexCoordXform(self, origShape):
         """Returns the inverse of :meth:`texCoordXform`. """
-        return transform.invert(self.texCoordXform)
+        return transform.invert(self.texCoordXform(origShape))
 
 
     @property

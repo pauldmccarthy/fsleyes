@@ -73,7 +73,7 @@ class SelectionTextureBase(object):
             self.set(data=data)
         else:
             data   = prepare(new)
-            offset = transform.transform(offset, self.texCoordXform)
+            offset = transform.transform(offset, self.texCoordXform(shape))
             self.doPatch(data, offset)
 
 

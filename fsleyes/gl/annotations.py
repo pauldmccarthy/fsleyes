@@ -694,7 +694,7 @@ class VoxelSelection(AnnotationObject):
         displayToVox = opts.getTransform('display', 'voxel')
         voxToDisplay = opts.getTransform('voxel',   'display')
         voxToTex     = opts.getTransform('voxel',   'texture')
-        voxToTex     = transform.concat(texture.texCoordXform, voxToTex)
+        voxToTex     = transform.concat(texture.texCoordXform(shape), voxToTex)
         verts, voxs  = glroutines.slice2D(shape,
                                           xax,
                                           yax,
