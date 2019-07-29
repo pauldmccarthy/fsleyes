@@ -834,7 +834,7 @@ class GLVolume(glimageobject.GLImageObject):
             clipCoordXform = transform.concat(
                 self.clipOpts.getTransform('display', 'texture'),
                 self.opts    .getTransform('texture', 'display'),
-                self.imageTexture.invTexCoordXform)
+                self.imageTexture.invTexCoordXform(self.overlay.shape))
 
         return clipCoordXform
 
@@ -851,7 +851,7 @@ class GLVolume(glimageobject.GLImageObject):
                 self, zpos, axes, bbox)
 
         texCoords = transform.transform(
-            texCoords, self.imageTexture.texCoordXform)
+            texCoords, self.imageTexture.texCoordXform(self.overlay.shape))
 
         return vertices, voxCoords, texCoords
 
@@ -867,7 +867,7 @@ class GLVolume(glimageobject.GLImageObject):
             glimageobject.GLImageObject.generateVertices3D(self, bbox)
 
         texCoords = transform.transform(
-            texCoords, self.imageTexture.texCoordXform)
+            texCoords, self.imageTexture.texCoordXform(self.overlay.shape))
 
         return vertices, voxCoords, texCoords
 

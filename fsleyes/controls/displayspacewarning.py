@@ -123,6 +123,9 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         displaySpace = displayCtx.displaySpace
         overlay      = displayCtx.getSelectedOverlay()
 
+        if overlay is not None:
+            overlay = displayCtx.getOpts(overlay).referenceImage
+
         if   condition == 'overlay':     show = displaySpace is overlay
         elif condition == 'not overlay': show = displaySpace is not overlay
         elif condition == 'world':       show = displaySpace == 'world'
@@ -130,12 +133,14 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
             if displaySpace == 'world':
                 show = False
             else:
-                show = overlay.sameSpace(displaySpace)
+                show = (overlay is not None) and \
+                    overlay.sameSpace(displaySpace)
         elif condition == 'not like overlay':
             if displaySpace == 'world':
                 show = True
             else:
-                show = not overlay.sameSpace(displaySpace)
+                show = (overlay is not None) and \
+                    (not overlay.sameSpace(displaySpace))
         else:
             show = False
 

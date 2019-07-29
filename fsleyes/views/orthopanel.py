@@ -27,6 +27,7 @@ import fsleyes_widgets.utils.layout            as fsllayout
 import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
+import fsleyes.editor                          as editor
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
@@ -709,22 +710,27 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         if selOverlay is not None:
 
-            display = self.displayCtx.getDisplay(selOverlay)
-            isImage = isinstance(selOverlay, fslimage.Image) and \
-                      display.overlayType in ('volume', 'mask', 'label', 'mip')
+            display    = self.displayCtx.getDisplay(selOverlay)
+            isImage    = isinstance(selOverlay, fslimage.Image) and \
+                             display.overlayType in ('volume',
+                                                     'mask',
+                                                     'label',
+                                                     'mip')
+            isEditable = editor.isEditable(selOverlay, self.displayCtx)
         else:
-            isImage = False
+            isImage    = False
+            isEditable = False
 
         self.resetDisplay            .enabled = haveOverlays
         self.centreCursor            .enabled = haveOverlays
         self.centreCursorWorld       .enabled = haveOverlays
-        self.toggleEditMode          .enabled = isImage
+        self.toggleEditMode          .enabled = isEditable
         self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
 
         # Kill edit mode if a non-
         # image has been selected
-        if (self.profile == 'edit') and (not isImage):
+        if (self.profile == 'edit') and (not isEditable):
             self.profile = 'view'
 
 

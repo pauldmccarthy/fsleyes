@@ -9,10 +9,9 @@ which creates a copy of the currently selected overlay.
 """
 
 
-import numpy                  as np
+import numpy as np
 
 import fsl.data.image         as fslimage
-import fsl.utils.transform    as transform
 import fsl.utils.settings     as fslsettings
 import fsl.utils.image.roi    as imgroi
 import fsleyes_widgets.dialog as fsldlg
@@ -219,11 +218,12 @@ def copyImage(overlayList,
     more than four dimensions.
     """
 
-    ovlIdx = overlayList.index(overlay)
-    opts   = displayCtx.getOpts(overlay)
-    is4D   = len(overlay.shape) > 3
-    isROI  = roi is not None
-    copy4D = copy4D and is4D
+    ovlIdx     = overlayList.index(overlay)
+    opts       = displayCtx.getOpts(overlay)
+    is4D       = len(overlay.shape) > 3
+    isROI      = roi is not None
+    copy4D     = copy4D and is4D
+    createMask = createMask and (data is None)
 
     # Initialise the roi indices if one wasn't
     # provided - we will use the indices
@@ -244,21 +244,23 @@ def copyImage(overlayList,
     # the image data, either including all
     # volumes, or the currently selected volume
     if not isROI:
-        slc   = tuple(slice(lo, hi) for lo, hi in roi)
-        data  = overlay[slc]
-        xform = overlay.voxToWorldMat
+        slc     = tuple(slice(lo, hi) for lo, hi in roi)
+        imgdata = overlay[slc]
+        xform   = overlay.voxToWorldMat
 
     # if an ROI is specified, we use the
     # fsl.utils.image.roi module to generate
     # an ROI and the adjusted voxel-to-world
     # affine
     else:
-        roi   = imgroi.roi(overlay, roi)
-        data  = roi.data
-        xform = roi.voxToWorldMat
+        roi     = imgroi.roi(overlay, roi)
+        imgdata = roi.data
+        xform   = roi.voxToWorldMat
 
     if createMask:
-        data[:] = 0
+        data = np.zeros(imgdata.shape, dtype=imgdata.dtype)
+    elif data is None:
+        data = np.copy(imgdata)
 
     copy = fslimage.Image(data,
                           xform=xform,

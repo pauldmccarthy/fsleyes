@@ -39,6 +39,7 @@ FILTERS = [
     r'Gtk-Message',
     r'Gtk-CRITICAL',
     r'Glib-CRITICAL',
+    r'libGL error',
     r'Pango-WARNING',
     r'Xlib:  extension',
     r'CRITICAL \*\*',

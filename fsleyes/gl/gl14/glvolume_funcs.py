@@ -194,6 +194,7 @@ def draw3D(self, xform=None, bbox=None):
     canvas  = self.canvas
     display = self.display
     shader  = self.shader
+    shape   = self.image.shape
     proj    = canvas.projectionMatrix
     src     = self.renderTexture1
     dest    = self.renderTexture2
@@ -202,10 +203,10 @@ def draw3D(self, xform=None, bbox=None):
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
 
-    rayStep = transform.transformNormal(rayStep,
-                                        self.imageTexture.texCoordXform)
-    texform = transform.concat(         texform,
-                                        self.imageTexture.invTexCoordXform)
+    rayStep = transform.transformNormal(
+        rayStep, self.imageTexture.texCoordXform(shape))
+    texform = transform.concat(
+        texform, self.imageTexture.invTexCoordXform(shape))
 
     if xform is not None:
         vertices = transform.transform(vertices, xform)
