@@ -10,10 +10,11 @@ import functools as ft
 
 import numpy as np
 
-import wx
-
 import fsl.utils.transform as transform
-from fsl.data.image import Image
+import fsl.utils.idle      as   idle
+from fsl.data.image  import Image
+from fsl.data.bitmap import Bitmap
+from fsl.data.vtk    import VTKMesh
 
 from . import run_with_orthopanel, realYield
 
@@ -125,3 +126,54 @@ def test_fillSelection_2d():
     tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
     run_with_orthopanel(tfs)
     img.save('three')
+
+
+
+def _test_editable(ortho, overlayList, displayCtx):
+
+    # must be an image
+    # must have one value per voxel (e.g. no RGB)
+    # must be displayed as volume, mask, or label
+    img  = Image(  op.join(datadir, '3d'))
+    surf = VTKMesh(op.join(datadir, 'mesh_l_thal.vtk'))
+    dti  = Image(  op.join(datadir, 'dti', 'dti_V1'))
+    rgb  = Bitmap( op.join(datadir, 'test_screenshot_3d.png')).asImage()
+
+    editable    = [(img, 'volume'),
+                   (img, 'mask'),
+                   (img, 'label')]
+    notEditable = [(img, 'mip'),
+                   (surf, 'mesh'),
+                   (dti, 'rgbvector'),
+                   (rgb, 'volume')]
+
+    def setprof(profile):
+        ortho.profile = profile
+
+
+    savedprof = [None]
+
+    def saveprof():
+        savedprof[0] = ortho.profile
+
+    for ovl, ot in editable:
+        idle.idle(setprof, 'edit')
+        idle.idle(overlayList.append, ovl, ot)
+        idle.idle(displayCtx.selectOverlay, ovl)
+        idle.idle(saveprof)
+        idle.idle(overlayList.clear)
+        idle.block(1)
+        assert savedprof[0] == 'edit'
+
+    for ovl, ot in notEditable:
+        idle.idle(setprof, 'edit')
+        idle.idle(overlayList.append, ovl, ot)
+        idle.idle(displayCtx.selectOverlay, ovl)
+        idle.idle(saveprof)
+        idle.idle(overlayList.clear)
+        idle.block(1)
+        assert savedprof[0] == 'view'
+
+
+def test_editable():
+    run_with_orthopanel(_test_editable)
