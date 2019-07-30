@@ -18,6 +18,8 @@ Changed
 
 * The *Crop* tool can now be used to expand the field-of-view of an image,
   in addition to cropping an image.
+* The label overlay ``--lut`` command-line option will accepts colour map
+  files.
 
 
 Fixed
