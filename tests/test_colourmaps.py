@@ -72,9 +72,14 @@ def mockCmaps():
 
 def clearCmaps(func):
     def wrapper(*args, **kwargs):
+        restore = fslcm._cmaps is not None
+        fslcm._cmaps = None
+        fslcm._luts  = None
         func(*args, **kwargs)
         fslcm._cmaps = None
         fslcm._luts  = None
+        if restore:
+            fslcm.init()
     return wrapper
 
 
