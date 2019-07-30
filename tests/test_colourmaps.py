@@ -58,7 +58,9 @@ def mockCmaps():
     2 0.6 0.7 0.8 label 2
     """).strip()
 
-    with mockSettings() as sdir, mockAssetDir() as assetDir:
+
+    with mockSettings() as sdir, \
+         mockAssetDir() as assetDir:
         cmap1 = op.join(assetDir, 'colourmaps', 'cmap1.cmap')
         cmap2 = op.join(sdir,     'colourmaps', 'cmap2.cmap')
         lut1  = op.join(assetDir, 'luts',       'lut1.lut')
@@ -71,13 +73,24 @@ def mockCmaps():
 
 
 def clearCmaps(func):
+
+    def regcmap(*a):
+        pass
+
+    mo = mock.MagicMock()
+
     def wrapper(*args, **kwargs):
-        restore = fslcm._cmaps is not None
-        fslcm._cmaps = None
-        fslcm._luts  = None
-        func(*args, **kwargs)
-        fslcm._cmaps = None
-        fslcm._luts  = None
+        with mock.patch('matplotlib.cm.register_cmap',       regcmap), \
+             mock.patch('fsleyes.displaycontext.VolumeOpts', mo), \
+             mock.patch('fsleyes.displaycontext.VectorOpts', mo), \
+             mock.patch('fsleyes.displaycontext.MeshOpts',   mo), \
+             mock.patch('fsleyes.displaycontext.LabelOpts',  mo):
+            restore      = fslcm._cmaps is not None
+            fslcm._cmaps = None
+            fslcm._luts  = None
+            func(*args, **kwargs)
+            fslcm._cmaps = None
+            fslcm._luts  = None
         if restore:
             fslcm.init()
     return wrapper
@@ -91,6 +104,7 @@ def test_validMapKey():
         assert fslcm.isValidMapKey(key)
 
 
+@clearCmaps
 def test_scanDirs():
     with mockSettings() as sdir, mockAssetDir() as assetDir:
         os.mkdir(op.join(assetDir, 'colourmaps', 'sub'))
