@@ -537,6 +537,8 @@ def registerColourMap(cmapFile,
 
     :arg name:        Display name for the colour map. If ``None``, defaults
                       to the ``name``.
+
+    :returns:         The key that the ``ColourMap`` was registered under.
     """
 
     import matplotlib.cm     as mplcm
@@ -604,6 +606,8 @@ def registerColourMap(cmapFile,
         prop = cls.getProp(propName)
         prop.addColourMap(key)
 
+    return key
+
 
 def registerLookupTable(lut,
                         overlayList=None,
@@ -632,6 +636,8 @@ def registerLookupTable(lut,
 
     :arg name:        Display name for the lookup table. If ``None``, defaults
                       to the ``name``.
+
+    :returns:         The :class:`LookupTable` object
     """
 
     if isinstance(lut, six.string_types): lutFile = lut

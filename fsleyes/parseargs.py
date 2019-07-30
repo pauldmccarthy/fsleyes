@@ -3346,9 +3346,7 @@ def _applyColourMap(cmap, overlayList, displayCtx):
     a new value for the colour map argument.
     """
     if op.exists(cmap):
-        key = op.splitext(op.basename(cmap))[0]
-        colourmaps.registerColourMap(cmap, overlayList, displayCtx, key)
-        cmap = key
+        cmap = colourmaps.registerColourMap(cmap, overlayList, displayCtx)
     return cmap
 
 
@@ -3424,9 +3422,7 @@ def _applyLookupTable(lut, overlayList, displayCtx):
     Returns a new value for the lookup table argument.
     """
     if op.exists(lut):
-        key = op.splitext(op.basename(lut))[0]
-        colourmaps.registerLookupTable(lut, overlayList, displayCtx, key)
-        lut = key
+        lut = colourmaps.registerLookupTable(lut, overlayList, displayCtx).key
     return lut
 
 
