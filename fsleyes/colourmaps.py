@@ -72,6 +72,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMap
    getColourMapLabel
    getColourMapFile
+   loadColourMapFile
    registerColourMap
    installColourMap
    isColourMapRegistered
@@ -161,6 +162,7 @@ access and manage :class:`LookupTable` instances:
    getLookupTables
    getLookupTable
    getLookupTableFile
+   loadLookupTableFile
    registerLookupTable
    installLookupTable
    isLookupTableRegistered
@@ -178,6 +180,7 @@ for querying installed colour maps and lookup tables,
 .. autosummary::
    :nosignatures:
 
+   fileType
    getCmapDir
    getLutDir
    scanBuiltInCmaps
@@ -554,14 +557,7 @@ def registerColourMap(cmapFile,
     if name        is None: name        = key
     if overlayList is None: overlayList = []
 
-    # The file could be a FSLView style VEST-LUT
-    if vest.looksLikeVestLutFile(cmapFile):
-        data = vest.loadVestLutFile(cmapFile, normalise=False)
-
-    # Or just a plain 2D text array
-    else:
-        data = np.loadtxt(cmapFile)
-
+    data = loadColourMapFile(cmapFile)
     cmap = colors.ListedColormap(data, key)
 
     log.debug('Loading and registering custom '
@@ -834,6 +830,145 @@ def installLookupTable(key):
 
     lut.mapFile   = destFile
     lut.installed = True
+
+
+##########
+# File I/O
+##########
+
+
+def fileType(fname):
+    """Attempts to guess the type of ``fname``.
+
+    ``fname`` is assumed to be a FSLeyes colour map or lookup table file,
+    or a FSLView-style VEST lookup table file.
+
+    A ``ValueError`` is raised if the file type cannot be determined.
+
+    :arg fname: Name of file to check
+
+    :returns:   One of ``'vest'``, ``'cmap'``, or ``'lut'``, depending on
+                what the contents of ``fname`` look like.
+    """
+
+    if vest.looksLikeVestLutFile(fname):
+        return 'vest'
+
+    with open(fname, 'rt') as f:
+        line = f.readline().strip()
+
+    tkns = list(line.split())
+
+    # cmap file
+    if len(tkns) == 3:
+        try:
+            [float(t) for t in tkns]
+            return 'cmap'
+        except ValueError:
+            pass
+
+    # lut file
+    elif len(tkns) >= 4:
+        try:
+            [float(t) for t in tkns[:4]]
+            return 'lut'
+        except ValueError:
+            pass
+
+    raise ValueError('Cannot determine type of {}'.format(fname))
+
+
+def loadColourMapFile(fname, aslut=False):
+    """Load the given file, assumed to be a colour map.
+
+    :arg fname: FSLeyes or FSLView (VEST) colour map file
+
+    :arg aslut: If ``True``, the returned array will contain a label for
+                each colour, ranging from ``1`` to ``N``, where ``N`` is
+                the number of colours in the file.
+
+    :returns:   A ``numpy`` array of shape ``(N, 3)`` containing the
+                RGB values for ``N`` colours. Or, if ``aslut is True``,
+                A ``numpy`` array of shape ``(N, 4)`` containing a
+                label, and the RGB values for ``N`` colours.
+    """
+
+    # The file could be a FSLView style VEST LUT
+    if vest.looksLikeVestLutFile(fname):
+        data = vest.loadVestLutFile(fname, normalise=False)
+
+    # Or just a plain 2D text array
+    else:
+        data = np.loadtxt(fname)
+
+    if aslut:
+        lbls = np.arange(1, data.shape[0] + 1).reshape(-1, 1)
+        data = np.hstack((lbls, data))
+
+    return data
+
+
+def loadLookupTableFile(fname):
+    """Loads the given file, assumed to be a lookup table.
+
+    :arg fname: Name of a FSLeyes lookup table file.
+
+    :returns:   A tuple containing:
+
+                 - A ``numpy`` array of shape ``(N, 4)`` containing the
+                   label and RGB values for ``N`` colours.
+                 - A list containin the name for each label
+
+    .. note:: The provided file may also be a colour map file (see
+              :func:`loadColourMapFile`), in which case the labels will range
+              from ``1`` to ``N``, and the names will be strings containing
+              the label values.
+    """
+
+    # Accept cmap file, auto-generate labels/names
+    if fileType(fname) in ('vest', 'cmap'):
+        lut   = loadColourMapFile(fname, aslut=True)
+        names = ['{}'.format(int(l)) for l in lut[:, 0]]
+        return lut, names
+
+    # Otherwise assume a FSLeyes lut file
+    with open(fname, 'rt') as f:
+
+        # Read the LUT label/colours on
+        # a first pass through the file
+        struclut = np.genfromtxt(
+            f,
+            usecols=(0, 1, 2, 3),
+            dtype={
+                'formats' : (np.int, np.float, np.float, np.float),
+                'names'   : ('label', 'r', 'g', 'b')})
+
+        # Save the label ordering -
+        # we'll use it below
+        order     = struclut.argsort(order='label')
+
+        # Convert from a structured
+        # array into a regular array
+        lut       = np.zeros((len(struclut), 4), dtype=np.float32)
+        lut[:, 0] = struclut['label']
+        lut[:, 1] = struclut['r']
+        lut[:, 2] = struclut['g']
+        lut[:, 3] = struclut['b']
+
+        # Read the names on a second pass
+        f.seek(0)
+        names = []
+        for i, line in enumerate(f):
+            tkns = line.split(None, 4)
+            if len(tkns) < 5: name = '{}'.format(int(lut[i, 0]))
+            else:             name = tkns[4].strip()
+            names.append(name)
+
+    # Sort by ascending label value
+    lut   = lut[order, :]
+    names = [names[o] for o in order]
+
+    return lut, names
 
 
 ###############
@@ -1289,7 +1424,7 @@ class LookupTable(notifier.Notifier):
         self.__toParse = None
 
         if lutFile is not None:
-            self.__toParse = self.__load(lutFile)
+            self.__toParse = loadLookupTableFile(lutFile)
             self.__savbed  = True
 
 
@@ -1468,7 +1603,6 @@ class LookupTable(notifier.Notifier):
                 value  = label.value
                 colour = label.colour
                 name   = label.name
-
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))
 
@@ -1480,35 +1614,13 @@ class LookupTable(notifier.Notifier):
     def __parse(self, lut, names):
         """Parses ``lut``, a numpy array containing a LUT. """
 
-        labels = [LutLabel(l, name, (r, g, b), l > 0)
+        labels = [LutLabel(int(l), name, (r, g, b), l > 0)
                   for ((l, r, g, b), name) in zip(lut, names)]
 
         self.__labels = labels
 
         for label in labels:
             label.addGlobalListener(self.__name, self.__labelChanged)
-
-
-    def __load(self, lutFile):
-        """Called by :meth:`__init__`. Loads a ``LookupTable`` specification
-        from the given file.
-        """
-
-        with open(lutFile, 'rt') as f:
-            lut = np.genfromtxt(
-                f,
-                usecols=(0, 1, 2, 3),
-                dtype={
-                    'formats' : (np.int, np.float, np.float, np.float),
-                    'names'   : ('label', 'r', 'g', 'b')})
-            f.seek(0)
-            names = [l.split(None, 4)[4].strip() for l in f]
-
-        order = lut.argsort(order='label')
-        lut   = lut[order]
-        names = [names[o] for o in order]
-
-        return lut, names
 
 
     def __labelChanged(self, value, valid, label, propName):
