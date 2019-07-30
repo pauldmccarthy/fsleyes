@@ -288,7 +288,6 @@ def scanBuiltInCmaps():
     cmapIDs = [op.relpath(i, basedir) for i in cmapIDs]
     cmapIDs = [i.replace(op.sep, '_') for i in cmapIDs]
 
-
     return cmapIDs
 
 
@@ -1339,9 +1338,9 @@ class LutLabel(props.HasProperties):
         """The hash of a ``LutLabel`` is a combination of its
         value, name, and colour, but not its enabled state.
         """
-        return (hash(self.value)        ^
-                hash(self.internalName) ^
-                hash(self.colour))
+        return hash(      self.value)        ^ \
+               hash(      self.internalName) ^ \
+               hash(tuple(self.colour))
 
 
     def __str__(self):
@@ -1425,7 +1424,7 @@ class LookupTable(notifier.Notifier):
 
         if lutFile is not None:
             self.__toParse = loadLookupTableFile(lutFile)
-            self.__savbed  = True
+            self.__saved   = True
 
 
     def lazyparse(func):
