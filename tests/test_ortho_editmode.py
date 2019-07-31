@@ -182,27 +182,28 @@ def test_editable():
 def _test_newMask(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img]
-    idle.block(0.25)
+    idle.block(0.5)
     ortho.profile = 'edit'
-    idle.block(0.25)
+    idle.block(0.5)
 
     profile = ortho.getCurrentProfile()
 
     profile.createMask()
-    idle.block(0.25)
+    idle.block(0.5)
     assert len(overlayList) == 2
     mask = overlayList[1]
     assert mask.sameSpace(img)
     assert np.all(mask[:] == 0)
     overlayList.remove(mask)
-    idle.block(0.25)
+    idle.block(0.5)
 
     profile.mode = 'sel'
-    idle.block(0.25)
+    idle.block(0.5)
     ed = profile.editor(img)
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
+    idle.block(0.5)
     profile.createMask()
-    idle.block(0.25)
+    idle.block(0.5)
     assert len(overlayList) == 2
     mask = overlayList[1]
     assert mask.sameSpace(img)
@@ -210,7 +211,7 @@ def _test_newMask(ortho, overlayList, displayCtx):
     exp[8:12, 8:12, 8:12] = 1
     assert np.all(mask[:] == exp)
     overlayList[:] = []
-    idle.block(0.25)
+    idle.block(0.55)
 
 
 def test_newMask():
