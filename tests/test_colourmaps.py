@@ -85,14 +85,13 @@ def clearCmaps(func):
              mock.patch('fsleyes.displaycontext.VectorOpts', mo), \
              mock.patch('fsleyes.displaycontext.MeshOpts',   mo), \
              mock.patch('fsleyes.displaycontext.LabelOpts',  mo):
-            restore      = fslcm._cmaps is not None
+            cmaps        = fslcm._cmaps
+            luts         = fslcm._luts
             fslcm._cmaps = None
             fslcm._luts  = None
             func(*args, **kwargs)
-            fslcm._cmaps = None
-            fslcm._luts  = None
-        if restore:
-            fslcm.init()
+            fslcm._cmaps = cmaps
+            fslcm._luts  = luts
     return wrapper
 
 
