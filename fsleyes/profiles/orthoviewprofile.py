@@ -680,9 +680,9 @@ class OrthoViewProfile(profiles.Profile):
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Handles left mouse drag events in ``pick`` mode. If the currently
-        selected overlay is a :class:`.Mesh`, identifies the mesh
-        vertex which is nearest to the mouse click. Otherwise, returns
-        ``False``.
+        selected overlay is a :class:`.Mesh`, identifies the mesh vertex which
+        is nearest to the mouse click, and updates the
+        :attr:`.DisplayContext.location`. Otherwise, returns ``False``.
         """
 
         import fsl.data.mesh as fslmesh
@@ -691,7 +691,6 @@ class OrthoViewProfile(profiles.Profile):
 
         if not isinstance(overlay, fslmesh.Mesh):
             return False
-
 
         opts  = self.displayCtx.getOpts(overlay)
         loc   = opts.transformCoords(canvasPos, 'display', 'mesh')
@@ -729,5 +728,8 @@ class OrthoViewProfile(profiles.Profile):
         # this triangle
         fdists = transform.veclength(faceVerts - lvert)
         vidx   = np.argsort(fdists)[0]
+        vidx   = face[vidx]
+        loc    = overlay.vertices[vidx, :]
+        loc    = opts.transformCoords(loc, 'mesh', 'display')
 
-        self.displayCtx.vertexIndex = face[vidx]
+        self.displayCtx.location.xyz = loc

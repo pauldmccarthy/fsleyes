@@ -27,6 +27,8 @@ Fixed
 
 
 * Added support for editing 2D images.
+* Fixed a bug in the mesh vertex picking logic which would occur when multiple
+  views were open.
 
 
 0.30.0 (Thursday 27th June 2019)

@@ -257,9 +257,6 @@ class CanvasPanel(viewpanel.ViewPanel):
             self.bindProps('syncLocation',
                            displayCtx,
                            displayCtx.getSyncPropertyName('worldLocation'))
-            self.bindProps('syncLocation',
-                           displayCtx,
-                           displayCtx.getSyncPropertyName('vertexIndex'))
             self.bindProps('syncOverlayOrder',
                            displayCtx,
                            displayCtx.getSyncPropertyName('overlayOrder'))
