@@ -728,7 +728,7 @@ class OrthoViewProfile(profiles.Profile):
         # this triangle
         fdists = transform.veclength(faceVerts - lvert)
         vidx   = np.argsort(fdists)[0]
-
+        vidx   = face[vidx]
         loc    = overlay.vertices[vidx, :]
         loc    = opts.transformCoords(loc, 'mesh', 'display')
 
