@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.31.0 (Under development)
---------------------------
+0.30.1 (Wednesday 7th August 2019)
+----------------------------------
 
 
 Changed
