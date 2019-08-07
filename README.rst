@@ -27,7 +27,6 @@ environment. Standalone versions of FSLeyes can be downloaded from
 https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes.
 
 
-
 FSLeyes is a `wxPython <https://www.wxpython.org>`_ application.  If you are
 on Linux, you will need to install wxPython first - head to
 https://extras.wxpython.org/wxPython4/extras/linux/ and find the directory
@@ -46,6 +45,12 @@ functionality)::
 
 
     pip install fsleyes[extras]
+
+
+As an alternate to using ``pip``, FSLeyes is also available on `conda-forge
+<https://conda-forge.org/>`_::
+
+    conda install -c conda-forge fsleyes
 
 
 Dependencies

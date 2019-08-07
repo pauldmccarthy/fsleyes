@@ -95,23 +95,15 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     worldLocation = props.Point(ndims=3)
-    """The location property contains the currently selected 3D location (xyz)
-    in the world coordinate system. Whenever the :attr:`location` changes, it
-    gets transformed into the world coordinate system, and propagated to this
-    property. The location of different ``DisplayContext`` instances is
-    synchronised through this property.
+    """The :attr:`location` property contains the currently selected 3D
+    location (xyz) in the current display coordinate system. Whenever the
+    :attr:`location` changes, it gets transformed into the world coordinate
+    system, and propagated to this property. The location of different
+    ``DisplayContext`` instances is synchronised through this property.
 
     .. note:: If any :attr:`.NiftiOpts.transform` properties have been modified
               independently of the :attr:`displaySpace`, this value will be
               invalid.
-    """
-
-
-    vertexIndex = props.Int()
-    """This property may be used to control the :attr:`location` when the
-    currently selected overlay is a :class:`.Mesh`, which comprises
-    a list of vertices. If this property is set to an index into the mesh
-    vertex list, the :attr:`location` will be set to that vertex.
     """
 
 
@@ -358,10 +350,6 @@ class DisplayContext(props.SyncableHasProperties):
                              self.__name,
                              self.__worldLocationChanged,
                              immediate=True)
-            self.addListener('vertexIndex',
-                             self.__name,
-                             self.__vertexIndexChanged,
-                             immediate=True)
 
         # The overlayListChanged method
         # is important - check it out
@@ -400,7 +388,6 @@ class DisplayContext(props.SyncableHasProperties):
             self.removeListener('displaySpace',       self.__name)
             self.removeListener('location',           self.__name)
             self.removeListener('worldLocation',      self.__name)
-            self.removeListener('vertexIndex',        self.__name)
         else:
             for g in list(self.overlayGroups):
                 self.overlayGroups.remove(g)
@@ -1178,28 +1165,6 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         self.__propagateLocation('display')
-
-
-    def __vertexIndexChanged(self, *a):
-        """Called when the :attr:`vertexIndex` property changes. Propagates
-        the new location to the :attr:`location` property.
-        """
-
-        vidx = self.vertexIndex
-        ovl  = self.getSelectedOverlay()
-
-        # If the current overlay is a mesh, and
-        # the index looks valid, propagate it on
-        # to the location.
-        if isinstance(ovl, fslmesh.Mesh) and \
-           vidx >= 0                     and \
-           vidx < ovl.vertices.shape[0]:
-
-            opts = self.getOpts(ovl)
-            loc  = ovl.vertices[vidx, :]
-            loc  = opts.transformCoords(loc, 'mesh', 'display')
-
-            self.location.xyz = loc
 
 
     def __propagateLocation(self, dest):

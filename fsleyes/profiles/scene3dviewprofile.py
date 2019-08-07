@@ -35,8 +35,7 @@ class Scene3DViewProfile(profiles.Profile):
     ``rotate`` Clicking and dragging the mouse rotates the scene
     ``zoom``   Moving the mouse wheel zooms in and out.
     ``pan``    Clicking and dragging the mouse pans the scene.
-    ``pick``   Clicking changes the :attr:`.DisplayContext.vertexIndex`
-               or :attr:`.DisplayContext.location`
+    ``pick``   Clicking changes the :attr:`.DisplayContext.location`
     ========== ========================================================
     """
 
@@ -192,9 +191,7 @@ class Scene3DViewProfile(profiles.Profile):
     def _pickModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Called on mouse down events in ``pick`` mode.
 
-        Updates the :attr:`DisplayContext.vertexIndex` property if the
-        currently selected overlay is a :class:`.Mesh`, otherwise
-        updates the :attr:`DisplayContext.location` property.
+        Updates the :attr:`DisplayContext.location` property.
         """
 
         from fsl.data.mesh import Mesh
@@ -249,7 +246,10 @@ class Scene3DViewProfile(profiles.Profile):
             triDists = transform.veclength(loc - triVerts)
             vertIdx  = np.argsort(triDists)[0]
 
-            self.displayCtx.vertexIndex = tri[vertIdx]
+            loc      = ovl.vertices[tri[vertIdx], :]
+            loc      = opts.transformCoords(loc, 'mesh', 'display')
+
+            self.displayCtx.location.xyz = loc
 
 
     def _pickModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):

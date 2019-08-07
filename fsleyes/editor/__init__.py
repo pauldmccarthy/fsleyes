@@ -33,3 +33,44 @@ stage, and the :class:`.Editor` class implements functinoality for the second.
 The ``Editor`` class also keeps track of changes to the current selection, and
 to the image data, thus allowing the user to undo/redo any changes.
 """
+
+
+__all__ = ['isEditable',
+           'Editor',
+           'Selection',
+           'ValueChange',
+           'SelectionChange']
+
+
+import fsl.data.image         as fslimage
+import fsleyes.displaycontext as fsldisplay
+
+from .selection import  Selection
+from .editor    import (Editor,
+                        ValueChange,
+                        SelectionChange)
+
+
+def isEditable(overlay, displayCtx):
+    """Returns ``True`` if the given overlay is editable, ``False``
+    otherwise.
+
+    :arg overlay:    The overlay to check
+    :arg displayCtx: The relevant :meth:`.DisplayContext`
+    :returns:        True if ``overlay``is editable, ``False`` otherwise
+    """
+
+    # will raise if overlay is
+    # None, or has been removed
+    try:
+        display = displayCtx.getDisplay(overlay)
+    except (ValueError, fsldisplay.InvalidOverlayError):
+        return False
+
+    # Edit mode is only supported on
+    # images with the 'volume', 'mask'
+    # or 'label' types
+    return overlay is not None                 and \
+           isinstance(overlay, fslimage.Image) and \
+           overlay.nvals == 1                  and \
+           display.overlayType in ('volume', 'mask', 'label')

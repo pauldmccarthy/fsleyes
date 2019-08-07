@@ -9,6 +9,28 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.30.1 (Wednesday 7th August 2019)
+----------------------------------
+
+
+Changed
+^^^^^^^
+
+* The *Crop* tool can now be used to expand the field-of-view of an image,
+  in addition to cropping an image.
+* The label overlay ``--lut`` command-line option will accepts colour map
+  files.
+
+
+Fixed
+^^^^^
+
+
+* Added support for editing 2D images.
+* Fixed a bug in the mesh vertex picking logic which would occur when multiple
+  views were open.
+
+
 0.30.0 (Thursday 27th June 2019)
 --------------------------------
 
