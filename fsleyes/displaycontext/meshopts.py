@@ -459,31 +459,31 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         return opts.getTransform(self.coordSpace, opts.transform)
 
 
-    def getVertex(self, xyz=None):
+    def getVertex(self, xyz=None, tol=1):
         """Returns an integer identifying the index of the mesh vertex that
-        coresponds to the given ``xyz`` location,
+        coresponds to the given ``xyz`` location, assumed to be specified
+        in the display coordinate system.
 
         :arg xyz: Location to convert to a vertex index. If not provided, the
                   current :class:`.DisplayContext.location` is used.
+
+        :arg tol: Tolerance in mesh coordinate system units - if ``xyz`` is
+                  farther than ``tol`` to any vertex, ``None`` is returned.
+                  Pass in ``None`` to always return the nearest vertex.
         """
 
-        # TODO return vertex closest to the point,
-        #      within some configurabe tolerance?
-
         if xyz is None:
-            xyz = self.displayCtx.location.xyz
-            xyz = self.transformCoords(xyz, 'display', 'mesh')
+            xyz = self.displayCtx.location
 
-        vert = None
-        vidx = self.displayCtx.vertexIndex
+        xyz        = self.transformCoords(xyz, 'display', 'mesh')
+        xyz        = np.asarray(xyz).reshape(1, 3)
+        dist, vidx = self.overlay.trimesh.nearest.vertex(xyz)
+        dist       = dist[0]
+        vidx       = vidx[0]
 
-        if vidx >= 0 and vidx <= self.overlay.nvertices:
-            vert = self.overlay.vertices[vidx, :]
+        if tol is not None and dist > tol: return None
+        else:                              return vidx
 
-        if vert is not None and np.all(np.isclose(vert, xyz)):
-            return vidx
-        else:
-            return None
 
     def normaliseSpace(self, space):
         """Used by :meth:`transformCoords` and :meth:`getTransform` to

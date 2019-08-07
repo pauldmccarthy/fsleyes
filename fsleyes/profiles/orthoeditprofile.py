@@ -12,13 +12,12 @@ import logging
 
 import numpy                        as np
 
-import fsl.data.image               as fslimage
 import fsl.utils.idle               as idle
+import fsl.utils.deprecated         as deprecated
 import fsleyes_props                as props
-import fsleyes.displaycontext       as fsldisplay
 import fsleyes.actions              as actions
 import fsleyes.actions.copyoverlay  as copyoverlay
-import fsleyes.editor.editor        as fsleditor
+import fsleyes.editor               as fsleditor
 import fsleyes.gl.routines          as glroutines
 import fsleyes.gl.annotations       as annotations
 from . import                          orthoviewprofile
@@ -646,24 +645,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__refreshCanvases()
 
 
+    @deprecated.deprecated('0.31.0',
+                           '1.0.0',
+                           'Use fsleyes.editor.isEditable instead')
     def isEditable(self, overlay):
         """Returns ``True`` if the given overlay is editable, ``False``
         otherwise.
         """
-
-        # will raise if overlay is
-        # None, or has been removed
-        try:
-            display = self.displayCtx.getDisplay(overlay)
-        except (ValueError, fsldisplay.InvalidOverlayError) as e:
-            display = None
-
-        # Edit mode is only supported on
-        # images with the 'volume', 'mask'
-        # or 'label' types
-        return overlay is not None                 and \
-               isinstance(overlay, fslimage.Image) and \
-               display.overlayType in ('volume', 'mask', 'label')
+        return fsleditor.isEditable(overlay, self.displayCtx)
 
 
     def __modeChanged(self, *a):
@@ -770,8 +759,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         compatibleOverlays = [None]
         if not self.drawMode:
             for ovl in self.overlayList:
-                if ovl is not overlay   and \
-                   self.isEditable(ovl) and \
+                if ovl is not overlay                         and \
+                   fsleditor.isEditable(ovl, self.displayCtx) and \
                    overlay.sameSpace(ovl):
                     compatibleOverlays.append(ovl)
 
@@ -935,7 +924,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # Make sure that the newly
         # selected overlay is editable
-        if self.isEditable(overlay):
+        if fsleditor.isEditable(overlay, self.displayCtx):
             self.__currentOverlay = overlay
         else:
             self.__currentOverlay = None
@@ -1205,9 +1194,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # calling _navModeLeftMouseDrag we
         # will not trigger a refresh, so
         # we will force the refresh instead.
-        forceRefresh = (
-            canvasPos is not None and
-            np.all(np.isclose(canvasPos, self.displayCtx.location.xyz)))
+        forceRefresh = \
+            canvasPos is not None and \
+            np.all(np.isclose(canvasPos, self.displayCtx.location.xyz))
 
         # If locationFollowsMouse==True, we make
         # the canvas location track the edit cursor
@@ -1659,7 +1648,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if overlay is None:
             return False
 
-        editor = self.__editors[self.__currentOverlay]
+        editor = self.__editors[overlay]
 
         # The searchRadius/intensityThres
         # properties are unclamped, so we

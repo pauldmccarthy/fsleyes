@@ -23,8 +23,8 @@ from . import run_with_orthopanel
 def test_copyImage():
     run_with_orthopanel(_test_copyImage)
 def _test_copyImage(panel, overlayList, displayCtx):
-    img3d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-    img4d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 20)))
+    img3d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)), name='img3d')
+    img4d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 20)), name='img4d')
 
     overlayList.extend((img3d, img4d))
 
@@ -67,6 +67,19 @@ def _test_copyImage(panel, overlayList, displayCtx):
     copy = overlayList[1]
     assert np.all(copy.shape == img3d.shape)
     assert np.all(copy[:]    == 0)
+    overlayList.remove(copy)
+
+    # new data (createMask should be ignored)
+    data = np.random.randint(1, 100, img3d.shape)
+    copyoverlay.copyImage(overlayList,
+                          displayCtx,
+                          img3d,
+                          createMask=True,
+                          data=data)
+    assert len(overlayList) == 3
+    copy = overlayList[1]
+    assert np.all(copy.shape == img3d.shape)
+    assert np.all(copy[:]    == data)
     overlayList.remove(copy)
 
     # 4D
@@ -145,6 +158,41 @@ def _test_copyImage(panel, overlayList, displayCtx):
     assert tuple(copy.shape) == (5, 5, 5)
     assert np.all(copy[:] == img4d[5:10, 5:10, 5:10, 10])
     overlayList.remove(copy)
+
+    # roi, expanding FOV
+    copyoverlay.copyImage(overlayList,
+                          displayCtx,
+                          img3d,
+                          roi=((-5, 25), (-5, 25), (-5, 25)))
+    assert len(overlayList) == 3
+    copy = overlayList[1]
+    assert tuple(copy.shape) == (30, 30, 30)
+    assert np.all(copy[5:25, 5:25, 5:25] == img3d[:, :, :])
+    overlayList.remove(copy)
+
+    # roi, 4D, expanding FOV
+    copyoverlay.copyImage(overlayList,
+                          displayCtx,
+                          img4d,
+                          roi=((-5, 25), (-5, 25), (-5, 25)))
+    assert len(overlayList) == 3
+    copy = overlayList[2]
+    assert tuple(copy.shape) == (30, 30, 30, 20)
+    assert np.all(copy[5:25, 5:25, 5:25, :] == img4d[:, :, :, :])
+    overlayList.remove(copy)
+
+    # roi, 4D, current vol
+    copyoverlay.copyImage(overlayList,
+                          displayCtx,
+                          img4d,
+                          copy4D=False,
+                          roi=((-5, 25), (-5, 25), (-5, 25)))
+    assert len(overlayList) == 3
+    copy = overlayList[2]
+    assert tuple(copy.shape) == (30, 30, 30)
+    assert np.all(copy[5:25, 5:25, 5:25] == img4d[:, :, :, 10])
+    overlayList.remove(copy)
+
 
 
 def test_CopyOverlayAction():

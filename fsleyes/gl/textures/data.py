@@ -9,6 +9,7 @@
 .. autosummary::
    :nosignatures:
 
+   numTextureDims
    canUseFloatTextures
    oneChannelFormat
    getTextureType
@@ -39,6 +40,7 @@ GL_TYPE_NAMES = {
     gl.GL_UNSIGNED_SHORT      : 'GL_UNSIGNED_SHORT',
     gl.GL_FLOAT               : 'GL_FLOAT',
 
+    gl.GL_ALPHA               : 'GL_ALPHA',
     gl.GL_RED                 : 'GL_RED',
     gl.GL_LUMINANCE           : 'GL_LUMINANCE',
     gl.GL_RGB                 : 'GL_RGB',
@@ -49,6 +51,8 @@ GL_TYPE_NAMES = {
     arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
     arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
     gl.GL_R32F                : 'GL_R32F',
+
+    gl.GL_ALPHA8              : 'GL_ALPHA8',
 
     gl.GL_R8                  : 'GL_R8',
     gl.GL_R16                 : 'GL_R16',
@@ -70,6 +74,36 @@ def _makeInstance(dtype):
     if inspect.isclass(dtype):
         dtype = np.zeros([0], dtype=dtype).dtype
     return dtype
+
+
+def numTextureDims(shape):
+    """Given a 3D image shape, returns the number of dimensions needd
+    to store the image as a texture - either ``2`` or ``3``.
+
+    :arg shape: 3D image shape
+    :returns:   2 if a 2D texture can be used to store the image data,
+                3 otherwise.
+    """
+    max3d = gl.glGetInteger(gl.GL_MAX_3D_TEXTURE_SIZE)
+    max2d = gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE)
+
+    def checklim(shape, lim):
+        if any([d > lim for d in shape]):
+            raise RuntimeError(
+                'Cannot create an OpenGL texture for {} - it exceeds '
+                'the hardware limits on this platform (2D: {}, 3D: {}'
+                .format(shape, max2d, max3d))
+
+    shape = [d for d in shape[:3] if d > 1]
+
+    # force scalar/vector shape to be 2D
+    if   len(shape) == 0: shape = [1, 1]
+    elif len(shape) == 1: shape = [shape[0], 1]
+
+    if len(shape) == 3: checklim(shape, max3d)
+    else:               checklim(shape, max2d)
+
+    return len(shape)
 
 
 @memoize.memoize

@@ -15,6 +15,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.transform as transform
+import fsl.data.utils      as dutils
 import fsleyes.gl.routines as glroutines
 from . import                 texture
 
@@ -165,16 +166,17 @@ class Texture2D(texture.Texture):
 
         if data is not None:
             data = np.array(data.ravel('F'), copy=False)
+            data = dutils.makeWriteable(data)
+
+        interp = self.interp
+
+        if interp is None:
+            interp = gl.GL_NEAREST
 
         with self.bound():
 
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
-
-            interp = self.interp
-
-            if interp is None:
-                interp = gl.GL_NEAREST
 
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_MAG_FILTER,
@@ -234,6 +236,106 @@ class Texture2D(texture.Texture):
                                 self.baseFormat,
                                 self.textureType,
                                 data)
+
+
+    def shapeData(self, data, oldShape=None):
+        """Overrides :meth:`.Texture.shapeData`.
+
+        This method is used by ``Texture2D`` sub-classes which are used to
+        store 3D image data (e.g. the :class:`.ImageTexture2D` class). It
+        shapes the data, ensuring that it is compatible with a 2D texture.
+
+        :arg data:     ``numpy`` array containing the data
+        :arg oldShape: Original data shape; if not provided, is taken from
+                       ``data``.
+        """
+
+        nvals = self.nvals
+
+        # For scalar, 1D or 2D data, we need
+        # to make sure the data has a shape
+        # compatible with the Texture2D
+        if oldShape is None:
+            oldShape = data.shape
+
+        if nvals == 1:
+            datShape = data.shape
+        else:
+            oldShape = oldShape[1:]
+            datShape = data.shape[1:]
+
+        oldShape = np.array(oldShape)
+        datShape = np.array(datShape)
+
+        if   np.all(oldShape         == [1, 1, 1]): newShape = ( 1,  1)
+        elif np.all(oldShape[1:]     == [1, 1]):    newShape = (-1,  1)
+        elif np.all(oldShape[[0, 2]] == [1, 1]):    newShape = (-1,  1)
+        elif np.all(oldShape[:2]     == [1, 1]):    newShape = ( 1, -1)
+        elif        oldShape[2]      == 1:          newShape = datShape[:2]
+        elif        oldShape[1]      == 1:          newShape = datShape[[0, 2]]
+        elif        oldShape[0]      == 1:          newShape = datShape[1:]
+
+        if nvals > 1:
+            newShape = [nvals] + list(newShape)
+
+        return data.reshape(newShape)
+
+
+    def texCoordXform(self, origShape):
+        """Overrides :meth:`.Texture.texCoordXform`.
+
+        Returns an affine matrix which encodes a rotation that maps the two
+        major axes of the image voxel coordinate system to the first two axes
+        of the texture coordinate system.
+
+        This method is used by sub-classes which are being used to store 3D
+        image data, e.g. the :class:`.ImageTexture2D` and
+        :class:`.SelectionTexture2D` classes.
+
+        If this texture does not have any data yet, this method will return
+        ``None``.
+        """
+
+        scales  = [1, 1, 1]
+        offsets = [0, 0, 0]
+        rots    = [0, 0, 0]
+
+        if origShape is None:
+            return None
+
+        if self.nvals > 1:
+            origShape = origShape[1:]
+
+        # Here we apply a rotation to the
+        # coordinates to force the two major
+        # voxel axes to map to the first two
+        # texture coordinate axes
+        if origShape[0] == 1:
+            rots      = [0, -np.pi / 2, -np.pi / 2]
+        elif origShape[1] == 1:
+            rots      = [-np.pi / 2, 0, 0]
+            scales[1] = -1
+
+        return transform.compose(scales, offsets, rots)
+
+
+    def doPatch(self, data, offset):
+        """Overrides :meth:`.Texture.doPatch`. Updates part of the texture
+        data.
+        """
+        shape = data.shape
+        data  = data.flatten(order='F')
+
+        with self.bound():
+            gl.glTexSubImage2D(gl.GL_TEXTURE_2D,
+                               0,
+                               offset[0],
+                               offset[1],
+                               shape[0],
+                               shape[1],
+                               self.baseFormat,
+                               self.textureType,
+                               data)
 
 
     def __prepareCoords(self, vertices, xform=None):

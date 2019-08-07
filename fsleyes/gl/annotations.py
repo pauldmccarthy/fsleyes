@@ -32,11 +32,12 @@ import time
 import numpy       as np
 import OpenGL.GL   as gl
 
-import fsleyes.gl.globject  as globject
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.resources as glresources
-import fsleyes.gl.textures  as textures
-import fsl.utils.transform  as transform
+import fsleyes.gl.globject       as globject
+import fsleyes.gl.routines       as glroutines
+import fsleyes.gl.resources      as glresources
+import fsleyes.gl.textures       as textures
+import fsleyes.gl.textures.data  as texdata
+import fsl.utils.transform       as transform
 
 
 log = logging.getLogger(__name__)
@@ -654,9 +655,14 @@ class VoxelSelection(AnnotationObject):
 
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
+        ndims = texdata.numTextureDims(selection.shape)
+
+        if ndims == 2: ttype = textures.SelectionTexture2D
+        else:          ttype = textures.SelectionTexture3D
+
         self.__texture = glresources.get(
             texName,
-            textures.SelectionTexture,
+            ttype,
             texName,
             selection)
 
@@ -688,6 +694,7 @@ class VoxelSelection(AnnotationObject):
         displayToVox = opts.getTransform('display', 'voxel')
         voxToDisplay = opts.getTransform('voxel',   'display')
         voxToTex     = opts.getTransform('voxel',   'texture')
+        voxToTex     = transform.concat(texture.texCoordXform(shape), voxToTex)
         verts, voxs  = glroutines.slice2D(shape,
                                           xax,
                                           yax,
@@ -695,7 +702,7 @@ class VoxelSelection(AnnotationObject):
                                           voxToDisplay,
                                           displayToVox)
 
-        texs  = transform.transform(voxs, voxToTex)
+        texs  = transform.transform(voxs, voxToTex)[:, :texture.ndim]
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
@@ -703,12 +710,12 @@ class VoxelSelection(AnnotationObject):
         gl.glClientActiveTexture(gl.GL_TEXTURE0)
         gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
 
-        with glroutines.enabled((gl.GL_TEXTURE_3D,
+        with glroutines.enabled((texture.target,
                                  gl.GL_TEXTURE_COORD_ARRAY,
                                  gl.GL_VERTEX_ARRAY)):
-            gl.glVertexPointer(  3, gl.GL_FLOAT, 0, verts)
-            gl.glTexCoordPointer(3, gl.GL_FLOAT, 0, texs)
-            gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+            gl.glVertexPointer(  3,            gl.GL_FLOAT, 0, verts)
+            gl.glTexCoordPointer(texture.ndim, gl.GL_FLOAT, 0, texs)
+            gl.glDrawArrays(     gl.GL_TRIANGLES, 0, 6)
 
         texture.unbindTexture()
 

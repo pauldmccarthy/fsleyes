@@ -25,7 +25,8 @@ from .imagetexture       import ImageTexture2D         # noqa
 from .imagetexture       import createImageTexture     # noqa
 from .colourmaptexture   import ColourMapTexture       # noqa
 from .lookuptabletexture import LookupTableTexture     # noqa
-from .selectiontexture   import SelectionTexture       # noqa
+from .selectiontexture   import SelectionTexture2D     # noqa
+from .selectiontexture   import SelectionTexture3D     # noqa
 from .rendertexture      import RenderTexture          # noqa
 from .rendertexture      import GLObjectRenderTexture  # noqa
 from .rendertexturestack import RenderTextureStack     # noqa

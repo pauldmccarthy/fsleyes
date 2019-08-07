@@ -205,7 +205,6 @@ import            warnings
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.settings                 as fslsettings
 import fsleyes.version                    as version
-import fsleyes.plugins                    as plugins
 
 
 # The logger is assigned in
@@ -250,7 +249,9 @@ def initialise():
 
     global assetDir
 
-    import matplotlib as mpl
+    import matplotlib      as mpl
+    import fsleyes.plugins as plugins
+
 
     # implement various hacks and workarounds
     _hacksAndWorkarounds()
@@ -368,17 +369,6 @@ def configLogging(verbose=0, noisy=None):
 
     if noisy is None:
         noisy = []
-
-    # make numpy/matplotlib/nibabel/etc quiet
-    warnings.filterwarnings('ignore',  module='matplotlib')
-    warnings.filterwarnings('ignore',  module='mpl_toolkits')
-    warnings.filterwarnings('ignore',  module='numpy')
-    warnings.filterwarnings('ignore',  module='h5py')
-    warnings.filterwarnings('ignore',  module='notebook')
-    warnings.filterwarnings('ignore',  module='trimesh')
-    logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
-    logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
-    logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
     # Show deprecations if running from code
     if fslplatform.frozen:
