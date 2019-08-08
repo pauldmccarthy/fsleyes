@@ -4,30 +4,31 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""
+
+See also the :mod:`.filetreemanager` module, which contains the logic for
+generating the file list.
+"""
 
 
-import os.path   as op
-import itertools as it
-import functools as ft
-import              logging
-import              collections
+import os.path as op
+import            logging
+import            collections
 
-import wx
+import            wx
 
-import numpy as np
+import fsl.utils.filetree               as filetree
+import fsl.utils.settings               as fslsettings
+import fsleyes_widgets.widgetlist       as wlist
+import fsleyes_widgets.widgetgrid       as wgrid
+import fsleyes_widgets.elistbox         as elb
 
-import fsl.utils.path                as fslpath
-import fsl.utils.filetree            as filetree
-import fsl.utils.settings            as fslsettings
-import fsleyes_widgets.widgetlist    as wlist
-import fsleyes_widgets.widgetgrid    as wgrid
-import fsleyes_widgets.elistbox      as elb
-
-import fsleyes.displaycontext.meshopts as meshopts
-import fsleyes.actions.loadoverlay     as loadoverlay
-import fsleyes.actions.copyoverlay     as copyoverlay
-import fsleyes.strings                 as strings
-import fsleyes.controls.controlpanel   as ctrlpanel
+import fsleyes.displaycontext.meshopts  as meshopts
+import fsleyes.actions.loadoverlay      as loadoverlay
+import fsleyes.actions.copyoverlay      as copyoverlay
+import fsleyes.strings                  as strings
+import fsleyes.controls.controlpanel    as ctrlpanel
+import fsleyes.controls.filetreemanager as ftmanager
 
 
 log = logging.getLogger(__name__)
@@ -38,6 +39,19 @@ ALLLBL  = strings.labels['VariablePanel.value.all']
 
 
 class FileTreePanel(ctrlpanel.ControlPanel):
+    """
+
+    The user needs to select a data directory, and a file tree. The file
+    tree can be selected either from the drop down list of built-in trees, or a
+    custom tree file can be selected.
+
+    Once the user has selected a file tree and a data directory, the
+    :class:`FileTypePanel` and :class:`VariablePanel` will be populated,
+    allowing the user to choose which file types to display, and how to
+    arrange them.
+
+
+    """
 
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``FileTreePanel``.
@@ -55,6 +69,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
         self.__tree     = None
         self.__query    = None
+        self.__mgr      = None
         self.__overlays = None
 
         self.__loadDir      = wx.Button(self)
@@ -105,62 +120,37 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__treeChoice.Bind(wx.EVT_CHOICE, self.__onTreeChoice)
 
 
-    def UpdateMatches(self):
-        """
+    def Update(self):
+        """Called by the sub-panels when the user changes any settings.
+        Re-generates the file grid.
         """
 
         if self.__tree is None or self.__query is None:
             return
 
-
+        mgr      = self.__mgr
         flist    = self.__fileList
-        query    = self.__query
         ftypes   = self.__fileTypes.GetFileTypes()
-        allvars  = query.variables()
         varyings = self.__varPanel.GetVaryings()
         fixed    = self.__varPanel.GetFixed()
-        ftfixed  = {}
 
-        for ft in ftypes:
-            print('axes for', ft)
-            for v in query.variables(ft):
-                print('  ', v)
-
-        for ftype in ftypes:
-            ftvars = self.__query.variables(ftype)
-            ftfixed[ftype] = {}
-            for var in fixed:
-                if var in ftvars:
-                    ftfixed[ftype][var] = allvars[var]
-
-        fixed = ftfixed
-
-        for var, val in list(varyings.items()):
-
-            if not any([var in query.variables(ft) for ft in ftypes]):
-                varyings.pop(var)
-                continue
-
-            elif val == '*':
-                varyings[var] = allvars[var]
-            else:
-                varyings[var] = [val]
-
-        flist.ResetGrid(ftypes, varyings, fixed)
+        mgr.update(ftypes, varyings, fixed)
+        flist.ResetGrid(mgr)
 
 
-    def GetFile(self, ftype, **vars):
-        return self.__query.query(ftype, **vars)
-
-
-    def ShowFiles(self, vars, ftypes, ftvars, files):
+    def Show(self, filegroup):
+        """
+        """
 
         overlayList = self.overlayList
         displayCtx  = self.displayCtx
         overlays    = self.__overlays
+        ftypes      = filegroup.ftypes
+        fixed       = filegroup.fixed
+        files       = filegroup.files
+        keys        = []
 
-        keys = []
-        for ftype, v in zip(ftypes, ftvars):
+        for ftype, v in zip(ftypes, fixed):
 
             if len(v) == 0:
                 key = ftype
@@ -230,18 +220,25 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
 
     def __loadTree(self, treename, dirname):
-        """
+        """Called when a new tree or data directory is selected. Clears
+        any previous file tree, and loads the new one. If either the tree
+        or directory are ``None``, any existing file tree is cleared.
+
+        :arg treename: File tree name or file
+        :arg dirname:  Data directory
         """
 
         if treename is None or dirname is None:
             dirname    = None
             tree       = None
             query      = None
+            mgr        = None
             allvars    = None
             shortnames = None
         else:
             tree       = filetree.FileTree.read(treename, directory=dirname)
             query      = filetree.FileTreeQuery(tree)
+            mgr        = ftmanager.FileTreeManager(query)
             allvars    = query.variables()
             allvars    = [(var, vals) for var, vals in allvars.items()]
             allvars    = collections.OrderedDict(list(sorted(allvars)))
@@ -249,18 +246,19 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
         self.__tree  = tree
         self.__query = query
+        self.__mgr   = mgr
 
         self.__dirName  .SetLabel(dirname or '')
         self.__varPanel .SetVariables(allvars)
         self.__fileTypes.SetFileTypes(shortnames)
-
         self.__leftPanel.Layout()
 
-        self.UpdateMatches()
+        self.Update()
 
 
     def __getTreeChoice(self):
-        """
+        """Returns the current selection of the built-in filetree drop down
+        box.
         """
         idx = self.__treeChoice.GetSelection()
 
@@ -271,7 +269,10 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
 
     def __onLoadDir(self, ev):
-        """
+        """Called when the user pushes the *load data directory* button.
+
+        Prompts the user to select a directory, then calls the
+        :meth:`__loadTree` method.
         """
 
         msg     = strings.messages[self, 'loadDir']
@@ -292,7 +293,8 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
 
     def __onTreeChoice(self, ev):
-        """
+        """Called when the user changes the built-in file tree selection.
+        Calls the :meth:`__loadTree` method.
         """
         dirname  = self.__dirName.GetLabel() or None
         treename = self.__getTreeChoice()
@@ -300,65 +302,95 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
 
     def __onCustomTree(self, ev):
-        """
+        """Called when the user pushes the *load custom tree* button.
         """
         pass
 
 
 class FileTypePanel(elb.EditableListBox):
+    """The ``FileTypePanel`` displays a list of available file types.
+    It allows the user to choose which file types should be displayed.
 
+    Whenever the user changes the selected file types, the
+    :meth:`FileTreePanel.Update` method is called.
+    """
 
     def __init__(self, parent, ftpanel):
-        """
+        """Create a ``FileTypePanel``.
+
+        :arg parent:  ``wx`` parent object
+        :arg ftpanel: The :class:`.FileTreePanel`
         """
         elb.EditableListBox.__init__(
-            self,
-            parent,
-            style=(elb.ELB_NO_ADD    |
-                   elb.ELB_NO_REMOVE |
-                   elb.ELB_NO_MOVE))
+            self, parent, style=(elb.ELB_NO_ADD    |
+                                 elb.ELB_NO_REMOVE |
+                                 elb.ELB_NO_MOVE))
 
         self.__ftpanel = ftpanel
 
 
     def SetFileTypes(self, filetypes):
-        """
+        """Display the given list of file types.
+
+        A check box is displayed alongside each file type allowing the
+        user to toggle it on and off.
+
+        :arg filetypes: List of file types Pass in ``None`` to clear the
+                        list.
         """
         self.Clear()
 
         if filetypes is None:
             return
 
-        for ft in filetypes:
+        for ftype in filetypes:
             toggle = wx.CheckBox(self)
-            self.Append(ft, extraWidget=toggle)
+            self.Append(ftype, extraWidget=toggle)
             toggle.Bind(wx.EVT_CHECKBOX, self.__onToggle)
 
 
     def GetFileTypes(self):
-        """
-        """
+        """Returns a list of the file types that are currently selected. """
+
         filetypes = self.GetLabels()
         toggles   = self.GetWidgets()
         active    = []
 
-        for ft, tog in zip(filetypes, toggles):
+        for ftype, tog in zip(filetypes, toggles):
             if tog.GetValue():
-                active.append(ft)
+                active.append(ftype)
 
         return active
 
 
     def __onToggle(self, ev):
+        """Called when a file type is toggled. Calls the
+        :meth:`FileTreePanel.Update` method.
         """
-        """
-        self.__ftpanel.UpdateMatches()
+        self.__ftpanel.Update()
 
 
 class VariablePanel(wx.Panel):
+    """The ``VariablePanel`` displays a list of available variables, allowing
+    the user to choose between:
+
+      - Displaying each variable value on a different row (``<any>``, the
+        default). These variables are referred to as *varying*.
+
+      - Displaying all variable value on the same row (``<all>``). These
+        variables are referred to as *fixed*.
+
+      - Displaying one specific variable value. These are also included as
+        *varying* variables.
+    """
 
 
     def __init__(self, parent, ftpanel):
+        """Create a ``VariablePanel``
+
+        :arg parent:  ``wx`` parent object
+        :arg ftpanel: The :class:`.FileTreePanel`
+        """
 
         wx.Panel.__init__(self, parent)
 
@@ -373,15 +405,19 @@ class VariablePanel(wx.Panel):
 
 
     def SetVariables(self, vars):
+        """Set the variables to be displayed.
 
-        self.__vars = {}
+        :arg vars: Dict of ``{ var : [value] }`` mappings, containing
+                   all variables, and all of their possible values.
+        """
 
+        self.__vars = None
         self.__varList.Clear()
 
         if vars is None or len(vars) == 0:
-            self.__ftpanel.UpdateMatches()
             return
 
+        self.__vars = {}
 
         for var, vals in vars.items():
 
@@ -389,7 +425,8 @@ class VariablePanel(wx.Panel):
                 vals.remove(None)
                 vals = [ANYLBL, ALLLBL, NONELBL] + sorted(vals)
             else:
-                vals = [ANYLBL, ALLLBL] + sorted(vals)
+                vals = [ANYLBL, ALLLBL]          + sorted(vals)
+
             choice = wx.Choice(self.__varList, choices=vals, name=var)
 
             choice.SetSelection(0)
@@ -400,6 +437,18 @@ class VariablePanel(wx.Panel):
 
 
     def GetVaryings(self):
+        """Return a dict of ``{ var : val }`` mappings containing all *varying*
+        variables. The value for each variable may be one of:
+
+         - ``'*'``, indicating that all possible values for this variable
+           should be considered
+
+         - ``None``, indicating that only instances  where this variable is
+           absent should be considered.
+
+         - A specific value, indicating that only this value should be
+           considered.
+        """
 
         queryvars = {}
 
@@ -417,8 +466,9 @@ class VariablePanel(wx.Panel):
 
 
     def GetFixed(self):
+        """Returns a list containing the names of all *fixed* variables. """
 
-        flatvars = []
+        fixedvars = []
 
         for choice in self.__varList.GetWidgets():
             var    = choice.GetName()
@@ -426,22 +476,36 @@ class VariablePanel(wx.Panel):
             val    = self.__vars[var][validx]
 
             if val == ALLLBL:
-                flatvars.append(var)
+                fixedvars.append(var)
 
-        return flatvars
+        return fixedvars
 
 
     def __onVariable(self, ev):
+        """Called when the user changes a variable setting. Calls the
+        :meth:`FileTreePanel.Update` method.
         """
-        """
-        self.__ftpanel.UpdateMatches()
+        self.__ftpanel.Update()
 
 
 class FileListPanel(wx.Panel):
+    """The ``FileListPanel`` displays a grid of filetree variable values
+    and file types, allowing the user to step through the files in the data
+    directory.
+    """
+
 
     def __init__(self, parent, ftpanel):
+        """Create a ``FileListPanel``.
+
+        :arg parent:  ``wx`` parent object
+        :arg ftpanel: The :class:`.FileTreePanel`
+        """
+
         wx.Panel.__init__(self, parent)
+
         self.__ftpanel = ftpanel
+        self.__mgr     = None
 
         self.__sizer = wx.BoxSizer(wx.VERTICAL)
         self.__grid = wgrid.WidgetGrid(
@@ -452,10 +516,7 @@ class FileListPanel(wx.Panel):
                    wgrid.WG_SELECTABLE_ROWS |
                    wgrid.WG_DRAGGABLE_COLUMNS))
 
-        self.__varcols  = []
-        self.__ftcols   = []
-        self.__rows     = []
-        self.__rowfiles = []
+
 
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
         self.SetSizer(self.__sizer)
@@ -464,161 +525,17 @@ class FileListPanel(wx.Panel):
         self.__grid.Bind(wgrid.EVT_WG_REORDER, self.__onReorder)
 
 
-    def __onSelect(self, ev):
-
-        vars  = self.__rows[    ev.row]
-        files = self.__rowfiles[ev.row]
-
-        ftypes, ftvars, files = zip(*files)
-
-        self.__ftpanel.ShowFiles(vars, ftypes, ftvars, files)
-
-
-    def __onReorder(self, ev):
-        """
-        """
-        varcols = self.__grid.GetColLabels()[:len(self.__varcols)]
-
-        def cmp(r1, r2):
-            r1 = self.__rows[r1]
-            r2 = self.__rows[r2]
-            for col in varcols:
-                v1 = r1[col]
-                v2 = r2[col]
-                if   v1 == v2:   continue
-                elif v1 is None: return  1
-                elif v2 is None: return -1
-                elif v1 > v2:    return  1
-                elif v1 < v2:    return -1
-            return 0
-
-        grid     = self.__grid
-        rowidxs  = list(range(len(self.__rows)))
-        rowidxs  = sorted(rowidxs, key=ft.cmp_to_key(cmp))
-        rows     = [self.__rows[    i] for i in rowidxs]
-        rowfiles = [self.__rowfiles[i] for i in rowidxs]
-
-        self.__varcols  = varcols
-        self.__rows     = rows
-        self.__rowfiles = rowfiles
-
-        for ri in range(len(rows)):
-            vals  = rows[    ri]
-            files = rowfiles[ri]
-
-            for ci in range(len(varcols)):
-                val = vals[varcols[ci]]
-                if val is None:
-                    val = NONELBL
-                grid.SetText(ri, ci, val)
-
-            for ci, (ftype, ftvars, ftfile) in enumerate(files, len(varcols)):
-                if ftfile is not None: grid.SetText(ri, ci, '\u2022')
-                else:                  grid.SetText(ri, ci, '')
-
-
-    def ResetGrid(self, ftypes, varyings, fixed):
+    def ResetGrid(self, mgr):
         """
         """
 
-        # Force a constsient ordering
-        # of the varying variables
-        _varyings = collections.OrderedDict()
-        for var in sorted(varyings.keys()):
-            _varyings[var] = varyings[var]
-        varyings = _varyings
-
-        # example template for one row
-        # sub=X, ses=Y, T1
-        #               T2
-        #               surface[surf=mid]
-        #               surface[surf=pial]
-        #               surface[surf=white]
-
-        # Build a list of all columns:
-        #
-        #  - one column for each varying variable
-        #  - one column for each file type that doesn't have any fixed
-        #    variables
-        #  - one column for each file type and set of fixed variable values,
-        #    for file types which do have fixed variables
-        #
-        # varcols: list of varying variable names that map to grid columns
-        # ftcols:  list of (ftype, {var : val}) tuples for all file types/fixed
-        #          variables, each of which maps to one column
-        #
-        grid      = self.__grid
-        varcols   = [var for var, vals in varyings.items() if len(vals) > 1]
-        ftcols    = []
-        collabels = list(varcols)
-
-        for ftype in ftypes:
-
-            ftvars    = fixed[ftype]
-            ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
-
-            for ftvals in ftvarprod:
-
-                ftvals = {var : val for var, val in zip(ftvars, ftvals)}
-
-                ftcols.append((ftype, ftvals))
-
-                if len(ftvals) == 0:
-                    lbl = ftype
-                else:
-                    lbl = ftype + '[' + ','.join(
-                        ['{}={}'.format(var, val)
-                         for var, val in ftvals.items()]) + ']'
-                collabels.append(lbl)
-
-        # Build a list of all rows:
-        #  - rows:     a {var : val} dict for each row, containing all
-        #              varyings
-        #
-        #  - rowfiles: a [(ftype, {var : val}, file)] list for each row,
-        #              containing all fixed variables for each file type
-        #              The file will be None if there is no fike of this
-        #              type for these variable values
-        rows     = []
-        rowfiles = []
-
-        # loop through all possible combinations of varying values
-        valprod = list(it.product(*varyings.values()))
-        for rowi, vals in enumerate(valprod):
-
-            rowivals  = {var : val for var, val in zip(varyings.keys(), vals)}
-            rowifiles = []
-            nfiles    = 0
-
-            for ftype, ftvars in ftcols:
-
-                ftvars = dict(ftvars)
-
-                # Should you only be storing
-                # the fixed vars here?
-                ftfile = self.__ftpanel.GetFile(ftype, **ftvars, **rowivals)
-                ftfile = ftfile.reshape((-1,))
-
-                try:
-                    ftfile  = ftfile[0].filename
-                    nfiles += 1
-                except Exception:
-                    ftfile = None
-
-                rowifiles.append((ftype, ftvars, ftfile))
-
-            # Drop rows which have no files
-            if nfiles > 0:
-                rows    .append(rowivals)
-                rowfiles.append(rowifiles)
-
-        nrows = len(rows)
-        ncols = len(varcols) + len(ftcols)
-
-        self.__varcols  = varcols
-        self.__ftcols   = ftcols
-        self.__rows     = rows
-        self.__rowfiles = rowfiles
+        self.__mgr = mgr
+        grid       = self.__grid
+        varcols    = mgr.varcols
+        fgroups    = mgr.filegroups
+        collabels  = self.__genColumnLabels()
+        nrows      = len(fgroups)
+        ncols      = len(collabels)
 
         grid.ClearGrid()
         grid.SetGridSize(nrows, ncols)
@@ -626,17 +543,68 @@ class FileListPanel(wx.Panel):
         grid.SetColLabels(collabels)
         grid.ShowColLabels()
 
-        for rowi, (vals, files) in enumerate(zip(rows, rowfiles)):
+        for rowi, fgroup in enumerate(fgroups):
 
             for coli, col in enumerate(varcols):
-                val = vals[col]
+                val = fgroup.varyings[col]
                 if val is None:
                     val = NONELBL
                 grid.SetText(rowi, coli, val)
 
-            for coli, (ftype, ftvars, ftfile) in enumerate(files,
-                                                           len(varcols)):
-                if ftfile is not None: grid.SetText(rowi, coli, '\u2022')
-                else:                  grid.SetText(rowi, coli, '')
+            for coli, filename in enumerate(fgroup.files, len(varcols)):
+                if filename is not None: grid.SetText(rowi, coli, '\u2022')
+                else:                    grid.SetText(rowi, coli, '')
 
         grid.Refresh()
+
+
+    def __onSelect(self, ev):
+        """Called when the user selects a row. Calls the
+        :meth:`FileTreePanel.Show` method.
+        """
+
+        group = self.__mgr.filegroups[ev.row]
+        self.__ftpanel.Show(group)
+
+
+    def __onReorder(self, ev):
+        """Called when the user drags a column to change the column order.
+        """
+        pass
+
+
+    def __genColumnLabels(self):
+        """Called by :meth:`ResetGrid`. Generates a label for each column in
+        the grid.
+
+        :returns: A list of labels for each column
+        """
+
+        mgr = self.__mgr
+
+        # The first set of columns correspond
+        # to the varying variables - they are
+        # just labelled with the variable name.
+        collabels = list(mgr.varcols)
+
+        # The second set of columns each
+        # correspond to a combination of all
+        # selected file types, and all
+        # selected fixed variables.
+        for ftype, ftvals in mgr.fixedcols:
+
+            # No fixed variables for this type -
+            # just use the file type name
+            if len(ftvals) == 0:
+                lbl = ftype
+
+            # Generate a label containing the
+            # file type name, and the values
+            # of all fixed variables
+            else:
+                lbl = ['{}={}'.format(var, val) for var, val in ftvals.items()]
+                lbl = ftype + '[' + ','.join(lbl) + ']'
+
+            collabels.append(lbl)
+
+        return collabels
