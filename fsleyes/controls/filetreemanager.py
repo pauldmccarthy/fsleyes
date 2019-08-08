@@ -91,8 +91,9 @@ to re-arrange the grid like so:
 """
 
 
-import itertools as it
 import              collections
+import functools as ft
+import itertools as it
 
 
 class FileGroup(object):
@@ -344,6 +345,50 @@ class FileTreeManager(object):
         self.__varcols    = varcols
         self.__fixedcols  = fixedcols
         self.__filegroups = filegroups
+
+
+    def reorder(self, varcols):
+        """Re-order the file groups according to the new varying variable
+        order. The first varying variable is the slowest changing.
+
+        :arg varcols: List of varying variable names.
+        """
+
+        if sorted(varcols) != sorted(self.varcols):
+            raise ValueError('Invalid varying columns: {}'.format(varcols))
+
+        filegroups = self.filegroups
+
+        def cmp(g1, g2):
+
+            g1 = filegroups[g1]
+            g2 = filegroups[g2]
+
+            for col in varcols:
+                v1 = g1.varyings[col]
+                v2 = g2.varyings[col]
+                if   v1 == v2:   continue
+                elif v1 is None: return  1
+                elif v2 is None: return -1
+                elif v1 > v2:    return  1
+                elif v1 < v2:    return -1
+            return 0
+
+        idxs = list(range(len(filegroups)))
+        idxs = sorted(idxs, key=ft.cmp_to_key(cmp))
+
+        # Update the internal manager state
+        # so the new order is preserved
+        filegroups = [filegroups[i] for i in idxs]
+        varyings   = collections.OrderedDict()
+        varcols    = list(varcols)
+
+        for v in varcols:
+            varyings[v] = self.varyings[v]
+
+        self.__filegroups = filegroups
+        self.__varyings   = varyings
+        self.__varcols    = varcols
 
 
     @property

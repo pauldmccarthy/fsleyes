@@ -77,8 +77,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__treeChoice   = wx.Choice(self)
         self.__dirName      = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         self.__mainSplitter = wx.SplitterWindow(
-            self,
-            style=wx.SP_LIVE_UPDATE)
+            self, style=wx.SP_LIVE_UPDATE)
         self.__leftPanel    = wx.Panel(self.__mainSplitter)
         self.__leftSizer    = wx.BoxSizer(wx.VERTICAL)
 
@@ -149,6 +148,11 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         fixed       = filegroup.fixed
         files       = filegroup.files
         keys        = []
+
+        present     = [i for i, f in enumerate(files) if f is not None]
+        files       = [files[ i] for i in present]
+        ftypes      = [ftypes[i] for i in present]
+        fixed       = [fixed[ i] for i in present]
 
         for ftype, v in zip(ftypes, fixed):
 
@@ -492,6 +496,9 @@ class FileListPanel(wx.Panel):
     """The ``FileListPanel`` displays a grid of filetree variable values
     and file types, allowing the user to step through the files in the data
     directory.
+
+    The user can drag varying variable columns to re-order them - this will
+    trigger a call to .FileTreeManager.reor
     """
 
 
@@ -515,8 +522,6 @@ class FileListPanel(wx.Panel):
                    wgrid.WG_KEY_NAVIGATION  |
                    wgrid.WG_SELECTABLE_ROWS |
                    wgrid.WG_DRAGGABLE_COLUMNS))
-
-
 
         self.__sizer.Add(self.__grid, flag=wx.EXPAND, proportion=1)
         self.SetSizer(self.__sizer)
@@ -542,15 +547,30 @@ class FileListPanel(wx.Panel):
         grid.SetDragLimit(len(varcols) - 1)
         grid.SetColLabels(collabels)
         grid.ShowColLabels()
+        self.__populateGrid()
+
+
+    def __populateGrid(self):
+
+        mgr     = self.__mgr
+        grid    = self.__grid
+        fgroups = mgr.filegroups
+        varcols = mgr.varcols
+
 
         for rowi, fgroup in enumerate(fgroups):
 
+            # Varying variable columns display
+            # the current variable value
             for coli, col in enumerate(varcols):
                 val = fgroup.varyings[col]
                 if val is None:
                     val = NONELBL
                 grid.SetText(rowi, coli, val)
 
+            # Fixed variable columns have a
+            # bullet indicating whether or
+            # not each file is present
             for coli, filename in enumerate(fgroup.files, len(varcols)):
                 if filename is not None: grid.SetText(rowi, coli, '\u2022')
                 else:                    grid.SetText(rowi, coli, '')
@@ -570,7 +590,14 @@ class FileListPanel(wx.Panel):
     def __onReorder(self, ev):
         """Called when the user drags a column to change the column order.
         """
-        pass
+
+        mgr      = self.__mgr
+        grid     = self.__grid
+        nvarcols = len(mgr.varcols)
+        varcols  = grid.GetColLabels()[:nvarcols]
+
+        self.__mgr.reorder(varcols)
+        self.__populateGrid()
 
 
     def __genColumnLabels(self):
