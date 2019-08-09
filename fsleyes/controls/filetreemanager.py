@@ -102,11 +102,21 @@ import fsleyes.actions.loadoverlay     as loadoverlay
 import fsleyes.displaycontext.meshopts as meshopts
 
 
+FILETREE_PREFIX = '[filetree] '
+"""This is a prefix added to the name of every overlay which is added to the
+:class:`.OverlayList` by this module.
+"""
+
+
 class FileGroup(object):
     """A ``FileGroup`` represents a single row in the file tree panel list.  It
     encapsulates a set of values for all varying variables, and a set of files
     and their associated fixed variable values. These are all accessible as
     attributes called ``varyings``, ``files``, and ``fixedvars``.
+
+    Another attribute, ``fileIDs``, contains a unique ID for each file within
+    one ``FileGroup``. This ID can be used to pair up files from different
+    ``FileGroup`` objects.
     """
 
 
@@ -129,6 +139,40 @@ class FileGroup(object):
         self.fixed    = fixed
         self.ftypes   = ftypes
         self.files    = files
+        self.fileIDs  = []
+
+        # Generate a key which uniquely identifies
+        # each overlay by file type and fixed
+        # variable values (i.e. a unique ID for each
+        # row . This will be used as
+        # the overlay name
+        for fname, ftype, v in zip(files, ftypes, fixed):
+
+            # The FileGroup may contain
+            # non-existent files, and
+            # we don't want to load files
+            # that are already in the
+            # overlay list
+            if fname is None:
+                self.fileIDs.append(None)
+                continue
+
+            if len(v) == 0:
+                fid = ftype
+            else:
+                fid = ftype + '[' + ','.join(
+                    ['{}={}'.format(var, val)
+                     for var, val in sorted(v.items())]) + ']'
+
+            self.fileIDs.append(fid)
+
+
+    def __hash__(self):
+        """Returns a unique hash for this ``FileGroup``. """
+        return (hash(self.varyings) ^
+                hash(self.fixed)    ^
+                hash(self.ftypes)   ^
+                hash(self.files))
 
 
 def prepareVaryings(query, ftypes, varyings):
@@ -370,6 +414,8 @@ class FileTreeManager(object):
         varcols, fixedcols = genColumns(     ftypes, varyings, fixed)
         filegroups         = genFileGroups(  query, varyings, fixedcols)
 
+        self.__ovlmgr.update(filegroups)
+
         self.__ftypes     = ftypes
         self.__varyings   = varyings
         self.__fixed      = fixed
@@ -416,6 +462,8 @@ class FileTreeManager(object):
 
         for v in varcols:
             varyings[v] = self.varyings[v]
+
+        self.__ovlmgr.update(filegroups)
 
         self.__filegroups = filegroups
         self.__varyings   = varyings
@@ -492,6 +540,15 @@ class FileTreeManager(object):
 class OverlayManager(object):
     """The ``OverlayManager`` is used by the :class:`FileTreeManager`. It
     manages the mechanics of displaying overlays associated with the file tree.
+
+    The :meth:`update` method is used to tell the ``OverlayManager`` about the
+    currently displayed list of :class:`FileGroup` objects. The :meth:`show`
+    method is used to show the overlays in a specific ``FileGroup``.
+
+    Whenever the :meth:`show` method is called, the overlays from any
+    previously displayed ``FileGroup`` are "swapped" out for the overlays in
+    the new ``FileGroup``. The display properties for matching pairs of
+    overlays are preserved as best as possible.
     """
 
 
@@ -508,6 +565,7 @@ class OverlayManager(object):
         self.__displayCtx  = displayCtx
         self.__cache       = cache.Cache(maxsize=50, lru=True)
         self.__filegroups  = None
+        self.__order       = None
 
 
     def destroy(self):
@@ -520,6 +578,7 @@ class OverlayManager(object):
         self.__displayCtx  = None
         self.__cache       = None
         self.__filegroups  = None
+        self.__order       = None
 
 
     def update(self, filegroups):
@@ -527,8 +586,7 @@ class OverlayManager(object):
         either due to them being re-ordered or completely changed.
         """
         self.__filegroups = filegroups
-
-        # TODO
+        self.__order      = []
 
 
     def show(self, filegroup):
@@ -538,18 +596,20 @@ class OverlayManager(object):
         with the overlays associated with the new group.
         """
 
+        # Force an error if a file
+        # group which is not in our
+        # known list is passed in.
+        self.__filegroups.index(filegroup)
+
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
-        ftypes      = filegroup.ftypes
-        fixed       = filegroup.fixed
-        files       = filegroup.files
 
-        # Generate a key which uniquely identifies
-        # each overlay by file type and fixed
-        # variable values. This will be used as
-        # the overlay name
+        # Gather all of the files
+        # to be loaded, using their
+        # unique file ID (unique
+        # within one file group)
         new = {}
-        for fname, ftype, v in zip(files, ftypes, fixed):
+        for fname, fid in zip(filegroup.files, filegroup.fileIDs):
 
             # The FileGroup may contain
             # non-existent files, and
@@ -559,73 +619,106 @@ class OverlayManager(object):
             if fname is None or overlayList.find(fname):
                 continue
 
-            if len(v) == 0:
-                key = ftype
-            else:
-                key = ftype + '[' + ','.join(
-                    ['{}={}'.format(var, val)
-                     for var, val in sorted(v.items())]) + ']'
-
-            new['[filetree] ' + key] = fname
+            new[FILETREE_PREFIX + fid] = fname
 
         # Get refs to the existing
-        # overlays with same file
-        # type and fixed variable
-        # values.
+        # overlays with the same
+        # file ID - we will replace
+        # the existing ones with the
+        # new ones.
         old = collections.OrderedDict()
         for ovl in displayCtx.getOrderedOverlays():
             if ovl.name in new:
                 old[ovl.name] = ovl
 
+        # Save the ordering of the old
+        # overlays so we can preserve
+        # it in the new overlays. The
+        # length check is to take into
+        # account missingd files -
+        # file groups with more present
+        # files should take precedence
+        # over file groups with more
+        # missing files.
+        if len(old) >= len(self.__order):
+            self.__order = list(old.keys())
+
         # Set the ordering of the new
         # overlays based on the old ones
-        keys = [k for k in old if k     in new] + \
-               [k for k in new if k not in old]
-        new  = collections.OrderedDict([(k, new[k]) for k in keys])
+        order = self.__order
+        keys  = [k for k in order if k     in new] + \
+                [k for k in new   if k not in order]
+        new   = collections.OrderedDict([(k, new[k]) for k in keys])
 
         if len(new) > 0:
             self.__load(new, old)
 
 
-    def __load(self, files, *args, **kwargs):
-        """
+    def __load(self, new, old):
+        """Called by :meth:`show`. Loads the files specified in ``new``, then
+        passes them (along with the ``old``) to the :meth:`__show` method.
+
+        :arg new: Dict of ``{fileid : file}`` mappings, containing the
+                  files to load.
+
+        :arg old: Dict of ``{fileid : overlay}`` mappings, containing the
+                  existing overlays which will be replaced with the new ones.
         """
 
+        # Remove any files that are
+        # in the cache, and don't
+        # need to be re-loaded
         cache     = self.__cache
-        toload    = [(k, f) for k, f in files.items() if f not in cache]
+        toload    = [(k, f) for k, f in new.items() if f not in cache]
         loadkeys  = [kf[0] for kf in toload]
         loadfiles = [kf[1] for kf in toload]
 
         def onLoad(ovlidxs, ovls):
 
+            # Gather the overlays to be shown,
+            # either from the ones that were
+            # just loaded, or from the cache.
             toshow = collections.OrderedDict()
 
-            for key, fname in files.items():
+            for key, fname in new.items():
 
-                try:
+                # Has this overlay just been loaded?
+                if key in loadkeys:
                     idx         = loadkeys.index(key)
                     toshow[key] = ovls[idx]
                     cache.put(fname, ovls[idx])
-                    continue
-                except Exception:
-                    pass
 
-                try:
+                # Or is it already in the cache?
+                else:
                     toshow[key] = cache.get(fname)
-                    continue
-                except Exception:
-                    pass
 
-            self.__show(toshow, *args, **kwargs)
+            self.__show(toshow, old)
 
         loadoverlay.loadOverlays(loadfiles, onLoad=onLoad)
 
 
     def __show(self, new, old):
+        """Adds the given ``new`` overlays to the :class:`.OverlayList`. The
+        display properties of any ``old`` overlays with the same ID are copied
+        over to the new ones.
+
+        All existing overlays which were previously added are removed.
+        """
 
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
 
+        # Get refs to all existing filetree
+        # overlays, because we're going to
+        # remove them all after adding the
+        # new ones
+        oldovls = [o for o in overlayList
+                   if o.name.startswith(FILETREE_PREFIX)]
+
+        # We set the name of each new overlay
+        # to its ID key. If the user changes
+        # the overlay name, it will no longer
+        # be tracked
         for key, ovl in new.items():
             ovl.name = key
 
@@ -669,7 +762,8 @@ class OverlayManager(object):
                     optExclude=optExcl,
                     optArgs=optArgs)
 
-        old            = list(old.values())
+        # Remove all of the
+        # old filetree overlays
         idxs           = range(len(overlayList))
-        idxs           = [i for i in idxs if overlayList[i] not in old]
+        idxs           = [i for i in idxs if overlayList[i] not in oldovls]
         overlayList[:] = [overlayList[i] for i in idxs]
