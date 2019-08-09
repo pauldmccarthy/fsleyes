@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module contains the :class:`FileTreeManager`, which is used by the
-:class:`.FileTreePanel`.
+:class:`.FileTreePanel`. It also contains the :class:`OverlayManager`, which
+is used by the ``FileTreeManager``.
 
 
 Overview
@@ -508,8 +509,6 @@ class OverlayManager(object):
         self.__cache       = cache.Cache(maxsize=50, lru=True)
         self.__filegroups  = None
 
-        self.__overlays = None
-
 
     def destroy(self):
         """Must be called when this ``OverlayManager`` is no longer needed.
@@ -521,8 +520,6 @@ class OverlayManager(object):
         self.__displayCtx  = None
         self.__cache       = None
         self.__filegroups  = None
-
-        self.__overlays = None
 
 
     def update(self, filegroups):
@@ -541,23 +538,26 @@ class OverlayManager(object):
         with the overlays associated with the new group.
         """
 
-        # check already in overlaylist?
-        # check already loaded in cache?
-
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
-        overlays    = self.__overlays
         ftypes      = filegroup.ftypes
         fixed       = filegroup.fixed
         files       = filegroup.files
-        keys        = []
 
-        present     = [i for i, f in enumerate(files) if f is not None]
-        files       = [files[ i] for i in present]
-        ftypes      = [ftypes[i] for i in present]
-        fixed       = [fixed[ i] for i in present]
+        # Generate a key which uniquely identifies
+        # each overlay by file type and fixed
+        # variable values. This will be used as
+        # the overlay name
+        new = {}
+        for fname, ftype, v in zip(files, ftypes, fixed):
 
-        for ftype, v in zip(ftypes, fixed):
+            # The FileGroup may contain
+            # non-existent files, and
+            # we don't want to load files
+            # that are already in the
+            # overlay list
+            if fname is None or overlayList.find(fname):
+                continue
 
             if len(v) == 0:
                 key = ftype
@@ -565,62 +565,111 @@ class OverlayManager(object):
                 key = ftype + '[' + ','.join(
                     ['{}={}'.format(var, val)
                      for var, val in sorted(v.items())]) + ']'
-            keys.append('[filetree] ' + key)
 
-        if overlays is not None:
-            idxs = {k : overlayList.index(v) for k, v in overlays.items()}
-        else:
-            idxs = {}
+            new['[filetree] ' + key] = fname
+
+        # Get refs to the existing
+        # overlays with same file
+        # type and fixed variable
+        # values.
+        old = collections.OrderedDict()
+        for ovl in displayCtx.getOrderedOverlays():
+            if ovl.name in new:
+                old[ovl.name] = ovl
+
+        # Set the ordering of the new
+        # overlays based on the old ones
+        keys = [k for k in old if k     in new] + \
+               [k for k in new if k not in old]
+        new  = collections.OrderedDict([(k, new[k]) for k in keys])
+
+        if len(new) > 0:
+            self.__load(new, old)
+
+
+    def __load(self, files, *args, **kwargs):
+        """
+        """
+
+        cache     = self.__cache
+        toload    = [(k, f) for k, f in files.items() if f not in cache]
+        loadkeys  = [kf[0] for kf in toload]
+        loadfiles = [kf[1] for kf in toload]
 
         def onLoad(ovlidxs, ovls):
 
-            order   = list(displayCtx.overlayOrder)
-            ovls    = collections.OrderedDict(zip(keys, ovls))
-            oldOvls = []
+            toshow = collections.OrderedDict()
 
-            for key, ovl in ovls.items():
-                ovl.name = key
+            for key, fname in files.items():
 
-            for key, ovl in ovls.items():
-                if key in idxs:
-                    oldovl  = overlayList[idxs[key]]
-                    ovlType = displayCtx.getDisplay(oldovl).overlayType
-                else:
-                    ovlType = None
-                overlayList.append(ovl, overlayType=ovlType)
+                try:
+                    idx         = loadkeys.index(key)
+                    toshow[key] = ovls[idx]
+                    cache.put(fname, ovls[idx])
+                    continue
+                except Exception:
+                    pass
+
+                try:
+                    toshow[key] = cache.get(fname)
+                    continue
+                except Exception:
+                    pass
+
+            self.__show(toshow, *args, **kwargs)
+
+        loadoverlay.loadOverlays(loadfiles, onLoad=onLoad)
 
 
-            for key, ovl in ovls.items():
-                ovl.name = key
-                idx = idxs.get(key, None)
-                if idx is not None:
-                    oldOvl = overlayList[idx]
-                    opts   = displayCtx.getOpts(ovl)
-                    oldOvls.append(oldOvl)
+    def __show(self, new, old):
 
-                    optExcl = ['bounds', 'transform']
-                    optArgs = {}
+        overlayList = self.__overlayList
+        displayCtx  = self.__displayCtx
 
-                    if isinstance(opts, meshopts.MeshOpts):
-                        optExcl += ['vertexData', 'vertexSet']
-                        ref = opts.refImage
+        for key, ovl in new.items():
+            ovl.name = key
 
-                        if ref is not None and ref.name in ovls:
-                            optArgs['refImage'] =  ovls[ref.name]
+        # Get a list of overlay types from
+        # the old overlays, if present
+        ovltypes = {}
+        for key, ovl in new.items():
+            if key in old:
+                oldovl        = old[key]
+                ovltypes[ovl] = displayCtx.getDisplay(oldovl).overlayType
 
-                    copyoverlay.copyDisplayProperties(
-                        displayCtx,
-                        oldOvl,
-                        ovl,
-                        optExclude=optExcl,
-                        optArgs=optArgs)
+        # Insert the new overlays
+        # into the list. We'll sort
+        # out overlay order later on.
+        overlayList.extend(new.values(), ovltypes)
 
-            for oldOvl in set(oldOvls):
-                overlayList.remove(oldOvl)
+        # Copy display properties from
+        # the old overlays if present
+        for key, ovl in new.items():
 
-            if len(order) > 0:
-                displayCtx.overlayOrder = order
+            if key in old:
+                oldovl  = old[key]
+                opts    = displayCtx.getOpts(ovl)
+                optExcl = ['bounds', 'transform']
+                optArgs = {}
 
-            self.__overlays = ovls
+                # mesh data/vertices are complicated,
+                # so I'm not doing them for the time
+                # being.
+                if isinstance(opts, meshopts.MeshOpts):
+                    optExcl += ['vertexData', 'vertexSet']
+                    ref      = opts.refImage
 
-        loadoverlay.loadOverlays(files, onLoad=onLoad)
+                    if ref is not None and ref.name in new:
+                        optArgs['refImage'] = new[ref.name]
+
+                copyoverlay.copyDisplayProperties(
+                    displayCtx,
+                    oldovl,
+                    ovl,
+                    optExclude=optExcl,
+                    optArgs=optArgs)
+
+        old            = list(old.values())
+        idxs           = range(len(overlayList))
+        idxs           = [i for i in idxs if overlayList[i] not in old]
+        overlayList[:] = [overlayList[i] for i in idxs]
