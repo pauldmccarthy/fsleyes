@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains functions and classes which are used by the
+"""This module contains the :class:`FileTreeManager`, which is used by the
 :class:`.FileTreePanel`.
 
 
@@ -91,9 +91,14 @@ to re-arrange the grid like so:
 """
 
 
-import              collections
-import functools as ft
-import itertools as it
+import                    collections
+import functools       as ft
+import itertools       as it
+
+import fsl.utils.cache                 as cache
+import fsleyes.actions.copyoverlay     as copyoverlay
+import fsleyes.actions.loadoverlay     as loadoverlay
+import fsleyes.displaycontext.meshopts as meshopts
 
 
 class FileGroup(object):
@@ -303,16 +308,41 @@ class FileTreeManager(object):
     """The ``FileTreeManager`` class handles the generation and arranging
     of varying and fixed variables, and file types, according to a
     specification of *varying* and *fixed* variables.
+
+    The ``FileTreeManager`` creates and uses an :class:`OverlayManager` which
+    handles overlay display.
     """
 
 
-    def __init__(self, query):
+    def __init__(self, overlayList, displayCtx, query):
         """Create a ``FileTreeManager``.
 
-        :arg query: :class:`.FileTreeQuery` instance
+        :arg overlayList: The :class:`.OverlayList`
+
+        :arg displayCtx:  The :class:`.DisplayContext` which is to manage
+                          the file tree overlay display.
+
+        :arg query:      :class:`.FileTreeQuery` instance
         """
 
-        self.__query      = query
+        self.__query       = query
+        self.__ovlmgr      = OverlayManager(overlayList, displayCtx)
+        self.__ftypes      = None
+        self.__varyings    = None
+        self.__fixed       = None
+        self.__varcols     = None
+        self.__fixedcols   = None
+        self.__filegroups  = None
+
+
+    def destroy(self):
+        """Must be called when this ``FileTreeManager`` is no longer needed.
+        Destroys the :class:`OverlayManager` and clears references.
+        """
+
+        self.__ovlmgr.destroy()
+        self.__query      = None
+        self.__ovlmgr     = None
         self.__ftypes     = None
         self.__varyings   = None
         self.__fixed      = None
@@ -391,12 +421,18 @@ class FileTreeManager(object):
         self.__varcols    = varcols
 
 
+    def show(self, filegroup):
+        """Show the overlays associated with a :class:`FileGroup`. The
+        ``filegroup`` is passed to the :meth:`OverlayManager.show` method.
+        """
+        self.__ovlmgr.show(filegroup)
+
+
     @property
     def query(self):
         """Returns the :class:`.FileTreeQuery` object used by this
         ``FileTreeManager``.
         """
-
         return self.__query
 
 
@@ -450,3 +486,141 @@ class FileTreeManager(object):
         ``FileGroup`` represents one row in the file tree grid.
         """
         return self.__filegroups
+
+
+class OverlayManager(object):
+    """The ``OverlayManager`` is used by the :class:`FileTreeManager`. It
+    manages the mechanics of displaying overlays associated with the file tree.
+    """
+
+
+    def __init__(self, overlayList, displayCtx):
+        """Create an ``OverlayManager``
+
+        :arg overlayList: The :class:`.OverlayList`
+
+        :arg displayCtx:  The :class:`.DisplayContext` which is to manage
+                          the file tree overlay display.
+        """
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__cache       = cache.Cache(maxsize=50, lru=True)
+        self.__filegroups  = None
+
+        self.__overlays = None
+
+
+    def destroy(self):
+        """Must be called when this ``OverlayManager`` is no longer needed.
+        Clears references.
+        """
+        self.__cache.clear()
+
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__cache       = None
+        self.__filegroups  = None
+
+        self.__overlays = None
+
+
+    def update(self, filegroups):
+        """Must be called when the list of ``FileGroup`` objects has changed,
+        either due to them being re-ordered or completely changed.
+        """
+        self.__filegroups = filegroups
+
+        # TODO
+
+
+    def show(self, filegroup):
+        """Show the overlays associated with the given :class:`FileGroup`.
+
+        Any overlays which were previously displayed are removed, and replaced
+        with the overlays associated with the new group.
+        """
+
+        # check already in overlaylist?
+        # check already loaded in cache?
+
+        overlayList = self.__overlayList
+        displayCtx  = self.__displayCtx
+        overlays    = self.__overlays
+        ftypes      = filegroup.ftypes
+        fixed       = filegroup.fixed
+        files       = filegroup.files
+        keys        = []
+
+        present     = [i for i, f in enumerate(files) if f is not None]
+        files       = [files[ i] for i in present]
+        ftypes      = [ftypes[i] for i in present]
+        fixed       = [fixed[ i] for i in present]
+
+        for ftype, v in zip(ftypes, fixed):
+
+            if len(v) == 0:
+                key = ftype
+            else:
+                key = ftype + '[' + ','.join(
+                    ['{}={}'.format(var, val)
+                     for var, val in sorted(v.items())]) + ']'
+            keys.append('[filetree] ' + key)
+
+        if overlays is not None:
+            idxs = {k : overlayList.index(v) for k, v in overlays.items()}
+        else:
+            idxs = {}
+
+        def onLoad(ovlidxs, ovls):
+
+            order   = list(displayCtx.overlayOrder)
+            ovls    = collections.OrderedDict(zip(keys, ovls))
+            oldOvls = []
+
+            for key, ovl in ovls.items():
+                ovl.name = key
+
+            for key, ovl in ovls.items():
+                if key in idxs:
+                    oldovl  = overlayList[idxs[key]]
+                    ovlType = displayCtx.getDisplay(oldovl).overlayType
+                else:
+                    ovlType = None
+                overlayList.append(ovl, overlayType=ovlType)
+
+
+            for key, ovl in ovls.items():
+                ovl.name = key
+                idx = idxs.get(key, None)
+                if idx is not None:
+                    oldOvl = overlayList[idx]
+                    opts   = displayCtx.getOpts(ovl)
+                    oldOvls.append(oldOvl)
+
+                    optExcl = ['bounds', 'transform']
+                    optArgs = {}
+
+                    if isinstance(opts, meshopts.MeshOpts):
+                        optExcl += ['vertexData', 'vertexSet']
+                        ref = opts.refImage
+
+                        if ref is not None and ref.name in ovls:
+                            optArgs['refImage'] =  ovls[ref.name]
+
+                    copyoverlay.copyDisplayProperties(
+                        displayCtx,
+                        oldOvl,
+                        ovl,
+                        optExclude=optExcl,
+                        optArgs=optArgs)
+
+            for oldOvl in set(oldOvls):
+                overlayList.remove(oldOvl)
+
+            if len(order) > 0:
+                displayCtx.overlayOrder = order
+
+            self.__overlays = ovls
+
+        loadoverlay.loadOverlays(files, onLoad=onLoad)
