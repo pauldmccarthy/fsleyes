@@ -219,8 +219,20 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
     def __onCustomTree(self, ev):
         """Called when the user pushes the *load custom tree* button.
+        Prompts the user to choose a file, then calls :meth:`__loadTree`.
         """
-        raise NotImplementedError()
+        msg = strings.messages[self, 'loadCustomTree']
+        dlg = wx.FileDialog(wx.GetApp().GetTopWindow(),
+                            message=msg,
+                            style=wx.FD_OPEN)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        dirname  = self.__dirName.GetLabel() or None
+        treefile = dlg.GetPath()
+
+        self.__loadTree(treefile, dirname)
 
 
 class FileTypePanel(elb.EditableListBox):

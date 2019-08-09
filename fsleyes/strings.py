@@ -305,7 +305,8 @@ messages = TypeDict({
     'LoadPluginAction.installError'  :
     'An error occurred installing the plugin file.',
 
-    'FileTreePanel.loadDir' : 'Load directory',
+    'FileTreePanel.loadDir'        : 'Load directory',
+    'FileTreePanel.loadCustomTree' : 'Load filetree file',
 })
 
 
