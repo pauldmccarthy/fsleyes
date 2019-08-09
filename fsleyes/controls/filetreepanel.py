@@ -23,9 +23,6 @@ import fsleyes_widgets.widgetlist       as wlist
 import fsleyes_widgets.widgetgrid       as wgrid
 import fsleyes_widgets.elistbox         as elb
 
-import fsleyes.displaycontext.meshopts  as meshopts
-import fsleyes.actions.loadoverlay      as loadoverlay
-import fsleyes.actions.copyoverlay      as copyoverlay
 import fsleyes.strings                  as strings
 import fsleyes.controls.controlpanel    as ctrlpanel
 import fsleyes.controls.filetreemanager as ftmanager
@@ -67,10 +64,9 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
-        self.__tree     = None
-        self.__query    = None
-        self.__mgr      = None
-        self.__overlays = None
+        self.__tree  = None
+        self.__query = None
+        self.__mgr   = None
 
         self.__loadDir      = wx.Button(self)
         self.__customTree   = wx.Button(self)
@@ -137,92 +133,6 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         flist.ResetGrid(mgr)
 
 
-    def Show(self, filegroup):
-        """
-        """
-
-        overlayList = self.overlayList
-        displayCtx  = self.displayCtx
-        overlays    = self.__overlays
-        ftypes      = filegroup.ftypes
-        fixed       = filegroup.fixed
-        files       = filegroup.files
-        keys        = []
-
-        present     = [i for i, f in enumerate(files) if f is not None]
-        files       = [files[ i] for i in present]
-        ftypes      = [ftypes[i] for i in present]
-        fixed       = [fixed[ i] for i in present]
-
-        for ftype, v in zip(ftypes, fixed):
-
-            if len(v) == 0:
-                key = ftype
-            else:
-                key = ftype + '[' + ','.join(
-                    ['{}={}'.format(var, val)
-                     for var, val in sorted(v.items())]) + ']'
-            keys.append('[filetree] ' + key)
-
-        if overlays is not None:
-            idxs = {k : overlayList.index(v) for k, v in overlays.items()}
-        else:
-            idxs = {}
-
-        def onLoad(ovlidxs, ovls):
-
-            order   = list(displayCtx.overlayOrder)
-            ovls    = collections.OrderedDict(zip(keys, ovls))
-            oldOvls = []
-
-            for key, ovl in ovls.items():
-                ovl.name = key
-
-            for key, ovl in ovls.items():
-                if key in idxs:
-                    oldovl  = overlayList[idxs[key]]
-                    ovlType = displayCtx.getDisplay(oldovl).overlayType
-                else:
-                    ovlType = None
-                overlayList.append(ovl, overlayType=ovlType)
-
-
-            for key, ovl in ovls.items():
-                ovl.name = key
-                idx = idxs.get(key, None)
-                if idx is not None:
-                    oldOvl = overlayList[idx]
-                    opts   = displayCtx.getOpts(ovl)
-                    oldOvls.append(oldOvl)
-
-                    optExcl = ['bounds', 'transform']
-                    optArgs = {}
-
-                    if isinstance(opts, meshopts.MeshOpts):
-                        optExcl += ['vertexData', 'vertexSet']
-                        ref = opts.refImage
-
-                        if ref is not None and ref.name in ovls:
-                            optArgs['refImage'] =  ovls[ref.name]
-
-                    copyoverlay.copyDisplayProperties(
-                        displayCtx,
-                        oldOvl,
-                        ovl,
-                        optExclude=optExcl,
-                        optArgs=optArgs)
-
-            for oldOvl in set(oldOvls):
-                overlayList.remove(oldOvl)
-
-            if len(order) > 0:
-                displayCtx.overlayOrder = order
-
-            self.__overlays = ovls
-
-        loadoverlay.loadOverlays(files, onLoad=onLoad)
-
-
     def __loadTree(self, treename, dirname):
         """Called when a new tree or data directory is selected. Clears
         any previous file tree, and loads the new one. If either the tree
@@ -242,7 +152,9 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         else:
             tree       = filetree.FileTree.read(treename, directory=dirname)
             query      = filetree.FileTreeQuery(tree)
-            mgr        = ftmanager.FileTreeManager(query)
+            mgr        = ftmanager.FileTreeManager(self.overlayList,
+                                                   self.displayCtx,
+                                                   query)
             allvars    = query.variables()
             allvars    = [(var, vals) for var, vals in allvars.items()]
             allvars    = collections.OrderedDict(list(sorted(allvars)))
@@ -308,7 +220,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     def __onCustomTree(self, ev):
         """Called when the user pushes the *load custom tree* button.
         """
-        pass
+        raise NotImplementedError()
 
 
 class FileTypePanel(elb.EditableListBox):
@@ -513,9 +425,8 @@ class FileListPanel(wx.Panel):
 
         self.__ftpanel = ftpanel
         self.__mgr     = None
-
-        self.__sizer = wx.BoxSizer(wx.VERTICAL)
-        self.__grid = wgrid.WidgetGrid(
+        self.__sizer   = wx.BoxSizer(wx.VERTICAL)
+        self.__grid    = wgrid.WidgetGrid(
             self,
             style=(wx   .HSCROLL            |
                    wx   .VSCROLL            |
@@ -531,14 +442,18 @@ class FileListPanel(wx.Panel):
 
 
     def ResetGrid(self, mgr):
-        """
+        """Clear and re-populate the file tree grid.
+
+        :arg mgr: The :class:`.FileTreeManager` from which the variable
+                  and file information is retrieved.
         """
 
         self.__mgr = mgr
-        grid       = self.__grid
         varcols    = mgr.varcols
+        fixedcols  = mgr.fixedcols
         fgroups    = mgr.filegroups
-        collabels  = self.__genColumnLabels()
+        grid       = self.__grid
+        collabels  = self.__genColumnLabels(varcols, fixedcols)
         nrows      = len(fgroups)
         ncols      = len(collabels)
 
@@ -551,12 +466,14 @@ class FileListPanel(wx.Panel):
 
 
     def __populateGrid(self):
+        """Populates the contents of the file tree grid. The contents
+        are retrieved from the :class:`.FileTreeManager`.
+        """
 
         mgr     = self.__mgr
         grid    = self.__grid
         fgroups = mgr.filegroups
         varcols = mgr.varcols
-
 
         for rowi, fgroup in enumerate(fgroups):
 
@@ -580,15 +497,17 @@ class FileListPanel(wx.Panel):
 
     def __onSelect(self, ev):
         """Called when the user selects a row. Calls the
-        :meth:`FileTreePanel.Show` method.
+        :meth:`.FileTreeManager.Show` method.
         """
 
         group = self.__mgr.filegroups[ev.row]
-        self.__ftpanel.Show(group)
+        self.__mgr.show(group)
 
 
     def __onReorder(self, ev):
         """Called when the user drags a column to change the column order.
+        Calls the :meth:`.FileTreeManager.reorder` method, and updates
+        the grid contents.
         """
 
         mgr      = self.__mgr
@@ -596,29 +515,33 @@ class FileListPanel(wx.Panel):
         nvarcols = len(mgr.varcols)
         varcols  = grid.GetColLabels()[:nvarcols]
 
-        self.__mgr.reorder(varcols)
+        mgr.reorder(varcols)
         self.__populateGrid()
 
 
-    def __genColumnLabels(self):
+    def __genColumnLabels(self, varcols, fixedcols):
         """Called by :meth:`ResetGrid`. Generates a label for each column in
         the grid.
 
-        :returns: A list of labels for each column
-        """
+        :arg varcols:   List of varying variable names
 
-        mgr = self.__mgr
+        :arg fixedcols: List of ``(name, { var : val })`` tuples, containing
+                        the file type and variable values of all fixed variable
+                        columns.
+
+        :returns:       A list of labels for each column
+        """
 
         # The first set of columns correspond
         # to the varying variables - they are
         # just labelled with the variable name.
-        collabels = list(mgr.varcols)
+        collabels = list(varcols)
 
         # The second set of columns each
         # correspond to a combination of all
         # selected file types, and all
         # selected fixed variables.
-        for ftype, ftvals in mgr.fixedcols:
+        for ftype, ftvals in fixedcols:
 
             # No fixed variables for this type -
             # just use the file type name
