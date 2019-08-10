@@ -605,8 +605,7 @@ class OverlayManager(object):
         # known list is passed in.
         self.__filegroups.index(filegroup)
 
-        overlayList = self.__overlayList
-        displayCtx  = self.__displayCtx
+        displayCtx = self.__displayCtx
 
         # Gather all of the files
         # to be loaded, using their
@@ -616,11 +615,8 @@ class OverlayManager(object):
         for fname, fid in zip(filegroup.files, filegroup.fileIDs):
 
             # The FileGroup may contain
-            # non-existent files, and
-            # we don't want to load files
-            # that are already in the
-            # overlay list
-            if fname is None or overlayList.find(fname):
+            # non-existent files
+            if fname is None:
                 continue
 
             new[FILETREE_PREFIX + fid] = fname
@@ -712,15 +708,22 @@ class OverlayManager(object):
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
 
-        for key, ovl in new.items(): log.debug('Adding %s: %s',   key, ovl)
-        for key, ovl in old.items(): log.debug('Removing %s: %s', key, ovl)
-
         # Get refs to all existing filetree
         # overlays, because we're going to
         # remove them all after adding the
         # new ones
         oldovls = [o for o in overlayList
-                   if o.name.startswith(FILETREE_PREFIX)]
+                   if o.name.startswith(FILETREE_PREFIX) and
+                   o not in new.values()]
+
+        # Drop new overlays that
+        # are already in the list
+        new = collections.OrderedDict(
+            [(key, ovl) for key, ovl in new.items()
+             if ovl not in overlayList])
+
+        for key, ovl in new.items(): log.debug('Adding %s: %s', key, ovl)
+        for      ovl in oldovls:     log.debug('Removing %s',   ovl)
 
         # We set the name of each new overlay
         # to its ID key. If the user changes
