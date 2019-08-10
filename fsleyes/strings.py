@@ -888,6 +888,8 @@ labels = TypeDict({
 
     'FileTreePanel.loadDir'    : 'Load directory',
     'FileTreePanel.customTree' : 'Load tree file',
+    'FileTreePanel.save'       : 'Save notes',
+    'FileListPanel.notes'      : 'Notes',
 
     'VariablePanel.value.none' : '<none>',
     'VariablePanel.value.any'  : '<any>',

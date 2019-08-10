@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #
-# filetreepanel.py -
+# filetreepanel.py - The FileTreePanel
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""
+"""This module provides the :class:`FileTreePanel` class, which can be used
+to browse the contents of structured directories which are described with
+a :mod:`.filetree`.
 
 See also the :mod:`.filetreemanager` module, which contains the logic for
 generating the file list.
@@ -36,10 +38,11 @@ ALLLBL  = strings.labels['VariablePanel.value.all']
 
 
 class FileTreePanel(ctrlpanel.ControlPanel):
-    """
+    """The ``FileTreePanel`` can be used to browse the contents of structured
+    directories which are described with a :mod:`.filetree`.
 
-    The user needs to select a data directory, and a file tree. The file
-    tree can be selected either from the drop down list of built-in trees, or a
+    The user needs to select a data directory, and a file tree. The file tree
+    can be selected either from the drop down list of built-in trees, or a
     custom tree file can be selected.
 
     Once the user has selected a file tree and a data directory, the
@@ -47,7 +50,12 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     allowing the user to choose which file types to display, and how to
     arrange them.
 
+    When the user has selected some file types, the :class:`FileListPanel`
+    will display a grid containing all of the matching files that exist in the
+    directory. The user can select a row to view the relevant files.
 
+    The :class:`.FileTreeManager` handles the logic of working with the
+    :class:`.FileTree` and of displaying overlays.
     """
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -71,9 +79,10 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__loadDir      = wx.Button(self)
         self.__customTree   = wx.Button(self)
         self.__treeChoice   = wx.Choice(self)
+        self.__save         = wx.Button(self)
         self.__dirName      = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         self.__mainSplitter = wx.SplitterWindow(
-            self, style=wx.SP_LIVE_UPDATE)
+            self, style=wx.SP_LIVE_UPDATE | wx.SP_BORDER)
         self.__leftPanel    = wx.Panel(self.__mainSplitter)
         self.__leftSizer    = wx.BoxSizer(wx.VERTICAL)
 
@@ -97,11 +106,13 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
         self.__loadDir   .SetLabel(strings.labels[self, 'loadDir'])
         self.__customTree.SetLabel(strings.labels[self, 'customTree'])
+        self.__save      .SetLabel(strings.labels[self, 'save'])
 
         self.__topSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__topSizer.Add(self.__loadDir,    flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__treeChoice, flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__customTree, flag=wx.EXPAND, proportion=1)
+        self.__topSizer.Add(self.__save,       flag=wx.EXPAND, proportion=1)
 
         self.__mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.__mainSizer.Add(self.__topSizer,     flag=wx.EXPAND)
@@ -113,9 +124,10 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__loadDir   .Bind(wx.EVT_BUTTON, self.__onLoadDir)
         self.__customTree.Bind(wx.EVT_BUTTON, self.__onCustomTree)
         self.__treeChoice.Bind(wx.EVT_CHOICE, self.__onTreeChoice)
+        self.__save      .Bind(wx.EVT_BUTTON, self.__onSave)
 
 
-    def Update(self):
+    def UpdateFileList(self):
         """Called by the sub-panels when the user changes any settings.
         Re-generates the file grid.
         """
@@ -169,7 +181,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__fileTypes.SetFileTypes(filetypes)
         self.__leftPanel.Layout()
 
-        self.Update()
+        self.UpdateFileList()
 
 
     def __getTreeChoice(self):
@@ -235,6 +247,12 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__loadTree(treefile, dirname)
 
 
+    def __onSave(self, ev):
+        """Called when the *save* button is pushed.
+        """
+
+
+
 class FileTypePanel(elb.EditableListBox):
     """The ``FileTypePanel`` displays a list of available file types.
     It allows the user to choose which file types should be displayed.
@@ -295,7 +313,7 @@ class FileTypePanel(elb.EditableListBox):
         """Called when a file type is toggled. Calls the
         :meth:`FileTreePanel.Update` method.
         """
-        self.__ftpanel.Update()
+        self.__ftpanel.UpdateFileList()
 
 
 class VariablePanel(wx.Panel):
@@ -413,7 +431,7 @@ class VariablePanel(wx.Panel):
         """Called when the user changes a variable setting. Calls the
         :meth:`FileTreePanel.Update` method.
         """
-        self.__ftpanel.Update()
+        self.__ftpanel.UpdateFileList()
 
 
 class FileListPanel(wx.Panel):
@@ -421,8 +439,13 @@ class FileListPanel(wx.Panel):
     and file types, allowing the user to step through the files in the data
     directory.
 
+
     The user can drag varying variable columns to re-order them - this will
-    trigger a call to .FileTreeManager.reor
+    trigger a call to :meth:`.FileTreeManager.reorder`.
+
+
+    A text control is added at the end of each row, allowing the user to add
+    notes.
     """
 
 
@@ -466,15 +489,22 @@ class FileListPanel(wx.Panel):
         fgroups    = mgr.filegroups
         grid       = self.__grid
         collabels  = self.__genColumnLabels(varcols, fixedcols)
+        collabels  = collabels + [strings.labels[self, 'notes']]
         nrows      = len(fgroups)
         ncols      = len(collabels)
 
         grid.ClearGrid()
+
+        if len(fgroups) == 0:
+            return
+
         grid.SetGridSize(nrows, ncols)
         grid.SetDragLimit(len(varcols) - 1)
         grid.SetColLabels(collabels)
         grid.ShowColLabels()
         self.__populateGrid()
+        self.__createNotes()
+        grid.Refresh()
 
 
     def __populateGrid(self):
@@ -504,7 +534,48 @@ class FileListPanel(wx.Panel):
                 if filename is not None: grid.SetText(rowi, coli, '\u2022')
                 else:                    grid.SetText(rowi, coli, '')
 
-        grid.Refresh()
+
+    def __createNotes(self):
+        """Called by :meth:`ResetGrid`. Creates a ``wx.TextCtrl`` for each
+        row, and adds it to the end column.
+        """
+
+        grid         = self.__grid
+        nrows, ncols = grid.GetGridSize()
+
+        for i in range(nrows):
+            note = wx.TextCtrl(grid, i)
+            grid.SetWidget(i, ncols - 1, note)
+            note.Bind(wx.EVT_CHAR_HOOK, self.__noteCharHook)
+
+
+    def __noteCharHook(self, ev):
+        """Called on character events for any of the note controls. If the
+        character is a tab, up, or down arrow, focus is shifted to the next
+        or previous note.
+        """
+
+        key   = ev.GetKeyCode()
+        shift = ev.ShiftDown()
+
+        if key not in (wx.WXK_TAB, wx.WXK_DOWN, wx.WXK_UP):
+            ev.Skip()
+            return
+
+        if (key == wx.WXK_UP) or ((key == wx.WXK_TAB) and shift): offset = -1
+        else:                                                     offset = 1
+
+        grid         = self.__grid
+        nrows, ncols = grid.GetGridSize()
+        oldrow       = ev.GetEventObject().GetId()
+        newrow       = oldrow + offset
+
+        if   newrow < 0:      newrow = 0
+        elif newrow >= nrows: newrow = nrows - 1
+
+        if newrow != oldrow:
+            grid.GetWidget(newrow, ncols - 1).SetFocus()
+            grid.SetSelection(newrow, -1)
 
 
     def __onSelect(self, ev):
@@ -529,6 +600,7 @@ class FileListPanel(wx.Panel):
 
         mgr.reorder(varcols)
         self.__populateGrid()
+        grid.Refresh()
 
 
     def __genColumnLabels(self, varcols, fixedcols):
