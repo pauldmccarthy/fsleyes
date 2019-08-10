@@ -307,6 +307,7 @@ messages = TypeDict({
 
     'FileTreePanel.loadDir'        : 'Load directory',
     'FileTreePanel.loadCustomTree' : 'Load filetree file',
+    'FileTreePanel.save'           : 'Save notes',
 })
 
 
@@ -890,10 +891,11 @@ labels = TypeDict({
     'FileTreePanel.customTree' : 'Load tree file',
     'FileTreePanel.save'       : 'Save notes',
     'FileListPanel.notes'      : 'Notes',
-
+    'FileListPanel.present'    : '\u2022',
     'VariablePanel.value.none' : '<none>',
     'VariablePanel.value.any'  : '<any>',
     'VariablePanel.value.all'  : '<all>',
+
 
 })
 

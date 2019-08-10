@@ -13,11 +13,13 @@ generating the file list.
 """
 
 
-import os.path as op
-import            logging
-import            collections
 
-import            wx
+import os.path   as op
+import itertools as it
+import              logging
+import              collections
+
+import              wx
 
 import fsl.utils.filetree               as filetree
 import fsl.utils.settings               as fslsettings
@@ -32,9 +34,10 @@ import fsleyes.controls.filetreemanager as ftmanager
 
 log = logging.getLogger(__name__)
 
-NONELBL = strings.labels['VariablePanel.value.none']
-ANYLBL  = strings.labels['VariablePanel.value.any']
-ALLLBL  = strings.labels['VariablePanel.value.all']
+NONELBL    = strings.labels['VariablePanel.value.none']
+ANYLBL     = strings.labels['VariablePanel.value.any']
+ALLLBL     = strings.labels['VariablePanel.value.all']
+PRESENTLBL = strings.labels['FileListPanel.present']
 
 
 class FileTreePanel(ctrlpanel.ControlPanel):
@@ -248,8 +251,26 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
 
     def __onSave(self, ev):
-        """Called when the *save* button is pushed.
+        """Called when the *save* button is pushed. Prompts the user
+        for a destination, and then saves the contents of the grid.
         """
+
+        msg = strings.messages[self, 'save']
+        dlg = wx.FileDialog(
+            self,
+            defaultFile='notes.txt',
+            message=msg,
+            style=wx.FD_SAVE)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        path = dlg.GetPath()
+        grid = self.__fileList.GridContents()
+
+        with open(path, 'wt') as f:
+            for row in grid:
+                f.write('\t'.join(row) + '\n')
 
 
 
@@ -507,6 +528,31 @@ class FileListPanel(wx.Panel):
         grid.Refresh()
 
 
+    def GridContents(self):
+        """Returns the contents of the grid as a list of lists of strings. """
+
+        grid         = self.__grid
+        nrows, ncols = grid.GetGridSize()
+        rows         = [[None] * ncols for i in range(nrows)]
+
+        for row, col in it.product(range(nrows), range(ncols)):
+
+            widget = grid.GetWidget(row, col)
+
+            # widget is either a StaticText
+            # or (last column) a TextCtrl
+            if col < ncols - 1: value = widget.GetLabel()
+            else:               value = widget.GetValue()
+
+            if value == PRESENTLBL:
+                value = 'x'
+
+            rows[row][col] = value
+
+        rows = [grid.GetColLabels()] + rows
+        return rows
+
+
     def __populateGrid(self):
         """Populates the contents of the file tree grid. The contents
         are retrieved from the :class:`.FileTreeManager`.
@@ -531,7 +577,7 @@ class FileListPanel(wx.Panel):
             # bullet indicating whether or
             # not each file is present
             for coli, filename in enumerate(fgroup.files, len(varcols)):
-                if filename is not None: grid.SetText(rowi, coli, '\u2022')
+                if filename is not None: grid.SetText(rowi, coli, PRESENTLBL)
                 else:                    grid.SetText(rowi, coli, '')
 
 
