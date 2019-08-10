@@ -143,22 +143,22 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         """
 
         if treename is None or dirname is None:
-            dirname    = None
-            tree       = None
-            query      = None
-            mgr        = None
-            allvars    = None
-            shortnames = None
+            dirname   = None
+            tree      = None
+            query     = None
+            mgr       = None
+            allvars   = None
+            filetypes = None
         else:
-            tree       = filetree.FileTree.read(treename, directory=dirname)
-            query      = filetree.FileTreeQuery(tree)
-            mgr        = ftmanager.FileTreeManager(self.overlayList,
-                                                   self.displayCtx,
-                                                   query)
-            allvars    = query.variables()
-            allvars    = [(var, vals) for var, vals in allvars.items()]
-            allvars    = collections.OrderedDict(list(sorted(allvars)))
-            shortnames = list(sorted(query.short_names))
+            tree      = filetree.FileTree.read(treename, directory=dirname)
+            query     = filetree.FileTreeQuery(tree)
+            mgr       = ftmanager.FileTreeManager(self.overlayList,
+                                                  self.displayCtx,
+                                                  query)
+            allvars   = query.variables()
+            allvars   = [(var, vals) for var, vals in allvars.items()]
+            allvars   = collections.OrderedDict(list(sorted(allvars)))
+            filetypes = list(sorted(query.templates))
 
         self.__tree  = tree
         self.__query = query
@@ -166,7 +166,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
         self.__dirName  .SetLabel(dirname or '')
         self.__varPanel .SetVariables(allvars)
-        self.__fileTypes.SetFileTypes(shortnames)
+        self.__fileTypes.SetFileTypes(filetypes)
         self.__leftPanel.Layout()
 
         self.Update()

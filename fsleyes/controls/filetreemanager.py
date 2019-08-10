@@ -93,6 +93,7 @@ to re-arrange the grid like so:
 
 
 import                    collections
+import                    logging
 import functools       as ft
 import itertools       as it
 
@@ -100,6 +101,9 @@ import fsl.utils.cache                 as cache
 import fsleyes.actions.copyoverlay     as copyoverlay
 import fsleyes.actions.loadoverlay     as loadoverlay
 import fsleyes.displaycontext.meshopts as meshopts
+
+
+log = logging.getLogger(__name__)
 
 
 FILETREE_PREFIX = '[filetree] '
@@ -707,6 +711,9 @@ class OverlayManager(object):
 
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
+
+        for key, ovl in new.items(): log.debug('Adding %s: %s',   key, ovl)
+        for key, ovl in old.items(): log.debug('Removing %s: %s', key, ovl)
 
         # Get refs to all existing filetree
         # overlays, because we're going to
