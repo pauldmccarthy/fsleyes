@@ -682,15 +682,15 @@ class OverlayManager(object):
 
             for key, fname in new.items():
 
-                # Has this overlay just been loaded?
-                if key in loadkeys:
+                # Is this overlay in the cache?
+                if fname in cache:
+                    toshow[key] = cache[fname]
+
+                # Or has it just been loaded?
+                else:
                     idx         = loadkeys.index(key)
                     toshow[key] = ovls[idx]
                     cache.put(fname, ovls[idx])
-
-                # Or is it already in the cache?
-                else:
-                    toshow[key] = cache.get(fname)
 
             self.__show(toshow, old)
 

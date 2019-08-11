@@ -13,14 +13,15 @@ generating the file list.
 """
 
 
-
 import os.path   as op
 import itertools as it
+import              time
 import              logging
 import              collections
 
 import              wx
 
+import fsl.utils.idle                   as idle
 import fsl.utils.filetree               as filetree
 import fsl.utils.settings               as fslsettings
 import fsleyes_widgets.widgetlist       as wlist
@@ -629,8 +630,30 @@ class FileListPanel(wx.Panel):
         :meth:`.FileTreeManager.Show` method.
         """
 
-        group = self.__mgr.filegroups[ev.row]
-        self.__mgr.show(group)
+        overlayList = self.__ftpanel.overlayList
+        group       = self.__mgr.filegroups[ev.row]
+
+        # Disable events on the grid while
+        # the overlays are being swapped,
+        # otherwise FSLeyes will explode.
+        freezeTime = time.time()
+        self.__grid.SetEvtHandlerEnabled(False)
+
+        # Wait until every overlay is in the
+        # overlay list, or 5 seconds have
+        # elapsed, before re-enabling the grid.
+        def thawWhen():
+
+            thawTime = time.time()
+            files    = [f for f in group.files if f is not None]
+            allin    = all([overlayList.find(f) is not None for f in files])
+
+            return allin or ((thawTime - freezeTime) >= 5)
+
+        try:
+            self.__mgr.show(group)
+        finally:
+            idle.idleWhen(self.__grid.SetEvtHandlerEnabled, thawWhen)
 
 
     def __onReorder(self, ev):
