@@ -73,7 +73,7 @@ class Display(props.SyncableHasProperties):
                  overlayList,
                  displayCtx,
                  parent=None,
-                 overlayType=None):
+                 **kwa):
         """Create a :class:`Display` for the specified overlay.
 
         :arg overlay:     The overlay object.
@@ -87,9 +87,16 @@ class Display(props.SyncableHasProperties):
         :arg parent:      A parent ``Display`` instance - see
                           :mod:`props.syncable`.
 
-        :arg overlayType: Initial overlay type - see the :attr:`overlayType`
-                          property.
+        All other keyword arguments are assumed to be ``name=value`` pairs,
+        containing initial property values, for both this ``Display``, and
+        the initially created :class:`DisplayOpts` instance. For the latter,
+        it is assumed that any properties specified are appropriate for the
+        initial overlay type.
         """
+
+        dispProps     = self.getAllProperties()[0]
+        initDispProps = {n : v for n, v in kwa.items() if n     in dispProps}
+        initOptProps  = {n : v for n, v in kwa.items() if n not in dispProps}
 
         self.__overlay     = overlay
         self.__overlayList = overlayList
@@ -105,11 +112,6 @@ class Display(props.SyncableHasProperties):
 
         log.debug('Enabling overlay types for {}: '.format(overlay, ovlTypes))
         ovlTypeProp.setChoices(ovlTypes, instance=self)
-
-        # Override the default overlay
-        # type if it has been specified
-        if overlayType is not None:
-            self.overlayType = overlayType
 
         # Call the super constructor after our own
         # initialisation, in case the provided parent
@@ -129,7 +131,10 @@ class Display(props.SyncableHasProperties):
             # Initial sync state between this
             # Display and the parent Display
             # (if this Display has a parent)
-            state=displayCtx.syncOverlayDisplay)
+            state=displayCtx.syncOverlayDisplay,
+
+            # set initial display property values
+            **initDispProps)
 
         # When the overlay type changes, the property
         # values of the DisplayOpts instance for the
@@ -147,7 +152,13 @@ class Display(props.SyncableHasProperties):
         # LabelOpts) - the values of all common
         # properties are copied to the new
         # DisplayOpts instance.
-        self.__oldOptValues = td.TypeDict()
+        self.__oldOptProps = td.TypeDict()
+
+        # Initial DisplayOpt property values
+        # are used in the first call to
+        # __makeDisplayOpts, and then cleared
+        # afterwards.
+        self.__initOptProps = initOptProps
 
         # Set up listeners after caling Syncable.__init__,
         # so the callbacks don't get called during
@@ -191,10 +202,12 @@ class Display(props.SyncableHasProperties):
 
         self.detachAllFromParent()
 
-        self.__displayOpts = None
-        self.__overlayList = None
-        self.__displayCtx  = None
-        self.__overlay     = None
+        self.__oldOptProps  = None
+        self.__initOptProps = None
+        self.__displayOpts  = None
+        self.__overlayList  = None
+        self.__displayCtx   = None
+        self.__overlay      = None
 
 
     @deprecated.deprecated('0.14.3', '1.0.0', 'Use overlay instead')
@@ -272,6 +285,12 @@ class Display(props.SyncableHasProperties):
         else:
             oParent = self.getParent().opts
 
+        initOptProps        = self.__initOptProps
+        self.__initOptProps = None
+
+        if initOptProps is None:
+            initOptProps = {}
+
         from . import DISPLAY_OPTS_MAP
 
         optType = DISPLAY_OPTS_MAP[self.__overlay, self.overlayType]
@@ -296,7 +315,8 @@ class Display(props.SyncableHasProperties):
                        self.__overlayList,
                        self.__displayCtx,
                        parent=oParent,
-                       state=initState)
+                       state=initState,
+                       **initOptProps)
 
 
     def __findOptBaseType(self, optType, optName):
@@ -342,7 +362,7 @@ class Display(props.SyncableHasProperties):
             log.debug('Saving {}.{} = {} [{} {}]'.format(
                 base, propName, val, type(opts).__name__, id(self)))
 
-            self.__oldOptValues[base, propName] = val
+            self.__oldOptProps[base, propName] = val
 
 
     def __restoreOldDisplayOpts(self):
@@ -357,7 +377,7 @@ class Display(props.SyncableHasProperties):
         for propName in opts.getAllProperties()[0]:
 
             try:
-                value = self.__oldOptValues[opts, propName]
+                value = self.__oldOptProps[opts, propName]
 
                 if not hasattr(opts, propName):
                     continue
@@ -411,6 +431,11 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
                     instances.
     ``name``        A unique name for this ``DisplayOpts`` instance.
     =============== ======================================================
+
+
+    .. warning:: :class:`DisplayOpts` sub-classes must not define any
+                 properties with the same name as any of the :class:`Display`
+                 properties.
     """
 
 

@@ -307,7 +307,7 @@ class OverlayList(props.HasProperties):
 
             for propName, overlayProps in initProps.items():
                 for overlay, val in overlayProps.items():
-                    self.__initProps[overlay] = val
+                    self.__initProps[overlay][propName] = val
 
         return result
 
