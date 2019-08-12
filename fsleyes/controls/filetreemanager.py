@@ -98,7 +98,6 @@ import functools       as ft
 import itertools       as it
 
 import fsl.utils.cache                 as cache
-import fsleyes.actions.copyoverlay     as copyoverlay
 import fsleyes.actions.loadoverlay     as loadoverlay
 import fsleyes.displaycontext.meshopts as meshopts
 
@@ -734,43 +733,44 @@ class OverlayManager(object):
 
         # Get a list of overlay types from
         # the old overlays, if present
-        ovltypes = {}
+        propVals = collections.defaultdict(dict)
         for key, ovl in new.items():
             if key in old:
-                oldovl        = old[key]
-                ovltypes[ovl] = displayCtx.getDisplay(oldovl).overlayType
+
+                oldovl  = old[key]
+                display = displayCtx.getDisplay(oldovl)
+                opts    = displayCtx.getOpts(   oldovl)
+
+                for propName in display.getAllProperties()[0]:
+                    propVals[propName][ovl] = getattr(display, propName)
+                for propName in opts.getAllProperties()[0]:
+
+                    val = getattr(opts, propName)
+
+                    # these get calculated automatically
+                    if propName in ('bounds', 'transform'):
+                        continue
+
+                    # mesh data/vertices are complicated,
+                    # so I'm not doing them for the time
+                    # being.
+                    if isinstance(opts, meshopts.MeshOpts):
+
+                        if propName in ('vertexData', 'vertexSet'):
+                            continue
+
+                        # Find a new reference image
+                        if propName == 'refImage':
+                            ref = opts.refImage
+                            if ref is not None and ref.name in new:
+                                val = new[ref.name]
+
+                    propVals[propName][ovl] = val
 
         # Insert the new overlays
         # into the list. We'll sort
         # out overlay order later on.
-        overlayList.extend(new.values(), ovltypes)
-
-        # Copy display properties from
-        # the old overlays if present
-        for key, ovl in new.items():
-
-            if key in old:
-                oldovl  = old[key]
-                opts    = displayCtx.getOpts(ovl)
-                optExcl = ['bounds', 'transform']
-                optArgs = {}
-
-                # mesh data/vertices are complicated,
-                # so I'm not doing them for the time
-                # being.
-                if isinstance(opts, meshopts.MeshOpts):
-                    optExcl += ['vertexData', 'vertexSet']
-                    ref      = opts.refImage
-
-                    if ref is not None and ref.name in new:
-                        optArgs['refImage'] = new[ref.name]
-
-                copyoverlay.copyDisplayProperties(
-                    displayCtx,
-                    oldovl,
-                    ovl,
-                    optExclude=optExcl,
-                    optArgs=optArgs)
+        overlayList.extend(new.values(), **propVals)
 
         # Remove all of the
         # old filetree overlays
