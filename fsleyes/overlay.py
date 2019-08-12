@@ -75,6 +75,7 @@ This module also provides a few convenience classes and functions:
 import os.path as op
 import            logging
 import            weakref
+import            collections
 
 import fsl.utils.deprecated as deprecated
 import fsl.data.utils       as dutils
@@ -124,12 +125,21 @@ class OverlayList(props.HasProperties):
         if overlays is None: overlays = []
         self.overlays.extend(overlays)
 
-        # The append/insert methods allow an initial
-        # overlay type to be specified for newly
-        # added overlays. This can be queried via
-        # the initOverlayType method (and is done so
-        # by DisplayContext instances).
-        self.__initOverlayType = {}
+        # The append/insert methods allow display/opts
+        # property values to be specified for newly
+        # added overlays. These can be queried via
+        # the initProps method (and is done so by
+        # DisplayContext/Display instances).
+        # It is a dict of dicts:
+        #
+        #    {
+        #      overlay : {
+        #        propName: value,
+        #        propName: value,
+        #      },
+        #      ...
+        #    }
+        self.__initProps = collections.defaultdict(dict)
 
         # This dictionary may be used throughout FSLeyes,
         # via the getData/setData methods, to store
@@ -149,12 +159,16 @@ class OverlayList(props.HasProperties):
         self.__overlayData = weakref.WeakKeyDictionary()
 
 
-    def initOverlayType(self, overlay):
-        """Returns the initial type for the given ``overlay``, if it was
-        specified via the :meth:`append` or :meth:`insert` methods. Returns
-        ``None`` otherwise.
+    def initProps(self, overlay):
+        """Returns a dict containing initial :class:`.Display` and
+        :class:`.DisplayOpts` property values to be used for the given
+        ``overlay``, if they were specified via the :meth:`append` or
+        :meth:`insert` methods.
+
+        This method requires that there is no overlap between the property
+        names used in :class:`.Display` and :class:`.DisplayOpts` classes.
         """
-        return self.__initOverlayType.get(overlay, None)
+        return self.__initProps[overlay]
 
 
     def getData(self, overlay, key, *args):
@@ -249,7 +263,7 @@ class OverlayList(props.HasProperties):
 
         ovls = self[key]
         for ovl in ovls:
-            self.__initOverlayType.pop(ovl, None)
+            self.__initProps.pop(ovl, None)
 
         return self.overlays.__delitem__(key)
 
@@ -259,55 +273,61 @@ class OverlayList(props.HasProperties):
     def count(self, item):
         return self.overlays.count(item)
 
-    def append(self, item, overlayType=None):
+    def insert(self, index, item, **initProps):
+        """Insert a new overlay into the overlay list.
+
+        Any initial :class:`.Display`/:class:`.DisplayOpts` property values
+        may be passed in as keyword arguments.
+        """
 
         with props.suppress(self, 'overlays', notify=True):
+            self.overlays.insert(index, item)
+            self.__initProps[item] = initProps
 
-            self.overlays.append(item)
+    def append(self, item, **initProps):
+        """Add a new overlay to the end of the overlay list.
 
-            if overlayType is not None:
-                self.__initOverlayType[item] = overlayType
+        Any initial :class:`.Display`/:class:`.DisplayOpts` property values
+        may be passed in as keyword arguments.
+        """
+        self.insert(len(self), item, **initProps)
 
+    def extend(self, iterable, **initProps):
+        """Add new overlays to the overlay list.
 
-    def extend(self, iterable, overlayTypes=None):
+        Any initial :class:`.Display`/:class:`.DisplayOpts` property values
+        may be passed in as keyword arguments, where the argument name is the
+        property name, and the argument value is a dict of
+        ``{overlay : value}`` mappings.
+        """
 
         with props.suppress(self, 'overlays', notify=True):
 
             result = self.overlays.extend(iterable)
 
-            if overlayTypes is not None:
-                for overlay, overlayType in overlayTypes.items():
-                    self.__initOverlayType[overlay] = overlayType
+            for propName, overlayProps in initProps.items():
+                for overlay, val in overlayProps.items():
+                    self.__initProps[overlay] = val
 
         return result
 
+    def insertAll(self, index, items):
+        return self.overlays.insertAll(index, items)
+
     def pop(self, index=-1):
         ovl = self.overlays.pop(index)
-        self.__initOverlayType.pop(ovl, None)
+        self.__initProps.pop(ovl, None)
         return ovl
 
     def move(self, from_, to):
         return self.overlays.move(from_, to)
 
     def remove(self, item):
-        self.__initOverlayType.pop(item, None)
         self.overlays.remove(item)
+        self.__initProps.pop(item, None)
 
     def clear(self):
         del self[:]
-
-    def insert(self, index, item, overlayType=None):
-
-        with props.suppress(self, 'overlays', notify=True):
-
-            self.overlays.insert(index, item)
-
-            if overlayType is not None:
-                self.__initOverlayType[item] = overlayType
-
-
-    def insertAll(self, index, items):
-        return self.overlays.insertAll(index, items)
 
 
 class ProxyImage(fslimage.Image):
