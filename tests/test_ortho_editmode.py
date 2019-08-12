@@ -158,8 +158,8 @@ def _test_editable(ortho, overlayList, displayCtx):
 
     for ovl, ot in editable:
         idle.idle(setprof, 'edit')
-        idle.idle(overlayList.append, ovl, ot)
-        idle.idle(displayCtx.selectOverlay, ovl)
+        idle.idle(overlayList.append, ovl, overlayType=ot)
+        idle.idle(displayCtx.selectOverlay, overlayType=ovl)
         idle.block(1)
         idle.idle(saveprof)
         idle.idle(overlayList.clear)
@@ -168,7 +168,7 @@ def _test_editable(ortho, overlayList, displayCtx):
 
     for ovl, ot in notEditable:
         idle.idle(setprof, 'edit')
-        idle.idle(overlayList.append, ovl, ot)
+        idle.idle(overlayList.append, ovl, overlayType=ot)
         idle.idle(displayCtx.selectOverlay, ovl)
         idle.block(1)
         idle.idle(saveprof)
