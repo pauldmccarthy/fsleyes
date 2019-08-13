@@ -98,8 +98,8 @@ import functools       as ft
 import itertools       as it
 
 import fsl.utils.cache                 as cache
+import fsleyes_widgets.utils.typedict  as td
 import fsleyes.actions.loadoverlay     as loadoverlay
-import fsleyes.displaycontext.meshopts as meshopts
 
 
 log = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ class FileGroup(object):
         self.files    = files
         self.fileIDs  = []
 
-        # Generate a key which uniquely identifies
+        # Generate an ID which uniquely identifies
         # each overlay by file type and fixed
         # variable values (i.e. a unique ID for each
         # row . This will be used as
@@ -176,180 +176,6 @@ class FileGroup(object):
                 hash(self.fixed)    ^
                 hash(self.ftypes)   ^
                 hash(self.files))
-
-
-def prepareVaryings(query, ftypes, varyings):
-    """Called by :meth:`FileTreeManager.update`. Prepares a dictionary which
-    contains all possible values for each varying variable.
-
-    :arg query:    :class:`.FileTreeQuery` object
-
-    :arg ftypes:   List of file types to be displayed.
-
-    :arg varyings: Dict of ``{ var : value }`` mappings. A value of ``'*'``
-                   indicates that all possible values for this variable
-                   should be used.
-
-    :returns:      A dict of ``{ var : [value] }`` mappings, containing
-                   every possible value for each varying variable.
-    """
-
-    allvars = query.variables()
-
-    # Force a constsient ordering
-    # of the varying variables
-    _varyings = collections.OrderedDict()
-    for var in sorted(varyings.keys()):
-        _varyings[var] = varyings[var]
-    varyings = _varyings
-
-    # Expand the varying dict so that
-    # it contains { var : [value] }
-    # mappings - '*' is replaced with
-    # a list of all possible values,
-    # and a scalar value is replaced
-    # with a list containing just that
-    # value.
-    for var, val in list(varyings.items()):
-
-        # This variable is not relevant for
-        # any of the specified file types.
-        if not any([var in query.variables(ft) for ft in ftypes]):
-            varyings.pop(var)
-            continue
-
-        elif val == '*': varyings[var] = allvars[var]
-        else:            varyings[var] = [val]
-
-    return varyings
-
-
-def prepareFixed(query, ftypes, fixed):
-    """Called by :meth:`.FileTreeManager.update`. Prepares a dictionary
-    which contains all possible values for each fixed variable, and for
-    each file type.
-
-    :arg query:  :class:`.FileTreeQuery` object
-
-    :arg ftypes: List of file types to be displayed
-
-    :arg fixed:  List of fixed variables
-
-    :returns:    A dict of ``{ ftype : { var : [value] } }`` mappings
-                 which, for each file type, contains a dictionary of
-                 all fixed variables and their possible values.
-    """
-
-    allvars = query.variables()
-
-    # Create a dict for each file type
-    # containing { var : [value] }
-    # mappings for all fixed variables
-    # which are relevant to that file
-    # type.
-    _fixed = {}
-    for ftype in ftypes:
-        ftvars        = query.variables(ftype)
-        _fixed[ftype] = {}
-        for var in fixed:
-            if var in ftvars:
-                _fixed[ftype][var] = allvars[var]
-    fixed = _fixed
-
-    return fixed
-
-
-def genColumns(ftypes, varyings, fixed):
-    """Determines all columns which need to be present in a file tree grid
-    for the given file types, varying and fixed variables.
-
-    :arg ftypes:   List of file types to be displayed
-
-    :arg varyings: Dict of ``{ var : [value} }`` mappings, containing all
-                   varying variables and their possible values (see
-                   :func:`prepareVaryings`).
-
-    :arg fixed:    Dict of ``{ ftype : { var : [value] } }`` mappings
-                   which, for each file type, contains a dictionary of
-                   all fixed variables and their possible values.
-
-    :returns:      Two lists which, combined, represent all columns to be
-                   displayed in the file tree grid:
-                    - A list of varying variable names
-                    - A list of tuples, with each tuple containing:
-                      - A file type
-                      - A dict of ``{var : value}`` mappings, containing
-                        fixed variable values
-    """
-
-    varcols   = [var for var, vals in varyings.items() if len(vals) > 1]
-    fixedcols = []
-
-    for ftype in ftypes:
-
-        ftvars    = fixed[ftype]
-        ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
-
-        for ftvals in ftvarprod:
-            ftvals = {var : val for var, val in zip(ftvars, ftvals)}
-            fixedcols.append((ftype, ftvals))
-
-    return varcols, fixedcols
-
-
-def genFileGroups(query, varyings, fixed):
-    """Generates a list of :class:`FileGroup` objects, each representing one
-    row in a grid defined by the given set of varying and fixed variables.
-
-    :arg query:    :class:`.FileTreeQuery` object
-
-    :arg varyings: Dict of ``{ var : [value} }`` mappings, containing all
-                   varying variables and their possible values (see
-                   :func:`prepareVaryings`).
-
-    :arg fixed:    Dict of ``{ ftype : { var : [value] } }`` mappings
-                   which, for each file type, contains a dictionary of
-                   all fixed variables and their possible values.
-
-    :returns:      A list of ``FileGroup`` objects.
-    """
-
-    # Build a list of file groups - each
-    # file group represents a group of
-    # files to be displayed together,
-    # corresponding to a combination of
-    # varying values
-    filegroups = []
-
-    # loop through all possible
-    # combinations of varying values
-    for rowi, vals in enumerate(it.product(*varyings.values())):
-
-        groupVars   = {var : val for var, val in zip(varyings.keys(), vals)}
-        groupFtypes = []
-        groupFixed  = []
-        groupFiles  = []
-
-        for ftype, ftvars in fixed:
-
-            fname = query.query(ftype, **groupVars, **ftvars)
-
-            # There should only be one file for
-            # each combination of varying+fixed
-            # values
-            if len(fname) == 1: fname = fname[0].filename
-            else:               fname = None
-
-            groupFtypes.append(ftype)
-            groupFixed .append(ftvars)
-            groupFiles .append(fname)
-
-        # Drop rows which have no files
-        if not all([f is None for f in groupFiles]):
-            grp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
-            filegroups.append(grp)
-
-    return filegroups
 
 
 class FileTreeManager(object):
@@ -540,6 +366,180 @@ class FileTreeManager(object):
         return self.__filegroups
 
 
+def prepareVaryings(query, ftypes, varyings):
+    """Called by :meth:`FileTreeManager.update`. Prepares a dictionary which
+    contains all possible values for each varying variable.
+
+    :arg query:    :class:`.FileTreeQuery` object
+
+    :arg ftypes:   List of file types to be displayed.
+
+    :arg varyings: Dict of ``{ var : value }`` mappings. A value of ``'*'``
+                   indicates that all possible values for this variable
+                   should be used.
+
+    :returns:      A dict of ``{ var : [value] }`` mappings, containing
+                   every possible value for each varying variable.
+    """
+
+    allvars = query.variables()
+
+    # Force a constsient ordering
+    # of the varying variables
+    _varyings = collections.OrderedDict()
+    for var in sorted(varyings.keys()):
+        _varyings[var] = varyings[var]
+    varyings = _varyings
+
+    # Expand the varying dict so that
+    # it contains { var : [value] }
+    # mappings - '*' is replaced with
+    # a list of all possible values,
+    # and a scalar value is replaced
+    # with a list containing just that
+    # value.
+    for var, val in list(varyings.items()):
+
+        # This variable is not relevant for
+        # any of the specified file types.
+        if not any([var in query.variables(ft) for ft in ftypes]):
+            varyings.pop(var)
+            continue
+
+        elif val == '*': varyings[var] = allvars[var]
+        else:            varyings[var] = [val]
+
+    return varyings
+
+
+def prepareFixed(query, ftypes, fixed):
+    """Called by :meth:`.FileTreeManager.update`. Prepares a dictionary
+    which contains all possible values for each fixed variable, and for
+    each file type.
+
+    :arg query:  :class:`.FileTreeQuery` object
+
+    :arg ftypes: List of file types to be displayed
+
+    :arg fixed:  List of fixed variables
+
+    :returns:    A dict of ``{ ftype : { var : [value] } }`` mappings
+                 which, for each file type, contains a dictionary of
+                 all fixed variables and their possible values.
+    """
+
+    allvars = query.variables()
+
+    # Create a dict for each file type
+    # containing { var : [value] }
+    # mappings for all fixed variables
+    # which are relevant to that file
+    # type.
+    _fixed = {}
+    for ftype in ftypes:
+        ftvars        = query.variables(ftype)
+        _fixed[ftype] = {}
+        for var in fixed:
+            if var in ftvars:
+                _fixed[ftype][var] = allvars[var]
+    fixed = _fixed
+
+    return fixed
+
+
+def genColumns(ftypes, varyings, fixed):
+    """Determines all columns which need to be present in a file tree grid
+    for the given file types, varying and fixed variables.
+
+    :arg ftypes:   List of file types to be displayed
+
+    :arg varyings: Dict of ``{ var : [value} }`` mappings, containing all
+                   varying variables and their possible values (see
+                   :func:`prepareVaryings`).
+
+    :arg fixed:    Dict of ``{ ftype : { var : [value] } }`` mappings
+                   which, for each file type, contains a dictionary of
+                   all fixed variables and their possible values.
+
+    :returns:      Two lists which, combined, represent all columns to be
+                   displayed in the file tree grid:
+                    - A list of varying variable names
+                    - A list of tuples, with each tuple containing:
+                      - A file type
+                      - A dict of ``{var : value}`` mappings, containing
+                        fixed variable values
+    """
+
+    varcols   = [var for var, vals in varyings.items() if len(vals) > 1]
+    fixedcols = []
+
+    for ftype in ftypes:
+
+        ftvars    = fixed[ftype]
+        ftvarprod = list(it.product(*[vals for vals in ftvars.values()]))
+
+        for ftvals in ftvarprod:
+            ftvals = {var : val for var, val in zip(ftvars, ftvals)}
+            fixedcols.append((ftype, ftvals))
+
+    return varcols, fixedcols
+
+
+def genFileGroups(query, varyings, fixed):
+    """Generates a list of :class:`FileGroup` objects, each representing one
+    row in a grid defined by the given set of varying and fixed variables.
+
+    :arg query:    :class:`.FileTreeQuery` object
+
+    :arg varyings: Dict of ``{ var : [value} }`` mappings, containing all
+                   varying variables and their possible values (see
+                   :func:`prepareVaryings`).
+
+    :arg fixed:    Dict of ``{ ftype : { var : [value] } }`` mappings
+                   which, for each file type, contains a dictionary of
+                   all fixed variables and their possible values.
+
+    :returns:      A list of ``FileGroup`` objects.
+    """
+
+    # Build a list of file groups - each
+    # file group represents a group of
+    # files to be displayed together,
+    # corresponding to a combination of
+    # varying values
+    filegroups = []
+
+    # loop through all possible
+    # combinations of varying values
+    for rowi, vals in enumerate(it.product(*varyings.values())):
+
+        groupVars   = {var : val for var, val in zip(varyings.keys(), vals)}
+        groupFtypes = []
+        groupFixed  = []
+        groupFiles  = []
+
+        for ftype, ftvars in fixed:
+
+            fname = query.query(ftype, **groupVars, **ftvars)
+
+            # There should only be one file for
+            # each combination of varying+fixed
+            # values
+            if len(fname) == 1: fname = fname[0].filename
+            else:               fname = None
+
+            groupFtypes.append(ftype)
+            groupFixed .append(ftvars)
+            groupFiles .append(fname)
+
+        # Drop rows which have no files
+        if not all([f is None for f in groupFiles]):
+            grp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
+            filegroups.append(grp)
+
+    return filegroups
+
+
 class OverlayManager(object):
     """The ``OverlayManager`` is used by the :class:`FileTreeManager`. It
     manages the mechanics of displaying overlays associated with the file tree.
@@ -566,9 +566,26 @@ class OverlayManager(object):
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        self.__cache       = cache.Cache(maxsize=50, lru=True)
-        self.__filegroups  = None
-        self.__order       = None
+
+        # Loaded overlays are cached to
+        # reduce swap time if they are
+        # re-shown.
+        self.__cache = cache.Cache(maxsize=50, lru=True)
+
+        # The current list of file
+        # groups - set in update
+        self.__filegroups = None
+
+        # When we swap one group out
+        # for another, we preserve
+        # the overlay ordering.
+        self.__order = None
+
+        # When we swap one group out
+        # for another, we preserve
+        # overlay display/opts
+        # property values.
+        self.__propVals = None
 
 
     def destroy(self):
@@ -582,6 +599,7 @@ class OverlayManager(object):
         self.__cache       = None
         self.__filegroups  = None
         self.__order       = None
+        self.__propVals    = None
 
 
     def update(self, filegroups):
@@ -590,6 +608,7 @@ class OverlayManager(object):
         """
         self.__filegroups = filegroups
         self.__order      = []
+        self.__propVals   = {}
 
 
     def show(self, filegroup):
@@ -621,20 +640,25 @@ class OverlayManager(object):
             new[FILETREE_PREFIX + fid] = fname
 
         # Get refs to the existing
-        # overlays with the same
-        # file ID - we will replace
-        # the existing ones with the
-        # new ones.
+        # filetree overlays - we will
+        # replace the existing ones
+        # with the new ones.
         old = collections.OrderedDict()
         for ovl in displayCtx.getOrderedOverlays():
-            if ovl.name in new:
+            if ovl.name.startswith(FILETREE_PREFIX):
                 old[ovl.name] = ovl
+
+        # Save the display settings
+        # of the old overlays - we'll
+        # apply them to the new ones
+        for fid, ovl in old.items():
+            self.__propVals[fid] = getProperties(ovl, displayCtx)
 
         # Save the ordering of the old
         # overlays so we can preserve
         # it in the new overlays. The
         # length check is to take into
-        # account missingd files -
+        # account missing files -
         # file groups with more present
         # files should take precedence
         # over file groups with more
@@ -645,9 +669,9 @@ class OverlayManager(object):
         # Set the ordering of the new
         # overlays based on the old ones
         order = self.__order
-        keys  = [k for k in order if k     in new] + \
-                [k for k in new   if k not in order]
-        new   = collections.OrderedDict([(k, new[k]) for k in keys])
+        fids  = [f for f in order if f     in new] + \
+                [f for f in new   if f not in order]
+        new   = collections.OrderedDict([(f, new[f]) for f in fids])
 
         if len(new) > 0:
             self.__load(new, old)
@@ -668,9 +692,9 @@ class OverlayManager(object):
         # in the cache, and don't
         # need to be re-loaded
         cache     = self.__cache
-        toload    = [(k, f) for k, f in new.items() if f not in cache]
-        loadkeys  = [kf[0] for kf in toload]
-        loadfiles = [kf[1] for kf in toload]
+        toload    = [(fid, f) for fid, f in new.items() if fid not in cache]
+        loadfids  = [f[0] for f in toload]
+        loadfiles = [f[1] for f in toload]
 
         def onLoad(ovlidxs, ovls):
 
@@ -679,16 +703,16 @@ class OverlayManager(object):
             # just loaded, or from the cache.
             toshow = collections.OrderedDict()
 
-            for key, fname in new.items():
+            for fid, fname in new.items():
 
                 # Is this overlay in the cache?
                 if fname in cache:
-                    toshow[key] = cache[fname]
+                    toshow[fid] = cache[fname]
 
                 # Or has it just been loaded?
                 else:
-                    idx         = loadkeys.index(key)
-                    toshow[key] = ovls[idx]
+                    idx         = loadfids.index(fid)
+                    toshow[fid] = ovls[idx]
                     cache.put(fname, ovls[idx])
 
             self.__show(toshow, old)
@@ -707,73 +731,125 @@ class OverlayManager(object):
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
 
-        # Get refs to all existing filetree
-        # overlays, because we're going to
-        # remove them all after adding the
-        # new ones
-        oldovls = [o for o in overlayList
-                   if o.name.startswith(FILETREE_PREFIX) and
-                   o not in new.values()]
+        # Drop old overlays that
+        # are being (re-)addd
+        old = collections.OrderedDict(
+            [(fid, ovl) for fid, ovl in old.items()
+             if ovl not in new.values()])
 
         # Drop new overlays that
         # are already in the list
         new = collections.OrderedDict(
-            [(key, ovl) for key, ovl in new.items()
+            [(fid, ovl) for fid, ovl in new.items()
              if ovl not in overlayList])
 
-        for key, ovl in new.items(): log.debug('Adding %s: %s', key, ovl)
-        for      ovl in oldovls:     log.debug('Removing %s',   ovl)
+        for fid, ovl in new.items(): log.debug('Adding %s: %s', fid, ovl)
+        for      ovl in old:         log.debug('Removing %s',   ovl)
 
         # We set the name of each new overlay
-        # to its ID key. If the user changes
+        # to its file ID. If the user changes
         # the overlay name, it will no longer
         # be tracked
-        for key, ovl in new.items():
-            ovl.name = key
+        for fid, ovl in new.items():
+            ovl.name = fid
 
-        # Get a list of overlay types from
-        # the old overlays, if present
+        # Copy the display settings across from
+        # the old overlays to the new ones. The
+        # old ones were saved in the show method,
+        # but we need to rearrange them a little
+        # before passing them to the overlayList.
         propVals = collections.defaultdict(dict)
-        for key, ovl in new.items():
-            if key in old:
 
-                oldovl  = old[key]
-                display = displayCtx.getDisplay(oldovl)
-                opts    = displayCtx.getOpts(   oldovl)
+        for fid, ovl in new.items():
+            for name, val in self.__propVals.get(fid, {}).items():
 
-                for propName in display.getAllProperties()[0]:
-                    propVals[propName][ovl] = getattr(display, propName)
-                for propName in opts.getAllProperties()[0]:
+                # If the value is a file ID, it
+                # has been REPLACEd by the
+                # getProperties function - see
+                # REPLACE/getProperties.
+                if val in new: val = new[val.name]
+                else:          val = None
 
-                    val = getattr(opts, propName)
+                propVals[name][ovl] = val
 
-                    # these get calculated automatically
-                    if propName in ('bounds', 'transform'):
-                        continue
-
-                    # mesh data/vertices are complicated,
-                    # so I'm not doing them for the time
-                    # being.
-                    if isinstance(opts, meshopts.MeshOpts):
-
-                        if propName in ('vertexData', 'vertexSet'):
-                            continue
-
-                        # Find a new reference image
-                        if propName == 'refImage':
-                            ref = opts.refImage
-                            if ref is not None and ref.name in new:
-                                val = new[ref.name]
-
-                    propVals[propName][ovl] = val
+        # remove the old overlays from any
+        # overlay groups, otherwise property
+        # syncing might screw things up
+        old = list(old.values())
+        for ovl in old:
+            for group in displayCtx.overlayGroups:
+                group.removeOverlay(ovl)
 
         # Insert the new overlays
         # into the list. We'll sort
         # out overlay order later on.
         overlayList.extend(new.values(), **propVals)
 
+        # preserve the display space if
+        # it was set to a filegroup image
+        dspace = displayCtx.displaySpace
+        if dspace in old and dspace.name in new:
+            displayCtx.displaySpace = new[dspace.name]
+
         # Remove all of the
         # old filetree overlays
         idxs           = range(len(overlayList))
-        idxs           = [i for i in idxs if overlayList[i] not in oldovls]
+        idxs           = [i for i in idxs if overlayList[i] not in old]
         overlayList[:] = [overlayList[i] for i in idxs]
+
+
+
+REPLACE = td.TypeDict({
+    'DisplayOpts' : ['bounds'],
+    'MeshOpts'    : ['refImage'],
+    'NiftiOpts'   : ['transform'],
+    'VolumeOpts'  : ['clipImage'],
+    'VectorOpts'  : ['colourImage', 'modulateImage', 'clipImage']
+})
+"""This dict contains :class:`.DisplayOpts` properties which refer to other
+images, and which need to be explicitly handled when the
+:class:`OverlayManager` swaps a group of overlays in for another.
+"""
+
+
+SKIP = td.TypeDict({
+    'MeshOpts' : ['vertexSet', 'vertexData', 'vertexDataIndex'],
+})
+"""This dict contains :class:`.DisplayOpts` properties which are not copied
+when the :class:`OverlayManager` swaps a group of overlays in for an existing
+group.
+"""
+
+
+def getProperties(ovl, displayCtx):
+    """Retrieves the :class:`.Display` and :class:`DisplayOpts` properties
+    for the given overlay, applying the rules defined by the :attr:`REPLACE`
+    and :attr:`SKIP` dictionaries.
+
+    :arg ovl:        An overlay
+    :arg displayCtx: The :class:`.DisplayContext` managing the overlay display.
+    :returns:        a dict of ``{ name : value}`` mappings.
+    """
+
+    propVals = {}
+    display  = displayCtx.getDisplay(ovl)
+    opts     = displayCtx.getOpts(   ovl)
+    skip     = it.chain(*SKIP   .get(opts, [], allhits=True))
+    replace  = it.chain(*REPLACE.get(opts, [], allhits=True))
+
+    for propName in display.getAllProperties()[0]:
+        propVals[propName] = getattr(display, propName)
+
+    for propName in opts.getAllProperties()[0]:
+
+        value = getattr(opts, propName)
+
+        if propName in skip:
+            continue
+
+        if (propName in replace) and (value is not None):
+            value = value.name
+
+        propVals[propName] = value
+
+    return propVals
