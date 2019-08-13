@@ -763,12 +763,14 @@ class OverlayManager(object):
         for fid, ovl in new.items():
             for name, val in self.__propVals.get(fid, {}).items():
 
-                # If the value is a file ID, it
-                # has been REPLACEd by the
-                # getProperties function - see
-                # REPLACE/getProperties.
-                if val in new: val = new[val.name]
-                else:          val = None
+                # If the value is a ToReplace
+                # object, it has has been
+                # REPLACEd by the getProperties
+                # function - see REPLACE and
+                # getProperties.
+                if isinstance(val, ToReplace):
+                    if val.value in new: val = new[val.value]
+                    else:                val = None
 
                 propVals[name][ovl] = val
 
@@ -800,9 +802,7 @@ class OverlayManager(object):
 
 
 REPLACE = td.TypeDict({
-    'DisplayOpts' : ['bounds'],
     'MeshOpts'    : ['refImage'],
-    'NiftiOpts'   : ['transform'],
     'VolumeOpts'  : ['clipImage'],
     'VectorOpts'  : ['colourImage', 'modulateImage', 'clipImage']
 })
@@ -813,12 +813,23 @@ images, and which need to be explicitly handled when the
 
 
 SKIP = td.TypeDict({
-    'MeshOpts' : ['vertexSet', 'vertexData', 'vertexDataIndex'],
+    'DisplayOpts' : ['bounds'],
+    'NiftiOpts'   : ['transform'],
+    'MeshOpts'    : ['vertexSet', 'vertexData', 'vertexDataIndex'],
 })
 """This dict contains :class:`.DisplayOpts` properties which are not copied
 when the :class:`OverlayManager` swaps a group of overlays in for an existing
 group.
 """
+
+
+class ToReplace(object):
+    """Placeholder type used by the :func:`getProperties` function when a
+    property value is in the :attr:`REPLACE` dictionary, and needs to be
+    explicitly handled by the :class:`OverlayManager`.
+    """
+    def __init__(self, value):
+        self.value = value
 
 
 def getProperties(ovl, displayCtx):
@@ -834,8 +845,8 @@ def getProperties(ovl, displayCtx):
     propVals = {}
     display  = displayCtx.getDisplay(ovl)
     opts     = displayCtx.getOpts(   ovl)
-    skip     = it.chain(*SKIP   .get(opts, [], allhits=True))
-    replace  = it.chain(*REPLACE.get(opts, [], allhits=True))
+    skip     = list(it.chain(*SKIP   .get(opts, [], allhits=True)))
+    replace  = list(it.chain(*REPLACE.get(opts, [], allhits=True)))
 
     for propName in display.getAllProperties()[0]:
         propVals[propName] = getattr(display, propName)
@@ -848,7 +859,7 @@ def getProperties(ovl, displayCtx):
             continue
 
         if (propName in replace) and (value is not None):
-            value = value.name
+            value = ToReplace(value.name)
 
         propVals[propName] = value
 
