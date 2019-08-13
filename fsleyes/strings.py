@@ -308,6 +308,8 @@ messages = TypeDict({
     'FileTreePanel.loadDir'        : 'Load directory',
     'FileTreePanel.loadCustomTree' : 'Load filetree file',
     'FileTreePanel.save'           : 'Save notes',
+    'FileListPanel.buildingList'   : 'Building file list ...',
+    'FileListPanel.loading'        : 'Loading files ...',
 })
 
 

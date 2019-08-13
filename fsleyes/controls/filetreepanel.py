@@ -24,6 +24,7 @@ import              wx
 import fsl.utils.idle                   as idle
 import fsl.utils.filetree               as filetree
 import fsl.utils.settings               as fslsettings
+import fsleyes_widgets.utils.overlay    as fwoverlay
 import fsleyes_widgets.widgetlist       as wlist
 import fsleyes_widgets.widgetgrid       as wgrid
 import fsleyes_widgets.elistbox         as elb
@@ -563,6 +564,9 @@ class FileListPanel(wx.Panel):
         grid    = self.__grid
         fgroups = mgr.filegroups
         varcols = mgr.varcols
+        msg     = strings.messages[self, 'buildingList']
+
+        fwoverlay.textOverlay(self.__grid, msg)
 
         for rowi, fgroup in enumerate(fgroups):
 
@@ -580,6 +584,9 @@ class FileListPanel(wx.Panel):
             for coli, filename in enumerate(fgroup.files, len(varcols)):
                 if filename is not None: grid.SetText(rowi, coli, PRESENTLBL)
                 else:                    grid.SetText(rowi, coli, '')
+
+        self.Refresh()
+        self.Update()
 
 
     def __createNotes(self):
@@ -637,7 +644,17 @@ class FileListPanel(wx.Panel):
         # the overlays are being swapped,
         # otherwise FSLeyes will explode.
         freezeTime = time.time()
-        self.__grid.SetEvtHandlerEnabled(False)
+        freezeMsg  = strings.messages[self, 'loading']
+
+        def freeze():
+            self.__grid.SetEvtHandlerEnabled(False)
+            idle.idle(fwoverlay.textOverlay, self.__grid, freezeMsg)
+            self.__mgr.show(group)
+
+        def thaw():
+            self.__grid.SetEvtHandlerEnabled(True)
+            self.Refresh()
+            self.Update()
 
         # Wait until every overlay is in the
         # overlay list, or 5 seconds have
@@ -651,9 +668,9 @@ class FileListPanel(wx.Panel):
             return allin or ((thawTime - freezeTime) >= 5)
 
         try:
-            self.__mgr.show(group)
+            freeze()
         finally:
-            idle.idleWhen(self.__grid.SetEvtHandlerEnabled, thawWhen)
+            idle.idleWhen(thaw, thawWhen)
 
 
     def __onReorder(self, ev):
