@@ -290,7 +290,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # If we have inherited values from a
         # parent instance, make sure the vertex
         # data (if set) is initialised
-        self.__vertexDataChanged()
+        if self.vertexData is not None:
+            self.__vertexDataChanged()
 
         # If a reference image has not
         # been set on the parent MeshOpts
