@@ -503,6 +503,9 @@ def genFileGroups(query, varyings, fixed):
     :returns:      A list of ``FileGroup`` objects.
     """
 
+    if len(varyings) == 0:
+        return []
+
     # Build a list of file groups - each
     # file group represents a group of
     # files to be displayed together,
@@ -814,8 +817,12 @@ class OverlayManager(object):
              if ovl not in new.values()])
 
         # Drop new overlays that
-        # are already in the list
-        new = collections.OrderedDict(
+        # are already in the list,
+        # but keep a ref to the
+        # original, in case any
+        # properties refer to them
+        allnew = new
+        new    = collections.OrderedDict(
             [(fid, ovl) for fid, ovl in new.items()
              if ovl not in overlayList])
 
@@ -845,8 +852,8 @@ class OverlayManager(object):
                 # function - see REPLACE and
                 # getProperties.
                 if isinstance(val, ToReplace):
-                    if val.value in new: val = new[val.value]
-                    else:                val = None
+                    if val.value in allnew: val = allnew[val.value]
+                    else:                   val = None
 
                 propVals[name][ovl] = val
 
