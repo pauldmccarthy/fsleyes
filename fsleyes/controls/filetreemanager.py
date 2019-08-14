@@ -237,11 +237,12 @@ class FileTreeManager(object):
         :arg fixed:    List of variable names defining the fixed variables.
         """
 
-        query              = self.query
-        varyings           = prepareVaryings(query, ftypes, varyings)
-        fixed              = prepareFixed(   query, ftypes, fixed)
-        varcols, fixedcols = genColumns(     ftypes, varyings, fixed)
-        filegroups         = genFileGroups(  query, varyings, fixedcols)
+        query                 = self.query
+        varyings              = prepareVaryings( query,  ftypes,   varyings)
+        fixed                 = prepareFixed(    query,  ftypes,   fixed)
+        varcols,    fixedcols = genColumns(      ftypes, varyings, fixed)
+        filegroups            = genFileGroups(   query,  varyings, fixedcols)
+        filegroups, fixedcols = filterFileGroups(filegroups,       fixedcols)
 
         self.__ovlmgr.update(filegroups)
 
@@ -495,9 +496,9 @@ def genFileGroups(query, varyings, fixed):
                    varying variables and their possible values (see
                    :func:`prepareVaryings`).
 
-    :arg fixed:    Dict of ``{ ftype : { var : [value] } }`` mappings
-                   which, for each file type, contains a dictionary of
-                   all fixed variables and their possible values.
+    :arg fixed:    List of tuples of ``(ftype, { var : value })`` mappings,
+                   which each contain a file type and set of fixed variables
+                   corresponding to one column in the grid.
 
     :returns:      A list of ``FileGroup`` objects.
     """
@@ -532,38 +533,87 @@ def genFileGroups(query, varyings, fixed):
             groupFixed .append(ftvars)
             groupFiles .append(fname)
 
-        newgrp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
+        grp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
+        filegroups.append(grp)
 
-        # TODO optimise this
-        for i, oldgrp in enumerate(filegroups):
+    return filegroups
 
-            newfiles = [f for f in newgrp.files if f is not None]
-            oldfiles = [f for f in oldgrp.files if f is not None]
 
-            # An existing group already
-            # contains all of the files
-            # of this group - we can skip
-            # this column
+def filterFileGroups(filegroups, fixedcols):
+    """Filters out empty, duplicate and redundant rows, and empty columns,
+    from ``filegroups``
+
+    :arg filegroups: List of :class:`FileGroup` objects.
+    :arg fixedcols:  List of ``(ftype, { var : value })`` mappings
+    :returns:        A tuple containing the filtered ``filegroups`` and
+                     ``fixedcols``
+    """
+
+    # TODO optimise this whole thing
+
+    dropcols = set()
+
+    # Remove duplicate/redundant rows
+    for i in range(len(filegroups) - 1, -1, -1):
+
+        grpi = filegroups[i]
+
+        if i in dropcols:
+            continue
+
+        for j in range(i):
+
+            grpj = filegroups[j]
+
+            if j in dropcols:
+                continue
+
+            ifiles = [f for f in grpi.files if f is not None]
+            jfiles = [f for f in grpj.files if f is not None]
+
+            # Group j already contains all
+            # of the files in group i - we
+            # can drop group i
             #
             # This condition will also
             # pass if the new group does
             # not have any files (so we
             # are dropping empty rows)
-            if all([n in oldfiles for n in newfiles]):
-                newgrp.files = []
+            if all([n in jfiles for n in ifiles]):
+                dropcols.add(i)
                 break
 
-            # This group contains all the
-            # files of the old group, plus
+            # Group i contains all the
+            # files of group j, plus
             # some more - we can drop the
-            # old column
-            elif all([n in newfiles for n in oldfiles]):
-                filegroups.pop(i)
+            # group j
+            elif all([n in ifiles for n in jfiles]):
+                dropcols.add(j)
+                break
 
-        if len(newgrp.files) > 0:
-            filegroups.append(newgrp)
+    filegroups = [g for i, g in enumerate(filegroups) if i not in dropcols]
 
-    return filegroups
+    # Count the number of present files in
+    # each column, and drop empty columns
+    if len(filegroups) > 0: ncolumns = len(filegroups[0].files)
+    else:                   ncolumns = 0
+
+    colcounts = {i : 0 for i in range(ncolumns)}
+    for grp in filegroups:
+        for i, fname in enumerate(grp.files):
+            if fname is not None:
+                colcounts[i] += 1
+
+    keepcols = [idx for idx, count in colcounts.items() if count > 0]
+
+    if len(keepcols) > 0 and len(keepcols) < ncolumns:
+        fixedcols = [fixedcols[i] for i in keepcols]
+        for grp in filegroups:
+            grp.fileIDs = [grp.fileIDs[i] for i in keepcols]
+            grp.files   = [grp.files[  i] for i in keepcols]
+            grp.fixed   = [grp.fixed[  i] for i in keepcols]
+
+    return filegroups, fixedcols
 
 
 class OverlayManager(object):
@@ -808,9 +858,7 @@ class OverlayManager(object):
             for group in displayCtx.overlayGroups:
                 group.removeOverlay(ovl)
 
-        # Insert the new overlays
-        # into the list. We'll sort
-        # out overlay order later on.
+        # Insert the new overlays into the list.
         overlayList.extend(new.values(), **propVals)
 
         # preserve the display space if
