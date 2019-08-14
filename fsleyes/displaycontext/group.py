@@ -101,17 +101,8 @@ class OverlayGroup(props.HasProperties):
         :arg overlayList: The :class:`.OverlayList`.
         """
 
-        self.__displayCtx  = displayCtx
-        self.__overlayList = overlayList
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        # This dict is used by the __bindDisplayOpts
-        # method to keep track of which group properties
-        # have already been given a value
-        self.__hasBeenSet  = {}
-
         # Import all of the Display/DisplayOpts
-        # classes into the local namespace
+        # classes into the local namespace.
         from fsleyes.displaycontext import (  # noqa
             Display,
             NiftiOpts,
@@ -125,6 +116,21 @@ class OverlayGroup(props.HasProperties):
             LabelOpts,
             TensorOpts)
 
+        self.__displayCtx  = displayCtx
+        self.__overlayList = overlayList
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+
+        # This dict is used by the __bindDisplayOpts
+        # method to keep track of which group properties
+        # have already been given a value
+        self.__hasBeenSet  = {}
+
+        # Save a ref to each type so we
+        # can look up classes by name.
+        self.__typeMappings = {}
+        for clsName in OverlayGroup._groupBindings.keys():
+            self.__typeMappings[clsName] = locals()[clsName]
+
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged)
@@ -135,12 +141,11 @@ class OverlayGroup(props.HasProperties):
         # instance.
         for clsName, propNames in OverlayGroup._groupBindings.items():
 
-            cls = locals()[clsName]
+            cls = self.__typeMappings[clsName]
 
             for propName in propNames:
                 prop = copy.copy(getattr(cls, propName))
                 self.addProperty('{}_{}'.format(clsName, propName), prop)
-
                 self.__hasBeenSet[clsName, propName] = False
 
         # Special case - make sure that the NiftiOpts
@@ -245,9 +250,24 @@ class OverlayGroup(props.HasProperties):
 
         display.removeListener('overlayType', self.__name)
 
-        if len(self.overlays) == 0:
-            for key in self.__hasBeenSet.keys():
-                self.__hasBeenSet[key] = False
+        # If this was the last overlay of its type,
+        # make sure to clear the hasBeenSet flag
+        # for all relevent properties; otherwise
+        # the properties of the next overlay of
+        # this type to be added will be clobbered
+        # by the old group values.
+        allopts   = [self.__displayCtx.getOpts(o) for o in self.overlays]
+        bindProps = OverlayGroup._groupBindings.get(opts,
+                                                    allhits=True,
+                                                    bykey=True)
+        for clsName, propNames in bindProps.items():
+
+            cls     = self.__typeMappings[clsName]
+            noftype = len([o for o in allopts if issubclass(type(o), cls)])
+
+            if noftype == 0:
+                for propName in propNames:
+                    self.__hasBeenSet[clsName, propName] = False
 
 
     def __bindDisplayOpts(self, target, unbind=False):
@@ -287,7 +307,6 @@ class OverlayGroup(props.HasProperties):
                 # property values with un-initialised
                 # group property values.
                 if not self.__hasBeenSet[clsName, propName]:
-
                     setattr(self, groupName, getattr(target, propName))
                     self.__hasBeenSet[clsName, propName] = True
 
