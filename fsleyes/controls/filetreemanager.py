@@ -511,7 +511,7 @@ def genFileGroups(query, varyings, fixed):
 
     # loop through all possible
     # combinations of varying values
-    for rowi, vals in enumerate(it.product(*varyings.values())):
+    for vals in it.product(*varyings.values()):
 
         groupVars   = {var : val for var, val in zip(varyings.keys(), vals)}
         groupFtypes = []
@@ -532,10 +532,36 @@ def genFileGroups(query, varyings, fixed):
             groupFixed .append(ftvars)
             groupFiles .append(fname)
 
-        # Drop rows which have no files
-        if not all([f is None for f in groupFiles]):
-            grp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
-            filegroups.append(grp)
+        newgrp = FileGroup(groupVars, groupFixed, groupFtypes, groupFiles)
+
+        # TODO optimise this
+        for i, oldgrp in enumerate(filegroups):
+
+            newfiles = [f for f in newgrp.files if f is not None]
+            oldfiles = [f for f in oldgrp.files if f is not None]
+
+            # An existing group already
+            # contains all of the files
+            # of this group - we can skip
+            # this column
+            #
+            # This condition will also
+            # pass if the new group does
+            # not have any files (so we
+            # are dropping empty rows)
+            if all([n in oldfiles for n in newfiles]):
+                newgrp.files = []
+                break
+
+            # This group contains all the
+            # files of the old group, plus
+            # some more - we can drop the
+            # old column
+            elif all([n in newfiles for n in oldfiles]):
+                filegroups.pop(i)
+
+        if len(newgrp.files) > 0:
+            filegroups.append(newgrp)
 
     return filegroups
 
