@@ -557,14 +557,14 @@ def filterFileGroups(filegroups, fixedcols):
     dropcols = set()
 
     # Remove duplicate/redundant rows
-    for i in range(len(filegroups) - 1, -1, -1):
+    for i in range(len(filegroups)):
 
         grpi = filegroups[i]
 
         if i in dropcols:
             continue
 
-        for j in range(i):
+        for j in range(i + 1, len(filegroups)):
 
             grpj = filegroups[j]
 
@@ -574,24 +574,20 @@ def filterFileGroups(filegroups, fixedcols):
             ifiles = [f for f in grpi.files if f is not None]
             jfiles = [f for f in grpj.files if f is not None]
 
-            # Group j already contains all
-            # of the files in group i - we
-            # can drop group i
-            #
-            # This condition will also
-            # pass if the new group does
-            # not have any files (so we
-            # are dropping empty rows)
+            # Note that the conditions below
+            # will cause empty groups (groups
+            # with no files present) to be
+            # dropped
+
+            # Group i contains all the files
+            # of group j - we can drop group j
+            if all([n in ifiles for n in jfiles]):
+                dropcols.add(j)
+
+            # Group j contains all the files
+            # in group i - we can drop group i
             if all([n in jfiles for n in ifiles]):
                 dropcols.add(i)
-                break
-
-            # Group i contains all the
-            # files of group j, plus
-            # some more - we can drop the
-            # group j
-            elif all([n in ifiles for n in jfiles]):
-                dropcols.add(j)
                 break
 
     filegroups = [g for i, g in enumerate(filegroups) if i not in dropcols]
@@ -731,7 +727,9 @@ class OverlayManager(object):
         # of the old overlays - we'll
         # apply them to the new ones
         for fid, ovl in old.items():
-            self.__propVals[fid] = getProperties(ovl, displayCtx)
+            propVals = self.__propVals.get(fid, {})
+            propVals.update(getProperties(ovl, displayCtx))
+            self.__propVals[fid] = propVals
 
         # Save the ordering of the old
         # overlays so we can preserve
@@ -934,9 +932,12 @@ def getProperties(ovl, displayCtx):
 
     for propName in opts.getAllProperties()[0]:
 
+        if propName in skip:
+            continue
+
         value = getattr(opts, propName)
 
-        if propName in skip:
+        if value is None:
             continue
 
         if (propName in replace) and (value is not None):
