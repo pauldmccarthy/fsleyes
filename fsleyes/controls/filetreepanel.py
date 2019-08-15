@@ -42,6 +42,15 @@ ALLLBL     = strings.labels['VariablePanel.value.all']
 PRESENTLBL = strings.labels['FileListPanel.present']
 
 
+BUILTIN_TREE_FILTER = ['BedpostX', 'Diffusion', 'HCP_Surface', 'ProbtrackX',
+                       'bet',      'dti',       'eddy',        'epi_reg',
+                       'fast',     'topup']
+"""Built-in ``.tree`` files with a name in this list are hidden from the
+:class:`FileTreePanel` interface. These trees are not very useful for our
+purposes of navigating multi-subject data directories.
+"""
+
+
 class FileTreePanel(ctrlpanel.ControlPanel):
     """The ``FileTreePanel`` can be used to browse the contents of structured
     directories which are described with a :mod:`.filetree`.
@@ -112,7 +121,15 @@ class FileTreePanel(ctrlpanel.ControlPanel):
                                               self.__fileList)
         self.__mainSplitter.SetSashGravity(0.3)
 
-        treefiles   = list(filetree.list_all_trees())
+        # Build a list of all built-in filetrees,
+        # along with any custom ones that have been
+        # previously loaded. We hide the BUILTIN
+        # ones
+        def filter(tf):
+            name = op.splitext(op.basename(tf))[0]
+            return name not in BUILTIN_TREE_FILTER
+
+        treefiles   = [tf for tf in filetree.list_all_trees() if filter(tf)]
         treefiles  += FileTreePanel.customTrees
         treefiles   = [op.abspath( tf) for tf in treefiles]
         treelabels  = [op.basename(tf) for tf in treefiles]
@@ -125,8 +142,8 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__save      .SetLabel(strings.labels[self, 'save'])
 
         self.__topSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__topSizer.Add(self.__loadDir,    flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__treeChoice, flag=wx.EXPAND, proportion=1)
+        self.__topSizer.Add(self.__loadDir,    flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__customTree, flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__save,       flag=wx.EXPAND, proportion=1)
 
