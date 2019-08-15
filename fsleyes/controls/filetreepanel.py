@@ -63,6 +63,14 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     :class:`.FileTree` and of displaying overlays.
     """
 
+
+    customTrees = []
+    """Whenever the user loads a custom tree file, its path is added to this
+    list, so that the tree file dropdown box can be populated with previously
+    loaded tree files.
+    """
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``FileTreePanel``.
 
@@ -104,8 +112,11 @@ class FileTreePanel(ctrlpanel.ControlPanel):
                                               self.__fileList)
         self.__mainSplitter.SetSashGravity(0.3)
 
-        treefiles  = filetree.list_all_trees()
-        treelabels = [op.basename(tf) for tf in treefiles]
+        treefiles   = list(filetree.list_all_trees())
+        treefiles  += FileTreePanel.customTrees
+        treefiles   = [op.abspath( tf) for tf in treefiles]
+        treelabels  = [op.basename(tf) for tf in treefiles]
+
         for f, l in zip(treefiles, treelabels):
             self.__treeChoice.Append(l, clientData=f)
 
@@ -225,7 +236,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__loadTree(treename, dirname)
 
 
-    def __onTreeChoice(self, ev):
+    def __onTreeChoice(self, ev=None):
         """Called when the user changes the built-in file tree selection.
         Calls the :meth:`__loadTree` method.
         """
@@ -246,10 +257,22 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        dirname  = self.__dirName.GetLabel() or None
-        treefile = dlg.GetPath()
+        # TODO make sure tree label is unique
+        choice    = self.__treeChoice
+        ntrees    = choice.GetCount()
+        treefile  = op.abspath(dlg.GetPath())
+        treelabel = op.basename(treefile)
+        existing  = [choice.GetClientData(i) for i in range(ntrees)]
 
-        self.__loadTree(treefile, dirname)
+        try:               index = existing.index(treefile)
+        except ValueError: index = -1
+
+        if index == -1:
+            index = ntrees
+            choice.Append(treelabel, clientData=treefile)
+
+        choice.SetSelection(index)
+        self.__onTreeChoice()
 
 
     def __onSave(self, ev):
