@@ -1,4 +1,5 @@
 .. |right_arrow| unicode:: U+21D2
+.. |tick|        unicode:: U+2713
 
 
 .. _file_tree:
@@ -20,13 +21,16 @@ including:
  - `Human Connectome Project <http://www.humanconnectomeproject.org/>`_ data
  - Raw `BIDS <https://bids.neuroimaging.io/>`_ data
  - `Freesurfer <http://www.freesurfer.net/>`_ data
+ - `FEAT <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ data
+ - `VBM <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLVBM>`_ data
+ - `TBSS <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/TBSS>`_ data
 
 It is also possible to :ref:`define your own file tree
 <file_tree_define_your_own>`, for working with your own directory structures.
 
 
-Opening a data directory
-------------------------
+Loading data
+------------
 
 
 .. image:: images/filetree_toprow.png
@@ -35,20 +39,26 @@ Opening a data directory
 
 
 .. image:: images/filetree_filetypes_and_variables.png
-   :width: 25%
+   :width: 20%
    :align: left
 
 
-The file tree panel has a row along its top containing a drop-down box and
-some buttons. When you want to open a directory, the first step is to select
-the data directory type from the dropdown box. Or, if you have a custom tree
-file, you can select it via the *Load tree file* button.
+The file tree panel has a row along its top containing a drop-down list and
+some buttons.  When you want to browse some data, you first need to select the
+data directory type from the dropdown list - for example, if you want to view
+some VBM data, you would select *vbm.tree* from the list.  If you have a
+custom tree file, you can select it via the *Load tree file* button.
 
 
 Once you have selected a tree, click on the *Load directory* button to select
 your data directory. The left side of the file tree panel will be then be
 populated with lists of all the file types and variables present in the
-directory. Here we are looking at some data from the Human Connectome Project.
+directory.
+
+
+Here we have selected the *HCP_directory.tree*, and have loaded a directory
+containing data for a handful of individuals from the Human Connectome
+Project.
 
 
 Configuring the file list
@@ -56,15 +66,45 @@ Configuring the file list
 
 
 The next step is to choose which file types you want to display - you can do
-this by selecting them from the file type list on the left. As soon as you
+this by selecting them from the file type list on the left.  As soon as you
 select some file types, a list of files will appear on the right side of the
-file tree panel.
+file tree panel. The list will update whenever you change the selected file
+types or variable settings.
 
 
+Let's imagine that we want to look at the white-matter surfaces overlaid on
+the native-space T1 image for all of our subjects. For HCP data, we would
+select the *T1w_acpc_dc* and *T1w_native/white* file types. We're viewing data
+in native subject space, so we'll set the *space* variable to *native*.
+
+
+We would also like to view white matter surfaces for both the left and right
+hemispheres together - we can accomplish this by setting the *hemi* variable
+to *<all>*, which will cause files for every value of *hemi* to be listed on
+the same row.
+
+
+.. image:: images/filetree_filelist.png
+   :width: 70%
+   :align: center
+
+
+You will end up with a grid which contains a row for every combination of
+variable values, and a column for every file type, and every combination of
+values for variables set to *<all>*. A |tick| indicates that the file is
+present - cells for missing/absent files will be empty. The right-most column
+allows you to enter notes for each row - see the section below on :ref:`saving
+notes <file_tree_saving_notes>`.
+
+
+Viewing data
+------------
+
+
+.. _file_tree_saving_notes:
 
 Saving notes
 ------------
-
 
 
 
