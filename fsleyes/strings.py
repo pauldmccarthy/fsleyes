@@ -893,7 +893,7 @@ labels = TypeDict({
     'FileTreePanel.customTree' : 'Load tree file',
     'FileTreePanel.save'       : 'Save notes',
     'FileListPanel.notes'      : 'Notes',
-    'FileListPanel.present'    : '\u2022',
+    'FileListPanel.present'    : '\u2713',
     'VariablePanel.value.none' : '<none>',
     'VariablePanel.value.any'  : '<any>',
     'VariablePanel.value.all'  : '<all>',

@@ -44,7 +44,7 @@ PRESENTLBL = strings.labels['FileListPanel.present']
 
 BUILTIN_TREE_FILTER = ['BedpostX', 'Diffusion', 'HCP_Surface', 'ProbtrackX',
                        'bet',      'dti',       'eddy',        'epi_reg',
-                       'fast',     'topup']
+                       'fast',     'topup',     'feat_reg',    'feat_stats']
 """Built-in ``.tree`` files with a name in this list are hidden from the
 :class:`FileTreePanel` interface. These trees are not very useful for our
 purposes of navigating multi-subject data directories.
