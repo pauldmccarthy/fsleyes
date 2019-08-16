@@ -130,6 +130,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             return name not in BUILTIN_TREE_FILTER
 
         treefiles   = [tf for tf in filetree.list_all_trees() if filter(tf)]
+        treefiles   = list(sorted(treefiles))
         treefiles  += FileTreePanel.customTrees
         treefiles   = [op.abspath( tf) for tf in treefiles]
         treelabels  = [op.basename(tf) for tf in treefiles]
