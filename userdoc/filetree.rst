@@ -1,4 +1,6 @@
 .. |right_arrow| unicode:: U+21D2
+.. |up_arrow|    unicode:: U+2191
+.. |down_arrow|  unicode:: U+2193
 .. |tick|        unicode:: U+2713
 
 
@@ -100,11 +102,68 @@ notes <file_tree_saving_notes>`.
 Viewing data
 ------------
 
+Simply click on a row in the file list - when you do so, all of the files in
+that row will be loaded into FSLeyes. You can now configure their display
+settings just like with any other FSLeyes overlay. When you select another row
+in the file list (either with the mouse, or with the |up_arrow| / |down_arrow|
+keys, the overlays from the previous row will be replaced with the overlays
+from the new row.
+
+
+.. image:: images/filetree_viewdata.png
+   :width: 70%
+   :align: center
+
+
+The main strength of the file tree panel is that, once you have configured the
+display settings for the overlays from one row, when you select another row in
+the file list, those display settings will be preserved for the new overlays.
+
+
+So, if you are viewing data from many subjects, you only need to configure the
+overlay display settings once; you can then view the data from all of your
+subjects without having to configure the display for each of them.
+
+
+.. note:: In FSLeyes |version|, some display settings are not preserved when
+          changing rows, most notably vertex data on mesh overlays
+          (e.g. cortical thickness).  Furthermore, if you have missing data,
+          some display settings may not be correctly preserved as you change
+          rows.
+
 
 .. _file_tree_saving_notes:
 
 Saving notes
 ------------
+
+
+The right-most column in the file list allows you to add notes about the
+overlays in each row. For example, you may be performing quality-control
+checks on imaging data from a number of subjects.
+
+
+.. image:: images/filetree_notes.png
+   :width: 70%
+   :align: center
+
+
+The *Save notes* button allows you to save your notes to a plain text,
+tab-separated file. This file will contain the entire contents of the
+file list, including your notes, e.g.::
+
+    participant  t1  t1_brain  t1_crop  Notes
+    01           x   x         x        good
+    02           x   x         x        good
+    03           x   x         x        good
+    04           x   x         x        bad
+    05           x   x         x        good
+    06           x   x         x        bad
+    ...
+
+
+.. warning:: The contents of the *Notes* column is cleared whenever the file
+             types or variables are changed.
 
 
 
