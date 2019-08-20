@@ -618,6 +618,7 @@ def filterFileGroups(filegroups, fixedcols):
         for grp in filegroups:
             grp.fileIDs = [grp.fileIDs[i] for i in keepcols]
             grp.files   = [grp.files[  i] for i in keepcols]
+            grp.ftypes  = [grp.ftypes[ i] for i in keepcols]
             grp.fixed   = [grp.fixed[  i] for i in keepcols]
 
     return filegroups, fixedcols
