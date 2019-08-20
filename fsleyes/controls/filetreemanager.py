@@ -308,11 +308,12 @@ class FileTreeManager(object):
         self.__varcols    = varcols
 
 
-    def show(self, filegroup):
-        """Show the overlays associated with a :class:`FileGroup`. The
-        ``filegroup`` is passed to the :meth:`OverlayManager.show` method.
+    def show(self, filegroup, callback=None):
+        """Show the overlays associated with a :class:`FileGroup`.
+
+        All arguments are passed through to the :meth:`OverlayManager.show` method.
         """
-        self.__ovlmgr.show(filegroup)
+        self.__ovlmgr.show(filegroup, callback)
 
 
     @property
@@ -695,11 +696,16 @@ class OverlayManager(object):
         self.__propVals   = {}
 
 
-    def show(self, filegroup):
+    def show(self, filegroup, callback=None):
         """Show the overlays associated with the given :class:`FileGroup`.
 
         Any overlays which were previously displayed are removed, and replaced
         with the overlays associated with the new group.
+
+        :arg filegroup: ``FileGroup`` to show
+        :arg callback:  Optional function which will be called when the
+                        overlays have been shown. Will not be called if no new
+                        overlays are to be shown.
         """
 
         # Force an error if a file
@@ -760,18 +766,23 @@ class OverlayManager(object):
         new   = collections.OrderedDict([(f, new[f]) for f in fids])
 
         if len(new) > 0:
-            self.__load(new, old)
+            self.__load(new, old, callback)
 
 
-    def __load(self, new, old):
+    def __load(self, new, old, callback=None):
         """Called by :meth:`show`. Loads the files specified in ``new``, then
         passes them (along with the ``old``) to the :meth:`__show` method.
 
-        :arg new: Dict of ``{fileid : file}`` mappings, containing the
-                  files to load.
+        :arg new:      Dict of ``{fileid : file}`` mappings, containing the
+                       files to load.
 
-        :arg old: Dict of ``{fileid : overlay}`` mappings, containing the
-                  existing overlays which will be replaced with the new ones.
+        :arg old:      Dict of ``{fileid : overlay}`` mappings, containing the
+                       existing overlays which will be replaced with the new
+                       ones.
+
+        :arg callback: No-args function which will be called after the new
+                       overlays have been loaded.
+
         """
 
         # Remove any files that are
@@ -802,6 +813,9 @@ class OverlayManager(object):
                     cache.put(fname, ovls[idx])
 
             self.__show(toshow, old)
+
+            if callback is not None:
+                callback()
 
         loadoverlay.loadOverlays(loadfiles, onLoad=onLoad)
 
