@@ -123,6 +123,10 @@ def realYield(centis=10):
         wx.YieldIfNeeded()
         time.sleep(0.01)
 
+def yieldUntil(condition):
+    while not condition():
+        realYield()
+
 class CaptureStdout(object):
     """Context manager which captures stdout and stderr. """
 
