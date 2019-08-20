@@ -170,12 +170,20 @@ class FileGroup(object):
             self.fileIDs.append(fid)
 
 
-    def __hash__(self):
-        """Returns a unique hash for this ``FileGroup``. """
-        return (hash(self.varyings) ^
-                hash(self.fixed)    ^
-                hash(self.ftypes)   ^
-                hash(self.files))
+    def __str__(self):
+        """Return a string representation of this ``FileGroup``. """
+        return 'FileGroup({}, {}, {}, {})'.format(self.varyings,
+                                                  self.fixed,
+                                                  self.ftypes,
+                                                  self.files)
+
+
+    def __eq__(self, other):
+        """Return ``True`` if this ``FileGroup`` is equal to ``other``. """
+        return (self.varyings == other.varyings and
+                self.fixed    == other.fixed    and
+                self.ftypes   == other.ftypes   and
+                self.files    == other.files)
 
 
 class FileTreeManager(object):
