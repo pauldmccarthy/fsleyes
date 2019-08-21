@@ -7,6 +7,7 @@ import os.path as op
 import itertools as it
 import textwrap as tw
 from contextlib import contextmanager
+from collections import OrderedDict
 
 from   fsl.utils.tempdir                import  tempdir
 from   fsl.data.image                   import  Image
@@ -123,20 +124,20 @@ def test_genColumns():
 
         varcols, fixedcols = ftman.genColumns(['T1w', 'T2w'],
                                               {'subject' : ['01', '02', '03']},
-                                              {'T1w' : {'session' : ['1', '2']},
-                                               'T2w' : {}})
+                                              OrderedDict([('T1w', {'session' : ['1', '2']}),
+                                                           ('T2w', {})]))
         assert varcols == ['subject']
         assert fixedcols == [('T1w', {'session' : '1'}),
                              ('T1w', {'session' : '2'}),
                              ('T2w', {})]
 
         varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
-                                              {'subject' : ['01', '02', '03'],
-                                               'session' : ['1', '2']},
-                                              {'T1w'     : {},
-                                               'surface' : {'hemi' : ['L', 'R'],
-                                                            'surf' : ['pial', 'mid', 'white']}})
-        assert varcols == ['subject', 'session']
+                                              OrderedDict([('subject', ['01', '02', '03']),
+                                                           ('session', ['1', '2'])]),
+                                              OrderedDict([('T1w',     {}),
+                                                           ('surface', OrderedDict([('hemi', ['L', 'R']),
+                                                                                    ('surf', ['pial', 'mid', 'white'])]))]))
+        assert sorted(varcols) == ['session', 'subject']
         assert fixedcols == [('T1w',     {}),
                              ('surface', {'hemi' : 'L', 'surf' : 'pial'}),
                              ('surface', {'hemi' : 'L', 'surf' : 'mid'}),
@@ -146,12 +147,12 @@ def test_genColumns():
                              ('surface', {'hemi' : 'R', 'surf' : 'white'})]
 
         varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
-                                              {'subject' : ['01', '02', '03'],
-                                               'session' : ['1', '2'],
-                                               'surf'    : ['pial', 'mid', 'white']},
-                                              {'T1w'     : {},
-                                               'surface' : {'hemi' : ['L', 'R']}})
-        assert varcols == ['subject', 'session', 'surf']
+                                              OrderedDict([('subject', ['01', '02', '03']),
+                                                           ('session', ['1', '2']),
+                                                           ('surf'   , ['pial', 'mid', 'white'])]),
+                                              OrderedDict([('T1w',     {}),
+                                                           ('surface', {'hemi' : ['L', 'R']})]))
+        assert sorted(varcols) == ['session', 'subject', 'surf']
         assert fixedcols == [('T1w',     {}),
                              ('surface', {'hemi' : 'L'}),
                              ('surface', {'hemi' : 'R'})]
@@ -161,8 +162,8 @@ def test_genColumns():
 def test_genFileGroups():
     # varyings, fixed, expgroups
     tests = [
-        ({'subject' : ['01', '02', '03'],
-          'session' : ['1', '2']},
+        (OrderedDict([('subject', ['01', '02', '03']),
+                      ('session', ['1', '2'])]),
          [('T1w', {}),
           ('T2w', {})],
          [ftman.FileGroup({'subject' : '01', 'session' : '1'}, [{}, {}], ['T1w', 'T2w'], ['subj-01/ses-1/T1w.nii.gz', 'subj-01/ses-1/T2w.nii.gz']),
@@ -177,9 +178,9 @@ def test_genFileGroups():
          [ftman.FileGroup({'subject' : '01'}, [{'session' : '1'}, {'session' : '2'}], ['T1w', 'T1w'], ['subj-01/ses-1/T1w.nii.gz', 'subj-01/ses-2/T1w.nii.gz']),
           ftman.FileGroup({'subject' : '02'}, [{'session' : '1'}, {'session' : '2'}], ['T1w', 'T1w'], ['subj-02/ses-1/T1w.nii.gz', 'subj-02/ses-2/T1w.nii.gz']),
           ftman.FileGroup({'subject' : '03'}, [{'session' : '1'}, {'session' : '2'}], ['T1w', 'T1w'], ['subj-03/ses-1/T1w.nii.gz', 'subj-03/ses-2/T1w.nii.gz'])]),
-        ({'subject' : ['01', '02', '03'],
-          'session' : ['1'],
-          'surf'    : ['pial', 'mid', 'white']},
+        (OrderedDict([('subject', ['01', '02', '03']),
+                      ('session', ['1']),
+                      ('surf',    ['pial', 'mid', 'white'])]),
          [('T1w',     {}),
           ('surface', {'hemi' : 'L'}),
           ('surface', {'hemi' : 'R'})],
@@ -213,7 +214,7 @@ def test_filterFileGroups():
 
     sub = tw.dedent("""
     {hemi}.{space}.gii (surface)
-    """)
+    """).strip()
 
     files = [
         op.join('subj-01', 'T1w.nii.gz'),
@@ -260,7 +261,7 @@ def test_filterFileGroups():
           ('surf_native/surface', {'space' : 'native'})],
         ),
     ]
-    with _query({'base' : base, 'sub' : sub}, files) as query:
+    with _query(OrderedDict([('base', base), ('sub', sub)]), files) as query:
 
         for invars, infixed, expgroups, expcols in tests:
             if expcols is None:
