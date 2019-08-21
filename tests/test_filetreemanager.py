@@ -39,12 +39,14 @@ surfs  = ['pial', 'mid', 'white']
 
 
 @contextmanager
-def _query(specs=None, files=None):
+def _query(specs=None, files=None, realdata=False):
 
     if specs is None:
         specs = {'tree' : treespec}
 
     root = list(specs.keys())[0]
+    volfile  = op.join(datadir, '3d.nii.gz')
+    meshfile = op.join(datadir, 'gifti', 'white.surf.gii')
 
     with tempdir():
         for name, spec in specs.items():
@@ -64,8 +66,14 @@ def _query(specs=None, files=None):
         for file in files:
             dirname, filename = op.split(file)
             os.makedirs(dirname, exist_ok=True)
-            with open(file, 'wt') as f:
-                pass
+
+            if realdata:
+                if   file.endswith('.gii'):    src = meshfile
+                elif file.endswith('.nii.gz'): src = volfile
+                shutil.copy(src, file)
+            else:
+                with open(file, 'wt') as f:
+                    pass
 
         tree  = filetree.FileTree.read('{}.tree'.format(root), '.')
         query = filetree.FileTreeQuery(tree)
@@ -368,17 +376,7 @@ def _test_OverlayManager(panel, overlayList, displayCtx):
     volfile  = op.join(datadir, '3d.nii.gz')
     meshfile = op.join(datadir, 'gifti', 'white.surf.gii')
 
-    with _query() as query:
-
-        # replace the stubs with real data files
-        for subj, ses in it.product(subjs, sess):
-            shutil.copy(volfile, query.query('T1w', subject=subj, session=ses)[0].filename)
-            shutil.copy(volfile, query.query('T2w', subject=subj, session=ses)[0].filename)
-
-            for hemi, surf in it.product(hemis, surfs):
-                match = query.query('surface', subject=subj, session=ses, hemi=hemi, surf=surf)
-                shutil.copy(meshfile, match[0].filename)
-
+    with _query(realdata=True) as query:
         mgr = ftman.FileTreeManager(overlayList, displayCtx, query)
 
         called = [False]
