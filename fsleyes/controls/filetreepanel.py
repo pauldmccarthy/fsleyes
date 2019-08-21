@@ -155,10 +155,34 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
         self.SetSizer(self.__mainSizer)
 
-        self.__loadDir   .Bind(wx.EVT_BUTTON, self.__onLoadDir)
-        self.__customTree.Bind(wx.EVT_BUTTON, self.__onCustomTree)
-        self.__treeChoice.Bind(wx.EVT_CHOICE, self.__onTreeChoice)
-        self.__save      .Bind(wx.EVT_BUTTON, self.__onSave)
+        self.__loadDir   .Bind(wx.EVT_BUTTON, self._onLoadDir)
+        self.__customTree.Bind(wx.EVT_BUTTON, self._onCustomTree)
+        self.__treeChoice.Bind(wx.EVT_CHOICE, self._onTreeChoice)
+        self.__save      .Bind(wx.EVT_BUTTON, self._onSave)
+
+
+    @property
+    def varPanel(self):
+        """Return a reference to the :class:`VariablePanel`."""
+        return self.__varPanel
+
+
+    @property
+    def fileTypePanel(self):
+        """Return a reference to the :class:`FileTypePanel`."""
+        return self.__fileTypes
+
+
+    @property
+    def fileListPanel(self):
+        """Return a reference to the :class:`FileListPanel`."""
+        return self.__fileList
+
+
+    @property
+    def treeChoice(self):
+        """Return a reference to the file tree ``wx.Choice`` widget."""
+        return self.__treeChoice
 
 
     def UpdateFileList(self):
@@ -179,7 +203,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         flist.ResetGrid(mgr)
 
 
-    def __loadTree(self, treename, dirname):
+    def _loadTree(self, treename, dirname):
         """Called when a new tree or data directory is selected. Clears
         any previous file tree, and loads the new one. If either the tree
         or directory are ``None``, any existing file tree is cleared.
@@ -218,7 +242,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.UpdateFileList()
 
 
-    def __getTreeChoice(self):
+    def _getTreeChoice(self):
         """Returns the current selection of the built-in filetree drop down
         box.
         """
@@ -230,7 +254,7 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         return self.__treeChoice.GetClientData(idx)
 
 
-    def __onLoadDir(self, ev):
+    def _onLoadDir(self, ev=None):
         """Called when the user pushes the *load data directory* button.
 
         Prompts the user to select a directory, then calls the
@@ -249,21 +273,21 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             return
 
         dirname  = dlg.GetPath()
-        treename = self.__getTreeChoice()
+        treename = self._getTreeChoice()
 
-        self.__loadTree(treename, dirname)
+        self._loadTree(treename, dirname)
 
 
-    def __onTreeChoice(self, ev=None):
+    def _onTreeChoice(self, ev=None):
         """Called when the user changes the built-in file tree selection.
         Calls the :meth:`__loadTree` method.
         """
         dirname  = self.__dirName.GetLabel() or None
-        treename = self.__getTreeChoice()
-        self.__loadTree(treename, dirname)
+        treename = self._getTreeChoice()
+        self._loadTree(treename, dirname)
 
 
-    def __onCustomTree(self, ev):
+    def _onCustomTree(self, ev=None):
         """Called when the user pushes the *load custom tree* button.
         Prompts the user to choose a file, then calls :meth:`__loadTree`.
         """
@@ -290,10 +314,10 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             choice.Append(treelabel, clientData=treefile)
 
         choice.SetSelection(index)
-        self.__onTreeChoice()
+        self._onTreeChoice()
 
 
-    def __onSave(self, ev):
+    def _onSave(self, ev=None):
         """Called when the *save* button is pushed. Prompts the user
         for a destination, and then saves the contents of the grid.
         """
@@ -314,7 +338,6 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         with open(path, 'wt') as f:
             for row in grid:
                 f.write('\t'.join(row) + '\n')
-
 
 
 class FileTypePanel(elb.EditableListBox):
