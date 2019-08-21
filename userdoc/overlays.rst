@@ -269,6 +269,11 @@ The following settings are available for volume overlays:
   the dimension (fourth or higher) that the **Volume** setting controls.
 
 
+- **Channel** If your image is multi-valued (e.g. RGB(A)), you can select
+  the currently displayed channel. See also the :ref:`RGB(A) <overlays_rgba>`
+  overlay type.
+
+
 - **Interpolation** You can interpolate the image data (resampled to the
   resolution of your display). This is useful for generating figures, and to
   smooth over voxel or slice boundaries for oblique images (images which are
@@ -811,6 +816,44 @@ on diffusion SH overlays:
 .. [*] The FOD lighting model in FSLeyes |version| is broken, as I have not
        yet figured out a way to make a better lighting model work in a
        computationally efficient manner.
+
+
+.. _overlays_rgba:
+
+RGB(A)
+^^^^^^
+
+
+FSLeyes is able to display NIFTI images which contain RGB(A) data, and can
+also load 2D bitmap files (e.g. ``.png``, ``.bmp``, ``.jpg``, etc). When you
+load such a file, it will by default be displayed as a :ref:`volume overlay
+<overlays_volume>`, but you can change the overlay type to *3D/4D RGB(A) volume*
+to display the image data in its native colouring.
+
+
+The following settings are available on RGB(A) overlays:
+
+- **Interpolation** You can interpolate RGB(A) overlays using linear or
+  spline interpolation.
+
+- **R Colour** The colour to be used for the R channel.
+
+- **G Colour** The colour to be used for the G channel.
+
+- **B Colour** The colour to be used for the B channel.
+
+- **Suppress R value** Suppress the R channel - its contribution to
+  the overall colour will be replaced according to the current *suppression
+  mode*.
+
+- **Suppress G value** Suppress the G channel.
+
+- **Suppress B value** Suppress the B channel.
+
+- **Suppress A value** Suppress the A channel.
+
+- **Suppression mode** What to do when a channel is suppressed - you can
+  choose to replace channels with white, black, or transparent.
 
 
 .. _overlays_mesh:

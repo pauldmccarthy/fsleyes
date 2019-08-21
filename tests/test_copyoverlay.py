@@ -247,3 +247,64 @@ def _test_CopyOverlayAction(panel, overlayList, displayCtx):
         copy = overlayList[2]
         assert np.all(copy[:] == img4d[:])
         overlayList.remove(copy)
+
+
+def test_copyDisplayProperties():
+    run_with_orthopanel(_test_copyImage)
+def _test_copyDisplayProperties(panel, overlayList, displayCtx):
+    img1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+    img2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+
+    overlayList.extend((img1, img2))
+
+    disp1 = displayCtx.getDisplay(img1)
+    disp2 = displayCtx.getDisplay(img2)
+    opts1 = displayCtx.getOpts(   img1)
+    opts2 = displayCtx.getOpts(   img2)
+
+    disp1.name       = 'hurdi hur'
+    disp1.brightness = 75
+    disp1.contrast   = 25
+    opts1.cmap       = 'blue-lightblue'
+
+    copyoverlay.copyDisplayProperties(displayCtx, img1, img2)
+
+    assert disp2.name == 'hurdi hur'
+    assert np.isclose(disp2.brightness, 75)
+    assert np.isclose(disp2.contrast,   75)
+    assert opts2.cmap == 'blue-lightblue'
+
+    disp1.brightness = 25
+    disp1.contrast   = 75
+    opts1.gamma      = 0.75
+    opts1.cmap       = 'red-yellow'
+
+    copyoverlay.copyDisplayProperties(
+        displayCtx,
+        img1,
+        img2,
+        displayExclude=['brightness'],
+        optExclude=['cmap'])
+
+    assert np.isclose(disp2.brightness, 75)
+    assert np.isclose(disp2.contrast,   75)
+    assert np.isclose(opts2.gamma,      0.75)
+    assert opts2.cmap == 'blue-lightblue'
+
+
+    disp1.brightness = 30
+    disp1.contrast   = 40
+    opts1.gamma      = 0.6
+    opts1.cmap       = 'hot'
+
+    copyoverlay.copyDisplayProperties(
+        displayCtx,
+        img1,
+        img2,
+        displayArgs={'brightness' : 80},
+        optArgs={'gamma' : 0.2})
+
+    assert np.isclose(disp2.brightness, 80)
+    assert np.isclose(disp2.contrast,   40)
+    assert np.isclose(opts2.gamma,      0.2)
+    assert opts2.cmap == 'hot'

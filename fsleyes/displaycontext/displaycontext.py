@@ -18,7 +18,6 @@ import numpy        as np
 import numpy.linalg as npla
 
 import        fsl.data.image as fslimage
-import        fsl.data.mesh  as fslmesh
 import        fsleyes_props  as props
 from . import group          as dcgroup
 
@@ -404,7 +403,7 @@ class DisplayContext(props.SyncableHasProperties):
         return self.__overlayList is None
 
 
-    def getDisplay(self, overlay, overlayType=None):
+    def getDisplay(self, overlay, **kwargs):
         """Returns the :class:`.Display` instance for the specified overlay
         (or overlay index).
 
@@ -419,10 +418,8 @@ class DisplayContext(props.SyncableHasProperties):
         :arg overlay:     The overlay to retrieve a ``Display`` instance for,
                           or an index into the ``OverlayList``.
 
-        :arg overlayType: If a ``Display`` instance for the specified
-                          ``overlay`` does not exist, one is created - in
-                          this case, the specified ``overlayType`` is passed
-                          to the :class:`.Display` constructor.
+        All other keyword arguments are assumed to be ``name=value`` pairs,
+        containing initial property values.
         """
 
         if overlay is None:
@@ -446,9 +443,7 @@ class DisplayContext(props.SyncableHasProperties):
             if not self.__child:
                 dParent = None
             else:
-                dParent = self.getParent().getDisplay(overlay, overlayType)
-                if overlayType is None:
-                    overlayType = dParent.overlayType
+                dParent = self.getParent().getDisplay(overlay, **kwargs)
 
             from .display import Display
 
@@ -456,13 +451,13 @@ class DisplayContext(props.SyncableHasProperties):
                               self.__overlayList,
                               self,
                               parent=dParent,
-                              overlayType=overlayType)
+                              **kwargs)
             self.__displays[overlay] = display
 
         return display
 
 
-    def getOpts(self, overlay, overlayType=None):
+    def getOpts(self, overlay):
         """Returns the :class:`.DisplayOpts` instance associated with the
         specified overlay.  See :meth:`getDisplay` and :meth:`.Display.opts`
         for more details.
@@ -478,7 +473,7 @@ class DisplayContext(props.SyncableHasProperties):
             raise InvalidOverlayError('Overlay {} is not in '
                                       'list'.format(overlay.name))
 
-        return self.getDisplay(overlay, overlayType).opts
+        return self.getDisplay(overlay).opts
 
 
     def getReferenceImage(self, overlay):
@@ -751,13 +746,13 @@ class DisplayContext(props.SyncableHasProperties):
         # for every overlay in the list
         for overlay in self.__overlayList:
 
-            ovlType = self.__overlayList.initOverlayType(overlay)
+            initProps = self.__overlayList.initProps(overlay)
 
             # The getDisplay method
             # will create a Display object
             # if one does not already exist
             new     = overlay not in self.__displays
-            display = self.getDisplay(overlay, ovlType)
+            display = self.getDisplay(overlay, **initProps)
             opts    = display.opts
 
             # Register a listener on the overlay type,

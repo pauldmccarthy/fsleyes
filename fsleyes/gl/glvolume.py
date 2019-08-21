@@ -259,8 +259,13 @@ class GLVolume(glimageobject.GLImageObject):
         # Call glvolume_funcs.init when the image
         # and clip textures are ready to be used.
         def init():
-            fslgl.glvolume_funcs.init(self)
-            self.notify()
+
+            # In some crazy circumstances,
+            # a just-created GLVolume can
+            # get destroyed immediately
+            if not self.destroyed():
+                fslgl.glvolume_funcs.init(self)
+                self.notify()
 
         idle.idleWhen(init, self.texturesReady)
 

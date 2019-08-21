@@ -61,6 +61,8 @@ actions = td.TypeDict({
     'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
     'Scene3DPanel.toggleScene3DToolBar'     : 'Ctrl-Alt-8',
 
+    'CanvasPanel.toggleFileTreePanel'       : 'Ctrl-Alt-9',
+
     'CanvasPanel.toggleMovieMode'           : 'Alt-M',
     'CanvasPanel.toggleDisplaySync'         : 'Alt-S',
 

@@ -272,41 +272,84 @@ def copyImage(overlayList,
     # Copy the Display/DisplayOpts settings
     if copyDisplay:
 
-        srcDisplay  = displayCtx.getDisplay(overlay)
-        destDisplay = displayCtx.getDisplay(copy)
+        # Don't override the name
+        # that we set above
+        dispexcl = ('name',)
 
-        for prop in srcDisplay.getAllProperties()[0]:
+        # And don't clobber the transform, and related,
+        # properties, as it is (typically) automatically
+        # controlled via the DisplayContext.displaySpace
+        optexcl = ('transform', 'bounds')
 
-            # Don't override the name
-            # that we set above
-            if prop == 'name':
-                continue
-
-            if (not srcDisplay .propertyIsEnabled(prop)) or \
-               (not destDisplay.propertyIsEnabled(prop)):
-                continue
-
-            val = getattr(srcDisplay, prop)
-            setattr(destDisplay, prop, val)
-
-        # And after the Display has been configured
-        # copy the DisplayOpts settings.
-        srcOpts  = displayCtx.getOpts(overlay)
-        destOpts = displayCtx.getOpts(copy)
-
-        for prop in srcOpts.getAllProperties()[0]:
-
-            # But don't clobber the transform, and related,
-            # properties, as it is (typically) automatically
-            # controlled via the DisplayContext.displaySpace
-            if prop in ('transform', 'bounds'):
-                continue
-
-            if (not srcOpts .propertyIsEnabled(prop)) or \
-               (not destOpts.propertyIsEnabled(prop)):
-                continue
-
-            val = getattr(srcOpts, prop)
-            setattr(destOpts, prop, val)
+        copyDisplayProperties(displayCtx,
+                              overlay,
+                              copy,
+                              displayExclude=dispexcl,
+                              optExclude=optexcl)
 
     return copy
+
+
+def copyDisplayProperties(displayCtx,
+                          src,
+                          dest,
+                          displayExclude=None,
+                          optExclude=None,
+                          displayArgs=None,
+                          optArgs=None):
+    """Copies all properties from the ``src`` :class:`.Display` and
+    :class:`.DisplayOpts` instances to the ``dest`` instances.
+
+    :arg displayCtx:     The :class:`.DisplayContext`
+
+    :arg displayExclude: Collection of :class:`.Display` properties which
+                         should not be copied
+
+    :arg optExclude:     Collection of :class:`.DisplayOpts` properties which
+                         should not be copied
+
+    :arg displayArgs:    Values to be used instead of the ``src`` ``Display``
+                         values.
+
+    :arg optArgs:        Values to be used instead of the ``src``
+                         ``DisplayOpts`` values.
+    """
+
+    if displayExclude is None: displayExclude = []
+    if optExclude     is None: optExclude     = []
+    if displayArgs    is None: displayArgs    = {}
+    if optArgs        is None: optArgs        = {}
+
+    # copy the Display properties first, as
+    # they may affect the DisplayOpts type
+    srcDisplay  = displayCtx.getDisplay(src)
+    destDisplay = displayCtx.getDisplay(dest)
+
+    for prop in srcDisplay.getAllProperties()[0]:
+
+        if prop in displayExclude:
+            continue
+
+        if (not srcDisplay .propertyIsEnabled(prop)) or \
+           (not destDisplay.propertyIsEnabled(prop)):
+            continue
+
+        val = displayArgs.get(prop, getattr(srcDisplay, prop))
+        setattr(destDisplay, prop, val)
+
+    # And after the Display has been configured
+    # copy the DisplayOpts settings.
+    srcOpts  = displayCtx.getOpts(src)
+    destOpts = displayCtx.getOpts(dest)
+
+    for prop in srcOpts.getAllProperties()[0]:
+
+        if prop in optExclude:
+            continue
+
+        if (not srcOpts .propertyIsEnabled(prop)) or \
+           (not destOpts.propertyIsEnabled(prop)):
+            continue
+
+        val = optArgs.get(prop, getattr(srcOpts, prop))
+        setattr(destOpts, prop, val)

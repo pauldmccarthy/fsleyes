@@ -89,9 +89,12 @@ def clearCmaps(func):
             luts         = fslcm._luts
             fslcm._cmaps = None
             fslcm._luts  = None
-            func(*args, **kwargs)
-            fslcm._cmaps = cmaps
-            fslcm._luts  = luts
+            try:
+                func(*args, **kwargs)
+            finally:
+                fslcm._cmaps = cmaps
+                fslcm._luts  = luts
+
     return wrapper
 
 

@@ -35,6 +35,7 @@ If you are getting started with FSLeyes, check out the :ref:`Quick start
    editing_images
    feat_mode
    ic_classification
+   filetree
    tools
    command_line
    fsleyes_notebook

@@ -123,6 +123,10 @@ def realYield(centis=10):
         wx.YieldIfNeeded()
         time.sleep(0.01)
 
+def yieldUntil(condition):
+    while not condition():
+        realYield()
+
 class CaptureStdout(object):
     """Context manager which captures stdout and stderr. """
 
@@ -435,7 +439,7 @@ def run_with_powerspectrumpanel(func, *args, **kwargs):
 
 
 @contextlib.contextmanager
-def MockFileDialog():
+def MockFileDialog(dirdlg=False):
     class MockDlg(object):
         def __init__(self, *args, **kwargs):
             pass
@@ -453,7 +457,10 @@ def MockFileDialog():
         GetPath_retval   = ''
         GetPaths_retval  = []
 
-    with mock.patch('wx.FileDialog', MockDlg):
+    if dirdlg: patched = 'wx.DirDialog'
+    else:      patched = 'wx.FileDialog'
+
+    with mock.patch(patched, MockDlg):
         yield MockDlg
 
 

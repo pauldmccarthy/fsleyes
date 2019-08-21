@@ -304,6 +304,12 @@ messages = TypeDict({
     'An error occurred loading the plugin file.',
     'LoadPluginAction.installError'  :
     'An error occurred installing the plugin file.',
+
+    'FileTreePanel.loadDir'        : 'Load directory',
+    'FileTreePanel.loadCustomTree' : 'Load filetree file',
+    'FileTreePanel.save'           : 'Save notes',
+    'FileListPanel.buildingList'   : 'Building file list ...',
+    'FileListPanel.loading'        : 'Loading files ...',
 })
 
 
@@ -369,6 +375,8 @@ titles = TypeDict({
 
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
+
+    'FileTreePanel'              : 'File tree',
 
     'LocationHistoryPanel.loadError' : 'Error loading location file',
     'LocationHistoryPanel.saveError' : 'Error saving location file',
@@ -518,6 +526,7 @@ actions = TypeDict({
     'CanvasPanel.toggleClusterPanel'        : 'Cluster browser',
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
     'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
+    'CanvasPanel.toggleFileTreePanel'       : 'File tree',
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
@@ -879,6 +888,17 @@ labels = TypeDict({
 
     'BrowseDicomDialog.load'       : 'Load',
     'BrowseDicomDialog.cancel'     : 'Cancel',
+
+    'FileTreePanel.loadDir'    : 'Load directory',
+    'FileTreePanel.customTree' : 'Load tree file',
+    'FileTreePanel.save'       : 'Save notes',
+    'FileListPanel.notes'      : 'Notes',
+    'FileListPanel.present'    : '\u2713',
+    'VariablePanel.value.none' : '<none>',
+    'VariablePanel.value.any'  : '<any>',
+    'VariablePanel.value.all'  : '<all>',
+
+
 })
 
 

@@ -288,7 +288,7 @@ def scanBuiltInCmaps():
     cmapIDs = [op.relpath(i, basedir) for i in cmapIDs]
     cmapIDs = [i.replace(op.sep, '_') for i in cmapIDs]
 
-    return cmapIDs
+    return list(sorted(cmapIDs))
 
 
 def scanBuiltInLuts():
@@ -300,7 +300,7 @@ def scanBuiltInLuts():
     lutIDs  = [op.relpath(i, basedir) for i in lutIDs]
     lutIDs  = [i.replace(op.sep, '_') for i in lutIDs]
 
-    return lutIDs
+    return list(sorted(lutIDs))
 
 
 def scanUserAddedCmaps():
@@ -311,7 +311,7 @@ def scanUserAddedCmaps():
     cmapIDs   = [op.splitext(f)[0] for f in cmapFiles]
     cmapIDs   = [m.lower()         for m in cmapIDs]
 
-    return cmapIDs
+    return list(sorted(cmapIDs))
 
 
 def scanUserAddedLuts():
@@ -322,7 +322,7 @@ def scanUserAddedLuts():
     lutIDs   = [op.splitext(f)[0] for f in lutFiles]
     lutIDs   = [m.lower()         for m in lutIDs]
 
-    return lutIDs
+    return list(sorted(lutIDs))
 
 
 def makeValidMapKey(name):

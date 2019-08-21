@@ -9,6 +9,26 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.31.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* New *File tree* control panel, for viewing data contained in structured
+  directories.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in the :class:`.OverlayGroup` where old display settings were
+  mistakenly being applied to newly added overlays.
+
+
 0.30.1 (Wednesday 7th August 2019)
 ----------------------------------
 

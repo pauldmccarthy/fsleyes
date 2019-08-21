@@ -2680,7 +2680,7 @@ def applyOverlayArgs(args,
         # Display/DisplayOpts instances for each
         # overlay.
         if loadOverlays:
-            overlayList.extend(overlays, overlayTypes=overlayTypes)
+            overlayList.extend(overlays, overlayType=overlayTypes)
 
         # Select the last image in the list
         selovl = args.selectedOverlay
