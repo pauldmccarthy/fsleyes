@@ -290,9 +290,8 @@ def loadImage(dtype, path, inmem=False):
     from the whole image, or from a sample.
 
     This function returns a sequence, most likely containing a single
-    :class:`.Image` instance. But in some circumstances (e.g. image files with
-    a complex data type), more than one :class:`.Image` will be created and
-    returned.
+    :class:`.Image` instance. But in some circumstances, more than one
+    :class:`.Image` will be created and returned.
 
     :arg dtype: Overlay type (``Image``, or a sub-class of ``Image``).
     :arg path:  Path to the overlay file.
@@ -325,15 +324,10 @@ def loadImage(dtype, path, inmem=False):
     nbytes   = np.prod(image.shape) * image.dtype.itemsize
     image    = None
 
-    # Complex images are split into two separate overlays
-    if (dtype is fslimage.Image) and \
-       np.issubdtype(imgdtype, np.complexfloating):
-        return _loadComplexImage(path)
-    else:
-        return [_loadNonComplexImage(dtype, path, nbytes, inmem)]
+    return [_loadImage(dtype, path, nbytes, inmem)]
 
 
-def _loadNonComplexImage(dtype, path, nbytes, inmem):
+def _loadImage(dtype, path, nbytes, inmem):
     """Loads an image with a non-complex data type.
 
     :arg dtype:  Overlay type - :class:`.Image`, or a sub-class of ``Image``.
@@ -376,31 +370,6 @@ def _loadNonComplexImage(dtype, path, nbytes, inmem):
     image.calcRange(rangethres)
 
     return image
-
-
-def _loadComplexImage(path):
-    """Loads the specified ``path`` assumed to be a NIFTI image
-    with complex data.
-
-    The image is loaded as two separate :class:`.Image` instances,
-    containing the real and imaginary components respectively.
-    """
-
-    import nibabel        as nib
-    import fsl.data.image as fslimage
-
-    image = nib.load(path)
-    hdr   = image.header
-    data  = image.get_data()
-
-    name  = op.basename(fslimage.removeExt(path))
-    rname = '{} [real]'.format(name)
-    iname = '{} [imag]'.format(name)
-
-    real = fslimage.Image(np.real(data), name=rname, header=hdr)
-    imag = fslimage.Image(np.imag(data), name=iname, header=hdr)
-
-    return real, imag
 
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):
