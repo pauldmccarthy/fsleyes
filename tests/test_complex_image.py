@@ -36,18 +36,26 @@ def _test_complex_image(panel, overlayList, displayCtx):
             overlayList,
             displayCtx,
             args)
+        realYield()
 
-        realYield(50)
+        assert len(overlayList) == 1
+        nimg = overlayList[0]
+        opts = displayCtx.getOpts(nimg)
+        assert np.all(nimg[:] == img[:])
 
-        assert len(overlayList) == 2
+        assert opts.channel == 'real'
+        assert opts.cmapResolution == 25
+        assert opts.gamma          == 0.5
 
-        real, imag = overlayList
+        overlayList.clear()
+        args = ['complex.nii', '-ch', 'imag']
+        applycommandline.applyCommandLineArgs(
+            overlayList,
+            displayCtx,
+            args)
+        realYield()
 
-        # make sure CLI args were applied to both overlays
-        assert displayCtx.getOpts(real).cmapResolution == 25
-        assert displayCtx.getOpts(imag).cmapResolution == 25
-        assert displayCtx.getOpts(real).gamma          == 0.5
-        assert displayCtx.getOpts(imag).gamma          == 0.5
-
-        assert np.all(real[:] == np.real(img[:]))
-        assert np.all(imag[:] == np.imag(img[:]))
+        assert len(overlayList) == 1
+        nimg = overlayList[0]
+        opts = displayCtx.getOpts(nimg)
+        assert opts.channel == 'imag'
