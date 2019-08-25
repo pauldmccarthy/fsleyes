@@ -12,6 +12,10 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 
    TimeSeries
    VoxelTimeSeries
+   ComplexVoxelTimeSeries
+   ImaginaryTimeSeries
+   MagnitudeTimeSerie
+   PhaseTimeSeries
    FEATTimeSeries
    FEATPartialFitTimeSeries
    FEATEVTimeSeries
@@ -23,7 +27,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 
 
 import numpy as np
-
 
 import fsl.utils.cache      as cache
 import fsl.utils.idle       as idle
@@ -189,6 +192,95 @@ class VoxelTimeSeries(TimeSeries):
             self.__cache.put((x, y, z, vdim), ydata)
 
         return ydata
+
+
+class ComplexVoxelTimeSeries(VoxelTimeSeries):
+    """
+    """
+
+
+    plotReal = props.Boolean(default=True)
+    """
+    """
+
+
+    plotImaginary = props.Boolean(default=False)
+    """
+    """
+
+
+    plotMagnitude = props.Boolean(default=False)
+    """
+    """
+
+
+    plotPhase = props.Boolean(default=False)
+    """
+    """
+
+
+    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+        """
+        """
+
+        VoxelTimeSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
+
+        self.bindProps('plotReal', self, 'enabled')
+
+        self.__imagts = ImaginaryTimeSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+        self.__magts = MagnitudeTimeSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+        self.__phasets = PhaseTimeSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+
+
+    def extraSeries(self):
+        """
+        """
+
+        extras = []
+
+        if self.plotImaginary: extras.append(self.__imagts)
+        if self.plotMagnitude: extras.append(self.__magts)
+        if self.plotPhase:     extras.append(self.__phasets)
+
+        return extras
+
+
+    def dataAtCurrentVoxel(self):
+        return VoxelTimeSeries.dataAtCurrentVoxel(self).real
+
+
+class ImaginaryTimeSeries(VoxelTimeSeries):
+    """
+    """
+
+    def dataAtCurrentVoxel(self):
+        return VoxelTimeSeries.dataAtCurrentVoxel(self).imag
+
+
+class MagnitudeTimeSeries(VoxelTimeSeries):
+    """
+    """
+
+    def dataAtCurrentVoxel(self):
+        data = VoxelTimeSeries.dataAtCurrentVoxel(self)
+        real = data.real
+        imag = data.imag
+        return np.sqrt(real ** 2 + imag ** 2)
+
+
+class PhaseTimeSeries(VoxelTimeSeries):
+    """
+    """
+
+    def dataAtCurrentVoxel(self):
+        data = VoxelTimeSeries.dataAtCurrentVoxel(self)
+        real = data.real
+        imag = data.imag
+        return np.arctan(real / imag)
 
 
 class FEATTimeSeries(VoxelTimeSeries):

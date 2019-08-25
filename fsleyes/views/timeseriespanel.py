@@ -314,8 +314,15 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         overlayList = self.overlayList
         tsargs      = (overlay, overlayList, displayCtx, self)
 
+        # Is this a mesh?
+        if isinstance(overlay, fslmesh.Mesh):
+            ts        = plotting.MeshTimeSeries(*tsargs)
+            opts      = displayCtx.getOpts(overlay)
+            targets   = [displayCtx, opts]
+            propNames = ['location', 'vertexData']
+
         # Is this a FEAT filtered_func_data image?
-        if isinstance(overlay, fslfeatimage.FEATImage):
+        elif isinstance(overlay, fslfeatimage.FEATImage):
 
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
@@ -332,22 +339,24 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
-        # Otherwise we just plot
-        # bog-standard 4D voxel data
-        # (listening to volumeDim for
-        # images with >4 dimensions)
+        # Otherwise it's a normal image
         elif isinstance(overlay, fslimage.Image) and overlay.ndim > 3:
-            ts        = plotting.VoxelTimeSeries(*tsargs)
+
+            # Is it a complex data image?
+            if overlay.iscomplex:
+                ts = plotting.ComplexVoxelTimeSeries(*tsargs)
+            # Or a RGB(A) image?
+            # elif overlay.nvals > 1:
+            #    ts = plotting.ComplexTimeSeries(*tsargs)
+            # Or just a bog-standard 4D image?
+            else:
+                ts = plotting.VoxelTimeSeries(*tsargs)
+
+            # listen to volumeDim for
+            # images with >4 dimensions
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
-
-        elif isinstance(overlay, fslmesh.Mesh):
-            ts        = plotting.MeshTimeSeries(*tsargs)
-            opts      = displayCtx.getOpts(overlay)
-            targets   = [displayCtx, opts]
-            propNames = ['location', 'vertexData']
-
         else:
             return None, None, None
 

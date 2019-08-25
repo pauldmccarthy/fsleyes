@@ -18,6 +18,10 @@ from . import powerspectrumseries
 DataSeries                 = dataseries         .DataSeries
 TimeSeries                 = timeseries         .TimeSeries
 VoxelTimeSeries            = timeseries         .VoxelTimeSeries
+ComplexVoxelTimeSeries     = timeseries         .ComplexVoxelTimeSeries
+ImaginaryTimeSeries        = timeseries         .ImaginaryTimeSeries
+MagnitudeTimeSeries        = timeseries         .MagnitudeTimeSeries
+PhaseTimeSeries            = timeseries         .PhaseTimeSeries
 FEATTimeSeries             = timeseries         .FEATTimeSeries
 FEATPartialFitTimeSeries   = timeseries         .FEATPartialFitTimeSeries
 FEATEVTimeSeries           = timeseries         .FEATEVTimeSeries
