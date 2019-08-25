@@ -111,6 +111,10 @@ cli_tests = """
 {{asrgb('dti/dti_V1.nii.gz')}} -ch B
 
 -vl 0 0 0 -xc 0 0 -yc 0 0 -zc 0 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
+
+{{complex()}}
+{{complex()}} -ch real
+{{complex()}} -ch imag
 """  # noqa
 
 
@@ -149,6 +153,7 @@ def test_overlay_volume():
         'swapdim'     : swapdim,
         'asrgb'       : asrgb,
         'roi'         : roi,
+        'complex'     : complex,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
 
@@ -201,3 +206,14 @@ def swapdim(infile):
     fslimage.Image(data, xform=affine, header=img.header).save(outfile)
 
     return outfile
+
+
+def complex():
+
+    data =      np.linspace(0, 1, 1000).reshape((10, 10, 10)) + \
+           1j * np.linspace(1, 0, 1000).reshape((10, 10, 10))
+    data = np.array(data, dtype=np.complex64)
+    img  = fslimage.Image(data, xform=np.eye(4))
+    img.save('complex.nii.gz')
+
+    return 'complex.nii.gz'

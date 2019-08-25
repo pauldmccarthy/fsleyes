@@ -36,7 +36,7 @@ def _test_complex_image(panel, overlayList, displayCtx):
             overlayList,
             displayCtx,
             args)
-        realYield()
+        realYield(50)
 
         assert len(overlayList) == 1
         nimg = overlayList[0]
@@ -53,7 +53,7 @@ def _test_complex_image(panel, overlayList, displayCtx):
             overlayList,
             displayCtx,
             args)
-        realYield()
+        realYield(50)
 
         assert len(overlayList) == 1
         nimg = overlayList[0]
