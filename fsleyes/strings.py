@@ -984,6 +984,11 @@ properties = TypeDict({
     'DataSeries.lineWidth' : 'Line width',
     'DataSeries.lineStyle' : 'Line style',
 
+    'ComplexVoxelTimeSeries.plotReal'      : 'Plot real',
+    'ComplexVoxelTimeSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexVoxelTimeSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexVoxelTimeSeries.plotPhase'     : 'Plot phase',
+
     'HistogramSeries.nbins'           : 'Number of bins',
     'HistogramSeries.autoBin'         : 'Automatic histogram binning',
     'HistogramSeries.ignoreZeros'     : 'Ignore zeros',

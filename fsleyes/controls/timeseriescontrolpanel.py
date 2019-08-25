@@ -10,15 +10,16 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 
 
 import fsleyes_props               as props
+import fsl.data.image              as fslimage
 import fsl.data.featimage          as fslfeatimage
 
 import fsleyes.tooltips            as fsltooltips
 import fsleyes.plotting.timeseries as timeseries
 import fsleyes.strings             as strings
-from . import                         plotcontrolpanel
+from . import plotcontrolpanel     as plotctrl
 
 
-class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
+class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     """The ``TimeSeriesControlPanel`` is a :class:`.PlotContrlPanel` which
     allows the user to configure a :class:`.TimeSeriesPanel`. It contains
     controls which are linked to the properties of the ``TimeSeriesPanel``,
@@ -58,7 +59,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         through to the :meth:`.PlotControlPanel.__init__` method.
         """
 
-        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
+        plotctrl.PlotControlPanel.__init__(self, *args, **kwargs)
 
         tsPanel = self.getPlotPanel()
         tsPanel.addListener('plotMelodicICs',
@@ -73,7 +74,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         """
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self.name)
-        plotcontrolpanel.PlotControlPanel.destroy(self)
+        plotctrl.PlotControlPanel.destroy(self)
 
 
     @staticmethod
@@ -112,6 +113,30 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
                 displayName=strings.properties[tsPanel, prop],
                 tooltip=fsltooltips.properties[tsPanel, prop],
                 groupName=groupName)
+
+        return allWidgets
+
+
+    def generateDataSeriesWidgets(self, ts, groupName):
+        """
+        """
+
+        overlay    = ts.overlay
+        widgetList = self.getWidgetList()
+
+        allWidgets = plotctrl.PlotControlPanel.generateDataSeriesWidgets(
+            self, ts, groupName)
+
+        if isinstance(ts, timeseries.ComplexVoxelTimeSeries):
+            for propName in ['plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widg = props.makeWidget(widgetList, ts, propName)
+                widgetList.AddWidget(
+                    widg,
+                    displayName=strings.properties[ts, propName],
+                    tooltip=fsltooltips.properties[ts, propName],
+                    groupName=groupName)
+                allWidgets.append(widg)
 
         return allWidgets
 

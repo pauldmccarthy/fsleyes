@@ -595,6 +595,15 @@ properties = TypeDict({
     'DataSeries.lineWidth' : 'Line width.',
     'DataSeries.lineStyle' : 'Line style.',
 
+    'ComplexVoxelTimeSeries.plotReal' :
+    'Plot the real component of a complex image.',
+    'ComplexVoxelTimeSeries.plotImaginary' :
+    'Plot the imaginary component of a complex image.',
+    'ComplexVoxelTimeSeries.plotMagnitude' :
+    'Plot the magnitude of a complex image.',
+    'ComplexVoxelTimeSeries.plotPhase' :
+    'Plot the phase of a complex image.',
+
     'FEATTimeSeries.plotData'         : 'Plot the input data.',
     'FEATTimeSeries.plotFullModelFit' : 'Plot the full model fit.',
     'FEATTimeSeries.plotResiduals'    : 'Plot the residuals of the full '
