@@ -25,12 +25,13 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 import numpy as np
 
 
-import fsl.utils.cache    as cache
-import fsl.utils.idle     as idle
-import fsleyes_props      as props
-import fsleyes.strings    as strings
-import fsleyes.colourmaps as fslcm
-from . import                dataseries
+import fsl.utils.cache      as cache
+import fsl.utils.idle       as idle
+import fsl.utils.deprecated as deprecated
+import fsleyes_props        as props
+import fsleyes.strings      as strings
+import fsleyes.colourmaps   as fslcm
+from . import                  dataseries
 
 
 class TimeSeries(dataseries.DataSeries):
@@ -143,6 +144,18 @@ class VoxelTimeSeries(TimeSeries):
             return '{} [out of bounds]'.format(display.name)
 
 
+    def getData(self, xdata=None, ydata=None):
+        """Returns the data at the current voxel location. The ``xdata`` and
+        ``ydata`` parameters may be used by sub-classes to override this
+        default behaviour.
+        """
+
+        if ydata is None: ydata = self.dataAtCurrentVoxel()
+        if xdata is None: xdata = np.arange(len(ydata))
+
+        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
+
+
     # The PlotPanel uses a new thread to access
     # data every time the displaycontext location
     # changes. So we mark this method as mutually
@@ -154,32 +167,28 @@ class VoxelTimeSeries(TimeSeries):
     # will hit the cache instead of hitting the disk
     # (which is a good thing).
     @idle.mutex
-    def getData(self, xdata=None, ydata=None):
-        """Returns the data at the current voxel location. The ``xdata`` and
-        ``ydata`` parameters may be used by sub-classes to override this
-        default behaviour.
+    def dataAtCurrentVoxel(self):
+        """Returns the data at the voxel corresponding to the current
+        :attr:`.DisplayContext.location`. May be overridden by
+        sub-classes.
         """
 
+        opts = self.displayCtx.getOpts(self.overlay)
+        vdim = opts.volumeDim
+        xyz  = opts.getVoxel(vround=True)
+
+        if xyz is None:
+            return []
+
+        x, y, z = xyz
+
+        ydata = self.__cache.get((x, y, z, vdim), None)
+
         if ydata is None:
-            opts = self.displayCtx.getOpts(self.overlay)
-            vdim = opts.volumeDim
-            xyz  = opts.getVoxel(vround=True)
+            ydata = self.overlay[opts.index(xyz, atVolume=False)]
+            self.__cache.put((x, y, z, vdim), ydata)
 
-            if xyz is None:
-                return [], []
-
-            x, y, z = xyz
-
-            ydata = self.__cache.get((x, y, z, vdim), None)
-
-            if ydata is None:
-                ydata = self.overlay[opts.index(xyz, atVolume=False)]
-                self.__cache.put((x, y, z, vdim), ydata)
-
-        if xdata is None:
-            xdata = np.arange(len(ydata))
-
-        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
+        return ydata
 
 
 class FEATTimeSeries(VoxelTimeSeries):
@@ -189,28 +198,19 @@ class FEATTimeSeries(VoxelTimeSeries):
 
     The ``FEATTimeSeries`` class acts as a container for several
     ``TimeSeries`` instances, each of which represent some part of a FEAT
-    analysis. Therefore, the data returned by a call to
-    :meth:`.TimeSeries.getData` on a ``FEATTimeSeries`` instance should not
-    be plotted.
+    analysis. The data returned by a call to :meth:`.TimeSeries.getData` on a
+    ``FEATTimeSeries`` instance returns the fMRI time series data
+    (``filtered_func_data`` in the ``.feat`` directory).
 
-
-    Instead, the :meth:`getModelTimeSeries` method should be used to retrieve
-    a list of all the ``TimeSeries`` instances which are associated with the
-    ``FEATTimeSeries`` instance - all of these ``TimeSeries`` instances should
-    be plotted instead.
-
+    The :meth:`extraSeries` method may be used to retrieve a list of all the
+    other ``TimeSeries`` instances which are associated with the
+    ``FEATTimeSeries`` instance - all of these ``TimeSeries`` instances, in
+    addition to this ``FEATTimeSeries`` instasnce, should be plotted.
 
     For example, if the :attr:`plotData` and :attr:`plotFullModelFit` settings
-    are ``True``, the :meth:`getModelTimeSeries` method will return a list
-    containing two ``TimeSeries`` instances - one which will return the FEAT
-    analysis input data, and another which will return the full model fit, for
-    the voxel in question.
-
-
-    .. note:: The ``getData`` method of a ``FEATTimeSeries`` instance will
-              return the FEAT input data. Therefore, when :attr:`plotData` is
-              ``True``, the ``FEATTimeSeries`` instance will itself be included
-              in the list returned by :meth:`getModelTimeSeries`.
+    are ``True``, the :meth:`extraSeries` method will return a list containing
+    one ``TimeSeries`` instance, containing the full model fit, for the voxel
+    in question.
 
 
     The following classes are used to represent the various parts of a FEAT
@@ -227,7 +227,9 @@ class FEATTimeSeries(VoxelTimeSeries):
 
 
     plotData = props.Boolean(default=True)
-    """If ``True``, the FEAT input data is plotted. """
+    """If ``True``, the FEAT input data is plotted.  This is bound to
+    :attr:`.DataSeries.enabled`.
+    """
 
 
     plotFullModelFit = props.Boolean(default=True)
@@ -273,6 +275,8 @@ class FEATTimeSeries(VoxelTimeSeries):
         """
 
         VoxelTimeSeries.__init__(self, *args, **kwargs)
+
+        self.bindProps('plotData', self, 'enabled')
 
         numEVs    = self.overlay.numEVs()
         numCOPEs  = self.overlay.numContrasts()
@@ -323,14 +327,13 @@ class FEATTimeSeries(VoxelTimeSeries):
         self.__plotFullModelFitChanged()
 
 
-    def getModelTimeSeries(self):
+    def extraSeries(self):
         """Returns a list containing all of the ``TimeSeries`` instances
         which should be plotted in place of this ``FEATTimeSeries``.
         """
 
         modelts = []
 
-        if self.plotData:              modelts.append(self)
         if self.plotFullModelFit:      modelts.append(self.__fullModelTs)
         if self.plotResiduals:         modelts.append(self.__resTs)
         if self.plotPartial != 'none': modelts.append(self.__partialTs)
@@ -348,6 +351,11 @@ class FEATTimeSeries(VoxelTimeSeries):
                 modelts.append(self.__copeTs[i])
 
         return modelts
+
+
+    @deprecated.deprecated('0.31.0', '1.0.0', 'Use extraSeries instead')
+    def getModelTimeSeries(self):
+        return self.extraSeries()
 
 
     def __getContrast(self, fitType, idx):

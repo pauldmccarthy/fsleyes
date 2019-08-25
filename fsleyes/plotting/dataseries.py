@@ -158,6 +158,15 @@ class DataSeries(props.HasProperties):
         return self.getAllProperties()[0]
 
 
+    def extraSeries(self):
+        """Some ``DataSeries`` types have additional ``DataSeries`` associated
+        with them (see e.g. the :class:`.FEATTimeSeries` class). This method
+        can be overridden to return a list of these extra ``DataSeries``
+        instances. The default implementation returns an empty list.
+        """
+        return []
+
+
     def setData(self, xdata, ydata):
         """Set the data to be plotted. This method is irrelevant if a
         ``DataSeries`` sub-class has overridden :meth:`getData`.

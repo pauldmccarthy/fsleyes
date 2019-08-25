@@ -263,23 +263,19 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         tss = self.getDataSeriesToPlot()
 
-        # Include all of the extra model series
-        # for all FEATTimeSeries instances
-        newTss = []
-        for ts in tss:
-            if isinstance(ts, plotting.FEATTimeSeries):
+        # Gather any extra time series
+        # associated with the base time
+        # series objects.
+        for i, ts in enumerate(list(reversed(tss))):
 
-                mtss    = ts.getModelTimeSeries()
-                newTss += mtss
+            extras = ts.extraSeries()
+            tss    = tss[:i + 1] + extras + tss[i + 1:]
 
-                # If the FEATTimeSeries is disabled,
-                # disable the associated model time
-                # series.
-                for mts in mtss:
-                    mts.enabled = ts.enabled
-            else:
-                newTss.append(ts)
-        tss = newTss
+            # If a base time series is disabled,
+            # its additional ones should also
+            # be disabled
+            for ets in extras:
+                ets.enabled = ts.enabled
 
         for ts in tss:
 
