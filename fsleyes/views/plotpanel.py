@@ -1286,8 +1286,7 @@ class OverlayPlotPanel(PlotPanel):
                                plotting.MelodicPowerSpectrumSeries)):
                 copy._volume = opts.volume
 
-            elif isinstance(ds, (plotting.VoxelTimeSeries,
-                                 plotting.VoxelPowerSpectrumSeries)):
+            elif isinstance(ds, plotting.VoxelDataSeries):
                 copy._location = opts.getVoxel()
 
         self.dataSeries.extend(toAdd)

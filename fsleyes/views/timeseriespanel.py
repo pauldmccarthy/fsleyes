@@ -26,7 +26,7 @@ import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
 import fsleyes.actions.addmaskdataseries       as addmaskdataseries
 import fsleyes.strings                         as strings
-import fsleyes.plotting                        as plotting
+import fsleyes.plotting.timeseries             as timeseries
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
 from . import                                     plotpanel
@@ -316,7 +316,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         # Is this a mesh?
         if isinstance(overlay, fslmesh.Mesh):
-            ts        = plotting.MeshTimeSeries(*tsargs)
+            ts        = timeseries.MeshTimeSeries(*tsargs)
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'vertexData']
@@ -326,7 +326,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
-            ts        = plotting.FEATTimeSeries(*tsargs)
+            ts        = timeseries.FEATTimeSeries(*tsargs)
             targets   = [displayCtx]
             propNames = ['location']
 
@@ -335,7 +335,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # we use a MelodicTimeSeries object.
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
-            ts        = plotting.MelodicTimeSeries(*tsargs)
+            ts        = timeseries.MelodicTimeSeries(*tsargs)
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
@@ -344,11 +344,11 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
             # Is it a complex data image?
             if overlay.iscomplex:
-                ts = plotting.ComplexTimeSeries(*tsargs)
+                ts = timeseries.ComplexTimeSeries(*tsargs)
 
             # Or just a bog-standard 4D image?
             else:
-                ts = plotting.VoxelTimeSeries(*tsargs)
+                ts = timeseries.VoxelTimeSeries(*tsargs)
 
             # listen to volumeDim for
             # images with >4 dimensions

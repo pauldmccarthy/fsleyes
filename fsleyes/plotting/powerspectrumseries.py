@@ -12,7 +12,7 @@ The following classes are provided:
 .. autosummary::
    :nosignatures:
 
-   PowerSpectrumSeriesMixin
+   PowerSpectrumSeries
    VoxelPowerSpectrumSeries
    ComplexPowerSpectrumSeries
    ImaginaryPowerSpectrumSeries
@@ -37,11 +37,12 @@ from . import                   dataseries
 log = logging.getLogger(__name__)
 
 
-class PowerSpectrumSeriesMixin(object):
-    """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
-    from an overlay. The ``PowerSpectrumSeries`` class is the base class for
-    all other classes in this module. It provides the :meth:`calcPowerSpectrum`
-    method which calculates the power spectrum of a data series.
+class PowerSpectrumSeries(object):
+    """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series from
+    an overlay. The ``PowerSpectrumSeries`` class is a base mixin class for
+    all other classes in this module. It provides the
+    :meth:`calcPowerSpectrum` method which calculates the power spectrum of a
+    data series.
     """
 
 
@@ -74,7 +75,7 @@ class PowerSpectrumSeriesMixin(object):
 
 
 class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
-                               PowerSpectrumSeriesMixin):
+                               PowerSpectrumSeries):
     """The ``VoxelPowerSpectrumSeries`` class encapsulates the power spectrum
     of a single voxel from a 4D :class:`.Image` overlay. The voxel is dictated
     by the :attr:`.DisplayContext.location` property.
@@ -217,7 +218,7 @@ class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
 
 
 class MelodicPowerSpectrumSeries(dataseries.DataSeries,
-                                 PowerSpectrumSeriesMixin):
+                                 PowerSpectrumSeries):
     """The ``MelodicPowerSpectrumSeries`` class encapsulates the power spectrum
     of the time course for a single component of a :class:`.MelodicImage`. The
     component is dictated by the :attr:`.NiftiOpts.volume` property.
@@ -265,7 +266,7 @@ class MelodicPowerSpectrumSeries(dataseries.DataSeries,
 
 
 class MeshPowerSpectrumSeries(dataseries.DataSeries,
-                              PowerSpectrumSeriesMixin):
+                              PowerSpectrumSeries):
     """A ``MeshPowerSpectrumSeries`` object encapsulates the power spectrum for
     the data from a :class:`.Mesh` overlay which has some time series
     vertex data associated with it. See the :attr:`.MeshOpts.vertexData`
