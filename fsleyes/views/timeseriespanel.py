@@ -345,9 +345,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             # Is it a complex data image?
             if overlay.iscomplex:
                 ts = plotting.ComplexVoxelTimeSeries(*tsargs)
-            # Or a RGB(A) image?
-            # elif overlay.nvals > 1:
-            #    ts = plotting.ComplexTimeSeries(*tsargs)
+
             # Or just a bog-standard 4D image?
             else:
                 ts = plotting.VoxelTimeSeries(*tsargs)
@@ -364,7 +362,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         ts.alpha     = 1
         ts.lineWidth = 1
         ts.lineStyle = '-'
-        ts.label     = ts.makeLabel()
 
         return ts, targets, propNames
 

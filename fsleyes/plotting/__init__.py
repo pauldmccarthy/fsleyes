@@ -16,7 +16,6 @@ from . import histogramseries
 from . import powerspectrumseries
 
 DataSeries                 = dataseries         .DataSeries
-TimeSeries                 = timeseries         .TimeSeries
 VoxelTimeSeries            = timeseries         .VoxelTimeSeries
 ComplexVoxelTimeSeries     = timeseries         .ComplexVoxelTimeSeries
 ImaginaryTimeSeries        = timeseries         .ImaginaryTimeSeries

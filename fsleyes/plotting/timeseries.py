@@ -10,7 +10,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 .. autosummary::
    :nosignatures:
 
-   TimeSeries
    VoxelTimeSeries
    ComplexVoxelTimeSeries
    ImaginaryTimeSeries
@@ -28,8 +27,6 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 
 import numpy as np
 
-import fsl.utils.cache      as cache
-import fsl.utils.idle       as idle
 import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
 import fsleyes.strings      as strings
@@ -37,162 +34,9 @@ import fsleyes.colourmaps   as fslcm
 from . import                  dataseries
 
 
-class TimeSeries(dataseries.DataSeries):
-    """Encapsulates time series data from an overlay.  The ``TimeSeries`` class
-    is the base-class for all other classes in this module - its
-    :meth:`getData` method implements some pre-processing routines which are
-    required by the :class:`.TimeSeriesPanel`.
-
-    The following methods are intended to be overridden and/or called by
-    sub-class implementations:
-
-    .. autosummary::
-       :nosignatures:
-
-       makeLabel
-       getData
+class VoxelTimeSeries(dataseries.VoxelDataSeries):
     """
-
-
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """Create a ``TimeSeries`` instance.
-
-        :arg overlay:     The overlay  to extract the data from.
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
-                          ``TimeSeries``.
-        """
-        dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
-
-
-    def makeLabel(self):
-        """Return a label for this ``TimeSeries``. """
-        display = self.displayCtx.getDisplay(self.overlay)
-        return display.name
-
-
-    def getData(self, xdata=None, ydata=None):
-        """Overrides :meth:`.DataSeries.getData`. Returns the data associated
-        with this ``TimeSeries`` instance.
-
-        The ``xdata`` and ``ydata`` arguments may be used by sub-classes to
-        override the x/y data in the event that they have already performed
-        some processing on the data. The default implementation returns
-        whatever has been set through :meth:`.DataSeries.setData`.
-        """
-
-        dsXData, dsYData = dataseries.DataSeries.getData(self)
-
-        if xdata is None:                    xdata = dsXData
-        if ydata is None:                    ydata = dsYData
-        if xdata is None or len(xdata) == 0: xdata = np.arange(len(ydata))
-
-        xdata = np.array(xdata, dtype=np.float32)
-        ydata = np.array(ydata, dtype=np.float32)
-
-        return xdata, ydata
-
-
-class VoxelTimeSeries(TimeSeries):
-    """A :class:`TimeSeries` sub-class which encapsulates data from a
-    specific voxel of a :class:`.Image` overlay.
-
-    The voxel data may be accessed through the :meth:`getData` method, where
-    the voxel is defined by current value of the
-    :attr:`.DisplayContext.location` property (transformed into the image
-    voxel coordinate system).
     """
-
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """Create a ``VoxelTimeSeries`` instance.
-
-        :arg overlay:     The :class:`.Image` instance to extract the data
-                          from.
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
-                          ``VoxelTimeSeries``.
-        """
-        TimeSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
-
-        # We use a cache to store data for the
-        # most recently accessed voxels. This is
-        # done to improve performance on big
-        # images (which may be compressed and
-        # on disk).
-        #
-        # TODO You need to invalidate the cache
-        #      when the image data changes.
-        self.__cache = cache.Cache(maxsize=1000)
-
-
-    def makeLabel(self):
-        """Returns a string representation of this ``VoxelTimeSeries``
-        instance.
-        """
-
-        display = self.displayCtx.getDisplay(self.overlay)
-        opts    = display.opts
-        coords  = opts.getVoxel()
-
-        if coords is not None:
-            return '{} [{} {} {}]'.format(display.name,
-                                          coords[0],
-                                          coords[1],
-                                          coords[2])
-        else:
-            return '{} [out of bounds]'.format(display.name)
-
-
-    def getData(self, xdata=None, ydata=None):
-        """Returns the data at the current voxel location. The ``xdata`` and
-        ``ydata`` parameters may be used by sub-classes to override this
-        default behaviour.
-        """
-
-        if ydata is None: ydata = self.dataAtCurrentVoxel()
-        if xdata is None: xdata = np.arange(len(ydata))
-
-        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
-
-
-    # The PlotPanel uses a new thread to access
-    # data every time the displaycontext location
-    # changes. So we mark this method as mutually
-    # exclusive to prevent multiple
-    # near-simultaneous accesses to the same voxel
-    # location. The first time that a voxel location
-    # is accessed, its data is cached. So when
-    # subsequent (blocked) accesses execute, they
-    # will hit the cache instead of hitting the disk
-    # (which is a good thing).
-    @idle.mutex
-    def dataAtCurrentVoxel(self):
-        """Returns the data at the voxel corresponding to the current
-        :attr:`.DisplayContext.location`. May be overridden by
-        sub-classes.
-        """
-
-        opts = self.displayCtx.getOpts(self.overlay)
-        vdim = opts.volumeDim
-        xyz  = opts.getVoxel(vround=True)
-
-        if xyz is None:
-            return []
-
-        x, y, z = xyz
-
-        ydata = self.__cache.get((x, y, z, vdim), None)
-
-        if ydata is None:
-            ydata = self.overlay[opts.index(xyz, atVolume=False)]
-            self.__cache.put((x, y, z, vdim), ydata)
-
-        return ydata
-
 
 class ComplexVoxelTimeSeries(VoxelTimeSeries):
     """A :class:`VoxelTimeSeries` to display time series from 4D
@@ -241,7 +85,7 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
 
 
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """Create a ``ComplexTimeSeries``. All arguments are passed
+        """Create a ``ComplexVoxelTimeSeries``. All arguments are passed
         through to the :class:`VoxelTimeSeries` constructor.
         """
 
@@ -270,13 +114,13 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
                                 strings.labels[self])
 
 
-    def getData(self, xdata=None, ydata=None):
+    def getData(self):
         """If :attr:`plotReal` is true, returns the real component
         of the complex data. Otherwise returns ``(None, None)``.
         """
         if not self.plotReal:
             return None, None
-        return VoxelTimeSeries.getData(self, xdata, ydata)
+        return VoxelTimeSeries.getData(self)
 
 
     def extraSeries(self):
@@ -499,13 +343,13 @@ class FEATTimeSeries(VoxelTimeSeries):
         self.__plotFullModelFitChanged()
 
 
-    def getData(self, xdata=None, ydata=None):
+    def getData(self):
         """Returns the fMRI time series data at the current voxel. Or,
         if :attr:`plotData` is ``False``, returns ``(None, None)``.
         """
         if not self.plotData:
             return None, None
-        return VoxelTimeSeries.getData(self, xdata, ydata)
+        return VoxelTimeSeries.getData(self)
 
 
     def extraSeries(self):
@@ -751,7 +595,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
         self.idx      = idx
 
 
-    def getData(self):
+    def dataAtCurrentVoxel(self):
         """Returns the partial model fit for the voxel and model fit type
         specified in the constructop.
 
@@ -761,13 +605,12 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
         coords = opts.getVoxel()
 
         if coords is None:
-            return [], []
+            return None
 
-        data = self.overlay.partialFit(self.contrast, coords)
-        return VoxelTimeSeries.getData(self, ydata=data)
+        return self.overlay.partialFit(self.contrast, coords)
 
 
-class FEATEVTimeSeries(TimeSeries):
+class FEATEVTimeSeries(dataseries.DataSeries):
     """A :class:`TimeSeries` class which represents the time course of an
     EV from a FEAT analysis. Instances of this class are created by the
     :class:`FEATTimeSeries` class.
@@ -797,7 +640,8 @@ class FEATEVTimeSeries(TimeSeries):
 
         :arg idx:         The EV index.
         """
-        TimeSeries.__init__(self, overlay, overlayList, displayCtx, plotPanel)
+        dataseries.DataSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
 
         self.parentTs = parentTs
         self.idx      = idx
@@ -822,9 +666,10 @@ class FEATEVTimeSeries(TimeSeries):
         opts   = self.displayCtx.getOpts(self.overlay)
         coords = opts.getVoxel()
         design = self.overlay.getDesign(coords)
-        data   = design[:, self.idx]
+        ydata  = design[:, self.idx]
+        xdata  = np.arange(len(ydata))
 
-        return TimeSeries.getData(self, ydata=data)
+        return xdata, ydata
 
 
 class FEATResidualTimeSeries(VoxelTimeSeries):
@@ -862,19 +707,19 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
                                 strings.labels[self])
 
 
-    def getData(self):
+    def dataAtCurrentVoxel(self):
         """Returns the residuals for the current voxel. """
 
         opts  = self.displayCtx.getOpts(self.overlay)
         voxel = opts.getVoxel()
 
         if voxel is None:
-            return [], []
+            return None
 
         x, y, z = voxel
         data    = self.overlay.getResiduals()[x, y, z, :]
 
-        return VoxelTimeSeries.getData(self, ydata=data)
+        return data
 
 
 class FEATModelFitTimeSeries(VoxelTimeSeries):
@@ -914,7 +759,6 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
                           ``'cope'``.
 
         :arg idx:         If the model fit type is ``'pe'`` or ``'cope'``,
-
         """
 
         if fitType not in ('full', 'cope', 'pe'):
@@ -949,7 +793,7 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
             return label.format(self.idx + 1)
 
 
-    def getData(self):
+    def dataAtCurrentVoxel(self):
         """Returns the FEAT model fit at the current voxel. """
 
         opts     = self.displayCtx.getOpts(self.overlay)
@@ -957,15 +801,13 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
         contrast = self.contrast
 
         if voxel is None:
-            return [], []
+            return None
 
-        data = self.overlay.fit(contrast, voxel)
-
-        return VoxelTimeSeries.getData(self, ydata=data)
+        return self.overlay.fit(contrast, voxel)
 
 
-class MelodicTimeSeries(TimeSeries):
-    """A :class:`.TimeSeries` class which encapsulates the time course for
+class MelodicTimeSeries(dataseries.DataSeries):
+    """A :class:`.DataSeries` class which encapsulates the time course for
     one component of a :class:`.MelodicImage`. The :meth:`getData` method
     returns the time course of the component specified by the current
     :class:`.NiftiOpts.volume`.
@@ -980,7 +822,8 @@ class MelodicTimeSeries(TimeSeries):
         :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
                           ``MelodicTimeSeries``.
         """
-        TimeSeries.__init__(self, overlay, overlayList, displayCtx, plotPanel)
+        dataseries.DataSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
 
 
     def getComponent(self):
@@ -1004,10 +847,11 @@ class MelodicTimeSeries(TimeSeries):
 
         component = self.getComponent()
         ydata     = self.overlay.getComponentTimeSeries(component)
-        return TimeSeries.getData(self, ydata=ydata)
+        xdata     = np.arange(len(ydata))
+        return xdata, ydata
 
 
-class MeshTimeSeries(TimeSeries):
+class MeshTimeSeries(dataseries.DataSeries):
     """A ``MeshTimeSeries`` object encapsulates the time course for a
     :class:`.Mesh` overlay which has some time series vertex data
     associated with it. See the :attr:`.MeshOpts.vertexData` property.
@@ -1023,7 +867,8 @@ class MeshTimeSeries(TimeSeries):
         :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
                           ``TimeSeries``.
         """
-        TimeSeries.__init__(self, overlay, overlayList, displayCtx, plotPanel)
+        dataseries.DataSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
 
 
     def makeLabel(self):
@@ -1031,15 +876,17 @@ class MeshTimeSeries(TimeSeries):
         legend.
         """
 
+        display = self.displayCtx.getDisplay(self.overlay)
+
         if self.__haveData():
-            display = self.displayCtx.getDisplay(self.overlay)
+
             opts    = display.opts
             vidx    = opts.getVertex()
 
             return '{} [{}]'.format(display.name, vidx)
 
         else:
-            return TimeSeries.makeLabel(self)
+            return display.name
 
 
     def __haveData(self):
@@ -1053,23 +900,19 @@ class MeshTimeSeries(TimeSeries):
         return vidx is not None and vd is not None and vd.shape[1] > 1
 
 
-    def getData(self, xdata=None, ydata=None):
+    def getData(self):
         """Returns the data at the current location for the
-        :class:`.Mesh`, or ``[], []`` if there is no data.
+        :class:`.Mesh`, or ``(None, None)`` if there is no data.
         """
 
-        if ydata is None:
+        if not self.__haveData():
+            return None, None
 
-            if not self.__haveData():
-                return [], []
+        opts = self.displayCtx.getOpts(self.overlay)
+        vidx = opts.getVertex()
+        vd   = opts.getVertexData()
 
-            opts = self.displayCtx.getOpts(self.overlay)
-            vidx = opts.getVertex()
-            vd   = opts.getVertexData()
+        ydata = vd[vidx, :]
+        xdata = np.arange(len(ydata))
 
-            ydata = vd[vidx, :]
-
-        if xdata is None:
-            xdata = np.arange(len(ydata))
-
-        return TimeSeries.getData(self, xdata=xdata, ydata=ydata)
+        return xdata, ydata
