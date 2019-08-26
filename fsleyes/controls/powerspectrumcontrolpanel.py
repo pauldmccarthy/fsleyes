@@ -101,6 +101,17 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
                              tooltip=strings.properties[ps, 'varNorm'],
                              groupName=groupName)
 
+        if isinstance(ps, powerspectrumseries.ComplexPowerSpectrumSeries):
+            for propName in ['plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widg = props.makeWidget(widgetList, ps, propName)
+                widgetList.AddWidget(
+                    widg,
+                    displayName=strings.properties[ps, propName],
+                    tooltip=fsltooltips.properties[ps, propName],
+                    groupName=groupName)
+                allWidgets.append(widg)
+
         return allWidgets + [varNorm]
 
 

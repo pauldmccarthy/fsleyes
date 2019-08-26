@@ -118,7 +118,10 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
 
 
     def generateDataSeriesWidgets(self, ts, groupName):
-        """
+        """Overrides :meth:`.PlotControlPanel.generateDataSeriesWidgets`.
+
+        Adds some widgets for controlling some properties of the
+        :class:`.DataSeries` instance.
         """
 
         overlay    = ts.overlay

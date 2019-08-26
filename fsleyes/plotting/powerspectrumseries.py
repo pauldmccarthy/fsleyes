@@ -128,11 +128,19 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         self.__phaseps = PhasePowerSpectrumSeries(
             overlay, overlayList, displayCtx, plotPanel)
 
-        for ts in (self.__imagps, self.__magps, self.__phaseps):
-            ts.colour = fslcm.randomDarkColour()
-            ts.bindProps('alpha',     self)
-            ts.bindProps('lineWidth', self)
-            ts.bindProps('lineStyle', self)
+        for ps in (self.__imagps, self.__magps, self.__phaseps):
+            ps.colour = fslcm.randomDarkColour()
+            ps.bindProps('alpha',     self)
+            ps.bindProps('lineWidth', self)
+            ps.bindProps('lineStyle', self)
+
+
+    def makeLabel(self):
+        """Returns a string representation of this
+        ``ComplexPowerSpectrumSeries`` instance.
+        """
+        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+                                strings.labels[self])
 
 
     def getData(self):
@@ -147,6 +155,19 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
     def dataAtCurrentVoxel(self):
         """Returns the real component of the data at the current voxel. """
         return VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self).real
+
+
+    def extraSeries(self):
+        """Returns a list of additional series to be plotted, based
+        on the values of the :attr:`plotImaginary`, :attr:`plotMagnitude`
+        and :attr:`plotPhase` properties.
+        """
+
+        extras = []
+        if self.plotImaginary: extras.append(self.__imagps)
+        if self.plotMagnitude: extras.append(self.__magps)
+        if self.plotPhase:     extras.append(self.__phaseps)
+        return extras
 
 
 class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
@@ -182,7 +203,7 @@ class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
         """Returns a string representation of this
         ``MagnitudePowerSpectrumSeries`` instance.
         """
-        return '{} ({})'.format(MagnitudePowerSpectrumSeries.makeLabel(self),
+        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
                                 strings.labels[self])
 
 
