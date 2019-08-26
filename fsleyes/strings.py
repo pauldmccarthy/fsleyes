@@ -656,10 +656,15 @@ labels = TypeDict({
 
     'FEATResidualTimeSeries'     : 'Residuals',
 
-    'ComplexVoxelTimeSeries' : 'real',
-    'ImaginaryTimeSeries'    : 'imaginary',
-    'MagnitudeTimeSeries'    : 'magnitude',
-    'PhaseTimeSeries'        : 'phase',
+    'ComplexTimeSeries'   : 'real',
+    'ImaginaryTimeSeries' : 'imaginary',
+    'MagnitudeTimeSeries' : 'magnitude',
+    'PhaseTimeSeries'     : 'phase',
+
+    'ComplexPowerSpectrumSeries'   : 'real',
+    'ImaginaryPowerSpectrumSeries' : 'imaginary',
+    'MagnitudePowerSpectrumSeries' : 'magnitude',
+    'PhasePowerSpectrumSeries'     : 'phase',
 
     'ClusterPanel.clustName'     : 'Z statistics for COPE{} ({})',
 
@@ -989,10 +994,15 @@ properties = TypeDict({
     'DataSeries.lineWidth' : 'Line width',
     'DataSeries.lineStyle' : 'Line style',
 
-    'ComplexVoxelTimeSeries.plotReal'      : 'Plot real',
-    'ComplexVoxelTimeSeries.plotImaginary' : 'Plot imaginary',
-    'ComplexVoxelTimeSeries.plotMagnitude' : 'Plot magnitude',
-    'ComplexVoxelTimeSeries.plotPhase'     : 'Plot phase',
+    'ComplexTimeSeries.plotReal'      : 'Plot real',
+    'ComplexTimeSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexTimeSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexTimeSeries.plotPhase'     : 'Plot phase',
+
+    'ComplexPowerSpectrumSeries.plotReal'      : 'Plot real',
+    'ComplexPowerSpectrumSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexPowerSpectrumSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexPowerSpectrumSeries.plotPhase'     : 'Plot phase',
 
     'HistogramSeries.nbins'           : 'Number of bins',
     'HistogramSeries.autoBin'         : 'Automatic histogram binning',

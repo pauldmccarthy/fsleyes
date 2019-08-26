@@ -11,7 +11,7 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
    :nosignatures:
 
    VoxelTimeSeries
-   ComplexVoxelTimeSeries
+   ComplexTimeSeries
    ImaginaryTimeSeries
    MagnitudeTimeSerie
    PhaseTimeSeries
@@ -35,13 +35,16 @@ from . import                  dataseries
 
 
 class VoxelTimeSeries(dataseries.VoxelDataSeries):
-    """
+    """A ``VoxelTimeSeries`` is a ``VoxelDataSeries`` which represents
+    time series data.
     """
 
-class ComplexVoxelTimeSeries(VoxelTimeSeries):
+
+class ComplexTimeSeries(VoxelTimeSeries):
     """A :class:`VoxelTimeSeries` to display time series from 4D
     complex images. The :meth:`getData` method returns the real component
-    (if :attr:`plotReal.` is ``True``).
+    of the data..
+
 
     The :meth:`extraSeries` method returns additional series based on
     the values of the :attr:`plotImaginary`, :attr:`plotMagnitude` and
@@ -85,7 +88,7 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
 
 
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """Create a ``ComplexVoxelTimeSeries``. All arguments are passed
+        """Create a ``ComplexTimeSeries``. All arguments are passed
         through to the :class:`VoxelTimeSeries` constructor.
         """
 
@@ -107,7 +110,7 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
 
 
     def makeLabel(self):
-        """Returns a string representation of this ``ComplexVoxelTimeSeries``
+        """Returns a string representation of this ``ComplexTimeSeries``
         instance.
         """
         return '{} ({})'.format(VoxelTimeSeries.makeLabel(self),
@@ -137,9 +140,7 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
 
 
     def dataAtCurrentVoxel(self):
-        """Returns the real component of the data at the current
-        voxel.
-        """
+        """Returns the real component of the data at the current voxel. """
         return VoxelTimeSeries.dataAtCurrentVoxel(self).real
 
 
@@ -159,15 +160,14 @@ class ImaginaryTimeSeries(VoxelTimeSeries):
 
 
     def dataAtCurrentVoxel(self):
-        """Returns the imaginary component of the data at the current
-        voxel.
+        """Returns the imaginary component of the data at the current voxel.
         """
         return VoxelTimeSeries.dataAtCurrentVoxel(self).imag
 
 
 class MagnitudeTimeSeries(VoxelTimeSeries):
     """An ``MagnitudeTimeSeries`` represents the magnitude of a complex-valued
-    image. ``ImaginaryTimeSeries`` instances are created by
+    image. ``MagnitudeTimeSeries`` instances are created by
     :class:`ComplexTimeSeries` instances.
     """
 
@@ -190,7 +190,7 @@ class MagnitudeTimeSeries(VoxelTimeSeries):
 
 class PhaseTimeSeries(VoxelTimeSeries):
     """An ``PhaseTimeSeries`` represents the phase of a complex-valued
-    image. ``ImaginaryTimeSeries`` instances are created by
+    image. ``PhaseTimeSeries`` instances are created by
     :class:`ComplexTimeSeries` instances.
     """
 
@@ -218,14 +218,16 @@ class FEATTimeSeries(VoxelTimeSeries):
 
     The ``FEATTimeSeries`` class acts as a container for several
     ``TimeSeries`` instances, each of which represent some part of a FEAT
-    analysis. The data returned by a call to :meth:`.TimeSeries.getData` on a
+    analysis. The data returned by a call to :meth:`.getData` on a
     ``FEATTimeSeries`` instance returns the fMRI time series data
     (``filtered_func_data`` in the ``.feat`` directory).
 
+
     The :meth:`extraSeries` method may be used to retrieve a list of all the
     other ``TimeSeries`` instances which are associated with the
-    ``FEATTimeSeries`` instance - all of these ``TimeSeries`` instances, in
+    ``FEATTimeSeries`` instance - all of these ``DataSeries`` instances, in
     addition to this ``FEATTimeSeries`` instasnce, should be plotted.
+
 
     For example, if the :attr:`plotData` and :attr:`plotFullModelFit` settings
     are ``True``, the :meth:`extraSeries` method will return a list containing

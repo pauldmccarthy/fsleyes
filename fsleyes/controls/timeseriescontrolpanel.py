@@ -24,7 +24,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     allows the user to configure a :class:`.TimeSeriesPanel`. It contains
     controls which are linked to the properties of the ``TimeSeriesPanel``,
     (which include properties defined on the :class:`.PlotPanel` base class),
-    and the :class:`.TimeSeries` class.
+    and the :class:`.DataSeries` class.
 
 
     A ``TimeSeriesControlPanel`` looks something like this:
@@ -44,7 +44,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
        properties of the :class:`.PlotPanel` base class.
 
      - The *Settings for the current time course* section has controls which
-       are linked to properties of the :class:`.TimeSeries` class. These
+       are linked to properties of the :class:`.DataSeries` class. These
        properties define how the *current* time course is displayed (see the
        :class:`.TimeSeriesPanel` class documentation).
 
@@ -127,7 +127,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
         allWidgets = plotctrl.PlotControlPanel.generateDataSeriesWidgets(
             self, ts, groupName)
 
-        if isinstance(ts, timeseries.ComplexVoxelTimeSeries):
+        if isinstance(ts, timeseries.ComplexTimeSeries):
             for propName in ['plotReal', 'plotImaginary',
                              'plotMagnitude', 'plotPhase']:
                 widg = props.makeWidget(widgetList, ts, propName)
@@ -144,7 +144,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     def generateCustomDataSeriesWidgets(self, ts, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
 
-        If the given :class:`.TimeSeries` is a :class:`.FEATTimeSeries`
+        If the given :class:`.DataSeries` is a :class:`.FEATTimeSeries`
         instance, this method adds some widgets for controlling the
         FEAT-related settings of the instance.
         """
@@ -238,7 +238,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
         """Called when the :attr:`.TimeSeriesPanel.plotMelodicICs` property
         changes. If the current overlay is a :class:`.MelodicImage`,
         re-generates the widgets in the *current time course* section, as
-        the :class:`.TimeSeries` instance associated with the overlay may
+        the :class:`.DataSeries` instance associated with the overlay may
         have been re-created.
         """
         self.refreshDataSeriesWidgets()

@@ -12,8 +12,12 @@ The following classes are provided:
 .. autosummary::
    :nosignatures:
 
-   PowerSpectrumSeries
+   PowerSpectrumSeriesMixin
    VoxelPowerSpectrumSeries
+   ComplexPowerSpectrumSeries
+   ImaginaryPowerSpectrumSeries
+   MagnitudePowerSpectrumSeries
+   PhasePowerSpecturmSeries
    MelodicPowerSpectrumSeries
 """
 
@@ -23,22 +27,21 @@ import logging
 import numpy     as np
 import numpy.fft as fft
 
-import fsl.utils.idle        as idle
-import fsl.utils.cache       as cache
 import fsl.data.melodicimage as fslmelimage
 import fsleyes_props         as props
+import fsleyes.colourmaps    as fslcm
+import fsleyes.strings       as strings
 from . import                   dataseries
 
 
 log = logging.getLogger(__name__)
 
 
-class PowerSpectrumSeries(dataseries.DataSeries):
+class PowerSpectrumSeriesMixin(object):
     """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
     from an overlay. The ``PowerSpectrumSeries`` class is the base class for
     all other classes in this module. It provides the :meth:`calcPowerSpectrum`
-    method which (surprisingly) calculates the power spectrum of a data
-    series.
+    method which calculates the power spectrum of a data series.
     """
 
 
@@ -46,34 +49,6 @@ class PowerSpectrumSeries(dataseries.DataSeries):
     """If ``True``, the data is normalised to unit variance before the fourier
     transformation.
     """
-
-
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """Create a ``PowerSpectrumSeries``.
-
-        :arg overlay:     The overlay from which the data to be plotted is
-                          retrieved.
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`.PlotPanel` that owns this
-                          ``PowerSpectrumSeries``.
-        """
-        dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
-
-
-    def destroy(self):
-        """Must be called when this ``PowerSpectrumSeries`` is no longer
-        needed.
-        """
-        dataseries.DataSeries.destroy(self)
-
-
-    def makeLabel(self):
-        """Returns a label that can be used for this ``PowerSpectrumSeries``.
-        """
-        display = self.displayCtx.getDisplay(self.overlay)
-        return display.name
 
 
     def calcPowerSpectrum(self, data):
@@ -98,7 +73,8 @@ class PowerSpectrumSeries(dataseries.DataSeries):
         return data
 
 
-class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
+class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
+                               PowerSpectrumSeriesMixin):
     """The ``VoxelPowerSpectrumSeries`` class encapsulates the power spectrum
     of a single voxel from a 4D :class:`.Image` overlay. The voxel is dictated
     by the :attr:`.DisplayContext.location` property.
@@ -107,72 +83,141 @@ class VoxelPowerSpectrumSeries(PowerSpectrumSeries):
 
     def __init__(self, *args, **kwargs):
         """Create a ``VoxelPowerSpectrumSeries``.  All arguments are passed
-        to the :meth:`PowerSpectrumSeries.__init__` method. A :exc:`ValueError`
+        to the :meth:`VoxelDataSeries.__init__` method. A :exc:`ValueError`
         is raised if the overlay is not a 4D :class:`.Image`.
         """
 
-        PowerSpectrumSeries.__init__(self, *args, **kwargs)
-
-        # We use a cache just like in the
-        # VoxelTimeSeries class - see that
-        # class.
-        #
-        # TODO You need to invalidate the cache
-        #      when the image data changes.
-        self.__cache = cache.Cache(maxsize=1000)
+        dataseries.VoxelDataSeries.__init__(self, *args, **kwargs)
 
         if self.overlay.ndim < 4:
             raise ValueError('Overlay is not a 4D image')
 
 
-    def makeLabel(self):
-        """Creates and returns a label for use with this
-        ``VoxelPowerSpectrumSeries``.
-        """
-
-        display = self.displayCtx.getDisplay(self.overlay)
-        opts    = display.opts
-        coords  = opts.getVoxel()
-
-        if coords is not None:
-            return '{} [{} {} {}]'.format(display.name,
-                                          coords[0],
-                                          coords[1],
-                                          coords[2])
-        else:
-            return '{} [out of bounds]'.format(display.name)
-
-
-    # See VoxelTimeSeries.getData for an
-    # explanation of the mutex decorator.
-    @idle.mutex
     def getData(self):
-        """Returns the data for the current voxel of the overlay. The current
-        voxel is dictated by the :attr:`.DisplayContext.location` property.
-        """
-
-        opts  = self.displayCtx.getOpts(self.overlay)
-        vdim  = opts.volumeDim
-        voxel = opts.getVoxel()
-
-        if voxel is None:
-            return [], []
-
-        x, y, z = voxel
-
-        ydata = self.__cache.get((x, y, z, vdim), None)
-
-        if ydata is None:
-            ydata = self.overlay[opts.index(voxel, atVolume=False)]
-            self.__cache.put((x, y, z, vdim), ydata)
-
+        """Returns the data at the current voxel. """
+        ydata = self.dataAtCurrentVoxel()
         ydata = self.calcPowerSpectrum(ydata)
-        xdata = np.arange(len(ydata), dtype=np.float32)
-
+        xdata = np.arange(len(ydata))
         return xdata, ydata
 
 
-class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
+class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
+    """This class is the frequency-spectrum equivalent of the
+    :class:`.ComplexTimeSeries` class - see it for more details.
+    """
+
+    plotReal      = props.Boolean(default=True)
+    plotImaginary = props.Boolean(default=False)
+    plotMagnitude = props.Boolean(default=False)
+    plotPhase     = props.Boolean(default=False)
+
+
+    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+        """Create a ``ComplexPowerSpectrumSeries``. All arguments are
+        passed through to the :class:`VoxelPowerSpectrumSeries` constructor.
+        """
+
+        VoxelPowerSpectrumSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotPanel)
+
+        self.__imagps = ImaginaryPowerSpectrumSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+        self.__magps = MagnitudePowerSpectrumSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+        self.__phaseps = PhasePowerSpectrumSeries(
+            overlay, overlayList, displayCtx, plotPanel)
+
+        for ts in (self.__imagps, self.__magps, self.__phaseps):
+            ts.colour = fslcm.randomDarkColour()
+            ts.bindProps('alpha',     self)
+            ts.bindProps('lineWidth', self)
+            ts.bindProps('lineStyle', self)
+
+
+    def getData(self):
+        """If :attr:`plotReal` is true, returns the real component
+        of the complex data. Otherwise returns ``(None, None)``.
+        """
+        if not self.plotReal:
+            return None, None
+        return VoxelPowerSpectrumSeries.getData(self)
+
+
+    def dataAtCurrentVoxel(self):
+        """Returns the real component of the data at the current voxel. """
+        return VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self).real
+
+
+class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
+    """An ``ImaginaryPowerSpectrumSeries`` represents the power spectrum of the
+    imaginary component of a complex-valued image.
+    ``ImaginaryPowerSpectrumSeries`` instances are created by
+    :class:`ComplexPowerSpectrumSeries` instances.
+    """
+
+
+    def makeLabel(self):
+        """Returns a string representation of this
+        ``ImaginaryPowerSpectrumSeries`` instance.
+        """
+        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+                                strings.labels[self])
+
+
+    def dataAtCurrentVoxel(self):
+        """Returns the imaginary component of the data at the current voxel.
+        """
+        return VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self).imag
+
+
+class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
+    """An ``MagnitudePowerSpectrumSeries`` represents the magnitude of a
+    complex-valued image. ``MagnitudePowerSpectrumSeries`` instances are
+    created by :class:`ComplexPowerSpectrumSeries` instances.
+    """
+
+
+    def makeLabel(self):
+        """Returns a string representation of this
+        ``MagnitudePowerSpectrumSeries`` instance.
+        """
+        return '{} ({})'.format(MagnitudePowerSpectrumSeries.makeLabel(self),
+                                strings.labels[self])
+
+
+    def dataAtCurrentVoxel(self):
+        """Returns the magnitude of the data at the current voxel. """
+        data = VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self)
+        real = data.real
+        imag = data.imag
+        return np.sqrt(real ** 2 + imag ** 2)
+
+
+class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
+    """An ``PhasePowerSpectrumSeries`` represents the phase of a complex-valued
+    image. ``PhasePowerSpectrumSeries`` instances are created by
+    :class:`ComplexPowerSpectrumSeries` instances.
+    """
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``PhasePowerSpectrumSeries``
+        instance.
+        """
+        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+                                strings.labels[self])
+
+
+    def dataAtCurrentVoxel(self):
+        """Returns the phase of the data at the current voxel. """
+        data = VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self)
+        real = data.real
+        imag = data.imag
+        return np.arctan(real / imag)
+
+
+class MelodicPowerSpectrumSeries(dataseries.DataSeries,
+                                 PowerSpectrumSeriesMixin):
     """The ``MelodicPowerSpectrumSeries`` class encapsulates the power spectrum
     of the time course for a single component of a :class:`.MelodicImage`. The
     component is dictated by the :attr:`.NiftiOpts.volume` property.
@@ -183,7 +228,7 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
         """Create a ``MelodicPowerSpectrumSeries``. All arguments are passed
         through to the :meth:`PowerSpectrumSeries.__init__` method.
         """
-        PowerSpectrumSeries.__init__(self, *args, **kwargs)
+        dataseries.DataSeries.__init__(self, *args, **kwargs)
 
         if not isinstance(self.overlay, fslmelimage.MelodicImage):
             raise ValueError('Overlay is not a MelodicImage')
@@ -219,7 +264,8 @@ class MelodicPowerSpectrumSeries(PowerSpectrumSeries):
 
 
 
-class MeshPowerSpectrumSeries(PowerSpectrumSeries):
+class MeshPowerSpectrumSeries(dataseries.DataSeries,
+                              PowerSpectrumSeriesMixin):
     """A ``MeshPowerSpectrumSeries`` object encapsulates the power spectrum for
     the data from a :class:`.Mesh` overlay which has some time series
     vertex data associated with it. See the :attr:`.MeshOpts.vertexData`
@@ -229,9 +275,9 @@ class MeshPowerSpectrumSeries(PowerSpectrumSeries):
 
     def __init__(self, *args, **kwargs):
         """Create a ``MeshPowerSpectrumSeries`` instance. All arguments are
-        passed through to  :meth:`PowerSpectrumSeries.__init__`.
+        passed through to  :meth:`.DataSeries.__init__`.
         """
-        PowerSpectrumSeries.__init__(self, *args, **kwargs)
+        dataseries.DataSeries.__init__(self, *args, **kwargs)
 
 
     def makeLabel(self):
@@ -239,15 +285,15 @@ class MeshPowerSpectrumSeries(PowerSpectrumSeries):
         legend.
         """
 
-        if self.__haveData():
-            display = self.displayCtx.getDisplay(self.overlay)
-            opts    = display.opts
-            vidx    = opts.getVertex()
+        display = self.displayCtx.getDisplay(self.overlay)
 
+        if self.__haveData():
+            opts = display.opts
+            vidx = opts.getVertex()
             return '{} [{}]'.format(display.name, vidx)
 
         else:
-            return PowerSpectrumSeries.makeLabel(self)
+            return display.name
 
 
     def __haveData(self):

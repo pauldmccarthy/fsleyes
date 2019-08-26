@@ -46,18 +46,18 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        :align: center
 
 
-    A ``TimeSeriesPanel`` plots one or more :class:`.TimeSeries` instances,
-    which encapsulate time series data from an overlay. All ``TimeSeries``
-    classes are defined in the :mod:`.plotting.timeseries` module; these are
-    all sub-classes of the :class:`.DataSeries` class - see the
-    :class:`.PlotPanel` and :class:`.OverlayPlotPanel` documentation for more
-    details:
+    A ``TimeSeriesPanel`` plots one or more :class:`.DataSeries` instances,
+    which encapsulate time series data from an overlay. All time series
+    related ``DataSeries`` classes are defined in the
+    :mod:`.plotting.timeseries` module; these are all sub-classes of the
+    :class:`.DataSeries` class - see the :class:`.PlotPanel` and
+    :class:`.OverlayPlotPanel` documentation for more details:
 
     .. autosummary::
        :nosignatures:
 
-       .timeseries.TimeSeries
        .timeseries.VoxelTimeSeries
+       .timeseries.ComplexTimeSeries
        .timeseries.FEATTimeSeries
        .timeseries.MelodicTimeSeries
        .timeseries.MeshTimeSeries
@@ -139,7 +139,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     """If ``True``, the component time courses are plotted for
     :class:`.MelodicImage` overlays (using a :class:`.MelodicTimeSeries`
     instance). Otherwise, ``MelodicImage`` overlays are treated as regular
-    4D :class:`.Image` overlays (a :class:`.TimeSeries` instance is used).
+    4D :class:`.Image` overlays (a :class:`.VoxelTimeSeries` instance is used).
     """
 
 
@@ -254,7 +254,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     def draw(self, *a):
-        """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.TimeSeries`
+        """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.DataSeries`
         instances to the :meth:`.PlotPanel.drawDataSeries` method.
         """
 
@@ -299,7 +299,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         Returns a tuple containing the following:
 
-          - A :class:`.TimeSeries` instance for the given overlay
+          - A :class:`.DataSeries` instance for the given overlay
 
           - A list of *targets* - objects which have properties that
             influence the state of the ``TimeSeries`` instance.
@@ -344,7 +344,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
             # Is it a complex data image?
             if overlay.iscomplex:
-                ts = plotting.ComplexVoxelTimeSeries(*tsargs)
+                ts = plotting.ComplexTimeSeries(*tsargs)
 
             # Or just a bog-standard 4D image?
             else:
@@ -368,7 +368,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
     def prepareDataSeries(self, ts):
         """Overrides :class:`.PlotPanel.prepareDataSeries`. Given a
-        :class:`.TimeSeries` instance, scales and normalises the x and y data
+        :class:`.DataSeries` instance, scales and normalises the x and y data
         according to the current values of the :attr:`usePixdim` and
         :attr:`plotMode` properties.
         """
