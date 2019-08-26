@@ -656,6 +656,11 @@ labels = TypeDict({
 
     'FEATResidualTimeSeries'     : 'Residuals',
 
+    'ComplexVoxelTimeSeries' : 'real',
+    'ImaginaryTimeSeries'    : 'imaginary',
+    'MagnitudeTimeSeries'    : 'magnitude',
+    'PhaseTimeSeries'        : 'phase',
+
     'ClusterPanel.clustName'     : 'Z statistics for COPE{} ({})',
 
     'ClusterPanel.index'         : 'Cluster index',

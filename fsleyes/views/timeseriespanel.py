@@ -378,7 +378,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = ts.getData()
 
-        if len(xdata) == 0:
+        if (xdata is None) or (ydata is None) or (len(xdata) == 0):
             return xdata, ydata
 
         if self.usePixdim and isinstance(ts.overlay, fslimage.Image):

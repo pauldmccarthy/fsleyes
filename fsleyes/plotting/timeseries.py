@@ -195,38 +195,58 @@ class VoxelTimeSeries(TimeSeries):
 
 
 class ComplexVoxelTimeSeries(VoxelTimeSeries):
-    """
+    """A :class:`VoxelTimeSeries` to display time series from 4D
+    complex images. The :meth:`getData` method returns the real component
+    (if :attr:`plotReal.` is ``True``).
+
+    The :meth:`extraSeries` method returns additional series based on
+    the values of the :attr:`plotImaginary`, :attr:`plotMagnitude` and
+    :attr:`plotPhase` properties. The :meth:`extraSeries` method will
+    return instances of the following classes:
+
+    .. autosummary::
+       :nosignatures:
+
+       ImaginaryTimeSeries
+       MagnitudeTimeSeries
+       PhaseTimeSeries
     """
 
 
     plotReal = props.Boolean(default=True)
-    """
+    """If ``True``, the :meth:`getData` method will return the real
+    component time series data.
     """
 
 
     plotImaginary = props.Boolean(default=False)
-    """
+    """If ``True``, the :meth:`extraSeries` method will return an
+    :class:`ImaginaryTimeSeries` instance, containing the imaginary
+    component data.
     """
 
 
     plotMagnitude = props.Boolean(default=False)
-    """
+    """If ``True``, the :meth:`extraSeries` method will return a
+    :class:`MagnitudeTimeSeries` instance, containing the complex
+    magnitude.
     """
 
 
     plotPhase = props.Boolean(default=False)
-    """
+    """If ``True``, the :meth:`extraSeries` method will return a
+    :class:`PhaseTimeSeries` instance, containing the complex
+    phase.
     """
 
 
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
-        """
+        """Create a ``ComplexTimeSeries``. All arguments are passed
+        through to the :class:`VoxelTimeSeries` constructor.
         """
 
         VoxelTimeSeries.__init__(
             self, overlay, overlayList, displayCtx, plotPanel)
-
-        self.bindProps('plotReal', self, 'enabled')
 
         self.__imagts = ImaginaryTimeSeries(
             overlay, overlayList, displayCtx, plotPanel)
@@ -235,37 +255,89 @@ class ComplexVoxelTimeSeries(VoxelTimeSeries):
         self.__phasets = PhaseTimeSeries(
             overlay, overlayList, displayCtx, plotPanel)
 
+        for ts in (self.__imagts, self.__magts, self.__phasets):
+            ts.colour = fslcm.randomDarkColour()
+            ts.bindProps('alpha',     self)
+            ts.bindProps('lineWidth', self)
+            ts.bindProps('lineStyle', self)
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``ComplexVoxelTimeSeries``
+        instance.
+        """
+        return '{} ({})'.format(VoxelTimeSeries.makeLabel(self),
+                                strings.labels[self])
+
+
+    def getData(self, xdata=None, ydata=None):
+        """If :attr:`plotReal` is true, returns the real component
+        of the complex data. Otherwise returns ``(None, None)``.
+        """
+        if not self.plotReal:
+            return None, None
+        return VoxelTimeSeries.getData(self, xdata, ydata)
+
 
     def extraSeries(self):
-        """
+        """Returns a list of additional series to be plotted, based
+        on the values of the :attr:`plotImaginary`, :attr:`plotMagnitude`
+        and :attr:`plotPhase` properties.
         """
 
         extras = []
-
         if self.plotImaginary: extras.append(self.__imagts)
         if self.plotMagnitude: extras.append(self.__magts)
         if self.plotPhase:     extras.append(self.__phasets)
-
         return extras
 
 
     def dataAtCurrentVoxel(self):
+        """Returns the real component of the data at the current
+        voxel.
+        """
         return VoxelTimeSeries.dataAtCurrentVoxel(self).real
 
 
 class ImaginaryTimeSeries(VoxelTimeSeries):
-    """
+    """An ``ImaginaryTimeSeries`` represents the imaginary component
+    of a complex-valued image. ``ImaginaryTimeSeries`` instances
+    are created by :class:`ComplexTimeSeries` instances.
     """
 
+
+    def makeLabel(self):
+        """Returns a string representation of this ``ImaginaryTimeSeries``
+        instance.
+        """
+        return '{} ({})'.format(VoxelTimeSeries.makeLabel(self),
+                                strings.labels[self])
+
+
     def dataAtCurrentVoxel(self):
+        """Returns the imaginary component of the data at the current
+        voxel.
+        """
         return VoxelTimeSeries.dataAtCurrentVoxel(self).imag
 
 
 class MagnitudeTimeSeries(VoxelTimeSeries):
-    """
+    """An ``MagnitudeTimeSeries`` represents the magnitude of a complex-valued
+    image. ``ImaginaryTimeSeries`` instances are created by
+    :class:`ComplexTimeSeries` instances.
     """
 
+
+    def makeLabel(self):
+        """Returns a string representation of this ``MagnitudeTimeSeries``
+        instance.
+        """
+        return '{} ({})'.format(VoxelTimeSeries.makeLabel(self),
+                                strings.labels[self])
+
+
     def dataAtCurrentVoxel(self):
+        """Returns the magnitude of the data at the current voxel. """
         data = VoxelTimeSeries.dataAtCurrentVoxel(self)
         real = data.real
         imag = data.imag
@@ -273,10 +345,22 @@ class MagnitudeTimeSeries(VoxelTimeSeries):
 
 
 class PhaseTimeSeries(VoxelTimeSeries):
-    """
+    """An ``PhaseTimeSeries`` represents the phase of a complex-valued
+    image. ``ImaginaryTimeSeries`` instances are created by
+    :class:`ComplexTimeSeries` instances.
     """
 
+
+    def makeLabel(self):
+        """Returns a string representation of this ``PhaseTimeSeries``
+        instance.
+        """
+        return '{} ({})'.format(VoxelTimeSeries.makeLabel(self),
+                                strings.labels[self])
+
+
     def dataAtCurrentVoxel(self):
+        """Returns the phase of the data at the current voxel. """
         data = VoxelTimeSeries.dataAtCurrentVoxel(self)
         real = data.real
         imag = data.imag
@@ -319,9 +403,7 @@ class FEATTimeSeries(VoxelTimeSeries):
 
 
     plotData = props.Boolean(default=True)
-    """If ``True``, the FEAT input data is plotted.  This is bound to
-    :attr:`.DataSeries.enabled`.
-    """
+    """If ``True``, the FEAT input data is plotted. """
 
 
     plotFullModelFit = props.Boolean(default=True)
@@ -367,8 +449,6 @@ class FEATTimeSeries(VoxelTimeSeries):
         """
 
         VoxelTimeSeries.__init__(self, *args, **kwargs)
-
-        self.bindProps('plotData', self, 'enabled')
 
         numEVs    = self.overlay.numEVs()
         numCOPEs  = self.overlay.numContrasts()
@@ -417,6 +497,15 @@ class FEATTimeSeries(VoxelTimeSeries):
         # plotFullModelFit defaults to True, so
         # force the model fit ts creation here
         self.__plotFullModelFitChanged()
+
+
+    def getData(self, xdata=None, ydata=None):
+        """Returns the fMRI time series data at the current voxel. Or,
+        if :attr:`plotData` is ``False``, returns ``(None, None)``.
+        """
+        if not self.plotData:
+            return None, None
+        return VoxelTimeSeries.getData(self, xdata, ydata)
 
 
     def extraSeries(self):
@@ -492,10 +581,8 @@ class FEATTimeSeries(VoxelTimeSeries):
                     **kwargs)
 
         ts.alpha     = self.alpha
-        ts.label     = self.label
         ts.lineWidth = self.lineWidth
         ts.lineStyle = self.lineStyle
-        ts.label     = ts.makeLabel()
 
         if isinstance(ts, FEATModelFitTimeSeries) and ts.fitType == 'full':
             ts.colour = (0, 0, 0.8)
