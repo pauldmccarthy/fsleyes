@@ -457,3 +457,37 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
                                      overlayList,
                                      displayCtx,
                                      **kwargs)
+
+
+
+class ComplexOpts(volumeopts.VolumeOpts):
+    """The ``ComplexOpts`` class is a specialisation of :class:`VolumeOpts` for
+    images with a complex data type.
+    """
+
+
+    component = props.Choice(('real', 'imag', 'mag', 'phase'))
+    """How to display the complex data:
+
+     - ``'real'``   - display the real component
+     - ``'imag'```  - display the imaginary component
+     - ``'mag'```   - display the magnitude
+     - ``'phase'``` - display the phase
+    """
+
+
+    def getComponent(self, data):
+        """Calculates and returns the current :attr:`component` from the given
+        data, assumed to be complex.
+        """
+
+        if self.component == 'real':
+            data = data.real
+        elif self.component == 'imag':
+            data = data.imag
+        elif self.component == 'mag':
+            data = (data.real ** 2 + data.imag ** 2) ** 0.5
+        elif self.component == 'phase':
+            data = np.arctan(data.real / data.imag)
+
+        return data
