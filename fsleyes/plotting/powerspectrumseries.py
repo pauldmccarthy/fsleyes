@@ -58,6 +58,9 @@ class PowerSpectrumSeries(object):
         de-meaned and normalised by its standard deviation before the fourier
         transformation.
         """
+
+        # De-mean and normalise
+        # by standard deviation
         if self.varNorm:
             mean = data.mean()
             std  = data.std()
@@ -65,11 +68,22 @@ class PowerSpectrumSeries(object):
             if not np.isclose(std, 0):
                 data = data - mean
                 data = data / std
-            else:
-                data = np.zeros(data.shape)
 
-        data = fft.rfft(data)[1:]
-        data = np.power(data.real, 2) + np.power(data.imag, 2)
+            # If all values in the data
+            # are the same, it has mean 0
+            else:
+                data = np.zeros(data.shape, dtype=data.dtype)
+
+        # Fourier transform on complex
+        # data - XXX
+        if np.issubdtype(data.dtype, np.complexfloating):
+            data = fft.fft(data)[1:]
+
+        # Fourier transform on real
+        # data - return the magnitude
+        else:
+            data = fft.rfft(data)[1:]
+            data = np.power(data.real, 2) + np.power(data.imag, 2)
 
         return data
 
@@ -149,12 +163,9 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         """
         if not self.plotReal:
             return None, None
-        return VoxelPowerSpectrumSeries.getData(self)
 
-
-    def dataAtCurrentVoxel(self):
-        """Returns the real component of the data at the current voxel. """
-        return VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self).real
+        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        return xdata, ydata.real
 
 
     def extraSeries(self):
@@ -186,10 +197,12 @@ class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
                                 strings.labels[self])
 
 
-    def dataAtCurrentVoxel(self):
-        """Returns the imaginary component of the data at the current voxel.
+    def getData(self):
+        """Returns the imaginary component of the complex data. Otherwise
+        returns ``(None, None)``.
         """
-        return VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self).imag
+        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        return xdata, ydata.imag
 
 
 class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
@@ -207,12 +220,15 @@ class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
                                 strings.labels[self])
 
 
-    def dataAtCurrentVoxel(self):
-        """Returns the magnitude of the data at the current voxel. """
-        data = VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self)
-        real = data.real
-        imag = data.imag
-        return np.sqrt(real ** 2 + imag ** 2)
+    def getData(self):
+        """Returns the imaginary component of the complex data. Otherwise
+        returns ``(None, None)``.
+        """
+        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        real         = ydata.real
+        imag         = ydata.imag
+        ydata        = np.sqrt(real ** 2 + imag ** 2)
+        return xdata, ydata
 
 
 class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
@@ -230,12 +246,12 @@ class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
                                 strings.labels[self])
 
 
-    def dataAtCurrentVoxel(self):
+    def getData(self):
         """Returns the phase of the data at the current voxel. """
-        data = VoxelPowerSpectrumSeries.dataAtCurrentVoxel(self)
-        real = data.real
-        imag = data.imag
-        return np.arctan(real / imag)
+        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        real         = ydata.real
+        imag         = ydata.imag
+        return xdata, np.arctan(real / imag)
 
 
 class MelodicPowerSpectrumSeries(dataseries.DataSeries,
