@@ -972,6 +972,8 @@ properties = TypeDict({
     'PlotPanel.yAutoScale' : 'Auto-scale (y axis)',
     'PlotPanel.xLogScale'  : 'Log scale (x axis)',
     'PlotPanel.yLogScale'  : 'Log scale (y axis)',
+    'PlotPanel.invertX'    : 'Invert X axis',
+    'PlotPanel.invertY'    : 'Invert Y axis',
     'PlotPanel.xlabel'     : 'X label',
     'PlotPanel.ylabel'     : 'Y label',
 

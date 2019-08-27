@@ -197,6 +197,8 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
 
         plotProps = ['xLogScale',
                      'yLogScale',
+                     'invertX',
+                     'invertY',
                      'smooth',
                      'legend',
                      'ticks',

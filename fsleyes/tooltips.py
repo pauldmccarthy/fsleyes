@@ -537,6 +537,8 @@ properties = TypeDict({
                              'the x axis.',
     'PlotPanel.yLogScale'  : 'If checked, a log (base 10) scale is used for '
                              'the y axis.',
+    'PlotPanel.invertX'    : 'Invert the plot along the X axis.',
+    'PlotPanel.invertY'    : 'Invert the plot along the Y axis.',
     'PlotPanel.ticks'      : 'Show / hide axis ticks and tick labels.',
     'PlotPanel.grid'       : 'Show hide plot grid.' ,
     'PlotPanel.gridColour' : 'Set the plot grid colour.' ,

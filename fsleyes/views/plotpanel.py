@@ -154,6 +154,14 @@ class PlotPanel(viewpanel.ViewPanel):
     """Toggle a :math:`log_{10}` x axis scale. """
 
 
+    invertX = props.Boolean(default=False)
+    """Invert the plot along the X axis. """
+
+
+    invertY = props.Boolean(default=False)
+    """Invert the plot along the Y axis. """
+
+
     yLogScale = props.Boolean(default=False)
     """Toggle a :math:`log_{10}` y axis scale. """
 
@@ -272,6 +280,8 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yAutoScale',
                          'xLogScale',
                          'yLogScale',
+                         'invertX',
+                         'invertY',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -355,6 +365,8 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yAutoScale',
                          'xLogScale',
                          'yLogScale',
+                         'invertX',
+                         'invertY',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -765,8 +777,10 @@ class PlotPanel(viewpanel.ViewPanel):
 
         # Limits
         if xmin != xmax:
-            axis.set_xlim((xmin, xmax))
-            axis.set_ylim((ymin, ymax))
+            if self.invertX: axis.set_xlim((xmax, xmin))
+            else:            axis.set_xlim((xmin, xmax))
+            if self.invertY: axis.set_ylim((ymax, ymin))
+            else:            axis.set_ylim((ymin, ymax))
 
         # legend
         labels = [ds.label for ds in dataSeries if ds.label is not None]
