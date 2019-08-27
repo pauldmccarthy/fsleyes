@@ -216,6 +216,10 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         ylogscale  = props.makeWidget(widgetList, plotPanel, 'yLogScale')
         xinvert    = props.makeWidget(widgetList, plotPanel, 'invertX')
         yinvert    = props.makeWidget(widgetList, plotPanel, 'invertY')
+        xscale     = props.makeWidget(widgetList, plotPanel, 'xScale')
+        yscale     = props.makeWidget(widgetList, plotPanel, 'yScale')
+        xoffset    = props.makeWidget(widgetList, plotPanel, 'xOffset')
+        yoffset    = props.makeWidget(widgetList, plotPanel, 'yOffset')
         xautoscale = props.makeWidget(widgetList, plotPanel, 'xAutoScale')
         yautoscale = props.makeWidget(widgetList, plotPanel, 'yAutoScale')
         xlabel     = props.makeWidget(widgetList, plotPanel, 'xlabel')
@@ -228,12 +232,18 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
                            yinvert,
                            xautoscale,
                            yautoscale,
+                           xscale,
+                           yscale,
+                           xoffset,
+                           yoffset,
                            xlabel,
                            ylabel])
 
         pairs = [('logscale',  xlogscale,  ylogscale),
                  ('invert',    xinvert,    yinvert),
                  ('autoscale', xautoscale, yautoscale),
+                 ('scale',     xscale,     yscale),
+                 ('offset',    xoffset,    yoffset),
                  ('labels',    xlabel,     ylabel)]
 
         for key, xwidget, ywidget in pairs:

@@ -635,6 +635,8 @@ labels = TypeDict({
     'PlotControlPanel.logscale'           : 'Log scale',
     'PlotControlPanel.invert'             : 'Invert',
     'PlotControlPanel.autoscale'          : 'Auto scale',
+    'PlotControlPanel.scale'              : 'Axis scale',
+    'PlotControlPanel.offset'             : 'Axis offset',
     'PlotControlPanel.xlabel'             : 'X',
     'PlotControlPanel.ylabel'             : 'Y',
 

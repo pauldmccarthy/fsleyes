@@ -833,6 +833,10 @@ misc = TypeDict({
     'the plot contents change.',
     'PlotControlPanel.invert' :
     'If checked, the plot is inverted along the X/Y axis.',
+    'PlotControlPanel.scale' :
+    'A constant scaling factor to apply to the data.',
+    'PlotControlPanel.offset' :
+    'A constant offset to apply to the data.',
 
     'PlotControlPanel.xlim'   : 'X axis data limits.',
     'PlotControlPanel.ylim'   : 'Y axis data limits.',

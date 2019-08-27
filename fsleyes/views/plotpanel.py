@@ -154,6 +154,10 @@ class PlotPanel(viewpanel.ViewPanel):
     """Toggle a :math:`log_{10}` x axis scale. """
 
 
+    yLogScale = props.Boolean(default=False)
+    """Toggle a :math:`log_{10}` y axis scale. """
+
+
     invertX = props.Boolean(default=False)
     """Invert the plot along the X axis. """
 
@@ -162,8 +166,20 @@ class PlotPanel(viewpanel.ViewPanel):
     """Invert the plot along the Y axis. """
 
 
-    yLogScale = props.Boolean(default=False)
-    """Toggle a :math:`log_{10}` y axis scale. """
+    xScale = props.Real(default=1)
+    """Scale to apply to the X axis data. """
+
+
+    yScale = props.Real(default=1)
+    """Scale to apply to the Y axis data. """
+
+
+    xOffset = props.Real(default=0)
+    """Offset to apply to the X axis data. """
+
+
+    yOffset = props.Real(default=0)
+    """Offset to apply to the Y axis data. """
 
 
     ticks = props.Boolean(default=True)
@@ -282,6 +298,10 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yLogScale',
                          'invertX',
                          'invertY',
+                         'xScale',
+                         'yScale',
+                         'xOffset',
+                         'yOffset',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -367,6 +387,10 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yLogScale',
                          'invertX',
                          'invertY',
+                         'xScale',
+                         'yScale',
+                         'xOffset',
+                         'yOffset',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -718,6 +742,8 @@ class PlotPanel(viewpanel.ViewPanel):
             if not ds.enabled:
                 continue
 
+            xdata      = self.xOffset + self.xScale * xdata
+            ydata      = self.yOffset + self.yScale * ydata
             xlim, ylim = self.__drawOneDataSeries(ds,
                                                   xdata,
                                                   ydata,
