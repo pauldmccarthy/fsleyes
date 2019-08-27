@@ -826,6 +826,14 @@ actions = TypeDict({
 
 misc = TypeDict({
     'PlotControlPanel.labels' : 'X/Y axis labels.',
+    'PlotControlPanel.logscale' :
+    'If checked, a log (base 10) scale is used for the X/Y axis.',
+    'PlotControlPanel.autoscale' :
+    'If checked, the plot X/Y axis limits are automatically adjusted whenever '
+    'the plot contents change.',
+    'PlotControlPanel.invert' :
+    'If checked, the plot is inverted along the X/Y axis.',
+
     'PlotControlPanel.xlim'   : 'X axis data limits.',
     'PlotControlPanel.ylim'   : 'Y axis data limits.',
 
