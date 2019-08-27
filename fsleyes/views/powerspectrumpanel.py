@@ -243,8 +243,13 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             elif isinstance(ps.overlay, fslimage.Image):
                 sampleTime = ps.overlay.pixdim[3]
 
-            freqStep = 1.0 / (2 * nsamples * sampleTime)
-            xdata    = np.linspace(0.0, (nsamples - 1) * freqStep, nsamples)
+            xdata = np.fft.fftfreq(nsamples * 2, sampleTime)
+
+            if np.issubdtype(ydata.dtype, np.complexfloating):
+                # XXX
+                xdata = np.arange(nsamples)
+            else:
+                xdata = xdata[:nsamples]
 
         return xdata, ydata
 
