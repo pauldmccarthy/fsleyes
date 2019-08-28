@@ -320,7 +320,6 @@ class ColourMapOpts(object):
     def getDataRange(self):
         """Must be overridden by sub-classes. Must return the range of the
         data used for colouring as a ``(min, max)`` tuple.  Note that, even
-
         if there is no effective data range, you should return two different
         values for ``min`` and ``max`` (e.g. ``(0, 1)``), because otherwise
         the relationship between the :attr:`displayRange` and the

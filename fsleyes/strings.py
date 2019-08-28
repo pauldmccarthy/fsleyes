@@ -1266,6 +1266,7 @@ choices = TypeDict({
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
         'rgb'            : '3D/4D RGB(A) volume',
+        'complex'        : 'Complex volume',
         'mask'           : '3D/4D mask image',
         'mip'            : 'Max intensity projection',
         'label'          : 'Label image',

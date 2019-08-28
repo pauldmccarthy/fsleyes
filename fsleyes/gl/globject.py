@@ -44,6 +44,7 @@ def getGLObjectType(overlayType):
 
     from . import glvolume
     from . import glrgbvolume
+    from . import glcomplex
     from . import glmask
     from . import glrgbvector
     from . import gllinevector
@@ -64,6 +65,7 @@ def getGLObjectType(overlayType):
         'sh'         : glsh        .GLSH,
         'mip'        : glmip       .GLMIP,
         'rgb'        : glrgbvolume .GLRGBVolume,
+        'complex'    : glcomplex   .GLComplex
     }
 
     return typeMap.get(overlayType, None)

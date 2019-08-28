@@ -460,7 +460,7 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
 
 
 
-class ComplexOpts(volumeopts.VolumeOpts):
+class ComplexOpts(VolumeOpts):
     """The ``ComplexOpts`` class is a specialisation of :class:`VolumeOpts` for
     images with a complex data type.
     """
@@ -474,6 +474,35 @@ class ComplexOpts(volumeopts.VolumeOpts):
      - ``'mag'```   - display the magnitude
      - ``'phase'``` - display the phase
     """
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``ComplexOpts``. All arguments are passed through to
+        the :class:`VolumeOpts` constructor.
+        """
+        self.__dataRanges = {}
+
+        VolumeOpts.__init__(self, *args, **kwargs)
+
+        self.addListener('component', self.name, self.__componentChanged)
+
+
+    def destroy(self):
+        """Must be called when this ``ComplexOpts`` is no longer needed. """
+        VolumeOpts.destroy(self)
+
+
+    def getDataRange(self):
+        """Overrides :meth:`.ColourMapOpts.getDataRange`.
+        Calculates and returns the data range of the current
+        :attr:`component`.
+        """
+
+        drange = self.__dataRanges.get(self.component, None)
+        if drange is None:
+            data   = self.getComponent(self.overlay[:])
+            drange = np.nanmin(data), np.nanmax(data)
+            self.__dataRanges[self.component] = drange
+        return drange
 
 
     def getComponent(self, data):
@@ -491,3 +520,10 @@ class ComplexOpts(volumeopts.VolumeOpts):
             data = np.arctan(data.real / data.imag)
 
         return data
+
+
+    def __componentChanged(self, *a):
+        """Called when the :attr:`component` changes. Calls
+        :meth:`.ColourMapOpts.updateDataRange`.
+        """
+        self.updateDataRange()
