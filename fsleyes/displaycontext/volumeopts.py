@@ -475,14 +475,13 @@ class ComplexOpts(VolumeOpts):
      - ``'phase'``` - display the phase
     """
 
+
     def __init__(self, *args, **kwargs):
         """Create a ``ComplexOpts``. All arguments are passed through to
         the :class:`VolumeOpts` constructor.
         """
         self.__dataRanges = {}
-
         VolumeOpts.__init__(self, *args, **kwargs)
-
         self.addListener('component', self.name, self.__componentChanged)
 
 
@@ -509,17 +508,34 @@ class ComplexOpts(VolumeOpts):
         """Calculates and returns the current :attr:`component` from the given
         data, assumed to be complex.
         """
+        if   self.component == 'real':  return self.getReal(data)
+        elif self.component == 'imag':  return self.getImaginary(data)
+        elif self.component == 'mag':   return self.getMagnitude(data)
+        elif self.component == 'phase': return self.getPhase(data)
 
-        if self.component == 'real':
-            data = data.real
-        elif self.component == 'imag':
-            data = data.imag
-        elif self.component == 'mag':
-            data = (data.real ** 2 + data.imag ** 2) ** 0.5
-        elif self.component == 'phase':
-            data = np.arctan(data.real / data.imag)
 
-        return data
+    @staticmethod
+    def getReal(data):
+        """Return the real component of the given complex data. """
+        return data.real
+
+
+    @staticmethod
+    def getImaginary(data):
+        """Return the imaginary component of the given complex data. """
+        return data.imag
+
+
+    @staticmethod
+    def getMagnitude(data):
+        """Return the magnitude of the given complex data. """
+        return (data.real ** 2 + data.imag ** 2) ** 0.5
+
+
+    @staticmethod
+    def getPhase(data):
+        """Return the phase of the given complex data. """
+        return np.arctan(data.real / data.imag)
 
 
     def __componentChanged(self, *a):
