@@ -27,6 +27,7 @@ import logging
 import numpy     as np
 import numpy.fft as fft
 
+import fsl.data.image        as fslimage
 import fsl.data.melodicimage as fslmelimage
 import fsleyes_props         as props
 import fsleyes.colourmaps    as fslcm
@@ -42,7 +43,8 @@ class PowerSpectrumSeries(object):
     an overlay. The ``PowerSpectrumSeries`` class is a base mixin class for
     all other classes in this module. It provides the
     :meth:`calcPowerSpectrum` method which calculates the power spectrum of a
-    data series.
+    data series, and the :meth:`calcFrequencies` method which calculates the
+    frequences for a spectrum.
     """
 
 
@@ -52,11 +54,15 @@ class PowerSpectrumSeries(object):
     """
 
 
-    def calcPowerSpectrum(self, data):
+    def calcPowerSpectrum(self, data, freqs):
         """Calculates a power spectrum for the given one-dimensional data
         array. If the :attr:`varNorm` property is ``True``, the data is
         de-meaned and normalised by its standard deviation before the fourier
         transformation.
+
+        :arg data:  Numpy array containing the time series data
+        :arg freqs: Frequencies of the resulting power spectrum, as calculated
+                    by :meth:`calcFrequencies`.
         """
 
         # De-mean and normalise
@@ -88,6 +94,32 @@ class PowerSpectrumSeries(object):
         return data
 
 
+    def calcFrequencies(self, data):
+        """Calculates the frequencies of the power spectrum for the given
+        data.
+
+        :arg data: The input time series data
+        :returns:  A ``numpy`` array containing the frequencies of the
+                   power spectrum for ``data``
+        """
+
+        nsamples   = len(data)
+        sampleTime = 1
+
+        if isinstance(self.overlay, fslmelimage.MelodicImage):
+            sampleTime = self.overlay.tr
+        elif isinstance(self.overlay, fslimage.Image):
+            sampleTime = self.overlay.pixdim[3]
+
+        if np.issubdtype(data.dtype, np.complexfloating):
+            xdata = fft.fftfreq(nsamples, sampleTime)
+            xdata = fft.fftshift(xdata)
+        else:
+            xdata = fft.rfftfreq(nsamples, sampleTime)
+
+        return xdata
+
+
 class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
                                PowerSpectrumSeries):
     """The ``VoxelPowerSpectrumSeries`` class encapsulates the power spectrum
@@ -110,9 +142,15 @@ class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
 
     def getData(self):
         """Returns the data at the current voxel. """
-        ydata = self.dataAtCurrentVoxel()
-        ydata = self.calcPowerSpectrum(ydata)
-        xdata = np.arange(len(ydata))
+
+        data = self.dataAtCurrentVoxel()
+
+        if data is None:
+            return None, None
+
+        xdata = self.calcFrequencies(data)
+        ydata = self.calcPowerSpectrum(data, xdata)
+
         return xdata, ydata
 
 
@@ -347,16 +385,21 @@ class MeshPowerSpectrumSeries(dataseries.DataSeries,
 
     def getData(self):
         """Returns the power spectrum of the data at the current location for
-        the :class:`.Mesh`, or ``[], []`` if there is no data.
+        the :class:`.Mesh`, or ``None, None`` if there is no data.
         """
 
         if not self.__haveData():
-            return [], []
+            return None, None
 
-        opts  = self.displayCtx.getOpts(self.overlay)
-        vidx  = opts.getVertex()
+        opts = self.displayCtx.getOpts(self.overlay)
+        vidx = opts.getVertex()
+
+        if vidx is None:
+            return None, None
+
         vd    = opts.getVertexData()
-        ydata = self.calcPowerSpectrum(vd[vidx, :])
-        xdata = np.arange(len(ydata))
+        data  = vd[vidx, :]
+        xdata = self.calcFrequencies(data)
+        ydata = self.calcPowerSpectrum(data, xdata)
 
         return xdata, ydata

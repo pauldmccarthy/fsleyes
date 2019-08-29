@@ -230,26 +230,13 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = ps.getData()
 
+        # if plotFrequencies is disabled, replace
+        # the x axis data with sample numbers
         if (xdata is not None) and \
            (ydata is not None) and \
            (len(xdata) > 0)    and \
-           self.plotFrequencies:
-
-            nsamples   = len(ydata)
-            sampleTime = 1
-
-            if isinstance(ps.overlay, fslmelimage.MelodicImage):
-                sampleTime = ps.overlay.tr
-            elif isinstance(ps.overlay, fslimage.Image):
-                sampleTime = ps.overlay.pixdim[3]
-
-            xdata = np.fft.fftfreq(nsamples * 2, sampleTime)
-
-            if np.issubdtype(ydata.dtype, np.complexfloating):
-                # XXX
-                xdata = np.arange(nsamples)
-            else:
-                xdata = xdata[:nsamples]
+           not self.plotFrequencies:
+            xdata = np.arange(len(ydata))
 
         return xdata, ydata
 
