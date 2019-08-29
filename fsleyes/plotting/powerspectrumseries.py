@@ -251,7 +251,7 @@ class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
         real         = ydata.real
         imag         = ydata.imag
-        return xdata, np.arctan(real / imag)
+        return xdata, np.arctan2(imag, real)
 
 
 class MelodicPowerSpectrumSeries(dataseries.DataSeries,
