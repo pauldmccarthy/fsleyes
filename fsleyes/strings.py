@@ -1087,6 +1087,9 @@ properties = TypeDict({
     'Volume3DOpts.clipInclination'         : 'Clip Z angle',
     'Volume3DOpts.clipAzimuth'             : 'Clip rotation',
 
+
+    'ComplexOpts.component' : 'Component',
+
     'MaskOpts.colour'        : 'Colour',
     'MaskOpts.invert'        : 'Invert',
     'MaskOpts.threshold'     : 'Threshold',
@@ -1262,6 +1265,11 @@ choices = TypeDict({
 
     'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
                            'direction' : 'Colour by direction'},
+
+    'ComplexOpts.component' :{ 'real'  : 'Real',
+                               'imag'  : 'Imaginary',
+                               'mag'   : 'Magnitude',
+                               'phase' : 'Phase'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',

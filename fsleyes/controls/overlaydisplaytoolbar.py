@@ -334,7 +334,6 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         negCmapSpec    = _TOOLBAR_PROPS[opts, 'negativeCmap']
         useNegCmapSpec = _TOOLBAR_PROPS[opts, 'useNegativeCmap']
 
-
         cmapPanel = wx.Panel(self)
 
         rangeWidget      = props.buildGUI(self,      opts, rangeSpec)
@@ -351,6 +350,32 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         tools = [resetWidget, rangeWidget, useNegCmapWidget, cmapPanel]
         nav   = [resetWidget, rangeWidget, useNegCmapWidget, cmapWidget,
                  negCmapWidget]
+
+        return tools, nav
+
+
+    def __makeComplexOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of the given :class:`.ComplexOpts` instance.
+        """
+        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
+        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
+        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
+        compSpec  = _TOOLBAR_PROPS[opts, 'component']
+        ccpanel   = wx.Panel(self)
+
+        rangeWidget = props.buildGUI(self,    opts, rangeSpec)
+        resetWidget = props.buildGUI(self,    opts, resetSpec)
+        cmapWidget  = props.buildGUI(ccpanel, opts, cmapSpec)
+        compWidget  = props.buildGUI(ccpanel, opts, compSpec)
+
+        ccsizer = wx.BoxSizer(wx.VERTICAL)
+        ccpanel.SetSizer(ccsizer)
+        ccsizer.Add(cmapWidget, flag=wx.EXPAND)
+        ccsizer.Add(compWidget, flag=wx.EXPAND)
+
+        tools = [resetWidget, rangeWidget, ccpanel]
+        nav   = [resetWidget, rangeWidget, cmapWidget, compWidget]
 
         return tools, nav
 
@@ -615,6 +640,8 @@ _TOOLTIPS = td.TypeDict({
     'VolumeOpts.useNegativeCmap'   :
     fsltooltips.properties['ColourMapOpts.useNegativeCmap'],
 
+    'ComplexOpts.component' : fsltooltips.properties['ComplexOpts.component'],
+
     'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
 
@@ -710,6 +737,11 @@ _TOOLBAR_PROPS = td.TypeDict({
         tooltip=_TOOLTIPS['VolumeOpts.negativeCmap'],
         dependencies=['useNegativeCmap'],
         enabledWhen=lambda i, unc : unc),
+
+    'ComplexOpts.component' : props.Widget(
+        'component',
+        labels=strings.choices['ComplexOpts.component'],
+        tooltip=_TOOLTIPS['ComplexOpts.component']),
 
     'MaskOpts.threshold' : props.Widget(
         'threshold',

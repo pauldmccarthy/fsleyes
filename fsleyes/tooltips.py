@@ -169,6 +169,10 @@ properties = TypeDict({
     'Volume3DOpts.clipAzimuth' :
     'Amount by which to rotate the clip plane about the Z axis.',
 
+    'ComplexOpts.component' :
+    'Choose to display either the real or imaginary components, or the '
+    'magnitude or phase.',
+
     'MaskOpts.colour' :
     'The colour of this mask image.',
     'MaskOpts.invert' :
