@@ -618,6 +618,10 @@ properties = TypeDict({
     'Plot the magnitude of the power spectrum of a complex image.',
     'ComplexPowerSpectrumSeries.plotPhase' :
     'Plot the phase of the power spectrum of a complex image.',
+    'ComplexPowerSpectrumSeries.order0PhaseCorrection' :
+    'Zero order phase correction',
+    'ComplexPowerSpectrumSeries.order1PhaseCorrection' :
+    'First order phase correction',
 
     'FEATTimeSeries.plotData'         : 'Plot the input data.',
     'FEATTimeSeries.plotFullModelFit' : 'Plot the full model fit.',

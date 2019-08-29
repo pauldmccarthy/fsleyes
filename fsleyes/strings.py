@@ -1010,6 +1010,10 @@ properties = TypeDict({
     'ComplexPowerSpectrumSeries.plotImaginary' : 'Plot imaginary',
     'ComplexPowerSpectrumSeries.plotMagnitude' : 'Plot magnitude',
     'ComplexPowerSpectrumSeries.plotPhase'     : 'Plot phase',
+    'ComplexPowerSpectrumSeries.order0PhaseCorrection' :
+    'Zero order phase correction',
+    'ComplexPowerSpectrumSeries.order1PhaseCorrection' :
+    'First order phase correction',
 
     'HistogramSeries.nbins'           : 'Number of bins',
     'HistogramSeries.autoBin'         : 'Automatic histogram binning',
@@ -1086,7 +1090,6 @@ properties = TypeDict({
     'Volume3DOpts.clipPosition'            : 'Clip position (%)',
     'Volume3DOpts.clipInclination'         : 'Clip Z angle',
     'Volume3DOpts.clipAzimuth'             : 'Clip rotation',
-
 
     'ComplexOpts.component' : 'Component',
 

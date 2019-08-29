@@ -102,7 +102,8 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
                              groupName=groupName)
 
         if isinstance(ps, powerspectrumseries.ComplexPowerSpectrumSeries):
-            for propName in ['plotReal', 'plotImaginary',
+            for propName in ['order0PhaseCorrection', 'order1PhaseCorrection',
+                             'plotReal', 'plotImaginary',
                              'plotMagnitude', 'plotPhase']:
                 widg = props.makeWidget(widgetList, ps, propName)
                 widgetList.AddWidget(
