@@ -53,7 +53,6 @@ class PowerSpectrumSeries(object):
     transformation.
     """
 
-
     def calcPowerSpectrum(self, data, freqs):
         """Calculates a power spectrum for the given one-dimensional data
         array. If the :attr:`varNorm` property is ``True``, the data is
@@ -80,15 +79,15 @@ class PowerSpectrumSeries(object):
             else:
                 data = np.zeros(data.shape, dtype=data.dtype)
 
-        # Fourier transform on complex
-        # data - XXX
+        # Fourier transform on complex data
         if np.issubdtype(data.dtype, np.complexfloating):
-            data = fft.fft(data)[1:]
+            data = fft.fft(data)
+            data = fft.fftshift(data)
 
-        # Fourier transform on real
-        # data - return the magnitude
+        # Fourier transform on real data - we
+        # calculate and return the magnitude
         else:
-            data = fft.rfft(data)[1:]
+            data = fft.rfft(data)
             data = np.power(data.real, 2) + np.power(data.imag, 2)
 
         return data
@@ -165,6 +164,14 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
     plotPhase     = props.Boolean(default=False)
 
 
+    zeroOrderPhaseCorrection = props.Real(default=0)
+    """Apply a correction """
+
+
+    firstOrderPhaseCorrection = props.Real(default=0)
+    """ """
+
+
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
         """Create a ``ComplexPowerSpectrumSeries``. All arguments are
         passed through to the :class:`VoxelPowerSpectrumSeries` constructor.
@@ -185,6 +192,7 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
             ps.bindProps('alpha',     self)
             ps.bindProps('lineWidth', self)
             ps.bindProps('lineStyle', self)
+            ps.bindProps('varNorm',   self)
 
 
     def makeLabel(self):
@@ -203,7 +211,28 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
             return None, None
 
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+
         return xdata, ydata.real
+
+
+    def calcPowerSpectrum(self, data, freqs):
+        """Overrides .PowerSpectrumSeries.calcPowerSpectrum.
+
+        Calls that function, and then applies phase correction if either of
+        the :attr:`zeroOrderPhaseCorrection` or
+        :attr:`firstOrderPhaseCorrection` parameters are set.
+        """
+
+        data = VoxelPowerSpectrumSeries.calcPowerSpectrum(self, data, freqs)
+
+        if self.zeroOrderPhaseCorrection  != 0 or \
+           self.firstOrderPhaseCorrection != 0:
+            p0   = self.zeroOrderPhaseCorrection
+            p1   = self.firstOrderPhaseCorrection
+            exp  = 1j * 2 * np.pi * (p0 / 360 + freqs * p1)
+            data = np.exp(exp) * data
+
+        return data
 
 
     def extraSeries(self):
