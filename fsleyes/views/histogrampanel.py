@@ -242,8 +242,11 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if isinstance(overlay, fsloverlay.ProxyImage):
             overlay = overlay.getBase()
 
-        if   isinstance(overlay, fslimage.Image):
-            hsType = histogramseries.ImageHistogramSeries
+        if isinstance(overlay, fslimage.Image):
+            if overlay.iscomplex:
+                hsType = histogramseries.ComplexHistogramSeries
+            else:
+                hsType = histogramseries.ImageHistogramSeries
         elif isinstance(overlay, fslmesh.Mesh):
             hsType = histogramseries.MeshHistogramSeries
         else:
@@ -267,8 +270,11 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = hs.getData()
 
-        if len(xdata) == 0 or len(ydata) == 0:
-            return [], []
+        if xdata is None   or \
+           ydata is None   or \
+           len(xdata) == 0 or \
+           len(ydata) == 0:
+            return None, None
 
         # If smoothing is enabled, we just
         # need to provide the data as-is

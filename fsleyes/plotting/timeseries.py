@@ -217,7 +217,7 @@ class PhaseTimeSeries(VoxelTimeSeries):
         if data is not None:
             real = data.real
             imag = data.imag
-            data = np.arctan(real / imag)
+            data = np.arctan2(imag, real)
         return data
 
 

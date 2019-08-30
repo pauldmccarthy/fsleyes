@@ -5,8 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`HistogramSeries`,
- :class:`ImageHistogramSeries`, and :class:`MeshHistogramSeries` classes, used
- by the :class:`.HistogramPanel` for plotting histogram data.
+ :class:`ImageHistogramSeries`, :class:`ComplexHistogramSeries`, and
+ :class:`MeshHistogramSeries` classes, used by the :class:`.HistogramPanel`
+ for plotting histogram data.
 
 Two standalone functions are also defined in this module:
 
@@ -24,6 +25,7 @@ import numpy as np
 import fsl.utils.cache              as cache
 import fsleyes_widgets.utils.status as status
 import fsleyes_props                as props
+import fsleyes.colourmaps           as fslcm
 from . import                          dataseries
 
 
@@ -223,7 +225,11 @@ class HistogramSeries(dataseries.DataSeries):
         as a filled polygon.
         """
 
-        x, y  = self.getData()
+        x, y = self.getData()
+
+        if x is None or y is None:
+            return None
+
         verts = np.zeros((len(x) * 2, 2), dtype=x.dtype)
 
         verts[  :,   0] = x.repeat(2)
@@ -452,6 +458,97 @@ class ImageHistogramSeries(HistogramSeries):
         oldOpts.removeListener('volumeDim', self.name)
         newOpts.addListener(   'volume',    self.name, self.__volumeChanged)
         newOpts.addListener(   'volumeDim', self.name, self.__volumeChanged)
+
+
+class ComplexHistogramSeries(ImageHistogramSeries):
+    """Thre ``ComplexHistogramSeries`` class is a specialisation of the
+    :class:`ImageHistogramSeries` for images with a complex data type.
+
+    See also the :class:`.ComplexTimeSeries` and
+    :class:`.ComplexPowerSpectrumSeries` classes.
+    """
+
+
+    plotReal      = props.Boolean(default=True)
+    plotImaginary = props.Boolean(default=False)
+    plotMagnitude = props.Boolean(default=False)
+    plotPhase     = props.Boolean(default=False)
+
+
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        ImageHistogramSeries.__init__(self, *args, **kwargs)
+
+        self.__imaghs  = ImaginaryHistogramSeries(*args, **kwargs)
+        self.__maghs   = MagnitudeHistogramSeries(*args, **kwargs)
+        self.__phasehs = PhaseHistogramSeries(    *args, **kwargs)
+
+        for hs in (self.__imaghs, self.__maghs, self.__phasehs):
+            hs.colour = fslcm.randomDarkColour()
+            hs.bindProps('alpha',           self)
+            hs.bindProps('lineWidth',       self)
+            hs.bindProps('lineStyle',       self)
+            hs.bindProps('autoBin',         self)
+            hs.bindProps('ignoreZeros',     self)
+            hs.bindProps('includeOutliers', self)
+
+
+    def extraSeries(self):
+        """Returns a list containing an :class:`ImaginaryHistogramSeries`,
+        :class:`MagnitudeHistogramSeries`, and/or
+        :class:`PhaseHistogramSeries`, depending on the values of the
+        :attr:`plotImaginary`, :attr:`plotMagnitude`, and :attr:`plotPhase`
+        properties.
+        """
+        extras = []
+        if self.plotImaginary: extras.append(self.__imaghs)
+        if self.plotMagnitude: extras.append(self.__maghs)
+        if self.plotPhase:     extras.append(self.__phasehs)
+        return extras
+
+
+    def getData(self):
+        """Overrides :meth:`HistogramSeries.setHistogramData`. If
+        :attr:`plotReal` is ``False``, returns ``(None, None)``. Otherwise
+        returns the parent class implementation.
+        """
+        if self.plotReal: return ImageHistogramSeries.getData(self)
+        else:             return None, None
+
+
+    def setHistogramData(self, data, key):
+        """Overrides :meth:`HistogramSeries.setHistogramData`.  The real
+        component of the data is passed to the parent class implementation.
+        """
+        data = data.real
+        ImageHistogramSeries.setHistogramData(self, data, key)
+
+
+class ImaginaryHistogramSeries(ImageHistogramSeries):
+    """Class which plots the histogram of the imaginary component
+    of a complex-valued image.
+    """
+    def setHistogramData(self, data, key):
+        data = data.imag
+        ImageHistogramSeries.setHistogramData(self, data, key)
+
+
+class MagnitudeHistogramSeries(ImageHistogramSeries):
+    """Class which plots the histogram of the magnitude of a complex-valued
+    image.
+    """
+    def setHistogramData(self, data, key):
+        data = (data.real ** 2 + data.imag ** 2) ** 0.5
+        ImageHistogramSeries.setHistogramData(self, data, key)
+
+
+class PhaseHistogramSeries(ImageHistogramSeries):
+    """Class which plots the histogram of the phase of a complex-valued image.
+    """
+    def setHistogramData(self, data, key):
+        data = np.arctan2(data.imag, data.real)
+        ImageHistogramSeries.setHistogramData(self, data, key)
 
 
 class MeshHistogramSeries(HistogramSeries):
