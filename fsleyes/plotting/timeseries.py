@@ -141,7 +141,10 @@ class ComplexTimeSeries(VoxelTimeSeries):
 
     def dataAtCurrentVoxel(self):
         """Returns the real component of the data at the current voxel. """
-        return VoxelTimeSeries.dataAtCurrentVoxel(self).real
+        data = VoxelTimeSeries.dataAtCurrentVoxel(self)
+        if data is not None:
+            data = data.real
+        return data
 
 
 class ImaginaryTimeSeries(VoxelTimeSeries):
@@ -162,7 +165,10 @@ class ImaginaryTimeSeries(VoxelTimeSeries):
     def dataAtCurrentVoxel(self):
         """Returns the imaginary component of the data at the current voxel.
         """
-        return VoxelTimeSeries.dataAtCurrentVoxel(self).imag
+        data = VoxelTimeSeries.dataAtCurrentVoxel(self)
+        if data is not None:
+            data = data.imag
+        return data
 
 
 class MagnitudeTimeSeries(VoxelTimeSeries):
@@ -183,9 +189,11 @@ class MagnitudeTimeSeries(VoxelTimeSeries):
     def dataAtCurrentVoxel(self):
         """Returns the magnitude of the data at the current voxel. """
         data = VoxelTimeSeries.dataAtCurrentVoxel(self)
-        real = data.real
-        imag = data.imag
-        return np.sqrt(real ** 2 + imag ** 2)
+        if data is not None:
+            real = data.real
+            imag = data.imag
+            data = np.sqrt(real ** 2 + imag ** 2)
+        return data
 
 
 class PhaseTimeSeries(VoxelTimeSeries):
@@ -206,9 +214,11 @@ class PhaseTimeSeries(VoxelTimeSeries):
     def dataAtCurrentVoxel(self):
         """Returns the phase of the data at the current voxel. """
         data = VoxelTimeSeries.dataAtCurrentVoxel(self)
-        real = data.real
-        imag = data.imag
-        return np.arctan(real / imag)
+        if data is not None:
+            real = data.real
+            imag = data.imag
+            data = np.arctan(real / imag)
+        return data
 
 
 class FEATTimeSeries(VoxelTimeSeries):

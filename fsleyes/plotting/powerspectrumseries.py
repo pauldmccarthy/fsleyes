@@ -216,7 +216,10 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
 
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
 
-        return xdata, ydata.real
+        if ydata is not None:
+            ydata = ydata.real
+
+        return xdata, ydata
 
 
     def calcPowerSpectrum(self, data, freqs):
@@ -273,7 +276,11 @@ class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         returns ``(None, None)``.
         """
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
-        return xdata, ydata.imag
+
+        if ydata is not None:
+            ydata = ydata.imag
+
+        return xdata, ydata
 
 
 class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
@@ -296,9 +303,10 @@ class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
         returns ``(None, None)``.
         """
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
-        real         = ydata.real
-        imag         = ydata.imag
-        ydata        = np.sqrt(real ** 2 + imag ** 2)
+        if ydata is not None:
+            real  = ydata.real
+            imag  = ydata.imag
+            ydata = np.sqrt(real ** 2 + imag ** 2)
         return xdata, ydata
 
 
@@ -320,9 +328,11 @@ class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
     def getData(self):
         """Returns the phase of the data at the current voxel. """
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
-        real         = ydata.real
-        imag         = ydata.imag
-        return xdata, np.arctan2(imag, real)
+        if ydata is not None:
+            real  = ydata.real
+            imag  = ydata.imag
+            ydata = np.arctan2(imag, real)
+        return xdata, ydata
 
 
 class MelodicPowerSpectrumSeries(dataseries.DataSeries,
