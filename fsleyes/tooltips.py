@@ -611,7 +611,7 @@ properties = TypeDict({
     'Plot the phase of a complex image.',
 
     'ComplexPowerSpectrumSeries.plotReal' :
-    'Plot the  real component of the power spectrum of a complex image.',
+    'Plot the real component of the power spectrum of a complex image.',
     'ComplexPowerSpectrumSeries.plotImaginary' :
     'Plot the imaginary component of the power spectrum of a complex image.',
     'ComplexPowerSpectrumSeries.plotMagnitude' :
@@ -622,6 +622,15 @@ properties = TypeDict({
     'Zero order phase correction',
     'ComplexPowerSpectrumSeries.firstOrderPhaseCorrection' :
     'First order phase correction',
+
+    'ComplexHistogramSeries.plotReal' :
+    'Plot the histogram of the real component of a complex image.',
+    'ComplexHistogramSeries.plotImaginary' :
+    'Plot the histogram of the imaginary component of a complex image.',
+    'ComplexHistogramSeries.plotMagnitude' :
+    'Plot the histogram of the magnitude of a complex image.',
+    'ComplexHistogramSeries.plotPhase' :
+    'Plot the histogram of the phase of a complex image.',
 
     'FEATTimeSeries.plotData'         : 'Plot the input data.',
     'FEATTimeSeries.plotFullModelFit' : 'Plot the full model fit.',

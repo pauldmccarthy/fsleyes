@@ -1021,6 +1021,11 @@ properties = TypeDict({
     'HistogramSeries.dataRange'       : 'Data range',
     'HistogramSeries.showOverlay'     : 'Show 3D histogram overlay',
 
+    'ComplexHistogramSeries.plotReal'      : 'Plot real',
+    'ComplexHistogramSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexHistogramSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexHistogramSeries.plotPhase'     : 'Plot phase',
+
     'PowerSpectrumSeries.varNorm'     : 'Normalise to unit variance',
 
     'FEATTimeSeries.plotFullModelFit' : 'Plot full model fit',
