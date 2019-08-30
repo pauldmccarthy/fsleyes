@@ -262,21 +262,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             return
 
         tss = self.getDataSeriesToPlot()
-
-        # Gather any extra time series
-        # associated with the base time
-        # series objects.
-        for i, ts in enumerate(list(reversed(tss))):
-
-            extras = ts.extraSeries()
-            tss    = tss[:i + 1] + extras + tss[i + 1:]
-
-            # If a base time series is disabled,
-            # its additional ones should also
-            # be disabled
-            for ets in extras:
-                ets.enabled = ts.enabled
-
         for ts in tss:
 
             # Changing the label might trigger

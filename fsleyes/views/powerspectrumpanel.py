@@ -161,14 +161,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         pss = self.getDataSeriesToPlot()
 
-        for i, ps in enumerate(list(reversed(pss))):
-
-            extras = ps.extraSeries()
-            pss    = pss[:i + 1] + extras + pss[i + 1:]
-
-            for eps in extras:
-                eps.enabled = ps.enabled
-
         for ps in pss:
             with props.suppress(ps, 'label'):
                 ps.label = ps.makeLabel()

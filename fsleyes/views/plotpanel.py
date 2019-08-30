@@ -1217,6 +1217,20 @@ class OverlayPlotPanel(PlotPanel):
         dss = [self.getDataSeries(o) for o in overlays]
         dss = [ds for ds in dss if ds is not None]
 
+        # Gather any extra time series
+        # associated with the base time
+        # series objects.
+        for i, ds in enumerate(list(reversed(dss))):
+
+            extras = ds.extraSeries()
+            dss    = dss[:i + 1] + extras + dss[i + 1:]
+
+            # If a base time series is disabled,
+            # its additional ones should also
+            # be disabled
+            for eds in extras:
+                eds.enabled = ds.enabled
+
         # Remove duplicates
         unique = []
         for ds in dss:
