@@ -85,9 +85,12 @@ class PowerSpectrumSeries(object):
             data = fft.fftshift(data)
 
         # Fourier transform on real data - we
-        # calculate and return the magnitude
+        # calculate and return the magnitude.
+        # We also drop the first (zero-frequency)
+        # term (see the rfft docs) as it is
+        # useless when varNorm is disabled.
         else:
-            data = fft.rfft(data)
+            data = fft.rfft(data)[1:]
             data = np.power(data.real, 2) + np.power(data.imag, 2)
 
         return data
@@ -114,7 +117,9 @@ class PowerSpectrumSeries(object):
             xdata = fft.fftfreq(nsamples, sampleTime)
             xdata = fft.fftshift(xdata)
         else:
-            xdata = fft.rfftfreq(nsamples, sampleTime)
+            # Drop the zero-frequency term
+            # (see calcPowerSpectrum)
+            xdata = fft.rfftfreq(nsamples, sampleTime)[1:]
 
         return xdata
 
