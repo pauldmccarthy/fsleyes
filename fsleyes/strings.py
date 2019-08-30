@@ -625,10 +625,8 @@ labels = TypeDict({
 
     'PlotControlPanel.plotSettings'       : 'General plot settings',
     'PlotControlPanel.customPlotSettings' : 'Custom plot settings',
-    'PlotControlPanel.currentDSSettings'  : 'Plot settings for '
-                                            'selected overlay ({})',
-    'PlotControlPanel.customDSSettings'   : 'Custom plot settings for '
-                                            'selected overlay ({})',
+    'PlotControlPanel.currentDSSettings'  : 'Plot settings for {}',
+    'PlotControlPanel.customDSSettings'   : 'Custom plot settings for {}',
     'PlotControlPanel.xlim'               : 'X limits',
     'PlotControlPanel.ylim'               : 'Y limits',
     'PlotControlPanel.labels'             : 'Labels',
@@ -640,17 +638,17 @@ labels = TypeDict({
     'PlotControlPanel.xlabel'             : 'X',
     'PlotControlPanel.ylabel'             : 'Y',
 
-
     'TimeSeriesControlPanel.customPlotSettings' : 'Time series settings',
-    'TimeSeriesControlPanel.customDSSettings'   : 'FEAT settings for '
-                                                  'selected overlay ({})',
+    'TimeSeriesControlPanel.customDSSettings'   : 'Time series settings for '
+                                                  '{}',
 
     'PowerSpectrumControlPanel.customPlotSettings' : 'Power spectrum plot '
                                                      'settings',
+    'PowerSpectrumControlPanel.customDSSettings' : 'Power spectrum '
+                                                   'settings for {}',
 
     'HistogramControlPanel.customPlotSettings' : 'Histogram plot settings',
-    'HistogramControlPanel.customDSSettings'   : 'Histogram settings for '
-                                                  'selected overlay ({})',
+    'HistogramControlPanel.customDSSettings'   : 'Histogram settings for {}',
 
     'FEATModelFitTimeSeries.full' : 'Full model fit',
     'FEATModelFitTimeSeries.cope' : 'COPE{} fit: {}',

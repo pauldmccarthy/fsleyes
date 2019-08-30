@@ -117,49 +117,35 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
         return allWidgets
 
 
-    def generateDataSeriesWidgets(self, ts, groupName):
-        """Overrides :meth:`.PlotControlPanel.generateDataSeriesWidgets`.
-
-        Adds some widgets for controlling some properties of the
-        :class:`.DataSeries` instance.
-        """
-
-        overlay    = ts.overlay
-        widgetList = self.getWidgetList()
-
-        allWidgets = plotctrl.PlotControlPanel.generateDataSeriesWidgets(
-            self, ts, groupName)
-
-        if isinstance(ts, timeseries.ComplexTimeSeries):
-            for propName in ['plotReal', 'plotImaginary',
-                             'plotMagnitude', 'plotPhase']:
-                widg = props.makeWidget(widgetList, ts, propName)
-                widgetList.AddWidget(
-                    widg,
-                    displayName=strings.properties[ts, propName],
-                    tooltip=fsltooltips.properties[ts, propName],
-                    groupName=groupName)
-                allWidgets.append(widg)
-
-        return allWidgets
-
-
     def generateCustomDataSeriesWidgets(self, ts, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
 
-        If the given :class:`.DataSeries` is a :class:`.FEATTimeSeries`
-        instance, this method adds some widgets for controlling the
-        FEAT-related settings of the instance.
+        Adds some widgets to the widget list for certain time series types.
+        """
+
+        overlay = ts.overlay
+
+        if (isinstance(overlay, fslfeatimage.FEATImage)    and
+            isinstance(ts,      timeseries.FEATTimeSeries) and
+            overlay.hasStats()):
+            return self.__generateFeatWidgets(ts, groupName)
+
+        elif isinstance(ts, timeseries.ComplexTimeSeries):
+            return self.__generateComplexWidgets(ts, groupName)
+
+        else:
+            return []
+
+
+    def __generateFeatWidgets(self, ts, groupName):
+        """Called by :meth:`generateCustomDataSeriesWidgets`. Generates
+        widgets for :class:`.FEATTimeSeries` options, and adds them
+        to the widget list.
         """
 
         overlay    = ts.overlay
         widgetList = self.getWidgetList()
         allWidgets = []
-
-        if not (isinstance(overlay, fslfeatimage.FEATImage)    and
-                isinstance(ts,      timeseries.FEATTimeSeries) and
-                overlay.hasStats()):
-            return allWidgets
 
         full    = props.makeWidget(     widgetList, ts, 'plotFullModelFit')
         res     = props.makeWidget(     widgetList, ts, 'plotResiduals')
@@ -233,6 +219,28 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
                     i + 1, name),
                 tooltip=fsltooltips.properties[ts, 'plotCOPEFits'],
                 groupName=groupName)
+
+        return allWidgets
+
+
+    def __generateComplexWidgets(self, ts, groupName):
+        """Called by :meth:`generateCustomDataSeriesWidgets`. Generates
+        widgets for :class:`.ComplexTimeSeries` options, and adds them
+        to the widget list.
+        """
+        widgetList = self.getWidgetList()
+        allWidgets = []
+
+        if isinstance(ts, timeseries.ComplexTimeSeries):
+            for propName in ['plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widg = props.makeWidget(widgetList, ts, propName)
+                widgetList.AddWidget(
+                    widg,
+                    displayName=strings.properties[ts, propName],
+                    tooltip=fsltooltips.properties[ts, propName],
+                    groupName=groupName)
+                allWidgets.append(widg)
 
         return allWidgets
 

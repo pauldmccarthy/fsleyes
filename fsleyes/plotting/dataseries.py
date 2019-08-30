@@ -244,8 +244,11 @@ class VoxelDataSeries(DataSeries):
     def getData(self):
         """Returns the data at the current voxel location. """
 
+        xdata = None
         ydata = self.dataAtCurrentVoxel()
-        xdata = np.arange(len(ydata))
+
+        if ydata is not None:
+            xdata = np.arange(len(ydata))
 
         return xdata, ydata
 
