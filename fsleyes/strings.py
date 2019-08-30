@@ -1010,10 +1010,10 @@ properties = TypeDict({
     'ComplexPowerSpectrumSeries.plotImaginary' : 'Plot imaginary',
     'ComplexPowerSpectrumSeries.plotMagnitude' : 'Plot magnitude',
     'ComplexPowerSpectrumSeries.plotPhase'     : 'Plot phase',
-    'ComplexPowerSpectrumSeries.order0PhaseCorrection' :
-    'Zero order phase correction',
-    'ComplexPowerSpectrumSeries.order1PhaseCorrection' :
-    'First order phase correction',
+    'ComplexPowerSpectrumSeries.zeroOrderPhaseCorrection' :
+    'Zero order phase correction (degrees)',
+    'ComplexPowerSpectrumSeries.firstOrderPhaseCorrection' :
+    'First order phase correction (seconds)',
 
     'HistogramSeries.nbins'           : 'Number of bins',
     'HistogramSeries.autoBin'         : 'Automatic histogram binning',

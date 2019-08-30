@@ -165,11 +165,15 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
 
 
     zeroOrderPhaseCorrection = props.Real(default=0)
-    """Apply a correction """
+    """Apply zero order phase correction to the power spectrum of the complex
+    data.
+    """
 
 
     firstOrderPhaseCorrection = props.Real(default=0)
-    """ """
+    """Apply first order phase correction to the power spectrum of the complex
+    data.
+    """
 
 
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
@@ -366,7 +370,6 @@ class MelodicPowerSpectrumSeries(dataseries.DataSeries,
         xdata = np.arange(len(ydata), dtype=np.float32)
 
         return xdata, ydata
-
 
 
 class MeshPowerSpectrumSeries(dataseries.DataSeries,
