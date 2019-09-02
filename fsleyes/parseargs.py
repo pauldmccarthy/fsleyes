@@ -605,7 +605,8 @@ OPTIONS = td.TypeDict({
                          'suppressG',
                          'suppressB',
                          'suppressA',
-                         'suppressMode']
+                         'suppressMode'],
+    'ComplexOpts'      : ['component'],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -626,6 +627,7 @@ GROUPNAMES = td.TypeDict({
     'Display'        : 'Display options',
     'VolumeOpts'     : 'Volume options',
     'VolumeRGBOpts'  : 'RGB(A) volume options',
+    'ComplexOpts'    : 'Complex volume options',
     'MaskOpts'       : 'Mask options',
     'LineVectorOpts' : 'Line vector options',
     'RGBVectorOpts'  : 'RGB vector options',
@@ -666,6 +668,7 @@ GROUPDESCS = td.TypeDict({
 
     'VolumeOpts'     : 'These options are applied to \'volume\' overlays.',
     'VolumeRGBOpts'  : 'These options are applied to \'rgb\' overlays.',
+    'ComplexOpts'    : 'These options are applied to \'complex\' overlays.',
     'MaskOpts'       : 'These options are applied to \'mask\' overlays.',
     'LabelOpts'      : 'These options are applied to \'label\' overlays.',
     'LineVectorOpts' : 'These options are applied to \'linevector\' overlays.',
@@ -907,6 +910,8 @@ ARGUMENTS = td.TypeDict({
     'VolumeRGBOpts.suppressB'     : ('bs', 'suppressB',     False),
     'VolumeRGBOpts.suppressA'     : ('as', 'suppressA',     False),
     'VolumeRGBOpts.suppressMode'  : ('sm', 'suppressMode',  True),
+
+    'ComplexOpts.component' : ('co', 'component', True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1734,6 +1739,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     Display        = fsldisplay.Display
     VolumeOpts     = fsldisplay.VolumeOpts
     VolumeRGBOpts  = fsldisplay.VolumeRGBOpts
+    ComplexOpts    = fsldisplay.ComplexOpts
     RGBVectorOpts  = fsldisplay.RGBVectorOpts
     LineVectorOpts = fsldisplay.LineVectorOpts
     TensorOpts     = fsldisplay.TensorOpts
@@ -1747,8 +1753,8 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
     # A parser is created and returned
     # for each one of these types.
-    parserTypes = [VolumeOpts, VolumeRGBOpts, MaskOpts,
-                   LabelOpts, MeshOpts, GiftiOpts,
+    parserTypes = [VolumeOpts, VolumeRGBOpts, ComplexOpts,
+                   MaskOpts, LabelOpts, MeshOpts, GiftiOpts,
                    FreesurferOpts, LineVectorOpts,
                    RGBVectorOpts, TensorOpts, SHOpts,
                    MIPOpts]
@@ -2095,7 +2101,7 @@ def parseArgs(mainParser,
         # for this overlay, use its default (see the
         # display.OVERLAY_TYPES) dictionary).
         else:
-            otArgs.overlayType = fsldisplay.getOverlayTypes(ovlType)[0]
+            otArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
 
         # Now parse the Display/DisplayOpts
         # with the appropriate parser

@@ -535,7 +535,7 @@ class ComplexOpts(VolumeOpts):
     @staticmethod
     def getPhase(data):
         """Return the phase of the given complex data. """
-        return np.arctan(data.real / data.imag)
+        return np.arctan2(data.imag, data.real)
 
 
     def __componentChanged(self, *a):
