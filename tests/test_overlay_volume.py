@@ -112,9 +112,7 @@ cli_tests = """
 
 -vl 0 0 0 -xc 0 0 -yc 0 0 -zc 0 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
 
-{{complex()}}
-{{complex()}} -ch real
-{{complex()}} -ch imag
+{{complex()}}  -ot volume # real component should be displayed
 """  # noqa
 
 
