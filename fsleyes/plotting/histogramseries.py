@@ -310,6 +310,7 @@ class HistogramSeries(dataseries.DataSeries):
         drange  = (self.dataRange.xmin, self.dataRange.xmax)
         histkey = (self.__dataKey,
                    self.includeOutliers,
+                   self.ignoreZeros,
                    hrange,
                    drange,
                    self.nbins)
