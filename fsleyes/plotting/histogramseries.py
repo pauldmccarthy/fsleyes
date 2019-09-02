@@ -183,6 +183,9 @@ class HistogramSeries(dataseries.DataSeries):
             log.debug('Got histogram data {} from cache'.format(key))
             finData, nzData, dmin, dmax = cached
 
+        # The upper bound on the dataRange
+        # is exclusive, so we initialise it
+        # to a bit more than the data max.
         dist = (dmax - dmin) / 10000.0
 
         with props.suppressAll(self):
@@ -476,7 +479,8 @@ class ComplexHistogramSeries(ImageHistogramSeries):
 
 
     def __init__(self, *args, **kwargs):
-        """
+        """Create a ``ComplexHistogramSeries``. All arguments are passed
+        through to the ``ImageHistogramSeries`` constructor.
         """
         ImageHistogramSeries.__init__(self, *args, **kwargs)
 
