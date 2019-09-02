@@ -178,7 +178,7 @@ def test_MelodicTimeSeries():
 def _test_MelodicTimeSeries(panel, overlayList, displayCtx):
     class MockMelodicImage(Image):
         def getComponentTimeSeries(self, comp):
-            x, y, z = img.shape[0] // 2, img.shape[1] // 2, img.shape[2] // 2
+            x, y, z = self.shape[0] // 2, self.shape[1] // 2, self.shape[2] // 2
             return self[x, y, z, :] * comp
 
     with tempdir(), mock.patch('fsl.data.melodicimage.MelodicImage',
