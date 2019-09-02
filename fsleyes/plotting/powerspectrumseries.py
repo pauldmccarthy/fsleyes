@@ -94,8 +94,7 @@ def calcFrequencies(data, sampleTime):
                      power spectrum for ``data``
     """
 
-    nsamples   = len(data)
-    sampleTime = 1
+    nsamples = len(data)
 
     if np.issubdtype(data.dtype, np.complexfloating):
         xdata = fft.fftfreq(nsamples, sampleTime)
@@ -110,8 +109,8 @@ def calcFrequencies(data, sampleTime):
 
 def magnitude(data):
     """Returns the magnitude of the given complex data. """
-    real = data.real
-    imag = data.imag
+    real  = data.real
+    imag  = data.imag
     return np.sqrt(real ** 2 + imag ** 2)
 
 
@@ -120,6 +119,19 @@ def phase(data):
     real = data.real
     imag = data.imag
     return np.arctan2(imag, real)
+
+
+def phaseCorrection(spectrum, freqs, p0, p1):
+    """Applies phase correction to the given complex power spectrum.
+
+    :arg spectrum: Complex-valued power spectrum
+    :arg freqs:    Spectrum frequency bins
+    :arg p0:       Zero order phase correction term
+    :arg p1:       First order phase correction term
+    :returns:      The corrected power spectrum.
+    """
+    exp = 1j * 2 * np.pi * (p0 / 360 + freqs * p1)
+    return np.exp(exp) * spectrum
 
 
 class PowerSpectrumSeries(object):
@@ -259,11 +271,17 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
 
         if self.zeroOrderPhaseCorrection  != 0 or \
            self.firstOrderPhaseCorrection != 0:
-            p0    = self.zeroOrderPhaseCorrection
-            p1    = self.firstOrderPhaseCorrection
-            exp   = 1j * 2 * np.pi * (p0 / 360 + xdata * p1)
-            ydata = np.exp(exp) * ydata
+            ydata = phaseCorrection(ydata,
+                                    xdata,
+                                    self.zeroOrderPhaseCorrection,
+                                    self.firstOrderPhaseCorrection)
 
+        # Note that we're assuming that this
+        # ComplexPowerSpectrumSeries.getData
+        # method will be called before the
+        # corresponding call(s) to the
+        # Imaginary/Magnitude/Phase series
+        # methods.
         self.__cachedData = xdata, ydata
 
         if not self.plotReal:
