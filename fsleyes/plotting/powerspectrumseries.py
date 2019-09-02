@@ -38,13 +38,94 @@ from . import                   dataseries
 log = logging.getLogger(__name__)
 
 
+def calcPowerSpectrum(data, varNorm=False):
+    """Calculates a power spectrum for the given one-dimensional data array. If
+    ``varNorm is True``, the data is de-meaned and normalised by its standard
+    deviation before the fourier transformation.
+
+    :arg data:    Numpy array containing the time series data
+
+    :arg varNorm: Normalise the data before fourier transformation
+
+    :returns:     If ``data`` contains real values, the magnitude of the power
+                  spectrum is returned. If ``data`` contains complex values,
+                  the complex power spectrum is returned.
+    """
+
+    # De-mean and normalise
+    # by standard deviation
+    if varNorm:
+        mean = data.mean()
+        std  = data.std()
+
+        if not np.isclose(std, 0):
+            data = data - mean
+            data = data / std
+
+        # If all values in the data
+        # are the same, it has mean 0
+        else:
+            data = np.zeros(data.shape, dtype=data.dtype)
+
+    # Fourier transform on complex data
+    if np.issubdtype(data.dtype, np.complexfloating):
+        data = fft.fft(data)
+        data = fft.fftshift(data)
+
+    # Fourier transform on real data - we
+    # calculate and return the magnitude.
+    # We also drop the first (zero-frequency)
+    # term (see the rfft docs) as it is
+    # useless when varNorm is disabled.
+    else:
+        data = fft.rfft(data)[1:]
+        data = magnitude(data)
+
+    return data
+
+
+def calcFrequencies(data, sampleTime):
+    """Calculates the frequencies of the power spectrum for the given
+    data.
+
+    :arg data:       The input time series data
+    :arg sampleTime: Time between each data point
+    :returns:        A ``numpy`` array containing the frequencies of the
+                     power spectrum for ``data``
+    """
+
+    nsamples   = len(data)
+    sampleTime = 1
+
+    if np.issubdtype(data.dtype, np.complexfloating):
+        xdata = fft.fftfreq(nsamples, sampleTime)
+        xdata = fft.fftshift(xdata)
+    else:
+        # Drop the zero-frequency term
+        # (see calcPowerSpectrum)
+        xdata = fft.rfftfreq(nsamples, sampleTime)[1:]
+
+    return xdata
+
+
+def magnitude(data):
+    """Returns the magnitude of the given complex data. """
+    real = data.real
+    imag = data.imag
+    return np.sqrt(real ** 2 + imag ** 2)
+
+
+def phase(data):
+    """Returns the phase of the given complex data. """
+    real = data.real
+    imag = data.imag
+    return np.arctan2(imag, real)
+
+
 class PowerSpectrumSeries(object):
-    """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series from
-    an overlay. The ``PowerSpectrumSeries`` class is a base mixin class for
-    all other classes in this module. It provides the
-    :meth:`calcPowerSpectrum` method which calculates the power spectrum of a
-    data series, and the :meth:`calcFrequencies` method which calculates the
-    frequences for a spectrum.
+    """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
+    from an overlay. The ``PowerSpectrumSeries`` class is a base mixin class
+    for all other classes in this module.
     """
 
 
@@ -53,75 +134,17 @@ class PowerSpectrumSeries(object):
     transformation.
     """
 
-    def calcPowerSpectrum(self, data, freqs):
-        """Calculates a power spectrum for the given one-dimensional data
-        array. If the :attr:`varNorm` property is ``True``, the data is
-        de-meaned and normalised by its standard deviation before the fourier
-        transformation.
 
-        :arg data:  Numpy array containing the time series data
-        :arg freqs: Frequencies of the resulting power spectrum, as calculated
-                    by :meth:`calcFrequencies`.
-        """
-
-        # De-mean and normalise
-        # by standard deviation
-        if self.varNorm:
-            mean = data.mean()
-            std  = data.std()
-
-            if not np.isclose(std, 0):
-                data = data - mean
-                data = data / std
-
-            # If all values in the data
-            # are the same, it has mean 0
-            else:
-                data = np.zeros(data.shape, dtype=data.dtype)
-
-        # Fourier transform on complex data
-        if np.issubdtype(data.dtype, np.complexfloating):
-            data = fft.fft(data)
-            data = fft.fftshift(data)
-
-        # Fourier transform on real data - we
-        # calculate and return the magnitude.
-        # We also drop the first (zero-frequency)
-        # term (see the rfft docs) as it is
-        # useless when varNorm is disabled.
-        else:
-            data = fft.rfft(data)[1:]
-            data = np.power(data.real, 2) + np.power(data.imag, 2)
-
-        return data
-
-
-    def calcFrequencies(self, data):
-        """Calculates the frequencies of the power spectrum for the given
-        data.
-
-        :arg data: The input time series data
-        :returns:  A ``numpy`` array containing the frequencies of the
-                   power spectrum for ``data``
-        """
-
-        nsamples   = len(data)
-        sampleTime = 1
-
+    @property
+    def sampleTime(self):
+        """Returns the time between time series samples for the overlay
+        data. """
         if isinstance(self.overlay, fslmelimage.MelodicImage):
-            sampleTime = self.overlay.tr
+            return self.overlay.tr
         elif isinstance(self.overlay, fslimage.Image):
-            sampleTime = self.overlay.pixdim[3]
-
-        if np.issubdtype(data.dtype, np.complexfloating):
-            xdata = fft.fftfreq(nsamples, sampleTime)
-            xdata = fft.fftshift(xdata)
+            return self.overlay.pixdim[3]
         else:
-            # Drop the zero-frequency term
-            # (see calcPowerSpectrum)
-            xdata = fft.rfftfreq(nsamples, sampleTime)[1:]
-
-        return xdata
+            return 1
 
 
 class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
@@ -152,8 +175,8 @@ class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
         if data is None:
             return None, None
 
-        xdata = self.calcFrequencies(data)
-        ydata = self.calcPowerSpectrum(data, xdata)
+        xdata = calcFrequencies(  data, self.sampleTime)
+        ydata = calcPowerSpectrum(data, self.varNorm)
 
         return xdata, ydata
 
@@ -189,19 +212,19 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         VoxelPowerSpectrumSeries.__init__(
             self, overlay, overlayList, displayCtx, plotPanel)
 
-        self.__imagps = ImaginaryPowerSpectrumSeries(
-            overlay, overlayList, displayCtx, plotPanel)
-        self.__magps = MagnitudePowerSpectrumSeries(
-            overlay, overlayList, displayCtx, plotPanel)
-        self.__phaseps = PhasePowerSpectrumSeries(
-            overlay, overlayList, displayCtx, plotPanel)
+        self.__cachedData = (None, None)
+        self.__imagps     = ImaginaryPowerSpectrumSeries(
+            self, overlay, overlayList, displayCtx, plotPanel)
+        self.__magps      = MagnitudePowerSpectrumSeries(
+            self, overlay, overlayList, displayCtx, plotPanel)
+        self.__phaseps    = PhasePowerSpectrumSeries(
+            self, overlay, overlayList, displayCtx, plotPanel)
 
         for ps in (self.__imagps, self.__magps, self.__phaseps):
             ps.colour = fslcm.randomDarkColour()
             ps.bindProps('alpha',     self)
             ps.bindProps('lineWidth', self)
             ps.bindProps('lineStyle', self)
-            ps.bindProps('varNorm',   self)
 
 
     def makeLabel(self):
@@ -212,39 +235,44 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
                                 strings.labels[self])
 
 
+    @property
+    def cachedData(self):
+        """Returns the currently cached data (see :meth:`getData`). """
+        return self.__cachedData
+
+
     def getData(self):
-        """If :attr:`plotReal` is true, returns the real component
-        of the complex data. Otherwise returns ``(None, None)``.
+        """If :attr:`plotReal` is true, returns the real component of the power
+        spectrum of the data at the current voxel. Otherwise returns ``(None,
+        None)``.
+
+        Every time this method is called, the power spectrum is calculated,
+        phase correction is applied, and a reference to the resulting complex
+        power spectrum (and frequencies) is saved; it is accessible via the
+        :meth:`cachedData` property, for use by the
+        :class:`ImaginaryPowerSpectrumSeries`,
+        :class:`MagnitudePowerSpectrumSeries`, and
+        :class:`PhasePowerSpectrumSeries`.
         """
-        if not self.plotReal:
-            return None, None
 
         xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+
+        if self.zeroOrderPhaseCorrection  != 0 or \
+           self.firstOrderPhaseCorrection != 0:
+            p0    = self.zeroOrderPhaseCorrection
+            p1    = self.firstOrderPhaseCorrection
+            exp   = 1j * 2 * np.pi * (p0 / 360 + xdata * p1)
+            ydata = np.exp(exp) * ydata
+
+        self.__cachedData = xdata, ydata
+
+        if not self.plotReal:
+            return None, None
 
         if ydata is not None:
             ydata = ydata.real
 
         return xdata, ydata
-
-
-    def calcPowerSpectrum(self, data, freqs):
-        """Overrides .PowerSpectrumSeries.calcPowerSpectrum.
-
-        Calls that function, and then applies phase correction if either of
-        the :attr:`zeroOrderPhaseCorrection` or
-        :attr:`firstOrderPhaseCorrection` parameters are set.
-        """
-
-        data = VoxelPowerSpectrumSeries.calcPowerSpectrum(self, data, freqs)
-
-        if self.zeroOrderPhaseCorrection  != 0 or \
-           self.firstOrderPhaseCorrection != 0:
-            p0   = self.zeroOrderPhaseCorrection
-            p1   = self.firstOrderPhaseCorrection
-            exp  = 1j * 2 * np.pi * (p0 / 360 + freqs * p1)
-            data = np.exp(exp) * data
-
-        return data
 
 
     def extraSeries(self):
@@ -260,7 +288,7 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         return extras
 
 
-class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
+class ImaginaryPowerSpectrumSeries(dataseries.DataSeries):
     """An ``ImaginaryPowerSpectrumSeries`` represents the power spectrum of the
     imaginary component of a complex-valued image.
     ``ImaginaryPowerSpectrumSeries`` instances are created by
@@ -268,19 +296,31 @@ class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
     """
 
 
+    def __init__(self, parent, *args, **kwargs):
+        """Create an ``ImaginaryPowerSpectrumSeries``.
+
+        :arg parent: The :class:`ComplexPowerSpectrumSeries` which owns this
+                     ``ImaginaryPowerSpectrumSeries``.
+
+        All other arguments are passed through to the :class:`DataSeries`
+        constructor.
+        """
+        dataseries.DataSeries.__init__(self, *args, **kwargs)
+        self.__parent = parent
+
+
     def makeLabel(self):
         """Returns a string representation of this
         ``ImaginaryPowerSpectrumSeries`` instance.
         """
-        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+        return '{} ({})'.format(self.__parent.makeLabel(),
                                 strings.labels[self])
 
 
     def getData(self):
-        """Returns the imaginary component of the complex data. Otherwise
-        returns ``(None, None)``.
-        """
-        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        """Returns the imaginary component of the power spectrum. """
+
+        xdata, ydata = self.__parent.cachedData
 
         if ydata is not None:
             ydata = ydata.imag
@@ -288,55 +328,75 @@ class ImaginaryPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         return xdata, ydata
 
 
-class MagnitudePowerSpectrumSeries(VoxelPowerSpectrumSeries):
+class MagnitudePowerSpectrumSeries(dataseries.DataSeries):
     """An ``MagnitudePowerSpectrumSeries`` represents the magnitude of a
     complex-valued image. ``MagnitudePowerSpectrumSeries`` instances are
     created by :class:`ComplexPowerSpectrumSeries` instances.
     """
 
 
+    def __init__(self, parent, *args, **kwargs):
+        """Create an ``ImaginaryPowerSpectrumSeries``.
+
+        :arg parent: The :class:`ComplexPowerSpectrumSeries` which owns this
+                     ``ImaginaryPowerSpectrumSeries``.
+
+        All other arguments are passed through to the :class:`DataSeries`
+        constructor.
+        """
+        dataseries.DataSeries.__init__(self, *args, **kwargs)
+        self.__parent = parent
+
+
     def makeLabel(self):
         """Returns a string representation of this
         ``MagnitudePowerSpectrumSeries`` instance.
         """
-        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+        return '{} ({})'.format(self.__parent.makeLabel(),
                                 strings.labels[self])
 
 
     def getData(self):
-        """Returns the imaginary component of the complex data. Otherwise
-        returns ``(None, None)``.
-        """
-        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        """Returns the magnitude of the complex power spectrum. """
+        xdata, ydata = self.__parent.cachedData
         if ydata is not None:
-            real  = ydata.real
-            imag  = ydata.imag
-            ydata = np.sqrt(real ** 2 + imag ** 2)
+            ydata = magnitude(ydata)
         return xdata, ydata
 
 
-class PhasePowerSpectrumSeries(VoxelPowerSpectrumSeries):
+class PhasePowerSpectrumSeries(dataseries.DataSeries):
     """An ``PhasePowerSpectrumSeries`` represents the phase of a complex-valued
     image. ``PhasePowerSpectrumSeries`` instances are created by
     :class:`ComplexPowerSpectrumSeries` instances.
     """
 
 
+    def __init__(self, parent, *args, **kwargs):
+        """Create an ``ImaginaryPowerSpectrumSeries``.
+
+        :arg parent: The :class:`ComplexPowerSpectrumSeries` which owns this
+                     ``ImaginaryPowerSpectrumSeries``.
+
+        All other arguments are passed through to the :class:`DataSeries`
+        constructor.
+        """
+        dataseries.DataSeries.__init__(self, *args, **kwargs)
+        self.__parent = parent
+
+
     def makeLabel(self):
         """Returns a string representation of this ``PhasePowerSpectrumSeries``
         instance.
         """
-        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
+        return '{} ({})'.format(self.__parent.makeLabel(),
                                 strings.labels[self])
 
 
     def getData(self):
-        """Returns the phase of the data at the current voxel. """
-        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        """Returns the phase of the complex power spectrum. """
+        xdata, ydata = self.__parent.cachedData
         if ydata is not None:
-            real  = ydata.real
-            imag  = ydata.imag
-            ydata = np.arctan2(imag, real)
+            ydata = phase(ydata)
         return xdata, ydata
 
 
@@ -446,7 +506,7 @@ class MeshPowerSpectrumSeries(dataseries.DataSeries,
 
         vd    = opts.getVertexData()
         data  = vd[vidx, :]
-        xdata = self.calcFrequencies(data)
-        ydata = self.calcPowerSpectrum(data, xdata)
+        xdata = calcFrequencies(  data, self.sampleTime)
+        ydata = calcPowerSpectrum(data, self.varNorm)
 
         return xdata, ydata
