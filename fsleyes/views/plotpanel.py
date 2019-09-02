@@ -1151,29 +1151,26 @@ class OverlayPlotPanel(PlotPanel):
         # mappings, containing a DataSeries instance for
         # each compatible overlay in the overlay list.
         #
-        # Different DataSeries types need to be re-drawn
-        # when different properties change. For example,
-        # a VoxelTimeSeries instance needs to be redrawn
-        # when the DisplayContext.location property
-        # changes, whereas a MelodicTimeSeries instance
-        # needs to be redrawn when the VolumeOpts.volume
-        # property changes.
+        # refreshProps is a dict of
         #
-        # Therefore, the refreshProps dictionary contains
-        # a set of
+        #   {overlay : ([targets], [propNames]}
         #
-        #   {overlay : ([targets], [propNames])}
+        # mappings, containing the target instances and
+        # properties which, when those properties change,
+        # need to trigger a refresh of the plot.
         #
-        # mappings - for each overlay, a list of
-        # target objects (e.g. DisplayContext, VolumeOpts,
-        # etc), and a list of property names on each,
-        # defining the properties that need to trigger a
-        # redraw.
+        # refreshCounts is a dict of:
         #
-        # See the createDataSeries method for more
-        # information.
-        self.__dataSeries   = {}
-        self.__refreshProps = {}
+        #   {target, propName : dscount}
+
+        # mappings, containing all targets and
+        # associated property names on which a listener
+        # is currently registered, and the count of
+        # DataSeries instances which are interested
+        # in them.
+        self.__dataSeries    = {}
+        self.__refreshProps  = {}
+        self.__refreshCounts = {}
 
         self            .addListener('dataSeries',
                                      self.__name,
@@ -1196,8 +1193,9 @@ class OverlayPlotPanel(PlotPanel):
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
 
-        self.__dataSeries   = None
-        self.__refreshProps = None
+        self.__dataSeries    = None
+        self.__refreshProps  = None
+        self.__refreshCounts = None
 
         PlotPanel.destroy(self)
 
@@ -1421,7 +1419,13 @@ class OverlayPlotPanel(PlotPanel):
             ds.destroy()
 
         for t, p in zip(targets, propNames):
-            t.removeListener(p, self.__name)
+            count = self.__refreshCounts[t, p]
+
+            if count - 1 == 0:
+                self.__refreshCounts.pop((t, p))
+                t.removeListener(p, self.__name)
+            else:
+                self.__refreshCounts[t, p] = count - 1
 
 
     def updateDataSeries(self, initialState=None):
@@ -1500,15 +1504,20 @@ class OverlayPlotPanel(PlotPanel):
 
             for target, propName in zip(targets, propNames):
 
-                log.debug('Adding listener on {}.{} for {} data '
-                          'series'.format(type(target).__name__,
-                                          propName,
-                                          overlay))
+                count = self.__refreshCounts.get((target, propName), 0)
+                self.__refreshCounts[target, propName] = count + 1
 
-                target.addListener(propName,
-                                   self.__name,
-                                   self.asyncDraw,
-                                   overwrite=True)
+                if count == 0:
+
+                    log.debug('Adding listener on {}.{} for {} data '
+                              'series'.format(type(target).__name__,
+                                              propName,
+                                              overlay))
+
+                    target.addListener(propName,
+                                       self.__name,
+                                       self.asyncDraw,
+                                       overwrite=True)
 
 
     @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
