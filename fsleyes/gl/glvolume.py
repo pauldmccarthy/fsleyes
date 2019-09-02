@@ -542,11 +542,14 @@ class GLVolume(glimageobject.GLImageObject):
                       skipIfQueued=True)
 
 
-    def refreshImageTexture(self):
+    def refreshImageTexture(self, **kwargs):
         """Refreshes the :class:`.ImageTexture` used to store the
         :class:`.Image` data. This is performed through the :mod:`.resources`
         module, so the image texture can be shared between multiple
         ``GLVolume`` instances.
+
+        All keyword arguments are passed through to the :class:`.ImageTexture`
+        constructor.
         """
 
         opts     = self.opts
@@ -579,7 +582,8 @@ class GLVolume(glimageobject.GLImageObject):
             channel=opts.channel,
             volume=opts.index()[3:],
             normaliseRange=normRange,
-            notify=False)
+            notify=False,
+            **kwargs)
 
         self.imageTexture.register(self.name, self.__texturesChanged)
 

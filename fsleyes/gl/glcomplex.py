@@ -8,6 +8,7 @@
 :class:`.Image` overlays with a complex data type.
 """
 
+
 from . import glvolume
 
 
@@ -38,14 +39,39 @@ class GLComplex(glvolume.GLVolume):
         return glvolume.GLVolume.removeDisplayListeners(self)
 
 
-    def __componentChanged(self, *a):
-        """Called when the :attr:`component` changes. Updates the image texture
-        data.
+    def refreshImageTexture(self):
+        """Overrides :meth:`.GLVolume.refreshImageTexture`. Calls that
+        method, passing it a prefilter function to extract the complex
+        component from the image data.
+        """
+        pfunc = self.getPrefilterFunc()
+        glvolume.GLVolume.refreshImageTexture(self,
+                                              prefilter=pfunc,
+                                              prefilterRange=pfunc)
+
+
+
+    def getPrefilterFunc(self):
+        """Returns a function which extracts the component to be displayed
+        from the image data. Used as the prefilter function by the
+        :class:`.ImageTexture`
+
+        See the :attr:`ComplexOpts.component` property.
         """
 
         opts      = self.opts
         component = opts.component
 
+        if   component == 'real':  return opts.getReal
+        elif component == 'imag':  return opts.getImaginary
+        elif component == 'mag':   return opts.getMagnitude
+        elif component == 'phase': return opts.getPhase
+
+
+    def __componentChanged(self, *a):
+        """Called when the :attr:`component` changes. Updates the image texture
+        data.
+        """
         # We only want the image texture data
         # to be updated once, despite multiple
         # calls to set() (e.g. from three
@@ -62,11 +88,7 @@ class GLComplex(glvolume.GLVolume):
         # (the prefilter functions are static,
         # so subsequent calls will pass in the
         # same function object)
-        if   component == 'real':  func = opts.getReal
-        elif component == 'imag':  func = opts.getImaginary
-        elif component == 'mag':   func = opts.getMagnitude
-        elif component == 'phase': func = opts.getPhase
-
-        self.imageTexture.set(prefilter=func,
-                              prefilterRange=func,
+        pfunc = self.getPrefilterFunc()
+        self.imageTexture.set(prefilter=pfunc,
+                              prefilterRange=pfunc,
                               volRefresh=False)
