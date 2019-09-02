@@ -20,7 +20,7 @@ import numpy as np
 import fsl.utils.transform as transform
 import fsl.data.image      as fslimage
 
-from . import run_cli_tests, translate, zero_centre, asrgb, roi
+from . import run_cli_tests, translate, zero_centre, asrgb, roi, complex
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -204,14 +204,3 @@ def swapdim(infile):
     fslimage.Image(data, xform=affine, header=img.header).save(outfile)
 
     return outfile
-
-
-def complex():
-
-    data =      np.linspace(0, 1, 1000).reshape((10, 10, 10)) + \
-           1j * np.linspace(1, 0, 1000).reshape((10, 10, 10))
-    data = np.array(data, dtype=np.complex64)
-    img  = fslimage.Image(data, xform=np.eye(4))
-    img.save('complex.nii.gz')
-
-    return 'complex.nii.gz'
