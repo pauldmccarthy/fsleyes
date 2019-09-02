@@ -620,8 +620,12 @@ class PlotPanel(viewpanel.ViewPanel):
         # to preserve the limits that the
         # user set. These are passed to
         # the __drawDataSeries method.
-        axxlim = axis.get_xlim()
-        axylim = axis.get_ylim()
+        #
+        # Make sure the limits are ordered
+        # as (min, max), as they won't be
+        # if invertX/invertY are active.
+        axxlim = list(sorted(axis.get_xlim()))
+        axylim = list(sorted(axis.get_ylim()))
 
         # Here we are preparing the data for
         # each data series on separate threads,
