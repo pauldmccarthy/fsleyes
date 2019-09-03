@@ -322,17 +322,18 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         # Three types of hyperlink:
         #   - one for complete (summary) label atlases,
         #   - one for a region label mask image
-        #   - one for a region probability image
+        #   - one for a region statistic/probability image
         #
         # The hrefs are formatted as:
         #
         #     imageType atlasID labelIdx
         #
-        # where "imageType" is one of "summary", "label", or "prob",
-        # and "labelIdx" is "None" for complete/summary atlases.
+        # where "imageType" is one of "summary", "label", or "stat"
+        # and "labelIdx" is "None" for summary atlases.
         titleTemplate = '<b>{}</b> (<a href="summary {} {}">Show/Hide</a>)'
         labelTemplate = '{} (<a href="label {} {}">Show/Hide</a>)'
-        probTemplate  = '{:0.1f}% {} (<a href="prob {} {}">Show/Hide</a>)'
+
+        statTemplate  = '{}{} {} (<a href="stat {} {}">Show/Hide</a>)'
 
         for atlasID in self.__enabledAtlases:
 
@@ -340,18 +341,21 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
             lines.append(titleTemplate.format(atlas.desc.name, atlasID, None))
 
-            if isinstance(atlas, atlases.ProbabilisticAtlas):
-                proportions = atlas.proportions(loc)
+            if isinstance(atlas, atlases.StatisticAtlas):
+                values = atlas.values(loc)
 
-                if len(proportions) == 0:
+                if len(values) == 0:
                     continue
 
-                propslabels = zip(proportions, atlas.desc.labels)
+                vallabels = zip(values, atlas.desc.labels)
 
-                for prop, label in reversed(sorted(propslabels)):
-                    if prop == 0.0:
+                for val, label in reversed(sorted(vallabels)):
+                    if val == 0.0:
                         continue
-                    lines.append(probTemplate.format(prop,
+                    fmt = '{{:0.{}f}}'.format(atlas.desc.precision)
+                    val = fmt.format(val)
+                    lines.append(statTemplate.format(val,
+                                                     atlas.desc.units,
                                                      label.name,
                                                      atlasID,
                                                      label.index))
@@ -384,14 +388,14 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         # inside __locationChanged method
         showType, atlasID, labelIndex = ev.GetLinkInfo().GetHref().split()
 
-        try:    labelIndex = int(labelIndex)
-        except: labelIndex = None
+        try:               labelIndex = int(labelIndex)
+        except ValueError: labelIndex = None
 
-        # showType is one of 'prob', 'label', or
+        # showType is one of 'stat', 'label', or
         # 'summary'; the summary parameter controls
-        # whether a probabilstic or label image
+        # whether a probabilstic/stat or label image
         # is loaded
-        summary = showType != 'prob'
+        summary = showType != 'stat'
 
         def onLoad():
             self.__atlasPanel.Enable()

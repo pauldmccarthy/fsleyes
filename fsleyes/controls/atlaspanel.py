@@ -49,6 +49,7 @@ class AtlasPanel(ctrlpanel.ControlPanel):
     :class:`.AtlasInfoPanel`       Displays information for the current
                                    :attr:`.DisplayContext.location` from
                                    atlases selected by the user.
+
     :class:`.AtlasOverlayPanel`    Allows the user to search through all
                                    atlases for specific regions, and to toggle
                                    on/off overlays for those regions.
@@ -80,8 +81,8 @@ class AtlasPanel(ctrlpanel.ControlPanel):
         :class:`.LabelAtlas`. These images are added with a
         :attr:`.Display.overlayType` of ``mask``.
 
-      - A 3D image containing the probabilty image for a single region,
-        extracted from a :class:`.ProbabilisticAtlas`. These images are added
+      - A 3D image containing the statistic image for a single region,
+        extracted from a :class:`.StatisticAtlas`. These images are added
         with a :attr:`.Display.overlayType` of ``volume``.
 
 
@@ -111,8 +112,9 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
       - ``atlasID`` is the atlas identifier (see the :mod:`.atlases` module).
 
-      - ``overlayType`` is either ``label`` or ``prob``, depending on whether
-        the overlay is a discrete label image, or a probaility image.
+      - ``overlayType`` is either ``label``, ``prob``, or ``stat``, depending on
+        whether the overlay is a discrete label image, a probaility image, or
+        a statistic image..
 
       - ``regionName`` is the name of the region, or ``all`` if the overlay
         is a complete :class:`.LabelAtlas`.
@@ -453,27 +455,21 @@ class AtlasPanel(ctrlpanel.ControlPanel):
             # label image
             if labelIdx is None:
                 overlayType = 'label'
-                data        = atlas[:]
+                overlay     = fslimage.Image(atlas)
 
             else:
 
                 # regional label image
                 if summary:
-
-                    labelVal    = atlasDesc.find(index=labelIdx).value
+                    overlay     = atlas.get(index=labelIdx, binary=False)
                     overlayType = 'mask'
-                    data        = np.zeros(atlas.shape, dtype=np.uint16)
-                    data[atlas[:] == labelVal] = labelVal
 
-                # regional probability image
+                # regional statistic/probability image
                 else:
                     overlayType = 'volume'
-                    data        = atlas[:, :, :, labelIdx]
+                    overlay     = atlas.get(index=labelIdx)
 
-            overlay = fslimage.Image(
-                data,
-                header=atlas.header,
-                name=overlayName)
+            overlay.name = overlayName
 
             with props.suppress(self.overlayList, 'overlays', self.name):
                 self.overlayList.append(overlay, overlayType=overlayType)
