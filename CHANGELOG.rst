@@ -19,6 +19,21 @@ Added
 
 * New *File tree* control panel, for viewing data contained in structured
   directories.
+* New ``complex`` overlay type, for displaying images with a complex data type.
+* Support in plot panels for complex images - data from the real, imaginary,
+  magnitude, and/or phase components can be plotted.
+* New plot panel options to invert axes, and to apply scale/offsets.
+* New power spectrum panel options to apply phase correction to complex image
+  data.
+
+
+Changed
+^^^^^^^
+
+
+* Images with a complex data type are no longer split into separate real and
+  imaginary ``volume`` overlays - they are loaded as a single image, and
+  displayed as ``complex`` overlays.
 
 
 Fixed
@@ -27,6 +42,7 @@ Fixed
 
 * Fixed a bug in the :class:`.OverlayGroup` where old display settings were
   mistakenly being applied to newly added overlays.
+* Fixed a number of minor bugs in the plot panel logic.
 
 
 0.30.1 (Wednesday 7th August 2019)
