@@ -8,7 +8,7 @@
 
 import fsleyes.controls.atlaspanel as ap
 
-from . import run_with_orthopanel, yieldUntil
+from . import run_with_orthopanel, yieldUntil, realYield
 
 
 def test_atlaspanel_toggleOverlay():
@@ -31,3 +31,9 @@ def _test_atlaspanel_toggleOverlay(panel, overlayList, displayCtx):
     assert len(overlayList) == 1
     img = overlayList[0]
     assert img.ndim == 3
+
+    atlaspanel = None
+    overlayList.clear()
+    realYield()
+    panel.toggleAtlasPanel()
+    realYield()

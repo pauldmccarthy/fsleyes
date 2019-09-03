@@ -386,7 +386,11 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
 def run_with_viewpanel(func, vptype, *args, **kwargs):
     def inner(frame, overlayList, displayCtx, *a, **kwa):
         panel = frame.addViewPanel(vptype)
-        return func(panel, overlayList, displayCtx, *a, **kwa)
+        try:
+            result = func(panel, overlayList, displayCtx, *a, **kwa)
+        finally:
+            frame.removeViewPanel(panel)
+        return result
     return run_with_fsleyes(inner, *args, **kwargs)
 
 
