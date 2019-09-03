@@ -169,6 +169,10 @@ properties = TypeDict({
     'Volume3DOpts.clipAzimuth' :
     'Amount by which to rotate the clip plane about the Z axis.',
 
+    'ComplexOpts.component' :
+    'Choose to display either the real or imaginary components, or the '
+    'magnitude or phase.',
+
     'MaskOpts.colour' :
     'The colour of this mask image.',
     'MaskOpts.invert' :
@@ -537,6 +541,8 @@ properties = TypeDict({
                              'the x axis.',
     'PlotPanel.yLogScale'  : 'If checked, a log (base 10) scale is used for '
                              'the y axis.',
+    'PlotPanel.invertX'    : 'Invert the plot along the X axis.',
+    'PlotPanel.invertY'    : 'Invert the plot along the Y axis.',
     'PlotPanel.ticks'      : 'Show / hide axis ticks and tick labels.',
     'PlotPanel.grid'       : 'Show hide plot grid.' ,
     'PlotPanel.gridColour' : 'Set the plot grid colour.' ,
@@ -594,6 +600,37 @@ properties = TypeDict({
     'DataSeries.label'     : 'Line label (shown in the legend).',
     'DataSeries.lineWidth' : 'Line width.',
     'DataSeries.lineStyle' : 'Line style.',
+
+    'ComplexTimeSeries.plotReal' :
+    'Plot the real component of a complex image.',
+    'ComplexTimeSeries.plotImaginary' :
+    'Plot the imaginary component of a complex image.',
+    'ComplexTimeSeries.plotMagnitude' :
+    'Plot the magnitude of a complex image.',
+    'ComplexTimeSeries.plotPhase' :
+    'Plot the phase of a complex image.',
+
+    'ComplexPowerSpectrumSeries.plotReal' :
+    'Plot the real component of the power spectrum of a complex image.',
+    'ComplexPowerSpectrumSeries.plotImaginary' :
+    'Plot the imaginary component of the power spectrum of a complex image.',
+    'ComplexPowerSpectrumSeries.plotMagnitude' :
+    'Plot the magnitude of the power spectrum of a complex image.',
+    'ComplexPowerSpectrumSeries.plotPhase' :
+    'Plot the phase of the power spectrum of a complex image.',
+    'ComplexPowerSpectrumSeries.zeroOrderPhaseCorrection' :
+    'Zero order phase correction',
+    'ComplexPowerSpectrumSeries.firstOrderPhaseCorrection' :
+    'First order phase correction',
+
+    'ComplexHistogramSeries.plotReal' :
+    'Plot the histogram of the real component of a complex image.',
+    'ComplexHistogramSeries.plotImaginary' :
+    'Plot the histogram of the imaginary component of a complex image.',
+    'ComplexHistogramSeries.plotMagnitude' :
+    'Plot the histogram of the magnitude of a complex image.',
+    'ComplexHistogramSeries.plotPhase' :
+    'Plot the histogram of the phase of a complex image.',
 
     'FEATTimeSeries.plotData'         : 'Plot the input data.',
     'FEATTimeSeries.plotFullModelFit' : 'Plot the full model fit.',
@@ -806,6 +843,18 @@ actions = TypeDict({
 
 misc = TypeDict({
     'PlotControlPanel.labels' : 'X/Y axis labels.',
+    'PlotControlPanel.logscale' :
+    'If checked, a log (base 10) scale is used for the X/Y axis.',
+    'PlotControlPanel.autoscale' :
+    'If checked, the plot X/Y axis limits are automatically adjusted whenever '
+    'the plot contents change.',
+    'PlotControlPanel.invert' :
+    'If checked, the plot is inverted along the X/Y axis.',
+    'PlotControlPanel.scale' :
+    'A constant scaling factor to apply to the data.',
+    'PlotControlPanel.offset' :
+    'A constant offset to apply to the data.',
+
     'PlotControlPanel.xlim'   : 'X axis data limits.',
     'PlotControlPanel.ylim'   : 'Y axis data limits.',
 

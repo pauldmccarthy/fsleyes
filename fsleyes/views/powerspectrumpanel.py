@@ -179,8 +179,14 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         psargs = [overlay, overlayList, displayCtx, self]
 
-        if self.plotMelodicICs and \
-           isinstance(overlay, fslmelimage.MelodicImage):
+        if isinstance(overlay, fslmesh.Mesh):
+            ps        = psseries.MeshPowerSpectrumSeries(*psargs)
+            opts      = displayCtx.getOpts(overlay)
+            targets   = [displayCtx, opts]
+            propNames = ['location', 'vertexData']
+
+        elif isinstance(overlay, fslmelimage.MelodicImage) and \
+             self.plotMelodicICs:
 
             ps        = psseries.MelodicPowerSpectrumSeries(*psargs)
             targets   = [displayCtx.getOpts(overlay)]
@@ -188,16 +194,14 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         elif isinstance(overlay, fslimage.Image) and overlay.ndim > 3:
 
-            ps        = psseries.VoxelPowerSpectrumSeries(*psargs)
+            if overlay.iscomplex:
+                ps = psseries.ComplexPowerSpectrumSeries(*psargs)
+            else:
+                ps = psseries.VoxelPowerSpectrumSeries(*psargs)
+
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
-
-        elif isinstance(overlay, fslmesh.Mesh):
-            ps        = psseries.MeshPowerSpectrumSeries(*psargs)
-            opts      = displayCtx.getOpts(overlay)
-            targets   = [displayCtx, opts]
-            propNames = ['location', 'vertexData']
 
         else:
             return None, None, None
@@ -218,18 +222,13 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
         xdata, ydata = ps.getData()
 
-        if len(xdata) > 0 and self.plotFrequencies:
-
-            nsamples   = len(ydata)
-            sampleTime = 1
-
-            if isinstance(ps.overlay, fslmelimage.MelodicImage):
-                sampleTime = ps.overlay.tr
-            elif isinstance(ps.overlay, fslimage.Image):
-                sampleTime = ps.overlay.pixdim[3]
-
-            freqStep = 1.0 / (2 * nsamples * sampleTime)
-            xdata    = np.linspace(0.0, (nsamples - 1) * freqStep, nsamples)
+        # if plotFrequencies is disabled, replace
+        # the x axis data with sample numbers
+        if (xdata is not None) and \
+           (ydata is not None) and \
+           (len(xdata) > 0)    and \
+           not self.plotFrequencies:
+            xdata = np.arange(len(ydata))
 
         return xdata, ydata
 

@@ -8,9 +8,14 @@
 classes used by :class:`.PlotPanel` views for plotting data.
 """
 
+
 import logging
 
-import fsleyes_props as props
+import numpy as np
+
+import fsl.utils.idle  as idle
+import fsl.utils.cache as cache
+import fsleyes_props   as props
 
 
 log = logging.getLogger(__name__)
@@ -158,6 +163,15 @@ class DataSeries(props.HasProperties):
         return self.getAllProperties()[0]
 
 
+    def extraSeries(self):
+        """Some ``DataSeries`` types have additional ``DataSeries`` associated
+        with them (see e.g. the :class:`.FEATTimeSeries` class). This method
+        can be overridden to return a list of these extra ``DataSeries``
+        instances. The default implementation returns an empty list.
+        """
+        return []
+
+
     def setData(self, xdata, ydata):
         """Set the data to be plotted. This method is irrelevant if a
         ``DataSeries`` sub-class has overridden :meth:`getData`.
@@ -179,3 +193,104 @@ class DataSeries(props.HasProperties):
         :meth:`setData` method.
         """
         return self.__xdata, self.__ydata
+
+
+class VoxelDataSeries(DataSeries):
+    """The ``VoxelDataSeries`` class is a :class:`DataSeries` class which
+    provides some functionality useful to data series that represent data
+    from a voxel in an :class:`.Image` overlay.
+
+    It contains a built-in cache which is used to prevent repeated access
+    to data from the same voxel.
+    """
+
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``VoxelDataSeries``. All arguments are passed through to
+        the :class:`DataSeries` constructor.
+        """
+
+        DataSeries.__init__(self, *args, **kwargs)
+
+        # We use a cache to store data for the
+        # most recently accessed voxels. This is
+        # done to improve performance on big
+        # images (which may be compressed and
+        # on disk).
+        #
+        # TODO You need to invalidate the cache
+        #      when the image data changes.
+        self.__cache = cache.Cache(maxsize=1000)
+
+
+    def makeLabel(self):
+        """Returns a string representation of this ``VoxelDataSeries``
+        instance.
+        """
+
+        display = self.displayCtx.getDisplay(self.overlay)
+        opts    = display.opts
+        coords  = opts.getVoxel()
+
+        if coords is not None:
+            return '{} [{} {} {}]'.format(display.name,
+                                          coords[0],
+                                          coords[1],
+                                          coords[2])
+        else:
+            return '{} [out of bounds]'.format(display.name)
+
+
+    def getData(self):
+        """Returns the data at the current voxel location. """
+
+        xdata = None
+        ydata = self.dataAtCurrentVoxel()
+
+        if ydata is not None:
+            xdata = np.arange(len(ydata))
+
+        return xdata, ydata
+
+
+    # The PlotPanel uses a new thread to access
+    # data every time the displaycontext location
+    # changes. So we mark this method as mutually
+    # exclusive to prevent multiple
+    # near-simultaneous accesses to the same voxel
+    # location. The first time that a voxel location
+    # is accessed, its data is cached. So when
+    # subsequent (blocked) accesses execute, they
+    # will hit the cache instead of hitting the disk
+    # (which is a good thing).
+    @idle.mutex
+    def dataAtCurrentVoxel(self):
+        """Returns the data for the current voxel of the overlay. The current
+        voxel is dictated by the :attr:`.DisplayContext.location` property.
+        This method is intended to be used by the :meth:`DataSeries.getData`
+        method of sub-classes.
+
+        It may also be overridden by sub-classes, but this implementation
+        should be called to take advantage of the voxel data cache.
+
+        :returns: A ``numpy`` array containing the data at the current
+                  voxel, or ``None`` if the current location is out of bounds
+                  of the image.
+        """
+
+        opts  = self.displayCtx.getOpts(self.overlay)
+        vdim  = opts.volumeDim
+        voxel = opts.getVoxel()
+
+        if voxel is None:
+            return None
+
+        x, y, z = voxel
+
+        data = self.__cache.get((x, y, z, vdim), None)
+
+        if data is None:
+            data = self.overlay[opts.index(voxel, atVolume=False)]
+            self.__cache.put((x, y, z, vdim), data)
+
+        return data

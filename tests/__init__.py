@@ -671,3 +671,16 @@ def zero_centre(infile):
     img.save(outfile)
 
     return outfile
+
+
+
+
+def complex():
+
+    data =      np.linspace(0, 1, 1000).reshape((10, 10, 10)) + \
+           1j * np.linspace(1, 0, 1000).reshape((10, 10, 10))
+    data = np.array(data, dtype=np.complex64)
+    img  = fslimage.Image(data, xform=np.eye(4))
+    img.save('complex.nii.gz')
+
+    return 'complex.nii.gz'

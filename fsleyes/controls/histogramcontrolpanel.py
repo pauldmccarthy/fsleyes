@@ -82,6 +82,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
 
         isimage    = isinstance(hs, hseries.ImageHistogramSeries)
         widgetList = self.getWidgetList()
+        allWidgets = []
 
         autoBin    = props.Widget('autoBin')
         nbins      = props.Widget('nbins',
@@ -99,20 +100,20 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         ignoreZeros     = props.makeWidget(widgetList, hs, 'ignoreZeros')
         includeOutliers = props.makeWidget(widgetList, hs, 'includeOutliers')
 
-        if isimage:
-            showOverlay = props.makeWidget(widgetList, hs, 'showOverlay')
-
         widgetList.AddWidget(ignoreZeros,
                              groupName=groupName,
                              displayName=strings.properties[hs, 'ignoreZeros'],
                              tooltip=fsltooltips.properties[hs, 'ignoreZeros'])
+        allWidgets.append(ignoreZeros)
 
         if isimage:
+            showOverlay = props.makeWidget(widgetList, hs, 'showOverlay')
             widgetList.AddWidget(
                 showOverlay,
                 groupName=groupName,
                 displayName=strings.properties[hs, 'showOverlay'],
                 tooltip=fsltooltips.properties[hs, 'showOverlay'])
+            allWidgets.append(showOverlay)
 
         widgetList.AddWidget(includeOutliers,
                              groupName=groupName,
@@ -132,17 +133,20 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
                              groupName=groupName,
                              displayName=strings.properties[hs, 'dataRange'],
                              tooltip=fsltooltips.properties[hs, 'dataRange'])
+        allWidgets.append(includeOutliers)
+        allWidgets.append(autoBin)
+        allWidgets.append(nbins)
+        allWidgets.append(dataRange)
 
-        if isimage:
-            return [ignoreZeros,
-                    showOverlay,
-                    includeOutliers,
-                    autoBin,
-                    nbins,
-                    dataRange]
-        else:
-            return [ignoreZeros,
-                    includeOutliers,
-                    autoBin,
-                    nbins,
-                    dataRange]
+        if isinstance(hs, hseries.ComplexHistogramSeries):
+            for propName in ['plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widget = props.makeWidget(widgetList, hs, propName)
+                widgetList.AddWidget(
+                    widget,
+                    groupName=groupName,
+                    displayName=strings.properties[hs, propName],
+                    tooltip=fsltooltips.properties[hs, propName])
+                allWidgets.append(widget)
+
+        return allWidgets

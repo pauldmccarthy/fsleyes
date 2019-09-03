@@ -158,6 +158,30 @@ class PlotPanel(viewpanel.ViewPanel):
     """Toggle a :math:`log_{10}` y axis scale. """
 
 
+    invertX = props.Boolean(default=False)
+    """Invert the plot along the X axis. """
+
+
+    invertY = props.Boolean(default=False)
+    """Invert the plot along the Y axis. """
+
+
+    xScale = props.Real(default=1)
+    """Scale to apply to the X axis data. """
+
+
+    yScale = props.Real(default=1)
+    """Scale to apply to the Y axis data. """
+
+
+    xOffset = props.Real(default=0)
+    """Offset to apply to the X axis data. """
+
+
+    yOffset = props.Real(default=0)
+    """Offset to apply to the Y axis data. """
+
+
     ticks = props.Boolean(default=True)
     """Toggle axis ticks and tick labels on/off."""
 
@@ -272,6 +296,12 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yAutoScale',
                          'xLogScale',
                          'yLogScale',
+                         'invertX',
+                         'invertY',
+                         'xScale',
+                         'yScale',
+                         'xOffset',
+                         'yOffset',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -355,6 +385,12 @@ class PlotPanel(viewpanel.ViewPanel):
                          'yAutoScale',
                          'xLogScale',
                          'yLogScale',
+                         'invertX',
+                         'invertY',
+                         'xScale',
+                         'yScale',
+                         'xOffset',
+                         'yOffset',
                          'ticks',
                          'grid',
                          'gridColour',
@@ -584,8 +620,12 @@ class PlotPanel(viewpanel.ViewPanel):
         # to preserve the limits that the
         # user set. These are passed to
         # the __drawDataSeries method.
-        axxlim = axis.get_xlim()
-        axylim = axis.get_ylim()
+        #
+        # Make sure the limits are ordered
+        # as (min, max), as they won't be
+        # if invertX/invertY are active.
+        axxlim = list(sorted(axis.get_xlim()))
+        axylim = list(sorted(axis.get_ylim()))
 
         # Here we are preparing the data for
         # each data series on separate threads,
@@ -706,6 +746,8 @@ class PlotPanel(viewpanel.ViewPanel):
             if not ds.enabled:
                 continue
 
+            xdata      = self.xOffset + self.xScale * xdata
+            ydata      = self.yOffset + self.yScale * ydata
             xlim, ylim = self.__drawOneDataSeries(ds,
                                                   xdata,
                                                   ydata,
@@ -765,8 +807,10 @@ class PlotPanel(viewpanel.ViewPanel):
 
         # Limits
         if xmin != xmax:
-            axis.set_xlim((xmin, xmax))
-            axis.set_ylim((ymin, ymax))
+            if self.invertX: axis.set_xlim((xmax, xmin))
+            else:            axis.set_xlim((xmin, xmax))
+            if self.invertY: axis.set_ylim((ymax, ymin))
+            else:            axis.set_ylim((ymin, ymax))
 
         # legend
         labels = [ds.label for ds in dataSeries if ds.label is not None]
@@ -1107,29 +1151,26 @@ class OverlayPlotPanel(PlotPanel):
         # mappings, containing a DataSeries instance for
         # each compatible overlay in the overlay list.
         #
-        # Different DataSeries types need to be re-drawn
-        # when different properties change. For example,
-        # a VoxelTimeSeries instance needs to be redrawn
-        # when the DisplayContext.location property
-        # changes, whereas a MelodicTimeSeries instance
-        # needs to be redrawn when the VolumeOpts.volume
-        # property changes.
+        # refreshProps is a dict of
         #
-        # Therefore, the refreshProps dictionary contains
-        # a set of
+        #   {overlay : ([targets], [propNames]}
         #
-        #   {overlay : ([targets], [propNames])}
+        # mappings, containing the target instances and
+        # properties which, when those properties change,
+        # need to trigger a refresh of the plot.
         #
-        # mappings - for each overlay, a list of
-        # target objects (e.g. DisplayContext, VolumeOpts,
-        # etc), and a list of property names on each,
-        # defining the properties that need to trigger a
-        # redraw.
+        # refreshCounts is a dict of:
         #
-        # See the createDataSeries method for more
-        # information.
-        self.__dataSeries   = {}
-        self.__refreshProps = {}
+        #   {target, propName : dscount}
+
+        # mappings, containing all targets and
+        # associated property names on which a listener
+        # is currently registered, and the count of
+        # DataSeries instances which are interested
+        # in them.
+        self.__dataSeries    = {}
+        self.__refreshProps  = {}
+        self.__refreshCounts = {}
 
         self            .addListener('dataSeries',
                                      self.__name,
@@ -1152,8 +1193,9 @@ class OverlayPlotPanel(PlotPanel):
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
 
-        self.__dataSeries   = None
-        self.__refreshProps = None
+        self.__dataSeries    = None
+        self.__refreshProps  = None
+        self.__refreshCounts = None
 
         PlotPanel.destroy(self)
 
@@ -1176,6 +1218,20 @@ class OverlayPlotPanel(PlotPanel):
         # Have data series
         dss = [self.getDataSeries(o) for o in overlays]
         dss = [ds for ds in dss if ds is not None]
+
+        # Gather any extra time series
+        # associated with the base time
+        # series objects.
+        for i, ds in enumerate(list(reversed(dss))):
+
+            extras = ds.extraSeries()
+            dss    = dss[:i + 1] + extras + dss[i + 1:]
+
+            # If a base time series is disabled,
+            # its additional ones should also
+            # be disabled
+            for eds in extras:
+                eds.enabled = ds.enabled
 
         # Remove duplicates
         unique = []
@@ -1286,8 +1342,7 @@ class OverlayPlotPanel(PlotPanel):
                                plotting.MelodicPowerSpectrumSeries)):
                 copy._volume = opts.volume
 
-            elif isinstance(ds, (plotting.VoxelTimeSeries,
-                                 plotting.VoxelPowerSpectrumSeries)):
+            elif isinstance(ds, plotting.VoxelDataSeries):
                 copy._location = opts.getVoxel()
 
         self.dataSeries.extend(toAdd)
@@ -1364,7 +1419,13 @@ class OverlayPlotPanel(PlotPanel):
             ds.destroy()
 
         for t, p in zip(targets, propNames):
-            t.removeListener(p, self.__name)
+            count = self.__refreshCounts[t, p]
+
+            if count - 1 == 0:
+                self.__refreshCounts.pop((t, p))
+                t.removeListener(p, self.__name)
+            else:
+                self.__refreshCounts[t, p] = count - 1
 
 
     def updateDataSeries(self, initialState=None):
@@ -1443,15 +1504,20 @@ class OverlayPlotPanel(PlotPanel):
 
             for target, propName in zip(targets, propNames):
 
-                log.debug('Adding listener on {}.{} for {} data '
-                          'series'.format(type(target).__name__,
-                                          propName,
-                                          overlay))
+                count = self.__refreshCounts.get((target, propName), 0)
+                self.__refreshCounts[target, propName] = count + 1
 
-                target.addListener(propName,
-                                   self.__name,
-                                   self.asyncDraw,
-                                   overwrite=True)
+                if count == 0:
+
+                    log.debug('Adding listener on {}.{} for {} data '
+                              'series'.format(type(target).__name__,
+                                              propName,
+                                              overlay))
+
+                    target.addListener(propName,
+                                       self.__name,
+                                       self.asyncDraw,
+                                       overwrite=True)
 
 
     @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)

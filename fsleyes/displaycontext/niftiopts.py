@@ -596,6 +596,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         value of :attr:`transform`.
         """
 
+        if not self.__child:
+            raise RuntimeError('getTransform cannot be called on '
+                               'a parent NiftiOpts instance')
+
         if xform is None:
             xform = self.transform
 
@@ -671,6 +675,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         :returns:    The ``voxels``, rounded appropriately.
         """
+
+        if not self.__child:
+            raise RuntimeError('roundVoxels cannot be called on '
+                               'a parent NiftiOpts instance')
 
         if daxes is None:
             daxes = list(range(3))
@@ -760,6 +768,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                      transformation.
         """
 
+        if not self.__child:
+            raise RuntimeError('transformCoords cannot be called on '
+                               'a parent NiftiOpts instance')
+
         xform = self.getTransform(from_, to_)
 
         if pre  is not None: xform = transform.concat(xform, pre)
@@ -796,6 +808,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :returns:    ``None`` if the location is outside of the image bounds,
                      unless ``clip=False``.
         """
+
+        if not self.__child:
+            raise RuntimeError('getVoxel cannot be called on '
+                               'a parent NiftiOpts instance')
 
         if xyz is not None: x, y, z = xyz
         else:               x, y, z = self.displayCtx.location.xyz

@@ -82,26 +82,37 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         return allWidgets
 
 
-    def generateDataSeriesWidgets(self, ps, groupName):
+    def generateCustomDataSeriesWidgets(self, ps, groupName):
         """Overrides :meth:`.PlotControlPanel.generateDataSeriesWidgets`.
         Adds some widgets for controlling :class:`.PowerSpectrumSeries`
         instances.
         """
-        allWidgets = plotcontrol.PlotControlPanel.generateDataSeriesWidgets(
-            self, ps, groupName)
-
-        if not isinstance(ps, powerspectrumseries.PowerSpectrumSeries):
-            return
 
         widgetList = self.getWidgetList()
+        allWidgets = []
+
         varNorm    = props.makeWidget(widgetList, ps, 'varNorm')
 
         widgetList.AddWidget(varNorm,
                              displayName=strings.properties[ps, 'varNorm'],
                              tooltip=strings.properties[ps, 'varNorm'],
                              groupName=groupName)
+        allWidgets.append(varNorm)
 
-        return allWidgets + [varNorm]
+        if isinstance(ps, powerspectrumseries.ComplexPowerSpectrumSeries):
+            for propName in ['zeroOrderPhaseCorrection',
+                             'firstOrderPhaseCorrection',
+                             'plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widg = props.makeWidget(widgetList, ps, propName)
+                widgetList.AddWidget(
+                    widg,
+                    displayName=strings.properties[ps, propName],
+                    tooltip=fsltooltips.properties[ps, propName],
+                    groupName=groupName)
+                allWidgets.append(widg)
+
+        return allWidgets
 
 
     def __plotMelodicICsChanged(self, *a):

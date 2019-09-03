@@ -10,20 +10,21 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 
 
 import fsleyes_props               as props
+import fsl.data.image              as fslimage
 import fsl.data.featimage          as fslfeatimage
 
 import fsleyes.tooltips            as fsltooltips
 import fsleyes.plotting.timeseries as timeseries
 import fsleyes.strings             as strings
-from . import                         plotcontrolpanel
+from . import plotcontrolpanel     as plotctrl
 
 
-class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
+class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     """The ``TimeSeriesControlPanel`` is a :class:`.PlotContrlPanel` which
     allows the user to configure a :class:`.TimeSeriesPanel`. It contains
     controls which are linked to the properties of the ``TimeSeriesPanel``,
     (which include properties defined on the :class:`.PlotPanel` base class),
-    and the :class:`.TimeSeries` class.
+    and the :class:`.DataSeries` class.
 
 
     A ``TimeSeriesControlPanel`` looks something like this:
@@ -43,7 +44,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
        properties of the :class:`.PlotPanel` base class.
 
      - The *Settings for the current time course* section has controls which
-       are linked to properties of the :class:`.TimeSeries` class. These
+       are linked to properties of the :class:`.DataSeries` class. These
        properties define how the *current* time course is displayed (see the
        :class:`.TimeSeriesPanel` class documentation).
 
@@ -58,7 +59,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         through to the :meth:`.PlotControlPanel.__init__` method.
         """
 
-        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
+        plotctrl.PlotControlPanel.__init__(self, *args, **kwargs)
 
         tsPanel = self.getPlotPanel()
         tsPanel.addListener('plotMelodicICs',
@@ -73,7 +74,7 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         """
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self.name)
-        plotcontrolpanel.PlotControlPanel.destroy(self)
+        plotctrl.PlotControlPanel.destroy(self)
 
 
     @staticmethod
@@ -119,19 +120,32 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
     def generateCustomDataSeriesWidgets(self, ts, groupName):
         """Overrides :meth:`.PlotControlPanel.generateCustomDataSeriesWidgets`.
 
-        If the given :class:`.TimeSeries` is a :class:`.FEATTimeSeries`
-        instance, this method adds some widgets for controlling the
-        FEAT-related settings of the instance.
+        Adds some widgets to the widget list for certain time series types.
+        """
+
+        overlay = ts.overlay
+
+        if (isinstance(overlay, fslfeatimage.FEATImage)    and
+            isinstance(ts,      timeseries.FEATTimeSeries) and
+            overlay.hasStats()):
+            return self.__generateFeatWidgets(ts, groupName)
+
+        elif isinstance(ts, timeseries.ComplexTimeSeries):
+            return self.__generateComplexWidgets(ts, groupName)
+
+        else:
+            return []
+
+
+    def __generateFeatWidgets(self, ts, groupName):
+        """Called by :meth:`generateCustomDataSeriesWidgets`. Generates
+        widgets for :class:`.FEATTimeSeries` options, and adds them
+        to the widget list.
         """
 
         overlay    = ts.overlay
         widgetList = self.getWidgetList()
         allWidgets = []
-
-        if not (isinstance(overlay, fslfeatimage.FEATImage)    and
-                isinstance(ts,      timeseries.FEATTimeSeries) and
-                overlay.hasStats()):
-            return allWidgets
 
         full    = props.makeWidget(     widgetList, ts, 'plotFullModelFit')
         res     = props.makeWidget(     widgetList, ts, 'plotResiduals')
@@ -209,11 +223,33 @@ class TimeSeriesControlPanel(plotcontrolpanel.PlotControlPanel):
         return allWidgets
 
 
+    def __generateComplexWidgets(self, ts, groupName):
+        """Called by :meth:`generateCustomDataSeriesWidgets`. Generates
+        widgets for :class:`.ComplexTimeSeries` options, and adds them
+        to the widget list.
+        """
+        widgetList = self.getWidgetList()
+        allWidgets = []
+
+        if isinstance(ts, timeseries.ComplexTimeSeries):
+            for propName in ['plotReal', 'plotImaginary',
+                             'plotMagnitude', 'plotPhase']:
+                widg = props.makeWidget(widgetList, ts, propName)
+                widgetList.AddWidget(
+                    widg,
+                    displayName=strings.properties[ts, propName],
+                    tooltip=fsltooltips.properties[ts, propName],
+                    groupName=groupName)
+                allWidgets.append(widg)
+
+        return allWidgets
+
+
     def __plotMelodicICsChanged(self, *a):
         """Called when the :attr:`.TimeSeriesPanel.plotMelodicICs` property
         changes. If the current overlay is a :class:`.MelodicImage`,
         re-generates the widgets in the *current time course* section, as
-        the :class:`.TimeSeries` instance associated with the overlay may
+        the :class:`.DataSeries` instance associated with the overlay may
         have been re-created.
         """
         self.refreshDataSeriesWidgets()

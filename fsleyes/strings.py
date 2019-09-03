@@ -625,27 +625,30 @@ labels = TypeDict({
 
     'PlotControlPanel.plotSettings'       : 'General plot settings',
     'PlotControlPanel.customPlotSettings' : 'Custom plot settings',
-    'PlotControlPanel.currentDSSettings'  : 'Plot settings for '
-                                            'selected overlay ({})',
-    'PlotControlPanel.customDSSettings'   : 'Custom plot settings for '
-                                            'selected overlay ({})',
+    'PlotControlPanel.currentDSSettings'  : 'Plot settings for {}',
+    'PlotControlPanel.customDSSettings'   : 'Custom plot settings for {}',
     'PlotControlPanel.xlim'               : 'X limits',
     'PlotControlPanel.ylim'               : 'Y limits',
     'PlotControlPanel.labels'             : 'Labels',
+    'PlotControlPanel.logscale'           : 'Log scale',
+    'PlotControlPanel.invert'             : 'Invert',
+    'PlotControlPanel.autoscale'          : 'Auto scale',
+    'PlotControlPanel.scale'              : 'Axis scale',
+    'PlotControlPanel.offset'             : 'Axis offset',
     'PlotControlPanel.xlabel'             : 'X',
     'PlotControlPanel.ylabel'             : 'Y',
 
-
     'TimeSeriesControlPanel.customPlotSettings' : 'Time series settings',
-    'TimeSeriesControlPanel.customDSSettings'   : 'FEAT settings for '
-                                                  'selected overlay ({})',
+    'TimeSeriesControlPanel.customDSSettings'   : 'Time series settings for '
+                                                  '{}',
 
     'PowerSpectrumControlPanel.customPlotSettings' : 'Power spectrum plot '
                                                      'settings',
+    'PowerSpectrumControlPanel.customDSSettings' : 'Power spectrum '
+                                                   'settings for {}',
 
     'HistogramControlPanel.customPlotSettings' : 'Histogram plot settings',
-    'HistogramControlPanel.customDSSettings'   : 'Histogram settings for '
-                                                  'selected overlay ({})',
+    'HistogramControlPanel.customDSSettings'   : 'Histogram settings for {}',
 
     'FEATModelFitTimeSeries.full' : 'Full model fit',
     'FEATModelFitTimeSeries.cope' : 'COPE{} fit: {}',
@@ -655,6 +658,16 @@ labels = TypeDict({
     'FEATPartialFitTimeSeries.pe'   : 'Reduced against PE{}',
 
     'FEATResidualTimeSeries'     : 'Residuals',
+
+    'ComplexTimeSeries'   : 'real',
+    'ImaginaryTimeSeries' : 'imaginary',
+    'MagnitudeTimeSeries' : 'magnitude',
+    'PhaseTimeSeries'     : 'phase',
+
+    'ComplexPowerSpectrumSeries'   : 'real',
+    'ImaginaryPowerSpectrumSeries' : 'imaginary',
+    'MagnitudePowerSpectrumSeries' : 'magnitude',
+    'PhasePowerSpectrumSeries'     : 'phase',
 
     'ClusterPanel.clustName'     : 'Z statistics for COPE{} ({})',
 
@@ -962,6 +975,8 @@ properties = TypeDict({
     'PlotPanel.yAutoScale' : 'Auto-scale (y axis)',
     'PlotPanel.xLogScale'  : 'Log scale (x axis)',
     'PlotPanel.yLogScale'  : 'Log scale (y axis)',
+    'PlotPanel.invertX'    : 'Invert X axis',
+    'PlotPanel.invertY'    : 'Invert Y axis',
     'PlotPanel.xlabel'     : 'X label',
     'PlotPanel.ylabel'     : 'Y label',
 
@@ -984,6 +999,20 @@ properties = TypeDict({
     'DataSeries.lineWidth' : 'Line width',
     'DataSeries.lineStyle' : 'Line style',
 
+    'ComplexTimeSeries.plotReal'      : 'Plot real',
+    'ComplexTimeSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexTimeSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexTimeSeries.plotPhase'     : 'Plot phase',
+
+    'ComplexPowerSpectrumSeries.plotReal'      : 'Plot real',
+    'ComplexPowerSpectrumSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexPowerSpectrumSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexPowerSpectrumSeries.plotPhase'     : 'Plot phase',
+    'ComplexPowerSpectrumSeries.zeroOrderPhaseCorrection' :
+    'Zero order phase correction (degrees)',
+    'ComplexPowerSpectrumSeries.firstOrderPhaseCorrection' :
+    'First order phase correction (seconds)',
+
     'HistogramSeries.nbins'           : 'Number of bins',
     'HistogramSeries.autoBin'         : 'Automatic histogram binning',
     'HistogramSeries.ignoreZeros'     : 'Ignore zeros',
@@ -991,6 +1020,11 @@ properties = TypeDict({
     'HistogramSeries.volume'          : 'Volume',
     'HistogramSeries.dataRange'       : 'Data range',
     'HistogramSeries.showOverlay'     : 'Show 3D histogram overlay',
+
+    'ComplexHistogramSeries.plotReal'      : 'Plot real',
+    'ComplexHistogramSeries.plotImaginary' : 'Plot imaginary',
+    'ComplexHistogramSeries.plotMagnitude' : 'Plot magnitude',
+    'ComplexHistogramSeries.plotPhase'     : 'Plot phase',
 
     'PowerSpectrumSeries.varNorm'     : 'Normalise to unit variance',
 
@@ -1059,6 +1093,8 @@ properties = TypeDict({
     'Volume3DOpts.clipPosition'            : 'Clip position (%)',
     'Volume3DOpts.clipInclination'         : 'Clip Z angle',
     'Volume3DOpts.clipAzimuth'             : 'Clip rotation',
+
+    'ComplexOpts.component' : 'Component',
 
     'MaskOpts.colour'        : 'Colour',
     'MaskOpts.invert'        : 'Invert',
@@ -1236,9 +1272,15 @@ choices = TypeDict({
     'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
                            'direction' : 'Colour by direction'},
 
+    'ComplexOpts.component' :{ 'real'  : 'Real',
+                               'imag'  : 'Imaginary',
+                               'mag'   : 'Magnitude',
+                               'phase' : 'Phase'},
+
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
         'rgb'            : '3D/4D RGB(A) volume',
+        'complex'        : 'Complex volume',
         'mask'           : '3D/4D mask image',
         'mip'            : 'Max intensity projection',
         'label'          : 'Label image',

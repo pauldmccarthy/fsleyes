@@ -195,16 +195,12 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         plotPanel  = self.__plotPanel
         allWidgets = []
 
-        plotProps = ['xLogScale',
-                     'yLogScale',
-                     'smooth',
+        plotProps = ['smooth',
                      'legend',
                      'ticks',
                      'grid',
                      'gridColour',
-                     'bgColour',
-                     'xAutoScale',
-                     'yAutoScale']
+                     'bgColour']
 
         for prop in plotProps:
             widget = props.makeWidget(widgetList, plotPanel, prop)
@@ -215,11 +211,57 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
                 tooltip=fsltooltips.properties[plotPanel, prop],
                 groupName=groupName)
 
-        limits = props.makeListWidgets(widgetList, plotPanel, 'limits')
-        xlims  = wx.BoxSizer(wx.HORIZONTAL)
-        ylims  = wx.BoxSizer(wx.HORIZONTAL)
+        limits     = props.makeListWidgets(widgetList, plotPanel, 'limits')
+        xlogscale  = props.makeWidget(widgetList, plotPanel, 'xLogScale')
+        ylogscale  = props.makeWidget(widgetList, plotPanel, 'yLogScale')
+        xinvert    = props.makeWidget(widgetList, plotPanel, 'invertX')
+        yinvert    = props.makeWidget(widgetList, plotPanel, 'invertY')
+        xscale     = props.makeWidget(widgetList, plotPanel, 'xScale')
+        yscale     = props.makeWidget(widgetList, plotPanel, 'yScale')
+        xoffset    = props.makeWidget(widgetList, plotPanel, 'xOffset')
+        yoffset    = props.makeWidget(widgetList, plotPanel, 'yOffset')
+        xautoscale = props.makeWidget(widgetList, plotPanel, 'xAutoScale')
+        yautoscale = props.makeWidget(widgetList, plotPanel, 'yAutoScale')
+        xlabel     = props.makeWidget(widgetList, plotPanel, 'xlabel')
+        ylabel     = props.makeWidget(widgetList, plotPanel, 'ylabel')
 
         allWidgets.extend(limits)
+        allWidgets.extend([xlogscale,
+                           ylogscale,
+                           xinvert,
+                           yinvert,
+                           xautoscale,
+                           yautoscale,
+                           xscale,
+                           yscale,
+                           xoffset,
+                           yoffset,
+                           xlabel,
+                           ylabel])
+
+        pairs = [('logscale',  xlogscale,  ylogscale),
+                 ('invert',    xinvert,    yinvert),
+                 ('autoscale', xautoscale, yautoscale),
+                 ('scale',     xscale,     yscale),
+                 ('offset',    xoffset,    yoffset),
+                 ('labels',    xlabel,     ylabel)]
+
+        for key, xwidget, ywidget in pairs:
+
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+            sizer.Add(wx.StaticText(widgetList,
+                                    label=strings.labels[self, 'xlabel']))
+            sizer.Add(xwidget, flag=wx.EXPAND, proportion=1)
+            sizer.Add(wx.StaticText(widgetList,
+                                    label=strings.labels[self, 'ylabel']))
+            sizer.Add(ywidget, flag=wx.EXPAND, proportion=1)
+
+            widgetList.AddWidget(
+                sizer,
+                displayName=strings.labels[self, key],
+                tooltip=fsltooltips.misc[  self, key],
+                groupName=groupName)
 
         # Store refs to the limit widgets
         # so they can be enabled/disabled
@@ -228,23 +270,13 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         self.__xLimitWidgets = [limits[0], limits[1]]
         self.__yLimitWidgets = [limits[2], limits[3]]
 
+        xlims = wx.BoxSizer(wx.HORIZONTAL)
+        ylims = wx.BoxSizer(wx.HORIZONTAL)
+
         xlims.Add(limits[0], flag=wx.EXPAND, proportion=1)
         xlims.Add(limits[1], flag=wx.EXPAND, proportion=1)
         ylims.Add(limits[2], flag=wx.EXPAND, proportion=1)
         ylims.Add(limits[3], flag=wx.EXPAND, proportion=1)
-
-        xlabel = props.makeWidget(widgetList, plotPanel, 'xlabel')
-        ylabel = props.makeWidget(widgetList, plotPanel, 'ylabel')
-        labels = wx.BoxSizer(wx.HORIZONTAL)
-
-        allWidgets.extend([xlabel, ylabel])
-
-        labels.Add(wx.StaticText(widgetList,
-                                 label=strings.labels[self, 'xlabel']))
-        labels.Add(xlabel, flag=wx.EXPAND, proportion=1)
-        labels.Add(wx.StaticText(widgetList,
-                                 label=strings.labels[self, 'ylabel']))
-        labels.Add(ylabel, flag=wx.EXPAND, proportion=1)
 
         widgetList.AddWidget(
             xlims,
@@ -255,11 +287,6 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
             ylims,
             displayName=strings.labels[self, 'ylim'],
             tooltip=fsltooltips.misc[  self, 'ylim'],
-            groupName=groupName)
-        widgetList.AddWidget(
-            labels,
-            displayName=strings.labels[self, 'labels'],
-            tooltip=fsltooltips.misc[  self, 'labels'],
             groupName=groupName)
 
         return allWidgets

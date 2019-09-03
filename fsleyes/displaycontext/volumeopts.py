@@ -457,3 +457,89 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
                                      overlayList,
                                      displayCtx,
                                      **kwargs)
+
+
+
+class ComplexOpts(VolumeOpts):
+    """The ``ComplexOpts`` class is a specialisation of :class:`VolumeOpts` for
+    images with a complex data type.
+    """
+
+
+    component = props.Choice(('real', 'imag', 'mag', 'phase'))
+    """How to display the complex data:
+
+     - ``'real'``   - display the real component
+     - ``'imag'```  - display the imaginary component
+     - ``'mag'```   - display the magnitude
+     - ``'phase'``` - display the phase
+    """
+
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``ComplexOpts``. All arguments are passed through to
+        the :class:`VolumeOpts` constructor.
+        """
+        self.__dataRanges = {}
+        VolumeOpts.__init__(self, *args, **kwargs)
+        self.addListener('component', self.name, self.__componentChanged)
+
+
+    def destroy(self):
+        """Must be called when this ``ComplexOpts`` is no longer needed. """
+        VolumeOpts.destroy(self)
+
+
+    def getDataRange(self):
+        """Overrides :meth:`.ColourMapOpts.getDataRange`.
+        Calculates and returns the data range of the current
+        :attr:`component`.
+        """
+
+        drange = self.__dataRanges.get(self.component, None)
+        if drange is None:
+            data   = self.getComponent(self.overlay[:])
+            drange = np.nanmin(data), np.nanmax(data)
+            self.__dataRanges[self.component] = drange
+        return drange
+
+
+    def getComponent(self, data):
+        """Calculates and returns the current :attr:`component` from the given
+        data, assumed to be complex.
+        """
+        if   self.component == 'real':  return self.getReal(data)
+        elif self.component == 'imag':  return self.getImaginary(data)
+        elif self.component == 'mag':   return self.getMagnitude(data)
+        elif self.component == 'phase': return self.getPhase(data)
+
+
+    @staticmethod
+    def getReal(data):
+        """Return the real component of the given complex data. """
+        return data.real
+
+
+    @staticmethod
+    def getImaginary(data):
+        """Return the imaginary component of the given complex data. """
+        return data.imag
+
+
+    @staticmethod
+    def getMagnitude(data):
+        """Return the magnitude of the given complex data. """
+        return (data.real ** 2 + data.imag ** 2) ** 0.5
+
+
+    @staticmethod
+    def getPhase(data):
+        """Return the phase of the given complex data. """
+        return np.arctan2(data.imag, data.real)
+
+
+    def __componentChanged(self, *a):
+        """Called when the :attr:`component` changes. Calls
+        :meth:`.ColourMapOpts.updateDataRange`.
+        """
+        self.updateDataRange()

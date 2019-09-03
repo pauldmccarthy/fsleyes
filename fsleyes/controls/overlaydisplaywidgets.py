@@ -170,6 +170,10 @@ def _initPropertyList_VolumeOpts(threedee):
     return plist
 
 
+def _initPropertyList_ComplexOpts(threedee):
+    return ['component']
+
+
 def _init3DPropertyList_VolumeOpts():
     return ['blendFactor',
             'numSteps',
@@ -440,6 +444,14 @@ def _init3DWidgetSpec_VolumeOpts():
         'clipInclination'   : props.Widget('clipInclination',
                                            showLimits=False),
         'custom_clipPlanes' : _VolumeOpts_3DClipPlanes,
+    }
+
+
+def _initWidgetSpec_ComplexOpts(threedee):
+    return {
+        'component' : props.Widget(
+            'component',
+            labels=strings.choices['ComplexOpts.component'])
     }
 
 

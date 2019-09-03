@@ -849,59 +849,9 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             # corresponds to a vertex, show some info
             # about that vertex
             if isinstance(overlay, fslmesh.Mesh):
-                vidx  = opts.getVertex()
-                vd    = opts.getVertexData()
-                vdidx = opts.vertexDataIndex
-
-                if vidx is None:
-                    info = '[no vertex]'
-
-                else:
-                    # some vertex data has been
-                    # loaded for this mesh.
-                    if vd is not None:
-
-                        # time series/multiple data points per
-                        # vertex - display the time/data index
-                        # as well
-                        if vd.shape[1] > 1:
-                            info = '[{}, {}]: {}'.format(vidx,
-                                                         vdidx,
-                                                         vd[vidx, vdidx])
-
-                        # Only one scalar value per vertex -
-                        # don't bother showing the vertex
-                        # data index
-                        else:
-                            info = '[{}]: {}'.format(vidx, vd[vidx, vdidx])
-
-                    else:
-                        info = '[{}]'.format(vidx)
-
+                info = self.__genMeshInfo(overlay, opts)
             elif isinstance(overlay, fslimage.Image):
-
-                vloc = opts.getVoxel()
-
-                if vloc is not None:
-                    vloc = tuple(int(v) for v in vloc)
-                    vloc = opts.index(vloc)
-                    vval = overlay[vloc]
-                    vloc = ' '.join(map(str, vloc))
-
-                    if not np.isscalar(vval):
-                        vval = np.asscalar(vval)
-
-                    if opts.overlayType == 'label':
-                        lbl = opts.lut.get(int(vval))
-                        if lbl is None: lbl = 'no label'
-                        else:           lbl = lbl.name
-                        info = '[{}]: {} / {}'.format(vloc, vval, lbl)
-
-                    else:
-                        info = '[{}]: {}'.format(vloc, vval)
-
-                else:
-                    info = strings.labels[self, 'outOfBounds']
+                info = self.__genImageInfo(overlay, opts)
             else:
                 info = '{}'.format(strings.labels[self, 'noData'])
 
@@ -923,6 +873,74 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         self.__info.Refresh()
 
 
+    def __genMeshInfo(self, ovl, opts):
+        """Generate an info line for the given :class:`.Mesh` overlay. """
+        vidx  = opts.getVertex()
+        vd    = opts.getVertexData()
+        vdidx = opts.vertexDataIndex
+
+        if vidx is None:
+            info = '[no vertex]'
+
+        else:
+            # some vertex data has been
+            # loaded for this mesh.
+            if vd is not None:
+
+                # time series/multiple data points per
+                # vertex - display the time/data index
+                # as well
+                if vd.shape[1] > 1:
+                    info = '[{}, {}]: {}'.format(vidx,
+                                                 vdidx,
+                                                 vd[vidx, vdidx])
+
+                # Only one scalar value per vertex -
+                # don't bother showing the vertex
+                # data index
+                else:
+                    info = '[{}]: {}'.format(vidx, vd[vidx, vdidx])
+
+            else:
+                info = '[{}]'.format(vidx)
+        return info
+
+
+    def __genImageInfo(self, ovl, opts):
+        """Generate an info line for the given :class:`.Image` overlay. """
+
+        vloc = opts.getVoxel()
+
+        if vloc is not None:
+            vloc = tuple(int(v) for v in vloc)
+            vloc = opts.index(vloc)
+            vval = ovl[vloc]
+            vloc = ' '.join(map(str, vloc))
+
+            if not np.isscalar(vval):
+                vval = np.asscalar(vval)
+
+            if opts.overlayType == 'label':
+                lbl = opts.lut.get(int(vval))
+                if lbl is None: lbl = 'no label'
+                else:           lbl = lbl.name
+                info = '[{}]: {} / {}'.format(vloc, vval, lbl)
+
+            elif opts.overlayType == 'complex':
+                if opts.component in ('real', 'imag'):
+                    info = '[{}]: {}'.format(vloc, vval)
+                else:
+                    cval = opts.getComponent(vval)
+                    info = '[{}]: {} ({}: {})'.format(
+                        vloc, vval, opts.component, cval)
+            else:
+                info = '[{}]: {}'.format(vloc, vval)
+
+        else:
+            info = strings.labels[self, 'outOfBounds']
+        return info
+
+
 DISPLAYOPTS_BOUNDS = td.TypeDict({
     'DisplayOpts' : ['bounds'],
     'MeshOpts'    : ['refImage'],
@@ -936,8 +954,9 @@ listeners on the properties specified in this dictionary.
 
 
 DISPLAYOPTS_INFO = td.TypeDict({
-    'NiftiOpts' : ['volume'],
-    'MeshOpts'  : ['vertexDataIndex'],
+    'NiftiOpts'   : ['volume'],
+    'MeshOpts'    : ['vertexDataIndex'],
+    'ComplexOpts' : ['component']
 })
 """Different :class:`.DisplayOpts` types have different properties which
 affect the current overlay location information.  Therefore, when the current

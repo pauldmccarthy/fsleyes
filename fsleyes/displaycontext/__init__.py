@@ -75,6 +75,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.niftiopts.NiftiOpts
    ~fsleyes.displaycontext.volumeopts.VolumeOpts
    ~fsleyes.displaycontext.volumeopts.VolumeRGBOpts
+   ~fsleyes.displaycontext.volumeopts.ComplexOpts
    ~fsleyes.displaycontext.volume3dopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
    ~fsleyes.displaycontext.vectoropts.VectorOpts
@@ -159,6 +160,7 @@ from .scene3dopts    import Scene3DOpts
 from .colourmapopts  import ColourMapOpts
 from .niftiopts      import NiftiOpts
 from .volumeopts     import VolumeOpts
+from .volumeopts     import ComplexOpts
 from .volumeopts     import VolumeRGBOpts
 from .volume3dopts   import Volume3DOpts
 from .maskopts       import MaskOpts
@@ -179,8 +181,9 @@ from .displaycontext import InvalidOverlayError
 OVERLAY_TYPES = td.TypeDict({
 
     'Image'          : ['volume',     'mask',  'rgbvector',
-                        'linevector', 'label', 'sh', 'tensor',
-                        'mip', 'rgb'],
+                        'linevector', 'label', 'sh',
+                        'tensor',     'mip',   'rgb',
+                        'complex'],
     'Mesh'           : ['mesh'],
     'DTIFitTensor'   : ['tensor', 'rgbvector', 'linevector'],
 })
@@ -210,6 +213,7 @@ DISPLAY_OPTS_MAP = td.TypeDict({
     'Nifti.sh'            : SHOpts,
     'Nifti.mip'           : MIPOpts,
     'Nifti.rgb'           : VolumeRGBOpts,
+    'Nifti.complex'       : ComplexOpts,
     'Mesh.mesh'           : MeshOpts,
     'VTKMesh.mesh'        : MeshOpts,
     'GiftiMesh.mesh'      : GiftiOpts,
@@ -235,9 +239,10 @@ def getOverlayTypes(overlay):
     if not isinstance(overlay, fslimage.Image):
         return possibleTypes
 
-    shape = overlay.shape
-    ndims = len(shape)
-    nvals = overlay.nvals
+    shape     = overlay.shape
+    ndims     = len(shape)
+    nvals     = overlay.nvals
+    iscomplex = overlay.iscomplex
 
     # Could this image be a vector image?
     couldBeVector = ((ndims == 4 and shape[-1] == 3) or
@@ -250,8 +255,14 @@ def getOverlayTypes(overlay):
     couldBeTensor = ndims == 4 and shape[-1] == 6
     couldBeSH     = ndims == 4 and shape[-1] in shopts.SH_COEFFICIENT_TYPE
 
-    # Special cases:
-    #
+    # Special cases
+
+    # If the image is complex, make complex the
+    # default overlay type
+    possibleTypes.remove('complex')
+    if iscomplex:
+        possibleTypes.insert(0, 'complex')
+
     # If the overlay looks like a vector image,
     # and its nifti intent code is set as such,
     # make rgbvector the default overlay type

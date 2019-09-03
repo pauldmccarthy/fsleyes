@@ -26,7 +26,7 @@ import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
 import fsleyes.actions.addmaskdataseries       as addmaskdataseries
 import fsleyes.strings                         as strings
-import fsleyes.plotting                        as plotting
+import fsleyes.plotting.timeseries             as timeseries
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
 from . import                                     plotpanel
@@ -46,18 +46,18 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        :align: center
 
 
-    A ``TimeSeriesPanel`` plots one or more :class:`.TimeSeries` instances,
-    which encapsulate time series data from an overlay. All ``TimeSeries``
-    classes are defined in the :mod:`.plotting.timeseries` module; these are
-    all sub-classes of the :class:`.DataSeries` class - see the
-    :class:`.PlotPanel` and :class:`.OverlayPlotPanel` documentation for more
-    details:
+    A ``TimeSeriesPanel`` plots one or more :class:`.DataSeries` instances,
+    which encapsulate time series data from an overlay. All time series
+    related ``DataSeries`` classes are defined in the
+    :mod:`.plotting.timeseries` module; these are all sub-classes of the
+    :class:`.DataSeries` class - see the :class:`.PlotPanel` and
+    :class:`.OverlayPlotPanel` documentation for more details:
 
     .. autosummary::
        :nosignatures:
 
-       .timeseries.TimeSeries
        .timeseries.VoxelTimeSeries
+       .timeseries.ComplexTimeSeries
        .timeseries.FEATTimeSeries
        .timeseries.MelodicTimeSeries
        .timeseries.MeshTimeSeries
@@ -139,7 +139,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     """If ``True``, the component time courses are plotted for
     :class:`.MelodicImage` overlays (using a :class:`.MelodicTimeSeries`
     instance). Otherwise, ``MelodicImage`` overlays are treated as regular
-    4D :class:`.Image` overlays (a :class:`.TimeSeries` instance is used).
+    4D :class:`.Image` overlays (a :class:`.VoxelTimeSeries` instance is used).
     """
 
 
@@ -254,7 +254,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     def draw(self, *a):
-        """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.TimeSeries`
+        """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.DataSeries`
         instances to the :meth:`.PlotPanel.drawDataSeries` method.
         """
 
@@ -262,25 +262,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             return
 
         tss = self.getDataSeriesToPlot()
-
-        # Include all of the extra model series
-        # for all FEATTimeSeries instances
-        newTss = []
-        for ts in tss:
-            if isinstance(ts, plotting.FEATTimeSeries):
-
-                mtss    = ts.getModelTimeSeries()
-                newTss += mtss
-
-                # If the FEATTimeSeries is disabled,
-                # disable the associated model time
-                # series.
-                for mts in mtss:
-                    mts.enabled = ts.enabled
-            else:
-                newTss.append(ts)
-        tss = newTss
-
         for ts in tss:
 
             # Changing the label might trigger
@@ -303,7 +284,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         Returns a tuple containing the following:
 
-          - A :class:`.TimeSeries` instance for the given overlay
+          - A :class:`.DataSeries` instance for the given overlay
 
           - A list of *targets* - objects which have properties that
             influence the state of the ``TimeSeries`` instance.
@@ -318,12 +299,19 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         overlayList = self.overlayList
         tsargs      = (overlay, overlayList, displayCtx, self)
 
+        # Is this a mesh?
+        if isinstance(overlay, fslmesh.Mesh):
+            ts        = timeseries.MeshTimeSeries(*tsargs)
+            opts      = displayCtx.getOpts(overlay)
+            targets   = [displayCtx, opts]
+            propNames = ['location', 'vertexData']
+
         # Is this a FEAT filtered_func_data image?
-        if isinstance(overlay, fslfeatimage.FEATImage):
+        elif isinstance(overlay, fslfeatimage.FEATImage):
 
             # If the filtered_func for this FEAT analysis
             # has been loaded, we show its time series.
-            ts        = plotting.FEATTimeSeries(*tsargs)
+            ts        = timeseries.FEATTimeSeries(*tsargs)
             targets   = [displayCtx]
             propNames = ['location']
 
@@ -332,26 +320,26 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         # we use a MelodicTimeSeries object.
         elif isinstance(overlay, fslmelimage.MelodicImage) and \
              self.plotMelodicICs:
-            ts        = plotting.MelodicTimeSeries(*tsargs)
+            ts        = timeseries.MelodicTimeSeries(*tsargs)
             targets   = [displayCtx.getOpts(overlay)]
             propNames = ['volume']
 
-        # Otherwise we just plot
-        # bog-standard 4D voxel data
-        # (listening to volumeDim for
-        # images with >4 dimensions)
+        # Otherwise it's a normal image
         elif isinstance(overlay, fslimage.Image) and overlay.ndim > 3:
-            ts        = plotting.VoxelTimeSeries(*tsargs)
+
+            # Is it a complex data image?
+            if overlay.iscomplex:
+                ts = timeseries.ComplexTimeSeries(*tsargs)
+
+            # Or just a bog-standard 4D image?
+            else:
+                ts = timeseries.VoxelTimeSeries(*tsargs)
+
+            # listen to volumeDim for
+            # images with >4 dimensions
             opts      = displayCtx.getOpts(overlay)
             targets   = [displayCtx, opts]
             propNames = ['location', 'volumeDim']
-
-        elif isinstance(overlay, fslmesh.Mesh):
-            ts        = plotting.MeshTimeSeries(*tsargs)
-            opts      = displayCtx.getOpts(overlay)
-            targets   = [displayCtx, opts]
-            propNames = ['location', 'vertexData']
-
         else:
             return None, None, None
 
@@ -359,21 +347,20 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         ts.alpha     = 1
         ts.lineWidth = 1
         ts.lineStyle = '-'
-        ts.label     = ts.makeLabel()
 
         return ts, targets, propNames
 
 
     def prepareDataSeries(self, ts):
         """Overrides :class:`.PlotPanel.prepareDataSeries`. Given a
-        :class:`.TimeSeries` instance, scales and normalises the x and y data
+        :class:`.DataSeries` instance, scales and normalises the x and y data
         according to the current values of the :attr:`usePixdim` and
         :attr:`plotMode` properties.
         """
 
         xdata, ydata = ts.getData()
 
-        if len(xdata) == 0:
+        if (xdata is None) or (ydata is None) or (len(xdata) == 0):
             return xdata, ydata
 
         if self.usePixdim and isinstance(ts.overlay, fslimage.Image):

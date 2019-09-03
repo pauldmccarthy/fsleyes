@@ -120,6 +120,7 @@ be displayed as:
 
    ~fsleyes.gl.glvolume.GLVolume
    ~fsleyes.gl.glrgbvolume.GLRGBVolume
+   ~fsleyes.gl.glcomplex.GLComplex
    ~fsleyes.gl.glmask.GLMask
    ~fsleyes.gl.gllabel.GLLabel
    ~fsleyes.gl.gllinevector.GLLineVector

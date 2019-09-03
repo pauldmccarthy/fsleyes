@@ -15,18 +15,28 @@ from . import timeseries
 from . import histogramseries
 from . import powerspectrumseries
 
-DataSeries                 = dataseries         .DataSeries
-TimeSeries                 = timeseries         .TimeSeries
-VoxelTimeSeries            = timeseries         .VoxelTimeSeries
-FEATTimeSeries             = timeseries         .FEATTimeSeries
-FEATPartialFitTimeSeries   = timeseries         .FEATPartialFitTimeSeries
-FEATEVTimeSeries           = timeseries         .FEATEVTimeSeries
-FEATResidualTimeSeries     = timeseries         .FEATResidualTimeSeries
-FEATModelFitTimeSeries     = timeseries         .FEATModelFitTimeSeries
-MelodicTimeSeries          = timeseries         .MelodicTimeSeries
-MeshTimeSeries             = timeseries         .MeshTimeSeries
-HistogramSeries            = histogramseries    .HistogramSeries
-PowerSpectrumSeries        = powerspectrumseries.PowerSpectrumSeries
-VoxelPowerSpectrumSeries   = powerspectrumseries.VoxelPowerSpectrumSeries
-MelodicPowerSpectrumSeries = powerspectrumseries.MelodicPowerSpectrumSeries
-MeshPowerSpectrumSeries    = powerspectrumseries.MeshPowerSpectrumSeries
+DataSeries                   = dataseries         .DataSeries
+VoxelDataSeries              = dataseries         .VoxelDataSeries
+VoxelTimeSeries              = timeseries         .VoxelTimeSeries
+ComplexTimeSeries            = timeseries         .ComplexTimeSeries
+ImaginaryTimeSeries          = timeseries         .ImaginaryTimeSeries
+MagnitudeTimeSeries          = timeseries         .MagnitudeTimeSeries
+PhaseTimeSeries              = timeseries         .PhaseTimeSeries
+FEATTimeSeries               = timeseries         .FEATTimeSeries
+FEATPartialFitTimeSeries     = timeseries         .FEATPartialFitTimeSeries
+FEATEVTimeSeries             = timeseries         .FEATEVTimeSeries
+FEATResidualTimeSeries       = timeseries         .FEATResidualTimeSeries
+FEATModelFitTimeSeries       = timeseries         .FEATModelFitTimeSeries
+MelodicTimeSeries            = timeseries         .MelodicTimeSeries
+MeshTimeSeries               = timeseries         .MeshTimeSeries
+HistogramSeries              = histogramseries    .HistogramSeries
+ImageHistogramSeries         = histogramseries    .ImageHistogramSeries
+MeshHistogramSeries          = histogramseries    .MeshHistogramSeries
+PowerSpectrumSeries          = powerspectrumseries.PowerSpectrumSeries
+VoxelPowerSpectrumSeries     = powerspectrumseries.VoxelPowerSpectrumSeries
+ComplexPowerSpectrumSeries   = powerspectrumseries.ComplexPowerSpectrumSeries
+ImaginaryPowerSpectrumSeries = powerspectrumseries.ImaginaryPowerSpectrumSeries
+MagnitudePowerSpectrumSeries = powerspectrumseries.MagnitudePowerSpectrumSeries
+PhasePowerSpectrumSeries     = powerspectrumseries.PhasePowerSpectrumSeries
+MelodicPowerSpectrumSeries   = powerspectrumseries.MelodicPowerSpectrumSeries
+MeshPowerSpectrumSeries      = powerspectrumseries.MeshPowerSpectrumSeries
