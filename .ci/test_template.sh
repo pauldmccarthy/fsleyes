@@ -14,6 +14,12 @@ if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
   git merge --no-commit --no-ff upstream/master;
 fi;
 
+# We need the FSL atlases for the atlas
+# tests, and need $FSLDIR to be defined
+export FSLDIR=/fsl/
+mkdir -p $FSLDIR/data/
+rsync -rv "fsldownload:$FSL_ATLAS_DIR" "$FSLDIR/data/atlases/"
+
 source /test.venv/bin/activate
 pip install --upgrade pip
 

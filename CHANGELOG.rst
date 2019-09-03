@@ -25,6 +25,7 @@ Added
 * New plot panel options to invert axes, and to apply scale/offsets.
 * New power spectrum panel options to apply phase correction to complex image
   data.
+* The atlas panel has basic support for more general "Statistic" atlas types.
 
 
 Changed

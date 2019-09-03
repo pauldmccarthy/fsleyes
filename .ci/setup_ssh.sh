@@ -28,7 +28,8 @@ if [[ -f /.dockerenv ]]; then
   eval $(ssh-agent -s);
   mkdir -p $HOME/.ssh;
 
-  echo "$SSH_PRIVATE_KEY_GIT" > $HOME/.ssh/id_git;
+  echo "$SSH_PRIVATE_KEY_GIT"          > $HOME/.ssh/id_git;
+  echo "$SSH_PRIVATE_KEY_FSL_DOWNLOAD" > $HOME/.ssh/id_fsl_download;
 
   if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
     echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
@@ -47,6 +48,7 @@ if [[ -f /.dockerenv ]]; then
   ssh-keyscan ${UPSTREAM_URL##*@} >> $HOME/.ssh/known_hosts;
   ssh-keyscan ${USERDOC_HOST##*@} >> $HOME/.ssh/known_hosts;
   ssh-keyscan ${APIDOC_HOST##*@}  >> $HOME/.ssh/known_hosts;
+  ssh-keyscan ${FSL_HOST##*@}     >> $HOME/.ssh/known_hosts;
 
   touch $HOME/.ssh/config;
 
@@ -63,6 +65,11 @@ if [[ -f /.dockerenv ]]; then
   echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
   echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
   echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
+
+  echo "Host fsldownload"                            >> $HOME/.ssh/config;
+  echo "    HostName ${FSL_HOST##*@}"                >> $HOME/.ssh/config;
+  echo "    User ${FSL_HOST%@*}"                     >> $HOME/.ssh/config;
+  echo "    IdentityFile $HOME/.ssh/id_fsl_download" >> $HOME/.ssh/config;
 
   echo "Host *"                                        >> $HOME/.ssh/config;
   echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;

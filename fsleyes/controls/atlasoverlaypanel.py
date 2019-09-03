@@ -60,7 +60,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
         for every region in the atlas that is currently selected in the atlas
         list, and an ``OverlayListWidget`` alongside every region. The
         ``OverlayListWidget`` allows the user to navigate to a region, and
-        to turn on/off a label or probabilistic region overlay.
+        to turn on/off a label or statistic/probabilistic region overlay.
 
       - The *region filter* - a ``wx.TextCtrl`` located above the region
         list. This allows the user to search for regions by name. When the

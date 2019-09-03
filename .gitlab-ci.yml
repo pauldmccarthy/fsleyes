@@ -64,6 +64,9 @@ stages:
 #   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
 #                                      to remote host (USERDOC_HOST)
 #
+#   - SSH_PRIVATE_KEY_FSL_DOWNLOAD   - private key for downloading some FSL
+#                                      files from a remote server (FSL_HOST)
+#
 #   - APIDOC_HOST:                   - Username@host to upload API
 #                                      documentation to (e.g.
 #                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
@@ -71,6 +74,12 @@ stages:
 #   - USERDOC_HOST:                  - Username@host to upload user
 #                                      documentation to (e.g.
 #                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - FSL_HOST:                      - Username@host to download FSL data from
+#                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
+#
+#   - FSL_ATLAS_DIR:                 - Location of the FSL atlas data on
+#                                      FSL_HOST.
 #
 #   - TWINE_USERNAME:                - Username to use when uploading to pypi
 #
