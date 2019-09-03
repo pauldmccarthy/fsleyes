@@ -452,27 +452,34 @@ class AtlasPanel(ctrlpanel.ControlPanel):
             return
 
         def realOnLoad(atlas):
+            initprops = {}
             # label image
             if labelIdx is None:
-                overlayType = 'label'
-                overlay     = fslimage.Image(atlas)
+                overlay = fslimage.Image(atlas)
+                initprops['overlayType'] = 'label'
 
             else:
 
                 # regional label image
                 if summary:
-                    overlay     = atlas.get(index=labelIdx, binary=False)
-                    overlayType = 'mask'
+                    overlay = atlas.get(index=labelIdx, binary=False)
+                    initprops['overlayType'] = 'mask'
+                    initprops['colour']      = np.random.random(3)
 
                 # regional statistic/probability image
                 else:
-                    overlayType = 'volume'
-                    overlay     = atlas.get(index=labelIdx)
+                    overlay = atlas.get(index=labelIdx)
+                    initprops['overlayType']   = 'volume'
+                    initprops['cmap']          = 'hot'
+                    initprops['displayRange']  = (atlasDesc.lower,
+                                                  atlasDesc.upper)
+                    initprops['clippingRange'] = (atlasDesc.lower,
+                                                  atlasDesc.upper)
 
             overlay.name = overlayName
 
             with props.suppress(self.overlayList, 'overlays', self.name):
-                self.overlayList.append(overlay, overlayType=overlayType)
+                self.overlayList.append(overlay, **initprops)
 
             self.__overlayPanel.setOverlayState(
                 atlasDesc, labelIdx, summary, True)
@@ -483,13 +490,6 @@ class AtlasPanel(ctrlpanel.ControlPanel):
                                                    summary)
 
             log.debug('Added overlay {}'.format(overlayName))
-
-            display             = self.displayCtx.getDisplay(overlay)
-            display.overlayType = overlayType
-            opts                = display.opts
-
-            if   overlayType == 'mask':   opts.colour = np.random.random(3)
-            elif overlayType == 'volume': opts.cmap   = 'hot'
 
             if onLoad is not None:
                 onLoad()
