@@ -234,7 +234,10 @@ class BrowseDicomDialog(wx.Dialog):
                         :func:`fsl.data.dicom.scanDir` function.
         """
 
-        wx.Dialog.__init__(self, parent, title=strings.titles[self])
+        wx.Dialog.__init__(self,
+                           parent,
+                           title=strings.titles[self],
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         self.__browser = BrowseDicomPanel(self, dcmseries)
         self.__load    = wx.Button(self, id=wx.ID_OK)
@@ -324,7 +327,9 @@ class BrowseDicomPanel(wx.Panel):
         self.__date        = wx.StaticText(self)
         self.__patient     = wx.StaticText(self)
         self.__institution = wx.StaticText(self)
-        self.__series      = wg.WidgetGrid(self, style=0)
+        self.__series      = wg.WidgetGrid(self, style=wx.VSCROLL)
+
+        self.__series.SetMinSize((-1, 200))
 
         self.__loadCheckboxes = [wx.CheckBox(self) for s in dcmseries]
 
@@ -361,7 +366,7 @@ class BrowseDicomPanel(wx.Panel):
         self.SetSizer(self.__mainSizer)
 
         # columns:
-        #   SeriesNumber
+        #   SeriesNumber[.EchoNumber]
         #   SeriesDescription
         #   ReconMatrix
         #   Load (checkbox)
@@ -378,11 +383,15 @@ class BrowseDicomPanel(wx.Panel):
 
         for i, s in enumerate(dcmseries):
 
-            num  = s['SeriesNumber']
-            desc = s['SeriesDescription']
-            size = s['ReconMatrixPE']
+            num  = str(s.get('SeriesNumber',      '?'))
+            echo = str(s.get('EchoNumber',        ''))
+            desc =     s.get('SeriesDescription', 'n/a')
+            size =     s.get('ReconMatrixPE',     'n/a')
 
-            self.__series.SetText(  i, 0, str(num))
+            if len(echo) > 0:
+                echo = '.' + echo
+
+            self.__series.SetText(  i, 0, num + echo)
             self.__series.SetText(  i, 1, desc)
             self.__series.SetText(  i, 2, '{}x{}'.format(size, size))
             self.__series.SetWidget(i, 3, self.__loadCheckboxes[i])
