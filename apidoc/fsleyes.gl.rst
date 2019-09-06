@@ -8,6 +8,7 @@
    fsleyes.gl.gl21
    fsleyes.gl.annotations
    fsleyes.gl.colourbarcanvas
+   fsleyes.gl.glcomplex
    fsleyes.gl.glimageobject
    fsleyes.gl.gllabel
    fsleyes.gl.gllinevector

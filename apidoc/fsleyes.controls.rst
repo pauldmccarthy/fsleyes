@@ -16,6 +16,8 @@
    fsleyes.controls.cropimagepanel
    fsleyes.controls.displayspacewarning
    fsleyes.controls.edittransformpanel
+   fsleyes.controls.filetreemanager
+   fsleyes.controls.filetreepanel
    fsleyes.controls.histogramcontrolpanel
    fsleyes.controls.histogramtoolbar
    fsleyes.controls.labelgrid
