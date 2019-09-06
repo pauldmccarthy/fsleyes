@@ -106,10 +106,11 @@ class CopyOverlayAction(base.Action):
 
         display = self.__displayCtx.getDisplay(overlay)
 
-        # We ask the user questions three:
+        # We ask the user questions four:
         #  - Copy data, or create an empty (a.k.a. mask) image?
         #  - Copy display settings?
         #  - For 4D, copy 4D, or just the current 3D volume?
+        #  - For complex/RGB(A), copy as single channel, or multi-channel?
         #
         # Here we build a list of
         # questions and initial states.
@@ -119,11 +120,14 @@ class CopyOverlayAction(base.Action):
         createMaskSetting  = 'fsleyes.actions.copyoverlay.createMask'
         copyDisplaySetting = 'fsleyes.actions.copyoverlay.copyDisplay'
         copy4DSetting      = 'fsleyes.actions.copyoverlay.copy4D'
+        copyMultiSetting   = 'fsleyes.actions.copyoverlay.copyMulti'
 
         createMask  = fslsettings.read(createMaskSetting,  False)
         copyDisplay = fslsettings.read(copyDisplaySetting, False)
         copy4D      = fslsettings.read(copy4DSetting,      False)
+        copyMulti   = fslsettings.read(copy4DSetting,      True)
         is4D        = len(overlay.shape) > 3 and overlay.shape[3] > 1
+        isMulti     = overlay.iscomplex or overlay.nvals > 1
 
         options.append(strings.messages['actions.copyoverlay.createMask'])
         states .append(createMask)
@@ -134,6 +138,10 @@ class CopyOverlayAction(base.Action):
         if is4D:
             options.append(strings.messages['actions.copyoverlay.copy4D'])
             states .append(copy4D)
+
+        if isMulti:
+            options.append(strings.messages['actions.copyoverlay.copyMulti'])
+            states .append(copyMulti)
 
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
@@ -149,21 +157,44 @@ class CopyOverlayAction(base.Action):
         if dlg.ShowModal() != wx.ID_YES:
             return
 
-        createMask  = dlg.CheckBoxState(0)
-        copyDisplay = dlg.CheckBoxState(1)
-        if is4D:
-            copy4D = dlg.CheckBoxState(2)
+        createMask            = dlg.CheckBoxState(0)
+        copyDisplay           = dlg.CheckBoxState(1)
+        if is4D:    copy4D    = dlg.CheckBoxState(2)
+        if isMulti: copyMulti = dlg.CheckBoxState(3 if is4D else 2)
 
-        fslsettings.write(createMaskSetting,  createMask)
-        fslsettings.write(copyDisplaySetting, copyDisplay)
-        if is4D:
-            fslsettings.write(copy4DSetting, copy4D)
+        fslsettings            .write(createMaskSetting,  createMask)
+        fslsettings            .write(copyDisplaySetting, copyDisplay)
+        if is4D:    fslsettings.write(copy4DSetting,      copy4D)
+        if isMulti: fslsettings.write(copyMultiSetting,   copyMulti)
+
+        # If the user de-selected copy all channels,
+        # ask them which channel they want to copy
+        channel = None
+        if isMulti and (not copyMulti):
+            if overlay.iscomplex:
+                choices = ['real', 'imag']
+            else:
+                choices = ['R' ,'G', 'B', 'A'][:overlay.nvals]
+
+            labels = [strings.choices[self, 'component'][c] for c in choices]
+            title  = strings.titles[  'actions.copyoverlay.component']
+            msg    = strings.messages['actions.copyoverlay.component']
+            dlg    = wx.SingleChoiceDialog(self.__frame,
+                                           msg,
+                                           title,
+                                           choices=labels)
+
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+
+            channel = choices[dlg.GetSelection()]
 
         copyImage(self.__overlayList,
                   self.__displayCtx,
                   overlay,
                   createMask=createMask,
                   copy4D=copy4D,
+                  channel=channel,
                   copyDisplay=copyDisplay)
 
 
