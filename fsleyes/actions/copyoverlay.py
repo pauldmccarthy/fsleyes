@@ -19,7 +19,7 @@ import fsleyes.strings        as strings
 from . import                    base
 
 
-class CopyOverlayAction(base.Action):
+class CopyOverlayAction(base.NeedImageAction):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
 
@@ -49,42 +49,8 @@ class CopyOverlayAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__copyOverlay)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-        self.__selectedOverlayChanged()
-
-
-    def destroy(self):
-        """Removes listeners from the :class:`.DisplayContext` and
-        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
-        """
-
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        base.Action.destroy(self)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the selected overlay, or overlay list, changes.
-
-        Enables/disables this action depending on the nature of the selected
-        overlay.
-        """
-
-        ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
+        base.NeedImageAction.__init__(
+            self, overlayList, displayCtx, frame, self.__copyOverlay)
 
 
     def __copyOverlay(self):
@@ -94,7 +60,7 @@ class CopyOverlayAction(base.Action):
 
         import wx
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return
@@ -104,12 +70,13 @@ class CopyOverlayAction(base.Action):
             raise RuntimeError('Currently, only {} instances can be '
                                'copied'.format(fslimage.Image.__name__))
 
-        display = self.__displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
 
-        # We ask the user questions three:
+        # We ask the user questions four:
         #  - Copy data, or create an empty (a.k.a. mask) image?
         #  - Copy display settings?
         #  - For 4D, copy 4D, or just the current 3D volume?
+        #  - For complex/RGB(A), copy as single channel, or multi-channel?
         #
         # Here we build a list of
         # questions and initial states.
@@ -119,11 +86,14 @@ class CopyOverlayAction(base.Action):
         createMaskSetting  = 'fsleyes.actions.copyoverlay.createMask'
         copyDisplaySetting = 'fsleyes.actions.copyoverlay.copyDisplay'
         copy4DSetting      = 'fsleyes.actions.copyoverlay.copy4D'
+        copyMultiSetting   = 'fsleyes.actions.copyoverlay.copyMulti'
 
         createMask  = fslsettings.read(createMaskSetting,  False)
         copyDisplay = fslsettings.read(copyDisplaySetting, False)
         copy4D      = fslsettings.read(copy4DSetting,      False)
+        copyMulti   = fslsettings.read(copy4DSetting,      True)
         is4D        = len(overlay.shape) > 3 and overlay.shape[3] > 1
+        isMulti     = overlay.iscomplex or overlay.nvals > 1
 
         options.append(strings.messages['actions.copyoverlay.createMask'])
         states .append(createMask)
@@ -135,9 +105,13 @@ class CopyOverlayAction(base.Action):
             options.append(strings.messages['actions.copyoverlay.copy4D'])
             states .append(copy4D)
 
+        if isMulti:
+            options.append(strings.messages['actions.copyoverlay.copyMulti'])
+            states .append(copyMulti)
+
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
-            self.__frame,
+            self.frame,
             title=strings.actions[self],
             message='Copy {}'.format(display.name),
             cbMessages=options,
@@ -149,22 +123,83 @@ class CopyOverlayAction(base.Action):
         if dlg.ShowModal() != wx.ID_YES:
             return
 
-        createMask  = dlg.CheckBoxState(0)
-        copyDisplay = dlg.CheckBoxState(1)
-        if is4D:
-            copy4D = dlg.CheckBoxState(2)
+        createMask            = dlg.CheckBoxState(0)
+        copyDisplay           = dlg.CheckBoxState(1)
+        if is4D:    copy4D    = dlg.CheckBoxState(2)
+        if isMulti: copyMulti = dlg.CheckBoxState(3 if is4D else 2)
 
-        fslsettings.write(createMaskSetting,  createMask)
-        fslsettings.write(copyDisplaySetting, copyDisplay)
-        if is4D:
-            fslsettings.write(copy4DSetting, copy4D)
+        fslsettings            .write(createMaskSetting,  createMask)
+        fslsettings            .write(copyDisplaySetting, copyDisplay)
+        if is4D:    fslsettings.write(copy4DSetting,      copy4D)
+        if isMulti: fslsettings.write(copyMultiSetting,   copyMulti)
 
-        copyImage(self.__overlayList,
-                  self.__displayCtx,
+        # If the user de-selected copy all channels,
+        # ask them which channel they want to copy
+        channel = None
+        if isMulti and (not copyMulti):
+            if overlay.iscomplex:
+                choices = ['real', 'imag']
+            else:
+                choices = ['R' ,'G', 'B', 'A'][:overlay.nvals]
+
+            labels = [strings.choices[self, 'component'][c] for c in choices]
+            title  = strings.titles[  'actions.copyoverlay.component']
+            msg    = strings.messages['actions.copyoverlay.component']
+            dlg    = wx.SingleChoiceDialog(self.frame,
+                                           msg,
+                                           title,
+                                           choices=labels)
+
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+
+            channel = choices[dlg.GetSelection()]
+
+        copyImage(self.overlayList,
+                  self.displayCtx,
                   overlay,
                   createMask=createMask,
                   copy4D=copy4D,
+                  channel=channel,
                   copyDisplay=copyDisplay)
+
+
+class CopyAsMaskAction(base.NeedImageAction):
+    """The ``CopyAsMaskAction`` is a convenience action which creates an
+    empty copy of the currently selected :class:`.Image`.
+    """
+
+
+    def __init__(self, overlayList, displayCtx, frame):
+        """Create a ``CopyAsMaskAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
+        """
+        base.NeedImageAction.__init__(
+            self, overlayList, displayCtx, frame, self.__copyAsMask)
+
+
+    def __copyAsMask(self):
+        """Creates an empty copy of the currently selecyed :class:`.Image`.
+        """
+
+        overlay = self.displayCtx.getSelectedOverlay()
+        if   overlay.iscomplex: channel = 'real'
+        elif overlay.nvals > 1: channel = 'R'
+        else:                   channel = None
+
+        name = '{}_mask'.format(overlay.name)
+
+        copyImage(self.overlayList,
+                  self.displayCtx,
+                  overlay,
+                  name=name,
+                  createMask=True,
+                  copy4D=False,
+                  copyDisplay=False,
+                  channel=channel)
 
 
 def copyImage(overlayList,
@@ -175,6 +210,7 @@ def copyImage(overlayList,
               copyDisplay=True,
               name=None,
               roi=None,
+              channel=None,
               data=None):
     """Creates a copy of the given :class:`.Image` overlay, and inserts it
     into the :class:`.OverlayList`.
@@ -205,6 +241,13 @@ def copyImage(overlayList,
                       dimension are optional. If ``roi`` specifies more than
                       three dimensions, but ``copy4D is False``, the additional
                       dimensions are ignored.
+
+    :arg channel:     If provided, and if the image is complex or multi-valued
+                      (RGB(A)), only this channel is copied. Otherwise the
+                      image and data type are copied as-is. For complex images,
+                      valid values are ``'real'`` or ``'imag'``; for multi-
+                      valued images, valid values are ``'R'``, ``'G'``, ``'B'``
+                      or ``'A'``.
 
     :arg data:        If provided, is used as the image data for the new copy.
                       Must match the shape dictated by the other arguments
@@ -256,6 +299,18 @@ def copyImage(overlayList,
         roi     = imgroi.roi(overlay, roi)
         imgdata = roi.data
         xform   = roi.voxToWorldMat
+
+    if channel is not None:
+        if overlay.iscomplex:
+            if   channel == 'real': imgdata = imgdata.real
+            elif channel == 'imag': imgdata = imgdata.imag
+            else: raise ValueError('Invalid value for channel: '
+                                   '{}'.format(channel))
+        elif overlay.nvals > 1:
+            if channel not in 'RGBA':
+                raise ValueError('Invalid value for channel: '
+                                   '{}'.format(channel))
+            imgdata = imgdata[channel]
 
     if createMask:
         data = np.zeros(imgdata.shape, dtype=imgdata.dtype)
@@ -335,6 +390,14 @@ def copyDisplayProperties(displayCtx,
             continue
 
         val = displayArgs.get(prop, getattr(srcDisplay, prop))
+
+        # Check that the overlay type of the old
+        # overlay is valid for the new overlay
+        if prop == 'overlayType':
+            choices = destDisplay.getProp('overlayType').getChoices(destDisplay)
+            if val not in choices:
+                continue
+
         setattr(destDisplay, prop, val)
 
     # And after the Display has been configured
@@ -345,6 +408,11 @@ def copyDisplayProperties(displayCtx,
     for prop in srcOpts.getAllProperties()[0]:
 
         if prop in optExclude:
+            continue
+
+        # The source and destination opts
+        # instances may be different types
+        if not hasattr(destOpts, prop):
             continue
 
         if (not srcOpts .propertyIsEnabled(prop)) or \

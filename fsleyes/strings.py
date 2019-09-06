@@ -109,6 +109,9 @@ messages = TypeDict({
                                         'with same dimensions',
     'actions.copyoverlay.copyDisplay' : 'Copy display properties',
     'actions.copyoverlay.copy4D'      : 'Copy 4D image',
+    'actions.copyoverlay.copyMulti'   : 'Copy all channels/components',
+    'actions.copyoverlay.component'   :
+    'Select the component/channel you want to copy',
 
     'RunScriptAction.runScript' : 'Choose a FSLeyes script to run',
     'RunScriptAction.crash'     : 'The script {} has crashed! Reason: {}',
@@ -405,6 +408,8 @@ titles = TypeDict({
     'removeoverlay.unsaved' : 'Remove unsaved image?',
     'reloadoverlay.unsaved' : 'Reload unsaved image?',
 
+    'actions.copyoverlay.component' : 'Select component/channel',
+
     'OrthoPanel.toolMenu'                 : 'Tools',
 
     'OrthoEditProfile.imageChange'        : 'Changing edited image',
@@ -471,6 +476,7 @@ actions = TypeDict({
     'LoadDicomAction'          : 'Add from DICOM',
     'BrowseXNATAction'         : 'Add from XNAT',
     'CopyOverlayAction'        : 'Copy',
+    'CopyAsMaskAction'         : 'Copy as mask',
     'LoadAtlasAction'          : 'Import new atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
     'UpdateCheckAction'        : 'Check for updates',
@@ -1306,6 +1312,13 @@ choices = TypeDict({
                                   'demean'        : 'Demeaned',
                                   'normalise'     : 'Normalised',
                                   'percentChange' : 'Percent changed'},
+
+    'CopyOverlayAction.component' : {'real' : 'Real',
+                                     'imag' : 'Imaginary',
+                                     'R'    : 'R',
+                                     'G'    : 'G',
+                                     'B'    : 'B',
+                                     'A'    : 'A'},
 })
 
 

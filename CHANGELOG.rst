@@ -26,6 +26,8 @@ Added
 * New power spectrum panel options to apply phase correction to complex image
   data.
 * The atlas panel has basic support for more general "Statistic" atlas types.
+* New *Overlay* |right_arrow| *Copy as mask* menu option, a shortcut to create
+  an empty copy of an image.
 
 
 Changed
@@ -35,6 +37,8 @@ Changed
 * Images with a complex data type are no longer split into separate real and
   imaginary ``volume`` overlays - they are loaded as a single image, and
   displayed as ``complex`` overlays.
+* The *Overlay* |right_arrow| *Copy* menu option now supports complex and
+  RGB(A) images.
 
 
 Fixed

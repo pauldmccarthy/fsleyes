@@ -39,9 +39,11 @@ fsl.utils.async
 fsl.utils.cache
 fsl.utils.callfsl
 fsl.utils.deprecated
+fsl.utils.filetree
 fsl.utils.idle
 fsl.utils.image
 fsl.utils.image.resample
+fsl.utils.image.roi
 fsl.utils.memoize
 fsl.utils.notifier
 fsl.utils.path
@@ -68,6 +70,7 @@ fsleyes_widgets.texttag
 fsleyes_widgets.utils
 fsleyes_widgets.utils.colourbarbitmap
 fsleyes_widgets.utils.layout
+fsleyes_widgets.utils.overlay
 fsleyes_widgets.utils.progress
 fsleyes_widgets.utils.status
 fsleyes_widgets.utils.typedict

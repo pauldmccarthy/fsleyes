@@ -4,13 +4,15 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Action` and :class:`ToggleAction` classes.
-See the :mod:`.actions` package documentation for more details.
+"""This module provides the :class:`Action`, :class:`NeedImageAction`, and
+:class:`ToggleAction` classes.  See the :mod:`.actions` package documentation
+for more details.
 """
 
 
 import logging
 
+import fsl.data.image  as fslimage
 import fsleyes_props   as props
 import fsleyes_widgets as fwidgets
 
@@ -312,3 +314,77 @@ class ToggleAction(Action):
 
             except Exception:
                 self.unbindWidget(bw.widget)
+
+
+class NeedImageAction(Action):
+    """The ``NeedImageAction`` is a convenience base class for actions
+    which can only be executed when an :class:`.Image` is selected. It
+    enables/disables itself based on the type of the currently selected
+    overlay.
+    """
+
+
+    def __init__(self, overlayList, displayCtx, frame, func=None):
+        """Create a ``NeedImageAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
+        :arg func:        The action function
+        """
+        Action.__init__(self, func)
+
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__frame       = frame
+        self.__name        = 'NeedImageAction_{}_{}'.format(
+            type(self).__name__, id(self))
+
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+
+        self.__selectedOverlayChanged()
+
+
+    @property
+    def overlayList(self):
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        return self.__displayCtx
+
+
+    @property
+    def frame(self):
+        return self.__frame
+
+
+    def destroy(self):
+        """Removes listeners from the :class:`.DisplayContext` and
+        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
+        """
+
+        self.__displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__overlayList.removeListener('overlays',        self.__name)
+        self.__displayCtx  = None
+        self.__overlayList = None
+        self.__frame       = None
+
+        Action.destroy(self)
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the selected overlay, or overlay list, changes.
+
+        Enables/disables this action depending on the nature of the selected
+        overlay.
+        """
+
+        ovl          = self.__displayCtx.getSelectedOverlay()
+        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
