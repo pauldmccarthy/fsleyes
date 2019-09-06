@@ -19,7 +19,7 @@ import fsleyes.strings        as strings
 from . import                    base
 
 
-class CopyOverlayAction(base.Action):
+class CopyOverlayAction(base.NeedImageAction):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
 
@@ -49,42 +49,8 @@ class CopyOverlayAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__copyOverlay)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-        self.__selectedOverlayChanged()
-
-
-    def destroy(self):
-        """Removes listeners from the :class:`.DisplayContext` and
-        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
-        """
-
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        base.Action.destroy(self)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the selected overlay, or overlay list, changes.
-
-        Enables/disables this action depending on the nature of the selected
-        overlay.
-        """
-
-        ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
+        base.NeedImageAction.__init__(
+            self, overlayList, displayCtx, frame, self.__copyOverlay)
 
 
     def __copyOverlay(self):
@@ -94,7 +60,7 @@ class CopyOverlayAction(base.Action):
 
         import wx
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             return
@@ -104,7 +70,7 @@ class CopyOverlayAction(base.Action):
             raise RuntimeError('Currently, only {} instances can be '
                                'copied'.format(fslimage.Image.__name__))
 
-        display = self.__displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
 
         # We ask the user questions four:
         #  - Copy data, or create an empty (a.k.a. mask) image?
@@ -145,7 +111,7 @@ class CopyOverlayAction(base.Action):
 
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
-            self.__frame,
+            self.frame,
             title=strings.actions[self],
             message='Copy {}'.format(display.name),
             cbMessages=options,
@@ -179,7 +145,7 @@ class CopyOverlayAction(base.Action):
             labels = [strings.choices[self, 'component'][c] for c in choices]
             title  = strings.titles[  'actions.copyoverlay.component']
             msg    = strings.messages['actions.copyoverlay.component']
-            dlg    = wx.SingleChoiceDialog(self.__frame,
+            dlg    = wx.SingleChoiceDialog(self.frame,
                                            msg,
                                            title,
                                            choices=labels)
@@ -189,8 +155,8 @@ class CopyOverlayAction(base.Action):
 
             channel = choices[dlg.GetSelection()]
 
-        copyImage(self.__overlayList,
-                  self.__displayCtx,
+        copyImage(self.overlayList,
+                  self.displayCtx,
                   overlay,
                   createMask=createMask,
                   copy4D=copy4D,
