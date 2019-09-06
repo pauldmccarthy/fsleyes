@@ -175,6 +175,7 @@ def copyImage(overlayList,
               copyDisplay=True,
               name=None,
               roi=None,
+              channel=None,
               data=None):
     """Creates a copy of the given :class:`.Image` overlay, and inserts it
     into the :class:`.OverlayList`.
@@ -205,6 +206,13 @@ def copyImage(overlayList,
                       dimension are optional. If ``roi`` specifies more than
                       three dimensions, but ``copy4D is False``, the additional
                       dimensions are ignored.
+
+    :arg channel:     If provided, and if the image is complex or multi-valued
+                      (RGB(A)), only this channel is copied. Otherwise the
+                      image and data type are copied as-is. For complex images,
+                      valid values are ``'real'`` or ``'imag'``; for multi-
+                      valued images, valid values are ``'R'``, ``'G'``, ``'B'``
+                      or ``'A'``.
 
     :arg data:        If provided, is used as the image data for the new copy.
                       Must match the shape dictated by the other arguments
@@ -256,6 +264,18 @@ def copyImage(overlayList,
         roi     = imgroi.roi(overlay, roi)
         imgdata = roi.data
         xform   = roi.voxToWorldMat
+
+    if channel is not None:
+        if overlay.iscomplex:
+            if   channel == 'real': imgdata = imgdata.real
+            elif channel == 'imag': imgdata = imgdata.imag
+            else: raise ValueError('Invalid value for channel: '
+                                   '{}'.format(channel))
+        elif overlay.nvals > 1:
+            if channel not in 'RGBA':
+                raise ValueError('Invalid value for channel: '
+                                   '{}'.format(channel))
+            imgdata = imgdata[channel]
 
     if createMask:
         data = np.zeros(imgdata.shape, dtype=imgdata.dtype)
@@ -335,6 +355,14 @@ def copyDisplayProperties(displayCtx,
             continue
 
         val = displayArgs.get(prop, getattr(srcDisplay, prop))
+
+        # Check that the overlay type of the old
+        # overlay is valid for the new overlay
+        if prop == 'overlayType':
+            choices = destDisplay.getProp('overlayType').getChoices(destDisplay)
+            if val not in choices:
+                continue
+
         setattr(destDisplay, prop, val)
 
     # And after the Display has been configured
@@ -345,6 +373,11 @@ def copyDisplayProperties(displayCtx,
     for prop in srcOpts.getAllProperties()[0]:
 
         if prop in optExclude:
+            continue
+
+        # The source and destination opts
+        # instances may be different types
+        if not hasattr(destOpts, prop):
             continue
 
         if (not srcOpts .propertyIsEnabled(prop)) or \

@@ -109,6 +109,7 @@ messages = TypeDict({
                                         'with same dimensions',
     'actions.copyoverlay.copyDisplay' : 'Copy display properties',
     'actions.copyoverlay.copy4D'      : 'Copy 4D image',
+    'actions.copyoverlay.copy4D'      : 'Copy all channels/components',
 
     'RunScriptAction.runScript' : 'Choose a FSLeyes script to run',
     'RunScriptAction.crash'     : 'The script {} has crashed! Reason: {}',
