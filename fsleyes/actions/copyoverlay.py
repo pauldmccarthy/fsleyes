@@ -164,6 +164,44 @@ class CopyOverlayAction(base.NeedImageAction):
                   copyDisplay=copyDisplay)
 
 
+class CopyAsMaskAction(base.NeedImageAction):
+    """The ``CopyAsMaskAction`` is a convenience action which creates an
+    empty copy of the currently selected :class:`.Image`.
+    """
+
+
+    def __init__(self, overlayList, displayCtx, frame):
+        """Create a ``CopyAsMaskAction``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        :arg frame:       The :class:`.FSLeyesFrame`.
+        """
+        base.NeedImageAction.__init__(
+            self, overlayList, displayCtx, frame, self.__copyAsMask)
+
+
+    def __copyAsMask(self):
+        """Creates an empty copy of the currently selecyed :class:`.Image`.
+        """
+
+        overlay = self.displayCtx.getSelectedOverlay()
+        if   overlay.iscomplex: channel = 'real'
+        elif overlay.nvals > 1: channel = 'R'
+        else:                   channel = None
+
+        name = '{}_mask'.format(overlay.name)
+
+        copyImage(self.overlayList,
+                  self.displayCtx,
+                  overlay,
+                  name=name,
+                  createMask=True,
+                  copy4D=False,
+                  copyDisplay=False,
+                  channel=channel)
+
+
 def copyImage(overlayList,
               displayCtx,
               overlay,

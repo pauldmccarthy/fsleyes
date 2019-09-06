@@ -1817,6 +1817,7 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.actions.removealloverlays import RemoveAllOverlaysAction
         from fsleyes.actions.copyoverlay       import CopyOverlayAction
+        from fsleyes.actions.copyoverlay       import CopyAsMaskAction
         from fsleyes.actions.saveoverlay       import SaveOverlayAction
         from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
         from fsleyes.actions.removeoverlay     import RemoveOverlayAction
@@ -1829,6 +1830,7 @@ class FSLeyesFrame(wx.Frame):
                        'sep',
                        'name',
                        CopyOverlayAction,
+                       CopyAsMaskAction,
                        SaveOverlayAction,
                        ReloadOverlayAction,
                        RemoveOverlayAction,

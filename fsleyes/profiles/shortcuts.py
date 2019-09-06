@@ -17,6 +17,7 @@ actions = td.TypeDict({
     'LoadOverlayFromDirAction' : 'Ctrl-D',
     'LoadStandardAction'       : 'Ctrl-S',
     'CopyOverlayAction'        : 'Ctrl-Shift-C',
+    'CopyAsMaskAction'         : 'Ctrl-Shift-M',
     'SaveOverlayAction'        : 'Ctrl-Shift-S',
     'ReloadOverlayAction'      : 'Ctrl-Shift-R',
     'RemoveOverlayAction'      : 'Ctrl-Shift-W',
