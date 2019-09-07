@@ -388,6 +388,8 @@ class ActionFactory(object):
 
             # Create an Action for the instance
             action = self.__actionType(
+                instance.overlayList,
+                instance.displayCtx,
                 self.__func,
                 instance,
                 *self.__args,

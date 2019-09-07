@@ -1786,7 +1786,7 @@ class FSLeyesFrame(wx.Frame):
             menuItem  = menu.Append(
                 wx.ID_ANY, strings.layouts.get(layout, layout))
             actionObj = LoadLayoutAction(
-                self.overlayList, self.displayCtx, layout, self)
+                self.overlayList, self.displayCtx, self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
             actionItems.append((actionObj, menuItem))

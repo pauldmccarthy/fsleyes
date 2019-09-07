@@ -140,7 +140,7 @@ def openHelp(self, *args, **kwargs):
     if op.exists(url):
         webpage.openFile(url)
     else:
-        url = 'https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/userdoc/'
+        url = 'https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/userdoc/latest/'
         webpage.openPage(url)
 
 
