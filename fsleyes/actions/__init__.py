@@ -143,10 +143,37 @@ class ActionProvider(object):
     actions.
     """
 
+
+    def __init__(self, overlayList, displayCtx):
+        """Create an ``ActionProvider``.
+
+        :arg overlayList: The :class:`.OverlayList`.
+        :arg displayCtx:  The :class:`.DisplayContext`.
+        """
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+
+
+    @property
+    def overlayList(self):
+        """Return a reference to the :class:`.OverlayList`. """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Return a reference to the :class:`.DisplayContext`. """
+        return self.__displayCtx
+
+
     def destroy(self):
         """Must be called when this ``ActionProvider`` is no longer needed.
         Calls the :meth:`Action.destroy` method of all ``Action`` instances.
         """
+
+        self.__overlayList = None
+        self.__displayCtx  = None
+
         for name, actionz in ActionProvider.getActions(self):
 
             # Entries in getActions may be (None, None)

@@ -76,8 +76,6 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
        name
        frame
-       overlayList
-       displayCtx
        setNavOrder
        destroy
        destroyed
@@ -106,7 +104,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                           :meth:`setNavOrder` method.
         """
 
-        actions.ActionProvider     .__init__(self)
+        actions.ActionProvider     .__init__(self, overlayList, displayCtx)
         props.SyncableHasProperties.__init__(self)
 
         if not isinstance(displayCtx, displaycontext.DisplayContext):
@@ -114,12 +112,10 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                 'displayCtx must be a '
                 '{} instance'.format( displaycontext.DisplayContext.__name__))
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
-        self.__destroyed   = False
-        self.__navOrder    = None
+        self.__frame     = frame
+        self.__name      = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__destroyed = False
+        self.__navOrder  = None
 
         if kbFocus:
             self.Bind(wx.EVT_CHAR_HOOK, self.__onCharHook)
@@ -245,29 +241,15 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
 
     @property
-    def displayCtx(self):
-        """Returns a reference to the :class:`.DisplayContext` that is
-        associated with this ``_FSLeyesPanel``.
-        """
-        return self.__displayCtx
-
-
-    @property
-    def overlayList(self):
-        """Returns a reference to the :class:`.OverlayList`. """
-        return self.__overlayList
-
-
-    @property
     @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
     def _overlayList(self):
-        return self.__overlayList
+        return self.overlayList
 
 
     @property
     @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
     def _displayCtx(self):
-        return self.__displayCtx
+        return self.displayCtx
 
 
     @property
@@ -296,13 +278,13 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         """Returns a reference to the :class:`.DisplayContext` that is
         associated with this ``_FSLeyesPanel``.
         """
-        return self.__displayCtx
+        return self.displayCtx
 
 
     @deprecated.deprecated('0.15.2', '1.0.0', 'Use overlayList instead')
     def getOverlayList(self):
         """Returns a reference to the :class:`.OverlayList`. """
-        return self.__overlayList
+        return self.overlayList
 
 
     def destroy(self):
@@ -327,22 +309,17 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         called. So this method *must* be called by managing code when a panel
         is deleted.
 
-        Overriding subclass implementations must call this base class
-        method, otherwise memory leaks will probably occur, and warnings will
-        probably be output to the log (see :meth:`__del__`). This
-        implememtation should be called **after** the subclass has performed
-        its own clean-up, as this method expliciltly clears the
-        ``__overlayList`` and ``__displayCtx`` references.
+        Overriding subclass implementations must call this base class method,
+        otherwise memory leaks will probably occur, and warnings will probably
+        be output to the log (see :meth:`__del__`). This implememtation should
+        be called **after** the subclass has performed its own clean-up, as
+        this method expliciltly clears the ``overlayList`` and ``displayCtx``
+        references (via :meth:`.ActionProvider.destroy`).
         """
         actions.ActionProvider.destroy(self)
         self.__frame       = None
-        self.__displayCtx  = None
-        self.__overlayList = None
         self.__navOrder    = None
         self.__destroyed   = True
-
-        self.__displayCtx  = None
-        self.__overlayList = None
 
 
     def destroyed(self):

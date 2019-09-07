@@ -106,12 +106,11 @@ class Editor(actions.ActionProvider):
                               change history.
         """
 
-        self.__name           = '{}_{}'.format(self.__class__.__name__,
-                                               id(self))
-        self.__image          = image
-        self.__overlayList    = overlayList
-        self.__displayCtx     = displayCtx
-        self.__selection      = selection.Selection(
+        actions.ActionProvider.__init__(self, overlayList, displayCtx)
+
+        self.__name      = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__image     = image
+        self.__selection = selection.Selection(
             image, displayCtx.getDisplay(image))
 
         if recordSelection:
@@ -146,16 +145,11 @@ class Editor(actions.ActionProvider):
         """Removes some property listeners, and clears references to objects
         to prevent memory leaks.
         """
-
-        self.__selection  .deregister(self.__name)
-        self.__overlayList.removeListener('overlays',  self.__name)
-
-        self.__image          = None
-        self.__overlayList    = None
-        self.__displayCtx     = None
-        self.__selection      = None
-        self.__currentOverlay = None
-        self.__doneList       = None
+        actions.ActionProvider.destroy(self)
+        self.__selection.deregister(self.__name)
+        self.__image     = None
+        self.__selection = None
+        self.__doneList  = None
 
 
     def getImage(self):
@@ -211,7 +205,7 @@ class Editor(actions.ActionProvider):
         """
 
         image               = self.__image
-        opts                = self.__displayCtx.getOpts(image)
+        opts                = self.displayCtx.getOpts(image)
         selectBlock, offset = self.__selection.getBoundedSelection()
 
         if not isinstance(newVals, collections.Sequence):
@@ -373,7 +367,7 @@ class Editor(actions.ActionProvider):
         """
 
         image     = self.__image
-        opts      = self.__displayCtx.getOpts(image)
+        opts      = self.displayCtx.getOpts(image)
         selection = np.array(self.__selection.getSelection() > 0)
         data      = np.zeros(image.shape[:3], dtype=image.dtype)
 
@@ -448,7 +442,7 @@ class Editor(actions.ActionProvider):
         """
 
         image = change.overlay
-        opts  = self.__displayCtx.getOpts(image)
+        opts  = self.displayCtx.getOpts(image)
 
         if isinstance(change, ValueChange):
             log.debug('{}: changing image {} data - offset '
@@ -478,7 +472,7 @@ class Editor(actions.ActionProvider):
         """
 
         image = change.overlay
-        opts  = self.__displayCtx.getOpts(image)
+        opts  = self.displayCtx.getOpts(image)
 
         if isinstance(change, ValueChange):
             log.debug('{}: reverting image {} data change - offset '
