@@ -34,11 +34,8 @@ class LoadPluginAction(base.Action):
         :arg displayCtx:  The top-level :class:`.DisplayContext`.
         :arg overlayList: The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__loadPlugin)
-
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__loadPlugin)
+        self.__frame = frame
 
 
     def __loadPlugin(self, *args, **kwargs):

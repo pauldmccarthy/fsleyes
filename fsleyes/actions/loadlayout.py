@@ -19,7 +19,7 @@ class LoadLayoutAction(base.Action):
     """
 
 
-    def __init__(self, frame, layout):
+    def __init__(self, overlayList, displayCtx, frame, layout):
         """Create a ``LoadLayoutAction`` instance.
 
         :arg frame:  The :class:`.FSLeyesFrame`
@@ -28,8 +28,7 @@ class LoadLayoutAction(base.Action):
 
         self.__frame  = frame
         self.__layout = layout
-
-        base.Action.__init__(self, self.__loadLayout)
+        base.Action.__init__(self, overlayList, displayCtx, self.__loadLayout)
 
 
     def __loadLayout(self):

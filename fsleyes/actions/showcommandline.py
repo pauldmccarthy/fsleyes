@@ -38,21 +38,16 @@ class ShowCommandLineAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg panel:       The :class:`.CanvasPanel`.
         """
-        base.Action.__init__(self, self.__showCommandLineArgs)
-
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__panel       = panel
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__showCommandLineArgs)
+        self.__panel = panel
 
 
     def __showCommandLineArgs(self):
         """Called when this action is executed. Calls the
         :func:`showCommandLineArgs` function.
         """
-        showCommandLineArgs(self.__overlayList,
-                            self.__displayCtx,
-                            self.__panel)
+        showCommandLineArgs(self.overlayList, self.displayCtx, self.__panel)
 
 
 def showCommandLineArgs(overlayList, displayCtx, canvas):

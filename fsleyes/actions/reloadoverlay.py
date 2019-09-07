@@ -36,12 +36,11 @@ class ReloadOverlayAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__reloadOverlay)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__reloadOverlay)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__frame = frame
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -58,9 +57,8 @@ class ReloadOverlayAction(base.Action):
         required. Removes some property listeners, and calls
         :meth:`.Action.destroy`.
         """
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-
+        self.overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
         base.Action.destroy(self)
 
 
@@ -68,7 +66,7 @@ class ReloadOverlayAction(base.Action):
         """Called when the currently selected overlay changes. Enables/disables
         this ``Action`` depending on the type of the newly selected overlay.
         """
-        ovl          = self.__displayCtx.getSelectedOverlay()
+        ovl          = self.displayCtx.getSelectedOverlay()
         self.enabled = (ovl            is not None)    and \
                        (ovl.dataSource is not None)    and \
                        type(ovl) == fslimage.Image     and \
@@ -78,13 +76,13 @@ class ReloadOverlayAction(base.Action):
     def __reloadOverlay(self):
         """Reloads the currently selected overlay from disk.
         """
-        ovl = self.__displayCtx.getSelectedOverlay()
+        ovl = self.displayCtx.getSelectedOverlay()
 
         if ovl is None or type(ovl) != fslimage.Image:
             raise RuntimeError('Only Image overlays can be reloaded')
 
-        index      = self.__overlayList.index(ovl)
-        order      = self.__displayCtx.overlayOrder[:]
+        index      = self.overlayList.index(ovl)
+        order      = self.displayCtx.overlayOrder[:]
         dataSource = ovl.dataSource
 
         status.update('Reloading {}...'.format(dataSource))
@@ -92,7 +90,7 @@ class ReloadOverlayAction(base.Action):
         # Get refs to all DisplayContexts -
         # the master one, and the one for
         # every view panel.
-        displayCtxs  = [self.__displayCtx]
+        displayCtxs  = [self.displayCtx]
         viewPanels   = self.__frame.viewPanels
         displayCtxs += [vp.displayCtx for vp in viewPanels]
 
@@ -103,8 +101,8 @@ class ReloadOverlayAction(base.Action):
         opts     = []
 
         for dctx in displayCtxs:
-            displays.append(self.__displayCtx.getDisplay(ovl))
-            opts    .append(self.__displayCtx.getOpts(   ovl))
+            displays.append(self.displayCtx.getDisplay(ovl))
+            opts    .append(self.displayCtx.getOpts(   ovl))
 
         # Turn those references into
         # {prop : value} dictionaries
@@ -124,8 +122,8 @@ class ReloadOverlayAction(base.Action):
         # from the list. If removeOverlay
         # returns False, it probably means
         # the user cancelled the action.
-        if not removeoverlay.removeOverlay(self.__overlayList,
-                                           self.__displayCtx,
+        if not removeoverlay.removeOverlay(self.overlayList,
+                                           self.displayCtx,
                                            ovl,
                                            'reloadoverlay.unsaved'):
             return
@@ -133,12 +131,12 @@ class ReloadOverlayAction(base.Action):
         # Now we re-load the overlay, and add it
         # back in to the list at the same location
         ovl = fslimage.Image(dataSource)
-        self.__overlayList.insert(index, ovl)
+        self.overlayList.insert(index, ovl)
 
         # Make sure the overlay is selected,
         # and the display order is preserved
-        self.__displayCtx.selectOverlay(ovl)
-        self.__displayCtx.overlayOrder = order
+        self.displayCtx.selectOverlay(ovl)
+        self.displayCtx.overlayOrder = order
 
         # The last step is to re-apply all of the
         # Display/DisplayOpts settings to the

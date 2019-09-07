@@ -19,10 +19,10 @@ class ClearLayoutsAction(base.Action):
     layouts.
     """
 
-    def __init__(self, frame):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``ClearLayoutsAction``. """
-        base.Action.__init__(self, func=self.__clearLayouts)
-
+        base.Action.__init__(
+            self, overlayList, displayCtx, func=self.__clearLayouts)
         self.__frame = frame
 
 

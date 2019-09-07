@@ -1547,7 +1547,7 @@ class FSLeyesFrame(wx.Frame):
              strings.actions[ClearSettingsAction],
              None,
              wx.ID_ANY),
-            (UpdateCheckAction(),
+            (UpdateCheckAction(overlayList, displayCtx),
              strings.actions[      UpdateCheckAction],
              shortcuts.actions.get(UpdateCheckAction),
              wx.ID_ANY),
@@ -1772,7 +1772,8 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = menu.Append(wx.ID_ANY, title)
 
-            actionObj = LoadLayoutAction(self, layout)
+            actionObj = LoadLayoutAction(
+                self.overlayList, self.displayCtx, self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             actionItems.append((actionObj, menuItem))
 
@@ -1784,7 +1785,8 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem  = menu.Append(
                 wx.ID_ANY, strings.layouts.get(layout, layout))
-            actionObj = LoadLayoutAction(self, layout)
+            actionObj = LoadLayoutAction(
+                self.overlayList, self.displayCtx, layout, self)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
             actionItems.append((actionObj, menuItem))
@@ -1802,7 +1804,7 @@ class FSLeyesFrame(wx.Frame):
 
         for la in layoutActions:
 
-            actionObj = la(self)
+            actionObj = la(self.overlayList, self.displayCtx, self)
             menuItem  = menu.Append(wx.ID_ANY, strings.actions[la])
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)

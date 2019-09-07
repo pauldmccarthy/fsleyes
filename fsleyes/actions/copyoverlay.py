@@ -19,7 +19,7 @@ import fsleyes.strings        as strings
 from . import                    base
 
 
-class CopyOverlayAction(base.NeedImageAction):
+class CopyOverlayAction(base.NeedOverlayAction):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
 
@@ -49,8 +49,9 @@ class CopyOverlayAction(base.NeedImageAction):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.NeedImageAction.__init__(
-            self, overlayList, displayCtx, frame, self.__copyOverlay)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__copyOverlay)
+        self.__frame = frame
 
 
     def __copyOverlay(self):
@@ -111,7 +112,7 @@ class CopyOverlayAction(base.NeedImageAction):
 
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
-            self.frame,
+            self.__frame,
             title=strings.actions[self],
             message='Copy {}'.format(display.name),
             cbMessages=options,
@@ -145,7 +146,7 @@ class CopyOverlayAction(base.NeedImageAction):
             labels = [strings.choices[self, 'component'][c] for c in choices]
             title  = strings.titles[  'actions.copyoverlay.component']
             msg    = strings.messages['actions.copyoverlay.component']
-            dlg    = wx.SingleChoiceDialog(self.frame,
+            dlg    = wx.SingleChoiceDialog(self.__frame,
                                            msg,
                                            title,
                                            choices=labels)
@@ -164,7 +165,7 @@ class CopyOverlayAction(base.NeedImageAction):
                   copyDisplay=copyDisplay)
 
 
-class CopyAsMaskAction(base.NeedImageAction):
+class CopyAsMaskAction(base.NeedOverlayAction):
     """The ``CopyAsMaskAction`` is a convenience action which creates an
     empty copy of the currently selected :class:`.Image`.
     """
@@ -177,8 +178,8 @@ class CopyAsMaskAction(base.NeedImageAction):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.NeedImageAction.__init__(
-            self, overlayList, displayCtx, frame, self.__copyAsMask)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__copyAsMask)
 
 
     def __copyAsMask(self):

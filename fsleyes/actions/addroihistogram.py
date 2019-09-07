@@ -40,13 +40,12 @@ class AddROIHistogramAction(base.Action):
         :arg plotPanel:   The :class:`.HistogramPanel`.
         """
 
-        base.Action.__init__(self, self.__addROIHistogram)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__addROIHistogram)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__plotPanel   = plotPanel
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__roiOptions  = []
+        self.__plotPanel  = plotPanel
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
+        self.__roiOptions = []
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -62,12 +61,10 @@ class AddROIHistogramAction(base.Action):
         """Must be called when this ``AddROIHistogramAction`` is no
         longer in use.
         """
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList = None
-        self.__displayCtx  = None
-        self.__plotPanel   = None
-        self.__roiOptions  = None
+        self.overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__plotPanel  = None
+        self.__roiOptions = None
         base.Action.destroy(self)
 
 
@@ -77,14 +74,14 @@ class AddROIHistogramAction(base.Action):
         valid mask images for the currently selected overlay.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
-        if (len(self.__overlayList) == 0 or
+        if (len(self.overlayList) == 0 or
            (not isinstance(overlay, fslimage.Image))):
             self.enabled = False
             return
 
-        self.__roiOptions = [o for o in self.__overlayList if
+        self.__roiOptions = [o for o in self.overlayList if
                              isinstance(o, fslimage.Image) and
                              o is not overlay              and
                              o.sameSpace(overlay)]
@@ -99,8 +96,8 @@ class AddROIHistogramAction(base.Action):
         to the ``HistogramPanel``.
         """
 
-        overlay    = self.__displayCtx.getSelectedOverlay()
-        opts       = self.__displayCtx.getOpts(overlay)
+        overlay    = self.displayCtx.getSelectedOverlay()
+        opts       = self.displayCtx.getOpts(overlay)
         roiOptions = self.__roiOptions
 
         frame   = wx.GetApp().GetTopWindow()
@@ -134,8 +131,8 @@ class AddROIHistogramAction(base.Action):
                                                     count=count)
 
         ds           = dataseries.DataSeries(overlay,
-                                             self.__overlayList,
-                                             self.__displayCtx,
+                                             self.overlayList,
+                                             self.displayCtx,
                                              self.__plotPanel)
         ds.colour    = self.__plotPanel.getOverlayPlotColour(overlay)
         ds.alpha     = 1

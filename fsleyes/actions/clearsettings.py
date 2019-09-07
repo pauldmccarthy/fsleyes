@@ -27,8 +27,8 @@ class ClearSettingsAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__clearSettings)
-
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__clearSettings)
         self.__frame = frame
 
 

@@ -28,12 +28,8 @@ class ImportDataSeriesAction(base.Action):
 
     def __init__(self, overlayList, displayCtx, plotPanel):
 
-        base.Action.__init__(self, self.__doImport)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__plotPanel   = plotPanel
-
+        base.Action.__init__(self, overlayList, displayCtx, self.__doImport)
+        self.__plotPanel = plotPanel
 
 
     def __doImport(self):
@@ -84,7 +80,7 @@ class ImportDataSeriesAction(base.Action):
         # Ask the user the x axis scaling factor.
         # If the currently selected overlay is
         # Nifti and 4D, default to its pixdim[3]
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is not None                 and \
            isinstance(overlay, fslimage.Nifti) and \
@@ -133,8 +129,8 @@ class ImportDataSeriesAction(base.Action):
             y   = y[fin]
 
             ds = plotting.DataSeries(None,
-                                     self.__overlayList,
-                                     self.__displayCtx,
+                                     self.overlayList,
+                                     self.displayCtx,
                                      self.__plotPanel)
             ds.setData(x, y)
 

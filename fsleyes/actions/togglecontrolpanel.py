@@ -27,18 +27,20 @@ class ToggleControlPanelAction(base.ToggleAction):
     managed by a ``ToggleControlPanelAction`` is added/removed.
     """
 
-    def __init__(self, func, instance, cpType):
+    def __init__(self, overlayList, displayCtx, func, instance, cpType):
         """Create a ``ToggleControlPanelAction``.
 
-        :arg func:     The function which toggles the
-        :arg instance: The :class:`.ViewPanel` instance.
-        :arg cpType:   The type of the control panel being managed by this
-                       ``ToggleControlPanelAction``.
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  The :class:`.DisplayContext`
+        :arg func:        The function which toggles the
+        :arg instance:    The :class:`.ViewPanel` instance.
+        :arg cpType:      The type of the control panel being managed by this
+                          ``ToggleControlPanelAction``.
         """
 
         import wx.lib.agw.aui as aui
 
-        base.ToggleAction.__init__(self, func, instance)
+        base.ToggleAction.__init__(self, overlayList, displayCtx, func, instance)
 
         self.__viewPanel = instance
         self.__cpType    = cpType

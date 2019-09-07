@@ -43,11 +43,8 @@ class DiagnosticReportAction(base.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        base.Action.__init__(self, self.__action)
-
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__action)
+        self.__frame = frame
 
 
     def __action(self):
@@ -99,7 +96,7 @@ class DiagnosticReportAction(base.Action):
         report   = OrderedDict()
         overlays = []
 
-        for i, ovl in enumerate(self.__overlayList):
+        for i, ovl in enumerate(self.overlayList):
             overlays.append(OrderedDict([
                 ('type',   type(ovl).__name__),
                 ('name',   ovl.name),

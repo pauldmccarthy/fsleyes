@@ -29,10 +29,7 @@ class LoadOverlayFromDirAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__openDir)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__openDir)
 
 
     def __openDir(self):
@@ -51,18 +48,16 @@ class LoadOverlayFromDirAction(base.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.extend(overlays)
+            self.overlayList.extend(overlays)
+            self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[-1]
-
-            if self.__displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
-                                            self.__overlayList,
-                                            self.__displayCtx)
+                                            self.overlayList,
+                                            self.displayCtx)
 
         loadoverlay.interactiveLoadOverlays(
             dirdlg=True,
             onLoad=onLoad,
-            inmem=self.__displayCtx.loadInMemory)
+            inmem=self.displayCtx.loadInMemory)

@@ -19,7 +19,7 @@ import fsleyes.strings              as strings
 from . import                          base
 
 
-class LoadVertexDataAction(base.Action):
+class LoadVertexDataAction(base.NeedOverlayAction):
     """The ``LoadVertexDataAction`` prompts the user to load a file containing
     vertex data or a vertex set for a :class:`.Mesh` overlay.  See the
     :attr:`.MeshOpts.vertexData` and :attr:`.MeshOpts.vertexSet` properties.
@@ -35,40 +35,9 @@ class LoadVertexDataAction(base.Action):
                           containing vertices for the mesh. Otherwise, the user
                           is prompted to load a file containing vertex data.
         """
-        base.Action.__init__(self, self.__onRun)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__vertices    = vertices
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-
-    def destroy(self):
-        """Must be called when this ``LoadVertexDataAction`` is no longer
-        needed. Performs some clean-up.
-        """
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-
-        base.Action.destroy(self)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        Enables/disables this action based on the type of the newly selected
-        overlay.
-        """
-
-        overlay = self.__displayCtx.getSelectedOverlay()
-
-        self.enabled = isinstance(overlay, fslmesh.Mesh)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, self.__onRun, fslmesh.Mesh)
+        self.__vertices = vertices
 
 
     def __onRun(self):
@@ -107,7 +76,7 @@ class LoadVertexDataAction(base.Action):
         import wx
 
         app     = wx.GetApp()
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
         fromDir = op.dirname(overlay.dataSource)
 
         msg = strings.messages[self, key].format(overlay.name)
@@ -125,7 +94,7 @@ class LoadVertexDataAction(base.Action):
         errmsg   = strings.messages[self, 'error'].format(overlay.name)
 
         with status.reportIfError(errtitle, errmsg, raiseError=False):
-            func(overlay, self.__displayCtx, path)
+            func(overlay, self.displayCtx, path)
 
 
 def loadVertexData(overlay, displayCtx, filename, select=True):

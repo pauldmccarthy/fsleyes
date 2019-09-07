@@ -29,11 +29,10 @@ class RemoveOverlayAction(base.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        base.Action.__init__(self, self.__removeOverlay)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__removeOverlay)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -45,7 +44,7 @@ class RemoveOverlayAction(base.Action):
         needed. Removes property listeners, and then calls
         :meth:`.Action.destroy`.
         """
-        self.__overlayList.removeListener('overlays', self.__name)
+        self.overlayList.removeListener('overlays', self.__name)
         base.Action.destroy(self)
 
 
@@ -53,14 +52,14 @@ class RemoveOverlayAction(base.Action):
         """Called when the :class:`.OverlayList` changes. Updates the
         :attr:`.Action.enabled` flag
         """
-        self.enabled = len(self.__overlayList) > 0
+        self.enabled = len(self.overlayList) > 0
 
 
     def __removeOverlay(self):
         """Removes the currently selected overlay (as defined by the
         :attr:`.DisplayContext.selectedOverlay) from the :class:`.OverlayList`.
         """
-        removeOverlay(self.__overlayList, self.__displayCtx)
+        removeOverlay(self.overlayList, self.displayCtx)
 
 
 def removeOverlay(overlayList, displayCtx, overlay=None, stringKey=None):

@@ -38,10 +38,8 @@ class LoadColourMapAction(base.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         """
-        base.Action.__init__(self, self.__loadColourMap)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__loadColourMap)
 
 
     def __loadColourMap(self):
@@ -107,8 +105,8 @@ class LoadColourMapAction(base.Action):
 
         # register the selected colour map file
         fslcmap.registerColourMap(cmapFile,
-                                  self.__overlayList,
-                                  self.__displayCtx,
+                                  self.overlayList,
+                                  self.displayCtx,
                                   key=cmapKey,
                                   name=cmapName)
 

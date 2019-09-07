@@ -43,12 +43,9 @@ class ApplyCommandLineAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg panel:       The :class:`.CanvasPanel`.
         """
-        base.Action.__init__(self, self.__applyCommandLineArgs)
-
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__panel       = panel
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__applyCommandLineArgs)
+        self.__panel = panel
 
 
     def __applyCommandLineArgs(self):
@@ -78,8 +75,8 @@ class ApplyCommandLineAction(base.Action):
 
         # apply said arguments
         with status.reportIfError(errTitle, errMsg):
-            applyCommandLineArgs(self.__overlayList,
-                                 self.__displayCtx,
+            applyCommandLineArgs(self.overlayList,
+                                 self.displayCtx,
                                  argv,
                                  self.__panel)
 

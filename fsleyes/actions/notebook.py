@@ -94,16 +94,15 @@ class NotebookAction(base.Action):
         :arg displayCtx:  The master :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__openNotebooks)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__openNotebooks)
 
         # permanently disable if any
         # dependencies are not present
-        self.enabled        = ENABLED
-        self.__overlayList  = overlayList
-        self.__displayCtx   = displayCtx
-        self.__frame        = frame
-        self.__kernel       = None
-        self.__server       = None
+        self.enabled  = ENABLED
+        self.__frame  = frame
+        self.__kernel = None
+        self.__server = None
 
 
     def __openNotebooks(self):
@@ -167,8 +166,8 @@ class NotebookAction(base.Action):
         """
         progdlg.UpdateMessage(strings.messages[self, 'init.kernel'])
         kernel = BackgroundIPythonKernel(
-            self.__overlayList,
-            self.__displayCtx,
+            self.overlayList,
+            self.displayCtx,
             self.__frame)
         kernel.start()
         self.__bounce(1, progdlg)

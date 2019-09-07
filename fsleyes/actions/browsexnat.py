@@ -46,11 +46,8 @@ class BrowseXNATAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__openBrowser)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        base.Action.__init__(self, overlayList, displayCtx, self.__openBrowser)
+        self.__frame = frame
 
         if wxnat is None:
             self.enabled = False
@@ -91,21 +88,19 @@ class BrowseXNATAction(base.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.extend(overlays)
-
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[-1]
+            self.overlayList.extend(overlays)
+            self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
             if self.__displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
-                                            self.__overlayList,
-                                            self.__displayCtx)
+                                            self.overlayList,
+                                            self.displayCtx)
 
         loadoverlay.loadOverlays(paths,
                                  onLoad=onLoad,
                                  saveDir=False,
-                                 inmem=self.__displayCtx.loadInMemory)
+                                 inmem=self.displayCtx.loadInMemory)
 
 
 class XNATBrowser(wx.Dialog):

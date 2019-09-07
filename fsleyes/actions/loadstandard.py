@@ -30,12 +30,10 @@ class LoadStandardAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__loadStandard)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__loadStandard)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
         self.__setStandardDir()
 
         # If FSLDIR is not set, the setStandardDir
@@ -80,12 +78,10 @@ class LoadStandardAction(base.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.extend(overlays)
-
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[-1]
+            self.overlayList.extend(overlays)
+            self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
         loadoverlay.interactiveLoadOverlays(
             fromDir=self.__stddir,
             onLoad=onLoad,
-            inmem=self.__displayCtx.loadInMemory)
+            inmem=self.displayCtx.loadInMemory)

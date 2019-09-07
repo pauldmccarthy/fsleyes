@@ -34,7 +34,7 @@ import fsleyes.strings     as strings
 from . import                 base
 
 
-class ApplyFlirtXfmAction(base.Action):
+class ApplyFlirtXfmAction(base.NeedOverlayAction):
     """The ``ApplyFlirtXfmAction`` class is an action which allows the user to
     load a FLIRT transformation matrix (or other affine file) and apply it to
     the currently selected overlay, if it is an :class:`.Image` instance.
@@ -55,36 +55,17 @@ class ApplyFlirtXfmAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__applyFlirtXfm)
-
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        Updates the :attr:`.Action.enabled` state of this action.
-        """
-
-        overlay      = self.__displayCtx.getSelectedOverlay()
-        self.enabled = isinstance(overlay, fslimage.Image)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__applyFlirtXfm)
+        self.__frame = frame
 
 
     def __applyFlirtXfm(self):
         """Called when this action is executed.
         """
 
-        displayCtx  = self.__displayCtx
-        overlayList = self.__overlayList
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
         overlay     = displayCtx.getSelectedOverlay()
 
         affType, matFile, refFile = promptForFlirtFiles(
