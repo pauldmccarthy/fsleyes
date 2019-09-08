@@ -318,6 +318,12 @@ def _findEntryPoints(filename, modname):
         if not isinstance(item, type):
             continue
 
+        # avoid module imports
+        if item is viewpanel.ViewPanel    or \
+           item is ctrlpanel.ControlPanel or \
+           item is actions.Action:
+            continue
+
         if   issubclass(item, viewpanel.ViewPanel):    group = 'views'
         elif issubclass(item, ctrlpanel.ControlPanel): group = 'controls'
         elif issubclass(item, actions.Action):         group = 'tools'

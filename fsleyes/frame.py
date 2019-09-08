@@ -887,7 +887,10 @@ class FSLeyesFrame(wx.Frame):
 
                 func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
                 name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
-                act  = actions.ToggleAction(func, name=ctrlName)
+                act  = actions.ToggleAction(self.overlayList,
+                                            self.displayCtx,
+                                            func,
+                                            name=ctrlName)
 
                 setattr(panel, name, act)
 
