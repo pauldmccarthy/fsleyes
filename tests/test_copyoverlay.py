@@ -386,56 +386,6 @@ def _test_CopyOverlayAction(panel, overlayList, displayCtx):
         overlayList.remove(copy)
 
 
-def test_CopyAsMaskAction():
-    run_with_orthopanel(_test_CopyAsMaskAction)
-def _test_CopyAsMaskAction(panel, overlayList, displayCtx):
-
-    img3d   = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-    img4d   = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 20)))
-    complex = make_complex()
-    rgb     = make_rgb()
-    overlayList.extend((img3d, img4d, complex, rgb))
-
-    act = copyoverlay.CopyAsMaskAction(overlayList, displayCtx, panel.frame)
-
-    displayCtx.selectOverlay(img3d)
-    act()
-    assert len(overlayList) == 5
-    copy = overlayList[1]
-    assert copy.sameSpace(img3d)
-    assert np.all(copy[:] == 0)
-    overlayList.remove(copy)
-
-    displayCtx.selectOverlay(img4d)
-    act()
-    assert len(overlayList) == 5
-    copy = overlayList[2]
-    assert copy.sameSpace(img4d)
-    assert copy.ndim == 3
-    assert np.all(copy[:] == 0)
-    overlayList.remove(copy)
-
-    displayCtx.selectOverlay(complex)
-    act()
-    assert len(overlayList) == 5
-    copy = overlayList[3]
-    assert copy.sameSpace(complex)
-    assert not copy.iscomplex
-    assert np.all(copy[:] == 0)
-    overlayList.remove(copy)
-
-    displayCtx.selectOverlay(rgb)
-    act()
-    assert len(overlayList) == 5
-    copy = overlayList[4]
-    assert copy.sameSpace(rgb)
-    assert copy.nvals == 1
-    assert np.all(copy[:] == 0)
-    overlayList.remove(copy)
-
-
-
-
 def test_copyDisplayProperties():
     run_with_orthopanel(_test_copyDisplayProperties)
 def _test_copyDisplayProperties(panel, overlayList, displayCtx):
