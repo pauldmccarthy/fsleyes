@@ -43,8 +43,8 @@ class PluginControl(ctrlpanel.ControlPanel):
 
 class PluginTool(actions.Action):
 
-    def __init__(self, *args, **kwargs):
-        actions.Action.__init__(self, self.run)
+    def __init__(self, overlayList, displayCtx, frame):
+        actions.Action.__init__(self, overlayList, displayCtx, self.run)
 
     def run(self):
         print('Running plugin tool')
