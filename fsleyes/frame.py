@@ -1589,6 +1589,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.loadstandard       import LoadStandardAction
         from fsleyes.actions.loadatlas          import LoadAtlasAction
         from fsleyes.actions.browsexnat         import BrowseXNATAction
+        from fsleyes.actions.newimage           import NewImageAction
         from fsleyes.actions.runscript          import RunScriptAction
         from fsleyes.actions.loadplugin         import LoadPluginAction
         from fsleyes.actions.notebook           import NotebookAction
@@ -1598,6 +1599,7 @@ class FSLeyesFrame(wx.Frame):
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
                        LoadStandardAction,
+                       NewImageAction,
                        LoadDicomAction,
                        BrowseXNATAction,
                        LoadAtlasAction,
@@ -1822,7 +1824,6 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.actions.removealloverlays import RemoveAllOverlaysAction
         from fsleyes.actions.copyoverlay       import CopyOverlayAction
-        from fsleyes.actions.copyoverlay       import CopyAsMaskAction
         from fsleyes.actions.saveoverlay       import SaveOverlayAction
         from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
         from fsleyes.actions.removeoverlay     import RemoveOverlayAction
@@ -1835,7 +1836,6 @@ class FSLeyesFrame(wx.Frame):
                        'sep',
                        'name',
                        CopyOverlayAction,
-                       CopyAsMaskAction,
                        SaveOverlayAction,
                        ReloadOverlayAction,
                        RemoveOverlayAction,
