@@ -359,7 +359,6 @@ class NeedOverlayAction(Action):
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
         :arg func:        The action function
         :arg overlayType: The required overlay type (defaults to :class:`.Image`)
         """
