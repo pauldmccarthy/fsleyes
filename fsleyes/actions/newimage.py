@@ -53,21 +53,23 @@ class NewImageAction(base.Action):
         ovl = self.displayCtx.getSelectedOverlay()
 
         if ovl is not None and isinstance(ovl, fslimage.Nifti):
-            shape  = ovl.shape[:3]
-            pixdim = ovl.pixdim[:3]
-            dtype  = ovl.dtype
-            affine = ovl.voxToWorldMat
-            units  = ovl.xyzUnits, ovl.timeUnits
+            shape     = ovl.shape[:3]
+            pixdim    = ovl.pixdim[:3]
+            dtype     = ovl.dtype
+            affine    = ovl.voxToWorldMat
+            xyzUnits  = ovl.xyzUnits
+            timeUnits = ovl.timeUnits
 
             # adjust pixdims in case there
             # are inversions (e.g. l/r flip)
             pixdim = pixdim * np.sign(fslaffine.decompose(affine)[0])
         else:
-            shape  = None
-            pixdim = None
-            dtype  = None
-            affine = np.eye(4)
-            units  = (constants.NIFTI_UNITS_MM, constants.NIFTI_UNITS_SEC)
+            shape     = None
+            pixdim    = None
+            dtype     = None
+            affine    = np.eye(4)
+            xyzUnits  = None
+            timeUnits = None
 
         dlg = NewImageDialog(self.__frame,
                              shape=shape,
@@ -78,14 +80,39 @@ class NewImageAction(base.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        data = np.zeros(dlg.shape, dtype=dlg.dtype)
-        img  = nib.nifti1.Nifti1Image(data, dlg.affine)
-        img.header.set_zooms(np.abs(dlg.pixdim))
-        img.header.set_xyzt_units(*units)
-
-        img = fslimage.Image(img, name='new')
+        img = newImage(dlg.shape,
+                       dlg.pixdim,
+                       dlg.dtype,
+                       dlg.affine,
+                       xyzUnits=xyzUnits,
+                       timeUnits=timeUnits,
+                       name='new')
         self.overlayList.append(img)
         self.displayCtx.selectOverlay(img)
+
+
+def newImage(shape,
+             pixdim,
+             dtype,
+             affine,
+             xyzUnits=constants.NIFTI_UNITS_MM,
+             timeUnits=constants.NIFTI_UNITS_SEC,
+             name='new'):
+    """Create a new :class:`.Image` with the specified properties.
+
+    :arg shape:      Tuple containing the image shape
+    :arg pixdim:     Tuple containing the image pixdims
+    :arg dtype:      ``numpy`` ``dtype``
+    :arg affine:     ``(4, 4)`` ``numpy`` array specifying the voxel-to-world
+                     affine
+    :arg xyzUnits:   Spatial units
+    :arg timeUnits:  Temporal units
+    """
+    data = np.zeros(shape, dtype=dtype)
+    img  = nib.Nifti2Image(data, affine)
+    img.header.set_zooms(np.abs(pixdim))
+    img.header.set_xyzt_units(xyzUnits, timeUnits)
+    return fslimage.Image(img, name=name)
 
 
 class NewImageDialog(wx.Dialog):
@@ -291,6 +318,48 @@ class NewImageDialog(wx.Dialog):
         self.__pixdimx.SetValue(scales[0])
         self.__pixdimy.SetValue(scales[1])
         self.__pixdimz.SetValue(scales[2])
+
+
+    @property
+    def linkWidget(self):
+        """Return a reference to the link widget. """
+        return self.__link
+
+
+    @property
+    def shapeWidgets(self):
+        """Return a reference to the three shape widgets. """
+        return (self.__shapex, self.__shapey, self.__shapez)
+
+
+    @property
+    def pixdimWidgets(self):
+        """Return a reference to the three pixdim widgets. """
+        return (self.__pixdimx, self.__pixdimy, self.__pixdimz)
+
+
+    @property
+    def dtypeWidget(self):
+        """Return a reference to the dtype widget. """
+        return self.__dtype
+
+
+    @property
+    def affineWidget(self):
+        """Return a reference to the affine widget. """
+        return self.__affine
+
+
+    @property
+    def ok(self):
+        """Return a reference to the ok button. """
+        return self.__ok
+
+
+    @property
+    def cancel(self):
+        """Return a reference to the cancel button. """
+        return self.__cancel
 
 
     @property
