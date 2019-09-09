@@ -80,7 +80,7 @@ class NewImageAction(base.Action):
 
         data = np.zeros(dlg.shape, dtype=dlg.dtype)
         img  = nib.nifti1.Nifti1Image(data, dlg.affine)
-        img.header.set_zooms(dlg.pixdim)
+        img.header.set_zooms(np.abs(dlg.pixdim))
         img.header.set_xyzt_units(*units)
 
         img = fslimage.Image(img, name='new')
