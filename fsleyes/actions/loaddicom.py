@@ -51,11 +51,8 @@ class LoadDicomAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__loadDicom)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        base.Action.__init__(self, overlayList, displayCtx, self.__loadDicom)
+        self.__frame = frame
 
         # permanently disable if
         # fsl.data.dicom says it
@@ -72,16 +69,15 @@ class LoadDicomAction(base.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.extend(overlays)
+            self.overlayList.extend(overlays)
 
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[-1]
+            self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
-            if self.__displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
-                                            self.__overlayList,
-                                            self.__displayCtx)
+                                            self.overlayList,
+                                            self.displayCtx)
 
         loadDicom(parent=self.__frame, callback=onLoad)
 

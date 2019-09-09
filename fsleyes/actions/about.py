@@ -27,11 +27,8 @@ class AboutAction(base.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        base.Action.__init__(self, self.__showDialog)
-
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__showDialog)
+        self.__frame = frame
 
 
     def __showDialog(self):

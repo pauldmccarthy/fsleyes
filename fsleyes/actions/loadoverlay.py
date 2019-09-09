@@ -57,10 +57,7 @@ class LoadOverlayAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__loadOverlay)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__loadOverlay)
 
 
     def __loadOverlay(self):
@@ -79,19 +76,18 @@ class LoadOverlayAction(base.Action):
             if len(overlays) == 0:
                 return
 
-            self.__overlayList.extend(overlays)
+            self.overlayList.extend(overlays)
 
-            self.__displayCtx.selectedOverlay = \
-                self.__displayCtx.overlayOrder[-1]
+            self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
-            if self.__displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
-                                            self.__overlayList,
-                                            self.__displayCtx)
+                                            self.overlayList,
+                                            self.displayCtx)
 
         interactiveLoadOverlays(onLoad=onLoad,
-                                inmem=self.__displayCtx.loadInMemory)
+                                inmem=self.displayCtx.loadInMemory)
 
 
 def makeWildcard(allowedExts=None, descs=None):
@@ -320,9 +316,8 @@ def loadImage(dtype, path, inmem=False):
                   calcRange=False,
                   threaded=False)
 
-    imgdtype = image.dtype
-    nbytes   = np.prod(image.shape) * image.dtype.itemsize
-    image    = None
+    nbytes = np.prod(image.shape) * image.dtype.itemsize
+    image  = None
 
     return [_loadImage(dtype, path, nbytes, inmem)]
 

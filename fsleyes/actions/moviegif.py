@@ -46,22 +46,20 @@ class MovieGifAction(base.Action):
                           GIF for.
         """
 
-        base.Action.__init__(self, self.__doMakeGif)
+        base.Action.__init__(self, overlayList, displayCtx, self.__doMakeGif)
 
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__panel       = panel
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+        self.__panel = panel
 
-        self.__overlayList.addListener('overlays',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
-        self.__displayCtx .addListener('selectedOverlay',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
-        self.__panel      .addListener('movieAxis',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
+        overlayList.addListener('overlays',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        displayCtx .addListener('selectedOverlay',
+                                self.__name,
+                                self.__selectedOverlayChanged)
+        panel      .addListener('movieAxis',
+                                self.__name,
+                                self.__selectedOverlayChanged)
 
         self.__selectedOverlayChanged()
 
@@ -70,10 +68,9 @@ class MovieGifAction(base.Action):
         """Must be called when this ``MovieGifAction`` is no longer neded.
         Removes some property listeners.
         """
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__panel      .removeListener('movieAxis',       self.__name)
-
+        self.overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.__panel    .removeListener('movieAxis',       self.__name)
         base.Action.destroy(self)
 
 
@@ -83,13 +80,13 @@ class MovieGifAction(base.Action):
         (see :meth:`.CanvasPanel.canRunMovie`).
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             self.enabled = False
             return
 
-        opts = self.__displayCtx.getOpts(overlay)
+        opts = self.displayCtx.getOpts(overlay)
 
         self.enabled = self.__panel.canRunMovie(overlay, opts)
 
@@ -134,8 +131,8 @@ class MovieGifAction(base.Action):
 
         # TODO prompt user to select axis/delay/limits?
         self.__progdlg.Show()
-        makeGif(self.__overlayList,
-                self.__displayCtx,
+        makeGif(self.overlayList,
+                self.displayCtx,
                 self.__panel,
                 filename,
                 progfunc=update,

@@ -19,7 +19,7 @@ import fsleyes.strings        as strings
 from . import                    base
 
 
-class CopyOverlayAction(base.NeedImageAction):
+class CopyOverlayAction(base.NeedOverlayAction):
     """The ``CopyOverlayAction`` does as its name suggests - it creates a
     copy of the currently selected overlay.
 
@@ -49,8 +49,9 @@ class CopyOverlayAction(base.NeedImageAction):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.NeedImageAction.__init__(
-            self, overlayList, displayCtx, frame, self.__copyOverlay)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__copyOverlay)
+        self.__frame = frame
 
 
     def __copyOverlay(self):
@@ -111,7 +112,7 @@ class CopyOverlayAction(base.NeedImageAction):
 
         # Ask the user what they want to do
         dlg = fsldlg.CheckBoxMessageDialog(
-            self.frame,
+            self.__frame,
             title=strings.actions[self],
             message='Copy {}'.format(display.name),
             cbMessages=options,
@@ -145,7 +146,7 @@ class CopyOverlayAction(base.NeedImageAction):
             labels = [strings.choices[self, 'component'][c] for c in choices]
             title  = strings.titles[  'actions.copyoverlay.component']
             msg    = strings.messages['actions.copyoverlay.component']
-            dlg    = wx.SingleChoiceDialog(self.frame,
+            dlg    = wx.SingleChoiceDialog(self.__frame,
                                            msg,
                                            title,
                                            choices=labels)
@@ -162,44 +163,6 @@ class CopyOverlayAction(base.NeedImageAction):
                   copy4D=copy4D,
                   channel=channel,
                   copyDisplay=copyDisplay)
-
-
-class CopyAsMaskAction(base.NeedImageAction):
-    """The ``CopyAsMaskAction`` is a convenience action which creates an
-    empty copy of the currently selected :class:`.Image`.
-    """
-
-
-    def __init__(self, overlayList, displayCtx, frame):
-        """Create a ``CopyAsMaskAction``.
-
-        :arg overlayList: The :class:`.OverlayList`.
-        :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
-        """
-        base.NeedImageAction.__init__(
-            self, overlayList, displayCtx, frame, self.__copyAsMask)
-
-
-    def __copyAsMask(self):
-        """Creates an empty copy of the currently selecyed :class:`.Image`.
-        """
-
-        overlay = self.displayCtx.getSelectedOverlay()
-        if   overlay.iscomplex: channel = 'real'
-        elif overlay.nvals > 1: channel = 'R'
-        else:                   channel = None
-
-        name = '{}_mask'.format(overlay.name)
-
-        copyImage(self.overlayList,
-                  self.displayCtx,
-                  overlay,
-                  name=name,
-                  createMask=True,
-                  copy4D=False,
-                  copyDisplay=False,
-                  channel=channel)
 
 
 def copyImage(overlayList,

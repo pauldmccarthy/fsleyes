@@ -364,6 +364,8 @@ titles = TypeDict({
     'FlirtFileDialog.load'      : 'Load affine transformation',
     'FlirtFileDialog.save'      : 'Save affine transformation',
 
+    'NewImageDialog'            : 'New image',
+
     'PlotListPanel'             : 'Plot list',
     'TimeSeriesControlPanel'    : 'Time series control',
     'HistogramControlPanel'     : 'Histogram control',
@@ -475,8 +477,8 @@ actions = TypeDict({
     'LoadStandardAction'       : 'Add standard',
     'LoadDicomAction'          : 'Add from DICOM',
     'BrowseXNATAction'         : 'Add from XNAT',
+    'NewImageAction'           : 'New image',
     'CopyOverlayAction'        : 'Copy',
-    'CopyAsMaskAction'         : 'Copy as mask',
     'LoadAtlasAction'          : 'Import new atlas',
     'ClearSettingsAction'      : 'Clear FSLeyes settings',
     'UpdateCheckAction'        : 'Check for updates',
@@ -891,6 +893,19 @@ labels = TypeDict({
     'ResampleDialog.origPixdims'   : 'Old pixdims',
     'ResampleDialog.newVoxels'     : 'New shape',
     'ResampleDialog.newPixdims'    : 'New pixdims',
+
+    'NewImageDialog.uchar'         : 'Unsigned char',
+    'NewImageDialog.sshort'        : 'Signed short',
+    'NewImageDialog.sint'          : 'Signed int',
+    'NewImageDialog.float'         : 'Float',
+    'NewImageDialog.double'        : 'Double',
+    'NewImageDialog.ok'            : 'Ok',
+    'NewImageDialog.cancel'        : 'Cancel',
+    'NewImageDialog.dtype'         : 'Data type',
+    'NewImageDialog.shape'         : 'Shape',
+    'NewImageDialog.pixdim'        : 'Dimensions',
+    'NewImageDialog.link'          : 'link with dimensions',
+    'NewImageDialog.affine'        : 'Affine',
 
     'XNATBrowser.ok'        : 'Download',
     'XNATBrowser.cancel'    : 'Cancel',

@@ -55,11 +55,8 @@ class RunScriptAction(base.Action):
         :arg displayCtx:  The top-level :class:`.DisplayContext`.
         :arg overlayList: The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__doAction)
-
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
+        base.Action.__init__(self, overlayList, displayCtx, self.__doAction)
+        self.__frame = frame
 
 
     def __doAction(self, script=None):
@@ -100,8 +97,8 @@ class RunScriptAction(base.Action):
         # error if it crashes
         try:
             runScript(self.__frame,
-                      self.__overlayList,
-                      self.__displayCtx,
+                      self.overlayList,
+                      self.displayCtx,
                       script)
 
         except Exception as e:

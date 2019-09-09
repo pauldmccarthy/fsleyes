@@ -31,11 +31,8 @@ class LoadAtlasAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__loadAtlas)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
+        base.Action.__init__(self, overlayList, displayCtx, self.__loadAtlas)
+        self.__frame = frame
 
 
     def __loadAtlas(self):

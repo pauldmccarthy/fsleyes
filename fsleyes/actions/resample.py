@@ -21,7 +21,7 @@ import fsleyes.tooltips          as tooltips
 from . import                       base
 
 
-class ResampleAction(base.Action):
+class ResampleAction(base.NeedOverlayAction):
     def __init__(self, overlayList, displayCtx, frame):
         """Create a ``ResampleAction``.
 
@@ -29,42 +29,9 @@ class ResampleAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__resample)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-        self.__selectedOverlayChanged()
-
-
-    def destroy(self):
-        """Removes listeners from the :class:`.DisplayContext` and
-        :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
-        """
-
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        base.Action.destroy(self)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the selected overlay, or overlay list, changes.
-
-        Enables/disables this action depending on the nature of the selected
-        overlay.
-        """
-
-        ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__resample)
+        self.__frame = frame
 
 
     def __resample(self):
@@ -72,15 +39,15 @@ class ResampleAction(base.Action):
         ``ResampleDialog``, and then resamples the currently selected overlay.
         """
 
-        ovl  = self.__displayCtx.getSelectedOverlay()
-        opts = self.__displayCtx.getOpts(ovl)
+        ovl  = self.displayCtx.getSelectedOverlay()
+        opts = self.displayCtx.getOpts(ovl)
 
         def refCandidate(o):
             return (isinstance(o, fslimage.Nifti) and
                     (o is not ovl)                and
                     not o.sameSpace(ovl))
 
-        refs = [o for o in self.__overlayList if refCandidate(o)]
+        refs = [o for o in self.overlayList if refCandidate(o)]
         dlg  = ResampleDialog(
             self.__frame,
             title=ovl.name,
@@ -123,7 +90,7 @@ class ResampleAction(base.Action):
                                    header=ovl.header,
                                    name=name)
 
-        self.__overlayList.append(resampled)
+        self.overlayList.append(resampled)
 
 
 class ResampleDialog(wx.Dialog):

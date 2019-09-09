@@ -54,9 +54,10 @@ class UpdateCheckAction(base.Action):
     """
 
 
-    def __init__(self):
+    def __init__(self, overlayList, displayCtx):
         """Create an ``UpdateCheckAction``. """
-        base.Action.__init__(self, self.__checkForUpdates)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__checkForUpdates)
 
 
     def __checkForUpdates(self,

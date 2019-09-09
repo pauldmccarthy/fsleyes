@@ -386,13 +386,11 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
                           options on the :attr:`mode` property.
         """
 
-        actions.ActionProvider     .__init__(self)
+        actions.ActionProvider     .__init__(self, overlayList, displayCtx)
         props.SyncableHasProperties.__init__(self)
 
-        self.__viewPanel   = viewPanel
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__viewPanel = viewPanel
+        self.__name      = '{}_{}'.format(self.__class__.__name__, id(self))
 
         import fsleyes.views.canvaspanel as canvaspanel
         import fsleyes.views.plotpanel   as plotpanel
@@ -531,8 +529,6 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         actions.ActionProvider.destroy(self)
         self.__lastCanvas    = None
         self.__viewPanel     = None
-        self.__overlayList   = None
-        self.__displayCtx    = None
         self.__extraHandlers = None
 
 
@@ -550,20 +546,6 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
 
     @property
-    def overlayList(self):
-        """Returns the :class:`.OverlayList`. """
-        return self.__overlayList
-
-
-    @property
-    def displayCtx(self):
-        """Returns the :class:`.DisplayContext` associated with this
-        ``Profile``.
-        """
-        return self.__displayCtx
-
-
-    @property
     @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanel instead')
     def _viewPanel(self):
         return self.__viewPanel
@@ -578,13 +560,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     @property
     @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
     def _displayCtx(self):
-        return self.__displayCtx
+        return self.displayCtx
 
 
     @property
     @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
     def _overlayList(self):
-        return self.__overlayList
+        return self.overlayList
 
 
     def getEventTargets(self):

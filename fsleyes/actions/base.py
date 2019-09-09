@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`Action`, :class:`NeedImageAction`, and
+"""This module provides the :class:`Action`, :class:`NeedOverlayAction`, and
 :class:`ToggleAction` classes.  See the :mod:`.actions` package documentation
 for more details.
 """
@@ -24,7 +24,6 @@ class ActionDisabledError(Exception):
     """Exception raised when an attempt is made to call a disabled
     :class:`Action`.
     """
-    pass
 
 
 class BoundWidget(object):
@@ -78,15 +77,26 @@ class Action(props.HasProperties):
     """
 
 
-    def __init__(self, func, instance=None, name=None):
+    def __init__(self,
+                 overlayList,
+                 displayCtx,
+                 func,
+                 instance=None,
+                 name=None):
         """Create an ``Action``.
 
-        :arg func:     The action function.
+        :arg overlayList: The :class:`.OverlayList`.
 
-        :arg instance: Object associated with the function, if this ``Action``
-                       is encapsulating an instance method.
+        :arg displayCtx:  The :class:`.DisplayContext` associated with this
+                          ``Action``; note that this is not necessarily the
+                          master :class:`.DisplayContext`.
 
-        :arg name:     Action name. Defaults to ``func.__name__``.
+        :arg func:        The action function.
+
+        :arg instance:    Object associated with the function, if this
+                          ``Action`` is encapsulating an instance method.
+
+        :arg name:        Action name. Defaults to ``func.__name__``.
 
         .. note:: If an ``Action`` encapsulates a method of an
                   :class:`.ActionProvider` instance, it is assumed that the
@@ -96,6 +106,8 @@ class Action(props.HasProperties):
         if name is None:
             name = func.__name__
 
+        self.__overlayList  = overlayList
+        self.__displayCtx   = displayCtx
         self.__instance     = instance
         self.__func         = func
         self.__name         = name
@@ -121,6 +133,18 @@ class Action(props.HasProperties):
         return self.__name
 
 
+    @property
+    def overlayList(self):
+        """Return a reference to the :class:`.OverlayList`. """
+        return self.__overlayList
+
+
+    @property
+    def displayCtx(self):
+        """Return a reference to the :class:`.DisplayContext`. """
+        return self.__displayCtx
+
+
     def __call__(self, *args, **kwargs):
         """Calls this action. An :exc:`ActionDisabledError` will be raised
         if :attr:`enabled` is ``False``.
@@ -143,8 +167,10 @@ class Action(props.HasProperties):
     def destroy(self):
         """Must be called when this ``Action`` is no longer needed. """
         self.unbindAllWidgets()
-        self.__func     = None
-        self.__instance = None
+        self.__overlayList = None
+        self.__displayCtx  = None
+        self.__func        = None
+        self.__instance    = None
 
 
     def bindToWidget(self, parent, evType, widget, wrapper=None):
@@ -316,28 +342,30 @@ class ToggleAction(Action):
                 self.unbindWidget(bw.widget)
 
 
-class NeedImageAction(Action):
-    """The ``NeedImageAction`` is a convenience base class for actions
-    which can only be executed when an :class:`.Image` is selected. It
-    enables/disables itself based on the type of the currently selected
+class NeedOverlayAction(Action):
+    """The ``NeedOverlayAction`` is a convenience base class for actions
+    which can only be executed when an overlay of a specific type is selected.
+    It enables/disables itself based on the type of the currently selected
     overlay.
     """
 
 
-    def __init__(self, overlayList, displayCtx, frame, func=None):
-        """Create a ``NeedImageAction``.
+    def __init__(self,
+                 overlayList,
+                 displayCtx,
+                 func=None,
+                 overlayType=fslimage.Image):
+        """Create a ``NeedOverlayAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg frame:       The :class:`.FSLeyesFrame`.
         :arg func:        The action function
+        :arg overlayType: The required overlay type (defaults to :class:`.Image`)
         """
-        Action.__init__(self, func)
+        Action.__init__(self, overlayList, displayCtx, func)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__frame       = frame
-        self.__name        = 'NeedImageAction_{}_{}'.format(
+        self.__overlayType = overlayType
+        self.__name        = 'NeedOverlayAction_{}_{}'.format(
             type(self).__name__, id(self))
 
         displayCtx .addListener('selectedOverlay',
@@ -350,32 +378,12 @@ class NeedImageAction(Action):
         self.__selectedOverlayChanged()
 
 
-    @property
-    def overlayList(self):
-        return self.__overlayList
-
-
-    @property
-    def displayCtx(self):
-        return self.__displayCtx
-
-
-    @property
-    def frame(self):
-        return self.__frame
-
-
     def destroy(self):
         """Removes listeners from the :class:`.DisplayContext` and
         :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
         """
-
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx  = None
-        self.__overlayList = None
-        self.__frame       = None
-
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.overlayList.removeListener('overlays',        self.__name)
         Action.destroy(self)
 
 
@@ -385,6 +393,6 @@ class NeedImageAction(Action):
         Enables/disables this action depending on the nature of the selected
         overlay.
         """
-
-        ovl          = self.__displayCtx.getSelectedOverlay()
-        self.enabled = (ovl is not None) and isinstance(ovl, fslimage.Image)
+        ovl          = self.displayCtx.getSelectedOverlay()
+        ovlType      = self.__overlayType
+        self.enabled = (ovl is not None) and isinstance(ovl, ovlType)

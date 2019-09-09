@@ -25,7 +25,7 @@ from . import                          applyflirtxfm
 log = logging.getLogger(__name__)
 
 
-class SaveFlirtXfmAction(base.Action):
+class SaveFlirtXfmAction(base.NeedOverlayAction):
     """The :class:`SaveFlirtXfmAction` class is an :class:`.Action` which
     allows the user to save an :class:`.Image` transformation to disk, either
     as a FLIRT matrix, or a voxel-to-world matrix.
@@ -39,40 +39,16 @@ class SaveFlirtXfmAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__saveFlirtXfm)
-
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__saveFlirtXfm)
+        self.__frame = frame
 
 
     def destroy(self):
         """Must be called when this ``SaveFlirtXfmAction`` is no longer needed.
         """
-        self.__overlayList.removeListener('overlays')
-        self.__displayCtx .removeListener('selectedOverlay')
-        self.__overlayList = None
-        self.__displayCtx  = None
-        self.__frame       = None
-
+        self.__frame = None
         base.Action.destroy(self)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        Updates the :attr:`.Action.enabled` state of this action.
-        """
-
-        overlay      = self.__displayCtx.getSelectedOverlay()
-        self.enabled = isinstance(overlay, fslimage.Image)
 
 
     def __saveFlirtXfm(self):
@@ -80,8 +56,8 @@ class SaveFlirtXfmAction(base.Action):
         a FLIRT transform for the currently selected image.
         """
 
-        displayCtx  = self.__displayCtx
-        overlayList = self.__overlayList
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
         overlay     = displayCtx.getSelectedOverlay()
 
         affType, matFile, refFile = applyflirtxfm.promptForFlirtFiles(

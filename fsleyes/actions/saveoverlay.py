@@ -45,11 +45,8 @@ class SaveOverlayAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__saveOverlay)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        base.Action.__init__(self, overlayList, displayCtx, self.__saveOverlay)
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
 
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
@@ -65,12 +62,8 @@ class SaveOverlayAction(base.Action):
         """Removes listeners from the :class:`.DisplayContext` and
         :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
         """
-
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx  = None
-        self.__overlayList = None
-
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.overlayList.removeListener('overlays',        self.__name)
         base.Action.destroy(self)
 
 
@@ -81,7 +74,7 @@ class SaveOverlayAction(base.Action):
         this action is enabled; otherwise it is disabled.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         # TODO  Support for other overlay types
 
@@ -89,7 +82,7 @@ class SaveOverlayAction(base.Action):
                         isinstance(overlay, fslimage.Image) and
                         (not overlay.saveState))
 
-        for ovl in self.__overlayList:
+        for ovl in self.overlayList:
 
             if not isinstance(ovl, fslimage.Image):
                 continue
@@ -115,7 +108,7 @@ class SaveOverlayAction(base.Action):
         see the :meth:`__selectedOverlayChanged` method.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if overlay is None:
             self.enabled = False
@@ -131,13 +124,13 @@ class SaveOverlayAction(base.Action):
         :func:`saveOverlay` with the currentyl selected overlay.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
         if (overlay is not None)               and \
            isinstance(overlay, fslimage.Image) and \
            (not overlay.saveState):
 
-            display = self.__displayCtx.getDisplay(overlay)
+            display = self.displayCtx.getDisplay(overlay)
             saveOverlay(overlay, display)
 
 

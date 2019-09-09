@@ -34,7 +34,7 @@ import fsleyes.strings     as strings
 from . import                 base
 
 
-class ApplyFlirtXfmAction(base.Action):
+class ApplyFlirtXfmAction(base.NeedOverlayAction):
     """The ``ApplyFlirtXfmAction`` class is an action which allows the user to
     load a FLIRT transformation matrix (or other affine file) and apply it to
     the currently selected overlay, if it is an :class:`.Image` instance.
@@ -55,36 +55,17 @@ class ApplyFlirtXfmAction(base.Action):
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
-        base.Action.__init__(self, self.__applyFlirtXfm)
-
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__frame       = frame
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-
-        overlayList.addListener('overlays',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self.__name,
-                                self.__selectedOverlayChanged)
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-        Updates the :attr:`.Action.enabled` state of this action.
-        """
-
-        overlay      = self.__displayCtx.getSelectedOverlay()
-        self.enabled = isinstance(overlay, fslimage.Image)
+        base.NeedOverlayAction.__init__(
+            self, overlayList, displayCtx, func=self.__applyFlirtXfm)
+        self.__frame = frame
 
 
     def __applyFlirtXfm(self):
         """Called when this action is executed.
         """
 
-        displayCtx  = self.__displayCtx
-        overlayList = self.__overlayList
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
         overlay     = displayCtx.getSelectedOverlay()
 
         affType, matFile, refFile = promptForFlirtFiles(
@@ -155,8 +136,6 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
              If the user cancelled the dialog, all elements of this tuple will
              be ``None``.
     """
-
-    import wx
 
     if overlay.dataSource is not None:
         matFile, refFile = guessFlirtFiles(overlay.dataSource)
@@ -392,6 +371,7 @@ class FlirtFileDialog(wx.Dialog):
         okButton      .SetLabel(strings.labels[self, 'ok'])
         cancelButton  .SetLabel(strings.labels[self, 'cancel'])
         refChoice     .SetSelection(selectedRef)
+        affType       .SetSelection(0)
 
         if save: label.SetLabel(strings.labels[self, 'save.message'])
         else:    label.SetLabel(strings.labels[self, 'load.message'])
@@ -458,11 +438,54 @@ class FlirtFileDialog(wx.Dialog):
         affType      .Bind(wx.EVT_CHOICE, self.__onAffType)
         refChoice    .Bind(wx.EVT_CHOICE, self.__onRefChoice)
 
+        self.__okButton     = okButton
+        self.__cancelButton = cancelButton
+        self.__matFileText  = matFileText
+        self.__refFileText  = refFileText
+        self.__affType      = affType
+        self.__refChoice    = refChoice
+
         if len(refOpts) == 1:
             refChoice     .Disable()
             refChoiceLabel.Disable()
         else:
             self.__onRefChoice(None)
+
+
+    @property
+    def ok(self):
+        """Return a reference to the OK button. """
+        return self.__okButton
+
+
+    @property
+    def cancel(self):
+        """Return a reference to the cancel button. """
+        return self.__cancelButton
+
+
+    @property
+    def matFileText(self):
+        """Return a reference to the matrix file text entry widget. """
+        return self.__matFileText
+
+
+    @property
+    def refFileText(self):
+        """Return a reference to the reference file text entry widget. """
+        return self.__refFileText
+
+
+    @property
+    def affType(self):
+        """Return a reference to the affine type dropdown widget. """
+        return self.__affType
+
+
+    @property
+    def refChoice(self):
+        """Return a reference to the reference file dropdown widget. """
+        return self.__refChoice
 
 
     def GetAffineType(self):

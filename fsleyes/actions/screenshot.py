@@ -57,7 +57,8 @@ class ScreenshotAction(base.Action):
                           take a screenshot of.
         """
 
-        base.Action.__init__(self, self.__doScreenshot)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__doScreenshot)
         self.__panel = panel
 
 

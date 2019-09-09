@@ -82,7 +82,11 @@ class {prefix}Control(ControlPanel):
     pass
 
 class {prefix}Tool(Action):
-    pass
+    def __init__(self, overlayList, displayCtx, frame):
+        Action.__init__(self, overlayList, displayCtx, self.func)
+
+    def func(self):
+        pass
 """).strip()
 
 

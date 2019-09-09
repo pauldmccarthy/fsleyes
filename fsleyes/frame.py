@@ -887,7 +887,10 @@ class FSLeyesFrame(wx.Frame):
 
                 func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
                 name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
-                act  = actions.ToggleAction(func, name=ctrlName)
+                act  = actions.ToggleAction(self.overlayList,
+                                            self.displayCtx,
+                                            func,
+                                            name=ctrlName)
 
                 setattr(panel, name, act)
 
@@ -1547,7 +1550,7 @@ class FSLeyesFrame(wx.Frame):
              strings.actions[ClearSettingsAction],
              None,
              wx.ID_ANY),
-            (UpdateCheckAction(),
+            (UpdateCheckAction(overlayList, displayCtx),
              strings.actions[      UpdateCheckAction],
              shortcuts.actions.get(UpdateCheckAction),
              wx.ID_ANY),
@@ -1586,6 +1589,7 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.actions.loadstandard       import LoadStandardAction
         from fsleyes.actions.loadatlas          import LoadAtlasAction
         from fsleyes.actions.browsexnat         import BrowseXNATAction
+        from fsleyes.actions.newimage           import NewImageAction
         from fsleyes.actions.runscript          import RunScriptAction
         from fsleyes.actions.loadplugin         import LoadPluginAction
         from fsleyes.actions.notebook           import NotebookAction
@@ -1595,6 +1599,7 @@ class FSLeyesFrame(wx.Frame):
         fileActions = [LoadOverlayAction,
                        LoadOverlayFromDirAction,
                        LoadStandardAction,
+                       NewImageAction,
                        LoadDicomAction,
                        BrowseXNATAction,
                        LoadAtlasAction,
@@ -1772,7 +1777,8 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = menu.Append(wx.ID_ANY, title)
 
-            actionObj = LoadLayoutAction(self, layout)
+            actionObj = LoadLayoutAction(
+                self.overlayList, self.displayCtx, self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             actionItems.append((actionObj, menuItem))
 
@@ -1784,7 +1790,8 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem  = menu.Append(
                 wx.ID_ANY, strings.layouts.get(layout, layout))
-            actionObj = LoadLayoutAction(self, layout)
+            actionObj = LoadLayoutAction(
+                self.overlayList, self.displayCtx, self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
 
             actionItems.append((actionObj, menuItem))
@@ -1802,7 +1809,7 @@ class FSLeyesFrame(wx.Frame):
 
         for la in layoutActions:
 
-            actionObj = la(self)
+            actionObj = la(self.overlayList, self.displayCtx, self)
             menuItem  = menu.Append(wx.ID_ANY, strings.actions[la])
 
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
@@ -1817,7 +1824,6 @@ class FSLeyesFrame(wx.Frame):
 
         from fsleyes.actions.removealloverlays import RemoveAllOverlaysAction
         from fsleyes.actions.copyoverlay       import CopyOverlayAction
-        from fsleyes.actions.copyoverlay       import CopyAsMaskAction
         from fsleyes.actions.saveoverlay       import SaveOverlayAction
         from fsleyes.actions.reloadoverlay     import ReloadOverlayAction
         from fsleyes.actions.removeoverlay     import RemoveOverlayAction
@@ -1830,7 +1836,6 @@ class FSLeyesFrame(wx.Frame):
                        'sep',
                        'name',
                        CopyOverlayAction,
-                       CopyAsMaskAction,
                        SaveOverlayAction,
                        ReloadOverlayAction,
                        RemoveOverlayAction,

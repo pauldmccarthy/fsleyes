@@ -37,10 +37,9 @@ class AddMaskDataSeriesAction(base.Action):
         :arg plotPanel:   The :class:`.TimeSeriesPanel`.
         """
 
-        base.Action.__init__(self, self.__addMaskDataSeries)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__addMaskDataSeries)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
         self.__plotPanel   = plotPanel
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__maskOptions = []
@@ -59,10 +58,8 @@ class AddMaskDataSeriesAction(base.Action):
         """Must be called when this ``AddMaskDataSeriesAction`` is no
         longer in use.
         """
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList = None
-        self.__displayCtx  = None
+        self.overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
         self.__plotPanel   = None
         self.__maskOptions = None
         base.Action.destroy(self)
@@ -74,14 +71,14 @@ class AddMaskDataSeriesAction(base.Action):
         overlay, and the contents of the overlay list.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
+        overlay = self.displayCtx.getSelectedOverlay()
 
-        if (len(self.__overlayList) == 0 or
+        if (len(self.overlayList) == 0 or
            (not isinstance(overlay, fslimage.Image))):
             self.enabled = False
             return
 
-        self.__maskOptions = [o for o in self.__overlayList if
+        self.__maskOptions = [o for o in self.overlayList if
                               isinstance(o, fslimage.Image) and
                               o is not overlay              and
                               o.sameSpace(overlay)]
@@ -96,8 +93,8 @@ class AddMaskDataSeriesAction(base.Action):
         :class:`.TimeSeriesPanel` that owns this action instance.
         """
 
-        overlay = self.__displayCtx.getSelectedOverlay()
-        opts    = self.__displayCtx.getOpts(overlay)
+        overlay = self.displayCtx.getSelectedOverlay()
+        opts    = self.displayCtx.getOpts(overlay)
         options = self.__maskOptions
 
         frame   = wx.GetApp().GetTopWindow()
@@ -118,8 +115,8 @@ class AddMaskDataSeriesAction(base.Action):
         maskimg   = options[dlg.GetChoice()]
         weight    = dlg.GetCheckBox()
         ds        = dataseries.DataSeries(overlay,
-                                          self.__overlayList,
-                                          self.__displayCtx,
+                                          self.overlayList,
+                                          self.displayCtx,
                                           self.__plotPanel)
 
         data     = overlay.nibImage.get_data()[opts.index(atVolume=False)]

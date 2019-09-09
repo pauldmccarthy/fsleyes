@@ -27,11 +27,10 @@ class RemoveAllOverlaysAction(base.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
 
-        base.Action.__init__(self, self.__removeAllOverlays)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__removeAllOverlays)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name = '{}_{}'.format(type(self).__name__, id(self))
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -43,7 +42,7 @@ class RemoveAllOverlaysAction(base.Action):
         needed. Removes property listeners, and then calls
         :meth:`.Action.destroy`.
         """
-        self.__overlayList.removeListener('overlays', self.__name)
+        self.overlayList.removeListener('overlays', self.__name)
         base.Action.destroy(self)
 
 
@@ -51,7 +50,7 @@ class RemoveAllOverlaysAction(base.Action):
         """Called when the :class:`.OverlayList` changes. Updates the
         :attr:`.Action.enabled` flag
         """
-        self.enabled = len(self.__overlayList) > 0
+        self.enabled = len(self.overlayList) > 0
 
 
     def __removeAllOverlays(self):
@@ -61,7 +60,7 @@ class RemoveAllOverlaysAction(base.Action):
         import wx
 
         allSaved = saveoverlay.checkOverlaySaveState(
-            self.__overlayList, self.__displayCtx)
+            self.overlayList, self.displayCtx)
 
         # If there are unsaved images,
         # get the user to confirm
@@ -83,4 +82,4 @@ class RemoveAllOverlaysAction(base.Action):
             if dlg.ShowModal() == wx.ID_NO:
                 return
 
-        del self.__overlayList[:]
+        del self.overlayList[:]

@@ -21,11 +21,8 @@ class ExportDataSeriesAction(base.Action):
 
     def __init__(self, overlayList, displayCtx, plotPanel):
 
-        base.Action.__init__(self, self.__doExport)
-
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__plotPanel   = plotPanel
+        base.Action.__init__(self, overlayList, displayCtx, self.__doExport)
+        self.__plotPanel = plotPanel
 
 
     def __doExport(self):

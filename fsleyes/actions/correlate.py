@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`.PearsonCorrelateAction` and
-:class:`PCACorrelateAction` classes, which are :class:`.Action`s that
-calculate seed-based correlation on 4D :class:`.Image` overlays.
+"""This module provides the :class:`.PearsonCorrelateAction` class, which is
+an :class:`.Action` that calculates seed-based correlation on 4D
+:class:`.Image` overlays.
 """
 
 
@@ -48,12 +48,11 @@ class CorrelateAction(base.Action):
         :arg panel:       The :class:`.CanvasPanel` that owns this action.
         """
 
-        base.Action.__init__(self, self.__runCorrelateAction)
+        base.Action.__init__(
+            self, overlayList, displayCtx, self.__runCorrelateAction)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__panel       = panel
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__panel = panel
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
 
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
@@ -81,8 +80,8 @@ class CorrelateAction(base.Action):
         :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
         """
 
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-        self.__overlayList.removeListener('overlays',        self.__name)
+        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.overlayList.removeListener('overlays',        self.__name)
         base.Action.destroy(self)
 
         self.__correlateOverlays = None
@@ -96,7 +95,7 @@ class CorrelateAction(base.Action):
         overlay.
         """
 
-        ovl          = self.__displayCtx.getSelectedOverlay()
+        ovl          = self.displayCtx.getSelectedOverlay()
         isCorrOvl    = ovl in self.__overlayCorrelates
 
         self.enabled = isCorrOvl or  \
@@ -120,8 +119,8 @@ class CorrelateAction(base.Action):
         """
 
         for overlay, corrOvl in list(self.__correlateOverlays.items()):
-            if overlay not in self.__overlayList or \
-               corrOvl not in self.__overlayList:
+            if overlay not in self.overlayList or \
+               corrOvl not in self.overlayList:
                 self.__correlateOverlays.pop(overlay)
                 self.__overlayCorrelates.pop(corrOvl)
 
@@ -132,15 +131,15 @@ class CorrelateAction(base.Action):
         properties.
         """
 
-        display = self.__displayCtx.getDisplay(overlay)
+        display = self.displayCtx.getDisplay(overlay)
         name    = '{}/correlation'.format(display.name)
         corrOvl = fslimage.Image(data, name=name, header=overlay.header)
 
-        self.__overlayList.append(corrOvl, overlayType='volume')
+        self.overlayList.append(corrOvl, overlayType='volume')
         self.__correlateOverlays[overlay] = corrOvl
         self.__overlayCorrelates[corrOvl] = overlay
 
-        corrOpts = self.__displayCtx.getOpts(corrOvl)
+        corrOpts = self.displayCtx.getOpts(corrOvl)
 
         with props.suppressAll(corrOpts), \
              props.suppressAll(display):
@@ -176,7 +175,7 @@ class CorrelateAction(base.Action):
 
         # See if a correlate overlay already exists
         # for the currently selected overlay
-        ovl     = self.__displayCtx.getSelectedOverlay()
+        ovl     = self.displayCtx.getSelectedOverlay()
         corrOvl = self.__correlateOverlays.get(ovl, None)
 
         # If not, check to see if it is a correlate
@@ -194,7 +193,7 @@ class CorrelateAction(base.Action):
         # add it to the overlay list after the
         # correlation values have been calculated.
 
-        opts = self.__displayCtx.getOpts(ovl)
+        opts = self.displayCtx.getOpts(ovl)
         xyz  = opts.getVoxel(vround=True)
 
         if xyz is None:
@@ -263,43 +262,31 @@ class PearsonCorrelateAction(CorrelateAction):
     calculates Pearson correlation coefficient values between the seed voxel
     and all other voxels.
     """
-
     def calculateCorrelation(self, seed, data):
         """Calculates Pearson correlation between the data at the specified
         seed voxel, and all other voxels.
         """
-
-        x, y, z = seed
-        npoints = data.shape[3]
-
-        # the scipy.spatial.distance.cdist
-        # function can be used to calculate
-        # one-to-many correlation values.
-        with np.errstate(invalid='ignore'):
-            correlations = 1 - spd.cdist(
-                data[x, y, z, :].reshape( 1, npoints),
-                data            .reshape(-1, npoints),
-                metric='correlation')
-
-        # Set any nans to 0
-        correlations[np.isnan(correlations)] = 0
-
-        return correlations.reshape(data.shape[:3])
+        return pearsonCorrelation(seed, data)
 
 
-class PCACorrelateAction(CorrelateAction):
-    """
+def pearsonCorrelation(seed, data):
+    """Calculates Pearson correlation between the data at the specified
+    seed voxel, and all other voxels.
     """
 
-    def calculateCorrelation(self, seed, data):
-        """
-        """
+    x, y, z = seed
+    npoints = data.shape[3]
 
-        x, y, z = seed
-        nvox    = np.prod(data.shape[:3])
-        npoints =         data.shape[ 3]
+    # the scipy.spatial.distance.cdist
+    # function can be used to calculate
+    # one-to-many correlation values.
+    with np.errstate(invalid='ignore'):
+        correlations = 1 - spd.cdist(
+            data[x, y, z, :].reshape( 1, npoints),
+            data            .reshape(-1, npoints),
+            metric='correlation')
 
-        correlations = np.dot(data[x, y, z, :].reshape(1,    npoints),
-                              data            .reshape(nvox, npoints).T)
+    # Set any nans to 0
+    correlations[np.isnan(correlations)] = 0
 
-        return correlations.reshape(data.shape[:3])
+    return correlations.reshape(data.shape[:3])

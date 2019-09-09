@@ -20,15 +20,15 @@ class SaveLayoutAction(base.Action):
     at a later time. See the :mod:`.layouts` module.
     """
 
-    def __init__(self, frame):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``SaveLayoutAction``.
 
-        :arg frame: The :class:`.FSLeyesFrame`.
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  The :class:`.DisplayContext`
+        :arg frame:       The :class:`.FSLeyesFrame`.
         """
-
         self.__frame = frame
-
-        base.Action.__init__(self, self.__saveLayout)
+        base.Action.__init__(self, overlayList, displayCtx, self.__saveLayout)
 
 
     def __saveLayout(self):
