@@ -26,8 +26,8 @@ Added
 * New power spectrum panel options to apply phase correction to complex image
   data.
 * The atlas panel has basic support for more general "Statistic" atlas types.
-* New *Overlay* |right_arrow| *Copy as mask* menu option, a shortcut to create
-  an empty copy of an image.
+* New *File* |right_arrow| *New image* menu option, a shortcut to create a
+  new empty image.
 
 
 Changed
@@ -39,6 +39,10 @@ Changed
   displayed as ``complex`` overlays.
 * The *Overlay* |right_arrow| *Copy* menu option now supports complex and
   RGB(A) images.
+* The plugin interface for tools has changed slightly - tools provided by
+  FSLeyes plugins are now passed references to the :class:`.OverlayList`, the
+  :class:`.DisplayContext`, and to the main :class:`.FSLeyesFrame`, to their
+  ``__init__`` method.
 
 
 Fixed
