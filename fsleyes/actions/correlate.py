@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`.PearsonCorrelateAction` and
-:class:`PCACorrelateAction` classes, which are :class:`.Action`s that
-calculate seed-based correlation on 4D :class:`.Image` overlays.
+"""This module provides the :class:`.PearsonCorrelateAction` class, which is
+an :class:`.Action` that calculates seed-based correlation on 4D
+:class:`.Image` overlays.
 """
 
 
@@ -262,43 +262,31 @@ class PearsonCorrelateAction(CorrelateAction):
     calculates Pearson correlation coefficient values between the seed voxel
     and all other voxels.
     """
-
     def calculateCorrelation(self, seed, data):
         """Calculates Pearson correlation between the data at the specified
         seed voxel, and all other voxels.
         """
-
-        x, y, z = seed
-        npoints = data.shape[3]
-
-        # the scipy.spatial.distance.cdist
-        # function can be used to calculate
-        # one-to-many correlation values.
-        with np.errstate(invalid='ignore'):
-            correlations = 1 - spd.cdist(
-                data[x, y, z, :].reshape( 1, npoints),
-                data            .reshape(-1, npoints),
-                metric='correlation')
-
-        # Set any nans to 0
-        correlations[np.isnan(correlations)] = 0
-
-        return correlations.reshape(data.shape[:3])
+        return pearsonCorrelation(seed, data)
 
 
-class PCACorrelateAction(CorrelateAction):
-    """
+def pearsonCorrelation(seed, data):
+    """Calculates Pearson correlation between the data at the specified
+    seed voxel, and all other voxels.
     """
 
-    def calculateCorrelation(self, seed, data):
-        """
-        """
+    x, y, z = seed
+    npoints = data.shape[3]
 
-        x, y, z = seed
-        nvox    = np.prod(data.shape[:3])
-        npoints =         data.shape[ 3]
+    # the scipy.spatial.distance.cdist
+    # function can be used to calculate
+    # one-to-many correlation values.
+    with np.errstate(invalid='ignore'):
+        correlations = 1 - spd.cdist(
+            data[x, y, z, :].reshape( 1, npoints),
+            data            .reshape(-1, npoints),
+            metric='correlation')
 
-        correlations = np.dot(data[x, y, z, :].reshape(1,    npoints),
-                              data            .reshape(nvox, npoints).T)
+    # Set any nans to 0
+    correlations[np.isnan(correlations)] = 0
 
-        return correlations.reshape(data.shape[:3])
+    return correlations.reshape(data.shape[:3])
