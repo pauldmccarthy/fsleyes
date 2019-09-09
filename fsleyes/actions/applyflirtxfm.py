@@ -137,8 +137,6 @@ def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):
              be ``None``.
     """
 
-    import wx
-
     if overlay.dataSource is not None:
         matFile, refFile = guessFlirtFiles(overlay.dataSource)
     else:
@@ -373,6 +371,7 @@ class FlirtFileDialog(wx.Dialog):
         okButton      .SetLabel(strings.labels[self, 'ok'])
         cancelButton  .SetLabel(strings.labels[self, 'cancel'])
         refChoice     .SetSelection(selectedRef)
+        affType       .SetSelection(0)
 
         if save: label.SetLabel(strings.labels[self, 'save.message'])
         else:    label.SetLabel(strings.labels[self, 'load.message'])
@@ -439,11 +438,54 @@ class FlirtFileDialog(wx.Dialog):
         affType      .Bind(wx.EVT_CHOICE, self.__onAffType)
         refChoice    .Bind(wx.EVT_CHOICE, self.__onRefChoice)
 
+        self.__okButton     = okButton
+        self.__cancelButton = cancelButton
+        self.__matFileText  = matFileText
+        self.__refFileText  = refFileText
+        self.__affType      = affType
+        self.__refChoice    = refChoice
+
         if len(refOpts) == 1:
             refChoice     .Disable()
             refChoiceLabel.Disable()
         else:
             self.__onRefChoice(None)
+
+
+    @property
+    def ok(self):
+        """Return a reference to the OK button. """
+        return self.__okButton
+
+
+    @property
+    def cancel(self):
+        """Return a reference to the cancel button. """
+        return self.__cancelButton
+
+
+    @property
+    def matFileText(self):
+        """Return a reference to the matrix file text entry widget. """
+        return self.__matFileText
+
+
+    @property
+    def refFileText(self):
+        """Return a reference to the reference file text entry widget. """
+        return self.__refFileText
+
+
+    @property
+    def affType(self):
+        """Return a reference to the affine type dropdown widget. """
+        return self.__affType
+
+
+    @property
+    def refChoice(self):
+        """Return a reference to the reference file dropdown widget. """
+        return self.__refChoice
 
 
     def GetAffineType(self):
