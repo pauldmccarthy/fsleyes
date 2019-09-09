@@ -170,7 +170,7 @@ class NotebookAction(base.Action):
             self.displayCtx,
             self.__frame)
         kernel.start()
-        self.__bounce(1, progdlg)
+        self.__bounce(2, progdlg)
 
         if not kernel.is_alive():
             raise RuntimeError('Could not start IPython kernel: '
