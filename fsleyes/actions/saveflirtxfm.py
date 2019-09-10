@@ -48,7 +48,7 @@ class SaveFlirtXfmAction(base.NeedOverlayAction):
         """Must be called when this ``SaveFlirtXfmAction`` is no longer needed.
         """
         self.__frame = None
-        base.Action.destroy(self)
+        base.NeedOverlayAction.destroy(self)
 
 
     def __saveFlirtXfm(self):
