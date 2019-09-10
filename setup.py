@@ -133,12 +133,9 @@ class apidoc(docbuilder):
 
 
 class custom_build(build):
-    description = 'Custom build command which builds the '\
-                  'user documentation.'
+    description = 'Custom build command'
 
     def run(self):
-
-        self.run_command('userdoc')
 
         # In its source form, the FSLeyes asset files
         # and documentation live outside the FSLeyes
@@ -150,8 +147,8 @@ class custom_build(build):
         #
         # I can't believe that this is so difficult to
         # accomplish.
-        targets = ['assets', op.join('userdoc', 'html')]
-        dests   = ['assets', 'userdoc']
+        targets = ['assets']
+        dests   = ['assets']
         targets = [op.join(basedir, t)            for t in targets]
         dests   = [op.join(basedir, 'fsleyes', d) for d in dests]
 
@@ -219,7 +216,9 @@ def get_fsleyes_dev_deps():
 
 def main():
 
-    packages         = find_packages(exclude=('tests', ))
+    packages         = find_packages(exclude=('tests',
+                                              'tests.overlays',
+                                              'tests.actions'))
     version          = get_fsleyes_version()
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()
