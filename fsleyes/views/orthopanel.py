@@ -148,8 +148,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         name         = self.name
         contentPanel = self.contentPanel
 
-        # The canvases themselves - each one displays a
-        # slice along each of the three world axes
+        # The canvases themselves - each one displays
+        # a slice along each of the three world axes.
+        # They are laid out in __refreshLayout
+        self.__canvasSizer = None
         self.__xcanvas = slicecanvas.WXGLSliceCanvas(contentPanel,
                                                      overlayList,
                                                      displayCtx,
@@ -845,6 +847,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         elif layout == 'vertical':   nrows, ncols = 3, 1
         elif layout == 'grid':       nrows, ncols = 2, 2
 
+        if self.__canvasSizer is not None:
+            self.__canvasSizer.Clear()
+            self.__canvasSizer = None
+
         self.__canvasSizer = wx.FlexGridSizer(nrows, ncols, 0, 0)
 
         # The rows/columns that contain
@@ -857,10 +863,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             canvases.append((0, 0))
 
         # Add all those widgets to the grid sizer
-        flag = wx.ALIGN_CENTRE_HORIZONTAL | wx.ALIGN_CENTRE_VERTICAL
-
         for c in canvases:
-            self.__canvasSizer.Add(c, flag=flag | wx.EXPAND)
+            self.__canvasSizer.Add(c, flag=wx.EXPAND)
 
         self.contentPanel.SetSizer(self.__canvasSizer)
 
