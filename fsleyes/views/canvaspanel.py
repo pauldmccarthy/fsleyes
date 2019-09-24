@@ -625,6 +625,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         self.layoutContainerPanel()
 
+        sizer = self.centrePanel.GetSizer()
+        if sizer is not None:
+            sizer.Clear()
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__containerPanel, flag=wx.EXPAND, proportion=1)
         self.centrePanel.SetSizer(sizer)
@@ -639,6 +643,11 @@ class CanvasPanel(viewpanel.ViewPanel):
         This method is used by the default :meth:`centrePanelLayout` method,
         and is available for custom sub-class implementations to use.
         """
+
+        sizer = self.__containerPanel.GetSizer()
+        if sizer is not None:
+            sizer.Clear()
+            sizer = None
 
         sopts = self.sceneOpts
 

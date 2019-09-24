@@ -124,8 +124,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.__leftButton .SetBitmapLabel(lBmp)
         self.__rightButton.SetBitmapLabel(rBmp)
 
-        self.__sizer = wx.BoxSizer(orient)
-        self.SetSizer(self.__sizer)
+        self.__sizer = None
 
         self.__leftButton .Bind(wx.EVT_BUTTON,     self.__onLeftButton)
         self.__rightButton.Bind(wx.EVT_BUTTON,     self.__onRightButton)
@@ -463,7 +462,10 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         tools  = self.__tools
         orient = self.__orient
 
-        sizer.Clear()
+        if sizer is not None:
+            sizer.Clear()
+        sizer = self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(sizer)
 
         if orient == wx.HORIZONTAL:
 
