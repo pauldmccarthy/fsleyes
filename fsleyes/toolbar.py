@@ -271,6 +271,8 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         for tool in tools:
             self.InsertTool(tool, postevent=False, redraw=False)
 
+        self.__drawToolBar()
+
         wx.PostEvent(self, ToolBarEvent())
 
 
@@ -296,6 +298,14 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
             type(self).__name__, index, type(tool).__name__))
 
         tool.Bind(wx.EVT_MOUSEWHEEL, self.__onMouseWheel)
+
+        # gtk3: something somewhere sometimes
+        # clobbers the best size, so widgets
+        # don't get shown. Only observed with
+        # BitmapToggleButtons.
+        size = tool.GetBestSize()
+        tool.SetMinSize(size)
+        tool.SetMaxSize(size)
 
         self.__tools.insert(index, tool)
 
