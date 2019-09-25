@@ -396,7 +396,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
             elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
-            paneInfo.Direction(location)
+            # Make sure the pane is
+            # resizable in case it
+            # gets floated later on
+            paneInfo.Direction(location) \
+                    .Resizable(True)
 
         # Or, for floating panes, centre the
         # floating pane on this ViewPanel
@@ -412,6 +416,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         selfCentre[1] - paneSize[1] * 0.5)
 
             paneInfo.Float()                 \
+                    .Resizable(True)         \
                     .Dockable(not floatOnly) \
                     .CloseButton(closeable)  \
                     .FloatingPosition(panePos)
@@ -590,7 +595,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             pinfo.MinSize(     (1, 1))  \
                  .BestSize(    bestSize) \
-                 .FloatingSize(floatSize)
+                 .FloatingSize(floatSize) \
+                 .Resizable(   True)
 
             # This is a terrible hack which forces
             # the AuiManager to grow a dock when a
@@ -671,8 +677,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 # underneath the frame, meaning that the user is unable to actually select any
 # items from the list!
 #
-# I have only seen this behaviour when using XQuartz 2.7.6, running under OSX
-# 10.9 Mavericks.
+# I have only seen this behaviour when using XQuartz on macOS.
 #
 # Ultimately, this appears to be caused by the wx.FRAME_TOOL_WINDOW style, as
 # passed to the wx.MiniFrame constructor (from which the AuiFloatingFrame
