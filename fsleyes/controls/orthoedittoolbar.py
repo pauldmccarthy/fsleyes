@@ -169,9 +169,7 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
                 widget = props.buildGUI(parent, profileObj, spec)
 
                 if not isGroup and spec.label is not None:
-                    widget = self.MakeLabelledTool(widget,
-                                                   spec.label,
-                                                   expand=True)
+                    widget = self.MakeLabelledTool(widget, spec.label)
 
                 allWidgets  .append(widget)
                 groupWidgets.append(widget)
@@ -187,8 +185,8 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
                 labels = [wx.StaticText(parent, label=l) for l in labels]
 
                 for w, l in zip(groupWidgets, labels):
-                    sizer.Add(l, flag=wx.EXPAND)
-                    sizer.Add(w, flag=wx.EXPAND)
+                    sizer.Add(l, flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT)
+                    sizer.Add(w, flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT)
 
                 allTools.append(parent)
 
