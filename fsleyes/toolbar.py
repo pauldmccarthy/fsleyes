@@ -188,7 +188,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         if expand:
             sizerArgs = {
-                'flag'       : wx.ALIGN_CENTRE | wx.EXPAND,
+                'flag'       : wx.EXPAND,
                 'proportion' : 1
             }
         else:
