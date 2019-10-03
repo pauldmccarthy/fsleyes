@@ -83,7 +83,7 @@ class SettingsPanel(ControlPanel):
 
         ControlPanel.__init__(self, *args, **kwargs)
 
-        self.__widgets = widgetlist.WidgetList(self)
+        self.__widgets = widgetlist.WidgetList(self, minHeight=24)
         self.__sizer   = wx.BoxSizer(wx.VERTICAL)
 
         self.SetSizer(self.__sizer)
