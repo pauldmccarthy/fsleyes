@@ -79,6 +79,8 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         self.__sizer    .Add(self.__realSizer, flag=wx.EXPAND)
 
         self.SetSizer(self.__sizer)
+        self.Fit()
+        self.__size = self.GetBestSize()
 
         self.__changeDS .Bind(wx.EVT_BUTTON, self.__onChangeDS)
 
@@ -144,9 +146,15 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         else:
             show = False
 
+        if show: size = self.__size
+        else:    size = (0, 0)
+
         if show:
             log.debug('Showing display space warning ({} / {})'.format(
                 displaySpace, condition))
+
+        self.SetMinSize(   size)
+        self.CacheBestSize(size)
 
         self.__sizer.Show(self.__realSizer, show)
         self.Layout()
