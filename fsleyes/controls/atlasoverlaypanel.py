@@ -101,6 +101,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                                                    style=wx.SP_LIVE_UPDATE)
         self.__atlasList       = elistbox.EditableListBox(
             self.__contentPanel,
+            vgap=5,
             style=(elistbox.ELB_NO_ADD    |
                    elistbox.ELB_NO_REMOVE |
                    elistbox.ELB_NO_MOVE))
@@ -385,6 +386,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
             # widgets asynchronously on the wx idle loop.
             regionList = elistbox.EditableListBox(
                 self.__regionPanel,
+                vgap=5,
                 style=(elistbox.ELB_NO_ADD    |
                        elistbox.ELB_NO_REMOVE |
                        elistbox.ELB_NO_MOVE))

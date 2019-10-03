@@ -55,6 +55,7 @@ class AtlasManagementPanel(fslpanel.FSLeyesPanel):
             labels=names,
             clientData=descs,
             tooltips=paths,
+            vgap=5,
             style=(elistbox.ELB_NO_MOVE |
                    elistbox.ELB_TOOLTIP_DOWN))
 
