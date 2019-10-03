@@ -408,7 +408,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             if w > width:  width  = w
             if h > height: height = h
 
-        return width + 5, height + 5
+        return width + 5, height
 
 
     def __selectedOverlayChanged(self, *a):
