@@ -6,7 +6,6 @@ nibabel>=2.3.*
 Jinja2==2.*
 Pillow>=3.2.0
 PyOpenGL>=3.1.0
-PyOpenGL-accelerate>=3.1.0
 pyparsing==2.*
 scipy>=0.18
 wxPython>=3.0.2.0
