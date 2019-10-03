@@ -14,8 +14,6 @@ import fsl.data.image as fslimage
 import fsl.utils.idle as idle
 import fsleyes.main   as fslmain
 
-from tests import simclick
-
 
 datadir = op.join(op.dirname(__file__), 'testdata')
 
@@ -38,7 +36,6 @@ def test_embed():
     panel.SetSizer(psizer)
     psizer.Add(btn, flag=wx.EXPAND)
 
-    sim    = wx.UIActionSimulator()
     ncalls = [0]
 
     def finish():
@@ -58,20 +55,18 @@ def test_embed():
         wx.CallLater(1500, fframe.Close)
         fframe = None
         if ncalls[0] < 4:
-            wx.CallLater(2500, simclick, sim, btn)
+            wx.CallLater(2500, open_fsleyes)
         else:
             print('Done - closing')
             wx.CallLater(1500, finish)
 
-    def open_fsleyes(ev):
+    def open_fsleyes():
         fslmain.embed(frame[0],
                       callback=embedded,
                       menu=False,
                       save=False)
 
-    btn.Bind(wx.EVT_BUTTON, open_fsleyes)
-
-    wx.CallLater(1000, simclick, sim, btn)
+    wx.CallLater(1000, open_fsleyes)
 
     frame[0].Show()
     app.MainLoop()
