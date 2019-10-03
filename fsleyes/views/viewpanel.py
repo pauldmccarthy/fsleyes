@@ -16,6 +16,7 @@ import                   wx
 import wx.lib.agw.aui as aui
 
 import fsl.utils.deprecated          as deprecated
+from   fsl.utils.platform import        platform
 import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
@@ -702,7 +703,8 @@ def AuiFloatingFrame__init__(*args, **kwargs):
                  wx.FRAME_NO_TASKBAR      |
                  wx.CLIP_CHILDREN)
 
-    style &= ~wx.FRAME_TOOL_WINDOW
+    if platform.inSSHSession:
+        style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style
 
@@ -731,7 +733,8 @@ def AuiDockingGuide__init__(*args, **kwargs):
                  wx.FRAME_NO_TASKBAR  |
                  wx.NO_BORDER)
 
-    style &= ~wx.FRAME_TOOL_WINDOW
+    if platform.inSSHSession:
+        style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style
 
