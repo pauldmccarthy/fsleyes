@@ -736,8 +736,8 @@ class LabelWidget(wx.Panel):
 
         self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.__sizer)
-        self.__sizer.Add(self.__enable)
-        self.__sizer.Add(self.__colour)
+        self.__sizer.Add(self.__enable, flag=wx.ALIGN_CENTRE)
+        self.__sizer.Add(self.__colour, flag=wx.ALIGN_CENTRE)
         self.__sizer.Add(self.__name, flag=wx.EXPAND)
 
 
