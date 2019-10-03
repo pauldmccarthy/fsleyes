@@ -474,7 +474,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         if sizer is not None:
             sizer.Clear()
-        sizer = self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer = self.__sizer = wx.BoxSizer(orient)
         self.SetSizer(sizer)
 
         if orient == wx.HORIZONTAL:
