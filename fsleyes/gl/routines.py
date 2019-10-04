@@ -617,31 +617,31 @@ def samplePointsToTriangleStrip(coords,
     vertex locations)::
 
 
-        1  3  5  7
-        .  .  .  .
-        |\ |\ |\ |
-        | \| \| \|
-        .  .  .  .
-        0  2  4  6
+        1   3   5   7
+        .   .   .   .
+        |\\ |\\ |\\ |
+        | \\| \\| \\|
+        .   .   .   .
+        0   2   4   6
 
     In order to use a single OpenGL call to draw multiple non-contiguous voxel
-    rows, between every column we add a couple of 'dummy' vertices, which will
+    rows, between  every column we add a couple of 'dummy' vertices, which will
     then be interpreted by OpenGL as 'degenerate triangles', and will not be
     drawn. So in reality, a 4*3 slice would be drawn as follows (with vertices
     labelled from ``[a-z0-9]``::
 
-         v  x  z  1  33
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-        uu  w  y  0  2
-         l  n  p  r  tt
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-        kk  m  o  q  s
-         b  d  f  h  jj
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-         a  c  e  g  i
+         v   x   z   1   33
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+        uu   w   y   0   2
+         l   n   p   r   tt
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+        kk   m   o   q   s
+         b   d   f   h   jj
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+         a   c   e   g   i
 
     These repeated/degenerate vertices are dealt with by using a vertex index
     array.  See these links for good overviews of triangle strips and
@@ -946,12 +946,12 @@ def slice2D(dataShape,
     If ``geometry`` is ``triangles`` (the default), six vertices are returned,
     arranged as follows::
 
-         4---5
-        1 \  |
-        |\ \ |
-        | \ \|
-        |  \ 3
-        0---2
+          4----5
+        1  \\  |
+        |\\ \\ |
+        | \\ \\|
+        |  \\  3
+        0----2
 
     Otherwise, if geometry is ``square``, four vertices are returned, arranged
     as follows::
