@@ -334,11 +334,11 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
     else:
         exclude = []
 
-    tests     = [t.strip()             for t in tests.split('\n')]
-    tests     = [t                     for t in tests if t != '' and t[0] != '#']
-    tests     = [re.sub('\s+', ' ', t) for t in tests]
-    tests     = [re.sub('#.*', '',  t) for t in tests]
-    tests     = [t.strip()             for t in tests]
+    tests     = [t.strip()              for t in tests.split('\n')]
+    tests     = [t                      for t in tests if t != '' and t[0] != '#']
+    tests     = [re.sub(r'\s+', ' ', t) for t in tests]
+    tests     = [re.sub(r'#.*', '',  t) for t in tests]
+    tests     = [t.strip()              for t in tests]
     allpassed = True
 
     datadir  = op.join(op.dirname(__file__), 'testdata')
