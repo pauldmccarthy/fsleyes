@@ -14,7 +14,7 @@ import fsl.data.constants   as constants
 import fsl.transform.affine as fslaffine
 
 import fsleyes.actions.newimage as newimage
-from .. import run_with_fsleyes, run_with_orthopanel, realYield, simclick
+from .. import run_with_fsleyes, run_with_orthopanel, realYield
 
 
 class MockNewImageDialog(object):
@@ -154,14 +154,14 @@ def test_NewImageDialog():
     run_with_fsleyes(_test_NewImageDialog)
 
 def _test_NewImageDialog(frame, overlayList, displayCtx):
-    sim = wx.UIActionSimulator()
 
     dlg = newimage.NewImageDialog(frame, None, None, None, None)
-    wx.CallLater(250, simclick, sim, dlg.cancel)
+
+    wx.CallLater(250, dlg.EndModal, wx.ID_CANCEL)
     assert dlg.ShowModal() == wx.ID_CANCEL
 
     dlg = newimage.NewImageDialog(frame, None, None, None, None)
-    wx.CallLater(250, simclick, sim, dlg.ok)
+    wx.CallLater(250, dlg.EndModal, wx.ID_OK)
     assert dlg.ShowModal() == wx.ID_OK
     assert         dlg.shape == (100, 100, 100)
     assert        dlg.pixdim == (1, 1, 1)
@@ -177,7 +177,7 @@ def _test_NewImageDialog(frame, overlayList, displayCtx):
     dlg.pixdimWidgets[1].SetValue(2)
     dlg.pixdimWidgets[2].SetValue(2.5)
     dlg._NewImageDialog__onPixdim(None)
-    wx.CallLater(250, simclick, sim, dlg.ok)
+    wx.CallLater(250, dlg.EndModal, wx.ID_OK)
     assert dlg.ShowModal() == wx.ID_OK
     assert         dlg.shape == (20, 30, 40)
     assert        dlg.pixdim == (-2, 2, 2.5)
@@ -195,7 +195,7 @@ def _test_NewImageDialog(frame, overlayList, displayCtx):
     dlg.pixdimWidgets[2].SetValue(2.5)
     dlg.linkWidget     .SetValue(False)
     dlg._NewImageDialog__onPixdim(None)
-    wx.CallLater(250, simclick, sim, dlg.ok)
+    wx.CallLater(250, dlg.EndModal, wx.ID_OK)
     assert dlg.ShowModal() == wx.ID_OK
     assert         dlg.shape == (20, 30, 40)
     assert        dlg.pixdim == (-2, 2, 2.5)
@@ -212,7 +212,7 @@ def _test_NewImageDialog(frame, overlayList, displayCtx):
     dlg.affineWidget.SetCellValue((1, 1), '1.5')
     dlg.affineWidget.SetCellValue((2, 2), '1.4')
     dlg._NewImageDialog__onAffine(None)
-    wx.CallLater(250, simclick, sim, dlg.ok)
+    wx.CallLater(250, dlg.EndModal, wx.ID_OK)
     assert dlg.ShowModal() == wx.ID_OK
     assert         dlg.shape == (20, 30, 40)
     assert        dlg.pixdim == (-2, 1.5, 1.4)

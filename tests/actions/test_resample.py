@@ -144,7 +144,8 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
                                   'title',
                                   (10, 10, 10),
                                   (1, 1, 1), [])
-    wx.CallLater(500, simclick, sim, dlg.okButton)
+
+    wx.CallLater(500, dlg._ResampleDialog__onOk, None)
     assert dlg.ShowModal() == wx.ID_OK
     assert dlg.GetReference() is None
 
@@ -153,7 +154,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
                                   'title',
                                   (10, 10, 10),
                                   (1, 1, 1), [])
-    wx.CallLater(500, simclick, sim, dlg.cancelButton)
+    wx.CallLater(500, dlg._ResampleDialog__onCancel, None)
     assert dlg.ShowModal() == wx.ID_CANCEL
 
     # set voxel dims
@@ -164,7 +165,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     wx.CallLater(300,  simtext,  sim, dlg.voxXCtrl.textCtrl, '20')
     wx.CallLater(400,  simtext,  sim, dlg.voxYCtrl.textCtrl, '40')
     wx.CallLater(500,  simtext,  sim, dlg.voxZCtrl.textCtrl, '80')
-    wx.CallLater(1000, simclick, sim, dlg.okButton)
+    wx.CallLater(1000, dlg._ResampleDialog__onOk, None)
     dlg.ShowModal()
     assert dlg.GetVoxels()  == (20,  40,   80)
     assert dlg.GetPixdims() == (0.5, 0.25, 0.125)
@@ -180,7 +181,7 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     wx.CallLater(300,  simtext,  sim, dlg.pixXCtrl.textCtrl, '0.5')
     wx.CallLater(400,  simtext,  sim, dlg.pixYCtrl.textCtrl, '0.25')
     wx.CallLater(500,  simtext,  sim, dlg.pixZCtrl.textCtrl, '0.125')
-    wx.CallLater(1000, simclick, sim, dlg.okButton)
+    wx.CallLater(1000, dlg._ResampleDialog__onOk, None)
     dlg.ShowModal()
     assert dlg.GetVoxels()  == (20,  40,   80)
     assert dlg.GetPixdims() == (0.5, 0.25, 0.125)
@@ -194,8 +195,8 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     wx.CallLater(300,  simtext,  sim, dlg.pixXCtrl.textCtrl, '0.5')
     wx.CallLater(400,  simtext,  sim, dlg.pixYCtrl.textCtrl, '0.25')
     wx.CallLater(500,  simtext,  sim, dlg.pixZCtrl.textCtrl, '0.125')
-    wx.CallLater(1000, simclick, sim, dlg.resetButton)
-    wx.CallLater(1500, simclick, sim, dlg.okButton)
+    wx.CallLater(1000, dlg._ResampleDialog__onReset, None)
+    wx.CallLater(1500, dlg._ResampleDialog__onOk, None)
     dlg.ShowModal()
     assert dlg.GetVoxels()  == (10, 10, 10)
     assert dlg.GetPixdims() == (1, 1, 1)
@@ -219,9 +220,9 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     origSmooth  = dlg.GetSmoothing()
     origAllVols = dlg.GetAllVolumes()
 
-    wx.CallLater(500,  simclick, sim, dlg.smoothCtrl)
-    wx.CallLater(1000, simclick, sim, dlg.allVolumesCtrl)
-    wx.CallLater(1500, simclick, sim, dlg.okButton)
+    dlg.smoothCtrl.SetValue(not origSmooth)
+    dlg.allVolumesCtrl.SetValue(not origAllVols)
+    wx.CallLater(500, dlg._ResampleDialog__onOk, None)
     dlg.ShowModal()
     assert dlg.GetSmoothing()     == (not origSmooth)
     assert dlg.GetAllVolumes()    == (not origAllVols)
