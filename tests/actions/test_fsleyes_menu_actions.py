@@ -15,8 +15,7 @@ from .. import (run_with_orthopanel,
                 run_with_fsleyes,
                 realYield,
                 MockFileDialog,
-                mockFSLDIR,
-                simclick)
+                mockFSLDIR)
 
 from fsl.utils.tempdir import tempdir
 from fsl.data.image    import Image
@@ -95,14 +94,13 @@ def test_UrlDialog():
     run_with_fsleyes(_test_UrlDialog)
 def _test_UrlDialog(frame, *a):
 
-    sim = wx.UIActionSimulator()
     dlg = updatecheck.UrlDialog(frame,
                                 'title',
                                 'message',
                                 urlMsg='url',
                                 url='url')
 
-    wx.CallLater(750, simclick, sim, dlg.ok)
+    wx.CallLater(750, dlg.EndModal, wx.ID_OK)
     dlg.ShowModal()
 
 
