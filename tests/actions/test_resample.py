@@ -14,7 +14,7 @@ import numpy as np
 
 import wx
 
-import fsl.utils.transform as transform
+import fsl.transform.affine as affine
 import fsl.data.image as fslimage
 
 import fsleyes.actions.resample as resample
@@ -126,8 +126,8 @@ def _test_resample(panel, overlayList, displayCtx):
         act()
         res = overlayList[-1]
         assert np.all(np.isclose(
-            np.array(transform.axisBounds(img.shape, img.voxToWorldMat)),
-            np.array(transform.axisBounds(res.shape, res.voxToWorldMat))))
+            np.array(affine.axisBounds(img.shape, img.voxToWorldMat)),
+            np.array(affine.axisBounds(res.shape, res.voxToWorldMat))))
 
 
 

@@ -17,8 +17,8 @@ except ImportError:
 
 import numpy as np
 
-import fsl.utils.transform as transform
-import fsl.data.image      as fslimage
+import fsl.transform.affine as affine
+import fsl.data.image       as fslimage
 
 from .. import run_cli_tests, translate, zero_centre, asrgb, roi, complex
 
@@ -190,17 +190,17 @@ def swapdim(infile):
     img      = fslimage.Image(infile)
 
     data     = img.data
-    affine   = img.voxToWorldMat
+    xform    = img.voxToWorldMat
 
     data = data.transpose((2, 0, 1))
-    rot  = transform.rotMatToAffine(transform.concat(
-        transform.axisAnglesToRotMat(np.pi / 2, 0, 0),
-        transform.axisAnglesToRotMat(0, 0, 3 * np.pi / 2)))
-    affine = transform.concat(
-        affine,
-        transform.scaleOffsetXform((1, -1, -1), (0, 0, 0)),
+    rot  = affine.rotMatToAffine(affine.concat(
+        affine.axisAnglesToRotMat(np.pi / 2, 0, 0),
+        affine.axisAnglesToRotMat(0, 0, 3 * np.pi / 2)))
+    xform = affine.concat(
+        xform,
+        affine.scaleOffsetXform((1, -1, -1), (0, 0, 0)),
         rot)
 
-    fslimage.Image(data, xform=affine, header=img.header).save(outfile)
+    fslimage.Image(data, xform=xform, header=img.header).save(outfile)
 
     return outfile

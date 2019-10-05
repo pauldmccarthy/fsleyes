@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-import os.path as op
 
 import pytest
 
 import numpy as np
-
-import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
 
 from .. import run_cli_tests, discretise
 
