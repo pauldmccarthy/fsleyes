@@ -507,7 +507,7 @@ def simclick(sim, target, btn=wx.MOUSE_BTN_LEFT, pos=None, stype=0):
     x += w * pos[0]
     y += h * pos[1]
 
-    sim.MouseMove(x, y)
+    sim.MouseMove(round(x), round(y))
     realYield()
     if   stype == 0: sim.MouseClick(btn)
     elif stype == 1: sim.MouseDblClick(btn)
