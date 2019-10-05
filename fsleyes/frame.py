@@ -1421,9 +1421,9 @@ class FSLeyesFrame(wx.Frame):
 
             # Default size is 90% of
             # the first display size
-            size     = list(wx.Display(0).GetGeometry().GetSize())
-            size[0] *= 0.9
-            size[1] *= 0.9
+            size    = list(wx.Display(0).GetGeometry().GetSize())
+            size[0] = round(size[0] * 0.9)
+            size[1] = round(size[1] * 0.9)
             log.debug('Setting default frame size: {}'.format(size))
             self.SetSize(size)
 

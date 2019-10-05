@@ -82,7 +82,7 @@ class ScreenshotAction(base.Action):
         # it is available
         if 'png' in fmts:
             fmts = [('png', fmts['png'])] + \
-                   [(k, v) for k, v in fmts.items() if k is not 'png']
+                   [(k, v) for k, v in fmts.items() if k != 'png']
         else:
             fmts = list(fmts.items())
 

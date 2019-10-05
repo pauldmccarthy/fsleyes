@@ -518,7 +518,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         else:
             reqdSpace  = reqdSpace[self.__visibleOffset:]
             cumSpace   = np.cumsum(reqdSpace) + leftSpace + rightSpace
-            biggerIdxs = np.where(cumSpace > availSpace)[0]
+            biggerIdxs = [int(i) for i in np.where(cumSpace > availSpace)[0]]
 
             if len(biggerIdxs) == 0:
                 lastIdx = len(tools)
