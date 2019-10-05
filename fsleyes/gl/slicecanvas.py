@@ -1434,7 +1434,7 @@ class SliceCanvas(object):
 
         # Set the viewport to match the current
         # display bounds and canvas size
-        if copts.renderMode is not 'offscreen':
+        if copts.renderMode != 'offscreen':
             bbox = self._setViewport()
             glroutines.clear(copts.bgColour)
 

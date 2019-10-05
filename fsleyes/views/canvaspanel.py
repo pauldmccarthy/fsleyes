@@ -751,8 +751,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         bg        = sceneOpts.bgColour
         fg        = sceneOpts.fgColour
 
-        cpanel.SetBackgroundColour([c * 255 for c in bg])
-        cpanel.SetForegroundColour([c * 255 for c in fg])
+        cpanel.SetBackgroundColour([round(c * 255) for c in bg])
+        cpanel.SetForegroundColour([round(c * 255) for c in fg])
 
         if self.__colourBar is not None:
             canvas = self.__colourBar.canvas

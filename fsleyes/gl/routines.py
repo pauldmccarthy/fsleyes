@@ -11,14 +11,14 @@ routines.
 
 from __future__ import division
 
-import                logging
-import                contextlib
-import                collections
-import itertools   as it
+import                    logging
+import                    contextlib
+import collections.abc as abc
+import itertools       as it
 
-import OpenGL.GL   as gl
-import OpenGL.GLUT as glut
-import numpy       as np
+import OpenGL.GL       as gl
+import OpenGL.GLUT     as glut
+import numpy           as np
 
 import fsl.transform.affine as affine
 
@@ -71,7 +71,7 @@ def enabled(capabilities, enable=True):
         gl.GL_FOG_COORD_ARRAY,
         gl.GL_TEXTURE_COORD_ARRAY]
 
-    if not isinstance(capabilities, collections.Sequence):
+    if not isinstance(capabilities, abc.Sequence):
         capabilities = [capabilities]
 
     # Build lists of pre/post-yield
@@ -861,7 +861,7 @@ def voxelBox(voxel,
                   image bounds.
     """
 
-    if not isinstance(boxSize, collections.Iterable):
+    if not isinstance(boxSize, abc.Iterable):
         boxSize = [boxSize] * 3
 
     for i in range(3):

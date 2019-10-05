@@ -796,8 +796,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                     height)
 
         for canvas, size in zip(canvases, sizes):
-            canvas.SetMinSize(size)
-            canvas.SetMaxSize(size)
+            canvas.SetMinSize((round(size[0]), round(size[1])))
+            canvas.SetMaxSize((round(size[0]), round(size[1])))
 
 
     def __refreshLayout(self, *a, **kwa):
