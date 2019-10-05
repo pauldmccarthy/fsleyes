@@ -39,7 +39,7 @@ import matplotlib.image as mplimg
 import fsleyes_props                as props
 from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
-import fsl.utils.transform          as transform
+import fsl.transform.affine         as affine
 import fsl.data.image               as fslimage
 import                                 fsleyes
 import fsleyes.frame                as fslframe
@@ -580,8 +580,8 @@ def roi(fname, roi):
 
     xform  = img.voxToWorldMat
     offset = [lo for lo in roi[::2]]
-    offset = transform.scaleOffsetXform([1, 1, 1], offset)
-    xform  = transform.concat(xform, offset)
+    offset = affine.scaleOffsetXform([1, 1, 1], offset)
+    xform  = affine.concat(xform, offset)
 
     img = fslimage.Image(data, xform=xform, header=img.header)
 
@@ -638,8 +638,8 @@ def translate(infile, x, y, z):
     img      = fslimage.Image(infile)
     xform    = img.voxToWorldMat
 
-    shift             = transform.scaleOffsetXform(1, (x, y, z))
-    xform             = transform.concat(shift, xform)
+    shift             = affine.scaleOffsetXform(1, (x, y, z))
+    xform             = affine.concat(shift, xform)
     img.voxToWorldMat = xform
 
     img.save(outfile)
@@ -656,9 +656,9 @@ def rotate(infile, rx, ry, rz):
     ry = ry * np.pi / 180
     rz = rz * np.pi / 180
 
-    rot               = transform.axisAnglesToRotMat(rx, ry, rz)
-    rot               = transform.rotMatToAffine(rot)
-    img.voxToWorldMat = transform.concat(rot, img.voxToWorldMat)
+    rot               = affine.axisAnglesToRotMat(rx, ry, rz)
+    rot               = affine.rotMatToAffine(rot)
+    img.voxToWorldMat = affine.concat(rot, img.voxToWorldMat)
 
     img.save(outfile)
 

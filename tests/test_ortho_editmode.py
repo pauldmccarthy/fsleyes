@@ -10,8 +10,8 @@ import functools as ft
 
 import numpy as np
 
-import fsl.utils.transform as transform
-import fsl.utils.idle      as   idle
+import fsl.transform.affine as affine
+import fsl.utils.idle       as  idle
 from fsl.data.image  import Image
 from fsl.data.bitmap import Bitmap
 from fsl.data.vtk    import VTKMesh
@@ -30,7 +30,7 @@ def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None):
     overlayList.append(img)
     realYield()
     displayCtx.displaySpace  = img
-    displayCtx.worldLocation = transform.transform([0, 0, 0], img.
+    displayCtx.worldLocation = affine.transform([0, 0, 0], img.
                                                    voxToWorldMat)
     realYield()
     ortho.profile = 'edit'
