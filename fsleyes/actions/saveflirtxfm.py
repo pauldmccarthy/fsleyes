@@ -15,7 +15,7 @@ import logging
 import numpy as np
 
 import fsl.data.image               as fslimage
-import fsl.utils.transform          as transform
+import fsl.transform.affine         as affine
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
 from . import                          base
@@ -95,4 +95,4 @@ def calculateTransform(overlay,
     if refImg is None:
         refImg = fslimage.Image(refFile, loadData=False)
 
-    return transform.sformToFlirtMatrix(overlay, refImg, srcXform)
+    return affine.sformToFlirtMatrix(overlay, refImg, srcXform)

@@ -276,7 +276,7 @@ import fsl.data.image                     as fslimage
 import fsl.data.bitmap                    as fslbmp
 import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
-import fsl.utils.transform                as transform
+import fsl.transform.affine               as affine
 from   fsl.utils.platform import platform as fslplatform
 
 import fsleyes_props                      as props
@@ -3179,8 +3179,8 @@ def _applySpecial_Scene3DOpts_cameraRotation(
     pitch = pitch * np.pi / 180
     roll  = roll  * np.pi / 180
 
-    xform           = transform.axisAnglesToRotMat(pitch, roll, yaw)
-    target.rotation = transform.concat(xform, target.rotation)
+    xform           = affine.axisAnglesToRotMat(pitch, roll, yaw)
+    target.rotation = affine.concat(xform, target.rotation)
 
 
 def _generateSpecial_Scene3DOpts_cameraRotation(
@@ -3189,7 +3189,7 @@ def _generateSpecial_Scene3DOpts_cameraRotation(
 
     rot = source.rotation
 
-    pitch, roll, yaw = transform.rotMatToAxisAngles(rot)
+    pitch, roll, yaw = affine.rotMatToAxisAngles(rot)
 
     yaw   = yaw   * 180 / np.pi
     pitch = pitch * 180 / np.pi

@@ -9,10 +9,10 @@ settings for displaying a :class:`.FreesurferMesh` overlay.
 """
 
 
-import fsl.data.freesurfer as fslfs
-import fsl.data.mghimage   as fslmgh
-import fsl.utils.transform as transform
-from . import                 meshopts
+import fsl.data.freesurfer  as fslfs
+import fsl.data.mghimage    as fslmgh
+import fsl.transform.affine as affine
+from . import                  meshopts
 
 
 class FreesurferOpts(meshopts.MeshOpts):
@@ -65,8 +65,8 @@ class FreesurferOpts(meshopts.MeshOpts):
             surf2world = ref.surfToWorldMat
             world2surf = ref.worldToSurfMat
 
-            if   from_ == 'mesh': xform = transform.concat(xform, surf2world)
-            elif to    == 'mesh': xform = transform.concat(world2surf, xform)
+            if   from_ == 'mesh': xform = affine.concat(xform, surf2world)
+            elif to    == 'mesh': xform = affine.concat(world2surf, xform)
 
         return xform
 

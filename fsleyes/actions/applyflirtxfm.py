@@ -28,10 +28,10 @@ import numpy as np
 
 import wx
 
-import fsl.data.image      as fslimage
-import fsl.utils.transform as transform
-import fsleyes.strings     as strings
-from . import                 base
+import fsl.data.image       as fslimage
+import fsl.transform.affine as affine
+import fsleyes.strings      as strings
+from . import                  base
 
 
 class ApplyFlirtXfmAction(base.NeedOverlayAction):
@@ -87,7 +87,7 @@ def calculateTransform(overlay, overlayList, displayCtx, matFile, refFile):
     """Calculates a source voxel -> reference world transformation matrix
     from the given FLIRT transform and refernece image files.
 
-    See the :func:`fsl.utils.transform.flirtMatrixToSform` function.
+    See the :func:`fsl.transform.affine.flirtMatrixToSform` function.
 
     :arg overlay:     The :class:`.Image` overlay - the source image of the
                       FLIRT transformation.
@@ -110,7 +110,7 @@ def calculateTransform(overlay, overlayList, displayCtx, matFile, refFile):
 
     flirtMat = np.loadtxt(matFile)
 
-    return transform.flirtMatrixToSform(flirtMat, overlay, refImg)
+    return affine.flirtMatrixToSform(flirtMat, overlay, refImg)
 
 
 def promptForFlirtFiles(parent, overlay, overlayList, displayCtx, save=False):

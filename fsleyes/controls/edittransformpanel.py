@@ -18,7 +18,7 @@ import numpy as np
 
 import fsl.data.image                       as fslimage
 import fsl.utils.idle                       as idle
-import fsl.utils.transform                  as transform
+import fsl.transform.affine                 as affine
 
 import fsleyes_props                        as props
 import fsleyes_widgets.floatslider          as fslider
@@ -457,12 +457,12 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
             # of the image in world coordinates
             # to define the origin of rotation.
             shape  = self.__overlay.shape
-            lo, hi = transform.axisBounds(shape, self.__overlay.voxToWorldMat)
+            lo, hi = affine.axisBounds(shape, self.__overlay.voxToWorldMat)
             origin = [l + (h - l) / 2.0 for h, l in zip(hi, lo)]
         else:
             origin = self.displayCtx.worldLocation
 
-        return transform.compose(scales, offsets, rotations, origin)
+        return affine.compose(scales, offsets, rotations, origin)
 
 
     def __xformChanged(self, ev=None):
@@ -481,7 +481,7 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         else:                         v2wXform = self.__extraXform
 
         xform = self.__getCurrentXform()
-        xform = transform.concat(xform, v2wXform)
+        xform = affine.concat(xform, v2wXform)
 
         self.__formatXform(xform, self.__newXform)
 
@@ -491,7 +491,7 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         # the voxToWorldMat entirely. So we include
         # a worldToVoxMat transform to trick the
         # NiftiOpts code.
-        opts.displayXform = transform.concat(xform, overlay.worldToVoxMat)
+        opts.displayXform = affine.concat(xform, overlay.worldToVoxMat)
 
 
     def __onApply(self, ev):
@@ -511,7 +511,7 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         newXform = self.__getCurrentXform()
         opts     = self.displayCtx.getOpts(overlay)
 
-        xform = transform.concat(newXform, v2wXform)
+        xform = affine.concat(newXform, v2wXform)
 
         with props.suppress(opts, 'displayXform'):
             opts.displayXform     = np.eye(4)
@@ -622,7 +622,7 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         else:                         v2wXform = self.__extraXform
 
         newXform = self.__getCurrentXform()
-        v2wXform = transform.concat(newXform, v2wXform)
+        v2wXform = affine.concat(newXform, v2wXform)
 
         if affType == 'flirt':
             xform = saveflirtxfm.calculateTransform(

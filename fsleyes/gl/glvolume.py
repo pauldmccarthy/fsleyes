@@ -17,7 +17,7 @@ import OpenGL.GL                          as gl
 
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.idle                     as idle
-import fsl.utils.transform                as transform
+import fsl.transform.affine               as affine
 import fsleyes.gl                         as fslgl
 import fsleyes.gl.routines                as glroutines
 import fsleyes.gl.shaders.filter          as glfilter
@@ -779,8 +779,8 @@ class GLVolume(glimageobject.GLImageObject):
                           [-1,  1, 0],
                           [ 1,  1, 0]], dtype=np.float32)
 
-        invproj = transform.invert(self.canvas.projectionMatrix)
-        verts   = transform.transform(verts, invproj)
+        invproj = affine.invert(self.canvas.projectionMatrix)
+        verts   = affine.transform(verts, invproj)
 
         if opts.resolution != 100:
             gl.glViewport(0, 0, w, h)
@@ -840,7 +840,7 @@ class GLVolume(glimageobject.GLImageObject):
         if self.opts.clipImage is None:
             clipCoordXform = np.eye(4)
         else:
-            clipCoordXform = transform.concat(
+            clipCoordXform = affine.concat(
                 self.clipOpts.getTransform('display', 'texture'),
                 self.opts    .getTransform('texture', 'display'),
                 self.imageTexture.invTexCoordXform(self.overlay.shape))
@@ -859,7 +859,7 @@ class GLVolume(glimageobject.GLImageObject):
             glimageobject.GLImageObject.generateVertices2D(
                 self, zpos, axes, bbox)
 
-        texCoords = transform.transform(
+        texCoords = affine.transform(
             texCoords, self.imageTexture.texCoordXform(self.overlay.shape))
 
         return vertices, voxCoords, texCoords
@@ -875,7 +875,7 @@ class GLVolume(glimageobject.GLImageObject):
         vertices, voxCoords, texCoords = \
             glimageobject.GLImageObject.generateVertices3D(self, bbox)
 
-        texCoords = transform.transform(
+        texCoords = affine.transform(
             texCoords, self.imageTexture.texCoordXform(self.overlay.shape))
 
         return vertices, voxCoords, texCoords

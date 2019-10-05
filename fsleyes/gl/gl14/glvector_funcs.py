@@ -14,8 +14,8 @@ These functions are used by the :mod:`.gl14.glrgbvector_funcs` and
 
 import numpy as np
 
-import fsleyes.gl.shaders  as shaders
-import fsl.utils.transform as transform
+import fsleyes.gl.shaders   as shaders
+import fsl.transform.affine as affine
 
 
 def destroy(self):
@@ -100,7 +100,7 @@ def updateShaderState(self):
 
         voxValXform = self.colourTexture.voxValXform
         cmapXform   = self.cmapTexture.getCoordinateTransform()
-        voxValXform = transform.concat(cmapXform, voxValXform)
+        voxValXform = affine.concat(cmapXform, voxValXform)
         voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
         self.shader.setFragParam('voxValXform', voxValXform)
@@ -111,7 +111,7 @@ def updateShaderState(self):
 
         # See comments in gl21/glvector_funcs.py
         if np.issubdtype(self.imageTexture.dtype, np.integer):
-            voxValXform = transform.scaleOffsetXform(2, -1)
+            voxValXform = affine.scaleOffsetXform(2, -1)
         else:
             voxValXform = self.imageTexture.voxValXform
 

@@ -14,13 +14,13 @@ shader programs.
 
 import logging
 
-import numpy               as np
-import OpenGL.GL           as gl
+import numpy                as np
+import OpenGL.GL            as gl
 
-import fsl.utils.transform as transform
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.shaders  as shaders
-import fsleyes.gl.glvolume as glvolume
+import fsl.transform.affine as affine
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.shaders   as shaders
+import fsleyes.gl.glvolume  as glvolume
 
 
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def updateShaderState(self):
     # which transforms from image texture values
     # to voxel values, and scales said voxel
     # values to colour map texture coordinates.
-    img2CmapXform = transform.concat(
+    img2CmapXform = affine.concat(
         self.colourTexture.getCoordinateTransform(),
         self.imageTexture.voxValXform)
 
@@ -137,8 +137,8 @@ def updateShaderState(self):
 
         for i in range(opts.numClipPlanes):
             origin, normal   = self.get3DClipPlane(i)
-            origin           = transform.transform(origin, d2tmat)
-            normal           = transform.transformNormal(normal, d2tmat)
+            origin           = affine.transform(origin, d2tmat)
+            normal           = affine.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
         changed |= shader.set('numClipPlanes', opts.numClipPlanes)
@@ -184,7 +184,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
         zpos, axes, bbox=bbox)
 
     if xform is not None:
-        vertices = transform.transform(vertices, xform)
+        vertices = affine.transform(vertices, xform)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -213,13 +213,13 @@ def draw3D(self, xform=None, bbox=None):
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
 
-    rayStep = transform.transformNormal(
+    rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(self.overlay.shape))
-    texform = transform.concat(
+    texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(self.overlay.shape))
 
     if xform is not None:
-        vertices = transform.transform(vertices, xform)
+        vertices = affine.transform(vertices, xform)
 
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
@@ -247,7 +247,7 @@ def drawAll(self, axes, zposes, xforms):
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
         v, vc, tc = self.generateVertices2D(zpos, axes)
-        vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
+        vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 
