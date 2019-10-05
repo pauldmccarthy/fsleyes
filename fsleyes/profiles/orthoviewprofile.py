@@ -14,11 +14,11 @@ import wx
 
 import numpy as np
 
-import fsl.utils.idle      as idle
-import fsl.utils.transform as transform
+import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
 
-import fsleyes.profiles    as profiles
-import fsleyes.actions     as actions
+import fsleyes.profiles     as profiles
+import fsleyes.actions      as actions
 
 
 log = logging.getLogger(__name__)
@@ -714,7 +714,7 @@ class OrthoViewProfile(profiles.Profile):
 
         # Find the location on the cross section
         # that was nearest to the mouse click
-        ldists = transform.veclength(loc - lines)
+        ldists = affine.veclength(loc - lines)
         lidx   = np.argsort(ldists)[0]
         lvert  = lines[lidx]
         fidx   = faces[int(np.floor(lidx / 2))]
@@ -726,7 +726,7 @@ class OrthoViewProfile(profiles.Profile):
 
         # Calculate the nearest vertex on
         # this triangle
-        fdists = transform.veclength(faceVerts - lvert)
+        fdists = affine.veclength(faceVerts - lvert)
         vidx   = np.argsort(fdists)[0]
         vidx   = face[vidx]
         loc    = overlay.vertices[vidx, :]

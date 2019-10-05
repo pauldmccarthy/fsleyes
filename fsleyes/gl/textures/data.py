@@ -26,7 +26,7 @@ import OpenGL.extensions           as glexts
 import OpenGL.GL.ARB.texture_float as arbtf
 
 import fsl.utils.memoize           as memoize
-import fsl.utils.transform         as transform
+import fsl.transform.affine        as affine
 import fsleyes.gl.routines         as glroutines
 
 
@@ -406,8 +406,8 @@ def prepareData(data,
     # will be an identity transform.
     else:
         invScale       = 1.0 / scale
-        voxValXform    = transform.scaleOffsetXform(scale, offset)
-        invVoxValXform = transform.scaleOffsetXform(
+        voxValXform    = affine.scaleOffsetXform(scale, offset)
+        invVoxValXform = affine.scaleOffsetXform(
             invScale,
             -offset * invScale)
 

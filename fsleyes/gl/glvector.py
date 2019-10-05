@@ -12,16 +12,16 @@ shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``.
 """
 
 
-import numpy               as np
-import OpenGL.GL           as gl
+import numpy                as np
+import OpenGL.GL            as gl
 
-import fsl.data.image      as fslimage
-import fsl.utils.idle      as idle
-import fsl.utils.transform as transform
-import fsleyes.colourmaps  as fslcm
-from . import resources    as glresources
-from . import                 textures
-from . import                 glimageobject
+import fsl.data.image       as fslimage
+import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
+import fsleyes.colourmaps   as fslcm
+from . import resources     as glresources
+from . import                  textures
+from . import                  glimageobject
 
 
 class GLVectorBase(glimageobject.GLImageObject):
@@ -576,7 +576,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         if auxImage is None:
             return np.eye(4)
         else:
-            return transform.concat(
+            return affine.concat(
                 auxOpts.getTransform('display', 'texture'),
                 opts   .getTransform('texture', 'display'))
 

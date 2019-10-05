@@ -13,11 +13,11 @@ import logging
 
 import numpy as np
 
-import fsleyes_props       as props
-import fsl.utils.transform as transform
-import fsl.utils.idle      as idle
-import fsleyes.profiles    as profiles
-import fsleyes.actions     as actions
+import fsleyes_props        as props
+import fsl.transform.affine as affine
+import fsl.utils.idle       as idle
+import fsleyes.profiles     as profiles
+import fsleyes.actions      as actions
 
 
 log = logging.getLogger(__name__)
@@ -113,12 +113,12 @@ class Scene3DViewProfile(profiles.Profile):
         xrot = x1 - x0
         yrot = y1 - y0
 
-        rot = transform.axisAnglesToRotMat(yrot, 0, xrot)
+        rot = affine.axisAnglesToRotMat(yrot, 0, xrot)
 
         self.__lastRot        = rot
         self.__rotateMousePos = mousePos
 
-        canvas.opts.rotation = transform.concat(rot,
+        canvas.opts.rotation = affine.concat(rot,
                                                 self.__lastRot,
                                                 self.__baseXform)
 
@@ -213,8 +213,8 @@ class Scene3DViewProfile(profiles.Profile):
         if not isinstance(ovl, Mesh):
 
             posDir = farPos - canvasPos
-            dist   = transform.veclength(posDir)
-            posDir = transform.normalise(posDir)
+            dist   = affine.veclength(posDir)
+            posDir = affine.normalise(posDir)
             midPos = canvasPos + 0.5 * dist * posDir
 
             self.displayCtx.location.xyz = midPos
@@ -222,7 +222,7 @@ class Scene3DViewProfile(profiles.Profile):
         else:
             opts      = self.displayCtx.getOpts(ovl)
             rayOrigin = canvasPos
-            rayDir    = transform.normalise(farPos - canvasPos)
+            rayDir    = affine.normalise(farPos - canvasPos)
 
             # transform location from display into model space
             rayOrigin = opts.transformCoords(rayOrigin, 'display', 'mesh')
@@ -243,7 +243,7 @@ class Scene3DViewProfile(profiles.Profile):
             # we want the vertex on that triangle
             # which is nearest to the intersection.
             triVerts = ovl.vertices[tri, :]
-            triDists = transform.veclength(loc - triVerts)
+            triDists = affine.veclength(loc - triVerts)
             vertIdx  = np.argsort(triDists)[0]
 
             loc      = ovl.vertices[tri[vertIdx], :]

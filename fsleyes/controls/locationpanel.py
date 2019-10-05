@@ -17,7 +17,7 @@ import wx.html as wxhtml
 
 import numpy as np
 
-import fsl.utils.transform            as transform
+import fsl.transform.affine           as affine
 import fsl.utils.settings             as fslsettings
 import fsl.data.image                 as fslimage
 import fsl.data.mesh                  as fslmesh
@@ -657,7 +657,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             shape    = refImage.shape[:3]
             vlo      = [0, 0, 0]
             vhi      = np.array(shape) - 1
-            wlo, whi = transform.axisBounds(shape, v2w)
+            wlo, whi = affine.axisBounds(shape, v2w)
             wstep    = refImage.pixdim[:3]
         else:
             vlo     = [0, 0, 0]

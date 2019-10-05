@@ -13,7 +13,7 @@ data from :class:`.Nifti` overlays.
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform                 as transform
+import fsl.transform.affine                as affine
 import fsl.utils.memoize                   as memoize
 
 import fsleyes.displaycontext.volume3dopts as volume3dopts
@@ -257,7 +257,7 @@ class GLImageObject(globject.GLObject):
         if not hasattr(opts, 'interpolation') or opts.interpolation == 'none':
             voxCoords = opts.roundVoxels(voxCoords, daxes=[zax])
 
-        texCoords = transform.transform(voxCoords, v2tMat)
+        texCoords = affine.transform(voxCoords, v2tMat)
 
         return vertices, voxCoords, texCoords
 
@@ -289,7 +289,7 @@ class GLImageObject(globject.GLObject):
             d2vMat,
             bbox=bbox)
 
-        texCoords = transform.transform(voxCoords, v2tMat)
+        texCoords = affine.transform(voxCoords, v2tMat)
 
         return vertices, voxCoords, texCoords
 
@@ -352,7 +352,7 @@ class GLImageObject(globject.GLObject):
         voxels[:, zax] = zpos
 
         if space == 'voxel':
-            voxels = transform.transform(voxels, d2vMat)
+            voxels = affine.transform(voxels, d2vMat)
             voxels = opts.roundVoxels(voxels,
                                       daxes=[zax],
                                       roundOther=False)
@@ -383,7 +383,7 @@ class GLImageObject(globject.GLObject):
 
         if space == 'voxel':
             pass
-            # voxels = transform.transform(voxels, d2vMat)
+            # voxels = affine.transform(voxels, d2vMat)
             # voxels = opts.roundVoxels(voxels)
 
         return voxels
@@ -468,7 +468,7 @@ class GLImageObject(globject.GLObject):
                 continue
 
             if xform is not None:
-                verts = transform.transform(verts, xform)
+                verts = affine.transform(verts, xform)
 
             verts = np.array(verts.ravel('C'), dtype=np.float32, copy=False)
 

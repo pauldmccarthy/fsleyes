@@ -15,7 +15,7 @@ import collections
 
 import numpy as np
 
-import fsl.utils.transform   as transform
+import fsl.transform.affine  as affine
 import fsl.data.imagewrapper as imagewrapper
 from . import data           as texdata
 from . import                   texture2d
@@ -305,7 +305,7 @@ class ImageTextureBase(object):
             # Make sure the data/offset are
             # compatible with 2D textures
             data   = self.shapeData(data, oldShape=image.shape)
-            offset = transform.transform(
+            offset = affine.transform(
                 offset, self.texCoordXform(image.shape))
 
             log.debug('{} data changed - refreshing part of '

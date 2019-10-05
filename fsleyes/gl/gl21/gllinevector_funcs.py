@@ -32,8 +32,8 @@ import logging
 import numpy               as np
 import OpenGL.GL           as gl
 
-import fsl.utils.transform as transform
-from . import                 glvector_funcs
+import fsl.transform.affine as affine
+from . import                  glvector_funcs
 
 
 log = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ def updateShaderState(self):
 
     # see comments in gl21/glvector_funcs.py
     if np.issubdtype(self.imageTexture.dtype, np.integer):
-        vvxMat = transform.scaleOffsetXform(2, -1)
+        vvxMat = affine.scaleOffsetXform(2, -1)
     else:
         vvxMat = self.imageTexture.voxValXform
 
@@ -157,7 +157,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
     if xform is None: xform = v2dMat
-    else:             xform = transform.concat(xform, v2dMat)
+    else:             xform = affine.concat(xform, v2dMat)
 
     shader.set(   'voxToDisplayMat', xform)
     shader.setAtt('vertexID',        indices)

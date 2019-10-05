@@ -37,7 +37,7 @@ import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.resources      as glresources
 import fsleyes.gl.textures       as textures
 import fsleyes.gl.textures.data  as texdata
-import fsl.utils.transform       as transform
+import fsl.transform.affine      as affine
 
 
 log = logging.getLogger(__name__)
@@ -584,7 +584,7 @@ class VoxelGrid(AnnotationObject):
         xax, yax, zax = axes
         dispLoc       = [0] * 3
         dispLoc[zax]  = zpos
-        voxLoc        = transform.transform([dispLoc], self.displayToVoxMat)[0]
+        voxLoc        = affine.transform([dispLoc], self.displayToVoxMat)[0]
 
         vox = int(round(voxLoc[zax]))
 
@@ -694,7 +694,7 @@ class VoxelSelection(AnnotationObject):
         displayToVox = opts.getTransform('display', 'voxel')
         voxToDisplay = opts.getTransform('voxel',   'display')
         voxToTex     = opts.getTransform('voxel',   'texture')
-        voxToTex     = transform.concat(texture.texCoordXform(shape), voxToTex)
+        voxToTex     = affine.concat(texture.texCoordXform(shape), voxToTex)
         verts, voxs  = glroutines.slice2D(shape,
                                           xax,
                                           yax,
@@ -702,7 +702,7 @@ class VoxelSelection(AnnotationObject):
                                           voxToDisplay,
                                           displayToVox)
 
-        texs  = transform.transform(voxs, voxToTex)[:, :texture.ndim]
+        texs  = affine.transform(voxs, voxToTex)[:, :texture.ndim]
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
