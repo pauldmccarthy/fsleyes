@@ -701,7 +701,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
                   between the three location properties.
         """
 
-        if not self or self.destroyed():
+        if not self or self.destroyed:
             return
 
         if len(self.overlayList) == 0:       return

@@ -367,7 +367,7 @@ class PlotPanel(viewpanel.ViewPanel):
 
         idleName = '{}.draw'.format(id(self))
 
-        if not self.destroyed() and not idle.inIdle(idleName):
+        if not self.destroyed and not idle.inIdle(idleName):
             idle.idle(self.draw, name=idleName)
 
 

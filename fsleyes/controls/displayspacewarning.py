@@ -119,7 +119,7 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         message is shown.
         """
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         parent       = self.GetParent()

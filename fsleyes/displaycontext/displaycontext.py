@@ -396,6 +396,7 @@ class DisplayContext(props.SyncableHasProperties):
             display.destroy()
 
 
+    @property
     def destroyed(self):
         """Returns ``True`` if this ``DisplayContext`` has been, or is being,
         destroyed, ``False`` otherwise.
@@ -425,7 +426,7 @@ class DisplayContext(props.SyncableHasProperties):
         if overlay is None:
             raise ValueError('No overlay specified')
 
-        if self.destroyed():
+        if self.destroyed:
             raise ValueError('DisplayContext has been destroyed')
 
         if overlay not in self.__overlayList:
@@ -466,7 +467,7 @@ class DisplayContext(props.SyncableHasProperties):
         if overlay is None:
             raise ValueError('No overlay specified')
 
-        if self.destroyed():
+        if self.destroyed:
             raise ValueError('DisplayContext has been destroyed')
 
         if overlay not in self.__overlayList:
