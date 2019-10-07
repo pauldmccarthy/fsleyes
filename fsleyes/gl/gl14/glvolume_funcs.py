@@ -20,7 +20,7 @@ import OpenGL.GL            as gl
 import fsl.transform.affine as affine
 import fsleyes.gl.shaders   as shaders
 import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.glvolume bas glvolume
+import fsleyes.gl.glvolume  as glvolume
 
 
 log = logging.getLogger(__name__)
