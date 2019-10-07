@@ -119,6 +119,9 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         message is shown.
         """
 
+        if self.destroyed():
+            return
+
         parent       = self.GetParent()
         condition    = self.__warnCondition
         displayCtx   = self.displayCtx
