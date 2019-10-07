@@ -167,7 +167,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
         def onLoad(atlas):
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             self.__enabledAtlases[atlasID] = atlas

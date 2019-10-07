@@ -267,6 +267,7 @@ class SliceCanvas(object):
         self._offscreenTextures = None
 
 
+    @property
     def destroyed(self):
         """Returns ``True`` if a call to :meth:`destroy` has been made,
         ``False`` otherwise.
@@ -774,7 +775,7 @@ class SliceCanvas(object):
 
         def create():
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             # The overlay has been removed from the
@@ -900,7 +901,7 @@ class SliceCanvas(object):
             # This SliceCanvas might get
             # destroyed before this idle
             # task is executed
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             self._updateRenderTextures()
@@ -1415,7 +1416,7 @@ class SliceCanvas(object):
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         width, height = self.GetSize()

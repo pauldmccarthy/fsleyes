@@ -263,7 +263,7 @@ class GLVolume(glimageobject.GLImageObject):
             # In some crazy circumstances,
             # a just-created GLVolume can
             # get destroyed immediately
-            if not self.destroyed():
+            if not self.destroyed:
                 fslgl.glvolume_funcs.init(self)
                 self.notify()
 
@@ -311,7 +311,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Returns ``True`` if this ``GLVolume`` is ready to be drawn,
         ``False`` otherwise.
         """
-        return (not self.destroyed()    and
+        return (not self.destroyed      and
                 self.shader is not None and
                 self.texturesReady())
 

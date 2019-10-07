@@ -348,7 +348,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         if ev is not None:
             ev.Skip()
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         # Lay this panel out, so the

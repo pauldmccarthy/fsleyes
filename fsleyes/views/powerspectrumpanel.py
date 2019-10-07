@@ -156,7 +156,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.drawDataSeries` method.
         """
 
-        if not self or self.destroyed():
+        if not self or self.destroyed:
             return
 
         pss = self.getDataSeriesToPlot()

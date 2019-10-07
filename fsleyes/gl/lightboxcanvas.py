@@ -544,7 +544,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         be displayed, in display coordinates.
         """
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         opts = self.opts
@@ -830,7 +830,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """Draws the current scene to the canvas. """
 
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         width, height = self.GetSize()

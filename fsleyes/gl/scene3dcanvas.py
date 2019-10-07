@@ -79,6 +79,7 @@ class Scene3DCanvas(object):
         self.__glObjects   = None
 
 
+    @property
     def destroyed(self):
         """
         """
@@ -408,7 +409,7 @@ class Scene3DCanvas(object):
 
         def create():
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             if overlay not in self.__glObjects:

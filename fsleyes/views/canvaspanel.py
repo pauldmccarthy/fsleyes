@@ -976,7 +976,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         from . import scene3dpanel
 
-        if self.destroyed():   return False
+        if self.destroyed:     return False
         if not self.movieMode: return False
 
         overlay  = self.displayCtx.getSelectedOverlay()

@@ -322,7 +322,7 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
                 # The atlas panel may be destroyed
                 # before the atlas is loaded.
-                if not self or self.destroyed():
+                if not self or self.destroyed:
                     return
 
                 self.__loadedAtlases[atlasID, summary, res] = atlas

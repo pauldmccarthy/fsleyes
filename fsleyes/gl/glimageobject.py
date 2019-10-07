@@ -127,6 +127,7 @@ class GLImageObject(globject.GLObject):
         globject.GLObject.destroy(self)
 
 
+    @property
     def destroyed(self):
         """Returns ``True`` if :meth:`destroy` has been called, ``False``
         otherwise.
