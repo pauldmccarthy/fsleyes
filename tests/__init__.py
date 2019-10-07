@@ -115,6 +115,24 @@ def mockFSLDIR(**kwargs):
         fslplatform.fsldir    = oldfsldir
         fslplatform.fsldevdir = oldfsldevdir
 
+@contextlib.contextmanager
+def exitMainLoopOnError(app):
+
+    oldhook = sys.excepthook
+
+    error = [None]
+
+    def myhook(type, value, traceback):
+        app.ExitMainLoop()
+        oldhook(type, value, traceback)
+        error[0] = value
+
+    try:
+        sys.excepthook = myhook
+        yield error
+    finally:
+        sys.excepthook = oldhook
+
 
 # Under GTK, a single call to
 # yield just doesn't cut it
@@ -194,10 +212,11 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     from fsl.utils.platform import platform as fslplatform
 
-    logging.getLogger().setLevel(logging.WARNING)
+    fsleyes.configLogging()
 
     gc.collect()
     idle.idleReset()
+    idle._idleAllowErrors = True
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
@@ -274,12 +293,17 @@ def run_with_fsleyes(func, *args, **kwargs):
             wx.CallLater(startingDelay,
                          fslgl.getGLContext,
                          parent=panel,
-                         ready=init)
+                         ready=init,
+                         raiseErrors=True)
     else:
         wx.CallLater(startingDelay, run)
 
-    app[0].MainLoop()
+    with exitMainLoopOnError(app[0]) as err:
+        app[0].MainLoop()
     dummy.Close()
+
+    if err[0] is not None:
+        raise err[0]
 
     time.sleep(1)
 
