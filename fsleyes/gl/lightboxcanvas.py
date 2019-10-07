@@ -544,6 +544,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         be displayed, in display coordinates.
         """
 
+        if self.destroyed():
+            return
+
         opts = self.opts
         xmin = self.displayCtx.bounds.getLo( opts.xax)
         ymin = self.displayCtx.bounds.getLo( opts.yax)
