@@ -9,6 +9,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.31.1 (Tuesday October 8th 2019)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in edit mode where the image texture would not get updated
+  correctly in restricted environments (e.g. VNC) with certain image data
+  types.
+
+
 0.31.0 (Thursday September 10th 2019)
 -------------------------------------
 
