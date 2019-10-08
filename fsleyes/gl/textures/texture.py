@@ -944,7 +944,14 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             newshape = list(data.shape) + [1] * (self.ndim - len(data.shape))
             data     = data.reshape(newshape)
 
-        data = texdata.prepareData(data)[0]
+        data = texdata.prepareData(
+            data,
+            prefilter=self.prefilter,
+            prefilterRange=self.prefilterRange,
+            resolution=self.resolution,
+            scales=self.scales,
+            normalise=self.normalise,
+            normaliseRange=self.normaliseRange)[0]
 
         self.doPatch(data, offset)
 
