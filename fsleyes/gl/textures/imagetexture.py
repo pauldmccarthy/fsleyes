@@ -280,6 +280,16 @@ class ImageTextureBase(object):
                        that was changed.
         """
 
+        # TODO If the change has caused the image
+        #      data range to change, and texture
+        #      data normalisation is on, you have
+        #      to refresh the full texture.
+        #
+        #      The Image instance does follow up
+        #      data change notifications with a
+        #      data range notification; perhaps
+        #      you can use this somehow.
+
         # If the data change was performed using
         # normal array indexing, we can just replace
         # that part of the image texture.
