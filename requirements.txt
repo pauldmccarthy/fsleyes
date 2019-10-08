@@ -9,6 +9,6 @@ PyOpenGL>=3.1.0
 pyparsing==2.*
 scipy>=0.18
 wxPython>=3.0.2.0
-fslpy>=2.6
+fslpy>=2.6.2
 fsleyes-props>=1.6.7
-fsleyes-widgets>=0.8.3
+fsleyes-widgets>=0.8.4
