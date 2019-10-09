@@ -724,36 +724,37 @@ class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
             self.SetMaxSize(size)
 
 
-class MyAuiDockingGuide(auifm.AuiDockingGuide):
+def _AuiDockingGuide_init(self, *args, **kwargs):
     """I am also monkey-patching the
     ``wx.lib.agw.aui.AuiDockingGuide.__init__`` method, because in this
     instance, when running over SSH/X11, the ``wx.FRAME_TOOL_WINDOW`` style
     seems to result in the docking guide frames being given title bars, which
     is quite undesirable.
+
+    I cannot patch the entire class in the aui package, because it is used
+    as part of a class hierarchy. So I am just patching the method.
     """
 
-    def __init__(self, *args, **kwargs):
+    if 'style' in kwargs:
+        style = kwargs['style']
 
-        if 'style' in kwargs:
-            style = kwargs['style']
+    # This is the default style, as defined
+    # in the AuiDockingGuide constructor
+    else:
+        style = (wx.FRAME_TOOL_WINDOW |
+                 wx.FRAME_STAY_ON_TOP |
+                 wx.FRAME_NO_TASKBAR  |
+                 wx.NO_BORDER)
 
-        # This is the default style, as defined
-        # in the AuiDockingGuide constructor
-        else:
-            style = (wx.FRAME_TOOL_WINDOW |
-                     wx.FRAME_STAY_ON_TOP |
-                     wx.FRAME_NO_TASKBAR  |
-                     wx.NO_BORDER)
+    if platform.inSSHSession:
+        style &= ~wx.FRAME_TOOL_WINDOW
 
-        if platform.inSSHSession:
-            style &= ~wx.FRAME_TOOL_WINDOW
+    kwargs['style'] = style
 
-        kwargs['style'] = style
-
-        super().__init__(*args, **kwargs)
+    _AuiDockingGuide_real_init(self, *args, **kwargs)
 
 
-aui  .AuiFloatingFrame = MyAuiFloatingFrame
-auifm.AuiFloatingFrame = MyAuiFloatingFrame
-aui  .AuiDockingGuide  = MyAuiDockingGuide
-auifm.AuiDockingGuide  = MyAuiDockingGuide
+aui  .AuiFloatingFrame       = MyAuiFloatingFrame
+auifm.AuiFloatingFrame       = MyAuiFloatingFrame
+_AuiDockingGuide_real_init   = aui.AuiDockingGuide.__init__
+aui.AuiDockingGuide.__init__ = _AuiDockingGuide_init
