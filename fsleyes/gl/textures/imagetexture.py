@@ -11,7 +11,7 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 
 
 import logging
-import collections
+import collections.abc as abc
 
 import numpy as np
 
@@ -199,7 +199,7 @@ class ImageTextureBase(object):
             if volume is None and self.__volume is None:
                 volume = [0] * (ndims - 3)
 
-            elif not isinstance(volume, collections.Sequence):
+            elif not isinstance(volume, abc.Sequence):
                 volume = [volume]
 
             if len(volume) != ndims - 3:
