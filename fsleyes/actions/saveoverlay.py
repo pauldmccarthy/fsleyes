@@ -46,7 +46,8 @@ class SaveOverlayAction(base.Action):
         :arg frame:       The :class:`.FSLeyesFrame`.
         """
         base.Action.__init__(self, overlayList, displayCtx, self.__saveOverlay)
-        self.__name = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
+        self.__registered = None
 
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
@@ -64,6 +65,11 @@ class SaveOverlayAction(base.Action):
         """
         self.displayCtx .removeListener('selectedOverlay', self.__name)
         self.overlayList.removeListener('overlays',        self.__name)
+
+        if self.__registered is not None:
+            self.__registered.deregister(self.__name, 'saveState')
+            self.__registered = None
+
         base.Action.destroy(self)
 
 
@@ -82,19 +88,17 @@ class SaveOverlayAction(base.Action):
                         isinstance(overlay, fslimage.Image) and
                         (not overlay.saveState))
 
-        for ovl in self.overlayList:
+        if self.__registered is not None:
+            self.__registered.deregister(self.__name, 'saveState')
+            self.__registered = None
 
-            if not isinstance(ovl, fslimage.Image):
-                continue
-
-            ovl.deregister(self.__name, 'saveState')
-
-            # Register a listener on the saved property
-            # of the currently selected image, so we can
-            # enable the save action when the image
-            # becomes 'unsaved', and vice versa.
-            if ovl is overlay:
-                ovl.register(self.__name,
+        # Register a listener on the saved property
+        # of the currently selected image, so we can
+        # enable the save action when the image
+        # becomes 'unsaved', and vice versa.
+        if self.enabled:
+            self.__registered = overlay
+            overlay.register(self.__name,
                              self.__overlaySaveStateChanged,
                              'saveState')
 
@@ -108,28 +112,17 @@ class SaveOverlayAction(base.Action):
         see the :meth:`__selectedOverlayChanged` method.
         """
 
-        overlay = self.displayCtx.getSelectedOverlay()
-
-        if overlay is None:
-            self.enabled = False
-
-        elif not isinstance(overlay, fslimage.Image):
-            self.enabled = False
-        else:
-            self.enabled = not overlay.saveState
+        overlay = self.__registered
+        self.enabled = (overlay is not None) and (not overlay.saveState)
 
 
     def __saveOverlay(self):
         """Called when this :class:`.Action` is executed. Calls
-        :func:`saveOverlay` with the currentyl selected overlay.
+        :func:`saveOverlay` with the currently selected overlay.
         """
 
-        overlay = self.displayCtx.getSelectedOverlay()
-
-        if (overlay is not None)               and \
-           isinstance(overlay, fslimage.Image) and \
-           (not overlay.saveState):
-
+        overlay = self.__registered
+        if overlay is not None:
             display = self.displayCtx.getDisplay(overlay)
             saveOverlay(overlay, display)
 
