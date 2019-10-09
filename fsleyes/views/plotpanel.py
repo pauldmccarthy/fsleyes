@@ -549,9 +549,13 @@ class PlotPanel(viewpanel.ViewPanel):
         else:
             self.__drawQueue.enqueue(idle.idle, realDraw)
 
+        def refreshCanvas():
+            if not self.destroyed:
+                canvas.draw()
+
         if refresh:
-            if immediate: canvas.draw()
-            else:         self.__drawQueue.enqueue(idle.idle, canvas.draw)
+            if immediate: refreshCanvas()
+            else:         self.__drawQueue.enqueue(idle.idle, refreshCanvas)
 
 
     def drawDataSeries(self, extraSeries=None, refresh=False, **plotArgs):

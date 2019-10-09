@@ -743,6 +743,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         :arg refresh: Must be passed as a keyword argument. If ``True`` (the
                       default), this ``OrthoPanel`` is refreshed.
         """
+
+        if self.destroyed:
+            return
+
         refresh = kwa.pop('refresh', True)
 
         sceneOpts = self.sceneOpts

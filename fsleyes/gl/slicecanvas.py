@@ -869,6 +869,9 @@ class SliceCanvas(object):
         overlay.
         """
 
+        if self.destroyed:
+            return
+
         # Destroy any GL objects for overlays
         # which are no longer in the list
         for ovl, globj in list(self._glObjects.items()):
