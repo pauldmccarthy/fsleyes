@@ -552,11 +552,15 @@ class FSLeyesFrame(wx.Frame):
         if panelId > 1:
             width, height = self.GetClientSize().Get()
 
-            # PlotPanels/ShellPanels are
-            # initially placed along the
-            # bottom
-            if isinstance(panel, (plotpanel.PlotPanel, shellpanel.ShellPanel)):
+            # PlotPanels are initially
+            # placed along the bottom
+            if isinstance(panel, plotpanel.PlotPanel):
                 paneInfo.Bottom().BestSize(width, height // 3)
+
+            # As are ShellPanels, albeit
+            # a bit smaller
+            elif isinstance(panel, shellpanel.ShellPanel):
+                paneInfo.Bottom().BestSize(width, height // 5)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
