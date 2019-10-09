@@ -184,28 +184,28 @@ def test_editable():
 def _test_newMask(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img]
-    idle.block(0.5)
+    idle.block(2.5)
     ortho.profile = 'edit'
-    idle.block(0.5)
+    idle.block(2.5)
 
     profile = ortho.getCurrentProfile()
 
     profile.createMask()
-    idle.block(0.5)
+    idle.block(2.5)
     assert len(overlayList) == 2
     mask = overlayList[1]
     assert mask.sameSpace(img)
     assert np.all(mask[:] == 0)
     overlayList.remove(mask)
-    idle.block(0.5)
+    idle.block(2.5)
 
     profile.mode = 'sel'
-    idle.block(0.5)
+    idle.block(2.5)
     ed = profile.editor(img)
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
-    idle.block(0.5)
+    idle.block(2.5)
     profile.createMask()
-    idle.block(0.5)
+    idle.block(2.5)
     assert len(overlayList) == 2
     mask = overlayList[1]
     assert mask.sameSpace(img)
@@ -213,7 +213,7 @@ def _test_newMask(ortho, overlayList, displayCtx):
     exp[8:12, 8:12, 8:12] = 1
     assert np.all(mask[:] == exp)
     overlayList[:] = []
-    idle.block(0.55)
+    idle.block(2.5)
 
 
 def test_newMask():
@@ -225,24 +225,24 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
     img2 = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img1, img2]
     displayCtx.selectOverlay(img1)
-    idle.block(0.25)
+    idle.block(2)
     ortho.profile = 'edit'
-    idle.block(0.25)
+    idle.block(2)
     profile = ortho.getCurrentProfile()
     profile.mode = 'sel'
     profile.drawMode = False
-    idle.block(0.25)
+    idle.block(2)
     ed = profile.editor(img1)
 
     # clear
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
-    idle.block(0.25)
+    idle.block(2)
     profile.clearSelection()
     assert np.all(ed.getSelection().getSelection() == 0)
 
     # fill
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
-    idle.block(0.25)
+    idle.block(2)
     profile.fillValue = 999
     profile.fillSelection()
     exp = np.copy(img1[:])
@@ -252,7 +252,7 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
     # erase
     profile.clearSelection()
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(3, 3, 3))
-    idle.block(0.25)
+    idle.block(2)
     profile.eraseValue = -999
     profile.eraseSelection()
     exp = np.copy(img1[:])
@@ -261,7 +261,7 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
 
     # invert
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
-    idle.block(0.25)
+    idle.block(2)
     profile.invertSelection()
     exp = np.ones(img1.shape)
     exp[8:12, 8:12, 8:12] = 0
@@ -273,9 +273,9 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
     displayCtx.selectOverlay(img2)
     profile.copySelection()
     displayCtx.selectOverlay(img1)
-    idle.block(0.25)
+    idle.block(2)
     profile.pasteSelection()
-    idle.block(0.25)
+    idle.block(2)
     exp = np.copy(img1[:])
     exp[8:12, 8:12, 8:12] = img2[8:12, 8:12, 8:12]
     assert np.all(img1[:] == exp)
