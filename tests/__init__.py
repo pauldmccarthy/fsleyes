@@ -122,10 +122,26 @@ def exitMainLoopOnError(app):
 
     error = [None]
 
-    def myhook(type, value, traceback):
-        app.ExitMainLoop()
-        oldhook(type, value, traceback)
-        error[0] = value
+    def myhook(type_, value, tb):
+
+        # some errors come from
+        # elsewhere (e.g. matplotlib),
+        # and are out of our control
+        ignore = True
+        while tb is not None:
+            frame = tb.tb_frame
+            mod   = frame.f_globals['__name__']
+
+            if any([mod.startswith(m) for m in ('fsl', 'fsleyes')]):
+                ignore = False
+                break
+            tb = tb.tb_next
+
+        if not ignore:
+            app.ExitMainLoop()
+            error[0] = value
+
+        oldhook(type_, value, traceback)
 
     try:
         sys.excepthook = myhook
@@ -211,6 +227,7 @@ def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
     from fsl.utils.platform import platform as fslplatform
+    import fsleyes_widgets.utils.status     as status
 
     fsleyes.configLogging()
 
@@ -301,6 +318,12 @@ def run_with_fsleyes(func, *args, **kwargs):
     with exitMainLoopOnError(app[0]) as err:
         app[0].MainLoop()
     dummy.Close()
+
+    if status._clearThread is not None:
+        status._clearThread.die()
+        status._clearThread.clear(0.01)
+        status._clearThread.join()
+        status._clearThread = None
 
     if err[0] is not None:
         raise err[0]
