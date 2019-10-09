@@ -77,28 +77,24 @@ def test_MaskDialog():
     run_with_fsleyes(_test_MaskDialog)
 def _test_MaskDialog(frame, overlayList, displayCtx):
 
-    sim = wx.UIActionSimulator()
-
     dlg = amds.MaskDialog(frame, ['a', 'b', 'c'])
-    wx.CallLater(500, simclick, sim, dlg.okButton)
-    dlg.ShowModal()
+    wx.CallLater(500, dlg._MaskDialog__onOkButton, None)
+    assert dlg.ShowModal() == wx.ID_OK
     dlg.Destroy()
 
 
     dlg = amds.MaskDialog(frame, ['a', 'b', 'c'])
-    wx.CallLater(500, simclick, sim, dlg.cancelButton)
-    dlg.ShowModal()
+    wx.CallLater(500, dlg._MaskDialog__onCancelButton, None)
+    assert dlg.ShowModal() == wx.ID_CANCEL
     dlg.Destroy()
 
     dlg = amds.MaskDialog(frame, ['a', 'b', 'c'])
 
-    # wxgtk2 does not like simulated clicks
-    # on wx.Choice objects, so we can't test
-    # that
-    wx.CallLater(500,  simclick, sim, dlg.checkbox)
-    wx.CallLater(1000, simclick, sim, dlg.okButton)
+    dlg.choice.SetSelection(1)
+    dlg.checkbox.SetValue(True)
+    wx.CallLater(500, dlg._MaskDialog__onOkButton, None)
 
-    dlg.ShowModal()
-    dlg.GetChoice()
+    assert dlg.ShowModal() == wx.ID_OK
+    assert dlg.GetChoice() == 1
     assert dlg.GetCheckBox()
     dlg.Destroy()

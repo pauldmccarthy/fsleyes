@@ -39,7 +39,7 @@ import matplotlib.image as mplimg
 import fsleyes_props                as props
 from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
-import fsl.utils.transform          as transform
+import fsl.transform.affine         as affine
 import fsl.data.image               as fslimage
 import                                 fsleyes
 import fsleyes.frame                as fslframe
@@ -114,6 +114,40 @@ def mockFSLDIR(**kwargs):
     finally:
         fslplatform.fsldir    = oldfsldir
         fslplatform.fsldevdir = oldfsldevdir
+
+@contextlib.contextmanager
+def exitMainLoopOnError(app):
+
+    oldhook = sys.excepthook
+
+    error = [None]
+
+    def myhook(type_, value, tb):
+
+        # some errors come from
+        # elsewhere (e.g. matplotlib),
+        # and are out of our control
+        ignore = True
+        while tb is not None:
+            frame = tb.tb_frame
+            mod   = frame.f_globals['__name__']
+
+            if any([mod.startswith(m) for m in ('fsl', 'fsleyes')]):
+                ignore = False
+                break
+            tb = tb.tb_next
+
+        if not ignore:
+            app.ExitMainLoop()
+            error[0] = value
+
+        oldhook(type_, value, traceback)
+
+    try:
+        sys.excepthook = myhook
+        yield error
+    finally:
+        sys.excepthook = oldhook
 
 
 # Under GTK, a single call to
@@ -193,11 +227,13 @@ def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
     from fsl.utils.platform import platform as fslplatform
+    import fsleyes_widgets.utils.status     as status
 
-    logging.getLogger().setLevel(logging.WARNING)
+    fsleyes.configLogging()
 
     gc.collect()
     idle.idleReset()
+    idle._idleAllowErrors = True
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
@@ -274,12 +310,23 @@ def run_with_fsleyes(func, *args, **kwargs):
             wx.CallLater(startingDelay,
                          fslgl.getGLContext,
                          parent=panel,
-                         ready=init)
+                         ready=init,
+                         raiseErrors=True)
     else:
         wx.CallLater(startingDelay, run)
 
-    app[0].MainLoop()
+    with exitMainLoopOnError(app[0]) as err:
+        app[0].MainLoop()
     dummy.Close()
+
+    if status._clearThread is not None:
+        status._clearThread.die()
+        status._clearThread.clear(0.01)
+        status._clearThread.join()
+        status._clearThread = None
+
+    if err[0] is not None:
+        raise err[0]
 
     time.sleep(1)
 
@@ -334,11 +381,11 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
     else:
         exclude = []
 
-    tests     = [t.strip()             for t in tests.split('\n')]
-    tests     = [t                     for t in tests if t != '' and t[0] != '#']
-    tests     = [re.sub('\s+', ' ', t) for t in tests]
-    tests     = [re.sub('#.*', '',  t) for t in tests]
-    tests     = [t.strip()             for t in tests]
+    tests     = [t.strip()              for t in tests.split('\n')]
+    tests     = [t                      for t in tests if t != '' and t[0] != '#']
+    tests     = [re.sub(r'\s+', ' ', t) for t in tests]
+    tests     = [re.sub(r'#.*', '',  t) for t in tests]
+    tests     = [t.strip()              for t in tests]
     allpassed = True
 
     datadir  = op.join(op.dirname(__file__), 'testdata')
@@ -507,7 +554,7 @@ def simclick(sim, target, btn=wx.MOUSE_BTN_LEFT, pos=None, stype=0):
     x += w * pos[0]
     y += h * pos[1]
 
-    sim.MouseMove(x, y)
+    sim.MouseMove(round(x), round(y))
     realYield()
     if   stype == 0: sim.MouseClick(btn)
     elif stype == 1: sim.MouseDblClick(btn)
@@ -580,8 +627,8 @@ def roi(fname, roi):
 
     xform  = img.voxToWorldMat
     offset = [lo for lo in roi[::2]]
-    offset = transform.scaleOffsetXform([1, 1, 1], offset)
-    xform  = transform.concat(xform, offset)
+    offset = affine.scaleOffsetXform([1, 1, 1], offset)
+    xform  = affine.concat(xform, offset)
 
     img = fslimage.Image(data, xform=xform, header=img.header)
 
@@ -638,8 +685,8 @@ def translate(infile, x, y, z):
     img      = fslimage.Image(infile)
     xform    = img.voxToWorldMat
 
-    shift             = transform.scaleOffsetXform(1, (x, y, z))
-    xform             = transform.concat(shift, xform)
+    shift             = affine.scaleOffsetXform(1, (x, y, z))
+    xform             = affine.concat(shift, xform)
     img.voxToWorldMat = xform
 
     img.save(outfile)
@@ -656,9 +703,9 @@ def rotate(infile, rx, ry, rz):
     ry = ry * np.pi / 180
     rz = rz * np.pi / 180
 
-    rot               = transform.axisAnglesToRotMat(rx, ry, rz)
-    rot               = transform.rotMatToAffine(rot)
-    img.voxToWorldMat = transform.concat(rot, img.voxToWorldMat)
+    rot               = affine.axisAnglesToRotMat(rx, ry, rz)
+    rot               = affine.rotMatToAffine(rot)
+    img.voxToWorldMat = affine.concat(rot, img.voxToWorldMat)
 
     img.save(outfile)
 

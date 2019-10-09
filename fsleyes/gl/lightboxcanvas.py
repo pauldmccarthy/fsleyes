@@ -16,7 +16,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.data.image                    as fslimage
-import fsl.utils.transform               as transform
+import fsl.transform.affine              as affine
 
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
@@ -544,6 +544,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         be displayed, in display coordinates.
         """
 
+        if self.destroyed:
+            return
+
         opts = self.opts
         xmin = self.displayCtx.bounds.getLo( opts.xax)
         ymin = self.displayCtx.bounds.getLo( opts.yax)
@@ -691,10 +694,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                 toOrigin[  opts.yax, 3]        = -yoff
                 fromOrigin[opts.yax, 3]        =  yoff
 
-            xform = transform.concat(fromOrigin,
-                                     invert,
-                                     toOrigin,
-                                     xform)
+            xform = affine.concat(fromOrigin, invert, toOrigin, xform)
             invXforms.append(xform)
 
         return invXforms
@@ -830,7 +830,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """Draws the current scene to the canvas. """
 
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         width, height = self.GetSize()

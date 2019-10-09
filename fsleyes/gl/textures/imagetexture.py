@@ -11,11 +11,11 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 
 
 import logging
-import collections
+import collections.abc as abc
 
 import numpy as np
 
-import fsl.utils.transform   as transform
+import fsl.transform.affine  as affine
 import fsl.data.imagewrapper as imagewrapper
 from . import data           as texdata
 from . import                   texture2d
@@ -199,7 +199,7 @@ class ImageTextureBase(object):
             if volume is None and self.__volume is None:
                 volume = [0] * (ndims - 3)
 
-            elif not isinstance(volume, collections.Sequence):
+            elif not isinstance(volume, abc.Sequence):
                 volume = [volume]
 
             if len(volume) != ndims - 3:
@@ -305,7 +305,7 @@ class ImageTextureBase(object):
             # Make sure the data/offset are
             # compatible with 2D textures
             data   = self.shapeData(data, oldShape=image.shape)
-            offset = transform.transform(
+            offset = affine.transform(
                 offset, self.texCoordXform(image.shape))
 
             log.debug('{} data changed - refreshing part of '

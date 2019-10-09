@@ -39,7 +39,7 @@ def colourBarMinorAxisSize(fontSize):
     # Fix the minor axis of the colour bar,
     # according to the font size, and a
     # constant size for the colour bar
-    return 2 * fontSize + 40
+    return round(2 * fontSize + 40)
 
 
 class ColourBar(props.HasProperties, notifier.Notifier):

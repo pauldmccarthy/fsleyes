@@ -11,7 +11,7 @@ use with :class:`.DisplayOpts` classes.
 import numpy as np
 
 from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.transform                as transform
+import fsl.transform.affine               as affine
 import fsl.utils.deprecated               as deprecated
 import fsleyes_props                      as props
 
@@ -234,15 +234,15 @@ class Volume3DOpts(object):
         # it by the inverse modelview
         # matrix
         t2dmat = self.getTransform('texture', 'display')
-        xform  = transform.concat(view, t2dmat)
-        ixform = transform.invert(xform)
+        xform  = affine.concat(view, t2dmat)
+        ixform = affine.invert(xform)
 
-        eye    = transform.transform(eye,    ixform, vector=True)
-        target = transform.transform(target, ixform, vector=True)
+        eye    = affine.transform(eye,    ixform, vector=True)
+        target = affine.transform(target, ixform, vector=True)
 
         # Direction that the 'camera' is
         # pointing, normalied to unit length
-        cdir = transform.normalise(eye - target)
+        cdir = affine.normalise(eye - target)
 
         # Calculate the length of one step
         # along the camera direction in a
@@ -263,8 +263,8 @@ class Volume3DOpts(object):
         #
         # The projection matrix puts depth into
         # [-1, 1], but we want it in [0, 1]
-        zscale = transform.scaleOffsetXform([1, 1, 0.5], [0, 0, 0.5])
-        xform  = transform.concat(zscale, proj, xform)
+        zscale = affine.scaleOffsetXform([1, 1, 0.5], [0, 0, 0.5])
+        xform  = affine.concat(zscale, proj, xform)
 
         return rayStep, xform
 
@@ -295,12 +295,12 @@ class Volume3DOpts(object):
         centre = [xmid, ymid, zmid]
         normal = [0, 0, -1]
 
-        rot1     = transform.axisAnglesToRotMat(incline, 0, 0)
-        rot2     = transform.axisAnglesToRotMat(0, 0, azimuth)
-        rotation = transform.concat(rot2, rot1)
+        rot1     = affine.axisAnglesToRotMat(incline, 0, 0)
+        rot2     = affine.axisAnglesToRotMat(0, 0, azimuth)
+        rotation = affine.concat(rot2, rot1)
 
-        normal = transform.transformNormal(normal, rotation)
-        normal = transform.normalise(normal)
+        normal = affine.transformNormal(normal, rotation)
+        normal = affine.normalise(normal)
 
         offset = (pos - 0.5) * max((b.xlen, b.ylen, b.zlen))
         origin = centre + normal * offset

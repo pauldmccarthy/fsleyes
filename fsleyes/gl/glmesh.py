@@ -13,12 +13,12 @@ import numpy        as np
 import numpy.linalg as npla
 import OpenGL.GL    as gl
 
-from . import                 globject
-import fsl.data.utils      as dutils
-import fsl.utils.transform as transform
-import fsleyes.gl          as fslgl
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.textures as textures
+from . import                  globject
+import fsl.data.utils       as dutils
+import fsl.transform.affine as affine
+import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.textures  as textures
 
 
 class GLMesh(globject.GLObject):
@@ -350,11 +350,11 @@ class GLMesh(globject.GLObject):
         xform    = self.opts.getTransform('mesh', 'display')
 
         if not np.all(np.isclose(xform, np.eye(4))):
-            vertices = transform.transform(vertices, xform)
+            vertices = affine.transform(vertices, xform)
 
             if self.threedee:
-                nmat    = transform.invert(xform).T
-                normals = transform.transform(normals, nmat, vector=True)
+                nmat    = affine.invert(xform).T
+                normals = affine.transform(normals, nmat, vector=True)
 
         self.vertices = np.asarray(vertices,          dtype=np.float32)
         self.indices  = np.asarray(indices.flatten(), dtype=np.uint32)
@@ -583,7 +583,7 @@ class GLMesh(globject.GLObject):
             zpos, axes, bbox)
 
         if vertXform is not None:
-            xform = transform.concat(xform, vertXform)
+            xform = affine.concat(xform, vertXform)
 
         vdata     = self.getVertexData(faces, dists)
         useShader = vdata is not None
@@ -1006,7 +1006,7 @@ class GLMesh(globject.GLObject):
 
         if dopts.useLut:
             delta     = 1.0 / (dopts.lut.max() + 1)
-            cmapXform = transform.scaleOffsetXform(delta, 0.5 * delta)
+            cmapXform = affine.scaleOffsetXform(delta, 0.5 * delta)
         else:
             cmapXform = self.cmapTexture.getCoordinateTransform()
 

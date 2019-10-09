@@ -15,11 +15,10 @@ import numpy as np
 
 import fsl.data.image       as fslimage
 import fsl.data.utils       as dutils
-import fsl.utils.transform  as transform
+import fsl.transform.affine as affine
 import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
 
-import fsleyes.colourmaps   as colourmaps
 import fsleyes.overlay      as fsloverlay
 import fsleyes.colourmaps   as fslcmaps
 from . import display       as fsldisplay
@@ -38,7 +37,7 @@ def genMeshColour(overlay):
     map. Otherwise returns a random colour.
     """
     filename        = str(overlay.dataSource)
-    subcorticalCmap = colourmaps.getLookupTable('freesurfercolorlut')
+    subcorticalCmap = fslcmaps.getLookupTable('freesurfercolorlut')
 
     if   'L_Thal' in filename: return subcorticalCmap.get(10).colour
     elif 'L_Caud' in filename: return subcorticalCmap.get(11).colour
@@ -56,7 +55,7 @@ def genMeshColour(overlay):
     elif 'R_Amyg' in filename: return subcorticalCmap.get(54).colour
     elif 'R_Accu' in filename: return subcorticalCmap.get(58).colour
 
-    return colourmaps.randomBrightColour()
+    return fslcmaps.randomBrightColour()
 
 
 class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
@@ -607,7 +606,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         lo, hi = self.overlay.bounds
         xform  = self.getTransform('mesh', 'display')
-        lohi   = transform.transform([lo, hi], xform)
+        lohi   = affine.transform([lo, hi], xform)
         lohi.sort(axis=0)
         lo, hi = lohi[0, :], lohi[1, :]
 

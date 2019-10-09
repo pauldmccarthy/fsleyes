@@ -11,16 +11,16 @@ routines.
 
 from __future__ import division
 
-import                logging
-import                contextlib
-import                collections
-import itertools   as it
+import                    logging
+import                    contextlib
+import collections.abc as abc
+import itertools       as it
 
-import OpenGL.GL   as gl
-import OpenGL.GLUT as glut
-import numpy       as np
+import OpenGL.GL       as gl
+import OpenGL.GLUT     as glut
+import numpy           as np
 
-import fsl.utils.transform as transform
+import fsl.transform.affine as affine
 
 
 log = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ def enabled(capabilities, enable=True):
         gl.GL_FOG_COORD_ARRAY,
         gl.GL_TEXTURE_COORD_ARRAY]
 
-    if not isinstance(capabilities, collections.Sequence):
+    if not isinstance(capabilities, abc.Sequence):
         capabilities = [capabilities]
 
     # Build lists of pre/post-yield
@@ -212,8 +212,8 @@ def lookAt(eye, centre, up):
     proj[1, :3] =  up
     proj[2, :3] = -forward
 
-    eye  = transform.scaleOffsetXform(1, -eye)
-    proj = transform.concat(proj, eye)
+    eye  = affine.scaleOffsetXform(1, -eye)
+    proj = affine.concat(proj, eye)
 
     return proj
 
@@ -494,7 +494,7 @@ def pointGrid(shape,
     :arg yax:        The vertical display coordinate system axis (0, 1, or 2).
 
     :arg origin:     ``centre`` or ``corner``. See the
-                     :func:`.transform.axisBounds` function.
+                     :func:`.affine.axisBounds` function.
 
     :arg bbox:       An optional sequence of three ``(low, high)`` values,
                      defining the bounding box in the display coordinate
@@ -509,8 +509,8 @@ def pointGrid(shape,
     # values of a bounding box which
     # encapsulates the entire image,
     # in the display coordinate system
-    xmin, xmax = transform.axisBounds(shape, xform, xax, origin, boundary=None)
-    ymin, ymax = transform.axisBounds(shape, xform, yax, origin, boundary=None)
+    xmin, xmax = affine.axisBounds(shape, xform, xax, origin, boundary=None)
+    ymin, ymax = affine.axisBounds(shape, xform, yax, origin, boundary=None)
 
     # Number of samples along each display
     # axis, given the requested resolution
@@ -568,7 +568,7 @@ def pointGrid3D(shape, xform=None, origin='centre', bbox=None):
     coords = np.indices(shape).transpose(1, 2, 3, 0).reshape(-1, 3)
 
     if xform is not None:
-        coords = transform.transform(coords, xform)
+        coords = affine.transform(coords, xform)
 
     return coords
 
@@ -617,31 +617,31 @@ def samplePointsToTriangleStrip(coords,
     vertex locations)::
 
 
-        1  3  5  7
-        .  .  .  .
-        |\ |\ |\ |
-        | \| \| \|
-        .  .  .  .
-        0  2  4  6
+        1   3   5   7
+        .   .   .   .
+        |\\ |\\ |\\ |
+        | \\| \\| \\|
+        .   .   .   .
+        0   2   4   6
 
     In order to use a single OpenGL call to draw multiple non-contiguous voxel
-    rows, between every column we add a couple of 'dummy' vertices, which will
+    rows, between  every column we add a couple of 'dummy' vertices, which will
     then be interpreted by OpenGL as 'degenerate triangles', and will not be
     drawn. So in reality, a 4*3 slice would be drawn as follows (with vertices
     labelled from ``[a-z0-9]``::
 
-         v  x  z  1  33
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-        uu  w  y  0  2
-         l  n  p  r  tt
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-        kk  m  o  q  s
-         b  d  f  h  jj
-         |\ |\ |\ |\ |
-         | \| \| \| \|
-         a  c  e  g  i
+         v   x   z   1   33
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+        uu   w   y   0   2
+         l   n   p   r   tt
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+        kk   m   o   q   s
+         b   d   f   h   jj
+         |\\ |\\ |\\ |\\ |
+         | \\| \\| \\| \\|
+         a   c   e   g   i
 
     These repeated/degenerate vertices are dealt with by using a vertex index
     array.  See these links for good overviews of triangle strips and
@@ -861,7 +861,7 @@ def voxelBox(voxel,
                   image bounds.
     """
 
-    if not isinstance(boxSize, collections.Iterable):
+    if not isinstance(boxSize, abc.Iterable):
         boxSize = [boxSize] * 3
 
     for i in range(3):
@@ -946,12 +946,12 @@ def slice2D(dataShape,
     If ``geometry`` is ``triangles`` (the default), six vertices are returned,
     arranged as follows::
 
-         4---5
-        1 \  |
-        |\ \ |
-        | \ \|
-        |  \ 3
-        0---2
+          4----5
+        1  \\  |
+        |\\ \\ |
+        | \\ \\|
+        |  \\  3
+        0----2
 
     Otherwise, if geometry is ``square``, four vertices are returned, arranged
     as follows::
@@ -995,7 +995,7 @@ def slice2D(dataShape,
     :arg geometry:        ``square`` or ``triangle``.
 
     :arg origin:          ``centre`` or ``corner``. See the
-                          :func:`.transform.axisBounds` function.
+                          :func:`.affine.axisBounds` function.
 
     :arg bbox:            An optional sequence of three ``(low, high)``
                           values, defining the bounding box in the display
@@ -1014,9 +1014,9 @@ def slice2D(dataShape,
     """
 
     zax        = 3 - xax - yax
-    xmin, xmax = transform.axisBounds(
+    xmin, xmax = affine.axisBounds(
         dataShape, voxToDisplayMat, xax, origin, boundary=None)
-    ymin, ymax = transform.axisBounds(
+    ymin, ymax = affine.axisBounds(
         dataShape, voxToDisplayMat, yax, origin, boundary=None)
 
     if bbox is not None:
@@ -1071,7 +1071,7 @@ def slice2D(dataShape,
 
     vertices[:, zax] = zpos
 
-    voxCoords = transform.transform(vertices, displayToVoxMat)
+    voxCoords = affine.transform(vertices, displayToVoxMat)
 
     return vertices, voxCoords
 
@@ -1109,7 +1109,7 @@ def boundingBox(dataShape,
     # to invert the voxel coordinate ranges to
     # ensure a correct triangle winding order
     # (so that back faces can be culled).
-    scales = transform.decompose(voxToDisplayMat)[0]
+    scales = affine.decompose(voxToDisplayMat)[0]
 
     if scales[0] < 0: xlo, xhi = xhi, xlo
     if scales[1] < 0: ylo, yhi = yhi, ylo
@@ -1203,7 +1203,7 @@ def boundingBox(dataShape,
     else:
         raise ValueError('Unrecognised geometry type: {}'.format(geometry))
 
-    vertices = transform.transform(voxCoords, voxToDisplayMat)
+    vertices = affine.transform(voxCoords, voxToDisplayMat)
 
     return vertices, voxCoords
 
@@ -1315,7 +1315,7 @@ def broadcast(vertices, indices, zposes, xforms, zax):
 
         allIndices[   iStart:iEnd]    = indices + i * nverts
         allTexCoords[ vStart:vEnd, :] = vertices
-        allVertCoords[vStart:vEnd, :] = transform.transform(vertices, xform)
+        allVertCoords[vStart:vEnd, :] = affine.transform(vertices, xform)
 
     return allVertCoords, allTexCoords, allIndices
 
@@ -1360,7 +1360,7 @@ def planeEquation2(origin, normal):
     See also :func:`planeEquation`.
     """
 
-    normal     = transform.normalise(normal)
+    normal     = affine.normalise(normal)
     ax, by, cz = np.array(origin) * normal
 
     eqn     = np.zeros(4, dtype=np.float64)

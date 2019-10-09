@@ -14,10 +14,10 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.data.mesh       as fslmesh
-import fsl.data.image      as fslimage
-import fsl.utils.idle      as idle
-import fsl.utils.transform as transform
+import fsl.data.mesh        as fslmesh
+import fsl.data.image       as fslimage
+import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
 
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
@@ -79,6 +79,7 @@ class Scene3DCanvas(object):
         self.__glObjects   = None
 
 
+    @property
     def destroyed(self):
         """
         """
@@ -232,7 +233,7 @@ class Scene3DCanvas(object):
         # view/projection matrices. This is
         # calculated and cached for us in the
         # __setViewport method.
-        pos = transform.transform(pos, self.__invViewProjMat)
+        pos = affine.transform(pos, self.__invViewProjMat)
 
         return pos
 
@@ -408,7 +409,7 @@ class Scene3DCanvas(object):
 
         def create():
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             if overlay not in self.__glObjects:
@@ -482,8 +483,8 @@ class Scene3DCanvas(object):
         # displaycontext bounds (the bounding
         # box which contains all loaded overlays).
         scale  = opts.zoom / 100.0
-        scale  = transform.scaleOffsetXform([scale] * 3, 0)
-        rotate = transform.rotMatToAffine(opts.rotation, centre)
+        scale  = affine.scaleOffsetXform([scale] * 3, 0)
+        rotate = affine.rotMatToAffine(opts.rotation, centre)
 
         # The offset property is defined in x/y
         # pixels, normalised to [-1, 1]. We need
@@ -496,7 +497,7 @@ class Scene3DCanvas(object):
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
         offset[0]  = xlen * offset[0] / 2
         offset[1]  = ylen * offset[1] / 2
-        offset     = transform.scaleOffsetXform(1, offset)
+        offset     = affine.scaleOffsetXform(1, offset)
 
         # And finally the camera.
         eye     = list(centre)
@@ -505,7 +506,7 @@ class Scene3DCanvas(object):
         camera  = glroutines.lookAt(eye, centre, up)
 
         # Order is very important!
-        xform = transform.concat(offset, scale, camera, rotate)
+        xform = affine.concat(offset, scale, camera, rotate)
         np.array(xform, dtype=np.float32)
 
         self.__viewOffset = offset
@@ -543,9 +544,8 @@ class Scene3DCanvas(object):
         projmat, viewport     = glroutines.ortho(blo, bhi, width, height, zoom)
         self.__projMat        = projmat
         self.__viewport       = viewport
-        self.__invViewProjMat = transform.concat(self.__projMat,
-                                                 self.__viewMat)
-        self.__invViewProjMat = transform.invert(self.__invViewProjMat)
+        self.__invViewProjMat = affine.concat(self.__projMat, self.__viewMat)
+        self.__invViewProjMat = affine.invert(self.__invViewProjMat)
 
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(gl.GL_PROJECTION)
@@ -579,7 +579,7 @@ class Scene3DCanvas(object):
         # which are higher in the list will get
         # drawn above (closer to the screen)
         # than lower ones.
-        depthOffset = transform.scaleOffsetXform(1, [0, 0, 0.1])
+        depthOffset = affine.scaleOffsetXform(1, [0, 0, 0.1])
         depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
         xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
 
@@ -593,7 +593,7 @@ class Scene3DCanvas(object):
                 continue
 
             if opts.occlusion:
-                xform = transform.concat(depthOffset, xform)
+                xform = affine.concat(depthOffset, xform)
             elif isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
@@ -618,7 +618,7 @@ class Scene3DCanvas(object):
             gl.glBegin(gl.GL_LINES)
             for i, p in enumerate(self.points):
                 gl.glColor4f(*colours[i % 2])
-                p = transform.transform(p, self.viewMatrix)
+                p = affine.transform(p, self.viewMatrix)
                 gl.glVertex3f(*p)
             gl.glEnd()
 
@@ -639,7 +639,7 @@ class Scene3DCanvas(object):
             [b.xlo, pos.y, pos.z],
             [b.xhi, pos.y, pos.z],
         ], dtype=np.float32)
-        points = transform.transform(points, self.__viewMat)
+        points = affine.transform(points, self.__viewMat)
         gl.glLineWidth(1)
 
         r, g, b = opts.cursorColour[:3]
@@ -684,10 +684,10 @@ class Scene3DCanvas(object):
         # to the legend vertices. Offset
         # anatomical labels off each
         # axis line by a small amount.
-        rotation   = transform.decompose(self.__viewMat)[2]
-        xform      = transform.compose(scale, offset, rotation)
-        labelPoses = transform.transform(vertices * 1.2, xform)
-        vertices   = transform.transform(vertices,       xform)
+        rotation   = affine.decompose(self.__viewMat)[2]
+        xform      = affine.compose(scale, offset, rotation)
+        labelPoses = affine.transform(vertices * 1.2, xform)
+        vertices   = affine.transform(vertices,       xform)
 
         # Draw the legend lines
         gl.glDisable(gl.GL_DEPTH_TEST)
@@ -758,7 +758,7 @@ class Scene3DCanvas(object):
                            b.ylo + 0.5 * (b.yhi - b.ylo),
                            b.zlo + 0.5 * (b.zhi - b.zlo)])
 
-        centre = transform.transform(centre, self.__viewMat)
+        centre = affine.transform(centre, self.__viewMat)
 
         gl.glColor4f(1, 0, 1, 1)
         gl.glBegin(gl.GL_LINES)
@@ -802,7 +802,7 @@ class Scene3DCanvas(object):
             [xlo, yhi, zhi],
             [xhi, yhi, zhi],
         ])
-        vertices = transform.transform(vertices, self.__viewMat)
+        vertices = affine.transform(vertices, self.__viewMat)
 
 
         gl.glLineWidth(2)

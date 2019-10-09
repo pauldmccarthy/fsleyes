@@ -18,7 +18,7 @@ import numpy as np
 
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
-import fsl.utils.transform            as transform
+import fsl.transform.affine           as affine
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.controls.controlpanel  as ctrlpanel
@@ -397,8 +397,8 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
                 pixdim,
                 section=dimSect)
 
-        bounds = transform.axisBounds(overlay.shape[:3],
-                                      opts.getTransform('voxel', 'world'))
+        bounds = affine.axisBounds(overlay.shape[:3],
+                                   opts.getTransform('voxel', 'world'))
         lens   = bounds[1] - bounds[0]
         lens   = 'X={:0.0f} {} Y={:0.0f} {} Z={:0.0f} {}'.format(
             lens[0], voxUnits,
@@ -593,7 +593,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
             coordSpace      = strings.labels[
                 self, overlay,
                 'coordSpace', opts.coordSpace].format(refImg.name)
-            mesh2worldXform = transform.concat(
+            mesh2worldXform = affine.concat(
                 refOpts.getTransform('display', 'world'),
                 opts.getTransform('mesh', 'display'))
 
@@ -605,7 +605,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
             modelInfo.append(('coordSpace',   coordSpace))
             modelInfo.append(('displaySpace', displaySpace))
 
-        bounds = transform.transform(overlay.bounds, mesh2worldXform)
+        bounds = affine.transform(overlay.bounds, mesh2worldXform)
         lens   = bounds[1] - bounds[0]
         lens   = 'X={:0.0f} mm Y={:0.0f} mm Z={:0.0f} mm'.format(*lens)
 

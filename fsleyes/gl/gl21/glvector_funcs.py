@@ -14,8 +14,8 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 
 import numpy as np
 
-import fsl.utils.transform as transform
-import fsleyes.gl.shaders  as shaders
+import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
 
 
 def compileShaders(self, vertShader, indexed=False):
@@ -71,7 +71,7 @@ def updateShaderState(self, useSpline=False):
     if self.useVolumeFragShader:
 
         voxValXform   = self.colourTexture.voxValXform
-        img2CmapXform = transform.concat(
+        img2CmapXform = affine.concat(
             self.cmapTexture.getCoordinateTransform(),
             voxValXform)
 
@@ -98,7 +98,7 @@ def updateShaderState(self, useSpline=False):
         # so we rescale the data from [0, 1]
         # back to [-1, 1].
         if np.issubdtype(self.imageTexture.dtype, np.integer):
-            voxValXform = transform.scaleOffsetXform(2, -1)
+            voxValXform = affine.scaleOffsetXform(2, -1)
 
         # Otherwise, if it's floating point,
         # it will not be normalised.

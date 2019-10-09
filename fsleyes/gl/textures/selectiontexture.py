@@ -18,9 +18,9 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
-from . import                 texture2d
-from . import                 texture3d
+import fsl.transform.affine as affine
+from . import                  texture2d
+from . import                  texture3d
 
 
 log = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class SelectionTextureBase(object):
             self.set(data=data)
         else:
             data   = prepare(new)
-            offset = transform.transform(offset, self.texCoordXform(shape))
+            offset = affine.transform(offset, self.texCoordXform(shape))
             self.doPatch(data, offset)
 
 

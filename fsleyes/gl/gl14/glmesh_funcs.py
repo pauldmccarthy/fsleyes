@@ -15,10 +15,10 @@ programs.
 
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
+import fsl.transform.affine as affine
 
-import fsleyes.gl.shaders  as shaders
-import fsleyes.gl.routines as glroutines
+import fsleyes.gl.shaders   as shaders
+import fsleyes.gl.routines  as glroutines
 
 
 def compileShaders(self):
@@ -146,7 +146,7 @@ def draw(self,
         # NOTE You are assuming here that the canvas
         #      view matrix is the GL model view matrix.
         normalMatrix = self.canvas.viewMatrix
-        normalMatrix = transform.invert(normalMatrix).T
+        normalMatrix = affine.invert(normalMatrix).T
 
         shader.setVertParam('normalMatrix', normalMatrix)
 

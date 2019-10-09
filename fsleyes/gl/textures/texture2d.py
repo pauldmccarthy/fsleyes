@@ -14,10 +14,10 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.utils.transform as transform
-import fsl.data.utils      as dutils
-import fsleyes.gl.routines as glroutines
-from . import                 texture
+import fsl.transform.affine as affine
+import fsl.data.utils       as dutils
+import fsleyes.gl.routines  as glroutines
+from . import                  texture
 
 
 log = logging.getLogger(__name__)
@@ -316,7 +316,7 @@ class Texture2D(texture.Texture):
             rots      = [-np.pi / 2, 0, 0]
             scales[1] = -1
 
-        return transform.compose(scales, offsets, rots)
+        return affine.compose(scales, offsets, rots)
 
 
     def doPatch(self, data, offset):
@@ -360,7 +360,7 @@ class Texture2D(texture.Texture):
             raise ValueError('Six vertices must be provided')
 
         if xform is not None:
-            vertices = transform.transform(vertices, xform)
+            vertices = affine.transform(vertices, xform)
 
         vertices  = np.array(vertices, dtype=np.float32).ravel('C')
         texCoords = self.generateTextureCoords()        .ravel('C')
@@ -485,7 +485,7 @@ class Texture2D(texture.Texture):
         vertices[ 5, [xax, yax]] = [xmax, ymax]
 
         if xform is not None:
-            vertices = transform.transform(vertices, xform)
+            vertices = affine.transform(vertices, xform)
 
         return vertices
 

@@ -16,7 +16,7 @@ MIP overlays are rendered via the :class:`.GLMIP` class.
 import numpy as np
 
 from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.transform                as transform
+import fsl.transform.affine               as affine
 import fsleyes_props                      as props
 
 from . import colourmapopts               as cmapopts
@@ -100,10 +100,10 @@ class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
         """
 
         d2tmat  = self.getTransform('display', 'texture')
-        xform   = transform.concat(d2tmat, viewmat)
+        xform   = affine.concat(d2tmat, viewmat)
         cdir    = np.array([0, 0, 1])
-        cdir    = transform.transform(cdir, xform, vector=True)
-        cdir    = transform.normalise(cdir)
+        cdir    = affine.transform(cdir, xform, vector=True)
+        cdir    = affine.normalise(cdir)
 
         # sqrt(3) so the maximum number
         # of samplews is taken along the

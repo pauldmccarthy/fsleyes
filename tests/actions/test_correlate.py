@@ -35,7 +35,7 @@ def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
     realYield()
     assert panel.pearsonCorrelation.enabled
     panel.pearsonCorrelation()
-    realYield(50)
+    realYield(100)
     assert len(overlayList) == 3
     corr = overlayList[2]
     assert corr.shape == img4d.shape[:3]

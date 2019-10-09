@@ -73,6 +73,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
         self.__infoPanel      = wxhtml.HtmlWindow(self.__contentPanel)
         self.__atlasList      = elistbox.EditableListBox(
             self.__contentPanel,
+            vgap=5,
             style=(elistbox.ELB_NO_ADD    |
                    elistbox.ELB_NO_REMOVE |
                    elistbox.ELB_NO_MOVE))
@@ -166,7 +167,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
         def onLoad(atlas):
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             self.__enabledAtlases[atlasID] = atlas
@@ -498,6 +499,8 @@ class AtlasListWidget(wx.CheckBox):
         self.SetValue(enabled)
 
         self.Bind(wx.EVT_CHECKBOX, self.__onEnable)
+
+        self.SetMinSize(self.GetBestSize())
 
 
     def __onEnable(self, ev):
