@@ -160,20 +160,20 @@ def _test_editable(ortho, overlayList, displayCtx):
         idle.idle(setprof, 'edit')
         idle.idle(overlayList.append, ovl, overlayType=ot)
         idle.idle(displayCtx.selectOverlay, ovl)
-        idle.block(1)
+        idle.block(3)
         idle.idle(saveprof)
         idle.idle(overlayList.clear)
-        idle.block(1)
+        idle.block(3)
         assert savedprof[0] == 'edit'
 
     for ovl, ot in notEditable:
         idle.idle(setprof, 'edit')
         idle.idle(overlayList.append, ovl, overlayType=ot)
         idle.idle(displayCtx.selectOverlay, ovl)
-        idle.block(1)
+        idle.block(3)
         idle.idle(saveprof)
         idle.idle(overlayList.clear)
-        idle.block(1)
+        idle.block(3)
         assert savedprof[0] == 'view'
 
 
