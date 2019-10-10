@@ -75,8 +75,8 @@ def test_server():
         time.sleep(1)
 
         cliserver.send('Hey 1 2 3')
-        die.set()
         time.sleep(1)
+        die.set()
 
     assert received[0] == 'Hey 1 2 3'
 
