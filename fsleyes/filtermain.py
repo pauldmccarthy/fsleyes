@@ -36,9 +36,11 @@ FILTERS = [
     r'ClientToScreen',
     r'ScreenToClient',
     r'Gdk-WARNING',
+    r'Gtk-WARNING',
     r'Gtk-Message',
     r'Gtk-CRITICAL',
     r'Glib-CRITICAL',
+    r'GLib-GObject-WARNING',
     r'libGL error',
     r'Pango-WARNING',
     r'Xlib:  extension',
@@ -93,9 +95,14 @@ def filter_stream(stream, die, filters=None):
     # stream.
     q = queue.Queue()
 
+    # Use a Barrier to synchronise the
+    # read, write, and calling threads
+    alive = threading.Barrier(3)
+
     # The read thread runs forever,
     # just putting lines in the queue.
     def read_loop():
+        alive.wait()
         while True:
             line = fin.readline()
             if line == '':
@@ -108,6 +115,7 @@ def filter_stream(stream, die, filters=None):
     #  - there are no lines in the queue
     #  - the die event has been set
     def write_loop():
+        alive.wait()
         while True:
             try:
                 line = q.get(timeout=0.25)
@@ -117,7 +125,6 @@ def filter_stream(stream, die, filters=None):
 
             if not any([re.search(pat, line) for pat in filters]):
                 fout.write(line)
-
             fout.flush()
 
         # Restore the original stream
@@ -134,7 +141,7 @@ def filter_stream(stream, die, filters=None):
     rt.start()
     wt.start()
 
-    return rt, wt
+    return rt, wt, alive
 
 
 def main(args=None):
@@ -157,11 +164,16 @@ def main(args=None):
     logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
     logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
-    die                = threading.Event()
-    rtstdout, wtstdout = filter_stream(sys.stdout, die)
-    rtstderr, wtstderr = filter_stream(sys.stderr, die)
+    die                        = threading.Event()
+    rtstdout, wtstdout, oalive = filter_stream(sys.stdout, die)
+    rtstderr, wtstderr, ealive = filter_stream(sys.stderr, die)
 
     import fsleyes.main as fm
+
+    # wait until the filter
+    # threads have started
+    oalive.wait()
+    ealive.wait()
 
     result = 1
 
@@ -173,6 +185,8 @@ def main(args=None):
         die.set()
         wtstderr.join()
         wtstdout.join()
+        rtstdout.join()
+        rtstderr.join()
 
     sys.exit(result)
 
