@@ -49,9 +49,10 @@ Install from ``conda-forge`` (recommended)
 ------------------------------------------
 
 
-FSLeyes is available on `conda-forge <https://conda-forge.org/>`_, and can
-therefore be installed into any ``conda`` environment with the following
-command::
+FSLeyes is available on `conda-forge <https://conda-forge.org/>`_ - if you use
+an `anaconda <https://www.anaconda.com/>`_ or `miniconda
+<https://docs.conda.io/en/latest/miniconda.html>`_ environment, you can
+install FSLeyes into it like so::
 
     conda install -c conda-forge fsleyes
 
@@ -84,15 +85,16 @@ Install from PyPi (advanced)
 ----------------------------
 
 
-.. note:: This is an advanced option, recommended only of you are comfortable
+.. note:: This is an advanced option, recommended only if you are comfortable
           working with Python environments, and installing packages using your
           OS package manager.
 
 
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
 should work with Python 3.5 and newer. The best way to install FSLeyes from
-PyPi is to create an isolated python environment with `virtualenv
-<https://virtualenv.pypa.io/en/stable/>`_ For example::
+PyPi is to create an isolated python environment with a `virtual environment
+<https://docs.python.org/3/library/venv.html>`_, and install FSLeyes
+into it. To get started::
 
     python -m venv fsleyes-virtualenv
     . fsleyes-virtualenv/bin/activate
