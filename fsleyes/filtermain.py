@@ -22,13 +22,17 @@ import warnings
 import threading
 
 
+# Filters may be either:
+#   - a regex string, or
+#   - a tuple of (regex string, total number of lines to skip)
+
 FILTERS = [
     r'Adding duplicate image handler',
     r'Metadata\.framework \[Error\]',
     r'Class FIFinderSyncExtensionHost',
     r'_RegisterApplication()',
     r'FinderKit',
-    r'DeprecationWarning',
+    (r'DeprecationWarning', 2),
     r'wx.NewId',
     r'ioloop.install',
     r'FutureWarning',
@@ -36,9 +40,9 @@ FILTERS = [
     r'ClientToScreen',
     r'ScreenToClient',
     r'Gdk-WARNING',
-    r'Gtk-WARNING',
+    (r'Gtk-WARNING', 2),
     r'Gtk-Message',
-    r'Gtk-CRITICAL',
+    (r'Gtk-CRITICAL', 2),
     r'Glib-CRITICAL',
     r'GLib-GObject-WARNING',
     r'libGL error',
@@ -50,7 +54,6 @@ FILTERS = [
     r'\*\*\* BUG \*\*\*',
     r'In pixman',
     r'Set a breakpoint',
-    r'^ *$',
 ]
 
 
@@ -109,12 +112,24 @@ def filter_stream(stream, die, filters=None):
                 break
             q.put(line)
 
+
+    def testline(line):
+        for pat in filters:
+
+            if isinstance(pat, tuple): pat, skip = pat
+            else:                      skip      = 1
+
+            if re.search(pat, line):
+                return skip
+        return 0
+
     # The write thread runs until both
     # of the following are true:
     #
     #  - there are no lines in the queue
     #  - the die event has been set
     def write_loop():
+        skip = 0
         alive.wait()
         while True:
             try:
@@ -123,9 +138,15 @@ def filter_stream(stream, die, filters=None):
                 if die.is_set(): break
                 else:            continue
 
-            if not any([re.search(pat, line) for pat in filters]):
+            if skip > 0:
+                skip -= 1
+                continue
+
+            skip = testline(line) - 1
+
+            if skip < 0:
                 fout.write(line)
-            fout.flush()
+                fout.flush()
 
         # Restore the original stream
         try:
