@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.32.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Various changes to improve GTK3 compatibility.
+
+
 0.31.1 (Tuesday October 8th 2019)
 ---------------------------------
 
