@@ -67,7 +67,7 @@ def test_help():
 
 def test_filtermain():
 
-    threads = [mock.MagicMock()] * 2
+    threads = [mock.MagicMock()] * 3
 
     with mock.patch('fsleyes.filtermain.filter_stream',
                     return_value=threads):
@@ -90,7 +90,9 @@ def test_filter_stream():
 
         with open('stream.txt', 'wt') as f:
 
-            rt, wt = ffm.filter_stream(f, die, filters=[r'skip this'])
+            rt, wt, al = ffm.filter_stream(f, die, filters=[r'skip this'])
+
+            al.wait()
 
             f.write('skip this 1\n')
             f.write('keep this 1\n')

@@ -2,7 +2,14 @@ Installing FSLeyes
 ==================
 
 
-There are several ways to obtain and install FSLeyes.
+There are several ways to obtain and install FSLeyes. FSLeyes comes as a
+standard component of an FSL installation, but can also be installed
+independently of FSL.
+
+
+.. note:: The terminal commands in these instructions may require
+          administrative privileges, depending on where you have installed
+          FSL.
 
 
 Install as part of FSL (recommended)
@@ -12,40 +19,52 @@ Install as part of FSL (recommended)
 FSLeyes comes bundled with all versions of FSL from 5.0.10 onwards. So if you
 have FSL, you already have FSLeyes.
 
-The version which comes bundled with FSL may be slightly out of date, so you
-may wish to update FSLeyes within your FSL installation - keep reading.
+
+Versions of FSL prior to 6.0.2 come with a standalone version of FSLeyes. From
+FSL 6.0.2 onwards, FSLeyes is now installed into the ``fslpython`` conda
+environment, which is a part of the FSL installation.
+
+
+The FSLeyes version which comes bundled with FSL may be slightly out of date,
+but it is straightforward to update using ``conda``. Before updating, if you
+have FSL 6.0.1 or older, you should remove the old standalone version of
+FSLeyes before updating. If you are using macOS::
+
+    rm $FSLDIR/bin/fsleyes
+    rm -r $FSLDIR/bin/FSLeyes.app
+
+
+Or, if you are using Linux::
+
+    rm $FSLDIR/bin/fsleyes
+    rm -r $FSLDIR/bin/FSLeyes
+
+
+Now you can update your version of FSLeyes with the following command::
+
+    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge fsleyes
+
+
+Install from ``conda-forge`` (recommended)
+------------------------------------------
+
+
+FSLeyes is available on `conda-forge <https://conda-forge.org/>`_ - if you use
+an `anaconda <https://www.anaconda.com/>`_ or `miniconda
+<https://docs.conda.io/en/latest/miniconda.html>`_ environment, you can
+install FSLeyes into it like so::
+
+    conda install -c conda-forge fsleyes
 
 
 Install standalone build (recommended)
 --------------------------------------
 
 
-This is currently the recommended way to install FSLeyes.
+If you wish to install FSLeyes independently of FSL, you can download and
+install a standalone version from the |fsleyes_homepage| home page, using
+these instructions.
 
-
-If your operating system is supported, the easiest way to run FSLeyes is to
-download and install a standalone version from the |fsleyes_homepage| home
-page.
-
-
-If you wish to upgrade your version of FSLeyes which was installed as part of
-FSL (*note: you may need to ask your system administrator to do this*):
-
-For macOS::
-
-    cd $FSLDIR/bin/
-    sudo mv FSLeyes.app FSLeyes.app_backup
-    sudo unzip /path/to/downloaded/FSLeyes_macos_latest.zip
-
-
-For Linux::
-
-    cd $FSLDIR/bin/
-    sudo mv FSLeyes FSLeyes_backup
-    sudo unzip /path/to/downloaded/FSLeyes_centos6_latest.zip
-
-
-If you are installing FSLeyes independently of FSL:
 
 1. Download the ``zip`` or ``tar.gz`` file for your platform.
 
@@ -65,11 +84,17 @@ If you are installing FSLeyes independently of FSL:
 Install from PyPi (advanced)
 ----------------------------
 
+
+.. note:: This is an advanced option, recommended only if you are comfortable
+          working with Python environments, and installing packages using your
+          OS package manager.
+
+
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
-should work with Python 2.7, 3.4, 3.5, and 3.6. The best way to install
-FSLeyes from PyPi is to create an isolated python environment with `virtualenv
-<https://virtualenv.pypa.io/en/stable/>`_ For example, if you are using python
-3.5::
+should work with Python 3.5 and newer. The best way to install FSLeyes from
+PyPi is to create an isolated python environment with a `virtual environment
+<https://docs.python.org/3/library/venv.html>`_, and install FSLeyes
+into it. To get started::
 
     python -m venv fsleyes-virtualenv
     . fsleyes-virtualenv/bin/activate
@@ -120,10 +145,3 @@ Under Ubuntu, run the following::
     sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev freeglut3-dev
 
 Then you should be able to run ``pip install fsleyes``.
-
-
-Install from ``conda-forge`` (advanced)
----------------------------------------
-
-
-FSLeyes will soon be available on conda-forge.
