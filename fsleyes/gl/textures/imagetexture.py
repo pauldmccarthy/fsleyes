@@ -15,11 +15,12 @@ import collections.abc as abc
 
 import numpy as np
 
-import fsl.transform.affine  as affine
-import fsl.data.imagewrapper as imagewrapper
-from . import data           as texdata
-from . import                   texture2d
-from . import                   texture3d
+import fsl.transform.affine               as affine
+import fsl.data.imagewrapper              as imagewrapper
+from   fsl.utils.platform import platform as fslplatform
+from . import data                        as texdata
+from . import                                texture2d
+from . import                                texture3d
 
 
 log = logging.getLogger(__name__)
@@ -368,9 +369,10 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
                   the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
         """
 
-        nvals            = kwargs.get('nvals', 1)
-        kwargs['nvals']  = nvals
-        kwargs['scales'] = image.pixdim[:3]
+        nvals              = kwargs.get('nvals', 1)
+        kwargs['nvals']    = nvals
+        kwargs['scales']   = image.pixdim[:3]
+        kwargs['threaded'] = kwargs.pop('threaded', fslplatform.haveGui)
 
         ImageTextureBase   .__init__(self, image, nvals, 3)
         texture3d.Texture3D.__init__(self, name, **kwargs)
