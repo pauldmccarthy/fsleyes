@@ -28,6 +28,7 @@ import threading
 
 FILTERS = [
     r'Adding duplicate image handler',
+    r'Value error parsing header in AFM',
     r'Metadata\.framework \[Error\]',
     r'Class FIFinderSyncExtensionHost',
     r'_RegisterApplication()',
