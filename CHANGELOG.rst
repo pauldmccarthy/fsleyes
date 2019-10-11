@@ -20,6 +20,15 @@ Changed
 * Various changes to improve GTK3 compatibility.
 
 
+Fixed
+^^^^^
+
+
+* Image texture data is now prepared off the main thread; this was the
+  behaviour before version 0.30.0, but was accidentally disabled for that
+  release.
+
+
 0.31.1 (Tuesday October 8th 2019)
 ---------------------------------
 
