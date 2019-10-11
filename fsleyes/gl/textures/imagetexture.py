@@ -372,7 +372,7 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
         nvals              = kwargs.get('nvals', 1)
         kwargs['nvals']    = nvals
         kwargs['scales']   = image.pixdim[:3]
-        kwargs['threaded'] = kwargs.pop('threaded', fslplatform.haveGui)
+        kwargs['threaded'] = kwargs.get('threaded', fslplatform.haveGui)
 
         ImageTextureBase   .__init__(self, image, nvals, 3)
         texture3d.Texture3D.__init__(self, name, **kwargs)
