@@ -1065,8 +1065,10 @@ class WXGLCanvasTarget(object):
             # Just in case this canvas
             # was destroyed before it
             # had a chance to be drawn
-            # on
-            except wx.PyDeadObjectError:
+            # on - wxpython raises a
+            # RuntimeError on attempts
+            # to use deleted wx objects
+            except RuntimeError:
                 pass
 
         if not self.__glReady:
