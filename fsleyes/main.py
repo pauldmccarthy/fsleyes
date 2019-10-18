@@ -40,6 +40,7 @@ import wx
 import wx.adv
 
 from   fsl.utils.platform import platform as fslplatform
+import fsl.utils.idle                     as idle
 import fsleyes_widgets.utils.status       as status
 
 import                       fsleyes
@@ -424,18 +425,16 @@ def main(args=None):
     return exitCode[0]
 
 
-def embed(parent, callback=None, **kwargs):
+def embed(parent=None, **kwargs):
     """Initialise FSLeyes and create a :class:`.FSLeyesFrame`, when
     running within another application.
 
-    :arg parent:   ``wx`` parent object
-    :arg callback: A function which will be called when FSLeyes
-                   is ready. Must accept three positional arguments:
+    .. note:: If a ``wx.App`` does not exist, one is created.
 
+    :arg parent: ``wx`` parent object
+    :returns:    A tuple containing:
                     - The :class:`.OverlayList`
-
                     - The master :class:`.DisplayContext`
-
                     - The :class:`.FSLeyesFrame`
 
     All other arguments are passed to :meth:`.FSLeyesFrame.__init__`.
@@ -447,23 +446,42 @@ def embed(parent, callback=None, **kwargs):
     import fsleyes.overlay        as fsloverlay
     import fsleyes.displaycontext as fsldc
 
+    app    = wx.GetApp()
+    ownapp = app is None
+    if ownapp:
+        app = wx.App()
+
     fsleyes.initialise()
     colourmaps.init()
     props.initGUI()
+
+    called = [False]
+    ret    = [None]
+
+    def until():
+        return called[0]
 
     def ready():
         fslgl.bootstrap()
 
         overlayList = fsloverlay.OverlayList()
         displayCtx  = fsldc.DisplayContext(overlayList)
-
-        frame = fslframe.FSLeyesFrame(
+        frame       = fslframe.FSLeyesFrame(
             parent, overlayList, displayCtx, **kwargs)
 
-        if callback is not None:
-            callback(overlayList, displayCtx, frame)
+        # Prevent the app from being GC'd
+        if ownapp:
+            frame._embed_app = app
+
+        called[0] = True
+        ret[0]    = (overlayList, displayCtx, frame)
 
     fslgl.getGLContext(parent=parent, ready=ready)
+    idle.block(10, until=until)
+
+    if ret[0] is None:
+        raise RuntimeError('Failed to start FSLeyes')
+    return ret[0]
 
 
 def initialise(splash, namespace, callback):
