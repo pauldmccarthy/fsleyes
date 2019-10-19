@@ -648,7 +648,7 @@ class NotebookServer(threading.Thread):
         cfgenv = {
             'fsleyes_nbserver_port'       : defaultPort,
             'fsleyes_nbserver_token'      : self.__token,
-            'fsleyes_nbserver_dir'        : op.expanduser('~'),
+            'fsleyes_nbserver_dir'        : os.getcwd(),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : nbextdir,
             'fsleyes_kernel_connfile'     : self.__connfile,
