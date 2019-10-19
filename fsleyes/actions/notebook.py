@@ -379,15 +379,30 @@ class BackgroundIPythonKernel(object):
             return display.Image('screenshot.png')
 
 
+    def start(self):
+        """Start the IPython kernel loop. This method returns immediately - the
+        kernel loop is driven on :func:`.idle.idle`.
+        """
+        self.__kernel.start()
+        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+
+    def __eventloop(self):
+        """Event loop used for the IPython kernel. Calls :meth:`__kernelDispatch`,
+        then schedules a future call to ``__eventloop`` via :func:`.idle.idle`
+        loop.
+        """
+        self.__kernelDispatch()
+        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+
     def __kernelDispatch(self):
-        """Event loop used for the IPython kernel. Calls
-        IPythonKernel.do_one_iteration, and then schedules a future call to
-        ``__kernelDispatch`` via :func:`.idle.idle` loop.
+        """Execute one kernel iteration, by scheduling a call to
+        ``IPythonKernel.do_one_iteration`` on the kernel's io loop.
         """
         try:
-            self.__kernel.do_one_iteration()
-            idle.idle(self.__kernelDispatch,
-                      after=self.__kernel._poll_interval)
+            loop = self.__kernel.io_loop
+            loop.run_sync(self.__kernel.do_one_iteration)
 
             # save the time on each iteration,
             # so the is_alive method has an
@@ -398,14 +413,6 @@ class BackgroundIPythonKernel(object):
         except Exception as e:
             self.__error = e
             raise
-
-
-    def start(self):
-        """Start the IPython kernel loop. This method returns immediately - the
-        kernel loop is executed on :func:`.idle.idle`.
-        """
-        self.__kernel.start()
-        idle.idle(self.__kernelDispatch, after=self.__kernel._poll_interval)
 
 
 class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
