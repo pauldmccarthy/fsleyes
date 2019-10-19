@@ -13,6 +13,14 @@ chronological order.
 --------------------------
 
 
+Added
+^^^^^
+
+
+* New ``--notebookFile`` command-line option, which starts the Jupyter notebook
+  server, and opens a specified notebook file.
+
+
 Changed
 ^^^^^^^
 
