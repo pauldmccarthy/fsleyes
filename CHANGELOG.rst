@@ -19,6 +19,8 @@ Changed
 
 * The :func:`.main.embed` function has been changed so that it now works in a
   synchronous manner, rather than using an asynchronous callback function.
+* Fixed a bug in Jupyter notebook integration, where an error in the notebook
+  would stop the kernel from executing any more commands.
 
 
 0.31.2 (Tuesday October 22nd 2019)
