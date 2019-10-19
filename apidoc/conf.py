@@ -33,6 +33,7 @@ date = datetime.date.today()
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.graphviz',
