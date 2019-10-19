@@ -105,10 +105,12 @@ class NotebookAction(base.Action):
         self.__server = None
 
 
-    def __openNotebooks(self):
+    def __openNotebooks(self, nbfile=None):
         """Called when this ``NotebookAction`` is invoked. Starts the
-        server and kernel if necessary, then opens a new notebook in a
-        web browser.
+        server and kernel if necessary.
+
+        If the server/kernel have not yet been started and ``nbfile`` is
+        provided, the server will be started with ``nbfile`` opened.
         """
 
         # have the kernel or server threads crashed?
@@ -134,7 +136,7 @@ class NotebookAction(base.Action):
                 if self.__kernel is None:
                     self.__kernel = self.__startKernel(progdlg)
                 if self.__server is None:
-                    self.__server = self.__startServer(progdlg)
+                    self.__server = self.__startServer(progdlg, nbfile)
 
         finally:
             if progdlg is not None:
@@ -179,7 +181,7 @@ class NotebookAction(base.Action):
         return kernel
 
 
-    def __startServer(self, progdlg):
+    def __startServer(self, progdlg, nbfile=None):
         """Attempts to create and start a :class:`NotebookServer`.
 
         :returns: the server if it was started.
@@ -188,7 +190,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel.connfile)
+        server = NotebookServer(self.__kernel.connfile, nbfile)
         server.start()
 
         elapsed = 0
@@ -483,15 +485,18 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, connfile):
+    def __init__(self, connfile, nbfile=None):
         """Create a ``NotebookServer`` thread.
 
         :arg connfile: Connection file of the IPython kernel to connect to.
+        :arg nbfile:   Path to a notebook file which should be opened on
+                       startup.
         """
 
         threading.Thread.__init__(self)
         self.daemon        = True
         self.__connfile    = connfile
+        self.__nbfile      = nbfile
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
@@ -593,9 +598,13 @@ class NotebookServer(threading.Thread):
             exe = op.join(op.dirname(sys.executable), 'fsleyes')
             log.debug('Running notebook server via %s notebook', sys.argv[0])
 
+            cmd = [exe, 'notebook', 'server', cfgdir]
+            if self.__nbfile is not None:
+                cmd.append(self.__nbfile)
+
             # py2app manipulates the PYTHONPATH, so we
             # pass it through as a command-line argument.
-            self.__nbproc = sp.Popen([exe, 'notebook', 'server', cfgdir],
+            self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
                                      cwd=cfgdir,
@@ -605,7 +614,10 @@ class NotebookServer(threading.Thread):
         # it in the usual manner.
         else:
             log.debug('Running notebook server via jupyter-notebook')
-            self.__nbproc = sp.Popen(['jupyter-notebook'],
+            cmd = ['jupyter-notebook']
+            if self.__nbfile is not None:
+                cmd.append(self.__nbfile)
+            self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
                                      cwd=cfgdir,
@@ -699,7 +711,9 @@ def nbmain(argv):
         # to add to the PYTHONPATH.
         # See NotebookServer.run.
         sys.path.insert(0, argv[1])
-        return main(argv=[])
+        # remaining arguments are passed
+        # through to notebookapp.main
+        return main(argv=argv[2:])
 
     # run a kernel (in place of ipykernel_launcher}
     elif argv[0] == 'kernel':

@@ -363,9 +363,12 @@ def main(args=None):
                          ignorePoint=False)
 
         # start notebook server
+        if namespace[0].notebookFile is not None:
+            namespace[0].notebook     = True
+            namespace[0].notebookFile = op.abspath(namespace[0].notebookFile)
         if namespace[0].notebook:
             from fsleyes.actions.notebook import NotebookAction
-            frame.menuActions[NotebookAction]()
+            frame.menuActions[NotebookAction](namespace[0].notebookFile)
 
         # start CLI server
         if namespace[0].cliserver:
