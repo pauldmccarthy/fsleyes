@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.32.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* The :func:`.main.embed` function has been changed so that it now works in a
+  synchronous manner, rather than using an asynchronous callback function.
+
+
 0.31.2 (Tuesday October 22nd 2019)
 ----------------------------------
 
