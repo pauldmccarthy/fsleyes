@@ -19,6 +19,14 @@ Changed
 
 * The :func:`.main.embed` function has been changed so that it now works in a
   synchronous manner, rather than using an asynchronous callback function.
+* The Jupyter notebook server is now configured so that its root directory
+  is the current working directory.
+
+
+Fixed
+^^^^^
+
+
 * Fixed a bug in Jupyter notebook integration, where an error in the notebook
   would stop the kernel from executing any more commands.
 
