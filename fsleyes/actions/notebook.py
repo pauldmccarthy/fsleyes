@@ -630,17 +630,19 @@ class NotebookServer(threading.Thread):
                                      env=env)
 
         def killServer():
-            # We need two CTRL+Cs to kill
-            # the notebook server
-            self.__nbproc.terminate()
-            self.__nbproc.terminate()
+            if self.__nbproc is not None:
+                # We need two CTRL+Cs to kill
+                # the notebook server
+                self.__nbproc.terminate()
+                self.__nbproc.terminate()
 
-            # Give it a little time, then
-            # force kill if needed
-            try:
-                self.__nbproc.wait(0.25)
-            except sp.TimeoutExpired:
-                self.__nbproc.kill()
+                # Give it a little time, then
+                # force kill if needed
+                try:
+                    self.__nbproc.wait(0.25)
+                except sp.TimeoutExpired:
+                    self.__nbproc.kill()
+                self.__nbproc = None
 
             shutil.rmtree(op.abspath(op.join(cfgdir, '..')))
 
@@ -651,6 +653,14 @@ class NotebookServer(threading.Thread):
         o, e          = self.__nbproc.communicate()
         self.__stdout = o.decode()
         self.__stderr = e.decode()
+        self.__nbproc = None
+
+        # if we've gotten this far,
+        # call our atexit handler
+        # directly, and unregister
+        # it
+        killServer()
+        atexit.unregister(killServer)
 
 
     def __initConfigDir(self, cfgdir):
