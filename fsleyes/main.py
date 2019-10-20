@@ -452,7 +452,7 @@ def embed(parent=None, **kwargs):
     app    = wx.GetApp()
     ownapp = app is None
     if ownapp:
-        app = wx.App()
+        app = FSLeyesApp()
 
     fsleyes.initialise()
     colourmaps.init()
@@ -472,8 +472,9 @@ def embed(parent=None, **kwargs):
         frame       = fslframe.FSLeyesFrame(
             parent, overlayList, displayCtx, **kwargs)
 
-        # Prevent the app from being GC'd
         if ownapp:
+            app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
+            # Keep a ref to prevent the app from being GC'd
             frame._embed_app = app
 
         called[0] = True
