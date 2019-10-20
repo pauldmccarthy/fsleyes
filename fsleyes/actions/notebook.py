@@ -113,6 +113,15 @@ class NotebookAction(base.Action):
         provided, the server will be started with ``nbfile`` opened.
         """
 
+        # If the kernel and server are both
+        # ok, open the notebook homepage
+        if self.__kernel is not None and \
+           self.__server is not None and \
+           self.__kernel.is_alive()  and \
+           self.__server.is_alive():
+            webbrowser.open(self.__server.url)
+            return
+
         # have the kernel or server threads crashed?
         if self.__kernel is not None and not self.__kernel.is_alive():
             self.__kernel = None
@@ -142,10 +151,6 @@ class NotebookAction(base.Action):
             if progdlg is not None:
                 progdlg.Destroy()
                 progdlg = None
-
-        # if all is well, open the
-        # notebook server homepage
-        webbrowser.open(self.__server.url)
 
 
     def __bounce(self, secs, progdlg):
@@ -593,21 +598,22 @@ class NotebookServer(threading.Thread):
         # With frozen FSLeyes versions, there
         # probbaly isn't a 'jupyter-notebook'
         # executable. So we use a hook in
-        # fsleyes.main to run the server.
+        # fsleyes.main to run the server via
+        # nbmain, defined below.
         if fslplatform.frozen:
             exe = op.join(op.dirname(sys.executable), 'fsleyes')
             log.debug('Running notebook server via %s notebook', sys.argv[0])
 
+            # py2app manipulates the PYTHONPATH, so we pass
+            # it through as a command-line argument - it is
+            # picked up again by the nbmain function, below.
             cmd = [exe, 'notebook', 'server', cfgdir]
             if self.__nbfile is not None:
                 cmd.append(self.__nbfile)
 
-            # py2app manipulates the PYTHONPATH, so we
-            # pass it through as a command-line argument.
             self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
-                                     cwd=cfgdir,
                                      env=env)
 
         # Otherwise we can call
@@ -617,10 +623,10 @@ class NotebookServer(threading.Thread):
             cmd = ['jupyter-notebook']
             if self.__nbfile is not None:
                 cmd.append(self.__nbfile)
+
             self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
-                                     cwd=cfgdir,
                                      env=env)
 
         def killServer():
