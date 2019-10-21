@@ -147,6 +147,7 @@ def exitMainLoopOnError(app):
         sys.excepthook = myhook
         yield error
     finally:
+        app = None
         sys.excepthook = oldhook
 
 
@@ -240,10 +241,16 @@ def run_with_fsleyes(func, *args, **kwargs):
     finishingDelay = kwargs.pop('finishingDelay', 5)
     callAfterApp   = kwargs.pop('callAfterApp',   None)
 
-    result = [None]
-    raised = [None]
-    frame  = [None]
-    app    = [None]
+    class State(object):
+        pass
+    state             = State()
+    state.result      = None
+    state.raised      = None
+    state.frame       = None
+    state.app         = None
+    state.dummy       = None
+    state.panel       = None
+
     glver  = os.environ.get('FSLEYES_TEST_GL', '2.1')
     glver  = [int(v) for v in glver.split('.')]
 
@@ -256,50 +263,51 @@ def run_with_fsleyes(func, *args, **kwargs):
         wx.CallAfter(run)
 
     def finish():
-        frame[0].Close(askUnsaved=False, askLayout=False)
-        app[0].ExitMainLoop()
+        state.frame.Close(askUnsaved=False, askLayout=False)
+        state.dummy.Close()
+        state.app.ExitMainLoop()
 
     def run():
 
         overlayList = fsloverlay.OverlayList()
         displayCtx  = dc.DisplayContext(overlayList)
-        frame[0]    = fslframe.FSLeyesFrame(None,
+        state.frame = fslframe.FSLeyesFrame(None,
                                             overlayList,
                                             displayCtx)
 
-        app[0].SetOverlayListAndDisplayContext(overlayList, displayCtx)
-        app[0].SetTopWindow(frame[0])
+        state.app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
+        state.app.SetTopWindow(state.frame)
 
-        frame[0].Show()
+        state.frame.Show()
 
         try:
             if func is not None:
-                result[0] = func(frame[0],
-                                 overlayList,
-                                 displayCtx,
-                                 *args,
-                                 **kwargs)
+                state.result = func(state.frame,
+                                    overlayList,
+                                    displayCtx,
+                                    *args,
+                                    **kwargs)
 
         except Exception as e:
             traceback.print_exc()
-            raised[0] = e
+            state.raised = e
 
         finally:
             wx.CallLater(finishingDelay, finish)
 
-    app[0] = fslmain.FSLeyesApp()
-    dummy  = wx.Frame(None)
-    panel  = wx.Panel(dummy)
-    sizer  = wx.BoxSizer(wx.HORIZONTAL)
-    sizer.Add(panel, flag=wx.EXPAND, proportion=1)
-    dummy.SetSizer(sizer)
+    state.app   = fslmain.FSLeyesApp()
+    state.dummy = wx.Frame(None)
+    state.panel = wx.Panel(state.dummy)
+    state.sizer = wx.BoxSizer(wx.HORIZONTAL)
+    state.sizer.Add(state.panel, flag=wx.EXPAND, proportion=1)
+    state.dummy.SetSizer(state.sizer)
 
     if callAfterApp is not None:
         callAfterApp()
 
-    dummy.SetSize((100, 100))
-    dummy.Layout()
-    dummy.Show()
+    state.dummy.SetSize((100, 100))
+    state.dummy.Layout()
+    state.dummy.Show()
 
     if not initialised[0]:
 
@@ -309,36 +317,35 @@ def run_with_fsleyes(func, *args, **kwargs):
         else:
             wx.CallLater(startingDelay,
                          fslgl.getGLContext,
-                         parent=panel,
+                         parent=state.panel,
                          ready=init,
                          raiseErrors=True)
     else:
         wx.CallLater(startingDelay, run)
 
-    with exitMainLoopOnError(app[0]) as err:
-        app[0].MainLoop()
-    dummy.Close()
+    with exitMainLoopOnError(state.app) as err:
+        state.app.MainLoop()
 
+    status.setTarget(None)
     if status._clearThread is not None:
         status._clearThread.die()
         status._clearThread.clear(0.01)
         status._clearThread.join()
         status._clearThread = None
 
-    panel = None
-    dummy = None
-    frame[0] = None
-    app[0] = None
+    raised = state.raised
+    result = state.result
+    state  = None
 
     if err[0] is not None:
         raise err[0]
 
     time.sleep(1)
 
-    if raised[0] and propagateRaise:
-        raise raised[0]
+    if raised and propagateRaise:
+        raise raised
 
-    return result[0]
+    return result
 
 
 
