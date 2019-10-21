@@ -16,6 +16,7 @@ import            textwrap
 
 import numpy as np
 
+import fsl.utils.idle                        as idle
 import fsleyes_widgets.utils.layout          as fsllayout
 
 import                                          fsleyes
@@ -59,6 +60,13 @@ def main(args=None):
 
     # Create a GL context
     fslgl.getGLContext(offscreen=True, createApp=True)
+
+    # Now that GL inititalisation is over,
+    # make sure that the idle loop executes
+    # all tasks synchronously, instead of
+    # trying to schedule them on the wx
+    # event loop
+    idle.idleLoop.neverQueue = True
 
     # Parse arguments, and
     # configure logging/debugging
