@@ -325,6 +325,11 @@ def run_with_fsleyes(func, *args, **kwargs):
         status._clearThread.join()
         status._clearThread = None
 
+    panel = None
+    dummy = None
+    frame[0] = None
+    app[0] = None
+
     if err[0] is not None:
         raise err[0]
 
