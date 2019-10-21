@@ -181,7 +181,7 @@ def loadOverlays(paths,
     :arg blocking:  Defaults to ``False``. If ``True``, overlays are loaded
                     immediately (and the ``onLoad`` function is called
                     directly. Otherwise, overlays and the ``onLoad`` are loaded
-                    loaded/called on the :func:`.idle.idle` loop.
+                    and called on the :func:`.idle.idle` loop.
 
     :returns:       If ``blocking is False`` (the default), returns ``None``.
                     Otherwise returns a list containing the loaded overlay
