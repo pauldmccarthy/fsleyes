@@ -265,6 +265,8 @@ def run_with_fsleyes(func, *args, **kwargs):
     def finish():
         state.frame.Close(askUnsaved=False, askLayout=False)
         state.dummy.Close()
+        waitUntilIdle()
+        realYield(100)
         state.app.ExitMainLoop()
 
     def run():
@@ -335,7 +337,6 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     raised = state.raised
     result = state.result
-    state  = None
 
     if err[0] is not None:
         raise err[0]
