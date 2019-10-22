@@ -322,6 +322,7 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         self.__destroyed   = True
 
 
+    @property
     def destroyed(self):
         """Returns ``True`` if a call to :meth:`destroy` has been made,
         ``False`` otherwise.

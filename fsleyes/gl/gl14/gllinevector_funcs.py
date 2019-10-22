@@ -29,7 +29,7 @@ import numpy                   as np
 
 import OpenGL.GL               as gl
 
-import fsl.utils.transform     as transform
+import fsl.transform.affine    as affine
 import fsleyes.gl.gllinevector as gllinevector
 import fsleyes.gl.resources    as glresources
 from . import                     glvector_funcs
@@ -171,7 +171,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     v2d = opts.getTransform('voxel', 'display')
 
     if xform is None: xform = v2d
-    else:             xform = transform.concat(xform, v2d)
+    else:             xform = affine.concat(xform, v2d)
 
     gl.glPushMatrix()
     gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))

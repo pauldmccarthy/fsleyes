@@ -15,7 +15,7 @@ import wx
 
 import numpy as np
 
-import fsl.utils.transform                as transform
+import fsl.transform.affine               as affine
 import fsleyes.displaycontext.scene3dopts as scene3dopts
 import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
 import fsleyes.actions                    as actions
@@ -211,8 +211,8 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
             rots                 = [0, 0, 0]
             rots[self.movieAxis] = rate
 
-            xform = transform.axisAnglesToRotMat(*rots)
-            xform = transform.concat(xform, currot)
+            xform = affine.axisAnglesToRotMat(*rots)
+            xform = affine.concat(xform, currot)
 
             canvas.opts.rotation = xform
             return np.copy(xform)

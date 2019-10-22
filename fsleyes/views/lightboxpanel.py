@@ -344,7 +344,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         of rows to the maximum displayable number (given that the number of
         columns is fixed).
         """
-        if ev is not None: ev.Skip()
+
+        if ev is not None:
+            ev.Skip()
+
+        if self.destroyed:
+            return
 
         # Lay this panel out, so the
         # canvas panel size is up to date

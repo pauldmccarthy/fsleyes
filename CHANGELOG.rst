@@ -9,6 +9,28 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.31.2 (Tuesday October 22nd 2019)
+----------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes is now more lenient towards NIfTI images with extreme qform affines.
+* Various changes to improve GTK3 compatibility.
+* Various changes to reduce warnings and unnecessary output messages.
+
+
+Fixed
+^^^^^
+
+
+* Image texture data is now prepared off the main thread; this was the
+  behaviour before version 0.30.0, but was accidentally disabled for that
+  release.
+
+
 0.31.1 (Tuesday October 8th 2019)
 ---------------------------------
 

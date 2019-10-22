@@ -11,15 +11,16 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 
 
 import logging
-import collections
+import collections.abc as abc
 
 import numpy as np
 
-import fsl.utils.transform   as transform
-import fsl.data.imagewrapper as imagewrapper
-from . import data           as texdata
-from . import                   texture2d
-from . import                   texture3d
+import fsl.transform.affine               as affine
+import fsl.data.imagewrapper              as imagewrapper
+from   fsl.utils.platform import platform as fslplatform
+from . import data                        as texdata
+from . import                                texture2d
+from . import                                texture3d
 
 
 log = logging.getLogger(__name__)
@@ -199,7 +200,7 @@ class ImageTextureBase(object):
             if volume is None and self.__volume is None:
                 volume = [0] * (ndims - 3)
 
-            elif not isinstance(volume, collections.Sequence):
+            elif not isinstance(volume, abc.Sequence):
                 volume = [volume]
 
             if len(volume) != ndims - 3:
@@ -305,7 +306,7 @@ class ImageTextureBase(object):
             # Make sure the data/offset are
             # compatible with 2D textures
             data   = self.shapeData(data, oldShape=image.shape)
-            offset = transform.transform(
+            offset = affine.transform(
                 offset, self.texCoordXform(image.shape))
 
             log.debug('{} data changed - refreshing part of '
@@ -368,9 +369,10 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
                   the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
         """
 
-        nvals            = kwargs.get('nvals', 1)
-        kwargs['nvals']  = nvals
-        kwargs['scales'] = image.pixdim[:3]
+        nvals              = kwargs.get('nvals', 1)
+        kwargs['nvals']    = nvals
+        kwargs['scales']   = image.pixdim[:3]
+        kwargs['threaded'] = kwargs.get('threaded', fslplatform.haveGui)
 
         ImageTextureBase   .__init__(self, image, nvals, 3)
         texture3d.Texture3D.__init__(self, name, **kwargs)

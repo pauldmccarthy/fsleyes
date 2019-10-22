@@ -280,6 +280,7 @@ class FSLeyesFrame(wx.Frame):
         self.__viewMenuActions      = []
         self.__viewPanelMenuActions = {}
         self.__layoutMenuActions    = []
+        self.__overlayMenuActions   = []
         self.__toolsMenuActions     = []
 
         # The recent paths manager notifies us when
@@ -552,11 +553,15 @@ class FSLeyesFrame(wx.Frame):
         if panelId > 1:
             width, height = self.GetClientSize().Get()
 
-            # PlotPanels/ShellPanels are
-            # initially placed along the
-            # bottom
-            if isinstance(panel, (plotpanel.PlotPanel, shellpanel.ShellPanel)):
+            # PlotPanels are initially
+            # placed along the bottom
+            if isinstance(panel, plotpanel.PlotPanel):
                 paneInfo.Bottom().BestSize(width, height // 3)
+
+            # As are ShellPanels, albeit
+            # a bit smaller
+            elif isinstance(panel, shellpanel.ShellPanel):
+                paneInfo.Bottom().BestSize(width, height // 5)
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
@@ -639,6 +644,8 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
+            if action.instance is None:
+                action.destroy()
 
         for item in viewMenu.GetMenuItems():
             viewMenu.Delete(item.GetId())
@@ -655,6 +662,8 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in self.__layoutMenuActions:
             action.unbindWidget(item)
+            if action.instance is None:
+                action.destroy()
 
         for item in self.__layoutMenu.GetMenuItems():
             self.__layoutMenu.Delete(item.GetId())
@@ -670,6 +679,8 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in it.chain(*self.__viewPanelMenuActions.values()):
             action.unbindWidget(item)
+            if action.instance is None:
+                action.destroy()
 
         for menu in self.__viewPanelMenus.values():
             menu = menu.GetSubMenu()
@@ -700,6 +711,8 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
+            if action.instance is None:
+                action.destroy()
 
         for item in menu.GetMenuItems():
             menu.Delete(item.GetId())
@@ -887,15 +900,16 @@ class FSLeyesFrame(wx.Frame):
 
                 func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
                 name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
-                act  = actions.ToggleAction(self.overlayList,
-                                            self.displayCtx,
-                                            func,
-                                            name=ctrlName)
+                if not hasattr(panel, name):
+                    act  = actions.ToggleAction(self.overlayList,
+                                                self.displayCtx,
+                                                func,
+                                                name=ctrlName)
 
-                setattr(panel, name, act)
+                    setattr(panel, name, act)
 
-                actionNames .append(name)
-                actionTitles[name] = ctrlName
+                    actionNames .append(name)
+                    actionTitles[name] = ctrlName
 
         if len(actionNames) == 0:
             return None, []
@@ -1330,7 +1344,31 @@ class FSLeyesFrame(wx.Frame):
         for panel in self.__viewPanels:
             panel.destroy()
 
-        self.__menuActions = None
+        # (not created) self.__overlayMenuActions
+
+        # Cleanly destroy all
+        # menu action objects
+        allactions = []
+        allactions.extend([a for a, _ in self.__viewMenuActions])
+        allactions.extend([a for a, _ in self.__layoutMenuActions])
+        allactions.extend([a for a, _ in self.__overlayMenuActions])
+        allactions.extend([a for a, _ in self.__toolsMenuActions])
+        allactions.extend(self.__menuActions.values())
+        for vpactions in self.__viewPanelMenuActions.values():
+            allactions.extend([a for a, _ in vpactions])
+
+        for action in allactions:
+
+            # actions associated with some object
+            # (e.g. a ViewPanel) will have already
+            # been destroyed by them
+            if action.instance is None or action.instance is self:
+                action.destroy()
+
+        self.__layoutMenuActions    = None
+        self.__viewPanelMenuActions = None
+        self.__toolsMenuActions     = None
+        self.__menuActions          = None
 
         # Deregister loadoverlay listener
         # (registered in __init__)
@@ -1421,9 +1459,9 @@ class FSLeyesFrame(wx.Frame):
 
             # Default size is 90% of
             # the first display size
-            size     = list(wx.Display(0).GetGeometry().GetSize())
-            size[0] *= 0.9
-            size[1] *= 0.9
+            size    = list(wx.Display(0).GetGeometry().GetSize())
+            size[0] = round(size[0] * 0.9)
+            size[1] = round(size[1] * 0.9)
             log.debug('Setting default frame size: {}'.format(size))
             self.SetSize(size)
 
@@ -1444,8 +1482,8 @@ class FSLeyesFrame(wx.Frame):
                         layout,
                         message=strings.messages[self, 'restoringLayout'])
                 except Exception:
-                    log.warn('Previous layout could not be restored - '
-                             'falling back to default layout.')
+                    log.warning('Previous layout could not be restored - '
+                                'falling back to default layout.')
                     log.debug('Layout restore error', exc_info=True)
                     layout = None
 
@@ -1873,6 +1911,7 @@ class FSLeyesFrame(wx.Frame):
 
             menuItem = menu.Append(wx.ID_ANY, title)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+            self.__overlayMenuActions.append((actionObj, menuItem))
 
 
     def __makeToolsMenu(self):

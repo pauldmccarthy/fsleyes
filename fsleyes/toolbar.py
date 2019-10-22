@@ -100,11 +100,11 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                                        *args,
                                        **kwargs)
 
-        self.__tools      = []
-        self.__index      = 0
-        self.__numVisible = None
-        self.__height     = height
-        self.__orient     = orient
+        self.__tools         = []
+        self.__visibleOffset = 0
+        self.__numVisible    = 0
+        self.__height        = height
+        self.__orient        = orient
 
         font = self.GetFont()
         self.SetFont(font.Smaller())
@@ -121,11 +121,19 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         self.__leftButton  = wx.Button(self, style=style)
         self.__rightButton = wx.Button(self, style=style)
 
-        self.__leftButton .SetBitmapLabel(lBmp)
-        self.__rightButton.SetBitmapLabel(rBmp)
+        self.__leftButton .SetBitmap(lBmp)
+        self.__rightButton.SetBitmap(rBmp)
+
+        for btn in [self.__leftButton, self.__rightButton]:
+            size = btn.GetBestSize()
+            btn.SetMinSize(size)
 
         self.__sizer = wx.BoxSizer(orient)
         self.SetSizer(self.__sizer)
+
+        self.__sizer.Add(self.__leftButton,  flag=wx.EXPAND)
+        self.__sizer.Add((0, 0),             flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add(self.__rightButton, flag=wx.EXPAND)
 
         self.__leftButton .Bind(wx.EVT_BUTTON,     self.__onLeftButton)
         self.__rightButton.Bind(wx.EVT_BUTTON,     self.__onRightButton)
@@ -180,7 +188,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         if expand:
             sizerArgs = {
-                'flag'       : wx.ALIGN_CENTRE | wx.EXPAND,
+                'flag'       : wx.EXPAND,
                 'proportion' : 1
             }
         else:
@@ -272,6 +280,8 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         for tool in tools:
             self.InsertTool(tool, postevent=False, redraw=False)
 
+        self.__drawToolBar()
+
         wx.PostEvent(self, ToolBarEvent())
 
 
@@ -298,7 +308,16 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
 
         tool.Bind(wx.EVT_MOUSEWHEEL, self.__onMouseWheel)
 
-        self.__tools.insert(index, tool)
+        # gtk3: something somewhere sometimes
+        # clobbers the best size, so widgets
+        # don't get shown. Only observed with
+        # BitmapToggleButtons.
+        size = tool.GetBestSize()
+        tool.SetMinSize(size)
+        tool.SetMaxSize(size)
+
+        self.__tools.insert(index,     tool)
+        self.__sizer.Insert(index + 1, tool, flag=wx.ALIGN_CENTRE)
 
         self.InvalidateBestSize()
 
@@ -423,13 +442,13 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         If the toolbar is compressed, it is scrolled to the left.
         """
 
-        self.__index -= 1
+        self.__visibleOffset -= 1
 
-        if self.__index <= 0:
-            self.__index = 0
+        if self.__visibleOffset <= 0:
+            self.__visibleOffset = 0
 
         log.debug('Left button pushed - setting start '
-                  'tool index to {}'.format(self.__index))
+                  'tool index to {}'.format(self.__visibleOffset))
 
         self.__drawToolBar()
 
@@ -440,13 +459,13 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         If the toolbar is compressed, it is scrolled to the right.
         """
 
-        self.__index += 1
+        self.__visibleOffset += 1
 
-        if self.__index + self.__numVisible >= len(self.__tools):
-            self.__index = len(self.__tools) - self.__numVisible
+        if self.__visibleOffset + self.__numVisible >= len(self.__tools):
+            self.__visibleOffset = len(self.__tools) - self.__numVisible
 
         log.debug('Right button pushed - setting start '
-                  'tool index to {}'.format(self.__index))
+                  'tool index to {}'.format(self.__visibleOffset))
 
         self.__drawToolBar()
 
@@ -462,71 +481,60 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         sizer  = self.__sizer
         tools  = self.__tools
         orient = self.__orient
-
-        sizer.Clear()
+        lbtn   = self.__leftButton
+        rbtn   = self.__rightButton
 
         if orient == wx.HORIZONTAL:
-
             availSpace = self.GetSize().GetWidth()
             reqdSpace  = [tool.GetBestSize().GetWidth() for tool in tools]
-            leftSpace  = self.__leftButton .GetBestSize().GetWidth()
-            rightSpace = self.__rightButton.GetBestSize().GetWidth()
+            leftSpace  = lbtn .GetBestSize().GetWidth()
+            rightSpace = rbtn .GetBestSize().GetWidth()
 
         else:
-
             availSpace = self.GetSize().GetHeight()
             reqdSpace  = [tool.GetBestSize().GetHeight() for tool in tools]
-            leftSpace  = self.__leftButton .GetBestSize().GetHeight()
-            rightSpace = self.__rightButton.GetBestSize().GetHeight()
+            leftSpace  = lbtn .GetBestSize().GetHeight()
+            rightSpace = rbtn .GetBestSize().GetHeight()
 
-        if availSpace >= sum(reqdSpace):
+        enoughSpace = availSpace >= sum(reqdSpace)
+
+        sizer.Show(lbtn, not enoughSpace)
+        sizer.Show(rbtn, not enoughSpace)
+
+        # show all tools
+        if enoughSpace:
 
             log.debug('{}: All tools fit ({} >= {})'.format(
                 type(self).__name__, availSpace, sum(reqdSpace)))
 
-            self.__index      = 0
-            self.__numVisible = len(tools)
-
-            self.__leftButton .Enable(False)
-            self.__rightButton.Enable(False)
-            self.__leftButton .Show(  False)
-            self.__rightButton.Show(  False)
+            self.__visibleOffset = 0
+            self.__numVisible    = len(tools)
 
             for tool in tools:
-                tool.Show(True)
-                sizer.Add(tool, flag=wx.ALIGN_CENTRE)
+                sizer.Show(tool)
 
+        # show <numVisible> tools, starting from <visibleOffset>
+        # (see __onMouseWheel/__onLeftButton/__onRightButton)
         else:
-            reqdSpace  = reqdSpace[self.__index:]
+            reqdSpace  = reqdSpace[self.__visibleOffset:]
             cumSpace   = np.cumsum(reqdSpace) + leftSpace + rightSpace
-            biggerIdxs = np.where(cumSpace > availSpace)[0]
+            biggerIdxs = [int(i) for i in np.where(cumSpace > availSpace)[0]]
 
             if len(biggerIdxs) == 0:
                 lastIdx = len(tools)
             else:
-                lastIdx = biggerIdxs[0] + self.__index
+                lastIdx = biggerIdxs[0] + self.__visibleOffset
 
-            self.__numVisible = lastIdx - self.__index
+            self.__numVisible = lastIdx - self.__visibleOffset
 
             log.debug('{}: {} tools fit ({} - {})'.format(
-                type(self).__name__, self.__numVisible, self.__index, lastIdx))
+                type(self).__name__, self.__numVisible, self.__visibleOffset, lastIdx))
 
-            self.__leftButton .Show(True)
-            self.__rightButton.Show(True)
-            self.__leftButton .Enable(self.__index > 0)
-            self.__rightButton.Enable(lastIdx < len(tools))
+            lbtn.Enable(self.__visibleOffset > 0)
+            rbtn.Enable(lastIdx < len(tools))
 
             for i in range(len(tools)):
-                if i >= self.__index and i < lastIdx:
-                    tools[i].Show(True)
-                    sizer.Add(tools[i], flag=wx.ALIGN_CENTRE)
-                else:
-                    tools[i].Show(False)
-
-        if self.__numVisible > 0:
-            sizer.Add(      (0, 0),             flag=wx.EXPAND, proportion=1)
-            sizer.Add(      self.__rightButton, flag=wx.EXPAND)
-            sizer.Insert(0, self.__leftButton,  flag=wx.EXPAND)
+                sizer.Show(tools[i], self.__visibleOffset <= i < lastIdx)
 
         self.Layout()
 

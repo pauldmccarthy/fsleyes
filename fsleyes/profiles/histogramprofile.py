@@ -390,6 +390,11 @@ class RangePolygon(patches.Polygon):
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
 
+        # destroy may have been called while
+        # this call was asynchronously scheduled
+        if hs is None or hsPanel is None:
+            return
+
         # If smoothing is enabled, or we are
         # plotting bin centres, we get
         # the histogram data from the plotted

@@ -355,9 +355,9 @@ class FileTypePanel(elb.EditableListBox):
         :arg ftpanel: The :class:`.FileTreePanel`
         """
         elb.EditableListBox.__init__(
-            self, parent, style=(elb.ELB_NO_ADD    |
-                                 elb.ELB_NO_REMOVE |
-                                 elb.ELB_NO_MOVE))
+            self, parent, vgap=5, style=(elb.ELB_NO_ADD    |
+                                         elb.ELB_NO_REMOVE |
+                                         elb.ELB_NO_MOVE))
 
         self.__ftpanel = ftpanel
 
@@ -378,6 +378,7 @@ class FileTypePanel(elb.EditableListBox):
 
         for ftype in filetypes:
             toggle = wx.CheckBox(self)
+            toggle.SetMinSize(toggle.GetBestSize())
             self.Append(ftype, extraWidget=toggle)
             toggle.Bind(wx.EVT_CHECKBOX, self.__onToggle)
 

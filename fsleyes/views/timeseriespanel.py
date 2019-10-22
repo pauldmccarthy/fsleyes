@@ -258,7 +258,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         instances to the :meth:`.PlotPanel.drawDataSeries` method.
         """
 
-        if not self or self.destroyed():
+        if not self or self.destroyed:
             return
 
         tss = self.getDataSeriesToPlot()

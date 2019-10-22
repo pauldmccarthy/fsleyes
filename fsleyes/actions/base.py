@@ -145,6 +145,14 @@ class Action(props.HasProperties):
         return self.__displayCtx
 
 
+    @property
+    def instance(self):
+        """Return the instance which owns this ``Action``, if relevant.
+        Returns ``None`` otherwise.
+        """
+        return self.__instance
+
+
     def __call__(self, *args, **kwargs):
         """Calls this action. An :exc:`ActionDisabledError` will be raised
         if :attr:`enabled` is ``False``.

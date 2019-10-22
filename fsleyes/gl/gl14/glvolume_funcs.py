@@ -14,13 +14,13 @@ programs.
 
 import logging
 
-import numpy               as np
-import OpenGL.GL           as gl
+import numpy                as np
+import OpenGL.GL            as gl
 
-import fsl.utils.transform as transform
-import fsleyes.gl.shaders  as shaders
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.glvolume as glvolume
+import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.glvolume  as glvolume
 
 
 log = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ def updateShaderState(self):
     # into a value between 0 and 1, suitable
     # for looking up an appropriate colour
     # in the 1D colour map texture.
-    voxValXform = transform.concat(self.colourTexture.getCoordinateTransform(),
+    voxValXform = affine.concat(self.colourTexture.getCoordinateTransform(),
                                    self.imageTexture.voxValXform)
     voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
@@ -137,8 +137,8 @@ def updateShaderState(self):
 
         for i in range(opts.numClipPlanes):
             origin, normal   = self.get3DClipPlane(i)
-            origin           = transform.transform(origin, d2tmat)
-            normal           = transform.transformNormal(normal, d2tmat)
+            origin           = affine.transform(origin, d2tmat)
+            normal           = affine.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
         changed |= shader.setFragParam('clipPlanes', clipPlanes)
@@ -166,7 +166,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
         zpos, axes, bbox=bbox)
 
     if xform is not None:
-        vertices = transform.transform(vertices, xform)
+        vertices = affine.transform(vertices, xform)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -203,13 +203,13 @@ def draw3D(self, xform=None, bbox=None):
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
     rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
 
-    rayStep = transform.transformNormal(
+    rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(shape))
-    texform = transform.concat(
+    texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(shape))
 
     if xform is not None:
-        vertices = transform.transform(vertices, xform)
+        vertices = affine.transform(vertices, xform)
 
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
@@ -281,7 +281,7 @@ def drawAll(self, axes, zposes, xforms):
 
         v, vc, tc = self.generateVertices2D(zpos, axes)
 
-        vertices[ i * 6: i * 6 + 6, :] = transform.transform(v, xform)
+        vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         texCoords[i * 6: i * 6 + 6, :] = tc
 
     vertices = vertices.ravel('C')

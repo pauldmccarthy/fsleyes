@@ -34,7 +34,7 @@ import OpenGL.GL                    as gl
 
 import OpenGL.GL.ARB.draw_instanced as arbdi
 
-import fsl.utils.transform          as transform
+import fsl.transform.affine         as affine
 import fsleyes.gl.shaders           as shaders
 
 
@@ -113,7 +113,7 @@ def updateShaderState(self):
         voxValXform     = self.colourTexture.voxValXform
         invVoxValXform  = self.colourTexture.invVoxValXform
         texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
-        img2CmapXform   = transform.concat(
+        img2CmapXform   = affine.concat(
             self.cmapTexture.getCoordinateTransform(),
             voxValXform)
 
@@ -176,7 +176,7 @@ def preDraw(self, xform=None, bbox=None):
     mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
     v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
-    normalMatrix = transform.concat(mvMat, v2dMat)
+    normalMatrix = affine.concat(mvMat, v2dMat)
     normalMatrix = npla.inv(normalMatrix).T
 
     shader.set('normalMatrix', normalMatrix)
@@ -195,7 +195,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     v2dMat = opts.getTransform('voxel',   'display')
 
     if xform is None: xform = v2dMat
-    else:             xform = transform.concat(v2dMat, xform)
+    else:             xform = affine.concat(v2dMat, xform)
 
     voxels              = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)

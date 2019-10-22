@@ -19,7 +19,7 @@ import OpenGL.GL                    as gl
 import fsl.utils.idle               as idle
 
 import fsl.utils.notifier           as notifier
-import fsl.utils.transform          as transform
+import fsl.transform.affine         as affine
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
 from . import data                  as texdata
@@ -93,8 +93,12 @@ class TextureBase(object):
 
     def __del__(self):
         """Prints a log message."""
-        if log:
+
+        # log might get deleted before us
+        try:
             log.debug('%s.del (%s)', type(self).__name__, id(self))
+        except Exception:
+            pass
 
 
     def destroy(self):
@@ -647,7 +651,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
 
     def invTexCoordXform(self, origShape):
         """Returns the inverse of :meth:`texCoordXform`. """
-        return transform.invert(self.texCoordXform(origShape))
+        return affine.invert(self.texCoordXform(origShape))
 
 
     @property

@@ -11,9 +11,9 @@ rendering in an OpenGL 2.1 environment.
 
 import numpy as np
 
-import fsl.utils.transform as transform
-import fsleyes.gl.shaders  as shaders
-from . import                 glvolume_funcs
+import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
+from . import                  glvolume_funcs
 
 
 def init(self):
@@ -66,7 +66,7 @@ def updateShaderState(self):
     # which transforms from image texture values
     # to voxel values, and scales said voxel
     # values to colour map texture coordinates.
-    img2CmapXform = transform.concat(
+    img2CmapXform = affine.concat(
         self.cmapTexture.getCoordinateTransform(),
         self.imageTexture.voxValXform)
 

@@ -12,10 +12,12 @@ documentation for more details.
 
 import logging
 
-import                   wx
-import wx.lib.agw.aui as aui
+import                                  wx
+import wx.lib.agw.aui                as aui
+import wx.lib.agw.aui.framemanager   as auifm
 
 import fsl.utils.deprecated          as deprecated
+from   fsl.utils.platform import        platform
 import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
@@ -396,7 +398,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
             elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
-            paneInfo.Direction(location)
+            # Make sure the pane is
+            # resizable in case it
+            # gets floated later on
+            paneInfo.Direction(location) \
+                    .Resizable(not isToolbar)
 
         # Or, for floating panes, centre the
         # floating pane on this ViewPanel
@@ -412,6 +418,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                         selfCentre[1] - paneSize[1] * 0.5)
 
             paneInfo.Float()                 \
+                    .Resizable(True)         \
                     .Dockable(not floatOnly) \
                     .CloseButton(closeable)  \
                     .FloatingPosition(panePos)
@@ -590,7 +597,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             pinfo.MinSize(     (1, 1))  \
                  .BestSize(    bestSize) \
-                 .FloatingSize(floatSize)
+                 .FloatingSize(floatSize) \
+                 .Resizable(   True)
 
             # This is a terrible hack which forces
             # the AuiManager to grow a dock when a
@@ -659,61 +667,73 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         wx.CallAfter(self.__auiMgrUpdate)
 
 
-#
-# Here I am monkey patching the
-# wx.agw.aui.framemanager.AuiFloatingFrame.__init__ method.
-#
-#
-# I am doing this because I have observed some strange behaviour when running
-# a remote instance of this application over an SSH/X11 session, with the X11
-# server (i.e. the local machine) running in OS X. When a combobox is embedded
-# in a floating frame (either a pane or a toolbar), its dropdown list appears
-# underneath the frame, meaning that the user is unable to actually select any
-# items from the list!
-#
-# I have only seen this behaviour when using XQuartz 2.7.6, running under OSX
-# 10.9 Mavericks.
-#
-# Ultimately, this appears to be caused by the wx.FRAME_TOOL_WINDOW style, as
-# passed to the wx.MiniFrame constructor (from which the AuiFloatingFrame
-# class derives). Removing this style flag fixes the problem, so this is
-# exactly what I'm doing. I haven't looked any deeper into the situation.
-#
+class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
+    """Here I am monkey patching the
+    ``wx.agw.aui.framemanager.AuiFloatingFrame.__init__`` method.
+
+    I am doing this because I have observed some strange behaviour when running
+    a remote instance of this application over an SSH/X11 session, with the X11
+    server (i.e. the local machine) running in OS X. When a combobox is embedded
+    in a floating frame (either a pane or a toolbar), its dropdown list appears
+    underneath the frame, meaning that the user is unable to actually select any
+    items from the list!
+
+    I have only seen this behaviour when using XQuartz on macOS.
+
+    Ultimately, this appears to be caused by the ``wx.FRAME_TOOL_WINDOW``
+    style, as passed to the ``wx.MiniFrame`` constructor (from which the
+    ``AuiFloatingFrame`` class derives). Removing this style flag fixes the
+    problem, so this is exactly what I'm doing. I haven't looked any deeper
+    into the situation.
 
 
-# My new constructor, which makes sure that
-# the FRAME_TOOL_WINDOW style is not passed
-# through to the AuiFloatingFrame constructor
-def AuiFloatingFrame__init__(*args, **kwargs):
+    This class also overrieds the ``SetPaneWindow`` method, because under gtk3,
+    the maximum size if a frame musr be set.
+    """
 
-    if 'style' in kwargs:
-        style = kwargs['style']
+    def __init__(self, *args, **kwargs):
+        """My new constructor, which makes sure that the ``FRAME_TOOL_WINDOW``
+        style is not passed through to the ``AuiFloatingFrame`` constructor
+        """
 
-    # This is the default style, as defined
-    # in the AuiFloatingFrame constructor
-    else:
-        style = (wx.FRAME_TOOL_WINDOW     |
-                 wx.FRAME_FLOAT_ON_PARENT |
-                 wx.FRAME_NO_TASKBAR      |
-                 wx.CLIP_CHILDREN)
+        if 'style' in kwargs:
+            style = kwargs['style']
 
-    style &= ~wx.FRAME_TOOL_WINDOW
+        # This is the default style, as defined
+        # in the AuiFloatingFrame constructor
+        else:
+            style = (wx.FRAME_TOOL_WINDOW     |
+                     wx.FRAME_FLOAT_ON_PARENT |
+                     wx.FRAME_NO_TASKBAR      |
+                     wx.CLIP_CHILDREN)
 
-    kwargs['style'] = style
+        if platform.inSSHSession:
+            style &= ~wx.FRAME_TOOL_WINDOW
 
-    return AuiFloatingFrame__real__init__(*args, **kwargs)
+        kwargs['style'] = style
+
+        super().__init__(*args, **kwargs)
 
 
-# Store a reference to the real constructor, and
-# Patch my constructor in to the class definition.
-AuiFloatingFrame__real__init__ = aui.AuiFloatingFrame.__init__
-aui.AuiFloatingFrame.__init__  = AuiFloatingFrame__init__
+    def SetPaneWindow(self, pane):
+        """Make sure that floated toolbars are sized correctly.
+        """
+        super().SetPaneWindow(pane)
+        if isinstance(pane.window, ctrlpanel.ControlToolBar):
+            size = self.GetBestSize()
+            self.SetMaxSize(size)
 
-# I am also monkey-patching the wx.lib.agw.aui.AuiDockingGuide.__init__ method,
-# because in this instance, when running over SSH/X11, the wx.FRAME_TOOL_WINDOW
-# style seems to result in the docking guide frames being given title bars,
-# which is quite undesirable.
-def AuiDockingGuide__init__(*args, **kwargs):
+
+def _AuiDockingGuide_init(self, *args, **kwargs):
+    """I am also monkey-patching the
+    ``wx.lib.agw.aui.AuiDockingGuide.__init__`` method, because in this
+    instance, when running over SSH/X11, the ``wx.FRAME_TOOL_WINDOW`` style
+    seems to result in the docking guide frames being given title bars, which
+    is quite undesirable.
+
+    I cannot patch the entire class in the aui package, because it is used
+    as part of a class hierarchy. So I am just patching the method.
+    """
 
     if 'style' in kwargs:
         style = kwargs['style']
@@ -726,12 +746,15 @@ def AuiDockingGuide__init__(*args, **kwargs):
                  wx.FRAME_NO_TASKBAR  |
                  wx.NO_BORDER)
 
-    style &= ~wx.FRAME_TOOL_WINDOW
+    if platform.inSSHSession:
+        style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style
 
-    return AuiDockingGuide__real__init__(*args, **kwargs)
+    _AuiDockingGuide_real_init(self, *args, **kwargs)
 
 
-AuiDockingGuide__real__init__ = aui.AuiDockingGuide.__init__
-aui.AuiDockingGuide.__init__  = AuiDockingGuide__init__
+aui  .AuiFloatingFrame       = MyAuiFloatingFrame
+auifm.AuiFloatingFrame       = MyAuiFloatingFrame
+_AuiDockingGuide_real_init   = aui.AuiDockingGuide.__init__
+aui.AuiDockingGuide.__init__ = _AuiDockingGuide_init

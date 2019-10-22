@@ -19,7 +19,7 @@ import          PIL
 import          wx
 
 import fsl.utils.idle                 as idle
-import fsl.utils.transform            as transform
+import fsl.transform.affine           as affine
 import fsl.utils.settings             as fslsettings
 import fsleyes_widgets.utils.progress as progress
 from   fsleyes_widgets import            isalive
@@ -261,7 +261,7 @@ def makeGif(overlayList,
             # normalise the rotmat for this
             # frame to the rms difference
             # from the starting rotmat
-            frame = transform.rmsdev(ctx.startFrame, frame)
+            frame = affine.rmsdev(ctx.startFrame, frame)
 
             # Keep capturing frames until we
             # have performed a full 360 degree

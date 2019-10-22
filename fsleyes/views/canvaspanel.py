@@ -625,6 +625,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         self.layoutContainerPanel()
 
+        sizer = self.centrePanel.GetSizer()
+        if sizer is not None:
+            sizer.Clear()
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__containerPanel, flag=wx.EXPAND, proportion=1)
         self.centrePanel.SetSizer(sizer)
@@ -639,6 +643,11 @@ class CanvasPanel(viewpanel.ViewPanel):
         This method is used by the default :meth:`centrePanelLayout` method,
         and is available for custom sub-class implementations to use.
         """
+
+        sizer = self.__containerPanel.GetSizer()
+        if sizer is not None:
+            sizer.Clear()
+            sizer = None
 
         sopts = self.sceneOpts
 
@@ -734,6 +743,10 @@ class CanvasPanel(viewpanel.ViewPanel):
         :arg refresh: Must be passed as a keyword argument. If ``True`` (the
                       default), this ``OrthoPanel`` is refreshed.
         """
+
+        if self.destroyed:
+            return
+
         refresh = kwa.pop('refresh', True)
 
         sceneOpts = self.sceneOpts
@@ -742,8 +755,8 @@ class CanvasPanel(viewpanel.ViewPanel):
         bg        = sceneOpts.bgColour
         fg        = sceneOpts.fgColour
 
-        cpanel.SetBackgroundColour([c * 255 for c in bg])
-        cpanel.SetForegroundColour([c * 255 for c in fg])
+        cpanel.SetBackgroundColour([round(c * 255) for c in bg])
+        cpanel.SetForegroundColour([round(c * 255) for c in fg])
 
         if self.__colourBar is not None:
             canvas = self.__colourBar.canvas
@@ -967,7 +980,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         from . import scene3dpanel
 
-        if self.destroyed():   return False
+        if self.destroyed:     return False
         if not self.movieMode: return False
 
         overlay  = self.displayCtx.getSelectedOverlay()

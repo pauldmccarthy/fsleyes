@@ -374,6 +374,7 @@ class GLObject(notifier.Notifier):
         self.__displayCtx = None
 
 
+    @property
     def destroyed(self):
         """This method may be called to test whether a call has been made to
         :meth:`destroy`.
@@ -509,6 +510,7 @@ class GLSimpleObject(GLObject):
         self.__destroyed = True
 
 
+    @property
     def destroyed(self):
         """Overrides :meth:`GLObject.destroy`. Returns ``True`` if
         :meth:`destroy` hs been called, ``False`` otherwise.

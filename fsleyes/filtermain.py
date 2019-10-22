@@ -22,13 +22,18 @@ import warnings
 import threading
 
 
+# Filters may be either:
+#   - a regex string, or
+#   - a tuple of (regex string, total number of lines to skip)
+
 FILTERS = [
     r'Adding duplicate image handler',
+    r'Value error parsing header in AFM',
     r'Metadata\.framework \[Error\]',
     r'Class FIFinderSyncExtensionHost',
     r'_RegisterApplication()',
     r'FinderKit',
-    r'DeprecationWarning',
+    (r'DeprecationWarning', 2),
     r'wx.NewId',
     r'ioloop.install',
     r'FutureWarning',
@@ -36,9 +41,11 @@ FILTERS = [
     r'ClientToScreen',
     r'ScreenToClient',
     r'Gdk-WARNING',
+    (r'Gtk-WARNING', 2),
     r'Gtk-Message',
-    r'Gtk-CRITICAL',
+    (r'Gtk-CRITICAL', 2),
     r'Glib-CRITICAL',
+    r'GLib-GObject-WARNING',
     r'libGL error',
     r'Pango-WARNING',
     r'Xlib:  extension',
@@ -48,7 +55,6 @@ FILTERS = [
     r'\*\*\* BUG \*\*\*',
     r'In pixman',
     r'Set a breakpoint',
-    r'^ *$',
 ]
 
 
@@ -93,14 +99,30 @@ def filter_stream(stream, die, filters=None):
     # stream.
     q = queue.Queue()
 
+    # Use a Barrier to synchronise the
+    # read, write, and calling threads
+    alive = threading.Barrier(3)
+
     # The read thread runs forever,
     # just putting lines in the queue.
     def read_loop():
+        alive.wait()
         while True:
             line = fin.readline()
             if line == '':
                 break
             q.put(line)
+
+
+    def testline(line):
+        for pat in filters:
+
+            if isinstance(pat, tuple): pat, skip = pat
+            else:                      skip      = 1
+
+            if re.search(pat, line):
+                return skip
+        return 0
 
     # The write thread runs until both
     # of the following are true:
@@ -108,6 +130,8 @@ def filter_stream(stream, die, filters=None):
     #  - there are no lines in the queue
     #  - the die event has been set
     def write_loop():
+        skip = 0
+        alive.wait()
         while True:
             try:
                 line = q.get(timeout=0.25)
@@ -115,10 +139,15 @@ def filter_stream(stream, die, filters=None):
                 if die.is_set(): break
                 else:            continue
 
-            if not any([re.search(pat, line) for pat in filters]):
-                fout.write(line)
+            if skip > 0:
+                skip -= 1
+                continue
 
-            fout.flush()
+            skip = testline(line) - 1
+
+            if skip < 0:
+                fout.write(line)
+                fout.flush()
 
         # Restore the original stream
         try:
@@ -134,7 +163,7 @@ def filter_stream(stream, die, filters=None):
     rt.start()
     wt.start()
 
-    return rt, wt
+    return rt, wt, alive
 
 
 def main(args=None):
@@ -157,11 +186,16 @@ def main(args=None):
     logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
     logging.getLogger('traitlets').setLevel(logging.CRITICAL)
 
-    die                = threading.Event()
-    rtstdout, wtstdout = filter_stream(sys.stdout, die)
-    rtstderr, wtstderr = filter_stream(sys.stderr, die)
+    die                        = threading.Event()
+    rtstdout, wtstdout, oalive = filter_stream(sys.stdout, die)
+    rtstderr, wtstderr, ealive = filter_stream(sys.stderr, die)
 
     import fsleyes.main as fm
+
+    # wait until the filter
+    # threads have started
+    oalive.wait()
+    ealive.wait()
 
     result = 1
 
@@ -173,6 +207,8 @@ def main(args=None):
         die.set()
         wtstderr.join()
         wtstdout.join()
+        rtstdout.join()
+        rtstderr.join()
 
     sys.exit(result)
 

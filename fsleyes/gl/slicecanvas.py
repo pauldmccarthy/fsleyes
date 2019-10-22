@@ -267,6 +267,7 @@ class SliceCanvas(object):
         self._offscreenTextures = None
 
 
+    @property
     def destroyed(self):
         """Returns ``True`` if a call to :meth:`destroy` has been made,
         ``False`` otherwise.
@@ -774,7 +775,7 @@ class SliceCanvas(object):
 
         def create():
 
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             # The overlay has been removed from the
@@ -868,6 +869,9 @@ class SliceCanvas(object):
         overlay.
         """
 
+        if self.destroyed:
+            return
+
         # Destroy any GL objects for overlays
         # which are no longer in the list
         for ovl, globj in list(self._glObjects.items()):
@@ -900,7 +904,7 @@ class SliceCanvas(object):
             # This SliceCanvas might get
             # destroyed before this idle
             # task is executed
-            if not self or self.destroyed():
+            if not self or self.destroyed:
                 return
 
             self._updateRenderTextures()
@@ -1415,7 +1419,7 @@ class SliceCanvas(object):
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
 
-        if self.destroyed():
+        if self.destroyed:
             return
 
         width, height = self.GetSize()
@@ -1434,7 +1438,7 @@ class SliceCanvas(object):
 
         # Set the viewport to match the current
         # display bounds and canvas size
-        if copts.renderMode is not 'offscreen':
+        if copts.renderMode != 'offscreen':
             bbox = self._setViewport()
             glroutines.clear(copts.bgColour)
 

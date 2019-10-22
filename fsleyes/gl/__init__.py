@@ -525,26 +525,31 @@ class GLContext(object):
                  other=None,
                  target=None,
                  createApp=False,
-                 ready=None):
+                 ready=None,
+                 raiseErrors=False):
         """Create a ``GLContext``.
 
-        :arg offscreen: On-screen or off-screen context?
+        :arg offscreen:   On-screen or off-screen context?
 
-        :arg parent:    Parent ``wx`` GUI object
+        :arg parent:      Parent ``wx`` GUI object
 
-        :arg other:     Another ``GLContext`` instance with which GL state
-                        should be shared.
+        :arg other:       Another ``GLContext`` instance with which GL state
+                          should be shared.
 
-        :arg target:    If ``other`` is not ``None``, this must be a reference
-                        to a ``WXGLCanvasTarget``, the rendering target for the
-                        new context.
+        :arg target:      If ``other`` is not ``None``, this must be a
+                          reference to a ``WXGLCanvasTarget``, the rendering
+                          target for the new context.
 
-        :arg createApp: If ``True``, and if possible, this ``GLContext`` will
-                        create and run a ``wx.App`` so that it can create a
-                        ``wx.glcanvas.GLContext``.
+        :arg createApp:   If ``True``, and if possible, this ``GLContext`` will
+                          create and run a ``wx.App`` so that it can create a
+                          ``wx.glcanvas.GLContext``.
 
-        :arg ready:     Function which will be called when the context has
-                        been created and is ready to use.
+        :arg ready:       Function which will be called when the context has
+                          been created and is ready to use.
+
+        :are raiseErrors: Defaults to ``False``. If ``True``, and if the
+                          ``ready`` function raises an error, that error is not
+                          caught.
         """
 
         def defaultReady():
@@ -621,6 +626,8 @@ class GLContext(object):
                                     '{}: {}'.format(type(e).__name__,
                                                     str(e)),
                                                     exc_info=True)
+                        if raiseErrors:
+                            raise e
 
                 # Destroying the dummy canvas
                 # can be dangerous on GTK, so we
