@@ -70,7 +70,7 @@ def main(args=None):
     # don't use separate threads for data
     # processing.
     with idle.idleLoop.synchronous(), \
-         imagetexture.ImageTexture,enableThreading(False):
+         imagetexture.ImageTexture.enableThreading(False):
 
         # Parse arguments, and
         # configure logging/debugging
