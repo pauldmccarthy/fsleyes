@@ -30,6 +30,7 @@ import fsleyes.displaycontext.lightboxopts   as lightboxopts
 import fsleyes.displaycontext.scene3dopts    as scene3dopts
 import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl                            as fslgl
+import fsleyes.gl.textures.imagetexture      as imagetexture
 import fsleyes.gl.ortholabels                as ortholabels
 import fsleyes.gl.offscreenslicecanvas       as slicecanvas
 import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
@@ -65,8 +66,11 @@ def main(args=None):
     # make sure that the idle loop executes
     # all tasks synchronously, instead of
     # trying to schedule them on the wx
-    # event loop
-    with idle.idleLoop.synchronous():
+    # event loop. And make sure image textures
+    # don't use separate threads for data
+    # processing.
+    with idle.idleLoop.synchronous(), \
+         imagetexture.ImageTexture,enableThreading(False):
 
         # Parse arguments, and
         # configure logging/debugging

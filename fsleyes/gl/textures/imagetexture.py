@@ -11,6 +11,7 @@ classes, :class:`.Texture3D` and :class:`.Texture2D` classes for storing an
 
 
 import logging
+import contextlib
 import collections.abc as abc
 
 import numpy as np
@@ -345,6 +346,29 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
     """
 
 
+    threadedDefault = None
+    """Default value used for the ``threaded`` argument passed to
+    :meth:`__init__`. When this is set to ``None``, the default value will be
+    the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
+    """
+
+
+    @contextlib.contextmanager
+    @classmethod
+    def enableThreading(cls, enable=True):
+        """Context manager which can be used to temporarily set the
+        default value of the ``threaded`` argument passedto :meth:`__init__`.
+        """
+
+        oldval = ImageTexture.threadedDefault
+        ImageTexture.threadedDefault = enable
+
+        try:
+            yield
+        finally:
+            ImageTexture.threadedDefault = oldval
+
+
     def __init__(self,
                  name,
                  image,
@@ -366,13 +390,17 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
 
 
         .. note:: The default value of the ``threaded`` parameter is set to
-                  the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
+                  the value of :attr:`threadedDefault`.
         """
 
         nvals              = kwargs.get('nvals', 1)
         kwargs['nvals']    = nvals
         kwargs['scales']   = image.pixdim[:3]
-        kwargs['threaded'] = kwargs.get('threaded', fslplatform.haveGui)
+        kwargs['threaded'] = kwargs.get('threaded',
+                                        ImageTexture.threadedDefault)
+
+        if kwargs['threaded'] is None:
+            kwargs['threaded'] = fslplatform.haveGui
 
         ImageTextureBase   .__init__(self, image, nvals, 3)
         texture3d.Texture3D.__init__(self, name, **kwargs)
