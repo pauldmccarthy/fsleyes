@@ -353,8 +353,8 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
     """
 
 
-    @contextlib.contextmanager
     @classmethod
+    @contextlib.contextmanager
     def enableThreading(cls, enable=True):
         """Context manager which can be used to temporarily set the
         default value of the ``threaded`` argument passedto :meth:`__init__`.
