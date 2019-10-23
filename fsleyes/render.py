@@ -66,27 +66,27 @@ def main(args=None):
     # all tasks synchronously, instead of
     # trying to schedule them on the wx
     # event loop
-    idle.idleLoop.neverQueue = True
+    with idle.idleLoop.synchronous():
 
-    # Parse arguments, and
-    # configure logging/debugging
-    namespace = parseArgs(args)
-    fsleyes.configLogging(namespace.verbose, namespace.noisy)
+        # Parse arguments, and
+        # configure logging/debugging
+        namespace = parseArgs(args)
+        fsleyes.configLogging(namespace.verbose, namespace.noisy)
 
-    # Initialise the fsleyes.gl modules
-    fslgl.bootstrap(namespace.glversion)
+        # Initialise the fsleyes.gl modules
+        fslgl.bootstrap(namespace.glversion)
 
-    # Create a description of the scene
-    overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
+        # Create a description of the scene
+        overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
 
-    import matplotlib.image as mplimg
+        import matplotlib.image as mplimg
 
-    # Render that scene, and save it to file
-    bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
+        # Render that scene, and save it to file
+        bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
 
-    if namespace.crop is not None:
-        bitmap = autocrop(bitmap, bg, namespace.crop)
-    mplimg.imsave(namespace.outfile, bitmap)
+        if namespace.crop is not None:
+            bitmap = autocrop(bitmap, bg, namespace.crop)
+        mplimg.imsave(namespace.outfile, bitmap)
 
 
 def parseArgs(argv):
