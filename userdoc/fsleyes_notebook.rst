@@ -9,9 +9,53 @@ FSLeyes and Jupyter Notebook
 
 FSLeyes is written primarily in the `Python <https://www.python.org>`_
 programming language.  Much of the internal state of FSLeyes can be queried
-and modified through a programming interface, which may be accessed through a
-Jupyter Notebook. You can start a Jupyter Notebook server which may be used to
-interact with FSLeyes via the *File* |right_arrow| *Open notebooks* menu item.
+and modified through a programming interface, which may be accessed from
+`IPython <https://ipython.readthedocs.io/>`_ or through a `Jupyter Notebook
+<https://jupyter.readthedocs.io/>`_.
+
+
+It is possible to start FSLeyes from an IPython/Jupyter Notebook session, or
+to start a Jupyter notebook which is attached to a running instance of
+FSLeyes.
+
+
+Starting FSLeyes from IPython/Jupyter
+-------------------------------------
+
+
+To start FSLeyes from a running IPython/Jupyter Notebook session, you first
+need to enable GUI integration::
+
+    %gui wx
+
+
+Then you can call the :func:`fsleyes.main.embed` function to start FSLeyes::
+
+    import fsleyes.main as main
+    overlayList, displayCtx, frame = main.embed()
+    frame.Show()
+
+
+You now have references to an :class:`.OverlayList`, the master
+:class:`.DisplayContext`, and the :class:`.FSLeyesFrame`, and can use their
+programming interfaces to interact with FSLeyes. For example, to open an ortho
+view, and add an image::
+
+    import os.path as op
+    from fsleyes.views.orthopanel import OrthoPanel
+    from fsl.data.image import Image
+
+    ortho = frame.addViewPanel(OrthoPanel)
+    overlayList.append(Image(op.expandvars('$FSLDIR/data/standard/MNI152_T1_2mm')))
+
+
+Starting Jupyter Notebook from FSLeyes
+--------------------------------------
+
+
+You can start a Jupyter Notebook server which may be used to interact with a
+running instance of FSLeyes via the *File* |right_arrow| *Open notebooks* menu
+item.
 
 .. image:: images/fsleyes_notebook.png
    :width: 50%
@@ -27,16 +71,18 @@ menu item
    :align: center
 
 
-This page contains a very brief overview of the FSLeyes programming
-interface. Refer to the :ref:`links below <fsleyes_api_further_reading>` for
-more comprehensive documentation.
+The remainder of this page contains a very brief overview of the FSLeyes
+programming interface. Refer to the :ref:`links below
+<fsleyes_api_further_reading>` for more comprehensive documentation.
 
 
 .. [*] See also the ``--runscript`` :ref:`command line option
        <command_line_run_script>`.
 
 
-.. warning:: The FSLeyes programming API is subject to change without warning!
+.. warning:: The FSLeyes programming API is subject to change. The developers
+             strive to adhere to `semantic versioning <https://semver.org>`_
+             conventions, so take note of the FSLeyes version number.
 
 
 Help

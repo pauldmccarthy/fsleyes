@@ -105,11 +105,22 @@ class NotebookAction(base.Action):
         self.__server = None
 
 
-    def __openNotebooks(self):
+    def __openNotebooks(self, nbfile=None):
         """Called when this ``NotebookAction`` is invoked. Starts the
-        server and kernel if necessary, then opens a new notebook in a
-        web browser.
+        server and kernel if necessary.
+
+        If the server/kernel have not yet been started and ``nbfile`` is
+        provided, the server will be started with ``nbfile`` opened.
         """
+
+        # If the kernel and server are both
+        # ok, open the notebook homepage
+        if self.__kernel is not None and \
+           self.__server is not None and \
+           self.__kernel.is_alive()  and \
+           self.__server.is_alive():
+            webbrowser.open(self.__server.url)
+            return
 
         # have the kernel or server threads crashed?
         if self.__kernel is not None and not self.__kernel.is_alive():
@@ -134,16 +145,12 @@ class NotebookAction(base.Action):
                 if self.__kernel is None:
                     self.__kernel = self.__startKernel(progdlg)
                 if self.__server is None:
-                    self.__server = self.__startServer(progdlg)
+                    self.__server = self.__startServer(progdlg, nbfile)
 
         finally:
             if progdlg is not None:
                 progdlg.Destroy()
                 progdlg = None
-
-        # if all is well, open the
-        # notebook server homepage
-        webbrowser.open(self.__server.url)
 
 
     def __bounce(self, secs, progdlg):
@@ -179,7 +186,7 @@ class NotebookAction(base.Action):
         return kernel
 
 
-    def __startServer(self, progdlg):
+    def __startServer(self, progdlg, nbfile=None):
         """Attempts to create and start a :class:`NotebookServer`.
 
         :returns: the server if it was started.
@@ -188,7 +195,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel.connfile)
+        server = NotebookServer(self.__kernel.connfile, nbfile)
         server.start()
 
         elapsed = 0
@@ -379,15 +386,30 @@ class BackgroundIPythonKernel(object):
             return display.Image('screenshot.png')
 
 
+    def start(self):
+        """Start the IPython kernel loop. This method returns immediately - the
+        kernel loop is driven on :func:`.idle.idle`.
+        """
+        self.__kernel.start()
+        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+
+    def __eventloop(self):
+        """Event loop used for the IPython kernel. Calls :meth:`__kernelDispatch`,
+        then schedules a future call to ``__eventloop`` via :func:`.idle.idle`
+        loop.
+        """
+        self.__kernelDispatch()
+        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+
     def __kernelDispatch(self):
-        """Event loop used for the IPython kernel. Calls
-        IPythonKernel.do_one_iteration, and then schedules a future call to
-        ``__kernelDispatch`` via :func:`.idle.idle` loop.
+        """Execute one kernel iteration, by scheduling a call to
+        ``IPythonKernel.do_one_iteration`` on the kernel's io loop.
         """
         try:
-            self.__kernel.do_one_iteration()
-            idle.idle(self.__kernelDispatch,
-                      after=self.__kernel._poll_interval)
+            loop = self.__kernel.io_loop
+            loop.run_sync(self.__kernel.do_one_iteration)
 
             # save the time on each iteration,
             # so the is_alive method has an
@@ -398,14 +420,6 @@ class BackgroundIPythonKernel(object):
         except Exception as e:
             self.__error = e
             raise
-
-
-    def start(self):
-        """Start the IPython kernel loop. This method returns immediately - the
-        kernel loop is executed on :func:`.idle.idle`.
-        """
-        self.__kernel.start()
-        idle.idle(self.__kernelDispatch, after=self.__kernel._poll_interval)
 
 
 class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
@@ -476,15 +490,18 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, connfile):
+    def __init__(self, connfile, nbfile=None):
         """Create a ``NotebookServer`` thread.
 
         :arg connfile: Connection file of the IPython kernel to connect to.
+        :arg nbfile:   Path to a notebook file which should be opened on
+                       startup.
         """
 
         threading.Thread.__init__(self)
         self.daemon        = True
         self.__connfile    = connfile
+        self.__nbfile      = nbfile
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
@@ -581,41 +598,51 @@ class NotebookServer(threading.Thread):
         # With frozen FSLeyes versions, there
         # probbaly isn't a 'jupyter-notebook'
         # executable. So we use a hook in
-        # fsleyes.main to run the server.
+        # fsleyes.main to run the server via
+        # nbmain, defined below.
         if fslplatform.frozen:
             exe = op.join(op.dirname(sys.executable), 'fsleyes')
             log.debug('Running notebook server via %s notebook', sys.argv[0])
 
-            # py2app manipulates the PYTHONPATH, so we
-            # pass it through as a command-line argument.
-            self.__nbproc = sp.Popen([exe, 'notebook', 'server', cfgdir],
+            # py2app manipulates the PYTHONPATH, so we pass
+            # it through as a command-line argument - it is
+            # picked up again by the nbmain function, below.
+            cmd = [exe, 'notebook', 'server', cfgdir]
+            if self.__nbfile is not None:
+                cmd.append(self.__nbfile)
+
+            self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
-                                     cwd=cfgdir,
                                      env=env)
 
         # Otherwise we can call
         # it in the usual manner.
         else:
             log.debug('Running notebook server via jupyter-notebook')
-            self.__nbproc = sp.Popen(['jupyter-notebook'],
+            cmd = ['jupyter-notebook']
+            if self.__nbfile is not None:
+                cmd.append(self.__nbfile)
+
+            self.__nbproc = sp.Popen(cmd,
                                      stdout=sp.PIPE,
                                      stderr=sp.PIPE,
-                                     cwd=cfgdir,
                                      env=env)
 
         def killServer():
-            # We need two CTRL+Cs to kill
-            # the notebook server
-            self.__nbproc.terminate()
-            self.__nbproc.terminate()
+            if self.__nbproc is not None:
+                # We need two CTRL+Cs to kill
+                # the notebook server
+                self.__nbproc.terminate()
+                self.__nbproc.terminate()
 
-            # Give it a little time, then
-            # force kill if needed
-            try:
-                self.__nbproc.wait(0.25)
-            except sp.TimeoutExpired:
-                self.__nbproc.kill()
+                # Give it a little time, then
+                # force kill if needed
+                try:
+                    self.__nbproc.wait(0.25)
+                except sp.TimeoutExpired:
+                    self.__nbproc.kill()
+                self.__nbproc = None
 
             shutil.rmtree(op.abspath(op.join(cfgdir, '..')))
 
@@ -626,6 +653,14 @@ class NotebookServer(threading.Thread):
         o, e          = self.__nbproc.communicate()
         self.__stdout = o.decode()
         self.__stderr = e.decode()
+        self.__nbproc = None
+
+        # if we've gotten this far,
+        # call our atexit handler
+        # directly, and unregister
+        # it
+        killServer()
+        atexit.unregister(killServer)
 
 
     def __initConfigDir(self, cfgdir):
@@ -641,7 +676,7 @@ class NotebookServer(threading.Thread):
         cfgenv = {
             'fsleyes_nbserver_port'       : defaultPort,
             'fsleyes_nbserver_token'      : self.__token,
-            'fsleyes_nbserver_dir'        : op.expanduser('~'),
+            'fsleyes_nbserver_dir'        : os.getcwd(),
             'fsleyes_nbserver_static_dir' : cfgdir,
             'fsleyes_nbextension_dir'     : nbextdir,
             'fsleyes_kernel_connfile'     : self.__connfile,
@@ -692,7 +727,9 @@ def nbmain(argv):
         # to add to the PYTHONPATH.
         # See NotebookServer.run.
         sys.path.insert(0, argv[1])
-        return main(argv=[])
+        # remaining arguments are passed
+        # through to notebookapp.main
+        return main(argv=argv[2:])
 
     # run a kernel (in place of ipykernel_launcher}
     elif argv[0] == 'kernel':

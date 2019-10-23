@@ -42,9 +42,11 @@ def test_embed():
         frame[0].Close()
         app.ExitMainLoop()
 
-    def embedded(overlayList, displayCtx, fframe):
-
+    def open_fsleyes():
         print('Embedded call', ncalls[0])
+
+        overlayList, displayCtx, fframe = fslmain.embed(
+            frame[0], menu=False, save=False)
 
         img = fslimage.Image(op.join(datadir, '3d'))
         fframe.addOrthoPanel()
@@ -59,12 +61,6 @@ def test_embed():
         else:
             print('Done - closing')
             wx.CallLater(1500, finish)
-
-    def open_fsleyes():
-        fslmain.embed(frame[0],
-                      callback=embedded,
-                      menu=False,
-                      save=False)
 
     wx.CallLater(1000, open_fsleyes)
 

@@ -304,7 +304,7 @@ class LookupTablePanel(ctrlpanel.ControlPanel):
                 else:
                     idle.idle(addLabel, labelIdx + 1)
 
-            except wx.PyDeadObjectError:
+            except RuntimeError:
                 pass
 
         log   .debug( 'Creating lookup table label list')

@@ -422,6 +422,7 @@ OPTIONS = td.TypeDict({
                        'bumMode',
                        'fontSize',
                        'notebook',
+                       'notebookFile',
                        'notebookPort'],
 
     # From here on, all of the keys are
@@ -751,6 +752,7 @@ ARGUMENTS = td.TypeDict({
     'Main.bumMode'             : ('bums',    'bumMode',             False),
     'Main.fontSize'            : ('fs',      'fontSize',            True),
     'Main.notebook'            : ('nb',      'notebook',            False),
+    'Main.notebookFile'        : ('nbf',     'notebookFile',        True),
     'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
@@ -984,6 +986,8 @@ HELP = td.TypeDict({
     'Main.bumMode'          : 'Make the coronal icon look like a bum',
     'Main.fontSize'         : 'Application font size',
     'Main.notebook'         : 'Start the Jupyter notebook server',
+    'Main.notebookFile'     : 'Start the Jupyter notebook server and open '
+                              'the specified notebook file.',
     'Main.notebookPort'     : 'Jupyter notebook server port',
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
@@ -1699,6 +1703,9 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['notebook'],
                             action='store_true',
                             help=mainHelp['notebook'])
+    mainParser.add_argument(*mainArgs['notebookFile'],
+                            type=str,
+                            help=mainHelp['notebookFile'])
     mainParser.add_argument(*mainArgs['notebookPort'],
                             type=int,
                             help=mainHelp['notebookPort'],

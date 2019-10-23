@@ -176,11 +176,11 @@ display the data correctly.
 
 .. _troubleshooting_keyboard_navigation_doesnt_work_in_the_ic_classification_panel:
 
-OSX - Keyboard navigation doesn't work in the IC classification panel
----------------------------------------------------------------------
+macOS - Keyboard navigation doesn't work in the IC classification panel
+-----------------------------------------------------------------------
 
 
-Under OSX, you may have focus-related issues while navigating around the
+Under macOS, you may have focus-related issues while navigating around the
 :ref:`IC classification panel
 <ic_classification_classifying_components_with_the_classification_panel>` with
 the keyboard.
@@ -193,11 +193,11 @@ setting can be changed through *System Preferences* |right_arrow| *Keyboard*
 controls*.
 
 
-OSX - FSLeyes breaks after updating
------------------------------------
+macOS - FSLeyes breaks after updating
+-------------------------------------
 
 
-Under OSX, you may encounter the following error after overwriting an old
+Under macOS, you may encounter the following error after overwriting an old
 version of FSLeyes with a new version:
 
 
@@ -206,7 +206,7 @@ version of FSLeyes with a new version:
    :align: center
 
 
-This is happening because OSX is caching the old version of the FSLeyes
+This is happening because macOS is caching the old version of the FSLeyes
 application specification file (found in ``FSLeyes.app/Contents/Info.plist``),
 and ignoring the new version. You can fix this problem by temporarily moving
 this file to a different location, and then moving it back again, for example::
@@ -230,6 +230,69 @@ try replacing the symlink with a wrapper script that contains the following::
 
   #!/bin/bash
   /path/to/FSLeyes.app/Contents/MacOS/fsleyes $@
+
+
+macOS - I can't start FSLeyes from IPython/Jupyter Notebook
+-----------------------------------------------------------
+
+If you are using macOS, and you are using FSLeyes from a `conda
+<https://conda.io/en/latest/>`_ environment, you may encounter this error
+when trying to use FSLeyes::
+
+    This program needs access to the screen. Please run with a Framework
+    build of python, and only when you are logged in on the main display
+    of your Mac.
+
+
+This is due to a problem with the way that conda interacts with macOS. If you
+are using ``python``/``ipython``, you can work around the problem by using
+``pythonw`` instead of ``python``. If you are using ``ipython``, you can run
+it like so::
+
+    pythonw $(which ipython)
+
+
+If you are using a Jupyter Notebook, things are a little bit more complicated.
+You will need to define a custom Jupyter kernel specification file, which uses
+``pythonw``. The easiest way to do this is to create a copy of the default
+kernel specification, e.g::
+
+  cp -r [conda environment location]/share/jupyter/python3 \
+        ~/Library/Jupyter/kernels/python3w
+
+
+Then open ``~/Library/Jupyter/kernels/python3w/kernel.json`` in a text editor,
+and change the first element in the ``argv`` list to ``pythonw`` instead of
+``python``. For example, if the contents of ``kernel.json`` look like this::
+
+    {
+     "argv": [
+      "/Users/paulmc/miniconda3/envs/fsleyes/bin/python",
+      "-m",
+      "ipykernel_launcher",
+      "-f",
+      "{connection_file}"
+     ],
+     "display_name": "Python 3",
+     "language": "python"
+    }
+
+Change it to this::
+
+    {
+     "argv": [
+      "/Users/paulmc/miniconda3/envs/fsleyes/bin/pythonw",
+      "-m",
+      "ipykernel_launcher",
+      "-f",
+      "{connection_file}"
+     ],
+     "display_name": "Python 3 (GUI)",
+     "language": "python"
+    }
+
+The next time you start a new Jupyter notebook, select the *Python 3 (GUI)*
+kernel.
 
 
 Linux - FSLeyes does not start

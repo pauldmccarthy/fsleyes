@@ -16,6 +16,7 @@ import            textwrap
 
 import numpy as np
 
+import fsl.utils.idle                        as idle
 import fsleyes_widgets.utils.layout          as fsllayout
 
 import                                          fsleyes
@@ -29,6 +30,7 @@ import fsleyes.displaycontext.lightboxopts   as lightboxopts
 import fsleyes.displaycontext.scene3dopts    as scene3dopts
 import fsleyes.controls.colourbar            as cbar
 import fsleyes.gl                            as fslgl
+import fsleyes.gl.textures.imagetexture      as imagetexture
 import fsleyes.gl.ortholabels                as ortholabels
 import fsleyes.gl.offscreenslicecanvas       as slicecanvas
 import fsleyes.gl.offscreenlightboxcanvas    as lightboxcanvas
@@ -60,25 +62,35 @@ def main(args=None):
     # Create a GL context
     fslgl.getGLContext(offscreen=True, createApp=True)
 
-    # Parse arguments, and
-    # configure logging/debugging
-    namespace = parseArgs(args)
-    fsleyes.configLogging(namespace.verbose, namespace.noisy)
+    # Now that GL inititalisation is over,
+    # make sure that the idle loop executes
+    # all tasks synchronously, instead of
+    # trying to schedule them on the wx
+    # event loop. And make sure image textures
+    # don't use separate threads for data
+    # processing.
+    with idle.idleLoop.synchronous(), \
+         imagetexture.ImageTexture.enableThreading(False):
 
-    # Initialise the fsleyes.gl modules
-    fslgl.bootstrap(namespace.glversion)
+        # Parse arguments, and
+        # configure logging/debugging
+        namespace = parseArgs(args)
+        fsleyes.configLogging(namespace.verbose, namespace.noisy)
 
-    # Create a description of the scene
-    overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
+        # Initialise the fsleyes.gl modules
+        fslgl.bootstrap(namespace.glversion)
 
-    import matplotlib.image as mplimg
+        # Create a description of the scene
+        overlayList, displayCtx, sceneOpts = makeDisplayContext(namespace)
 
-    # Render that scene, and save it to file
-    bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
+        import matplotlib.image as mplimg
 
-    if namespace.crop is not None:
-        bitmap = autocrop(bitmap, bg, namespace.crop)
-    mplimg.imsave(namespace.outfile, bitmap)
+        # Render that scene, and save it to file
+        bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
+
+        if namespace.crop is not None:
+            bitmap = autocrop(bitmap, bg, namespace.crop)
+        mplimg.imsave(namespace.outfile, bitmap)
 
 
 def parseArgs(argv):

@@ -9,6 +9,36 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.32.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--notebookFile`` command-line option, which starts the Jupyter notebook
+  server, and opens a specified notebook file.
+
+
+Changed
+^^^^^^^
+
+
+* The :func:`.main.embed` function has been changed so that it now works in a
+  synchronous manner, rather than using an asynchronous callback function.
+* The Jupyter notebook server is now configured so that its root directory
+  is the current working directory.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in Jupyter notebook integration, where an error in the notebook
+  would stop the kernel from executing any more commands.
+
+
 0.31.2 (Tuesday October 22nd 2019)
 ----------------------------------
 

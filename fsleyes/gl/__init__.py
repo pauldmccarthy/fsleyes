@@ -570,8 +570,8 @@ class GLContext(object):
         haveGui          = fslplatform.haveGui
 
         # On-screen contexts *must* be
-        # created on the wx.MainLoop
-        if (not offscreen) and (not haveGui):
+        # created via a wx event loop
+        if (not offscreen) and not (haveGui or createApp):
             raise ValueError('On-screen GL contexts must be '
                              'created on the wx.MainLoop')
 
@@ -659,6 +659,13 @@ class GLContext(object):
             if self.__ownApp:
                 log.debug('Starting temporary wx.MainLoop')
                 self.__app.MainLoop()
+
+                # Once the GL context has been
+                # created, we no longer need
+                # references to the wx objects
+                self.__parent = None
+                self.__canvas = None
+                self.__app    = None
 
 
     def setTarget(self, target):
@@ -1065,8 +1072,10 @@ class WXGLCanvasTarget(object):
             # Just in case this canvas
             # was destroyed before it
             # had a chance to be drawn
-            # on
-            except wx.PyDeadObjectError:
+            # on - wxpython raises a
+            # RuntimeError on attempts
+            # to use deleted wx objects
+            except RuntimeError:
                 pass
 
         if not self.__glReady:

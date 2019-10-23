@@ -373,7 +373,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                 if atlasPanelDisabled:
                     self.__atlasPanel.enableAtlasPanel()
 
-            except wx.PyDeadObjectError:
+            except RuntimeError:
                 pass
 
         if regionList is None:
@@ -420,7 +420,7 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
                     if i < nlabels - 1: idle.idle(addToRegionList, i + 1)
                     else:               idle.idle(changeAtlasList)
 
-                except wx.PyDeadObjectError:
+                except RuntimeError:
                     pass
 
             log.debug('Creating region list for {} ({})'.format(

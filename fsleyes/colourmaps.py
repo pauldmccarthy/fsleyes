@@ -210,6 +210,7 @@ colours:
 
 
 import itertools as it
+import functools as ft
 import os.path   as op
 import              os
 import              bisect
@@ -1438,7 +1439,7 @@ class LookupTable(notifier.Notifier):
                 self.__toParse = None
                 self.__parsed  = True
             return func(self, *args, **kwargs)
-        return wrapper
+        return ft.update_wrapper(wrapper, func)
 
 
     def __str__(self):
