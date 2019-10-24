@@ -11,7 +11,7 @@ functionality to edit the data in an :class:`.Image` overlay.
 
 import logging
 
-import collections
+import collections.abc as abc
 
 import numpy as np
 
@@ -208,7 +208,7 @@ class Editor(actions.ActionProvider):
         opts                = self.displayCtx.getOpts(image)
         selectBlock, offset = self.__selection.getBoundedSelection()
 
-        if not isinstance(newVals, collections.Sequence):
+        if not isinstance(newVals, abc.Sequence):
             nv = np.zeros(selectBlock.shape, dtype=np.float32)
             nv.fill(newVals)
             newVals = nv
@@ -309,7 +309,7 @@ class Editor(actions.ActionProvider):
 
         change = self.__doneList[self.__doneIndex]
 
-        if not isinstance(change, collections.Sequence):
+        if not isinstance(change, abc.Sequence):
             change = [change]
 
         for c in reversed(change):
@@ -341,7 +341,7 @@ class Editor(actions.ActionProvider):
 
         change = self.__doneList[self.__doneIndex + 1]
 
-        if not isinstance(change, collections.Sequence):
+        if not isinstance(change, abc.Sequence):
             change = [change]
 
         for c in change:
