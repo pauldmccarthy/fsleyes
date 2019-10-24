@@ -846,6 +846,11 @@ class SliceCanvas(object):
         redrawn.
         """
 
+        # we can sometimes get called after
+        # being destroyed (e.g. during testing)
+        if self.destroyed:
+            return
+
         # If we are in prerender mode, we
         # need to tell the RenderTextureStack
         # for this GLObject to update itself.
