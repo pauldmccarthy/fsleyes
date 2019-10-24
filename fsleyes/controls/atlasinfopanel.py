@@ -10,7 +10,8 @@ that is used by the :class:`.AtlasPanel`.
 
 import logging
 
-import wx
+import numpy                              as np
+import                                       wx
 import wx.html                            as wxhtml
 
 import fsleyes_widgets.elistbox           as elistbox
@@ -351,7 +352,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
                 vallabels = zip(values, atlas.desc.labels)
 
                 for val, label in reversed(sorted(vallabels)):
-                    if val == 0.0:
+                    if np.abs(val) < atlas.desc.lower:
                         continue
                     fmt = '{{:0.{}f}}'.format(atlas.desc.precision)
                     val = fmt.format(val)

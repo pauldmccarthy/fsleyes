@@ -725,6 +725,12 @@ class PlotPanel(viewpanel.ViewPanel):
                          :meth:`__drawOneDataSeries` method.
         """
 
+        # Avoid spursious post-destruction
+        # notifications (occur sporadically
+        # during testing)
+        if self.destroyed:
+            return
+
         # Only draw the plot if there are no
         # pending draw requests. Otherwise
         # we would be drawing out-of-date data.

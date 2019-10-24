@@ -21,7 +21,7 @@ datadir = op.join(op.dirname(__file__), 'testdata')
 def test_embed():
 
     gc.collect()
-    idle.idleReset()
+    idle.idleLoop.reset()
 
     app = wx.App()
     frame = [wx.Frame(None)]

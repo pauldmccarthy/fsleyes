@@ -780,9 +780,9 @@ class CanvasPanel(viewpanel.ViewPanel):
         # cause delays in frame updates. So when
         # movie mode is on, we bump up the rate.
         def startMovie():
-            idle.setIdleTimeout(10)
+            idle.idleLoop.callRate = 10
             if not self.__movieLoop(startLoop=True):
-                idle.setIdleTimeout(None)
+                idle.idleLoop.callRate = None
 
         # The __movieModeChanged method is called
         # on the props event queue. Here we make
@@ -790,7 +790,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         # the props event queue, by calling it from
         # the idle loop.
         if self.movieMode: idle.idle(startMovie)
-        else:              idle.setIdleTimeout(None)
+        else:              idle.idleLoop.callRate = None
 
 
     def __movieLoop(self, startLoop=False):

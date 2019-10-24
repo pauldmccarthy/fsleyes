@@ -318,6 +318,11 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
             def load():
 
+                # the panel might get destroyed
+                # before this function is called
+                if self.destroyed:
+                    return
+
                 atlas = atlases.loadAtlas(atlasID, summary, resolution=res)
 
                 # The atlas panel may be destroyed

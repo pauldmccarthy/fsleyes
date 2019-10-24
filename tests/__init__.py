@@ -233,8 +233,8 @@ def run_with_fsleyes(func, *args, **kwargs):
     fsleyes.configLogging()
 
     gc.collect()
-    idle.idleReset()
-    idle._idleAllowErrors = True
+    idle.idleLoop.reset()
+    idle.idleLoop.allowErrors = True
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
