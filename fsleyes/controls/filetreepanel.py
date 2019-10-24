@@ -532,21 +532,33 @@ class FileListPanel(wx.Panel):
     trigger a call to :meth:`.FileTreeManager.reorder`.
 
 
-    A text control is added at the end of each row, allowing the user to add
-    notes.
+    A *Notes* column contains text controls in each row, allowing the user to
+    add notes. The position of this column can be set to either left or right
+    of the fixed variable columns via the :meth:`NotesColumn` method.
     """
 
 
-    def __init__(self, parent, ftpanel):
+    def __init__(self, parent, ftpanel, notes='right'):
         """Create a ``FileListPanel``.
 
         :arg parent:  ``wx`` parent object
         :arg ftpanel: The :class:`.FileTreePanel`
+        :arg notes:   Location of the *Notes* column - one of:
+                        - ``'right'`` - right-most column (default)
+                        - ``'left'``  - left-most column, after varying
+                          columns
+
+        The *Notes* column location can be changed later via the
+        :meth:`NotesColumn` method.
         """
+
+        if notes not in ('left', 'right'):
+            raise ValueError('Invalid value for notes: {}'.format(notes))
 
         wx.Panel.__init__(self, parent)
 
         self.__ftpanel = ftpanel
+        self.__notes   = notes
         self.__mgr     = None
         self.__sizer   = wx.BoxSizer(wx.VERTICAL)
         self.__grid    = wgrid.WidgetGrid(
@@ -577,7 +589,6 @@ class FileListPanel(wx.Panel):
         fgroups    = mgr.filegroups
         grid       = self.__grid
         collabels  = self.__genColumnLabels(varcols, fixedcols)
-        collabels  = collabels + [strings.labels[self, 'notes']]
         nrows      = len(fgroups)
         ncols      = len(collabels)
 
@@ -595,6 +606,28 @@ class FileListPanel(wx.Panel):
         grid.Refresh()
 
 
+    def NotesColumn(self, notes):
+        """Set the position of the *Notes* column, either ``'left'`` or
+        ``'right'`` of the fixed variable columns.
+        """
+
+        if notes not in ('left', 'right'):
+            raise ValueError('Invalid value for notes: {}'.format(notes))
+
+        oldnotes     = self.__notes
+        self.__notes = notes
+
+        if self.__grid.Nrows() == 0: return
+        if oldnotes == notes:        return
+
+        nvarcols   = len(self.__mgr.varcols)
+        nfixedcols = len(self.__mgr.fixedcols)
+        order      = list(range(ncols))
+
+        if notes == 'left': order.insert(nvarcols, order.pop(-1))
+        else:               order.append(order.pop(nvarcols))
+
+
     def GridContents(self):
         """Returns the contents of the grid as a list of lists of strings. """
 
@@ -607,9 +640,9 @@ class FileListPanel(wx.Panel):
             widget = grid.GetWidget(row, col)
 
             # widget is either a StaticText
-            # or (last column) a TextCtrl
-            if col < ncols - 1: value = widget.GetLabel()
-            else:               value = widget.GetValue()
+            # or a TextCtrl (notes column)
+            if isinstance(widget, wx.TextCtrl): value = widget.GetValue()
+            else:                               value = widget.GetLabel()
 
             if value == PRESENTLBL:
                 value = 'x'
@@ -625,11 +658,12 @@ class FileListPanel(wx.Panel):
         are retrieved from the :class:`.FileTreeManager`.
         """
 
-        mgr     = self.__mgr
-        grid    = self.__grid
-        fgroups = mgr.filegroups
-        varcols = mgr.varcols
-        msg     = strings.messages[self, 'buildingList']
+        mgr      = self.__mgr
+        grid     = self.__grid
+        fgroups  = mgr.filegroups
+        varcols  = mgr.varcols
+        fixedoff = 1 if self.__notes == 'left' else 0
+        msg      = strings.messages[self, 'buildingList']
 
         fwoverlay.textOverlay(self.__grid, msg)
 
@@ -646,12 +680,25 @@ class FileListPanel(wx.Panel):
             # Fixed variable columns have a
             # bullet indicating whether or
             # not each file is present
-            for coli, filename in enumerate(fgroup.files, len(varcols)):
+            for coli, filename in enumerate(fgroup.files,
+                                            len(varcols) + fixedoff):
                 if filename is not None: grid.SetText(rowi, coli, PRESENTLBL)
                 else:                    grid.SetText(rowi, coli, '')
 
         self.Refresh()
         self.Update()
+
+
+    def __notesIndex(self):
+        """Returns the column index of the notes column. Assumes that a
+        :class:`.FileTreeManager` has been passed to :meth:`.ResetGrid`.
+        """
+
+        nvarcols   = len(self.__mgr.varcols)
+        nfixedcols = len(self.__mgr.fixedcols)
+
+        if self.__notes == 'left': return nvarcols
+        else:                      return nvarcols + nfixedcols
 
 
     def __createNotes(self):
@@ -660,11 +707,12 @@ class FileListPanel(wx.Panel):
         """
 
         grid         = self.__grid
+        notesIdx     = self.__notesIndex()
         nrows, ncols = grid.GetGridSize()
 
         for i in range(nrows):
             note = wx.TextCtrl(grid, i)
-            grid.SetWidget(i, ncols - 1, note)
+            grid.SetWidget(i, notesIdx, note)
             note.Bind(wx.EVT_CHAR_HOOK, self.__noteCharHook)
 
 
@@ -685,6 +733,7 @@ class FileListPanel(wx.Panel):
         else:                                                     offset = 1
 
         grid         = self.__grid
+        notesIdx     = self.__notesIndex()
         nrows, ncols = grid.GetGridSize()
         oldrow       = ev.GetEventObject().GetId()
         newrow       = oldrow + offset
@@ -693,7 +742,7 @@ class FileListPanel(wx.Panel):
         elif newrow >= nrows: newrow = nrows - 1
 
         if newrow != oldrow:
-            grid.GetWidget(newrow, ncols - 1).SetFocus()
+            grid.GetWidget(newrow, notesIdx).SetFocus()
             grid.SetSelection(newrow, -1)
 
 
@@ -756,7 +805,7 @@ class FileListPanel(wx.Panel):
 
     def __genColumnLabels(self, varcols, fixedcols):
         """Called by :meth:`ResetGrid`. Generates a label for each column in
-        the grid.
+        the grid, including the *Notes* column if it is visible.
 
         :arg varcols:   List of varying variable names
 
@@ -791,5 +840,12 @@ class FileListPanel(wx.Panel):
                 lbl = ftype + '[' + ','.join(lbl) + ']'
 
             collabels.append(lbl)
+
+        # notes column (if visible) is on the
+        # left or right of the fixed columns
+        if self.__notes == 'left':
+            collabels.insert(len(varcols), strings.labels[self, 'notes'])
+        else:
+            collabels.append(strings.labels[self, 'notes'])
 
         return collabels
