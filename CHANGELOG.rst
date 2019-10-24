@@ -29,6 +29,9 @@ Changed
   synchronous manner, rather than using an asynchronous callback function.
 * The Jupyter notebook server is now configured so that its root directory
   is the current working directory.
+* Small valued regions are no longer shown in the atlas information panel.
+  They are thresholded according to the ``lower`` threshold in the
+  :class:`.AtlasDescription`.
 
 
 Fixed
