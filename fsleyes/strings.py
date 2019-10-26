@@ -926,6 +926,7 @@ labels = TypeDict({
     'FileTreePanel.loadDir'    : 'Load directory',
     'FileTreePanel.customTree' : 'Load tree file',
     'FileTreePanel.save'       : 'Save notes',
+    'FileTreePanel.notes'      : 'Notes position',
     'FileListPanel.notes'      : 'Notes',
     'FileListPanel.present'    : '\u2713',
     'VariablePanel.value.none' : '<none>',
@@ -1334,6 +1335,9 @@ choices = TypeDict({
                                      'G'    : 'G',
                                      'B'    : 'B',
                                      'A'    : 'A'},
+
+    'FileTreePanel.notes' : {'left'  : 'Left',
+                             'right' : 'Right'}
 })
 
 

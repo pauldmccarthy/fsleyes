@@ -102,23 +102,22 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         self.__customTree   = wx.Button(self)
         self.__treeChoice   = wx.Choice(self)
         self.__save         = wx.Button(self)
-        self.__dirName      = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         self.__mainSplitter = wx.SplitterWindow(
             self, style=wx.SP_LIVE_UPDATE | wx.SP_BORDER)
         self.__leftPanel    = wx.Panel(self.__mainSplitter)
-        self.__leftSizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__rightPanel   = wx.Panel(self.__mainSplitter)
+        self.__notesLabel   = wx.StaticText(self.__leftPanel)
+        self.__notesChoice  = wx.Choice(self.__leftPanel)
+        self.__dirName      = wx.StaticText(
+            self.__rightPanel, style=wx.ST_ELLIPSIZE_MIDDLE)
 
-        self.__varPanel     = VariablePanel(self.__leftPanel,    self)
-        self.__fileTypes    = FileTypePanel(self.__leftPanel,    self)
-        self.__fileList     = FileListPanel(self.__mainSplitter, self)
-
-        self.__leftSizer.Add(self.__fileTypes, flag=wx.EXPAND, proportion=1)
-        self.__leftSizer.Add(self.__varPanel,  flag=wx.EXPAND)
-        self.__leftPanel.SetSizer(self.__leftSizer)
+        self.__varPanel     = VariablePanel(self.__leftPanel,  self)
+        self.__fileTypes    = FileTypePanel(self.__leftPanel,  self)
+        self.__fileList     = FileListPanel(self.__rightPanel, self)
 
         self.__mainSplitter.SetMinimumPaneSize(50)
-        self.__mainSplitter.SplitVertically(  self.__leftPanel,
-                                              self.__fileList)
+        self.__mainSplitter.SplitVertically(
+            self.__leftPanel, self.__rightPanel)
         self.__mainSplitter.SetSashGravity(0.3)
 
         # Build a list of all built-in filetrees,
@@ -138,27 +137,52 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         for f, l in zip(treefiles, treelabels):
             self.__treeChoice.Append(l, clientData=f)
 
+        notesChoices = list(strings.choices[self, 'notes'].items())
+        for key, label in notesChoices:
+            self.__notesChoice.Append(label, clientData=key)
+
+        self.__treeChoice .SetSelection(0)
+        self.__notesChoice.SetSelection(0)
+        self.__fileList   .NotesColumn(notesChoices[0][0])
+
         self.__loadDir   .SetLabel(strings.labels[self, 'loadDir'])
         self.__customTree.SetLabel(strings.labels[self, 'customTree'])
         self.__save      .SetLabel(strings.labels[self, 'save'])
+        self.__notesLabel.SetLabel(strings.labels[self, 'notes'])
 
-        self.__topSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__mainSizer  = wx.BoxSizer(wx.VERTICAL)
+        self.__topSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        self.__notesSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__leftSizer  = wx.BoxSizer(wx.VERTICAL)
+        self.__rightSizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.__notesSizer.Add(self.__notesLabel,  flag=wx.EXPAND)
+        self.__notesSizer.Add(self.__notesChoice, flag=wx.EXPAND, proportion=1)
+
+        self.__leftSizer.Add(self.__fileTypes,  flag=wx.EXPAND, proportion=1)
+        self.__leftSizer.Add(self.__varPanel,   flag=wx.EXPAND)
+        self.__leftSizer.Add(self.__notesSizer, flag=wx.EXPAND)
+
+        self.__rightSizer.Add(self.__dirName,  flag=wx.EXPAND)
+        self.__rightSizer.Add(self.__fileList, flag=wx.EXPAND, proportion=1)
+
         self.__topSizer.Add(self.__treeChoice, flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__loadDir,    flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__customTree, flag=wx.EXPAND, proportion=1)
         self.__topSizer.Add(self.__save,       flag=wx.EXPAND, proportion=1)
 
-        self.__mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.__mainSizer.Add(self.__topSizer,     flag=wx.EXPAND)
-        self.__mainSizer.Add(self.__dirName,      flag=wx.EXPAND)
         self.__mainSizer.Add(self.__mainSplitter, flag=wx.EXPAND, proportion=1)
 
-        self.SetSizer(self.__mainSizer)
+        self             .SetSizer(self.__mainSizer)
+        self.__leftPanel .SetSizer(self.__leftSizer)
+        self.__rightPanel.SetSizer(self.__rightSizer)
 
-        self.__loadDir   .Bind(wx.EVT_BUTTON, self._onLoadDir)
-        self.__customTree.Bind(wx.EVT_BUTTON, self._onCustomTree)
-        self.__treeChoice.Bind(wx.EVT_CHOICE, self._onTreeChoice)
-        self.__save      .Bind(wx.EVT_BUTTON, self._onSave)
+        self.__loadDir    .Bind(wx.EVT_BUTTON, self._onLoadDir)
+        self.__customTree .Bind(wx.EVT_BUTTON, self._onCustomTree)
+        self.__treeChoice .Bind(wx.EVT_CHOICE, self._onTreeChoice)
+        self.__save       .Bind(wx.EVT_BUTTON, self._onSave)
+        self.__notesChoice.Bind(wx.EVT_CHOICE, self._onNotesChoice)
 
 
     @property
@@ -275,6 +299,8 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         dirname  = dlg.GetPath()
         treename = self._getTreeChoice()
 
+        fslsettings.write('loadSaveOverlayDir', dirname)
+
         self._loadTree(treename, dirname)
 
 
@@ -338,6 +364,15 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         with open(path, 'wt') as f:
             for row in grid:
                 f.write('\t'.join(row) + '\n')
+
+
+    def _onNotesChoice(self, ev):
+        """Called when the user changes the notes column position choice.
+        Calls :meth:`FileListPanel.NotesColumn` accordingly.
+        """
+        sel = self.__notesChoice.GetSelection()
+        sel = self.__notesChoice.GetClientData(sel)
+        self.__fileList.NotesColumn(sel)
 
 
 class FileTypePanel(elb.EditableListBox):
@@ -614,18 +649,21 @@ class FileListPanel(wx.Panel):
         if notes not in ('left', 'right'):
             raise ValueError('Invalid value for notes: {}'.format(notes))
 
+        nrows, ncols = self.__grid.GetGridSize()
         oldnotes     = self.__notes
         self.__notes = notes
 
-        if self.__grid.Nrows() == 0: return
-        if oldnotes == notes:        return
+        if nrows    == 0:     return
+        if oldnotes == notes: return
 
-        nvarcols   = len(self.__mgr.varcols)
-        nfixedcols = len(self.__mgr.fixedcols)
-        order      = list(range(ncols))
+        nvarcols = len(self.__mgr.varcols)
+        order    = list(range(ncols))
 
         if notes == 'left': order.insert(nvarcols, order.pop(-1))
         else:               order.append(order.pop(nvarcols))
+
+        self.__grid.ReorderColumns(order)
+        self.__grid.Refresh()
 
 
     def GridContents(self):
