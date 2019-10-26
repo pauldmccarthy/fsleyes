@@ -19,6 +19,7 @@ Added
 
 * New ``--notebookFile`` command-line option, which starts the Jupyter notebook
   server, and opens a specified notebook file.
+* Option to change the location of the *Notes* column in the file treee panel.
 
 
 Changed
