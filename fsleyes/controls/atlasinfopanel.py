@@ -182,6 +182,9 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
         def onError(e):
 
+            if not self or self.destroyed:
+                return
+
             message = strings.messages[self, 'loadAtlasError']
             message = message.format(
                 atlasID, '{} ({})'.format(type(e).__name__, str(e)))
