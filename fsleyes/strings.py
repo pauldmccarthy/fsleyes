@@ -1142,6 +1142,7 @@ properties = TypeDict({
     'VectorOpts.orientFlip'      : 'L/R orientation flip',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
+    'RGBVectorOpts.unitLength'    : 'Scale vectors to unit length',
 
     'LineVectorOpts.directed'    : 'Interpret vectors as directed',
     'LineVectorOpts.lineWidth'   : 'Line width',

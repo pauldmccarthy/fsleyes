@@ -81,10 +81,26 @@ class GLRGBVector(glvector.GLVector):
         if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
         else:                                      vecImage = image
 
-        prefilter = np.abs
+        def prefilter(data):
+            # make absolute and scale to
+            # unit length if required
+            data = np.abs(data)
+            if self.opts.unitLength:
+                with np.errstate(invalid='ignore'):
+                    x            = data[0, ...]
+                    y            = data[1, ...]
+                    z            = data[2, ...]
+                    lens         = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+                    data[0, ...] = x / lens
+                    data[1, ...] = y / lens
+                    data[2, ...] = z / lens
+            return data
 
         def prefilterRange(dmin, dmax):
-            return max((0, dmin)), max((abs(dmin), abs(dmax)))
+            if self.unitLength:
+                return 0, 1
+            else:
+                return max((0, dmin)), max((abs(dmin), abs(dmax)))
 
         glvector.GLVector.__init__(self,
                                    image,
@@ -101,6 +117,10 @@ class GLRGBVector(glvector.GLVector):
         self.opts.addListener('interpolation',
                               self.name,
                               self.__interpChanged)
+        self.opts.addListener('unitLength',
+                              self.name,
+                              self.__unitLengthChanged)
+
 
 
     def destroy(self):
@@ -110,6 +130,7 @@ class GLRGBVector(glvector.GLVector):
         function, and calls the :meth:`.GLVector.destroy` method.
         """
         self.opts.removeListener('interpolation', self.name)
+        self.opts.removeListener('unitLength',    self.name)
         fslgl.glrgbvector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -152,6 +173,12 @@ class GLRGBVector(glvector.GLVector):
         self.clipTexture    .set(interp=interp)
         self.colourTexture  .set(interp=interp)
         self.asyncUpdateShaderState(alwaysNotify=True)
+
+    def __unitLengthChanged(self, *a):
+        """Called when :attr:`.RGBVectorOpts.unitLength` changes. Refreshes
+        the texture data.
+        """
+        self.imageTexture.refresh()
 
 
     def compileShaders(self):

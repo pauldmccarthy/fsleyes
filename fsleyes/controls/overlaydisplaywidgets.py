@@ -208,7 +208,8 @@ def _initPropertyList_VectorOpts(threedee):
 
 
 def _initPropertyList_RGBVectorOpts(threedee):
-    return ['interpolation']
+    return ['interpolation',
+            'unitLength']
 
 
 def _initPropertyList_LineVectorOpts(threedee):
@@ -572,7 +573,8 @@ def _initWidgetSpec_RGBVectorOpts(threedee):
     return {
         'interpolation' : props.Widget(
             'interpolation',
-            labels=strings.choices['VolumeOpts.interpolation'])
+            labels=strings.choices['VolumeOpts.interpolation']),
+        'unitLength' : props.Widget('unitLength')
     }
 
 

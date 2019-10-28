@@ -542,7 +542,8 @@ OPTIONS = td.TypeDict({
                         'directed',
                         'unitLength',
                         'lengthScale'],
-    'RGBVectorOpts'  : ['interpolation'],
+    'RGBVectorOpts'  : ['interpolation',
+                        'unitLength'],
     'MeshOpts'       : ['vertexData',
                         'vertexDataIndex',
                         'vertexSet',
@@ -863,6 +864,7 @@ ARGUMENTS = td.TypeDict({
     'LineVectorOpts.lengthScale'  : ('ls', 'lengthScale', True),
 
     'RGBVectorOpts.interpolation' : ('in', 'interpolation', True),
+    'RGBVectorOpts.unitLength'    : ('u',  'unitLengh',     False),
 
     'TensorOpts.lighting'         : ('dl', 'disableLighting',  False),
     'TensorOpts.tensorResolution' : ('tr', 'tensorResolution', True),
@@ -1145,6 +1147,7 @@ HELP = td.TypeDict({
     'LineVectorOpts.lengthScale'  : 'Scale line length by this '
                                     'percentage (10-500, default: 100)',
     'RGBVectorOpts.interpolation' : 'Interpolation',
+    'RGBVectorOpts.unitLength'    : 'Scale vectors to unit length.',
 
     'MeshOpts.colour'       : 'Mesh colour (0-1)',
     'MeshOpts.outline'      : 'Show mesh outline',

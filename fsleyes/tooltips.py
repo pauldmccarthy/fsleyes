@@ -292,6 +292,9 @@ properties = TypeDict({
                                     'purposes. You can choose none '
                                     '(equivalent to nearest-neighbour), '
                                     'linear, or spline interpolation.',
+    'RGBVectorOpts.unitLength'    : 'If checked, the data is scaled so that '
+                                    'each vector has length 1.',
+
 
     'MeshOpts.colour' :
     'The colour of the mesh, when not colouring by vertex data.',
