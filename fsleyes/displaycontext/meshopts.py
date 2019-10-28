@@ -611,10 +611,14 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         lo, hi        = self.overlay.bounds
         xlo, ylo, zlo = lo
         xhi, yhi, zhi = hi
+
+        # Transform the bounding box
+        # into display coordinates
         xform         = self.getTransform('mesh', 'display')
         bbox          = list(it.product(*zip(lo, hi)))
         bbox          = affine.transform(bbox, xform)
 
+        # re-calculate the min/max bounds
         x        = np.sort(bbox[:, 0])
         y        = np.sort(bbox[:, 1])
         z        = np.sort(bbox[:, 2])
