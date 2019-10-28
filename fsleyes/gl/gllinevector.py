@@ -284,9 +284,9 @@ class GLLineVertices(object):
 
             # scale the vector lengths to 0.5
             with np.errstate(invalid='ignore'):
-                vertices[:, :, :, 0] = 0.5 * x / lens
-                vertices[:, :, :, 1] = 0.5 * y / lens
-                vertices[:, :, :, 2] = 0.5 * z / lens
+                vertices[..., 0] = 0.5 * x / lens
+                vertices[..., 1] = 0.5 * y / lens
+                vertices[..., 2] = 0.5 * z / lens
 
             # Scale the vector data by the minimum
             # voxel length, so it is a unit vector

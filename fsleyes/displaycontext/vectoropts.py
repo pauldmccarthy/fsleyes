@@ -321,7 +321,14 @@ class RGBVectorOpts(VectorOpts):
     at each voxel.
     """
 
+
     interpolation = copy.copy(volumeopts.VolumeOpts.interpolation)
+    """Apply interpolation to the image data. """
+
+
+    unitLength = props.Boolean(default=False)
+    """If ``True``, the vector data is scaled so it has length 1. """
+
 
     def __init__(self, *args, **kwargs):
         """Create a ``RGBVectorOpts`` instance. All arguments are passed
