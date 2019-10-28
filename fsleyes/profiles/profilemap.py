@@ -237,9 +237,11 @@ altHandlerMap = {
         (('selint', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
     )),
 
+    OrthoCropProfile : OrderedDict((
+        (('crop', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')), )),
+
     LightBoxViewProfile : OrderedDict((
         (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), )),
-
 
     Scene3DViewProfile : OrderedDict((
         (('rotate', 'MiddleMouseDown'), ('pan', 'LeftMouseDown')),
