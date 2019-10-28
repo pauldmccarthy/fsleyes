@@ -9,7 +9,8 @@ for displaying :class:`.Mesh` overlays.
 """
 
 
-import logging
+import itertools as it
+import              logging
 
 import numpy as np
 
@@ -604,14 +605,25 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         Updates the :attr:`.DisplayOpts.bounds` property accordingly.
         """
 
-        lo, hi = self.overlay.bounds
-        xform  = self.getTransform('mesh', 'display')
-        lohi   = affine.transform([lo, hi], xform)
-        lohi.sort(axis=0)
-        lo, hi = lohi[0, :], lohi[1, :]
+        # create a bounding box for the
+        # overlay vertices in their
+        # native coordinate system
+        lo, hi        = self.overlay.bounds
+        xlo, ylo, zlo = lo
+        xhi, yhi, zhi = hi
+        xform         = self.getTransform('mesh', 'display')
+        bbox          = list(it.product(zip(lo, hi)))
+        bbox          = affine.transform(bbox, xform)
 
-        oldBounds = self.bounds
-        self.bounds = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
+        x        = np.sort(bbox[:, 0])
+        y        = np.sort(bbox[:, 1])
+        z        = np.sort(bbox[:, 2])
+        xlo, xhi = x.min(), x.max()
+        ylo, yhi = y.min(), y.max()
+        zlo, zhi = z.min(), z.max()
+
+        oldBounds   = self.bounds
+        self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
 
         if np.all(np.isclose(oldBounds, self.bounds)):
             self.propNotify('bounds')
