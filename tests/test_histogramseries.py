@@ -90,11 +90,11 @@ def test_HistogramSeries():
 
     hs.setHistogramData(data1, 'data1')
 
-    d1min, d1max  = data1.min(), data1.max()
-    nbins         = hseries.autoBin(data1, (d1min, d1max))
-
     # HistogramSeries.dataRange upper bound is exclusive
-    drange = (d1min, d1max + (d1max - d1min) / 10000.0)
+    d1min, d1max  = data1.min(), data1.max()
+    drange        = (d1min, d1max + (d1max - d1min) / 10000.0)
+    nbins         = hseries.autoBin(data1, drange)
+
     hx, hy, nvals = hseries.histogram(data1, nbins, drange, drange)
 
     gotx, goty = hs.getData()
