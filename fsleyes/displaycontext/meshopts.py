@@ -612,7 +612,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         xlo, ylo, zlo = lo
         xhi, yhi, zhi = hi
         xform         = self.getTransform('mesh', 'display')
-        bbox          = list(it.product(zip(lo, hi)))
+        bbox          = list(it.product(*zip(lo, hi)))
         bbox          = affine.transform(bbox, xform)
 
         x        = np.sort(bbox[:, 0])
