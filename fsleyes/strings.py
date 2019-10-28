@@ -868,6 +868,7 @@ labels = TypeDict({
     'FlirtFileDialog.selectFile'          : 'Choose',
     'FlirtFileDialog.ok'                  : 'Ok',
     'FlirtFileDialog.cancel'              : 'Cancel',
+    'FlirtFileDialog.inmemory'            : 'In-memory image',
 
     'ResampleDialog.ok'            : 'Ok',
     'ResampleDialog.reset'         : 'Reset',
