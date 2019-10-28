@@ -39,6 +39,7 @@ Fixed
 ^^^^^
 
 
+* Fixed a bug in :class:`.MeshOpts` bounds calculation.
 * Fixed a bug in Jupyter notebook integration, where an error in the notebook
   would stop the kernel from executing any more commands.
 
