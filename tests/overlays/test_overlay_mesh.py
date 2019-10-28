@@ -5,8 +5,11 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import os.path as op
+
 import pytest
-import fsl.data.image as fslimage
+import fsl.data.image       as fslimage
+import fsl.transform.affine as affine
 
 from .. import run_cli_tests, fliporient
 
@@ -61,12 +64,32 @@ mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -cm hot -cr 25 100
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100 -dc
+
+# Regression: incorrect mesh bounds calculation
+# when reference image affine has rotations
+-ds world {{oblique('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0.5 0.5 1 -r mesh_ref_oblique
 """
+
+
+def oblique(infile):
+
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_oblique.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+    xform    = img.getAffine('voxel', 'world')
+    rot      = affine.compose([1, 1, 1], [0, 0, 0], [0, 0, 1])
+    xform    = affine.concat(rot, xform)
+    img      = fslimage.Image(img.data, xform=xform)
+
+    img.save(outfile)
+
+    return outfile
 
 
 def test_overlay_mesh():
     extras = {
         'fliporient' : fliporient,
+        'oblique'    : oblique
     }
     run_cli_tests('test_overlay_mesh',
                   cli_tests,
