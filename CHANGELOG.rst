@@ -45,6 +45,8 @@ Fixed
 * Fixed a bug in :class:`.MeshOpts` bounds calculation.
 * Fixed a bug in Jupyter notebook integration, where an error in the notebook
   would stop the kernel from executing any more commands.
+* The *Robust FOV* and load/export affine transformation options now work
+  with in-memory images.
 
 
 0.31.2 (Tuesday October 22nd 2019)

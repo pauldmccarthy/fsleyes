@@ -22,6 +22,7 @@ module:
 """
 
 
+import            os
 import os.path as op
 
 import numpy as np
@@ -358,8 +359,11 @@ class FlirtFileDialog(wx.Dialog):
         self.__refChoice      = refChoice
         self.__affType        = affType
 
-        srcName = op.basename(srcFile)
-        srcName = fslimage.removeExt(srcFile)
+        if srcFile is None:
+            srcName = strings.labels[self, 'inmemory']
+        else:
+            srcName = op.basename(srcFile)
+            srcName = fslimage.removeExt(srcFile)
 
         overlayName   .SetLabel(strings.labels[self, 'source'].format(srcName))
         affTypeLabel  .SetLabel(strings.labels[self, 'affType'])
@@ -577,7 +581,8 @@ class FlirtFileDialog(wx.Dialog):
 
         matFile = self.__matFileText.GetValue().strip()
         if matFile == '':
-            dirName  = op.dirname(self.__srcFile)
+            if self.__srcFile is None: dirName = os.getcwd()
+            else:                      dirName = op.dirname(self.__srcFile)
             fileName = 'xform.mat'
         else:
             dirName, fileName = op.split(matFile)
@@ -600,7 +605,8 @@ class FlirtFileDialog(wx.Dialog):
 
         refFile = self.__refFileText.GetValue()
         if refFile == '':
-            refFile = self.__srcFile
+            if self.__srcFile is None: refFile = ''
+            else:                      refFile = self.__srcFile
 
         dlg = wx.FileDialog(
             self,

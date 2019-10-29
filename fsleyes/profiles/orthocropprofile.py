@@ -15,6 +15,7 @@ import numpy as np
 
 import fsl.data.image                     as fslimage
 import fsl.utils.run                      as fslrun
+import fsl.utils.tempdir                  as tempdir
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
 import fsleyes.actions                    as actions
@@ -175,25 +176,37 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         :attr:`cropBox` based on the result.
         """
 
-        if self.__overlay is None:
+        overlay = self.__overlay
+
+        if overlay is None:
             return
 
         try:
-            result = fslrun.runfsl(
-                'robustfov', '-i', self.__overlay.dataSource)
+            with tempdir.tempdir():
 
-            # robustfov returns two lines, the last
-            # of which contains the limits, as:
-            #
-            #    xmin xlen ymin ylen zmin zlen
-            limits = list(result.strip().split('\n')[-1].split())
-            limits = [float(l) for l in limits]
+                # in-memory image - create and
+                # save a copy - use a copy
+                # otherwise the original will
+                # think that is has been saved
+                # to disk.
+                if overlay.dataSource is None:
+                    overlay = fslimage.Image(overlay)
+                    overlay.save('image')
 
-            # Convert the lens to maxes
-            limits[1]      += limits[0]
-            limits[3]      += limits[2]
-            limits[5]      += limits[4]
-            self.cropBox[:] = limits
+                result = fslrun.runfsl('robustfov', '-i', overlay.dataSource)
+
+                # robustfov returns two lines, the last
+                # of which contains the limits, as:
+                #
+                #    xmin xlen ymin ylen zmin zlen
+                limits = list(result.strip().split('\n')[-1].split())
+                limits = [float(l) for l in limits]
+
+                # Convert the lens to maxes
+                limits[1]      += limits[0]
+                limits[3]      += limits[2]
+                limits[5]      += limits[4]
+                self.cropBox[:] = limits
 
         except Exception as e:
             log.warning('Call to robustfov failed: {}'.format(str(e)))
