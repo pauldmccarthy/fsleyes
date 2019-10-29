@@ -71,14 +71,14 @@ class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
 
         # calculate the approximate number
         # of voxels along the longest diagonal
-        # of the image - we use this as the
-        # maximum number of samples to take
+        # of the image - we use this to calculate
+        # the maximum number of samples to take
         x, y, z  = self.overlay.shape[:3]
         xy       = (x * y, (x, y))
         xz       = (x * z, (x, z))
         yz       = (y * z, (y, z))
         ax0, ax1 = max((xy, xz, yz))[1]
-        self.numSteps = np.ceil(np.sqrt(ax0 ** 2 + ax1 ** 2))
+        self.numSteps = np.ceil(np.sqrt(ax0 ** 2 + ax1 ** 2)) * 2
 
 
     def destroy(self):
