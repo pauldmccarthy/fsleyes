@@ -16,6 +16,7 @@ import wx
 
 import numpy as np
 
+import fsl.utils.bids                 as fslbids
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
 import fsl.transform.affine           as affine
@@ -275,7 +276,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         self.__info.Refresh()
 
 
-    def __getImageInfo(self, overlay, display, title=None):
+    def __getImageInfo(self, overlay, display, title=None, metadata=True):
         """Creates and returns an :class:`OverlayInfo` object containing
         information about the given :class:`.Image` overlay.
 
@@ -287,10 +288,17 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         img     = overlay.nibImage
         hdr     = overlay.header
         isNifti = overlay.niftiVersion >= 1
+        hasMeta = metadata and len(overlay.metaKeys()) > 0
         opts    = display.opts
 
         if isNifti: title = strings.labels[self, overlay]
         else:       title = strings.labels[self, 'Analyze']
+
+        if overlay.dataSource is not None and \
+           fslbids.isBIDSFile(overlay.dataSource):
+            metaSect = strings.labels[self, overlay, 'bidsMeta']
+        else:
+            metaSect = strings.labels[self, overlay, 'jsonMeta']
 
         info = OverlayInfo('{} - {}'.format(display.name, title))
 
@@ -303,6 +311,9 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         info.addSection(dimSect)
         info.addSection(xformSect)
         info.addSection(orientSect)
+
+        if hasMeta:
+            info.addSection(metaSect)
 
         displaySpace = strings.labels[self,
                                       overlay,
@@ -483,6 +494,10 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
             info.addInfo(strings.nifti['worldOrient.{}'.format(i)],
                          orient,
                          section=orientSect)
+
+        if hasMeta:
+            for k, v in overlay.metaItems():
+                info.addInfo(k, str(v), metaSect)
 
         return info
 
@@ -712,8 +727,8 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
                       ``DicomImage``.
         """
 
-        info      = self.__getImageInfo(overlay, display)
-        dicomInfo = strings.labels[self, overlay, 'dicomInfo']
+        info      = self.__getImageInfo(overlay, display, metadata=False)
+        dicomInfo = strings.labels[self, overlay, 'dicomMeta']
 
         info.addInfo(strings.labels[self, overlay, 'dicomDir'],
                      overlay.dicomDir)
