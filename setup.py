@@ -216,9 +216,7 @@ def get_fsleyes_dev_deps():
 
 def main():
 
-    packages         = find_packages(exclude=('tests',
-                                              'tests.overlays',
-                                              'tests.actions'))
+    packages         = find_packages(include=('fsleyes', 'fsleyes.*'))
     version          = get_fsleyes_version()
     readme           = get_fsleyes_readme()
     install_requires = get_fsleyes_deps()

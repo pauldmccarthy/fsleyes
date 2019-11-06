@@ -347,7 +347,8 @@ def _loadImage(dtype, path, nbytes, inmem):
     image      = dtype(path,
                        loadData=inmem,
                        calcRange=False,
-                       threaded=threaded)
+                       threaded=threaded,
+                       loadMeta=True)
 
     # If the image is bigger than the
     # index threshold, keep it on disk.

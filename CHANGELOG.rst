@@ -23,6 +23,8 @@ Added
   panel.
 * New ``--unitLength`` option for the *RGB vector* overlay type, which scales
   the vector data to unit length.
+* Metadata from JSON sidecar files (e.g. in BIDS data sets) is now displayed
+  in the overlay information panel.
 
 
 Changed

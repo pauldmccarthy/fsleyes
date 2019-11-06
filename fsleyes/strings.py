@@ -740,6 +740,8 @@ labels = TypeDict({
 
     'OverlayInfoPanel.Analyze'                  : 'ANALYZE image',
     'OverlayInfoPanel.Image'                    : 'NIFTI image',
+    'OverlayInfoPanel.Image.jsonMeta'           : 'JSON metadata',
+    'OverlayInfoPanel.Image.bidsMeta'           : 'BIDS metadata',
     'OverlayInfoPanel.FEATImage'                : 'NIFTI image '
                                                   '(FEAT analysis)',
     'OverlayInfoPanel.FEATImage.featInfo'       : 'FEAT information',
@@ -786,7 +788,7 @@ labels = TypeDict({
 
     'OverlayInfoPanel.DicomImage'               : 'NIFTI Image (from DICOM)',
     'OverlayInfoPanel.DicomImage.dicomDir'      : 'DICOM directory',
-    'OverlayInfoPanel.DicomImage.dicomInfo'     : 'DICOM information',
+    'OverlayInfoPanel.DicomImage.dicomMeta'     : 'DICOM metadata',
 
     'OverlayInfoPanel.MGHImage'                 : 'NIFTI Image (from MGH)',
     'OverlayInfoPanel.MGHImage.filename'        : 'MGH image file',
