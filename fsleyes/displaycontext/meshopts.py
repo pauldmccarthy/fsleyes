@@ -286,6 +286,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
             self.__overlayListChanged()
             self.__updateBounds()
+            self.__refImageChanged()
 
         # If we have inherited values from a
         # parent instance, make sure the vertex

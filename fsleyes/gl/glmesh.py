@@ -524,8 +524,10 @@ class GLMesh(globject.GLObject):
             gl.glPushMatrix()
             gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
-        if is2D: enable = (gl.GL_DEPTH_TEST)
-        else:    enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
+        if is2D or opts.wireframe:
+            enable = (gl.GL_DEPTH_TEST)
+        else:
+            enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
 
         gl.glDisable(gl.GL_CULL_FACE)
         with glroutines.enabled(enable):
