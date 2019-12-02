@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.33.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug which caused mesh display to be corrupted when changing rows in
+  the file tree panel.
+
+
 0.32.0 (Thursday 7th November 2019)
 -----------------------------------
 
