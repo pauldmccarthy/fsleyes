@@ -119,8 +119,8 @@ class AddMaskDataSeriesAction(base.Action):
                                           self.displayCtx,
                                           self.__plotPanel)
 
-        data     = overlay.nibImage.get_data()[opts.index(atVolume=False)]
-        mask     = maskimg.nibImage.get_data()
+        data     = overlay.data[opts.index(atVolume=False)]
+        mask     = maskimg.data
         maskmask = mask > 0
         ydata    = data[maskmask]
 
