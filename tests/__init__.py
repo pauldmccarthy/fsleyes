@@ -654,7 +654,7 @@ def asrgb(infile):
     basename = fslimage.removeExt(op.basename(infile))
     outfile  = '{}_asrgb.nii.gz'.format(basename)
     img      = fslimage.Image(infile)
-    data     = img.nibImage.get_data()
+    data     = img.data
 
     shape    = data.shape[:3]
     rgbdtype = np.dtype([('R', 'uint8'), ('G', 'uint8'), ('B', 'uint8')])
