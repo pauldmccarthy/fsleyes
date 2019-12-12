@@ -381,7 +381,7 @@ class GLSH(glvector.GLVectorBase):
         # *all* voxels.
         params = self.__shParams
         vols   = self.__coefVolumeMask()
-        coefs  = self.image.nibImage.get_data()[x, y, z, vols]
+        coefs  = self.image.data[x, y, z, vols]
         radii  = np.dot(coefs, params.T)
 
         # Remove sub-threshold voxels/radii
