@@ -9,6 +9,7 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 """
 
 
+import platform
 import collections
 
 import fsl.data.image                as fslimage
@@ -140,6 +141,11 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('labelSize', props.Widget('labelSize',
                                        spin=True,
                                        showLimits=False))))
+
+        # The highDpi setting is
+        # only relevant on macOS
+        if platform.system != 'Darwin':
+            sceneOptsProps.pop('highDpi')
 
         def _displaySpaceOptionName(opt):
 
