@@ -209,6 +209,7 @@ def makeGif(overlayList,
 
     def captureFrame(ctx):
         try:
+            panel.movieSync()
             realCaptureFrame(ctx)
             idle.idleWhen(captureFrame, ready, ctx, after=0.1)
             panel.doMovieUpdate(overlay, opts)
