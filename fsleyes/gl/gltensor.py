@@ -87,7 +87,7 @@ class GLTensor(glvector.GLVector):
         # Or an Image with 6 volumes containing
         # the unique tensor matrix elements
         else:
-            decomp = dtifit.decomposeTensorMatrix(image.nibImage.get_data())
+            decomp = dtifit.decomposeTensorMatrix(image.data)
             v1     = fslimage.Image(decomp[0])
             v2     = fslimage.Image(decomp[1])
             v3     = fslimage.Image(decomp[2])
