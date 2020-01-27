@@ -13,6 +13,14 @@ chronological order.
 --------------------------
 
 
+Changed
+^^^^^^^
+
+
+* Internal changes to avoid using the deprecated
+  ``nibabel.dataobj_images.DataobjImage.get_data`` method.
+
+
 Fixed
 ^^^^^
 
