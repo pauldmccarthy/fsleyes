@@ -22,17 +22,21 @@ from . import run_with_orthopanel, realYield
 datadir = op.join(op.dirname(__file__), 'testdata')
 
 
-def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None):
+def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None, vol=None):
 
     if canvas is None: cidx = 2
     else:              cidx = canvas
 
-    overlayList.append(img)
+    if vol is None:
+        vol = 0
+
+    overlayList.append(img, volume=vol)
     realYield()
     displayCtx.displaySpace  = img
     displayCtx.worldLocation = affine.transform([0, 0, 0], img.
                                                    voxToWorldMat)
     realYield()
+
     ortho.profile = 'edit'
     realYield(20)
 
@@ -91,11 +95,16 @@ def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None):
 
     xs, ys, zs = voxels.T
 
-    exp             = np.zeros(img.shape)
+    exp             = np.zeros(img.shape[:3])
     exp[xs, ys, zs] = 1
 
     assert np.all(sel == exp)
-    assert np.all(img[:][xs, ys, zs] == 999)
+
+    if len(img.shape) == 3:
+        assert np.all(img[:][xs, ys, zs] == 999)
+    elif len(img.shape) == 4:
+        vol = displayCtx.getOpts(img).volume
+        assert np.all(img[:][xs, ys, zs, vol] == 999)
 
     overlayList[:] = []
 
@@ -115,18 +124,23 @@ def test_fillSelection_2d():
     img = Image(np.random.randint(1, 65536, (60, 60, 1)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=2)
     run_with_orthopanel(tfs)
-    img.save('one')
 
     img = Image(np.random.randint(1, 65536, (60, 1, 60)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=1)
     run_with_orthopanel(tfs)
-    img.save('two')
 
     img = Image(np.random.randint(1, 65536, (1, 60, 60)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
     run_with_orthopanel(tfs)
-    img.save('three')
 
+def test_fillSelection_4d():
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
+    tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
+    run_with_orthopanel(tfs)
+    tfs = ft.partial(_test_fillSelection, img=img, canvas=1, vol=3)
+    run_with_orthopanel(tfs)
+    tfs = ft.partial(_test_fillSelection, img=img, canvas=2, vol=8)
+    run_with_orthopanel(tfs)
 
 
 def _test_editable(ortho, overlayList, displayCtx):

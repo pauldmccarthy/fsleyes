@@ -28,6 +28,8 @@ Fixed
 * Fixed a bug which caused mesh display to be corrupted when changing rows in
   the file tree panel.
 * Added support for high-DPI displays on platforms other than macOS.
+* Fixed a bug in animated GIF generation.
+* Fixed a bug which occurred when editing 4D images.
 
 
 0.32.0 (Thursday 7th November 2019)
