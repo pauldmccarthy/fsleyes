@@ -15,6 +15,7 @@ import              logging
 import numpy as np
 
 import fsl.data.image       as fslimage
+import fsl.data.mghimage    as fslmgh
 import fsl.data.utils       as dutils
 import fsl.transform.affine as affine
 import fsl.utils.deprecated as deprecated
@@ -150,8 +151,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     # defined in this property are assumed to be valid
     # inputs to that method (with the exception of
     # ``'torig'``).
-    coordSpace = props.Choice(('torig', 'affine', 'pixdim', 'pixdim-flip',
-                               'id'),
+    coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id',
+                               'torig'),
                               default='pixdim-flip')
     """If :attr:`refImage` is not ``None``, this property defines the
     reference image coordinate space in which the mesh coordinates are
@@ -160,9 +161,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     =============== =========================================================
     ``affine``      The mesh coordinates are defined in the reference image
                     world coordinate system.
-
-    ``torig``       Equivalent to ``'affine'``, except for
-                    :class:`.FreesurferOpts`  sub-classes.
 
     ``id``          The mesh coordinates are defined in the reference image
                     voxel coordinate system.
@@ -174,6 +172,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                     voxel coordinate system, scaled by the voxel pixdims. If
                     the reference image transformation matrix has a positive
                     determinant, the X axis is flipped.
+
+    ``torig``       The mesh coordinates are defined in the Freesurfer
+                    "Torig" / "vox2ras-tkr" coordnie system.
     =============== =========================================================
 
     The default value is ``pixdim-flip``, as this is the coordinate system
@@ -198,10 +199,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         constructor.
         """
 
-        useTorig = kwargs.pop('useTorig', False)
-
-        if not useTorig:
-            self.getProp('coordSpace').removeChoice('torig', instance=self)
+        if 'useTorig' in kwargs:
+            deprecated.warn('useTorig', '0.33.0', '0.34.0',
+                            'useTorig is deprecated and has no effect.')
 
         # Set a default colour
         colour      = genMeshColour(overlay)
@@ -519,15 +519,27 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'mesh'``    The coordinate system of this mesh.
         """
 
-        from_ = self.normaliseSpace(from_)
-        to    = self.normaliseSpace(to)
+        nfrom_ = self.normaliseSpace(from_)
+        nto    = self.normaliseSpace(to)
+        ref    = self.refImage
+        pre    = None
+        post   = None
 
-        if self.refImage is None:
+        if ref is None:
             return coords
 
-        opts = self.displayCtx.getOpts(self.refImage)
+        if from_ == 'mesh' and self.coordSpace == 'torig':
+            pre = affine.concat(ref.getAffine('voxel', 'world'),
+                                affine.invert(fslmgh.voxToSurfMat(ref)))
 
-        return opts.transformCoords(coords, from_, to, *args, **kwargs)
+        if to == 'mesh' and self.coordSpace == 'torig':
+            post = affine.concat(fslmgh.voxToSurfMat(ref),
+                                 ref.getAffine('world', 'voxel'))
+
+        opts = self.displayCtx.getOpts(ref)
+
+        return opts.transformCoords(
+            coords, nfrom_, nto, pre=pre, post=post, **kwargs)
 
 
     def getTransform(self, from_, to):
@@ -542,15 +554,28 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'mesh'``    The coordinate system of this mesh.
         """
 
-        from_ = self.normaliseSpace(from_)
-        to    = self.normaliseSpace(to)
+        nfrom_ = self.normaliseSpace(from_)
+        nto    = self.normaliseSpace(to)
+        ref    = self.refImage
 
-        if self.refImage is None:
+        if ref is None:
             return np.eye(4)
 
-        opts = self.displayCtx.getOpts(self.refImage)
+        opts  = self.displayCtx.getOpts(ref)
+        xform = opts.getTransform(nfrom_, nto)
 
-        return opts.getTransform(from_, to)
+        if from_ == 'mesh' and self.coordSpace == 'torig':
+            surfToVox = affine.invert(fslmgh.voxToSurfMat(ref))
+            xform     = affine.concat(xform,
+                                      ref.getAffine('voxel', 'world'),
+                                      surfToVox)
+        if to == 'mesh' and self.coordSpace == 'torig':
+            voxToSurf = fslmgh.voxToSurfMat(ref)
+            xform     = affine.concat(voxToSurf,
+                                      ref.getAffine('world', 'voxel'),
+                                      xform)
+
+        return xform
 
 
     def __transformChanged(self, value, valid, ctx, name):
