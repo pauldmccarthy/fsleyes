@@ -17,6 +17,8 @@ Changed
 ^^^^^^^
 
 
+* Any mesh overlay can now be displayed in the Freesurfer mesh coordinate
+  system - not just Freesurfer meshes.
 * Internal changes to avoid using the deprecated
   ``nibabel.dataobj_images.DataobjImage.get_data`` method.
 
