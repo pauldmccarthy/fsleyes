@@ -473,8 +473,10 @@ def genColumns(ftypes, varyings, fixed):
 
     :returns:      Two lists which, combined, represent all columns to be
                    displayed in the file tree grid:
+
                     - A list of varying variable names
                     - A list of tuples, with each tuple containing:
+
                       - A file type
                       - A dict of ``{var : value}`` mappings, containing
                         fixed variable values

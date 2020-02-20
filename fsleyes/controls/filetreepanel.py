@@ -579,6 +579,7 @@ class FileListPanel(wx.Panel):
         :arg parent:  ``wx`` parent object
         :arg ftpanel: The :class:`.FileTreePanel`
         :arg notes:   Location of the *Notes* column - one of:
+
                         - ``'right'`` - right-most column (default)
                         - ``'left'``  - left-most column, after varying
                           columns
