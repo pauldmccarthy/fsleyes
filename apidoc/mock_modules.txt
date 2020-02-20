@@ -36,6 +36,7 @@ fsl.data.vest
 fsl.data.volumelabels
 fsl.utils
 fsl.utils.async
+fsl.utils.bids
 fsl.utils.cache
 fsl.utils.callfsl
 fsl.utils.deprecated
@@ -52,6 +53,9 @@ fsl.utils.run
 fsl.utils.settings
 fsl.utils.tempdir
 fsl.utils.transform
+fsl.transform
+fsl.transform.affine
+fsl.transform.flirt
 fsl.version
 fsleyes_props
 fsleyes_props
@@ -102,6 +106,7 @@ wx.html
 wx.lib
 wx.lib.agw
 wx.lib.agw.aui
+wx.lib.agw.aui.framemanager
 wx.lib.newevent
 wx.py
 wx.py.interpreter
