@@ -17,32 +17,45 @@ Install as part of FSL (recommended)
 
 
 FSLeyes comes bundled with all versions of FSL from 5.0.10 onwards. So if you
-have FSL, you already have FSLeyes.
+have FSL, you already have FSLeyes. The FSLeyes version which comes bundled
+with FSL may be slightly out of date, but it is straightforward to update
+using ``conda``.
 
 
-Versions of FSL prior to 6.0.2 come with a standalone version of FSLeyes. From
-FSL 6.0.2 onwards, FSLeyes is now installed into the ``fslpython`` conda
-environment, which is a part of the FSL installation.
+FSL 6.0.2 and newer
+^^^^^^^^^^^^^^^^^^^
 
 
-The FSLeyes version which comes bundled with FSL may be slightly out of date,
-but it is straightforward to update using ``conda``. Before updating, if you
-have FSL 6.0.1 or older, you should remove the old standalone version of
-FSLeyes before updating. If you are using macOS::
+From FSL 6.0.2 onwards, FSLeyes is installed into the ``fslpython`` conda
+environment, which is a part of the FSL installation. You can update to the
+latest version of FSLeyes by running the following command::
+
+    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-deps fsleyes
+
+
+FSL 6.0.1 and older
+^^^^^^^^^^^^^^^^^^^
+
+
+Versions of FSL prior to 6.0.2 come with a standalone version of
+FSLeyes. Before updating, you should remove the old standalone version of
+FSLeyes. If you are using macOS::
 
     rm $FSLDIR/bin/fsleyes
     rm -r $FSLDIR/bin/FSLeyes.app
-
 
 Or, if you are using Linux::
 
     rm $FSLDIR/bin/fsleyes
     rm -r $FSLDIR/bin/FSLeyes
 
+Now you can install FSLeyes with the following command::
 
-Now you can update your version of FSLeyes with the following command::
+    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge --update-deps fsleyes
 
-    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge fsleyes
+When you want to update FSLeyes again in the future, use this command instead::
+
+    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-deps fsleyes
 
 
 Install from ``conda-forge`` (recommended)
@@ -145,3 +158,40 @@ Under Ubuntu, run the following::
     sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev freeglut3-dev
 
 Then you should be able to run ``pip install fsleyes``.
+
+
+Install into a Singularity image
+--------------------------------
+
+FSLeyes can be executed from `Singularity <https://sylabs.io/docs/>`_
+containers. Here is an example Singularity definition file which installs a
+standalone version of FSLeyes::
+
+    Bootstrap: docker
+    From: centos:7
+
+    %help
+      FSLeyes Singularity image
+
+    %post
+      yum -y update
+      yum -y install epel-release
+      yum -y install wget \
+                     gtk3 \
+                     SDL \
+                     libSM \
+                     mesa-dri-drivers \
+                     gstreamer-plugins-base \
+                     xorg-x11-server-Xvfb \
+                     libnotify \
+                     freeglut
+      wget -O /tmp/fsleyes.tar.gz \
+        https://fsl.fmrib.ox.ac.uk/fsldownloads/fsleyes/FSLeyes-latest-centos7.tar.gz
+      pushd /usr/local/
+      tar xf /tmp/fsleyes.tar.gz
+      echo -e '#!/usr/bin/env bash\n/usr/local/FSLeyes/fsleyes "$@"' > bin/fsleyes
+      chmod a+x bin/fsleyes
+      popd
+
+    %runscript
+      fsleyes "$@"
