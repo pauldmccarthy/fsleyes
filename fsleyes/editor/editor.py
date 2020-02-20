@@ -189,7 +189,7 @@ class Editor(actions.ActionProvider):
 
         image    = self.__image
         sel      = self.__selection.getSelection()
-        inverted = np.array(selection == 0, dtype=np.uint8)
+        inverted = np.array(sel == 0, dtype=np.uint8)
 
         change = SelectionChange(image, (0, 0, 0), sel, inverted)
 
