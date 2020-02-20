@@ -1034,9 +1034,9 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         rate = (rateMin + (rateMax - rate)) / 1000.0
 
-        # Use sync or unsync refresh regime
-        if self.movieSyncRefresh: update = self.__syncMovieRefresh
-        else:                     update = self.__unsyncMovieRefresh
+        def update():
+            self.movieSync()
+            idle.idle(self.__movieLoop, after=rate)
 
         # Refresh the canvases when all
         # GLObjects are ready to be drawn.
@@ -1045,47 +1045,33 @@ class CanvasPanel(viewpanel.ViewPanel):
         return True
 
 
-    def __unsyncMovieRefresh(self, canvases, rate):
-        """Called by :meth:`__movieUpdate`. Updates all canvases in an
-        unsynchronised manner.
+    def movieSync(self):
+        """Called by :meth:`__movieUpdate`. Updates all GL canvases, attempting
+        to refresh them in a synchronised manner.
 
         Ideally all canvases should be drawn off-screen (i.e. rendered to the
         back buffer), and then all refreshed together (back and front buffers
         swapped). Unfortunately some OpenGL drivers seem to have trouble with
         this approach, and require drawing and front/back buffer swaps to be
-        done at the same time. This method is used for those drivers.
+        done at the same time.
 
-        :arg canvases: List of canvases to update. It is assumed that
-                       ``FreezeDraw`` and ``FreezeSwapBuffers`` has been
-                       called on every canvas.
-        :arg rate:     Delay to trigger the next movie update.
+        This method will refresh the GL canvases in either a synchronised or
+        unsynchronised manner, depending upon the value of the
+        :attr:`movieSyncRefresh` property.
         """
 
-        for c in canvases:
-            c.ThawDraw()
-            c.ThawSwapBuffers()
-            c.Refresh()
+        canvases = self.getGLCanvases()
 
-        idle.idle(self.__movieLoop, after=rate)
+        if self.movieSyncRefresh:
+            for c in canvases:
+                c.ThawDraw()
+                c.Refresh()
 
-
-    def __syncMovieRefresh(self, canvases, rate):
-        """Updates all canvases in a synchronised manner. All canvases are
-        refreshed, and then the front/back buffers are swapped on each of
-        them.
-
-        :arg canvases: List of canvases to update. It is assumed that
-                       ``FreezeDraw`` and ``FreezeSwapBuffers`` has been
-                       called on every canvas.
-        :arg rate:     Delay to trigger the next movie update.
-        """
-
-        for c in canvases:
-            c.ThawDraw()
-            c.Refresh()
-
-        for c in canvases:
-            c.ThawSwapBuffers()
-            c.SwapBuffers()
-
-        idle.idle(self.__movieLoop, after=rate)
+            for c in canvases:
+                c.ThawSwapBuffers()
+                c.SwapBuffers()
+        else:
+            for c in canvases:
+                c.ThawDraw()
+                c.ThawSwapBuffers()
+                c.Refresh()

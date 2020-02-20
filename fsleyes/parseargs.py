@@ -1005,7 +1005,8 @@ HELP = td.TypeDict({
                                      '(1=fastest, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
                                      'display, render at the full display '
-                                     'resolution',
+                                     'resolution. This setting is only '
+                                     'relevant on macOS.',
     'SceneOpts.movieSyncRefresh'   : 'Toggle the canvas refresh strategy in '
                                      'movie mode.',
     'SceneOpts.labelSize'          : 'Orientation/colour bar label font size '

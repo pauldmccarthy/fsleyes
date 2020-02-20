@@ -15,8 +15,9 @@ import            os
 import            shutil
 import            tempfile
 
-import          PIL
-import          wx
+import            PIL
+import            wx
+import numpy   as np
 
 import fsl.utils.idle                 as idle
 import fsl.transform.affine           as affine
@@ -208,6 +209,7 @@ def makeGif(overlayList,
 
     def captureFrame(ctx):
         try:
+            panel.movieSync()
             realCaptureFrame(ctx)
             idle.idleWhen(captureFrame, ready, ctx, after=0.1)
             panel.doMovieUpdate(overlay, opts)
@@ -277,21 +279,8 @@ def makeGif(overlayList,
         # point within this range. We capture frames
         # until a full loop through this range has
         # been completed.
-        else:
-
-            # Have we looped back to fmin?
-            ctx.looped = getattr(ctx, 'looped', False)
-            if not ctx.looped          and \
-               len(ctx.frames) > 1 and \
-               frame < ctx.frames[-1]:
-                ctx.looped = True
-
-            # We have done one full loop, and
-            # have reached the starting frame.
-            if ctx.looped          and \
-               len(ctx.frames) > 1 and \
-               frame >= ctx.frames[0]:
-                raise Finished()
+        elif len(ctx.frames) > 1 and np.isclose(frame, ctx.frames[0]):
+            raise Finished()
 
         screenshot.screenshot(panel, fname)
         ctx.images.append(PIL.Image.open(fname))

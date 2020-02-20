@@ -962,8 +962,17 @@ class WXGLCanvasTarget(object):
         self.__glReady           = False
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
-        self.__dpiscale          = 1.0
         self.__context           = context
+
+        # Under macOS, high DPI must be explicitly
+        # requested for GL canvases. This can be
+        # done via the EnableHighDPI method. Under
+        # Linux, GL canvases are scaled the same as
+        # other windows.
+        if platform.system() == 'Darwin':
+            self.__dpiscale = 1.0
+        else:
+            self.__dpiscale = self.GetContentScaleFactor()
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
@@ -1104,15 +1113,23 @@ class WXGLCanvasTarget(object):
         return self.GetClientSize().Get()
 
 
+    def GetContentScaleFactor(self):
+        """Overrides ``wx.Window.GetContentScaleFactor``.
+
+        Calls the base class implementation, except where wxpython 3.0.2.0 is
+        being used, as the method does not exist in that version. In this
+        case, 1.0 is returned.
+        """
+        try:
+            return float(super().GetContentScaleFactor())
+        except AttributeError:
+            return 1.0
+
+
     def GetScale(self):
         """Returns the current DPI scaling factor. """
 
-        # GetContentScaleFactor does not
-        # exist in wxpython 3.0.2.0
-        try:
-            scale = float(self.GetContentScaleFactor())
-        except AttributeError:
-            scale = 1.0
+        scale = self.GetContentScaleFactor()
 
         # Reset scaling factor in case the canvas
         # window has moved between displays with
@@ -1175,33 +1192,32 @@ class WXGLCanvasTarget(object):
         """Attempts to enable/disable high-resolution rendering.
         """
 
+        # Not relevant under linux -
+        # see note in __init__
+        if platform.system() != 'Darwin':
+            return
+
         if not self._setGLContext():
             return
 
         self.__dpiscale = 1.0
 
-        # GetContentScaleFactor does not
-        # exist in wxpython 3.0.2.0
-        try:
-            scale = self.GetContentScaleFactor()
-
-        except AttributeError:
-            return
-
         # If the display can't scale,
         # (scale == 1) there's no point
         # in enabling it.
-        scale  = float(scale)
+        scale  = self.GetContentScaleFactor()
         enable = enable and scale > 1
 
-        # TODO Support other platforms
+        # on macOS, we have to set
+        # scaling on the GL canvas
         try:
             import objc
+            nsview = objc.objc_object(c_void_p=self.GetHandle())
+            nsview.setWantsBestResolutionOpenGLSurface_(enable)
+
+        # objc library not present
         except ImportError:
             return
-
-        nsview = objc.objc_object(c_void_p=self.GetHandle())
-        nsview.setWantsBestResolutionOpenGLSurface_(enable)
 
         if enable: self.__dpiscale = scale
         else:      self.__dpiscale = 1.0

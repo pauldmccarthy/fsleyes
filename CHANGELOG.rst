@@ -9,6 +9,31 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.32.1 (Thursday 20th February 2020)
+------------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Any mesh overlay can now be displayed in the Freesurfer mesh coordinate
+  system - not just Freesurfer meshes.
+* Internal changes to avoid using the deprecated
+  ``nibabel.dataobj_images.DataobjImage.get_data`` method.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug which caused mesh display to be corrupted when changing rows in
+  the file tree panel.
+* Added support for high-DPI displays on platforms other than macOS.
+* Fixed a bug in animated GIF generation.
+* Fixed a bug which occurred when editing 4D images.
+
+
 0.32.0 (Thursday 7th November 2019)
 -----------------------------------
 
