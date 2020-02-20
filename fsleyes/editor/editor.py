@@ -28,9 +28,9 @@ class Editor(actions.ActionProvider):
     specific ``Image`` overlay, passed to :meth:`__init__`.
 
 
-    An ``Editor`` instance uses a :class:`.Selection` object which allows
-    voxel selections to be made, and keeps track of all changes to both the
-    selection and image data.
+    An ``Editor`` instance uses a :class:`.selection.Selection` object which
+    allows voxel selections to be made, and keeps track of all changes to both
+    the selection and image data.
 
 
     **The editing process**
@@ -43,10 +43,9 @@ class Editor(actions.ActionProvider):
      2. Change the value of voxels in that selection
 
 
-    The first step can be peformed by working directly with the
-    :class:`.Selection` object - this is accessible via the
-    :meth:`getSelection` method. The :meth:`fillSelection` method can be used
-    to perform the second step.
+    The first step can be peformed by working directly with the ``Selection``
+    object - this is accessible via the :meth:`getSelection` method. The
+    :meth:`fillSelection` method can be used to perform the second step.
 
 
     Some convenience methods are also provided for working with selections:
@@ -64,7 +63,7 @@ class Editor(actions.ActionProvider):
 
 
     An ``Editor`` instance keeps track of all changes made to the
-    :class:`Image` data and to the :class:`.Selection.  Every selection/data
+    :class:`Image` data and to the ``Selection``  Every selection/data
     change made is recorded using :class:`SelectionChange` and
     :class:`.ValueChange` instances, which are stored in a list. These changes
     can be undone (and redone), through the :meth:`undo` and :meth:`redo`
@@ -101,9 +100,9 @@ class Editor(actions.ActionProvider):
 
         :arg displayCtx:      The :class:`.DisplayContext` instance.
 
-        :arg recordSelection: Defaults to ``False``. If ``True``, changes
-                              to the :class:`.Selection` are recorded in the
-                              change history.
+        :arg recordSelection: Defaults to ``False``. If ``True``, changes to
+                              the :class:`.selection.Selection` are recorded
+                              in the change history.
         """
 
         actions.ActionProvider.__init__(self, overlayList, displayCtx)
@@ -153,23 +152,24 @@ class Editor(actions.ActionProvider):
 
 
     def getImage(self):
-        """Returns the :class:`~fsl.dat.image.Image` associated with this
+        """Returns the :class:`~fsl.data.image.Image` associated with this
         ``Editor``.
         """
         return self.__image
 
 
     def getSelection(self):
-        """Returns the :class:`.Selection` instance currently in use. """
+        """Returns the :class:`.selection.Selection` instance currently in use.
+        """
         return self.__selection
 
 
     def clearSelection(self):
-        """Clears the :class:`.Selection` (see
-        :meth:`.Selection.clearSelection`). If this ``Editor`` is not
-        recording all selection changes (``recordSelection=False`` in
-        :meth:`__init__`), the selection state before being cleared
-        is saved in the change history.
+        """Clears the :class:`.selection.Selection` (see
+        :meth:`.selection.Selection.clearSelection`). If this ``Editor`` is
+        not recording all selection changes (``recordSelection=False`` in
+        :meth:`__init__`), the selection state before being cleared is saved
+        in the change history.
         """
         self.__selection.clearSelection()
 
@@ -543,8 +543,9 @@ class ValueChange(object):
 
 
 class SelectionChange(object):
-    """Represents a change which has been made to a :class:`.Selection`
-    instance. Stores the location, the old selection, and the new selection.
+    """Represents a change which has been made to a
+    :class:`.selection.Selection` instance. Stores the location, the old
+    selection, and the new selection.
     """
 
 

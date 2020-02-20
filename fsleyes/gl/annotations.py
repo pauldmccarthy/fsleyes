@@ -610,7 +610,7 @@ class VoxelGrid(AnnotationObject):
 
 class VoxelSelection(AnnotationObject):
     """A ``VoxelSelection`` is an :class:`AnnotationObject` which draws
-    selected voxels from a :class:`.Selection` instance.  A
+    selected voxels from a :class:`.selection.Selection` instance.  A
     :class:`.SelectionTexture` is used to draw the selected voxels.
     """
 
@@ -627,7 +627,7 @@ class VoxelSelection(AnnotationObject):
         :arg annot:     The :class:`Annotations` object that owns this
                         ``VoxelSelection``.
 
-        :arg selection: A :class:`.Selection` instance which defines
+        :arg selection: A :class:`.selection.Selection` instance which defines
                         the voxels to be highlighted.
 
         :arg opts:      A :class:`.NiftiOpts` instance which is used

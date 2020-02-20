@@ -17,7 +17,7 @@ The following classes are provided:
    ComplexPowerSpectrumSeries
    ImaginaryPowerSpectrumSeries
    MagnitudePowerSpectrumSeries
-   PhasePowerSpecturmSeries
+   PhasePowerSpectrumSeries
    MelodicPowerSpectrumSeries
 """
 
