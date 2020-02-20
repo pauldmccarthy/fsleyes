@@ -187,11 +187,11 @@ class Editor(actions.ActionProvider):
     def invertSelection(self):
         """Inverts the current selection. """
 
-        image     = self.__image
-        selection = self.__selection.getSelection()
-        inverted  = np.array(selection == 0, dtype=np.uint8)
+        image    = self.__image
+        sel      = self.__selection.getSelection()
+        inverted = np.array(selection == 0, dtype=np.uint8)
 
-        change = SelectionChange(image, (0, 0, 0), selection, inverted)
+        change = SelectionChange(image, (0, 0, 0), sel, inverted)
 
         self.__applyChange(change)
         self.__changeMade( change)
@@ -386,8 +386,8 @@ class Editor(actions.ActionProvider):
         the ``Image`` managed by this instance.
         """
 
-        data, selection = clipboard
-        self.__image[selection] = data[selection]
+        data, sel = clipboard
+        self.__image[sel] = data[sel]
 
 
     def __selectionChanged(self, *a):
