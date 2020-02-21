@@ -1040,7 +1040,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         # Refresh the canvases when all
         # GLObjects are ready to be drawn.
-        idle.idleWhen(update, allReady, canvases, rate, pollTime=rate / 10)
+        idle.idleWhen(update, allReady, pollTime=rate / 10)
 
         return True
 
