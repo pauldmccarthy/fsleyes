@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+0.32.2 (Friday 21st February 2020)
+----------------------------------
+
+
+Fixed
+^^^^^
+
+
+* The animated GIF changes in 0.32.1 broke movie mode.
+
+
 0.32.1 (Thursday 20th February 2020)
 ------------------------------------
 
