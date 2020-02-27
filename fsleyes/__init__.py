@@ -197,8 +197,9 @@ TODO
 """
 
 
-import            os
 import os.path as op
+import            os
+import            sys
 import            logging
 import            warnings
 
@@ -359,6 +360,12 @@ def _hacksAndWorkarounds():
         locale.getdefaultlocale()
     except ValueError:
         os.environ['LC_ALL'] = 'C.UTF-8'
+
+    # Add the current directory to the python
+    # path, so that modules can be imported
+    # from within notebook/shell environments
+    if fslplatform.frozen:
+        sys.path.insert(0, '')
 
 
 def configLogging(verbose=0, noisy=None):
