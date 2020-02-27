@@ -449,12 +449,16 @@ def embed(parent=None, **kwargs):
     import fsleyes.overlay        as fsloverlay
     import fsleyes.displaycontext as fsldc
 
+    # initialise must be called before
+    # a FSLeyesApp gets created, as it
+    # tries to access app_icon.png
+    fsleyes.initialise()
+
     app    = wx.GetApp()
     ownapp = app is None
     if ownapp:
         app = FSLeyesApp()
 
-    fsleyes.initialise()
     colourmaps.init()
     props.initGUI()
 
