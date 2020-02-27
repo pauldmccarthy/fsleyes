@@ -17,6 +17,8 @@ Fixed
 ^^^^^
 
 
+* Importing modules from the current directory in the Notebook/shell
+  environments is now possible within standalone versions of FSLeyes.
 * Fixed a small bug in the :func:`.embed` function.
 
 
