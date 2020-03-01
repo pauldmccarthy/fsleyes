@@ -10,6 +10,18 @@ chronological order.
 
 
 
+0.32.3 (Sunday 1st March 2020)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug which occurred when using 3D mode on platforms with
+  limited OpenGL capabilities.
+
+
 0.32.2 (Friday 21st February 2020)
 ----------------------------------
 
