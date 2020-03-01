@@ -5,6 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+
+from unittest import mock
+
 import pytest
 
 from . import run_cli_tests
@@ -58,3 +61,16 @@ def test_render_3d():
     extras = {
     }
     run_cli_tests('test_render_3d', cli_tests, extras=extras, scene='3d')
+
+
+# regression test - use of depth texture on
+# environments without float textures would
+# cause an error because the texture normalise
+# flag would not be set
+def test_render_3d_no_float_textures():
+
+    with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
+                    return_value=(False, None, None)):
+        run_cli_tests('test_render_3d_no_float_textures',
+                      '3d.nii.gz',
+                      scene='3d')
