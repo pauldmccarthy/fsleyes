@@ -790,24 +790,25 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             if self.nvals > 1: self.__shape = data.shape[1:]
             else:              self.__shape = data.shape
 
-            # If the data is of a type which cannot
-            # be stored natively as an OpenGL texture,
-            # and we don't have support for floating
-            # point textures, the data must be
-            # normalised. See determineType and
-            # prepareData in the data module
-            self.normalise = self.normalise or \
-                (not texdata.canUseFloatTextures()[0] and
-                 (dtype not in (np.uint8, np.int8, np.uint16, np.int16)))
+        # If the data is of a type which cannot
+        # be stored natively as an OpenGL texture,
+        # and we don't have support for floating
+        # point textures, the data must be
+        # normalised. See determineType and
+        # prepareData in the data module
+        self.normalise = self.normalise or \
+            (not texdata.canUseFloatTextures()[0] and
+             (dtype not in (np.uint8, np.int8, np.uint16, np.int16)))
 
-            # If the caller has not provided
-            # a normalisation range, we have
-            # to calculate it.
-            if self.normalise and (self.normaliseRange is None):
-
-                self.normaliseRange = np.nanmin(data), np.nanmax(data)
-                log.debug('Calculated %s data range for normalisation: '
-                          '[%s - %s]', self.__name, *self.__normaliseRange)
+        # If the caller has not provided
+        # a normalisation range, we have
+        # to calculate it.
+        if (data is not None) and \
+           self.normalise and \
+           (self.normaliseRange is None):
+            self.normaliseRange = np.nanmin(data), np.nanmax(data)
+            log.debug('Calculated %s data range for normalisation: '
+                      '[%s - %s]', self.__name, *self.normaliseRange)
 
         elif changed['shape'] or changed['dtype']:
             self.__data  = None
@@ -1008,8 +1009,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         """
 
         if self.nvals not in (1, 3, 4):
-            raise ValueError('Cannot create texture representation for %s '
-                             '(nvals: %s)', self.dtype, self.nvals)
+            raise ValueError('Cannot create texture representation for {} '
+                             '(nvals: {})'.format(self.dtype, self.nvals))
 
         if self.__data is None: dtype = self.__dtype
         else:                   dtype = self.__data.dtype
