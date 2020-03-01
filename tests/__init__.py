@@ -435,6 +435,7 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
             except Exception as e:
                 allpassed = False
                 print('CLI test failed [{}] {}: {}'.format(prefix, test, e))
+                traceback.print_exc()
 
                 if op.exists(testfile):
                     print('Copying {} to {}'.format(testfile, datadir))
