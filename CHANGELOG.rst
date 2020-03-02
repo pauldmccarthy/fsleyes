@@ -10,6 +10,19 @@ chronological order.
 
 
 
+0.32.3 (Monday 2nd March 2020)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug which occurred when using 3D mode on platforms with
+  limited OpenGL capabilities.
+* Fixed some minor issues in the file tree panel.
+
+
 0.32.2 (Friday 21st February 2020)
 ----------------------------------
 

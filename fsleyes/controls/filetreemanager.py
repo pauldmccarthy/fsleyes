@@ -178,6 +178,11 @@ class FileGroup(object):
                                                   self.files)
 
 
+    def __repr__(self):
+        """Return a string representation of this ``FileGroup``. """
+        return str(self)
+
+
     def __eq__(self, other):
         """Return ``True`` if this ``FileGroup`` is equal to ``other``. """
         return (self.varyings == other.varyings and
@@ -570,34 +575,35 @@ def filterFileGroups(filegroups, fixedcols):
     # Remove duplicate/redundant rows
     for i in range(len(filegroups)):
 
-        grpi = filegroups[i]
-
         if i in dropcols:
+            continue
+
+        grpi   = filegroups[i]
+        ifiles = [f for f in grpi.files if f is not None]
+
+        # drop empty rows
+        if len(ifiles) == 0:
+            dropcols.add(i)
             continue
 
         for j in range(i + 1, len(filegroups)):
 
-            grpj = filegroups[j]
-
             if j in dropcols:
                 continue
 
-            ifiles = [f for f in grpi.files if f is not None]
+            grpj   = filegroups[j]
             jfiles = [f for f in grpj.files if f is not None]
-
-            # Note that the conditions below
-            # will cause empty groups (groups
-            # with no files present) to be
-            # dropped
 
             # Group i contains all the files
             # of group j - we can drop group j
+            # (this will also cause j to be
+            # dropped if it is empty)
             if all([n in ifiles for n in jfiles]):
                 dropcols.add(j)
 
             # Group j contains all the files
             # in group i - we can drop group i
-            if all([n in jfiles for n in ifiles]):
+            elif all([n in jfiles for n in ifiles]):
                 dropcols.add(i)
                 break
 
