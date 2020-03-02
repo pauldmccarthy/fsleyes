@@ -214,59 +214,68 @@ def test_filterFileGroups():
     base = tw.dedent("""
     subj-{subject}
       T1w.nii.gz (T1w)
-      native
-        ->sub space=native (surf_native)
-      mni
-        ->sub space=mni (surf_mni)
+      surf
+        ->sub (surf)
     """).strip()
 
     sub = tw.dedent("""
-    {hemi}.{space}.gii (surface)
+    {hemi}.{boundary}.gii (surface)
     """).strip()
 
     files = [
         op.join('subj-01', 'T1w.nii.gz'),
-        op.join('subj-01', 'native', 'L.native.gii'),
-        op.join('subj-01', 'native', 'R.native.gii'),
-        op.join('subj-01', 'mni',    'L.mni.gii'),
-        op.join('subj-01', 'mni',    'R.mni.gii'),
-        op.join('subj-02', 'T1w.nii.gz'),
-        op.join('subj-02', 'native', 'L.native.gii'),
-        op.join('subj-02', 'native', 'R.native.gii'),
-        op.join('subj-02', 'mni',    'L.mni.gii'),
-        op.join('subj-02', 'mni',    'R.mni.gii'),
+        op.join('subj-01', 'surf', 'L.white.gii'),
+        op.join('subj-01', 'surf', 'R.white.gii'),
+        op.join('subj-01', 'surf', 'L.pial.gii'),
+        op.join('subj-01', 'surf', 'R.pial.gii'),
+        #op.join('subj-02', 'T1w.nii.gz'),
+        op.join('subj-02', 'surf', 'L.white.gii'),
+        op.join('subj-02', 'surf', 'R.white.gii'),
+        op.join('subj-02', 'surf', 'L.pial.gii'),
+        op.join('subj-02', 'surf', 'R.pial.gii'),
         op.join('subj-03', 'T1w.nii.gz'),
-        op.join('subj-03', 'native', 'L.native.gii'),
-        op.join('subj-03', 'native', 'R.native.gii'),
-        op.join('subj-03', 'mni',    'L.mni.gii'),
-        op.join('subj-03', 'mni',    'R.mni.gii'),
+        op.join('subj-03', 'surf', 'L.white.gii'),
+        op.join('subj-03', 'surf', 'R.white.gii'),
+        #op.join('subj-03', 'surf', 'L.pial.gii'),
+        #op.join('subj-03', 'surf', 'R.pial.gii'),
     ]
 
     # (invars, infixed, expgroups, expcols)
     tests = [
 
-        # rows where space=t1/mni should be removed
-        ({'subject' : ['01', '02', '03'],
-          'space'   : ['native', 'mni']},
-         [('T1w',                 {}),
-          ('surf_native/surface', {'hemi' : 'L'}),
-          ('surf_native/surface', {'hemi' : 'R'})],
-         [ftman.FileGroup({'subject' : '01', 'space' : 'native'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf_native/surface', 'surf_native/surface'], ['subj-01/T1w.nii.gz', 'subj-01/native/L.native.gii', 'subj-01/native/R.native.gii']),
-          ftman.FileGroup({'subject' : '02', 'space' : 'native'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf_native/surface', 'surf_native/surface'], ['subj-02/T1w.nii.gz', 'subj-02/native/L.native.gii', 'subj-02/native/R.native.gii']),
-          ftman.FileGroup({'subject' : '03', 'space' : 'native'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf_native/surface', 'surf_native/surface'], ['subj-03/T1w.nii.gz', 'subj-03/native/L.native.gii', 'subj-03/native/R.native.gii'])],
+        # subj02 row should be filtered
+        ({'subject' : ['01', '02', '03']},
+         [('T1w', {})],
+         [ftman.FileGroup({'subject' : '01'}, [{}], ['T1w'], ['subj-01/T1w.nii.gz']),
+          # ftman.FileGroup({'subject' : '02'}, [{}], ['T1w'], ['subj-02/T1w.nii.gz']),
+          ftman.FileGroup({'subject' : '03'}, [{}], ['T1w'], ['subj-03/T1w.nii.gz'])],
          None),
 
-        # cols where space=t1/mni should be removed
-        ({'subject' : ['01', '02', '03'],
-          'hemi'    : ['L']},
-         [('T1w',                 {}),
-          ('surf_native/surface', {'space' : 'native'}),
-          ('surf_native/surface', {'space' : 'mni'})],
-         [ftman.FileGroup({'subject' : '01', 'hemi' : 'L'}, [{}, {'space' : 'native'}], ['T1w', 'surf_native/surface'], ['subj-01/T1w.nii.gz', 'subj-01/native/L.native.gii']),
-          ftman.FileGroup({'subject' : '02', 'hemi' : 'L'}, [{}, {'space' : 'native'}], ['T1w', 'surf_native/surface'], ['subj-02/T1w.nii.gz', 'subj-02/native/L.native.gii']),
-          ftman.FileGroup({'subject' : '03', 'hemi' : 'L'}, [{}, {'space' : 'native'}], ['T1w', 'surf_native/surface'], ['subj-03/T1w.nii.gz', 'subj-03/native/L.native.gii'])],
-         [('T1w',                 {}),
-          ('surf_native/surface', {'space' : 'native'})],
+        # sub3/pial should be filtered
+        ({'subject'  : ['01', '02', '03'],
+          'boundary' : ['pial', 'white']},
+         [('T1w',          {}),
+          ('surf/surface', {'hemi' : 'L'}),
+          ('surf/surface', {'hemi' : 'R'})],
+         [ftman.FileGroup({'subject' : '01', 'boundary' : 'pial'},  [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], ['subj-01/T1w.nii.gz', 'subj-01/surf/L.pial.gii',  'subj-01/surf/R.pial.gii']),
+          ftman.FileGroup({'subject' : '01', 'boundary' : 'white'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], ['subj-01/T1w.nii.gz', 'subj-01/surf/L.white.gii', 'subj-01/surf/R.white.gii']),
+          ftman.FileGroup({'subject' : '02', 'boundary' : 'pial'},  [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], [None,                 'subj-02/surf/L.pial.gii',  'subj-02/surf/R.pial.gii']),
+          ftman.FileGroup({'subject' : '02', 'boundary' : 'white'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], [None,                 'subj-02/surf/L.white.gii', 'subj-02/surf/R.white.gii']),
+          # ftman.FileGroup({'subject' : '03', 'boundary' : 'pial'},  [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], ['subj-03/T1w.nii.gz', None,                        None]),
+          ftman.FileGroup({'subject' : '03', 'boundary' : 'white'}, [{}, {'hemi' : 'L'}, {'hemi' : 'R'}], ['T1w', 'surf/surface', 'surf/surface'], ['subj-03/T1w.nii.gz', 'subj-03/surf/L.white.gii', 'subj-03/surf/R.white.gii'])],
+         None),
+
+
+        # pial col should be filtered
+        ({'subject' : ['03'],
+          'hemi'    : ['L', 'R']},
+         [('T1w',          {}),
+          ('surf/surface', {'boundary' : 'white'}),
+          ('surf/surface', {'boundary' : 'pial'})],
+         [ftman.FileGroup({'subject' : '03', 'hemi' : 'L'}, [{}, {'boundary' : 'white'}], ['T1w', 'surf/surface'], ['subj-03/T1w.nii.gz', 'subj-03/surf/L.white.gii']),
+          ftman.FileGroup({'subject' : '03', 'hemi' : 'R'}, [{}, {'boundary' : 'white'}], ['T1w', 'surf/surface'], ['subj-03/T1w.nii.gz', 'subj-03/surf/R.white.gii'])],
+         [('T1w',          {}),
+          ('surf/surface', {'boundary' : 'white'})],
         ),
     ]
     with _query(OrderedDict([('base', base), ('sub', sub)]), files) as query:
