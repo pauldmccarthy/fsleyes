@@ -38,7 +38,7 @@ class GiftiOpts(meshopts.MeshOpts):
         # contain other vertex sets
         vertFiles  = [overlay.dataSource] + \
                      fslgifti.relatedFiles(overlay.dataSource,
-                                           fslgifti.ALLOWED_EXTENSIONS)
+                                           [fslgifti.ALLOWED_EXTENSIONS[0]])
 
         # Find files that contain
         # vertex data sets
