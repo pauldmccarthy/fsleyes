@@ -33,6 +33,7 @@ FILTERS = [
     r'Class FIFinderSyncExtensionHost',
     r'_RegisterApplication()',
     r'FinderKit',
+    r'CoreText note: Client requested name',
     (r'DeprecationWarning', 2),
     r'wx.NewId',
     r'ioloop.install',

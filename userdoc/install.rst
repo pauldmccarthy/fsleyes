@@ -75,7 +75,7 @@ Install standalone build (recommended)
 
 
 If you wish to install FSLeyes independently of FSL, you can download and
-install a standalone version from the |fsleyes_homepage| home page, using
+install a standalone version from the |fsleyes_homepage|_ home page, using
 these instructions.
 
 

@@ -197,8 +197,9 @@ TODO
 """
 
 
-import            os
 import os.path as op
+import            os
+import            sys
 import            logging
 import            warnings
 
@@ -249,9 +250,7 @@ def initialise():
 
     global assetDir
 
-    import matplotlib      as mpl
     import fsleyes.plugins as plugins
-
 
     # implement various hacks and workarounds
     _hacksAndWorkarounds()
@@ -262,11 +261,6 @@ def initialise():
     # initialise FSLeyes plugins (will discover
     # any plugins saved in the settings dir)
     plugins.initialise()
-
-    # Tell matplotlib what backend to use.
-    # n.b. this must be called before
-    # matplotlib.pyplot is imported.
-    mpl.use('WxAgg')
 
     # The fsleyes.actions.frameactions module
     # monkey-patches some things into the
@@ -359,6 +353,12 @@ def _hacksAndWorkarounds():
         locale.getdefaultlocale()
     except ValueError:
         os.environ['LC_ALL'] = 'C.UTF-8'
+
+    # Add the current directory to the python
+    # path, so that modules can be imported
+    # from within notebook/shell environments
+    if fslplatform.frozen:
+        sys.path.insert(0, '')
 
 
 def configLogging(verbose=0, noisy=None):

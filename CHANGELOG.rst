@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.33.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Importing modules from the current directory in the Notebook/shell
+  environments is now possible within standalone versions of FSLeyes.
+* Fixed a small bug in the :func:`.embed` function.
+
 
 0.32.3 (Monday 2nd March 2020)
 ------------------------------
