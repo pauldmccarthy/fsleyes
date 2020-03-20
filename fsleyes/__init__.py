@@ -250,9 +250,7 @@ def initialise():
 
     global assetDir
 
-    import matplotlib      as mpl
     import fsleyes.plugins as plugins
-
 
     # implement various hacks and workarounds
     _hacksAndWorkarounds()
@@ -263,11 +261,6 @@ def initialise():
     # initialise FSLeyes plugins (will discover
     # any plugins saved in the settings dir)
     plugins.initialise()
-
-    # Tell matplotlib what backend to use.
-    # n.b. this must be called before
-    # matplotlib.pyplot is imported.
-    mpl.use('WxAgg')
 
     # The fsleyes.actions.frameactions module
     # monkey-patches some things into the
