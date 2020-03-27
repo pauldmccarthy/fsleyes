@@ -13,6 +13,13 @@ chronological order.
 --------------------------
 
 
+Changed
+^^^^^^^
+
+
+* The minimum supported Python version is now 3.7.
+
+
 Fixed
 ^^^^^
 
