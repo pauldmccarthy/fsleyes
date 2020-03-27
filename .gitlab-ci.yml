@@ -163,12 +163,6 @@ variables:
     - bash ./.ci/test_template.sh
 
 
-test:3.6:
-  stage: test
-  image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
-  <<: *test_template
-
-
 test:3.7:
   stage: test
   image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
@@ -219,7 +213,7 @@ style:
     - docker
 
   stage: doc
-  image: python:3.6
+  image: python:3.7
 
 
 build-userdoc:
@@ -281,7 +275,7 @@ deploy-doc:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.6
+  image: python:3.7
 
   tags:
     - docker
@@ -299,7 +293,7 @@ deploy-pypi:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.6
+  image: python:3.7
 
   tags:
     - docker
@@ -316,7 +310,7 @@ deploy-zenodo:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.6
+  image: python:3.7
 
   tags:
     - docker

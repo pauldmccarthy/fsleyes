@@ -13,10 +13,19 @@ chronological order.
 --------------------------
 
 
+Changed
+^^^^^^^
+
+
+* The minimum supported Python version is now 3.7.
+
+
 Fixed
 ^^^^^
 
 
+* Fixed a bug in the *Export data series* action, which was causing
+  a crash on macOS.
 * Importing modules from the current directory in the Notebook/shell
   environments is now possible within standalone versions of FSLeyes.
 * Fixed a small bug in the :func:`.embed` function.

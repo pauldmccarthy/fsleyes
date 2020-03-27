@@ -1,6 +1,5 @@
 sphinx>=1.7
 sphinx_rtd_theme
-mock
 coverage
 pytest
 pytest-cov

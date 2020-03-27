@@ -8,8 +8,9 @@
 :class:`.PlotPanel` views to export data series to a text file.
 """
 
-import os
 
+import                          os
+import os.path               as op
 import numpy                 as np
 
 import fsl.utils.settings    as fslsettings
@@ -82,4 +83,4 @@ class ExportDataSeriesAction(base.Action):
 
         np.savetxt(filePath, data.T, fmt='% 0.8f')
 
-        fslsettings.write('loadSaveOverlayDir', filePath)
+        fslsettings.write('loadSaveOverlayDir', op.dirname(filePath))
