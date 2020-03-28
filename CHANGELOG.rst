@@ -29,6 +29,9 @@ Fixed
 * Importing modules from the current directory in the Notebook/shell
   environments is now possible within standalone versions of FSLeyes.
 * Fixed a small bug in the :func:`.embed` function.
+* Fixed a bug in the *Add from XNAT* action.
+* Adjusted the Jupyter Notebook integration so it does not rely on the
+  existence of a command called ``jupyter-notebook``.
 
 
 0.32.3 (Monday 2nd March 2020)
