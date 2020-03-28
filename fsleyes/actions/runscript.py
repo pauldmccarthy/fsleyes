@@ -32,6 +32,8 @@ import                        textwrap
 import                        functools
 import                        collections
 
+import nibabel             as nib
+
 import fsl.utils.settings  as fslsettings
 import fsleyes.strings     as strings
 import fsleyes.version     as version
@@ -196,6 +198,7 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     import fsl.data.gifti                       as fslgifti
     import fsl.data.freesurfer                  as fslfs
     import fsl.wrappers                         as wrappers
+    import fsl.wrappers.wrapperutils            as wutils
     import fsl.utils.fslsub                     as fslsub
 
     def load(filename):
@@ -329,35 +332,28 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
         ('output',             fslsub.output),
     ))
 
-
-    # We are assuming that all callable
-    # things in the wrappers module
-    # are decorated with one of the
-    # @fileOrImage or @fileOrArray
-    # decorators, found in wrapperutils.
+    # Most fsl.wrappers function use the
+    # fsl.wrappers.wrapperutils.fileOrImage
+    # decorator, which allows outputs to be
+    # auto-loaded. We apply another decorator
+    # to have those loaded results auto-added
+    # to the overlayList.
     def loadOutputDecorator(func):
         def wrapper(*args, **kwargs):
 
-            # All wrapper functions return a dict
-            # with an attribute called "output".
             result = func(*args, **kwargs)
 
-            # Submitted as a cluster job?
-            # The output contains the job ID.
-            if 'submit' in kwargs:
-                return result.output
+            # The decorated functions we're after
+            # return a value of type FoT.Results.
+            # Anything else is passed through.
+            if not isinstance(result, wutils.FileOrThing.Results):
+                return result
 
-            # Called directly? The output
-            # contains stdout/stderr.
-            stdout, stderr = result.output
-
-            if stdout.strip() != '': print(stdout)
-            if stderr.strip() != '': print(stderr, file=sys.stderr)
-
-            # Any image arguments which were
-            # specified as LOAD are loaded
-            # into FSLeyes.
+            # Any loaded images are
+            # loaded into FSLeyes.
             for name, val in result.items():
+                if isinstance(val, nib.Nifti1Image):
+                    val = fslimage.Image(val)
                 if isinstance(val, fslimage.Image):
                     overlayList.append(val)
                     displayCtx.getDisplay(val).name = name
@@ -366,12 +362,19 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
 
         return functools.update_wrapper(wrapper, func)
 
+
+    # a few exceptions that we do not
+    # want the loadOutputDecorator
+    # to be applied to
+    exclude = ('LOAD', 'fslstats', 'slicer', 'fslmaths')
+
     for att in dir(wrappers):
+
         val = getattr(wrappers, att)
         if att[0] == '_' or isinstance(val, types.ModuleType):
             continue
 
-        if callable(val):
+        if (att not in exclude) and callable(val):
             val = loadOutputDecorator(val)
         _locals[att] = val
 
