@@ -176,6 +176,14 @@ class ColourMapOpts(object):
     """
 
 
+    modulateAlpha = props.Boolean(default=False)
+    """If ``True``, the :attr:`.Display.alpha` is modulated by the data.
+    Regions with a value near to the low :attr:`displayRange` will have an
+    alpha near 0, and regions with a value near to the high
+    :attr:`displayRange` will have an alpha near 1.
+    """
+
+
     @staticmethod
     def realGamma(gamma):
         """Return the value of ``gamma`` property, scaled appropriately.

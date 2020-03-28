@@ -159,6 +159,7 @@ def _initPropertyList_VolumeOpts(threedee):
              'invertClipping',
              'linkLowRanges',
              'linkHighRanges',
+             'modulateAlpha',
              'displayRange',
              'clippingRange',
              'clipImage',
@@ -246,6 +247,7 @@ def _initPropertyList_MeshOpts(threedee):
              'discardClipped',
              'linkLowRanges',
              'linkHighRanges',
+             'modulateAlpha',
              'displayRange',
              'clippingRange']
 
@@ -363,6 +365,7 @@ def _initWidgetSpec_ColourMapOpts(threedee):
         'invertClipping'   : props.Widget('invertClipping'),
         'linkLowRanges'    : props.Widget('linkLowRanges'),
         'linkHighRanges'   : props.Widget('linkHighRanges'),
+        'modulateAlpha'    : props.Widget('modulateAlpha'),
         'gamma'            : props.Widget(
             'gamma',
             showLimits=False,

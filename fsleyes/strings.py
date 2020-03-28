@@ -1091,6 +1091,7 @@ properties = TypeDict({
     'ColourMapOpts.clippingRange'    : 'Clipping range',
     'ColourMapOpts.linkLowRanges'    : 'Link low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'   : 'Link high display/clipping ranges',
+    'ColourMapOpts.modulateAlpha'    : 'Modulate alpha by intensity',
     'ColourMapOpts.cmap'             : 'Colour map',
     'ColourMapOpts.custom_cmap'      : 'Colour map',
     'ColourMapOpts.cmapResolution'   : 'Colour map resolution',

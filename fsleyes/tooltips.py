@@ -110,6 +110,10 @@ properties = TypeDict({
     'Invert the display range, so that the low value corresponds to the high '
     'colour, and vice versa.',
 
+    'ColourMapOpts.modulateAlpha' :
+    'Modulate alpha by the intensity at each region.',
+
+
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
