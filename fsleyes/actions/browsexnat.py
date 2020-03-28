@@ -91,7 +91,7 @@ class BrowseXNATAction(base.Action):
             self.overlayList.extend(overlays)
             self.displayCtx.selectedOverlay = self.displayCtx.overlayOrder[-1]
 
-            if self.__displayCtx.autoDisplay:
+            if self.displayCtx.autoDisplay:
                 for overlay in overlays:
                     autodisplay.autoDisplay(overlay,
                                             self.overlayList,
