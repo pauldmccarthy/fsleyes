@@ -36,6 +36,7 @@ import fsl.utils.tempdir                  as tempdir
 import fsl.utils.idle                     as idle
 
 import                                       fsleyes
+import fsleyes.main                       as fsleyes_main
 import fsleyes.strings                    as strings
 import fsleyes.actions.screenshot         as screenshot
 
@@ -592,42 +593,34 @@ class NotebookServer(threading.Thread):
         env['JUPYTER_CONFIG_DIR'] = cfgdir
         env['PYTHONPATH']         = pythonpath
 
-        # command to start the notebook
-        # server in a sub-process
-
-        # With frozen FSLeyes versions, there
-        # probbaly isn't a 'jupyter-notebook'
-        # executable. So we use a hook in
-        # fsleyes.main to run the server via
-        # nbmain, defined below.
+        # command to start the notebook server
+        # in a sub-process - we run the server
+        # via a wrapper function called nbmain,
+        # defined below.
+        #
+        # But with frozen FSLeyes versions, we
+        # can't just call a python interpreter,
+        # so we use a hook in fsleyes.main to
+        # call actions.notebook_main.main.
         if fslplatform.frozen:
-            exe = op.join(op.dirname(sys.executable), 'fsleyes')
-            log.debug('Running notebook server via %s notebook', sys.argv[0])
-
-            # py2app manipulates the PYTHONPATH, so we pass
-            # it through as a command-line argument - it is
-            # picked up again by the nbmain function, below.
-            cmd = [exe, 'notebook', 'server', cfgdir]
-            if self.__nbfile is not None:
-                cmd.append(self.__nbfile)
-
-            self.__nbproc = sp.Popen(cmd,
-                                     stdout=sp.PIPE,
-                                     stderr=sp.PIPE,
-                                     env=env)
-
-        # Otherwise we can call
-        # it in the usual manner.
+            cmd = [op.join(op.dirname(sys.executable), 'fsleyes')]
         else:
-            log.debug('Running notebook server via jupyter-notebook')
-            cmd = ['jupyter-notebook']
-            if self.__nbfile is not None:
-                cmd.append(self.__nbfile)
+            cmd = [sys.executable, fsleyes_main.__file__]
 
-            self.__nbproc = sp.Popen(cmd,
-                                     stdout=sp.PIPE,
-                                     stderr=sp.PIPE,
-                                     env=env)
+        # py2app manipulates the PYTHONPATH,
+        # so we pass the cfgdir through as a
+        # command-line argument - it is picked
+        # up again by the nbmain function.
+        cmd.extend(('notebook', 'server', cfgdir))
+
+        if self.__nbfile is not None:
+            cmd.append(self.__nbfile)
+
+        log.debug('Running notebook server via %s notebook', cmd[0])
+        self.__nbproc = sp.Popen(cmd,
+                                 stdout=sp.PIPE,
+                                 stderr=sp.PIPE,
+                                 env=env)
 
         def killServer():
             if self.__nbproc is not None:
@@ -703,38 +696,24 @@ class NotebookServer(threading.Thread):
 
 
 def nbmain(argv):
-    """Notebook entry point used when FSLeyes is running as a frozen
-    application.
-
-    Used to start notebook server and kernel processes.
+    """Wrapper around a Jupyter Notebook server entry point. Invoked by the
+    :class:`NotebookServer`, via a hook in :func:`fsleyes.main.main`.
     """
 
-    if not fslplatform.frozen:
-        raise RuntimeError('nbmain can only be used in '
-                           'frozen versions of FSLeyes')
+    if argv[:2] != ['notebook', 'server']:
+        raise RuntimeError('argv does not look like notebook main arguments '
+                           '(first args are not \'notebook server\')')
 
-    if argv[0] != 'notebook':
-        raise RuntimeError('argv does not look like nbmain arguments '
-                           '(first arg is not \'notebook\')')
-
-    argv = argv[1:]
+    argv = argv[2:]
 
     # run the notebook server
-    if argv[0] == 'server':
-        from notebook.notebookapp import main
+    from notebook.notebookapp import main as nbmain
 
-        # second argument is a path
-        # to add to the PYTHONPATH.
-        # See NotebookServer.run.
-        sys.path.insert(0, argv[1])
-        # remaining arguments are passed
-        # through to notebookapp.main
-        return main(argv=argv[2:])
+    # first argument is a path
+    # to add to the PYTHONPATH.
+    # See NotebookServer.run.
+    sys.path.insert(0, argv[0])
 
-    # run a kernel (in place of ipykernel_launcher}
-    elif argv[0] == 'kernel':
-        from ipykernel.kernelapp import IPKernelApp
-
-        app = IPKernelApp.instance()
-        app.initialize(argv[1:])
-        return app.start()
+    # remaining arguments are passed
+    # through to notebookapp.main
+    return nbmain(argv=argv[1:])

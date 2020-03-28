@@ -2,13 +2,13 @@ setuptools
 six==1.*
 numpy>=1.14
 matplotlib>=1.5.1
-nibabel>=2.3.*
+nibabel>=2.3
 Jinja2==2.*
 Pillow>=3.2.0
 PyOpenGL>=3.1.0
 pyparsing==2.*
 scipy>=0.18
 wxPython>=3.0.2.0
-fslpy>=2.8.4
+fslpy>=3
 fsleyes-props>=1.6.7
 fsleyes-widgets>=0.8.4

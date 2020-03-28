@@ -214,9 +214,9 @@ def main(args=None):
     fsleyes.initialise()
 
     # Hook which allows us to run a jupyter
-    # notebook server  within a frozen version
+    # notebook server from a frozen version
     # of FSLeyes
-    if len(args) >= 1 and args[0] == 'notebook' and fslplatform.frozen:
+    if len(args) >= 1 and args[0] == 'notebook':
         from fsleyes.actions.notebook import nbmain
         fsleyes.configLogging()
         sys.exit(nbmain(args))
