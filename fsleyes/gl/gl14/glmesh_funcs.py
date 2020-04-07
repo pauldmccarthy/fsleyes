@@ -69,7 +69,7 @@ def updateShaderState(self, **kwargs):
     settings   = [-1 if     kwargs['useNegCmap'] else 1,
                   -1 if     dopts.invertClipping else 1,
                   -1 if not dopts.discardClipped else 1,
-                  0]
+                  -1 if not dopts.modulateAlpha  else 1]
 
     clipping   = [dopts.clippingRange.xlo, dopts.clippingRange.xhi, 0, 0]
 
