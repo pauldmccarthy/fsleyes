@@ -365,6 +365,8 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .addListener('useNegativeCmap',  name,
                              self._useNegativeCmapChanged)
         opts    .addListener('invert',           name, self._invertChanged)
+        opts    .addListener('modulateAlpha',    name,
+                             self._modulateAlphaChanged)
         opts    .addListener('volume',           name, self._volumeChanged)
         opts    .addListener('channel',          name, self._channelChanged)
         opts    .addListener('interpolation',    name,
@@ -433,26 +435,27 @@ class GLVolume(glimageobject.GLImageObject):
         name    = self.name
         crPVs   = opts.getPropVal('clippingRange').getPropertyValueList()
 
-        display .removeListener(          'alpha',                   name)
-        opts    .removeListener(          'displayRange',            name)
+        display .removeListener('alpha',                   name)
+        opts    .removeListener('displayRange',            name)
         crPVs[0].removeListener(name)
         crPVs[1].removeListener(name)
-        opts    .removeListener(          'clipImage',               name)
-        opts    .removeListener(          'invertClipping',          name)
-        opts    .removeListener(          'cmap',                    name)
-        opts    .removeListener(          'gamma',                   name)
-        opts    .removeListener(          'interpolateCmaps',        name)
-        opts    .removeListener(          'negativeCmap',            name)
-        opts    .removeListener(          'useNegativeCmap',         name)
-        opts    .removeListener(          'cmapResolution',          name)
-        opts    .removeListener(          'invert',                  name)
-        opts    .removeListener(          'volume',                  name)
-        opts    .removeListener(          'channel',                 name)
-        opts    .removeListener(          'interpolation',           name)
-        opts    .removeListener(          'transform',               name)
-        opts    .removeListener(          'displayXform',            name)
-        opts    .removeListener(          'enableOverrideDataRange', name)
-        opts    .removeListener(          'overrideDataRange',       name)
+        opts    .removeListener('clipImage',               name)
+        opts    .removeListener('invertClipping',          name)
+        opts    .removeListener('cmap',                    name)
+        opts    .removeListener('gamma',                   name)
+        opts    .removeListener('interpolateCmaps',        name)
+        opts    .removeListener('negativeCmap',            name)
+        opts    .removeListener('useNegativeCmap',         name)
+        opts    .removeListener('cmapResolution',          name)
+        opts    .removeListener('invert',                  name)
+        opts    .removeListener('modulateAlpha',           name)
+        opts    .removeListener('volume',                  name)
+        opts    .removeListener('channel',                 name)
+        opts    .removeListener('interpolation',           name)
+        opts    .removeListener('transform',               name)
+        opts    .removeListener('displayXform',            name)
+        opts    .removeListener('enableOverrideDataRange', name)
+        opts    .removeListener('overrideDataRange',       name)
 
         if self.threedee:
             opts.removeListener('numSteps',        name)
@@ -954,6 +957,13 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.VolumeOpts.invert` property changes. """
         self.refreshColourTextures()
         self.notify()
+
+
+    def _modulateAlphaChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.modulateAlpha` property changes.
+        Calls :meth:`updateShaderState`.
+        """
+        self.updateShaderState()
 
 
     def _enableOverrideDataRangeChanged(self, *a):

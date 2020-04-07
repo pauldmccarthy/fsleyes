@@ -111,5 +111,14 @@ bool sample_volume(vec3      texCoord,
   if (negCmap) finalColour = texture1D(negColourTexture, voxValue);
   else         finalColour = texture1D(colourTexture,    voxValue);
 
+  /*
+   * modulate alpha by voxel value -  voxels equal to
+   * low display range get alpha=0, and those equal
+   * to high display range get alpha=1
+   */
+  if (modulateAlpha) {
+      finalColour.a = voxValue;
+  }
+
   return true;
 }

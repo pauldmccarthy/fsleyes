@@ -225,30 +225,34 @@ class ColourMapOpts(object):
             name    = self.getColourMapOptsListenerName()
             display = self.display
 
-            display    .addListener('brightness',
-                                    name,
-                                    self.__briconChanged,
-                                    immediate=True)
-            display    .addListener('contrast',
-                                    name,
-                                    self.__briconChanged,
-                                    immediate=True)
-            self       .addListener('displayRange',
-                                    name,
-                                    self.__displayRangeChanged,
-                                    immediate=True)
-            self       .addListener('useNegativeCmap',
-                                    name,
-                                    self.__useNegativeCmapChanged,
-                                    immediate=True)
-            self       .addListener('linkLowRanges',
-                                    name,
-                                    self.__linkLowRangesChanged,
-                                    immediate=True)
-            self       .addListener('linkHighRanges',
-                                    name,
-                                    self.__linkHighRangesChanged,
-                                    immediate=True)
+            display.addListener('brightness',
+                                name,
+                                self.__briconChanged,
+                                immediate=True)
+            display.addListener('contrast',
+                                name,
+                                self.__briconChanged,
+                                immediate=True)
+            self   .addListener('displayRange',
+                                name,
+                                self.__displayRangeChanged,
+                                immediate=True)
+            self   .addListener('useNegativeCmap',
+                                name,
+                                self.__useNegativeCmapChanged,
+                                immediate=True)
+            self   .addListener('linkLowRanges',
+                                name,
+                                self.__linkLowRangesChanged,
+                                immediate=True)
+            self   .addListener('linkHighRanges',
+                                name,
+                                self.__linkHighRangesChanged,
+                                immediate=True)
+            self   .addListener('modulateAlpha',
+                                name,
+                                self.__modulateAlphaChanged,
+                                immediate=True)
 
             # Because displayRange and bri/con are intrinsically
             # linked, it makes no sense to let the user sync/unsync
@@ -313,6 +317,7 @@ class ColourMapOpts(object):
         self   .removeListener('useNegativeCmap', name)
         self   .removeListener('linkLowRanges',   name)
         self   .removeListener('linkHighRanges',  name)
+        self   .removeListener('modulateAlpha',   name)
 
         self.unbindProps(self   .getSyncPropertyName('displayRange'),
                          display,
@@ -608,3 +613,16 @@ class ColourMapOpts(object):
 
         if val:
             cRangePV.set(dRangePV.get())
+
+
+    def __modulateAlphaChanged(self, *a):
+        """Called when the :attr:`modulateAlpha` property changes.
+
+        When ``modulateAlpha`` is active, :attr:`.Display.alpha` is disabled,
+        and vice-versa.
+        """
+
+        if self.modulateAlpha:
+            self.display.disableProperty('alpha')
+        else:
+            self.display.enableProperty('alpha')

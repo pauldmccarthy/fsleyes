@@ -115,6 +115,7 @@ def updateShaderState(self):
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
+    changed |= shader.set('modulateAlpha',    opts.modulateAlpha)
     changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)

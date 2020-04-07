@@ -108,6 +108,12 @@ uniform float texZero;
 uniform bool invertClip;
 
 /*
+ * Modulate the alpha of each voxel by
+ * its intensity.
+ */
+uniform bool modulateAlpha;
+
+/*
  * Image voxel coordinates.
  */
 varying vec3 fragVoxCoord;
