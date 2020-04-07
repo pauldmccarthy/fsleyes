@@ -16,11 +16,13 @@
 #      the clip texture. Clipping values are assumed to be normalised to the
 #      image texture value range.
 #
-#   {{ negCmap }} - Negative colour map control. The (x) component is a
-#      boolean flag controlling whether the negative colour map is used. The
-#      (y) component is the display range centre (the value above which the
-#      regular colour map is used, and below which the negative colour map is
-#      used), as a voxel value, normalised to the image texture value range.
+#   {{ negCmap }} - Negative colour map and alpha modulation control. The (x)
+#      component is a boolean flag controlling whether the negative colour map
+#      is used. The (y) component is the display range centre (the value above
+#      which the regular colour map is used, and below which the negative
+#      colour map is used), as a voxel value, normalised to the image texture
+#      value range. The (z) component is a boolean flag which, if >=0, causes
+#      fragment opacity to be modulated by voxel intensity.
 #
 #   {{ voxValXform }}  - Vector with x component defining a scale, and y
 #      component defining an offset, with which image texture values can be
@@ -42,7 +44,6 @@
 #      according to the current display range.
 #
 #   {{ out_colour }} - Final colour to use for this fragment.
-
 #
 #
 # Constants:
@@ -214,6 +215,11 @@ TEX {{ negColour  }}, {{ voxValue }}.x, {{ negColourTexture }}, 1D;
 # negative colour map should be
 # used, positive otherwise.
 CMP {{ out_colour }}, {{ useNegCmap }}.x, {{ negColour }}, {{ out_colour }};
+
+# Set alpha to voxValue (which
+# is in range 0-1) if modulateAlpha
+# is active
+CMP {{ out_colour }}.a, {{ negCmap }}.z, {{ out_colour }}.a, {{ voxValue }}.x;
 
 # Normalise out_kill
 # to either -1 or +1

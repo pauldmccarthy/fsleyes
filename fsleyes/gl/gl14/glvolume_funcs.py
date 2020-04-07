@@ -112,6 +112,7 @@ def updateShaderState(self):
     # And the clipping range, normalised
     # to the image texture value range
     invClip     = 1 if opts.invertClipping    else -1
+    modAlpha    = 1 if opts.modulateAlpha     else -1
     useNegCmap  = 1 if opts.useNegativeCmap   else  0
     imageIsClip = 1 if opts.clipImage is None else -1
 
@@ -124,7 +125,7 @@ def updateShaderState(self):
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
 
     clipping = [clipLo, clipHi, invClip, imageIsClip]
-    negCmap  = [useNegCmap, texZero, 0, 0]
+    negCmap  = [useNegCmap, texZero, modAlpha, 0]
 
     changed  = False
     changed |= shader.setFragParam('voxValXform', voxValXform)
