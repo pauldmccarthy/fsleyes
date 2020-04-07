@@ -782,7 +782,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         # modulateAlpha may cause the
         # alpha property to be disabled
-        if self.display.propertyIsEnabled('alpha'):
+        if not self.display.propertyIsEnabled('alpha'):
             return
 
         alpha = self.colour[3] * 100

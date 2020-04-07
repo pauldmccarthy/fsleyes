@@ -568,6 +568,7 @@ OPTIONS = td.TypeDict({
                         'cmapResolution',
                         'interpolateCmaps',
                         'invert',
+                        'modulateAlpha',
                         'wireframe'],
     'GiftiOpts'      : [],
     'FreesurferOpts' : [],
