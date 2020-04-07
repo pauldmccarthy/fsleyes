@@ -115,7 +115,6 @@ def updateShaderState(self):
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
-    changed |= shader.set('modulateAlpha',    opts.modulateAlpha)
     changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
@@ -125,8 +124,10 @@ def updateShaderState(self):
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
 
-    if self.threedee:
+    if not self.threedee:
+        changed |= shader.set('modulateAlpha', opts.modulateAlpha)
 
+    else:
         blendFactor = (1 - opts.blendFactor) ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')

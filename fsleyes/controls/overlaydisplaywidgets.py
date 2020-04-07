@@ -167,6 +167,7 @@ def _initPropertyList_VolumeOpts(threedee):
 
     if threedee:
         plist.remove('clipImage')
+        plist.remove('modulateAlpha')
 
     return plist
 
