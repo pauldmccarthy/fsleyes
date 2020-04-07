@@ -35,6 +35,8 @@ uniform bool      discardClipped;
 /* Colour to use when discardClipped is false, and a fragment is clipped. */
 uniform vec4      flatColour;
 
+/* Modulate fragment opacity by the vertex data intensity.  */
+uniform bool modulateAlpha;
 
 /* Vertex data value */
 varying float     fragVertexData;
@@ -71,6 +73,16 @@ vec4 glmesh_data_colour() {
 
     if (negative) result = texture1D(negCmap, texCoord);
     else          result = texture1D(cmap,    texCoord);
+  }
+
+  /*
+   * Rather than modulating the opacity, we
+   * interpolate between the data colour and
+   * the flat colour according to the intensity.
+   */
+  if (modulateAlpha) {
+    texCoord   = clamp(texCoord, 0, 1);
+    result.rgb = mix(flatColour.rgb, result.rgb, texCoord);
   }
 
   return result;

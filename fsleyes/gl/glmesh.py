@@ -269,6 +269,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('displayRange',     name, refreshCmap, weak=False)
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
+        opts   .addListener('modulateAlpha',    name, shader,      weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
         if self.threedee:
@@ -305,6 +306,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('displayRange',     self.name)
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
+        self.opts   .removeListener('modulateAlpha',    self.name)
         self.display.removeListener('alpha',            self.name)
 
         if self.threedee:

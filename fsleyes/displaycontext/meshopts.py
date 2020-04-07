@@ -780,6 +780,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         from the alpha component.
         """
 
+        # modulateAlpha may cause the
+        # alpha property to be disabled
+        if self.display.propertyIsEnabled('alpha'):
+            return
+
         alpha = self.colour[3] * 100
 
         log.debug('Propagating MeshOpts.colour[3] to '

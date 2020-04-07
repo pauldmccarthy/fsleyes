@@ -64,6 +64,7 @@ def updateShaderState(self, **kwargs):
     dshader.set('flatColour',     kwargs['flatColour'])
     dshader.set('invertClip',     dopts.invertClipping)
     dshader.set('discardClipped', dopts.discardClipped)
+    dshader.set('modulateAlpha',  dopts.modulateAlpha)
     dshader.set('clipLow',        dopts.clippingRange.xlo)
     dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
