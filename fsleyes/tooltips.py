@@ -111,7 +111,10 @@ properties = TypeDict({
     'colour, and vice versa.',
 
     'ColourMapOpts.modulateAlpha' :
-    'Modulate alpha by the intensity at each region.',
+    'Modulate alpha (opacity) by the intensity at each region. Regions with a '
+    'value near to the low display range will have opacity near 0, and '
+    'regions with a value near to the high display range will have opacity '
+    'near 1.',
 
 
     'VolumeOpts.interpolation' :
