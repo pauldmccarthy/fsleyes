@@ -509,7 +509,8 @@ OPTIONS = td.TypeDict({
                         'cmapResolution',
                         'interpolation',
                         'interpolateCmaps',
-                        'invert'],
+                        'invert',
+                        'modulateAlpha'],
     'Volume3DOpts'   : ['numSteps',
                         'blendFactor',
                         'smoothing',
@@ -821,6 +822,7 @@ ARGUMENTS = td.TypeDict({
     'ColourMapOpts.gamma'            : ('g',   'gamma',            True),
     'ColourMapOpts.linkLowRanges'    : ('ll',  'unlinkLowRanges',  True),
     'ColourMapOpts.linkHighRanges'   : ('lh',  'linkHighRanges',   True),
+    'ColourMapOpts.modulateAlpha'    : ('ma',  'modulateAlpha',    False),
 
     'VolumeOpts.channel'           : ('ch',  'channel',           True),
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
@@ -1079,6 +1081,7 @@ HELP = td.TypeDict({
     'ColourMapOpts.gamma'             : 'Gamma correction [-1-+1, default: 0]',
     'ColourMapOpts.linkLowRanges'     : 'Unlink low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'    : 'Link high display/clipping ranges',
+    'ColourMapOpts.modulateAlpha'     : 'Modulate alpha by intensity',
 
     'VolumeOpts.channel'           : 'Channel to display, for RGB(A) images',
     'VolumeOpts.overrideDataRange' : 'Override data range. Setting this '
