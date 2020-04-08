@@ -95,6 +95,8 @@ def updateShaderState(self):
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
 
+    modAlpha = (not self.threedee) and opts.modulateAlpha
+
     # Create a single transformation matrix
     # which transforms from image texture values
     # to voxel values, and scales said voxel
@@ -118,16 +120,13 @@ def updateShaderState(self):
     changed |= shader.set('imageIsClip',      imageIsClip)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
-
+    changed |= shader.set('modulateAlpha',    modAlpha)
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
 
-    if not self.threedee:
-        changed |= shader.set('modulateAlpha', opts.modulateAlpha)
-
-    else:
+    if self.threedee:
         blendFactor = (1 - opts.blendFactor) ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')

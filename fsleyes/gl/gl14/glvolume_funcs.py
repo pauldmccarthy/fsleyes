@@ -111,10 +111,12 @@ def updateShaderState(self):
 
     # And the clipping range, normalised
     # to the image texture value range
-    invClip     = 1 if opts.invertClipping    else -1
-    modAlpha    = 1 if opts.modulateAlpha     else -1
-    useNegCmap  = 1 if opts.useNegativeCmap   else  0
-    imageIsClip = 1 if opts.clipImage is None else -1
+    invClip     = 1 if opts.invertClipping                         else -1
+    useNegCmap  = 1 if opts.useNegativeCmap                        else  0
+    imageIsClip = 1 if opts.clipImage is None                      else -1
+
+    # modalpha not applied in 3D
+    modAlpha    = 1 if (not self.threeedee) and opts.modulateAlpha else -1
 
     imgXform = self.imageTexture.invVoxValXform
     if opts.clipImage is None: clipXform = imgXform

@@ -102,6 +102,11 @@ uniform float texZero;
 uniform bool invertClip;
 
 /*
+ * Required by glvolume_common.glsl, but not used in 3D volume rendering.
+ */
+uniform bool modulateAlpha;
+
+/*
  * Number of active clip planes. Regions which are clipped
  * by *all* active clip planes are not drawn.
  */
