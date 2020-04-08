@@ -116,6 +116,11 @@ properties = TypeDict({
     'regions with a value near to the high display range will have opacity '
     'near 1.',
 
+    'ColourMapOpts.custom_modulateAlpha' :
+    'Modulate alpha (opacity) by the intensity at each region. Regions with a '
+    'value near to the low display range will have opacity near 0, and '
+    'regions with a value near to the high display range will have opacity '
+    'near 1.',
 
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
@@ -136,6 +141,15 @@ properties = TypeDict({
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
+
+    'VolumeOpts.clipImage' :
+    'Clip this image by the values contained in another image. When active, '
+    'The clipping range is set according to the values in the clip image '
+    'instead of in this image.',
+
+    'VolumeOpts.modulateImage' :
+    'Modulate alpha/opacity by the values contained in another image, instead '
+    'of modulating by the values in this image.',
 
     'Volume3DOpts.numSteps' :
     'The maximum number of times that the image is sampled for each pixel.',

@@ -1103,11 +1103,13 @@ properties = TypeDict({
     'ColourMapOpts.invertClipping'   : 'Invert clipping range',
 
     'VolumeOpts.clipImage'                : 'Clip by',
+    'VolumeOpts.modulateImage'            : 'Modulate by',
     'VolumeOpts.interpolation'            : 'Interpolation',
     'VolumeOpts.channel'                  : 'RGB(A) channel',
     'VolumeOpts.enableOverrideDataRange'  : 'Override image data range',
     'VolumeOpts.overrideDataRange'        : 'Override image data range',
     'VolumeOpts.custom_overrideDataRange' : 'Override image data range',
+    'VolumeOpts.custom_modulateAlpha'     : 'Modulate alpha by intensity',
 
     'Volume3DOpts.numSteps'                : 'Number of samples',
     'Volume3DOpts.blendFactor'             : 'Blending',

@@ -159,7 +159,7 @@ def _initPropertyList_VolumeOpts(threedee):
              'invertClipping',
              'linkLowRanges',
              'linkHighRanges',
-             'modulateAlpha',
+             'custom_modulateAlpha',
              'displayRange',
              'clippingRange',
              'clipImage',
@@ -167,7 +167,7 @@ def _initPropertyList_VolumeOpts(threedee):
 
     if threedee:
         plist.remove('clipImage')
-        plist.remove('modulateAlpha')
+        plist.remove('custom_modulateAlpha')
 
     return plist
 
@@ -345,9 +345,8 @@ def _initWidgetSpec_Display(threedee):
 
 def _initWidgetSpec_ColourMapOpts(threedee):
     return {
-        'custom_cmap'              : _ColourMapOpts_ColourMapWidget,
-        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
-        'cmap'              : props.Widget(
+        'custom_cmap'     : _ColourMapOpts_ColourMapWidget,
+        'cmap'            : props.Widget(
             'cmap',
             labels=fslcm.getColourMapLabel),
         'useNegativeCmap' : props.Widget('useNegativeCmap'),
@@ -394,7 +393,10 @@ def _initWidgetSpec_VolumeOpts(threedee):
         else:           return img.name
 
     return {
-        'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'custom_volume'            : _NiftiOpts_VolumeWidget,
+        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
+        'custom_modulateAlpha'     : _VolumeOpts_ModulateAlphaWidget,
+
         'channel'        : props.Widget('channel'),
         'volume'         : props.Widget(
             'volume',
@@ -413,7 +415,9 @@ def _initWidgetSpec_VolumeOpts(threedee):
         'clipImage'      : props.Widget(
             'clipImage',
             labels=imageName),
-        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
+        'modulateImage'      : props.Widget(
+            'modulateImage',
+            labels=imageName),
         'enableOverrideDataRange'  : props.Widget(
             'enableOverrideDataRange'),
         'overrideDataRange' : props.Widget(
@@ -962,7 +966,7 @@ def _NiftiOpts_VolumeWidget(
                              label='Dim',
                              style=(wx.ALIGN_CENTRE_VERTICAL |
                                     wx.ALIGN_CENTRE_HORIZONTAL))
-
+    dimLabel.SetMinSize(dimLabel.GetBestSize())
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
     sizer.Add(volume,    flag=wx.EXPAND, proportion=1)
@@ -998,6 +1002,40 @@ def _VolumeOpts_OverrideDataRangeWidget(
     sizer.Add(ovrRange, flag=wx.EXPAND, proportion=1)
 
     return sizer, [enable, ovrRange]
+
+
+def _VolumeOpts_ModulateAlphaWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains widgets for controlling the
+    :attr:`.ColourMapOpts.modulateAlpha` and :attr:`.VolumeOpts.modulateImage`
+    properties.
+    """
+
+    modAlpha  = getWidgetSpecs(target, threedee)['modulateAlpha']
+    modImage  = getWidgetSpecs(target, threedee)['modulateImage']
+
+    modAlpha  = props.buildGUI(parent, target, modAlpha)
+    modImage  = props.buildGUI(parent, target, modImage)
+
+    mimgLabel = wx.StaticText(
+        parent,
+        label=strings.properties[target, 'modulateImage'],
+        style=(wx.ALIGN_CENTRE_VERTICAL |
+               wx.ALIGN_CENTRE_HORIZONTAL))
+    mimgLabel.SetMinSize(mimgLabel.GetBestSize())
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(modAlpha,  flag=wx.EXPAND)
+    sizer.Add(mimgLabel, flag=wx.EXPAND)
+    sizer.Add(modImage,  flag=wx.EXPAND, proportion=1)
+
+    return sizer, [modAlpha, modImage]
 
 
 def _VolumeOpts_3DClipPlanes(
