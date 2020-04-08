@@ -13,6 +13,14 @@ chronological order.
 --------------------------
 
 
+Added
+^^^^^
+
+
+* New *modulate alpha* option for volume and mesh overlays, which causes
+  opacity to be modulated by voxel/vertex intensity.
+
+
 Changed
 ^^^^^^^
 
