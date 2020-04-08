@@ -513,3 +513,175 @@ class GLImageObject(globject.GLObject):
         """
         self.get3DClipPlane   .invalidate()
         self.clipPlaneVertices.invalidate()
+
+
+class AuxImageTextureManager:
+    """
+    """
+
+
+    def __init__(self, globj, auxtypes):
+        """
+        """`
+        self.globj      = globj
+        self.displayCtx = globj.displayCtx
+        self.opts       = globj.opts
+        self.auxtypes   = auxtypes
+
+        for t in auxtypes:
+            setattr(self, '{}Image'  .format(t), None)
+            setattr(self, '{}Opts'   .format(t), None)
+            setattr(self, '{}Texture'.format(t), None)
+
+
+    def destroy(self):
+        """
+        """
+        self.globj      = None
+        self.displayCtx = None
+        self.opts       = None
+
+        for t in self.auxtypes:
+            passs # self.deregisterAuxImage(t)
+
+
+    def texturesReady(self):
+        """
+        """
+        for t in auxtypes:
+            tex = getattr(self, '{}Texture'.format(t))
+            if t is None or not t.ready():
+                return False
+        return True
+
+
+    def registerAuxImage(self, which, image):
+        """Register an auxillary image.
+
+        :arg which: Name of the auxillary image
+        :arg image: :class:`.Image` object
+
+        Registers a listener with the :attr:`.NiftiOpts.volume` property of
+        the image, so the texture can be updated when the image volume
+        changes.
+        """
+
+        imageAttr = '{}Image'  .format(which)
+        optsAttr  = '{}Opts'   .format(which)
+        texAttr   = '{}Texture'.format(which)
+
+        image = getattr(self.opts, imageAttr)
+        tex   = getattr(self,      texAttr)
+
+        if image is None or image == 'none':
+            image = None
+
+        setattr(self, optsAttr,  None)
+        setattr(self, imageAttr, image)
+
+        if image is None:
+            return
+
+        opts = self.opts.displayCtx.getOpts(image)
+
+        setattr(self, optsAttr, opts)
+
+        def volumeChange(*a):
+            tex.set(volume=opts.index()[3:])
+            self.asyncUpdateShaderState(alwaysNotify=True)
+
+        # We set overwrite=True, because
+        # the modulate/clip/colour images
+        # may be the same.
+        opts.addListener('volume',
+                         self.name,
+                         volumeChange,
+                         overwrite=True,
+                         weak=False)
+
+
+    def deregisterAuxImage(self, which):
+        """De-register an auxillary image.
+
+        :arg which: Name of the auxillary image
+
+        Deregisters the :attr:`.NiftiOpts.volume` listener that was registered
+        in :meth:`registerAuxImage`.
+        """
+
+        imageAttr = '{}Image'.format(which)
+        optsAttr  = '{}Opts' .format(which)
+
+        opts = getattr(self, optsAttr)
+
+        if opts is not None:
+            opts.removeListener('volume', self.name)
+
+        setattr(self, imageAttr, None)
+        setattr(self, optsAttr,  None)
+
+
+    def refreshAuxTexture(self, which, interp=gl.GL_NEAREST):
+        """Called when the :attr`.VectorOpts.modulateImage`,
+        :attr`.VectorOpts.clipImage`, or :attr`.VectorOpts.colourImage`
+        properties changes.  Reconfigures the modulation/clip/colour
+        :class:`.ImageTexture`. If no image is selected, a 'dummy' texture is
+        creatad, which contains all white values (and which result in the
+        auxillary textures having no effect).
+
+        The ``interp`` argument can be used to set the initial interpolation
+        type (``GL_NEAREST`` or ``GL_LINEAR``).
+        """
+
+        imageAttr = '{}Image'  .format(which)
+        optsAttr  = '{}Opts'   .format(which)
+        texAttr   = '{}Texture'.format(which)
+
+        image = getattr(self, imageAttr)
+        opts  = getattr(self, optsAttr)
+        tex   = getattr(self, texAttr)
+
+        if tex is not None:
+            tex.deregister(self.name)
+            glresources.delete(tex.name)
+
+        if image is None:
+
+            textureData    = np.zeros((5, 5, 5), dtype=np.uint8)
+            textureData[:] = 255
+            image          = fslimage.Image(textureData)
+            norm           = None
+
+        else:
+            norm = image.dataRange
+
+        texName = '{}_{}_{}_{}'.format(
+            type(self).__name__, id(self.image), id(image), which)
+
+        if opts is not None:
+            unsynced = (opts.getParent() is None or
+                        not opts.isSyncedToParent('volume'))
+
+            # TODO If unsynced, this GLVectorBase needs to
+            # update the mod/clip/colour textures whenever
+            # their volume property changes.
+            # Right?
+            if unsynced:
+                texName = '{}_unsync_{}'.format(texName, id(opts))
+
+        if opts is not None: volume = opts.index()[3:]
+        else:                volume = 0
+
+        tex = glresources.get(
+            texName,
+            textures.ImageTexture,
+            texName,
+            image,
+            normaliseRange=norm,
+            volume=volume,
+            notify=False,
+            interp=interp)
+
+        tex.register(self.name, self.__textureChanged)
+
+        setattr(self, texAttr, tex)
