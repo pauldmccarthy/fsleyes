@@ -150,7 +150,7 @@ class GLRGBVector(glvector.GLVector):
         glvector.GLVector.refreshImageTexture(self, interp)
 
 
-    def refreshAuxTexture(self, which):
+    def registerAuxImage(self, which, image, onReady=None):
         """Overrides :meth:`.GLVector.refreshAuxTexture`. Calls the base
         class implementation.
         """
@@ -159,7 +159,8 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
 
-        glvector.GLVector.refreshAuxTexture(self, which, interp)
+        glvector.GLVector.registerAuxImage(
+            self, which, image, onReady, interp=interp)
 
 
     def __interpChanged(self, *a):
@@ -176,6 +177,7 @@ class GLRGBVector(glvector.GLVector):
         self.clipTexture    .set(interp=interp)
         self.colourTexture  .set(interp=interp)
         self.asyncUpdateShaderState(alwaysNotify=True)
+
 
     def __unitLengthChanged(self, *a):
         """Called when :attr:`.RGBVectorOpts.unitLength` changes. Refreshes
