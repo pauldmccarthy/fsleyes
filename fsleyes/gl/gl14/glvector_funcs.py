@@ -118,11 +118,11 @@ def updateShaderState(self):
 
         voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
-        self.shader.setFragParam('voxValXform',      voxValXform)
-        self.shader.setFragParam('mod',              mod)
-        self.shader.setFragParam('xColour',          colours[0])
-        self.shader.setFragParam('yColour',          colours[1])
-        self.shader.setFragParam('zColour',          colours[2])
-        self.shader.setFragParam('colourXform',      [colourXform[0, 0],
-                                                      colourXform[0, 3], 0, 0])
+        self.shader.setFragParam('voxValXform', voxValXform)
+        self.shader.setFragParam('mod',         mod)
+        self.shader.setFragParam('xColour',     colours[0])
+        self.shader.setFragParam('yColour',     colours[1])
+        self.shader.setFragParam('zColour',     colours[2])
+        self.shader.setFragParam('colourXform', [colourXform[0, 0],
+                                                 colourXform[0, 3], 0, 0])
     return True

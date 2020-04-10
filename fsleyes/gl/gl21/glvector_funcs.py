@@ -51,15 +51,16 @@ def updateShaderState(self, useSpline=False):
     """
 
     changed           = False
+    opts              = self.opts
     shader            = self.shader
     imageShape        = self.vectorImage.shape[:3]
     modLow,  modHigh  = self.getModulateRange()
     clipLow, clipHigh = self.getClippingRange()
 
-    if self.modulateImage is None: modShape  = [1, 1, 1]
-    else:                          modShape  = self.modulateImage.shape[:3]
-    if self.clipImage     is None: clipShape = [1, 1, 1]
-    else:                          clipShape = self.clipImage.shape[:3]
+    if opts.modulateImage is None: modShape  = [1, 1, 1]
+    else:                          modShape  = opts.modulateImage.shape[:3]
+    if opts.clipImage     is None: clipShape = [1, 1, 1]
+    else:                          clipShape = opts.clipImage.shape[:3]
 
     clipXform   = self.getAuxTextureXform('clip')
     colourXform = self.getAuxTextureXform('colour')

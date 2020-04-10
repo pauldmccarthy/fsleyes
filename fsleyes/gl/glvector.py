@@ -178,24 +178,38 @@ class GLVectorBase(glimageobject.GLImageObject):
 
     @property
     def modulateTexture(self):
-        return self.auxmgr.texture['modulate']
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.modulateImage`.
+        """
+        return self.auxmgr.texture('modulate')
 
 
     @property
     def clipTexture(self):
-        return self.auxmgr.texture['clip']
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.clipImage`.
+        """
+        return self.auxmgr.texture('clip')
 
 
     @property
     def colourTexture(self):
-        return self.auxmgr.texture['colour']
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.colourImage`.
+        """
+        return self.auxmgr.texture('colour')
 
 
     def ready(self):
         """Returns ``True`` if this ``GLVectorBase`` is ready to be drawn,
         ``False`` otherwise.
         """
-        return self.shader is not None and self.auxmgr.texturesReady()
+        return self.shader is not None and self.texturesReady()
+
+
+    def texturesReady(self):
+        """Calls :meth:`.AuxImageTextureManager.texturesReady`. """
+        return self.auxmgr.texturesReady()
 
 
     def addListeners(self):
@@ -304,8 +318,8 @@ class GLVectorBase(glimageobject.GLImageObject):
         display = self.display
         opts    = self.opts
 
-        if self.colourImage is not None:
-            dmin, dmax = self.colourImage.dataRange
+        if opts.colourImage is not None:
+            dmin, dmax = opts.colourImage.dataRange
 
         else:
             dmin, dmax = 0.0, 1.0

@@ -541,7 +541,7 @@ class AuxImageTextureManager:
         :arg auximages: ``auxtype=initial_value`` for each auxillary image
                         texture type. The initial value must be one of:
                           - an :class:`.Image`
-                          - ``None`` or ``'none'``
+                          - ``None``
                           - A tuple containing an ``Image``, and a dict
                             containing settings to initialise the
                             ``ImageTexture`` (passed as ``kwargs`` to
@@ -554,9 +554,9 @@ class AuxImageTextureManager:
         self.__opts        = globj.opts
         self.__displayCtx  = globj.displayCtx
         self.__auxtypes    = tuple(auximages.keys())
-        self.__auxopts     = {}
-        self.__auximages   = {}
-        self.__auxtextures = {}
+        self.__auxopts     = {t : None for t in self.__auxtypes}
+        self.__auximages   = {t : None for t in self.__auxtypes}
+        self.__auxtextures = {t : None for t in self.__auxtypes}
 
         for which, image in auximages.items():
             if isinstance(image, tuple):
@@ -575,7 +575,7 @@ class AuxImageTextureManager:
         self.__opts       = None
 
         for t in self.__auxtypes:
-            self.deregisterAuxImage(t)
+            self.deregisterAuxImage(t, False)
             self.__destroyAuxTexture(t)
 
 
@@ -651,35 +651,38 @@ class AuxImageTextureManager:
         """
 
         if self.__auximages[which] is not None:
-            self.deregisterAuxImage(which)
+            self.deregisterAuxImage(which, False)
 
-        if image in (None, 'none'):
-            return
+        if image is None:
+            opts = None
 
-        opts = self.displayCtx.getOpts(image)
+        else:
+            opts = self.displayCtx.getOpts(image)
+            def volumeChange(*a):
+                tex = self.texture(which)
+                tex.set(volume=opts.index()[3:])
+
+            opts.addListener('volume',
+                             '{}_{}'.format(self.name, which),
+                             volumeChange,
+                             weak=False)
 
         self.__auximages[which] = image
         self.__auxopts[  which] = opts
-
         self.refreshAuxTexture(which, **kwargs)
 
-        def volumeChange(*a):
-            tex = self.texture(which)
-            tex.set(volume=opts.index()[3:])
 
-        opts.addListener('volume',
-                         '{}_{}'.format(self.name, which),
-                         volumeChange,
-                         weak=False)
-
-
-    def deregisterAuxImage(self, which):
+    def deregisterAuxImage(self, which, refreshTexture=True):
         """De-register an auxillary image.  Deregisters the
         :attr:`.NiftiOpts.volume` listener that was registered in
         :meth:`registerAuxImage`, and destroys the associated
         :class:`.ImageTexture`.
 
-        :arg which: Name of the auxillary image
+        :arg which:          Name of the auxillary image
+
+        :arg refreshTexture: Defaults to ``True``. Call
+                             :meth:`refreshAuxTexture` to destroy the
+                             associated ``ImageTexture``.
         """
 
         image = self.__auximages[which]
@@ -692,7 +695,9 @@ class AuxImageTextureManager:
 
         self.__auximages[which] = None
         self.__auxopts[  which] = None
-        self.refreshAuxTexture(which)
+
+        if refreshTexture:
+            self.refreshAuxTexture(which)
 
 
     def __destroyAuxTexture(self, which):
