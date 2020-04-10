@@ -106,7 +106,7 @@ def updateShaderState(self):
     # for looking up an appropriate colour
     # in the 1D colour map texture.
     voxValXform = affine.concat(self.colourTexture.getCoordinateTransform(),
-                                   self.imageTexture.voxValXform)
+                                self.imageTexture.voxValXform)
     voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
     # And the clipping range, normalised
@@ -158,7 +158,7 @@ def preDraw(self, xform=None, bbox=None):
     self.shader.loadAtts()
 
     if isinstance(self, glvolume.GLVolume):
-        clipCoordXform = self.calculateClipCoordTransform()
+        clipCoordXform = self.getAuxTextureXform('clip')
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
 
 

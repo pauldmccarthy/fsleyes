@@ -161,7 +161,7 @@ def preDraw(self, xform=None, bbox=None):
     self.shader.load()
 
     if isinstance(self, glvolume.GLVolume):
-        clipCoordXform = self.calculateClipCoordTransform()
+        clipCoordXform = self.getAuxTextureXform('clip')
         self.shader.set('clipCoordXform', clipCoordXform)
 
 

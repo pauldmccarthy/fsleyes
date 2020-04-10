@@ -107,6 +107,16 @@ class GLVolume(glimageobject.GLImageObject):
     this clipping image is stored as another :class:`.ImageTexture`.
 
 
+    If the :attr:`.ColourMapOpts.modulateAlpha` setting is active, the opacity
+    of rendered voxels is modulated by the voxel intensity.  If
+    :attr:`.VolumeOpts.modulateImage` is also set, the opacity is modulated by
+    the values in a different image - in this case, this image is stored in
+    another :class:`.ImageTexture`.
+
+    An :class:`.AuxImageTextureManager` is used to manage the clip and modulate
+    textures.
+
+
     **3D rendering**
 
 
@@ -159,8 +169,9 @@ class GLVolume(glimageobject.GLImageObject):
     ``imageTexture``     The :class:`.ImageTexture` which stores the image
                          data.
     ``clipTexture``      The :class:`.ImageTexture` which stores the clip
-                         image data.   If :attr:`.VolumeOpts.clipImage`
-                         is ``None``, this attribute will also be ``None``.
+                         image data.
+    ``modulateTexture``  The :class:`.ImageTexture` which stores the
+                         modulate image data.
     ``colourTexture``    The :class:`.ColourMapTexture` used to store the
                          colour map.
     ``negColourTexture`` The :class:`.ColourMapTexture` used to store the
@@ -216,15 +227,15 @@ class GLVolume(glimageobject.GLImageObject):
         # create this for us.
         self.shader = None
 
-        # References to the clip image and
-        # associated DisplayOpts instance,
-        # if it is set.
-        self.clipImage        = None
-        self.clipOpts         = None
+        # aux texture manager takes care
+        # of clip+modulate textures
+        self.auxmgr = glimageobject.AuxImageTextureManager(
+            self, clip=None, modulate=None)
+        self.auxmgr.registerAuxImage('clip',     opts.clipImage)
+        self.auxmgr.registerAuxImage('modulate', opts.modulateImage)
 
         # Refs to all of the texture objects.
         self.imageTexture     = None
-        self.clipTexture      = None
         self.colourTexture    = textures.ColourMapTexture(self.texName)
         self.negColourTexture = textures.ColourMapTexture(
             '{}_neg'.format(self.texName))
@@ -246,15 +257,8 @@ class GLVolume(glimageobject.GLImageObject):
         # See that method for details.
         self.__alwaysNotify = False
 
-        # If the VolumeOpts instance has
-        # inherited a clipImage value,
-        # make sure we're registered with it.
-        if self.opts.clipImage is not None:
-            self.registerClipImage()
-
         self.refreshColourTextures()
         self.refreshImageTexture()
-        self.refreshClipTexture()
 
         # Call glvolume_funcs.init when the image
         # and clip textures are ready to be used.
@@ -277,21 +281,17 @@ class GLVolume(glimageobject.GLImageObject):
         and calls :meth:`.GLImageObject.destroy`.
         """
 
-        self.deregisterClipImage()
         self.removeDisplayListeners()
 
         self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.name)
 
-        if self.clipTexture is not None:
-            self.clipTexture.deregister(self.name)
-            glresources.delete(self.clipTexture.name)
-
         self.colourTexture   .destroy()
         self.negColourTexture.destroy()
+        self.auxmgr          .destroy()
 
+        self.auxmgr           = None
         self.imageTexture     = None
-        self.clipTexture      = None
         self.colourTexture    = None
         self.negColourTexture = None
 
@@ -322,12 +322,23 @@ class GLVolume(glimageobject.GLImageObject):
         """
         imageTexReady = (self.imageTexture is not None and
                          self.imageTexture.ready())
+        return imageTexReady and self.auxmgr.texturesReady()
 
-        clipTexReady  = (self.clipImage is None or
-                         (self.clipTexture is not None and
-                          self.clipTexture.ready()))
 
-        return imageTexReady and clipTexReady
+    @property
+    def clipTexture(self):
+        """Returns the :class:`.ImageTexture` associated with the
+        :attr:`.VolumeOpts.clipImage`.
+        """
+        return self.auxmgr.texture('clip')
+
+
+    @property
+    def modulateTexture(self):
+        """Returns the :class:`.ImageTexture` associated with the
+        :attr:`.VolumeOpts.modulateImage`.
+        """
+        return self.auxmgr.texture('modulate')
 
 
     def addDisplayListeners(self):
@@ -355,6 +366,8 @@ class GLVolume(glimageobject.GLImageObject):
         crPVs[1].addListener(name, self._highClippingRangeChanged)
 
         opts    .addListener('clipImage',        name, self._clipImageChanged)
+        opts    .addListener('modulateImage',    name,
+                             self._modulateImageChanged)
         opts    .addListener('invertClipping',   name,
                              self._invertClippingChanged)
         opts    .addListener('cmap',             name, self._cmapChanged)
@@ -440,6 +453,7 @@ class GLVolume(glimageobject.GLImageObject):
         crPVs[0].removeListener(name)
         crPVs[1].removeListener(name)
         opts    .removeListener('clipImage',               name)
+        opts    .removeListener('modulateImage',           name)
         opts    .removeListener('invertClipping',          name)
         opts    .removeListener('cmap',                    name)
         opts    .removeListener('gamma',                   name)
@@ -591,77 +605,19 @@ class GLVolume(glimageobject.GLImageObject):
         self.imageTexture.register(self.name, self.__texturesChanged)
 
 
-    def registerClipImage(self):
-        """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
-        Adds property listeners to the :class:`.NiftiOpts` instance
-        associated with the new clip image, if necessary.
+    def registerAuxImage(self, which, image, onReady=None):
+        """Calls :meth:`.AuxImageTextureManager.registerAuxImage`, making
+        sure that the texture interpolation is set appropriately.
         """
 
-        clipImage = self.opts.clipImage
+        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                                 interp = gl.GL_LINEAR
 
-        if clipImage is None:
-            return
-
-        clipOpts = self.opts.displayCtx.getOpts(clipImage)
-
-        self.clipImage = clipImage
-        self.clipOpts  = clipOpts
-
-        def updateClipTexture(*a):
-            self.clipTexture.set(volume=clipOpts.index()[3:])
-
-        clipOpts.addListener('volume',
-                             self.name,
-                             updateClipTexture,
-                             weak=False)
-
-
-    def deregisterClipImage(self):
-        """Called whenever the :attr:`.VolumeOpts.clipImage` property changes.
-        Removes property listeners from the :class:`.NiftiOpts` instance
-        associated with the old clip image, if necessary.
-        """
-
-        if self.clipImage is None:
-            return
-
-        self.clipOpts.removeListener('volume', self.name)
-
-        self.clipImage = None
-        self.clipOpts  = None
-
-
-    def refreshClipTexture(self):
-        """Re-creates the :class:`.ImageTexture` used to store the
-        :attr:`.VolumeOpts.clipImage`.
-        """
-        clipImage = self.clipImage
-        opts      = self.opts
-        clipOpts  = self.clipOpts
-
-        texName   = '{}_clip_{}'.format(type(self).__name__, id(clipImage))
-
-        if self.clipTexture is not None:
-            self.clipTexture.deregister(self.name)
-            glresources.delete(self.clipTexture.name)
-            self.clipTexture = None
-
-        if clipImage is None:
-            return None
-
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
-
-        self.clipTexture = glresources.get(
-            texName,
-            textures.ImageTexture,
-            texName,
-            clipImage,
-            interp=interp,
-            volume=clipOpts.volume,
-            notify=False)
-
-        self.clipTexture.register(self.name, self.__texturesChanged)
+        self.auxmgr.texture(which).deregister(self.name)
+        self.auxmgr.registerAuxImage(which, image, interp=interp)
+        self.auxmgr.texture(which).register(self.name, self.__texturesChanged)
+        if onReady is not None:
+            idle.idleWhen(onReady, self.auxmgr.texturesReady)
 
 
     def refreshColourTextures(self):
@@ -711,9 +667,8 @@ class GLVolume(glimageobject.GLImageObject):
         self.imageTexture    .bindTexture(gl.GL_TEXTURE0)
         self.colourTexture   .bindTexture(gl.GL_TEXTURE1)
         self.negColourTexture.bindTexture(gl.GL_TEXTURE2)
-
-        if self.clipTexture is not None:
-            self.clipTexture .bindTexture(gl.GL_TEXTURE3)
+        self.clipTexture     .bindTexture(gl.GL_TEXTURE3)
+        self.modulateTexture .bindTexture(gl.GL_TEXTURE4)
 
         fslgl.glvolume_funcs.preDraw(self, *args, **kwargs)
 
@@ -824,31 +779,25 @@ class GLVolume(glimageobject.GLImageObject):
         self.imageTexture    .unbindTexture()
         self.colourTexture   .unbindTexture()
         self.negColourTexture.unbindTexture()
-
-        if self.clipTexture is not None:
-            self.clipTexture.unbindTexture()
+        self.clipTexture     .unbindTexture()
+        self.modulateTexture .unbindTexture()
 
         fslgl.glvolume_funcs.postDraw(self, *args, **kwargs)
 
 
-    def calculateClipCoordTransform(self):
+    def getAuxTextureXform(self, which):
         """Calculates a transformation matrix which will transform from the
-        image coordinate system into the :attr:`.VolumeOpts.clipImage`
-        coordinate system. If ``clipImage is None``, it will be an identity
-        transform.
+        image coordinate system into the :attr:`.VolumeOpts.clipImage` or
+        :attr:`.VolumeOpts.modulateImage` coordinate system. If the property
+        is ``None``, it will be an identity transform.
 
-        This transform is used by shader programs to find the clip image
+        This transform is used by shader programs to find the auxillary image
         coordinates that correspond with specific image coordinates.
         """
-        if self.opts.clipImage is None:
-            clipCoordXform = np.eye(4)
-        else:
-            clipCoordXform = affine.concat(
-                self.clipOpts.getTransform('display', 'texture'),
-                self.opts    .getTransform('texture', 'display'),
-                self.imageTexture.invTexCoordXform(self.overlay.shape))
-
-        return clipCoordXform
+        return affine.concat(
+            self.auxmgr.textureXform(which),
+            # to support 2D image textures
+            self.imageTexture.invTexCoordXform(self.overlay.shape))
 
 
     def generateVertices2D(self, zpos, axes, bbox=None):
@@ -927,9 +876,13 @@ class GLVolume(glimageobject.GLImageObject):
     def _clipImageChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.clipImage` property changes.
         """
-        self.deregisterClipImage()
-        self.registerClipImage()
-        self.refreshClipTexture()
+        self.registerAuxImage('clip')
+
+
+    def _modulateImageChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.modulateImage` property changes.
+        """
+        self.registerAuxImage('modulate')
 
 
     def _invertClippingChanged(self, *a):
@@ -1001,8 +954,8 @@ class GLVolume(glimageobject.GLImageObject):
                               volRefresh=volRefresh,
                               normaliseRange=normRange)
 
-        if self.clipTexture is not None:
-            self.clipTexture.set(interp=interp)
+        self.clipTexture    .set(interp=interp)
+        self.modulateTexture.set(interp=interp)
 
 
     def _channelChanged(self, *a, **kwa):
