@@ -18,10 +18,12 @@
  */
 bool sample_volume(vec3      texCoord,
                    vec3      clipTexCoord,
+                   vec3      modTexCoord,
                    out float voxValue,
                    out vec4  finalColour) {
 
   float clipValue;
+  float modValue;
   bool  negCmap = false;
 
   /*
@@ -54,13 +56,12 @@ bool sample_volume(vec3      texCoord,
   }
 
   /*
-   * Look up the clipping value
+   * Look up the clip value
    */
-  if (imageIsClip)
-    clipValue = voxValue;
-
+  if (imageIsClip) { clipValue = voxValue; }
   /*
-   * Out of bounds of the clipping texture
+
+  * Out of bounds of the clipping texture
    */
   else if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
            any(greaterThan(fragClipTexCoord, vec3(1)))) {
@@ -74,6 +75,26 @@ bool sample_volume(vec3      texCoord,
   else                  clipValue = texture3D(    clipTexture,
                                                   clipTexCoord).r;
 
+  /*
+   * And the modulate value value
+   */
+  if (imageIsMod || !modulateAlpha) {
+    modValue = voxValue;
+  }
+  /*
+   * Out of bounds of the mod texture
+   */
+  else if (any(lessThan(   fragModTexCoord, vec3(0))) ||
+           any(greaterThan(fragModTexCoord, vec3(1)))) {
+    modValue = 1;
+  }
+
+  else if (useSpline)   modValue = spline_interp(modulateTexture,
+                                                 modTexCoord,
+                                                 modImageShape,
+                                                 0);
+  else                  modValue = texture3D(    modulateTexture,
+                                                 modTexCoord).r;
   /*
    * If we are using a negative colour map,
    * and the voxel value is below the negative
@@ -117,7 +138,7 @@ bool sample_volume(vec3      texCoord,
    * to high display range get alpha=1
    */
   if (modulateAlpha) {
-      finalColour.a = voxValue;
+      finalColour.a = modValue;
   }
 
   return true;

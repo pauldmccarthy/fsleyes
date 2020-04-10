@@ -74,12 +74,14 @@ def updateShaderState(self):
     display = self.display
     shader  = self.shader
 
+    imageIsClip = opts.clipImage     is None
+    imageIsMod  = opts.modulateImage is None
+
     # The clipping range options are in the voxel value
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale
     # them.
-    imageIsClip = opts.clipImage is None
-    imgXform    = self.imageTexture.invVoxValXform
+    imgXform = self.imageTexture.invVoxValXform
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
 
@@ -94,6 +96,8 @@ def updateShaderState(self):
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
+    if imageIsMod:  modImageShape  = imageShape
+    else:           modImageShape  = opts.modulateImage.shape[:3]
 
     modAlpha = (not self.threedee) and opts.modulateAlpha
 
@@ -118,13 +122,16 @@ def updateShaderState(self):
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
     changed |= shader.set('imageIsClip',      imageIsClip)
+    changed |= shader.set('imageIsMod',       imageIsMod)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
+    changed |= shader.set('modImageShape',    modImageShape)
     changed |= shader.set('modulateAlpha',    modAlpha)
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
+    changed |= shader.set('modulateTexture',  4)
 
     if self.threedee:
         blendFactor = (1 - opts.blendFactor) ** 2
@@ -162,7 +169,9 @@ def preDraw(self, xform=None, bbox=None):
 
     if isinstance(self, glvolume.GLVolume):
         clipCoordXform = self.getAuxTextureXform('clip')
+        modCoordXform  = self.getAuxTextureXform('modulate')
         self.shader.set('clipCoordXform', clipCoordXform)
+        self.shader.set('modCoordXform',  modCoordXform)
 
 
 def draw2D(self, zpos, axes, xform=None, bbox=None):

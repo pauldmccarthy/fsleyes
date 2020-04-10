@@ -231,8 +231,8 @@ class GLVolume(glimageobject.GLImageObject):
         # of clip+modulate textures
         self.auxmgr = glimageobject.AuxImageTextureManager(
             self, clip=None, modulate=None)
-        self.auxmgr.registerAuxImage('clip',     opts.clipImage)
-        self.auxmgr.registerAuxImage('modulate', opts.modulateImage)
+        self.auxmgr.registerAuxImage('clip',     self.opts.clipImage)
+        self.auxmgr.registerAuxImage('modulate', self.opts.modulateImage)
 
         # Refs to all of the texture objects.
         self.imageTexture     = None
@@ -876,13 +876,13 @@ class GLVolume(glimageobject.GLImageObject):
     def _clipImageChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.clipImage` property changes.
         """
-        self.registerAuxImage('clip')
+        self.registerAuxImage('clip', self.opts.clipImage)
 
 
     def _modulateImageChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.modulateImage` property changes.
         """
-        self.registerAuxImage('modulate')
+        self.registerAuxImage('modulate', self.opts.modulateImage)
 
 
     def _invertClippingChanged(self, *a):
