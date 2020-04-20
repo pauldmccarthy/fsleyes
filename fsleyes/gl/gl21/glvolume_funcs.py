@@ -72,18 +72,45 @@ def updateShaderState(self):
 
     opts    = self.opts
     display = self.display
+    image   = self.image
     shader  = self.shader
 
     imageIsClip = opts.clipImage     is None
     imageIsMod  = opts.modulateImage is None
 
-    # The clipping range options are in the voxel value
+    # The clipping options are in the voxel value
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale
     # them.
     imgXform = self.imageTexture.invVoxValXform
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
+
+    # the shader needs to normalise the modulate value
+    # by the modulate range, using a scale+offset
+    # We calculate the scale+offset by buildin an affine
+    # transform which transforms voxel values from the
+    # image/modulate image texture range to 0/1, where
+    # 0 corresponds to the low modulate range bound, and
+    # 1 to the high modulate range bound. The resulting
+    # scale/offset can be used by the shader to convert
+    # a modulate value directly into an opacity value.
+    if imageIsMod:
+        modXform = self.imageTexture.voxValXform
+    else:
+        modXform = self.modulateTexture.voxValXform
+
+    modlo, modhi = opts.modulateRange
+    modrange     = modhi - modlo
+    if modrange == 0:
+        modXform = np.eye(4)
+    else:
+        modXform = affine.concat(
+            affine.scaleOffsetXform(1 / modrange, -modlo / modrange),
+            modXform)
+
+    modScale  = modXform[0, 0]
+    modOffset = modXform[0, 3]
 
     clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
@@ -118,6 +145,8 @@ def updateShaderState(self):
     changed |= shader.set('texShape',         texShape)
     changed |= shader.set('clipLow',          clipLow)
     changed |= shader.set('clipHigh',         clipHigh)
+    changed |= shader.set('modScale',         modScale)
+    changed |= shader.set('modOffset',        modOffset)
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)

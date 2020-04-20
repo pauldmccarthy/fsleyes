@@ -361,6 +361,8 @@ class GLVolume(glimageobject.GLImageObject):
         display .addListener('alpha',            name, self._alphaChanged)
         opts    .addListener('displayRange',     name,
                              self._displayRangeChanged)
+        opts    .addListener('modulateRange',    name,
+                             self._modulateRangeChanged)
 
         crPVs[0].addListener(name, self._lowClippingRangeChanged)
         crPVs[1].addListener(name, self._highClippingRangeChanged)
@@ -450,6 +452,7 @@ class GLVolume(glimageobject.GLImageObject):
 
         display .removeListener('alpha',                   name)
         opts    .removeListener('displayRange',            name)
+        opts    .removeListener('modulateRange',           name)
         crPVs[0].removeListener(name)
         crPVs[1].removeListener(name)
         opts    .removeListener('clipImage',               name)
@@ -871,6 +874,12 @@ class GLVolume(glimageobject.GLImageObject):
             return
 
         self.updateShaderState(self)
+
+
+    def _modulateRangeChanged(self, *a):
+        """Called when the :attr:`.VolumeOpts.modulateRange` property changes.
+        """
+        self.updateShaderState()
 
 
     def _clipImageChanged(self, *a):

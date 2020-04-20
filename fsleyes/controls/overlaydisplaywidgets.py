@@ -390,7 +390,7 @@ def _initWidgetSpec_ColourMapOpts(threedee):
             showLimits=False,
             slider=True,
             dependencies=['modulateAlpha'],
-            enabledWhen=lambda i, ma : ma)
+            enabledWhen=lambda i, ma : ma,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']]),
     }

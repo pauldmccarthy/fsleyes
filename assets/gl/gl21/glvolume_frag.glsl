@@ -112,6 +112,14 @@ uniform float clipLow;
 uniform float clipHigh;
 
 /*
+ * Scaling/offset factors to normalise modulate value with.
+ * These factors should convert a modulation value read from
+ * the imageTexture/modulateTexture to an alpha value.
+ */
+uniform float modScale;
+uniform float modOffset;
+
+/*
  * Value in the image texture data range which corresponds
  * to zero - this is used to determine whether to use the
  * regular, or the negative colour texture (if useNegCmap

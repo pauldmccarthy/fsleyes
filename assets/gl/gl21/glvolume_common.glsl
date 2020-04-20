@@ -25,6 +25,7 @@ bool sample_volume(vec3      texCoord,
   float clipValue;
   float modValue;
   bool  negCmap = false;
+  bool  modAlpha = modulateAlpha;
 
   /*
    * Look up the voxel value. If using a 2D
@@ -86,7 +87,7 @@ bool sample_volume(vec3      texCoord,
    */
   else if (any(lessThan(   fragModTexCoord, vec3(0))) ||
            any(greaterThan(fragModTexCoord, vec3(1)))) {
-    modValue = 1;
+    modAlpha = false;
   }
 
   else if (useSpline)   modValue = spline_interp(modulateTexture,
@@ -95,6 +96,7 @@ bool sample_volume(vec3      texCoord,
                                                  0);
   else                  modValue = texture3D(    modulateTexture,
                                                  modTexCoord).r;
+
   /*
    * If we are using a negative colour map,
    * and the voxel value is below the negative
@@ -107,11 +109,10 @@ bool sample_volume(vec3      texCoord,
     negCmap  = true;
     voxValue = texZero + (texZero - voxValue);
 
-    // Invert the clip value as well, if the
-    // image and clip textures are the same
-    if (imageIsClip) {
-      clipValue = texZero + (texZero - clipValue);
-    }
+    // Invert the clip/mod values as well, if the
+    // image and clip/mod textures are the same
+    if (imageIsClip) { clipValue = texZero + (texZero - clipValue); }
+    if (imageIsMod)  { modValue  = texZero + (texZero - modValue); }
   }
 
   /*
@@ -137,8 +138,8 @@ bool sample_volume(vec3      texCoord,
    * low display range get alpha=0, and those equal
    * to high display range get alpha=1
    */
-  if (modulateAlpha) {
-      finalColour.a = modValue;
+  if (modAlpha) {
+      finalColour.a = modValue * modScale + modOffset;
   }
 
   return true;
