@@ -199,6 +199,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             crange = [drange[0], overlay.dataRange[1]]
 
             self.displayRange  = drange
+            self.modulateRange = drange
             self.clippingRange = crange
 
         # If this is not a RGB(A) image, disable
@@ -258,6 +259,9 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             self       .addListener('clipImage',
                                     self.name,
                                     self.__clipImageChanged)
+            self       .addListener('modulateImage',
+                                    self.name,
+                                    self.__modulateImageChanged)
             self       .addListener('enableOverrideDataRange',
                                     self.name,
                                     self.__enableOverrideDataRangeChanged)
@@ -266,7 +270,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
                                     self.__overrideDataRangeChanged)
 
             self.__overlayListChanged()
-            self.__clipImageChanged(updateDataRange=False)
+            self.__clipImageChanged(    updateDataRange=False)
+            self.__modulateImageChanged(updateDataRange=False)
 
 
     def destroy(self):
@@ -283,6 +288,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
             overlayList.removeListener('overlays',                self.name)
             self       .removeListener('clipImage',               self.name)
+            self       .removeListener('modulateImage',           self.name)
             self       .removeListener('enableOverrideDataRange', self.name)
             self       .removeListener('overrideDataRange',       self.name)
 
@@ -312,11 +318,23 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             return self.clipImage.dataRange
 
 
+    def getModulateRange(self):
+        """Overrides :meth:`.ColourMapOpts.getModulateRange`.
+        If a :attr:`.modulateImage` is set, returns its data range. Otherwise
+        returns ``None``.
+        """
+
+        if self.modulateImage is None:
+            return cmapopts.ColourMapOpts.getModulateRange(self)
+        else:
+            return self.modulateImage.dataRange
+
+
     def __dataRangeChanged(self, *a):
         """Called when the :attr:`.Image.dataRange` property changes.
         Calls :meth:`.ColourMapOpts.updateDataRange`.
         """
-        self.updateDataRange(resetDR=False, resetCR=False)
+        self.updateDataRange(False, False, False)
 
 
     def __enableOverrideDataRangeChanged(self, *a):
@@ -393,12 +411,29 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             self.disableProperty('linkLowRanges')
             self.disableProperty('linkHighRanges')
 
-        log.debug('Clip image changed for {}: {}'.format(
-            self.overlay,
-            self.clipImage))
+        log.debug('Clip image changed for %s: %s',
+                  self.overlay, self.clipImage)
 
         if updateDR:
-            self.updateDataRange(resetDR=False)
+            self.updateDataRange(resetDR=False, resetMR=False)
+
+
+    def __modulateImageChanged(self, *a, **kwa):
+        """Called when the :attr:`modulateImage` property is changed. Updates
+         the range of the :attr:`modulateRange` property.
+
+        :arg updateDataRange: Defaults to ``True``. If ``False``, the
+                              :meth:`.ColourMapOpts.updateDataRange` method
+                              is not called.
+        """
+
+        updateDR = kwa.get('updateDataRange', True)
+
+        log.debug('Modulate image changed for %s: %s',
+                  self.overlay, self.modulateImage)
+
+        if updateDR:
+            self.updateDataRange(resetDR=False, resetCR=False)
 
 
 class VolumeRGBOpts(niftiopts.NiftiOpts):

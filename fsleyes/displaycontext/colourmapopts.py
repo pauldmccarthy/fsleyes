@@ -43,7 +43,7 @@ class ColourMapOpts(object):
                  ColourMapOpts.__init__(self)
 
       3. Implement the :meth:`getDataRange` and (if necessary)
-         :meth:`getClippingRange` methods.
+         :meth:`getClippingRange` and :meth:`getModulateRange` methods.
 
       4. Call :meth:`updateDataRange` whenever the data driving the colouring
          changes.
@@ -66,6 +66,7 @@ class ColourMapOpts(object):
        updateDataRange
        getDataRange
        getClippingRange
+       getModulateRange
     """
 
 
@@ -178,9 +179,15 @@ class ColourMapOpts(object):
 
     modulateAlpha = props.Boolean(default=False)
     """If ``True``, the :attr:`.Display.alpha` is modulated by the data.
-    Regions with a value near to the low :attr:`displayRange` will have an
+    Regions with a value near to the low :attr:`modulateRange` will have an
     alpha near 0, and regions with a value near to the high
-    :attr:`displayRange` will have an alpha near 1.
+    :attr:`modulateRange` will have an alpha near 1.
+    """
+
+
+    modulateRange = props.Bounds(ndims=1)
+    """Range used to determine how much to modulate :attr:`.Display.alpha`
+    by, when :attr:`modulateAlpha` is active.
     """
 
 
@@ -284,7 +291,7 @@ class ColourMapOpts(object):
         # to the parent.
         if (not self.__registered) or \
            (not self.isSyncedToParent('displayRange')):
-            self.updateDataRange(False, False)
+            self.updateDataRange(False, False, False)
 
 
     def getColourMapOptsListenerName(self):
@@ -360,18 +367,35 @@ class ColourMapOpts(object):
         return None
 
 
+    def getModulateRange(self):
+        """Can be overridden by sub-classes if necessary. If the modulate
+        range is always the same as the data range, this method does not
+        need to be overridden.
+
+        Otherwise, if the modulate ange differs from the data range (see
+        e.g. the :attr:`.VolumeOpts.modulateImage` property), this method must
+        return the modulate range as a ``(min, max)`` tuple.
+
+        When a sub-class implementation wishes to use the default modulate
+        range/behaviour, it should return the value returned by this
+        base-class implementation.
+        """
+        return None
+
+
     @actions.action
     def resetDisplayRange(self):
-        """Resets the :attr:`displayRange` and :attr:`clippingRange` to their
-        initial values.
+        """Resets the :attr:`displayRange`, :attr:`clippingRange`, and
+         :attr:`modulateRange` to their initial values.
         """
-        self.updateDataRange(True, True)
+        self.updateDataRange(True, True, True)
 
 
-    def updateDataRange(self, resetDR=True, resetCR=True):
+    def updateDataRange(self, resetDR=True, resetCR=True, resetMR=True):
         """Must be called by sub-classes whenever the ranges of the underlying
-        data or clipping values change.  Configures the minimum/maximum bounds
-        of the :attr:`displayRange` and :attr:`clippingRange` properties.
+        data or clipping/modulate values change.  Configures the minimum/
+        maximum bounds of the :attr:`displayRange`, :attr:`clippingRange`, and
+        :attr:`modulateRange` properties.
 
         :arg resetDR: If ``True`` (the default), the :attr:`displayRange`
                       property will be reset to the data range returned
@@ -383,13 +407,19 @@ class ColourMapOpts(object):
                       by :meth:`getClippingRange`. Otherwise the existing
                       value will be preserved.
 
+        :arg resetMR: If ``True`` (the default), the :attr:`modulateRange`
+                      property will be reset to the modulate range returned
+                      by :meth:`getModulateRange`. Otherwise the existing
+                      value will be preserved.
+
         Note that both of these flags will be ignored if the existing low/high
-        :attr:`displayRange`/:attr:`clippingRange` values and limits are equal
-        to each other.
+        :attr:`displayRange`/:attr:`clippingRange`/:attr:`modulateRange`
+        values and limits are equal to each other.
         """
 
         dataMin, dataMax = self.getDataRange()
         clipRange        = self.getClippingRange()
+        modRange         = self.getModulateRange()
 
         absolute = self.useNegativeCmap
         drmin    = dataMin
@@ -401,6 +431,9 @@ class ColourMapOpts(object):
 
         if clipRange is not None: crmin, crmax = clipRange
         else:                     crmin, crmax = drmin, drmax
+
+        if modRange  is not None: mrmin, mrmax = modRange
+        else:                     mrmin, mrmax = drmin, drmax
 
         # Clipping works on >= and <=, so we add
         # a small offset to the display range limits
@@ -419,22 +452,27 @@ class ColourMapOpts(object):
         # in the correct order.
         def doUpdate():
 
-            # If display/clipping limit range
+            # If display/clipping/mod limit range
             # is 0, we assume that they haven't
             # yet been set
             drUnset = (self.displayRange .xmin == self.displayRange .xmax and
                        self.displayRange .xlo  == self.displayRange .xhi)
             crUnset = (self.clippingRange.xmin == self.clippingRange.xmax and
                        self.clippingRange.xlo  == self.clippingRange.xhi)
+            mrUnset = (self.modulateRange.xmin == self.modulateRange.xmax and
+                       self.modulateRange.xlo  == self.modulateRange.xhi)
             crGrow  =  self.clippingRange.xhi  == self.clippingRange.xmax
             drUnset =  resetDR or drUnset
             crUnset =  resetCR or crUnset
+            mrUnset =  resetMR or mrUnset
 
-            log.debug('[{}] Updating range limits [dr: {} - {}, ''cr: '
-                      '{} - {}]'.format(id(self), drmin, drmax, crmin, crmax))
+            log.debug('[%s] Updating range limits [dr: %s - %s, cr: '
+                      '%s - %s, mr: %s - %d]',
+                      id(self), drmin, drmax, crmin, crmax, mrmin, mrmax)
 
             self.displayRange .xlim = drmin, drmax
             self.clippingRange.xlim = crmin, crmax
+            self.modulateRange.xlim = mrmin, mrmax
 
             # If the ranges have not yet been set,
             # initialise them to the min/max.
@@ -442,16 +480,19 @@ class ColourMapOpts(object):
             # was previously equal to the max
             # clipping range, keep that relationship,
             # otherwise high values will be clipped.
-            if drUnset: self.displayRange .x   = drmin + droff, dataMax
+            if drUnset: self.displayRange .x   = drmin + droff, drmax
             if crUnset: self.clippingRange.x   = crmin + croff, crmax
+            if mrUnset: self.modulateRange.x   = mrmin,         mrmax
             if crGrow:  self.clippingRange.xhi = crmax
 
-            # If using absolute range values, the low
-            # display/clipping should be set to 0
+            # If using absolute range values, the
+            # low range values should be set to 0
             if absolute and self.displayRange .xlo < 0:
                 self.displayRange.xlo  = 0
             if absolute and self.clippingRange.xlo < 0:
                 self.clippingRange.xlo = 0
+            if absolute and self.modulateRange.xlo < 0:
+                self.modulateRange.xlo = 0
 
         props.safeCall(doUpdate)
 
@@ -570,7 +611,7 @@ class ColourMapOpts(object):
             self.display.enableProperty('contrast')
 
         if kwa.pop('updateDataRange', True):
-            self.updateDataRange(resetDR=False, resetCR=False)
+            self.updateDataRange(False, False, False)
 
 
     def __linkLowRangesChanged(self, *a):
