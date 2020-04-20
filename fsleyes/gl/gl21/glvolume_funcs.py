@@ -86,29 +86,7 @@ def updateShaderState(self):
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
 
-    # the shader needs to normalise the modulate value
-    # by the modulate range, using a scale+offset
-    # We calculate the scale+offset by buildin an affine
-    # transform which transforms voxel values from the
-    # image/modulate image texture range to 0/1, where
-    # 0 corresponds to the low modulate range bound, and
-    # 1 to the high modulate range bound. The resulting
-    # scale/offset can be used by the shader to convert
-    # a modulate value directly into an opacity value.
-    if imageIsMod:
-        modXform = self.imageTexture.voxValXform
-    else:
-        modXform = self.modulateTexture.voxValXform
-
-    modlo, modhi = opts.modulateRange
-    modrange     = modhi - modlo
-    if modrange == 0:
-        modXform = np.eye(4)
-    else:
-        modXform = affine.concat(
-            affine.scaleOffsetXform(1 / modrange, -modlo / modrange),
-            modXform)
-
+    modXform  = self.getModulateValueXform()
     modScale  = modXform[0, 0]
     modOffset = modXform[0, 3]
 
