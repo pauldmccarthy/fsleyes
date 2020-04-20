@@ -84,6 +84,9 @@ properties = TypeDict({
     'Data clipping range - voxels with values outside of this range will not '
     'be displayed.',
 
+    'ColourMapOpts.modulateRange' :
+    'Modulation range - controls the data range used to modulate transparency',
+
     'ColourMapOpts.invertClipping' :
     'Invert the clipping range, so that voxels inside the range are not '
     'displayed, and voxels outside of the range are displayed. '

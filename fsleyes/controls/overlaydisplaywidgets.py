@@ -160,13 +160,15 @@ def _initPropertyList_VolumeOpts(threedee):
              'linkLowRanges',
              'linkHighRanges',
              'custom_modulateAlpha',
+             'clipImage',
              'displayRange',
              'clippingRange',
-             'clipImage',
+             'modulateRange',
              'custom_overrideDataRange']
 
     if threedee:
         plist.remove('clipImage')
+        plist.remove('modulateRange')
         plist.remove('custom_modulateAlpha')
 
     return plist
@@ -381,6 +383,14 @@ def _initWidgetSpec_ColourMapOpts(threedee):
             'clippingRange',
             showLimits=False,
             slider=True,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']]),
+        'modulateRange'  : props.Widget(
+            'modulateRange',
+            showLimits=False,
+            slider=True,
+            dependencies=['modulateAlpha'],
+            enabledWhen=lambda i, ma : ma)
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']]),
     }

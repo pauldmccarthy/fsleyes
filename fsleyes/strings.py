@@ -1089,6 +1089,7 @@ properties = TypeDict({
 
     'ColourMapOpts.displayRange'     : 'Display range',
     'ColourMapOpts.clippingRange'    : 'Clipping range',
+    'ColourMapOpts.modulateRange'    : 'Modulate range',
     'ColourMapOpts.linkLowRanges'    : 'Link low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'   : 'Link high display/clipping ranges',
     'ColourMapOpts.modulateAlpha'    : 'Modulate alpha by intensity',
