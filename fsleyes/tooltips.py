@@ -119,12 +119,6 @@ properties = TypeDict({
     'regions with a value near to the high display range will have opacity '
     'near 1.',
 
-    'ColourMapOpts.custom_modulateAlpha' :
-    'Modulate alpha (opacity) by the intensity at each region. Regions with a '
-    'value near to the low display range will have opacity near 0, and '
-    'regions with a value near to the high display range will have opacity '
-    'near 1.',
-
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
