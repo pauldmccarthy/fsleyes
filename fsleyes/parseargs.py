@@ -498,9 +498,11 @@ OPTIONS = td.TypeDict({
                         'linkHighRanges',
                         'overrideDataRange',
                         'clipImage',
+                        'modulateImage',
                         'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
+                        'modulateRange',
                         'gamma',
                         'channel',
                         'invertClipping',
@@ -813,6 +815,7 @@ ARGUMENTS = td.TypeDict({
 
     'ColourMapOpts.displayRange'     : ('dr',  'displayRange',     True),
     'ColourMapOpts.clippingRange'    : ('cr',  'clippingRange',    True),
+    'ColourMapOpts.modulateRange'    : ('mr',  'modulateRange',    True),
     'ColourMapOpts.invertClipping'   : ('ic',  'invertClipping',   False),
     'ColourMapOpts.cmap'             : ('cm',  'cmap',             True),
     'ColourMapOpts.negativeCmap'     : ('nc',  'negativeCmap',     True),
@@ -828,6 +831,7 @@ ARGUMENTS = td.TypeDict({
     'VolumeOpts.channel'           : ('ch',  'channel',           True),
     'VolumeOpts.overrideDataRange' : ('or',  'overrideDataRange', True),
     'VolumeOpts.clipImage'         : ('cl',  'clipImage',         True),
+    'VolumeOpts.modulateImage'     : ('mi',  'modulateImage',     True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
 
     'Volume3DOpts.numSteps'      : ('ns',  'numSteps',      True),
@@ -1058,17 +1062,18 @@ HELP = td.TypeDict({
 
     'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
 
-    'ColourMapOpts.displayRange'      : 'Display range. Setting this will '
-                                        'override brightnes/contrast '
-                                        'settings. For volume overlays only: '
-                                        'append a "%%" to the high value to '
-                                        'set range by percentile.',
-    'ColourMapOpts.clippingRange'     : 'Clipping range. Setting this will '
-                                        'override the low display range '
-                                        '(unless low ranges are unlinked).'
-                                        'For volume overlays only: append '
-                                        'a "%%" to the high value to clip by '
-                                        'percentile.',
+    'ColourMapOpts.displayRange'      :
+    'Display range. Setting this will override brightnes/contrast '
+    'settings. For volume overlays only: append a "%%" to the high value to '
+    'set range by percentile.',
+    'ColourMapOpts.clippingRange'     :
+    'Clipping range. Setting this will override the low display range '
+    '(unless low ranges are unlinked). For volume overlays only: append '
+    'a "%%" to the high value to clip by percentile.',
+    'ColourMapOpts.modulateRange'     :
+    'Modulate range. Sets the range by which opacity should be modulated by. '
+    'For volume overlays only: append a "%%" to the high value to modulate by '
+    'percentile.',
     'ColourMapOpts.invertClipping'    : 'Invert clipping',
     'ColourMapOpts.cmap'              : 'Colour map',
     'ColourMapOpts.negativeCmap'      : 'Colour map for negative values '
@@ -1092,6 +1097,8 @@ HELP = td.TypeDict({
                                      'images with a large data range that is '
                                      'driven by outliers.' ,
     'VolumeOpts.clipImage'         : 'Image containing clipping values '
+                                     '(defaults to the image itself)' ,
+    'VolumeOpts.modulateImage'     : 'Image containing modulation values '
                                      '(defaults to the image itself)' ,
     'VolumeOpts.interpolation'     : 'Interpolation',
 
@@ -1306,8 +1313,8 @@ def getExtra(target, propName, default=None):
     # Same for MeshOpts.vertexSet
     vertexSetSettings = dict(vertexDataSettings)
 
-    # VolumeOpts.clippingRange and displayRange are
-    # manually applied with special apply functions,
+    # VolumeOpts.clippingRange, modulateRange and displayRange
+    # are manually applied with special apply functions,
     # but if an invalid value is passed in, we want the
     # error to occur during argument parsing. So we define
     # a custom 'type' which validates the value, raises
@@ -1345,6 +1352,7 @@ def getExtra(target, propName, default=None):
         (fsldisplay.VolumeOpts,     'cmap')          : cmapSettings,
         (fsldisplay.VolumeOpts,     'clippingRange') : rangeSettings,
         (fsldisplay.VolumeOpts,     'displayRange')  : rangeSettings,
+        (fsldisplay.VolumeOpts,     'modulateRange') : rangeSettings,
         (fsldisplay.VolumeOpts,     'negativeCmap')  : cmapSettings,
         (fsldisplay.LineVectorOpts, 'cmap')          : cmapSettings,
         (fsldisplay.RGBVectorOpts,  'cmap')          : cmapSettings,
@@ -1399,7 +1407,8 @@ def getExtra(target, propName, default=None):
 # need special treatment.
 FILE_OPTIONS = td.TypeDict({
     'Main'       : ['displaySpace'],
-    'VolumeOpts' : ['clipImage'],
+    'VolumeOpts' : ['clipImage',
+                    'modulateImage'],
     'VectorOpts' : ['clipImage',
                     'colourImage',
                     'modulateImage'],
@@ -2776,7 +2785,7 @@ def applyOverlayArgs(args,
                 # when we try to set the link properties
                 # on the VolumeOpts instance (because
                 # they have been disabled). So we
-                # clear themfrom the argparse namespace
+                # clear them from the argparse namespace
                 # to prevent this from occurring.
                 if fileOpt == 'clipImage' and \
                    isinstance(opts, fsldisplay.VolumeOpts):
@@ -3302,7 +3311,20 @@ def _applySpecial_VolumeOpts_clippingRange(
     line normally (as two numbers), or can be specified as a percentile by
     appending a ``'%'`` character to the high range value.
     """
-    target.clippingRange = _applyVolumeOptsRange(args.clippingRange, target)
+    target.clippingRange = _applyVolumeOptsRange(
+        args.clippingRange, target, target.clipImage)
+
+
+def _applySpecial_VolumeOpts_modulateRange(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.VolumeOpts.modulateRange` option.
+
+    The ``VolumeOpts.modulateRange`` property can be specified on the command
+    line normally (as two numbers), or can be specified as a percentile by
+    appending a ``'%'`` character to the high range value.
+    """
+    target.modulateRange = _applyVolumeOptsRange(
+        args.modulateRange, target, target.modulateImage)
 
 
 def _applySpecial_VolumeOpts_displayRange(
@@ -3316,16 +3338,19 @@ def _applySpecial_VolumeOpts_displayRange(
     target.displayRange = _applyVolumeOptsRange(args.displayRange, target)
 
 
-def _applyVolumeOptsRange(arange, target):
+def _applyVolumeOptsRange(arange, target, auximage=None):
     """This function is used to parse display/clipping range arguments. """
 
     arange = list(arange)
+
+    if auximage is None: overlay = target.overlay
+    else:                overlay = auximage
 
     if arange[1][-1] == '%':
 
         arange[1] = arange[1][:-1]
         arange    = [float(r) for r in arange]
-        arange    = np.nanpercentile(target.overlay[:], arange)
+        arange    = np.nanpercentile(overlay[:], arange)
 
     else:
         arange = [float(r) for r in arange]
