@@ -749,3 +749,15 @@ def complex():
     img.save('complex.nii.gz')
 
     return 'complex.nii.gz'
+
+
+def invert(infile):
+
+    img        = fslimage.Image(infile)
+    data       = img.data
+    dmin, dmax = data.min(), data.max()
+    data       = dmin + (dmax - data)
+
+    fslimage.Image(data, header=img.header).save('inverted.nii.gz')
+
+    return 'inverted.nii.gz'

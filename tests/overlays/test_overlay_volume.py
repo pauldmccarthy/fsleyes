@@ -20,7 +20,13 @@ import numpy as np
 import fsl.transform.affine as affine
 import fsl.data.image       as fslimage
 
-from .. import run_cli_tests, translate, zero_centre, asrgb, roi, complex
+from .. import (run_cli_tests,
+                translate,
+                zero_centre,
+                asrgb,
+                roi,
+                complex,
+                invert)
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -113,6 +119,19 @@ cli_tests = """
 -vl 0 0 0 -xc 0 0 -yc 0 0 -zc 0 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
 
 {{complex()}}  -ot volume # real component should be displayed
+
+-bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow
+-bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow
+-bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow
+-bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma               -cm red-yellow -nc blue-lightblue -un
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 0    1500 -cm red-yellow -nc blue-lightblue -un
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un
+
+-bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
 """  # noqa
 
 
@@ -152,6 +171,7 @@ def test_overlay_volume():
         'asrgb'       : asrgb,
         'roi'         : roi,
         'complex'     : complex,
+        'invert'      : invert,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
 
