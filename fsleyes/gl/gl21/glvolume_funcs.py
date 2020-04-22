@@ -72,7 +72,6 @@ def updateShaderState(self):
 
     opts    = self.opts
     display = self.display
-    image   = self.image
     shader  = self.shader
 
     imageIsClip = opts.clipImage     is None
@@ -86,6 +85,7 @@ def updateShaderState(self):
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
 
+    modAlpha  = opts.modulateAlpha
     modXform  = self.getModulateValueXform()
     modScale  = modXform[0, 0]
     modOffset = modXform[0, 3]
@@ -104,8 +104,6 @@ def updateShaderState(self):
     if imageIsMod:  modImageShape  = imageShape
     else:           modImageShape  = opts.modulateImage.shape[:3]
 
-    modAlpha = (not self.threedee) and opts.modulateAlpha
-
     # Create a single transformation matrix
     # which transforms from image texture values
     # to voxel values, and scales said voxel
@@ -115,6 +113,12 @@ def updateShaderState(self):
         self.imageTexture.voxValXform)
 
     shader.load()
+
+    # disable clipimage/modalpha in 3D
+    if self.threedee:
+        imageIsClip = True
+        imageIsMod  = True
+        modAlpha    = False
 
     changed = False
 
@@ -174,7 +178,7 @@ def preDraw(self, xform=None, bbox=None):
     """
     self.shader.load()
 
-    if isinstance(self, glvolume.GLVolume):
+    if isinstance(self, glvolume.GLVolume) and not self.threedee:
         clipCoordXform = self.getAuxTextureXform('clip')
         modCoordXform  = self.getAuxTextureXform('modulate')
         self.shader.set('clipCoordXform', clipCoordXform)

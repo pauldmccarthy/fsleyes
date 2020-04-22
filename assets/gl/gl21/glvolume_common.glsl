@@ -64,8 +64,8 @@ bool sample_volume(vec3      texCoord,
 
   * Out of bounds of the clipping texture
    */
-  else if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
-           any(greaterThan(fragClipTexCoord, vec3(1)))) {
+  else if (any(lessThan(   clipTexCoord, vec3(0))) ||
+           any(greaterThan(clipTexCoord, vec3(1)))) {
     clipValue = clipLow + 0.5 * (clipHigh - clipLow);
   }
 
@@ -85,8 +85,8 @@ bool sample_volume(vec3      texCoord,
   /*
    * Out of bounds of the mod texture
    */
-  else if (any(lessThan(   fragModTexCoord, vec3(0))) ||
-           any(greaterThan(fragModTexCoord, vec3(1)))) {
+  else if (any(lessThan(   modTexCoord, vec3(0))) ||
+           any(greaterThan(modTexCoord, vec3(1)))) {
     modAlpha = false;
   }
 
