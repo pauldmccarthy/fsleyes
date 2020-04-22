@@ -514,7 +514,7 @@ There are two requirements that must be met:
     the parser. This can easily be accomplished simply by using the expression
     somewhere in a comment, as in the example above.
 
-  - The only expression types that you cannot pass direcrly into a routine
+  - The only expression types that you cannot pass directly into a routine
     are Parameters with a length greater than 1 (e.g. matrix parameters). For
     example, this will result in a compiler error::
 
@@ -810,7 +810,7 @@ def _render(src, env, includePath):
         # 1. Looks up the called filename in the includes dictionary
         # 2. Resolve any arguments which need to be passed through
         #    from an outer arb_call
-        # 3. Generates code - render file source with the probvided
+        # 3. Generates code - render file source with the provided
         #    argument mappings
         # 3. Return generated code
 
@@ -842,9 +842,9 @@ def _render(src, env, includePath):
         oce = dict(args)
         oce.update(temps)
 
-        outerCallArgs[0] = oce
-        source           = callTemplate.render(**callEnv)
-        outerCallArgs[0] = None
+        outerCallArgs.insert(0, oce)
+        source = callTemplate.render(**callEnv)
+        outerCallArgs.pop(0)
 
         sourceLines.extend(source.split('\n'))
         source = '\n'.join(sourceLines)
