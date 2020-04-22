@@ -117,8 +117,8 @@ def updateShaderState(self):
     imageIsClip = 1 if opts.clipImage is None else -1
 
     # modalpha not applied in 3D
-    modAlpha    = 1 if (not self.threedee) and opts.modulateAlpha else -1
-    imageIsMod  = 1 if opts.modulateImage is None                 else -1
+    modAlpha    = 1 if opts.modulateAlpha         else -1
+    imageIsMod  = 1 if opts.modulateImage is None else -1
     modXform    = self.getModulateValueXform()
 
     imgXform = self.imageTexture.invVoxValXform
@@ -132,6 +132,12 @@ def updateShaderState(self):
     clipping = [clipLo, clipHi, invClip, imageIsClip]
     modulate = [modXform[0, 0], modXform[0, 3], modAlpha, imageIsMod]
     negCmap  = [useNegCmap, texZero, modAlpha, 0]
+
+    # disable clip image/modalpha for 3D
+    if self.threedee:
+        clipping[3] =  1
+        modulate[2] = -1
+        modulate[3] =  1
 
     changed  = False
     changed |= shader.setFragParam('voxValXform', voxValXform)
