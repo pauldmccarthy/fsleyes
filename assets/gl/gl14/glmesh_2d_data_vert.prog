@@ -6,7 +6,8 @@
 #    {{ attr_vertexData }} - Data associated with the current vertex
 #
 # Outputs:
-#    {{ varying_vertexData}}  - As above, passed through to fragment shader.
+#    {{ varying_vertexData}}    - As above, passed through to fragment shader.
+#    {{ varying_modulateeData}} - As above, passed through to fragment shader.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -17,7 +18,8 @@ DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
 DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
 DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
-# Copy the vertex data
-MOV {{ varying_vertexData }}, {{ attr_vertexData }};
+# Copy the vertex/modulate data
+MOV {{ varying_vertexData }},   {{ attr_vertexData }};
+MOV {{ varying_modulateData }}, {{ attr_vertexData }};
 
 END

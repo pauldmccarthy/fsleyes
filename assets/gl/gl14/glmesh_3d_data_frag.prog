@@ -22,10 +22,10 @@
 #   - {{ texture_negCmap }}
 #
 # Input varyings:
-# Input varyings:
-#   - {{ varying_vertexData }} - Vertex data value
-#   - {{ varying_vertex }}     - Vertex position in display coordinates
-#   - {{ varying_normal }}     - Vertex normal
+#   - {{ varying_vertexData }}   - Vertex data value
+#   - {{ varying_modulateData }} - Vertex alpha modulation value
+#   - {{ varying_vertex }}       - Vertex position in display coordinates
+#   - {{ varying_normal }}       - Vertex normal
 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
@@ -47,6 +47,7 @@ TEMP litColour;
             cmap='{{ texture_cmap }}',
             negCmap='{{ texture_negCmap }}',
             vertexData='{{ varying_vertexData }}',
+            modulateData='{{ varying_modulateData }}',
             out_colour='unlitColour')
 }}
 

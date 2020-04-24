@@ -2,28 +2,29 @@
 # It determines the colour to use for the fragment.
 #
 # Inputs:
-#   {{ settings   }} - Vector containing four settings:
-#                        1. -1 to use the negCmap texture for negative
-#                            values, or +1 to only use the cmap texture.
-#                        2. -1 to invert clipping, +1 for normal clipping
-#                        3. -1 to colour clipped fragments by the
-#                           flatColour, +1 to discard them.
-#                        4. +1 to modulate alpha by intensity, -1 otherwise
+#   {{ settings     }} - Vector containing four settings:
+#                          1. -1 to use the negCmap texture for negative
+#                              values, or +1 to only use the cmap texture.
+#                          2. -1 to invert clipping, +1 for normal clipping
+#                          3. -1 to colour clipped fragments by the
+#                             flatColour, +1 to discard them.
+#                          4. +1 to modulate alpha by intensity, -1 otherwise
 #
-#   {{ clipping   }} - Vector containing two settings:
-#                        1. Low clipping value
-#                        2. High clipping value
+#   {{ clipping     }} - Vector containing two settings:
+#                          1. Low clipping value
+#                          2. High clipping value
 #
-#   {{ flatColour }} - Vector containing a RGBA colour to use when
-#                      colouring clipped fragments.
+#   {{ flatColour   }} - Vector containing a RGBA colour to use when
+#                        colouring clipped fragments.
 #
-#   {{ cmapXform  }} - Transformation matrix which transforms vertex
-#                      data into colour map texture coordinates.
+#   {{ cmapXform    }} - Transformation matrix which transforms vertex
+#                        data into colour map texture coordinates.
 #
-#   {{ cmap       }} - 1D texture for vertex colouring
-#   {{ negCmap    }} - 1D texture for colouring vertices with negative
-#                      values, if the negative colour map is enabled.
-#   {{ vertexData }} - Data value associated with the vertex
+#   {{ cmap         }} - 1D texture for vertex colouring
+#   {{ negCmap      }} - 1D texture for colouring vertices with negative
+#                        values, if the negative colour map is enabled.
+#   {{ vertexData   }} - Data value associated with the vertex
+#   {{ modulateData }} - Alpha modulation value associated with the vertex
 #
 # Outputs:
 #   {{ out_colour }} - Output colour
@@ -49,7 +50,7 @@ TEMP useNegCmap;
 TEMP clip;
 
 # x is used to store and
-# manipulate the vertex data
+# manipulate the vertex/modulate data
 TEMP vertexData;
 
 # Used to store the
@@ -121,7 +122,7 @@ CMP colour, useNegCmap.x, negColour, colour;
 # colour with flatcolour according to
 # intensity - we use the blend if modulateAlpha
 # is set (using negColour as a temporary).
-MOV_SAT vertexData.x,  vertexData.x;
+MOV_SAT vertexData.x,  {{ modulateData }}.x;
 LRP negColour.rgb, vertexData.x, colour, {{ flatColour }};
 CMP colour.xyz, {{ settings }}.w, colour, negColour;
 
