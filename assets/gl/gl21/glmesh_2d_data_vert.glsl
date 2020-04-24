@@ -9,9 +9,11 @@
 attribute vec3  vertex;
 attribute float vertexData;
 varying   float fragVertexData;
+varying   float fragModulateData;
 
 void main(void) {
 
-  fragVertexData = vertexData;
-  gl_Position    = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  fragVertexData   = vertexData;
+  fragModulateData = vertexData;
+  gl_Position      = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
 }

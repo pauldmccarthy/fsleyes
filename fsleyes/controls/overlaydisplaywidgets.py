@@ -254,7 +254,8 @@ def _initPropertyList_MeshOpts(threedee):
              'linkHighRanges',
              'modulateAlpha',
              'displayRange',
-             'clippingRange']
+             'clippingRange',
+             'modulateRange']
 
     # Remove outline
     # options for 3D

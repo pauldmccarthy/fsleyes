@@ -257,6 +257,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('vertexData',       name, shader,      weak=False)
         opts   .addListener('vertexDataIndex',  name, shader,      weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
+        opts   .addListener('modulateRange',    name, shader,      weak=False)
         opts   .addListener('invertClipping',   name, shader,      weak=False)
         opts   .addListener('discardClipped',   name, shader,      weak=False)
         opts   .addListener('cmap',             name, refreshCmap, weak=False)
@@ -294,6 +295,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('vertexData',       self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
+        self.opts   .removeListener('modulateRange',    self.name)
         self.opts   .removeListener('invertClipping',   self.name)
         self.opts   .removeListener('discardClipped',   self.name)
         self.opts   .removeListener('cmap',             self.name)
@@ -1014,9 +1016,24 @@ class GLMesh(globject.GLObject):
         else:
             cmapXform = self.cmapTexture.getCoordinateTransform()
 
+        # calculate a scale+offset which transforms
+        # modulate alpha value from the data range
+        # into an alpha value, according to the
+        # modulateRange
+        modlo, modhi = dopts.modulateRange
+        modRange     = modhi - modlo
+        if modRange == 0:
+            modScale  = 1
+            modOffset = 0
+        else:
+            modScale  = 1 / modRange
+            modOffset = -modlo / modRange
+
         fslgl.glmesh_funcs.updateShaderState(
             self,
             useNegCmap=useNegCmap,
             cmapXform=cmapXform,
+            modScale=modScale,
+            modOffset=modOffset,
             flatColour=flatColour,
             lightPos=lightPos)
