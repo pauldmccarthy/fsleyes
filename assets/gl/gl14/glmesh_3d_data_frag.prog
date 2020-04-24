@@ -9,6 +9,7 @@
 #
 #   {{ param_settings }}
 #   {{ param_clipping }}
+#   {{ param_modulate }}
 #   {{ param_flatColour }}
 #   {{ param4_cmapXform }}
 #
@@ -42,6 +43,7 @@ TEMP litColour;
 {{ arb_call('glmesh_data_common.prog',
             settings='{{ param_settings }}',
             clipping='{{ param_clipping }}',
+            modulate='{{ param_modulate }}',
             flatColour='{{ param_flatColour }}',
             cmapXform='cmapXform',
             cmap='{{ texture_cmap }}',

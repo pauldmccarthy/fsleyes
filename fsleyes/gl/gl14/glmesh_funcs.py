@@ -66,12 +66,16 @@ def updateShaderState(self, **kwargs):
     dshader = self.dataShader
     fshader = self.flatShader
 
-    settings   = [-1 if     kwargs['useNegCmap'] else 1,
-                  -1 if     dopts.invertClipping else 1,
-                  -1 if not dopts.discardClipped else 1,
-                  -1 if not dopts.modulateAlpha  else 1]
+    settings = [-1 if     kwargs['useNegCmap'] else 1,
+                -1 if     dopts.invertClipping else 1,
+                -1 if not dopts.discardClipped else 1,
+                0]
 
-    clipping   = [dopts.clippingRange.xlo, dopts.clippingRange.xhi, 0, 0]
+    clipping = [dopts.clippingRange.xlo, dopts.clippingRange.xhi, 0, 0]
+    modulate = [-1 if not dopts.modulateAlpha  else 1,
+                kwargs['modScale'],
+                kwargs['modOffset'],
+                0]
 
     if self.threedee:
 
@@ -85,6 +89,7 @@ def updateShaderState(self, **kwargs):
 
     dshader.setFragParam('settings',    settings)
     dshader.setFragParam('clipping',    clipping)
+    dshader.setFragParam('modulate',    modulate)
     dshader.setFragParam('flatColour',  kwargs['flatColour'])
     dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
 

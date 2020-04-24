@@ -2,13 +2,17 @@
 # It determines the colour to use for the fragment.
 #
 # Inputs:
-#   {{ settings     }} - Vector containing four settings:
+#   {{ settings     }} - Vector containing three settings:
 #                          1. -1 to use the negCmap texture for negative
 #                              values, or +1 to only use the cmap texture.
 #                          2. -1 to invert clipping, +1 for normal clipping
 #                          3. -1 to colour clipped fragments by the
 #                             flatColour, +1 to discard them.
-#                          4. +1 to modulate alpha by intensity, -1 otherwise
+#
+#   {{ modulate     }} - Vector containing three settings:
+#                          1. +1 to modulate alpha by intensity, -1 otherwise
+#                          2. Scaling factor to apply to modulate value
+#                          3. Offset to apply to modulate value
 #
 #   {{ clipping     }} - Vector containing two settings:
 #                          1. Low clipping value
@@ -122,9 +126,9 @@ CMP colour, useNegCmap.x, negColour, colour;
 # colour with flatcolour according to
 # intensity - we use the blend if modulateAlpha
 # is set (using negColour as a temporary).
-MOV_SAT vertexData.x,  {{ modulateData }}.x;
+MAD_SAT vertexData.x, {{ modulateData }}.x, {{ modulate }}.y, {{ modulate }}.z;
 LRP negColour.rgb, vertexData.x, colour, {{ flatColour }};
-CMP colour.xyz, {{ settings }}.w, colour, negColour;
+CMP colour.xyz, {{ modulate }}.x, colour, negColour;
 
 # If the value has been clipped but
 # not killed, overwrite the final
