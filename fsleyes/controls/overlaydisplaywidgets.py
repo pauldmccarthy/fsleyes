@@ -253,6 +253,7 @@ def _initPropertyList_MeshOpts(threedee):
              'linkLowRanges',
              'linkHighRanges',
              'modulateAlpha',
+             'modulateData',
              'displayRange',
              'clippingRange',
              'modulateRange']
@@ -726,6 +727,9 @@ def _initWidgetSpec_MeshOpts(threedee):
             labels=pathName),
         'vertexData'   : props.Widget(
             'vertexData',
+            labels=pathName),
+        'modulateData'   : props.Widget(
+            'modulateData',
             labels=pathName),
         'vertexDataIndex' : props.Widget(
             'vertexDataIndex',

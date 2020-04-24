@@ -120,6 +120,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    modulateData = props.Choice((None, ))
+    """Populated with the same files available for the :attr:`vertexData`
+    attribute. Used to apply the :attr:`.ColourMapOpts.modulateAlpha`
+    setting.
+    """
+
+
     refImage = props.Choice()
     """A reference :class:`.Image` instance which the mesh coordinates are
     in terms of.

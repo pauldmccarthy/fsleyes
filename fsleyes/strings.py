@@ -1164,6 +1164,7 @@ properties = TypeDict({
     'MeshOpts.custom_vertexData' : 'Vertex data',
     'MeshOpts.vertexSet'         : 'Surface definition',
     'MeshOpts.vertexData'        : 'Vertex data',
+    'MeshOpts.modulateData'      : 'Modulate by',
     'MeshOpts.vertexDataIndex'   : 'Vertex data index',
     'MeshOpts.showName'          : 'Show model name',
     'MeshOpts.custom_lut'        : 'Lookup table',
