@@ -343,7 +343,8 @@ properties = TypeDict({
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
     'MeshOpts.modulateData' :
-    'Choose a vertex data file to modulate transparency by.',
+    'Choose a vertex data file to modulate transparency by. If left unset, '
+    'transparency is modulated by the currently selected vertex data.',
     'MeshOpts.custom_vertexData'   :
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '

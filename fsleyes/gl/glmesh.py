@@ -255,6 +255,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
         opts   .addListener('wireframe',        name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, shader,      weak=False)
+        opts   .addListener('modulateData',     name, shader,      weak=False)
         opts   .addListener('vertexDataIndex',  name, shader,      weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
         opts   .addListener('modulateRange',    name, shader,      weak=False)
@@ -293,6 +294,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('outlineWidth',     self.name)
         self.opts   .removeListener('wireframe',        self.name)
         self.opts   .removeListener('vertexData',       self.name)
+        self.opts   .removeListener('modulateData',     self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
         self.opts   .removeListener('modulateRange',    self.name)
@@ -514,6 +516,7 @@ class GLMesh(globject.GLObject):
         normals   = self.normals
         blo, bhi  = self.getDisplayBounds()
         vdata     = opts.getVertexData()
+        mdata     = opts.getVertexData('modulate')
 
         is2D = np.isclose(bhi[2], blo[2])
 
@@ -544,7 +547,8 @@ class GLMesh(globject.GLObject):
                 verts,
                 normals=normals,
                 indices=idxs,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
         if xform is not None:
             gl.glPopMatrix()
