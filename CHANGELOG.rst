@@ -32,6 +32,7 @@ Fixed
 * Fixed a bug in the *Add from XNAT* action.
 * Adjusted the Jupyter Notebook integration so it does not rely on the
   existence of a command called ``jupyter-notebook``.
+* Fixed a couple of bugs in the RGB vector overlay code.
 
 
 0.32.3 (Monday 2nd March 2020)
