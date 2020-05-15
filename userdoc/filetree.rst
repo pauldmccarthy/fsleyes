@@ -20,7 +20,7 @@ lightbox, or 3D views via the *Settings* |right_arrow| *view* |right_arrow|
 FSLeyes has built-in support for a selection of structured data directories,
 including:
 
- - `Human Connectome Project <http://www.humanconnectomeproject.org/>`_ data
+ - `Human Connectome Project <https://www.humanconnectome.org/>`_ data
  - Raw `BIDS <https://bids.neuroimaging.io/>`_ data
  - `Freesurfer <http://www.freesurfer.net/>`_ data
  - `FEAT <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ data
