@@ -82,8 +82,11 @@ class GLRGBVector(glvector.GLVector):
         else:                                      vecImage = image
 
         def prefilter(data):
-            # make absolute and scale to
-            # unit length if required
+            # make absolute, and scale to unit
+            # length if required. We must make
+            # the data absolute, otherwise we
+            # cannot perform interpolation on
+            # the texture when displaying it.
             data = np.abs(data)
             if self.opts.unitLength:
                 with np.errstate(invalid='ignore'):
@@ -97,7 +100,7 @@ class GLRGBVector(glvector.GLVector):
             return data
 
         def prefilterRange(dmin, dmax):
-            if self.unitLength:
+            if self.opts.unitLength:
                 return 0, 1
             else:
                 return max((0, dmin)), max((abs(dmin), abs(dmax)))
