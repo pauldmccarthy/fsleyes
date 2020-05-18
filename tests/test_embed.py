@@ -14,6 +14,8 @@ import fsl.data.image as fslimage
 import fsl.utils.idle as idle
 import fsleyes.main   as fslmain
 
+import fsleyes.displaycontext.displaycontext as displaycontext
+import fsleyes.views.orthopanel as orthopanel
 
 datadir = op.join(op.dirname(__file__), 'testdata')
 
@@ -25,16 +27,6 @@ def test_embed():
 
     app = wx.App()
     frame = [wx.Frame(None)]
-    panel = wx.Panel(frame[0])
-    btn = wx.Button(panel)
-    btn.SetLabel('Click to open FSLeyes')
-    fsizer = wx.BoxSizer(wx.VERTICAL)
-    frame[0].SetSizer(fsizer)
-    fsizer.Add(panel, flag=wx.EXPAND)
-
-    psizer = wx.BoxSizer(wx.VERTICAL)
-    panel.SetSizer(psizer)
-    psizer.Add(btn, flag=wx.EXPAND)
 
     ncalls = [0]
 
@@ -61,6 +53,71 @@ def test_embed():
         else:
             print('Done - closing')
             wx.CallLater(1500, finish)
+
+    wx.CallLater(1000, open_fsleyes)
+
+    frame[0].Show()
+    app.MainLoop()
+
+    assert ncalls[0] == 4
+
+
+def test_embed_ownFrame():
+
+    gc.collect()
+    idle.idleLoop.reset()
+
+    app = wx.App()
+    frame = [wx.Frame(None)]
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    frame[0].SetSizer(sizer)
+
+    panel = [None]
+
+    ncalls = [0]
+
+    def finish():
+        frame[0].Close()
+        app.ExitMainLoop()
+
+    def reset():
+        print('Resetting', ncalls)
+        sizer.Remove(0)
+        panel[0].destroy()
+        panel[0].Destroy()
+        panel[0] = None
+
+
+    def open_fsleyes():
+        print('Embedded call', ncalls[0])
+
+        overlayList, displayCtx, fframe = fslmain.embed(
+            frame[0], makeFrame=False, menu=False, save=False)
+
+        assert fframe is None
+
+        img = fslimage.Image(op.join(datadir, '3d'))
+        overlayList.append(img)
+
+        cdctx = displaycontext.DisplayContext(
+            overlayList,
+            displayCtx)
+
+        panel[0] = orthopanel.OrthoPanel(frame[0], overlayList, cdctx, None)
+        sizer.Add(panel[0], flag=wx.EXPAND, proportion=1)
+
+        frame[0].Layout()
+        frame[0].Refresh()
+
+        ncalls[0] += 1
+
+        wx.CallLater(1500, reset)
+
+        if ncalls[0] < 4:
+            wx.CallLater(2500, open_fsleyes)
+        else:
+            print('Done - closing')
+            wx.CallLater(2500, finish)
 
     wx.CallLater(1000, open_fsleyes)
 
