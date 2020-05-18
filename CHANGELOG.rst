@@ -18,6 +18,8 @@ Changed
 
 
 * The minimum supported Python version is now 3.7.
+* The :func:`.embed` function accepts a ``makeFrame`` argument, allowing
+  it to be called without creating a :class:`.FSLeyesFrame`.
 
 
 Fixed
