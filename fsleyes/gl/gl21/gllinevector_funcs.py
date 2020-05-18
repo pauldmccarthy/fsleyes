@@ -32,6 +32,7 @@ import logging
 import numpy               as np
 import OpenGL.GL           as gl
 
+import fsl.data.constants   as constants
 import fsl.transform.affine as affine
 from . import                  glvector_funcs
 
@@ -107,7 +108,7 @@ def updateShaderState(self):
     opts        = self.opts
 
     # see comments in gl21/glvector_funcs.py
-    if np.issubdtype(self.imageTexture.dtype, np.integer):
+    if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:
         vvxMat = affine.scaleOffsetXform(2, -1)
     else:
         vvxMat = self.imageTexture.voxValXform
