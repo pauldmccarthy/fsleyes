@@ -14,8 +14,9 @@ These functions are used by the :mod:`.gl14.glrgbvector_funcs` and
 
 import numpy as np
 
-import fsleyes.gl.shaders   as shaders
+import fsl.data.constants   as constants
 import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
 
 
 def destroy(self):
@@ -110,7 +111,7 @@ def updateShaderState(self):
         colours, colourXform = self.getVectorColours()
 
         # See comments in gl21/glvector_funcs.py
-        if np.issubdtype(self.imageTexture.dtype, np.integer):
+        if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:
             voxValXform = affine.scaleOffsetXform(2, -1)
         else:
             voxValXform = self.imageTexture.voxValXform

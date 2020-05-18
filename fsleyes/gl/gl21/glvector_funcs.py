@@ -14,6 +14,7 @@ These functions are used by the :mod:`.gl21.glrgbvector_funcs` and
 
 import numpy as np
 
+import fsl.data.constants   as constants
 import fsl.transform.affine as affine
 import fsleyes.gl.shaders   as shaders
 
@@ -89,15 +90,12 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('invertClip',       False)
 
     else:
-
-        # If the texture data is integral,
-        # it will be automatically normalised
-        # to the range [0-1] for us. But we
-        # assume that the original data range
-        # is [-1, 1] (as this is vector data),
-        # so we rescale the data from [0, 1]
-        # back to [-1, 1].
-        if np.issubdtype(self.imageTexture.dtype, np.integer):
+        # If we are displaying an RGB24 image
+        # as a vector, we map uint8 [0, 255] to
+        # [-1, 1]. The integer values will be
+        # automatically normalised to [0, 1],
+        # so we transform from that range.
+        if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:
             voxValXform = affine.scaleOffsetXform(2, -1)
 
         # Otherwise, if it's floating point,

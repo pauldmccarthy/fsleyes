@@ -5,11 +5,13 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+from unittest import mock
 
 import pytest
 
 from .. import run_cli_tests, asrgb
 
+import fsleyes.gl.textures.data as texdata
 
 pytestmark = pytest.mark.overlayclitest
 
@@ -37,3 +39,20 @@ def test_overlay_rgbvector():
         'asrgb' : asrgb,
     }
     run_cli_tests('test_overlay_rgbvector', cli_tests, extras=extras)
+
+
+def test_overlay_rgbvector_nofloattextures():
+
+    tests = """
+    dti/dti_V1 -ot rgbvector
+    """
+
+    extras = {
+        'asrgb' : asrgb,
+    }
+
+    texdata.canUseFloatTextures.invalidate()
+    with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
+                    return_val=(False, None, None)):
+        run_cli_tests('test_overlay_rgbvector_nofloattextures',
+                      tests, extras=extras)
