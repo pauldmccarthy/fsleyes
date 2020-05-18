@@ -462,7 +462,12 @@ def embed(parent=None, makeFrame=True, **kwargs):
     fsleyes.initialise()
 
     app    = wx.GetApp()
-    ownapp = (app is None) or (not makeFrame)
+    ownapp = app is None
+
+    if ownapp and (makeFrame is False):
+        raise RuntimeError('If makeFrame is False, you '
+                           'must create a wx.App before '
+                           'calling fsleyes.main.embed')
     if ownapp:
         app = FSLeyesApp()
 
@@ -495,7 +500,7 @@ def embed(parent=None, makeFrame=True, **kwargs):
         called[0] = True
         ret[0]    = (overlayList, displayCtx, frame)
 
-    fslgl.getGLContext(parent=parent, ready=ready)
+    fslgl.getGLContext(parent=parent, ready=ready, raiseErrors=True)
     idle.block(10, until=until)
 
     if ret[0] is None:
