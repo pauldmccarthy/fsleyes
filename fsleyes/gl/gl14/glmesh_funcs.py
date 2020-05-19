@@ -124,10 +124,10 @@ def draw(self,
          vertices,
          indices=None,
          normals=None,
-         vdata=None):
+         vdata=None,
+         mdata=None):
     """Called for 3D meshes, and :attr:`.MeshOpts.vertexData` is not
     ``None``. Loads and runs the shader program.
-
 
     :arg glType:   The OpenGL primitive type.
 
@@ -139,12 +139,16 @@ def draw(self,
     :arg normals:  Vertex normals.
 
     :arg vdata:    ``(n, )`` array containing data for each vertex.
+
+    :arg mdata:    ``(n, )`` array containing alpha modulation data for
+                   each vertex.
     """
 
     shader = self.activeShader
 
-    if normals is not None: shader.setAtt('normal',     normals)
-    if vdata   is not None: shader.setAtt('vertexData', vdata.reshape(-1, 1))
+    if normals is not None: shader.setAtt('normal',       normals)
+    if vdata   is not None: shader.setAtt('vertexData',   vdata.reshape(-1, 1))
+    if mdata   is not None: shader.setAtt('modulateData', mdata.reshape(-1, 1))
 
     if normals is not None:
 

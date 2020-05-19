@@ -20,6 +20,6 @@ DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
 
 # Copy the vertex/modulate data
 MOV {{ varying_vertexData }},   {{ attr_vertexData }};
-MOV {{ varying_modulateData }}, {{ attr_vertexData }};
+MOV {{ varying_modulateData }}, {{ attr_modulateData }};
 
 END

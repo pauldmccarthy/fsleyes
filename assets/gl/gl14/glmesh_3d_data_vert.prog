@@ -43,6 +43,6 @@ DP4 {{ varying_normal }}.w, normalMatrix[3], {{ attr_normal }};
 
 # Copy the vertex/modulate data
 MOV {{ varying_vertexData }},   {{ attr_vertexData }};
-MOV {{ varying_modulateData }}, {{ attr_vertexData }};
+MOV {{ varying_modulateData }}, {{ attr_modulateData }};
 
 END

@@ -515,8 +515,15 @@ class GLMesh(globject.GLObject):
         idxs      = self.indices
         normals   = self.normals
         blo, bhi  = self.getDisplayBounds()
-        vdata     = opts.getVertexData()
+        vdata     = opts.getVertexData('vertex')
         mdata     = opts.getVertexData('modulate')
+
+        if mdata is None:
+            mdata = vdata
+
+        # TODO separate modulateDataIndex?
+        if vdata is not None: vdata = vdata[:, self.opts.vertexDataIndex]
+        if mdata is not None: mdata = mdata[:, 0]
 
         is2D = np.isclose(bhi[2], blo[2])
 
@@ -638,10 +645,14 @@ class GLMesh(globject.GLObject):
         """
 
         opts      = self.opts
-        vdata     = opts.getVertexData()
+        vdata     = opts.getVertexData('vertex')
+        mdata     = opts.getVertexData('modulate')
         useShader = self.needShader()
         vertices  = self.vertices
         faces     = self.indices
+
+        if mdata is None:
+            mdata = vdata
 
         if opts.outline:
             gl.glLineWidth(opts.outlineWidth)
@@ -665,13 +676,16 @@ class GLMesh(globject.GLObject):
 
         # Coloured from vertex data
         else:
+            # TODO separate modulateDataIndex?
             vdata = vdata[:, opts.vertexDataIndex]
+            mdata = mdata[:, 0]
             fslgl.glmesh_funcs.draw(
                 self,
                 gl.GL_TRIANGLES,
                 vertices,
                 indices=faces,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
 
     def drawCrossSection(self, zpos, axes, lo, hi, dest):
@@ -930,7 +944,9 @@ class GLMesh(globject.GLObject):
         if vdata is None:
             return None
 
-        vdata = vdata[:, opts.vertexDataIndex]
+        # TODO separate modulateDataIndex for modulateData?
+        if vdtype == 'vertex': vdata = vdata[:, opts.vertexDataIndex]
+        else:                  vdata = vdata[:, 0]
 
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
         vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)

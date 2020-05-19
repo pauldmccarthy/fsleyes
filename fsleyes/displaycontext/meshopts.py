@@ -124,6 +124,10 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """Populated with the same files available for the :attr:`vertexData`
     attribute. Used to apply the :attr:`.ColourMapOpts.modulateAlpha`
     setting.
+
+    .. note:: There is currently no support for indexing into multi-
+              dimensional modulate data (e.g. time points). A separate
+              ``modulateDataIndex`` property may be added in the future.
     """
 
 
