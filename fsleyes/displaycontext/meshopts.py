@@ -381,9 +381,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
 
     def getModulateRange(self):
-        """Overrides the :meth:`.ColourMapOpts.getDisplayRange` method.
+        """Overrides the :meth:`.ColourMapOpts.getModulateRange` method.
         Returns the display range of the currently selected
-        :attr:`vertexData`, or ``(0, 1)`` if none is selected.
+        :attr:`vertexData`, or ``None`` if none is selected.
         """
         return self.__vdataRange.get('modulate')
 
@@ -814,9 +814,18 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         # if modulate data has changed,
         # don't update display/clipping
-        # ranges, and vice versa
-        drange = key == 'vertex'
-        self.updateDataRange(drange, drange, not drange)
+        # ranges (unless modulateData is
+        # None, meaning that it is using
+        # vertexData)
+        if key == 'vertex':
+            drange = True
+            mrange = self.modulateData is None
+        # and vice versa
+        else:
+            drange = False
+            mrange = True
+
+        self.updateDataRange(drange, drange, mrange)
 
 
     def __colourChanged(self, *a):
