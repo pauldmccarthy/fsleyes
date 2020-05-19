@@ -812,7 +812,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self.vertexDataIndex = 0
             self.setAttribute('vertexDataIndex', 'maxval', npoints - 1)
 
-        self.updateDataRange()
+        # if modulate data has changed,
+        # don't update display/clipping
+        # ranges, and vice versa
+        drange = key == 'vertex'
+        self.updateDataRange(drange, drange, not drange)
 
 
     def __colourChanged(self, *a):
