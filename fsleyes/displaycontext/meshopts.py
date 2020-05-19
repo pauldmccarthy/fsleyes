@@ -309,9 +309,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # parent instance, make sure the vertex/
         # modulate data (if set) is initialised
         if self.vertexData is not None:
-            self.__vertexDataChanged()
+            self.__vdataChanged(self.vertexData, None, None, 'vertexData')
         if self.modulateData is not None:
-            self.__modulateDataChanged()
+            self.__vdataChanged(self.modulateData, None, None, 'modulateData')
 
         # If a reference image has not
         # been set on the parent MeshOpts

@@ -595,10 +595,14 @@ class GLMesh(globject.GLObject):
         if vertXform is not None:
             xform = affine.concat(xform, vertXform)
 
-        vdata     = self.getVertexData(faces, dists)
+        vdata     = self.getVertexData(faces, dists, 'vertex')
+        mdata     = self.getVertexData(faces, dists, 'modulate')
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
         nvertices = vertices.shape[0]
+
+        if mdata is None:
+            mdata = vdata
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
@@ -621,7 +625,8 @@ class GLMesh(globject.GLObject):
                 self,
                 gl.GL_LINES,
                 vertices,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
         gl.glPopMatrix()
 
@@ -904,20 +909,23 @@ class GLMesh(globject.GLObject):
         return lines, faces, dists, vertXform
 
 
-    def getVertexData(self, faces, dists):
-        """If :attr:`.MeshOpts.vertexData` is not ``None``, this method
-        returns the vertex data to use for the line segments calculated
-        in the :meth:`calculateIntersection` method.
+    def getVertexData(self, faces, dists, vdtype):
+        """If :attr:`.MeshOpts.vertexData` (or :attr:`.MeshOpts.modulateData`)
+        is not ``None``, this method returns the vertex data to use for the
+        line segments calculated in the :meth:`calculateIntersection` method.
 
         The ``dists`` array contains barycentric coordinates for each line
         vertex, and is used to linearly interpolate between the values of the
         vertices of the intersected triangles (defined in ``faces``).
 
         If ``MeshOpts.vertexData is None``, this method returns ``None``.
+
+        :arg vdtype: Use ``'vertex'`` for :attr:`.MeshOpts.vertexData`, or
+                     ``'modulate'`` for :attr:`.MeshOpts.modulateData`.
         """
 
         opts  = self.opts
-        vdata = opts.getVertexData()
+        vdata = opts.getVertexData(vdtype)
 
         if vdata is None:
             return None

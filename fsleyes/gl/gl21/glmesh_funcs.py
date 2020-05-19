@@ -140,6 +140,9 @@ def draw(self,
     :arg normals:  Vertex normals.
 
     :arg vdata:    ``(n, )`` array containing data for each vertex.
+
+    :arg mdata:    ``(n, )`` array containing alpha modulation data for
+                   each vertex.
     """
 
     shader = self.activeShader
