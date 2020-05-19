@@ -550,6 +550,7 @@ OPTIONS = td.TypeDict({
     'MeshOpts'       : ['vertexData',
                         'vertexDataIndex',
                         'vertexSet',
+                        'modulateData',
                         'colour',
                         'outline',
                         'outlineWidth',
@@ -562,6 +563,7 @@ OPTIONS = td.TypeDict({
                         'useNegativeCmap',
                         'displayRange',
                         'clippingRange',
+                        'modulateRange',
                         'gamma',
                         'discardClipped',
                         'invertClipping',
@@ -885,6 +887,7 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.vertexData'      : ('vd',  'vertexData',      True),
     'MeshOpts.vertexDataIndex' : ('vdi', 'vertexDataIndex', True),
     'MeshOpts.vertexSet'       : ('vs',  'vertexSet',       True),
+    'MeshOpts.modulateData'    : ('md',  'modulateData',    True),
     'MeshOpts.useLut'          : ('ul',  'useLut',          False),
     'MeshOpts.lut'             : ('l',   'lut',             True),
     'MeshOpts.discardClipped'  : ('dc',  'discardClipped',  False),
@@ -1177,6 +1180,8 @@ HELP = td.TypeDict({
     'display.',
     'MeshOpts.vertexSet' :
     'A file containing an additional (compatible) mesh definition.',
+    'MeshOpts.modulateData' :
+    'Vertex data file by which to modulate transparency by.',
     'MeshOpts.useLut' :
     'Use a lookup table instead of colour map(S) when colouring the mesh '
     'with vertex data.',
@@ -1297,9 +1302,9 @@ def getExtra(target, propName, default=None):
         'alpha' : False,
     }
 
-    # MeshOpts.vertexData is a Choice
-    # property, but needs to accept
-    # any value on the command line,
+    # MeshOpts.vertexData/modulateData is
+    # a Choice property, but needs to
+    # accept any value on the command line,
     # as the vertex data files need to
     # be pre-loaded (by an applySpecial
     # function).
@@ -1381,6 +1386,9 @@ def getExtra(target, propName, default=None):
         (fsldisplay.MeshOpts,       'vertexData')    : vertexDataSettings,
         (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
         (fsldisplay.FreesurferOpts, 'vertexData')    : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'modulateData')  : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'modulateData')  : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'modulateData')  : vertexDataSettings,
         (fsldisplay.MeshOpts,       'vertexSet')     : vertexSetSettings,
         (fsldisplay.GiftiOpts,      'vertexSet')     : vertexSetSettings,
         (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
@@ -3259,6 +3267,18 @@ def _applySpecial_MeshOpts_vertexData(
         vertexData[i] = loadvertexdata.loadVertexData(
             target.overlay, displayCtx, vd, select=(i == last))
     target.vertexData = vertexData[0]
+
+
+def _applySpecial_MeshOpts_modulateData(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.MeshOpts.modulateData` option. """
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+    # Modulate data files need to be pre-loaded
+    modulateData = list(args.modulateData)
+    for i, vd in enumerate(modulateData):
+        modulateData[i] = loadvertexdata.loadVertexData(
+            target.overlay, displayCtx, vd, select=False)
+    target.modulateData = modulateData[0]
 
 
 def _applySpecial_MeshOpts_vertexSet(
