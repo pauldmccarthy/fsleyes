@@ -11,7 +11,7 @@ import pytest
 import fsl.data.image       as fslimage
 import fsl.transform.affine as affine
 
-from .. import run_cli_tests, fliporient
+from .. import run_cli_tests, fliporient, invert
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -68,6 +68,15 @@ mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 
 # Regression: incorrect mesh bounds calculation
 # when reference image affine has rotations
 -ds world {{oblique('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0.5 0.5 1 -r mesh_ref_oblique
+
+# modulate alpha options
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr  1 50
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr 50 99
+
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma           -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr  1 50 -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr 50 99 -md {{invert('mesh_l_thal_data3d.txt')}}
 """
 
 
@@ -89,7 +98,8 @@ def oblique(infile):
 def test_overlay_mesh():
     extras = {
         'fliporient' : fliporient,
-        'oblique'    : oblique
+        'oblique'    : oblique,
+        'invert'     : invert,
     }
     run_cli_tests('test_overlay_mesh',
                   cli_tests,

@@ -753,11 +753,22 @@ def complex():
 
 def invert(infile):
 
-    img        = fslimage.Image(infile)
-    data       = img.data
-    dmin, dmax = data.min(), data.max()
-    data       = dmin + (dmax - data)
+    if fslimage.looksLikeImage(infile):
+        basename   = fslimage.removeExt(op.basename(infile))
+        img        = fslimage.Image(infile)
+        data       = img.data
+        dmin, dmax = data.min(), data.max()
+        data       = dmin + (dmax - data)
+        outfile    = '{}_inverted.nii.gz'.format(basename)
+        fslimage.Image(data, header=img.header).save(outfile)
 
-    fslimage.Image(data, header=img.header).save('inverted.nii.gz')
+    # assume text file
+    else:
+        basename, ext = op.split(infile)
+        data          = np.loadtxt(infile)
+        dmin, dmax    = data.min(), data.max()
+        data          = dmin + (dmax - data)
+        outfile       = '{}_inverted.{}'.format(basename, ext)
+        np.savetxt(outfile, data)
 
-    return 'inverted.nii.gz'
+    return outfile

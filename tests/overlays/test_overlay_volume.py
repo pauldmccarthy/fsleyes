@@ -128,10 +128,10 @@ cli_tests = """
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 0    1500 -cm red-yellow -nc blue-lightblue -un
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un
 
--bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
--bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
--bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
--bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d')}} {{invert('3d')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 """  # noqa
 
 
