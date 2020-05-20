@@ -18,16 +18,17 @@ Added
 
 
 * New *modulate alpha* option for volume and mesh overlays, which causes
-  opacity to be modulated by voxel/vertex intensity.
+  opacity to be modulated by voxel/vertex intensity (!193).
 
 
 Changed
 ^^^^^^^
 
 
-* The minimum supported Python version is now 3.7.
+* The minimum supported Python version is now 3.7, due to reliance upon
+  a recent version of `fslpy` (!190).
 * The :func:`.embed` function accepts a ``mkFrame`` argument, allowing
-  it to be called without creating a :class:`.FSLeyesFrame`.
+  it to be called without creating a :class:`.FSLeyesFrame` (!195).
 
 
 Fixed
@@ -35,14 +36,14 @@ Fixed
 
 
 * Fixed a bug in the *Export data series* action, which was causing
-  a crash on macOS.
+  a crash on macOS (!190).
 * Importing modules from the current directory in the Notebook/shell
-  environments is now possible within standalone versions of FSLeyes.
-* Fixed a small bug in the :func:`.embed` function.
-* Fixed a bug in the *Add from XNAT* action.
+  environments is now possible within standalone versions of FSLeyes (!189).
+* Fixed a small bug in the :func:`.embed` function (!189).
+* Fixed a bug in the *Add from XNAT* action (!192).
 * Adjusted the Jupyter Notebook integration so it does not rely on the
-  existence of a command called ``jupyter-notebook``.
-* Fixed a couple of bugs in the RGB vector overlay code.
+  existence of a command called ``jupyter-notebook`` (!191).
+* Fixed a couple of bugs in the RGB vector overlay code (!194).
 
 
 0.32.3 (Monday 2nd March 2020)
