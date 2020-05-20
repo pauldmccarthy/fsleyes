@@ -30,6 +30,11 @@ uniform sampler3D imageTexture;
 uniform sampler3D clipTexture;
 
 /*
+ * image data texture, used for modulating.
+ */
+uniform sampler3D modulateTexture;
+
+/*
  * Texture containing the colour map.
  */
 uniform sampler1D colourTexture;
@@ -63,12 +68,25 @@ uniform vec3 texShape;
 uniform vec3 clipImageShape;
 
 /*
+ * Shape of the modulate image.
+ */
+uniform vec3 modImageShape;
+
+/*
  * Flag which tells the shader whether
  * the image and clip textures are actually
  * the same - if they are, set this to true
  * to avoid an extra texture lookup.
  */
 uniform bool imageIsClip;
+
+/*
+ * Flag which tells the shader whether
+ * the image and modulate textures are actually
+ * the same - if they are, set this to true
+ * to avoid an extra texture lookup.
+ */
+uniform bool imageIsMod;
 
 /*
  * Flag which determines whether to
@@ -94,6 +112,14 @@ uniform float clipLow;
 uniform float clipHigh;
 
 /*
+ * Scaling/offset factors to normalise modulate value with.
+ * These factors should convert a modulation value read from
+ * the imageTexture/modulateTexture to an alpha value.
+ */
+uniform float modScale;
+uniform float modOffset;
+
+/*
  * Value in the image texture data range which corresponds
  * to zero - this is used to determine whether to use the
  * regular, or the negative colour texture (if useNegCmap
@@ -108,6 +134,12 @@ uniform float texZero;
 uniform bool invertClip;
 
 /*
+ * Modulate the alpha of each voxel by
+ * its intensity.
+ */
+uniform bool modulateAlpha;
+
+/*
  * Image voxel coordinates.
  */
 varying vec3 fragVoxCoord;
@@ -117,11 +149,15 @@ varying vec3 fragVoxCoord;
  */
 varying vec3 fragTexCoord;
 
-
 /*
  * Texture coordinates for clipping image.
  */
 varying vec3 fragClipTexCoord;
+
+/*
+ * Texture coordinates for modulate image.
+ */
+varying vec3 fragModTexCoord;
 
 /*
  * Multiplicative factor to apply to the colour - can
@@ -145,7 +181,11 @@ void main(void) {
         discard;
     }
 
-    if (!sample_volume(fragTexCoord, fragClipTexCoord, voxValue, colour)) {
+    if (!sample_volume(fragTexCoord,
+                       fragClipTexCoord,
+                       fragModTexCoord,
+                       voxValue,
+                       colour)) {
         discard;
     }
 

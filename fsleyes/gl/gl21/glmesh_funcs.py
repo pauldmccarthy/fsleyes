@@ -52,7 +52,6 @@ def updateShaderState(self, **kwargs):
 
     dopts    = self.opts
     copts    = self.canvas.opts
-    vdata    = dopts.getVertexData()
     dshader  = self.dataShader
     fshader  = self.flatShader
 
@@ -64,6 +63,9 @@ def updateShaderState(self, **kwargs):
     dshader.set('flatColour',     kwargs['flatColour'])
     dshader.set('invertClip',     dopts.invertClipping)
     dshader.set('discardClipped', dopts.discardClipped)
+    dshader.set('modulateAlpha',  dopts.modulateAlpha)
+    dshader.set('modScale',       kwargs['modScale'])
+    dshader.set('modOffset',      kwargs['modOffset'])
     dshader.set('clipLow',        dopts.clippingRange.xlo)
     dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
@@ -74,11 +76,20 @@ def updateShaderState(self, **kwargs):
         dshader.setAtt('vertex', self.vertices)
         dshader.setAtt('normal', self.normals)
 
+        vdata = dopts.getVertexData()
+        mdata = dopts.getVertexData('modulate')
+
+        # if modulate data is not set,
+        # we use the vertex data
+        if mdata is None:
+            mdata = vdata
+
         if vdata is not None:
-
             vdata = vdata[:, dopts.vertexDataIndex]
-
             dshader.setAtt('vertexData', vdata.ravel('C'))
+        if mdata is not None:
+            dshader.setAtt('modulateData', mdata[:, 0].ravel('C'))
+
         dshader.setIndices(self.indices)
 
     dshader.unload()
@@ -114,7 +125,8 @@ def draw(self,
          vertices,
          indices=None,
          normals=None,
-         vdata=None):
+         vdata=None,
+         mdata=None):
     """Called for 3D meshes, and when :attr:`.MeshOpts.vertexData` is not
     ``None``. Loads and runs the shader program.
 
@@ -128,6 +140,9 @@ def draw(self,
     :arg normals:  Vertex normals.
 
     :arg vdata:    ``(n, )`` array containing data for each vertex.
+
+    :arg mdata:    ``(n, )`` array containing alpha modulation data for
+                   each vertex.
     """
 
     shader = self.activeShader
@@ -138,10 +153,12 @@ def draw(self,
         vertices = None
         normals  = None
         vdata    = None
+        mdata    = None
 
-    if vertices is not None: shader.setAtt('vertex',     vertices)
-    if normals  is not None: shader.setAtt('normal',     normals)
-    if vdata    is not None: shader.setAtt('vertexData', vdata)
+    if vertices is not None: shader.setAtt('vertex',       vertices)
+    if normals  is not None: shader.setAtt('normal',       normals)
+    if vdata    is not None: shader.setAtt('vertexData',   vdata)
+    if mdata    is not None: shader.setAtt('modulateData', mdata)
 
     shader.loadAtts()
 

@@ -7,6 +7,8 @@
 #
 #   {{ clipTexCoord }} - Clip image texture coordinates
 #
+#   {{ modTexCoord }} - Modulate image texture coordinates
+#
 #   {{ clipping }} - Vector containing clipping values - voxels with a
 #      value below the low threshold (x), or above the high threshold (y) will
 #      not be shown. The (z) component determines the clipping direction -
@@ -15,6 +17,14 @@
 #      boolen flag which indicates whether the image texture is to be used as
 #      the clip texture. Clipping values are assumed to be normalised to the
 #      image texture value range.
+#
+#   {{ modulate }} - Vector containing modulation settings. The (x) and (y)
+#     components contain a scale and offset that can bw used to transform a
+#     modulation value read from the image/modulate texture into an opacity
+#     value. The (z) component is a boolean flag which, if >=0, causes
+#     fragment opacity to be modulated by voxel intensity. The (w) component
+#     contains a boolean flag which indicates whether the image texture is to
+#     be used as the modulate texture.
 #
 #   {{ negCmap }} - Negative colour map control. The (x) component is a
 #      boolean flag controlling whether the negative colour map is used. The
@@ -29,6 +39,7 @@
 
 #   {{ imageTexture     }} - 3D texture containing the image
 #   {{ clipTexture      }} - 3D texture containing clipping image
+#   {{ modulateTexture  }} - 3D texture containing modulate image
 #   {{ colourTexture    }} - 1D texture containing colour map
 #   {{ negColourTexture }} - 1D texture containing negative colour map
 #
@@ -42,7 +53,6 @@
 #      according to the current display range.
 #
 #   {{ out_colour }} - Final colour to use for this fragment.
-
 #
 #
 # Constants:
@@ -56,24 +66,26 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-{{ arb_temp('voxValue') }}
-{{ arb_temp('clipValue') }}
+{{ arb_temp('voxValue')   }}
+{{ arb_temp('clipValue')  }}
+{{ arb_temp('modValue')   }}
 {{ arb_temp('useNegCmap') }}
-{{ arb_temp('negValues') }}
-{{ arb_temp('voxClip')   }}
-{{ arb_temp('negColour') }}
+{{ arb_temp('negValues')  }}
+{{ arb_temp('voxClip')    }}
+{{ arb_temp('negColour')  }}
 
 
 # look up image voxel value
-# and clipping value from 3D
-# image/clipping textures
+# and clipping/modulate values
+# from 3D image/clip/mod textures
 {% if texture_is_2d %}
 TEX {{ voxValue  }}.x, {{ texCoord }},     {{ imageTexture }}, 2D;
 {% else %}
 TEX {{ voxValue  }}.x, {{ texCoord }},     {{ imageTexture }}, 3D;
 {% endif %}
 
-TEX {{ clipValue }}.x, {{ clipTexCoord }}, {{ clipTexture  }}, 3D;
+TEX {{ clipValue }}.x, {{ clipTexCoord }}, {{ clipTexture     }}, 3D;
+TEX {{ modValue  }}.x, {{ modTexCoord  }}, {{ modulateTexture }}, 3D;
 
 # Discard this fragment if the voxel
 # value is nan - there is no nan test,
@@ -117,6 +129,29 @@ arb_call('texture_border.prog',
 # we just looked up.
 CMP {{ clipValue }}.x, {{ clipping }}.w, {{ clipValue }}.x, {{ voxValue }}.x;
 
+# Clobber the mod value if necessary
+MOV {{ negValues }}, -1;
+
+{{
+arb_call('texture_border.prog',
+         texCoord='{{ modTexCoord }}',
+         origval='{{ modValue }}',
+         borderval='{{ negValues }}',
+         out_result='{{ modValue }}')
+}}
+
+# If out of bounds, disable modulation.
+# From this point on, we use modValue.z
+# instead of modulate.w for the global
+# modulation toggle
+MOV {{ modValue }}.z, {{ modulate }}.z;
+CMP {{ modValue }}.z, {{ modValue }}.x, 0, {{ modValue }}.z;
+
+# If the image texture is the mod
+# texture, overwrite the mod value
+# we just looked up.
+CMP {{ modValue }}.x, {{ modulate }}.w, {{ modValue }}.x, {{ voxValue }}.x;
+
 # Figure out which colour map
 # should be used for this fragment.
 #
@@ -148,15 +183,21 @@ SUB {{ negValues }}.x, {{ negValues }}.x, {{ voxValue }}.x;
 ADD {{ negValues }}.y, {{ negCmap   }}.y, {{ negCmap   }}.y;
 SUB {{ negValues }}.y, {{ negValues }}.y, {{ clipValue }}.x;
 
+# And again for the mod value
+ADD {{ negValues }}.z, {{ negCmap   }}.y, {{ negCmap  }}.y;
+SUB {{ negValues }}.z, {{ negValues }}.z, {{ modValue }}.x;
+
 # If we're using the negative colour
 # map, replace the original voxel
 # value with the inverted one.
 CMP {{ voxValue }}.x, {{ useNegCmap }}.x, {{ negValues }}.x, {{ voxValue }}.x;
 
-# And do the same to the clip value if
-# the image texture is the clip texture.
+# And do the same to the clip/mod values if
+# the image texture is the clip/mod texture.
 CMP {{ negValues }}.y, {{ useNegCmap }}.x, {{ negValues }}.y, {{ clipValue }}.x;
 CMP {{ clipValue }}.x, {{ clipping   }}.w, {{ clipValue }}.x, {{ negValues }}.y;
+CMP {{ negValues }}.z, {{ useNegCmap }}.x, {{ negValues }}.z, {{ modValue  }}.x;
+CMP {{ modValue  }}.x, {{ modulate   }}.w, {{ modValue  }}.x, {{ negValues }}.z;
 
 # Test the low clipping range
 SUB {{ voxClip }}.x, {{ clipValue }}.x, {{ clipping }}.x;
@@ -214,6 +255,11 @@ TEX {{ negColour  }}, {{ voxValue }}.x, {{ negColourTexture }}, 1D;
 # negative colour map should be
 # used, positive otherwise.
 CMP {{ out_colour }}, {{ useNegCmap }}.x, {{ negColour }}, {{ out_colour }};
+
+# Scale modValue and set alpha to modValue
+# if modulateAlpha is active
+MAD {{ modValue }}.x,   {{ modValue }}.x, {{ modulate }}.x,   {{ modulate }}.y;
+CMP {{ out_colour }}.a, {{ modValue }}.z, {{ out_colour }}.a, {{ modValue }}.x;
 
 # Normalise out_kill
 # to either -1 or +1

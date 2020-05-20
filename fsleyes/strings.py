@@ -1089,8 +1089,10 @@ properties = TypeDict({
 
     'ColourMapOpts.displayRange'     : 'Display range',
     'ColourMapOpts.clippingRange'    : 'Clipping range',
+    'ColourMapOpts.modulateRange'    : 'Modulate range',
     'ColourMapOpts.linkLowRanges'    : 'Link low display/clipping ranges',
     'ColourMapOpts.linkHighRanges'   : 'Link high display/clipping ranges',
+    'ColourMapOpts.modulateAlpha'    : 'Modulate alpha by intensity',
     'ColourMapOpts.cmap'             : 'Colour map',
     'ColourMapOpts.custom_cmap'      : 'Colour map',
     'ColourMapOpts.cmapResolution'   : 'Colour map resolution',
@@ -1102,6 +1104,7 @@ properties = TypeDict({
     'ColourMapOpts.invertClipping'   : 'Invert clipping range',
 
     'VolumeOpts.clipImage'                : 'Clip by',
+    'VolumeOpts.modulateImage'            : 'Modulate by',
     'VolumeOpts.interpolation'            : 'Interpolation',
     'VolumeOpts.channel'                  : 'RGB(A) channel',
     'VolumeOpts.enableOverrideDataRange'  : 'Override image data range',
@@ -1161,6 +1164,7 @@ properties = TypeDict({
     'MeshOpts.custom_vertexData' : 'Vertex data',
     'MeshOpts.vertexSet'         : 'Surface definition',
     'MeshOpts.vertexData'        : 'Vertex data',
+    'MeshOpts.modulateData'      : 'Modulate by',
     'MeshOpts.vertexDataIndex'   : 'Vertex data index',
     'MeshOpts.showName'          : 'Show model name',
     'MeshOpts.custom_lut'        : 'Lookup table',

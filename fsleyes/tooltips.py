@@ -84,6 +84,9 @@ properties = TypeDict({
     'Data clipping range - voxels with values outside of this range will not '
     'be displayed.',
 
+    'ColourMapOpts.modulateRange' :
+    'Modulation range - controls the data range used to modulate transparency',
+
     'ColourMapOpts.invertClipping' :
     'Invert the clipping range, so that voxels inside the range are not '
     'displayed, and voxels outside of the range are displayed. '
@@ -110,6 +113,12 @@ properties = TypeDict({
     'Invert the display range, so that the low value corresponds to the high '
     'colour, and vice versa.',
 
+    'ColourMapOpts.modulateAlpha' :
+    'Modulate alpha (opacity) by the intensity at each region. Regions with a '
+    'value near to the low display range will have opacity near 0, and '
+    'regions with a value near to the high display range will have opacity '
+    'near 1.',
+
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
@@ -129,6 +138,15 @@ properties = TypeDict({
     'Override the actual data range of an image with a user-specified '
     'one. This is useful for images which have a very large data '
     'range that is driven by outliers.',
+
+    'VolumeOpts.clipImage' :
+    'Clip this image by the values contained in another image. When active, '
+    'The clipping range is set according to the values in the clip image '
+    'instead of in this image.',
+
+    'VolumeOpts.modulateImage' :
+    'Modulate alpha/opacity by the values contained in another image, instead '
+    'of modulating by the values in this image.',
 
     'Volume3DOpts.numSteps' :
     'The maximum number of times that the image is sampled for each pixel.',
@@ -324,6 +342,9 @@ properties = TypeDict({
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '
     'when the mesh outline, and not its cross-section is displayed.',
+    'MeshOpts.modulateData' :
+    'Choose a vertex data file to modulate transparency by. If left unset, '
+    'transparency is modulated by the currently selected vertex data.',
     'MeshOpts.custom_vertexData'   :
     'Choose a file which contains data for each vertex - you can colour the '
     'mesh outline according to the values in the file. This only applies '

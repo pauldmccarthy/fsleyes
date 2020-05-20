@@ -92,7 +92,7 @@ def test_embed_ownFrame():
         print('Embedded call', ncalls[0])
 
         overlayList, displayCtx, fframe = fslmain.embed(
-            frame[0], makeFrame=False, menu=False, save=False)
+            frame[0], mkFrame=False, menu=False, save=False)
 
         assert fframe is None
 

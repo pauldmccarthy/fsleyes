@@ -74,14 +74,21 @@ def updateShaderState(self):
     display = self.display
     shader  = self.shader
 
-    # The clipping range options are in the voxel value
+    imageIsClip = opts.clipImage     is None
+    imageIsMod  = opts.modulateImage is None
+
+    # The clipping options are in the voxel value
     # range, but the shader needs them to be in image
     # texture value range (0.0 - 1.0). So let's scale
     # them.
-    imageIsClip = opts.clipImage is None
-    imgXform    = self.imageTexture.invVoxValXform
+    imgXform = self.imageTexture.invVoxValXform
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
+
+    modAlpha  = opts.modulateAlpha
+    modXform  = self.getModulateValueXform()
+    modScale  = modXform[0, 0]
+    modOffset = modXform[0, 3]
 
     clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
@@ -94,6 +101,8 @@ def updateShaderState(self):
 
     if imageIsClip: clipImageShape = imageShape
     else:           clipImageShape = opts.clipImage.shape[:3]
+    if imageIsMod:  modImageShape  = imageShape
+    else:           modImageShape  = opts.modulateImage.shape[:3]
 
     # Create a single transformation matrix
     # which transforms from image texture values
@@ -105,6 +114,12 @@ def updateShaderState(self):
 
     shader.load()
 
+    # disable clipimage/modalpha in 3D
+    if self.threedee:
+        imageIsClip = True
+        imageIsMod  = True
+        modAlpha    = False
+
     changed = False
 
     changed |= shader.set('useSpline',        opts.interpolation == 'spline')
@@ -112,20 +127,24 @@ def updateShaderState(self):
     changed |= shader.set('texShape',         texShape)
     changed |= shader.set('clipLow',          clipLow)
     changed |= shader.set('clipHigh',         clipHigh)
+    changed |= shader.set('modScale',         modScale)
+    changed |= shader.set('modOffset',        modOffset)
     changed |= shader.set('texZero',          texZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
     changed |= shader.set('imageIsClip',      imageIsClip)
+    changed |= shader.set('imageIsMod',       imageIsMod)
     changed |= shader.set('img2CmapXform',    img2CmapXform)
     changed |= shader.set('clipImageShape',   clipImageShape)
-
+    changed |= shader.set('modImageShape',    modImageShape)
+    changed |= shader.set('modulateAlpha',    modAlpha)
     changed |= shader.set('imageTexture',     0)
     changed |= shader.set('colourTexture',    1)
     changed |= shader.set('negColourTexture', 2)
     changed |= shader.set('clipTexture',      3)
+    changed |= shader.set('modulateTexture',  4)
 
     if self.threedee:
-
         blendFactor = (1 - opts.blendFactor) ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
@@ -159,9 +178,11 @@ def preDraw(self, xform=None, bbox=None):
     """
     self.shader.load()
 
-    if isinstance(self, glvolume.GLVolume):
-        clipCoordXform = self.calculateClipCoordTransform()
+    if isinstance(self, glvolume.GLVolume) and not self.threedee:
+        clipCoordXform = self.getAuxTextureXform('clip')
+        modCoordXform  = self.getAuxTextureXform('modulate')
         self.shader.set('clipCoordXform', clipCoordXform)
+        self.shader.set('modCoordXform',  modCoordXform)
 
 
 def draw2D(self, zpos, axes, xform=None, bbox=None):

@@ -159,13 +159,19 @@ def _initPropertyList_VolumeOpts(threedee):
              'invertClipping',
              'linkLowRanges',
              'linkHighRanges',
+             'modulateAlpha',
+             'clipImage',
+             'modulateImage',
              'displayRange',
              'clippingRange',
-             'clipImage',
+             'modulateRange',
              'custom_overrideDataRange']
 
     if threedee:
+        plist.remove('modulateAlpha')
         plist.remove('clipImage')
+        plist.remove('modulateImage')
+        plist.remove('modulateRange')
 
     return plist
 
@@ -246,8 +252,11 @@ def _initPropertyList_MeshOpts(threedee):
              'discardClipped',
              'linkLowRanges',
              'linkHighRanges',
+             'modulateAlpha',
+             'modulateData',
              'displayRange',
-             'clippingRange']
+             'clippingRange',
+             'modulateRange']
 
     # Remove outline
     # options for 3D
@@ -342,9 +351,8 @@ def _initWidgetSpec_Display(threedee):
 
 def _initWidgetSpec_ColourMapOpts(threedee):
     return {
-        'custom_cmap'              : _ColourMapOpts_ColourMapWidget,
-        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
-        'cmap'              : props.Widget(
+        'custom_cmap'     : _ColourMapOpts_ColourMapWidget,
+        'cmap'            : props.Widget(
             'cmap',
             labels=fslcm.getColourMapLabel),
         'useNegativeCmap' : props.Widget('useNegativeCmap'),
@@ -363,6 +371,7 @@ def _initWidgetSpec_ColourMapOpts(threedee):
         'invertClipping'   : props.Widget('invertClipping'),
         'linkLowRanges'    : props.Widget('linkLowRanges'),
         'linkHighRanges'   : props.Widget('linkHighRanges'),
+        'modulateAlpha'    : props.Widget('modulateAlpha'),
         'gamma'            : props.Widget(
             'gamma',
             showLimits=False,
@@ -380,6 +389,14 @@ def _initWidgetSpec_ColourMapOpts(threedee):
             slider=True,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']]),
+        'modulateRange'  : props.Widget(
+            'modulateRange',
+            showLimits=False,
+            slider=True,
+            dependencies=['modulateAlpha'],
+            enabledWhen=lambda i, ma : ma,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']]),
     }
 
 
@@ -390,7 +407,9 @@ def _initWidgetSpec_VolumeOpts(threedee):
         else:           return img.name
 
     return {
-        'custom_volume'  : _NiftiOpts_VolumeWidget,
+        'custom_volume'            : _NiftiOpts_VolumeWidget,
+        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
+
         'channel'        : props.Widget('channel'),
         'volume'         : props.Widget(
             'volume',
@@ -409,7 +428,9 @@ def _initWidgetSpec_VolumeOpts(threedee):
         'clipImage'      : props.Widget(
             'clipImage',
             labels=imageName),
-        'custom_overrideDataRange' : _VolumeOpts_OverrideDataRangeWidget,
+        'modulateImage'      : props.Widget(
+            'modulateImage',
+            labels=imageName),
         'enableOverrideDataRange'  : props.Widget(
             'enableOverrideDataRange'),
         'overrideDataRange' : props.Widget(
@@ -707,6 +728,9 @@ def _initWidgetSpec_MeshOpts(threedee):
         'vertexData'   : props.Widget(
             'vertexData',
             labels=pathName),
+        'modulateData'   : props.Widget(
+            'modulateData',
+            labels=pathName),
         'vertexDataIndex' : props.Widget(
             'vertexDataIndex',
             showLimits=False,
@@ -958,7 +982,7 @@ def _NiftiOpts_VolumeWidget(
                              label='Dim',
                              style=(wx.ALIGN_CENTRE_VERTICAL |
                                     wx.ALIGN_CENTRE_HORIZONTAL))
-
+    dimLabel.SetMinSize(dimLabel.GetBestSize())
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
     sizer.Add(volume,    flag=wx.EXPAND, proportion=1)

@@ -6,15 +6,18 @@
 # Input parameters:
 #   {{ param_voxValXform }}
 #   {{ param_clipping }}
+#   {{ param_modulate }}
 #   {{ param_negCmap }}
 #
 # Input varyings:
 #   {{ varying_texCoord }}
 #   {{ varying_clipTexCoord }}
+#   {{ varying_modTexCoord }}
 #
 # Input textures:
 #   {{ texture_imageTexture }}
 #   {{ texture_clipTexture }}
+#   {{ texture_modulateTexture }}
 #   {{ texture_colourTexture }}
 #   {{ texture_negColourTexture }}
 #
@@ -51,11 +54,14 @@ KIL killTest.x;
 arb_call('glvolume_common.prog',
          texCoord='{{ varying_texCoord }}',
          clipTexCoord='{{ varying_clipTexCoord }}',
+         modTexCoord='{{ varying_modTexCoord }}',
          clipping='{{ param_clipping }}',
+         modulate='{{ param_modulate }}',
          negCmap='{{ param_negCmap }}',
          voxValXform='{{ param_voxValXform }}',
          imageTexture='{{ texture_imageTexture }}',
          clipTexture='{{ texture_clipTexture }}',
+         modulateTexture='{{ texture_modulateTexture }}',
          colourTexture='{{ texture_colourTexture }}',
          negColourTexture='{{ texture_negColourTexture }}',
          out_kill='killTest',

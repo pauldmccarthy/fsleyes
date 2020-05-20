@@ -342,6 +342,24 @@ The following settings are available for volume overlays:
   above the high display range value are also clipped.
 
 
+- **Modulate alpha by intensity** This setting allows you to have the
+  transparency of voxels modulated by the voxel intensity, so that voxels with
+  a low intensity will be more transparent, and voxels with a high intensity
+  will be less transparent.
+
+
+- **Clip by** This setting allows you to clip the selected overlay by the
+  voxel intensities that are in another image. When a *clip by* image is
+  selected, the *clipping range* will be in terms of that image, not of the
+  currently selected image.
+
+
+- **Modulate by** This setting allows you to modulate transparency of the
+  selected image by another image, when the *modulate alpha by intensity* option
+  is active. When a *modulate by* image is selected, the *modulate range* will
+  be in terms of that image, not of the currently selected image.
+
+
 - **Display range** This setting controls how the colour map relates to voxel
   intensities.
 
@@ -350,10 +368,9 @@ The following settings are available for volume overlays:
   of the range.
 
 
-- **Clip by** This setting allows you to clip the selected overlay by the
-  voxel intensities that are in another image. When a *clip by* image is
-  selected, the *clipping range* will be in terms of that image, not of the
-  image being clipped.
+- **Modulate range** This setting allows you to control the range by which
+  transparency is modulated, when the *modulate alpha by intensity* option
+  is active.
 
 
 - **Override image data range** This setting allows you to effectively
@@ -917,7 +934,9 @@ displays cross sections through the model along planes perpendicular to the
 X, Y, and Z axes.
 
 
-The following display settings are available for mesh overlays:
+Many of the display settings for :ref:`volume overlays <overlays_volume>` are
+also available for mesh overlays. Mesh overlays have the following additional
+display settings:
 
 
 - **Reference image** This setting allows you to choose the NIFTI reference

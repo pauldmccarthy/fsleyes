@@ -51,7 +51,11 @@ def compileShaders(self, vertShader):
             'clipTexture'      : 1,
             'imageTexture'     : 2,
             'colourTexture'    : 3,
-            'negColourTexture' : 3
+            'negColourTexture' : 3,
+
+            # glvolume frag shader expects a modulate
+            # alpha texture, but it is not used
+            'modulateTexture'  : 1,
         }
 
     else:
@@ -106,6 +110,11 @@ def updateShaderState(self):
 
         self.shader.setFragParam('voxValXform', voxValXform)
 
+        # settings expected by glvolume
+        # frag shader, but not used
+        self.shader.setFragParam('negCmap',  [-1, 0, 0, 0])
+        self.shader.setFragParam('modulate', [0, 0, -1, 1])
+
     else:
 
         colours, colourXform = self.getVectorColours()
@@ -118,11 +127,11 @@ def updateShaderState(self):
 
         voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
-        self.shader.setFragParam('voxValXform',      voxValXform)
-        self.shader.setFragParam('mod',              mod)
-        self.shader.setFragParam('xColour',          colours[0])
-        self.shader.setFragParam('yColour',          colours[1])
-        self.shader.setFragParam('zColour',          colours[2])
-        self.shader.setFragParam('colourXform',      [colourXform[0, 0],
-                                                      colourXform[0, 3], 0, 0])
+        self.shader.setFragParam('voxValXform', voxValXform)
+        self.shader.setFragParam('mod',         mod)
+        self.shader.setFragParam('xColour',     colours[0])
+        self.shader.setFragParam('yColour',     colours[1])
+        self.shader.setFragParam('zColour',     colours[2])
+        self.shader.setFragParam('colourXform', [colourXform[0, 0],
+                                                 colourXform[0, 3], 0, 0])
     return True

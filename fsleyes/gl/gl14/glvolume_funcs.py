@@ -58,7 +58,8 @@ def compileShaders(self):
         'imageTexture'     : 0,
         'colourTexture'    : 1,
         'negColourTexture' : 2,
-        'clipTexture'      : 3
+        'clipTexture'      : 3,
+        'modulateTexture'  : 4
     }
 
     constants = {
@@ -76,8 +77,8 @@ def compileShaders(self):
         constants['numSteps']        = self.opts.numInnerSteps
         constants['clipMode']        = clipMode
         constants['numClipPlanes']   = self.opts.numClipPlanes
-        texes[    'startingTexture'] = 4
-        texes[    'depthTexture']    = 5
+        texes[    'startingTexture'] = 5
+        texes[    'depthTexture']    = 6
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
@@ -106,7 +107,7 @@ def updateShaderState(self):
     # for looking up an appropriate colour
     # in the 1D colour map texture.
     voxValXform = affine.concat(self.colourTexture.getCoordinateTransform(),
-                                   self.imageTexture.voxValXform)
+                                self.imageTexture.voxValXform)
     voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 
     # And the clipping range, normalised
@@ -114,6 +115,11 @@ def updateShaderState(self):
     invClip     = 1 if opts.invertClipping    else -1
     useNegCmap  = 1 if opts.useNegativeCmap   else  0
     imageIsClip = 1 if opts.clipImage is None else -1
+
+    # modalpha not applied in 3D
+    modAlpha    = 1 if opts.modulateAlpha         else -1
+    imageIsMod  = 1 if opts.modulateImage is None else -1
+    modXform    = self.getModulateValueXform()
 
     imgXform = self.imageTexture.invVoxValXform
     if opts.clipImage is None: clipXform = imgXform
@@ -124,11 +130,19 @@ def updateShaderState(self):
     texZero = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
 
     clipping = [clipLo, clipHi, invClip, imageIsClip]
-    negCmap  = [useNegCmap, texZero, 0, 0]
+    modulate = [modXform[0, 0], modXform[0, 3], modAlpha, imageIsMod]
+    negCmap  = [useNegCmap, texZero, modAlpha, 0]
+
+    # disable clip image/modalpha for 3D
+    if self.threedee:
+        clipping[3] =  1
+        modulate[2] = -1
+        modulate[3] =  1
 
     changed  = False
     changed |= shader.setFragParam('voxValXform', voxValXform)
     changed |= shader.setFragParam('clipping',    clipping)
+    changed |= shader.setFragParam('modulate',    modulate)
     changed |= shader.setFragParam('negCmap',     negCmap)
 
     if self.threedee:
@@ -155,8 +169,10 @@ def preDraw(self, xform=None, bbox=None):
     self.shader.loadAtts()
 
     if isinstance(self, glvolume.GLVolume):
-        clipCoordXform = self.calculateClipCoordTransform()
+        clipCoordXform = self.getAuxTextureXform('clip')
+        modCoordXform  = self.getAuxTextureXform('modulate')
         self.shader.setVertParam('clipCoordXform', clipCoordXform)
+        self.shader.setVertParam('modCoordXform',  modCoordXform)
 
 
 def draw2D(self, zpos, axes, xform=None, bbox=None):
@@ -248,8 +264,8 @@ def draw3D(self, xform=None, bbox=None):
             shader.setFragParam('settings', settings)
 
             dest.bindAsRenderTarget()
-            src .bindTexture(gl.GL_TEXTURE4)
-            dtex.bindTexture(gl.GL_TEXTURE5)
+            src .bindTexture(gl.GL_TEXTURE5)
+            dtex.bindTexture(gl.GL_TEXTURE6)
 
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
             gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)

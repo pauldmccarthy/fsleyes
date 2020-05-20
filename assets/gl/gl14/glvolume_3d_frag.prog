@@ -11,6 +11,7 @@ OPTION ARB_precision_hint_nicest;
 #
 #   {{ param_voxValXform }}
 #   {{ param_clipping }}
+#   {{ param_modulate }} - not used
 #   {{ param_negCmap }}
 #
 #   {{ param_screenSize }} - First two components contain the screen width
@@ -38,20 +39,20 @@ OPTION ARB_precision_hint_nicest;
 #   {{ param5_clipPlanes }} - Up to five clipping plane equations.
 #
 # Input varyings:
-#   {{ varying_texCoord }}
-#   {{ varying_clipTexCoord }}
+#   {{ varying_texCoord }}         - Image texture coordinates
+#   {{ varying_clipTexCoord }}     - not used
+#   {{ varying_modTexCoord }}      - not used
 #
 # Input textures:
-#   {{ texture_startingTexture }} - Texture containing colour from a previous
-#      pass
-#
-#   {{ texture_depthTexture }} - Texture containing depth from a previous
-#      pass.
-#
-#   {{ texture_imageTexture }}
-#   {{ texture_clipTexture }}
-#   {{ texture_colourTexture }}
-#   {{ texture_negColourTexture }}
+#   {{ texture_startingTexture }}  - Texture containing colour from a previous
+#                                    pass
+#   {{ texture_depthTexture }}     - Texture containing depth from a previous
+#                                    pass.
+#   {{ texture_imageTexture }}     - Texture containing image data
+#   {{ texture_clipTexture }}      - not used
+#   {{ texture_modulateTexture }}  - not used
+#   {{ texture_colourTexture }}    - Texture containing colour map
+#   {{ texture_negColourTexture }} - Texture containing negative colour map
 #
 #
 # Constants:
@@ -88,8 +89,7 @@ TEMP  finalColour;
 
 
 # Initialise texture coordinates.
-MAD texCoord.xyz,     {{ param_settings }}.y, {{ param_rayStep }}, {{ varying_texCoord     }};
-MAD clipTexCoord.xyz, {{ param_settings }}.y, {{ param_rayStep }}, {{ varying_clipTexCoord }};
+MAD texCoord.xyz, {{ param_settings }}.y, {{ param_rayStep }}, {{ varying_texCoord     }};
 
 
 # Generate a random number
@@ -107,7 +107,6 @@ FRC tempVar.x, tempVar.x;
 # Add dither to the starting location
 MUL tempVar,       {{ param_rayStep }}, tempVar.x;
 ADD texCoord.xyz,     texCoord,         tempVar;
-ADD clipTexCoord.xyz, clipTexCoord,     tempVar;
 
 
 # Retrieve the starting colour and depth
@@ -139,12 +138,15 @@ CMP depth.w, depth.w, -1, 1;
 {{
 arb_call('glvolume_common.prog',
          texCoord='texCoord',
-         clipTexCoord='clipTexCoord',
+         clipTexCoord='{ 0, 0, 0, 0}',
+         modTexCoord='{ 0, 0, 0, 0}',
          clipping='{{ param_clipping }}',
+         modulate='{ 0, 0, -1, 1 }',
          negCmap='{{ param_negCmap }}',
          voxValXform='{{ param_voxValXform }}',
          imageTexture='{{ texture_imageTexture }}',
          clipTexture='{{ texture_clipTexture }}',
+         modulateTexture='{{ texture_modulateTexture }}',
          colourTexture='{{ texture_colourTexture }}',
          negColourTexture='{{ texture_negColourTexture }}',
          out_kill='skipTest',

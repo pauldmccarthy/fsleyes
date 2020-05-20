@@ -146,7 +146,7 @@ functions, e.g.::
 
 The special ``LOAD`` symbol will cause the result to be loaded into FSLeyes.
 
-.. [*] The FSL wrapper functions are provided by the |fslpy_doc| library -
+.. [*] The FSL wrapper functions are provided by the |fslpy_doc|_ library -
        check out the ``fsl.wrappers`` package documentation to see what is
        available.
 

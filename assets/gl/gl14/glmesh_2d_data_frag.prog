@@ -9,6 +9,7 @@
 #
 #   - {{ param_settings }}
 #   - {{ param_clipping }}
+#   - {{ param_modulate }}
 #   - {{ param_flatColour }}
 #   - {{ param4_cmapXform }}
 #
@@ -18,6 +19,7 @@
 #
 # Input varyings:
 #   - {{ varying_vertexData }}
+#   - {{ varying_modulateData }}
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -29,11 +31,13 @@ PARAM cmapXform[4] = {{ param4_cmapXform }};
 {{ arb_call('glmesh_data_common.prog',
             settings='{{ param_settings }}',
             clipping='{{ param_clipping }}',
+            modulate='{{ param_modulate }}',
             flatColour='{{ param_flatColour }}',
             cmapXform='cmapXform',
             cmap='{{ texture_cmap }}',
             negCmap='{{ texture_negCmap }}',
             vertexData='{{ varying_vertexData }}',
+            modulateData='{{ varying_modulateData }}',
             out_colour='result.color')
 }}
 

@@ -120,6 +120,17 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    modulateData = props.Choice((None, ))
+    """Populated with the same files available for the :attr:`vertexData`
+    attribute. Used to apply the :attr:`.ColourMapOpts.modulateAlpha`
+    setting.
+
+    .. note:: There is currently no support for indexing into multi-
+              dimensional modulate data (e.g. time points). A separate
+              ``modulateDataIndex`` property may be added in the future.
+    """
+
+
     refImage = props.Choice()
     """A reference :class:`.Image` instance which the mesh coordinates are
     in terms of.
@@ -217,16 +228,22 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # the previous one.
         self.__oldRefImage = None
 
-        # When the vertexData property is
-        # changed, the data (and its min/max)
+        # When the vertexData/modulateData properties
+        # are changed, the data (and its min/max)
         # is loaded and stored in these
-        # attributes. See the __vertexDataChanged
+        # attributes. See the __vdataChanged
         # method.
-        self.__vertexData      = None
-        self.__vertexDataRange = None
+        #
+        # Keys used are 'vertex' and 'modulate'
+        self.__vdata      = {}
+        self.__vdataRange = {}
 
         nounbind = kwargs.get('nounbind', [])
-        nounbind.extend(['refImage', 'coordSpace', 'vertexData', 'vertexSet'])
+        nounbind.extend(['refImage',
+                         'coordSpace',
+                         'vertexData',
+                         'vertexSet',
+                         'modulateData'])
         kwargs['nounbind'] = nounbind
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
@@ -274,7 +291,11 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
             self.addListener('vertexData',
                              self.name,
-                             self.__vertexDataChanged,
+                             self.__vdataChanged,
+                             immediate=True)
+            self.addListener('modulateData',
+                             self.name,
+                             self.__vdataChanged,
                              immediate=True)
             self.addListener('vertexSet',
                              self.name,
@@ -289,10 +310,12 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             self.__refImageChanged()
 
         # If we have inherited values from a
-        # parent instance, make sure the vertex
-        # data (if set) is initialised
+        # parent instance, make sure the vertex/
+        # modulate data (if set) is initialised
         if self.vertexData is not None:
-            self.__vertexDataChanged()
+            self.__vdataChanged(self.vertexData, None, None, 'vertexData')
+        if self.modulateData is not None:
+            self.__vdataChanged(self.modulateData, None, None, 'modulateData')
 
         # If a reference image has not
         # been set on the parent MeshOpts
@@ -333,7 +356,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                     pass
 
         self.__oldRefImage = None
-        self.__vertexData  = None
+        self.__vdata       = None
 
         cmapopts  .ColourMapOpts.destroy(self)
         fsldisplay.DisplayOpts  .destroy(self)
@@ -352,15 +375,24 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         Returns the display range of the currently selected
         :attr:`vertexData`, or ``(0, 1)`` if none is selected.
         """
-        if self.__vertexDataRange is None: return (0, 1)
-        else:                              return self.__vertexDataRange
+        vdata = self.__vdataRange.get('vertex')
+        if vdata is None: return (0, 1)
+        else:             return vdata
 
 
-    def getVertexData(self):
-        """Returns the :attr:`.MeshOpts.vertexData`, if some is loaded.
-        Returns ``None`` otherwise.
+    def getModulateRange(self):
+        """Overrides the :meth:`.ColourMapOpts.getModulateRange` method.
+        Returns the display range of the currently selected
+        :attr:`vertexData`, or ``None`` if none is selected.
         """
-        return self.__vertexData
+        return self.__vdataRange.get('modulate')
+
+
+    def getVertexData(self, vdtype='vertex'):
+        """Returns the :attr:`.MeshOpts.vertexData` or :attr:`modulateData` ,
+        if some is loaded.  Returns ``None`` otherwise.
+        """
+        return self.__vdata.get(vdtype)
 
 
     def vertexDataLen(self):
@@ -369,14 +401,16 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         selected.
         """
 
-        if self.__vertexData is None:
+        vdata = self.__vdata.get('vertex')
+
+        if vdata is None:
             return 0
 
-        elif len(self.__vertexData.shape) == 1:
+        elif len(vdata.shape) == 1:
             return 1
 
         else:
-            return self.__vertexData.shape[1]
+            return vdata.shape[1]
 
 
     def addVertexDataOptions(self, paths):
@@ -387,11 +421,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
 
         vdataProp = self.getProp('vertexData')
+        mdataProp = self.getProp('modulateData')
         newPaths  = paths
         paths     = vdataProp.getChoices(instance=self)
         paths     = paths + [p for p in newPaths if p not in paths]
 
         vdataProp.setChoices(paths, instance=self)
+        mdataProp.setChoices(paths, instance=self)
 
 
     def addVertexSetOptions(self, paths):
@@ -727,16 +763,20 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__updateBounds()
 
 
-    def __vertexDataChanged(self, *a):
-        """Called when the :attr:`vertexData` property changes. Attempts to
-        load the data if possible. The data may subsequently be retrieved
-        via the :meth:`getVertexData` method.
+    def __vdataChanged(self, value, valid, ctx, name):
+        """Called when the :attr:`vertexData` or :attr:`modulateData`
+        properties changes. Attempts to load the data if possible. The data may
+        subsequently be retrieved via the :meth:`getVertexData` method.
         """
 
         vdata      = None
         vdataRange = None
         overlay    = self.overlay
-        vdfile     = self.vertexData
+        vdfile     = value
+
+        if   name == 'vertexData':   key = 'vertex'
+        elif name == 'modulateData': key = 'modulate'
+        else: raise RuntimeError()
 
         try:
             if vdfile is not None:
@@ -763,22 +803,40 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             vdata      = None
             vdataRange = None
 
-        self.__vertexData      = vdata
-        self.__vertexDataRange = vdataRange
+        self.__vdata[key]      = vdata
+        self.__vdataRange[key] = vdataRange
 
-        if vdata is not None: npoints = vdata.shape[1]
-        else:                 npoints = 1
+        if key == 'vertex':
+            if vdata is not None: npoints = vdata.shape[1]
+            else:                 npoints = 1
+            self.vertexDataIndex = 0
+            self.setAttribute('vertexDataIndex', 'maxval', npoints - 1)
 
-        self.vertexDataIndex = 0
-        self.setAttribute('vertexDataIndex', 'maxval', npoints - 1)
+        # if modulate data has changed,
+        # don't update display/clipping
+        # ranges (unless modulateData is
+        # None, meaning that it is using
+        # vertexData)
+        if key == 'vertex':
+            drange = True
+            mrange = self.modulateData is None
+        # and vice versa
+        else:
+            drange = False
+            mrange = True
 
-        self.updateDataRange()
+        self.updateDataRange(drange, drange, mrange)
 
 
     def __colourChanged(self, *a):
         """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
         from the alpha component.
         """
+
+        # modulateAlpha may cause the
+        # alpha property to be disabled
+        if not self.display.propertyIsEnabled('alpha'):
+            return
 
         alpha = self.colour[3] * 100
 

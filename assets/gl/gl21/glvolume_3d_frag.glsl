@@ -19,9 +19,18 @@ uniform sampler3D imageTexture;
 {% endif %}
 
 /*
- * image data texture, used for clipping.
+ * Not used in 3D rendering, but must be defined
  */
 uniform sampler3D clipTexture;
+uniform sampler3D modulateTexture;
+uniform vec3      clipImageShape;
+uniform bool      imageIsClip;
+uniform bool      imageIsMod;
+uniform vec3      modImageShape;
+uniform bool      modulateAlpha;
+uniform float     modScale;
+uniform float     modOffset;
+
 
 /*
  * Texture containing the colour map.
@@ -50,19 +59,6 @@ uniform vec3 imageShape;
  * be different from the imageShape
  */
 uniform vec3 texShape;
-
-/*
- * Shape of the clipping image.
- */
-uniform vec3 clipImageShape;
-
-/*
- * Flag which tells the shader whether
- * the image and clip textures are actually
- * the same - if they are, set this to true
- * to avoid an extra texture lookup.
- */
-uniform bool imageIsClip;
 
 /*
  * Flag which determines whether to
@@ -168,19 +164,12 @@ uniform mat4 tex2ScreenXform;
 varying vec3 fragTexCoord;
 
 
-/*
- * Texture coordinates for clipping image.
- */
-varying vec3 fragClipTexCoord;
-
-
 #pragma include glvolume_common.glsl
 
 
 void main(void) {
 
     vec3  texCoord         = fragTexCoord;
-    vec3  clipTexCoord     = fragClipTexCoord;
     vec4  colour           = vec4(0);
     vec4  finalColour      = vec4(0);
     vec4  depth            = vec4(0);
@@ -199,8 +188,7 @@ void main(void) {
      * iteration.
      */
     vec3 dither  = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
-    texCoord     = texCoord     - dither;
-    clipTexCoord = clipTexCoord - dither;
+    texCoord     = texCoord - dither;
 
     /*
      * Keep going until we
@@ -209,8 +197,7 @@ void main(void) {
     while (finalColour.a < 0.95) {
 
       /* Shift the ray along */
-      texCoord     += rayStep;
-      clipTexCoord += rayStep;
+      texCoord += rayStep;
 
       /* Finish if we've exited the volume */
       if (!textest(texCoord)) {
@@ -246,7 +233,7 @@ void main(void) {
        * voxel was not clipped and was
        * not NaN.
        */
-      if (sample_volume(texCoord, clipTexCoord, voxValue, colour)) {
+      if (sample_volume(texCoord, vec3(0, 0, 0), vec3(0, 0, 0), voxValue, colour)) {
 
         /*
          * weight the sample opacity by the voxel intensity

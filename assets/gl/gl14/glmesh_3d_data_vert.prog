@@ -13,9 +13,10 @@
 #    {{ attr_normal }}     - Vertex normal vector
 #
 # Outputs:
-#    {{ varying_vertexData }} - As above, passed through to fragment shader.
-#    {{ varying_vertex }}     - The vertex position in display coordinates.
-#    {{ varying_normal }}     - As above, passed through to fragment shader.
+#    {{ varying_vertexData }}   - As above, passed through to fragment shader.
+#    {{ varying_modulateData }} - As above, passed through to fragment shader.
+#    {{ varying_vertex }}       - The vertex position in display coordinates.
+#    {{ varying_normal }}       - As above, passed through to fragment shader.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -40,7 +41,8 @@ DP4 {{ varying_normal }}.y, normalMatrix[1], {{ attr_normal }};
 DP4 {{ varying_normal }}.z, normalMatrix[2], {{ attr_normal }};
 DP4 {{ varying_normal }}.w, normalMatrix[3], {{ attr_normal }};
 
-# Copy the vertex data
-MOV {{ varying_vertexData }}, {{ attr_vertexData }};
+# Copy the vertex/modulate data
+MOV {{ varying_vertexData }},   {{ attr_vertexData }};
+MOV {{ varying_modulateData }}, {{ attr_modulateData }};
 
 END

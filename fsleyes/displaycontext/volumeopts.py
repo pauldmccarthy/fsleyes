@@ -43,10 +43,16 @@ class VolumeOpts(cmapopts.ColourMapOpts,
     """Clip voxels according to the values in another image. By default, voxels
     are clipped by the values in the image itself - this property allows the
     user to choose another image by which voxels are to be clipped. Any image
-    which is in the :class:`.OverlayList`, and which has the same voxel
-    dimensions as the primary image can be selected for clipping. The
+    which is in the :class:`.OverlayList` can be selected for clipping. The
     :attr:`.ColourMapOpts.clippingRange` property dictates the values outside
     of which voxels are clipped.
+    """
+
+
+    modulateImage = props.Choice()
+    """Modulate alapha (opacity) by the intensity of values in the selected
+    image, instead of in this image. Only relevant when
+    :attr:`.ColourMapOpts.modulateAlpha` is active.
     """
 
 
@@ -123,10 +129,12 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # - if interpolation were different
         # across different views, we would have
         # to create multiple 3D image textures
-        # for the same image.
+        # for the same image. Same goes for
+        # clip/mod images
         nounbind = kwargs.get('nounbind', [])
         nounbind.append('interpolation')
         nounbind.append('clipImage')
+        nounbind.append('modulateImage')
         kwargs['nounbind'] = nounbind
 
         # Some FSL tools will set the nifti aux_file
@@ -191,6 +199,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             crange = [drange[0], overlay.dataRange[1]]
 
             self.displayRange  = drange
+            self.modulateRange = drange
             self.clippingRange = crange
 
         # If this is not a RGB(A) image, disable
@@ -250,6 +259,9 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             self       .addListener('clipImage',
                                     self.name,
                                     self.__clipImageChanged)
+            self       .addListener('modulateImage',
+                                    self.name,
+                                    self.__modulateImageChanged)
             self       .addListener('enableOverrideDataRange',
                                     self.name,
                                     self.__enableOverrideDataRangeChanged)
@@ -258,7 +270,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
                                     self.__overrideDataRangeChanged)
 
             self.__overlayListChanged()
-            self.__clipImageChanged(updateDataRange=False)
+            self.__clipImageChanged(    updateDataRange=False)
+            self.__modulateImageChanged(updateDataRange=False)
 
 
     def destroy(self):
@@ -275,6 +288,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
             overlayList.removeListener('overlays',                self.name)
             self       .removeListener('clipImage',               self.name)
+            self       .removeListener('modulateImage',           self.name)
             self       .removeListener('enableOverrideDataRange', self.name)
             self       .removeListener('overrideDataRange',       self.name)
 
@@ -304,11 +318,23 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             return self.clipImage.dataRange
 
 
+    def getModulateRange(self):
+        """Overrides :meth:`.ColourMapOpts.getModulateRange`.
+        If a :attr:`.modulateImage` is set, returns its data range. Otherwise
+        returns ``None``.
+        """
+
+        if self.modulateImage is None:
+            return cmapopts.ColourMapOpts.getModulateRange(self)
+        else:
+            return self.modulateImage.dataRange
+
+
     def __dataRangeChanged(self, *a):
         """Called when the :attr:`.Image.dataRange` property changes.
         Calls :meth:`.ColourMapOpts.updateDataRange`.
         """
-        self.updateDataRange(resetDR=False, resetCR=False)
+        self.updateDataRange(False, False, False)
 
 
     def __enableOverrideDataRangeChanged(self, *a):
@@ -332,6 +358,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
         clipProp = self.getProp('clipImage')
         clipVal  = self.clipImage
+        modProp  = self.getProp('modulateImage')
+        modVal   = self.modulateImage
         overlays = self.displayCtx.getOrderedOverlays()
 
         options  = [None]
@@ -344,9 +372,12 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             options.append(overlay)
 
         clipProp.setChoices(options, instance=self)
+        modProp .setChoices(options, instance=self)
 
-        if clipVal in options: self.clipImage = clipVal
-        else:                  self.clipImage = None
+        if clipVal in options: self.clipImage     = clipVal
+        else:                  self.clipImage     = None
+        if modVal  in options: self.modulateImage = modVal
+        else:                  self.modulateImage = None
 
 
     def __clipImageChanged(self, *a, **kwa):
@@ -380,12 +411,29 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             self.disableProperty('linkLowRanges')
             self.disableProperty('linkHighRanges')
 
-        log.debug('Clip image changed for {}: {}'.format(
-            self.overlay,
-            self.clipImage))
+        log.debug('Clip image changed for %s: %s',
+                  self.overlay, self.clipImage)
 
         if updateDR:
-            self.updateDataRange(resetDR=False)
+            self.updateDataRange(resetDR=False, resetMR=False)
+
+
+    def __modulateImageChanged(self, *a, **kwa):
+        """Called when the :attr:`modulateImage` property is changed. Updates
+         the range of the :attr:`modulateRange` property.
+
+        :arg updateDataRange: Defaults to ``True``. If ``False``, the
+                              :meth:`.ColourMapOpts.updateDataRange` method
+                              is not called.
+        """
+
+        updateDR = kwa.get('updateDataRange', True)
+
+        log.debug('Modulate image changed for %s: %s',
+                  self.overlay, self.modulateImage)
+
+        if updateDR:
+            self.updateDataRange(resetDR=False, resetCR=False)
 
 
 class VolumeRGBOpts(niftiopts.NiftiOpts):

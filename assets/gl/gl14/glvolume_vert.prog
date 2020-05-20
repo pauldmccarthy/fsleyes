@@ -9,6 +9,9 @@
 # Input parameters:
 #    clipCoordXform - Matrix which transforms image texture coordinates
 #                     into clip image texture coordinates.
+#    modCoordXform  - Matrix which transforms image texture coordinates
+#                     into modulate image texture coordinates.
+
 #
 # Input attributes:
 #    texCoord - Texture coordinates
@@ -16,9 +19,11 @@
 # Outputs:
 #    texCoord     - Image texture coordinates
 #    clipTexCoord - Clip image texture coordinates
+#    modTexCoord  - Modulate image texture coordinates
 #
 
 PARAM clipCoordXform[4] = {{ param4_clipCoordXform }};
+PARAM modCoordXform[ 4] = {{ param4_modCoordXform  }};
 
 TEMP texCoord;
 
@@ -45,5 +50,13 @@ DP4 {{ varying_clipTexCoord }}.x, clipCoordXform[0], texCoord;
 DP4 {{ varying_clipTexCoord }}.y, clipCoordXform[1], texCoord;
 DP4 {{ varying_clipTexCoord }}.z, clipCoordXform[2], texCoord;
 DP4 {{ varying_clipTexCoord }}.w, clipCoordXform[3], texCoord;
+
+# Transform the image texture
+# coordinates into modulate
+#  imagetexture coordinates.
+DP4 {{ varying_modTexCoord }}.x, modCoordXform[0], texCoord;
+DP4 {{ varying_modTexCoord }}.y, modCoordXform[1], texCoord;
+DP4 {{ varying_modTexCoord }}.z, modCoordXform[2], texCoord;
+DP4 {{ varying_modTexCoord }}.w, modCoordXform[3], texCoord;
 
 END

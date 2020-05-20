@@ -9,6 +9,7 @@
 #
 #   {{ param_settings }}
 #   {{ param_clipping }}
+#   {{ param_modulate }}
 #   {{ param_flatColour }}
 #   {{ param4_cmapXform }}
 #
@@ -22,10 +23,10 @@
 #   - {{ texture_negCmap }}
 #
 # Input varyings:
-# Input varyings:
-#   - {{ varying_vertexData }} - Vertex data value
-#   - {{ varying_vertex }}     - Vertex position in display coordinates
-#   - {{ varying_normal }}     - Vertex normal
+#   - {{ varying_vertexData }}   - Vertex data value
+#   - {{ varying_modulateData }} - Vertex alpha modulation value
+#   - {{ varying_vertex }}       - Vertex position in display coordinates
+#   - {{ varying_normal }}       - Vertex normal
 
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
@@ -42,11 +43,13 @@ TEMP litColour;
 {{ arb_call('glmesh_data_common.prog',
             settings='{{ param_settings }}',
             clipping='{{ param_clipping }}',
+            modulate='{{ param_modulate }}',
             flatColour='{{ param_flatColour }}',
             cmapXform='cmapXform',
             cmap='{{ texture_cmap }}',
             negCmap='{{ texture_negCmap }}',
             vertexData='{{ varying_vertexData }}',
+            modulateData='{{ varying_modulateData }}',
             out_colour='unlitColour')
 }}
 

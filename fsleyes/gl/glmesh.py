@@ -255,8 +255,10 @@ class GLMesh(globject.GLObject):
         opts   .addListener('outlineWidth',     name, refresh,     weak=False)
         opts   .addListener('wireframe',        name, refresh,     weak=False)
         opts   .addListener('vertexData',       name, shader,      weak=False)
+        opts   .addListener('modulateData',     name, shader,      weak=False)
         opts   .addListener('vertexDataIndex',  name, shader,      weak=False)
         opts   .addListener('clippingRange',    name, shader,      weak=False)
+        opts   .addListener('modulateRange',    name, shader,      weak=False)
         opts   .addListener('invertClipping',   name, shader,      weak=False)
         opts   .addListener('discardClipped',   name, shader,      weak=False)
         opts   .addListener('cmap',             name, refreshCmap, weak=False)
@@ -269,6 +271,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('displayRange',     name, refreshCmap, weak=False)
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
+        opts   .addListener('modulateAlpha',    name, shader,      weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
         if self.threedee:
@@ -291,8 +294,10 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('outlineWidth',     self.name)
         self.opts   .removeListener('wireframe',        self.name)
         self.opts   .removeListener('vertexData',       self.name)
+        self.opts   .removeListener('modulateData',     self.name)
         self.opts   .removeListener('vertexDataIndex',  self.name)
         self.opts   .removeListener('clippingRange',    self.name)
+        self.opts   .removeListener('modulateRange',    self.name)
         self.opts   .removeListener('invertClipping',   self.name)
         self.opts   .removeListener('discardClipped',   self.name)
         self.opts   .removeListener('cmap',             self.name)
@@ -305,6 +310,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('displayRange',     self.name)
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
+        self.opts   .removeListener('modulateAlpha',    self.name)
         self.display.removeListener('alpha',            self.name)
 
         if self.threedee:
@@ -509,7 +515,15 @@ class GLMesh(globject.GLObject):
         idxs      = self.indices
         normals   = self.normals
         blo, bhi  = self.getDisplayBounds()
-        vdata     = opts.getVertexData()
+        vdata     = opts.getVertexData('vertex')
+        mdata     = opts.getVertexData('modulate')
+
+        if mdata is None:
+            mdata = vdata
+
+        # TODO separate modulateDataIndex?
+        if vdata is not None: vdata = vdata[:, self.opts.vertexDataIndex]
+        if mdata is not None: mdata = mdata[:, 0]
 
         is2D = np.isclose(bhi[2], blo[2])
 
@@ -540,7 +554,8 @@ class GLMesh(globject.GLObject):
                 verts,
                 normals=normals,
                 indices=idxs,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
         if xform is not None:
             gl.glPopMatrix()
@@ -587,10 +602,14 @@ class GLMesh(globject.GLObject):
         if vertXform is not None:
             xform = affine.concat(xform, vertXform)
 
-        vdata     = self.getVertexData(faces, dists)
+        vdata     = self.getVertexData(faces, dists, 'vertex')
+        mdata     = self.getVertexData(faces, dists, 'modulate')
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
         nvertices = vertices.shape[0]
+
+        if mdata is None:
+            mdata = vdata
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
@@ -613,7 +632,8 @@ class GLMesh(globject.GLObject):
                 self,
                 gl.GL_LINES,
                 vertices,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
         gl.glPopMatrix()
 
@@ -625,10 +645,14 @@ class GLMesh(globject.GLObject):
         """
 
         opts      = self.opts
-        vdata     = opts.getVertexData()
+        vdata     = opts.getVertexData('vertex')
+        mdata     = opts.getVertexData('modulate')
         useShader = self.needShader()
         vertices  = self.vertices
         faces     = self.indices
+
+        if mdata is None:
+            mdata = vdata
 
         if opts.outline:
             gl.glLineWidth(opts.outlineWidth)
@@ -652,13 +676,16 @@ class GLMesh(globject.GLObject):
 
         # Coloured from vertex data
         else:
+            # TODO separate modulateDataIndex?
             vdata = vdata[:, opts.vertexDataIndex]
+            mdata = mdata[:, 0]
             fslgl.glmesh_funcs.draw(
                 self,
                 gl.GL_TRIANGLES,
                 vertices,
                 indices=faces,
-                vdata=vdata)
+                vdata=vdata,
+                mdata=mdata)
 
 
     def drawCrossSection(self, zpos, axes, lo, hi, dest):
@@ -896,25 +923,30 @@ class GLMesh(globject.GLObject):
         return lines, faces, dists, vertXform
 
 
-    def getVertexData(self, faces, dists):
-        """If :attr:`.MeshOpts.vertexData` is not ``None``, this method
-        returns the vertex data to use for the line segments calculated
-        in the :meth:`calculateIntersection` method.
+    def getVertexData(self, faces, dists, vdtype):
+        """If :attr:`.MeshOpts.vertexData` (or :attr:`.MeshOpts.modulateData`)
+        is not ``None``, this method returns the vertex data to use for the
+        line segments calculated in the :meth:`calculateIntersection` method.
 
         The ``dists`` array contains barycentric coordinates for each line
         vertex, and is used to linearly interpolate between the values of the
         vertices of the intersected triangles (defined in ``faces``).
 
         If ``MeshOpts.vertexData is None``, this method returns ``None``.
+
+        :arg vdtype: Use ``'vertex'`` for :attr:`.MeshOpts.vertexData`, or
+                     ``'modulate'`` for :attr:`.MeshOpts.modulateData`.
         """
 
         opts  = self.opts
-        vdata = opts.getVertexData()
+        vdata = opts.getVertexData(vdtype)
 
         if vdata is None:
             return None
 
-        vdata = vdata[:, opts.vertexDataIndex]
+        # TODO separate modulateDataIndex for modulateData?
+        if vdtype == 'vertex': vdata = vdata[:, opts.vertexDataIndex]
+        else:                  vdata = vdata[:, 0]
 
         vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
         vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
@@ -1012,9 +1044,24 @@ class GLMesh(globject.GLObject):
         else:
             cmapXform = self.cmapTexture.getCoordinateTransform()
 
+        # calculate a scale+offset which transforms
+        # modulate alpha value from the data range
+        # into an alpha value, according to the
+        # modulateRange
+        modlo, modhi = dopts.modulateRange
+        modRange     = modhi - modlo
+        if modRange == 0:
+            modScale  = 1
+            modOffset = 0
+        else:
+            modScale  = 1 / modRange
+            modOffset = -modlo / modRange
+
         fslgl.glmesh_funcs.updateShaderState(
             self,
             useNegCmap=useNegCmap,
             cmapXform=cmapXform,
+            modScale=modScale,
+            modOffset=modOffset,
             flatColour=flatColour,
             lightPos=lightPos)

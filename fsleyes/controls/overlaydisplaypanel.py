@@ -12,6 +12,7 @@ control* panel which allows the user to change overlay display settings.
 import logging
 import functools
 import collections
+import collections.abc as abc
 
 import fsleyes_props                  as props
 
@@ -282,7 +283,7 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                     self.displayCtx,
                     self.__threedee)
 
-                if isinstance(container, collections.Sequence):
+                if isinstance(container, abc.Sequence):
                     specs    = container
                     keys     = [s.key for s in specs]
                     labels   = [strings.properties.get((target, k), None)

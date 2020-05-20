@@ -13,31 +13,41 @@ uniform sampler1D negCmap;
 
 
 /* Transformation from data values to colour map texture coordinates */
-uniform mat4      cmapXform;
+uniform mat4 cmapXform;
 
 /* Use negCmap for negative values */
-uniform bool      useNegCmap;
+uniform bool useNegCmap;
 
 /* Invert the clipping range */
-uniform bool      invertClip;
+uniform bool invertClip;
 
 /* Clip values <= this value */
-uniform float     clipLow;
+uniform float clipLow;
 
 /* Clip values >= this value  */
-uniform float     clipHigh;
+uniform float clipHigh;
 
-/* Control whether clipped fragments are discarded (true), or
-whether they are drawn in the flatColour (false).
-*/
-uniform bool      discardClipped;
+/*
+ * Control whether clipped fragments are discarded (true), or
+ * whether they are drawn in the flatColour (false).
+ */
+uniform bool discardClipped;
 
 /* Colour to use when discardClipped is false, and a fragment is clipped. */
-uniform vec4      flatColour;
+uniform vec4 flatColour;
 
+/* Modulate fragment opacity by the vertex data intensity.  */
+uniform bool modulateAlpha;
+
+/* Scale/offset to apply to alpha modulation value.  */
+uniform float modScale;
+uniform float modOffset;
 
 /* Vertex data value */
-varying float     fragVertexData;
+varying float fragVertexData;
+
+/* Alpha modulation data value */
+varying float fragModulateData;
 
 
 vec4 glmesh_data_colour() {
@@ -46,6 +56,7 @@ vec4 glmesh_data_colour() {
   float vertexData;
   float texCoord;
   float clipValue;
+  float modValue;
   bool  negative;
   bool  clip;
 
@@ -71,6 +82,17 @@ vec4 glmesh_data_colour() {
 
     if (negative) result = texture1D(negCmap, texCoord);
     else          result = texture1D(cmap,    texCoord);
+  }
+
+  /*
+   * Rather than modulating the opacity, we
+   * interpolate between the data colour and
+   * the flat colour according to the modalpha
+   * value
+   */
+  if (modulateAlpha) {
+    modValue   = clamp(fragModulateData * modScale + modOffset, 0, 1);
+    result.rgb = mix(flatColour.rgb, result.rgb, modValue);
   }
 
   return result;

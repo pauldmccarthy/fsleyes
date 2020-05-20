@@ -12,6 +12,8 @@ shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``.
 """
 
 
+import functools            as ft
+
 import numpy                as np
 import OpenGL.GL            as gl
 
@@ -133,38 +135,24 @@ class GLVectorBase(glimageobject.GLImageObject):
                                              threedee)
 
         name = self.name
-
-        self.cmapTexture     = textures.ColourMapTexture('{}_cm'.format(name))
-        self.shader          = None
-        self.modulateImage   = None
-        self.clipImage       = None
-        self.colourImage     = None
-        self.modulateOpts    = None
-        self.clipOpts        = None
-        self.colourOpts      = None
-        self.modulateTexture = None
-        self.clipTexture     = None
-        self.colourTexture   = None
-
-        # Make sure we are registered with the
-        # auxillary images if any of them are set.
         opts = self.opts
 
-        if opts.colourImage   is not None: self.registerAuxImage('colour')
-        if opts.modulateImage is not None: self.registerAuxImage('modulate')
-        if opts.clipImage     is not None: self.registerAuxImage('clip')
+        self.cmapTexture = textures.ColourMapTexture('{}_cm'.format(name))
+        self.shader      = None
+        self.auxmgr      = glimageobject.AuxImageTextureManager(
+            self, colour=None, modulate=None, clip=None)
+
+        self.registerAuxImage('colour',   opts.colourImage)
+        self.registerAuxImage('modulate', opts.modulateImage)
+        self.registerAuxImage('clip',     opts.clipImage)
 
         self.addListeners()
+        self.refreshColourMapTexture()
 
         def initWrapper():
             if init is not None:
                 init()
             self.notify()
-
-        self.refreshColourMapTexture()
-        self.refreshAuxTexture('modulate')
-        self.refreshAuxTexture('clip')
-        self.refreshAuxTexture('colour')
 
         if preinit is not None:
             preinit()
@@ -179,29 +167,37 @@ class GLVectorBase(glimageobject.GLImageObject):
         """
 
         self.cmapTexture.destroy()
-
-        for tex in (self.modulateTexture,
-                    self.clipTexture,
-                    self.colourTexture):
-            tex.deregister(self.name)
-            glresources.delete(tex.name)
-
+        self.auxmgr.destroy()
         self.removeListeners()
-        self.deregisterAuxImage('modulate')
-        self.deregisterAuxImage('clip')
-        self.deregisterAuxImage('colour')
 
-        self.modulateTexture = None
-        self.clipTexture     = None
-        self.colourTexture   = None
-        self.modulateImage   = None
-        self.clipImage       = None
-        self.colourImage     = None
-        self.modulateOpts    = None
-        self.clipOpts        = None
-        self.colourOpts      = None
+        self.cmapTexture = None
+        self.auxmgr      = None
 
         glimageobject.GLImageObject.destroy(self)
+
+
+    @property
+    def modulateTexture(self):
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.modulateImage`.
+        """
+        return self.auxmgr.texture('modulate')
+
+
+    @property
+    def clipTexture(self):
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.clipImage`.
+        """
+        return self.auxmgr.texture('clip')
+
+
+    @property
+    def colourTexture(self):
+        """Returns the :class:`.ImageTexture` for the
+        :attr:`.VectorOpts.colourImage`.
+        """
+        return self.auxmgr.texture('colour')
 
 
     def ready(self):
@@ -212,15 +208,8 @@ class GLVectorBase(glimageobject.GLImageObject):
 
 
     def texturesReady(self):
-        """Returns ``True`` if all of the textures are ready, ``False``
-        otherwise.
-        """
-        return (self.modulateTexture is not None and
-                self.clipTexture     is not None and
-                self.colourTexture   is not None and
-                self.modulateTexture.ready()     and
-                self.clipTexture    .ready()     and
-                self.colourTexture  .ready())
+        """Calls :meth:`.AuxImageTextureManager.texturesReady`. """
+        return self.auxmgr.texturesReady()
 
 
     def addListeners(self):
@@ -318,134 +307,6 @@ class GLVectorBase(glimageobject.GLImageObject):
                       skipIfQueued=True)
 
 
-    def registerAuxImage(self, which):
-        """Called when the :attr:`.VectorOpts.modulateImage`,
-        :attr:`.VectorOpts.clipImage`, or :attr:`.VectorOpts.colourImage`
-        properties change. Registers a listener with the
-        :attr:`.NiftiOpts.volume` property of the modulate/clip/colour image,
-        so the modulate/clip/colour textures can be updated when the image
-        volume changes.
-        """
-
-        imageAttr = '{}Image'  .format(which)
-        optsAttr  = '{}Opts'   .format(which)
-        texAttr   = '{}Texture'.format(which)
-
-        image = getattr(self.opts, imageAttr)
-        tex   = getattr(self,      texAttr)
-
-        if image is None or image == 'none':
-            image = None
-
-        setattr(self, optsAttr,  None)
-        setattr(self, imageAttr, image)
-
-        if image is None:
-            return
-
-        opts = self.opts.displayCtx.getOpts(image)
-
-        setattr(self, optsAttr, opts)
-
-        def volumeChange(*a):
-            tex.set(volume=opts.index()[3:])
-            self.asyncUpdateShaderState(alwaysNotify=True)
-
-        # We set overwrite=True, because
-        # the modulate/clip/colour images
-        # may be the same.
-        opts.addListener('volume',
-                         self.name,
-                         volumeChange,
-                         overwrite=True,
-                         weak=False)
-
-
-    def deregisterAuxImage(self, which):
-        """Called when the :attr:`.VectorOpts.modulateImage`,
-        :attr:`.VectorOpts.clipImage` or :attr:`.VectorOpts.colourImage`
-        properties change.  Deregisters the :attr:`.NiftiOpts.volume`
-        listener that was registered in :meth:`registerAuxImage`.
-        """
-
-        imageAttr = '{}Image'.format(which)
-        optsAttr  = '{}Opts' .format(which)
-
-        opts = getattr(self, optsAttr)
-
-        if opts is not None:
-            opts.removeListener('volume', self.name)
-
-        setattr(self, imageAttr, None)
-        setattr(self, optsAttr,  None)
-
-
-    def refreshAuxTexture(self, which, interp=gl.GL_NEAREST):
-        """Called when the :attr`.VectorOpts.modulateImage`,
-        :attr`.VectorOpts.clipImage`, or :attr`.VectorOpts.colourImage`
-        properties changes.  Reconfigures the modulation/clip/colour
-        :class:`.ImageTexture`. If no image is selected, a 'dummy' texture is
-        creatad, which contains all white values (and which result in the
-        auxillary textures having no effect).
-
-        The ``interp`` argument can be used to set the initial interpolation
-        type (``GL_NEAREST`` or ``GL_LINEAR``).
-        """
-
-        imageAttr = '{}Image'  .format(which)
-        optsAttr  = '{}Opts'   .format(which)
-        texAttr   = '{}Texture'.format(which)
-
-        image = getattr(self, imageAttr)
-        opts  = getattr(self, optsAttr)
-        tex   = getattr(self, texAttr)
-
-        if tex is not None:
-            tex.deregister(self.name)
-            glresources.delete(tex.name)
-
-        if image is None:
-
-            textureData    = np.zeros((5, 5, 5), dtype=np.uint8)
-            textureData[:] = 255
-            image          = fslimage.Image(textureData)
-            norm           = None
-
-        else:
-            norm = image.dataRange
-
-        texName = '{}_{}_{}_{}'.format(
-            type(self).__name__, id(self.image), id(image), which)
-
-        if opts is not None:
-            unsynced = (opts.getParent() is None or
-                        not opts.isSyncedToParent('volume'))
-
-            # TODO If unsynced, this GLVectorBase needs to
-            # update the mod/clip/colour textures whenever
-            # their volume property changes.
-            # Right?
-            if unsynced:
-                texName = '{}_unsync_{}'.format(texName, id(opts))
-
-        if opts is not None: volume = opts.index()[3:]
-        else:                volume = 0
-
-        tex = glresources.get(
-            texName,
-            textures.ImageTexture,
-            texName,
-            image,
-            normaliseRange=norm,
-            volume=volume,
-            notify=False,
-            interp=interp)
-
-        tex.register(self.name, self.__textureChanged)
-
-        setattr(self, texAttr, tex)
-
-
     def refreshColourMapTexture(self, colourRes=256):
         """Called when the component colour maps need to be updated, when one
         of the :attr:`.VectorOpts.xColour`, ``yColour``, ``zColour``, ``cmap``,
@@ -457,8 +318,8 @@ class GLVectorBase(glimageobject.GLImageObject):
         display = self.display
         opts    = self.opts
 
-        if self.colourImage is not None:
-            dmin, dmax = self.colourImage.dataRange
+        if opts.colourImage is not None:
+            dmin, dmax = opts.colourImage.dataRange
 
         else:
             dmin, dmax = 0.0, 1.0
@@ -569,16 +430,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         to transform texture coordinates from the vector image to the specified
         auxillary image (``'clip'``, ``'modulate'`` or ``'colour'``).
         """
-        opts     = self.opts
-        auxImage = getattr(self, '{}Image'.format(which), None)
-        auxOpts  = getattr(self, '{}Opts' .format(which), None)
-
-        if auxImage is None:
-            return np.eye(4)
-        else:
-            return affine.concat(
-                auxOpts.getTransform('display', 'texture'),
-                opts   .getTransform('texture', 'display'))
+        return self.auxmgr.textureXform(which)
 
 
     def preDraw(self, xform=None, bbox=None):
@@ -615,40 +467,43 @@ class GLVectorBase(glimageobject.GLImageObject):
         self.asyncUpdateShaderState(alwaysNotify=True)
 
 
+    def registerAuxImage(self, which, image, onReady=None, **kwargs):
+        """Registers the given auxillary image with the
+        ``AuxImageTextureManager``.
+        """
+
+        self.auxmgr.texture(which).deregister(self.name)
+        self.auxmgr.registerAuxImage(which, image, **kwargs)
+        self.auxmgr.texture(which).register(self.name, self.__textureChanged)
+        if onReady is not None:
+            idle.idleWhen(onReady, self.auxmgr.texturesReady)
+
+
     def __colourImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.colourImage` changes. Registers
         with the new image, and refreshes textures as needed.
         """
-        self.deregisterAuxImage('colour')
-        self.registerAuxImage(  'colour')
-
-        def onRefresh():
+        def onReady():
             self.compileShaders()
             self.refreshColourMapTexture()
             self.asyncUpdateShaderState(alwaysNotify=True)
-
-        self.refreshAuxTexture('colour')
-        idle.idleWhen(onRefresh, self.texturesReady)
+        self.registerAuxImage('colour', self.opts.colourImage, onReady)
 
 
     def __modImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.modulateImage` changes.
         Registers with the new image, and refreshes textures as needed.
         """
-        self.deregisterAuxImage('modulate')
-        self.registerAuxImage(  'modulate')
-        self.refreshAuxTexture( 'modulate')
-        self.asyncUpdateShaderState(alwaysNotify=True)
+        onReady = ft.partial(self.asyncUpdateShaderState, alwaysNotify=True)
+        self.registerAuxImage('modulate', self.opts.modulateImage, onReady)
 
 
     def __clipImageChanged(self, *a):
         """Called when the :attr:`.VectorOpts.clipImage` changes.
         Registers with the new image, and refreshes textures as needed.
         """
-        self.deregisterAuxImage('clip')
-        self.registerAuxImage(  'clip')
-        self.refreshAuxTexture( 'clip')
-        self.asyncUpdateShaderState(alwaysNotify=True)
+        onReady = ft.partial(self.asyncUpdateShaderState, alwaysNotify=True)
+        self.registerAuxImage('clip', self.opts.clipImage, onReady)
 
 
     def __textureChanged(self, *a):
