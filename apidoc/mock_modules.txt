@@ -91,6 +91,7 @@ matplotlib.pyplot
 numpy
 numpy.fft
 numpy.linalg
+nibabel
 pyparsing
 PIL
 scipy
@@ -102,6 +103,7 @@ scipy.spatial.distance
 wx
 wx.adv
 wx.glcanvas
+wx.grid
 wx.html
 wx.lib
 wx.lib.agw

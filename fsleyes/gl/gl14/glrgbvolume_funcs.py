@@ -89,7 +89,7 @@ def updateShaderState(self):
 
 def draw2D(self, zpos, axes, xform=None, bbox=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
-    :func:`.glvolume_funcs.draw2D` function.
+    :func:`.gl14.glvolume_funcs.draw2D` function.
     """
     self.shader.load()
     self.shader.loadAtts()
@@ -100,7 +100,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all specified slices. Uses the
-    :func:`.glvolume_funcs.drawAll` function.
+    :func:`.gl14.glvolume_funcs.drawAll` function.
     """
     self.shader.load()
     self.shader.loadAtts()

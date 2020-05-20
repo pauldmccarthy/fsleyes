@@ -540,12 +540,13 @@ class AuxImageTextureManager:
 
         :arg auximages: ``auxtype=initial_value`` for each auxillary image
                         texture type. The initial value must be one of:
-                          - an :class:`.Image`
-                          - ``None``
-                          - A tuple containing an ``Image``, and a dict
-                            containing settings to initialise the
-                            ``ImageTexture`` (passed as ``kwargs`` to
-                            ``ImageTexture.__init__``).
+
+                         - an :class:`.Image`
+                         - ``None``
+                         - A tuple containing an ``Image``, and a dict
+                           containing settings to initialise the
+                           ``ImageTexture`` (passed as ``kwargs`` to
+                           ``ImageTexture.__init__``).
         """
 
         self.__name        = '{}_{}'.format(type(self).__name__, id(self))

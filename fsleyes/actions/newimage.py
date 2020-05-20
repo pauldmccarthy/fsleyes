@@ -124,7 +124,7 @@ class NewImageDialog(wx.Dialog):
     def __init__(self, parent, shape, pixdim, affine, dtype):
         """Create a ``NewImageDialog``.
 
-        :arg parent: ``wx``parent object
+        :arg parent: ``wx`` parent object
         :arg shape:  Tuple of three initial shape values
         :arg pixdim: Tuple of three initial pixdim values
         :arg affine: Initial affine, assumed to be a ``(4, 4)`` ``numpy``

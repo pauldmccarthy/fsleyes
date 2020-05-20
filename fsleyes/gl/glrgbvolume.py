@@ -137,7 +137,9 @@ class GLRGBVolume(glimageobject.GLImageObject):
 
 
     def updateShaderState(self, *args, **kwargs):
-        """Calls :func:`.glrgbvolume_funcs.updateShaderState`. """
+        """Calls :func:`.gl14.glrgbvolume_funcs.updateShaderState` or
+        :func:`.gl12.glrgbvolume_funcs.updateShaderState`.
+        """
         fslgl.glrgbvolume_funcs.updateShaderState(self)
         self.notify()
 
