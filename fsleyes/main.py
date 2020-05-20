@@ -428,24 +428,25 @@ def main(args=None):
     return exitCode[0]
 
 
-def embed(parent=None, makeFrame=True, **kwargs):
+def embed(parent=None, mkFrame=True, **kwargs):
     """Initialise FSLeyes and create a :class:`.FSLeyesFrame`, when
     running within another application.
 
     .. note:: If a ``wx.App`` does not exist, one is created.
 
-    :arg parent:    ``wx`` parent object
+    :arg parent:  ``wx`` parent object
 
-    :arg makeFrame: Defaults to ``True``. If ``False``, FSLeyes is
-                    initialised, but a :class:`.FSLeyesFrame` is not created.
-                    If you set this to ``False``, you must ensure that a
-                    ``wx.App`` object exists before calling this function.
+    :arg mkFrame: Defaults to ``True``. If ``False``, FSLeyes is
+                  initialised, but a :class:`.FSLeyesFrame` is not created.
+                  If you set this to ``False``, you must ensure that a
+                  ``wx.App`` object exists before calling this function.
 
-    :returns:        A tuple containing:
-                    - The :class:`.OverlayList`
-                    - The master :class:`.DisplayContext`
-                    - The :class:`.FSLeyesFrame` (or ``None``, if
-                      ``makeFrame is False``).
+    :returns:     A tuple containing:
+
+                   - The :class:`.OverlayList`
+                   - The master :class:`.DisplayContext`
+                   - The :class:`.FSLeyesFrame` (or ``None``, if
+                     ``makeFrame is False``).
 
     All other arguments are passed to :meth:`.FSLeyesFrame.__init__`.
     """
@@ -486,7 +487,7 @@ def embed(parent=None, makeFrame=True, **kwargs):
         overlayList = fsloverlay.OverlayList()
         displayCtx  = fsldc.DisplayContext(overlayList)
 
-        if makeFrame:
+        if mkFrame:
             frame = fslframe.FSLeyesFrame(
                 parent, overlayList, displayCtx, **kwargs)
         else:
