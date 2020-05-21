@@ -859,6 +859,10 @@ def voxelBox(voxel,
                   result in part of the block being located outside of the
                   image shape, the block is truncated to fit inside the
                   image bounds.
+
+    :returns:     A ``(8, 3)`` numpy array containing the corners of the box,
+                  or ``None`` if a box of the requested size/shape cannot  be
+                  defined in the specifiied coordinate system.
     """
 
     if not isinstance(boxSize, abc.Iterable):
@@ -913,6 +917,8 @@ def voxelBox(voxel,
         lo = np.maximum(lo, 0)
         hi = np.minimum(hi, shape)
 
+    # requesting a box that is smaller than
+    # one voxel along at least one axis
     if np.any(hi <= lo):
         return None
 

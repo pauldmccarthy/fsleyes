@@ -1112,7 +1112,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # shortest voxel axis - we're
         # aiming for a square (if 2D)
         # or a cube (if 3D) selection.
-        blockSize = np.min(overlay.pixdim) * blockSize
+        blockSize = np.min(overlay.pixdim[:3]) * blockSize
         blockSize = [blockSize] * 3
 
         # Limit to the current plane
@@ -1124,12 +1124,14 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # system, centred at the current voxel,
         # and of the specified block size
         corners = glroutines.voxelBox(voxel,
-                                      overlay.shape,
-                                      overlay.pixdim,
+                                      overlay.shape[:3],
+                                      overlay.pixdim[:3],
                                       blockSize,
                                       axes=axes,
                                       bias='high')
 
+        # invalid box size for some reason -
+        # maybe the image has bad pixdims?
         if corners is None:
             self.__hideCursorAnnotation()
             return
@@ -1251,7 +1253,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         overlay   = self.__currentOverlay
         editor    = self.__editors[overlay]
         selection = editor.getSelection()
-        blockSize = self.selectionSize * np.min(overlay.pixdim)
+        blockSize = self.selectionSize * np.min(overlay.pixdim[:3])
 
         if from_ is not None:
 
@@ -1264,8 +1266,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
             block, offset = glroutines.voxelBlock(
                 voxel,
-                overlay.shape,
-                overlay.pixdim,
+                overlay.shape[:3],
+                overlay.pixdim[:3],
                 blockSize,
                 axes=axes,
                 bias='high')
