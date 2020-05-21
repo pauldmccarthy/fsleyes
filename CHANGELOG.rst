@@ -44,7 +44,7 @@ Fixed
 * Adjusted the Jupyter Notebook integration so it does not rely on the
   existence of a command called ``jupyter-notebook`` (!191).
 * Fixed a couple of bugs in the RGB vector overlay code (!194).
-* Fixed a bug in ortho edit mode (!194).
+* Fixed a bug in ortho edit mode (!196).
 
 
 0.32.3 (Monday 2nd March 2020)
