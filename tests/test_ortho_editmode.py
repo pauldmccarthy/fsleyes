@@ -8,6 +8,7 @@
 import os.path as op
 import functools as ft
 
+import nibabel as nib
 import numpy as np
 
 import fsl.transform.affine as affine
@@ -298,3 +299,57 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
 
 def test_SelectionActions():
     run_with_orthopanel(_test_SelectionActions)
+
+
+# regression - draw selection would crash
+# for 4D image with small pixdim4 (fixed
+# in (!196)
+def test_applySelection_small_pixdim4():
+    run_with_orthopanel(_test_applySelection_small_pixdim4)
+
+def _test_applySelection_small_pixdim4(ortho, overlayList, displayCtx):
+    data = np.random.random((10, 10, 10, 10))
+    img = nib.Nifti1Image(data, np.eye(4))
+    img.header.set_zooms((1, 1, 1, 0.1))
+    img = Image(img)
+
+    overlayList.append(img)
+    realYield()
+    displayCtx.displaySpace  = img
+    realYield()
+
+    ortho.profile = 'edit'
+    realYield(20)
+
+    profile = ortho.getCurrentProfile()
+    profile.mode          = 'sel'
+    profile.drawMode      = False
+    profile.selectionSize = 1
+
+    realYield(20)
+
+    canvas = ortho.getGLCanvases()[0]
+    opts   = ortho.displayCtx.getOpts(img)
+
+    pos        = opts.transformCoords([5, 5, 5], 'voxel', 'display')
+    px, py     = pos[1], pos[2]
+
+    bounds = canvas.opts.displayBounds
+
+    xoff = bounds.xlo - opts.bounds.ylo
+    yoff = bounds.ylo - opts.bounds.zlo
+    px   = (px - xoff) / bounds.xlen
+    py   = (py - yoff) / bounds.ylen
+
+    profile._selModeLeftMouseDown(None, canvas, (1 - px, py), pos)
+    realYield(20)
+    profile._selModeLeftMouseUp(None, canvas, (1 - px, py), pos)
+    realYield(20)
+
+    sel = np.array(profile.editor(img).getSelection().getSelection())
+    exp = np.zeros((10, 10, 10))
+    exp[5, 5, 5] = 1
+
+    assert np.all(sel == exp)
+
+    overlayList[:] = []
