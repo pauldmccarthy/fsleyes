@@ -9,7 +9,7 @@ selection of voxels in a 3D :class:`.Image`.
 """
 
 import logging
-import collections
+import collections.abc as abc
 
 import numpy                       as np
 import scipy.ndimage.measurements  as ndimeas
@@ -275,7 +275,7 @@ class Selection(notifier.Notifier):
         xs, ys, zs = np.where(self.__selection > 0)
 
         if len(xs) == 0:
-            return np.array([]).reshape(0, 0, 0), (0, 0, 0)
+            return np.array([]).reshape((0, 0, 0)), (0, 0, 0)
 
         xlo = int(xs.min())
         ylo = int(ys.min())
@@ -755,7 +755,7 @@ def selectByValue(data,
     # turn it into the third.
     if searchRadius is None:
         searchRadius = np.array([0, 0, 0])
-    elif not isinstance(searchRadius, collections.Sequence):
+    elif not isinstance(searchRadius, abc.Sequence):
         searchRadius = np.array([searchRadius] * 3)
 
     searchRadius = np.ceil(searchRadius)
@@ -789,7 +789,7 @@ def selectByValue(data,
 
         data         = data[restrict]
         shape        = data.shape
-        searchOffset = [start for start in [xs, ys, zs]]
+        searchOffset = [xs, ys, zs]
         seedLoc      = [sl - so for sl, so in zip(seedLoc, searchOffset)]
 
     # No search radius - search
@@ -912,7 +912,7 @@ def selectLine(shape,
     # We add 2 to the number
     # of points for the from_
     # and to locations.
-    if isinstance(boxSize, collections.Sequence):
+    if isinstance(boxSize, abc.Sequence):
         npoints = int(np.ceil(length / min(boxSize))) + 2
     else:
         npoints = int(np.ceil(length / boxSize)) + 2

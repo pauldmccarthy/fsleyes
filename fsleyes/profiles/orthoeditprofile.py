@@ -1130,6 +1130,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                                       axes=axes,
                                       bias='high')
 
+        # invalid box size for some reason -
+        # maybe the image has bad pixdims?
         if corners is None:
             self.__hideCursorAnnotation()
             return
