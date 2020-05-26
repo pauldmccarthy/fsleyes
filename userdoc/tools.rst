@@ -77,7 +77,9 @@ Resample image
 
 The **Resample image** tool allows you to resample the currently selected
 image to a different resolution. You can specify a desired shape via the *New
-shape* inputs, or a desired voxel resolution via the *New pixdims* inputs.
+shape* inputs, or a desired voxel resolution via the *New pixdims* inputs. Or
+you can resample one image into the space of another using the *Resample to
+reference* option.
 
 The **Interpolation** option allows you to choose different interpolation
 options to use during the resampling. If you are resampling a binary mask, you

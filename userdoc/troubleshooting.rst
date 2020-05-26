@@ -105,6 +105,36 @@ Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
 oriented.
 
 
+My images are aligned in FSLeyes, but other FSL tools complain about orientation!
+---------------------------------------------------------------------------------
+
+FSLeyes projects all of the overlays that you load into a common display
+coordinate system, regardless of their dimensions, orientation, or field of
+view. So two images which have a different resolution or orientation may
+appear to be aligned when you view them in FSLeyes.
+
+However, many FSL tools (and many neuroimage analysis tools) require input
+images to be **voxel-aligned**, so that the same voxel from each input image
+corresponds to the same anatomical location.
+
+When you load images with different orientations into FSLeyes, a warning
+will appear in the location panel:
+
+.. image:: images/troubleshooting_display_space_warning.png
+   :width: 70%
+   :align: center
+
+If you see this warning, and you intend to use the images you are viewing with
+any FSL processing or analysis tools, you may need to resample your images into
+the same space - you can do this within FSLeyes via the :ref:`Resample image
+<tools_resample_image>` tool, using the *Resample to reference* option, or on
+the command-line using ``flirt`` with the ``-applyxfm`` and ``-usesqform``
+options.
+
+You can read more about the different coordinate systems used by FSLeyes
+:ref:`here <display_space>`.
+
+
 There are weird striping artifacts in my image!
 -----------------------------------------------
 
