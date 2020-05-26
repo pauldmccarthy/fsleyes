@@ -29,6 +29,8 @@ Changed
   a recent version of `fslpy` (!190).
 * The :func:`.embed` function accepts a ``mkFrame`` argument, allowing
   it to be called without creating a :class:`.FSLeyesFrame` (!195).
+* A warning is now displayed in the location panel when images with different
+  orientations, resolutions and/or fields-of-view are being displayed (!198).
 
 
 Fixed
