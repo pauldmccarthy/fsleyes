@@ -82,6 +82,9 @@ messages = TypeDict({
 
     'loadOverlays.unknownType' : 'Unknown data type',
 
+    'LocationInfoPanel.displaySpaceWarning' :
+    'Displaying images with different orientations/fields of view!',
+
     'LoadColourMapAction.loadcmap'    : 'Open colour map file',
     'LoadColourMapAction.namecmap'    : 'Enter a name for the colour map.',
 

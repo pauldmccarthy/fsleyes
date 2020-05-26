@@ -834,6 +834,11 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         selOvl     = displayCtx.getSelectedOverlay()
         lines      = []
 
+        dswarn = self.__genDisplaySpaceWarning()
+        if dswarn is not None:
+            fmt = '<span style="color: #ff0000"><b>{}</b></span>'
+            lines.append(fmt.format(dswarn))
+
         for overlay in overlays:
 
             display = displayCtx.getDisplay(overlay)
@@ -871,6 +876,20 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
         self.__info.SetPage('<br>'.join(lines))
         self.__info.Refresh()
+
+
+    def __genDisplaySpaceWarning(self):
+        """Generate a warning if images with different orientations and/or
+        fields-of-view are loaded.
+        """
+        images  = [o for o in self.overlayList
+                   if isinstance(o, fslimage.Image)]
+
+        for i in images[1:]:
+            if not i.sameSpace(images[0]):
+                return strings.messages[self, 'displaySpaceWarning']
+
+        return None
 
 
     def __genMeshInfo(self, ovl, opts):
