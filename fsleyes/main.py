@@ -428,13 +428,12 @@ def main(args=None):
     return exitCode[0]
 
 
-def embed(parent=None, mkFrame=True, **kwargs):
+def embed(mkFrame=True, **kwargs):
     """Initialise FSLeyes and create a :class:`.FSLeyesFrame`, when
     running within another application.
 
-    .. note:: If a ``wx.App`` does not exist, one is created.
-
-    :arg parent:  ``wx`` parent object
+    .. note:: In most cases, this function must be called from the
+              ``wx.MainLoop``.
 
     :arg mkFrame: Defaults to ``True``. If ``False``, FSLeyes is
                   initialised, but a :class:`.FSLeyesFrame` is not created.
@@ -465,8 +464,8 @@ def embed(parent=None, mkFrame=True, **kwargs):
     app    = wx.GetApp()
     ownapp = app is None
 
-    if ownapp and (makeFrame is False):
-        raise RuntimeError('If makeFrame is False, you '
+    if ownapp and (mkFrame is False):
+        raise RuntimeError('If mkFrame is False, you '
                            'must create a wx.App before '
                            'calling fsleyes.main.embed')
     if ownapp:
@@ -489,7 +488,7 @@ def embed(parent=None, mkFrame=True, **kwargs):
 
         if mkFrame:
             frame = fslframe.FSLeyesFrame(
-                parent, overlayList, displayCtx, **kwargs)
+                None, overlayList, displayCtx, **kwargs)
         else:
             frame = None
 
@@ -501,7 +500,7 @@ def embed(parent=None, mkFrame=True, **kwargs):
         called[0] = True
         ret[0]    = (overlayList, displayCtx, frame)
 
-    fslgl.getGLContext(parent=parent, ready=ready, raiseErrors=True)
+    fslgl.getGLContext(ready=ready, raiseErrors=True)
     idle.block(10, until=until)
 
     if ret[0] is None:
