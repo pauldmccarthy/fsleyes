@@ -582,9 +582,7 @@ def initialise(splash, namespace, callback):
     try:
         # Force the creation of a wx.glcanvas.GLContext object,
         # and initialise OpenGL version-specific module loads.
-        # The splash screen is used as the parent of the dummy
-        # canvas created by the gl.getWXGLContext function.
-        fslgl.getGLContext(parent=splash, ready=realCallback)
+        fslgl.getGLContext(ready=realCallback)
 
     except Exception:
         log.error('Unable to initialise OpenGL!', exc_info=True)
