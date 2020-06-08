@@ -489,9 +489,9 @@ class GLContext(object):
 
 
     A ``wx.glcanvas.GLContext`` may only be created once a
-    ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.
-    The ``GLContext`` class therefore creates a dummy ``GLCanvas``, and
-    displays it, before creating the ``wx`` GL context.
+    ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.  The
+    ``GLContext`` class therefore creates a dummy ``wx.Frame`` and
+    ``GLCanvas``, and displays it, before creating the ``wx`` GL context.
 
 
     Because ``wx`` contexts may be used even when an off-screen rendering
@@ -521,7 +521,6 @@ class GLContext(object):
 
     def __init__(self,
                  offscreen=False,
-                 parent=None,
                  other=None,
                  target=None,
                  createApp=False,
@@ -530,8 +529,6 @@ class GLContext(object):
         """Create a ``GLContext``.
 
         :arg offscreen:   On-screen or off-screen context?
-
-        :arg parent:      Parent ``wx`` GUI object
 
         :arg other:       Another ``GLContext`` instance with which GL state
                           should be shared.
@@ -560,7 +557,6 @@ class GLContext(object):
 
         self.__offscreen = offscreen
         self.__ownApp    = False
-        self.__ownParent = False
         self.__context   = None
         self.__canvas    = None
         self.__parent    = None
@@ -575,97 +571,86 @@ class GLContext(object):
             raise ValueError('On-screen GL contexts must be '
                              'created on the wx.MainLoop')
 
-        # For off-screen, only use
-        # OSMesa if we have no cnoice
+        # For off-screen, only use OSMesa
+        # if we have no cnoice. Otherewise
+        # we use wx if possible
         if offscreen and not canHaveGui:
             self.__createOSMesaContext()
             ready()
+            return
 
-        # Use wx if possible
-        else:
+        self.__ownApp = (not haveGui) and createApp
 
-            self.__ownApp    = (not haveGui) and createApp
-            self.__ownParent = parent is None
+        # A context already exists - we don't
+        # need to create a GL canvas to create
+        # another one.
+        if other is not None:
+            self.__createWXGLContext(other=other.__context, target=target)
+            ready()
+            return
 
-            if other is not None:
-                self.__createWXGLContext(other=other.__context, target=target)
-                return
+        # Create a wx.App if we've been
+        # given permission to do so
+        # (via the createApp argument)
+        if self.__ownApp:
+            log.debug('Creating temporary wx.App')
 
-            # Create a wx.App if we've been
-            # given permission to do so
-            # (via the createApp argument)
+            import fsleyes.main as fm
+            self.__app = fm.FSLeyesApp()
+
+        # Create a parent for the GL
+        # canvas, and the canvas itself
+        self.__createWXGLParent()
+        self.__createWXGLCanvas()
+
+        # This function creates the context
+        # and does some clean-up afterwards.
+        # It gets scheduled on the wx idle
+        # loop.
+        def create():
+
+            self.__createWXGLContext()
+
+            # Once the GL context has been
+            # created, we no longer need
+            # references to the wx objects
+            app           = self.__app
+            self.__parent = None
+            self.__canvas = None
+            self.__app    = None
+
+            # If we've created and started
+            # our own loop, kill it
             if self.__ownApp:
-                log.debug('Creating temporary wx.App')
+                log.debug('Exiting temporary wx.MainLoop')
+                app.ExitMainLoop()
 
-                import fsleyes.main as fm
-                self.__app = fm.FSLeyesApp()
+            if ready is not None:
 
-            # Create a parent for the
-            # canvas if necessary
-            if self.__ownParent: self.__createWXGLParent()
-            else:                self.__parent = parent
+                try:
+                    ready()
 
-            # Create the GL canvas
-            self.__createWXGLCanvas()
+                except Exception as e:
+                    log.warning('GLContext callback function raised '
+                                '{}: {}'.format(type(e).__name__,
+                                                str(e)),
+                                                exc_info=True)
+                    if raiseErrors:
+                        raise e
 
-            # This function creates the context
-            # and does some clean-up afterwards.
-            # It gets scheduled on the wx idle
-            # loop.
-            def create():
+        # If we've created our own wx.App, run its
+        # main loop - we need to run the loop
+        # in order to display the GL canvas and
+        # context. But we can kill the loop as soon
+        # as this is done (in the create function
+        # above).  If an existing wx.App is running,
+        # we just schedule the context creation
+        # routine on it.
+        idle.idle(create, alwaysQueue=True)
 
-                self.__createWXGLContext()
-
-                if ready is not None:
-
-                    try:
-                        ready()
-
-                    except Exception as e:
-                        log.warning('GLContext callback function raised '
-                                    '{}: {}'.format(type(e).__name__,
-                                                    str(e)),
-                                                    exc_info=True)
-                        if raiseErrors:
-                            raise e
-
-                # Destroying the dummy canvas
-                # can be dangerous on GTK, so we
-                # just permanently hide it instead.
-                self.__canvas.Hide()
-
-                # We can hide the parent as well
-                # if we were the one who created
-                # it.
-                if self.__ownParent:
-                    self.__parent.Hide()
-
-                # If we've created and started
-                # our own loop, kill it
-                if self.__ownApp:
-                    log.debug('Exiting temporary wx.MainLoop')
-                    self.__app.ExitMainLoop()
-
-            # If we've created our own wx.App, run its
-            # main loop - we need to run the loop
-            # in order to display the GL canvas and
-            # context. But we can kill the loop as soon
-            # as this is done (in the create function
-            # above).  If an existing wx.App is running,
-            # we just schedule the context creation
-            # routine on it.
-            idle.idle(create, alwaysQueue=True)
-
-            if self.__ownApp:
-                log.debug('Starting temporary wx.MainLoop')
-                self.__app.MainLoop()
-
-                # Once the GL context has been
-                # created, we no longer need
-                # references to the wx objects
-                self.__parent = None
-                self.__canvas = None
-                self.__app    = None
+        if self.__ownApp:
+            log.debug('Starting temporary wx.MainLoop')
+            self.__app.MainLoop()
 
 
     def setTarget(self, target):
