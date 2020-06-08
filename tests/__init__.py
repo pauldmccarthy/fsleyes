@@ -319,7 +319,6 @@ def run_with_fsleyes(func, *args, **kwargs):
         else:
             wx.CallLater(startingDelay,
                          fslgl.getGLContext,
-                         parent=state.panel,
                          ready=init,
                          raiseErrors=True)
     else:
