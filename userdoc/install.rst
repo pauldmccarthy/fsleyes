@@ -70,30 +70,6 @@ install FSLeyes into it like so::
     conda install -c conda-forge fsleyes
 
 
-Install standalone build (recommended)
---------------------------------------
-
-
-If you wish to install FSLeyes independently of FSL, you can download and
-install a standalone version from the |fsleyes_homepage|_ home page, using
-these instructions.
-
-
-1. Download the ``zip`` or ``tar.gz`` file for your platform.
-
-2. Unzip/untar the downloaded file to a location of your choice.
-
-3. Call FSLeyes like this (you may wish to put the directory containing
-   the ``fsleyes`` command on your ``$PATH`` environment variable):
-
-   ======== ==========================================================
-   Platform Command to run FSLeyes
-   ======== ==========================================================
-   Linux    ``/path/to/downloaded/FSLeyes/fsleyes``
-   macOS    ``/path/to/downloaded/FSLeyes.app/Contents/MacOS/fsleyes``
-   ======== ==========================================================
-
-
 Install from PyPi (advanced)
 ----------------------------
 
@@ -158,6 +134,34 @@ Under Ubuntu, run the following::
     sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev freeglut3-dev
 
 Then you should be able to run ``pip install fsleyes``.
+
+
+Install standalone build (no longer updated)
+--------------------------------------------
+
+.. note:: FSLeyes 0.32.3 is the last version for which standalone builds are
+          provided. From FSLeyes 0.33.0 onwards, ``conda`` is the recommended
+          installation method.
+
+
+If you wish to install FSLeyes independently of FSL, you can download and
+install a standalone version from the |fsleyes_homepage|_ home page, using
+these instructions.
+
+
+1. Download the ``zip`` or ``tar.gz`` file for your platform.
+
+2. Unzip/untar the downloaded file to a location of your choice.
+
+3. Call FSLeyes like this (you may wish to put the directory containing
+   the ``fsleyes`` command on your ``$PATH`` environment variable):
+
+   ======== ==========================================================
+   Platform Command to run FSLeyes
+   ======== ==========================================================
+   Linux    ``/path/to/downloaded/FSLeyes/fsleyes``
+   macOS    ``/path/to/downloaded/FSLeyes.app/Contents/MacOS/fsleyes``
+   ======== ==========================================================
 
 
 Install into a Singularity image
