@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.33.1 (Monday 8th June 2020)
+-----------------------------
+
+
+Changed
+^^^^^^^
+
+* Changed the :func:`.embed` function so that a parent ``wx`` object is
+  not required.
+
+
 0.33.0 (Tuesday 26th May 2020)
 ------------------------------
 
