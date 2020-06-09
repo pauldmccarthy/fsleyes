@@ -38,7 +38,7 @@ def test_embed():
         print('Embedded call', ncalls[0])
 
         overlayList, displayCtx, fframe = fslmain.embed(
-            frame[0], menu=False, save=False)
+            menu=False, save=False)
 
         img = fslimage.Image(op.join(datadir, '3d'))
         fframe.addOrthoPanel()
@@ -92,7 +92,7 @@ def test_embed_ownFrame():
         print('Embedded call', ncalls[0])
 
         overlayList, displayCtx, fframe = fslmain.embed(
-            frame[0], mkFrame=False, menu=False, save=False)
+            mkFrame=False, menu=False, save=False)
 
         assert fframe is None
 
