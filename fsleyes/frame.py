@@ -164,7 +164,7 @@ class FSLeyesFrame(wx.Frame):
             fontSize = 10
 
         font.SetPointSize(fontSize)
-        font.SetWeight(wx.FONTWEIGHT_LIGHT)
+        font.SetWeight(wx.FONTWEIGHT_NORMAL)
         self.SetFont(font)
 
         self.__overlayList = overlayList
