@@ -427,7 +427,9 @@ class RangePolygon(patches.Polygon):
             # post-processing normally performed
             # by the HistogramPanel to the data.
             if hsPanel.histType == 'probability':
-                vertices[:, 1] /= hs.getNumHistogramValues()
+                nvals    = hs.numHistogramValues
+                binWidth = hs.binWidth
+                vertices[:, 1] /= (nvals * binWidth)
 
         # Nothing to plot, or we shouldn't
         # be plotting the range overlay
@@ -457,7 +459,9 @@ class RangePolygon(patches.Polygon):
             yval = float(histy[xidx])
 
             if hsPanel.histType == 'probability':
-                yval /= hs.getNumHistogramValues()
+                nvals    = hs.numHistogramValues
+                binWidth = hs.binWidth
+                yval /= (nvals * binWidth)
 
             vertices = np.array([[lo, 0], [lo, yval], [hi, yval], [hi, 0]])
 
