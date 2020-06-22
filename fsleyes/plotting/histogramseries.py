@@ -222,6 +222,13 @@ class HistogramSeries(dataseries.DataSeries):
         return self.__xdata, self.__ydata
 
 
+    @property
+    def binWidth(self):
+        """Returns the width of one bin for this :class:`HistogramSeries`. """
+        lo, hi = self.dataRange.x
+        return (hi - lo) / self.nbins
+
+
     def getVertexData(self):
         """Returns a ``numpy`` array of shape ``(N, 2)``, which contains a
         set of "vertices" which can be used to display the histogram data
@@ -241,7 +248,8 @@ class HistogramSeries(dataseries.DataSeries):
         return verts
 
 
-    def getNumHistogramValues(self):
+    @property
+    def numHistogramValues(self):
         """Returns the number of values which were used in calculating the
         histogram.
         """
