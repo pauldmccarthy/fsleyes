@@ -831,6 +831,7 @@ class PlotPanel(viewpanel.ViewPanel):
                 labels,
                 loc='upper right',
                 fontsize=10,
+                handlelength=3,
                 fancybox=True)
             legend.get_frame().set_alpha(0.6)
 
