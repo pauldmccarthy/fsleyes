@@ -855,7 +855,10 @@ def fileType(fname):
         return 'vest'
 
     with open(fname, 'rt') as f:
-        line = f.readline().strip()
+        for line in f:
+            line = f.readline().strip()
+            if (line != '') and (not line.startswith('#')):
+                break
 
     tkns = list(line.split())
 
