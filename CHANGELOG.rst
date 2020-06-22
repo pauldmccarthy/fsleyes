@@ -18,6 +18,8 @@ Added
 
 
 * Added some more line styles to the plotting panels.
+* Added a new "accessible" lookup table, courtesy of Paul Tol
+  (https://personal.sron.nl/~pault/).
 
 
 Changed
