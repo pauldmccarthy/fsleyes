@@ -1132,8 +1132,17 @@ class OverlayPlotPanel(PlotPanel):
     the same (initial) colour is used for the same overlay, across multiple
     plots.
 
-    Sub-classes should use the :meth:`getOverlayPlotColour` method to retrieve
-    the initial colour to use for a given overlay.
+    See also :attr:`plotStyles`.
+
+    Sub-classes should use the :meth:`getOverlayPlotColour` and
+    :meth:`getOverlayPlotStyle`methods to retrieve the initial colour and
+    linestyle to use for a given overlay.
+    """
+
+
+    plotStyles = {}
+    """This dictionary is used to store a collection of ``{overlay : colour}``
+    mappings - it is used in conjunction with :attr:`plotColours`.
     """
 
 
@@ -1182,6 +1191,15 @@ class OverlayPlotPanel(PlotPanel):
         self.__dataSeries    = {}
         self.__refreshProps  = {}
         self.__refreshCounts = {}
+
+        # Pre-generated default colours and line
+        # styles to use - see plotColours, plotStyles,
+        # getOverlayPlotColour, and getOverlayPlotStyle
+        lut    = fslcm.getLookupTable('paul_tol_accessible')
+        styles = plotting.DataSeries.lineStyle.getChoices()
+        limit  = min(len(lut), len(styles))
+        self.__defaultColours = [l.colour for l in lut[   :limit]]
+        self.__defaultStyles  = [s        for s in styles[:limit]]
 
         self            .addListener('dataSeries',
                                      self.__name,
@@ -1277,10 +1295,34 @@ class OverlayPlotPanel(PlotPanel):
         colour = self.plotColours.get(overlay)
 
         if colour is None:
-            colour = fslcm.randomDarkColour()
+            idx    = len(self.plotColours) % len(self.__defaultColours)
+            colour = self.__defaultColours[idx]
             self.plotColours[overlay] = colour
 
         return colour
+
+
+    def getOverlayPlotStyle(self, overlay):
+        """Returns an initial line style to use for plots associated with the
+        given overlay. If a colour is present in the  :attr:`plotStyles`
+        dictionary, it is returned. Otherwise a line style is generated,
+        added to ``plotStyles``, and returned.
+
+        The format of the returned line style is suitable for use with the
+        ``linestyle`` argument of the ``matplotlib`` ``plot``functions.
+        """
+
+        if isinstance(overlay, fsloverlay.ProxyImage):
+            overlay = overlay.getBase()
+
+        style = self.plotStyles.get(overlay)
+
+        if style is None:
+            idx   = len(self.plotStyles) % len(self.__defaultStyles)
+            style = self.__defaultStyles[idx]
+            self.plotStyles[overlay] = style
+
+        return style
 
 
     @actions.action
@@ -1375,7 +1417,9 @@ class OverlayPlotPanel(PlotPanel):
 
         .. note:: Sub-class implementations should set the
                   :attr:`.DataSeries.colour` property to that returned by
-                  the :meth:`getOverlayPlotColour` method.
+                  the :meth:`getOverlayPlotColour` method, and the
+                  :attr:`.DataSeries.lineStyle` property to that returned by
+                  the :meth:`getOverlayPlotStyle` method
 
 
         Different ``DataSeries`` types need to be re-drawn when different
