@@ -1329,10 +1329,17 @@ choices = TypeDict({
     'HistogramPanel.plotType' : {'centre'      : 'Bin centres',
                                  'edge'        : 'Bin edges'},
 
-    'DataSeries.lineStyle' : {'-'  : 'Solid line',
-                              '--' : 'Dashed line',
-                              '-.' : 'Dash-dot line',
-                              ':'  : 'Dotted line'},
+    'DataSeries.lineStyle' : {
+        '-'                      : 'Solid line',
+        '--'                     : 'Dashed line',
+        '-.'                     : 'Dash-dot line',
+        ':'                      : 'Dotted line',
+        (0, (5, 7))              : 'Loose dashed line',
+        (0, (1, 7))              : 'Loose dotted line',
+        (0, (4, 10, 1, 10))      : 'Loose dash-dot line',
+        (0, (4, 1, 1, 1, 1, 1))  : 'Dash-dot-dot line',
+        (0, (4, 1, 4, 1, 1, 1))  : 'Dash-dash-dot line',
+    },
 
     'TimeSeriesPanel.plotMode' : {'normal'        : 'Normal - no '
                                                     'scaling/offsets',
