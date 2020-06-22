@@ -13,10 +13,21 @@ chronological order.
 -------------------------------
 
 
+Added
+^^^^^
+
+
+* Added some more line styles to the plotting panels.
+
+
 Changed
 ^^^^^^^
 
 
+* Increased the default plotting line width.
+* The default plot colours are now from a pre-generated accessible palette,
+  rather than being randomly generated.
+* The default plot line style is also rotated, in addition the plot colour.
 * Adjusted the histogram panel so that, when plotting a probability histogram,
   the values are normalised by bin-width (!203).
 * A minor adjustment to the default font, to improve readability on some
