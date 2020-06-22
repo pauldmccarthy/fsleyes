@@ -254,9 +254,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         hs = hsType(overlay, self.overlayList, self.displayCtx, self)
         hs.colour      = self.getOverlayPlotColour(overlay)
+        hs.lineStyle   = self.getOverlayPlotStyle(overlay)
+        hs.lineWidth   = 2
         hs.alpha       = 1
-        hs.lineWidth   = 1
-        hs.lineStyle   = '-'
 
         return hs, [], []
 

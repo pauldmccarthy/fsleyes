@@ -135,9 +135,9 @@ class AddROIHistogramAction(base.Action):
                                              self.displayCtx,
                                              self.__plotPanel)
         ds.colour    = self.__plotPanel.getOverlayPlotColour(overlay)
+        ds.lineStyle = self.__plotPanel.getOverlayPlotStyle(overlay)
+        ds.lineWidth = 2
         ds.alpha     = 1
-        ds.lineWidth = 1
-        ds.lineStyle = '-'
         ds.label     = '{} [mask: {}]'.format(overlay.name, maskimg.name)
 
         # We have to run the data through
