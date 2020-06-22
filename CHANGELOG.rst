@@ -9,6 +9,27 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.33.2 (Tuesday 23rd June 2020)
+-------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Adjusted the histogram panel so that, when plotting a probability histogram,
+  the values are normalised by bin-width (!203).
+* A minor adjustment to the default font, to improve readability on some
+  platforms (!202).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with FSLeyes not shutting down cleanly (!204).
+
+
 0.33.1 (Monday 8th June 2020)
 -----------------------------
 
