@@ -71,8 +71,18 @@ class DataSeries(props.HasProperties):
     """Line width. """
 
 
-    lineStyle = props.Choice(('-', '--', '-.', ':'))
-    """Line style. """
+    lineStyle = props.Choice(('-',
+                              '--',
+                              '-.',
+                              ':',
+                              (0, (5, 7)),
+                              (0, (1, 7)),
+                              (0, (4, 10, 1, 10)),
+                              (0, (4, 1, 1, 1, 1, 1)),
+                              (0, (4, 1, 4, 1, 1, 1))))
+    """Line style. See
+    https://matplotlib.org/gallery/lines_bars_and_markers/linestyles.html
+    """
 
 
     def __init__(self, overlay, overlayList, displayCtx, plotPanel):
