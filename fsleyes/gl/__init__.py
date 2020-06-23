@@ -615,6 +615,7 @@ class GLContext(object):
             # created, we no longer need
             # references to the wx objects
             app           = self.__app
+            self.__parent.Close()
             self.__parent = None
             self.__canvas = None
             self.__app    = None

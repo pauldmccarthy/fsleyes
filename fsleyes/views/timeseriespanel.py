@@ -344,9 +344,9 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
             return None, None, None
 
         ts.colour    = self.getOverlayPlotColour(overlay)
+        ts.lineStyle = self.getOverlayPlotStyle(overlay)
+        ts.lineWidth = 2
         ts.alpha     = 1
-        ts.lineWidth = 1
-        ts.lineStyle = '-'
 
         return ts, targets, propNames
 

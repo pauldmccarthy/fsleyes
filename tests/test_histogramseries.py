@@ -100,7 +100,7 @@ def test_HistogramSeries():
     gotx, goty = hs.getData()
 
     assert hs.nbins == nbins
-    assert hs.getNumHistogramValues() == nvals
+    assert hs.numHistogramValues == nvals
     assert np.all(np.isclose(hx, gotx))
     assert np.all(np.isclose(hy, goty))
 

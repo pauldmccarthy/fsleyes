@@ -254,9 +254,9 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         hs = hsType(overlay, self.overlayList, self.displayCtx, self)
         hs.colour      = self.getOverlayPlotColour(overlay)
+        hs.lineStyle   = self.getOverlayPlotStyle(overlay)
+        hs.lineWidth   = 2
         hs.alpha       = 1
-        hs.lineWidth   = 1
-        hs.lineStyle   = '-'
 
         return hs, [], []
 
@@ -310,9 +310,16 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
             return xdata, ydata
 
         # Or a HistogramSeries instance
-        nvals = hs.getNumHistogramValues()
-        if   self.histType == 'count':       return xdata, ydata
-        elif self.histType == 'probability': return xdata, ydata / nvals
+        if self.histType == 'count':
+            return xdata, ydata
+
+        # Normalise by bin width to produce a
+        # probability density function, so it
+        # will look approximately the same,
+        # regardless of the current nbins setting
+        elif self.histType == 'probability':
+            nvals = hs.numHistogramValues
+            return xdata, ydata / (nvals * hs.binWidth)
 
 
     def __selectedOverlayChanged(self, *a):

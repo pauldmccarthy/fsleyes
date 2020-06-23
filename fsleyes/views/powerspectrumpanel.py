@@ -207,9 +207,9 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
             return None, None, None
 
         ps.colour    = self.getOverlayPlotColour(overlay)
+        ps.lineStyle = self.getOverlayPlotStyle(overlay)
+        ps.lineWidth = 2
         ps.alpha     = 1.0
-        ps.lineWidth = 1
-        ps.lineStyle = '-'
 
         return ps, targets, propNames
 

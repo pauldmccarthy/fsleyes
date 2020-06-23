@@ -9,6 +9,41 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.33.2 (Tuesday 23rd June 2020)
+-------------------------------
+
+
+Added
+^^^^^
+
+
+* Added some more line styles to the plotting panels (!206).
+* Added a new "accessible" lookup table, courtesy of Paul Tol
+  (https://personal.sron.nl/~pault/) (!206).
+
+
+Changed
+^^^^^^^
+
+
+* Increased the default plotting line width (!206).
+* The default plot colours are now from a pre-generated accessible palette,
+  rather than being randomly generated (!206).
+* The default plot line style is also rotated, in addition the plot colour
+  (!206).
+* Adjusted the histogram panel so that, when plotting a probability histogram,
+  the values are normalised by bin-width (!203).
+* A minor adjustment to the default font, to improve readability on some
+  platforms (!202).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with FSLeyes not shutting down cleanly (!204).
+
+
 0.33.1 (Monday 8th June 2020)
 -----------------------------
 

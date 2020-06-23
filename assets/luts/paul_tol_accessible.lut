@@ -1,0 +1,9 @@
+# The "bright" colour-blind accessible colour palette,
+# devised by Paul Tol (https://personal.sron.nl/~pault/).
+1 0.266667 0.466667 0.666667 Blue
+2 0.400000 0.800000 0.933333 Cyan
+3 0.133333 0.533333 0.200000 Green
+4 0.800000 0.733333 0.266667 Yellow
+5 0.933333 0.400000 0.466667 Red
+6 0.666667 0.200000 0.466667 Purple
+7 0.666667 0.666667 0.666667 Grey
