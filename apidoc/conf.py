@@ -371,12 +371,13 @@ latex_elements = {
 # special-members flag)
 autoclass_content = 'class'
 
-# Document private members and special members (e.g. __init__)
-autodoc_default_flags = ['private-members', 'special-members']
 
-# Documentation for python modules is in the same order
-# as the source code.
-autodoc_member_order = 'bysource'
+autodoc_default_options = {
+    'special-members' : True,
+    'private-members' : True,
+    'undoc-members'   : True,
+    'member-order'    : 'bysource',
+}
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
 
