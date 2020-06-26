@@ -22,35 +22,14 @@ Installation
 ------------
 
 
-These instructions pertain to manual installation of FSLeyes into a Python
-environment. Standalone versions of FSLeyes can be downloaded from
+FSLeyes is a GUI application written in Python, and built on `wxPython
+<https://www.wxpython.org>`_. FSLeyes requires OpenGL for visualisation.
+
+
+In the majority of cases, you should be able to follow the installation
+instructions outlined at the FSLeyes home page:
+
 https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes.
-
-
-FSLeyes is a `wxPython <https://www.wxpython.org>`_ application.  If you are
-on Linux, you will need to install wxPython first - head to
-https://extras.wxpython.org/wxPython4/extras/linux/ and find the directory
-that matches your OS. Then run this command (change the URL accordingly)::
-
-    pip install --only-binary wxpython -f https://extras.wxpython.org/wxPython4/extras/linux/gtk2/ubuntu-16.04/ wxpython
-
-
-Once ``wxPython`` has been installed, you can install FSLeyes like so::
-
-    pip install fsleyes
-
-
-To install FSLeyes with all of the optional dependencies (for additional
-functionality)::
-
-
-    pip install fsleyes[extras]
-
-
-As an alternate to using ``pip``, FSLeyes is also available on `conda-forge
-<https://conda-forge.org/>`_::
-
-    conda install -c conda-forge fsleyes
 
 
 Dependencies
@@ -62,7 +41,7 @@ All of the core dependencies of FSLeyes are listed in `requirements.txt
 
 
 Some extra dependencies, which provide additional functionality, are listed in
-`requirements-extras.txt <requirements-extras.txt>`_ and
+`requirements-extra.txt <requirements-extra.txt>`_ and
 `requirements-notebook.txt <requirements-notebook.txt>`_.
 
 
