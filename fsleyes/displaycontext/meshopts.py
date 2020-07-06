@@ -527,7 +527,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """Used by :meth:`transformCoords` and :meth:`getTransform` to
         normalise their ``from_`` and ``to`` parameters.
         """
-        if space not in ('world', 'display', 'mesh'):
+        if space not in ('world', 'display', 'mesh', 'voxel', 'id'):
             raise ValueError('Invalid space: {}'.format(space))
 
         if space == 'mesh':  space = self.coordSpace
@@ -553,6 +553,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'world'``:  World coordinate system
           - ``'display'`` Display coordinate system
           - ``'mesh'``    The coordinate system of this mesh.
+          - ``'voxel'``:   The voxel coordinate system of the reference
+                           image
+          - ``'id'``:      Equivalent to ``'voxel'``.
         """
 
         nfrom_ = self.normaliseSpace(from_)
@@ -582,12 +585,18 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """Return a matrix which may be used to transform coordinates from
         ``from_`` to ``to``.
 
+        If the :attr:`refImage` property is not set, an identity matrix is
+        returned.
+
         The following values are accepted for the ``from_`` and ``to``
         parameters:
 
-          - ``'world'``:  World coordinate system
-          - ``'display'`` Display coordinate system
-          - ``'mesh'``    The coordinate system of this mesh.
+          - ``'world'``:   World coordinate system
+          - ``'display'``: Display coordinate system
+          - ``'mesh'``:    The coordinate system of this mesh.
+          - ``'voxel'``:   The voxel coordinate system of the reference
+                           image
+          - ``'id'``:      Equivalent to ``'voxel'``.
         """
 
         nfrom_ = self.normaliseSpace(from_)
