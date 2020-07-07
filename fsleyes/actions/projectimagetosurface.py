@@ -57,7 +57,6 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
 
         # TODO Allow user to load an image from file?
 
-
         # We need to use child DisplayOpts objects in
         # order to perform the projection, as the parent
         # DisplayOpts objects do not maintain information
@@ -111,24 +110,38 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        # transform the mesh vertices
-        # into  the voxel coordinate
-        # system of the selected image
-        image   = images[dlg.GetSelection()]
-        iopts   = displayCtx.getOpts(image)
-        m2d     = mopts.getTransform('mesh', 'display')
-        verts   = mesh.vertices
-        verts   = iopts.transformCoords(verts, 'display', 'voxel', pre=m2d)
-
-        # sample the image data at
-        # every vertex location
-        imgdata = image.data[iopts.index()]
-        vdata   = ndi.map_coordinates(imgdata, verts.T)
+        # Sample data from the selected image
+        image = images[dlg.GetSelection()]
+        vdata = projectImageDataOntoMesh(displayCtx, image, mesh)
 
         # add the vertex data to
         # the mesh, and select it
         key              = mopts.addVertexData(image.name, vdata)
         mopts.vertexData = key
+
+
+def projectImageDataOntoMesh(displayCtx, image, mesh):
+    """Samples data from ``image`` at every vertex on ``mesh``. Uses
+    ``scipy.ndimage.map_coordinates``.
+    """
+
+    # transform the mesh vertices into
+    # the image voxel coordinate system
+    mopts   = displayCtx.getOpts(mesh)
+    iopts   = displayCtx.getOpts(image)
+    m2d     = mopts.getTransform('mesh', 'display')
+    verts   = mesh.vertices
+    verts   = iopts.transformCoords(verts, 'display', 'voxel', pre=m2d)
+
+    # sample the image data at
+    # every vertex location
+    imgdata = image.data[iopts.index()]
+    vdata   = ndi.map_coordinates(imgdata,
+                                  verts.T,
+                                  output=np.float64,
+                                  cval=np.nan)
+
+    return vdata
 
 
 def overlap(bbox1, bbox2):
