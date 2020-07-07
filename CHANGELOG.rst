@@ -27,6 +27,9 @@ Changed
 
 * Tweaked GL initialisation to avoid errors when running via XQuartz.
 * Minor adjustment to Jupyter Notebook integration
+* NaN values in mesh overlay vertex data are now handled in the same manner as
+  clipped values - previously they would be displayed in the low colour from the
+  selected colour map.
 
 
 0.33.2 (Tuesday 23rd June 2020)
