@@ -13,11 +13,20 @@ chronological order.
 --------------------------------
 
 
+Added
+^^^^^
+
+
+* New option under the *Tools* menu which allows data from an image overlay to
+  be projected onto a surface overlay.
+
+
 Changed
 ^^^^^^^
 
 
 * Tweaked GL initialisation to avoid errors when running via XQuartz.
+* Minor adjustment to Jupyter Notebook integration
 
 
 0.33.2 (Tuesday 23rd June 2020)
