@@ -413,6 +413,14 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             return vdata.shape[1]
 
 
+    def addVertexData(self, key, data):
+        """
+        """
+
+        self.overlay.addVertexData(key, data)
+        self.addVertexDataOptions([key])
+
+
     def addVertexDataOptions(self, paths):
         """Adds the given sequence of paths as options to the
         :attr:`vertexData` property. It is assumed that the paths refer

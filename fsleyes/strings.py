@@ -316,6 +316,10 @@ messages = TypeDict({
     'FileTreePanel.save'           : 'Save notes',
     'FileListPanel.buildingList'   : 'Building file list ...',
     'FileListPanel.loading'        : 'Loading files ...',
+
+    'ProjectImageToSurfaceAction.noOverlap' :
+    'Cannot identify any loaded images which overlap with the surface in '
+    'the display coordinate system.',
 })
 
 
@@ -470,6 +474,8 @@ titles = TypeDict({
     'LoadPluginAction.loadError'     : 'Error loading plugin file',
     'LoadPluginAction.installPlugin' : 'Install plugin?',
     'LoadPluginAction.installError'  : 'Error installing plugin file',
+
+    'ProjectImageDialog'  : 'Select image',
 })
 
 
@@ -557,8 +563,10 @@ actions = TypeDict({
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
-    'Scene3DPanel.resetDisplay'         : 'Reset camera',
-    'Scene3DPanel.toggleScene3DToolBar' : '3D toolbar',
+    'Scene3DPanel.resetDisplay'          : 'Reset camera',
+    'Scene3DPanel.toggleScene3DToolBar'  : '3D toolbar',
+    'Scene3DPanel.projectImageToSurface' :
+    'Project image data onto surface',
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
     'PlotPanel.importDataSeries'                    : 'Import ...',
@@ -939,7 +947,10 @@ labels = TypeDict({
     'VariablePanel.value.any'  : '<any>',
     'VariablePanel.value.all'  : '<all>',
 
-
+    'ProjectImageDialog.ok'      : 'Ok',
+    'ProjectImageDialog.cancel'  : 'Cancel',
+    'ProjectImageDialog.message' :
+    'Select an image to project onto the surface',
 })
 
 
