@@ -475,7 +475,7 @@ titles = TypeDict({
     'LoadPluginAction.installPlugin' : 'Install plugin?',
     'LoadPluginAction.installError'  : 'Error installing plugin file',
 
-    'ProjectImageDialog'  : 'Select image',
+    'ProjectImageToSurfaceAction.dialog'  : 'Select image',
 })
 
 
@@ -947,9 +947,7 @@ labels = TypeDict({
     'VariablePanel.value.any'  : '<any>',
     'VariablePanel.value.all'  : '<all>',
 
-    'ProjectImageDialog.ok'      : 'Ok',
-    'ProjectImageDialog.cancel'  : 'Cancel',
-    'ProjectImageDialog.message' :
+    'ProjectImageToSurfaceAction.message' :
     'Select an image to project onto the surface',
 })
 
