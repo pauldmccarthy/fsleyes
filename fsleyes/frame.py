@@ -580,6 +580,7 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.AddPane(panel, paneInfo)
         self.__configDisplaySync(panel)
         self.__auiManager.Update()
+        self.__enableMenus(True)
 
         return panel
 
@@ -1127,6 +1128,10 @@ class FSLeyesFrame(wx.Frame):
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Dockable(False).CaptionVisible(False)
 
+        # if there are no panels,
+        # disable the menus
+        self.__enableMenus(numPanels > 0)
+
         if displaySync:
             self.__configDisplaySync()
 
@@ -1504,14 +1509,16 @@ class FSLeyesFrame(wx.Frame):
         # than the menu bar on OSX/wxPhoenix, or on Linux.
         # This is because under OSX/wxPython, we can't get
         # access to the built-in application menu.
-        onOSX       = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
-                                                 fslplatform.WX_MAC_COCOA)
-        haveAppMenu = (onOSX and
-                       fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+        onOSX          = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
+                                                    fslplatform.WX_MAC_COCOA)
+        haveAppMenu    = (onOSX and
+                          fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+        locationOffset = 0
 
         # On linux, we create a FSLeyes menu
         if not onOSX:
-            fsleyesMenu = wx.Menu()
+            locationOffset  = 1
+            fsleyesMenu     = wx.Menu()
             menuBar.Append(fsleyesMenu, 'FSLeyes')
 
         # On OSX/wxPhoenix, we can
@@ -1545,6 +1552,15 @@ class FSLeyesFrame(wx.Frame):
         self.__settingsMenu = settingsMenu
         self.__toolsMenu    = toolsMenu
 
+        # store locations of some menus
+        # for use by the __enableMenus
+        # method
+        self.__menuLocations = {
+            'overlay'  : 1 + locationOffset,
+            'settings' : 3 + locationOffset,
+            'tools'    : 4 + locationOffset,
+        }
+
         self.__makeFileMenu()
 
         # We have a FSLeyes menu
@@ -1562,6 +1578,20 @@ class FSLeyesFrame(wx.Frame):
         self.__makeOverlayMenu()
         self.refreshToolsMenu()
         self.refreshViewMenu()
+
+
+    def __enableMenus(self, state):
+        """Enables/disables some of the menus. Only the menus which are useless
+        without any view panels open are affected.
+        """
+
+        if self.__fsleyesMenu is None: offset = 0
+        else:                          offset = 1
+
+        # overlay, settings, and tools menus
+        self.__menuBar.EnableTop(self.__menuLocations['overlay'],  state)
+        self.__menuBar.EnableTop(self.__menuLocations['settings'], state)
+        self.__menuBar.EnableTop(self.__menuLocations['tools'],    state)
 
 
     def __makeFSLeyesMenu(self, menu):
