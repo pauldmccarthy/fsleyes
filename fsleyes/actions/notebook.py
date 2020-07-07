@@ -344,7 +344,7 @@ class BackgroundIPythonKernel(object):
         # and that the worker threads are
         # alive.
         now   = time.time()
-        delta = 1.0
+        delta = 5.0
 
         return (now - self.__lastIter) < delta and \
                self.__error is None            and \
