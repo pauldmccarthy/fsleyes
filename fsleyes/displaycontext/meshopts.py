@@ -440,6 +440,8 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.overlay.addVertexData(key, data)
         self.addVertexDataOptions([key])
 
+        return key
+
 
     def addVertexDataOptions(self, paths):
         """Adds the given sequence of paths as options to the

@@ -1933,14 +1933,17 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
-        from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
-        from fsleyes.actions.resample      import ResampleAction
+        from fsleyes.actions.applyflirtxfm         import ApplyFlirtXfmAction
+        from fsleyes.actions.saveflirtxfm          import SaveFlirtXfmAction
+        from fsleyes.actions.resample              import ResampleAction
+        from fsleyes.actions.projectimagetosurface import \
+            ProjectImageToSurfaceAction
 
         actionz = [
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
             ResampleAction,
+            ProjectImageToSurfaceAction,
         ]
 
         actionItems = []

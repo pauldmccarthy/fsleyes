@@ -37,19 +37,19 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
     """
 
 
-    def __init__(self, overlayList, displayCtx, panel):
+    def __init__(self, overlayList, displayCtx, frame):
         """Create a ``ProjectImageToSurfaceAction``.
 
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext`
-        :arg panel:       The :class:`.ViewPanel` this action is associated
+        :arg frame:       The :class:`.ViewPanel` this action is associated
                           with.
         """
         super().__init__(overlayList,
                          displayCtx,
                          self.__projectImage,
                          fslmesh.Mesh)
-        self.__panel = panel
+        self.__frame = frame
 
 
     def __projectImage(self):
@@ -57,8 +57,16 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
 
         # TODO Allow user to load an image from file?
 
-        mesh  = self.displayCtx.getSelectedOverlay()
-        mopts = self.displayCtx.getOpts(mesh)
+
+        # We need to use child DisplayOpts objects in
+        # order to perform the projection, as the parent
+        # DisplayOpts objects do not maintain information
+        # about transformations between the different
+        # coordinate systems. Any child DisplayContext
+        # will do.
+        displayCtx = self.__frame.viewPanels[0].displayCtx
+        mesh       = self.displayCtx.getSelectedOverlay()
+        mopts      = displayCtx.getOpts(mesh)
 
         # any images which overlap with the
         # mesh bbox in the display coordinate
@@ -73,7 +81,7 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
             if not isinstance(o, fslimage.Image):
                 continue
 
-            iopts = self.displayCtx.getOpts(o)
+            iopts = displayCtx.getOpts(o)
             ibbox = affine.axisBounds(
                 o.shape[:3], iopts.getTransform('voxel', 'display'))
             ibbox = list(zip(*ibbox))
@@ -86,14 +94,14 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
         # display coordinate system
         if len(images) == 0:
             wx.MessageDialog(
-                self.__panel.GetTopLevelParent(),
+                self.__frame,
                 message=strings.messages[self, 'noOverlap'],
                 style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
             return
 
         # ask the user what image
         # they want to project
-        dlg = ProjectImageDialog(self.__panel, images)
+        dlg = ProjectImageDialog(self.__frame, images)
         if dlg.ShowModal() != wx.ID_OK:
             return
 
@@ -101,7 +109,7 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
         # into  the voxel coordinate
         # system of the selected image
         image   = dlg.GetImage()
-        iopts   = self.displayCtx.getOpts(image)
+        iopts   = displayCtx.getOpts(image)
         m2d     = mopts.getTransform('mesh', 'display')
         verts   = mesh.vertices
         verts   = iopts.transformCoords(verts, 'display', 'voxel', pre=m2d)

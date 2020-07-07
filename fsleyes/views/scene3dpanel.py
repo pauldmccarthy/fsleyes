@@ -15,13 +15,12 @@ import wx
 
 import numpy as np
 
-import fsl.transform.affine                  as affine
-import fsleyes.displaycontext.scene3dopts    as scene3dopts
-import fsleyes.gl.wxglscene3dcanvas          as scene3dcanvas
-import fsleyes.actions                       as actions
-import fsleyes.actions.projectimagetosurface as projectimagetosurface
-import fsleyes.controls.scene3dtoolbar       as s3dtoolbar
-from . import                                   canvaspanel
+import fsl.transform.affine               as affine
+import fsleyes.displaycontext.scene3dopts as scene3dopts
+import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
+import fsleyes.actions                    as actions
+import fsleyes.controls.scene3dtoolbar    as s3dtoolbar
+from . import                                canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -92,12 +91,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('rotation',     sceneOpts)
         opts.bindProps('highDpi',      sceneOpts)
 
-        self.__projAction = projectimagetosurface.ProjectImageToSurfaceAction(
-            self.overlayList,
-            self.displayCtx,
-            self)
-        self.projectImageToSurface.bindProps('enabled', self.__projAction)
-
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.__canvas, flag=wx.EXPAND, proportion=1)
         contentPanel.SetSizer(sizer)
@@ -121,13 +114,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         within this ``Scene3DPanel``.
         """
         return [self.__canvas]
-
-
-    def getTools(self):
-        """Overrides :meth:`.ViewPanel.getTools`. Returns a list of tools
-        that can be executed on this ``Scene3DPanel``.
-        """
-        return [self.projectImageToSurface]
 
 
     def getActions(self):
@@ -183,12 +169,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         method.
         """
         self.getCurrentProfile().resetDisplay()
-
-
-    @actions.action
-    def projectImageToSurface(self):
-        """Executes a :class:`.ProjectImageToSurfaceAction`. """
-        self.__projAction()
 
 
     @actions.toggleControlAction(s3dtoolbar.Scene3DToolBar)
