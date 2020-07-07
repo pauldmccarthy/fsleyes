@@ -414,8 +414,28 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
 
     def addVertexData(self, key, data):
+        """Adds the given data as a  vertex data set to the :class:`.Mesh`
+        overlay associated with this ``MeshOpts``.
+
+        :arg key:  A unique key to identify the data. If a vertex data set
+                   with the key already exists, a unique one is generated
+                   and returned.
+
+        :arg data: ``numpy`` array containing per-vertex data.
+
+        :returns:  The key used to identify the data (typically equal to
+                   ``key``)
         """
-        """
+        count   = 1
+        origKey = key
+        sets    = self.overlay.vertexDataSets()
+
+        # generate a unique key for the
+        # vertex data if one with the
+        # given key already exists
+        while key in sets:
+            key   = '{} [{}]'.format(origKey, count)
+            count = count + 1
 
         self.overlay.addVertexData(key, data)
         self.addVertexDataOptions([key])

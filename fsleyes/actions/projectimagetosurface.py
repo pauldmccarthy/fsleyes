@@ -81,6 +81,9 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
             if overlap(mbbox, ibbox):
                 images.append(o)
 
+        # can't find any images which
+        # overlap with the mesh in the
+        # display coordinate system
         if len(images) == 0:
             wx.MessageDialog(
                 self.__panel.GetTopLevelParent(),
@@ -88,21 +91,30 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
                 style=(wx.ICON_EXCLAMATION | wx.OK)).ShowModal()
             return
 
+        # ask the user what image
+        # they want to project
         dlg = ProjectImageDialog(self.__panel, images)
         if dlg.ShowModal() != wx.ID_OK:
             return
 
+        # transform the mesh vertices
+        # into  the voxel coordinate
+        # system of the selected image
         image   = dlg.GetImage()
         iopts   = self.displayCtx.getOpts(image)
         m2d     = mopts.getTransform('mesh', 'display')
         verts   = mesh.vertices
         verts   = iopts.transformCoords(verts, 'display', 'voxel', pre=m2d)
 
+        # sample the image data at
+        # every vertex location
         imgdata = image.data[iopts.index()]
         vdata   = ndi.map_coordinates(imgdata, verts.T)
 
-        mopts.addVertexData(image.name, vdata)
-        mopts.vertexData = image.name
+        # add the vertex data to
+        # the mesh, and select it
+        key              = mopts.addVertexData(image.name, vdata)
+        mopts.vertexData = key
 
 
 class ProjectImageDialog(wx.Dialog):
