@@ -609,6 +609,8 @@ class GLContext(object):
         # loop.
         def create():
 
+            app = self.__app
+
             self.__createWXGLContext()
 
             # If we've created and started
@@ -630,7 +632,6 @@ class GLContext(object):
                     if raiseErrors:
                         raise e
 
-
             # Once the GL context has been
             # created, we no longer need
             # references to the wx objects
@@ -651,7 +652,6 @@ class GLContext(object):
             # issue, or if the ready() callback
             # is doing something which causes the
             # error to not occur.
-            app           = self.__app
             self.__parent.Close()
             self.__parent = None
             self.__canvas = None
