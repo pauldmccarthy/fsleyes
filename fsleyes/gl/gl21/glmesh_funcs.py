@@ -76,19 +76,16 @@ def updateShaderState(self, **kwargs):
         dshader.setAtt('vertex', self.vertices)
         dshader.setAtt('normal', self.normals)
 
-        vdata = dopts.getVertexData()
-        mdata = dopts.getVertexData('modulate')
+        vdata = self.getVertexData('vertex')
+        mdata = self.getVertexData('modulate')
 
         # if modulate data is not set,
         # we use the vertex data
         if mdata is None:
             mdata = vdata
 
-        if vdata is not None:
-            vdata = vdata[:, dopts.vertexDataIndex]
-            dshader.setAtt('vertexData', vdata.ravel('C'))
-        if mdata is not None:
-            dshader.setAtt('modulateData', mdata[:, 0].ravel('C'))
+        if vdata is not None: dshader.setAtt('vertexData',   vdata.ravel('C'))
+        if mdata is not None: dshader.setAtt('modulateData', mdata.ravel('C'))
 
         dshader.setIndices(self.indices)
 
