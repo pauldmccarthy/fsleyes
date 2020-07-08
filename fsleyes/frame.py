@@ -1585,6 +1585,11 @@ class FSLeyesFrame(wx.Frame):
         without any view panels open are affected.
         """
 
+        # we might be running without a menubar
+        # if __init__ was called with menu=Falsee
+        if self.__menuBar is None:
+            return
+
         if self.__fsleyesMenu is None: offset = 0
         else:                          offset = 1
 
