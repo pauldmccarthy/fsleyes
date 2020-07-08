@@ -345,9 +345,14 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def focusedViewPanel(self):
-        """Returns the :class:`.ViewPanel` which currently has focus, or
-        ``None`` if no ``ViewPanel`` has focus.
+        """Returns the :class:`.ViewPanel` which currently has focus,
+        the first ``ViewPanel`` if none have focus, or ``None`` if there
+        are no ``ViewPanels``.
         """
+
+        if len(self.viewPanels) == 0:
+            return None
+
         import fsleyes.views.viewpanel as viewpanel
 
         focused = wx.Window.FindFocus()
@@ -358,7 +363,8 @@ class FSLeyesFrame(wx.Frame):
                 return focused
 
             focused = focused.GetParent()
-        return None
+
+        return self.viewPanels[0]
 
 
     @property
