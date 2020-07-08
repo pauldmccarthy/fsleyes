@@ -1590,9 +1590,6 @@ class FSLeyesFrame(wx.Frame):
         if self.__menuBar is None:
             return
 
-        if self.__fsleyesMenu is None: offset = 0
-        else:                          offset = 1
-
         # overlay, settings, and tools menus
         self.__menuBar.EnableTop(self.__menuLocations['overlay'],  state)
         self.__menuBar.EnableTop(self.__menuLocations['settings'], state)

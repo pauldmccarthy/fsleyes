@@ -63,7 +63,7 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
         # about transformations between the different
         # coordinate systems. Any child DisplayContext
         # will do.
-        displayCtx = self.__frame.viewPanels[0].displayCtx
+        displayCtx = self.__frame.focusedViewPanel.displayCtx
         mesh       = self.displayCtx.getSelectedOverlay()
         mopts      = displayCtx.getOpts(mesh)
 
