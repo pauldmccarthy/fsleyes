@@ -345,9 +345,14 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def focusedViewPanel(self):
-        """Returns the :class:`.ViewPanel` which currently has focus, or
-        ``None`` if no ``ViewPanel`` has focus.
+        """Returns the :class:`.ViewPanel` which currently has focus,
+        the first ``ViewPanel`` if none have focus, or ``None`` if there
+        are no ``ViewPanels``.
         """
+
+        if len(self.viewPanels) == 0:
+            return None
+
         import fsleyes.views.viewpanel as viewpanel
 
         focused = wx.Window.FindFocus()
@@ -358,7 +363,8 @@ class FSLeyesFrame(wx.Frame):
                 return focused
 
             focused = focused.GetParent()
-        return None
+
+        return self.viewPanels[0]
 
 
     @property
@@ -580,6 +586,7 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.AddPane(panel, paneInfo)
         self.__configDisplaySync(panel)
         self.__auiManager.Update()
+        self.__enableMenus(True)
 
         return panel
 
@@ -1127,6 +1134,10 @@ class FSLeyesFrame(wx.Frame):
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
             paneInfo.Dockable(False).CaptionVisible(False)
 
+        # if there are no panels,
+        # disable the menus
+        self.__enableMenus(numPanels > 0)
+
         if displaySync:
             self.__configDisplaySync()
 
@@ -1504,14 +1515,16 @@ class FSLeyesFrame(wx.Frame):
         # than the menu bar on OSX/wxPhoenix, or on Linux.
         # This is because under OSX/wxPython, we can't get
         # access to the built-in application menu.
-        onOSX       = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
-                                                 fslplatform.WX_MAC_COCOA)
-        haveAppMenu = (onOSX and
-                       fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+        onOSX          = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
+                                                    fslplatform.WX_MAC_COCOA)
+        haveAppMenu    = (onOSX and
+                          fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+        locationOffset = 0
 
         # On linux, we create a FSLeyes menu
         if not onOSX:
-            fsleyesMenu = wx.Menu()
+            locationOffset  = 1
+            fsleyesMenu     = wx.Menu()
             menuBar.Append(fsleyesMenu, 'FSLeyes')
 
         # On OSX/wxPhoenix, we can
@@ -1545,6 +1558,15 @@ class FSLeyesFrame(wx.Frame):
         self.__settingsMenu = settingsMenu
         self.__toolsMenu    = toolsMenu
 
+        # store locations of some menus
+        # for use by the __enableMenus
+        # method
+        self.__menuLocations = {
+            'overlay'  : 1 + locationOffset,
+            'settings' : 3 + locationOffset,
+            'tools'    : 4 + locationOffset,
+        }
+
         self.__makeFileMenu()
 
         # We have a FSLeyes menu
@@ -1562,6 +1584,22 @@ class FSLeyesFrame(wx.Frame):
         self.__makeOverlayMenu()
         self.refreshToolsMenu()
         self.refreshViewMenu()
+
+
+    def __enableMenus(self, state):
+        """Enables/disables some of the menus. Only the menus which are useless
+        without any view panels open are affected.
+        """
+
+        # we might be running without a menubar
+        # if __init__ was called with menu=Falsee
+        if self.__menuBar is None:
+            return
+
+        # overlay, settings, and tools menus
+        self.__menuBar.EnableTop(self.__menuLocations['overlay'],  state)
+        self.__menuBar.EnableTop(self.__menuLocations['settings'], state)
+        self.__menuBar.EnableTop(self.__menuLocations['tools'],    state)
 
 
     def __makeFSLeyesMenu(self, menu):
@@ -1933,14 +1971,17 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        from fsleyes.actions.applyflirtxfm import ApplyFlirtXfmAction
-        from fsleyes.actions.saveflirtxfm  import SaveFlirtXfmAction
-        from fsleyes.actions.resample      import ResampleAction
+        from fsleyes.actions.applyflirtxfm         import ApplyFlirtXfmAction
+        from fsleyes.actions.saveflirtxfm          import SaveFlirtXfmAction
+        from fsleyes.actions.resample              import ResampleAction
+        from fsleyes.actions.projectimagetosurface import \
+            ProjectImageToSurfaceAction
 
         actionz = [
             ApplyFlirtXfmAction,
             SaveFlirtXfmAction,
             ResampleAction,
+            ProjectImageToSurfaceAction,
         ]
 
         actionItems = []

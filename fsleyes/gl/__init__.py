@@ -314,10 +314,11 @@ def bootstrap(glVersion=None):
     else:
         major, minor = glVersion
 
+    # glVersion contains the actual GL version
+    # verstr contains the target compatibility
+    # GL version
     glVersion = major + minor / 10.0
-
-    glpkg = None
-
+    glpkg     = None
     if glVersion >= 2.1:
         verstr = '2.1'
         glpkg  = gl21
@@ -411,7 +412,7 @@ def bootstrap(glVersion=None):
     thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
-    fslplatform.glVersion      = thismod.GL_VERSION
+    fslplatform.glVersion      = glVersion
     fslplatform.glRenderer     = thismod.GL_RENDERER
 
     # If we're using a software based renderer,

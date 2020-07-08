@@ -316,6 +316,10 @@ messages = TypeDict({
     'FileTreePanel.save'           : 'Save notes',
     'FileListPanel.buildingList'   : 'Building file list ...',
     'FileListPanel.loading'        : 'Loading files ...',
+
+    'ProjectImageToSurfaceAction.noOverlap' :
+    'Cannot identify any loaded images which overlap with the surface in '
+    'the display coordinate system.',
 })
 
 
@@ -470,38 +474,42 @@ titles = TypeDict({
     'LoadPluginAction.loadError'     : 'Error loading plugin file',
     'LoadPluginAction.installPlugin' : 'Install plugin?',
     'LoadPluginAction.installError'  : 'Error installing plugin file',
+
+    'ProjectImageToSurfaceAction.dialog'  : 'Select image',
 })
 
 
 actions = TypeDict({
 
-    'LoadOverlayAction'        : 'Add from file',
-    'LoadOverlayFromDirAction' : 'Add from directory',
-    'LoadStandardAction'       : 'Add standard',
-    'LoadDicomAction'          : 'Add from DICOM',
-    'BrowseXNATAction'         : 'Add from XNAT',
-    'NewImageAction'           : 'New image',
-    'CopyOverlayAction'        : 'Copy',
-    'LoadAtlasAction'          : 'Import new atlas',
-    'ClearSettingsAction'      : 'Clear FSLeyes settings',
-    'UpdateCheckAction'        : 'Check for updates',
-    'SaveOverlayAction'        : 'Save',
-    'ReloadOverlayAction'      : 'Reload',
-    'RemoveOverlayAction'      : 'Remove',
-    'RemoveAllOverlaysAction'  : 'Remove all',
-    'LoadColourMapAction'      : 'Load custom colour map',
-    'SaveLayoutAction'         : 'Save current layout',
-    'ClearLayoutsAction'       : 'Clear all layouts',
-    'DiagnosticReportAction'   : 'Diagnostic report',
-    'RunScriptAction'          : 'Run script',
-    'AboutAction'              : 'About FSLeyes',
-    'PearsonCorrelateAction'   : 'Seed correlation (Pearson)',
-    'ApplyFlirtXfmAction'      : 'Load affine transformation',
-    'SaveFlirtXfmAction'       : 'Export affine transformation',
-    'NotebookAction'           : 'Open notebooks',
-    'PCACorrelateAction'       : 'Seed correlation (PCA)',
-    'ResampleAction'           : 'Resample image',
-    'LoadPluginAction'         : 'Load plugin',
+    'LoadOverlayAction'           : 'Add from file',
+    'LoadOverlayFromDirAction'    : 'Add from directory',
+    'LoadStandardAction'          : 'Add standard',
+    'LoadDicomAction'             : 'Add from DICOM',
+    'BrowseXNATAction'            : 'Add from XNAT',
+    'NewImageAction'              : 'New image',
+    'CopyOverlayAction'           : 'Copy',
+    'LoadAtlasAction'             : 'Import new atlas',
+    'ClearSettingsAction'         : 'Clear FSLeyes settings',
+    'UpdateCheckAction'           : 'Check for updates',
+    'SaveOverlayAction'           : 'Save',
+    'ReloadOverlayAction'         : 'Reload',
+    'RemoveOverlayAction'         : 'Remove',
+    'RemoveAllOverlaysAction'     : 'Remove all',
+    'LoadColourMapAction'         : 'Load custom colour map',
+    'SaveLayoutAction'            : 'Save current layout',
+    'ClearLayoutsAction'          : 'Clear all layouts',
+    'DiagnosticReportAction'      : 'Diagnostic report',
+    'RunScriptAction'             : 'Run script',
+    'AboutAction'                 : 'About FSLeyes',
+    'PearsonCorrelateAction'      : 'Seed correlation (Pearson)',
+    'ApplyFlirtXfmAction'         : 'Load affine transformation',
+    'SaveFlirtXfmAction'          : 'Export affine transformation',
+    'NotebookAction'              : 'Open notebooks',
+    'PCACorrelateAction'          : 'Seed correlation (PCA)',
+    'ResampleAction'              : 'Resample image',
+    'LoadPluginAction'            : 'Load plugin',
+    'ProjectImageToSurfaceAction' : 'Project image data onto surface',
+
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
@@ -557,8 +565,8 @@ actions = TypeDict({
 
     'LightBoxPanel.toggleLightBoxToolBar' : 'Lightbox toolbar',
 
-    'Scene3DPanel.resetDisplay'         : 'Reset camera',
-    'Scene3DPanel.toggleScene3DToolBar' : '3D toolbar',
+    'Scene3DPanel.resetDisplay'          : 'Reset camera',
+    'Scene3DPanel.toggleScene3DToolBar'  : '3D toolbar',
 
     'PlotPanel.screenshot'                          : 'Take screenshot',
     'PlotPanel.importDataSeries'                    : 'Import ...',
@@ -939,7 +947,8 @@ labels = TypeDict({
     'VariablePanel.value.any'  : '<any>',
     'VariablePanel.value.all'  : '<all>',
 
-
+    'ProjectImageToSurfaceAction.message' :
+    'Select an image to project onto the surface',
 })
 
 
@@ -1175,6 +1184,7 @@ properties = TypeDict({
     'MeshOpts.discardClipped'    : 'Hide clipped areas',
     'MeshOpts.wireframe'         : 'Show as wireframe',
     'MeshOpts.lighting'          : 'Enable lighting',
+    'MeshOpts.flatShading'       : 'Flat shading',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',

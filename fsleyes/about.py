@@ -15,6 +15,7 @@ import wx
 
 import fsleyes_widgets.imagepanel         as imagepanel
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes.gl                         as fslgl
 import fsleyes.strings                    as strings
 import fsleyes.splash                     as splash
 import fsleyes.version                    as version
@@ -83,7 +84,7 @@ class AboutDialog(wx.Dialog):
         fslVer    = strings.about['fslVersion'].format(fslplatform.fslVersion)
         fslDir    = strings.about['fslPath']   .format(fslplatform.fsldir)
         glVerStr  = strings.about['glVersion'] .format(glVerStr)
-        glCompat  = strings.about['glCompat']  .format(fslplatform.glVersion)
+        glCompat  = strings.about['glCompat']  .format(fslgl.GL_VERSION)
         glRenStr  = strings.about['glRenderer'].format(glRenStr)
         swStr     = strings.about['software']  .format(*swVersions)
 

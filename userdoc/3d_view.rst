@@ -61,6 +61,12 @@ display settings <overlays_mesh>`. You can choose different variants of the
 same mesh via the **Surface definition** setting, and you can display data on
 the surface via the **Vertex data** setting.
 
+The default behaviour, when you are colouring a mesh with some vertex data, is
+for the colours to be interpolated (smoothed) across the mesh surface. However,
+if you are viewing discrete data (e.g. anatomical labels), and/or wish to
+display the mesh with flat, unsmoothed colours, you can toggle the **Flat
+shading** option.
+
 
 Volume overlays
 ^^^^^^^^^^^^^^^

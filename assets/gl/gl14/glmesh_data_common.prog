@@ -51,6 +51,11 @@ TEMP useNegCmap;
 # will contain a negative value
 # if the vertex data is above
 # the high clipping range.
+# Z is used to store whether
+# the vertex data for this
+# fragment is nan (which is
+# treated the same as a clipped
+# fragment)
 TEMP clip;
 
 # x is used to store and
@@ -62,8 +67,21 @@ TEMP vertexData;
 TEMP colour;
 TEMP negColour;
 
-
 MOV vertexData.x, {{ vertexData }}.x;
+
+# Test whether the vertex data is nan,
+# and store in clip.z (using clip.w as
+# a temp). We're testing  whether
+# (value >= value) || (value < value).
+# We combine this test with the clip
+# test below, and conditionally kill
+# the fragment if it is nan or clipped.
+# clip.z will be negative if the data
+# is nan.
+SGE clip.z, vertexData.x, vertexData.x;
+SLT clip.w, vertexData.x, vertexData.x;
+ADD clip.z, clip.z,       clip.w;
+SUB clip.z, clip.z,       0.5;
 
 # Set the useNegCmap.x flag to -1
 # if negCmap is on (settings.x)
@@ -96,8 +114,12 @@ MUL clip.x, clip.x, {{ settings }}.y;
 # Copy the clipping value over
 # to clip.y - we'll use clip.y
 # to determine whether the fragment
-# should be killed or not.
+# should be killed or not. We
+# also combine the nan test (evaluated
+# above), as nan fragments are
+# treated the same as clipped fragments.
 MOV clip.y, clip.x;
+CMP clip.y, clip.z, clip.z, clip.y;
 
 # If discardClipped is not active
 # (settings.z == -1), override
@@ -105,9 +127,10 @@ MOV clip.y, clip.x;
 # alive regardless of clipping.
 CMP clip.y, {{ settings }}.z, 1, clip.y;
 
-# Kill the fragment if either
-# of the clip tests fail (but only
-# if discardClipped is active)
+# Kill the fragment if the vertex
+# data is nan, or either of the clip
+# tests fail (but only if
+# discardClipped is active)
 KIL clip.y;
 
 # Transform the vertex data

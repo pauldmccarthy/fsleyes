@@ -196,6 +196,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    flatShading = props.Boolean(default=False)
+    """3D only. If ``True``, colours between vertices are not interpolated -
+    each triangle is coloured with the colour assigned to the first vertex.
+    Only has an effect when the mesh is being coloured with vertex data.
+    """
+
+
     wireframe = props.Boolean(default=False)
     """3D only. If ``True``, the mesh is rendered as a wireframe. """
 
@@ -203,16 +210,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance.
 
-        :arg useTorig: If ``False`` (the default), the ``'torig'`` option
-                       from the :attr:`coordSpace` property is removed.
-
         All other arguments are passed through to the :class:`.DisplayOpts`
         constructor.
         """
-
-        if 'useTorig' in kwargs:
-            deprecated.warn('useTorig', '0.33.0', '0.34.0',
-                            'useTorig is deprecated and has no effect.')
 
         # Set a default colour
         colour      = genMeshColour(overlay)
@@ -413,6 +413,36 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             return vdata.shape[1]
 
 
+    def addVertexData(self, key, data):
+        """Adds the given data as a  vertex data set to the :class:`.Mesh`
+        overlay associated with this ``MeshOpts``.
+
+        :arg key:  A unique key to identify the data. If a vertex data set
+                   with the key already exists, a unique one is generated
+                   and returned.
+
+        :arg data: ``numpy`` array containing per-vertex data.
+
+        :returns:  The key used to identify the data (typically equal to
+                   ``key``)
+        """
+        count   = 1
+        origKey = key
+        sets    = self.overlay.vertexDataSets()
+
+        # generate a unique key for the
+        # vertex data if one with the
+        # given key already exists
+        while key in sets:
+            key   = '{} [{}]'.format(origKey, count)
+            count = count + 1
+
+        self.overlay.addVertexData(key, data)
+        self.addVertexDataOptions([key])
+
+        return key
+
+
     def addVertexDataOptions(self, paths):
         """Adds the given sequence of paths as options to the
         :attr:`vertexData` property. It is assumed that the paths refer
@@ -527,7 +557,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """Used by :meth:`transformCoords` and :meth:`getTransform` to
         normalise their ``from_`` and ``to`` parameters.
         """
-        if space not in ('world', 'display', 'mesh'):
+        if space not in ('world', 'display', 'mesh', 'voxel', 'id'):
             raise ValueError('Invalid space: {}'.format(space))
 
         if space == 'mesh':  space = self.coordSpace
@@ -553,6 +583,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
           - ``'world'``:  World coordinate system
           - ``'display'`` Display coordinate system
           - ``'mesh'``    The coordinate system of this mesh.
+          - ``'voxel'``:   The voxel coordinate system of the reference
+                           image
+          - ``'id'``:      Equivalent to ``'voxel'``.
         """
 
         nfrom_ = self.normaliseSpace(from_)
@@ -582,12 +615,18 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """Return a matrix which may be used to transform coordinates from
         ``from_`` to ``to``.
 
+        If the :attr:`refImage` property is not set, an identity matrix is
+        returned.
+
         The following values are accepted for the ``from_`` and ``to``
         parameters:
 
-          - ``'world'``:  World coordinate system
-          - ``'display'`` Display coordinate system
-          - ``'mesh'``    The coordinate system of this mesh.
+          - ``'world'``:   World coordinate system
+          - ``'display'``: Display coordinate system
+          - ``'mesh'``:    The coordinate system of this mesh.
+          - ``'voxel'``:   The voxel coordinate system of the reference
+                           image
+          - ``'id'``:      Equivalent to ``'voxel'``.
         """
 
         nfrom_ = self.normaliseSpace(from_)

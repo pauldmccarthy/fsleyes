@@ -130,6 +130,18 @@ class GLMesh(globject.GLObject):
     Whether the 3D mesh is coloured with a flat colour, or according to vertex
     data, shader programs are used which colour the mesh, and also apply a
     simple lighting effect.
+
+
+    **Flat shading**
+
+    When the :attr:`.MeshOpts.flatShading` property is active (only possible
+    when 3D rendering), the mesh vertices and indices need to be modified.
+    In order to achive flat shading, each vertex of a triangle must be given
+    the same vertex data value. This means that vertices cannot be shared by
+    different triangles. So when the ``flatShading`` property changes, the
+    :meth:`updateVertices` method will re-generate the vertices and indices
+    accordingly. The :meth:`getVertexData` method will modify the vertex
+    data that gets passed to the shader accordingly too.
     """
 
 
@@ -272,6 +284,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
         opts   .addListener('modulateAlpha',    name, shader,      weak=False)
+        opts   .addListener('flatShading',      name, vertices,    weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
         if self.threedee:
@@ -311,6 +324,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
         self.opts   .removeListener('modulateAlpha',    self.name)
+        self.opts   .removeListener('flatShading',      self.name)
         self.display.removeListener('alpha',            self.name)
 
         if self.threedee:
@@ -350,10 +364,13 @@ class GLMesh(globject.GLObject):
         """
 
         overlay  = self.overlay
+        opts     = self.opts
+        threedee = self.threedee
         vertices = overlay.vertices
         indices  = overlay.indices
         normals  = self.overlay.vnormals
-        xform    = self.opts.getTransform('mesh', 'display')
+        vdata    = opts.getVertexData('vertex')
+        xform    = opts.getTransform('mesh', 'display')
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = affine.transform(vertices, xform)
@@ -362,8 +379,23 @@ class GLMesh(globject.GLObject):
                 nmat    = affine.invert(xform).T
                 normals = affine.transform(normals, nmat, vector=True)
 
-        self.vertices = np.asarray(vertices,          dtype=np.float32)
-        self.indices  = np.asarray(indices.flatten(), dtype=np.uint32)
+        self.origIndices = indices
+        indices          = np.asarray(indices.flatten(), dtype=np.uint32)
+
+        # If flatShading is active, we cannot share
+        # vertices between triangles, so we generate
+        # a set of unique vertices for each triangle,
+        # and then re-generate the triangle indices.
+        # The original indices are saved above, as
+        # they will be used by the getVertexData
+        # method to duplicate the vertex data.
+        if threedee and (vdata is not None) and opts.flatShading:
+            self.vertices = vertices[indices].astype(np.float32)
+            self.indices  = np.arange(0, len(self.vertices), dtype=np.uint32)
+            normals       = normals[indices, :]
+        else:
+            self.vertices = np.asarray(vertices, dtype=np.float32)
+            self.indices  = indices
 
         self.vertices = dutils.makeWriteable(self.vertices)
         self.indices  = dutils.makeWriteable(self.indices)
@@ -515,15 +547,11 @@ class GLMesh(globject.GLObject):
         idxs      = self.indices
         normals   = self.normals
         blo, bhi  = self.getDisplayBounds()
-        vdata     = opts.getVertexData('vertex')
-        mdata     = opts.getVertexData('modulate')
+        vdata     = self.getVertexData('vertex')
+        mdata     = self.getVertexData('modulate')
 
         if mdata is None:
             mdata = vdata
-
-        # TODO separate modulateDataIndex?
-        if vdata is not None: vdata = vdata[:, self.opts.vertexDataIndex]
-        if mdata is not None: mdata = mdata[:, 0]
 
         is2D = np.isclose(bhi[2], blo[2])
 
@@ -602,8 +630,8 @@ class GLMesh(globject.GLObject):
         if vertXform is not None:
             xform = affine.concat(xform, vertXform)
 
-        vdata     = self.getVertexData(faces, dists, 'vertex')
-        mdata     = self.getVertexData(faces, dists, 'modulate')
+        vdata     = self.getVertexData('vertex',   faces, dists)
+        mdata     = self.getVertexData('modulate', faces, dists)
         useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
         nvertices = vertices.shape[0]
@@ -923,14 +951,16 @@ class GLMesh(globject.GLObject):
         return lines, faces, dists, vertXform
 
 
-    def getVertexData(self, faces, dists, vdtype):
+    def getVertexData(self, vdtype, faces=None, dists=None):
         """If :attr:`.MeshOpts.vertexData` (or :attr:`.MeshOpts.modulateData`)
         is not ``None``, this method returns the vertex data to use for the
-        line segments calculated in the :meth:`calculateIntersection` method.
+        current vertex data index.
 
-        The ``dists`` array contains barycentric coordinates for each line
-        vertex, and is used to linearly interpolate between the values of the
-        vertices of the intersected triangles (defined in ``faces``).
+        ``faces`` and ``dists`` are used by the :meth:`drawOutline` method,
+        which draws a cross-section of the mesh. The ``dists`` array contains
+        barycentric coordinates for each line vertex, and is used to linearly
+        interpolate between the values of the vertices of the intersected
+        triangles (defined in ``faces``).
 
         If ``MeshOpts.vertexData is None``, this method returns ``None``.
 
@@ -948,8 +978,20 @@ class GLMesh(globject.GLObject):
         if vdtype == 'vertex': vdata = vdata[:, opts.vertexDataIndex]
         else:                  vdata = vdata[:, 0]
 
-        vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
-        vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
+        # when flat-shading, we colour each
+        # triangle according to the data
+        # value for its first vertex. This
+        # should really be pre-generated
+        # whenever the vertex data or flat-
+        # shading option is changed, but it
+        # is quick for typical surfaces, so
+        # I'm not bothering for now.
+        if self.threedee and (vdata is not None) and opts.flatShading:
+            vdata = vdata[self.origIndices[:, 0]].repeat(3)
+
+        if faces is not None and dists is not None:
+            vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
+            vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
 
         return np.asarray(vdata, np.float32)
 

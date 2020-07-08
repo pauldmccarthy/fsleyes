@@ -13,11 +13,24 @@ chronological order.
 --------------------------------
 
 
+Added
+^^^^^
+
+
+* New option under the *Tools* menu which allows data from an image overlay to
+  be projected onto a surface overlay (!213).
+* New *Flat shading* display option when viewing surfaces in 3D (!213).
+
+
 Changed
 ^^^^^^^
 
 
-* Tweaked GL initialisation to avoid errors when running via XQuartz.
+* Tweaked GL initialisation to avoid errors when running via XQuartz (!211).
+* Minor adjustment to Jupyter Notebook integration (!213).
+* NaN values in mesh overlay vertex data are now handled in the same manner as
+  clipped values - previously they would be displayed in the low colour from the
+  selected colour map (!213).
 
 
 0.33.2 (Tuesday 23rd June 2020)

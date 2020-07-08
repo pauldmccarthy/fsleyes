@@ -60,15 +60,8 @@ vec4 glmesh_data_colour() {
   bool  negative;
   bool  clip;
 
-  negative = useNegCmap && fragVertexData < 0;
-
-  if (negative) vertexData = -fragVertexData;
-  else          vertexData =  fragVertexData;
-
-  clip = (!invertClip && (vertexData <= clipLow || vertexData >= clipHigh)) ||
-         ( invertClip && (vertexData >= clipLow && vertexData <= clipHigh));
-
-  if (clip) {
+  // vertex data is nan
+  if (fragVertexData != fragVertexData) {
     if (discardClipped) {
       discard;
     }
@@ -76,12 +69,31 @@ vec4 glmesh_data_colour() {
       result = flatColour;
     }
   }
+
   else {
+    negative = useNegCmap && fragVertexData < 0;
 
-    texCoord = (cmapXform * vec4(vertexData, 0, 0, 1)).x;
+    if (negative) vertexData = -fragVertexData;
+    else          vertexData =  fragVertexData;
 
-    if (negative) result = texture1D(negCmap, texCoord);
-    else          result = texture1D(cmap,    texCoord);
+    clip = (!invertClip && (vertexData <= clipLow || vertexData >= clipHigh)) ||
+           ( invertClip && (vertexData >= clipLow && vertexData <= clipHigh));
+
+    if (clip) {
+      if (discardClipped) {
+        discard;
+      }
+      else {
+        result = flatColour;
+      }
+    }
+    else {
+
+      texCoord = (cmapXform * vec4(vertexData, 0, 0, 1)).x;
+
+      if (negative) result = texture1D(negCmap, texCoord);
+      else          result = texture1D(cmap,    texCoord);
+    }
   }
 
   /*
