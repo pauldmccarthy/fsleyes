@@ -611,15 +611,6 @@ class GLContext(object):
 
             self.__createWXGLContext()
 
-            # Once the GL context has been
-            # created, we no longer need
-            # references to the wx objects
-            app           = self.__app
-            self.__parent.Close()
-            self.__parent = None
-            self.__canvas = None
-            self.__app    = None
-
             # If we've created and started
             # our own loop, kill it
             if self.__ownApp:
@@ -638,6 +629,33 @@ class GLContext(object):
                                                 exc_info=True)
                     if raiseErrors:
                         raise e
+
+
+            # Once the GL context has been
+            # created, we no longer need
+            # references to the wx objects
+            #
+            # (note: when running with macOS
+            # and XQuartz over SSH/X11, a
+            # GLXBadCurrentWindow can occur if
+            # we close/destroy the parent/canvas
+            # too soon after creating a GL
+            # context. Things seem to work ok if
+            # we do it after the ready() callback
+            # has been called (in normal
+            # circumstances, this creates the
+            # FSLeyesFrame, OverlayList, and
+            # DisplayContext - see fsleyes.main.main).
+
+            # I'm not sure if this is a timing
+            # issue, or if the ready() callback
+            # is doing something which causes the
+            # error to not occur.
+            app           = self.__app
+            self.__parent.Close()
+            self.__parent = None
+            self.__canvas = None
+            self.__app    = None
 
         # If we've created our own wx.App, run its
         # main loop - we need to run the loop
