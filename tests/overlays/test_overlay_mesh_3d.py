@@ -23,6 +23,10 @@ cli_tests = """
 -s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100     -dc
 -s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data3d.txt -cr 50 100 -ic -dc
 
+# timeseries
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data4d.txt
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv -vd gifti/data4d.txt -vdi 2
+
 # modulate alpha options
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma -mr  1 50
@@ -31,6 +35,12 @@ cli_tests = """
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma           -md {{invert('gifti/data3d.txt')}}
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma -mr  1 50 -md {{invert('gifti/data3d.txt')}}
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma -mr 50 99 -md {{invert('gifti/data3d.txt')}}
+
+# flat shading
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data3d.txt -f
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -ul -l random -vd gifti/data3d.txt -f
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -f
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -f -vdi 2
 """
 
 
