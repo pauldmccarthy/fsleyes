@@ -196,6 +196,13 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
+    flatShading = props.Boolean(default=False)
+    """3D only. If ``True``, colours between vertices are not interpolated -
+    each triangle is coloured with the colour assigned to the first vertex.
+    Only has an effect when the mesh is being coloured with vertex data.
+    """
+
+
     wireframe = props.Boolean(default=False)
     """3D only. If ``True``, the mesh is rendered as a wireframe. """
 
@@ -203,16 +210,9 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance.
 
-        :arg useTorig: If ``False`` (the default), the ``'torig'`` option
-                       from the :attr:`coordSpace` property is removed.
-
         All other arguments are passed through to the :class:`.DisplayOpts`
         constructor.
         """
-
-        if 'useTorig' in kwargs:
-            deprecated.warn('useTorig', '0.33.0', '0.34.0',
-                            'useTorig is deprecated and has no effect.')
 
         # Set a default colour
         colour      = genMeshColour(overlay)

@@ -268,7 +268,7 @@ def _initPropertyList_MeshOpts(threedee):
 
 
 def _init3DPropertyList_MeshOpts():
-    return ['wireframe']
+    return ['flatShading', 'wireframe']
 
 
 def _initPropertyList_GiftiOpts(threedee):
@@ -806,6 +806,10 @@ def _initWidgetSpec_MeshOpts(threedee):
 def _init3DWidgetSpec_MeshOpts():
     return {
         'wireframe' : props.Widget('wireframe'),
+        'flatShading' : props.Widget(
+            'flatShading',
+            dependencies=['vertexData'],
+            enabledWhen=lambda o, vd: vd is not None),
     }
 
 

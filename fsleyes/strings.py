@@ -1184,6 +1184,7 @@ properties = TypeDict({
     'MeshOpts.discardClipped'    : 'Hide clipped areas',
     'MeshOpts.wireframe'         : 'Show as wireframe',
     'MeshOpts.lighting'          : 'Enable lighting',
+    'MeshOpts.flatShading'       : 'Flat shading',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',

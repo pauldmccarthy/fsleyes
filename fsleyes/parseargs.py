@@ -570,6 +570,7 @@ OPTIONS = td.TypeDict({
                         'cmap',
                         'negativeCmap',
                         'cmapResolution',
+                        'flatShading',
                         'interpolateCmaps',
                         'invert',
                         'modulateAlpha',
@@ -892,6 +893,7 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.lut'             : ('l',   'lut',             True),
     'MeshOpts.discardClipped'  : ('dc',  'discardClipped',  False),
     'MeshOpts.wireframe'       : ('wf',  'wireframe',       False),
+    'MeshOpts.flatShading'     : ('f',   'flatShading',     False),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
     'LabelOpts.outline'      : ('o',  'outline',      False),
@@ -959,7 +961,8 @@ HELP = td.TypeDict({
     'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
     'Main.updatecheck'     : 'Check for FSLeyes updates on startup',
     'Main.noisy'           : 'Make the specified module noisy',
-    'Main.glversion'       : 'Desired (major, minor) OpenGL version',
+    'Main.glversion'       : 'Desired (major, minor) OpenGL compatibility '
+                             'version',
     'Main.scene'           : 'Scene to show',
 
     'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
@@ -1190,6 +1193,8 @@ HELP = td.TypeDict({
     'Discard clipped regions, rather than colouring them with the flat colour',
     'MeshOpts.wireframe' :
     '3D only. Draw as wireframe',
+    'MeshOpts.flatShading' :
+    '3D only. Do not interpolate colours between adjacent vertices.',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
