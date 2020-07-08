@@ -89,6 +89,19 @@ You can also specify the output *Data type*, and apply *Smoothing* to the
 resampled image.
 
 
+.. _tools_project_image_surface:
+
+Project image onto surface
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+This tool is available when the currently selected overlay is a `mesh
+<overlays_mesh>`. If you have an image with some data that you would like
+displayed on the mesh, you can select this option to project the volumetric
+data from the image onto the surface of the mesh. The image and the mesh
+are assumed to be aligned in the display coordinate system
+
+
 .. _tools_ortho:
 
 Ortho view tools
