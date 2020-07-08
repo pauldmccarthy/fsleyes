@@ -19,6 +19,7 @@ Added
 
 * New option under the *Tools* menu which allows data from an image overlay to
   be projected onto a surface overlay.
+* New *Flat shading* display option when viewing surfaces in 3D.
 
 
 Changed
