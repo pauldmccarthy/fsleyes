@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.34.0 (Wednesday 8th July 2020)
+--------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Tweaked GL initialisation to avoid errors when running via XQuartz.
+
+
 0.33.2 (Tuesday 23rd June 2020)
 -------------------------------
 
