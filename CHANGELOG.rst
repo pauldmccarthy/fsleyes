@@ -9,6 +9,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.34.1 (Monday 13th July 2020)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with Jupyter Notebook integration on conda+macOS installations
+  (!215).
+* Fixed an issue with the high-DPI option not appearing in the view settings panel
+  under macOS (!215).
+
+
 0.34.0 (Wednesday 8th July 2020)
 --------------------------------
 
