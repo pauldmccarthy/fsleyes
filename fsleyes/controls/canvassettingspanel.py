@@ -144,7 +144,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
 
         # The highDpi setting is
         # only relevant on macOS
-        if platform.system != 'Darwin':
+        if platform.system() != 'Darwin':
             sceneOptsProps.pop('highDpi')
 
         def _displaySpaceOptionName(opt):
