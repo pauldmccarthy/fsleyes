@@ -959,7 +959,7 @@ class WXGLCanvasTarget(object):
             return False
 
         wxver = getattr(wx, '__version__', '1.0.0')
-        wxver = [int(v) for v in wxver.split('.')[:3])
+        wxver = [int(v) for v in wxver.split('.')[:3]]
 
         return wxver < (4, 1, 0)
 
