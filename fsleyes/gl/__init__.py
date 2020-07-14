@@ -938,6 +938,34 @@ class WXGLCanvasTarget(object):
     """
 
 
+    @staticmethod
+    def canToggleHighDPI():
+        """Return ``True`` if high-DPI scaling can be toggled, ``False``
+        otherwise.
+
+        Under GTK, high DPI support is not possible with wxPython < 4.0.7, as
+        ``wx.Window.GetContentScaleFactor`` always returns 1. Under GTK and
+        from wxPython 4.0.7 onwards, GL canvases are scaled automatically.
+
+        Under macOS and wxpython < 4.1.0, high DPI must be explicitly requested
+        for GL canvases via a Cocoa API call. This can be done via the
+        :meth:`EnableHighDPI` method.
+
+        Under macOS and with wxpython >= 4.1.0, GL canvases are scaled
+        automatically.
+        """
+
+        import wx
+
+        if platform.system() != 'Darwin':
+            return False
+
+        wxver = getattr(wx, '__version__', '1.0.0')
+        wxver = [int(v) for v in wxver.split('.')[:3]]
+
+        return wxver < [4, 1, 0]
+
+
     def __init__(self):
         """Create a ``WXGLCanvasTarget``. """
 
@@ -963,12 +991,7 @@ class WXGLCanvasTarget(object):
         self.__freezeSwapBuffers = False
         self.__context           = context
 
-        # Under macOS, high DPI must be explicitly
-        # requested for GL canvases. This can be
-        # done via the EnableHighDPI method. Under
-        # Linux, GL canvases are scaled the same as
-        # other windows.
-        if platform.system() == 'Darwin':
+        if WXGLCanvasTarget.canToggleHighDPI():
             self.__dpiscale = 1.0
         else:
             self.__dpiscale = self.GetContentScaleFactor()
@@ -1191,9 +1214,10 @@ class WXGLCanvasTarget(object):
         """Attempts to enable/disable high-resolution rendering.
         """
 
-        # Not relevant under linux -
-        # see note in __init__
-        if platform.system() != 'Darwin':
+        # We don't necessarily need to
+        # enable high-DPI support - see
+        # __init__.
+        if not WXGLCanvasTarget.canToggleHighDPI():
             return
 
         if not self._setGLContext():

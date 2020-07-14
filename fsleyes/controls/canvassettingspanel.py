@@ -15,6 +15,7 @@ import collections
 import fsl.data.image                as fslimage
 import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.gl                    as fslgl
 import fsleyes.tooltips              as fsltooltips
 import fsleyes.strings               as strings
 
@@ -143,8 +144,8 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                                        showLimits=False))))
 
         # The highDpi setting is
-        # only relevant on macOS
-        if platform.system() != 'Darwin':
+        # not always relevant
+        if not fslgl.WXGLCanvasTarget.canToggleHighDPI():
             sceneOptsProps.pop('highDpi')
 
         def _displaySpaceOptionName(opt):
