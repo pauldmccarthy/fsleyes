@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.34.2 (Tuesday 14th July 2020)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Added support for high-DPI scaling under macOS with wxPython >= 4.1.0 (!217).
+
+
 0.34.1 (Monday 13th July 2020)
 ------------------------------
 
