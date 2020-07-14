@@ -955,6 +955,8 @@ class WXGLCanvasTarget(object):
         automatically.
         """
 
+        import wx
+
         if platform.system() != 'Darwin':
             return False
 
