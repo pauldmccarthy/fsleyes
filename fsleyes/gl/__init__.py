@@ -963,12 +963,26 @@ class WXGLCanvasTarget(object):
         self.__freezeSwapBuffers = False
         self.__context           = context
 
-        # Under macOS, high DPI must be explicitly
-        # requested for GL canvases. This can be
-        # done via the EnableHighDPI method. Under
-        # Linux, GL canvases are scaled the same as
+        # Under linux, high DPI support is not
+        # possible with wxPython < 4.0.7, as
+        # GetContentScaleFactor always returns 1.
+
+        # Under macOS and wxpython < 4.1.0,
+        # high DPI must be explicitly requested
+        # for GL canvases. This can be done via
+        # the EnableHighDPI method. Under Linux,
+        # GL canvases are scaled the same as
         # other windows.
-        if platform.system() == 'Darwin':
+        #
+        # Under Linux+wxpython>=4.0.7 and
+        # macOS+wxpython>=4.1.0, high DPI
+        # scaling happens for us automatically
+        plat  = platform.system()
+        wxver = getattr(wx, '__version__', '1.0.0')
+        wxver = [int(v) for v in wxver.split('.')[:3])
+        self.__needEnableHighDpi = (plat == 'Darwin') and (wxver < (4, 1, 0))
+
+        if self.__needEnableHighDpi:
             self.__dpiscale = 1.0
         else:
             self.__dpiscale = self.GetContentScaleFactor()
@@ -1191,9 +1205,10 @@ class WXGLCanvasTarget(object):
         """Attempts to enable/disable high-resolution rendering.
         """
 
-        # Not relevant under linux -
-        # see note in __init__
-        if platform.system() != 'Darwin':
+        # We don't necessarily need to
+        # enable high-DPI support - see
+        # __init__.
+        if self.__needEnableHighDpi:
             return
 
         if not self._setGLContext():
