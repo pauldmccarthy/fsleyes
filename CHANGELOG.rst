@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+0.35.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+* When opening a ``melodic_IC.nii.gz`` file with the ``--autoDisplay'`/``-ad``,
+  option, the ``melodic_IC`` file is now selected by default, instead of the
+  ``mean`` underlay.
+
+
 0.34.2 (Tuesday 14th July 2020)
 -------------------------------
 
