@@ -18,6 +18,8 @@ import sys
 import logging
 import os.path as op
 
+import numpy as np
+
 import fsl.data.image as fslimage
 
 
@@ -186,14 +188,19 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     :class:`.MelodicImage` overlay.
     """
 
-    opts   = displayCtx.getOpts(overlay)
-    maxVal = overlay.dataRange[1]
+    opts        = displayCtx.getOpts(overlay)
+    dmin, dmax  = np.abs(overlay.dataRange)
+
+    # clip low values by default
+    if dmax > 3:
+        dmin = 3
+        dmax = 10
 
     opts.cmap            = 'Red-Yellow'
     opts.negativeCmap    = 'Blue-LightBlue'
     opts.useNegativeCmap = True
-    opts.displayRange    = [3.0, min((10, maxVal))]
-    opts.clippingRange   = [3.0, maxVal]
+    opts.displayRange    = [dmin, dmax]
+    opts.clippingRange   = [dmin, dmax]
 
     # Add the mean as an underlay
     idx      = overlayList.index(overlay)

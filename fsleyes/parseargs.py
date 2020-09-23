@@ -2699,6 +2699,12 @@ def applyOverlayArgs(args,
     if len(paths) == 0:
         return
 
+    # the caller may be trying to pass an
+    # onLoad callback to the loadOverlays
+    # function - we cache it, and call it
+    # in our own onLoad callback.
+    callerOnLoad = kwargs.pop('onLoad', None)
+
     # The fsleyes.overlay.loadOverlay function
     # works asynchronously - this function will
     # get called once all of the overlays have
@@ -2724,13 +2730,6 @@ def applyOverlayArgs(args,
         # overlay.
         if loadOverlays:
             overlayList.extend(overlays, overlayType=overlayTypes)
-
-        # Select the last image in the list
-        selovl = args.selectedOverlay
-        if selovl is None or selovl < 0 or selovl >= len(overlayList):
-            displayCtx.selectedOverlay = len(overlayList) - 1
-        else:
-            displayCtx.selectedOverlay = selovl
 
         for idx, overlay in zip(pathIdxs, overlays):
 
@@ -2823,6 +2822,20 @@ def applyOverlayArgs(args,
                        opts,
                        gen=False,
                        overlay=overlay)
+
+        # Select the last image in the list,
+        # or whatever was specified by
+        # the --selectedOverlay option
+        selovl = args.selectedOverlay
+        if selovl is None or selovl < 0 or selovl >= len(overlayList):
+            displayCtx.selectedOverlay = len(overlayList) - 1
+        else:
+            displayCtx.selectedOverlay = selovl
+
+        # call the caller's onLoad
+        # callback if provided
+        if callerOnLoad is not None:
+            callerOnLoad(pathIdxs, overlays)
 
     if loadOverlays:
         loadoverlay.loadOverlays(paths,
