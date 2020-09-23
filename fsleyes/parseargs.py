@@ -2725,13 +2725,6 @@ def applyOverlayArgs(args,
         if loadOverlays:
             overlayList.extend(overlays, overlayType=overlayTypes)
 
-        # Select the last image in the list
-        selovl = args.selectedOverlay
-        if selovl is None or selovl < 0 or selovl >= len(overlayList):
-            displayCtx.selectedOverlay = len(overlayList) - 1
-        else:
-            displayCtx.selectedOverlay = selovl
-
         for idx, overlay in zip(pathIdxs, overlays):
 
             status.update('Applying display settings '
@@ -2823,6 +2816,15 @@ def applyOverlayArgs(args,
                        opts,
                        gen=False,
                        overlay=overlay)
+
+        # Select the last image in the list,
+        # or whatever was specified by
+        # the --selectedOverlay option
+        selovl = args.selectedOverlay
+        if selovl is None or selovl < 0 or selovl >= len(overlayList):
+            displayCtx.selectedOverlay = len(overlayList) - 1
+        else:
+            displayCtx.selectedOverlay = selovl
 
     if loadOverlays:
         loadoverlay.loadOverlays(paths,
