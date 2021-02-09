@@ -325,78 +325,6 @@ The next time you start a new Jupyter notebook, select the *Python 3 (GUI)*
 kernel.
 
 
-Linux - FSLeyes does not start
-------------------------------
-
-
-``glutInit``
-^^^^^^^^^^^^
-
-
-Under linux, you might be presented with the following error when you try to
-start FSLeyes::
-
-
-  WARNING          __init__.py  596: create          - GLContext callback function raised NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
-  Traceback (most recent call last):
-    File "fsleyes/gl/__init__.py", line 590, in create
-    File "fsleyes/main.py", line 371, in realCallback
-    File "fsleyes/gl/__init__.py", line 377, in bootstrap
-    File "site-packages/OpenGL/GLUT/special.py", line 333, in glutInit
-    File "site-packages/OpenGL/platform/baseplatform.py", line 407, in __call__
-  NullFunctionError: Attempt to call an undefined function glutInit, check for bool(glutInit) before calling
-
-
-This error is occurring because FSLeyes depends on some features provided by
-[GLUT](https://www.opengl.org/resources/libraries/glut/), which is not
-necessarily present on linux systems. You can avoid this error simply by
-installing [FreeGLUT](http://freeglut.sourceforge.net/), which should be
-available through your package manager (e.g. ``yum install freeglut`` under
-CentOS, or ``apt-get install freeglut3`` under Ubuntu).
-
-
-
-``libxcb``
-^^^^^^^^^^
-
-
-Another possible error which you may encounter when running on older Linux
-platforms::
-
-
-  Traceback (most recent call last):
-    File "fsleyes/__main__.py", line 4, in <module>
-    File "fsleyes/main.py", line 33, in <module>
-    File "site-packages/wx-3.0-gtk2/wx/__init__.py", line 45, in <module>
-    File "site-packages/wx-3.0-gtk2/wx/_core.py", line 4, in <module>
-  ImportError: libX11.so.6: undefined symbol: xcb_wait_for_reply64
-  Failed to execute script __main__
-
-
-This error is occurring because FSLeyes requires a more up-to-date version of
-the ``libxcb`` library. You can solve this problem simply by upgrading
-``libxcb``. Under CentOS, simply run ``yum update libxcb`` (with administrator
-privileges).
-
-
-
-``GLib version too old (micro mismatch)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-If you see an error that looks like this::
-
-  (fsleyes:15552): Gtk-WARNING **: GModule (/usr/lib64/gtk-2.0/2.10.0/immodules/im-ibus.so) initialization check failed: GLib version too old (micro mismatch)
-
-
-Then you are probably using a version of FSLeyes which has been built for a
-different operating system (e.g. using a version of FSLeyes that has been
-built for CentOS6 on a CentOS7 machine). Head to the |fsleyes_homepage|_ home
-page and follow the instructions to download the correct version for your
-platform.
-
-
-
 Running FSLeyes remotely
 ------------------------
 
@@ -463,14 +391,20 @@ following error::
 
 This is caused by a configuration issue with XQuartz - you will be unable to
 run any OpenGL application, not just FSLeyes. Fortunately, there is a
-solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
+solution: if you are using XQuartz 2.8.0 or newer, run this command (locally,
 not within the SSH session)::
+
+
+  defaults write org.xquartz.X11 enable_iglx -bool true
+
+
+if you are using XQuartz 2.7.10 or newer, run this command::
 
 
   defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
 
 
-If you are using XQuartz 2.7.9, and you cannot upgrade to 2.7.10 or newer, you
+If you are using XQuartz 2.7.9, and you cannot upgrade to a newer version, you
 will need to edit ``/usr/X11R6/bin/startx`` (you will probably need
 administrator privileges). There is a section in this script, around line 100,
 which configures a variable called ``defaultserverargs``. Immediately after
