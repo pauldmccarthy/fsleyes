@@ -16,9 +16,12 @@ chronological order.
 Fixed
 ^^^^^
 
-* When opening a ``melodic_IC.nii.gz`` file with the ``--autoDisplay'`/``-ad``,
-  option, the ``melodic_IC`` file is now selected by default, instead of the
-  ``mean`` underlay.
+
+* When opening a ``melodic_IC.nii.gz`` file with the
+  ``--autoDisplay'`/``-ad``, option, the ``melodic_IC`` file is now selected
+  by default, instead of the ``mean`` underlay.
+* Fixed a bug in image texture preparation for complex data types, when
+  running in a limited GL environment (e.g. VNC).
 
 
 0.34.2 (Tuesday 14th July 2020)
