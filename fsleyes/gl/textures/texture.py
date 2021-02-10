@@ -10,8 +10,9 @@ for all other FSLeyes texture types. See also the :class:`.Texture2D` and
 """
 
 
-import logging
-import contextlib
+import              logging
+import              contextlib
+import functools as ft
 
 import numpy                        as np
 import OpenGL.GL                    as gl
@@ -905,8 +906,13 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         # decorator in case an error occurs
         title     = strings.messages[self, 'dataError']
         msg       = strings.messages[self, 'dataError']
-        genData   = status.reportErrorDecorator(title, msg)(genData)
-        doRefresh = status.reportErrorDecorator(title, msg)(doRefresh)
+
+        # the genData function is called on a separate thread,
+        # but doRefresh is called on the idle/mainloop. So we
+        # can use the reportErrorDecorator for the latter, but
+        # not the former.
+        doRefresh    = status.reportErrorDecorator(title, msg)(doRefresh)
+        genDataError = ft.partial(status.reportError, title, msg)
 
         # Run asynchronously if we are
         # threaded, and we have data to
@@ -926,7 +932,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             if not self.__taskThread.isQueued(self.__taskName):
                 self.__taskThread.enqueue(genData,
                                           taskName=self.__taskName,
-                                          onFinish=doRefresh)
+                                          onFinish=doRefresh,
+                                          onError=genDataError)
 
         else:
             genData()

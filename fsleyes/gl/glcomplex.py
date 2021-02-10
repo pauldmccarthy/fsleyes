@@ -44,11 +44,11 @@ class GLComplex(glvolume.GLVolume):
         method, passing it a prefilter function to extract the complex
         component from the image data.
         """
-        pfunc = self.getPrefilterFunc()
+        pfunc  = self.getPrefilterFunc()
+        prfunc = self.getPrefilterRangeFunc()
         glvolume.GLVolume.refreshImageTexture(self,
                                               prefilter=pfunc,
-                                              prefilterRange=pfunc)
-
+                                              prefilterRange=prfunc)
 
 
     def getPrefilterFunc(self):
@@ -66,6 +66,16 @@ class GLComplex(glvolume.GLVolume):
         elif component == 'imag':  return opts.getImaginary
         elif component == 'mag':   return opts.getMagnitude
         elif component == 'phase': return opts.getPhase
+
+
+    def getPrefilterRangeFunc(self):
+        """Returns a function which returns the minimum/maximum of the
+        current component. Used as the prefilterRange function by the
+        :class:`.ImageTexture`.
+        """
+        def pr(*a):
+            return self.opts.getDataRange()
+        return pr
 
 
     def __componentChanged(self, *a):
@@ -88,7 +98,8 @@ class GLComplex(glvolume.GLVolume):
         # (the prefilter functions are static,
         # so subsequent calls will pass in the
         # same function object)
-        pfunc = self.getPrefilterFunc()
+        pfunc  = self.getPrefilterFunc()
+        prfunc = self.getPrefilterRangeFunc()
         self.imageTexture.set(prefilter=pfunc,
-                              prefilterRange=pfunc,
+                              prefilterRange=prfunc,
                               volRefresh=False)
