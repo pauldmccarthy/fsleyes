@@ -7,6 +7,8 @@
 
 import pytest
 
+from unittest import mock
+
 from .. import run_cli_tests, complex
 
 
@@ -28,3 +30,14 @@ def test_overlay_complex():
         'complex' : complex,
     }
     run_cli_tests('test_overlay_complex', cli_tests, extras=extras)
+
+
+
+# Emulate a restricted GL environment
+def test_overlay_complex_ssh_vnc():
+    extras = {
+        'complex' : complex,
+    }
+    with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
+                    return_value=(False, None, None)):
+        run_cli_tests('test_overlay_complex', cli_tests, extras=extras)
