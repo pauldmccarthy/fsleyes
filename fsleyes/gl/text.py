@@ -180,7 +180,7 @@ class Text:
                                  fontSize=self.fontSize,
                                  fgColour=self.fgColour,
                                  bgColour=self.bgColour)
-        bmp = np.fliplr(bmp).transpose([2, 0, 1])
+        bmp = np.flipud(bmp).transpose([2, 1, 0])
 
         self.__bitmap = bmp
         self.__texture.set(data=bmp)
