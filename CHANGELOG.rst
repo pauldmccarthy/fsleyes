@@ -13,6 +13,17 @@ chronological order.
 --------------------------
 
 
+Changed
+^^^^^^^
+
+
+* Text labels drawn on GL canvases are now created using ``matplotilb`` rather
+  than [Free]GLUT.
+* Removed dependence on [Free]GLUT - this means that ``fsleyes render`` can
+  now be used on headless systems without using ``xvfb-run``, as long as
+  `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed.
+
+
 Fixed
 ^^^^^
 
