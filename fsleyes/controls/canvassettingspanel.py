@@ -291,7 +291,7 @@ def _genLightPosWidget(parent, opts):
         opts,
         'lightPos',
         slider=True,
-        spin=False,
+        spin=True,
         showLimits=False,
         mousewheel=True)
     sizer = wx.BoxSizer(wx.VERTICAL)
