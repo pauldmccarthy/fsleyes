@@ -6,7 +6,7 @@
 #version 120
 
 #pragma include glmesh_data_common.glsl
-#pragma include glmesh_3d_lighting.glsl
+#pragma include phong_lighting.glsl
 
 uniform bool lighting;
 uniform vec3 lightPos;
@@ -20,7 +20,7 @@ void main(void) {
 
   if (lighting) {
 
-    colour.rgb = mesh_lighting(fragVertex, fragNormal, lightPos, colour.rgb);
+    colour.rgb = phong_lighting(fragVertex, fragNormal, lightPos, colour.rgb);
   }
 
   gl_FragColor = colour;
