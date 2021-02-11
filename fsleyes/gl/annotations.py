@@ -32,12 +32,13 @@ import time
 import numpy       as np
 import OpenGL.GL   as gl
 
-import fsleyes.gl.globject       as globject
-import fsleyes.gl.routines       as glroutines
-import fsleyes.gl.resources      as glresources
-import fsleyes.gl.textures       as textures
-import fsleyes.gl.textures.data  as texdata
-import fsl.transform.affine      as affine
+import fsleyes.gl.globject              as globject
+import fsleyes.gl.routines              as glroutines
+import fsleyes.gl.resources             as glresources
+import fsleyes.gl.textures              as textures
+import fsleyes.gl.text                  as gltext
+import fsleyes.gl.textures.data         as texdata
+import fsl.transform.affine             as affine
 
 
 log = logging.getLogger(__name__)
@@ -153,7 +154,7 @@ class Annotations(object):
         class.
         """
         hold = kwargs.pop('hold', False)
-        obj  = Text(self, *args, **kwargs)
+        obj  = TextAnnotation(self, *args, **kwargs)
 
         return self.obj(obj, hold)
 
@@ -251,7 +252,7 @@ class Annotations(object):
                 obj.draw2D(zpos, axes)
                 obj.postDraw()
             except Exception as e:
-                log.warn('{}'.format(e), exc_info=True)
+                log.warning('{}'.format(e), exc_info=True)
 
             if obj.xform is not None:
                 gl.glPopMatrix()
@@ -271,6 +272,7 @@ class AnnotationObject(globject.GLSimpleObject):
 
     ============ =============================================================
     ``colour``   Annotation colour
+    ``enabled``  Whether the annotation should be drawn or not.
     ``width``    Annotation line width (if the annotation is made up of lines)
     ``xform``    Custom transformation matrix to apply to annotation vertices.
     ``expiry``   Time (in seconds) after which the annotation will expire and
@@ -720,132 +722,21 @@ class VoxelSelection(AnnotationObject):
         texture.unbindTexture()
 
 
-class Text(AnnotationObject):
-    """A ``Text`` is an :class:`AnnotationObject` which draws a string of
-    text on the display.
+class TextAnnotation(AnnotationObject, gltext.Text):
+    """A ``TextAnnotation`` is an ``AnnotationObject`` which also sub-classes
+    from :class:`fsleyes.gl.text.Text`, allowing text to be drawn on a GL
+    canvas.
     """
 
 
-    def __init__(self,
-                 annot,
-                 text,
-                 xpos,
-                 ypos,
-                 fontSize=10,
-                 xoff=None,
-                 yoff=None,
-                 halign=None,
-                 valign=None,
-                 bgColour=None,
-                 angle=None,
-                 *args,
-                 **kwargs):
-        """Create a ``Text`` annotation.
-
-        :arg annot:    The :class:`Annotations` object that owns this
-                       ``Text``.
-
-        :arg text:     The text to draw.
-
-        :arg xpos:     Position along the horizontal axis as a proportion
-                       between 0  (left) and 1 (right).
-
-        :arg xpos:     Position along the vertial axis as a proportion
-                       between 0 (bottom) and 1 (top).
-
-        :arg xoff:     Fixed horizontal offset in pixels
-
-        :arg yoff:     Fixed vertical offset in pixels
-
-        :arg fontSize: Font size.
-
-        :arg halign:   Horizontal alignemnt - ``'left'``, ``'centre'``, or
-                       ``right``.
-
-        :arg valign:   Vertical alignemnt - ``'bottom'``, ``'centre'``, or
-                       ``top``.
-
-        :arg bcColour: If not ``None``, a border will be drawn around the
-                       text.
-
-        :arg angle:    Angle, in degrees, by which to rotate the text.
-                       NOT IMPLEMENTED YET
+    def __init__(self, annot, *args, **kwargs):
+        """Create a ``TextAnnotation``. All arguments (with the exception of
+        ``annot``) ere passed to :meth:`.Text.__init__`.
         """
-
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
-
-        # We need to know the text size in pixels
-        # in order to correctly align/offset the
-        # text on the display. But we don't want
-        # to have to calculate the size on every
-        # draw. Therefore, updates to the text and
-        # font size attributes are protected,
-        # because they affect the final pixel text
-        # size. When they are changed, we clear the
-        # __textSize attribute to indicate that the
-        # text size needs to be re-calculated.
-        self.__text     = text
-        self.__fontSize = fontSize
-        self.__textSize = None
-
-        self.xpos       = xpos
-        self.ypos       = ypos
-        self.xoff       = xoff
-        self.yoff       = yoff
-        self.bgColour   = bgColour
-        self.halign     = halign
-        self.valign     = valign
-        self.angle      = angle
-
-
-    @property
-    def text(self):
-        """Returns the current text value."""
-        return self.__text
-
-
-    @text.setter
-    def text(self, value):
-        """Update the text."""
-        self.__text     = value
-        self.__textSize = None
-
-
-    @property
-    def fontSize(self):
-        """Returns the current font size."""
-        return self.__fontSize
-
-
-    @fontSize.setter
-    def fontSize(self, value):
-        """Update the font size."""
-        self.__fontSize = value
-        self.__textSize = None
+        AnnotationObject.__init__(self, annot)
+        gltext.Text.__init__(self, *args, **kwargs)
 
 
     def draw2D(self, zpos, axes):
-        """Draws this ``Text`` annotation. """
-
-        canvasSize = self.annot.canvas.GetSize()
-        pos        = [self.xpos * canvasSize[0], self.ypos * canvasSize[1]]
-
-        if self.__textSize is None:
-            self.__textSize = glroutines.text2D(self.text,
-                                                pos,
-                                                self.fontSize,
-                                                canvasSize,
-                                                calcSize=True)
-
-        textSize = self.__textSize
-
-        if   self.halign == 'centre': pos[0] -= textSize[0] / 2.0
-        elif self.halign == 'right':  pos[0] -= textSize[0]
-
-        if   self.valign == 'centre': pos[1] -= textSize[1] / 2.0
-        elif self.valign == 'top':    pos[1] -= textSize[1]
-
-        if self.xoff is not None: pos[0] += self.xoff
-        if self.yoff is not None: pos[1] += self.yoff
-
-        glroutines.text2D(self.text, pos, self.fontSize, canvasSize)
+        """Draw this ``TextAnnotation``. """
+        self.draw(*self.annot.canvas.GetSize())

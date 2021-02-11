@@ -21,6 +21,7 @@ import fsl.transform.affine as affine
 
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
+import fsleyes.gl.text                   as gltext
 import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
 
@@ -29,7 +30,9 @@ log = logging.getLogger(__name__)
 
 
 class Scene3DCanvas(object):
-
+    """The ``Scene3DCanvas`` is an OpenGL canvas used to draw overlays in a 3D
+    view. Currently only ``volume`` and ``mesh`` overlay types are supported.
+    """
 
     def __init__(self, overlayList, displayCtx):
 
@@ -44,6 +47,13 @@ class Scene3DCanvas(object):
         self.__resetLightPos  = True
         self.__glObjects      = {}
 
+        # gl.text.Text objects containing anatomical
+        # orientation labels ordered
+        # (xlo, xhi, ylo, yhi, zlo, zhi) where xyz
+        # are the display coordinate system axes.
+        # Created in _initGL
+        self.__legendLabels = None
+
         overlayList.addListener('overlays',
                                 self.__name,
                                 self.__overlayListChanged)
@@ -57,6 +67,10 @@ class Scene3DCanvas(object):
         opts.addListener('cursorColour', self.__name, self.Refresh)
         opts.addListener('bgColour',     self.__name, self.Refresh)
         opts.addListener('showLegend',   self.__name, self.Refresh)
+        opts.addListener('legendColour', self.__name,
+                         self.__refreshLegendLabels)
+        opts.addListener('labelSize',    self.__name,
+                         self.__refreshLegendLabels)
         opts.addListener('occlusion',    self.__name, self.Refresh)
         opts.addListener('zoom',         self.__name, self.Refresh)
         opts.addListener('offset',       self.__name, self.Refresh)
@@ -65,24 +79,26 @@ class Scene3DCanvas(object):
 
 
     def destroy(self):
-        """
-        """
+        """Must be called when this Scene3DCanvas is no longer used. """
         self.__overlayList.removeListener('overlays', self.__name)
         self.__displayCtx .removeListener('bounds',   self.__name)
 
         for ovl in list(self.__glObjects.keys()):
             self.__deregisterOverlay(ovl)
 
-        self.__opts        = None
-        self.__displayCtx  = None
-        self.__overlayList = None
-        self.__glObjects   = None
+        for lbl in self.__legendLabels:
+            lbl.destroy()
+
+        self.__opts         = None
+        self.__displayCtx   = None
+        self.__overlayList  = None
+        self.__glObjects    = None
+        self.__legendLabels = None
 
 
     @property
     def destroyed(self):
-        """
-        """
+        """Returns ``True`` if :meth:`destroy` has been called. """
         return self.__overlayList is None
 
 
@@ -91,6 +107,7 @@ class Scene3DCanvas(object):
         """Returns a reference to the :class:`.Scene3DCanvasOpts` instance.
         """
         return self.__opts
+
 
     @property
     def resetLightPos(self):
@@ -313,6 +330,9 @@ class Scene3DCanvas(object):
 
     def _initGL(self):
         """Called when the canvas is ready to be drawn on. """
+
+        self.__legendLabels = [gltext.Text() for _ in range(6)]
+
         self.__overlayListChanged()
         self.__displayBoundsChanged()
 
@@ -334,6 +354,44 @@ class Scene3DCanvas(object):
             if ovl not in self.__glObjects:
                 self.__registerOverlay(ovl)
 
+        self.__refreshLegendLabels(refresh=False)
+
+
+    def __refreshLegendLabels(self, *a, refresh=True):
+        """Called when the legend labels (anatomical orientations) need
+        to be refreshed - when the selected overlay changes, or when
+        the :attr:`.Scene3DCanvasOpts.legendColour` is changed.
+        """
+
+        # Update legend labels. Figure out the
+        # anatomical labels for each axis.
+        overlay = self.__displayCtx.getSelectedOverlay()
+
+        if overlay is None:
+            return
+
+        dopts  = self.__displayCtx.getOpts(overlay)
+        labels = dopts.getLabels()[0]
+
+        # getLabels returns (xlo, ylo, zlo, xhi, yhi, zhi) -
+        # - rearrange them to (xlo, xhi, ylo, yhi, zlo, zhi)
+        labels = [labels[0],
+                  labels[3],
+                  labels[1],
+                  labels[4],
+                  labels[2],
+                  labels[5]]
+
+        for label, text in zip(labels, self.__legendLabels):
+            text.text     = label
+            text.fgColour = self.opts.legendColour
+            text.fontSize = self.opts.labelSize
+            text.halign   = 'centre'
+            text.valign   = 'centre'
+
+        if refresh:
+            self.Refresh()
+
 
     def __highDpiChanged(self, *a):
         """Called when the :attr:`.Scene3DCanvasOpts.highDpi` property
@@ -354,7 +412,8 @@ class Scene3DCanvas(object):
 
 
     def __registerOverlay(self, overlay):
-        """
+        """Called when a new overlay has been added to the overlay list.
+        Creates a ``GLObject`` for it, and registers property listeners.
         """
 
         if not isinstance(overlay, (fslmesh.Mesh, fslimage.Image)):
@@ -374,7 +433,8 @@ class Scene3DCanvas(object):
 
 
     def __deregisterOverlay(self, overlay):
-        """
+        """Called when an overlay has been removed from the overlay list.
+        Dstroys the ``GLObject`` for it, and de-registers property listeners.
         """
 
         log.debug('Deregistering overlay {}'.format(overlay))
@@ -394,7 +454,8 @@ class Scene3DCanvas(object):
 
 
     def __genGLObject(self, overlay):
-        """
+        """Create a ``GLObject`` for the given overlay, if one doesn't already
+        exist.
         """
 
         if overlay in self.__glObjects:
@@ -436,7 +497,8 @@ class Scene3DCanvas(object):
 
 
     def __overlayTypeChanged(self, value, valid, display, name):
-        """
+        """Called when the :attr:`.Display.overlayType` of an overlay
+        has changed. Re-generates a :class:`.GLObject` for it.
         """
 
         overlay = display.overlay
@@ -558,6 +620,9 @@ class Scene3DCanvas(object):
 
     def _draw(self):
         """Draws the scene to the canvas. """
+
+        if self.destroyed:
+            return
 
         if not self._setGLContext():
             return
@@ -702,46 +767,24 @@ class Scene3DCanvas(object):
         gl.glVertex3f(*vertices[5])
         gl.glEnd()
 
-
-        # Figure out the anatomical
-        # labels for each axis.
-        overlay = self.__displayCtx.getSelectedOverlay()
-        dopts   = self.__displayCtx.getOpts(overlay)
-        labels  = dopts.getLabels()[0]
-
-        # getLabels returns (xlo, ylo, zlo, xhi, yhi, zhi) -
-        # - rearrange them to (xlo, xhi, ylo, yhi, zlo, zhi)
-        labels = [labels[0],
-                  labels[3],
-                  labels[1],
-                  labels[4],
-                  labels[2],
-                  labels[5]]
-
         canvas = np.array([w, h])
         view   = np.array([xlen, ylen])
 
         # Draw each label
-        for i in range(6):
+        for i, label in enumerate(self.__legendLabels):
 
             # Calculate pixel x/y
             # location for this label
             xx, xy = canvas * (labelPoses[i, :2] + 0.5 * view) / view
 
-            # Calculate the size of the label
-            # in pixels, so we can centre the
-            # label
-            tw, th = glroutines.text2D(labels[i], (xx, xy), 10, (w, h),
-                                       calcSize=True)
+            label.xpix = xx
+            label.ypix = xy
 
-            # Draw the text
-            xx -= 0.5 * tw
-            xy -= 0.5 * th
-            gl.glColor3f(*copts.legendColour[:3])
-            glroutines.text2D(labels[i], (xx, xy), 10, (w, h))
+            label.draw(w, h)
 
 
     def __drawLight(self):
+        """Draws a representation of the light source. """
 
         opts      = self.opts
         lightPos  = np.array(opts.lightPos)
@@ -768,6 +811,7 @@ class Scene3DCanvas(object):
 
 
     def __drawBoundingBox(self):
+        """Draws a bounding box around all overlays. Used for debugging. """
         b = self.__displayCtx.bounds
         xlo, xhi = b.x
         ylo, yhi = b.y

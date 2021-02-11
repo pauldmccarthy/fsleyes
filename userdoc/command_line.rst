@@ -363,14 +363,9 @@ as the **first** argument to FSLeyes::
   fsleyes render ...
 
 
-FSLeyes should also work on systems which do not have a display (e.g. cluster
-nodes), via a tool such as `Xvfb
-<https://www.x.org/archive/X11R7.6/doc/man/man1/Xvfb.1.xhtml>`_, which is easy
-to install on most linux platforms. Make sure that you specify a 24-bit
-depth-buffer, for example::
-
-  xvfb-run -s "-screen 0 640x480x24" fsleyes render ...
-
+The ``fsleyes render`` command will also work on systems which do not have a
+display (e.g. cluster nodes), as long as the `osmesa
+<https://docs.mesa3d.org/osmesa.html>`_ library is available.
 
 
 You can access command line help in the same manner as :ref:`described above

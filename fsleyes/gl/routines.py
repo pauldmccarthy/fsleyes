@@ -17,7 +17,6 @@ import collections.abc as abc
 import itertools       as it
 
 import OpenGL.GL       as gl
-import OpenGL.GLUT     as glut
 import numpy           as np
 
 import fsl.transform.affine as affine
@@ -350,109 +349,6 @@ def preserveAspectRatio(width, height, xmin, xmax, ymin, ymax, grow=True):
         ymax = ymax + offset
 
     return xmin, xmax, ymin, ymax
-
-
-def text2D(text,
-           pos,
-           fontSize,
-           displaySize,
-           angle=None,
-           fixedWidth=False,
-           calcSize=False):
-    """Renders a 2D string using ``glutStrokeCharacter``.
-
-    :arg text:        The text to render. Only ASCII characters 32-127 (and
-                      newlines) are supported.
-
-    :arg pos:         2D text position in pixels.
-
-    :arg fontSize:    Font size in pixels
-
-    :arg displaySize: ``(width, height)`` of the canvas in pixels.
-
-    :arg angle:       Angle (in degrees) by which to rotate the text.
-
-    :arg fixedWidth:  If ``True``, a fixed-width font is used. Otherwise a
-                      variable-width font is used.
-
-    :arg calcSize:    If ``True``, the text is not rendered. Instead, the
-                      size of the text, in pixels, is calculated and returned
-                      (before any rotation by the ``angle``).
-    """
-
-    if fixedWidth: font = glut.GLUT_STROKE_MONO_ROMAN
-    else:          font = glut.GLUT_STROKE_ROMAN
-
-    pos           = list(pos)
-    width, height = displaySize
-
-    # The glut characters have a default
-    # height (in display coordinates) of
-    # 152.38. Scale this to the requested
-    # pixel font size.
-    scale = fontSize / 152.38
-
-    # Get the current matrix mode,
-    # and restore it when we're done
-    mm = gl.glGetInteger(gl.GL_MATRIX_MODE)
-
-    # Set up an ortho view where the
-    # display coordinates correspond
-    # to the canvas pixel coordinates.
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPushMatrix()
-    gl.glLoadIdentity()
-    gl.glOrtho(0, width, 0, height, -1, 1)
-
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glPushMatrix()
-    gl.glLoadIdentity()
-
-    gl.glEnable(gl.GL_LINE_SMOOTH)
-
-    # Draw each line one at a time
-    width  = 0
-    height = 0
-    lines  = text.split('\n')
-
-    for i, line in enumerate(lines):
-
-        height += scale * 152.38
-        pos[1] -= scale * 152.38 * i
-
-        gl.glPushMatrix()
-        gl.glTranslatef(pos[0], pos[1], 0)
-        gl.glScalef(scale, scale, scale)
-
-        lineWidth = 0
-        for char in line:
-
-            # We either calculate the
-            # character size, or draw
-            # the character, but not
-            # both
-            if calcSize:
-                charWidth  = glut.glutStrokeWidth(font, ord(char))
-                lineWidth += charWidth * (fontSize / 152.38)
-
-            else:
-                glut.glutStrokeCharacter(font, ord(char))
-
-        if lineWidth > width:
-            width = lineWidth
-
-        gl.glPopMatrix()
-
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPopMatrix()
-
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glPopMatrix()
-
-    gl.glMatrixMode(mm)
-
-    if calcSize: return width, height
-    else:        return 0,     0
 
 
 def pointGrid(shape,

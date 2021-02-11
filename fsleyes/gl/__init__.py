@@ -370,27 +370,6 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    # If using freeglut, we need to call
-    # glutInit. If not (e.g. on mac, which
-    # provides its own GLUT implementation),
-    # we don't need to bother.
-    #
-    # note: GLUT is only required for text
-    #       rendering. The GLUT requirement
-    #       means that true off-screen (i.e.
-    #       headless) rendering is not
-    #       currently possible, although
-    #       would be if we removed GLUT
-    #       as a requirement. Off-screen
-    #       rendering is possible via other
-    #       means (e.g. xvfb-run).
-
-    import OpenGL.GLUT as GLUT
-    # it would be nice if there were a
-    # nicer way to test for freeglut
-    if bool(GLUT.fgDeinitialize):
-        GLUT.glutInit()
-
     # Populate this module, and set
     # the fsl.utils.platform GL fields
     thismod.GL_VERSION         = verstr

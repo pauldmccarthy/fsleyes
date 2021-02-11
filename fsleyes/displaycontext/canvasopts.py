@@ -232,6 +232,10 @@ class Scene3DCanvasOpts(props.HasProperties):
     """Colour to use for the legend text."""
 
 
+    labelSize = props.Int(minval=4, maxval=96, default=12, clamped=True)
+    """Font size used for the legend labels. """
+
+
     occlusion = props.Boolean(default=True)
     """If ``True``, objects closer to the camera will occlude objects
     further away. Toggles ``gl.DEPTH_TEST``.

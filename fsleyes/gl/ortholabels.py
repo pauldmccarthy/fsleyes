@@ -15,7 +15,7 @@ off-screen rendering (see :mod:`.render`).
 import fsl.data.constants as constants
 
 
-class OrthoLabels(object):
+class OrthoLabels:
     """The ``OrthoLabels`` class manages anatomical orientation labels which
     are displayed on a set of three :class:`.SliceCanvas` instances, one for
     each plane in the display coordinate system, typically within an
@@ -63,7 +63,7 @@ class OrthoLabels(object):
         for side in ('left', 'right', 'top', 'bottom'):
             for canvas, cannots in zip(canvases, annots):
                 annot         = canvas.getAnnotations()
-                cannots[side] = annot.text('', 0, 0, width=2, hold=True)
+                cannots[side] = annot.text('', 0, 0, hold=True)
 
         # Initialise the display properties
         # of each Text annotation
@@ -162,7 +162,7 @@ class OrthoLabels(object):
 
         # Destroy the Text annotations
         for a in annots:
-            for side, text in a.items():
+            for text in a.values():
                 text.destroy()
 
 
@@ -177,7 +177,7 @@ class OrthoLabels(object):
         so the labels are refreshed when any overlay bounds change.
         """
 
-        for i, ovl in enumerate(self.__overlayList):
+        for ovl in self.__overlayList:
 
             opts = self.__displayCtx.getOpts(ovl)
 
@@ -226,16 +226,12 @@ class OrthoLabels(object):
         vertOrient                   = len(xlo) > 1
 
         fontSize = sopts.labelSize
-        bgColour = tuple(sopts.bgColour)
         fgColour = tuple(sopts.fgColour)
 
-        # If any axis orientation is unknown, and the
-        # the background colour is black or white,
-        # make the foreground colour red, to highlight
-        # the unknown orientation. It's too difficult
-        # to do this for any background colour.
-        if constants.ORIENT_UNKNOWN in orients and \
-           bgColour in ((0, 0, 0, 1), (1, 1, 1, 1)):
+        # If any axis orientation is unknown, make
+        # the foreground colour red, to highlight
+        # the unknown orientation.
+        if constants.ORIENT_UNKNOWN in orients:
             fgColour = (1, 0, 0, 1)
 
         # A list, with one entry for each canvas,
@@ -278,7 +274,7 @@ class OrthoLabels(object):
 
                 cannots[side].enabled  = show
                 cannots[side].fontSize = fontSize
-                cannots[side].colour   = fgColour
+                cannots[side].fgColour = fgColour
 
             if vertOrient:
                 cannots['left'] .angle = 90

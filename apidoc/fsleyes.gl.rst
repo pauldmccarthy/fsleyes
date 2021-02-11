@@ -33,6 +33,7 @@
    fsleyes.gl.scene3dcanvas
    fsleyes.gl.shaders
    fsleyes.gl.slicecanvas
+   fsleyes.gl.text
    fsleyes.gl.textures
    fsleyes.gl.wxglcolourbarcanvas
    fsleyes.gl.wxgllightboxcanvas
