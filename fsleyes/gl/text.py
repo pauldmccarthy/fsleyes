@@ -226,8 +226,6 @@ class Text:
         bmp  = self.__bitmap
         size = bmp.shape[1:]
 
-        print(f'{self.text} {size} {pos}')
-
         if   self.halign == 'centre': pos[0] -= size[0] / 2.0
         elif self.halign == 'right':  pos[0] -= size[0]
 
