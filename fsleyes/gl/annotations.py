@@ -252,7 +252,7 @@ class Annotations(object):
                 obj.draw2D(zpos, axes)
                 obj.postDraw()
             except Exception as e:
-                log.warn('{}'.format(e), exc_info=True)
+                log.warning('{}'.format(e), exc_info=True)
 
             if obj.xform is not None:
                 gl.glPopMatrix()
