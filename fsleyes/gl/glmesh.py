@@ -1069,15 +1069,10 @@ class GLMesh(globject.GLObject):
         """
 
         dopts      = self.opts
-        copts      = self.canvas.opts
-        lightPos   = None
+        canvas     = self.canvas
+        copts      = canvas.opts
         flatColour = dopts.getConstantColour()
         useNegCmap = (not dopts.useLut) and dopts.useNegativeCmap
-
-        if self.threedee:
-            lightPos  = np.array(copts.lightPos)
-        else:
-            lightPos = None
 
         if dopts.useLut:
             delta     = 1.0 / (dopts.lut.max() + 1)
@@ -1104,5 +1099,4 @@ class GLMesh(globject.GLObject):
             cmapXform=cmapXform,
             modScale=modScale,
             modOffset=modOffset,
-            flatColour=flatColour,
-            lightPos=lightPos)
+            flatColour=flatColour)

@@ -15,7 +15,8 @@ shader programs.
 
 import OpenGL.GL as gl
 
-import fsleyes.gl.shaders as shaders
+import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
 
 
 def compileShaders(self):
@@ -70,11 +71,9 @@ def updateShaderState(self, **kwargs):
     dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
     if self.threedee:
-        dshader.set('lighting', copts.light)
-        dshader.set('lightPos', kwargs['lightPos'])
-
-        dshader.setAtt('vertex', self.vertices)
-        dshader.setAtt('normal', self.normals)
+        dshader.set(   'lighting', copts.light)
+        dshader.setAtt('vertex',   self.vertices)
+        dshader.setAtt('normal',   self.normals)
 
         vdata = self.getVertexData('vertex')
         mdata = self.getVertexData('modulate')
@@ -94,7 +93,6 @@ def updateShaderState(self, **kwargs):
     if self.threedee:
         fshader.load()
         fshader.set('lighting', copts.light)
-        fshader.set('lightPos', kwargs['lightPos'])
         fshader.set('colour',   kwargs['flatColour'])
 
         fshader.setAtt('vertex', self.vertices)
@@ -156,6 +154,12 @@ def draw(self,
     if normals  is not None: shader.setAtt('normal',       normals)
     if vdata    is not None: shader.setAtt('vertexData',   vdata)
     if mdata    is not None: shader.setAtt('modulateData', mdata)
+
+    if self.threedee:
+        lightPos = affine.transform(
+            self.canvas.opts.lightPos,
+            self.canvas.viewMatrix)
+        shader.set('lightPos', lightPos)
 
     shader.loadAtts()
 

@@ -10,10 +10,8 @@ attribute vec3  normal;
 attribute float vertexData;
 attribute float modulateData;
 
-uniform   vec3  lightPos;
 varying   vec3  fragVertex;
 varying   vec3  fragNormal;
-varying   vec3  fragLightPos;
 varying   float fragVertexData;
 varying   float fragModulateData;
 
@@ -21,7 +19,6 @@ varying   float fragModulateData;
 void main(void) {
 
   fragVertex       = (gl_ModelViewMatrix * vec4(vertex, 1)).xyz;
-  fragLightPos     = (gl_ModelViewMatrix * vec4(lightPos, 1)).xyz;
   fragNormal       = normalize(gl_NormalMatrix * normal);
   fragVertexData   = vertexData;
   fragModulateData = modulateData;

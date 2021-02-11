@@ -12,7 +12,6 @@ uniform bool lighting;
 uniform vec3 lightPos;
 
 varying vec3 fragVertex;
-varying vec3 fragLightPos;
 varying vec3 fragNormal;
 
 
@@ -23,7 +22,7 @@ void main(void) {
   if (lighting) {
     colour.rgb = phong_lighting(fragVertex,
                                 fragNormal,
-                                fragLightPos,
+                                lightPos,
                                 colour.rgb);
   }
 
