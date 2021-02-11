@@ -809,7 +809,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
            (self.normaliseRange is None):
             self.normaliseRange = np.nanmin(data), np.nanmax(data)
             log.debug('Calculated %s data range for normalisation: '
-                      '[%s - %s]', self.__name, *self.normaliseRange)
+                      '[%s - %s]', self.name, *self.normaliseRange)
 
         elif changed['shape'] or changed['dtype']:
             self.__data  = None
