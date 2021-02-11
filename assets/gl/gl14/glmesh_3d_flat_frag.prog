@@ -5,16 +5,16 @@
 # Input parameters:
 #
 #   {{ param_colour   }}   - The mesh colour
-#
-#   {{ param_lighting }}   - The xyz components contain the light position
-#                            in display coordinates. The w component contains a
-#                            1 if lighting should be applied, or a -1 if
-#                            lighting should not be applied.
-#
+
 #
 # Input varyings:
-#   - {{ varying_vertex }} - Vertex position in display coordinates
-#   - {{ varying_normal }} - Vertex normal
+#   - {{ varying_vertex }}   - Vertex position in display coordinates
+#   - {{ varying_normal }}   - Vertex normal
+#   - {{ varying_lighting }} - The xyz components contain the light position
+#                              in display coordinates. The w component contains a
+#                              1 if lighting should be applied, or a -1 if
+#                              lighting should not be applied.
+#
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -26,7 +26,7 @@ TEMP colour;
 {{ arb_call('glmesh_3d_lighting.prog',
             vertex='{{ varying_vertex }}',
             normal='{{ varying_normal }}',
-            lightPos='{{ param_lighting }}',
+            lightPos='{{ varying_lighting }}',
             colour='{{ param_colour }}',
             out_colour='colour')
 }}

@@ -5,6 +5,9 @@
 #
 # Input parameters:
 #
+#    {{ param_lighting }}      - Light position (the w component contains
+#                                1 if lighting should be applied, or -1
+#                                otherwise)
 #    {{ param4_normalMatrix }} - Matrix to transform normal vectors into
 #                                display coordinates.
 #
@@ -14,11 +17,14 @@
 # Outputs:
 #    {{ varying_vertex }}      - The vertex position in view coordinates.
 #    {{ varying_normal }}      - As above, passed through to fragment shader.
+#    {{ varying_lighting }}    - Light position position in view coordinates.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
 PARAM normalMatrix[4] = {{ param4_normalMatrix }};
+PARAM lightParam      = {{ param_lighting }};
+TEMP  lighting;
 
 # Transform the vertex position into clip coordinates
 DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
@@ -31,6 +37,15 @@ DP4 {{ varying_vertex }}.x, state.matrix.modelview[0].row[0], vertex.position;
 DP4 {{ varying_vertex }}.y, state.matrix.modelview[0].row[1], vertex.position;
 DP4 {{ varying_vertex }}.z, state.matrix.modelview[0].row[2], vertex.position;
 DP4 {{ varying_vertex }}.w, state.matrix.modelview[0].row[3], vertex.position;
+
+# Transform the light position into display
+# coordinates (but preserve the w component)
+MOV lighting,                   lightParam;
+MOV lighting.w,                 1.0;
+DP4 {{ varying_lighting }}.x, state.matrix.modelview[0].row[0], lighting;
+DP4 {{ varying_lighting }}.y, state.matrix.modelview[0].row[1], lighting;
+DP4 {{ varying_lighting }}.z, state.matrix.modelview[0].row[2], lighting;
+MOV {{ varying_lighting }}.w, lightParam.w;
 
 # Transform the normal vector
 DP4 {{ varying_normal }}.x, normalMatrix[0], {{ attr_normal }};
