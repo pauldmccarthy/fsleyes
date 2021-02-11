@@ -48,6 +48,8 @@ class Text:
                  text=None,
                  xpos=None,
                  ypos=None,
+                 xpix=None,
+                 ypix=None,
                  fontSize=10,
                  xoff=None,
                  yoff=None,
@@ -65,6 +67,12 @@ class Text:
 
         :arg xpos:     Position along the vertial axis as a proportion
                        between 0 (bottom) and 1 (top).
+
+        :arg xpix:     Position along the horizontal axis in absolute
+                       pixels - takes precedence over xpos.
+
+        :arg ypix:     Position along the verticalk axis in absolute
+                       pixels - takes precedence over ypos.
 
         :arg xoff:     Fixed horizontal offset in pixels
 
@@ -104,6 +112,8 @@ class Text:
         # All othjer attributes can be assigned directly
         self.xpos       = xpos
         self.ypos       = ypos
+        self.xpix       = xpix
+        self.ypix       = ypix
         self.xoff       = xoff
         self.yoff       = yoff
         self.halign     = halign
@@ -196,15 +206,27 @@ class Text:
         if self.text is None or self.text == '':
             return
 
+        if (self.xpix is None) and (self.xpos is None) or \
+           (self.ypix is None) and (self.ypos is None):
+            return
+
         if (width == 0) or (height == 0):
             return
 
         if self.__bitmap is None:
             self.__refreshBitmap()
 
-        pos  = [self.xpos * width, self.ypos * height]
+        pos = []
+
+        if self.xpix is not None: pos.append(self.xpix)
+        else:                     pos.append(self.xpos * width)
+        if self.ypix is not None: pos.append(self.ypix)
+        else:                     pos.append(self.ypos * height)
+
         bmp  = self.__bitmap
         size = bmp.shape[1:]
+
+        print(f'{self.text} {size} {pos}')
 
         if   self.halign == 'centre': pos[0] -= size[0] / 2.0
         elif self.halign == 'right':  pos[0] -= size[0]
