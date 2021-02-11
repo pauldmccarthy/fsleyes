@@ -12,6 +12,10 @@
 #   {{ param_modulate }}
 #   {{ param_flatColour }}
 #   {{ param4_cmapXform }}
+#   {{ param_lighting }} - The xyz components contain the light position
+#                          in display coordinates. The w component contains
+#                          a 1 if lighting should be applied, or a -1 if
+#                          lighting should not be applied.
 #
 # Input textures:
 #   - {{ texture_cmap }}
@@ -22,11 +26,6 @@
 #   - {{ varying_modulateData }} - Vertex alpha modulation value
 #   - {{ varying_vertex }}       - Vertex position in display coordinates
 #   - {{ varying_normal }}       - Vertex normal
-#   - {{ varying_lighting }}     - The xyz components contain the light position
-#                                  in display coordinates. The w component contains a
-#                                  1 if lighting should be applied, or a -1 if
-#                                  lighting should not be applied.
-
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -55,7 +54,7 @@ TEMP litColour;
 {{ arb_call('glmesh_3d_lighting.prog',
             vertex='{{ varying_vertex }}',
             normal='{{ varying_normal }}',
-            lightPos='{{ varying_lighting }}',
+            lightPos='{{ param_lighting }}',
             colour='unlitColour',
             out_colour='litColour')
 }}
