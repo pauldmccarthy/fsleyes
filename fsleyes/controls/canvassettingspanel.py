@@ -188,6 +188,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('zoom',       props.Widget('zoom', showLimits=False)),
             ('showLegend', props.Widget('showLegend')),
             ('light',      props.Widget('light')),
+            ('showLight',  props.Widget('showLight')),
             ('occlusion',  props.Widget('occlusion')),
         ))
 

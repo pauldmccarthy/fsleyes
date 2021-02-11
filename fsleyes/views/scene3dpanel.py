@@ -87,6 +87,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('occlusion',    sceneOpts)
         opts.bindProps('light',        sceneOpts)
         opts.bindProps('lightPos',     sceneOpts)
+        opts.bindProps('showLight',    sceneOpts)
         opts.bindProps('zoom',         sceneOpts)
         opts.bindProps('offset',       sceneOpts)
         opts.bindProps('rotation',     sceneOpts)

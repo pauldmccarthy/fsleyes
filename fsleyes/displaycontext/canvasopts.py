@@ -252,6 +252,10 @@ class Scene3DCanvasOpts(props.HasProperties):
     """Light position in the display coordinate system. """
 
 
+    showLight = props.Boolean(default=False)
+    """If ``True``, a point is drawn at the current light position. """
+
+
     offset = props.Point(ndims=2)
     """An offset, in X/Y pixels normalised to the range ``[-1, 1]``, from the
     centre of the ``Scene3DCanvas``.

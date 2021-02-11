@@ -503,6 +503,8 @@ properties = TypeDict({
     'orientation information.',
     'Scene3DOpts.light'      :
     'Enable a simple lighting effect.',
+    'Scene3DOpts.showLight' :
+    'Show the position of the light source.',
     'Scene3DOpts.lightPos' :
     'Position of the light in the display coordinate system.',
     'Scene3DOpts.occlusion' :

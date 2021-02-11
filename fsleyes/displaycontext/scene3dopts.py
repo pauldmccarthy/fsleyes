@@ -29,6 +29,7 @@ class Scene3DOpts(sceneopts.SceneOpts):
     occlusion  = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
     light      = copy.copy(canvasopts.Scene3DCanvasOpts.light)
     lightPos   = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
+    showLight  = copy.copy(canvasopts.Scene3DCanvasOpts.showLight)
     offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
     rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 

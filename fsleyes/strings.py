@@ -999,6 +999,7 @@ properties = TypeDict({
 
     'Scene3DOpts.showLegend' : 'Show orientation',
     'Scene3DOpts.light'      : 'Lighting',
+    'Scene3DOpts.showLight'  : 'Show light source',
     'Scene3DOpts.lightPos'   : 'Light position',
     'Scene3DOpts.occlusion'  : 'Volume occlusion',
 

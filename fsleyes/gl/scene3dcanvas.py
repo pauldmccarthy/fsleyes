@@ -675,6 +675,9 @@ class Scene3DCanvas(object):
         if opts.showLegend:
             self.__drawLegend()
 
+        if opts.showLight:
+            self.__drawLight()
+
         # Testing click-to-near/far clipping plane transformation
         if hasattr(self, 'points'):
             colours = [(1, 0, 0, 1), (0, 0, 1, 1)]
@@ -788,22 +791,22 @@ class Scene3DCanvas(object):
 
         opts      = self.opts
         lightPos  = np.array(opts.lightPos)
-        lightPos *= (opts.zoom / 100.0)
+        bounds    = self.__displayCtx.bounds
+        centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
+                              bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
+                              bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
+        lightPos  = affine.transform(lightPos, self.__viewMat)
+        centre    = affine.transform(centre,   self.__viewMat)
 
-        gl.glColor4f(1, 1, 1, 1)
+        # draw the light as a point
+        gl.glColor4f(1, 1, 0, 1)
         gl.glPointSize(10)
         gl.glBegin(gl.GL_POINTS)
         gl.glVertex3f(*lightPos)
         gl.glEnd()
 
-        b = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-
-        centre = affine.transform(centre, self.__viewMat)
-
-        gl.glColor4f(1, 0, 1, 1)
+        # draw a line  from the light to the
+        # centre of the display bounding box
         gl.glBegin(gl.GL_LINES)
         gl.glVertex3f(*lightPos)
         gl.glVertex3f(*centre)
