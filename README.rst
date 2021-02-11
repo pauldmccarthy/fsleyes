@@ -68,9 +68,6 @@ following versions:
   - ``ARB_draw_instanced``
 
 
-FSLeyes also requires the presence of GLUT, or FreeGLUT.
-
-
 Documentation
 -------------
 

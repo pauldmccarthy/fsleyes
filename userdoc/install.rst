@@ -74,9 +74,9 @@ Install from PyPi (advanced)
 ----------------------------
 
 
-.. note:: This is an advanced option, recommended only if you are comfortable
-          working with Python environments, and installing packages using your
-          OS package manager.
+.. warning:: This is an advanced option, recommended only if you are
+             comfortable working with Python environments, and installing
+             packages using your OS package manager.
 
 
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
@@ -112,11 +112,11 @@ using CentOS 7::
 You will also need to install the wxPython runtime dependencies. Under CentOS
 7, you will need to run the following command::
 
-    sudo yum install freeglut SDL
+    sudo yum install SDL
 
 Similarly, under Ubuntu::
 
-    sudo apt-get install freeglut3 libsdl1.2debian
+    sudo apt-get install libsdl1.2debian
 
 
 Another option is to install wxPython directly from PyPi - if you do this, you
@@ -125,13 +125,13 @@ required to compile wxPython. Under CentOS 7, run the following commands::
 
     sudo yum groupinstall "Development tools"
     sudo yum install gtk2-devel gtk3-devel webkitgtk-devel webkitgtk3-devel
-    sudo yum install libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel freeglut-devel
+    sudo yum install libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel
 
 Under Ubuntu, run the following::
 
     sudo apt-get install build-essential
     sudo apt-get install libgtk2.0-dev libgtk-3-dev libwebkitgtk-dev libwebkitgtk-3.0-dev
-    sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev freeglut3-dev
+    sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev
 
 Then you should be able to run ``pip install fsleyes``.
 
@@ -167,9 +167,9 @@ these instructions.
 Install into a Singularity image
 --------------------------------
 
-FSLeyes can be executed from `Singularity <https://sylabs.io/docs/>`_
-containers. Here is an example Singularity definition file which installs a
-standalone version of FSLeyes::
+FSLeyes can be executed from `Docker <https://docs.docker.com/>`_ or
+`Singularity <https://sylabs.io/docs/>`_ containers. Here is an example
+Singularity definition file which installs a standalone version of FSLeyes::
 
     Bootstrap: docker
     From: centos:7
@@ -180,22 +180,11 @@ standalone version of FSLeyes::
     %post
       yum -y update
       yum -y install epel-release
-      yum -y install wget \
-                     gtk3 \
-                     SDL \
-                     libSM \
-                     mesa-dri-drivers \
-                     gstreamer-plugins-base \
-                     xorg-x11-server-Xvfb \
-                     libnotify \
-                     freeglut
-      wget -O /tmp/fsleyes.tar.gz \
-        https://fsl.fmrib.ox.ac.uk/fsldownloads/fsleyes/FSLeyes-latest-centos7.tar.gz
-      pushd /usr/local/
-      tar xf /tmp/fsleyes.tar.gz
-      echo -e '#!/usr/bin/env bash\n/usr/local/FSLeyes/fsleyes "$@"' > bin/fsleyes
-      chmod a+x bin/fsleyes
-      popd
+      yum -y install wget mesa-libGL mesa-libOSMesa
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+      sh Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda3
+      /miniconda3/bin/conda create -p /fsleyes-env -c conda-forge fsleyes
+      source /miniconda3/bin/activate /fsleyes-env
 
     %runscript
       fsleyes "$@"
