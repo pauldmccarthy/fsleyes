@@ -1076,7 +1076,6 @@ class GLMesh(globject.GLObject):
 
         if self.threedee:
             lightPos  = np.array(copts.lightPos)
-            lightPos *= (copts.zoom / 100.0)
         else:
             lightPos = None
 

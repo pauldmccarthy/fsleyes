@@ -10,7 +10,9 @@
 
 uniform bool lighting;
 uniform vec3 lightPos;
+
 varying vec3 fragVertex;
+varying vec3 fragLightPos;
 varying vec3 fragNormal;
 
 
@@ -19,8 +21,10 @@ void main(void) {
   vec4 colour = glmesh_data_colour();
 
   if (lighting) {
-
-    colour.rgb = phong_lighting(fragVertex, fragNormal, lightPos, colour.rgb);
+    colour.rgb = phong_lighting(fragVertex,
+                                fragNormal,
+                                fragLightPos,
+                                colour.rgb);
   }
 
   gl_FragColor = colour;

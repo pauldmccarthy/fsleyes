@@ -11,18 +11,16 @@ uniform vec4 colour;
 
 /* Toggle lighting */
 uniform bool lighting;
-
-
-/* Toggle lighting */
 uniform vec3 lightPos;
-
 
 /* Vertex */
 varying vec3 fragVertex;
 
-
 /* Vertex normal */
 varying vec3 fragNormal;
+
+/* Light position transformed by the model view matrix */
+varying vec3 fragLightPos;
 
 
 void main(void) {
@@ -30,10 +28,9 @@ void main(void) {
   vec4 finalColour = colour;
 
   if (lighting) {
-
     finalColour.rgb = phong_lighting(fragVertex,
                                      fragNormal,
-                                     lightPos,
+                                     fragLightPos,
                                      finalColour.rgb);
   }
 
