@@ -12,6 +12,8 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 import platform
 import collections
 
+import wx
+
 import fsl.data.image                as fslimage
 import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
@@ -187,9 +189,10 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         scene3dOptsProps = collections.OrderedDict((
             ('zoom',       props.Widget('zoom', showLimits=False)),
             ('showLegend', props.Widget('showLegend')),
+            ('occlusion',  props.Widget('occlusion')),
             ('light',      props.Widget('light')),
             ('showLight',  props.Widget('showLight')),
-            ('occlusion',  props.Widget('occlusion')),
+            ('lightPos',   _genLightPosWidget),
         ))
 
         import fsleyes.views.orthopanel    as orthopanel
@@ -260,21 +263,39 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                 tooltip=fsltooltips.properties[displayCtx, dispProp.key],
                 groupName='scene')
 
-        for dispProp in panelProps.values():
+        for propName, dispProp in panelProps.items():
 
-            widget = props.buildGUI(widgets,
-                                    opts,
-                                    dispProp,
-                                    showUnlink=False)
+            if callable(dispProp):
+                widget = dispProp(widgets, opts)
+            else:
+                widget = props.buildGUI(widgets, opts, dispProp)
 
             allWidgets.append(widget)
             widgets.AddWidget(
                 widget,
-                displayName=strings.properties[opts, dispProp.key],
-                tooltip=fsltooltips.properties[opts, dispProp.key],
+                displayName=strings.properties[opts, propName],
+                tooltip=fsltooltips.properties[opts, propName],
                 groupName=panelGroup)
 
         self.setNavOrder(allWidgets)
 
         widgets.Expand('scene')
         widgets.Expand(panelGroup)
+
+
+def _genLightPosWidget(parent, opts):
+    """Generates a widget for the :attr:`.Scene3DOpts.lightPos` property.
+    """
+    px, py, pz = props.makeListWidgets(
+        parent,
+        opts,
+        'lightPos',
+        slider=True,
+        spin=False,
+        showLimits=False,
+        mousewheel=True)
+    sizer = wx.BoxSizer(wx.VERTICAL)
+    sizer.Add(px, flag=wx.EXPAND)
+    sizer.Add(py, flag=wx.EXPAND)
+    sizer.Add(pz, flag=wx.EXPAND)
+    return sizer

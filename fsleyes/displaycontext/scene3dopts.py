@@ -44,6 +44,9 @@ class Scene3DOpts(sceneopts.SceneOpts):
         self.setAttribute('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
         self.setAttribute('fgColour', 'default', (0.0, 1.0, 0.0,   1.0))
 
+        for ax in range(3):
+            self.lightPos.setLimits(ax, -500, 500)
+
         self.zoom     = 75
         self.bgColour = (0.6, 0.6, 0.753)
         self.fgColour = (0,   1,   0)
