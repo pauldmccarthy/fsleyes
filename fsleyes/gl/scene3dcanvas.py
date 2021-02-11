@@ -132,7 +132,7 @@ class Scene3DCanvas(object):
         centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
                            b.ylo + 0.5 * (b.yhi - b.ylo),
                            b.zlo + 0.5 * (b.zhi - b.zlo)])
-        self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
+        self.opts.lightPos = centre + [-b.xlen, 0.5 * b.ylen, 0.5 * b.zlen]
 
 
     @property
