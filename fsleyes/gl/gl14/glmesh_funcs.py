@@ -150,7 +150,7 @@ def draw(self,
         if not copts.light:
             lighting = [0, 0, 0, -1]
         else:
-            lighting = affine.transform(copts.lightPos, canvas.viewMatrix)
+            lighting = affine.transform(canvas.lightPos, canvas.viewMatrix)
             lighting = list(lighting) + [1]
         shader.setFragParam('lighting', lighting)
 

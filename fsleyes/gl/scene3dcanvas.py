@@ -110,6 +110,35 @@ class Scene3DCanvas(object):
 
 
     @property
+    def lightPos(self):
+        """Takes the value of :attr:`.Scene3DOpts.lightPos` and converts it to
+        a position in the display coordinate system. The
+        ``Scene3DOpts.lightPos`` property contains rotations about the centre
+        of the display coordinate system.
+        """
+        b        = self.__displayCtx.bounds
+        centre   = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                             b.ylo + 0.5 * (b.yhi - b.ylo),
+                             b.zlo + 0.5 * (b.zhi - b.zlo)])
+
+        yaw, pitch, roll = self.opts.lightPos
+        yaw              = yaw   * np.pi / 180
+        pitch            = pitch * np.pi / 180
+        roll             = roll  * np.pi / 180
+
+        rotmat = affine.axisAnglesToRotMat(pitch, roll, yaw)
+        xform  = affine.compose([1, 1, 1],
+                                [0, 0, 0],
+                                rotmat,
+                                origin=centre)
+
+        lightPos = [0, 0, 2 * b.zlen]
+        lightPos = affine.transform(lightPos, xform)
+
+        return lightPos
+
+
+    @property
     def resetLightPos(self):
         """By default, the :attr:`lightPos` is updated whenever the
         :attr:`.DisplayContext.bounds` change. This flag can be used to
@@ -789,8 +818,7 @@ class Scene3DCanvas(object):
     def __drawLight(self):
         """Draws a representation of the light source. """
 
-        opts      = self.opts
-        lightPos  = np.array(opts.lightPos)
+        lightPos  = self.lightPos
         bounds    = self.__displayCtx.bounds
         centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
                               bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),

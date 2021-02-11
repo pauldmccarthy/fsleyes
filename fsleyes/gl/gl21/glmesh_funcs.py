@@ -140,6 +140,7 @@ def draw(self,
                    each vertex.
     """
 
+    canvas = self.canvas
     shader = self.activeShader
 
     # for 3D, shader attributes are
@@ -156,9 +157,7 @@ def draw(self,
     if mdata    is not None: shader.setAtt('modulateData', mdata)
 
     if self.threedee:
-        lightPos = affine.transform(
-            self.canvas.opts.lightPos,
-            self.canvas.viewMatrix)
+        lightPos = affine.transform(canvas.lightPos, canvas.viewMatrix)
         shader.set('lightPos', lightPos)
 
     shader.loadAtts()
