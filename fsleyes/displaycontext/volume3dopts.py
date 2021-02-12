@@ -140,9 +140,13 @@ class Volume3DOpts(object):
         # maximum possible amount of
         # smoothing, as GL14 fragment
         # programs cannot be too large.
+        #
+        # Also disable blendByIntensity,
+        # as it is not implemented on gl14
         if float(fslplatform.glVersion) < 2.1:
             smooth = self.getProp('smoothing')
             smooth.setAttribute(self, 'maxval', 6)
+            self.disableProperty('blendByIntensity')
 
         self.clipPosition[:]    = 10 * [50]
         self.clipAzimuth[:]     = 10 * [0]

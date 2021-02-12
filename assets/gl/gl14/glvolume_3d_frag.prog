@@ -215,15 +215,18 @@ MIN skipTest.x, skipTest.x,    tempVar.x;
 
 # Adjust the sample opacity - it is
 # a function of the (normalised)
-# voxel intensity and the blend factor.
+# voxel intensity and the blend factor:
+
+# a = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
 
 # Clamp voxValue to [0, 1]
 # (MOV_SAT does not work for me)
 MIN colour.a, voxValue.x, 1;
 MAX colour.a, colour.a,   0;
 
-SUB colour.a, 1, colour.a;
-POW colour.a, colour.a, {{ param_settings }}.x;
+SUB colour.a,  1, colour.a;
+SUB tempVar.x, 1, {{ param_settings }}.x;
+POW colour.a, colour.a, tempVar.x;
 SUB colour.a, 1, colour.a;
 MUL colour.rgb, colour, colour.a;
 
