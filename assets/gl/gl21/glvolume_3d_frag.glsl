@@ -7,6 +7,7 @@
 
 #pragma include spline_interp.glsl
 #pragma include test_in_bounds.glsl
+#pragma include phong_lighting.glsl
 #pragma include rand.glsl
 
 /*
@@ -202,6 +203,43 @@ bool is_clipped(vec3 texCoord,
   return false;
 }
 
+/*
+ * Estimate the intensity gradient at a specific location within a volume.
+ * Surface normals for volume lighting are based on intensity gradients.
+ */
+vec3 volume_gradient(vec3      texCoord,
+                     sampler3D imageTexture,
+                     float     stepSize) {
+
+  vec3 xstep = vec3(stepSize, 0, 0);
+  vec3 ystep = vec3(0, stepSize, 0);
+  vec3 zstep = vec3(0, 0, stepSize);
+
+  float xback = texture3D(imageTexture, texCoord - xstep).x;
+  float xfwd  = texture3D(imageTexture, texCoord + xstep).x;
+  float yback = texture3D(imageTexture, texCoord - ystep).x;
+  float yfwd  = texture3D(imageTexture, texCoord + ystep).x;
+  float zback = texture3D(imageTexture, texCoord - zstep).x;
+  float zfwd  = texture3D(imageTexture, texCoord + zstep).x;
+
+  return vec3(xback - xfwd, yback - yfwd, zback - zfwd) / (2 * stepSize);
+}
+
+/*
+ * Apply the Phong lighting model to the given colour, sampled from a volume.
+ */
+vec3 volume_lighting(vec3      texCoord,
+                     sampler3D imageTexture,
+                     vec3      lightPos,
+                     vec3      colour) {
+
+  float stepSize = 0.01;
+  vec3  normal   = volume_gradient(texCoord, imageTexture, stepSize);
+
+  normal = normalize(gl_NormalMatrix * normal);
+  return phong_lighting(texCoord, normal, lightPos, colour);
+}
+
 
 void main(void) {
 
@@ -209,7 +247,6 @@ void main(void) {
     vec4  colour      = vec4(0);
     vec4  finalColour = vec4(0);
     vec4  depth       = vec4(0);
-    vec3  normal      = vec3(0);
     int   nsamples    = 0;
     float voxValue;
     int   clipIdx;
@@ -252,11 +289,18 @@ void main(void) {
        */
       if (sample_volume(texCoord, vec3(0, 0, 0), vec3(0, 0, 0), voxValue, colour)) {
 
+        if (lighting) {
+          colour.rgb = volume_lighting(texCoord,
+                                       imageTexture,
+                                       lightPos,
+                                       colour.rgb);
+        }
+
         /*
          * weight the sample opacity by the voxel intensity
          * (normalised w.r.t. the current display range)
          */
-        colour.a     = 1.0 - pow(1.0 - clamp(voxValue, 0, 1), blendFactor);
+        colour.a     = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
         colour.rgb  *= colour.a;
         finalColour += (1 - finalColour.a) * colour;
         nsamples    += 1;
