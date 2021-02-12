@@ -71,9 +71,8 @@ def updateShaderState(self, **kwargs):
     dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
     if self.threedee:
-        dshader.set(   'lighting', copts.light)
-        dshader.setAtt('vertex',   self.vertices)
-        dshader.setAtt('normal',   self.normals)
+        dshader.setAtt('vertex', self.vertices)
+        dshader.setAtt('normal', self.normals)
 
         vdata = self.getVertexData('vertex')
         mdata = self.getVertexData('modulate')
@@ -92,7 +91,6 @@ def updateShaderState(self, **kwargs):
 
     if self.threedee:
         fshader.load()
-        fshader.set('lighting', copts.light)
         fshader.set('colour',   kwargs['flatColour'])
 
         fshader.setAtt('vertex', self.vertices)
@@ -158,6 +156,7 @@ def draw(self,
 
     if self.threedee:
         lightPos = affine.transform(canvas.lightPos, canvas.viewMatrix)
+        shader.set('lighting', canvas.opts.light)
         shader.set('lightPos', lightPos)
 
     shader.loadAtts()

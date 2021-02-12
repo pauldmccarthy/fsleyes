@@ -111,9 +111,6 @@ class GLMesh(globject.GLObject):
         - ``flatColour``:  Colour to use for fragments which are outside
                            of the clipping range.
 
-        - ``lightPos``     Light position in display coordinates.
-
-
      - ``preDraw(GLMesh)``: Prepare for drawing (e.g. load shaders)
 
      - ``draw(GLMesh, glType, vertices, indices=None, normals=None, vdata=None)``:  # noqa
@@ -287,10 +284,6 @@ class GLMesh(globject.GLObject):
         opts   .addListener('flatShading',      name, vertices,    weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
-        if self.threedee:
-            canvas.opts.addListener('light',    name, shader, weak=False)
-            canvas.opts.addListener('lightPos', name, shader, weak=False)
-
         # We don't need to listen for
         # brightness or contrast, because
         # they are linked to displayRange.
@@ -326,10 +319,6 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('modulateAlpha',    self.name)
         self.opts   .removeListener('flatShading',      self.name)
         self.display.removeListener('alpha',            self.name)
-
-        if self.threedee:
-            self.canvas.opts.removeListener('light',    self.name)
-            self.canvas.opts.removeListener('lightPos', self.name)
 
 
     def registerLut(self):
