@@ -25,13 +25,14 @@ class Scene3DOpts(sceneopts.SceneOpts):
     """
 
 
-    showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
-    occlusion  = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
-    light      = copy.copy(canvasopts.Scene3DCanvasOpts.light)
-    lightPos   = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
-    showLight  = copy.copy(canvasopts.Scene3DCanvasOpts.showLight)
-    offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
-    rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
+    showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    occlusion     = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
+    light         = copy.copy(canvasopts.Scene3DCanvasOpts.light)
+    lightPos      = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
+    lightDistance = copy.copy(canvasopts.Scene3DCanvasOpts.lightDistance)
+    showLight     = copy.copy(canvasopts.Scene3DCanvasOpts.showLight)
+    offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
+    rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
 
     def __init__(self, *args, **kwargs):

@@ -997,11 +997,12 @@ properties = TypeDict({
     'OrthoOpts.yzoom'       : 'Y zoom',
     'OrthoOpts.zzoom'       : 'Z zoom',
 
-    'Scene3DOpts.showLegend' : 'Show orientation',
-    'Scene3DOpts.light'      : 'Lighting',
-    'Scene3DOpts.showLight'  : 'Show light source',
-    'Scene3DOpts.lightPos'   : 'Light position',
-    'Scene3DOpts.occlusion'  : 'Volume occlusion',
+    'Scene3DOpts.showLegend'    : 'Show orientation',
+    'Scene3DOpts.light'         : 'Lighting',
+    'Scene3DOpts.showLight'     : 'Show light source',
+    'Scene3DOpts.lightPos'      : 'Light position',
+    'Scene3DOpts.lightDistance' : 'Light distance',
+    'Scene3DOpts.occlusion'     : 'Volume occlusion',
 
     'PlotPanel.legend'     : 'Show legend',
     'PlotPanel.ticks'      : 'Show ticks',

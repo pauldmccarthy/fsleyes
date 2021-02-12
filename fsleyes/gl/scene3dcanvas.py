@@ -62,20 +62,22 @@ class Scene3DCanvas(object):
                                self.__displayBoundsChanged)
 
         opts = self.opts
-        opts.addListener('pos',          self.__name, self.Refresh)
-        opts.addListener('showCursor',   self.__name, self.Refresh)
-        opts.addListener('cursorColour', self.__name, self.Refresh)
-        opts.addListener('bgColour',     self.__name, self.Refresh)
-        opts.addListener('showLegend',   self.__name, self.Refresh)
-        opts.addListener('legendColour', self.__name,
+        opts.addListener('pos',           self.__name, self.Refresh)
+        opts.addListener('showCursor',    self.__name, self.Refresh)
+        opts.addListener('cursorColour',  self.__name, self.Refresh)
+        opts.addListener('bgColour',      self.__name, self.Refresh)
+        opts.addListener('showLegend',    self.__name, self.Refresh)
+        opts.addListener('legendColour',  self.__name,
                          self.__refreshLegendLabels)
-        opts.addListener('labelSize',    self.__name,
+        opts.addListener('labelSize',     self.__name,
                          self.__refreshLegendLabels)
-        opts.addListener('occlusion',    self.__name, self.Refresh)
-        opts.addListener('zoom',         self.__name, self.Refresh)
-        opts.addListener('offset',       self.__name, self.Refresh)
-        opts.addListener('rotation',     self.__name, self.Refresh)
-        opts.addListener('highDpi',      self.__name, self.__highDpiChanged)
+        opts.addListener('occlusion',     self.__name, self.Refresh)
+        opts.addListener('zoom',          self.__name, self.Refresh)
+        opts.addListener('offset',        self.__name, self.Refresh)
+        opts.addListener('rotation',      self.__name, self.Refresh)
+        opts.addListener('lightPos',      self.__name, self.Refresh)
+        opts.addListener('lightDistance', self.__name, self.Refresh)
+        opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
 
 
     def destroy(self):
@@ -111,10 +113,12 @@ class Scene3DCanvas(object):
 
     @property
     def lightPos(self):
-        """Takes the value of :attr:`.Scene3DOpts.lightPos` and converts it to
-        a position in the display coordinate system. The
-        ``Scene3DOpts.lightPos`` property contains rotations about the centre
-        of the display coordinate system.
+        """Takes the values of :attr:`.Scene3DOpts.lightPos` and
+        :attr:`.Scene3DOpts.lightDistance`, and converts it to a position in
+        the display coordinate system. The ``Scene3DOpts.lightPos`` property
+        contains rotations about the centre of the display bounding box,
+        and the :attr:`.Scene3DOpts.lightDistance` property specifies the
+        distance of the light from the bounding box centre.
         """
         b        = self.__displayCtx.bounds
         centre   = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
@@ -122,6 +126,7 @@ class Scene3DCanvas(object):
                              b.zlo + 0.5 * (b.zhi - b.zlo)])
 
         yaw, pitch, roll = self.opts.lightPos
+        distance         = self.opts.lightDistance
         yaw              = yaw   * np.pi / 180
         pitch            = pitch * np.pi / 180
         roll             = roll  * np.pi / 180
@@ -132,7 +137,7 @@ class Scene3DCanvas(object):
                                 rotmat,
                                 origin=centre)
 
-        lightPos = [0, 0, 2 * b.zlen]
+        lightPos = centre + [0, 0, distance * b.zlen]
         lightPos = affine.transform(lightPos, xform)
 
         return lightPos
@@ -157,11 +162,7 @@ class Scene3DCanvas(object):
 
     def defaultLightPos(self):
         """Resets the :attr:`lightPos` property to a sensible value. """
-        b      = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-        self.opts.lightPos = centre + [-b.xlen, 0.5 * b.ylen, 0.5 * b.zlen]
+        self.opts.lightPos = [0, 0, 0]
 
 
     @property

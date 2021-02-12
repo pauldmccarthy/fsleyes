@@ -187,12 +187,13 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('showGridLines',  props.Widget('showGridLines'))))
 
         scene3dOptsProps = collections.OrderedDict((
-            ('zoom',       props.Widget('zoom', showLimits=False)),
-            ('showLegend', props.Widget('showLegend')),
-            ('occlusion',  props.Widget('occlusion')),
-            ('light',      props.Widget('light')),
-            ('showLight',  props.Widget('showLight')),
-            ('lightPos',   _genLightPosWidget),
+            ('zoom',          props.Widget('zoom', showLimits=False)),
+            ('showLegend',    props.Widget('showLegend')),
+            ('occlusion',     props.Widget('occlusion')),
+            ('light',         props.Widget('light')),
+            ('showLight',     props.Widget('showLight')),
+            ('lightDistance', props.Widget('lightDistance', showLimits=False)),
+            ('lightPos',      _genLightPosWidget),
         ))
 
         import fsleyes.views.orthopanel    as orthopanel

@@ -507,6 +507,8 @@ properties = TypeDict({
     'Show the position of the light source.',
     'Scene3DOpts.lightPos' :
     'Position of the light in the display coordinate system.',
+    'Scene3DOpts.lightDistance' :
+    'Distance of the light from the display centre.',
     'Scene3DOpts.occlusion' :
     'When selected, volumes in the scene which are behind another volume will '
     'not be shown. ',

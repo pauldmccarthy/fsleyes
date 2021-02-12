@@ -257,13 +257,22 @@ class Scene3DCanvasOpts(props.HasProperties):
     property contains a set of three rotation values, in degrees.
 
     The lighting model uses a point source which is located a fixed distance
-    away from the display coordinate system centre.
+    away from the display coordinate system centre - the distance is set
+    by the :attr:`lightDistance` property.
 
     The lightPos property defines how the light is rotated with respect to
     the centre of the display coordinate system.
 
     The :meth:`.Scene3DCanvas.lightPos` method can be used to calculate the
     actual position of the light in the display coordinate system.
+    """
+
+
+    lightDistance = props.Real(minval=0.5, maxval=10, default=2)
+    """Distance of the light source from the centre of the display coordinate
+    system. This is used as a multiplicative factor - a value of 2 set the
+    light source a distance of twice the length of the display bounding box
+    from the bounding box centre.
     """
 
 
