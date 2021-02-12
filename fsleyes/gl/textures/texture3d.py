@@ -103,19 +103,36 @@ class Texture3D(texture.Texture):
                                gl.GL_TEXTURE_MIN_FILTER,
                                interp)
 
+            # Clamp texture borders to
+            # the specified border value(s)
+            if self.border is not None:
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_S,
+                                   gl.GL_CLAMP_TO_BORDER)
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_T,
+                                   gl.GL_CLAMP_TO_BORDER)
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_R,
+                                   gl.GL_CLAMP_TO_BORDER)
+                gl.glTexParameterfv(gl.GL_TEXTURE_3D,
+                                    gl.GL_TEXTURE_BORDER_COLOR,
+                                    np.asarray(self.border, dtype=np.float32))
+
             # Clamp texture borders to the edge
             # values - it is the responsibility
             # of the rendering logic to not draw
             # anything outside of the image space
-            gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                               gl.GL_TEXTURE_WRAP_S,
-                               gl.GL_CLAMP_TO_EDGE)
-            gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                               gl.GL_TEXTURE_WRAP_T,
-                               gl.GL_CLAMP_TO_EDGE)
-            gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                               gl.GL_TEXTURE_WRAP_R,
-                               gl.GL_CLAMP_TO_EDGE)
+            else:
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_S,
+                                   gl.GL_CLAMP_TO_EDGE)
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_T,
+                                   gl.GL_CLAMP_TO_EDGE)
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_TEXTURE_WRAP_R,
+                                   gl.GL_CLAMP_TO_EDGE)
 
             # The macOS GL driver sometimes corrupts
             # the texture data if we don't generate
