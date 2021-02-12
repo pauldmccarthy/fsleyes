@@ -209,18 +209,46 @@ bool is_clipped(vec3 texCoord,
  */
 vec3 volume_gradient(vec3      texCoord,
                      sampler3D imageTexture,
-                     float     stepSize) {
+                     float     stepSize,
+                     int       numClipPlanes,
+                     vec4      clipPlanes[5],
+                     int       clipMode) {
 
-  vec3 xstep = vec3(stepSize, 0, 0);
-  vec3 ystep = vec3(0, stepSize, 0);
-  vec3 zstep = vec3(0, 0, stepSize);
+  vec3 xstep      = vec3(stepSize, 0, 0);
+  vec3 ystep      = vec3(0, stepSize, 0);
+  vec3 zstep      = vec3(0, 0, stepSize);
+  vec3 xbackcoord = texCoord - xstep;
+  vec3 xfwdcoord  = texCoord + xstep;
+  vec3 ybackcoord = texCoord - ystep;
+  vec3 yfwdcoord  = texCoord + ystep;
+  vec3 zbackcoord = texCoord - zstep;
+  vec3 zfwdcoord  = texCoord + zstep;
 
-  float xback = texture3D(imageTexture, texCoord - xstep).x;
-  float xfwd  = texture3D(imageTexture, texCoord + xstep).x;
-  float yback = texture3D(imageTexture, texCoord - ystep).x;
-  float yfwd  = texture3D(imageTexture, texCoord + ystep).x;
-  float zback = texture3D(imageTexture, texCoord - zstep).x;
-  float zfwd  = texture3D(imageTexture, texCoord + zstep).x;
+  float xback = 0;
+  float xfwd  = 0;
+  float yback = 0;
+  float yfwd  = 0;
+  float zback = 0;
+  float zfwd  = 0;
+
+  if (!is_clipped(xbackcoord, numClipPlanes, clipPlanes, clipMode)) {
+    xback = texture3D(imageTexture, xbackcoord).x;
+  }
+  if (!is_clipped(xfwdcoord, numClipPlanes, clipPlanes, clipMode)) {
+    xfwd = texture3D(imageTexture, xfwdcoord).x;
+  }
+  if (!is_clipped(ybackcoord, numClipPlanes, clipPlanes, clipMode)) {
+    yback = texture3D(imageTexture, ybackcoord).x;
+  }
+  if (!is_clipped(yfwdcoord, numClipPlanes, clipPlanes, clipMode)) {
+    yfwd = texture3D(imageTexture, yfwdcoord).x;
+  }
+  if (!is_clipped(zbackcoord, numClipPlanes, clipPlanes, clipMode)) {
+    zback = texture3D(imageTexture, zbackcoord).x;
+  }
+  if (!is_clipped(zfwdcoord, numClipPlanes, clipPlanes, clipMode)) {
+    zfwd = texture3D(imageTexture, zfwdcoord).x;
+  }
 
   return vec3(xback - xfwd, yback - yfwd, zback - zfwd) / (2 * stepSize);
 }
@@ -231,10 +259,18 @@ vec3 volume_gradient(vec3      texCoord,
 vec3 volume_lighting(vec3      texCoord,
                      sampler3D imageTexture,
                      vec3      lightPos,
-                     vec3      colour) {
+                     vec3      colour,
+                     int       numClipPlanes,
+                     vec4      clipPlanes[5],
+                     int       clipMode) {
 
   float stepSize = 0.01;
-  vec3  normal   = volume_gradient(texCoord, imageTexture, stepSize);
+  vec3  normal   = volume_gradient(texCoord,
+                                   imageTexture,
+                                   stepSize,
+                                   numClipPlanes,
+                                   clipPlanes,
+                                   clipMode);
 
   normal = normalize(gl_NormalMatrix * normal);
   return phong_lighting(texCoord, normal, lightPos, colour);
@@ -293,7 +329,10 @@ void main(void) {
           colour.rgb = volume_lighting(texCoord,
                                        imageTexture,
                                        lightPos,
-                                       colour.rgb);
+                                       colour.rgb,
+                                       numClipPlanes,
+                                       clipPlanes,
+                                       clipMode);
         }
 
         /*
