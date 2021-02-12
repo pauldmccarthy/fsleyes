@@ -354,8 +354,8 @@ software-based rendering::
   fsleyes
 
 
-Options are missing!
-^^^^^^^^^^^^^^^^^^^^
+Options are missing/disabled/not working!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Sometimes, in a remote desktop environment, FSLeyes is not able to provide all
@@ -367,6 +367,7 @@ X11, the following options will not be available:
    vector <overlays_vector>` overlays
  - :ref:`Tensor <overlays_tensor>` display
  - :ref:`Diffusion  SH <overlays_diffusion_sh>` display
+ - 3D lighting effects on for :ref:`volume <overlays_volume>` overlays.
 
 
 XQuartz - FSLeyes doesn't start, and just shows an error
