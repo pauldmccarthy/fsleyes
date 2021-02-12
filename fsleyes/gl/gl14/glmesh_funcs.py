@@ -13,6 +13,7 @@ programs.
 """
 
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.transform.affine as affine
@@ -141,9 +142,9 @@ def draw(self,
 
         # NOTE You are assuming here that the canvas
         #      view matrix is the GL model view matrix.
-        normalMatrix = self.canvas.viewMatrix
+        normalMatrix = self.canvas.viewMatrix[:3, :3]
         normalMatrix = affine.invert(normalMatrix).T
-
+        normalMatrix = np.hstack((normalMatrix, np.zeros((3, 1))))
         shader.setVertParam('normalMatrix', normalMatrix)
 
     if self.threedee:

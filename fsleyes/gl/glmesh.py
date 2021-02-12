@@ -1059,7 +1059,6 @@ class GLMesh(globject.GLObject):
 
         dopts      = self.opts
         canvas     = self.canvas
-        copts      = canvas.opts
         flatColour = dopts.getConstantColour()
         useNegCmap = (not dopts.useLut) and dopts.useNegativeCmap
 

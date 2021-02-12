@@ -21,21 +21,29 @@ TEMP specular;
 
 # Calculate the direction towards the
 # light and normalise it to unit length
+#
+#   lightDir = normalize(lightPos - vertex);
+#
 SUB lightDir.xyz, {{ lightPos }}, {{ vertex }};
 DP3 lightDir.w,      lightDir,       lightDir;
 RSQ lightDir.w,      lightDir.w;
 MUL lightDir.xyz,    lightDir,       lightDir.w;
 
-
 # Normalised camera direction
+#
+#   viewDir = normalize(-vertex)
+#
 MUL viewDir,     {{ vertex }},   -1;
 DP3 viewDir.w,      viewDir,   viewDir;
 RSQ viewDir.w,      viewDir.w;
 MUL viewDir.xyz,    viewDir,   viewDir.w;
 
-
 # Normalised reflection angle from
 # the light off the surface
+#
+#   reflect(I, N) = I – 2 * dot(N, I) * N
+#   angle = normalize(reflect(lightDir, normal));
+#
 DP3 angle.xyz, lightDir, {{ normal }};
 MUL angle.xyz, angle,    {{ normal }};
 MUL angle.xyz, angle,       2;
@@ -48,9 +56,15 @@ MUL angle.xyz, angle,       angle.w;
 MOV ambient.x, 0.5;
 
 # Diffuse component, clamped to [0, 1]
+#
+#   diffuse = clamp(dot(normal, lightDir), 0.0, 1.0);
+#
 DP3_SAT diffuse.x, {{ normal }}, lightDir;
 
 # Specular component, clamped to [0, 1]
+#
+#   spec = clamp(pow(max(dot(angle, viewDir), 0.0), 64), 0.0, 1.0);
+#
 DP3     specular.x, angle, viewDir;
 MAX     specular.x, specular.x, 0.0;
 
@@ -61,6 +75,9 @@ MOV     specular.y, 64.0;
 POW_SAT specular.x, specular.x, specular.y;
 
 # Combine the final colour
+#
+#  result = colour * vec3(amb + diff + spec);
+#
 ADD {{ out_colour }}.rgb,    ambient.x,        diffuse.x;
 ADD {{ out_colour }}.rgb, {{ out_colour }},    specular.x;
 MUL {{ out_colour }}.rgb, {{ out_colour }}, {{ colour }};

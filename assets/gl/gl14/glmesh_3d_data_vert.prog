@@ -5,7 +5,7 @@
 #
 # Input parameters:
 #
-#    {{ param4_normalMatrix }} - Matrix to transform normal vectors into
+#    {{ param3_normalMatrix }} - Matrix to transform normal vectors into
 #                                display coordinates.
 #
 # Input attributes:
@@ -21,7 +21,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-PARAM normalMatrix[4] = {{ param4_normalMatrix }};
+PARAM normalMatrix[3] = {{ param3_normalMatrix }};
+
+TEMP normal;
 
 # Transform the vertex position into clip coordinates
 DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
@@ -36,10 +38,17 @@ DP4 {{ varying_vertex }}.z, state.matrix.modelview[0].row[2], vertex.position;
 DP4 {{ varying_vertex }}.w, state.matrix.modelview[0].row[3], vertex.position;
 
 # Transform the normal vector
-DP4 {{ varying_normal }}.x, normalMatrix[0], {{ attr_normal }};
-DP4 {{ varying_normal }}.y, normalMatrix[1], {{ attr_normal }};
-DP4 {{ varying_normal }}.z, normalMatrix[2], {{ attr_normal }};
-DP4 {{ varying_normal }}.w, normalMatrix[3], {{ attr_normal }};
+DP3 normal.x, normalMatrix[0], {{ attr_normal }};
+DP3 normal.y, normalMatrix[1], {{ attr_normal }};
+DP3 normal.z, normalMatrix[2], {{ attr_normal }};
+
+# Normalise to unit length
+DP3 normal.w, normal, normal;
+RSQ normal.w, normal.w;
+MUL normal,   normal, normal.w;
+MOV normal.w, 0;
+
+MOV {{ varying_normal }}, normal;
 
 # Copy the vertex/modulate data
 MOV {{ varying_vertexData }},   {{ attr_vertexData }};

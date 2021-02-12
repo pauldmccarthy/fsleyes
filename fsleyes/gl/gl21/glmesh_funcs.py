@@ -52,7 +52,6 @@ def updateShaderState(self, **kwargs):
     """
 
     dopts    = self.opts
-    copts    = self.canvas.opts
     dshader  = self.dataShader
     fshader  = self.flatShader
 
