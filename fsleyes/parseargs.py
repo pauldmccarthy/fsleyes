@@ -466,6 +466,7 @@ OPTIONS = td.TypeDict({
                        'occlusion',
                        'light',
                        'lightPos',
+                       'lightDistance',
                        'offset',
                        'cameraRotation'],
 
@@ -515,6 +516,7 @@ OPTIONS = td.TypeDict({
                         'modulateAlpha'],
     'Volume3DOpts'   : ['numSteps',
                         'blendFactor',
+                        'blendByIntensity',
                         'smoothing',
                         'resolution',
                         'dithering',
@@ -804,6 +806,7 @@ ARGUMENTS = td.TypeDict({
     'Scene3DOpts.occlusion'      : ('noc', 'noOcclusion',    False),
     'Scene3DOpts.light'          : ('dl',  'disableLight',   False),
     'Scene3DOpts.lightPos'       : ('lp',  'lightPos',       True),
+    'Scene3DOpts.lightDistance'  : ('ld',  'lightDistance',  True),
     'Scene3DOpts.offset'         : ('off', 'offset',         True),
     'Scene3DOpts.cameraRotation' : ('rot', 'cameraRotation', True),
 
@@ -837,14 +840,15 @@ ARGUMENTS = td.TypeDict({
     'VolumeOpts.modulateImage'     : ('mi',  'modulateImage',     True),
     'VolumeOpts.interpolation'     : ('in',  'interpolation',     True),
 
-    'Volume3DOpts.numSteps'      : ('ns',  'numSteps',      True),
-    'Volume3DOpts.blendFactor'   : ('bf',  'blendFactor',   True),
-    'Volume3DOpts.smoothing'     : ('s',   'smoothing',     True),
-    'Volume3DOpts.resolution'    : ('r',   'resolution',    True),
-    'Volume3DOpts.dithering'     : ('dt',  'dithering',     True),
-    'Volume3DOpts.numInnerSteps' : ('nis', 'numInnerSteps', True),
-    'Volume3DOpts.clipPlane'     : ('cp',  'clipPlane',     True),
-    'Volume3DOpts.clipMode'      : ('m',   'clipMode',      True),
+    'Volume3DOpts.numSteps'         : ('ns',  'numSteps',           True),
+    'Volume3DOpts.blendFactor'      : ('bf',  'blendFactor',        True),
+    'Volume3DOpts.blendByIntensity' : ('bi',  'noBlendByIntensity', False),
+    'Volume3DOpts.smoothing'        : ('s',   'smoothing',          True),
+    'Volume3DOpts.resolution'       : ('r',   'resolution',         True),
+    'Volume3DOpts.dithering'        : ('dt',  'dithering',          True),
+    'Volume3DOpts.numInnerSteps'    : ('nis', 'numInnerSteps',      True),
+    'Volume3DOpts.clipPlane'        : ('cp',  'clipPlane',          True),
+    'Volume3DOpts.clipMode'         : ('m',   'clipMode',           True),
 
     'MaskOpts.colour'        : ('mc', 'maskColour',    False),
     'MaskOpts.invert'        : ('i',  'maskInvert',    False),
@@ -1048,12 +1052,16 @@ HELP = td.TypeDict({
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
     'LightBoxOpts.zax'            : 'Z axis',
 
-    'Scene3DOpts.zoom'       : 'Zoom (1-5000, default: 100)',
-    'Scene3DOpts.showLegend' : 'Hide the orientation legend',
-    'Scene3DOpts.occlusion'  : 'Disable volume occlusion',
-    'Scene3DOpts.light'      : 'Disable light source',
-    'Scene3DOpts.lightPos'   : 'Light position (XYZ world coordinates)',
-    'Scene3DOpts.offset'     : 'Offset from centre ([-1, 1])',
+    'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
+    'Scene3DOpts.showLegend'    : 'Hide the orientation legend',
+    'Scene3DOpts.occlusion'     : 'Disable volume occlusion',
+    'Scene3DOpts.light'         : 'Disable light effect',
+    'Scene3DOpts.lightPos'      :
+    'Light position, as XYZ rotations in degrees (-180 - 180)',
+    'Scene3DOpts.lightDistance' :
+    'Distance of light source from centre of display bounding box (0.5 - 10)',
+    'Scene3DOpts.offset'         :
+    'Offset from centre ([-1, 1])',
     'Scene3DOpts.cameraRotation' :
     'Rotation (degrees), specified as yaw (rotation about the vertical '
     'axis), pitch (rotation about the horizontal axis) and roll (rotation '
@@ -1111,11 +1119,14 @@ HELP = td.TypeDict({
     'Volume3DOpts.numSteps' :
     '3D only. Maximum number of samples per pixel',
     'Volume3DOpts.blendFactor' :
-    '3D only Sample blending factor [0.001-1, default: 0.2]',
+    '3D only Sample blending factor [0.001-1, default: 0.1]',
+    'Volume3DOpts.blendByIntensity' :
+    '3D only. Disable modulation of sample colours by voxel intensity when '
+    'blending.',
     'Volume3DOpts.smoothing' :
-    '3D only. Smoothing radius [0-10, default: 1]',
+    '3D only. Smoothing radius [0-10, default: 0]',
     'Volume3DOpts.resolution' :
-    '3D only. Resolution [1-100, default: 100]',
+    '3D only. Resolution/quality [1-100, default: 100]',
     'Volume3DOpts.dithering' :
     '3D only. Deprecated, has no effect.',
     'Volume3DOpts.numInnerSteps' :
@@ -1501,27 +1512,28 @@ def _colourTrans(c, **kwargs):
 
 
 TRANSFORMS = td.TypeDict({
-    'SceneOpts.showCursor'        : _boolTrans,
-    'OrthoOpts.showXCanvas'       : _boolTrans,
-    'OrthoOpts.showYCanvas'       : _boolTrans,
-    'OrthoOpts.showZCanvas'       : _boolTrans,
-    'OrthoOpts.showLabels'        : _boolTrans,
-    'Scene3DOpts.showLegend'      : _boolTrans,
-    'Scene3DOpts.occlusion'       : _boolTrans,
-    'Scene3DOpts.light'           : _boolTrans,
-    'Display.enabled'             : _boolTrans,
-    'ColourMapOpts.linkLowRanges' : _boolTrans,
-    'LineVectorOpts.unitLength'   : _boolTrans,
-    'TensorOpts.lighting'         : _boolTrans,
+    'SceneOpts.showCursor'          : _boolTrans,
+    'OrthoOpts.showXCanvas'         : _boolTrans,
+    'OrthoOpts.showYCanvas'         : _boolTrans,
+    'OrthoOpts.showZCanvas'         : _boolTrans,
+    'OrthoOpts.showLabels'          : _boolTrans,
+    'Scene3DOpts.showLegend'        : _boolTrans,
+    'Scene3DOpts.occlusion'         : _boolTrans,
+    'Scene3DOpts.light'             : _boolTrans,
+    'Display.enabled'               : _boolTrans,
+    'ColourMapOpts.linkLowRanges'   : _boolTrans,
+    'LineVectorOpts.unitLength'     : _boolTrans,
+    'TensorOpts.lighting'           : _boolTrans,
+    'Volume3DOpts.blendByIntensity' : _boolTrans,
 
-    'SceneOpts.bgColour'         : _colourTrans,
-    'SceneOpts.fgColour'         : _colourTrans,
-    'SceneOpts.cursorColour'     : _colourTrans,
-    'MeshOpts.colour'            : _colourTrans,
-    'MaskOpts.colour'            : _colourTrans,
-    'VectorOpts.xColour'         : _colourTrans,
-    'VectorOpts.yColour'         : _colourTrans,
-    'VectorOpts.zColour'         : _colourTrans,
+    'SceneOpts.bgColour'            : _colourTrans,
+    'SceneOpts.fgColour'            : _colourTrans,
+    'SceneOpts.cursorColour'        : _colourTrans,
+    'MeshOpts.colour'               : _colourTrans,
+    'MaskOpts.colour'               : _colourTrans,
+    'VectorOpts.xColour'            : _colourTrans,
+    'VectorOpts.yColour'            : _colourTrans,
+    'VectorOpts.zColour'            : _colourTrans,
 })
 """This dictionary defines any transformations for command line options
 where the value passed on the command line cannot be directly converted
