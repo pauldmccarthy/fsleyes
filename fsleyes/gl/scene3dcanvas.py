@@ -75,6 +75,8 @@ class Scene3DCanvas(object):
         opts.addListener('zoom',          self.__name, self.Refresh)
         opts.addListener('offset',        self.__name, self.Refresh)
         opts.addListener('rotation',      self.__name, self.Refresh)
+        opts.addListener('showLight',     self.__name, self.Refresh)
+        opts.addListener('light',         self.__name, self.Refresh)
         opts.addListener('lightPos',      self.__name, self.Refresh)
         opts.addListener('lightDistance', self.__name, self.Refresh)
         opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
