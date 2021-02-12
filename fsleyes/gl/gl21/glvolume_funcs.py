@@ -229,6 +229,8 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     opts                           = self.opts
+    canvas                         = self.canvas
+    copts                          = canvas.opts
     tex                            = self.renderTexture1
     proj                           = self.canvas.projectionMatrix
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
@@ -239,11 +241,22 @@ def draw3D(self, xform=None, bbox=None):
     texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(self.overlay.shape))
 
+    # If lighting is enabled, we specify the light
+    # position in image texture coordinates, to make
+    # life easier for the shader
+    if copts.light:
+        lxform   = opts.getTransform('display', 'texture')
+        lightPos = affine.transform(canvas.lightPos, lxform)
+    else:
+        lightPos = [0, 0, 0]
+
     if xform is not None:
         vertices = affine.transform(vertices, xform)
 
+    self.shader.set(   'lighting',        copts.light)
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
+    self.shader.set(   'lightPos',        lightPos)
     self.shader.setAtt('vertex',          vertices)
     self.shader.setAtt('texCoord',        texCoords)
 

@@ -158,10 +158,27 @@ uniform float alpha;
  */
 uniform mat4 tex2ScreenXform;
 
+
+/* Apply a simple lighting model to the rendered volume. */
+uniform bool lighting;
+
+
 /*
- * Corresponding image texture coordinates.
+ * Light position in *image texture* coordinates, when
+ * lighting is enabled.
+ */
+uniform vec3 lightPos;
+
+/*
+ * Image texture coordinates.
  */
 varying vec3 fragTexCoord;
+
+
+/*
+ * Fragment location in display coordinate system.
+ */
+varying vec3 fragVertex;
 
 
 #pragma include glvolume_common.glsl
