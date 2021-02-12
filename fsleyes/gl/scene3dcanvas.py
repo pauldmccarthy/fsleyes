@@ -51,7 +51,7 @@ class Scene3DCanvas(object):
         # orientation labels ordered
         # (xlo, xhi, ylo, yhi, zlo, zhi) where xyz
         # are the display coordinate system axes.
-        # Created in _initGL
+        # Created in __refreshLegendLabels
         self.__legendLabels = None
 
         overlayList.addListener('overlays',
@@ -90,8 +90,9 @@ class Scene3DCanvas(object):
         for ovl in list(self.__glObjects.keys()):
             self.__deregisterOverlay(ovl)
 
-        for lbl in self.__legendLabels:
-            lbl.destroy()
+        if self.__legendLabels is not None:
+            for lbl in self.__legendLabels:
+                lbl.destroy()
 
         self.__opts         = None
         self.__displayCtx   = None
@@ -362,9 +363,6 @@ class Scene3DCanvas(object):
 
     def _initGL(self):
         """Called when the canvas is ready to be drawn on. """
-
-        self.__legendLabels = [gltext.Text() for _ in range(6)]
-
         self.__overlayListChanged()
         self.__displayBoundsChanged()
 
@@ -401,6 +399,9 @@ class Scene3DCanvas(object):
 
         if overlay is None:
             return
+
+        if self.__legendLabels is None:
+            self.__legendLabels = [gltext.Text() for _ in range(6)]
 
         dopts  = self.__displayCtx.getOpts(overlay)
         labels = dopts.getLabels()[0]
