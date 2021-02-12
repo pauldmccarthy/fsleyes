@@ -234,7 +234,7 @@ def draw3D(self, xform=None, bbox=None):
     rayStep    = list(rayStep)   + [0]
     texform    = texform[2, :]
     settings   = [
-        (1 - opts.blendFactor) ** 2,
+        opts.blendFactor,
         0,
         0,
         display.alpha / 100.0]
