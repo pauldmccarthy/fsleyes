@@ -34,6 +34,12 @@ class Volume3DOpts(object):
     """
 
 
+    blendByIntensity  = props.Boolean(default=True)
+    """If ``True``, the colours from samples are weighted by voxel intensity
+    as well as the blendFactor.
+    """
+
+
     numSteps = props.Int(minval=25, maxval=500, default=100, clamped=False)
     """Specifies the maximum number of samples to acquire in the rendering of
     each pixel of the 3D scene. This corresponds to the number of iterations

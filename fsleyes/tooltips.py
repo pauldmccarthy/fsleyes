@@ -156,6 +156,11 @@ properties = TypeDict({
     'in the final volume colour being blended from samples which are deeper '
     'in the volume.',
 
+    'Volume3DOpts.blendByIntensity' :
+    'When active, the amount by which each sample is blended into the final '
+    'colour will be weighted by the voxel intensity. When inactive, samples '
+    'will be blended solely according to the blending setting.',
+
     'Volume3DOpts.smoothing' :
     'This setting controls the amount of smoothing applied to the volume. '
     'When the smoothing is greater than zero, a gaussian smoothing filter is '

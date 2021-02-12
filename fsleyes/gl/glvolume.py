@@ -401,7 +401,10 @@ class GLVolume(glimageobject.GLImageObject):
             opts.addListener('numInnerSteps',   name,
                              self._numInnerStepsChanged)
             opts.addListener('resolution',      name,  self._resolutionChanged)
-            opts.addListener('blendFactor',     name, self._blendFactorChanged)
+            opts.addListener('blendFactor',     name,
+                             self._blendPropertiesChanged)
+            opts.addListener('blendByIntensity', name,
+                             self._blendPropertiesChanged)
             opts.addListener('smoothing',       name, self._smoothingChanged)
             opts.addListener('showClipPlanes',  name,
                              self._showClipPlanesChanged)
@@ -475,17 +478,18 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener('overrideDataRange',       name)
 
         if self.threedee:
-            opts.removeListener('numSteps',        name)
-            opts.removeListener('numInnerSteps',   name)
-            opts.removeListener('resolution',      name)
-            opts.removeListener('blendFactor',     name)
-            opts.removeListener('smoothing',       name)
-            opts.removeListener('showClipPlanes',  name)
-            opts.removeListener('numClipPlanes',   name)
-            opts.removeListener('clipMode',        name)
-            opts.removeListener('clipPosition',    name)
-            opts.removeListener('clipAzimuth',     name)
-            opts.removeListener('clipInclination', name)
+            opts.removeListener('numSteps',         name)
+            opts.removeListener('numInnerSteps',    name)
+            opts.removeListener('resolution',       name)
+            opts.removeListener('blendFactor',      name)
+            opts.removeListener('blendByIntensity', name)
+            opts.removeListener('smoothing',        name)
+            opts.removeListener('showClipPlanes',   name)
+            opts.removeListener('numClipPlanes',    name)
+            opts.removeListener('clipMode',         name)
+            opts.removeListener('clipPosition',     name)
+            opts.removeListener('clipAzimuth',      name)
+            opts.removeListener('clipInclination',  name)
 
         if self.__syncListenersRegistered:
             opts.removeSyncChangeListener('volume',  name)
@@ -1077,7 +1081,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.updateShaderState(alwaysNotify=True)
 
 
-    def _blendFactorChanged(self, *a):
+    def _blendPropertiesChanged(self, *a):
         """Called when the :attr:`.Volume3DOpts.showClipPlanes` property
         changes.
         """

@@ -116,6 +116,15 @@ uniform float blendFactor;
 
 
 /*
+ * If true, colours from samples along the ray are modulated
+ * according to the voxel intensity before being blended.
+ * Otherwise colours are simply blended according to the
+ * blendFactor.
+ */
+uniform bool blendByIntensity;
+
+
+/*
  * Final transparency that the fragment should have.
  */
 uniform float alpha;
@@ -339,7 +348,13 @@ void main(void) {
          * weight the sample opacity by the voxel intensity
          * (normalised w.r.t. the current display range)
          */
-        colour.a     = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
+        if (blendByIntensity) {
+          colour.a = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
+        }
+        /* Or just weight by blend factor */
+        else {
+          colour.a = 1 - blendFactor;
+        }
         colour.rgb  *= colour.a;
         finalColour += (1 - finalColour.a) * colour;
         nsamples    += 1;

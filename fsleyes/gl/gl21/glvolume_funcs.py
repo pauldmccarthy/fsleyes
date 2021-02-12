@@ -160,12 +160,15 @@ def updateShaderState(self):
             normal           = affine.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
-        changed |= shader.set('numClipPlanes', opts.numClipPlanes)
-        changed |= shader.set('clipMode',      clipMode)
-        changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
-        changed |= shader.set('blendFactor',   opts.blendFactor)
-        changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())
-        changed |= shader.set('alpha',         display.alpha / 100.0)
+        changed |= shader.set('numClipPlanes',    opts.numClipPlanes)
+        changed |= shader.set('clipMode',         clipMode)
+        changed |= shader.set('clipPlanes',
+                              clipPlanes,
+                              opts.numClipPlanes)
+        changed |= shader.set('blendFactor',      opts.blendFactor)
+        changed |= shader.set('blendByIntensity', opts.blendByIntensity)
+        changed |= shader.set('stepLength',       1.0 / opts.getNumSteps())
+        changed |= shader.set('alpha',            display.alpha / 100.0)
 
     shader.unload()
 
