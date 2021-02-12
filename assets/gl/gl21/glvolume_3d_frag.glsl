@@ -190,6 +190,8 @@ void main(void) {
     vec4  colour           = vec4(0);
     vec4  finalColour      = vec4(0);
     vec4  depth            = vec4(0);
+    bool  clip             = false;
+    bool  clipBoundary     = false;
     int   nsamples         = 0;
     int   activeClipPlanes = 0;
     float voxValue;
@@ -235,14 +237,25 @@ void main(void) {
 
       /*
        * If the current position is in the
-       * intersection, union, or complement
-       * of all clipping planes, then don't
-       * sample this point, and keep casting.
+       * intersection (1), union (2), or
+       * complement (3) of all clipping
+       * planes, then don't sample this
+       * point, and keep casting.
        */
       if (numClipPlanes > 0) {
-        if      (clipMode == 1) { if (activeClipPlanes == numClipPlanes) continue; }
-        else if (clipMode == 2) { if (activeClipPlanes >= 1)             continue; }
-        else if (clipMode == 3) { if (activeClipPlanes == 0)             continue; }
+        clip = false;
+        if      (clipMode == 1) { if (activeClipPlanes == numClipPlanes) { clip = true; } }
+        else if (clipMode == 2) { if (activeClipPlanes >= 1)             { clip = true; } }
+        else if (clipMode == 3) { if (activeClipPlanes == 0)             { clip = true; } }
+        if (clip) {
+          /*
+           * For lighting, we need to know if we
+           * are on the boundary of a clipped region.
+           * This is used (and re-set) below.
+           */
+          clipBoundary = true;
+          continue;
+        }
       }
 
       /*
@@ -269,6 +282,7 @@ void main(void) {
           depth = tex2ScreenXform * vec4(texCoord, 1.0);
         }
       }
+      clipBoundary = false;
     }
 
     if (nsamples > 0) {
