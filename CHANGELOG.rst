@@ -13,6 +13,18 @@ chronological order.
 --------------------------
 
 
+Added
+^^^^^
+
+
+* The lighting effect in the 3D view is now applied to ``volume`` overlays
+  (OpenGL 2.1 or newer only).
+* New ``--lightDistance`` option (for 3D view), allowing the distance of
+  the light source from the centre of the display bounding box to be set.
+* New ``--noBlendByIntensity`` option, for ``volume`` overlays in the 3D
+  view, allowing the modulation of samples by voxel intensity to be disabled.
+
+
 Changed
 ^^^^^^^
 
@@ -22,12 +34,19 @@ Changed
 * Removed dependence on [Free]GLUT - this means that ``fsleyes render`` can
   now be used on headless systems without using ``xvfb-run``, as long as
   `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed.
+* The ``--lightPos`` command-line option (for the 3D view) has been changed to
+  expect three rotation values (in degrees), which specify the position of the
+  light source with respect to the centre of the display bounding box. This
+  can be combined with the new ``--lightDistance`` option to specify the
+  position of the light source.
 
 
 Fixed
 ^^^^^
 
 
+* Various fixes and improvements to the lighting effect on ``mesh`` overlays
+  in the 3D view.
 * When opening a ``melodic_IC.nii.gz`` file with the
   ``--autoDisplay'`/``-ad``, option, the ``melodic_IC`` file is now selected
   by default, instead of the ``mean`` underlay.
