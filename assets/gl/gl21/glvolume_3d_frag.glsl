@@ -33,14 +33,11 @@ uniform float     modOffset;
 
 
 /*
- * Texture containing the colour map.
+ * Texture containing the colour maps.
  */
 uniform sampler1D colourTexture;
-
-/*
- * Texture containing the negative colour map.
- */
 uniform sampler1D negColourTexture;
+uniform bool      useNegCmap;
 
 /*
  * Matrix which can be used to transform a texture value
@@ -61,27 +58,19 @@ uniform vec3 imageShape;
 uniform vec3 texShape;
 
 /*
- * Flag which determines whether to
- * use the negative colour map.
- */
-uniform bool useNegCmap;
-
-/*
  * Use spline interpolation?
  */
 uniform bool useSpline;
 
 /*
- * Clip voxels below this value. This must be specified
- * in the image texture data range.
+ * Clip voxels below/above these value. This must be specified
+ * in the image texture data range. invertClip inverts the logic,
+ * i.e. clip voxels that are inside the clipLow/High bounds.
  */
 uniform float clipLow;
-
-/*
- * Clip voxels above this value. This must be specified
- * in the image texture data range.
- */
 uniform float clipHigh;
+uniform bool  invertClip;
+
 
 /*
  * Value in the image texture data range which corresponds
@@ -92,31 +81,11 @@ uniform float clipHigh;
 uniform float texZero;
 
 /*
- * Invert clipping behaviour - clip voxels
- * that are inside the clipLow/High bounds.
+ * Clipping planes - see the is_clipped function below.
  */
-uniform bool invertClip;
-
-/*
- * Number of active clip planes. Regions which are clipped
- * by *all* active clip planes are not drawn.
- */
-uniform int numClipPlanes;
-
-/*
- * The clip planes, specified as plane equations in the image
- * texture coordinate system.
- */
+uniform int  numClipPlanes;
 uniform vec4 clipPlanes[5];
-
-
-/*
- * How the clipping planes are applied:
- *   -  1 clips the intersection of all planes
- *   -  2 clips the union of all planes
- *   -  3 clips the complement of all planes
- */
-uniform int clipMode;
+uniform int  clipMode;
 
 /*
  * A vector which defines how far to move in one iteration
@@ -159,14 +128,12 @@ uniform float alpha;
 uniform mat4 tex2ScreenXform;
 
 
-/* Apply a simple lighting model to the rendered volume. */
-uniform bool lighting;
-
-
 /*
- * Light position in *image texture* coordinates, when
- * lighting is enabled.
+ * Apply a simple lighting model to the rendered volume.
+ * Light position is specified in *image texture*
+ * coordinates.
  */
+uniform bool lighting;
 uniform vec3 lightPos;
 
 /*
@@ -184,16 +151,66 @@ varying vec3 fragVertex;
 #pragma include glvolume_common.glsl
 
 
+/*
+ * Test the given texture coordinate to see if it is within a
+ * region clipped by the clipping plane(s).
+ *
+ * - numClipPlanes: Number of active clip planes. Regions which are
+ *                  clipped by *all* active clip planes are not drawn.
+ *
+ * - clipPlanes[5]: The clip planes, specified as plane equations in the
+ *                  image texture coordinate system.
+ *
+ * - clipMode:      How the clipping planes are applied:
+ *                    - 1 clips the intersection of all planes
+ *                    - 2 clips the union of all planes
+ *                    - 3 clips the complement of all planes
+ */
+bool is_clipped(vec3 texCoord,
+                int  numClipPlanes,
+                vec4 clipPlanes[5],
+                int  clipMode) {
+
+  int clipIdx;
+  int activeClipPlanes = 0;
+
+  if (numClipPlanes == 0) {
+    return false;
+  }
+
+  /*
+   * Count the number of active clipping
+   * planes (planes for which the current
+   * ray position is on thwe wrong side).
+   */
+  for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++) {
+    if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w < 0) {
+      activeClipPlanes += 1;
+    }
+  }
+
+  /*
+   * If the current position is in the
+   * intersection (1), union (2), or
+   * complement (3) of all clipping
+   * planes, then don't sample this
+   * point, and keep casting.
+   */
+  if      (clipMode == 1) { if (activeClipPlanes == numClipPlanes) { return true; } }
+  else if (clipMode == 2) { if (activeClipPlanes >= 1)             { return true; } }
+  else if (clipMode == 3) { if (activeClipPlanes == 0)             { return true; } }
+  return false;
+}
+
+
 void main(void) {
 
-    vec3  texCoord         = fragTexCoord;
-    vec4  colour           = vec4(0);
-    vec4  finalColour      = vec4(0);
-    vec4  depth            = vec4(0);
-    bool  clip             = false;
-    bool  clipBoundary     = false;
-    int   nsamples         = 0;
-    int   activeClipPlanes = 0;
+    vec3  texCoord    = fragTexCoord;
+    vec4  colour      = vec4(0);
+    vec4  finalColour = vec4(0);
+    vec4  depth       = vec4(0);
+    vec3  normal      = vec3(0);
+    int   nsamples    = 0;
     float voxValue;
     int   clipIdx;
 
@@ -206,8 +223,8 @@ void main(void) {
      * occasionally break on the first
      * iteration.
      */
-    vec3 dither  = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
-    texCoord     = texCoord - dither;
+    vec3 dither = rayStep * rand(gl_FragCoord.x, gl_FragCoord.y);
+    texCoord    = texCoord - dither;
 
     /*
      * Keep going until we
@@ -223,39 +240,9 @@ void main(void) {
         break;
       }
 
-      /*
-       * Count the number of active clipping
-       * planes (planes for which the current
-       * ray position is on thwe wrong side).
-       */
-      activeClipPlanes = 0;
-      for (clipIdx = 0; clipIdx < numClipPlanes; clipIdx++) {
-        if (dot(clipPlanes[clipIdx].xyz, texCoord) + clipPlanes[clipIdx].w < 0) {
-          activeClipPlanes += 1;
-        }
-      }
-
-      /*
-       * If the current position is in the
-       * intersection (1), union (2), or
-       * complement (3) of all clipping
-       * planes, then don't sample this
-       * point, and keep casting.
-       */
-      if (numClipPlanes > 0) {
-        clip = false;
-        if      (clipMode == 1) { if (activeClipPlanes == numClipPlanes) { clip = true; } }
-        else if (clipMode == 2) { if (activeClipPlanes >= 1)             { clip = true; } }
-        else if (clipMode == 3) { if (activeClipPlanes == 0)             { clip = true; } }
-        if (clip) {
-          /*
-           * For lighting, we need to know if we
-           * are on the boundary of a clipped region.
-           * This is used (and re-set) below.
-           */
-          clipBoundary = true;
-          continue;
-        }
+      /* check if we're in a clipped region */
+      if (is_clipped(texCoord, numClipPlanes, clipPlanes, clipMode)) {
+        continue;
       }
 
       /*
@@ -282,7 +269,6 @@ void main(void) {
           depth = tex2ScreenXform * vec4(texCoord, 1.0);
         }
       }
-      clipBoundary = false;
     }
 
     if (nsamples > 0) {
