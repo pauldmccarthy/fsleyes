@@ -98,7 +98,13 @@ def test_render_sceneopts_lightbox():
 
 
 def test_render_sceneopts_3d():
-    tests = '\n'.join(['-dl {}'.format(t) for t in cli_tests.split('\n')])
+    tests = []
+    for t in cli_tests:
+        if 'nii' in t:
+            tests.append('-dl {}'.format(t))
+        else:
+            tests.append(t)
+    tests = '\n'.join(tests)
     run_cli_tests('test_render_sceneopts_3d',
                   tests,
                   extras=extras,
