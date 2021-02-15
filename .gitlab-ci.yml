@@ -146,6 +146,7 @@ variables:
     - docker:dind
   when: manual
   allow_failure: true
+  <<: *only_master
 
   script:
     - mkdir -p $HOME/.docker/
