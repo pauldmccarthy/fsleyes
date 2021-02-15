@@ -99,12 +99,13 @@ def test_render_sceneopts_lightbox():
 
 def test_render_sceneopts_3d():
     tests = []
-    for t in cli_tests:
+    for t in cli_tests.split('\n'):
         if 'nii' in t:
             tests.append('-dl {}'.format(t))
         else:
             tests.append(t)
     tests = '\n'.join(tests)
+
     run_cli_tests('test_render_sceneopts_3d',
                   tests,
                   extras=extras,
@@ -129,7 +130,10 @@ def test_render_fsl_sceneopts_lightbox():
 
 @pytest.mark.skipif('not haveFSL()')
 def test_render_fsl_sceneopts_3d():
-    tests = '\n'.join(['-dl {}'.format(t) for t in fsl_cli_tests.split('\n')])
+    tests = [t.strip() for t in fsl_cli_tests.split('\n')]
+    tests = [t for t in tests if (t != '') and (t[0] != '#')]
+    tests = '\n'.join(['-dl {}'.format(t) for t in tests])
+
     run_cli_tests('test_render_fsl_sceneopts_3d',
                   tests,
                   extras=extras,
