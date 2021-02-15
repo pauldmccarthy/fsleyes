@@ -10,7 +10,7 @@ ENV LANG             "C.UTF-8"
 
 ADD scripts/install_system_deps.sh /scripts/install_system_deps.sh
 ADD scripts/install_python.sh      /scripts/install_python.sh
-ADD scripts/compile_wxpython4.sh   /scripts/ubuntu_compile_wxpython4.sh
+ADD scripts/compile_wxpython4.sh   /scripts/compile_wxpython4.sh
 ADD scripts/install_python_deps.sh /scripts/install_python_deps.sh
 ADD scripts/install_dcm2niix.sh    /scripts/install_dcm2niix.sh
 
