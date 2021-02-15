@@ -3,13 +3,14 @@
 set -e
 
 apt-get install -y bc
+
 # Temporary: this should be done
-# in docker image definition
+# in docker image definitions
 apt install -y locales
 locale-gen en_US.UTF-8
 locale-gen en_GB.UTF-8
 update-locale
-
+export LANG=en_GB.UTF-8
 
 # If running on a fork repository, we merge in the
 # upstream/master branch. This is done so that merge
