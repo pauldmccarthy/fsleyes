@@ -72,7 +72,8 @@ if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || t
 if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
 if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 
-# Run the tests
+# Run the tests. First batch requires
+# a GUI, so we run via xvfb-run
 export MPLBACKEND=wxagg
 export FSLEYES_TEST_GL=2.1
 ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
@@ -80,19 +81,22 @@ status=`cat status`
 failed=$status
 sleep 5
 
-((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
+# Remaining tests are all off-screen,
+# so we can use osmesa
+export PYOPENGL_PLATFORM=osmesa
+((pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 sleep 5
 
-((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 sleep 5
 
 # test overlay types for GL14 as well
 export FSLEYES_TEST_GL=1.4
-((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
