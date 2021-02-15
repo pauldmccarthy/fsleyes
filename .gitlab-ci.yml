@@ -3,8 +3,6 @@
 #
 #    https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 #
-# The build pipeline currently comprises the following stages:
-#
 #    1. test:      Unit tests
 #
 #    2. style:     Check coding style
@@ -17,12 +15,13 @@
 #    5. deploy:    Uploading the source and wheel distributions
 #                  PyPI
 #
-#    6. docker:    (Re-)build and upload docker test images
-#
 # Custom docker images are used for several jobs - these images are
 # available at:
 #
 #    https://hub.docker.com/u/pauldmccarthy/
+#
+# These images can be re-built by manually invoked CI jobs defined within
+# the "test" stage.
 #
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
@@ -32,20 +31,18 @@
 # The build and deploy stages are only executed on release tags on
 # the upstream repository.
 #
-# The docker stage can be manually invoked on the upstream repository.
-#
 # Source and wheel distributions are deployed to pypi for release tags.
 #
 ###########################################################################
 
 
 stages:
+ - docker
  - test
  - style
  - doc
  - build
  - deploy
- - docker
 
 
 #################################################################################
@@ -134,17 +131,52 @@ variables:
     - bash ./.ci/setup_ssh.sh
 
 
-###################################################
-# The check_version anchor contains a before_script
-# section which is run on release builds, and makes
-# sure that the version in the code is up to date
-# (i.e. equal to the tag name).
-###################################################
+##############
+# Docker stage
+##############
 
 
-.check_version: &check_version
-  before_script:
-    - bash ./.ci/check_version.sh
+# (Re-)builds docker images for testing.
+.build-docker-image:
+  stage: docker
+  image: docker:latest
+  tags:
+    - docker_build
+  services:
+    - docker:dind
+  when: manual
+  allow_failure: true
+
+  script:
+    - mkdir -p $HOME/.docker/
+    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+    - export TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
+    - IMAGE="pauldmccarty/$(basename $BUILDDIR)"
+    - DOCKERFILE=${BUILDDIR}/Dockerfile
+    - docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" -f ${DOCKERFILE} ./.docker
+    - docker push "${IMAGE}:${TAG}"
+    - docker push "${IMAGE}:latest"
+
+
+build-docker-image-fsleyes-py36-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py36-wxpy4-gtk3
+
+build-docker-image-fsleyes-py37-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py37-wxpy4-gtk3
+
+build-docker-image-fsleyes-py38-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py38-wxpy4-gtk3
+
+build-docker-image-fsleyes-py39-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py39-wxpy4-gtk3
 
 
 ############
@@ -250,13 +282,17 @@ build-apidoc:
 
 build-pypi-dist:
   <<: *only_releases
-  <<: *check_version
 
   stage: build
   image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
 
   tags:
     - docker
+
+  # Make sure that the version in the code is
+  # up to date (i.e. equal to the tag name).
+  before_script:
+    - bash ./.ci/check_version.sh
 
   script:
    - bash ./.ci/build_pypi_dist.sh
@@ -323,50 +359,3 @@ deploy-zenodo:
 
   script:
     - bash ./.ci/zenodo_deposit.sh fsleyes "$ZENODO_URL" "$ZENODO_TOKEN" "$ZENODO_DEPOSIT_ID"
-
-
-##############
-# Docker stage
-##############
-
-# (Re-)builds docker images for testing.
-.build-docker-image:
-  stage: docker
-  image: docker:latest
-  tags:
-    - docker_build
-  services:
-    - docker:dind
-#  <<: *only_master
-  when: manual
-
-  script:
-    - mkdir -p $HOME/.docker/
-    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
-    - export TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
-    - IMAGE="pauldmccarty/$(basename $BUILDDIR)"
-    - DOCKERFILE=${BUILDDIR}/Dockerfile
-    - docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" -f ${DOCKERFILE} ./.docker
-    - docker push "${IMAGE}:${TAG}"
-    - docker push "${IMAGE}:latest"
-
-
-build-docker-image-fsleyes-py36-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py36-wxpy4-gtk3
-
-build-docker-image-fsleyes-py37-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py37-wxpy4-gtk3
-
-build-docker-image-fsleyes-py38-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py38-wxpy4-gtk3
-
-build-docker-image-fsleyes-py39-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py39-wxpy4-gtk3
