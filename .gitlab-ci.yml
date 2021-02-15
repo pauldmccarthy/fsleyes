@@ -150,8 +150,8 @@ variables:
   script:
     - mkdir -p $HOME/.docker/
     - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
-    - export TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
-    - IMAGE="pauldmccarty/$(basename $BUILDDIR)"
+    - TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
+    - IMAGE="pauldmccarthy/$(basename $BUILDDIR)"
     - DOCKERFILE=${BUILDDIR}/Dockerfile
     - docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" -f ${DOCKERFILE} ./.docker
     - docker push "${IMAGE}:${TAG}"
