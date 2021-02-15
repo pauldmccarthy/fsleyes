@@ -189,13 +189,6 @@ import fsleyes_widgets                    as fwidgets
 log = logging.getLogger(__name__)
 
 
-# When running under X, indirect rendering fails for
-# unknown reasons, so I'm forcing direct rendering.
-# If direct rendering is not available, I don't know
-# what to do.
-os.environ.pop('LIBGL_ALWAYS_INDIRECT', None)
-
-
 import OpenGL  # noqa
 
 
@@ -213,13 +206,6 @@ OpenGL.ERROR_LOGGING  = True
 # If FULL_LOGGING is enabled,
 # every GL call will be logged.
 # OpenGL.FULL_LOGGING   = True
-
-
-# Using PyOpenGL 3.1 (and OSX Mavericks 10.9.4 on a MacbookPro11,3), the
-# OpenGL.contextdata.setValue method throws 'unhashable type' TypeErrors
-# unless we set STORE_POINTERS to False. I don't know why.
-if os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa':
-    OpenGL.STORE_POINTERS = False
 
 
 def bootstrap(glVersion=None):
