@@ -5,6 +5,8 @@ ENV PY_VERSION       "python3.7"
 ENV PY_PACKAGES      "python3-pip python3.7-venv"
 ENV PY_VENV          "python3.7 -m venv"
 ENV WXPYTHON_VERSION "wxPython-4.1.1"
+ENV DEBIAN_FRONTEND  "noninteractive"
+ENV LANG             "C.UTF-8"
 
 ADD scripts/install_system_deps.sh /scripts/install_system_deps.sh
 ADD scripts/install_python.sh      /scripts/install_python.sh
