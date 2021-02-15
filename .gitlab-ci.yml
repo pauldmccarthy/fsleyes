@@ -3,24 +3,28 @@
 #
 #    https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 #
-# The build pipeline currently comprises the following stages:
+#    0. docker:    (Re-)build docker test images (upstream only, manually
+#                  invoked)
 #
 #    1. test:      Unit tests
 #
 #    2. style:     Check coding style
 #
-#    3. doc:       Building user and API documentation
+#    3. doc:       Building user and API documentation (upstream only)
 #
 #    4. build:     Building source and wheel distributions for
-#                  releases
+#                  releases (tags on upstream only)
 #
-#    6. deploy:    Uploading the source and wheel distributions
-#                  and the documentation to hosting servers.
+#    5. deploy:    Uploading the source and wheel distributions
+#                  PyPI (tags on upstream only, manually invoked)
 #
 # Custom docker images are used for several jobs - these images are
 # available at:
 #
 #    https://hub.docker.com/u/pauldmccarthy/
+#
+# These images can be re-built by manually invoked CI jobs defined within
+# the "docker" stage.
 #
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
@@ -32,12 +36,11 @@
 #
 # Source and wheel distributions are deployed to pypi for release tags.
 #
-# User and API documentation is deployed to a hosting server for all
-# branches.
 ###########################################################################
 
 
 stages:
+ - docker
  - test
  - style
  - doc
@@ -131,17 +134,47 @@ variables:
     - bash ./.ci/setup_ssh.sh
 
 
-###################################################
-# The check_version anchor contains a before_script
-# section which is run on release builds, and makes
-# sure that the version in the code is up to date
-# (i.e. equal to the tag name).
-###################################################
+##############
+# Docker stage
+##############
 
 
-.check_version: &check_version
-  before_script:
-    - bash ./.ci/check_version.sh
+# (Re-)builds docker images for testing.
+.build-docker-image:
+  stage: docker
+  image: docker:latest
+  tags:
+    - docker_build
+  services:
+    - docker:dind
+  when: manual
+  allow_failure: true
+  <<: *only_master
+
+  script:
+    - mkdir -p $HOME/.docker/
+    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+    - TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
+    - IMAGE="pauldmccarthy/$(basename $BUILDDIR)"
+    - DOCKERFILE=${BUILDDIR}/Dockerfile
+    - docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" -f ${DOCKERFILE} ./.docker
+    - docker push "${IMAGE}:${TAG}"
+    - docker push "${IMAGE}:latest"
+
+build-docker-image-fsleyes-py37-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py37-wxpy4-gtk3
+
+build-docker-image-fsleyes-py38-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py38-wxpy4-gtk3
+
+build-docker-image-fsleyes-py39-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py39-wxpy4-gtk3
 
 
 ############
@@ -247,13 +280,17 @@ build-apidoc:
 
 build-pypi-dist:
   <<: *only_releases
-  <<: *check_version
 
   stage: build
   image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
 
   tags:
     - docker
+
+  # Make sure that the version in the code is
+  # up to date (i.e. equal to the tag name).
+  before_script:
+    - bash ./.ci/check_version.sh
 
   script:
    - bash ./.ci/build_pypi_dist.sh
