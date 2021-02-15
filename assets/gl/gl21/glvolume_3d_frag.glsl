@@ -261,12 +261,65 @@ vec3 volume_gradient(vec3      texCoord,
 
   return vec3(xback - xfwd, yback - yfwd, zback - zfwd) / (2 * stepSize);
 }
+vec3 volume_gradient(vec3      texCoord,
+                     sampler2D imageTexture,
+                     float     stepSize,
+                     int       numClipPlanes,
+                     vec4      clipPlanes[5],
+                     int       clipMode) {
+
+  vec3 xstep      = vec3(stepSize, 0, 0);
+  vec3 ystep      = vec3(0, stepSize, 0);
+  vec3 xbackcoord = texCoord - xstep;
+  vec3 xfwdcoord  = texCoord + xstep;
+  vec3 ybackcoord = texCoord - ystep;
+  vec3 yfwdcoord  = texCoord + ystep;
+
+  float xback = 0;
+  float xfwd  = 0;
+  float yback = 0;
+  float yfwd  = 0;
+
+  if (!is_clipped(xbackcoord, numClipPlanes, clipPlanes, clipMode)) {
+    xback = texture2D(imageTexture, xbackcoord.xy).x;
+  }
+  if (!is_clipped(xfwdcoord, numClipPlanes, clipPlanes, clipMode)) {
+    xfwd = texture2D(imageTexture, xfwdcoord.xy).x;
+  }
+  if (!is_clipped(ybackcoord, numClipPlanes, clipPlanes, clipMode)) {
+    yback = texture2D(imageTexture, ybackcoord.xy).x;
+  }
+  if (!is_clipped(yfwdcoord, numClipPlanes, clipPlanes, clipMode)) {
+    yfwd = texture2D(imageTexture, yfwdcoord.xy).x;
+  }
+
+  return vec3(xback - xfwd, yback - yfwd, 0) / (2 * stepSize);
+}
 
 /*
  * Apply the Phong lighting model to the given colour, sampled from a volume.
  */
 vec3 volume_lighting(vec3      texCoord,
                      sampler3D imageTexture,
+                     vec3      lightPos,
+                     vec3      colour,
+                     int       numClipPlanes,
+                     vec4      clipPlanes[5],
+                     int       clipMode) {
+
+  float stepSize = 0.01;
+  vec3  normal   = volume_gradient(texCoord,
+                                   imageTexture,
+                                   stepSize,
+                                   numClipPlanes,
+                                   clipPlanes,
+                                   clipMode);
+
+  normal = normalize(gl_NormalMatrix * normal);
+  return phong_lighting(texCoord, normal, lightPos, colour);
+}
+vec3 volume_lighting(vec3      texCoord,
+                     sampler2D imageTexture,
                      vec3      lightPos,
                      vec3      colour,
                      int       numClipPlanes,
