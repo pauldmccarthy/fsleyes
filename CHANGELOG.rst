@@ -39,6 +39,8 @@ Changed
   light source with respect to the centre of the display bounding box. This
   can be combined with the new ``--lightDistance`` option to specify the
   position of the light source.
+* FSLeyes no longer ignores the ``LIBGL_ALWAYS_INDIRECT`` environment
+  variable.
 
 
 Fixed

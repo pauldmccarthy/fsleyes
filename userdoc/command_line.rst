@@ -365,7 +365,9 @@ as the **first** argument to FSLeyes::
 
 The ``fsleyes render`` command will also work on systems which do not have a
 display (e.g. cluster nodes), as long as the `osmesa
-<https://docs.mesa3d.org/osmesa.html>`_ library is available.
+<https://docs.mesa3d.org/osmesa.html>`_ library is available. In order to use
+``osmesa``, you need to set the ``PYOPENGL_PLATFORM="osmesa"`` environment
+variable.
 
 
 You can access command line help in the same manner as :ref:`described above
