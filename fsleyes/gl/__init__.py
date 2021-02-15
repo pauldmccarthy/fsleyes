@@ -522,8 +522,9 @@ class GLContext(object):
         self.__parent    = None
         self.__app       = None
 
-        canHaveGui       = fslplatform.canHaveGui
-        haveGui          = fslplatform.haveGui
+        osmesa     = os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa'
+        canHaveGui = fslplatform.canHaveGui
+        haveGui    = fslplatform.haveGui
 
         # On-screen contexts *must* be
         # created via a wx event loop
@@ -532,9 +533,10 @@ class GLContext(object):
                              'created on the wx.MainLoop')
 
         # For off-screen, only use OSMesa
-        # if we have no cnoice. Otherewise
-        # we use wx if possible
-        if offscreen and not canHaveGui:
+        # if we have no cnoice, or if
+        # dictaged by PYOPENGL_PLATFORM.
+        # Otherewise we use wx if possible.
+        if offscreen and (osmesa or (not canHaveGui)):
             self.__createOSMesaContext()
             ready()
             return
