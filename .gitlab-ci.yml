@@ -14,8 +14,10 @@
 #    4. build:     Building source and wheel distributions for
 #                  releases
 #
-#    6. deploy:    Uploading the source and wheel distributions
-#                  and the documentation to hosting servers.
+#    5. deploy:    Uploading the source and wheel distributions
+#                  PyPI
+#
+#    6. docker:    (Re-)build and upload docker test images
 #
 # Custom docker images are used for several jobs - these images are
 # available at:
@@ -30,10 +32,10 @@
 # The build and deploy stages are only executed on release tags on
 # the upstream repository.
 #
+# The docker stage can be manually invoked on the upstream repository.
+#
 # Source and wheel distributions are deployed to pypi for release tags.
 #
-# User and API documentation is deployed to a hosting server for all
-# branches.
 ###########################################################################
 
 
@@ -43,6 +45,7 @@ stages:
  - doc
  - build
  - deploy
+ - docker
 
 
 #################################################################################
@@ -320,3 +323,50 @@ deploy-zenodo:
 
   script:
     - bash ./.ci/zenodo_deposit.sh fsleyes "$ZENODO_URL" "$ZENODO_TOKEN" "$ZENODO_DEPOSIT_ID"
+
+
+##############
+# Docker stage
+##############
+
+# (Re-)builds docker images for testing.
+.build-docker-image:
+  stage: docker
+  image: docker:latest
+  tags:
+    - docker_build
+  services:
+    - docker:dind
+#  <<: *only_master
+  when: manual
+
+  script:
+    - mkdir -p $HOME/.docker/
+    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+    - export TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
+    - IMAGE="pauldmccarty/$(basename $BUILDDIR)"
+    - DOCKERFILE=${BUILDDIR}/Dockerfile
+    - docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" -f ${DOCKERFILE} ./.docker
+    - docker push "${IMAGE}:${TAG}"
+    - docker push "${IMAGE}:latest"
+
+
+build-docker-image-fsleyes-py36-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py36-wxpy4-gtk3
+
+build-docker-image-fsleyes-py37-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py37-wxpy4-gtk3
+
+build-docker-image-fsleyes-py38-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py38-wxpy4-gtk3
+
+build-docker-image-fsleyes-py39-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/build-docker-image-fsleyes-py39-wxpy4-gtk3
