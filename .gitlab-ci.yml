@@ -3,17 +3,20 @@
 #
 #    https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes
 #
+#    0. docker:    (Re-)build docker test images (upstream only, manually
+#                  invoked)
+#
 #    1. test:      Unit tests
 #
 #    2. style:     Check coding style
 #
-#    3. doc:       Building user and API documentation
+#    3. doc:       Building user and API documentation (upstream only)
 #
 #    4. build:     Building source and wheel distributions for
-#                  releases
+#                  releases (tags on upstream only)
 #
 #    5. deploy:    Uploading the source and wheel distributions
-#                  PyPI
+#                  PyPI (tags on upstream only, manually invoked)
 #
 # Custom docker images are used for several jobs - these images are
 # available at:
@@ -21,7 +24,7 @@
 #    https://hub.docker.com/u/pauldmccarthy/
 #
 # These images can be re-built by manually invoked CI jobs defined within
-# the "test" stage.
+# the "docker" stage.
 #
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
