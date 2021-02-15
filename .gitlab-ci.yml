@@ -157,12 +157,6 @@ variables:
     - docker push "${IMAGE}:${TAG}"
     - docker push "${IMAGE}:latest"
 
-
-build-docker-image-fsleyes-py36-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/fsleyes-py36-wxpy4-gtk3
-
 build-docker-image-fsleyes-py37-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
