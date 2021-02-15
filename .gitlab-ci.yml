@@ -161,22 +161,22 @@ variables:
 build-docker-image-fsleyes-py36-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py36-wxpy4-gtk3
+    BUILDDIR: .docker/fsleyes-py36-wxpy4-gtk3
 
 build-docker-image-fsleyes-py37-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py37-wxpy4-gtk3
+    BUILDDIR: .docker/fsleyes-py37-wxpy4-gtk3
 
 build-docker-image-fsleyes-py38-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py38-wxpy4-gtk3
+    BUILDDIR: .docker/fsleyes-py38-wxpy4-gtk3
 
 build-docker-image-fsleyes-py39-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
-    BUILDDIR: .docker/build-docker-image-fsleyes-py39-wxpy4-gtk3
+    BUILDDIR: .docker/fsleyes-py39-wxpy4-gtk3
 
 
 ############
