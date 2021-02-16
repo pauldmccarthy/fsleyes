@@ -21,6 +21,11 @@ apt-get install -y --ignore-missing \
   libhdf5-dev \
   openssh-client
 
+apt install -y locales
+locale-gen en_US.UTF-8
+locale-gen en_GB.UTF-8
+update-locale
+
 cat /etc/lsb-release | grep "14.04" && apt-get install -y libspatialindex-c3   || true
 cat /etc/lsb-release | grep "16.04" && apt-get install -y libspatialindex-c4v5 || true
 cat /etc/lsb-release | grep "18.04" && apt-get install -y libspatialindex-c4v5 || true
