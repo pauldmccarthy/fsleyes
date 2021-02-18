@@ -182,6 +182,7 @@ import logging
 import platform
 
 import fsl.utils.idle                     as idle
+import fsl.version                        as fslversion
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
 
@@ -739,13 +740,27 @@ class GLContext(object):
         import                wx
         import wx.glcanvas as wxgl
 
+        # Versions of wxwidgets 3.1 and newer (approximately
+        # corresponding to wxpython 4.1 and newer) allow
+        # us to select a GL compatibility profile (required,
+        # because we rely on GL 1.4/2.1).
+        wxver = fwidgets.wxVersion()
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            attrs  = wxgl.GLContextAttrs()
+            attrs.CompatibilityProfile()
+            attrs.EndList()
+            kwargs = {'ctxAttrs' : attrs}
+        else:
+            kwargs = {}
+
         log.debug('Creating wx.GLContext')
 
         if other is not None:
-            self.__context = wxgl.GLContext(target, other=other)
+            self.__context = wxgl.GLContext(target, other=other, **kwargs)
 
         else:
-            self.__context = wxgl.GLContext(self.__canvas)
+            self.__context = wxgl.GLContext(self.__canvas, **kwargs)
 
             # We can't set the context target
             # until the dummy canvas is
