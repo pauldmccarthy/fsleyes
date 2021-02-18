@@ -209,7 +209,25 @@ OpenGL.ERROR_LOGGING  = True
 # OpenGL.FULL_LOGGING   = True
 
 
-def selectPyOpenGLPlatform():
+GL_VERSION = None
+"""Set in :func:`bootstrap`. String containing the available "major.minor"
+OpenGL version.
+"""
+
+
+GL_COMPATIBILITY = None
+"""Set in :func:`bootstrap`. String containing the target "major.minor"
+OpenGL compatibility version ("1.4" or "2.1").
+"""
+
+
+GL_RENDERER = None
+"""Set in :func:`bootstrap`. Contains a description of the OpenGL renderer in
+ use.
+"""
+
+
+def _selectPyOpenGLPlatform():
     """Pyopengl sometimes doesn't select a suitable platform, so in some
     circumstances we need to force things (but not if ``PYOPENGL_PLATFORM``
     is already set in the environment).
@@ -232,7 +250,25 @@ def selectPyOpenGLPlatform():
             os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 
-selectPyOpenGLPlatform()
+_selectPyOpenGLPlatform()
+
+
+def glIsSoftwareRenderer():
+    """Returns ``True`` if the OpenGL renderer appears to be software based,
+    ``False`` otherwise, or ``None`` :func:`bootstrap` has not been called yet.
+
+    .. note:: This check is based on heuristics, ans is not guaranteed to
+              be correct.
+    """
+    if GL_RENDERER is None:
+        return None
+    # There doesn't seem to be any quantitative
+    # method for determining whether we are using
+    # software-based rendering, so a hack is
+    # necessary.
+    renderer = GL_RENDERER.lower()
+    return any(('software' in renderer,
+                'chromium' in renderer))
 
 
 def bootstrap(glVersion=None):
@@ -257,8 +293,10 @@ def bootstrap(glVersion=None):
 
 
     ====================== ====================================================
-    ``GL_VERSION``         A string containing the target OpenGL version, in
+    ``GL_COMPATIBILITY``   A string containing the target OpenGL version, in
                            the format ``major.minor``, e.g. ``2.1``.
+
+    ``GL_VERSION``         A string containing the available OpenGL version.
 
     ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
 
@@ -294,11 +332,6 @@ def bootstrap(glVersion=None):
     ====================== ====================================================
 
 
-    This function also sets the :attr:`.Platform.glVersion` and
-    :attr:`.Platform.glRenderer` properties of the
-    :attr:`fsl.utils.platform.platform` instance.
-
-
     :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
                     version to use. If ``None``, the best possible API
                     version will be used.
@@ -316,8 +349,8 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glVer = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
-        major, minor = [int(v) for v in glVer.split('.')][:2]
+        glver = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
+        major, minor = [int(v) for v in glver.split('.')][:2]
     else:
         major, minor = glVersion
 
@@ -351,7 +384,7 @@ def bootstrap(glVersion=None):
                         'to an older OpenGL implementation.'
                         .format(', '.join(exts)))
             verstr = '1.4'
-            glpkg = gl14
+            glpkg  = gl14
 
     # If using GL14, and the ARB_vertex_program
     # and ARB_fragment_program extensions are
@@ -383,9 +416,8 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    # Populate this module, and set
-    # the fsl.utils.platform GL fields
-    thismod.GL_VERSION         = verstr
+    thismod.GL_VERSION         = str(glVersion)
+    thismod.GL_COMPATIBILITY   = verstr
     thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
@@ -398,8 +430,6 @@ def bootstrap(glVersion=None):
     thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
-    fslplatform.glVersion      = glVersion
-    fslplatform.glRenderer     = thismod.GL_RENDERER
 
     # If we're using a software based renderer,
     # reduce the default performance settings
@@ -407,9 +437,9 @@ def bootstrap(glVersion=None):
     # But SVGA3D/llvmpipe are super fast, so if
     # we're using either of them, pretend that
     # we're on hardware
-    if fslplatform.glIsSoftwareRenderer                 and \
-       'llvmpipe' not in fslplatform.glRenderer.lower() and \
-       'svga3d'   not in fslplatform.glRenderer.lower():
+    if glIsSoftwareRenderer()                and \
+       'llvmpipe' not in GL_RENDERER.lower() and \
+       'svga3d'   not in GL_RENDERER.lower():
 
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')
@@ -550,8 +580,8 @@ class GLContext(object):
         self.__app       = None
 
         osmesa     = os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa'
-        canHaveGui = fslplatform.canHaveGui
-        haveGui    = fslplatform.haveGui
+        canHaveGui = fwidgets.canHaveGui()
+        haveGui    = fwidgets.haveGui()
 
         # On-screen contexts *must* be
         # created via a wx event loop
@@ -917,7 +947,7 @@ as the meta-class.  This is not necessary under Python2/wxPython.
 """
 
 
-if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
 
     import wx.siplib as sip
     WXGLMetaClass = sip.wrappertype
@@ -1025,7 +1055,7 @@ class WXGLCanvasTarget(object):
         # for each display. If we don't, then strange
         # refresh problems will occur.
         if platform.system() == 'Darwin' and \
-           'software' in fslplatform.glRenderer.lower():
+           'software' in GL_RENDERER.lower():
 
             log.debug('Creating separate GL context for '
                       'WXGLCanvasTarget {}'.format(id(self)))
