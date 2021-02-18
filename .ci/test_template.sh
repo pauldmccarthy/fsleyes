@@ -84,7 +84,6 @@ sleep 5
 
 # Remaining tests are all off-screen,
 # so we can use osmesa
-export PYOPENGL_PLATFORM=osmesa
 ((pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
