@@ -12,18 +12,17 @@ encapsulates the data and logic required to render 2D slice of an
 
 import logging
 
-import numpy                              as np
-import OpenGL.GL                          as gl
+import numpy                     as np
+import OpenGL.GL                 as gl
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.idle                     as idle
-import fsl.transform.affine               as affine
-import fsleyes.gl                         as fslgl
-import fsleyes.gl.routines                as glroutines
-import fsleyes.gl.shaders.filter          as glfilter
-from . import                                textures
-from . import                                glimageobject
-from . import resources                   as glresources
+import fsl.utils.idle            as idle
+import fsl.transform.affine      as affine
+import fsleyes.gl                as fslgl
+import fsleyes.gl.routines       as glroutines
+import fsleyes.gl.shaders.filter as glfilter
+from . import                       textures
+from . import                       glimageobject
+from . import resources          as glresources
 
 
 log = logging.getLogger(__name__)
@@ -1051,7 +1050,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.Volume3DOpts.numClipPlanes` property
         changes.
         """
-        if float(fslplatform.glVersion) == 1.4:
+        if float(fslgl.GL_COMPATIBILITY) == 1.4:
             fslgl.glvolume_funcs.compileShaders(self)
         self.updateShaderState(alwaysNotify=True)
 
@@ -1060,7 +1059,7 @@ class GLVolume(glimageobject.GLImageObject):
         """Called when the :attr:`.Volume3DOpts.clipMode` property
         changes.
         """
-        if float(fslplatform.glVersion) == 1.4:
+        if float(fslgl.GL_COMPATIBILITY) == 1.4:
             fslgl.glvolume_funcs.compileShaders(self)
         self.updateShaderState(alwaysNotify=True)
 

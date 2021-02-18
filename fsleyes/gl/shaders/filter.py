@@ -12,11 +12,10 @@ to loading and running simple filter shader programs, which require a
 
 import collections
 
+import OpenGL.GL          as gl
 
-import OpenGL.GL                          as gl
-
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes.gl.shaders                 as shaders
+import fsleyes.gl         as fslgl
+import fsleyes.gl.shaders as shaders
 
 
 GL14_CONSTANTS = collections.defaultdict(dict, {
@@ -74,7 +73,7 @@ class Filter(object):
         self.__texture  = texture
         self.__basename = basename
 
-        if float(fslplatform.glVersion) >= 2.1:
+        if float(fslgl.GL_COMPATIBILITY) >= 2.1:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
         else:
             constants = {n : 1 for n in GL14_CONSTANTS[basename]}
@@ -110,7 +109,7 @@ class Filter(object):
         shader.load()
 
         kwargs        = dict(kwargs)
-        glver         = float(fslplatform.glVersion)
+        glver         = float(fslgl.GL_COMPATIBILITY)
         needRecompile = False
 
         if glver >= 2.1:
@@ -172,7 +171,7 @@ class Filter(object):
         shader.loadAtts()
         shader.setAtt('texCoord', texCoords)
 
-        if float(fslplatform.glVersion) >= 2.1:
+        if float(fslgl.GL_COMPATIBILITY) >= 2.1:
             shader.setAtt('vertex', vertices)
             source.draw(**kwargs)
         else:

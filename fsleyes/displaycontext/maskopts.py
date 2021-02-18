@@ -12,10 +12,10 @@ for displaying an :class:`.Image` overlay as a binary mask.
 import copy
 import logging
 
-import fsleyes_props                      as props
-from   fsl.utils.platform import platform as fslplatform
-from . import                                volumeopts
-from . import                                niftiopts
+import fsleyes_props   as props
+import fsleyes.gl      as fslgl
+from . import             volumeopts
+from . import             niftiopts
 
 
 log = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class MaskOpts(niftiopts.NiftiOpts):
 
         # We need GL >= 2.1 for
         # spline interpolation
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])

@@ -16,11 +16,10 @@ import logging
 import platform
 from collections import OrderedDict
 
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes_widgets.utils.status       as status
-import fsleyes.strings                    as strings
-import fsleyes.state                      as fslstate
-from . import                                base
+import fsleyes_widgets.utils.status as status
+import fsleyes.strings              as strings
+import fsleyes.state                as fslstate
+from . import                          base
 
 
 log = logging.getLogger(__name__)
@@ -135,18 +134,17 @@ class DiagnosticReportAction(base.Action):
         OpenGL platform.
         """
 
-        import OpenGL.GL as gl
+        import fsleyes.gl as fslgl
+        import OpenGL.GL  as gl
 
-        report = OrderedDict()
-
-        version    = gl.glGetString( gl.GL_VERSION)   .decode('ascii')
-        renderer   = gl.glGetString( gl.GL_RENDERER)  .decode('ascii')
+        texsize    = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
         extensions = gl.glGetString( gl.GL_EXTENSIONS).decode('ascii')
 
-        report['Version']       = version
-        report['Compatibility'] = fslplatform.glVersion
-        report['Renderer']      = renderer
-        report['Texture size']  = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
+        report                  = OrderedDict()
+        report['Version']       = fslgl.GL_VERSION
+        report['Compatibility'] = fslgl.GL_COMPATIBILITY
+        report['Renderer']      = fslgl.GL_RENDERER
+        report['Texture size']  = texsize
         report['Extensions']    = extensions.split(' ')
 
         return report

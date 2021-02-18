@@ -12,9 +12,9 @@ settings used by :class:`.CanvasPanel` instances.
 import copy
 import logging
 
-from   fsl.utils.platform import platform  as fslplatform
-import fsleyes_props                       as props
-import fsleyes.colourmaps                  as fslcm
+import fsleyes_props      as props
+import fsleyes.gl         as fslgl
+import fsleyes.colourmaps as fslcm
 
 from . import canvasopts
 
@@ -121,22 +121,16 @@ class SceneOpts(props.HasProperties):
 
     @property
     def defaultMovieSyncRefresh(self):
-        """
-        # In movie mode, the canvas refreshes are
-        # performed by the __syncMovieRefresh or
-        # __unsyncMovieRefresh methods of the
-        # CanvasPanel class. Some platforms/GL
-        # drivers/environments seem to have a
-        # problem with separate renders/buffer
-        # swaps, so we have to use a shitty
-        # unsynchronised update routine.
-        #
-        # These heuristics are not perfect - the
-        # movieSyncRefresh property can therefore
-        # be overridden by the user.
+        """In movie mode, the canvas refreshes are performed by the
+        __syncMovieRefresh or __unsyncMovieRefresh methods of the CanvasPanel
+         class. Some platforms/GL drivers/environments seem to have a problem
+        with separate renders/buffer swaps, so we have to use a shitty
+        unsynchronised update routine.
 
+        These heuristics are not perfect - the movieSyncRefresh property can
+        therefore be overridden by the user.
         """
-        renderer        = fslplatform.glRenderer.lower()
+        renderer        = fslgl.GL_RENDERER.lower()
         unsyncRenderers = ['gallium', 'mesa dri intel(r)']
         unsync          = any([r in renderer for r in unsyncRenderers])
 

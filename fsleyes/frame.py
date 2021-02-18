@@ -20,19 +20,19 @@ import              logging
 import six
 
 import wx
-import wx.lib.agw.aui                     as aui
+import wx.lib.agw.aui               as aui
 
-import fsl.utils.idle                     as idle
-import fsl.utils.settings                 as fslsettings
-import fsl.utils.deprecated               as deprecated
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes_widgets.dialog             as fsldlg
-import fsleyes_widgets.utils.status       as status
+import fsl.utils.idle               as idle
+import fsl.utils.settings           as fslsettings
+import fsl.utils.deprecated         as deprecated
+import fsleyes_widgets              as fwidgets
+import fsleyes_widgets.dialog       as fsldlg
+import fsleyes_widgets.utils.status as status
 
-import fsleyes.strings                    as strings
-import fsleyes.plugins                    as plugins
-import fsleyes.autodisplay                as autodisplay
-import fsleyes.profiles.shortcuts         as shortcuts
+import fsleyes.strings              as strings
+import fsleyes.plugins              as plugins
+import fsleyes.autodisplay          as autodisplay
+import fsleyes.profiles.shortcuts   as shortcuts
 
 from . import actions
 from . import tooltips
@@ -1515,10 +1515,10 @@ class FSLeyesFrame(wx.Frame):
         # than the menu bar on OSX/wxPhoenix, or on Linux.
         # This is because under OSX/wxPython, we can't get
         # access to the built-in application menu.
-        onOSX          = fslplatform.wxPlatform in (fslplatform.WX_MAC_CARBON,
-                                                    fslplatform.WX_MAC_COCOA)
+        onOSX          = fwidgets.wxPlatform() in (fwidgets.WX_MAC_CARBON,
+                                                   fwidgets.WX_MAC_COCOA)
         haveAppMenu    = (onOSX and
-                          fslplatform.wxFlavour == fslplatform.WX_PHOENIX)
+                          fwidgets.wxFlavour() == fwidgets.WX_PHOENIX)
         locationOffset = 0
 
         # On linux, we create a FSLeyes menu
@@ -1725,7 +1725,7 @@ class FSLeyesFrame(wx.Frame):
 
         for path in self.__recentPathsMenu.GetMenuItems():
             # RemoveItem is deprecated in phoenix
-            if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+            if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
                 self.__recentPathsMenu.Remove(path)
             else:
                 self.__recentPathsMenu.RemoveItem(path)

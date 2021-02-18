@@ -203,9 +203,9 @@ import            sys
 import            logging
 import            warnings
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.settings                 as fslsettings
-import fsleyes.version                    as version
+import fsl.utils.settings as fslsettings
+import fsleyes_widgets    as fwidgets
+import fsleyes.version    as version
 
 
 # The logger is assigned in
@@ -214,7 +214,7 @@ log = None
 
 
 # If set to True, logging will not be configured
-disableLogging = fslplatform.frozen
+disableLogging = fwidgets.frozen()
 
 
 __version__ = version.__version__
@@ -277,7 +277,7 @@ def initialise():
     # application, we'll guess at the
     # location, which will differ depending
     # on the platform
-    if fslplatform.frozen:
+    if fwidgets.frozen():
         mac = op.join(fsleyesDir, '..', '..', '..', '..', 'Resources')
         lnx = op.join(fsleyesDir, '..', 'share', 'FSLeyes')
         options.append(op.normpath(mac))
@@ -328,7 +328,7 @@ def _hacksAndWorkarounds():
     # n.b. This will cause issues if building FSLeyes
     #      with the pyinstaller '--onefile' option, as
     #      discussed in the above pyinstaller file.
-    if fslplatform.frozen:
+    if fwidgets.frozen():
         os.environ.pop('MPLCONFIGDIR', None)
 
     # nibabel rejects NIfTI images where the
@@ -357,7 +357,7 @@ def _hacksAndWorkarounds():
     # Add the current directory to the python
     # path, so that modules can be imported
     # from within notebook/shell environments
-    if fslplatform.frozen:
+    if fwidgets.frozen():
         sys.path.insert(0, '')
 
 
@@ -383,7 +383,7 @@ def configLogging(verbose=0, noisy=None):
         noisy = []
 
     # Show deprecations if running from code
-    if fslplatform.frozen:
+    if fwidgets.frozen():
         warnings.filterwarnings('ignore', category=DeprecationWarning)
     else:
         warnings.filterwarnings('default', category=DeprecationWarning)

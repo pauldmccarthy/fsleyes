@@ -11,7 +11,7 @@ displays an about dialog for *FSLeyes*.
 
 from . import base
 
-from fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets as fwidgets
 
 
 class AboutAction(base.Action):
@@ -41,5 +41,5 @@ class AboutAction(base.Action):
 
         # When running over X11/SSH, CentreOnParent
         # causes the dialog to be moved way off.
-        if not fslplatform.inSSHSession:
+        if not fwidgets.inSSHSession():
             dlg.CentreOnParent()

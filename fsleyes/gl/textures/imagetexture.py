@@ -16,12 +16,12 @@ import collections.abc as abc
 
 import numpy as np
 
-import fsl.transform.affine               as affine
-import fsl.data.imagewrapper              as imagewrapper
-from   fsl.utils.platform import platform as fslplatform
-from . import data                        as texdata
-from . import                                texture2d
-from . import                                texture3d
+import fsl.transform.affine  as affine
+import fsl.data.imagewrapper as imagewrapper
+import fsleyes_widgets       as fwidgets
+from . import data           as texdata
+from . import                   texture2d
+from . import                   texture3d
 
 
 log = logging.getLogger(__name__)
@@ -349,7 +349,7 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
     threadedDefault = None
     """Default value used for the ``threaded`` argument passed to
     :meth:`__init__`. When this is set to ``None``, the default value will be
-    the value of :attr:`.fsl.utils.platform.Platform.haveGui`.
+    the value of :func:`.fsleyes_widgets.haveGui`.
     """
 
 
@@ -401,7 +401,7 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
                                         ImageTexture.threadedDefault)
 
         if kwargs['threaded'] is None:
-            kwargs['threaded'] = fslplatform.haveGui
+            kwargs['threaded'] = fwidgets.haveGui()
 
         ImageTextureBase   .__init__(self, image, nvals, 3)
         texture3d.Texture3D.__init__(self, name, **kwargs)

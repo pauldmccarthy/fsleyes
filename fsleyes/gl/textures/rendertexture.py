@@ -23,10 +23,10 @@ import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
 import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes.gl.routines                as glroutines
-import fsleyes.gl.shaders                 as shaders
-from . import                                texture2d
+import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
+import fsleyes.gl.shaders  as shaders
+from . import                 texture2d
 
 
 log = logging.getLogger(__name__)
@@ -163,7 +163,7 @@ class RenderTexture(texture2d.Texture2D):
         fragSrc   = shaders.getFragmentShader('rendertexture')
         shaderDir = shaders.getShaderDir()
 
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             self.__shader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
 
         else:

@@ -17,7 +17,7 @@ import wx.lib.agw.aui                as aui
 import wx.lib.agw.aui.framemanager   as auifm
 
 import fsl.utils.deprecated          as deprecated
-from   fsl.utils.platform import        platform
+import fsleyes_widgets               as fwidgets
 import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
@@ -707,7 +707,7 @@ class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
                      wx.FRAME_NO_TASKBAR      |
                      wx.CLIP_CHILDREN)
 
-        if platform.inSSHSession:
+        if fwidgets.inSSHSession():
             style &= ~wx.FRAME_TOOL_WINDOW
 
         kwargs['style'] = style
@@ -746,7 +746,7 @@ def _AuiDockingGuide_init(self, *args, **kwargs):
                  wx.FRAME_NO_TASKBAR  |
                  wx.NO_BORDER)
 
-    if platform.inSSHSession:
+    if fwidgets.inSSHSession():
         style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style

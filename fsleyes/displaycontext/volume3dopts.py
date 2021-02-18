@@ -10,10 +10,11 @@ use with :class:`.DisplayOpts` classes.
 
 import numpy as np
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.transform.affine               as affine
-import fsl.utils.deprecated               as deprecated
-import fsleyes_props                      as props
+import fsl.transform.affine as affine
+import fsl.utils.deprecated as deprecated
+import fsleyes_props        as props
+import fsleyes_widgets      as fwidgets
+import fsleyes.gl           as fslgl
 
 
 class Volume3DOpts(object):
@@ -131,7 +132,7 @@ class Volume3DOpts(object):
         # If we're in an X11/SSh session,
         # step down the quality so it's
         # a bit faster.
-        if fslplatform.inSSHSession:
+        if fwidgets.inSSHSession():
             self.numSteps    = 60
             self.resolution  = 70
             self.blendFactor = 0.3
@@ -143,7 +144,7 @@ class Volume3DOpts(object):
         #
         # Also disable blendByIntensity,
         # as it is not implemented on gl14
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             smooth = self.getProp('smoothing')
             smooth.setAttribute(self, 'maxval', 6)
             self.disableProperty('blendByIntensity')
@@ -182,7 +183,7 @@ class Volume3DOpts(object):
         See the :class:`.GLVolume` class for more details.
         """
 
-        if float(fslplatform.glVersion) >= 2.1:
+        if float(fslgl.GL_COMPATIBILITY) >= 2.1:
             return self.numSteps
 
         outer = self.getNumOuterSteps()

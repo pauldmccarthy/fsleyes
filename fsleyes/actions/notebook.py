@@ -28,20 +28,20 @@ import               webbrowser
 import               wx
 import jinja2     as j2
 
-import fsleyes_widgets.utils.progress     as progress
-import fsleyes_widgets.utils.status       as status
-import fsl.utils.settings                 as settings
-from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.tempdir                  as tempdir
-import fsl.utils.idle                     as idle
+import fsleyes_widgets                as fwidgets
+import fsleyes_widgets.utils.progress as progress
+import fsleyes_widgets.utils.status   as status
+import fsl.utils.settings             as settings
+import fsl.utils.tempdir              as tempdir
+import fsl.utils.idle                 as idle
 
-import                                       fsleyes
-import fsleyes.main                       as fsleyes_main
-import fsleyes.strings                    as strings
-import fsleyes.actions.screenshot         as screenshot
+import                                   fsleyes
+import fsleyes.main                   as fsleyes_main
+import fsleyes.strings                as strings
+import fsleyes.actions.screenshot     as screenshot
 
-from . import                                base
-from . import                                runscript
+from . import                            base
+from . import                            runscript
 
 try:
     import                            zmq
@@ -602,7 +602,7 @@ class NotebookServer(threading.Thread):
         # can't just call a python interpreter,
         # so we use a hook in fsleyes.main to
         # call actions.notebook_main.main.
-        if fslplatform.frozen:
+        if fwidgets.frozen():
             cmd = [op.join(op.dirname(sys.executable), 'fsleyes')]
         else:
             cmd = [sys.executable, fsleyes_main.__file__]
