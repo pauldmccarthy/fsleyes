@@ -208,6 +208,32 @@ OpenGL.ERROR_LOGGING  = True
 # OpenGL.FULL_LOGGING   = True
 
 
+def selectPyOpenGLPlatform():
+    """Pyopengl sometimes doesn't select a suitable platform, so in some
+    circumstances we need to force things (but not if ``PYOPENGL_PLATFORM``
+    is already set in the environment).
+    """
+    if 'PYOPENGL_PLATFORM' in os.environ:
+        return
+
+    # If no display, osmesa on all platforms
+    if not fwidgets.canHaveGui():
+        os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+
+    # Versions of wxpython 4.1.1 and newer
+    # default to using EGL for GL initialisation,
+    # but pyopengl doesn't seem to1
+    elif fslplatform.os.lower() == 'linux':
+        wxver = fwidgets.wxVersion()
+
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            os.environ['PYOPENGL_PLATFORM'] = 'egl'
+
+
+selectPyOpenGLPlatform()
+
+
 def bootstrap(glVersion=None):
     """Imports modules appropriate to the specified OpenGL version.
 
