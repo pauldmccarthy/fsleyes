@@ -675,18 +675,13 @@ class GLContext(object):
         # the first canvas, all canvases that are
         # subsequently created will inherit the
         # same properties.
-        attribs = [wxgl.WX_GL_RGBA,
-                   wxgl.WX_GL_DOUBLEBUFFER,
-                   wxgl.WX_GL_STENCIL_SIZE, 4,
-                   wxgl.WX_GL_DEPTH_SIZE,   24,
-                   0,
-                   0]
+        attrs = WXGLCanvasTarget.displayAttribues()
 
         # GLCanvas initialisation with an attribute
         # list fails when running in a nomachine-like
         # remote desktop session. No idea why.
         try:
-            self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
+            self.__canvas = wxgl.GLCanvas(self.__parent, **attrs)
             self.__canvas.SetSize((0, 0))
 
         # Creating without attribute list works ok
@@ -931,6 +926,49 @@ class WXGLCanvasTarget(object):
         wxver = [int(v) for v in wxver.split('.')[:3]]
 
         return wxver < [4, 1, 0]
+
+
+    @staticmethod
+    def displayAttribues():
+        """Used within ``__init__`` methods of ``WXGLCanvasTarget``
+        sub-classes.
+
+        Return a dict to be passed as keyword arguments to the
+        ``wx.glcanvas.GLCanvas.__init__`` method, defining display attributes.
+        The ``GLCanvas`` interface changed between wxWidgets 3.0.x and 3.1.x
+        (roughly corresponding to wxPython 4.0.x and 4.1.x) - this method
+        checks the wxPython version and returns a suitable set of arguments.
+        """
+
+        import wx
+        import wx.glcanvas as wxgl
+
+        # the format of wx.__version__ is not
+        # consistent (e.g. "4.0.7.post2", "4.1.0", etc)
+        try:
+            version = '.'.join(wx.__version__.split('.')[:3])
+        except Exception:
+            version = '4.0.0'
+
+        # Use new API for 4.1.0 and newer
+        if fslversion.compareVersions(version, '4.1.0') >= 0:
+            attrs = wxgl.GLAttributes()
+            attrs.MinRGBA(8, 8, 8, 8) \
+                 .DoubleBuffer()      \
+                 .Depth(24)           \
+                 .Stencil(4)          \
+                 .EndList()
+            kwargs = {'dispAttrs' : attrs}
+
+        else:
+            attrs = [wxgl.WX_GL_RGBA,
+                     wxgl.WX_GL_DOUBLEBUFFER,
+                     wxgl.WX_GL_STENCIL_SIZE, 4,
+                     wxgl.WX_GL_DEPTH_SIZE,   24,
+                     0,
+                     0]
+            kwargs = {'attribList' : attrs}
+        return kwargs
 
 
     def __init__(self):

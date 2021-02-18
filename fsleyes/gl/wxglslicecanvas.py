@@ -39,7 +39,9 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         details on the arguments.
         """
 
-        wxgl.GLCanvas          .__init__(self, parent)
+        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
+
+        wxgl.GLCanvas          .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget .__init__(self)
         slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
 

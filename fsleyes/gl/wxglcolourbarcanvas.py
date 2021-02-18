@@ -32,7 +32,9 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
     """
     def __init__(self, parent, overlayList, displayCtx):
 
-        wxgl.GLCanvas             .__init__(self, parent)
+        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
+
+        wxgl.GLCanvas             .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget    .__init__(self)
         cbarcanvas.ColourBarCanvas.__init__(self, overlayList, displayCtx)
 

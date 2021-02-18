@@ -32,7 +32,8 @@ class WXGLScene3DCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         """Create a ``WXGLScene3DCanvas``. See :meth:`.Scene3DCanvas.__init__`
         for details on the arguments.
         """
+        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
 
-        wxgl.GLCanvas              .__init__(self, parent)
+        wxgl.GLCanvas              .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget     .__init__(self)
         scene3dcanvas.Scene3DCanvas.__init__(self, overlayList, displayCtx)
