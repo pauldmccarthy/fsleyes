@@ -23,9 +23,6 @@ import numpy   as np
 
 from six import StringIO
 
-import matplotlib as mpl
-mpl.use('WxAgg')  # noqa
-
 # python 3
 try:
     from unittest import mock
