@@ -58,7 +58,7 @@ class ImportDataSeriesAction(base.Action):
 
             # Assuming that the data series
             # to plot are stored as columns
-            data = np.loadtxt(filePath, dtype=np.float).T
+            data = np.loadtxt(filePath, dtype=float).T
 
             # Make sure the data is 2D, to
             # make code below easier and
@@ -116,8 +116,7 @@ class ImportDataSeriesAction(base.Action):
             xdata = data[0,  :]
             ydata = data[1:, :]
         else:
-            xdata = np.arange(0, data.shape[1] * xscale, xscale,
-                              dtype=np.float)
+            xdata = np.arange(0, data.shape[1] * xscale, xscale, dtype=float)
             ydata = data
 
         for i, ydata in enumerate(ydata):

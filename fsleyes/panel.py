@@ -49,15 +49,15 @@ import six
 
 import wx
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.deprecated               as deprecated
-import fsleyes_props                      as props
-import fsleyes_widgets.floatspin          as floatspin
-import fsleyes_widgets.floatslider        as floatslider
-import fsleyes_widgets.rangeslider        as rangeslider
+import fsl.utils.deprecated        as deprecated
+import fsleyes_widgets             as fwidgets
+import fsleyes_props               as props
+import fsleyes_widgets.floatspin   as floatspin
+import fsleyes_widgets.floatslider as floatslider
+import fsleyes_widgets.rangeslider as rangeslider
 
-from . import                                actions
-from . import                                displaycontext
+from . import                         actions
+from . import                         displaycontext
 
 
 log = logging.getLogger(__name__)
@@ -352,7 +352,7 @@ FSLeyesPanelMeta = None
 """
 
 # wxPython/Phoenix
-if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
 
     import wx.siplib as sip
 

@@ -25,12 +25,14 @@ class Scene3DOpts(sceneopts.SceneOpts):
     """
 
 
-    showLegend = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
-    occlusion  = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
-    light      = copy.copy(canvasopts.Scene3DCanvasOpts.light)
-    lightPos   = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
-    offset     = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
-    rotation   = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
+    showLegend    = copy.copy(canvasopts.Scene3DCanvasOpts.showLegend)
+    occlusion     = copy.copy(canvasopts.Scene3DCanvasOpts.occlusion)
+    light         = copy.copy(canvasopts.Scene3DCanvasOpts.light)
+    lightPos      = copy.copy(canvasopts.Scene3DCanvasOpts.lightPos)
+    lightDistance = copy.copy(canvasopts.Scene3DCanvasOpts.lightDistance)
+    showLight     = copy.copy(canvasopts.Scene3DCanvasOpts.showLight)
+    offset        = copy.copy(canvasopts.Scene3DCanvasOpts.offset)
+    rotation      = copy.copy(canvasopts.Scene3DCanvasOpts.rotation)
 
 
     def __init__(self, *args, **kwargs):
@@ -42,6 +44,9 @@ class Scene3DOpts(sceneopts.SceneOpts):
         self.setAttribute('zoom',     'maxval',  5000)
         self.setAttribute('bgColour', 'default', (0.6, 0.6, 0.753, 1.0))
         self.setAttribute('fgColour', 'default', (0.0, 1.0, 0.0,   1.0))
+
+        for ax in range(3):
+            self.lightPos.setLimits(ax, -180, 180)
 
         self.zoom     = 75
         self.bgColour = (0.6, 0.6, 0.753)

@@ -12,11 +12,11 @@ vector images.
 
 import copy
 
-import fsleyes_props                      as props
-import fsl.data.image                     as fslimage
-from   fsl.utils.platform import platform as fslplatform
-from . import                                niftiopts
-from . import                                volumeopts
+import fsleyes_props   as props
+import fsl.data.image  as fslimage
+import fsleyes.gl      as fslgl
+from . import             niftiopts
+from . import             volumeopts
 
 
 class VectorOpts(niftiopts.NiftiOpts):
@@ -337,7 +337,7 @@ class RGBVectorOpts(VectorOpts):
 
         # We need GL >= 2.1 for
         # spline interpolation
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])

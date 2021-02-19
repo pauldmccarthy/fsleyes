@@ -15,7 +15,8 @@ shader programs.
 
 import OpenGL.GL as gl
 
-import fsleyes.gl.shaders as shaders
+import fsl.transform.affine as affine
+import fsleyes.gl.shaders   as shaders
 
 
 def compileShaders(self):
@@ -51,7 +52,6 @@ def updateShaderState(self, **kwargs):
     """
 
     dopts    = self.opts
-    copts    = self.canvas.opts
     dshader  = self.dataShader
     fshader  = self.flatShader
 
@@ -70,9 +70,6 @@ def updateShaderState(self, **kwargs):
     dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
     if self.threedee:
-        dshader.set('lighting', copts.light)
-        dshader.set('lightPos', kwargs['lightPos'])
-
         dshader.setAtt('vertex', self.vertices)
         dshader.setAtt('normal', self.normals)
 
@@ -93,8 +90,6 @@ def updateShaderState(self, **kwargs):
 
     if self.threedee:
         fshader.load()
-        fshader.set('lighting', copts.light)
-        fshader.set('lightPos', kwargs['lightPos'])
         fshader.set('colour',   kwargs['flatColour'])
 
         fshader.setAtt('vertex', self.vertices)
@@ -142,6 +137,7 @@ def draw(self,
                    each vertex.
     """
 
+    canvas = self.canvas
     shader = self.activeShader
 
     # for 3D, shader attributes are
@@ -156,6 +152,11 @@ def draw(self,
     if normals  is not None: shader.setAtt('normal',       normals)
     if vdata    is not None: shader.setAtt('vertexData',   vdata)
     if mdata    is not None: shader.setAtt('modulateData', mdata)
+
+    if self.threedee:
+        lightPos = affine.transform(canvas.lightPos, canvas.viewMatrix)
+        shader.set('lighting', canvas.opts.light)
+        shader.set('lightPos', lightPos)
 
     shader.loadAtts()
 

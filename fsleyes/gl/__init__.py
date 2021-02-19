@@ -182,18 +182,12 @@ import logging
 import platform
 
 import fsl.utils.idle                     as idle
+import fsl.version                        as fslversion
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
 
 
 log = logging.getLogger(__name__)
-
-
-# When running under X, indirect rendering fails for
-# unknown reasons, so I'm forcing direct rendering.
-# If direct rendering is not available, I don't know
-# what to do.
-os.environ.pop('LIBGL_ALWAYS_INDIRECT', None)
 
 
 import OpenGL  # noqa
@@ -215,11 +209,66 @@ OpenGL.ERROR_LOGGING  = True
 # OpenGL.FULL_LOGGING   = True
 
 
-# Using PyOpenGL 3.1 (and OSX Mavericks 10.9.4 on a MacbookPro11,3), the
-# OpenGL.contextdata.setValue method throws 'unhashable type' TypeErrors
-# unless we set STORE_POINTERS to False. I don't know why.
-if os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa':
-    OpenGL.STORE_POINTERS = False
+GL_VERSION = None
+"""Set in :func:`bootstrap`. String containing the available "major.minor"
+OpenGL version.
+"""
+
+
+GL_COMPATIBILITY = None
+"""Set in :func:`bootstrap`. String containing the target "major.minor"
+OpenGL compatibility version ("1.4" or "2.1").
+"""
+
+
+GL_RENDERER = None
+"""Set in :func:`bootstrap`. Contains a description of the OpenGL renderer in
+ use.
+"""
+
+
+def _selectPyOpenGLPlatform():
+    """Pyopengl sometimes doesn't select a suitable platform, so in some
+    circumstances we need to force things (but not if ``PYOPENGL_PLATFORM``
+    is already set in the environment).
+    """
+    if 'PYOPENGL_PLATFORM' in os.environ:
+        return
+
+    # If no display, osmesa on all platforms
+    if not fwidgets.canHaveGui():
+        os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+
+    # Versions of wxpython 4.1.1 and newer
+    # default to using EGL for GL initialisation,
+    # but pyopengl doesn't seem to1
+    elif fslplatform.os.lower() == 'linux':
+        wxver = fwidgets.wxVersion()
+
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            os.environ['PYOPENGL_PLATFORM'] = 'egl'
+
+
+_selectPyOpenGLPlatform()
+
+
+def glIsSoftwareRenderer():
+    """Returns ``True`` if the OpenGL renderer appears to be software based,
+    ``False`` otherwise, or ``None`` :func:`bootstrap` has not been called yet.
+
+    .. note:: This check is based on heuristics, ans is not guaranteed to
+              be correct.
+    """
+    if GL_RENDERER is None:
+        return None
+    # There doesn't seem to be any quantitative
+    # method for determining whether we are using
+    # software-based rendering, so a hack is
+    # necessary.
+    renderer = GL_RENDERER.lower()
+    return any(('software' in renderer,
+                'chromium' in renderer))
 
 
 def bootstrap(glVersion=None):
@@ -244,8 +293,10 @@ def bootstrap(glVersion=None):
 
 
     ====================== ====================================================
-    ``GL_VERSION``         A string containing the target OpenGL version, in
+    ``GL_COMPATIBILITY``   A string containing the target OpenGL version, in
                            the format ``major.minor``, e.g. ``2.1``.
+
+    ``GL_VERSION``         A string containing the available OpenGL version.
 
     ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
 
@@ -281,11 +332,6 @@ def bootstrap(glVersion=None):
     ====================== ====================================================
 
 
-    This function also sets the :attr:`.Platform.glVersion` and
-    :attr:`.Platform.glRenderer` properties of the
-    :attr:`fsl.utils.platform.platform` instance.
-
-
     :arg glVersion: A tuple containing the desired (major, minor) OpenGL API
                     version to use. If ``None``, the best possible API
                     version will be used.
@@ -303,8 +349,8 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glVer = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
-        major, minor = [int(v) for v in glVer.split('.')][:2]
+        glver = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
+        major, minor = [int(v) for v in glver.split('.')][:2]
     else:
         major, minor = glVersion
 
@@ -338,7 +384,7 @@ def bootstrap(glVersion=None):
                         'to an older OpenGL implementation.'
                         .format(', '.join(exts)))
             verstr = '1.4'
-            glpkg = gl14
+            glpkg  = gl14
 
     # If using GL14, and the ARB_vertex_program
     # and ARB_fragment_program extensions are
@@ -370,9 +416,8 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    # Populate this module, and set
-    # the fsl.utils.platform GL fields
-    thismod.GL_VERSION         = verstr
+    thismod.GL_VERSION         = str(glVersion)
+    thismod.GL_COMPATIBILITY   = verstr
     thismod.GL_RENDERER        = renderer
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
@@ -385,8 +430,6 @@ def bootstrap(glVersion=None):
     thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
-    fslplatform.glVersion      = glVersion
-    fslplatform.glRenderer     = thismod.GL_RENDERER
 
     # If we're using a software based renderer,
     # reduce the default performance settings
@@ -394,9 +437,9 @@ def bootstrap(glVersion=None):
     # But SVGA3D/llvmpipe are super fast, so if
     # we're using either of them, pretend that
     # we're on hardware
-    if fslplatform.glIsSoftwareRenderer                 and \
-       'llvmpipe' not in fslplatform.glRenderer.lower() and \
-       'svga3d'   not in fslplatform.glRenderer.lower():
+    if glIsSoftwareRenderer()                and \
+       'llvmpipe' not in GL_RENDERER.lower() and \
+       'svga3d'   not in GL_RENDERER.lower():
 
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')
@@ -536,8 +579,9 @@ class GLContext(object):
         self.__parent    = None
         self.__app       = None
 
-        canHaveGui       = fslplatform.canHaveGui
-        haveGui          = fslplatform.haveGui
+        osmesa     = os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa'
+        canHaveGui = fwidgets.canHaveGui()
+        haveGui    = fwidgets.haveGui()
 
         # On-screen contexts *must* be
         # created via a wx event loop
@@ -546,9 +590,10 @@ class GLContext(object):
                              'created on the wx.MainLoop')
 
         # For off-screen, only use OSMesa
-        # if we have no cnoice. Otherewise
-        # we use wx if possible
-        if offscreen and not canHaveGui:
+        # if we have no cnoice, or if
+        # dictaged by PYOPENGL_PLATFORM.
+        # Otherewise we use wx if possible.
+        if offscreen and (osmesa or (not canHaveGui)):
             self.__createOSMesaContext()
             ready()
             return
@@ -687,18 +732,13 @@ class GLContext(object):
         # the first canvas, all canvases that are
         # subsequently created will inherit the
         # same properties.
-        attribs = [wxgl.WX_GL_RGBA,
-                   wxgl.WX_GL_DOUBLEBUFFER,
-                   wxgl.WX_GL_STENCIL_SIZE, 4,
-                   wxgl.WX_GL_DEPTH_SIZE,   24,
-                   0,
-                   0]
+        attrs = WXGLCanvasTarget.displayAttribues()
 
         # GLCanvas initialisation with an attribute
         # list fails when running in a nomachine-like
         # remote desktop session. No idea why.
         try:
-            self.__canvas = wxgl.GLCanvas(self.__parent, attribList=attribs)
+            self.__canvas = wxgl.GLCanvas(self.__parent, **attrs)
             self.__canvas.SetSize((0, 0))
 
         # Creating without attribute list works ok
@@ -730,13 +770,27 @@ class GLContext(object):
         import                wx
         import wx.glcanvas as wxgl
 
+        # Versions of wxwidgets 3.1 and newer (approximately
+        # corresponding to wxpython 4.1 and newer) allow
+        # us to select a GL compatibility profile (required,
+        # because we rely on GL 1.4/2.1).
+        wxver = fwidgets.wxVersion()
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            attrs  = wxgl.GLContextAttrs()
+            attrs.CompatibilityProfile()
+            attrs.EndList()
+            kwargs = {'ctxAttrs' : attrs}
+        else:
+            kwargs = {}
+
         log.debug('Creating wx.GLContext')
 
         if other is not None:
-            self.__context = wxgl.GLContext(target, other=other)
+            self.__context = wxgl.GLContext(target, other=other, **kwargs)
 
         else:
-            self.__context = wxgl.GLContext(self.__canvas)
+            self.__context = wxgl.GLContext(self.__canvas, **kwargs)
 
             # We can't set the context target
             # until the dummy canvas is
@@ -893,7 +947,7 @@ as the meta-class.  This is not necessary under Python2/wxPython.
 """
 
 
-if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
 
     import wx.siplib as sip
     WXGLMetaClass = sip.wrappertype
@@ -945,6 +999,49 @@ class WXGLCanvasTarget(object):
         return wxver < [4, 1, 0]
 
 
+    @staticmethod
+    def displayAttribues():
+        """Used within ``__init__`` methods of ``WXGLCanvasTarget``
+        sub-classes.
+
+        Return a dict to be passed as keyword arguments to the
+        ``wx.glcanvas.GLCanvas.__init__`` method, defining display attributes.
+        The ``GLCanvas`` interface changed between wxWidgets 3.0.x and 3.1.x
+        (roughly corresponding to wxPython 4.0.x and 4.1.x) - this method
+        checks the wxPython version and returns a suitable set of arguments.
+        """
+
+        import wx
+        import wx.glcanvas as wxgl
+
+        # the format of wx.__version__ is not
+        # consistent (e.g. "4.0.7.post2", "4.1.0", etc)
+        try:
+            version = '.'.join(wx.__version__.split('.')[:3])
+        except Exception:
+            version = '4.0.0'
+
+        # Use new API for 4.1.0 and newer
+        if fslversion.compareVersions(version, '4.1.0') >= 0:
+            attrs = wxgl.GLAttributes()
+            attrs.MinRGBA(8, 8, 8, 8) \
+                 .DoubleBuffer()      \
+                 .Depth(24)           \
+                 .Stencil(4)          \
+                 .EndList()
+            kwargs = {'dispAttrs' : attrs}
+
+        else:
+            attrs = [wxgl.WX_GL_RGBA,
+                     wxgl.WX_GL_DOUBLEBUFFER,
+                     wxgl.WX_GL_STENCIL_SIZE, 4,
+                     wxgl.WX_GL_DEPTH_SIZE,   24,
+                     0,
+                     0]
+            kwargs = {'attribList' : attrs}
+        return kwargs
+
+
     def __init__(self):
         """Create a ``WXGLCanvasTarget``. """
 
@@ -958,7 +1055,7 @@ class WXGLCanvasTarget(object):
         # for each display. If we don't, then strange
         # refresh problems will occur.
         if platform.system() == 'Darwin' and \
-           'software' in fslplatform.glRenderer.lower():
+           'software' in GL_RENDERER.lower():
 
             log.debug('Creating separate GL context for '
                       'WXGLCanvasTarget {}'.format(id(self)))

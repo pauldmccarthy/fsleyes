@@ -575,8 +575,10 @@ def create3DCanvas(namespace,
     opts.offset          = sceneOpts.offset
     opts.rotation        = sceneOpts.rotation
 
-    if parseargs.wasSpecified(namespace, sceneOpts, 'lightPos'):
+    if parseargs.wasSpecified(namespace, sceneOpts, 'lightPos') or \
+       parseargs.wasSpecified(namespace, sceneOpts, 'lightDistance'):
         opts.lightPos        = sceneOpts.lightPos
+        opts.lightDistance   = sceneOpts.lightDistance
         canvas.resetLightPos = False
     else:
         canvas.defaultLightPos()

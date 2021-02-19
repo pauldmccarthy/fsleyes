@@ -13,8 +13,8 @@ import os.path as op
 
 import wx
 
-import fsleyes_widgets.imagepanel         as imagepanel
 from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets.imagepanel         as imagepanel
 import fsleyes.gl                         as fslgl
 import fsleyes.strings                    as strings
 import fsleyes.splash                     as splash
@@ -57,8 +57,9 @@ class AboutDialog(wx.Dialog):
 
         # Create / retrieve all the content
         verStr    = version.__version__
-        glVerStr  = fslplatform.glVersion
-        glRenStr  = fslplatform.glRenderer
+        glVerStr  = fslgl.GL_VERSION
+        glRenStr  = fslgl.GL_RENDERER
+        glCompat  = fslgl.GL_COMPATIBILITY
         swlibs    = strings.about['libs']
 
         swVersions = []
@@ -72,7 +73,10 @@ class AboutDialog(wx.Dialog):
                     mod = getattr(mod, n)
 
                 if lib == 'PIL':
-                    swVer = str(mod.PILLOW_VERSION)
+                    try:
+                        swVer = str(mod.__version__)
+                    except Exception:
+                        swVer = str(mod.PILLOW_VERSION)
                 else:
                     swVer = str(mod.__version__)
             except Exception:
@@ -84,7 +88,7 @@ class AboutDialog(wx.Dialog):
         fslVer    = strings.about['fslVersion'].format(fslplatform.fslVersion)
         fslDir    = strings.about['fslPath']   .format(fslplatform.fsldir)
         glVerStr  = strings.about['glVersion'] .format(glVerStr)
-        glCompat  = strings.about['glCompat']  .format(fslgl.GL_VERSION)
+        glCompat  = strings.about['glCompat']  .format(glCompat)
         glRenStr  = strings.about['glRenderer'].format(glRenStr)
         swStr     = strings.about['software']  .format(*swVersions)
 

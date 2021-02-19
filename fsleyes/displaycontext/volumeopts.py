@@ -12,9 +12,9 @@ import logging
 
 import numpy as np
 
-import fsl.data.image                     as fslimage
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes_props                      as props
+import fsl.data.image       as fslimage
+import fsleyes_props        as props
+import fsleyes.gl           as fslgl
 
 import fsleyes.colourmaps   as fslcm
 from . import colourmapopts as cmapopts
@@ -118,7 +118,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
         # We need GL >= 2.1 for
         # spline interpolation
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])
@@ -494,7 +494,7 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
 
         # We need GL >= 2.1 for
         # spline interpolation
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])

@@ -13,6 +13,7 @@ programs.
 """
 
 
+import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.transform.affine as affine
@@ -62,7 +63,6 @@ def updateShaderState(self, **kwargs):
     parameter values used by the shaders.
     """
     dopts   = self.opts
-    copts   = self.canvas.opts
     dshader = self.dataShader
     fshader = self.flatShader
 
@@ -77,31 +77,17 @@ def updateShaderState(self, **kwargs):
                 kwargs['modOffset'],
                 0]
 
-    if self.threedee:
-
-        lighting = list(kwargs['lightPos'])
-
-        if copts.light: lighting += [ 1]
-        else:           lighting += [-1]
-
-
     dshader.load()
-
     dshader.setFragParam('settings',    settings)
     dshader.setFragParam('clipping',    clipping)
     dshader.setFragParam('modulate',    modulate)
     dshader.setFragParam('flatColour',  kwargs['flatColour'])
     dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
-
-    if self.threedee:
-        dshader.setFragParam('lighting', lighting)
-
     dshader.unload()
 
     if self.threedee:
         fshader.load()
-        fshader.setFragParam('lighting', lighting)
-        fshader.setFragParam('colour',   kwargs['flatColour'])
+        fshader.setFragParam('colour', kwargs['flatColour'])
         fshader.unload()
 
 
@@ -144,6 +130,8 @@ def draw(self,
                    each vertex.
     """
 
+    canvas = self.canvas
+    copts  = canvas.opts
     shader = self.activeShader
 
     if normals is not None: shader.setAtt('normal',       normals)
@@ -154,10 +142,18 @@ def draw(self,
 
         # NOTE You are assuming here that the canvas
         #      view matrix is the GL model view matrix.
-        normalMatrix = self.canvas.viewMatrix
+        normalMatrix = self.canvas.viewMatrix[:3, :3]
         normalMatrix = affine.invert(normalMatrix).T
-
+        normalMatrix = np.hstack((normalMatrix, np.zeros((3, 1))))
         shader.setVertParam('normalMatrix', normalMatrix)
+
+    if self.threedee:
+        if not copts.light:
+            lighting = [0, 0, 0, -1]
+        else:
+            lighting = affine.transform(canvas.lightPos, canvas.viewMatrix)
+            lighting = list(lighting) + [1]
+        shader.setFragParam('lighting', lighting)
 
     shader.loadAtts()
 

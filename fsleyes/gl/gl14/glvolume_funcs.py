@@ -230,11 +230,15 @@ def draw3D(self, xform=None, bbox=None):
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
     outerLoop  = opts.getNumOuterSteps()
-    screenSize = [1.0 / w, 1.0 / h, 0, 0]
+    screenSize = [
+        1.0 / w,
+        1.0 / h,
+        1 if opts.blendByIntensity else -1,
+        0]
     rayStep    = list(rayStep)   + [0]
     texform    = texform[2, :]
     settings   = [
-        (1 - opts.blendFactor) ** 2,
+        opts.blendFactor,
         0,
         0,
         display.alpha / 100.0]

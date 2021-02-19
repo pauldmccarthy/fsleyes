@@ -194,7 +194,7 @@ class Texture2D(texture.Texture):
                                    gl.GL_CLAMP_TO_BORDER)
                 gl.glTexParameterfv(gl.GL_TEXTURE_2D,
                                     gl.GL_TEXTURE_BORDER_COLOR,
-                                    self.border)
+                                    np.asarray(self.border, dtype=np.float32))
             else:
                 gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                    gl.GL_TEXTURE_WRAP_S,

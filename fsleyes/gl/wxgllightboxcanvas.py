@@ -40,7 +40,9 @@ class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         :meth:`.LightBoxCanvas.__init__` for details on the arguments.
         """
 
-        wxgl.GLCanvas                .__init__(self, parent)
+        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
+
+        wxgl.GLCanvas                .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget       .__init__(self)
         lightboxcanvas.LightBoxCanvas.__init__(self,
                                                overlayList,

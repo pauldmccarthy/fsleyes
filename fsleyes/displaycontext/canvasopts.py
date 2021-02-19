@@ -248,8 +248,32 @@ class Scene3DCanvasOpts(props.HasProperties):
     """
 
 
+    showLight = props.Boolean(default=False)
+    """If ``True``, a point is drawn at the current light position. """
+
+
     lightPos = props.Point(ndims=3)
-    """Light position in the display coordinate system. """
+    """Defines the light position in the display coordinate system. This
+    property contains a set of three rotation values, in degrees.
+
+    The lighting model uses a point source which is located a fixed distance
+    away from the display coordinate system centre - the distance is set
+    by the :attr:`lightDistance` property.
+
+    The lightPos property defines how the light is rotated with respect to
+    the centre of the display coordinate system.
+
+    The :meth:`.Scene3DCanvas.lightPos` method can be used to calculate the
+    actual position of the light in the display coordinate system.
+    """
+
+
+    lightDistance = props.Real(minval=0.5, maxval=10, default=2)
+    """Distance of the light source from the centre of the display coordinate
+    system. This is used as a multiplicative factor - a value of 2 set the
+    light source a distance of twice the length of the display bounding box
+    from the bounding box centre.
+    """
 
 
     offset = props.Point(ndims=2)
@@ -267,4 +291,7 @@ class Scene3DCanvasOpts(props.HasProperties):
     orientation. This rotation is defined in terms of the display coordinate
     system (defined by the :class:`.DisplayContext.bounds`), and applied to
     the scene that is being displayed.
+
+    We use a rotation matrix here because it makes iterative updates of
+    the camera position easier - see the :class:`.Scene3DViewProfile` class.
     """

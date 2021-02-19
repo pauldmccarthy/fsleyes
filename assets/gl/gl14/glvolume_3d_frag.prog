@@ -15,7 +15,9 @@ OPTION ARB_precision_hint_nicest;
 #   {{ param_negCmap }}
 #
 #   {{ param_screenSize }} - First two components contain the screen width
-#      and height in pixels.
+#      and height in pixels. Third component determines whether to modulate
+#      samples by voxel intensity (blendByIntensity, +1), or whether to
+#      only use the blend factor (-1).
 #
 #   {{ param_rayStep }} - xyz is a vector defining how far to move through
 #      the volume texture space on each ray-casting iteration.
@@ -213,18 +215,33 @@ MAD tempVar.x,  tempVar.x,     2.0, -1;
 MIN skipTest.x, skipTest.x,    tempVar.x;
 
 
-# Adjust the sample opacity - it is
-# a function of the (normalised)
-# voxel intensity and the blend factor.
+# Adjust the sample opacity -
+# if blendByIntesnity (screenSize.z),
+# it is a function of the (normalised)
+# voxel intensity and the blend factor
+# (stored in tempVar.y):
+#
+#   a = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
+#
+# Otherwise it is just a function of
+# the blend factor (stored in tempVar.x):
+#
+#   a = 1 - blendFactor;
+
+SUB tempVar.x, 1, {{ param_settings }}.x;
 
 # Clamp voxValue to [0, 1]
 # (MOV_SAT does not work for me)
-MIN colour.a, voxValue.x, 1;
-MAX colour.a, colour.a,   0;
+MIN tempVar.y, voxValue.x, 1;
+MAX tempVar.y, tempVar.y,  0;
+SUB tempVar.y,  1, tempVar.y;
+SUB tempVar.z, 1, {{ param_settings }}.x;
+POW tempVar.y, tempVar.y, tempVar.z;
+SUB tempVar.y, 1, tempVar.y;
 
-SUB colour.a, 1, colour.a;
-POW colour.a, colour.a, {{ param_settings }}.x;
-SUB colour.a, 1, colour.a;
+# blend by intensity or just blend by blend factor
+CMP colour.a, {{ param_screenSize }}.z, tempVar.x, tempVar.y;
+
 MUL colour.rgb, colour, colour.a;
 
 # Blend the sample into the

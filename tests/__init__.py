@@ -23,9 +23,6 @@ import numpy   as np
 
 from six import StringIO
 
-import matplotlib as mpl
-mpl.use('WxAgg')  # noqa
-
 # python 3
 try:
     from unittest import mock
@@ -56,9 +53,8 @@ from .compare_images import compare_images
 
 
 def haveGL21():
-    from fsl.utils.platform import platform as fslplatform
     try:
-        return float(fslplatform.glVersion) >= 2.1
+        return float(fslgl.GL_COMPATIBILITY) >= 2.1
     except:
         return False
 
@@ -227,8 +223,7 @@ initialised = [False]
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
-    from fsl.utils.platform import platform as fslplatform
-    import fsleyes_widgets.utils.status     as status
+    import fsleyes_widgets.utils.status as status
 
     fsleyes.configLogging()
 
@@ -314,7 +309,7 @@ def run_with_fsleyes(func, *args, **kwargs):
     if not initialised[0]:
 
         # gl already initialised
-        if fslplatform.glVersion is not None:
+        if fslgl.GL_VERSION is not None:
             wx.CallLater(startingDelay, init)
         else:
             wx.CallLater(startingDelay,

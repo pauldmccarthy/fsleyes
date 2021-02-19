@@ -943,7 +943,7 @@ def loadLookupTableFile(fname):
             f,
             usecols=(0, 1, 2, 3),
             dtype={
-                'formats' : (np.int, np.float, np.float, np.float),
+                'formats' : (int, float, float, float),
                 'names'   : ('label', 'r', 'g', 'b')})
 
         # Save the label ordering -

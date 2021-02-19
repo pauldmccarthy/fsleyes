@@ -50,10 +50,10 @@ import wx
 
 import matplotlib.backend_bases as mplbackend
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.utils.deprecated               as deprecated
-import fsleyes_props                      as props
-import fsleyes.actions                    as actions
+import fsl.utils.deprecated as deprecated
+import fsleyes_widgets      as fwidgets
+import fsleyes_props        as props
+import fsleyes.actions      as actions
 
 
 log = logging.getLogger(__name__)
@@ -1005,8 +1005,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # produced positive values will now produce
         # negative values.
         if ev.ShiftDown() and \
-           fslplatform.wxPlatform in (fslplatform.WX_MAC_COCOA,
-                                      fslplatform.WX_MAC_CARBON):
+           fwidgets.wxPlatform() in (fwidgets.WX_MAC_COCOA,
+                                     fwidgets.WX_MAC_CARBON):
             wheel = -wheel
 
         log.debug('Mouse wheel event ({}) on {}'.format(

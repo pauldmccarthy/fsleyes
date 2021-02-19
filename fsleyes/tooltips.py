@@ -156,6 +156,11 @@ properties = TypeDict({
     'in the final volume colour being blended from samples which are deeper '
     'in the volume.',
 
+    'Volume3DOpts.blendByIntensity' :
+    'When active, the amount by which each sample is blended into the final '
+    'colour will be weighted by the voxel intensity. When inactive, samples '
+    'will be blended solely according to the blending setting.',
+
     'Volume3DOpts.smoothing' :
     'This setting controls the amount of smoothing applied to the volume. '
     'When the smoothing is greater than zero, a gaussian smoothing filter is '
@@ -503,8 +508,12 @@ properties = TypeDict({
     'orientation information.',
     'Scene3DOpts.light'      :
     'Enable a simple lighting effect.',
+    'Scene3DOpts.showLight' :
+    'Show the position of the light source.',
     'Scene3DOpts.lightPos' :
     'Position of the light in the display coordinate system.',
+    'Scene3DOpts.lightDistance' :
+    'Distance of the light from the display centre.',
     'Scene3DOpts.occlusion' :
     'When selected, volumes in the scene which are behind another volume will '
     'not be shown. ',

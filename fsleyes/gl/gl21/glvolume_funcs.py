@@ -71,6 +71,7 @@ def updateShaderState(self):
         return
 
     opts    = self.opts
+    copts   = self.canvas.opts
     display = self.display
     shader  = self.shader
 
@@ -145,7 +146,6 @@ def updateShaderState(self):
     changed |= shader.set('modulateTexture',  4)
 
     if self.threedee:
-        blendFactor = (1 - opts.blendFactor) ** 2
         clipPlanes  = np.zeros((opts.numClipPlanes, 4), dtype=np.float32)
         d2tmat      = opts.getTransform('display', 'texture')
 
@@ -160,12 +160,15 @@ def updateShaderState(self):
             normal           = affine.transformNormal(normal, d2tmat)
             clipPlanes[i, :] = glroutines.planeEquation2(origin, normal)
 
-        changed |= shader.set('numClipPlanes', opts.numClipPlanes)
-        changed |= shader.set('clipMode',      clipMode)
-        changed |= shader.set('clipPlanes',    clipPlanes, opts.numClipPlanes)
-        changed |= shader.set('blendFactor',   blendFactor)
-        changed |= shader.set('stepLength',    1.0 / opts.getNumSteps())
-        changed |= shader.set('alpha',         display.alpha / 100.0)
+        changed |= shader.set('numClipPlanes',    opts.numClipPlanes)
+        changed |= shader.set('clipMode',         clipMode)
+        changed |= shader.set('clipPlanes',
+                              clipPlanes,
+                              opts.numClipPlanes)
+        changed |= shader.set('blendFactor',      opts.blendFactor)
+        changed |= shader.set('blendByIntensity', opts.blendByIntensity)
+        changed |= shader.set('stepLength',       1.0 / opts.getNumSteps())
+        changed |= shader.set('alpha',            display.alpha / 100.0)
 
     shader.unload()
 
@@ -229,6 +232,8 @@ def draw3D(self, xform=None, bbox=None):
     """
 
     opts                           = self.opts
+    canvas                         = self.canvas
+    copts                          = canvas.opts
     tex                            = self.renderTexture1
     proj                           = self.canvas.projectionMatrix
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
@@ -239,11 +244,22 @@ def draw3D(self, xform=None, bbox=None):
     texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(self.overlay.shape))
 
+    # If lighting is enabled, we specify the light
+    # position in image texture coordinates, to make
+    # life easier for the shader
+    if copts.light:
+        lxform   = opts.getTransform('display', 'texture')
+        lightPos = affine.transform(canvas.lightPos, lxform)
+    else:
+        lightPos = [0, 0, 0]
+
     if xform is not None:
         vertices = affine.transform(vertices, xform)
 
+    self.shader.set(   'lighting',        copts.light)
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
+    self.shader.set(   'lightPos',        lightPos)
     self.shader.setAtt('vertex',          vertices)
     self.shader.setAtt('texCoord',        texCoords)
 

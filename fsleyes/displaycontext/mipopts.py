@@ -15,12 +15,12 @@ MIP overlays are rendered via the :class:`.GLMIP` class.
 
 import numpy as np
 
-from   fsl.utils.platform import platform as fslplatform
-import fsl.transform.affine               as affine
-import fsleyes_props                      as props
+import fsl.transform.affine as affine
+import fsleyes_props        as props
+import fsleyes.gl           as fslgl
 
-from . import colourmapopts               as cmapopts
-from . import                                niftiopts
+from . import colourmapopts as cmapopts
+from . import                  niftiopts
 
 
 class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
@@ -61,7 +61,7 @@ class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
 
         # We need GL >= 2.1 for
         # spline interpolation
-        if float(fslplatform.glVersion) < 2.1:
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
             interp.removeChoice('spline', instance=self)
             interp.updateChoice('linear', instance=self, newAlt=['spline'])

@@ -14,11 +14,11 @@ import six
 import wx
 import wx.glcanvas as wxgl
 
-from   fsl.utils.platform import platform
-import fsleyes_props      as     props
+import fsleyes_widgets as     fwidgets
+import fsleyes_props   as     props
 
-import fsleyes.gl         as     fslgl
-from   .                  import slicecanvas
+import fsleyes.gl      as     fslgl
+from   .               import slicecanvas
 
 
 class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
@@ -39,7 +39,9 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         details on the arguments.
         """
 
-        wxgl.GLCanvas          .__init__(self, parent)
+        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
+
+        wxgl.GLCanvas          .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget .__init__(self)
         slicecanvas.SliceCanvas.__init__(self, overlayList, displayCtx, zax)
 
@@ -85,7 +87,7 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
 
         # If not in SSH, we can just
         # show/hide normally.
-        if not platform.inSSHSession:
+        if not fwidgets.inSSHSession():
             wxgl.GLCanvas.Show(self, show)
 
         elif not show:

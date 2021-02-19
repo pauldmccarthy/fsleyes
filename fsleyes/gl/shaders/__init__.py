@@ -57,8 +57,8 @@ def getShaderDir():
     on which OpenGL version is in use.
     """
 
-    if   fslgl.GL_VERSION == '2.1': subdir = 'gl21'
-    elif fslgl.GL_VERSION == '1.4': subdir = 'gl14'
+    if   fslgl.GL_COMPATIBILITY == '2.1': subdir = 'gl21'
+    elif fslgl.GL_COMPATIBILITY == '1.4': subdir = 'gl14'
 
     return op.join(fsleyes.assetDir, 'assets', 'gl', subdir)
 
@@ -68,8 +68,8 @@ def getShaderSuffix():
     returned depending on which OpenGL version is in use.
     """
 
-    if   fslgl.GL_VERSION == '2.1': return 'glsl'
-    elif fslgl.GL_VERSION == '1.4': return 'prog'
+    if   fslgl.GL_COMPATIBILITY == '2.1': return 'glsl'
+    elif fslgl.GL_COMPATIBILITY == '1.4': return 'prog'
 
 
 def getVertexShader(prefix):

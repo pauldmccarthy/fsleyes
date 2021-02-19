@@ -51,7 +51,7 @@ class Scene3DCanvas(object):
         # orientation labels ordered
         # (xlo, xhi, ylo, yhi, zlo, zhi) where xyz
         # are the display coordinate system axes.
-        # Created in _initGL
+        # Created in __refreshLegendLabels
         self.__legendLabels = None
 
         overlayList.addListener('overlays',
@@ -62,20 +62,24 @@ class Scene3DCanvas(object):
                                self.__displayBoundsChanged)
 
         opts = self.opts
-        opts.addListener('pos',          self.__name, self.Refresh)
-        opts.addListener('showCursor',   self.__name, self.Refresh)
-        opts.addListener('cursorColour', self.__name, self.Refresh)
-        opts.addListener('bgColour',     self.__name, self.Refresh)
-        opts.addListener('showLegend',   self.__name, self.Refresh)
-        opts.addListener('legendColour', self.__name,
+        opts.addListener('pos',           self.__name, self.Refresh)
+        opts.addListener('showCursor',    self.__name, self.Refresh)
+        opts.addListener('cursorColour',  self.__name, self.Refresh)
+        opts.addListener('bgColour',      self.__name, self.Refresh)
+        opts.addListener('showLegend',    self.__name, self.Refresh)
+        opts.addListener('legendColour',  self.__name,
                          self.__refreshLegendLabels)
-        opts.addListener('labelSize',    self.__name,
+        opts.addListener('labelSize',     self.__name,
                          self.__refreshLegendLabels)
-        opts.addListener('occlusion',    self.__name, self.Refresh)
-        opts.addListener('zoom',         self.__name, self.Refresh)
-        opts.addListener('offset',       self.__name, self.Refresh)
-        opts.addListener('rotation',     self.__name, self.Refresh)
-        opts.addListener('highDpi',      self.__name, self.__highDpiChanged)
+        opts.addListener('occlusion',     self.__name, self.Refresh)
+        opts.addListener('zoom',          self.__name, self.Refresh)
+        opts.addListener('offset',        self.__name, self.Refresh)
+        opts.addListener('rotation',      self.__name, self.Refresh)
+        opts.addListener('showLight',     self.__name, self.Refresh)
+        opts.addListener('light',         self.__name, self.Refresh)
+        opts.addListener('lightPos',      self.__name, self.Refresh)
+        opts.addListener('lightDistance', self.__name, self.Refresh)
+        opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
 
 
     def destroy(self):
@@ -86,8 +90,9 @@ class Scene3DCanvas(object):
         for ovl in list(self.__glObjects.keys()):
             self.__deregisterOverlay(ovl)
 
-        for lbl in self.__legendLabels:
-            lbl.destroy()
+        if self.__legendLabels is not None:
+            for lbl in self.__legendLabels:
+                lbl.destroy()
 
         self.__opts         = None
         self.__displayCtx   = None
@@ -110,6 +115,38 @@ class Scene3DCanvas(object):
 
 
     @property
+    def lightPos(self):
+        """Takes the values of :attr:`.Scene3DOpts.lightPos` and
+        :attr:`.Scene3DOpts.lightDistance`, and converts it to a position in
+        the display coordinate system. The ``Scene3DOpts.lightPos`` property
+        contains rotations about the centre of the display bounding box,
+        and the :attr:`.Scene3DOpts.lightDistance` property specifies the
+        distance of the light from the bounding box centre.
+        """
+        b        = self.__displayCtx.bounds
+        centre   = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
+                             b.ylo + 0.5 * (b.yhi - b.ylo),
+                             b.zlo + 0.5 * (b.zhi - b.zlo)])
+
+        yaw, pitch, roll = self.opts.lightPos
+        distance         = self.opts.lightDistance
+        yaw              = yaw   * np.pi / 180
+        pitch            = pitch * np.pi / 180
+        roll             = roll  * np.pi / 180
+
+        rotmat = affine.axisAnglesToRotMat(pitch, roll, yaw)
+        xform  = affine.compose([1, 1, 1],
+                                [0, 0, 0],
+                                rotmat,
+                                origin=centre)
+
+        lightPos = centre + [0, 0, distance * b.zlen]
+        lightPos = affine.transform(lightPos, xform)
+
+        return lightPos
+
+
+    @property
     def resetLightPos(self):
         """By default, the :attr:`lightPos` is updated whenever the
         :attr:`.DisplayContext.bounds` change. This flag can be used to
@@ -128,11 +165,7 @@ class Scene3DCanvas(object):
 
     def defaultLightPos(self):
         """Resets the :attr:`lightPos` property to a sensible value. """
-        b      = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-        self.opts.lightPos = centre + [b.xlen, b.ylen, 0]
+        self.opts.lightPos = [0, 0, 0]
 
 
     @property
@@ -330,9 +363,6 @@ class Scene3DCanvas(object):
 
     def _initGL(self):
         """Called when the canvas is ready to be drawn on. """
-
-        self.__legendLabels = [gltext.Text() for _ in range(6)]
-
         self.__overlayListChanged()
         self.__displayBoundsChanged()
 
@@ -369,6 +399,9 @@ class Scene3DCanvas(object):
 
         if overlay is None:
             return
+
+        if self.__legendLabels is None:
+            self.__legendLabels = [gltext.Text() for _ in range(6)]
 
         dopts  = self.__displayCtx.getOpts(overlay)
         labels = dopts.getLabels()[0]
@@ -675,6 +708,9 @@ class Scene3DCanvas(object):
         if opts.showLegend:
             self.__drawLegend()
 
+        if opts.showLight:
+            self.__drawLight()
+
         # Testing click-to-near/far clipping plane transformation
         if hasattr(self, 'points'):
             colours = [(1, 0, 0, 1), (0, 0, 1, 1)]
@@ -786,24 +822,23 @@ class Scene3DCanvas(object):
     def __drawLight(self):
         """Draws a representation of the light source. """
 
-        opts      = self.opts
-        lightPos  = np.array(opts.lightPos)
-        lightPos *= (opts.zoom / 100.0)
+        lightPos  = self.lightPos
+        bounds    = self.__displayCtx.bounds
+        centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
+                              bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
+                              bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
+        lightPos  = affine.transform(lightPos, self.__viewMat)
+        centre    = affine.transform(centre,   self.__viewMat)
 
-        gl.glColor4f(1, 1, 1, 1)
+        # draw the light as a point
+        gl.glColor4f(1, 1, 0, 1)
         gl.glPointSize(10)
         gl.glBegin(gl.GL_POINTS)
         gl.glVertex3f(*lightPos)
         gl.glEnd()
 
-        b = self.__displayCtx.bounds
-        centre = np.array([b.xlo + 0.5 * (b.xhi - b.xlo),
-                           b.ylo + 0.5 * (b.yhi - b.ylo),
-                           b.zlo + 0.5 * (b.zhi - b.zlo)])
-
-        centre = affine.transform(centre, self.__viewMat)
-
-        gl.glColor4f(1, 0, 1, 1)
+        # draw a line  from the light to the
+        # centre of the display bounding box
         gl.glBegin(gl.GL_LINES)
         gl.glVertex3f(*lightPos)
         gl.glVertex3f(*centre)

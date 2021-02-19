@@ -31,6 +31,7 @@ import matplotlib.image  as mplimg
 
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.idle                     as idle
+import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.utils.status       as status
 import fsl.utils.settings                 as fslsettings
 import fsleyes.views.canvaspanel          as canvaspanel
@@ -181,7 +182,7 @@ def canvasPanelScreenshot(panel, filename):
     windowDC = wx.WindowDC(panel)
     memoryDC = wx.MemoryDC()
 
-    if fslplatform.wxFlavour == fslplatform.WX_PHOENIX:
+    if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
         bmp = wx.Bitmap(width, height)
     else:
         bmp = wx.EmptyBitmap(width, height)
@@ -205,7 +206,7 @@ def canvasPanelScreenshot(panel, filename):
     data[:, :, :3] = rgb.reshape(height, width, 3)
 
     # OSX and SSh/X11 both have complications
-    inSSH = fslplatform.inSSHSession and not fslplatform.inVNCSession
+    inSSH = fwidgets.inSSHSession() and not fwidgets.inVNCSession()
     if inSSH or fslplatform.os == 'Darwin':
         data = _patchInCanvases(cpanel, panel, data, bgColour)
 
