@@ -34,10 +34,6 @@ cli_tests = """
 -dl 3d   -r 50
 -dl 3d   -r 75
 
-# blendByIntensity
--dl -rot 30 -30 30 3d     -ll -dr 4000 8000
--dl -rot 30 -30 30 3d -bi -ll -dr 4000 8000
-
 # smoothing (only available via CLI)
 -dl 3d -s 0
 -dl 3d -s 1
@@ -78,6 +74,10 @@ cli_lighting_tests = """
 -lp -60 -90 0          3d -ns 400
 -lp   0 -90 0  -ld 0.6 3d -ns 400
 -lp   0 -90 0          3d -ns 400 -in linear
+
+# blendByIntensity also only available on GL21
+-dl -rot 30 -30 30 3d     -ll -dr 4000 8000
+-dl -rot 30 -30 30 3d -bi -ll -dr 4000 8000
 """
 
 
