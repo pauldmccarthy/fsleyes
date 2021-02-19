@@ -41,6 +41,7 @@ import wx.adv
 
 from   fsl.utils.platform import platform as fslplatform
 import fsl.utils.idle                     as idle
+import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.utils.status       as status
 
 import                       fsleyes
@@ -52,7 +53,7 @@ import fsleyes.colourmaps as colourmaps
 
 # wx.ModalDialogHook does not exist in wxPython < 4
 
-if fslplatform.wxFlavour in (fslplatform.WX_PYTHON, fslplatform.WX_UNKNOWN):
+if fwidgets.wxFlavour() in (fwidgets.WX_PYTHON, fwidgets.WX_UNKNOWN):
     class ModalDialogHook(object):
         def Register(self):
             pass
@@ -539,7 +540,7 @@ def initialise(splash, namespace, callback):
     #
     # If so, we set the save/load directory
     # to the user's home directory instead.
-    if fslplatform.frozen:
+    if fwidgets.frozen():
 
         fsleyesDir = op.dirname(__file__)
 

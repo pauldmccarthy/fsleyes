@@ -11,7 +11,7 @@ import            sys
 
 from jupyter_client.kernelspec import KernelSpecManager
 
-from fsl.utils.platform import platform as fslplatform
+from fsleyes_widgets as fwidgets
 
 
 class FSLeyesKernelSpecManager(KernelSpecManager):
@@ -28,7 +28,7 @@ class FSLeyesKernelSpecManager(KernelSpecManager):
         spec = super(FSLeyesKernelSpecManager, self).get_kernel_spec(
             kernel_name)
 
-        if not fslplatform.frozen:
+        if not fwidgets.frozen():
             return spec
 
         exe = op.join(op.dirname(sys.executable), 'fsleyes')
