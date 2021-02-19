@@ -877,8 +877,8 @@ class PlotPanel(viewpanel.ViewPanel):
                           ds.overlay.name, len(xdata), len(ydata)))
             return (0, 0), (0, 0)
 
-        xdata = np.asarray(xdata, dtype=np.float)
-        ydata = np.asarray(ydata, dtype=np.float)
+        xdata = np.asarray(xdata, dtype=float)
+        ydata = np.asarray(ydata, dtype=float)
 
         log.debug('Drawing {} for {}'.format(type(ds).__name__, ds.overlay))
 

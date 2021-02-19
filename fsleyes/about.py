@@ -73,7 +73,10 @@ class AboutDialog(wx.Dialog):
                     mod = getattr(mod, n)
 
                 if lib == 'PIL':
-                    swVer = str(mod.PILLOW_VERSION)
+                    try:
+                        swVer = str(mod.__version__)
+                    except Exception:
+                        swVer = str(mod.PILLOW_VERSION)
                 else:
                     swVer = str(mod.__version__)
             except Exception:
