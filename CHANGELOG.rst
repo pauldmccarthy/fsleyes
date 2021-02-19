@@ -22,8 +22,7 @@ Added
 * New ``--lightDistance`` option (for 3D view), allowing the distance of
   the light source from the centre of the display bounding box to be set.
 * New ``--noBlendByIntensity`` option, for ``volume`` overlays in the 3D view,
-  allowing the modulation of samples by voxel intensity to be disabled (OpenGL
-  2.1 or newer only).
+  allowing the modulation of samples by voxel intensity to be disabled.
 
 
 Changed
