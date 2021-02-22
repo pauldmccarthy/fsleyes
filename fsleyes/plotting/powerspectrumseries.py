@@ -38,34 +38,15 @@ from . import                   dataseries
 log = logging.getLogger(__name__)
 
 
-def calcPowerSpectrum(data, varNorm=False):
-    """Calculates a power spectrum for the given one-dimensional data array. If
-    ``varNorm is True``, the data is de-meaned and normalised by its standard
-    deviation before the fourier transformation.
+def calcPowerSpectrum(data):
+    """Calculates a power spectrum for the given one-dimensional data array.
 
     :arg data:    Numpy array containing the time series data
-
-    :arg varNorm: Normalise the data before fourier transformation
 
     :returns:     If ``data`` contains real values, the magnitude of the power
                   spectrum is returned. If ``data`` contains complex values,
                   the complex power spectrum is returned.
     """
-
-    # De-mean and normalise
-    # by standard deviation
-    if varNorm:
-        mean = data.mean()
-        std  = data.std()
-
-        if not np.isclose(std, 0):
-            data = data - mean
-            data = data / std
-
-        # If all values in the data
-        # are the same, it has mean 0
-        else:
-            data = np.zeros(data.shape, dtype=data.dtype)
 
     # Fourier transform on complex data
     if np.issubdtype(data.dtype, np.complexfloating):
@@ -76,7 +57,7 @@ def calcPowerSpectrum(data, varNorm=False):
     # calculate and return the magnitude.
     # We also drop the first (zero-frequency)
     # term (see the rfft docs) as it is
-    # useless when varNorm is disabled.
+    # kind of useless for display purposes
     else:
         data = fft.rfft(data)[1:]
         data = magnitude(data)
@@ -121,6 +102,17 @@ def phase(data):
     return np.arctan2(imag, real)
 
 
+def normalise(data, dmin=None, dmax=None, nmin=0, nmax=1):
+    """Returns ``data``, rescaled to the range [nmin, nmax].
+
+    If dmin and dmax are provided, the data is normalised with respect to them,
+    rather than being normalised by the data minimum/maximum.
+    """
+    if dmin is None: dmin = data.min()
+    if dmax is None: dmax = data.max()
+    return nmin + (nmax - nmin) * (data - dmin) / (dmax - dmin)
+
+
 def phaseCorrection(spectrum, freqs, p0, p1):
     """Applies phase correction to the given complex power spectrum.
 
@@ -134,16 +126,19 @@ def phaseCorrection(spectrum, freqs, p0, p1):
     return np.exp(exp) * spectrum
 
 
-class PowerSpectrumSeries(object):
+class PowerSpectrumSeries:
     """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
     from an overlay. The ``PowerSpectrumSeries`` class is a base mixin class
     for all other classes in this module.
     """
 
 
-    varNorm  = props.Boolean(default=True)
-    """If ``True``, the data is normalised to unit variance before the fourier
-    transformation.
+    varNorm  = props.Boolean(default=False)
+    """If ``True``, the fourier-transformed data is normalised to the range
+    [0, 1] before plotting.
+
+    .. note:: The :class:`ComplexPowerSpectrumSeries` applies normalisation
+              differently.
     """
 
 
@@ -188,7 +183,10 @@ class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
             return None, None
 
         xdata = calcFrequencies(  data, self.sampleTime)
-        ydata = calcPowerSpectrum(data, self.varNorm)
+        ydata = calcPowerSpectrum(data)
+
+        if self.varNorm:
+            ydata = normalise(ydata)
 
         return xdata, ydata
 
