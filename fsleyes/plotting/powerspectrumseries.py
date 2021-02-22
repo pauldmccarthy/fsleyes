@@ -549,7 +549,7 @@ class MeshPowerSpectrumSeries(dataseries.DataSeries,
 
         vd    = opts.getVertexData()
         data  = vd[vidx, :]
-        xdata = calcFrequencies(  data, self.sampleTime)
+        xdata = calcFrequencies(  len(data), self.sampleTime, data.dtype)
         ydata = calcPowerSpectrum(data)
 
         return xdata, ydata
