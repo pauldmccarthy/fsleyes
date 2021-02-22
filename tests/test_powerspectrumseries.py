@@ -37,13 +37,9 @@ def test_calcPowerSpectrum():
     ]
 
     for data, explen, expdtype in tests:
-        got1 = psseries.calcPowerSpectrum(data)
-        got2 = psseries.calcPowerSpectrum(data, True)
-
-        assert got1.shape == (explen,)
-        assert got2.shape == (explen,)
-        assert np.issubdtype(got1.dtype, expdtype)
-        assert np.issubdtype(got2.dtype, expdtype)
+        got = psseries.calcPowerSpectrum(data)
+        assert got.shape == (explen,)
+        assert np.issubdtype(got.dtype, expdtype)
 
 
 def test_calcFrequencies():
@@ -57,7 +53,7 @@ def test_calcFrequencies():
     ]
 
     for data, explen in tests:
-        got = psseries.calcFrequencies(data, 1)
+        got = psseries.calcFrequencies(len(data), 1, data.dtype)
         assert got.shape == (explen,)
 
 
@@ -68,11 +64,14 @@ def test_magnitude():
 def test_phase():
     assert np.isclose(psseries.phase(4 + 4j), np.pi / 4)
 
+def test_normalise():
+    data = np.array([1, 2, 3, 4, 5])
+    assert np.all(psseries.normalise(data) == np.linspace(-1, 1, 5))
 
 def test_phaseCorrection():
     data      = np.random.random(100) + np.random.random(100) * 1j
     spectrum  = psseries.calcPowerSpectrum(data)
-    freqs     = psseries.calcFrequencies(data, 1)
+    freqs     = psseries.calcFrequencies(len(data), 1, data.dtype)
     corrected = psseries.phaseCorrection(spectrum, freqs, 1, 2)
 
     # TODO write a real test
@@ -94,13 +93,21 @@ def _test_VoxelPowerSpectrumSeries(panel, overlayList, displayCtx):
     displayCtx.location = loc
     realYield()
 
-    expx = psseries.calcFrequencies(  img[x, y, z, :], img.pixdim[3])
-    expy = psseries.calcPowerSpectrum(img[x, y, z, :], True)
+    expx = psseries.calcFrequencies(img.shape[3], img.pixdim[3], img.dtype)
+    expy = psseries.calcPowerSpectrum(img[x, y, z, :])
 
     xdata, ydata = ps.getData()
     assert ps.sampleTime == img.pixdim[3]
     assert np.all(xdata  == expx)
     assert np.all(ydata  == expy)
+
+    ps.varNorm = True
+
+    expy = psseries.normalise(expy)
+    ydata = ps.getData()[1]
+    assert np.all(ydata  == expy)
+
+    ps.varNorm = False
 
     x = x - 1
     y = y + 1
@@ -110,8 +117,8 @@ def _test_VoxelPowerSpectrumSeries(panel, overlayList, displayCtx):
     displayCtx.location = loc
     realYield()
     xdata, ydata = ps.getData()
-    expx = psseries.calcFrequencies(  img[x, y, z, :], img.pixdim[3])
-    expy = psseries.calcPowerSpectrum(img[x, y, z, :], True)
+    expx = psseries.calcFrequencies(img.shape[3], img.pixdim[3], img.dtype)
+    expy = psseries.calcPowerSpectrum(img[x, y, z, :])
 
     assert np.all(xdata == expx)
     assert np.all(ydata == expy)
@@ -132,8 +139,8 @@ def _test_ComplexPowerSpectrumSeries(panel, overlayList, displayCtx):
     ps   = panel.getDataSeries(img)
     displayCtx.location = opts.transformCoords((7, 8, 9), 'voxel', 'display')
 
-    expx = psseries.calcFrequencies(  img[7, 8, 9, :], 1)
-    expy = psseries.calcPowerSpectrum(img[7, 8, 9, :], True)
+    expx = psseries.calcFrequencies(  img.shape[3], 1, img.dtype)
+    expy = psseries.calcPowerSpectrum(img[7, 8, 9, :])
 
     xdata, ydata = ps.getData()
     assert np.all(xdata == expx)
@@ -213,8 +220,8 @@ def _test_MeshPowerSpectrumSeries(panel, overlayList, displayCtx):
         mesh.vertices[10, :], 'mesh', 'display')
     realYield()
     exp  = data[10, :]
-    expx = psseries.calcFrequencies(exp, 1)
-    expy = psseries.calcPowerSpectrum(exp, True)
+    expx = psseries.calcFrequencies(len(exp), 1, exp.dtype)
+    expy = psseries.calcPowerSpectrum(exp)
     ps = panel.getDataSeries(mesh)
 
     gotx, goty = ps.getData()
