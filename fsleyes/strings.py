@@ -1065,7 +1065,7 @@ properties = TypeDict({
     'ComplexHistogramSeries.plotMagnitude' : 'Plot magnitude',
     'ComplexHistogramSeries.plotPhase'     : 'Plot phase',
 
-    'PowerSpectrumSeries.varNorm'     : 'Normalise to unit variance',
+    'PowerSpectrumSeries.varNorm'     : 'Normalise to [-1, 1]',
 
     'FEATTimeSeries.plotFullModelFit' : 'Plot full model fit',
     'FEATTimeSeries.plotEVs'          : 'Plot EV{} ({})',

@@ -38,34 +38,15 @@ from . import                   dataseries
 log = logging.getLogger(__name__)
 
 
-def calcPowerSpectrum(data, varNorm=False):
-    """Calculates a power spectrum for the given one-dimensional data array. If
-    ``varNorm is True``, the data is de-meaned and normalised by its standard
-    deviation before the fourier transformation.
+def calcPowerSpectrum(data):
+    """Calculates a power spectrum for the given one-dimensional data array.
 
     :arg data:    Numpy array containing the time series data
-
-    :arg varNorm: Normalise the data before fourier transformation
 
     :returns:     If ``data`` contains real values, the magnitude of the power
                   spectrum is returned. If ``data`` contains complex values,
                   the complex power spectrum is returned.
     """
-
-    # De-mean and normalise
-    # by standard deviation
-    if varNorm:
-        mean = data.mean()
-        std  = data.std()
-
-        if not np.isclose(std, 0):
-            data = data - mean
-            data = data / std
-
-        # If all values in the data
-        # are the same, it has mean 0
-        else:
-            data = np.zeros(data.shape, dtype=data.dtype)
 
     # Fourier transform on complex data
     if np.issubdtype(data.dtype, np.complexfloating):
@@ -76,7 +57,7 @@ def calcPowerSpectrum(data, varNorm=False):
     # calculate and return the magnitude.
     # We also drop the first (zero-frequency)
     # term (see the rfft docs) as it is
-    # useless when varNorm is disabled.
+    # kind of useless for display purposes
     else:
         data = fft.rfft(data)[1:]
         data = magnitude(data)
@@ -84,19 +65,19 @@ def calcPowerSpectrum(data, varNorm=False):
     return data
 
 
-def calcFrequencies(data, sampleTime):
+def calcFrequencies(nsamples, sampleTime, dtype):
     """Calculates the frequencies of the power spectrum for the given
     data.
 
-    :arg data:       The input time series data
+    :arg nsamples:   Number of samples in the input time series data
     :arg sampleTime: Time between each data point
+    :arg dtype:      Data type - the calculation differs depending on
+                     whether the data is real or complex.
     :returns:        A ``numpy`` array containing the frequencies of the
                      power spectrum for ``data``
     """
 
-    nsamples = len(data)
-
-    if np.issubdtype(data.dtype, np.complexfloating):
+    if np.issubdtype(dtype, np.complexfloating):
         xdata = fft.fftfreq(nsamples, sampleTime)
         xdata = fft.fftshift(xdata)
     else:
@@ -121,6 +102,17 @@ def phase(data):
     return np.arctan2(imag, real)
 
 
+def normalise(data, dmin=None, dmax=None, nmin=-1, nmax=1):
+    """Returns ``data``, rescaled to the range [nmin, nmax].
+
+    If dmin and dmax are provided, the data is normalised with respect to them,
+    rather than being normalised by the data minimum/maximum.
+    """
+    if dmin is None: dmin = data.min()
+    if dmax is None: dmax = data.max()
+    return nmin + (nmax - nmin) * (data - dmin) / (dmax - dmin)
+
+
 def phaseCorrection(spectrum, freqs, p0, p1):
     """Applies phase correction to the given complex power spectrum.
 
@@ -134,16 +126,19 @@ def phaseCorrection(spectrum, freqs, p0, p1):
     return np.exp(exp) * spectrum
 
 
-class PowerSpectrumSeries(object):
+class PowerSpectrumSeries:
     """The ``PowerSpectrumSeries`` encapsulates a power spectrum data series
     from an overlay. The ``PowerSpectrumSeries`` class is a base mixin class
     for all other classes in this module.
     """
 
 
-    varNorm  = props.Boolean(default=True)
-    """If ``True``, the data is normalised to unit variance before the fourier
-    transformation.
+    varNorm  = props.Boolean(default=False)
+    """If ``True``, the fourier-transformed data is normalised to the range
+    [0, 1] before plotting.
+
+    .. note:: The :class:`ComplexPowerSpectrumSeries` applies normalisation
+              differently.
     """
 
 
@@ -179,16 +174,29 @@ class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
             raise ValueError('Overlay is not a 4D image')
 
 
+    def currentVoxelData(self, location):
+        """Overrides :meth:`.VoxelDataSeries.currentVoxelData`. Retrieves
+        the data at the specified location, then performs a fourier transform
+        on it and returnes the result.
+        """
+
+        data = dataseries.VoxelDataSeries.currentVoxelData(self, location)
+        data = calcPowerSpectrum(data)
+        return data
+
+
     def getData(self):
-        """Returns the data at the current voxel. """
+        """Returns the ``(xdata, ydata)`` to be plotted from the current voxel
+        location.
+        """
+        overlay = self.overlay
+        ydata   = self.dataAtCurrentVoxel()
+        xdata   = calcFrequencies(overlay.shape[3],
+                                  self.sampleTime,
+                                  overlay.dtype)
 
-        data = self.dataAtCurrentVoxel()
-
-        if data is None:
-            return None, None
-
-        xdata = calcFrequencies(  data, self.sampleTime)
-        ydata = calcPowerSpectrum(data, self.varNorm)
+        if self.varNorm:
+            ydata = normalise(ydata)
 
         return xdata, ydata
 
@@ -224,12 +232,14 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
         VoxelPowerSpectrumSeries.__init__(
             self, overlay, overlayList, displayCtx, plotPanel)
 
-        self.__cachedData = (None, None)
-        self.__imagps     = ImaginaryPowerSpectrumSeries(
+        # Separate DataSeries for the imaginary/
+        # magnitude/phase signals, returned by
+        # the extraSeries method
+        self.__imagps = ImaginaryPowerSpectrumSeries(
             self, overlay, overlayList, displayCtx, plotPanel)
-        self.__magps      = MagnitudePowerSpectrumSeries(
+        self.__magps = MagnitudePowerSpectrumSeries(
             self, overlay, overlayList, displayCtx, plotPanel)
-        self.__phaseps    = PhasePowerSpectrumSeries(
+        self.__phaseps = PhasePowerSpectrumSeries(
             self, overlay, overlayList, displayCtx, plotPanel)
 
         for ps in (self.__imagps, self.__magps, self.__phaseps):
@@ -239,35 +249,60 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
             ps.bindProps('lineStyle', self)
 
 
-    def makeLabel(self):
-        """Returns a string representation of this
-        ``ComplexPowerSpectrumSeries`` instance.
+    def makeLabelBase(self):
+        """Returns a string to be used as the label prefix for this
+        ``ComplexPowerSpectrumSeries`` instance, and for the imaginary,
+        magnitude, and phase child series.
         """
-        return '{} ({})'.format(VoxelPowerSpectrumSeries.makeLabel(self),
-                                strings.labels[self])
+        return VoxelPowerSpectrumSeries.makeLabel(self)
 
 
-    @property
-    def cachedData(self):
-        """Returns the currently cached data (see :meth:`getData`). """
-        return self.__cachedData
+    def makeLabel(self):
+        """Returns a label to use for this data series. """
+        return '{} ({})'.format(self.makeLabelBase(), strings.labels[self])
 
 
-    def getData(self):
+    def getData(self, component='real'):
         """If :attr:`plotReal` is true, returns the real component of the power
         spectrum of the data at the current voxel. Otherwise returns ``(None,
         None)``.
 
-        Every time this method is called, the power spectrum is calculated,
-        phase correction is applied, and a reference to the resulting complex
-        power spectrum (and frequencies) is saved; it is accessible via the
-        :meth:`cachedData` property, for use by the
-        :class:`ImaginaryPowerSpectrumSeries`,
-        :class:`MagnitudePowerSpectrumSeries`, and
-        :class:`PhasePowerSpectrumSeries`.
+        Every time this method is called, the power spectrum is retrieved (see
+        the :class:`VoxelPowerSpectrumSeries` class), phase correction is
+        applied if set, andthe data is normalised, if set. A tuple containing
+        the ``(xdata, ydata)`` is returned, with ``ydata`` containing the
+        requested ``component`` ( ``'real'``, ``'imaginary'``,
+        ``'magnitude'``, or ``'phase'``).
+
+        This method is called by the :class:`ImaginarySpectrumPowerSeries`,
+        :class:`MagnitudeSpectrumPowerSeries`, and
+        :class:`PhasePowerSpectrumPowerSeries` instances that are associated
+        with this data series.
         """
 
-        xdata, ydata = VoxelPowerSpectrumSeries.getData(self)
+        if ((component == 'real')      and (not self.plotReal))      or \
+           ((component == 'imaginary') and (not self.plotImaginary)) or \
+           ((component == 'magnitude') and (not self.plotMagnitude)) or \
+           ((component == 'phase')     and (not self.plotPhase)):
+            return None, None
+
+        # See VoxelPowerSpectrumSeries - the data
+        # is already fourier-transformed
+        ydata = self.dataAtCurrentVoxel()
+
+        if ydata is None:
+            return None, None
+
+        # All of the calculations below are repeated
+        # for each real/imag/mag/phase series that
+        # gets plotted. But keeping the code together
+        # and clean is currently more important than
+        # performance, as there is not really any
+        # performance hit.
+        overlay = self.overlay
+        xdata   = calcFrequencies(overlay.shape[3],
+                                  self.sampleTime,
+                                  overlay.dtype)
 
         if self.zeroOrderPhaseCorrection  != 0 or \
            self.firstOrderPhaseCorrection != 0:
@@ -276,19 +311,21 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
                                     self.zeroOrderPhaseCorrection,
                                     self.firstOrderPhaseCorrection)
 
-        # Note that we're assuming that this
-        # ComplexPowerSpectrumSeries.getData
-        # method will be called before the
-        # corresponding call(s) to the
-        # Imaginary/Magnitude/Phase series
-        # methods.
-        self.__cachedData = xdata, ydata
+        # Normalise magnitude, real, imaginary
+        # components with respect to magnitude.
+        # Normalise phase independently.
+        if self.varNorm:
+            mag = magnitude(ydata)
+            mr  = mag.min(), mag.max()
+            if   component == 'phase':     ydata = normalise(phase(ydata))
+            elif component == 'magnitude': ydata = normalise(mag)
+            elif component == 'real':      ydata = normalise(ydata.real, *mr)
+            elif component == 'imaginary': ydata = normalise(ydata.imag, *mr)
 
-        if not self.plotReal:
-            return None, None
-
-        if ydata is not None:
-            ydata = ydata.real
+        elif component == 'real':      ydata = ydata.real
+        elif component == 'imaginary': ydata = ydata.imag
+        elif component == 'magnitude': ydata = magnitude(ydata)
+        elif component == 'phase':     ydata = phase(ydata)
 
         return xdata, ydata
 
@@ -331,19 +368,13 @@ class ImaginaryPowerSpectrumSeries(dataseries.DataSeries):
         """Returns a string representation of this
         ``ImaginaryPowerSpectrumSeries`` instance.
         """
-        return '{} ({})'.format(self.__parent.makeLabel(),
+        return '{} ({})'.format(self.__parent.makeLabelBase(),
                                 strings.labels[self])
 
 
     def getData(self):
         """Returns the imaginary component of the power spectrum. """
-
-        xdata, ydata = self.__parent.cachedData
-
-        if ydata is not None:
-            ydata = ydata.imag
-
-        return xdata, ydata
+        return self.__parent.getData('imaginary')
 
 
 class MagnitudePowerSpectrumSeries(dataseries.DataSeries):
@@ -370,16 +401,13 @@ class MagnitudePowerSpectrumSeries(dataseries.DataSeries):
         """Returns a string representation of this
         ``MagnitudePowerSpectrumSeries`` instance.
         """
-        return '{} ({})'.format(self.__parent.makeLabel(),
+        return '{} ({})'.format(self.__parent.makeLabelBase(),
                                 strings.labels[self])
 
 
     def getData(self):
         """Returns the magnitude of the complex power spectrum. """
-        xdata, ydata = self.__parent.cachedData
-        if ydata is not None:
-            ydata = magnitude(ydata)
-        return xdata, ydata
+        return self.__parent.getData('magnitude')
 
 
 class PhasePowerSpectrumSeries(dataseries.DataSeries):
@@ -406,16 +434,13 @@ class PhasePowerSpectrumSeries(dataseries.DataSeries):
         """Returns a string representation of this ``PhasePowerSpectrumSeries``
         instance.
         """
-        return '{} ({})'.format(self.__parent.makeLabel(),
+        return '{} ({})'.format(self.__parent.makeLabelBase(),
                                 strings.labels[self])
 
 
     def getData(self):
         """Returns the phase of the complex power spectrum. """
-        xdata, ydata = self.__parent.cachedData
-        if ydata is not None:
-            ydata = phase(ydata)
-        return xdata, ydata
+        return self.__parent.getData('phase')
 
 
 class MelodicPowerSpectrumSeries(dataseries.DataSeries,
@@ -524,7 +549,7 @@ class MeshPowerSpectrumSeries(dataseries.DataSeries,
 
         vd    = opts.getVertexData()
         data  = vd[vidx, :]
-        xdata = calcFrequencies(  data, self.sampleTime)
-        ydata = calcPowerSpectrum(data, self.varNorm)
+        xdata = calcFrequencies(  len(data), self.sampleTime, data.dtype)
+        ydata = calcPowerSpectrum(data)
 
         return xdata, ydata

@@ -36,8 +36,7 @@ class DataSeries(props.HasProperties):
       - Override the :meth:`redrawProperties` method if necessary
 
 
-    The overlay is accessible as an instance attribute, confusingly called
-    ``overlay``.
+    The overlay is accessible as an instance attribute called ``overlay``.
 
 
     .. note:: Some ``DataSeries`` instances may not be associated with
@@ -212,6 +211,16 @@ class VoxelDataSeries(DataSeries):
 
     It contains a built-in cache which is used to prevent repeated access
     to data from the same voxel.
+
+    Sub-classes may need to override:
+
+      - the :meth:`currentVoxelLocation` method, which
+        generates the location index for the current location, and which
+        is used as the unique cache key when the corresponding data is cached
+
+      - The :meth:`currentVoxelData` method, which retrieves and/or calculates
+        the data at the current location. This is the data which is cached,
+        and which is returned by the :meth:`dataAtCurrentVoxel` method.
     """
 
 
@@ -252,7 +261,10 @@ class VoxelDataSeries(DataSeries):
 
 
     def getData(self):
-        """Returns the data at the current voxel location. """
+        """Returns the ``(xdata, ydata)`` at the current voxel location.
+
+        This method may be overridden by sub-classes.
+        """
 
         xdata = None
         ydata = self.dataAtCurrentVoxel()
@@ -275,17 +287,45 @@ class VoxelDataSeries(DataSeries):
     # (which is a good thing).
     @idle.mutex
     def dataAtCurrentVoxel(self):
-        """Returns the data for the current voxel of the overlay. The current
-        voxel is dictated by the :attr:`.DisplayContext.location` property.
-        This method is intended to be used by the :meth:`DataSeries.getData`
-        method of sub-classes.
+        """Returns the data for the current voxel of the overlay.  This method
+        is intended to be used within the :meth:`DataSeries.getData` method
+        of sub-classes.
 
-        It may also be overridden by sub-classes, but this implementation
-        should be called to take advantage of the voxel data cache.
+        An internal cache is used to avoid the need to retrieve data for the
+        same voxel multiple times, as retrieving data from large compressed
+        4D images can be time consuming.
+
+        The location for the current voxel is calculated by the
+        :meth:`currentVoxelLocation` method, and the data lookup is performed
+        by the :meth:`currentVoxelData` method. These methods may be
+        overridden by sub-classes.
 
         :returns: A ``numpy`` array containing the data at the current
                   voxel, or ``None`` if the current location is out of bounds
                   of the image.
+        """
+
+        location = self.currentVoxelLocation()
+
+        if location is None:
+            return None
+
+        data = self.__cache.get(location, None)
+
+        if data is None:
+            data = self.currentVoxelData(location)
+            self.__cache.put(location, data)
+
+        return data
+
+
+    def currentVoxelLocation(self):
+        """Used by :meth:`dataAtCurrentVoxel`. Returns the current voxel
+        location. This is used as a key for the voxel data cache implemented
+        within the :meth:`dataAtCurrentVoxel` method, and subsequently passed
+        to the :meth:`currentVoxelData` method.
+
+        This method may be overridden by sub-classes.
         """
 
         opts  = self.displayCtx.getOpts(self.overlay)
@@ -297,10 +337,17 @@ class VoxelDataSeries(DataSeries):
 
         x, y, z = voxel
 
-        data = self.__cache.get((x, y, z, vdim), None)
+        return (x, y, z, vdim)
 
-        if data is None:
-            data = self.overlay[opts.index(voxel, atVolume=False)]
-            self.__cache.put((x, y, z, vdim), data)
+
+    def currentVoxelData(self, location):
+        """Used by :meth:`dataAtCurrentVoxel`. Returns the data at the
+        specified location.
+
+        This method may be overridden by sub-classes.
+        """
+        voxel = location[:3]
+        opts  = self.displayCtx.getOpts(self.overlay)
+        data  = self.overlay[opts.index(voxel, atVolume=False)]
 
         return data

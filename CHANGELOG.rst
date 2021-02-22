@@ -41,6 +41,14 @@ Changed
   position of the light source.
 * FSLeyes no longer ignores the ``LIBGL_ALWAYS_INDIRECT`` environment
   variable.
+* FSLeyes attempts to determine a suitable value for ``PYOPENGL_PLATFORM``
+  if it is not already set.
+* FSLeyes should now work with both Wayland/EGL and X11/GLX builds of wxPython
+  on Linux.
+* The normalisation method used in the power spectrum panel has been adjusted
+  so that, instead of the data being normalised to unit variance before the
+  fourier transform, the fourier-transformed data itself is normalised to the
+  range [-1, 1].
 
 
 Fixed
