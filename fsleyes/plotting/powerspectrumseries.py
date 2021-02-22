@@ -65,19 +65,19 @@ def calcPowerSpectrum(data):
     return data
 
 
-def calcFrequencies(data, sampleTime):
+def calcFrequencies(nsamples, sampleTime, dtype):
     """Calculates the frequencies of the power spectrum for the given
     data.
 
-    :arg data:       The input time series data
+    :arg nsamples:   Number of samples in the input time series data
     :arg sampleTime: Time between each data point
+    :arg dtype:      Data type - the calculation differs depending on
+                     whether the data is real or complex.
     :returns:        A ``numpy`` array containing the frequencies of the
                      power spectrum for ``data``
     """
 
-    nsamples = len(data)
-
-    if np.issubdtype(data.dtype, np.complexfloating):
+    if np.issubdtype(dtype, np.complexfloating):
         xdata = fft.fftfreq(nsamples, sampleTime)
         xdata = fft.fftshift(xdata)
     else:
@@ -174,16 +174,26 @@ class VoxelPowerSpectrumSeries(dataseries.VoxelDataSeries,
             raise ValueError('Overlay is not a 4D image')
 
 
+    def currentVoxelData(self, location):
+        """Overrides :meth:`.VoxelDataSeries.currentVoxelData`. Retrieves
+        the data at the specified location, then performs a fourier transform
+        on it and returnes the result.
+        """
+
+        data = dataseries.VoxelDataSeries.currentVoxelData(self, location)
+        data = calcPowerSpectrum(data)
+        return data
+
+
     def getData(self):
-        """Returns the data at the current voxel. """
-
-        data = self.dataAtCurrentVoxel()
-
-        if data is None:
-            return None, None
-
-        xdata = calcFrequencies(  data, self.sampleTime)
-        ydata = calcPowerSpectrum(data)
+        """Returns the ``(xdata, ydata)`` to be plotted from the current voxel
+        location.
+        """
+        overlay = self.overlay
+        ydata   = self.dataAtCurrentVoxel()
+        xdata   = calcFrequencies(overlay.shape[3],
+                                  self.sampleTime,
+                                  overlay.dtype)
 
         if self.varNorm:
             ydata = normalise(ydata)
