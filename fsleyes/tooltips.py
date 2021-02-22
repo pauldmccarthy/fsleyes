@@ -702,15 +702,14 @@ properties = TypeDict({
                                         'histogram.',
 
 
-    'PowerSpectrumSeries.varNorm'     : 'If checked, the data is demeaned and '
-                                        'normalised by its standard deviation '
-                                        'before its power spectrum is '
-                                        'calculated via a fourier transform.',
+    'PowerSpectrumSeries.varNorm' :
+    'If checked, the fourier-transformed data is normalised to the range '
+    '[-1, 1]. Complex valued data are normalised with respect to the '
+    'absolute value. ',
 
     # Profiles
-
-    'OrthoPanel.profile'                      : 'Switch between view mode '
-                                                'and edit mode',
+    'OrthoPanel.profile' :
+    'Switch between view mode and edit mode',
 
     'OrthoEditProfile.selectionCursorColour'  :
     'Colour to use for the selection cursor.',
