@@ -64,6 +64,8 @@ cli_tests = """
 
 -hl -z 50 -c 0  -bg 0.2 0.2 0.2 3d.nii.gz
 -hl -z 50 -c 10 -bg 0.2 0.2 0.2 3d.nii.gz
+
+-ixh -ixv -iyh -iyv -izh -izv 3d.nii.gz
 """
 
 

@@ -23,6 +23,8 @@ Added
   the light source from the centre of the display bounding box to be set.
 * New ``--noBlendByIntensity`` option, for ``volume`` overlays in the 3D view,
   allowing the modulation of samples by voxel intensity to be disabled.
+* New ``-ixh``, ``-ixv``, ``-iyh``, ``-iyv``, ``-izh``, and ``-izv`` options,
+  allowing ortho canvases to be inverted vertically or horizontally.
 
 
 Changed

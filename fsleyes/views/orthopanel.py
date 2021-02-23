@@ -178,6 +178,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # its name is stored here.
         self.__editMenuTitle = None
 
+        # The OrthoOpts and DisplayContext objects
+        # contains the properties that the user
+        # interacts with, but the slice canvases
+        # are controlled by properties on a
+        # SliceCanvsOpts object (one for each
+        # canvas). So we bind properties of these
+        # objects together.
         xopts = self.__xcanvas.opts
         yopts = self.__ycanvas.opts
         zopts = self.__zcanvas.opts
@@ -213,6 +220,13 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         xopts.bindProps('highDpi',      sceneOpts)
         yopts.bindProps('highDpi',      sceneOpts)
         zopts.bindProps('highDpi',      sceneOpts)
+
+        xopts.bindProps('invertX', sceneOpts, 'invertXHorizontal')
+        xopts.bindProps('invertY', sceneOpts, 'invertXVertical')
+        yopts.bindProps('invertX', sceneOpts, 'invertYHorizontal')
+        yopts.bindProps('invertY', sceneOpts, 'invertYVertical')
+        zopts.bindProps('invertX', sceneOpts, 'invertZHorizontal')
+        zopts.bindProps('invertY', sceneOpts, 'invertZVertical')
 
         # Callbacks for ortho panel layout options
         sceneOpts.addListener('layout', name, self.__refreshLayout)
