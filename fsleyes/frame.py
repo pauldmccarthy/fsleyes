@@ -1812,7 +1812,7 @@ class FSLeyesFrame(wx.Frame):
             for name, cls in pluginViews.items():
                 func = ft.partial(self.addViewPanel, cls, title=name)
                 item = menu.Append(wx.ID_ANY, name)
-                self.Bind(wx.EVT_MENU, lambda ev : func(), item)
+                self.Bind(wx.EVT_MENU, lambda ev, f=func : f(), item)
 
         # We create the layout menu,
         # but don't populate it - this
