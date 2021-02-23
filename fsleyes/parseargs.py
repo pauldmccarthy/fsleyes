@@ -453,7 +453,13 @@ OPTIONS = td.TypeDict({
                        'showZCanvas',
                        'xcentre',
                        'ycentre',
-                       'zcentre'],
+                       'zcentre',
+                       'invertXVertical',
+                       'invertXHorizontal',
+                       'invertYVertical',
+                       'invertYHorizontal',
+                       'invertZVertical',
+                       'invertZHorizontal'],
     'LightBoxOpts'  : ['zax',
                        'sliceSpacing',
                        'zrange',
@@ -778,20 +784,24 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.movieSyncRefresh'   : ('ms',  'movieSync',          False),
     'SceneOpts.labelSize'          : ('ls',  'labelSize',          True),
 
-    'OrthoOpts.xzoom'       : ('xz', 'xzoom',      True),
-    'OrthoOpts.yzoom'       : ('yz', 'yzoom',      True),
-    'OrthoOpts.zzoom'       : ('zz', 'zzoom',      True),
-    'OrthoOpts.cursorGap'   : ('cg', 'cursorGap',  False),
-    'OrthoOpts.layout'      : ('lo', 'layout',     True),
-    'OrthoOpts.showXCanvas' : ('xh', 'hidex',      False),
-    'OrthoOpts.showYCanvas' : ('yh', 'hidey',      False),
-    'OrthoOpts.showZCanvas' : ('zh', 'hidez',      False),
-    'OrthoOpts.showLabels'  : ('hl', 'hideLabels', False),
-
-
-    'OrthoOpts.xcentre'     : ('xc', 'xcentre', True),
-    'OrthoOpts.ycentre'     : ('yc', 'ycentre', True),
-    'OrthoOpts.zcentre'     : ('zc', 'zcentre', True),
+    'OrthoOpts.xzoom'             : ('xz', 'xzoom',              True),
+    'OrthoOpts.yzoom'             : ('yz', 'yzoom',              True),
+    'OrthoOpts.zzoom'             : ('zz', 'zzoom',              True),
+    'OrthoOpts.cursorGap'         : ('cg', 'cursorGap',          False),
+    'OrthoOpts.layout'            : ('lo', 'layout',             True),
+    'OrthoOpts.showXCanvas'       : ('xh', 'hidex',              False),
+    'OrthoOpts.showYCanvas'       : ('yh', 'hidey',              False),
+    'OrthoOpts.showZCanvas'       : ('zh', 'hidez',              False),
+    'OrthoOpts.showLabels'        : ('hl', 'hideLabels',         False),
+    'OrthoOpts.xcentre'           : ('xc', 'xcentre',            True),
+    'OrthoOpts.ycentre'           : ('yc', 'ycentre',            True),
+    'OrthoOpts.zcentre'           : ('zc', 'zcentre',            True),
+    'OrthoOpts.invertXHorizontal' : ('ixh', 'invertXHorizontal', False),
+    'OrthoOpts.invertXVertical'   : ('ixv', 'invertXVertical',   False),
+    'OrthoOpts.invertYHorizontal' : ('iyh', 'invertYHorizontal', False),
+    'OrthoOpts.invertYVertical'   : ('iyv', 'invertYVertical',   False),
+    'OrthoOpts.invertZHorizontal' : ('izh', 'invertZHorizontal', False),
+    'OrthoOpts.invertZVertical'   : ('izv', 'invertZVertical',   False),
 
     'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing',   True),
     'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
@@ -1038,6 +1048,18 @@ HELP = td.TypeDict({
     'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
     'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
     'OrthoOpts.showLabels'  : 'Hide orientation labels',
+    'OrthoOpts.invertXHorixontal' :
+    'Invert the X canvas along the horizontal axis',
+    'OrthoOpts.invertXVertical' :
+    'Invert the X canvas along the vertical axis',
+    'OrthoOpts.invertYHorizontal' :
+    'Invert the Y canvas along the horizontal axis',
+    'OrthoOpts.invertYVertical' :
+    'Invert the Y canvas along the vertical axis',
+    'OrthoOpts.invertZHorizontal' :
+    'Invert the Z canvas along the horizontal axis',
+    'OrthoOpts.invertZVertical' :
+    'Invert the Z canvas along the vertical axis',
 
 
     'OrthoOpts.xcentre'     : 'X canvas centre ([-1, 1])',

@@ -472,18 +472,25 @@ def createOrthoCanvases(namespace,
     canvasAxes = []
     zooms      = []
     centres    = []
+    inverts    = []
     if sceneOpts.showXCanvas:
         canvasAxes.append((1, 2))
         zooms     .append(sceneOpts.xzoom)
         centres   .append(sceneOpts.panel.getGLCanvases()[0].centre)
+        inverts   .append((sceneOpts.invertXHorizontal,
+                           sceneOpts.invertXVertical))
     if sceneOpts.showYCanvas:
         canvasAxes.append((0, 2))
         zooms     .append(sceneOpts.yzoom)
         centres   .append(sceneOpts.panel.getGLCanvases()[1].centre)
+        inverts   .append((sceneOpts.invertYHorizontal,
+                           sceneOpts.invertYVertical))
     if sceneOpts.showZCanvas:
         canvasAxes.append((0, 1))
         zooms     .append(sceneOpts.zzoom)
         centres   .append(sceneOpts.panel.getGLCanvases()[2].centre)
+        inverts   .append((sceneOpts.invertZHorizontal,
+                           sceneOpts.invertZVertical))
 
     # Grid layout only makes sense if
     # we're displaying 3 canvases
@@ -494,6 +501,7 @@ def createOrthoCanvases(namespace,
         canvasAxes = [canvasAxes[1], canvasAxes[0], canvasAxes[2]]
         centres    = [centres[   1], centres[   0], centres[   2]]
         zooms      = [zooms[     1], zooms[     0], zooms[     2]]
+        inverts    = [inverts[   1], inverts[   0], inverts[   2]]
 
     # Calculate the size in pixels for each canvas
     sizes = calculateOrthoCanvasSizes(overlayList,
@@ -504,10 +512,15 @@ def createOrthoCanvases(namespace,
                                       sceneOpts.layout)
 
     # Configure the properties on each canvas
-    for ((width, height), (xax, yax), zoom, centre) in zip(sizes,
-                                                           canvasAxes,
-                                                           zooms,
-                                                           centres):
+    for ((width, height),
+         (xax, yax),
+         zoom,
+         centre,
+         (invertx, inverty)) in zip(sizes,
+                                    canvasAxes,
+                                    zooms,
+                                    centres,
+                                    inverts):
 
         zax = 3 - xax - yax
 
@@ -524,6 +537,8 @@ def createOrthoCanvases(namespace,
         opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
         opts.renderMode   = sceneOpts.renderMode
+        opts.invertX      = invertx
+        opts.invertY      = inverty
 
         if zoom is not None:
             opts.zoom = zoom
@@ -536,7 +551,6 @@ def createOrthoCanvases(namespace,
         c.centreDisplayAt(*centre)
 
         canvases.append(c)
-
 
     return canvases
 

@@ -72,6 +72,30 @@ class OrthoOpts(sceneopts.SceneOpts):
     """Controls zoom on the Z canvas. """
 
 
+    invertXHorizontal = copy.copy(canvasopts.SliceCanvasOpts.invertX)
+    """Invert the X canvas along the horizontal axis. """
+
+
+    invertXVertical = copy.copy(canvasopts.SliceCanvasOpts.invertY)
+    """Invert the X canvas along the vertical axis. """
+
+
+    invertYHorizontal = copy.copy(canvasopts.SliceCanvasOpts.invertX)
+    """Invert the Y canvas along the horizontal axis. """
+
+
+    invertYVertical = copy.copy(canvasopts.SliceCanvasOpts.invertY)
+    """Invert the Y canvas along the vertical axis. """
+
+
+    invertZHorizontal = copy.copy(canvasopts.SliceCanvasOpts.invertX)
+    """Invert the Z canvas along the horizontal axis. """
+
+
+    invertZVertical = copy.copy(canvasopts.SliceCanvasOpts.invertY)
+    """Invert the Z canvas along the vertical axis. """
+
+
     def __init__(self, *args, **kwargs):
         """Create an ``OrthoOpts`` instance. All arguments are passed
         through to the :class:`.SceneOpts` constructor.
