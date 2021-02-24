@@ -6,8 +6,6 @@
 #
 
 
-from tornado import gen
-
 from notebook.services.kernels.kernelmanager import MappingKernelManager
 
 
@@ -25,7 +23,7 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
     """
 
     def __init__(self, *args, **kwargs):
-        super(FSLeyesNotebookKernelManager, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
     def __patch_connection(self, kernel):
@@ -40,16 +38,14 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
         kernel.load_connection_file(self.connfile)
 
 
-    @gen.coroutine
-    def start_kernel(self, **kwargs):
+    async def start_kernel(self, **kwargs):
         """Overrides ``MappingKernelManager.start_kernel``. Connects
         all new kernels to the IPython kernel specified by ``connfile``.
         """
-        kid = super(FSLeyesNotebookKernelManager, self)\
-                  .start_kernel(**kwargs).result()
+        kid    = await super().start_kernel(**kwargs)
         kernel = self._kernels[kid]
         self.__patch_connection(kernel)
-        raise gen.Return(kid)
+        return kid
 
 
     def restart_kernel(self, *args, **kwargs):
