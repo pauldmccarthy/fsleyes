@@ -18,6 +18,7 @@ are also defined here:
 
 import wx
 
+import fsl.data.image         as fslimage
 import fsleyes_widgets.dialog as fsldlg
 import fsleyes.strings        as strings
 import fsleyes.parseargs      as parseargs
@@ -59,6 +60,21 @@ def showCommandLineArgs(overlayList, displayCtx, canvas):
     :arg displayCtx:  A :class:`.DisplayContext` instance.
     :arg canvas:      A :class:`CanvasPanel` instance.
     """
+
+    unsaved = False
+
+    for o in overlayList:
+        if o.dataSource is None:
+            unsaved = True
+        elif isinstance(o, fslimage.Image) and not o.saveState:
+            unsaved = True
+
+    if unsaved:
+        msg   = strings.messages[canvas, 'showCommandLineArgs', 'unsaved']
+        title = strings.titles[  canvas, 'showCommandLineArgs', 'unsaved']
+        wx.MessageBox(msg, title, wx.ICON_EXCLAMATION | wx.OK)
+        return
+
     args = genCommandLineArgs(overlayList, displayCtx, canvas)
     dlg  = fsldlg.TextEditDialog(
         canvas,

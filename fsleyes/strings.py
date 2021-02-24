@@ -144,6 +144,9 @@ messages = TypeDict({
     'CanvasPanel.showCommandLineArgs.message' : 'Use these parameters on the '
                                                 'command line to recreate '
                                                 'the current scene',
+    'CanvasPanel.showCommandLineArgs.unsaved' :
+    'All of your images must be saved to a file before a command line can be '
+    'generated!',
 
     'PlotPanel.preparingData'          : 'Preparing data - please wait...',
 
@@ -446,6 +449,8 @@ titles = TypeDict({
     'SaveFlirtXfmAction.error' : 'Error saving affine matrix',
 
     'ClearSettingsAction.confirm' : 'Clear all settings?',
+
+    'CanvasPanel.showCommandLineArgs.unsaved' : 'Unsaved images',
 
 
     'LoadColourMapAction.namecmap'        : 'Name colour map.',
