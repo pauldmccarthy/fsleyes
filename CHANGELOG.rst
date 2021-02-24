@@ -51,6 +51,8 @@ Changed
   so that, instead of the data being normalised to unit variance before the
   fourier transform, the fourier-transformed data itself is normalised to the
   range [-1, 1].
+* The *Show command line for scene* option will display a warning if any
+  overlays are not saved.
 
 
 Fixed
