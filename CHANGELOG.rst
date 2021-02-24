@@ -66,6 +66,7 @@ Fixed
   by default, instead of the ``mean`` underlay.
 * Fixed a bug in image texture preparation for complex data types, when
   running in a limited GL environment (e.g. VNC).
+* Compatibility fixes for newer versions of Jupyter `notebook`.
 
 
 0.34.2 (Tuesday 14th July 2020)
