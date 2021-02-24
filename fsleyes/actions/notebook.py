@@ -380,8 +380,12 @@ class BackgroundIPythonKernel(object):
         return self.__error
 
 
-    def __screenshot(self, view):
-        """Insert a screenshot of the given view into the notebook. """
+    def __screenshot(self, view=None):
+        """Insert a screenshot of the given view panel into the notebook.
+        If ``view`` is not specified, the first view is assumed.
+        """
+        if view is None:
+            view = self.__frame.viewPanels[0]
         with tempdir.tempdir():
             screenshot.screenshot(view, 'screenshot.png')
             return display.Image('screenshot.png')
