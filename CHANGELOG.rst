@@ -67,6 +67,9 @@ Fixed
 * Fixed a bug in image texture preparation for complex data types, when
   running in a limited GL environment (e.g. VNC).
 * Compatibility fixes for newer versions of Jupyter `notebook`.
+* Fixed a problem with macOS desktop integration - it should now be possible
+  to open a file with FSLeyes as the default application, and to drag a file
+  onto the FSLeyes.app icon.
 
 
 0.34.2 (Tuesday 14th July 2020)
