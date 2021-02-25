@@ -95,6 +95,14 @@ class FSLeyesApp(wx.App):
         self.__overlayList = None
         self.__displayCtx  = None
 
+        # On macOS, when the user drags a file onto the FSLeyes window,
+        # or onto the FSLeyes.app icon, the file path will be passed to
+        # MacOpenFiles method. But that method may be called very early
+        # on in the startup process, before the DisplayContext and
+        # OverlayList have been created. So when this happens, we cache
+        # the files here, and then open them when the
+        # SetOverlayListAndDisplayContext method gets called.
+        self.__filesToOpen = []
 
         self.__modalHook = FSLeyesApp.ModalHook()
         self.__modalHook.Register()
@@ -124,6 +132,14 @@ class FSLeyesApp(wx.App):
         """
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+
+        # MacOpenFiles was called before the
+        # overlaylist/dc were created, and
+        # queued some files that need to be
+        # opened
+        if len(self.__filesToOpen) > 0:
+            wx.CallAfter(self.MacOpenFiles, self.__filesToOpen)
+            self.__filesToOpen = None
 
 
     def MacReopenApp(self):
@@ -169,7 +185,11 @@ class FSLeyesApp(wx.App):
         on the application icon.
         """
 
+        # OverlayList has not yet been created -
+        # queue the files to open them later
+        # in SetOverlayListAndDisplayContext
         if self.__overlayList is None:
+            self.__filesToOpen.extend(filenames)
             return
 
         import fsleyes.actions.loadoverlay as loadoverlay
