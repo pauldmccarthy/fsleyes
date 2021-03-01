@@ -363,7 +363,11 @@ def main(args=None):
         # and then create the FSLeyesFrame.
         overlayList, displayCtx = makeDisplayContext(namespace[0], splash)
         app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
-        frame = makeFrame(namespace[0], displayCtx, overlayList, splash)
+        frame = makeFrame(namespace[0],
+                          displayCtx,
+                          overlayList,
+                          splash,
+                          [shutdown])
 
         app.SetTopWindow(frame)
         frame.Show()
@@ -445,7 +449,6 @@ def main(args=None):
     except ImportError:
         pass
     app.MainLoop()
-    shutdown()
     return exitCode[0]
 
 
@@ -611,9 +614,12 @@ def initialise(splash, namespace, callback):
         sys.exit(1)
 
 
-def shutdown():
+def shutdown(ev=None):
     """Called when FSLeyes exits normally (i.e. the user closes the window).
     Does some final clean-up before exiting.
+
+    This function is used as a wxpython event handler, so it accepts an ``ev``
+    arguments, but ignores its value.
     """
 
     import fsl.utils.settings as fslsettings
@@ -737,7 +743,7 @@ def makeDisplayContext(namespace, splash):
     return overlayList, displayCtx
 
 
-def makeFrame(namespace, displayCtx, overlayList, splash):
+def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
     """Creates the *FSLeyes* interface.
 
     This function does the following:
@@ -750,16 +756,19 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
      3. Destroys the splash screen that was created by the :func:`context`
         function.
 
-    :arg namespace:   Parsed command line arguments, as returned by
-                      :func:`parseArgs`.
+    :arg namespace:     Parsed command line arguments, as returned by
+                        :func:`parseArgs`.
 
-    :arg displayCtx:  The  :class:`.DisplayContext`, as created and returned
-                      by :func:`makeDisplayContext`.
+    :arg displayCtx:    The  :class:`.DisplayContext`, as created and returned
+                        by :func:`makeDisplayContext`.
 
-    :arg overlayList: The :class:`.OverlayList`, as created and returned by
-                      :func:`makeDisplayContext`.
+    :arg overlayList:   The :class:`.OverlayList`, as created and returned by
+                        :func:`makeDisplayContext`.
 
-    :arg splash:      The :class:`.FSLeyesSplash` frame.
+    :arg splash:        The :class:`.FSLeyesSplash` frame.
+
+    :arg closeHandlers: List of event handlers to be called when the
+                        ``FSLeyesFrame`` closes.
 
     :returns: the :class:`.FSLeyesFrame` that was created.
     """
@@ -797,7 +806,8 @@ def makeFrame(namespace, displayCtx, overlayList, splash):
         displayCtx,
         restore,
         True,
-        fontSize=namespace.fontSize)
+        fontSize=namespace.fontSize,
+        closeHandlers=closeHandlers)
 
     # Allow files to be dropped
     # onto FSLeyes to open them
