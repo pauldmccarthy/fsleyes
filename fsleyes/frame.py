@@ -1347,12 +1347,6 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.write('fsleyes.frame.askToSaveLayout',
                                   not dlg.CheckBoxState())
 
-            # The close is going ahead. We assume that this
-            # EVT_CLOSE handler is the first that is called,
-            # and can thus control whether any the event
-            # gets propagated to other handlers.
-            ev.Skip()
-
             if save:
                 layout   = layouts.serialiseLayout(self)
                 size     = self.GetSize().Get()
@@ -1369,6 +1363,12 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.size')
                 fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
+
+        # The close is going ahead. We assume that this
+        # EVT_CLOSE handler is the first that is called,
+        # and can thus control whether any the event
+        # gets propagated to other handlers.
+        ev.Skip()
 
         # It's nice to explicitly clean
         # up our FSLeyesPanels, otherwise

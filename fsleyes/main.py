@@ -622,6 +622,9 @@ def shutdown(ev=None):
     arguments, but ignores its value.
     """
 
+    if ev is not None:
+        ev.Skip()
+
     import fsl.utils.settings as fslsettings
     import fsleyes.gl         as fslgl
 
