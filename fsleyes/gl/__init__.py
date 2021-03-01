@@ -708,11 +708,9 @@ class GLContext(object):
         initialisation are destroyed.
         """
         self.__context = None
-        if self.__parent is not None:
-            self.__parent.Close()
-            self.__parent = None
-            self.__canvas = None
-            self.__app    = None
+        self.__parent  = None
+        self.__canvas  = None
+        self.__app     = None
 
 
     def setTarget(self, target=None):
@@ -741,10 +739,20 @@ class GLContext(object):
         dummy ``wx.glcanvas.GLCanvas``.
         """
 
-        log.debug('Creating temporary wx.Frame')
-
         import wx
-        self.__parent = wx.Frame(None, style=0)
+
+        # Override ShouldPreventAppExit, meaning
+        # that the wx.App.MainLoop will exit even
+        # if a DummyFrame still exists. The wx
+        # equivalent of marking a thread as a
+        # daemon.
+        class DummyFrame(wx.Frame):
+            def ShouldPreventAppExit(self):
+                return False
+
+        log.debug('Creating dummy wx.Frame for GL context creation')
+
+        self.__parent = DummyFrame(None, style=0)
         self.__parent.SetSize((0, 0))
         self.__parent.Show(True)
 
