@@ -725,6 +725,10 @@ class GLContext(object):
         if self.__offscreen:
             return
 
+        # destroy() has been called
+        if self.__context is None:
+            return
+
         if target is None and self.__canvas is not None:
             self.__context.SetCurrent(self.__canvas)
 
@@ -1127,7 +1131,16 @@ class WXGLCanvasTarget(object):
         """Must be called when this WXGLCanvasTarget is no longer in use.
         Clears the GL rendering context target.
         """
-        getGLContext().setTarget(None)
+        self.__context.setTarget(None)
+        self.__context = None
+
+
+    @property
+    def destroyed(self):
+        """Returns ``True`` if :meth:`destroy` has been called, ``False``
+        otherwise.
+        """
+        return self.__context is None
 
 
     def __onEraseBackground(self, ev):
@@ -1196,6 +1209,9 @@ class WXGLCanvasTarget(object):
         import OpenGL.GL as gl
 
         def drawWrapper(*a, **kwa):
+
+            if self.destroyed:
+                return
 
             if not self.__freezeDraw:
                 subClassDraw(*a, **kwa)
