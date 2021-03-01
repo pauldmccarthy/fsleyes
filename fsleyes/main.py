@@ -617,11 +617,15 @@ def shutdown():
     """
 
     import fsl.utils.settings as fslsettings
+    import fsleyes.gl         as fslgl
 
     # Clear the cached directory for loading/saving
     # files - when FSLeyes starts up, we want it to
     # default to the current directory.
     fslsettings.delete('loadSaveOverlayDir')
+
+    # Shut down the GL rendering context
+    fslgl.shutdown()
 
 
 def parseArgs(argv):

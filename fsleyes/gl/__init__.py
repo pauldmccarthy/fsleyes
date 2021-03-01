@@ -44,6 +44,13 @@ Quick start
     # call our function when it is ready.
     fslgl.getGLContext(ready=ready)
 
+    # ...
+
+    # When you're finished, call the shutdown
+    # function to clear the context (only
+    # necessary for on-screen rendering)
+    fslgl.shutdown()
+
 
 --------
 Canvases
@@ -480,13 +487,31 @@ def getGLContext(**kwargs):
     return thismod._glContext
 
 
+def shutdown():
+    """Must be called when the GL rendering context is no longer needed.
+    Destroys the context object, and resources associated with it.
+
+    Does not need to be called for off-screen rendering.
+    """
+
+    thismod = sys.modules[__name__]
+    context = getattr(thismod, '_glContext', None)
+    if context is not None:
+        context.destroy()
+        delattr(thismod, '_glContext')
+
+
 class GLContext(object):
     """The ``GLContext`` class manages the creation of, and access to, an
     OpenGL context. This class abstracts away the differences between
     creation of on-screen and off-screen rendering contexts.
-    It contains a single method, :meth:`setTarget`, which may
-    be used to set a :class:`.WXGLCanvasTarget` or an
-    :class:`OffScreenCanvasTarget` as the GL rendering target.
+    It contains two methods:
+
+      - :meth:`setTarget`, which may be used to set a
+        :class:`.WXGLCanvasTarget` or an :class:`OffScreenCanvasTarget` as the
+         GL rendering target.
+      - :meth:`destroy`, which must be called when the context is no longer
+        needed.
 
 
     On-screen rendering is performed via the ``wx.GLCanvas.GLContext``
@@ -507,6 +532,12 @@ class GLContext(object):
     ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.  The
     ``GLContext`` class therefore creates a dummy ``wx.Frame`` and
     ``GLCanvas``, and displays it, before creating the ``wx`` GL context.
+
+
+    A reference to this dummy ``wx.Frame`` is retained, because destroying it
+    can result in ``GLXBadCurrentWindow`` errors when running on
+    macOS+XQuartz. The frame is destroyed on calls to the ``GLContext.destroy``
+    method.
 
 
     Because ``wx`` contexts may be used even when an off-screen rendering
@@ -671,7 +702,20 @@ class GLContext(object):
             self.__app.MainLoop()
 
 
-    def setTarget(self, target):
+    def destroy(self):
+        """Called by the module-level :func:`shutdown` function. If this is an
+        on-screen context, the dummy canvas and frame that were created at
+        initialisation are destroyed.
+        """
+        self.__context = None
+        if self.__parent is not None:
+            self.__parent.Close()
+            self.__parent = None
+            self.__canvas = None
+            self.__app    = None
+
+
+    def setTarget(self, target=None):
         """Set the given ``WXGLCanvasTarget`` or ``OffScreenCanvasTarget`` as
         the target for GL rendering with this context.
 
