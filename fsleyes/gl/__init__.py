@@ -178,6 +178,7 @@ been created.
 
 
 import os
+import sys
 import logging
 import platform
 
@@ -337,7 +338,6 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import sys
     import OpenGL.GL         as gl
     import OpenGL.extensions as glexts
     from . import               gl14
@@ -461,8 +461,6 @@ def getGLContext(**kwargs):
                  :meth:`GLContext.__init__`, and don't call :func:`bootstrap`
                  until it has been called!
     """
-
-    import sys
 
     thismod = sys.modules[__name__]
 
@@ -591,7 +589,7 @@ class GLContext(object):
 
         # For off-screen, only use OSMesa
         # if we have no cnoice, or if
-        # dictaged by PYOPENGL_PLATFORM.
+        # dictated by PYOPENGL_PLATFORM.
         # Otherewise we use wx if possible.
         if offscreen and (osmesa or (not canHaveGui)):
             self.__createOSMesaContext()
@@ -651,30 +649,12 @@ class GLContext(object):
                     if raiseErrors:
                         raise e
 
-            # Once the GL context has been
-            # created, we no longer need
-            # references to the wx objects
-            #
-            # (note: when running with macOS
-            # and XQuartz over SSH/X11, a
-            # GLXBadCurrentWindow can occur if
-            # we close/destroy the parent/canvas
-            # too soon after creating a GL
-            # context. Things seem to work ok if
-            # we do it after the ready() callback
-            # has been called (in normal
-            # circumstances, this creates the
-            # FSLeyesFrame, OverlayList, and
-            # DisplayContext - see fsleyes.main.main).
-
-            # I'm not sure if this is a timing
-            # issue, or if the ready() callback
-            # is doing something which causes the
-            # error to not occur.
-            self.__parent.Close()
-            self.__parent = None
-            self.__canvas = None
-            self.__app    = None
+            # We keep the parent around, because
+            # destroying it can cause GLXBadCurrentWindow
+            # errors when running on macOS+XQuartz. It is
+            # destroyed when the GLContext.destroy() method
+            # is called.
+            self.__parent.Hide()
 
         # If we've created our own wx.App, run its
         # main loop - we need to run the loop
@@ -694,10 +674,22 @@ class GLContext(object):
     def setTarget(self, target):
         """Set the given ``WXGLCanvasTarget`` or ``OffScreenCanvasTarget`` as
         the target for GL rendering with this context.
+
+        If ``target`` is None, and this is an on-screen rendering context,
+        the dummy ``wx.glcanvas.GLCanvas`` that was used to create this
+        ``GLContext`` is set as the rendering target.
         """
-        import wx.glcanvas as wxgl
-        if not self.__offscreen and isinstance(target, wxgl.GLCanvas):
-            self.__context.SetCurrent(target)
+        # not necessary for offscreen rendering
+        if self.__offscreen:
+            return
+
+        if target is None and self.__canvas is not None:
+            self.__context.SetCurrent(self.__canvas)
+
+        else:
+            import wx.glcanvas as wxgl
+            if isinstance(target, wxgl.GLCanvas):
+                self.__context.SetCurrent(target)
 
 
     def __createWXGLParent(self):
