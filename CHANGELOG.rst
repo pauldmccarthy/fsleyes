@@ -70,6 +70,7 @@ Fixed
 * Fixed a problem with macOS desktop integration - it should now be possible
   to open a file with FSLeyes as the default application, and to drag a file
   onto the FSLeyes.app icon.
+* Improved stability when running under macOS+XQuartz.
 
 
 0.34.2 (Tuesday 14th July 2020)
