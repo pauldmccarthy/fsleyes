@@ -54,7 +54,8 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         method.
         """
         self.Unbind(wx.EVT_SIZE)
-        super(WXGLSliceCanvas, self).destroy()
+        slicecanvas.SliceCanvas.destroy(self)
+        fslgl.WXGLCanvasTarget .destroy(self)
 
 
     def __onResize(self, ev):

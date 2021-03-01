@@ -37,3 +37,12 @@ class WXGLScene3DCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
         wxgl.GLCanvas              .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget     .__init__(self)
         scene3dcanvas.Scene3DCanvas.__init__(self, overlayList, displayCtx)
+
+
+    def destroy(self):
+        """Must be called when this ``WXGLScene3DCanvas`` is no longer needed.
+        Clears some event listeners and calls the base class ``destroy``
+        method.
+        """
+        scene3dcanvas.Scene3DCanvas.destroy(self)
+        fslgl.WXGLCanvasTarget     .destroy(self)

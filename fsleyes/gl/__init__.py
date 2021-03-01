@@ -1012,6 +1012,9 @@ class WXGLCanvasTarget(object):
 
        _initGL
        _draw
+
+    And must also ensure that the :meth:`destroy` method is called when
+    the class is being destroyed.
     """
 
 
@@ -1118,6 +1121,13 @@ class WXGLCanvasTarget(object):
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
+
+
+    def destroy(self):
+        """Must be called when this WXGLCanvasTarget is no longer in use.
+        Clears the GL rendering context target.
+        """
+        getGLContext().setTarget(None)
 
 
     def __onEraseBackground(self, ev):
