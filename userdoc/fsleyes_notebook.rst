@@ -29,24 +29,48 @@ need to enable GUI integration::
     %gui wx
 
 
-Then you can call the :func:`fsleyes.main.embed` function to start FSLeyes::
+Then you can call the :func:`fsleyes.embed` function to start FSLeyes::
 
-    import fsleyes.main as main
-    overlayList, displayCtx, frame = main.embed()
+    import fsleyes
+    overlayList, displayCtx, frame = fsleyes.embed()
     frame.Show()
+
+Or, if you already have your own ``wx.App`` and ``wx.Frame``, you can prevent
+a frame from being created::
+
+    overlayList, displayCtx, _ = fsleyes.embed(mkFrame=False)
 
 
 You now have references to an :class:`.OverlayList`, the master
-:class:`.DisplayContext`, and the :class:`.FSLeyesFrame`, and can use their
-programming interfaces to interact with FSLeyes. For example, to open an ortho
-view, and add an image::
+:class:`.DisplayContext`, and the :class:`.FSLeyesFrame` (unless you set
+``mkFrame=False``), and can use their programming interfaces to interact with
+FSLeyes. For example, to open an ortho view, and add an image::
 
     import os.path as op
     from fsleyes.views.orthopanel import OrthoPanel
     from fsl.data.image import Image
 
     ortho = frame.addViewPanel(OrthoPanel)
+
     overlayList.append(Image(op.expandvars('$FSLDIR/data/standard/MNI152_T1_2mm')))
+
+
+If you are managing your own ``wx.App`` and ``wx.Frame``, you need to do a
+little more work - for each view panel, you need to create a child
+``DisplayContext`` object, which is linked to the main ``DisplayContext``
+(this would normally be done for you by the ``FSLeyesFrame``)::
+
+    from fsleyes.displaycontext import DisplayContext
+    orthoDC = DisplayContext(overlayList, parent=displayCtx)
+    ortho = OrthoPanel(wxparent, overlayList, orthoDC, None)
+    wxparent.GetSizer().Add(ortho)
+
+
+When you are finished, you should call the :func:`fsleyes.shutdown` function
+to free up resources::
+
+    frame.Close()
+    fsleyes.shutdown()
 
 
 Starting Jupyter Notebook from FSLeyes
