@@ -262,6 +262,7 @@ def run_with_fsleyes(func, *args, **kwargs):
         state.dummy.Close()
         waitUntilIdle()
         realYield(100)
+        fslgl.shutdown()
         state.app.ExitMainLoop()
 
     def run():
