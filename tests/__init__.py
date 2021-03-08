@@ -233,7 +233,7 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
-    finishingDelay = kwargs.pop('finishingDelay', 5)
+    finishingDelay = kwargs.pop('finishingDelay', 250)
     callAfterApp   = kwargs.pop('callAfterApp',   None)
 
     class State(object):
@@ -277,6 +277,9 @@ def run_with_fsleyes(func, *args, **kwargs):
         state.app.SetTopWindow(state.frame)
 
         state.frame.Show()
+
+        while not state.frame.IsShownOnScreen():
+            realYield()
 
         try:
             if func is not None:
@@ -443,6 +446,8 @@ def run_with_viewpanel(func, vptype, *args, **kwargs):
     def inner(frame, overlayList, displayCtx, *a, **kwa):
         panel = frame.addViewPanel(vptype)
         try:
+            while not panel.IsShownOnScreen():
+                realYield()
             result = func(panel, overlayList, displayCtx, *a, **kwa)
         finally:
             frame.removeViewPanel(panel)
