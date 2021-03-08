@@ -19,30 +19,32 @@ defined in this module:
 
    scan
    allVariables
+
+This class aims to be compatible with the stand-alone `file_tree
+<https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_ library, and with the
+deprecated ``fsl.utils.filetree`` package.
 """
 
 
 import              logging
 import              collections
 import functools as ft
+import itertools as it
 
 import os.path as op
-from typing import Dict, List, Tuple
 
 import numpy as np
-
-from . import FileTree
 
 
 log = logging.getLogger(__name__)
 
 
 class FileTreeQuery(object):
-    """The ``FileTreeQuery`` class uses a :class:`.FileTree` to search
+    """The ``FileTreeQuery`` class uses a ``FileTree`` to search
     a directory for files which match a specific query.
 
     A ``FileTreeQuery`` scans the contents of a directory which is described
-    by a :class:`.FileTree`, and identifies all file types (a.k.a. *templates*
+    by a ``FileTree``, and identifies all file types (a.k.a. *templates*
     or *short names*) that are present, and the values of variables within each
     short name that are present. The :meth:`query` method can be used to
     retrieve files which match a specific template, and variable values.
@@ -52,7 +54,8 @@ class FileTreeQuery(object):
 
     Example usage::
 
-        >>> from fsl.utils.filetree import FileTree, FileTreeQuery
+        >>> from file_tree import FileTree
+        >>> from fsleyes.filetree import FileTreeQuery
 
         >>> tree  = FileTree.read('bids_raw', './my_bids_data')
         >>> query = FileTreeQuery(tree)
@@ -86,7 +89,7 @@ class FileTreeQuery(object):
         scanned via the :func:`scan` function, which may take some time for
         large data sets.
 
-        :arg tree: The :class:`.FileTree` object
+        :arg tree: The ``FileTree`` object
         """
         # Hard-code into the templates any pre-defined variables
         tree = tree.partial_fill()
@@ -167,7 +170,7 @@ class FileTreeQuery(object):
         self.__varidxs       = varidxs
 
 
-    def axes(self, template) -> List[str]:
+    def axes(self, template):
         """Returns a list containing the names of variables present in files
         of the given ``template`` type, in the same order of the axes of
         :class:`Match` arrays that are returned by the :meth:`query` method.
@@ -175,7 +178,7 @@ class FileTreeQuery(object):
         return self.__templatevars[template]
 
 
-    def variables(self, template=None) -> Dict[str, List]:
+    def variables(self, template=None):
         """Return a dict of ``{variable : [values]}`` mappings.
         This dict describes all variables and their possible values in
         the tree.
@@ -192,14 +195,13 @@ class FileTreeQuery(object):
 
     @property
     def tree(self):
-        """Returns the :class:`.FileTree` associated with this
-        ``FileTreeQuery``.
+        """Returns the ``FileTree`` associated with this ``FileTreeQuery``.
         """
         return self.__tree
 
 
     @property
-    def templates(self) -> List[str]:
+    def templates(self):
         """Returns a list containing all templates of the ``FileTree`` that
         are present in the directory.
         """
@@ -267,7 +269,7 @@ class Match(object):
 
         :arg filename:   name of existing file
         :arg template:   template identifier
-        :arg tree:       :class:`.FileTree` which contains this ``Match``
+        :arg tree:       ``FileTree`` which contains this ``Match``
         :arg variables:  Dictionary of ``{variable : value}`` mappings
                          containing all variables present in the file name.
         """
@@ -299,7 +301,7 @@ class Match(object):
         """
 
         def parents(tree):
-            if tree.parent is None:
+            if getattr(tree, 'parent', None) is None:
                 return []
             else:
                 return [tree.parent] + parents(tree.parent)
@@ -344,35 +346,58 @@ class Match(object):
         return repr(self)
 
 
-def scan(tree : FileTree) -> List[Match]:
+def scan(tree):
     """Scans the directory of the given ``FileTree`` to find all files which
     match a tree template.
 
-    :arg tree: :class:`.FileTree` to scan
+    :arg tree: ``FileTree`` to scan
     :returns:  list of :class:`Match` objects
     """
 
+    try:
+        import fsl.utils.filetree as filetree
+        old_FileTree = filetree.FileTree
+    except ImportError:
+        old_FileTree = None
+
     matches = []
-    for template in tree.templates:
 
-        for variables in tree.get_all_vars(template, glob_vars='all'):
+    # have we been given a FileTree from the
+    # deprecated fsl.utils.filetree package?
+    if isinstance(tree, old_FileTree):
+        for template in tree.templates:
+            for variables in tree.get_all_vars(template, glob_vars='all'):
 
-            filename = tree.update(**variables).get(template)
+                filename = tree.update(**variables).get(template)
 
-            if not op.isfile(filename):
-                continue
+                if not op.isfile(filename):
+                    continue
 
-            matches.append(Match(filename, template, tree, variables))
+                matches.append(Match(filename, template, tree, variables))
 
-    for tree_name, sub_tree in tree.sub_trees.items():
-        matches.extend(scan(sub_tree))
+        for _, sub_tree in tree.sub_trees.items():
+            matches.extend(scan(sub_tree))
+
+    # Otherwise assume that we are working
+    # with the new filetree library.
+    else:
+        for template in tree.template_keys():
+
+            as_xarray  = tree.get_mult_glob(template)
+            axes       = as_xarray.coords.keys()
+            axisvalues = [as_xarray.coords[name] for name in coords]
+
+            for values in it.product(*axisvalues):
+
+                variables = dict(zip(axes, values))
+                path      = as_xarray.sel(**variables)
+                if path and op.isfile(path):
+                    matches.append(Match(path, template, tree, variables))
 
     return matches
 
 
-def allVariables(
-        tree    : FileTree,
-        matches : List[Match]) -> Tuple[Dict[str, List], Dict[str, List]]:
+def allVariables(tree, matches):
     """Identifies the ``FileTree`` variables which are actually represented
     in files in the directory.
 
