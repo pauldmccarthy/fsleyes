@@ -310,7 +310,7 @@ def run_with_fsleyes(func, *args, **kwargs):
     if not initialised[0]:
 
         # gl already initialised
-        if fslgl.GL_VERSION is not None:
+        if getattr(fslgl, '_glContext', None) is not None:
             wx.CallLater(startingDelay, init)
         else:
             wx.CallLater(startingDelay,
