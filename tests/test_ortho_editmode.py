@@ -110,90 +110,119 @@ def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None, vol=No
     overlayList[:] = []
 
 
-
-def test_fillSelection():
+def test_fillSelection_x():
     img = Image(op.join(datadir, '3d'))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
     run_with_orthopanel(tfs)
+
+
+def test_fillSelection_y():
+    img = Image(op.join(datadir, '3d'))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=1)
     run_with_orthopanel(tfs)
+
+
+def test_fillSelection_z():
+    img = Image(op.join(datadir, '3d'))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=2)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_2d():
+def test_fillSelection_2d_x():
     img = Image(np.random.randint(1, 65536, (60, 60, 1)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=2)
     run_with_orthopanel(tfs)
 
+
+def test_fillSelection_2d_y():
     img = Image(np.random.randint(1, 65536, (60, 1, 60)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=1)
     run_with_orthopanel(tfs)
 
+
+def test_fillSelection_2d_z():
     img = Image(np.random.randint(1, 65536, (1, 60, 60)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
-def test_fillSelection_4d():
+
+def test_fillSelection_4d_x():
     img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
     run_with_orthopanel(tfs)
+
+def test_fillSelection_4d_y():
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=1, vol=3)
     run_with_orthopanel(tfs)
+
+
+def test_fillSelection_4d_z():
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
     tfs = ft.partial(_test_fillSelection, img=img, canvas=2, vol=8)
     run_with_orthopanel(tfs)
 
 
-def _test_editable(ortho, overlayList, displayCtx):
+def _test_editable(ortho, overlayList, displayCtx, ovl, ovlType, editable):
 
     # must be an image
     # must have one value per voxel (e.g. no RGB)
     # must be displayed as volume, mask, or label
-    img  = Image(  op.join(datadir, '3d'))
-    surf = VTKMesh(op.join(datadir, 'mesh_l_thal.vtk'))
-    dti  = Image(  op.join(datadir, 'dti', 'dti_V1'))
-    rgb  = Bitmap( op.join(datadir, 'test_screenshot_3d.png')).asImage()
 
-    editable    = [(img, 'volume'),
-                   (img, 'mask'),
-                   (img, 'label')]
-    notEditable = [(img, 'mip'),
-                   (surf, 'mesh'),
-                   (dti, 'rgbvector'),
-                   (rgb, 'volume')]
+    if editable: expect = 'edit'
+    else:        expect = 'view'
 
     def setprof(profile):
         ortho.profile = profile
-
 
     savedprof = [None]
 
     def saveprof():
         savedprof[0] = ortho.profile
 
-    for ovl, ot in editable:
-        idle.idle(setprof, 'edit')
-        idle.idle(overlayList.append, ovl, overlayType=ot)
-        idle.idle(displayCtx.selectOverlay, ovl)
-        idle.block(3)
-        idle.idle(saveprof)
-        idle.idle(overlayList.clear)
-        idle.block(3)
-        assert savedprof[0] == 'edit'
-
-    for ovl, ot in notEditable:
-        idle.idle(setprof, 'edit')
-        idle.idle(overlayList.append, ovl, overlayType=ot)
-        idle.idle(displayCtx.selectOverlay, ovl)
-        idle.block(3)
-        idle.idle(saveprof)
-        idle.idle(overlayList.clear)
-        idle.block(3)
-        assert savedprof[0] == 'view'
+    idle.idle(setprof, 'edit')
+    idle.idle(overlayList.append, ovl, overlayType=ovlType)
+    idle.idle(displayCtx.selectOverlay, ovl)
+    idle.block(3)
+    idle.idle(saveprof)
+    idle.idle(overlayList.clear)
+    idle.block(3)
+    assert savedprof[0] == expect
 
 
-def test_editable():
-    run_with_orthopanel(_test_editable)
+def test_editable_volume():
+    img  = Image(op.join(datadir, '3d'))
+    run_with_orthopanel(_test_editable, img, 'volume', True)
+
+
+def test_editable_mask():
+    img  = Image(op.join(datadir, '3d'))
+    run_with_orthopanel(_test_editable, img, 'mask', True)
+
+
+def test_editable_label():
+    img  = Image(op.join(datadir, '3d'))
+    run_with_orthopanel(_test_editable, img, 'label', True)
+
+
+def test_notEditable_mip():
+    img  = Image(op.join(datadir, '3d'))
+    run_with_orthopanel(_test_editable, img, 'mip', False)
+
+
+def test_notEditable_mesh():
+    surf = VTKMesh(op.join(datadir, 'mesh_l_thal.vtk'))
+    run_with_orthopanel(_test_editable, surf, 'mesh', False)
+
+
+def test_notEditable_rgbvector():
+    dti  = Image(  op.join(datadir, 'dti', 'dti_V1'))
+    run_with_orthopanel(_test_editable, dti, 'rgbvector', False)
+
+
+def test_notEditable_rgbvolume():
+    rgb  = Bitmap( op.join(datadir, 'test_screenshot_3d.png')).asImage()
+    run_with_orthopanel(_test_editable, rgb, 'rgbvector', False)
 
 
 def _test_newMask(ortho, overlayList, displayCtx):
