@@ -723,19 +723,19 @@ class GLContext(object):
         """
         # not necessary for offscreen rendering
         if self.__offscreen:
-            return
+            return True
 
         # destroy() has been called
         if self.__context is None:
-            return
+            return False
 
         if target is None and self.__canvas is not None:
-            self.__context.SetCurrent(self.__canvas)
+            return self.__context.SetCurrent(self.__canvas)
 
         else:
             import wx.glcanvas as wxgl
             if isinstance(target, wxgl.GLCanvas):
-                self.__context.SetCurrent(target)
+                return self.__context.SetCurrent(target)
 
 
     def __createWXGLParent(self):
@@ -898,8 +898,7 @@ class OffScreenCanvasTarget(object):
 
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
-        getGLContext().setTarget(self)
-        return True
+        return getGLContext().setTarget(self)
 
 
     def _draw(self, *a):
@@ -1272,8 +1271,7 @@ class WXGLCanvasTarget(object):
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
 
-        self.__context.setTarget(self)
-        return True
+        return self.__context.setTarget(self)
 
 
     def GetSize(self):
