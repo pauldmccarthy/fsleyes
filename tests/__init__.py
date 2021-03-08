@@ -336,6 +336,9 @@ def run_with_fsleyes(func, *args, **kwargs):
     if raised and propagateRaise:
         raise raised
 
+    state.app.Destroy()
+    state = None
+
     return result
 
 
@@ -358,6 +361,7 @@ def run_render_test(
            list(args)
 
     idle.idleLoop.reset()
+    idle.idleLoop.allowErrors = True
     fslrender.main(args)
 
     # gaaargh, why is macos case insensitive??
