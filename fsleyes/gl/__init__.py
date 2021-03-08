@@ -707,6 +707,10 @@ class GLContext(object):
         on-screen context, the dummy canvas and frame that were created at
         initialisation are destroyed.
         """
+
+        if self.__app is not None:
+            self.__app.Destroy()
+
         self.__context = None
         self.__parent  = None
         self.__canvas  = None
