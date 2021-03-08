@@ -218,8 +218,6 @@ def tempdir():
         shutil.rmtree(testdir)
 
 
-initialised = [False]
-
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
@@ -253,7 +251,6 @@ def run_with_fsleyes(func, *args, **kwargs):
         fsleyes.initialise()
         props.initGUI()
         colourmaps.init()
-        initialised[0] = True
         fslgl.bootstrap(glver)
         wx.CallAfter(run)
 
@@ -310,18 +307,13 @@ def run_with_fsleyes(func, *args, **kwargs):
     state.dummy.Layout()
     state.dummy.Show()
 
-    if not initialised[0]:
-
-        # gl already initialised
-        if getattr(fslgl, '_glContext', None) is not None:
-            wx.CallLater(startingDelay, init)
-        else:
-            wx.CallLater(startingDelay,
-                         fslgl.getGLContext,
-                         ready=init,
-                         raiseErrors=True)
+    if getattr(fslgl, '_glContext', None) is not None:
+        wx.CallLater(startingDelay, init)
     else:
-        wx.CallLater(startingDelay, run)
+        wx.CallLater(startingDelay,
+                     fslgl.getGLContext,
+                     ready=init,
+                     raiseErrors=True)
 
     with exitMainLoopOnError(state.app) as err:
         state.app.MainLoop()
