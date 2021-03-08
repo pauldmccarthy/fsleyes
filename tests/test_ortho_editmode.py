@@ -222,7 +222,7 @@ def test_notEditable_rgbvector():
 
 def test_notEditable_rgbvolume():
     rgb  = Bitmap( op.join(datadir, 'test_screenshot_3d.png')).asImage()
-    run_with_orthopanel(_test_editable, rgb, 'rgbvector', False)
+    run_with_orthopanel(_test_editable, rgb, 'volume', False)
 
 
 def _test_newMask(ortho, overlayList, displayCtx):
@@ -240,8 +240,16 @@ def _test_newMask(ortho, overlayList, displayCtx):
     mask = overlayList[1]
     assert mask.sameSpace(img)
     assert np.all(mask[:] == 0)
-    overlayList.remove(mask)
+
+
+def _test_newMask_with_selection(ortho, overlayList, displayCtx):
+    img = Image(np.random.randint(1, 65536, (20, 20, 20)))
+    overlayList[:] = [img]
     idle.block(2.5)
+    ortho.profile = 'edit'
+    idle.block(2.5)
+
+    profile = ortho.getCurrentProfile()
 
     profile.mode = 'sel'
     idle.block(2.5)
@@ -261,6 +269,10 @@ def _test_newMask(ortho, overlayList, displayCtx):
 
 
 def test_newMask():
+    run_with_orthopanel(_test_newMask)
+
+
+def test_newMask_with_selection():
     run_with_orthopanel(_test_newMask)
 
 
