@@ -365,6 +365,7 @@ def run_render_test(
            '-s  {}'   .format(scene)  .split() + \
            list(args)
 
+    idle.idleLoop.reset()
     fslrender.main(args)
 
     # gaaargh, why is macos case insensitive??
