@@ -6,7 +6,7 @@
 #
 """This module provides the :class:`FileTreePanel` class, which can be used
 to browse the contents of structured directories which are described with
-a :mod:`.filetree`.
+a `FileTree <https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_ specification.
 
 See also the :mod:`.filetreemanager` module, which contains the logic for
 generating the file list.
@@ -22,7 +22,6 @@ import              collections
 import              wx
 
 import fsl.utils.idle                   as idle
-import fsl.utils.filetree               as filetree
 import fsl.utils.settings               as fslsettings
 import fsleyes_widgets.utils.overlay    as fwoverlay
 import fsleyes_widgets.widgetlist       as wlist
@@ -31,7 +30,7 @@ import fsleyes_widgets.elistbox         as elb
 
 import fsleyes.strings                  as strings
 import fsleyes.controls.controlpanel    as ctrlpanel
-import fsleyes.controls.filetreemanager as ftmanager
+import fsleyes.filetree                 as filetree
 
 
 log = logging.getLogger(__name__)
@@ -244,11 +243,11 @@ class FileTreePanel(ctrlpanel.ControlPanel):
             allvars   = None
             filetypes = None
         else:
-            tree      = filetree.FileTree.read(treename, directory=dirname)
+            tree      = filetree.read(treename, directory=dirname)
             query     = filetree.FileTreeQuery(tree)
-            mgr       = ftmanager.FileTreeManager(self.overlayList,
-                                                  self.displayCtx,
-                                                  query)
+            mgr       = filetree.FileTreeManager(self.overlayList,
+                                                 self.displayCtx,
+                                                 query)
             allvars   = query.variables()
             allvars   = [(var, vals) for var, vals in allvars.items()]
             allvars   = collections.OrderedDict(list(sorted(allvars)))
