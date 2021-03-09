@@ -44,6 +44,13 @@ Quick start
     # call our function when it is ready.
     fslgl.getGLContext(ready=ready)
 
+    # ...
+
+    # When you're finished, call the shutdown
+    # function to clear the context (only
+    # necessary for on-screen rendering)
+    fslgl.shutdown()
+
 
 --------
 Canvases
@@ -178,6 +185,7 @@ been created.
 
 
 import os
+import sys
 import logging
 import platform
 
@@ -337,7 +345,6 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import sys
     import OpenGL.GL         as gl
     import OpenGL.extensions as glexts
     from . import               gl14
@@ -462,8 +469,6 @@ def getGLContext(**kwargs):
                  until it has been called!
     """
 
-    import sys
-
     thismod = sys.modules[__name__]
 
     # A context has already been created
@@ -482,13 +487,31 @@ def getGLContext(**kwargs):
     return thismod._glContext
 
 
+def shutdown():
+    """Must be called when the GL rendering context is no longer needed.
+    Destroys the context object, and resources associated with it.
+
+    Does not need to be called for off-screen rendering.
+    """
+
+    thismod = sys.modules[__name__]
+    context = getattr(thismod, '_glContext', None)
+    if context is not None:
+        context.destroy()
+        delattr(thismod, '_glContext')
+
+
 class GLContext(object):
     """The ``GLContext`` class manages the creation of, and access to, an
     OpenGL context. This class abstracts away the differences between
     creation of on-screen and off-screen rendering contexts.
-    It contains a single method, :meth:`setTarget`, which may
-    be used to set a :class:`.WXGLCanvasTarget` or an
-    :class:`OffScreenCanvasTarget` as the GL rendering target.
+    It contains two methods:
+
+      - :meth:`setTarget`, which may be used to set a
+        :class:`.WXGLCanvasTarget` or an :class:`OffScreenCanvasTarget` as the
+         GL rendering target.
+      - :meth:`destroy`, which must be called when the context is no longer
+        needed.
 
 
     On-screen rendering is performed via the ``wx.GLCanvas.GLContext``
@@ -509,6 +532,12 @@ class GLContext(object):
     ``wx.glcanvas.GLCanvas`` has been created, and is visible on screen.  The
     ``GLContext`` class therefore creates a dummy ``wx.Frame`` and
     ``GLCanvas``, and displays it, before creating the ``wx`` GL context.
+
+
+    A reference to this dummy ``wx.Frame`` is retained, because destroying it
+    can result in ``GLXBadCurrentWindow`` errors when running on
+    macOS+XQuartz. The frame is destroyed on calls to the ``GLContext.destroy``
+    method.
 
 
     Because ``wx`` contexts may be used even when an off-screen rendering
@@ -591,7 +620,7 @@ class GLContext(object):
 
         # For off-screen, only use OSMesa
         # if we have no cnoice, or if
-        # dictaged by PYOPENGL_PLATFORM.
+        # dictated by PYOPENGL_PLATFORM.
         # Otherewise we use wx if possible.
         if offscreen and (osmesa or (not canHaveGui)):
             self.__createOSMesaContext()
@@ -651,30 +680,12 @@ class GLContext(object):
                     if raiseErrors:
                         raise e
 
-            # Once the GL context has been
-            # created, we no longer need
-            # references to the wx objects
-            #
-            # (note: when running with macOS
-            # and XQuartz over SSH/X11, a
-            # GLXBadCurrentWindow can occur if
-            # we close/destroy the parent/canvas
-            # too soon after creating a GL
-            # context. Things seem to work ok if
-            # we do it after the ready() callback
-            # has been called (in normal
-            # circumstances, this creates the
-            # FSLeyesFrame, OverlayList, and
-            # DisplayContext - see fsleyes.main.main).
-
-            # I'm not sure if this is a timing
-            # issue, or if the ready() callback
-            # is doing something which causes the
-            # error to not occur.
-            self.__parent.Close()
-            self.__parent = None
-            self.__canvas = None
-            self.__app    = None
+            # We keep the parent around, because
+            # destroying it can cause GLXBadCurrentWindow
+            # errors when running on macOS+XQuartz. It is
+            # destroyed when the GLContext.destroy() method
+            # is called.
+            self.__parent.Hide()
 
         # If we've created our own wx.App, run its
         # main loop - we need to run the loop
@@ -691,13 +702,44 @@ class GLContext(object):
             self.__app.MainLoop()
 
 
-    def setTarget(self, target):
+    def destroy(self):
+        """Called by the module-level :func:`shutdown` function. If this is an
+        on-screen context, the dummy canvas and frame that were created at
+        initialisation are destroyed.
+        """
+
+        if self.__app is not None:
+            self.__app.Destroy()
+
+        self.__context = None
+        self.__parent  = None
+        self.__canvas  = None
+        self.__app     = None
+
+
+    def setTarget(self, target=None):
         """Set the given ``WXGLCanvasTarget`` or ``OffScreenCanvasTarget`` as
         the target for GL rendering with this context.
+
+        If ``target`` is None, and this is an on-screen rendering context,
+        the dummy ``wx.glcanvas.GLCanvas`` that was used to create this
+        ``GLContext`` is set as the rendering target.
         """
-        import wx.glcanvas as wxgl
-        if not self.__offscreen and isinstance(target, wxgl.GLCanvas):
-            self.__context.SetCurrent(target)
+        # not necessary for offscreen rendering
+        if self.__offscreen:
+            return True
+
+        # destroy() has been called
+        if self.__context is None:
+            return False
+
+        if target is None and self.__canvas is not None:
+            return self.__context.SetCurrent(self.__canvas)
+
+        else:
+            import wx.glcanvas as wxgl
+            if isinstance(target, wxgl.GLCanvas):
+                return self.__context.SetCurrent(target)
 
 
     def __createWXGLParent(self):
@@ -705,10 +747,20 @@ class GLContext(object):
         dummy ``wx.glcanvas.GLCanvas``.
         """
 
-        log.debug('Creating temporary wx.Frame')
-
         import wx
-        self.__parent = wx.Frame(None, style=0)
+
+        # Override ShouldPreventAppExit, meaning
+        # that the wx.App.MainLoop will exit even
+        # if a DummyFrame still exists. The wx
+        # equivalent of marking a thread as a
+        # daemon.
+        class DummyFrame(wx.Frame):
+            def ShouldPreventAppExit(self):
+                return False
+
+        log.debug('Creating dummy wx.Frame for GL context creation')
+
+        self.__parent = DummyFrame(None, style=0)
         self.__parent.SetSize((0, 0))
         self.__parent.Show(True)
 
@@ -850,8 +902,7 @@ class OffScreenCanvasTarget(object):
 
     def _setGLContext(self):
         """Configures the GL context to render to this canvas. """
-        getGLContext().setTarget(self)
-        return True
+        return getGLContext().setTarget(self)
 
 
     def _draw(self, *a):
@@ -968,6 +1019,9 @@ class WXGLCanvasTarget(object):
 
        _initGL
        _draw
+
+    And must also ensure that the :meth:`destroy` method is called when
+    the class is being destroyed.
     """
 
 
@@ -1076,6 +1130,22 @@ class WXGLCanvasTarget(object):
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
 
 
+    def destroy(self):
+        """Must be called when this WXGLCanvasTarget is no longer in use.
+        Clears the GL rendering context target.
+        """
+        self.__context.setTarget(None)
+        self.__context = None
+
+
+    @property
+    def destroyed(self):
+        """Returns ``True`` if :meth:`destroy` has been called, ``False``
+        otherwise.
+        """
+        return self.__context is None
+
+
     def __onEraseBackground(self, ev):
         """Called on ``wx.EVT_ERASE_BACKGROUND`` events. Does nothing. """
         pass
@@ -1143,6 +1213,9 @@ class WXGLCanvasTarget(object):
 
         def drawWrapper(*a, **kwa):
 
+            if self.destroyed:
+                return
+
             if not self.__freezeDraw:
                 subClassDraw(*a, **kwa)
 
@@ -1202,8 +1275,7 @@ class WXGLCanvasTarget(object):
         log.debug('Setting context target to {} ({})'.format(
             type(self).__name__, id(self)))
 
-        self.__context.setTarget(self)
-        return True
+        return self.__context.setTarget(self)
 
 
     def GetSize(self):

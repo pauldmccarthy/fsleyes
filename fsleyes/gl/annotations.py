@@ -737,6 +737,13 @@ class TextAnnotation(AnnotationObject, gltext.Text):
         gltext.Text.__init__(self, *args, **kwargs)
 
 
+    def destroy(self):
+        """Must be called when this ``TextAnnotation`` is no longer needed.
+        """
+        AnnotationObject.destroy(self)
+        gltext.Text.destroy(self)
+
+
     def draw2D(self, zpos, axes):
         """Draw this ``TextAnnotation``. """
         self.draw(*self.annot.canvas.GetSize())

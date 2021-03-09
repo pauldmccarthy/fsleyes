@@ -135,23 +135,32 @@ class FSLeyesFrame(wx.Frame):
                  restore=False,
                  save=True,
                  fontSize=None,
-                 menu=True):
+                 menu=True,
+                 closeHandlers=None):
         """Create a ``FSLeyesFrame``.
 
-        :arg parent:      The :mod:`wx` parent object.
+        :arg parent:        The :mod:`wx` parent object.
 
-        :arg overlayList: The :class:`.OverlayList`.
+        :arg overlayList:   The :class:`.OverlayList`.
 
-        :arg displayCtx:  The master :class:`.DisplayContext`.
+        :arg displayCtx:    The master :class:`.DisplayContext`.
 
-        :arg restore:     Restores previous saved layout. If ``False``, no
-                          view panels will be displayed.
+        :arg restore:       Restores previous saved layout. If ``False``, no
+                            view panels will be displayed.
 
-        :arg save:        Save current layout when closed.
+        :arg save:          Save current layout when closed.
 
-        :arg fontSize:    Application-wide font size to use. Defaults to 10.
+        :arg fontSize:      Application-wide font size to use. Defaults to 10.
 
-        :arg menu:        Whether or not to create a menu bar.
+        :arg menu:          Whether or not to create a menu bar.
+
+        :arg closeHandlers: List of functions to call when this
+                            ``FSLeyesFrame`` is closing. Use this rather than
+                            binding to the ``EVT_CLOSE`` event, so that the
+                            ``FSLeyesFrame`` can guarantee that your handler
+                            will be called when it is actually closing.
+                            Otherwise the user might cancel the close, but
+                            your handler will still get called.
         """
         wx.Frame.__init__(self, parent, title='FSLeyes')
         tooltips.initTooltips()
@@ -307,7 +316,17 @@ class FSLeyesFrame(wx.Frame):
         self.__askUnsaved = True
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
-        self             .Bind(wx.EVT_CLOSE,           self.__onClose)
+
+        # Event handlers are called in order of
+        # last bound first, first bound last.
+        # Our __onClose handler may veto the
+        # close (if the user cancels it), so
+        # we have to bind our handler last.
+        if closeHandlers is not None:
+            for h in closeHandlers:
+                self.Bind(wx.EVT_CLOSE, h)
+
+        self.Bind(wx.EVT_CLOSE, self.__onClose)
 
         overlayList.addListener('overlays',
                                 self.__name,
@@ -1266,8 +1285,6 @@ class FSLeyesFrame(wx.Frame):
         next time it is opened. See the :meth:`_restoreState` method.
         """
 
-        ev.Skip()
-
         import fsleyes.actions.saveoverlay as saveoverlay
 
         # Check to see if there are any unsaved images
@@ -1291,7 +1308,6 @@ class FSLeyesFrame(wx.Frame):
 
             dlg.CentreOnParent()
             if dlg.ShowModal() == wx.ID_NO:
-                ev.Skip(False)
                 ev.Veto()
                 return
 
@@ -1322,7 +1338,6 @@ class FSLeyesFrame(wx.Frame):
                 result = dlg.ShowModal()
 
                 if result == wx.ID_CANCEL:
-                    ev.Skip(False)
                     ev.Veto()
                     return
 
@@ -1348,6 +1363,12 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.size')
                 fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
+
+        # The close is going ahead. We assume that this
+        # EVT_CLOSE handler is the first that is called,
+        # and can thus control whether any the event
+        # gets propagated to other handlers.
+        ev.Skip()
 
         # It's nice to explicitly clean
         # up our FSLeyesPanels, otherwise

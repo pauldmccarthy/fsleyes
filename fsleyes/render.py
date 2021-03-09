@@ -92,6 +92,10 @@ def main(args=None):
             bitmap = autocrop(bitmap, bg, namespace.crop)
         mplimg.imsave(namespace.outfile, bitmap)
 
+        # Clear the GL context
+        fslgl.shutdown()
+
+
 
 def parseArgs(argv):
     """Creates an argument parser which accepts options for off-screen

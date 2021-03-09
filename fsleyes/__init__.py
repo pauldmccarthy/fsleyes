@@ -437,3 +437,7 @@ def configLogging(verbose=0, noisy=None):
     traceLogger = logging.getLogger('fsleyes_props.trace')
     if traceLogger.getEffectiveLevel() <= logging.DEBUG:
         import fsleyes_props.trace  # noqa
+
+
+# Just for convenience
+from fsleyes.main import embed, shutdown  # noqa

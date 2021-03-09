@@ -43,3 +43,14 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
             ev.Skip()
 
         self.Bind(wx.EVT_SIZE, onsize)
+
+
+    def destroy(self):
+        """Must be called when this ``WXGLColourBarCanvas`` is no longer
+        needed. Clears some event listeners and calls the base class
+        ``destroy`` method.
+        """
+        self.Unbind(wx.EVT_SIZE)
+
+        cbarcanvas.ColourBarCanvas.destroy(self)
+        fslgl.WXGLCanvasTarget    .destroy(self)

@@ -392,17 +392,17 @@ following error::
 
 This is caused by a configuration issue with XQuartz - you will be unable to
 run any OpenGL application, not just FSLeyes. Fortunately, there is a
-solution: if you are using XQuartz 2.8.0 or newer, run this command (locally,
+solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
 not within the SSH session)::
 
 
-  defaults write org.xquartz.X11 enable_iglx -bool true
-
-
-if you are using XQuartz 2.7.10 or newer, run this command::
-
-
   defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
+
+
+if you are using XQuartz 2.8.0 or newer, run this command::
+
+
+  defaults write org.xquartz.X11 enable_iglx -bool true
 
 
 If you are using XQuartz 2.7.9, and you cannot upgrade to a newer version, you

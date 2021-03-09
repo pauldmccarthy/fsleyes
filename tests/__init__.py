@@ -218,8 +218,6 @@ def tempdir():
         shutil.rmtree(testdir)
 
 
-initialised = [False]
-
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 
@@ -233,7 +231,7 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     propagateRaise = kwargs.pop('propagateRaise', True)
     startingDelay  = kwargs.pop('startingDelay',  500)
-    finishingDelay = kwargs.pop('finishingDelay', 5)
+    finishingDelay = kwargs.pop('finishingDelay', 250)
     callAfterApp   = kwargs.pop('callAfterApp',   None)
 
     class State(object):
@@ -253,7 +251,6 @@ def run_with_fsleyes(func, *args, **kwargs):
         fsleyes.initialise()
         props.initGUI()
         colourmaps.init()
-        initialised[0] = True
         fslgl.bootstrap(glver)
         wx.CallAfter(run)
 
@@ -262,6 +259,7 @@ def run_with_fsleyes(func, *args, **kwargs):
         state.dummy.Close()
         waitUntilIdle()
         realYield(100)
+        fslgl.shutdown()
         state.app.ExitMainLoop()
 
     def run():
@@ -276,6 +274,9 @@ def run_with_fsleyes(func, *args, **kwargs):
         state.app.SetTopWindow(state.frame)
 
         state.frame.Show()
+
+        while not state.frame.IsShownOnScreen():
+            realYield()
 
         try:
             if func is not None:
@@ -306,18 +307,13 @@ def run_with_fsleyes(func, *args, **kwargs):
     state.dummy.Layout()
     state.dummy.Show()
 
-    if not initialised[0]:
-
-        # gl already initialised
-        if fslgl.GL_VERSION is not None:
-            wx.CallLater(startingDelay, init)
-        else:
-            wx.CallLater(startingDelay,
-                         fslgl.getGLContext,
-                         ready=init,
-                         raiseErrors=True)
+    if getattr(fslgl, '_glContext', None) is not None:
+        wx.CallLater(startingDelay, init)
     else:
-        wx.CallLater(startingDelay, run)
+        wx.CallLater(startingDelay,
+                     fslgl.getGLContext,
+                     ready=init,
+                     raiseErrors=True)
 
     with exitMainLoopOnError(state.app) as err:
         state.app.MainLoop()
@@ -340,6 +336,9 @@ def run_with_fsleyes(func, *args, **kwargs):
     if raised and propagateRaise:
         raise raised
 
+    state.app.Destroy()
+    state = None
+
     return result
 
 
@@ -361,6 +360,8 @@ def run_render_test(
            '-s  {}'   .format(scene)  .split() + \
            list(args)
 
+    idle.idleLoop.reset()
+    idle.idleLoop.allowErrors = True
     fslrender.main(args)
 
     # gaaargh, why is macos case insensitive??
@@ -442,6 +443,8 @@ def run_with_viewpanel(func, vptype, *args, **kwargs):
     def inner(frame, overlayList, displayCtx, *a, **kwa):
         panel = frame.addViewPanel(vptype)
         try:
+            while not panel.IsShownOnScreen():
+                realYield()
             result = func(panel, overlayList, displayCtx, *a, **kwa)
         finally:
             frame.removeViewPanel(panel)

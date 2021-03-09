@@ -55,3 +55,13 @@ class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
             self._updateDisplayBounds()
             ev.Skip()
         self.Bind(wx.EVT_SIZE, onResize)
+
+
+    def destroy(self):
+        """Must be called when this ``WXGLLightBoxCanvas`` is no longer
+        needed. Clears some event listeners and calls the base class
+        ``destroy`` method.
+        """
+        self.Unbind(wx.EVT_SIZE)
+        lightboxcanvas.LightBoxCanvas.destroy(self)
+        fslgl.WXGLCanvasTarget       .destroy(self)

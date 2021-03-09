@@ -138,11 +138,19 @@ class Text:
         return self.__fgColour
 
 
+    def __clearBitmap(self, old, new):
+        """Used by property setters to clear cached bitmap, if a value which
+        requires the bitmap to be re-generated is changed.
+        """
+        if old != new:
+            self.__bitmap = None
+
+
     @fgColour.setter
     def fgColour(self, value):
         """Set the foreground colour. """
+        self.__clearBitmap(self.__fgColour, value)
         self.__fgColour = value
-        self.__bitmap   = None
 
 
     @property
@@ -154,8 +162,8 @@ class Text:
     @bgColour.setter
     def bgColour(self, value):
         """Set the background colour. """
+        self.__clearBitmap(self.__bgColour, value)
         self.__bgColour = value
-        self.__bitmap   = None
 
 
     @property
@@ -167,8 +175,8 @@ class Text:
     @text.setter
     def text(self, value):
         """Update the text."""
-        self.__text   = value
-        self.__bitmap = None
+        self.__clearBitmap(self.__text, value)
+        self.__text = value
 
 
     @property
@@ -180,8 +188,8 @@ class Text:
     @fontSize.setter
     def fontSize(self, value):
         """Update the font size."""
+        self.__clearBitmap(self.__fontSize, value)
         self.__fontSize = value
-        self.__bitmap   = None
 
 
     def __refreshBitmap(self):
