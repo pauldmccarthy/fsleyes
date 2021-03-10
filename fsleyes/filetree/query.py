@@ -19,10 +19,6 @@ defined in this module:
 
    scan
    allVariables
-
-This class aims to be compatible with the stand-alone `file_tree
-<https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_ library, and with the
-deprecated ``fsl.utils.filetree`` package.
 """
 
 
@@ -39,7 +35,7 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-class FileTreeQuery(object):
+class FileTreeQuery:
     """The ``FileTreeQuery`` class uses a ``FileTree`` to search
     a directory for files which match a specific query.
 
@@ -91,91 +87,15 @@ class FileTreeQuery(object):
 
         :arg tree: The ``FileTree`` object
         """
-        # Hard-code into the templates any pre-defined variables
-        tree = tree.partial_fill()
-
-        # Find all files present in the directory
-        # (as Match objects), and find all variables,
-        # plus their values, and all templates,
-        # that are present in the directory.
-        matches               = scan(tree)
-        allvars, templatevars = allVariables(tree, matches)
-
-        # Now we are going to build a series of ND
-        # arrays to store Match objects. We create
-        # one array for each template. Each axis
-        # in an array corresponds to a variable
-        # present in files of that template type,
-        # and each position along an axis corresponds
-        # to one value of that variable.
-        #
-        # These arrays will be used to store and
-        # retrieve Match objects - given a template
-        # and a set of variable values, we can
-        # quickly find the corresponding Match
-        # object (or objects).
-
-        # matcharrays contains {template : ndarray}
-        # mappings, and varidxs contains
-        # {template : {varvalue : index}} mappings
-        matcharrays = {}
-        varidxs     = {}
-
-        for template, tvars in templatevars.items():
-
-            tvarlens = [len(allvars[v]) for v in tvars]
-
-            # "Scalar" match objects - templates
-            # which have no variables, and for
-            # which zero or one file is present
-            if len(tvarlens) == 0:
-                tvarlens = 1
-
-            # An ND array for this short
-            # name. Each element is a
-            # Match object, or nan.
-            matcharray    = np.zeros(tvarlens, dtype=np.object)
-            matcharray[:] = np.nan
-
-            # indices into the match array
-            # for each variable value
-            tvaridxs = {}
-            for v in tvars:
-                tvaridxs[v] = {n : i for i, n in enumerate(allvars[v])}
-
-            matcharrays[template] = matcharray
-            varidxs[    template] = tvaridxs
-
-        # Populate the match arrays
-        for match in matches:
-            tvars    = templatevars[match.full_name]
-            tvaridxs = varidxs[     match.full_name]
-            tarr     = matcharrays[ match.full_name]
-            idx      = []
-
-            if len(match.variables) == 0:
-                idx = [0]
-            else:
-                for var in tvars:
-                    val = match.variables[var]
-                    idx.append(tvaridxs[var][val])
-
-            tarr[tuple(idx)] = match
-
-        self.__tree          = tree
-        self.__allvars       = allvars
-        self.__templatevars  = templatevars
-        self.__matches       = matches
-        self.__matcharrays   = matcharrays
-        self.__varidxs       = varidxs
+        self.__tree        = tree
+        self.__matcharrays = scan(tree)
 
 
     def axes(self, template):
         """Returns a list containing the names of variables present in files
-        of the given ``template`` type, in the same order of the axes of
-        :class:`Match` arrays that are returned by the :meth:`query` method.
+        of the given ``template`` type.
         """
-        return self.__templatevars[template]
+        return list(self.__matcharrays[template].coords.keys())
 
 
     def variables(self, template=None):
@@ -186,11 +106,21 @@ class FileTreeQuery(object):
         If a ``template`` is specified, only variables which are present in
         files of that ``template`` type are returned.
         """
-        if template is None:
-            return {var : list(vals) for var, vals in self.__allvars.items()}
+        if template is not None:
+            templates = [template]
         else:
-            varnames = self.__templatevars[template]
-            return {var : list(self.__allvars[var]) for var in varnames}
+            templates = self.__matcharrays.keys()
+
+        variables = collections.defaultdict(set)
+
+        for template in templates:
+            coords = self.__matcharrays[template].coords
+
+            for axis in coords.keys():
+                varvalues       = variables[axis]
+                variables[axis] = varvalues.union(set(coords[axis].data))
+
+        return variables
 
 
     @property
@@ -205,35 +135,26 @@ class FileTreeQuery(object):
         """Returns a list containing all templates of the ``FileTree`` that
         are present in the directory.
         """
-        return list(self.__templatevars.keys())
+        return list(self.__matcharrays.keys())
 
 
-    def query(self, template, asarray=False, **variables):
+    def query(self, template, **variables):
         """Search for files of the given ``template``, which match
         the specified ``variables``. All hits are returned for variables
         that are unspecified.
 
         :arg template: Template of files to search for.
 
-        :arg asarray:  If ``True``, the relevant :class:`Match` objects are
-                       returned in a in a ND ``numpy.array`` where each
-                       dimension corresponds to a variable for the
-                       ``templates`` in question (as returned by
-                       :meth:`axes`). Otherwise (the default), they are
-                       returned in a list.
-
         All other arguments are assumed to be ``variable=value`` pairs,
         used to restrict which matches are returned. All values are returned
         for variables that are not specified, or variables which are given a
         value of ``'*'``.
 
-        :returns: A list  of ``Match`` objects, (or a ``numpy.array`` if
-                  ``asarray=True``).
+        :returns: A list  of ``Match`` objects
         """
 
         varnames    = list(variables.keys())
-        allvarnames = self.__templatevars[template]
-        varidxs     = self.__varidxs[     template]
+        allvarnames = self.variables(template).keys()
         matcharray  = self.__matcharrays[ template]
         slc         = []
 
@@ -248,35 +169,48 @@ class FileTreeQuery(object):
             # returned by the axes() method
             # are valid.
             if val == '*': slc.append(slice(None))
-            else:          slc.extend([np.newaxis, varidxs[var][val]])
+            else:          slc.extend([np.newaxis, val])
 
-        result = matcharray[tuple(slc)]
+        # Convert xarray.DataArray into a list of
+        # Match objects. I can't find an elegant
+        # way to do this - something like apply_ufunc
+        # would be nice, but we lose the labelling
+        # information.
+        results = matcharray.loc[tuple(slc)]
+        matches = []
 
-        if asarray: return result
-        else:       return [m for m in result.flat if isinstance(m, Match)]
+        for result in results:
+
+            coords = result.coords
+            fname  = result.data[()]
+
+            if fname == '':
+                continue
+            else:
+                rvars = {ax : coords[ax].data[()] for ax in coords}
+                matches.append(Match(fname, template, rvars))
+
+        return matches
 
 
 @ft.total_ordering
-class Match(object):
+class Match:
     """A ``Match`` object represents a file with a name matching a template in
-    a ``FileTree``.  The :func:`scan` function and :meth:`FileTree.query`
-    method both return ``Match`` objects.
+    a ``FileTree``.  The :meth:`FileTree.query` method returns ``Match``
+    objects.
     """
 
 
-    def __init__(self, filename, template, tree, variables):
+    def __init__(self, filename, template, variables):
         """Create a ``Match`` object. All arguments are added as attributes.
 
-        :arg filename:   name of existing file
         :arg template:   template identifier
-        :arg tree:       ``FileTree`` which contains this ``Match``
-        :arg variables:  Dictionary of ``{variable : value}`` mappings
-                         containing all variables present in the file name.
+        :arg value:
+
         """
-        self.__filename   = filename
-        self.__template   = template
-        self.__tree       = tree
-        self.__variables  = dict(variables)
+        self.__filename  = filename
+        self.__template  = template
+        self.__variables = variables
 
 
     @property
@@ -290,36 +224,6 @@ class Match(object):
 
 
     @property
-    def full_name(self):
-        """The ``full_name`` of a ``Match`` is a combination of the
-        ``template`` (i.e. the matched template), and the name(s) of
-        the relevant ``FileTree`` objects.
-
-        It allows one to unamiguously identify the location of a ``Match``
-        in a ``FileTree`` hierarchy, where the same ``short_name`` may be
-        used in different sub-trees.
-        """
-
-        def parents(tree):
-            if getattr(tree, 'parent', None) is None:
-                return []
-            else:
-                return [tree.parent] + parents(tree.parent)
-
-        trees = [self.tree] + parents(self.tree)
-
-        # Drop the root tree
-        trees = list(reversed(trees))[1:]
-
-        return '/'.join([t.name for t in trees] + [self.template])
-
-
-    @property
-    def tree(self):
-        return self.__tree
-
-
-    @property
     def variables(self):
         return dict(self.__variables)
 
@@ -328,7 +232,6 @@ class Match(object):
         return (isinstance(other, Match)            and
                 self.filename   == other.filename   and
                 self.template   == other.template   and
-                self.tree       is other.tree       and
                 self.variables  == other.variables)
 
 
@@ -346,93 +249,44 @@ class Match(object):
         return repr(self)
 
 
-def scan(tree):
+def scan(tree, filterEmpty=False):
     """Scans the directory of the given ``FileTree`` to find all files which
     match a tree template.
 
-    :arg tree: ``FileTree`` to scan
-    :returns:  list of :class:`Match` objects
+    A dictionary of ``{template : xarray.DataArray}`` mappings is returned,
+    where each ``DataArray`` has dimensions corresponding to variables used in
+    the template, and contains names (as strings) of matching files present on
+    disk as strings. Entries in an arrays for variable values which do not
+    exist on disk are set to the empty string.
+
+    See the ``file_tree.FileTree.get_mult_glob`` method for more details.
+
+    :arg tree:        ``FileTree`` to scan
+
+    :arg filterEmpty: If ``True`` (the default), file tree templates which
+                      do not match any files on disk are not returned.
+
+    :returns:         A dict of ``{template : xarray.DataArray}`` objects,
+                      one for each template.
     """
 
-    try:
-        import fsl.utils.filetree as filetree
-        old_FileTree = filetree.FileTree
-    except ImportError:
-        old_FileTree = None
+    xarrays = {}
 
-    matches = []
+    for template in tree.template_keys():
 
-    # have we been given a FileTree from the
-    # deprecated fsl.utils.filetree package?
-    if isinstance(tree, old_FileTree):
-        for template in tree.templates:
-            for variables in tree.get_all_vars(template, glob_vars='all'):
+        # empty string template matches
+        # the root directory
+        if template == '':
+            continue
 
-                filename = tree.update(**variables).get(template)
+        xa = tree.get_mult_glob(template)
 
-                if not op.isfile(filename):
-                    continue
+        # Skip templates which do not have
+        # any files present on disk
+        if filterEmpty:
+            if (xa == '').sum() == np.prod(xa.shape):
+                continue
 
-                matches.append(Match(filename, template, tree, variables))
+        xarrays[template] = xa
 
-        for _, sub_tree in tree.sub_trees.items():
-            matches.extend(scan(sub_tree))
-
-    # Otherwise assume that we are working
-    # with the new filetree library.
-    else:
-        for template in tree.template_keys():
-
-            as_xarray  = tree.get_mult_glob(template)
-            axes       = as_xarray.coords.keys()
-            axisvalues = [as_xarray.coords[name] for name in coords]
-
-            for values in it.product(*axisvalues):
-
-                variables = dict(zip(axes, values))
-                path      = as_xarray.sel(**variables)
-                if path and op.isfile(path):
-                    matches.append(Match(path, template, tree, variables))
-
-    return matches
-
-
-def allVariables(tree, matches):
-    """Identifies the ``FileTree`` variables which are actually represented
-    in files in the directory.
-
-    :arg filetree: The ``FileTree`` object
-    :arg matches:  list of ``Match`` objects (e.g. as returned by :func:`scan`)
-
-    :returns: a tuple containing two dicts:
-
-               - A dict of ``{ variable : [values] }`` mappings containing all
-                 variables and their possible values present in the given list
-                 of ``Match`` objects.
-
-               - A dict of ``{ full_name : [variables] }`` mappings,
-                 containing the variables which are relevant to each template.
-    """
-    allvars      = collections.defaultdict(set)
-    alltemplates = {}
-
-    for m in matches:
-
-        if m.full_name not in alltemplates:
-            alltemplates[m.full_name] = set()
-
-        for var, val in m.variables.items():
-            allvars[     var]        .add(val)
-            alltemplates[m.full_name].add(var)
-
-    # allow us to compare None with strings
-    def key(v):
-        if v is None: return ''
-        else:         return v
-
-    allvars      = {var : list(sorted(vals, key=key))
-                    for var, vals in allvars.items()}
-    alltemplates = {tn  : list(sorted(vars))
-                    for tn, vars in alltemplates.items()}
-
-    return allvars, alltemplates
+    return xarrays
