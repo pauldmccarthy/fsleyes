@@ -1165,6 +1165,7 @@ properties = TypeDict({
     'VectorOpts.clipImage'       : 'Clip by',
     'VectorOpts.clippingRange'   : 'Clipping range',
     'VectorOpts.modulateRange'   : 'Modulation range',
+    'VectorOpts.modulateMode'    : 'Modulation mode',
     'VectorOpts.orientFlip'      : 'L/R orientation flip',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
@@ -1293,8 +1294,10 @@ choices = TypeDict({
     'VectorOpts.suppressMode' : {'white'       : 'White',
                                  'black'       : 'Black',
                                  'transparent' : 'Transparent'},
+    'VectorOpts.modulateMode' : {'brightness'  : 'Brightness',
+                                 'alpha'       : 'Transparency'},
 
-    'MeshOpts.refImage.none'     : 'No reference image',
+    'MeshOpts.refImage.none'  : 'No reference image',
 
     'MeshOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
                              'affine'      : 'World coordinates',

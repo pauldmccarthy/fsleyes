@@ -91,6 +91,8 @@ def updateShaderState(self):
 
     modLow,  modHigh  = self.getModulateRange()
     clipLow, clipHigh = self.getClippingRange()
+    modMode           = {'brightness' : 0,
+                         'alpha'      : 1}[opts.modulateMode]
 
     clipXform   = self.getAuxTextureXform('clip')
     colourXform = self.getAuxTextureXform('colour')
@@ -105,7 +107,6 @@ def updateShaderState(self):
     changed |= shader.set('lightPos',    lightPos)
     changed |= shader.set('nVertices',   self.vertices.shape[0])
     changed |= shader.set('sizeScaling', opts.size / 100.0)
-
     changed |= shader.set('radTexture',  4)
 
     if self.useVolumeFragShader:
@@ -144,6 +145,7 @@ def updateShaderState(self):
         changed |= shader.set('clipHigh',         clipHigh)
         changed |= shader.set('modLow',           modLow)
         changed |= shader.set('modHigh',          modHigh)
+        changed |= shader.set('modulateMode',     modMode)
         changed |= shader.set('colourMode',       colourMode)
         changed |= shader.set('xColour',          colours[0])
         changed |= shader.set('yColour',          colours[1])

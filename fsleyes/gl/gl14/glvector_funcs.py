@@ -81,13 +81,15 @@ def updateShaderState(self):
     useVolumeFragShader = opts.colourImage is not None
     modLow,  modHigh    = self.getModulateRange()
     clipLow, clipHigh   = self.getClippingRange()
+    modMode             = {'brightness' : -0.5,
+                           'alpha'      :  0.5}[opts.modulateMode]
 
     clipping = [clipLow, clipHigh, -1, -1]
 
     if np.isclose(modHigh, modLow):
-        mod = [0,  0,  0, -1]
+        mod = [0,  0,  0, 0]
     else:
-        mod = [modLow,  modHigh, 1.0 / (modHigh - modLow), -1]
+        mod = [modLow,  modHigh, 1.0 / (modHigh - modLow), modMode]
 
     # Inputs which are required by both the
     # glvolume and glvetor fragment shaders

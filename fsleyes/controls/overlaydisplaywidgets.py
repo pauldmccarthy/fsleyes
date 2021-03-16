@@ -205,6 +205,7 @@ def _initPropertyList_VectorOpts(threedee):
             'cmap',
             'clippingRange',
             'modulateRange',
+            'modulateMode',
             'xColour',
             'yColour',
             'zColour',
@@ -559,6 +560,11 @@ def _initWidgetSpec_VectorOpts(threedee):
             slider=True,
             labels=[strings.choices['VectorOpts.modulateRange.min'],
                     strings.choices['VectorOpts.modulateRange.max']],
+            dependencies=['colourImage', 'modulateImage'],
+            enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
+        'modulateMode' : props.Widget(
+            'modulateMode',
+            labels=strings.choices['VectorOpts.modulateMode'],
             dependencies=['colourImage', 'modulateImage'],
             enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
         'xColour'       : props.Widget(

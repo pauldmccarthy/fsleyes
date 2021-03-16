@@ -25,6 +25,9 @@ Added
   allowing the modulation of samples by voxel intensity to be disabled.
 * New ``-ixh``, ``-ixv``, ``-iyh``, ``-iyv``, ``-izh``, and ``-izv`` options,
   allowing ortho canvases to be inverted vertically or horizontally.
+* New ``--modulateMode`` option for ``rgbvector``, ``linevector``, ``tensor``
+  and ``sh`` overlays, allowing modulation to be applied to either brightness
+  or transparency.
 
 
 Changed

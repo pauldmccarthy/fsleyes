@@ -60,9 +60,10 @@ class GLVectorBase(glimageobject.GLImageObject):
        :attr:`.VectorOpts.colourImage` and :attr:`.VectorOpts.cmap` properties.
 
 
-    In either case, the brightness of each vector colour may be modulated by
-    another image, specified by the :attr:`.VectorOpts.modulateImage`
-    property.  This modulation image is stored as a 3D single-channel
+    In either case, the brightness or transparency of each vector colour may
+    be modulated by another image, specified by the
+    :attr:`.VectorOpts.modulateImage` and :attr:`.VectorOpts.modulateMode`
+    properties.  This modulation image is stored as a 3D single-channel
     :class:`.ImageTexture`.
 
 
@@ -232,6 +233,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         opts   .addListener('suppressY',     name, self.asyncUpdateShaderState)
         opts   .addListener('suppressZ',     name, self.asyncUpdateShaderState)
         opts   .addListener('suppressMode',  name, self.asyncUpdateShaderState)
+        opts   .addListener('modulateMode',  name, self.asyncUpdateShaderState)
         opts   .addListener('cmap',          name, self.__cmapPropChanged)
         opts   .addListener('modulateImage', name, self.__modImageChanged)
         opts   .addListener('clipImage',     name, self.__clipImageChanged)
@@ -261,6 +263,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         opts   .removeListener('suppressY',     name)
         opts   .removeListener('suppressZ',     name)
         opts   .removeListener('suppressMode',  name)
+        opts   .removeListener('modulateMode',  name)
         opts   .removeListener('modulateImage', name)
         opts   .removeListener('clipImage',     name)
         opts   .removeListener('colourImage',   name)
