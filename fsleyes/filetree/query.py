@@ -88,7 +88,7 @@ class FileTreeQuery:
         :arg tree: The ``FileTree`` object
         """
         self.__tree        = tree
-        self.__matcharrays = scan(tree, filterEmpty=True)
+        self.__matcharrays = scan(tree)
 
 
     def axes(self, template):
@@ -138,6 +138,13 @@ class FileTreeQuery:
         return list(self.__matcharrays.keys())
 
 
+    def matcharray(self, template):
+        """Returns a reference to the ``xarray.DataArray`` which contains the
+        file paths for the given ``template``.
+        """
+        return self.__matcharrays[template]
+
+
     def query(self, template, **variables):
         """Search for files of the given ``template``, which match
         the specified ``variables``. All hits are returned for variables
@@ -153,6 +160,8 @@ class FileTreeQuery:
         :returns: A list  of ``Match`` objects
         """
 
+        # Build a slice containing a value for
+        # every axis of the template array
         varnames    = list(variables.keys())
         allvarnames = self.variables(template).keys()
         matcharray  = self.__matcharrays[ template]
@@ -163,32 +172,33 @@ class FileTreeQuery:
             if var in varnames: val = variables[var]
             else:               val = '*'
 
-            # We're using np.newaxis to retain
-            # the full dimensionality of the
-            # array, so that the axis labels
-            # returned by the axes() method
-            # are valid.
             if val == '*': slc.append(slice(None))
-            else:          slc.extend([np.newaxis, val])
+            else:          slc.append(val)
+
+        # Retrieve the results
+        results = matcharray.loc[tuple(slc)]
 
         # Convert xarray.DataArray into a list of
         # Match objects. I can't find an elegant
         # way to do this - something like apply_ufunc
         # would be nice, but we lose the labelling
         # information.
-        results = matcharray.loc[tuple(slc)]
         matches = []
+        riter   = np.nditer(results, flags=['multi_index'])
 
-        for result in results:
-
-            coords = result.coords
-            fname  = result.data[()]
+        for fname in riter:
 
             if fname == '':
                 continue
-            else:
-                rvars = {ax : coords[ax].data[()] for ax in coords}
-                matches.append(Match(fname, template, rvars))
+
+            # Look up the variable values associated
+            # with this file name, and create a
+            # corresponding Match object
+            index  = riter.multi_index
+            coords = results[index].coords
+            rvars  = {ax : coords[ax].data[()] for ax in coords}
+
+            matches.append(Match(fname, template, rvars))
 
         return matches
 
@@ -241,7 +251,7 @@ class Match:
 
     def __repr__(self):
         """Returns a string representation of this ``Match``. """
-        return 'Match({}: {})'.format(self.full_name, self.filename)
+        return 'Match({}: {})'.format(self.template, self.filename)
 
 
     def __str__(self):
@@ -249,7 +259,7 @@ class Match:
         return repr(self)
 
 
-def scan(tree, filterEmpty=False):
+def scan(tree, filterEmpty=True):
     """Scans the directory of the given ``FileTree`` to find all files which
     match a tree template.
 
@@ -270,16 +280,13 @@ def scan(tree, filterEmpty=False):
                       one for each template.
     """
 
-    xarrays = {}
+    templates = tree.template_keys(only_leaves=True)
+    xarrays   = tree.get_mult_glob(templates)
+    results   = {}
 
-    for template in tree.template_keys():
+    for template in templates:
 
-        # empty string template matches
-        # the root directory
-        if template == '':
-            continue
-
-        xa = tree.get_mult_glob(template)
+        xa = xarrays[template]
 
         # Skip templates which do not have
         # any files present on disk
@@ -287,6 +294,6 @@ def scan(tree, filterEmpty=False):
             if (xa == '').sum() == np.prod(xa.shape):
                 continue
 
-        xarrays[template] = xa
+        results[template] = xa
 
-    return xarrays
+    return results
