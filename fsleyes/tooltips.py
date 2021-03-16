@@ -287,6 +287,9 @@ properties = TypeDict({
     'VectorOpts.modulateRange'    : 'The data range that is used when '
                                     'modulating vector brightness by a '
                                     'modulation image.',
+    'VectorOpts.modulateMode'     : 'Either the brightness, or the '
+                                    'transparency, of vector voxels can be '
+                                    'modulated by the modulation image.',
     'VectorOpts.cmap'             : 'Colour map to use for colouring vector '
                                     'voxels, if a colour image is selected.',
     'VectorOpts.orientFlip'       : 'If checked, direction orientations '

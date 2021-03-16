@@ -546,6 +546,7 @@ OPTIONS = td.TypeDict({
                         'colourImage',
                         'modulateImage',
                         'modulateRange',
+                        'modulateMode',
                         'clipImage',
                         'clippingRange'],
     'LineVectorOpts' : ['orientFlip',
@@ -878,6 +879,7 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.colourImage'     : ('co', 'colourImage',   True),
     'VectorOpts.modulateImage'   : ('mo', 'modulateImage', True),
     'VectorOpts.modulateRange'   : ('mr', 'modulateRange', True),
+    'VectorOpts.modulateMode'    : ('mm', 'modulateMode',  True),
     'VectorOpts.clipImage'       : ('cl', 'clipImage',     True),
     'VectorOpts.clippingRange'   : ('cr', 'clippingRange', True),
     'VectorOpts.orientFlip'      : ('of', 'orientFlip',    False),
@@ -1179,9 +1181,12 @@ HELP = td.TypeDict({
     'VectorOpts.cmap'            : 'Colour map (only used if a '
                                    'colour image is provided)',
     'VectorOpts.colourImage'     : 'Image to colour vectors with',
-    'VectorOpts.modulateImage'   : 'Image to modulate vector brightness with',
+    'VectorOpts.modulateImage'   : 'Image to modulate vector brightness/alpha '
+                                   'with',
     'VectorOpts.modulateRange'   : 'Modulation range (only used if a '
                                    'modulation image is provided)',
+    'VectorOpts.modulateMode'    : 'Modulate vector \'brightness\' (default) '
+                                   'or \'alpha\'',
     'VectorOpts.clipImage'       : 'Image to clip vectors with',
     'VectorOpts.clippingRange'   : 'Clipping range (only used if a '
                                    'clipping image is provided)',

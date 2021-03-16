@@ -95,18 +95,23 @@ class VectorOpts(niftiopts.NiftiOpts):
 
     colourImage = props.Choice()
     """Colour vector voxels by the values contained in this image. Any image which
-    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
-    the vector image can be selected for modulation. If a ``colourImage`` is
-    selected, the :attr:`xColour`, :attr:`yColour`, :attr:`zColour`,
+    is in the :class:`.OverlayList`, and which has the same voxel dimensions
+    as the vector image can be selected for colouring. If a ``colourImage``
+    is selected, the :attr:`xColour`, :attr:`yColour`, :attr:`zColour`,
     :attr:`suppressX`, :attr:`suppressY`, and :attr:`suppressZ` properties are
     all ignored.
     """
 
 
     modulateImage  = props.Choice()
-    """Modulate the vector colour brightness by another image. Any image which
-    is in the :class:`.OverlayList`, and which has the same voxel dimensions as
-    the vector image can be selected for modulation.
+    """Modulate the vector colour brightness/alpha by another image. Any image
+    which is in the :class:`.OverlayList`, and which has the same voxel
+    dimensions as the vector image can be selected for modulation.
+    """
+
+
+    modulateMode = props.Choice(('brightness', 'alpha'))
+    """Modulate either the brightness or transparency bu the modulation image.
     """
 
 
@@ -125,9 +130,9 @@ class VectorOpts(niftiopts.NiftiOpts):
     """
 
 
-    modulateRange = props.Bounds(ndims=1)
-    """Data range used in brightness modulation, when a :attr:`modulateImage`
-    is in use.
+    modulateRange = props.Bounds(ndims=1, clamped=False)
+    """Data range used in brightness/transparency modulation, when a
+    :attr:`modulateImage` is in use.
     """
 
 
