@@ -36,18 +36,25 @@ uniform sampler3D modulateTexture;
 uniform sampler3D clipTexture;
 
 
-/* 
+/*
  * Clipping range, specified in the clipTexture texture data range.
  */
 uniform float clipLow;
 uniform float clipHigh;
 
 
-/* 
+/*
  * Modulation range, specified in the modulateTexture texture data range.
  */
 uniform float modLow;
 uniform float modHigh;
+
+/*
+ * Modulation mode:
+ *   - 0 == modulate brightness by mod image
+ *   - 1 == modulate alpha by mod image
+ */
+uniform int modulateMode;
 
 /*
  * Scale/offset transform used to transform cmapTexture values into
@@ -65,8 +72,8 @@ uniform vec4 zColour;
 
 
 /*
- * Scale/offset to be applied to the fragment 
- * colour when colouring by direction. Encodes 
+ * Scale/offset to be applied to the fragment
+ * colour when colouring by direction. Encodes
  * a brightness/contrast adjustment.
  */
 uniform mat4 colourXform;
@@ -111,7 +118,7 @@ varying float fragRadius;
 
 
 /*
- * The final fragment colour is multiplied by this 
+ * The final fragment colour is multiplied by this
  * scaling factor - this may be used for vertex-based
  * lighting.
  */
@@ -119,7 +126,7 @@ varying vec4 fragColourFactor;
 
 
 void main(void) {
-  
+
   vec3 voxCoords = fragVoxCoord;
   vec3 normVertex;
   vec4 colour;
@@ -150,27 +157,27 @@ void main(void) {
   /* Clobber the clip values if out of bounds */
   if (any(lessThan(   fragClipTexCoord, vec3(0))) ||
       any(greaterThan(fragClipTexCoord, vec3(1)))) {
-    
+
     clipValue = clipLow + 0.5 * (clipHigh - clipLow);
   }
   else {
     clipValue = texture3D(clipTexture, fragClipTexCoord).x;
-    
+
   }
 
   /* And do the same for the modulation value */
   if (any(lessThan(   fragModTexCoord, vec3(0))) ||
       any(greaterThan(fragModTexCoord, vec3(1)))) {
 
-    /* 
-     * modValue gets scaled by the mod range down 
-     * below, but if we give it this value, the 
+    /*
+     * modValue gets scaled by the mod range down
+     * below, but if we give it this value, the
      * scaling step will result in a value of 1
      */
     modValue = modHigh - 2 * modLow;
   }
   else {
-    modValue = texture3D(modulateTexture, fragModTexCoord).x; 
+    modValue = texture3D(modulateTexture, fragModTexCoord).x;
   }
 
   /* Knock out voxels where the clipping value is outside the clipping range */
@@ -178,12 +185,14 @@ void main(void) {
       discard;
   }
 
-  /* Scale the modulation value, and modulate the colour  */
-  modValue    = (modValue + modLow) / (modHigh - modLow);
-  colour.xyz *= modValue; 
-  
+  /* Scale the modulation value, and modulate the colour or alpha  */
+  modValue = (modValue + modLow) / (modHigh - modLow);
+
+  if      (modulateMode == 0) { colour.xyz *= modValue; }
+  else if (modulateMode == 1) { colour.a   *= modValue; }
+
   gl_FragColor = colour * fragColourFactor;
   gl_FragDepth = fragVoxCoord.x / imageShape.x *
                  fragVoxCoord.y / imageShape.y *
-                 fragVoxCoord.z / imageShape.z; 
+                 fragVoxCoord.z / imageShape.z;
 }
