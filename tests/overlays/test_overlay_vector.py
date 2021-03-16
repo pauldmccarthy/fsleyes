@@ -46,6 +46,10 @@ dti/dti_FA -d dti/dti_V1 -ot rgbvector -co dti_FA     -b 70 -c 90
 dti/dti_FA dti/dti_V1 -ot rgbvector -mo dti_FA     -mr 0 0.5
 dti/dti_FA dti/dti_V1 -ot rgbvector -mo dti_FA
 
+           dti/dti_V1 -ot rgbvector -mo dti/dti_FA -mr 0 0.5 -mm alpha
+dti/dti_FA dti/dti_V1 -ot rgbvector -mo dti_FA     -mr 0 0.5 -mm alpha
+dti/dti_FA dti/dti_V1 -ot rgbvector -mo dti_FA               -mm alpha
+
 #############
 # Line vector
 #############
@@ -78,6 +82,10 @@ dti/dti_FA -d dti/dti_V1 -ot linevector -co dti_FA     -b 70 -c 90
 dti/dti_FA dti/dti_V1 -ot linevector -mo dti_FA     -mr 0 0.5
 dti/dti_FA dti/dti_V1 -ot linevector -mo dti_FA
 
+           dti/dti_V1 -ot linevector -mo dti/dti_FA -mr 0 0.5 -mm alpha
+dti/dti_FA dti/dti_V1 -ot linevector -mo dti_FA     -mr 0 0.5 -mm alpha
+dti/dti_FA dti/dti_V1 -ot linevector -mo dti_FA               -mm alpha
+
 ########
 # Tensor
 ########
@@ -108,6 +116,9 @@ dti/dti_FA -d dti -ot tensor -co dti_FA     -b 70 -c 90
            dti -ot tensor -mo dti/dti_FA -mr 0 0.5
 dti/dti_FA dti -ot tensor -mo dti_FA     -mr 0 0.5
 dti/dti_FA dti -ot tensor -mo dti_FA
+           dti -ot tensor -mo dti/dti_FA -mr 0 0.5 -mm alpha
+dti/dti_FA dti -ot tensor -mo dti_FA     -mr 0 0.5 -mm alpha
+dti/dti_FA dti -ot tensor -mo dti_FA               -mm alpha
 
 ####
 # SH
@@ -139,6 +150,9 @@ sh_sym_FA -d sh_sym -ot sh -co sh_sym_FA -b 70 -c 90
           sh_sym -ot sh -mo sh_sym_FA -mr 0 0.5
 sh_sym_FA sh_sym -ot sh -mo sh_sym_FA -mr 0 0.5
 sh_sym_FA sh_sym -ot sh -mo sh_sym_FA
+          sh_sym -ot sh -mo sh_sym_FA -mr 0 0.5 -mm alpha
+sh_sym_FA sh_sym -ot sh -mo sh_sym_FA -mr 0 0.5 -mm alpha
+sh_sym_FA sh_sym -ot sh -mo sh_sym_FA           -mm alpha
 """
 
 
