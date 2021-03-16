@@ -62,6 +62,9 @@ def updateShaderState(self, useSpline=False):
     if opts.clipImage     is None: clipShape = [1, 1, 1]
     else:                          clipShape = opts.clipImage.shape[:3]
 
+    modMode     = {'brightness' : 0,
+                   'alpha'      : 1}[opts.modulateMode]
+
     clipXform   = self.getAuxTextureXform('clip')
     colourXform = self.getAuxTextureXform('colour')
     modXform    = self.getAuxTextureXform('modulate')
@@ -122,5 +125,6 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('modLow',          modLow)
         changed |= shader.set('modHigh',         modHigh)
         changed |= shader.set('useSpline',       useSpline)
+        changed |= shader.set('modulateMode',    modMode)
 
     return changed

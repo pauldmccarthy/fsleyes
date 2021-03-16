@@ -16,7 +16,8 @@ uniform sampler3D vectorTexture;
 
 /*
  * Modulation texture containing values by
- * which the vector colours are to be modulated.
+ * which the vector colours/alpha are to be
+ * modulated.
  */
 uniform sampler3D modulateTexture;
 
@@ -86,6 +87,13 @@ uniform float modHigh;
  * Use spline interpolation?
  */
 uniform bool useSpline;
+
+/*
+ * Modulation mode:
+ *   - 0 == modulate brightness by mod image
+ *   - 1 == modulate alpha by mod image
+ */
+uniform int modulateMode;
 
 /*
  * Coordinates of the fragment in voxel
@@ -160,8 +168,9 @@ void main(void) {
 
     /*
      * modValue gets scaled by the mod range down
-     * below, but if we give it this value, the
-     * scaling step will result in a value of 1
+     * below, but we pre-scale it here to ensure
+     * that the scaling step below will result
+     * in a value of 1 (hence no modulation)
      */
     modValue = modHigh - 2 * modLow;
   }
@@ -206,10 +215,12 @@ void main(void) {
 
   /*
    * Scale the modulation value, and
-   * modulate the colour (but not alpha).
+   * modulate the colour or alpha.
    */
-  modValue       = (modValue + modLow) / (modHigh - modLow);
-  voxColour.xyz *= modValue;
+  modValue = (modValue + modLow) / (modHigh - modLow);
+
+  if      (modulateMode == 0) { voxColour.xyz *= modValue; }
+  else if (modulateMode == 1) { voxColour.a   *= modValue; }
 
   gl_FragColor = voxColour * fragColourFactor;
   gl_FragDepth = fragVoxCoord.x / imageShape.x *
