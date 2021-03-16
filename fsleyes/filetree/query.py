@@ -88,7 +88,7 @@ class FileTreeQuery:
         :arg tree: The ``FileTree`` object
         """
         self.__tree        = tree
-        self.__matcharrays = scan(tree)
+        self.__matcharrays = scan(tree, filterEmpty=True)
 
 
     def axes(self, template):
