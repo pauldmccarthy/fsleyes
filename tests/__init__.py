@@ -218,6 +218,42 @@ def tempdir():
         shutil.rmtree(testdir)
 
 
+def testdir(contents=None, suffix=""):
+    """Returnsa context manager which creates, changes to, and returns a
+    temporary directory, and then deletes it on exit.
+    """
+
+    if contents is not None:
+        contents = [op.join(*c.split('/')) for c in contents]
+
+    class ctx(object):
+
+        def __init__(self, contents):
+            self.contents = contents
+
+        def __enter__(self):
+
+            self.testdir = tempfile.mkdtemp(suffix=suffix)
+            self.prevdir = os.getcwd()
+
+            os.chdir(self.testdir)
+
+            if self.contents is not None:
+                contents = [op.join(self.testdir, c) for c in self.contents]
+                for path in contents:
+                    os.makedirs(op.dirname(path), exist_ok=True)
+                    with open(path, 'wt') as f:
+                        f.write('{}\n'.format(path))
+
+            return self.testdir
+
+        def __exit__(self, *a, **kwa):
+            os.chdir(self.prevdir)
+            shutil.rmtree(self.testdir)
+
+    return ctx(contents)
+
+
 def run_with_fsleyes(func, *args, **kwargs):
     """Create a ``FSLeyesFrame`` and run the given function. """
 

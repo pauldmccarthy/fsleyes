@@ -120,6 +120,8 @@ class FileTreeQuery:
                 varvalues       = variables[axis]
                 variables[axis] = varvalues.union(set(coords[axis].data))
 
+        variables = {name : sorted(vals) for name, vals in variables.items()}
+
         return variables
 
 
@@ -187,6 +189,8 @@ class FileTreeQuery:
         riter   = np.nditer(results, flags=['multi_index'])
 
         for fname in riter:
+
+            fname = fname.item()
 
             if fname == '':
                 continue
