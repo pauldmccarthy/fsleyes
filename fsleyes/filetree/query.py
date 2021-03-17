@@ -120,7 +120,11 @@ class FileTreeQuery:
                 varvalues       = variables[axis]
                 variables[axis] = varvalues.union(set(coords[axis].data))
 
-        variables = {name : sorted(vals) for name, vals in variables.items()}
+        # Variable values will usually be strings,
+        # but can sometimes be None, so we convert
+        # to str to handle this.
+        variables = {name : sorted(vals, key=str)
+                     for name, vals in variables.items()}
 
         return variables
 
