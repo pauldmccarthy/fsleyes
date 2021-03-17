@@ -28,6 +28,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
      - Create a new :class:`.Image`
      - Undo/redo the last change
      - Clear/fill/erase the current selection
+     - Copy/paste data between images
     """
 
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
@@ -134,8 +135,8 @@ _ICONS = {
     'clearSelection'  : fslicons.findImageFile('clearSelection24'),
     'fillSelection'   : fslicons.findImageFile('fillSelection24'),
     'eraseSelection'  : fslicons.findImageFile('eraseSelection24'),
-    'copySelection'   : fslicons.findImageFile('copySelection24'),
-    'pasteSelection'  : fslicons.findImageFile('pasteSelection24'),
+    'copyPasteData'   : [fslicons.findImageFile('copySelection24'),
+                         fslicons.findImageFile('pasteSelection24')]
 }
 
 
@@ -160,10 +161,8 @@ _TOOLTIPS = {
                                             'fillSelection'],
     'eraseSelection'  : fsltooltips.actions['OrthoEditProfile.'
                                             'eraseSelection'],
-    'copySelection'   : fsltooltips.actions['OrthoEditProfile.'
-                                            'copySelection'],
-    'pasteSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                            'pasteSelection'],
+    'copyPasteData'   : fsltooltips.actions['OrthoEditProfile.'
+                                            'copyPasteData'],
 }
 
 _TOOLBAR_SPECS = [
@@ -220,12 +219,8 @@ _TOOLBAR_SPECS = [
 
     'div',
 
-    actions.ActionButton(
-        'copySelection',
-        icon=_ICONS['copySelection'],
-        tooltip=_TOOLTIPS['copySelection']),
-    actions.ActionButton(
-        'pasteSelection',
-        icon=_ICONS['pasteSelection'],
-        tooltip=_TOOLTIPS['pasteSelection']),
+    actions.ToggleActionButton(
+        'copyPasteData',
+        icon=_ICONS['copyPasteData'],
+        tooltip=_TOOLTIPS['copyPasteData']),
 ]
