@@ -594,15 +594,14 @@ actions = TypeDict({
     'OrthoViewProfile.resetDisplay' : 'Reset display',
 
 
-    'OrthoEditProfile.undo'                    : 'Undo',
-    'OrthoEditProfile.redo'                    : 'Redo',
-    'OrthoEditProfile.createMask'              : 'Create mask',
-    'OrthoEditProfile.clearSelection'          : 'Clear selection',
-    'OrthoEditProfile.fillSelection'           : 'Fill selection',
-    'OrthoEditProfile.invertSelection'         : 'Invert selection',
-    'OrthoEditProfile.eraseSelection'          : 'Erase selection',
-    'OrthoEditProfile.copySelection'           : 'Copy selection',
-    'OrthoEditProfile.pasteSelection'          : 'Paste selection',
+    'OrthoEditProfile.undo'            : 'Undo',
+    'OrthoEditProfile.redo'            : 'Redo',
+    'OrthoEditProfile.createMask'      : 'Create mask',
+    'OrthoEditProfile.clearSelection'  : 'Clear selection',
+    'OrthoEditProfile.fillSelection'   : 'Fill selection',
+    'OrthoEditProfile.invertSelection' : 'Invert selection',
+    'OrthoEditProfile.eraseSelection'  : 'Erase selection',
+    'OrthoEditProfile.copyPasteData'   : 'Copy/paste data',
 })
 
 

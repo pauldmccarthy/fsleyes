@@ -859,14 +859,13 @@ actions = TypeDict({
     'Set the value at all selected voxels in the currently selected '
     'image to zero.',
 
-    'OrthoEditProfile.copySelection' :
-    'Copy the values of all selected voxels in the currently selected image '
-    'and store them in an internal clipboard. The voxel values can then be '
-    'pasted into another image (which has the same dimensions/resolution as '
-    'the source image).',
-
-    'OrthoEditProfile.pasteSelection' :
-    'Paste the contents of the clipboard into the currently selected image.',
+    'OrthoEditProfile.copyPasteData' :
+    'Copy/paste data between images. Select some voxels in one image, and '
+    'click this button to copy the voxel values to a clipboard. Then select '
+    'another image (which has the same dimensions/resolution as the first '
+    'image), and click this button again to paste the values. To clear the '
+    'clipboard without pasting, select the first image again, and click this '
+    'button.',
 
     'Scene3DViewProfile.resetDisplay' :
     'Reset the zoom, pan, and rotation',
