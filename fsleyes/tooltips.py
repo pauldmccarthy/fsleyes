@@ -867,6 +867,9 @@ actions = TypeDict({
     'clipboard without pasting, select the first image again, and click this '
     'button.',
 
+    'OrthoEditProfile.copyPasteSelection' :
+    'Copy/paste 2D selections between slices. ',
+
     'Scene3DViewProfile.resetDisplay' :
     'Reset the zoom, pan, and rotation',
 

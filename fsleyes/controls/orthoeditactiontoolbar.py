@@ -127,16 +127,18 @@ _ICONS = {
         fslicons.findImageFile('showSelectionHighlight24'),
         fslicons.findImageFile('showSelection24')],
 
-    'toggleEditPanel' : [fslicons.findImageFile('editSpannerHighlight24'),
-                         fslicons.findImageFile('editSpanner24')],
-    'undo'            : fslicons.findImageFile('undo24'),
-    'redo'            : fslicons.findImageFile('redo24'),
-    'createMask'      : fslicons.findImageFile('new24'),
-    'clearSelection'  : fslicons.findImageFile('clearSelection24'),
-    'fillSelection'   : fslicons.findImageFile('fillSelection24'),
-    'eraseSelection'  : fslicons.findImageFile('eraseSelection24'),
-    'copyPasteData'   : [fslicons.findImageFile('copySelection24'),
-                         fslicons.findImageFile('pasteSelection24')]
+    'toggleEditPanel'    : [fslicons.findImageFile('editSpannerHighlight24'),
+                            fslicons.findImageFile('editSpanner24')],
+    'undo'               : fslicons.findImageFile('undo24'),
+    'redo'               : fslicons.findImageFile('redo24'),
+    'createMask'         : fslicons.findImageFile('new24'),
+    'clearSelection'     : fslicons.findImageFile('clearSelection24'),
+    'fillSelection'      : fslicons.findImageFile('fillSelection24'),
+    'eraseSelection'     : fslicons.findImageFile('eraseSelection24'),
+    'copyPasteData'      : [fslicons.findImageFile('copySelection24'),
+                            fslicons.findImageFile('pasteSelection24')],
+    'copyPasteSelection' : [fslicons.findImageFile('coronalBumSlice24'),
+                            fslicons.findImageFile('coronalBumSlice24')]
 }
 
 
@@ -147,22 +149,24 @@ _TOOLTIPS = {
     'showSelection'        : fsltooltips.properties['OrthoEditProfile.'
                                                     'showSelection'],
 
-    'toggleEditPanel' : fsltooltips.actions['OrthoPanel.'
-                                            'toggleEditPanel'],
-    'undo'            : fsltooltips.actions['OrthoEditProfile.'
-                                            'undo'],
-    'redo'            : fsltooltips.actions['OrthoEditProfile.'
-                                            'redo'],
-    'createMask'      : fsltooltips.actions['OrthoEditProfile.'
-                                            'createMask'],
-    'clearSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                            'clearSelection'],
-    'fillSelection'   : fsltooltips.actions['OrthoEditProfile.'
-                                            'fillSelection'],
-    'eraseSelection'  : fsltooltips.actions['OrthoEditProfile.'
-                                            'eraseSelection'],
-    'copyPasteData'   : fsltooltips.actions['OrthoEditProfile.'
-                                            'copyPasteData'],
+    'toggleEditPanel'    : fsltooltips.actions['OrthoPanel.'
+                                               'toggleEditPanel'],
+    'undo'               : fsltooltips.actions['OrthoEditProfile.'
+                                               'undo'],
+    'redo'               : fsltooltips.actions['OrthoEditProfile.'
+                                               'redo'],
+    'createMask'         : fsltooltips.actions['OrthoEditProfile.'
+                                               'createMask'],
+    'clearSelection'     : fsltooltips.actions['OrthoEditProfile.'
+                                               'clearSelection'],
+    'fillSelection'      : fsltooltips.actions['OrthoEditProfile.'
+                                               'fillSelection'],
+    'eraseSelection'     : fsltooltips.actions['OrthoEditProfile.'
+                                               'eraseSelection'],
+    'copyPasteData'      : fsltooltips.actions['OrthoEditProfile.'
+                                               'copyPasteData'],
+    'copyPasteSelection' : fsltooltips.actions['OrthoEditProfile.'
+                                               'copyPasteSelection'],
 }
 
 _TOOLBAR_SPECS = [
@@ -223,4 +227,9 @@ _TOOLBAR_SPECS = [
         'copyPasteData',
         icon=_ICONS['copyPasteData'],
         tooltip=_TOOLTIPS['copyPasteData']),
+
+    actions.ToggleActionButton(
+        'copyPasteSelection',
+        icon=_ICONS['copyPasteSelection'],
+        tooltip=_TOOLTIPS['copyPasteSelection']),
 ]

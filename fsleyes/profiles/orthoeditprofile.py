@@ -624,6 +624,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__setCopyPasteState()
 
 
+    @actions.toggleAction
+    def copyPasteSelection(self):
+        """Copy+paste a 2D selection between slices.
+        """
     @actions.action
     def undo(self):
         """Un-does the most recent change to the selection or to the
