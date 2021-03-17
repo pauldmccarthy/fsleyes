@@ -9,15 +9,18 @@ import textwrap as tw
 from contextlib import contextmanager
 from collections import OrderedDict
 
-from   fsl.utils.tempdir                import  tempdir
-from   fsl.data.image                   import  Image
-from   fsl.data.gifti                   import  GiftiMesh
-import fsl.utils.filetree               as      filetree
-import fsl.utils.filetree.query         as      ftquery
-import fsleyes.controls.filetreemanager as      ftman
-import fsleyes.controls.filetreepanel   as      ftpan
+import pytest
+
+from   fsl.utils.tempdir              import tempdir
+from   fsl.data.image                 import Image
+from   fsl.data.gifti                 import GiftiMesh
+import fsleyes.filetree.query         as     ftquery
+import fsleyes.filetree.manager       as     ftman
 
 from . import run_with_fsleyes, run_with_orthopanel, yieldUntil
+
+
+file_tree = pytest.importorskip('file_tree')
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
@@ -64,7 +67,7 @@ def _query(specs=None, files=None, realdata=False):
                     files.append(op.join(sesdir, fname))
 
         for file in files:
-            dirname, filename = op.split(file)
+            dirname = op.split(file)[0]
             os.makedirs(dirname, exist_ok=True)
 
             if realdata:
@@ -75,8 +78,8 @@ def _query(specs=None, files=None, realdata=False):
                 with open(file, 'wt') as f:
                     pass
 
-        tree  = filetree.FileTree.read('{}.tree'.format(root), '.')
-        query = filetree.FileTreeQuery(tree)
+        tree  = file_tree.FileTree.read('{}.tree'.format(root), '.')
+        query = ftquery.FileTreeQuery(tree)
         yield query
 
 
@@ -117,53 +120,52 @@ def test_prepareFixed():
 
 
 def test_genColumns():
-    with _query() as query:
-        varcols, fixedcols = ftman.genColumns(['T1w'],
-                                              {'subject' : ['01']},
-                                              {'T1w' : {}})
-        assert varcols == []
-        assert fixedcols == [('T1w', {})]
+    varcols, fixedcols = ftman.genColumns(['T1w'],
+                                          {'subject' : ['01']},
+                                          {'T1w' : {}})
+    assert varcols == []
+    assert fixedcols == [('T1w', {})]
 
-        varcols, fixedcols = ftman.genColumns(['T1w'],
-                                              {'subject' : ['01', '02', '03']},
-                                              {'T1w' : {}})
-        assert varcols == ['subject']
-        assert fixedcols == [('T1w', {})]
+    varcols, fixedcols = ftman.genColumns(['T1w'],
+                                          {'subject' : ['01', '02', '03']},
+                                          {'T1w' : {}})
+    assert varcols == ['subject']
+    assert fixedcols == [('T1w', {})]
 
-        varcols, fixedcols = ftman.genColumns(['T1w', 'T2w'],
-                                              {'subject' : ['01', '02', '03']},
-                                              OrderedDict([('T1w', {'session' : ['1', '2']}),
-                                                           ('T2w', {})]))
-        assert varcols == ['subject']
-        assert fixedcols == [('T1w', {'session' : '1'}),
-                             ('T1w', {'session' : '2'}),
-                             ('T2w', {})]
+    varcols, fixedcols = ftman.genColumns(['T1w', 'T2w'],
+                                          {'subject' : ['01', '02', '03']},
+                                          OrderedDict([('T1w', {'session' : ['1', '2']}),
+                                                       ('T2w', {})]))
+    assert varcols == ['subject']
+    assert fixedcols == [('T1w', {'session' : '1'}),
+                         ('T1w', {'session' : '2'}),
+                         ('T2w', {})]
 
-        varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
-                                              OrderedDict([('subject', ['01', '02', '03']),
-                                                           ('session', ['1', '2'])]),
-                                              OrderedDict([('T1w',     {}),
-                                                           ('surface', OrderedDict([('hemi', ['L', 'R']),
-                                                                                    ('surf', ['pial', 'mid', 'white'])]))]))
-        assert sorted(varcols) == ['session', 'subject']
-        assert fixedcols == [('T1w',     {}),
-                             ('surface', {'hemi' : 'L', 'surf' : 'pial'}),
-                             ('surface', {'hemi' : 'L', 'surf' : 'mid'}),
-                             ('surface', {'hemi' : 'L', 'surf' : 'white'}),
-                             ('surface', {'hemi' : 'R', 'surf' : 'pial'}),
-                             ('surface', {'hemi' : 'R', 'surf' : 'mid'}),
-                             ('surface', {'hemi' : 'R', 'surf' : 'white'})]
+    varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
+                                          OrderedDict([('subject', ['01', '02', '03']),
+                                                       ('session', ['1', '2'])]),
+                                          OrderedDict([('T1w',     {}),
+                                                       ('surface', OrderedDict([('hemi', ['L', 'R']),
+                                                                                ('surf', ['pial', 'mid', 'white'])]))]))
+    assert sorted(varcols) == ['session', 'subject']
+    assert fixedcols == [('T1w',     {}),
+                         ('surface', {'hemi' : 'L', 'surf' : 'pial'}),
+                         ('surface', {'hemi' : 'L', 'surf' : 'mid'}),
+                         ('surface', {'hemi' : 'L', 'surf' : 'white'}),
+                         ('surface', {'hemi' : 'R', 'surf' : 'pial'}),
+                         ('surface', {'hemi' : 'R', 'surf' : 'mid'}),
+                         ('surface', {'hemi' : 'R', 'surf' : 'white'})]
 
-        varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
-                                              OrderedDict([('subject', ['01', '02', '03']),
-                                                           ('session', ['1', '2']),
-                                                           ('surf'   , ['pial', 'mid', 'white'])]),
-                                              OrderedDict([('T1w',     {}),
-                                                           ('surface', {'hemi' : ['L', 'R']})]))
-        assert sorted(varcols) == ['session', 'subject', 'surf']
-        assert fixedcols == [('T1w',     {}),
-                             ('surface', {'hemi' : 'L'}),
-                             ('surface', {'hemi' : 'R'})]
+    varcols, fixedcols = ftman.genColumns(['T1w', 'surface'],
+                                          OrderedDict([('subject', ['01', '02', '03']),
+                                                       ('session', ['1', '2']),
+                                                       ('surf'   , ['pial', 'mid', 'white'])]),
+                                          OrderedDict([('T1w',     {}),
+                                                       ('surface', {'hemi' : ['L', 'R']})]))
+    assert sorted(varcols) == ['session', 'subject', 'surf']
+    assert fixedcols == [('T1w',     {}),
+                         ('surface', {'hemi' : 'L'}),
+                         ('surface', {'hemi' : 'R'})]
 
 
 
@@ -395,6 +397,7 @@ def _test_OverlayManager(panel, overlayList, displayCtx):
             return called[0]
 
         mgr.update(['T1w', 'T2w'], {'subject' : '*', 'session' : '*'}, [])
+
         mgr.show(mgr.filegroups[0], callback)
 
         yieldUntil(beenCalled)
@@ -413,6 +416,7 @@ def _test_OverlayManager(panel, overlayList, displayCtx):
 
         called[0] = False
         mgr.show(mgr.filegroups[1], callback)
+
         yieldUntil(beenCalled)
 
         assert len(overlayList) == 2

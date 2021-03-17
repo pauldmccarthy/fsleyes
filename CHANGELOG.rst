@@ -56,6 +56,8 @@ Changed
   range [-1, 1].
 * The *Show command line for scene* option will display a warning if any
   overlays are not saved.
+* The :class:`.FileTreePanel` has been updated to work with the
+  new `file-tree <https://pypi.org/project/file-tree/>`_ library.
 
 
 Fixed

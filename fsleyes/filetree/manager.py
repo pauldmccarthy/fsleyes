@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# filetreemanager.py - Functions and classes used by the FileTreePanel.
+# manager.py - Functions and classes used by the FileTreePanel.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
@@ -15,9 +15,10 @@ Overview
 
 The :class:`.FileTreePanel` allows the user to navigate structured
 directories, where the files and sub-directories are named according to a
-:mod:`.filetree` specification. The ``FileTreePanel`` allows the user to
-select which file types to display, and to restrict or re-order the files
-with file tree variables.
+`FileTree <https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_
+specification. The ``FileTreePanel`` allows the user to select which file
+types to display, and to restrict or re-order the files with file tree
+variables.
 
 
 By default, the :class:`.FileTreePanel` will display a list containing one row
