@@ -278,6 +278,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         self.pearsonCorrelation.bindProps('enabled', self.__pCorrAction)
 
+        # The lastFocusedCanvas method allows
+        # a ref to the most recently focused
+        # canvas to be obtained. We listen
+        # for focus events on each canvas,
+        # and update this ref each time
+        self.__focusedCanvas = None
+        self.__xcanvas.Bind(wx.EVT_SET_FOCUS, self.__onCanvasFocus)
+        self.__ycanvas.Bind(wx.EVT_SET_FOCUS, self.__onCanvasFocus)
+        self.__zcanvas.Bind(wx.EVT_SET_FOCUS, self.__onCanvasFocus)
+
         # Call the __onResize method to refresh
         # the slice canvases when the canvas
         # panel is resized, so aspect ratio
@@ -325,11 +335,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         contentPanel.Unbind(wx.EVT_SIZE)
 
-        self.__xcanvas     = None
-        self.__ycanvas     = None
-        self.__zcanvas     = None
-        self.__labelMgr    = None
-        self.__pCorrAction = None
+        self.__xcanvas       = None
+        self.__ycanvas       = None
+        self.__zcanvas       = None
+        self.__focusedCanvas = None
+        self.__labelMgr      = None
+        self.__pCorrAction   = None
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -505,8 +516,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
 
     def getTools(self):
-        """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools menu
-        for ``OrthoPanel`` views.
+        """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools
+        menu for ``OrthoPanel`` views.
         """
         return [self.toggleEditMode,
                 self.toggleCropMode,
@@ -537,6 +548,20 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Returns the :class:`.SliceCanvas` instance displaying the Z axis.
         """
         return self.__zcanvas
+
+
+    def lastFocusedCanvas(self):
+        """Return a reference to the :class:`.SliceCanvas` which most recently
+        had focus. Will be ``None`` if called before any canvas gains focus.
+        """
+        return self.__focusedCanvas
+
+
+    def __onCanvasFocus(self, ev):
+        """Called when any :class:`.SliceCanvas` gains focus. Updates the
+        last focused canvas reference.
+        """
+        self.__focusedCanvas = ev.GetEventObject()
 
 
     def __profileChanged(self, *a):
