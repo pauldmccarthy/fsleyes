@@ -272,12 +272,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # The 'selectClipboard' is used by the
         # copyPasteSelection method. It contains
         # a numpy array with the copied 2D
-        # selection slice. The selectSource refers
-        # to the canvas that the selection slice
-        # was copied from, and is to be re-applied
-        # to.
-        self.__selectClipboard       = None
-        self.__selectClipboardSource = None
+        # selection slice. The axis refers
+        # to the canvas/axis that the selection
+        # slice was copied from, and is to be
+        # re-applied to, and the lastPaste refers
+        # to the most recent slice index that the
+        # clipboard was pasted into.
+        self.__selectClipboard          = None
+        self.__selectClipboardAxis      = None
+        self.__selectClipboardLastPaste = None
 
         # An Editor instance is created for each
         # Image overlay (on demand, as they are
@@ -402,22 +405,21 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         self.__destroyAnnotations()
 
-        self.__editors               = None
-        self.__xcanvas               = None
-        self.__ycanvas               = None
-        self.__zcanvas               = None
-        self.__xselAnnotation        = None
-        self.__yselAnnotation        = None
-        self.__zselAnnotation        = None
-        self.__xcurAnnotation        = None
-        self.__ycurAnnotation        = None
-        self.__zcurAnnotation        = None
-        self.__currentOverlay        = None
-        self.__dataClipboard         = None
-        self.__dataClipboardSource   = None
-        self.__selectClipboard       = None
-        self.__selectClipboardSource = None
-        self.__cache                 = None
+        self.__editors             = None
+        self.__xcanvas             = None
+        self.__ycanvas             = None
+        self.__zcanvas             = None
+        self.__xselAnnotation      = None
+        self.__yselAnnotation      = None
+        self.__zselAnnotation      = None
+        self.__xcurAnnotation      = None
+        self.__ycurAnnotation      = None
+        self.__zcurAnnotation      = None
+        self.__currentOverlay      = None
+        self.__dataClipboard       = None
+        self.__dataClipboardSource = None
+        self.__selectClipboard     = None
+        self.__cache               = None
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
@@ -628,6 +630,70 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def copyPasteSelection(self):
         """Copy+paste a 2D selection between slices.
         """
+        overlay   = self.__currentOverlay
+        clipboard = self.__selectClipboard
+        srcAxis   = self.__selectClipboardAxis
+        lastPaste = self.__selectClipboardLastPaste
+        canvas    = self.viewPanel.lastFocusedCanvas()
+
+        if overlay is None:
+            return
+
+        editor    = self.__editors[overlay]
+        selection = editor.getSelection()
+        opts      = self.displayCtx.getOpts(overlay)
+        voxel     = opts.getVoxel()
+
+        if voxel is None:
+            return
+
+        # copy a 2D selection slice from the currently
+        # displayed slice on the most recently focused
+        # ortho canvas
+        if clipboard is None:
+
+            # In edit mode, the depth axis of
+            # each X/Y/Z canvas maps to the XYZ
+            # voxel axes respectively.
+            if   canvas is self.viewPanel.getXCanvas(): axis = 0
+            elif canvas is self.viewPanel.getYCanvas(): axis = 1
+            elif canvas is self.viewPanel.getZCanvas(): axis = 2
+            else:                                       return
+
+            # We store the 2D slice as a 3D array,
+            # because that's what Selection objects
+            # expect when setting selection blocks
+            # (this is accomplished by indexing the
+            # desired slice index with a list)
+            slc       = [slice(None)] * 3
+            slc[axis] = [voxel[axis]]
+            selection = selection[slc]
+
+            self.__selectClipboard          = selection
+            self.__selectClipboardAxis      = axis
+            self.__selectClipboardLastPaste = voxel[axis]
+
+        # Button was pushed again on the same slice
+        # that the selection was most recently pasted
+        # into - clear the clipboard
+        elif voxel[srcAxis] == lastPaste:
+            self.__selectClipboard          = None
+            self.__selectClipboardAxis      = None
+            self.__selectClipboardLastPaste = None
+
+        # Paste the 2D selection slice into the
+        # currently displayed slice on the relevant
+        # voxel axis
+        else:
+            offset          = [0] * 3
+            offset[srcAxis] = voxel[srcAxis]
+            selection.setSelection(clipboard, offset)
+            self.__selectClipboardLastPaste = voxel[srcAxis]
+            self.__refreshCanvases()
+
+        self.__setCopyPasteState()
+
+
     @actions.action
     def undo(self):
         """Un-does the most recent change to the selection or to the
@@ -735,19 +801,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :meth:`copyPasteSelection` actions as needed.
         """
 
-        overlay   = self.__currentOverlay
-        clipboard = self.__dataClipboard
-        source    = self.__dataClipboardSource
+        overlay    = self.__currentOverlay
+        dclipboard = self.__dataClipboard
+        dsource    = self.__dataClipboardSource
+        sclipboard = self.__selectClipboard
 
-        enableCopy  = (not self.drawMode)     and \
-                      (overlay is not None)
+        enableDCopy  = (not self.drawMode)      and \
+                       (overlay is not None)
+        enableDPaste =  enableDCopy             and \
+                       (dclipboard is not None) and \
+                       (overlay.sameSpace(dsource))
 
-        enablePaste =  enableCopy             and \
-                      (clipboard is not None) and \
-                      (overlay.sameSpace(source))
+        enableSCopy  = (not self.drawMode)    and \
+                       (overlay is not None)
+        enableSPaste =  enableSCopy           and \
+                       (sclipboard is not None)
 
-        self.copyPasteData .enabled = enableCopy or enablePaste
-        self.copyPasteData .toggled = enablePaste
+        self.copyPasteData     .enabled = enableDCopy or enableDPaste
+        self.copyPasteData     .toggled = enableDPaste
+        self.copyPasteSelection.enabled = enableSCopy
+        self.copyPasteSelection.toggled = enableSPaste
 
 
     def __selectionColoursChanged(self, *a):

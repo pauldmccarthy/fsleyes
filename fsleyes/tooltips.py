@@ -868,7 +868,11 @@ actions = TypeDict({
     'button.',
 
     'OrthoEditProfile.copyPasteSelection' :
-    'Copy/paste 2D selections between slices. ',
+    'Copy/paste 2D selections between slices. Draw a selection on one slice, '
+    'and push this button to copy the selection from that slice. Then move .'
+    'the cursor to a different slice, and push this button again to paste the '
+    'selection into the new slice. Once you have pasted the selection, push '
+    'the button a third time to clear the clipboard.',
 
     'Scene3DViewProfile.resetDisplay' :
     'Reset the zoom, pan, and rotation',
