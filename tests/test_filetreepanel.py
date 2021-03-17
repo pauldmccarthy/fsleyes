@@ -8,7 +8,7 @@ from fsleyes.controls.filetreepanel import FileTreePanel
 
 from . import run_with_orthopanel, realYield, MockFileDialog
 
-from .test_filetreemanager import _query
+from .test_filetree_manager import _query
 
 def test_filetreepanel():
     run_with_orthopanel(_test_filetreepanel)

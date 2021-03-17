@@ -175,7 +175,11 @@ def test_query_optional_var_folder():
         tree  = file_tree.FileTree.read('_test_tree.tree', '.')
         query = ftquery.FileTreeQuery(tree)
 
-        assert query.variables()['session'] == {None, '1', '2'}
+        # None gets converted to a string,
+        # then sorted with the rest of the
+        # values. So in this case it will
+        # come last.
+        assert query.variables()['session'] == ['1', '2', None]
 
         m = query.query('T1w', participant='01')
         assert len(m) == 1
