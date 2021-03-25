@@ -135,10 +135,11 @@ _ICONS = {
     'clearSelection'     : fslicons.findImageFile('clearSelection24'),
     'fillSelection'      : fslicons.findImageFile('fillSelection24'),
     'eraseSelection'     : fslicons.findImageFile('eraseSelection24'),
-    'copyPasteData'      : [fslicons.findImageFile('copySelection24'),
-                            fslicons.findImageFile('pasteSelection24')],
-    'copyPasteSelection' : [fslicons.findImageFile('coronalBumSlice24'),
-                            fslicons.findImageFile('coronalBumSlice24')]
+    'copyPasteData'      : [fslicons.findImageFile('copyDataHighlight24'),
+                            fslicons.findImageFile('copyData24')],
+    'copyPasteSelection' : [fslicons.findImageFile('copySelectionHighlight24'),
+                            fslicons.findImageFile('copySelection24')]
+
 }
 
 
