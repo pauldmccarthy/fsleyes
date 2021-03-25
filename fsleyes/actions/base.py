@@ -277,11 +277,22 @@ class ToggleAction(Action):
 
 
     def __init__(self, *args, **kwargs):
-        """Create a ``ToggleAction``. All arguments are passed to
-        :meth:`Action.__init__`.
+        """Create a ``ToggleAction``.
+
+        :arg autoToggle: Must be specified as a keyword argument. If ``True``
+                         (the default), the state of ``toggled`` is inverted
+                         every time this action is called. Otherwise, the
+                         state of ``toggled``, and of all bound widgets/menu
+                         items, needs to be changed manually.
+
+        All other arguments are passed to :meth:`Action.__init__`.
         """
 
+        autoToggle = kwargs.pop('autoToggle', True)
+
         Action.__init__(self, *args, **kwargs)
+
+        self.__autoToggle = autoToggle
 
         self.addListener('toggled',
                          'ToggleAction_{}_internal'.format(id(self)),
@@ -296,9 +307,18 @@ class ToggleAction(Action):
         # Copy the toggled value before running
         # the action, in case it gets inadvertently
         # changed
-        toggled      = self.toggled
-        result       = Action.__call__(self, *args, **kwargs)
-        self.toggled = not toggled
+        toggled = self.toggled
+        result  = Action.__call__(self, *args, **kwargs)
+
+        # Update self.toggled to align
+        # it with the widget state.
+        if self.__autoToggle:
+            self.toggled = not toggled
+
+        # Or update the widget state to
+        # align it with self.toggled
+        else:
+            self.__toggledChanged()
 
         return result
 

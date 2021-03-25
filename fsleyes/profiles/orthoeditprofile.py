@@ -574,7 +574,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         editor.endChangeGroup()
 
 
-    @actions.toggleAction
+    @actions.toggleAction(autoToggle=False)
     def copyPasteData(self):
         """Copy/paste data between images.
 
@@ -626,7 +626,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__setCopyPasteState()
 
 
-    @actions.toggleAction
+    @actions.toggleAction(autoToggle=False)
     def copyPasteSelection(self):
         """Copy+paste a 2D selection between slices.
         """
