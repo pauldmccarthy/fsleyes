@@ -863,16 +863,15 @@ actions = TypeDict({
     'Copy/paste data between images. Select some voxels in one image, and '
     'click this button to copy the voxel values to a clipboard. Then select '
     'another image (which has the same dimensions/resolution as the first '
-    'image), and click this button again to paste the values. To clear the '
-    'clipboard without pasting, select the first image again, and click this '
-    'button.',
+    'image), and click this button again to paste the values. Shift+click the '
+    'button to clear the clipboard.',
 
     'OrthoEditProfile.copyPasteSelection' :
     'Copy/paste 2D selections between slices. Draw a selection on one slice, '
     'and push this button to copy the selection from that slice. Then move .'
     'the cursor to a different slice, and push this button again to paste the '
-    'selection into the new slice. Once you have pasted the selection, push '
-    'the button a third time to clear the clipboard.',
+    'selection into the new slice. Shift+click the button to clear the '
+    'clipboard.',
 
     'Scene3DViewProfile.resetDisplay' :
     'Reset the zoom, pan, and rotation',
