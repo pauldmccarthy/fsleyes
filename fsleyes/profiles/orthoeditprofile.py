@@ -699,11 +699,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # Paste the 2D selection slice into the
         # currently displayed slice on the relevant
-        # voxel axis
+        # voxel axis (adding to, not replacing,
+        # any existing selection)
         else:
             offset          = [0] * 3
             offset[srcAxis] = voxel[srcAxis]
-            selection.setSelection(clipboard, offset)
+            selection.addToSelection(clipboard, offset)
             self.__refreshCanvases()
 
         self.__setCopyPasteState()
