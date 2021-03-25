@@ -28,6 +28,8 @@ Added
 * New ``--modulateMode`` option for ``rgbvector``, ``linevector``, ``tensor``
   and ``sh`` overlays, allowing modulation to be applied to either brightness
   or transparency.
+* New option to copy/paste 2D selections between slices when editing a NIFTI
+  image.
 
 
 Changed
@@ -58,6 +60,8 @@ Changed
   overlays are not saved.
 * The :class:`.FileTreePanel` has been updated to work with the
   new `file-tree <https://pypi.org/project/file-tree/>`_ library.
+* Change to the interface for copying/pasting data between images - there is
+  now a single button for copying, pasting, and clearing the clipboard.
 
 
 Fixed
