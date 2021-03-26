@@ -573,7 +573,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.toggleAction(autoToggle=False)
-    def copyPasteData(self):
+    def copyPasteData(self, clear=None):
         """Copy/paste data between images.
 
         This method is bound to a button on the
@@ -589,22 +589,26 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             same dimensions/orientationn as the source image is selected, the
             values are copied into the image.
 
-          - If the internal data clipboard is filled, and the shift key is held
-            down, the clipboard is cleared.
+          - If the internal data clipboard is filled, and ``clear is True``,
+            the clipboard is cleared. If ``clear`` is not specified, it is
+            set to ``True`` if the shift key is being held down, ``False``
+            otherwise.
         """
+
+        if clear is None:
+            clear = wx.GetKeyState(wx.WXK_SHIFT)
 
         overlay   = self.__currentOverlay
         clipboard = self.__dataClipboard
         source    = self.__dataClipboardSource
-        shifted   = wx.GetKeyState(wx.WXK_SHIFT)
 
         if overlay is None:
             return
 
         editor = self.__editors[overlay]
 
-        # Shift held down - clear the clipboard
-        if shifted:
+        # clear the clipboard
+        if clear:
             self.__dataClipboard       = None
             self.__dataClipboardSource = None
 
@@ -629,7 +633,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     @actions.toggleAction(autoToggle=False)
-    def copyPasteSelection(self):
+    def copyPasteSelection(self, clear=None):
         """Copy+paste a 2D selection between slices.
 
         This method is bound to a button on the
@@ -644,14 +648,17 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
           - If the internal selection clipboard is filled, it is copied into
             the currently displayed slice on the relevant canvas.
 
-          - If the shift key is held down, the internal selection clipboard is
-            cleared.
+          - If ``clear is True``, the internal selection clipboard is
+            cleared. If ``clear`` is not specified, it is set to ``True`` if
+            the shift key is being held down, ``False`` otherwise.
         """
+
+        if clear is None:
+            clear = wx.GetKeyState(wx.WXK_SHIFT)
 
         overlay   = self.__currentOverlay
         clipboard = self.__selectClipboard
         srcAxis   = self.__selectClipboardAxis
-        shifted   = wx.GetKeyState(wx.WXK_SHIFT)
         canvas    = self.viewPanel.lastFocusedCanvas()
 
         if overlay is None:
@@ -668,7 +675,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             return
 
         # Shift+click - clear the clipboard
-        if shifted:
+        if clear:
             self.__selectClipboard     = None
             self.__selectClipboardAxis = None
 
