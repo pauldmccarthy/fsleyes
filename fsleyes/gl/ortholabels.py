@@ -63,7 +63,7 @@ class OrthoLabels:
         for side in ('left', 'right', 'top', 'bottom'):
             for canvas, cannots in zip(canvases, annots):
                 annot         = canvas.getAnnotations()
-                cannots[side] = annot.text('', 0, 0, hold=True)
+                cannots[side] = annot.text('', (0, 0), hold=True)
 
         # Initialise the display properties
         # of each Text annotation
@@ -78,21 +78,17 @@ class OrthoLabels:
             cannots['top']   .valign = 'top'
             cannots['bottom'].valign = 'bottom'
 
-            cannots['left']  .xpos = 0
-            cannots['left']  .ypos = 0.5
-            cannots['right'] .xpos = 1.0
-            cannots['right'] .ypos = 0.5
-            cannots['bottom'].xpos = 0.5
-            cannots['bottom'].ypos = 0
-            cannots['top']   .xpos = 0.5
-            cannots['top']   .ypos = 1.0
+            cannots['left']  .pos = (0.0, 0.5)
+            cannots['right'] .pos = (1.0, 0.5)
+            cannots['bottom'].pos = (0.5, 0.0)
+            cannots['top']   .pos = (0.5, 1.0)
 
             # Keep cannots 5 pixels away
             # from the canvas edges
-            cannots['left']  .xoff =  5
-            cannots['right'] .xoff = -5
-            cannots['top']   .yoff = -5
-            cannots['bottom'].yoff =  5
+            cannots['left']  .off = ( 5,  0)
+            cannots['right'] .off = (-5,  0)
+            cannots['top']   .off = ( 0, -5)
+            cannots['bottom'].off = ( 0,  5)
 
         # Add listeners to properties
         # that need to trigger a label
