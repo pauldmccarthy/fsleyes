@@ -6,28 +6,29 @@
 
 
 
-.. |draw_mode_button|            image:: images/editing_images_draw_mode_button.png
-.. |select_mode_button|          image:: images/editing_images_select_mode_button.png
-.. |navigate_button|             image:: images/editing_images_navigate_button.png
-.. |pencil_button|               image:: images/editing_images_pencil_button.png
-.. |eraser_button|               image:: images/editing_images_eraser_button.png
-.. |selint_button|               image:: images/editing_images_selint_button.png
-.. |bucket_button|               image:: images/editing_images_bucket_button.png
-.. |copy_button|                 image:: images/editing_images_copy_button.png
-.. |undo_button|                 image:: images/editing_images_undo_button.png
-.. |redo_button|                 image:: images/editing_images_redo_button.png
-.. |edit_spanner_button|         image:: images/editing_images_edit_spanner_button.png
+.. |draw_mode_button|                image:: images/editing_images_draw_mode_button.png
+.. |select_mode_button|              image:: images/editing_images_select_mode_button.png
+.. |navigate_button|                 image:: images/editing_images_navigate_button.png
+.. |pencil_button|                   image:: images/editing_images_pencil_button.png
+.. |eraser_button|                   image:: images/editing_images_eraser_button.png
+.. |selint_button|                   image:: images/editing_images_selint_button.png
+.. |bucket_button|                   image:: images/editing_images_bucket_button.png
+.. |copy_button|                     image:: images/editing_images_copy_button.png
+.. |undo_button|                     image:: images/editing_images_undo_button.png
+.. |redo_button|                     image:: images/editing_images_redo_button.png
+.. |edit_spanner_button|             image:: images/editing_images_edit_spanner_button.png
 
-.. |2D_3D_buttons|              image:: images/editing_images_2D_3D_buttons.png
-.. |select_radius_button|       image:: images/editing_images_select_radius_button.png
-.. |local_search_button|        image:: images/editing_images_local_search_button.png
-.. |fill_selection_button|      image:: images/editing_images_fill_selection_button.png
-.. |erase_selection_button|     image:: images/editing_images_erase_selection_button.png
-.. |clear_selection_button|     image:: images/editing_images_clear_selection_button.png
-.. |copy_selection_button|      image:: images/editing_images_copy_selection_button.png
-.. |paste_selection_button|     image:: images/editing_images_paste_selection_button.png
-
-.. |floppy_disk_button|          image:: images/floppy_icon.png
+.. |2D_3D_buttons|                   image:: images/editing_images_2D_3D_buttons.png
+.. |select_radius_button|            image:: images/editing_images_select_radius_button.png
+.. |local_search_button|             image:: images/editing_images_local_search_button.png
+.. |fill_selection_button|           image:: images/editing_images_fill_selection_button.png
+.. |erase_selection_button|          image:: images/editing_images_erase_selection_button.png
+.. |clear_selection_button|          image:: images/editing_images_clear_selection_button.png
+.. |copy_selection_button|           image:: images/editing_images_copy_selection_button.png
+.. |copy_selection_highlight_button| image:: images/editing_images_copy_selection_highlight_button.png
+.. |copy_data_button|                image:: images/editing_images_copy_data_button.png
+.. |copy_data_highlight_button|      image:: images/editing_images_copy_data_highlight_button.png
+.. |floppy_disk_button|              image:: images/floppy_icon.png
 
 
 .. _editing_images:
@@ -176,7 +177,7 @@ will be replaced with zero (or with the current erase value - see the
 
 The pencil/eraser size can be adjusted with the *Selection size* control on
 the :ref:`edit toolbar <editing_images_edit_toolbar>`. You can also hold down
-the |command_key| and |shift_key| keys and spin the mouse wheel to
+the |command_key| and |shift_key| keys and scroll/spin the mouse wheel to
 increase/decrease the pencil size.
 
 
@@ -258,7 +259,8 @@ added to the selection.
 
 You can adjust the selection cursor size via the *Selection size* control in
 the :ref:`edit toolbar <editing_images_edit_toolbar>`, or by holding down the
-|command_key|/|control_key| and |shift_key| keys and spinning the mouse wheel.
+|command_key|/|control_key| and |shift_key| keys and scrolling/spinning the
+mouse wheel.
 
 
 By default, the selection cursor is a 2-dimensional rectangle in the current
@@ -331,12 +333,12 @@ will be selected when you use the select by intensity tool:
 
 
 .. [*] You can also change the intensity threshold by holding down the
-       |command_key|/|control_key| and |shift_key| keys and spinning the mouse
-       wheel.
+       |command_key|/|control_key| and |shift_key| keys and scrolling/spinning
+       the mouse wheel.
 
 
 .. [*] The search radius can be also be changed by holding down the |alt_key|
-       and |shift_key| keys, and spinning the mouse wheel.
+       and |shift_key| keys, and scrolling/spinning the mouse wheel.
 
 
 .. _editing_images_changing_voxel_values:
@@ -375,21 +377,60 @@ Copying and pasting
 -------------------
 
 
-The copy |copy_selection_button| and paste |paste_selection_button| buttons on
-the :ref:`action toolbar <editing_images_action_toolbar>` allow you to copy
-voxel values from one image, and paste them into another image:
+The |copy_data_button| button on the :ref:`action toolbar
+<editing_images_action_toolbar>` allow you to copy voxel values from one
+image, and paste them into another image. Similarly, the
+|copy_selection_button| button allows you to copy a 2D selection from one
+slice, and paste/duplicate that selection in another slice. These features are
+only enabled in select mode |select_mode_button|, and the copy selection
+button is only enabled when using 2D selection |2D_3D_buttons|.
 
-1. Once you have selected some voxels in an image, either :ref:`manually
+
+Use the |copy_data_button| button to copy voxel values from one image, and
+paste them into another:
+
+1. Select some voxels in an image, either :ref:`manually
    <editing_images_manual_selection>` or with the :ref:`select by intensity
-   tool <editing_images_select_by_intensity>`, click the copy button
-   |copy_selection_button|. The values of all voxels in the selection are
-   copied to an internal clipboard.
+   tool <editing_images_select_by_intensity>`,
 
-2. Select a different image, which has the same dimensions, resolution, and
+2. Click the copy data button |copy_data_button|. The values of all voxels in
+   the selection are copied to an internal clipboard. The button will become
+   highlighted |copy_data_highlight_button|, indicating that the clipboard
+   contains some data.
+
+3. Select a different image, which has the same dimensions, resolution, and
    orientation as the previously selected image.
 
-3. Click the paste button |paste_selection_button|. The voxel values from the
-   first image will be pasted into the newly selected image.
+4. Click the copy data button again |copy_data_highlight_button|. The voxel
+   values from the first image will be pasted into the newly selected image.
+
+5. You can paste the data as many times as you wish. To clear the clipboard,
+   hold down the |shift_key| key and click the button again
+   |copy_data_highlight_button|.
+
+
+Use the |copy_selection_button| button to copy a 2D selection from one slice
+in an image, and paste that selection into another slice:
+
+1. Select some voxels on of the sagittal, coronal, or axial slices.
+
+2. Click the copy selection button |copy_selection_button|. The 2D selection
+   in **the most recently focused slice** will be copied to an internal
+   clipboard. The button will become highlighted
+   |copy_selection_highlight_button|, indicating that the clipboard contains
+   a selection.
+
+3. Navigate to a different slice (e.g. while in edit mode, you can hold down
+   the |shift_key| key and click on the image to change the displayed
+   location).
+
+4. Click the copy selection button again
+   |copy_selection_highlight_button|. The 2D selection will be pasted into the
+   currently displayed slice.
+
+5. You can paste the selection as many times as you wish. To clear the
+   clipboard, hold down the |shift_key| key and click the button again
+   |copy_selection_highlight_button|.
 
 
 Edit mode toolbars and panels
