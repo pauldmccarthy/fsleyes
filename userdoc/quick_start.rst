@@ -118,7 +118,7 @@ ortho view.
 .. sidebar:: Modifier keys
 
              Throughout this page, and the rest of the FSLeyes documentation,
-             we will use the following symbols to represent keyboard modifiers
+             we will use the following symbols to represent keyboard modifier
              keys:
 
              - |shift_key|:   Shift

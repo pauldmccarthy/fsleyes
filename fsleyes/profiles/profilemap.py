@@ -217,12 +217,11 @@ altHandlerMap = {
         (('desel',  'RightMouseDrag'),  ('sel',    'LeftMouseDrag')),
         (('desel',  'RightMouseUp'),    ('sel',    'LeftMouseUp')),
 
-        # Same for fill mode
+        # Right mouse alsi deselects in fill and selint mode
         (('fill',   'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('fill',   'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
         (('fill',   'RightMouseUp'),    ('desel',  'LeftMouseUp')),
 
-        # TODO Need a way to navigate?
         (('selint', 'RightMouseDown'),  ('desel',  'LeftMouseDown')),
         (('selint', 'RightMouseDrag'),  ('desel',  'LeftMouseDrag')),
         (('selint', 'RightMouseUp'),    ('desel',  'LeftMouseUp')),

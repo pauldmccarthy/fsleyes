@@ -48,7 +48,6 @@ class Selection(notifier.Notifier):
        :nosignatures:
 
        setSelection
-       replaceSelection
        addToSelection
        removeFromSelection
 
@@ -132,6 +131,11 @@ class Selection(notifier.Notifier):
         return self.__selection.shape
 
 
+    def __getitem__(self, key):
+        """Convenience wrapper around ``self.getSelection().__getitem__``. """
+        return self.__selection.__getitem__(key)
+
+
     def getSelection(self):
         """Returns the selection array.
 
@@ -204,21 +208,6 @@ class Selection(notifier.Notifier):
         :arg combine: Combine this change with the previous stored change (see
                       :meth:`__storeChange`).
         """
-        self.__updateSelectionBlock(block, offset, combine)
-
-
-    def replaceSelection(self, block, offset, combine=False):
-        """Copies the given ``block`` into the selection, starting at
-        ``offset``.
-
-        :arg block:   A ``numpy.uint8`` array containing a selection.
-
-        :arg offset:  Voxel coordinates specifying the block location.
-
-        :arg combine: Combine this change with the previous stored change (see
-                      :meth:`__storeChange`).
-        """
-
         self.__updateSelectionBlock(block, offset, combine)
 
 
@@ -527,7 +516,7 @@ class Selection(notifier.Notifier):
                                       local,
                                       restrict)
 
-        self.replaceSelection(block, offset, combine)
+        self.setSelection(block, offset, combine)
 
         return block, offset
 
