@@ -312,6 +312,38 @@ class SliceCanvas(object):
         return pos
 
 
+    def worldToCanvas(self, pos):
+        """Converts a location in the display coordinate system into
+        an x/y location in pixels relative to this ``SliceCanvas``.
+        """
+
+        opts    = self.opts
+        xpos    = pos[opts.xax]
+        ypos    = pos[opts.yax]
+        invertX = opts.invertX
+        invertY = opts.invertY
+
+        xmin          = opts.displayBounds.xlo
+        xlen          = opts.displayBounds.xlen
+        ymin          = opts.displayBounds.ylo
+        ylen          = opts.displayBounds.ylen
+        width, height = [float(s) for s in self.GetSize()]
+
+        if xlen   == 0 or \
+           ylen   == 0 or \
+           width  == 0 or \
+           height == 0:
+            return None
+
+        xpos = width  * ((xpos - xmin) / xlen)
+        ypos = height * ((ypos - ymin) / ylen)
+
+        if invertX: xpos = width  - xpos
+        if invertY: ypos = height - ypos
+
+        return xpos, ypos
+
+
     def panDisplayBy(self, xoff, yoff):
         """Pans the canvas display by the given x/y offsets (specified in
         display coordinates).

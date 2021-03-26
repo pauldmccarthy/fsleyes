@@ -915,6 +915,20 @@ class OffScreenCanvasTarget(object):
         raise NotImplementedError()
 
 
+    def canvasToWorld(self, xpos, ypos):
+        """Convert X/Y pixel coordinates into a location in the display
+        coordinate system. Must be provided by subclasses.
+        """
+        raise NotImplementedError()
+
+
+    def worldToCanvas(self, pos):
+        """Convert a location in the display coordinate system into X/Y pixel
+        coordinates. Must be provided by subclasses.
+        """
+        raise NotImplementedError()
+
+
     def GetSize(self):
         """Returns a tuple containing the canvas width and height."""
         return self.__width, self.__height
@@ -1176,6 +1190,20 @@ class WXGLCanvasTarget(object):
 
     def getAnnotations(self):
         """Must be provided by subclasses."""
+        raise NotImplementedError()
+
+
+    def canvasToWorld(self, xpos, ypos):
+        """Convert X/Y pixel coordinates into a location in the display
+        coordinate system. Must be provided by subclasses.
+        """
+        raise NotImplementedError()
+
+
+    def worldToCanvas(self, pos):
+        """Convert a location in the display coordinate system into X/Y pixel
+        coordinates. Must be provided by subclasses.
+        """
         raise NotImplementedError()
 
 

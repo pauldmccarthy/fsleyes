@@ -23,6 +23,7 @@ following annotation types are defined:
    Rect
    VoxelGrid
    VoxelSelection
+   TextAnnotation
 """
 
 
