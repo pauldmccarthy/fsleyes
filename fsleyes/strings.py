@@ -371,6 +371,7 @@ titles = TypeDict({
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
     'Scene3DToolBar'            : '3D view toolbar',
+    'AnnotationPanel'           : 'Annotations',
     'FlirtFileDialog.load'      : 'Load affine transformation',
     'FlirtFileDialog.save'      : 'Save affine transformation',
 
@@ -557,6 +558,7 @@ actions = TypeDict({
     'OrthoPanel.toggleCropMode'           : 'Crop',
     'OrthoPanel.toggleEditTransformPanel' : 'Nudge',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
+    'OrthoPanel.toggleAnnotationPanel'    : 'Annotations panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
     'OrthoPanel.pearsonCorrelation'       : 'Seed correlation (Pearson)',
