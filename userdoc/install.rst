@@ -184,6 +184,8 @@ Singularity definition file which installs a standalone version of FSLeyes::
       wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
       sh Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda3
       /miniconda3/bin/conda create -p /fsleyes-env -c conda-forge fsleyes
+
+    %environment
       source /miniconda3/bin/activate /fsleyes-env
 
     %runscript
