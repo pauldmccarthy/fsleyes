@@ -733,6 +733,14 @@ class TextAnnotation(AnnotationObject, gltext.Text):
     def __init__(self, annot, *args, **kwargs):
         """Create a ``TextAnnotation``. All arguments (with the exception of
         ``annot``) ere passed to :meth:`.Text.__init__`.
+
+        The ``Text`` class allows the text position to be specified as either
+        x/y proportions, or as absolute pixels. The ``TextAnnotation`` class
+        adds an additional option to specify the location in terms of a
+        3D position in the display coordinate system.
+
+        This can be achieved by setting ``coordinates`` to ``'display'``, and
+        setting ``pos`` to the 3D position in the display coordinate system.
         """
         AnnotationObject.__init__(self, annot)
         gltext.Text.__init__(self, *args, **kwargs)
@@ -747,4 +755,24 @@ class TextAnnotation(AnnotationObject, gltext.Text):
 
     def draw2D(self, zpos, axes):
         """Draw this ``TextAnnotation``. """
-        self.draw(*self.annot.canvas.GetSize())
+
+        if self.pos is None:
+            return
+
+        canvas  = self.annot.canvas
+        display = self.coordinates == 'display'
+        pos     = list(self.pos)
+
+        # If position is defined in the display coord
+        # system, we convert it to canvas pixels,
+        # and temporarilyu clobber pos/coordinates,
+        # so the Text.draw method stays happy.
+        if display:
+            self.pos         = canvas.worldToCanvas(pos)
+            self.coordinates = 'pixels'
+
+        self.draw(*canvas.GetSize())
+
+        if display:
+            self.pos         = pos
+            self.coordinates = 'display'
