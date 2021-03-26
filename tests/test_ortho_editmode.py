@@ -23,7 +23,7 @@ from . import run_with_orthopanel, realYield
 datadir = op.join(op.dirname(__file__), 'testdata')
 
 
-def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None, vol=None):
+def _test_select_and_fill(ortho, overlayList, displayCtx, img, canvas=None, vol=None):
 
     if canvas is None: cidx = 2
     else:              cidx = canvas
@@ -110,56 +110,56 @@ def _test_fillSelection(ortho, overlayList, displayCtx, img, canvas=None, vol=No
     overlayList[:] = []
 
 
-def test_fillSelection_x():
+def _test_select_and_fill_x():
     img = Image(op.join(datadir, '3d'))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_y():
+def test_select_and_fill_y():
     img = Image(op.join(datadir, '3d'))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=1)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=1)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_z():
+def test_select_and_fill_z():
     img = Image(op.join(datadir, '3d'))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=2)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=2)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_2d_x():
+def test_select_and_fill_2d_x():
     img = Image(np.random.randint(1, 65536, (60, 60, 1)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=2)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=2)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_2d_y():
+def test_select_and_fill_2d_y():
     img = Image(np.random.randint(1, 65536, (60, 1, 60)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=1)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=1)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_2d_z():
+def test_select_and_fill_2d_z():
     img = Image(np.random.randint(1, 65536, (1, 60, 60)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_4d_x():
+def test_select_and_fill_4d_x():
     img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=0)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
-def test_fillSelection_4d_y():
+def test_select_and_fill_4d_y():
     img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=1, vol=3)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=1, vol=3)
     run_with_orthopanel(tfs)
 
 
-def test_fillSelection_4d_z():
+def test_select_and_fill_4d_z():
     img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
-    tfs = ft.partial(_test_fillSelection, img=img, canvas=2, vol=8)
+    tfs = ft.partial(_test_select_and_fill, img=img, canvas=2, vol=8)
     run_with_orthopanel(tfs)
 
 
@@ -225,6 +225,9 @@ def test_notEditable_rgbvolume():
     run_with_orthopanel(_test_editable, rgb, 'volume', False)
 
 
+def test_newMask():
+    run_with_orthopanel(_test_newMask)
+
 def _test_newMask(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img]
@@ -241,6 +244,9 @@ def _test_newMask(ortho, overlayList, displayCtx):
     assert mask.sameSpace(img)
     assert np.all(mask[:] == 0)
 
+
+def test_newMask_with_selection():
+    run_with_orthopanel(_test_newMask_with_selection)
 
 def _test_newMask_with_selection(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
@@ -268,15 +274,7 @@ def _test_newMask_with_selection(ortho, overlayList, displayCtx):
     idle.block(2.5)
 
 
-def test_newMask():
-    run_with_orthopanel(_test_newMask)
-
-
-def test_newMask_with_selection():
-    run_with_orthopanel(_test_newMask)
-
-
-def _test_SelectionActions(ortho, overlayList, displayCtx):
+def _setup_selectionAction_test(ortho, overlayList, displayCtx):
     img1 = Image(np.random.randint(1, 65536, (20, 20, 20)))
     img2 = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img1, img2]
@@ -288,32 +286,73 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
     profile.mode = 'sel'
     profile.drawMode = False
     idle.block(2)
+
+
+def test_clearSelection():
+    run_with_orthopanel(_test_clearSelection)
+
+def _test_clearSelection(ortho, overlayList, displayCtx):
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    img1 = overlayList[0]
+    profile = ortho.getCurrentProfile()
     ed = profile.editor(img1)
 
-    # clear
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
     idle.block(2)
     profile.clearSelection()
     assert np.all(ed.getSelection().getSelection() == 0)
 
-    # fill
+
+def test_fillSelection():
+    run_with_orthopanel(_test_fillSelection)
+
+def _test_fillSelection(ortho, overlayList, displayCtx):
+
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    img1 = overlayList[0]
+    profile = ortho.getCurrentProfile()
+    ed = profile.editor(img1)
+
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
     idle.block(2)
     profile.fillValue = 999
     profile.fillSelection()
+    idle.block(1)
     exp = np.copy(img1[:])
     exp[8:12, 8:12, 8:12] = 999
     assert np.all(img1[:] == exp)
 
+
+def test_eraseSelection():
+    run_with_orthopanel(_test_eraseSelection)
+
+def _test_eraseSelection(ortho, overlayList, displayCtx):
+
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    img1 = overlayList[0]
+    profile = ortho.getCurrentProfile()
+    ed = profile.editor(img1)
+
     # erase
-    profile.clearSelection()
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(3, 3, 3))
     idle.block(2)
     profile.eraseValue = -999
     profile.eraseSelection()
+    idle.block(1)
     exp = np.copy(img1[:])
     exp[3:7, 3:7, 3:7] = -999
     assert np.all(img1[:] == exp)
+
+
+def test_invertSelection():
+    run_with_orthopanel(_test_invertSelection)
+
+def _test_invertSelection(ortho, overlayList, displayCtx):
+
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    img1 = overlayList[0]
+    profile = ortho.getCurrentProfile()
+    ed = profile.editor(img1)
 
     # invert
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
@@ -323,23 +362,61 @@ def _test_SelectionActions(ortho, overlayList, displayCtx):
     exp[8:12, 8:12, 8:12] = 0
     assert np.all(ed.getSelection().getSelection() == exp)
 
-    # copy+paste
-    profile.clearSelection()
+
+def test_copyPasteData():
+    run_with_orthopanel(_test_copyPasteData)
+
+def _test_copyPasteData(ortho, overlayList, displayCtx):
+
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    img1, img2 = overlayList[:]
+    profile = ortho.getCurrentProfile()
+    ed = profile.editor(img1)
+
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
     displayCtx.selectOverlay(img2)
-    profile.copySelection()
+    profile.copyPasteData()
     displayCtx.selectOverlay(img1)
     idle.block(2)
-    profile.pasteSelection()
+    profile.copyPasteData()
     idle.block(2)
     exp = np.copy(img1[:])
     exp[8:12, 8:12, 8:12] = img2[8:12, 8:12, 8:12]
     assert np.all(img1[:] == exp)
+    profile.copyPasteData(clear=True)
 
 
+def test_copyPasteSelection():
+    run_with_orthopanel(_test_copyPasteSelection)
 
-def test_SelectionActions():
-    run_with_orthopanel(_test_SelectionActions)
+def _test_copyPasteSelection(ortho, overlayList, displayCtx):
+
+    _setup_selectionAction_test(ortho, overlayList, displayCtx)
+    displayCtx = ortho.displayCtx
+    img1 = overlayList[0]
+    opts = displayCtx.getOpts(img1)
+    profile = ortho.getCurrentProfile()
+    ed = profile.editor(img1)
+
+    ortho.getXCanvas().SetFocus()
+    displayCtx.location = opts.transformCoords((8, 8, 8), 'voxel', 'display')
+    idle.block(0.5)
+    ed.getSelection().addToSelection(np.ones((1, 4, 4)), offset=(8, 8, 8))
+    idle.block(0.5)
+    profile.copyPasteSelection()
+    idle.block(0.5)
+    displayCtx.location = opts.transformCoords((9, 8, 8), 'voxel', 'display')
+    idle.block(0.5)
+    profile.copyPasteSelection()
+    idle.block(0.5)
+    displayCtx.location = opts.transformCoords((10, 8, 8), 'voxel', 'display')
+    idle.block(0.5)
+    profile.copyPasteSelection()
+    idle.block(0.5)
+
+    exp = np.zeros(img1.shape[:3])
+    exp[8:11, 8:12, 8:12] = 1
+    assert np.all(ed.getSelection().getSelection() == exp)
 
 
 # regression - draw selection would crash
