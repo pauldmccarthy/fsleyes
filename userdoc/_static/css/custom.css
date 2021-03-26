@@ -10,3 +10,7 @@
     margin-right: auto;
 }
 
+/* Line wrapping in a table, rather than horizontal scrollbar */
+.linewrap-table td {
+    white-space: normal !important;
+}
