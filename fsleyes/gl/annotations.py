@@ -26,6 +26,8 @@ following annotation types are defined:
 
    Line
    Rect
+   Point
+   Circle
    VoxelGrid
    VoxelSelection
    TextAnnotation
@@ -134,11 +136,28 @@ class Annotations(props.HasProperties):
         return self.obj(obj, hold)
 
 
+    def point(self, *args, **kwargs):
+        """Queues a point for drawing - see the :class:`Point` class. """
+        hold = kwargs.pop('hold', False)
+        obj  = Point(self, *args, **kwargs)
+
+        return self.obj(obj, hold)
+
+
     def rect(self, *args, **kwargs):
         """Queues a rectangle for drawing - see the :class:`Rectangle` class.
         """
         hold = kwargs.pop('hold', False)
         obj  = Rect(self, *args, **kwargs)
+
+        return self.obj(obj, hold)
+
+
+    def circle(self, *args, **kwargs):
+        """Queues a circle for drawing - see the :class:`Circle` class.
+        """
+        hold = kwargs.pop('hold', False)
+        obj  = Circle(self, *args, **kwargs)
 
         return self.obj(obj, hold)
 
@@ -307,10 +326,22 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     enabled = props.Boolean()
-    width   = props.Int()
-    colour  = props.Colour()
-    zmin    = props.Real()
-    zmax    = props.Real()
+    """Whether to draw this annotation or not. """
+
+
+    width = props.Int()
+    """Line width, for annotations which are drawn with lines. """
+
+
+    colour = props.Colour()
+    """Annotation colour."""
+
+    zmin = props.Real()
+    """Minimum z value below which this annotation will not be drawn. """
+
+
+    zmax = props.Real()
+    """Maximum z value below which this annotation will not be drawn. """
 
 
     def __init__(self,
@@ -387,6 +418,54 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
 
+class Point(AnnotationObject):
+    """The ``Point`` class is an :class:`AnnotationObject` which represents a
+    point, drawn as a small crosshair.
+    """
+
+
+    size = props.Real(default=1)
+    """Length (in display coordinates) of the horizontal and vertical lines
+    that make up the crosshair.
+    """
+
+
+    def __init__(self, annot, xy, *args, **kwargs):
+        """Create a ``Point`` annotation.
+
+        The ``xy`` coordinate tuple should be in relation to the axes which
+        map to the horizontal/vertical screen axes on the target canvas.
+
+        :arg annot: The :class:`Annotations` object that owns this ``Point``.
+
+        :arg xy:    Tuple containing the (x, y) coordinates of the point
+
+        All other arguments are passed through to
+        :meth:`AnnotationObject.__init__`.
+        """
+        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        self.xy = xy
+
+
+    def draw2D(self, zpos, axes):
+        """Draws this ``Line`` annotation. """
+
+        xax, yax, zax        = axes
+        offset               = self.size * 0.5
+        x, y                 = self.xy
+        idxs                 = np.arange(4,     dtype=np.uint32)
+        verts                = np.zeros((4, 3), dtype=np.float32)
+        verts[0, [xax, yax]] = [x - offset, y]
+        verts[1, [xax, yax]] = [x + offset, y]
+        verts[2, [xax, yax]] = [x, y - offset]
+        verts[3, [xax, yax]] = [x, y + offset]
+        verts[:, zax]        = zpos
+        verts                = verts.ravel('C')
+
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
+        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+
 class Line(AnnotationObject):
     """The ``Line`` class is an :class:`AnnotationObject` which represents a
     2D line.
@@ -434,6 +513,15 @@ class Rect(AnnotationObject):
     """The ``Rect`` class is an :class:`AnnotationObject` which represents a
     2D rectangle.
     """
+
+
+    filled = props.Boolean(default=False)
+    """Whether to fill the rectangle. """
+
+
+    fillColour = props.Colour()
+    """Colour to fill the rectangle with. """
+
 
     def __init__(self,
                  annot,
@@ -543,6 +631,103 @@ class Rect(AnnotationObject):
 
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+
+class Circle(AnnotationObject):
+    """The ``Circle`` class is an :class:`AnnotationObject` which represents a
+    circle.
+    """
+
+
+    filled = props.Boolean(default=False)
+    """Whether to fill the circle. """
+
+
+    fillColour = props.Colour()
+    """Colour to fill the circle with. """
+
+
+    def __init__(self,
+                 annot,
+                 xy,
+                 radius=1,
+                 npoints=60,
+                 filled=False,
+                 fillColour=None,
+                 *args, **kwargs):
+        """Create a ``Circle`` annotation.
+
+        :arg annot:      The :class:`Annotations` object that owns this
+                         ``Circle``.
+
+        :arg xy:         Tuple specifying the circle centre, in the display
+                         coordinate system.
+
+        :arg radius:     Circle radius.
+
+        :arg npoints:    Number of vertices used to draw the circle outline.
+
+        :arg filled:     If ``True``, the circle is filled with the
+                         ``fillColour``.
+
+        :arg fillColour: If ``filled=True``, the colour to fill the circle
+                         with. Defaults to a transparent version of the
+                         ``colour``.
+
+        All other arguments are passed through to
+        :meth:`AnnotationObject.__init__`.
+
+        """
+
+        AnnotationObject.__init__(self, annot, *args, **kwargs)
+
+        self.xy         = xy
+        self.radius     = radius
+        self.npoints    = npoints
+        self.filled     = filled
+        self.fillColour = fillColour
+
+
+    def draw2D(self, zpos, axes):
+        """Draws this ``Circle`` annotation. """
+
+        if self.radius == 0:
+            return
+
+        fillColour = self.fillColour
+
+        if fillColour is None:
+            if self.colour is not None:
+                fillColour = list(self.colour[:3])
+            else:
+                fillColour = [1, 1, 1]
+
+        if len(fillColour) == 3:
+            fillColour = list(fillColour) + [0.2]
+
+        xax, yax, zax = axes
+        x, y          = self.xy
+        r             = self.radius
+
+        idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
+        verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)
+        samples = np.linspace(0, 2 * np.pi, self.npoints)
+
+        verts[0, [xax, yax]] = x, y
+        verts[1:, xax]       = r * np.sin(samples) + x
+        verts[1:, yax]       = r * np.cos(samples) + y
+        verts[:,  zax]       = zpos
+
+        # outline
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts[1:-1])
+        gl.glDrawElements(
+            gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
+
+        if self.filled:
+            gl.glColor4f(*fillColour)
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
+            gl.glDrawElements(
+                gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
 class VoxelGrid(AnnotationObject):
