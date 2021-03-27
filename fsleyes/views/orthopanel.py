@@ -504,10 +504,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
                    self.toggleFileTreePanel,
+                   self.toggleAnnotationPanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,
-                   self.toggleAnnotationPanel,
                    self.removeAllPanels]
 
         def makeTuples(actionz):

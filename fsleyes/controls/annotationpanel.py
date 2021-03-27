@@ -54,16 +54,16 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
             self, style=bmpradio.BMPRADIO_ALLOW_DESELECTED)
 
         icons = {
-            'text'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
-                        fslicons.loadBitmap('coronalBumSlice24')],
-            'rect'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
-                        fslicons.loadBitmap('coronalBumSlice24')],
-            'line'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
-                        fslicons.loadBitmap('coronalBumSlice24')],
-            'point'  : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
-                        fslicons.loadBitmap('coronalBumSlice24')],
-            'circle' : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
-                        fslicons.loadBitmap('coronalBumSlice24')],
+            'text'   : [fslicons.loadBitmap('textAnnotationHighlight24'),
+                        fslicons.loadBitmap('textAnnotation24')],
+            'rect'   : [fslicons.loadBitmap('rectAnnotationHighlight24'),
+                        fslicons.loadBitmap('rectAnnotation24')],
+            'line'   : [fslicons.loadBitmap('lineAnnotationHighlight24'),
+                        fslicons.loadBitmap('lineAnnotation24')],
+            'point'  : [fslicons.loadBitmap('pointAnnotationHighlight24'),
+                        fslicons.loadBitmap('pointAnnotation24')],
+            'circle' : [fslicons.loadBitmap('circleAnnotationHighlight24'),
+                        fslicons.loadBitmap('circleAnnotation24')],
         }
 
         for option, icons in icons.items():
