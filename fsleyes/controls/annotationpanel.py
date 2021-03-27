@@ -1,20 +1,43 @@
 #!/usr/bin/env python
 #
-# annotationpanel.py -
+# annotationpanel.py - The AnnotationPanel
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains the :class:`AnnotationPanel` class, a FSLeyes control
+panel which allows the user to annotate the canvases of an
+:class:`.OrthoPanel`.
+"""
+
 
 import wx
 
 import fsleyes_widgets.elistbox      as elb
+import fsleyes_widgets.bitmapradio   as bmpradio
+import fsleyes.icons                 as fslicons
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.gl.annotations        as annotations
 
 
 class AnnotationPanel(ctrlpanel.ControlPanel):
+    """The ``AnnotationPanel`` contains controls allowing the user to add
+    annotations to the canvases in an :class:`.OrthoPanel`. The user is able
+    to add points, lines, rectangles, circles, and text to any canvas, and
+    can adjust the properties (e.g. colour, thickness) of each annotation.
+
+    When a user selects an annotation to add, the
+    :class:`.OrthoAnnotateProfile` is enabled on the ``OrthoPanel``, which
+    provides user interaction.
+    """
 
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
-        """
+        """Create an ``AnnotationPanel``.
+
+        :arg parent:      The :mod:`wx` parent object.
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
@@ -27,19 +50,37 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
             self, style=(elb.ELB_NO_ADD |
                          elb.ELB_NO_MOVE))
 
-        self.__text   = wx.Button(self, label='text')
-        self.__rect   = wx.Button(self, label='rect')
-        self.__line   = wx.Button(self, label='line')
-        self.__point  = wx.Button(self, label='point')
-        self.__circle = wx.Button(self, label='circle')
+        self.__annotOptions = bmpradio.BitmapRadioBox(
+            self, style=bmpradio.BMPRADIO_ALLOW_DESELECTED)
 
-        self.__buttonSizer.Add(self.__text,   flag=wx.EXPAND, proportion=1)
-        self.__buttonSizer.Add(self.__rect,   flag=wx.EXPAND, proportion=1)
-        self.__buttonSizer.Add(self.__line,   flag=wx.EXPAND, proportion=1)
-        self.__buttonSizer.Add(self.__point,  flag=wx.EXPAND, proportion=1)
-        self.__buttonSizer.Add(self.__circle, flag=wx.EXPAND, proportion=1)
+        icons = {
+            'text'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
+                        fslicons.loadBitmap('coronalBumSlice24')],
+            'rect'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
+                        fslicons.loadBitmap('coronalBumSlice24')],
+            'line'   : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
+                        fslicons.loadBitmap('coronalBumSlice24')],
+            'point'  : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
+                        fslicons.loadBitmap('coronalBumSlice24')],
+            'circle' : [fslicons.loadBitmap('coronalBumSliceHighlight24'),
+                        fslicons.loadBitmap('coronalBumSlice24')],
+        }
 
-        self.__mainSizer.Add(self.__annotList,   flag=wx.EXPAND, proportion=1)
-        self.__mainSizer.Add(self.__buttonSizer, flag=wx.EXPAND)
+        for option, icons in icons.items():
+            self.__annotOptions.AddChoice(*icons, clientData=option)
+
+        self.__mainSizer.Add(self.__annotList,    flag=wx.EXPAND, proportion=1)
+        self.__mainSizer.Add(self.__annotOptions, flag=wx.EXPAND)
 
         self.SetSizer(self.__mainSizer)
+
+        self.__annotOptions.Bind(bmpradio.EVT_BITMAP_RADIO_EVENT,
+                                 self.__onAnnotOption)
+
+
+    def __onAnnotOption(self, ev):
+        if ev.value:
+            self.__ortho.profile = 'annotate'
+            self.__ortho.getCurrentProfile().mode = ev.clientData
+        else:
+            self.__ortho.profile = 'view'
