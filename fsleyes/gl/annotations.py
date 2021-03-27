@@ -13,6 +13,11 @@ The :class:`Annotations` class is used by the :class:`.SliceCanvas` and
 canvas.
 
 
+.. note:: The ``Annotations`` class only works with the :class:`.SliceCanvas`
+          and :class:`.LightBoxCanvas` - there is no support for the
+          :class:`.Scene3DCanvas`.
+
+
 All annotations derive from the :class:`AnnotationObject` base class. The
 following annotation types are defined:
 
@@ -33,23 +38,24 @@ import time
 import numpy       as np
 import OpenGL.GL   as gl
 
-import fsleyes.gl.globject              as globject
-import fsleyes.gl.routines              as glroutines
-import fsleyes.gl.resources             as glresources
-import fsleyes.gl.textures              as textures
-import fsleyes.gl.text                  as gltext
-import fsleyes.gl.textures.data         as texdata
-import fsl.transform.affine             as affine
+import fsl.transform.affine     as affine
+import fsleyes_props            as props
+import fsleyes.gl.globject      as globject
+import fsleyes.gl.routines      as glroutines
+import fsleyes.gl.resources     as glresources
+import fsleyes.gl.textures      as textures
+import fsleyes.gl.text          as gltext
+import fsleyes.gl.textures.data as texdata
 
 
 log = logging.getLogger(__name__)
 
 
-class Annotations(object):
+class Annotations(props.HasProperties):
     """An :class:`Annotations` object provides functionality to draw 2D
     annotations on a :class:`.SliceCanvas`. Annotations may be enqueued via
-    any of the :meth:`line`, :meth:`rect`, :meth:`grid`, :meth:`selection` or
-    :meth:`obj`, methods.
+    any of the :meth:`line`, :meth:`rect`, :meth:`circle`, :meth:`point`,
+    :meth:`grid`, :meth:`selection` or :meth:`obj`, methods.
 
 
     A call to :meth:`draw` will then draw each of the queued annotations on
@@ -59,13 +65,20 @@ class Annotations(object):
     If an annotation is to be persisted, it can be enqueued, as above, but
     passing ``hold=True`` to the queueing method.  The annotation will then
     remain in the queue until it is removed via :meth:`dequeue`, or the
-    entire annotations queue is cleared via :meth:`clear`.
+    entire annotations queue is cleared via :meth:`clear`. Held, or persistent,
+    annotations are stored in the :attr:`annotations` attribute.
 
 
     Annotations can be queued by one of the helper methods on the
     :class:`Annotations` object (e.g. :meth:`line` or :meth:`rect`), or by
     manually creating an :class:`AnnotationObject` and passing it to the
     :meth:`obj` method.
+    """
+
+
+    annotations = props.List()
+    """Contains all persistent :class:`AnnotationObject` instances, which have
+    been added to the queue with ``hold=True``.
     """
 
 
@@ -83,7 +96,6 @@ class Annotations(object):
         """
 
         self.__q      = []
-        self.__holdq  = []
         self.__xax    = xax
         self.__yax    = yax
         self.__zax    = 3 - xax - yax
@@ -169,8 +181,8 @@ class Annotations(object):
                    it has been drawn.
         """
 
-        if hold: self.__holdq.append(obj)
-        else:    self.__q    .append(obj)
+        if hold: self.annotations.append(obj)
+        else:    self.__q        .append(obj)
 
         return obj
 
@@ -182,7 +194,7 @@ class Annotations(object):
         """
 
         if hold:
-            try:               self.__holdq.remove(obj)
+            try:               self.annotations.remove(obj)
             except ValueError: pass
         else:
             try:               self.__q.remove(obj)
@@ -195,11 +207,11 @@ class Annotations(object):
         in the queue.
         """
 
-        for obj in self.__q:     obj.destroy()
-        for obj in self.__holdq: obj.destroy()
+        for obj in self.__q:         obj.destroy()
+        for obj in self.annotations: obj.destroy()
 
-        self.__q     = []
-        self.__holdq = []
+        self.__q            = []
+        self.annotations[:] = []
 
 
     def draw(self, zpos, xform=None, skipHold=False):
@@ -215,7 +227,7 @@ class Annotations(object):
                        items.
         """
 
-        if not skipHold: objs = self.__holdq + self.__q
+        if not skipHold: objs = list(self.annotations) + self.__q
         else:            objs = self.__q
 
         if xform is not None:
@@ -266,7 +278,7 @@ class Annotations(object):
         self.__q = []
 
 
-class AnnotationObject(globject.GLSimpleObject):
+class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """Base class for all annotation objects. An ``AnnotationObject`` is drawn
     by an :class:`Annotations` instance. The ``AnnotationObject`` contains some
     attributes which are common to all annotation types:
@@ -292,6 +304,14 @@ class AnnotationObject(globject.GLSimpleObject):
     Subclasses must, at the very least, override the
     :meth:`globject.GLObject.draw2D` method.
     """
+
+
+    enabled = props.Boolean()
+    width   = props.Int()
+    colour  = props.Colour()
+    zmin    = props.Real()
+    zmax    = props.Real()
+
 
     def __init__(self,
                  annot,
