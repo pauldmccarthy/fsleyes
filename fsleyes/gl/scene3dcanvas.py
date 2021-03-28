@@ -418,7 +418,7 @@ class Scene3DCanvas(object):
 
         for label, text in zip(labels, self.__legendLabels):
             text.text     = label
-            text.fgColour = self.opts.legendColour
+            text.colour   = self.opts.legendColour
             text.fontSize = self.opts.labelSize
             text.halign   = 'centre'
             text.valign   = 'centre'

@@ -928,56 +928,97 @@ class VoxelSelection(AnnotationObject):
         texture.unbindTexture()
 
 
-class TextAnnotation(AnnotationObject, gltext.Text):
-    """A ``TextAnnotation`` is an ``AnnotationObject`` which also sub-classes
-    from :class:`fsleyes.gl.text.Text`, allowing text to be drawn on a GL
-    canvas.
+class TextAnnotation(AnnotationObject):
+    """A ``TextAnnotation`` is an ``AnnotationObject`` which draws a
+    :class:`fsleyes.gl.text.Text` object.
+
+    The ``Text`` class allows the text position to be specified as either
+    x/y proportions, or as absolute pixels. The ``TextAnnotation`` class
+    adds an additional option to specify the location in terms of a
+    3D position in the display coordinate system.
+
+    This can be achieved by setting ``coordinates`` to ``'display'``, and
+    setting ``pos`` to the 3D position in the display coordinate system.
     """
 
 
-    def __init__(self, annot, *args, **kwargs):
-        """Create a ``TextAnnotation``. All arguments (with the exception of
-        ``annot``) ere passed to :meth:`.Text.__init__`.
+    text  = props.String()
+    """Text to draw. """
 
-        The ``Text`` class allows the text position to be specified as either
-        x/y proportions, or as absolute pixels. The ``TextAnnotation`` class
-        adds an additional option to specify the location in terms of a
-        3D position in the display coordinate system.
 
-        This can be achieved by setting ``coordinates`` to ``'display'``, and
-        setting ``pos`` to the 3D position in the display coordinate system.
+    fontSize = props.Int(minval=6, maxval=48)
+    """Text font size."""
+
+
+    def __init__(self,
+                 annot,
+                 text=None,
+                 pos=None,
+                 off=None,
+                 coordinates='proportions',
+                 fontSize=10,
+                 halign=None,
+                 valign=None,
+                 colour=None,
+                 bgColour=None,
+                 angle=None,
+                 **kwargs):
+        """Create a ``TextAnnotation``.
+
+        :arg annot:      The :class:`Annotations` object that owns this
+                         ``TextAnnotation``.
+
+        See the :class:`.Text` class for details on the other arguments.
         """
-        AnnotationObject.__init__(self, annot)
-        gltext.Text.__init__(self, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
+
+        self.text        = text
+        self.pos         = pos
+        self.off         = off
+        self.coordinates = coordinates
+        self.fontSize    = fontSize
+        self.halign      = halign
+        self.valign      = valign
+        self.colour      = colour
+        self.bgColour    = bgColour
+        self.angle       = angle
+        self.__text      = gltext.Text()
+
+
+    @property
+    def gltext(self):
+        return self.__text
 
 
     def destroy(self):
         """Must be called when this ``TextAnnotation`` is no longer needed.
         """
         AnnotationObject.destroy(self)
-        gltext.Text.destroy(self)
+        self.__text.destroy()
+        self.__text = None
 
 
     def draw2D(self, zpos, axes):
         """Draw this ``TextAnnotation``. """
 
-        if self.pos is None:
-            return
+        text             = self.__text
+        canvas           = self.annot.canvas
+        text.text        = self.text
+        text.pos         = self.pos
+        text.off         = self.off
+        text.coordinates = self.coordinates
+        text.fontSize    = self.fontSize
+        text.halign      = self.halign
+        text.valign      = self.valign
+        text.colour      = self.colour
+        text.bgColour    = self.bgColour
+        text.angle       = self.angle
 
-        canvas  = self.annot.canvas
-        display = self.coordinates == 'display'
-        pos     = list(self.pos)
+        if self.coordinates == 'display':
+            text.pos         = canvas.worldToCanvas(self.pos)
+            text.coordinates = 'pixels'
+        else:
+            text.pos         = self.pos
+            text.coordinates = self.coordinates
 
-        # If position is defined in the display coord
-        # system, we convert it to canvas pixels,
-        # and temporarilyu clobber pos/coordinates,
-        # so the Text.draw method stays happy.
-        if display:
-            self.pos         = canvas.worldToCanvas(pos)
-            self.coordinates = 'pixels'
-
-        self.draw(*canvas.GetSize())
-
-        if display:
-            self.pos         = pos
-            self.coordinates = 'display'
+        text.draw(*canvas.GetSize())

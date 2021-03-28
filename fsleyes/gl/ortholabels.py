@@ -270,7 +270,7 @@ class OrthoLabels:
 
                 cannots[side].enabled  = show
                 cannots[side].fontSize = fontSize
-                cannots[side].fgColour = fgColour
+                cannots[side].colour   = fgColour
 
             if vertOrient:
                 cannots['left'] .angle = 90

@@ -32,8 +32,8 @@ class Text:
 
         # modify various properties by direct attribute
         # assignment - see __init__ for definitions
-        text.pos      = (0.5, 0.5)
-        text.fgColour = '#FFFFFF'
+        text.pos    = (0.5, 0.5)
+        text.colour = '#FFFFFF'
 
         # activate your GL context, and call draw()
         text.draw()
@@ -51,7 +51,7 @@ class Text:
                  fontSize=10,
                  halign=None,
                  valign=None,
-                 fgColour=None,
+                 colour=None,
                  bgColour=None,
                  angle=None):
         """Create a ``Text`` object.
@@ -75,7 +75,7 @@ class Text:
         :arg valign:      Vertical alignemnt - ``'bottom'``, ``'centre'``, or
                           ``top``.
 
-        :arg fgColour:    Colour to draw the text in (any
+        :arg colour:      Colour to draw the text in (any
                           ``matplotlib``-compatible colour specification)
 
         :arg bgColour:    Background colour (default: transparent).
@@ -96,7 +96,7 @@ class Text:
         # as they induce a bitmap refresh
         self.__text     = text
         self.__fontSize = fontSize
-        self.__fgColour = fgColour
+        self.__colour   = colour
         self.__bgColour = bgColour
 
         # All othjer attributes can be assigned directly
@@ -119,12 +119,6 @@ class Text:
         self.__texture = None
 
 
-    @property
-    def fgColour(self):
-        """Return the current foreground colour. """
-        return self.__fgColour
-
-
     def __clearBitmap(self, old, new):
         """Used by property setters to clear cached bitmap, if a value which
         requires the bitmap to be re-generated is changed.
@@ -133,11 +127,17 @@ class Text:
             self.__bitmap = None
 
 
-    @fgColour.setter
-    def fgColour(self, value):
+    @property
+    def colour(self):
+        """Return the current foreground colour. """
+        return self.__colour
+
+
+    @colour.setter
+    def colour(self, value):
         """Set the foreground colour. """
-        self.__clearBitmap(self.__fgColour, value)
-        self.__fgColour = value
+        self.__clearBitmap(self.__colour, value)
+        self.__colour = value
 
 
     @property
@@ -183,7 +183,7 @@ class Text:
         """Called when the text bitmap and texture data needs a refresh. """
         bmp = textbmp.textBitmap(self.text,
                                  fontSize=self.fontSize,
-                                 fgColour=self.fgColour,
+                                 fgColour=self.colour,
                                  bgColour=self.bgColour)
         bmp = np.flipud(bmp).transpose([2, 1, 0])
 

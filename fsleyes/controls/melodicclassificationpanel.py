@@ -380,8 +380,8 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
         labels = [volLabels.getDisplayLabel(l) for l in labels]
         colour = self.__lut.getByName(labels[0]).colour
 
-        self.__textAnnotation.text     = ', '.join(labels)
-        self.__textAnnotation.fgColour = colour
+        self.__textAnnotation.text   = ', '.join(labels)
+        self.__textAnnotation.colour = colour
 
 
     def __onLoadButton(self, ev):
