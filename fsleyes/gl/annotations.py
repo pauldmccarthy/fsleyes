@@ -24,9 +24,10 @@ following annotation types are defined:
 .. autosummary::
    :nosignatures:
 
-   Line
-   Rect
    Point
+   Line
+   Arrow
+   Rect
    Circle
    VoxelGrid
    VoxelSelection
@@ -132,6 +133,14 @@ class Annotations(props.HasProperties):
         """Queues a line for drawing - see the :class:`Line` class. """
         hold = kwargs.pop('hold', False)
         obj  = Line(self, *args, **kwargs)
+
+        return self.obj(obj, hold)
+
+
+    def arrow(self, *args, **kwargs):
+        """Queues an arrow for drawing - see the :class:`Arrow` class. """
+        hold = kwargs.pop('hold', False)
+        obj  = Arrow(self, *args, **kwargs)
 
         return self.obj(obj, hold)
 
@@ -524,6 +533,53 @@ class Line(AnnotationObject):
 
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+
+class Arrow(Line):
+    """The ``Arrow`` class is an :class:`AnnotationObject` which represents a
+    2D line with an arrow head at one end.
+    """
+
+
+    headLength = props.Real(default=2)
+    """Size of the arrow head, in display coordinates. """
+
+
+    def draw2D(self, zpos, axes):
+        """Draw an arrow. """
+
+        Line.draw2D(self, zpos, axes)
+
+        xax, yax, zax = axes
+
+        # we draw the arrow head as a triangle
+        # at the second line vertex (xy2). We
+        # generate the two other vertices of
+        # the triangle by rotating +/- 30
+        # degrees around xy2
+        xy1   = np.array(self.xy1)
+        xy2   = np.array(self.xy2)
+        vec   = xy2 - xy1
+        vec   = vec / np.sqrt(vec[0] ** 2 + vec[1] ** 2)
+        angle = np.arccos(np.dot(vec, [1, 0])) * np.sign(vec[1])
+        delta = np.pi / 6
+
+        p1 = np.array((np.cos(angle + delta), np.sin(angle + delta)))
+        p2 = np.array((np.cos(angle - delta), np.sin(angle - delta)))
+
+        p1 = xy2 - self.headLength * p1
+        p2 = xy2 - self.headLength * p2
+
+        idxs  = np.arange(3, dtype=np.uint32)
+        verts = np.zeros((3, 3), dtype=np.float32)
+        verts[0, [xax, yax]] = xy2
+        verts[1, [xax, yax]] = p1
+        verts[2, [xax, yax]] = p2
+        verts[:, zax]        = zpos
+
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
+        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
 
 
 class Rect(AnnotationObject):
