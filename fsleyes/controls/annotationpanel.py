@@ -30,6 +30,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
     provides user interaction.
     """
 
+
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
         """Create an ``AnnotationPanel``.
 
@@ -60,6 +61,8 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
                         fslicons.loadBitmap('rectAnnotation24')],
             'line'   : [fslicons.loadBitmap('lineAnnotationHighlight24'),
                         fslicons.loadBitmap('lineAnnotation24')],
+            'arrow'  : [fslicons.loadBitmap('arrowAnnotationHighlight24'),
+                        fslicons.loadBitmap('arrowAnnotation24')],
             'point'  : [fslicons.loadBitmap('pointAnnotationHighlight24'),
                         fslicons.loadBitmap('pointAnnotation24')],
             'circle' : [fslicons.loadBitmap('circleAnnotationHighlight24'),

@@ -52,7 +52,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['line', 'point', 'rect', 'text', 'circle'])
+            ['line', 'arrow', 'point', 'rect', 'text', 'circle'])
         self.mode = 'nav'
 
         # Used to store a reference to annotations during mouse drags.
@@ -135,6 +135,44 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
 
         if line.xy1 == line.xy2:
             annot.dequeue(line, hold=True)
+
+        canvas.Refresh()
+
+
+    def _arrowModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Adds a new arrow annotation."""
+        opts            = canvas.opts
+        annot           = canvas.getAnnotations()
+        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        settings        = self.__initialSettings(canvas, canvasPos)
+        self.__dragging = annot.arrow(pos, pos, **settings)
+
+
+    def _arrowModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Adjust the arrow end point so it tracks the mouse location."""
+        opts      = canvas.opts
+        arrow     = self.__dragging
+        arrow.xy2 = (canvasPos[opts.xax], canvasPos[opts.yax])
+
+        # display arrow length in the
+        # FSLeyesFrame status bar
+        xy1    = np.array(arrow.xy1)
+        xy2    = np.array(arrow.xy2)
+        length = np.sqrt(np.sum((xy1 - xy2) ** 2))
+        self.__displaySize(length, False)
+        canvas.Refresh()
+
+
+    def _arrowModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Clear a reference to the newly created arrow. If the mouse hasn't
+        moved since mouse down, the arrow is deleted.
+        """
+        arrow            = self.__dragging
+        annot           = canvas.getAnnotations()
+        self.__dragging = None
+
+        if arrow.xy1 == arrow.xy2:
+            annot.dequeue(arrow, hold=True)
 
         canvas.Refresh()
 
