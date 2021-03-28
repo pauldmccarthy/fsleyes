@@ -259,10 +259,11 @@ class Annotations(props.HasProperties):
 
         for obj in objs:
 
-            if obj.expired(drawTime):                    continue
-            if not obj.enabled:                          continue
-            if obj.zmin is not None and zpos < obj.zmin: continue
-            if obj.zmax is not None and zpos > obj.zmax: continue
+            if obj.expired(drawTime): continue
+            if not obj.enabled:       continue
+            if obj.honourZLimits:
+                if obj.zmin is not None and zpos < obj.zmin: continue
+                if obj.zmax is not None and zpos > obj.zmax: continue
 
             if obj.xform is not None:
                 gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -336,6 +337,14 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     colour = props.Colour()
     """Annotation colour."""
 
+
+    honourZLimits = props.Boolean(default=False)
+    """If True, the :attr:`zmin`/:attr:`zmax` properties are enforced.
+    Otherwise (the default) they are ignored, and the annotation is
+    always drawn.
+    """
+
+
     zmin = props.Real()
     """Minimum z value below which this annotation will not be drawn. """
 
@@ -351,41 +360,49 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                  width=None,
                  enabled=True,
                  expiry=None,
+                 honourZLimits=False,
                  zmin=None,
-                 zmax=None):
+                 zmax=None,
+                 **kwargs):
         """Create an ``AnnotationObject``.
 
-        :arg annot:   The :class:`Annotations` object that created this
-                      ``AnnotationObject``.
+        :arg annot:         The :class:`Annotations` object that created this
+                            ``AnnotationObject``.
 
-        :arg xform:   Transformation matrix which will be applied to all
-                      vertex coordinates.
+        :arg xform:         Transformation matrix which will be applied to all
+                            vertex coordinates.
 
-        :arg colour:  RGB/RGBA tuple specifying the annotation colour.
+        :arg colour:        RGB/RGBA tuple specifying the annotation colour.
 
-        :arg width:   Line width to use for the annotation.
+        :arg width:         Line width to use for the annotation.
 
-        :arg enabled: Initially enabled or disabled.
+        :arg enabled:       Initially enabled or disabled.
 
-        :arg expiry:  Time (in seconds) after which this annotation should be
-                      expired and not drawn.
+        :arg expiry:        Time (in seconds) after which this annotation
+                            should be expired and not drawn.
 
-        :arg zmin:    Minimum z value below which this annotation should not
-                      be drawn.
-        :arg zmax:    Maximum z value above which this annotation should not
-                      be drawn.
+        :arg honourZLimits: Whether to enforce ``zmin``/``zmax``.
+
+        :arg zmin:          Minimum z value below which this annotation should
+                            not be drawn.
+
+        :arg zmax:          Maximum z value above which this annotation should
+                            not be drawn.
+
+        Any other arguments are ignored.
         """
         globject.GLSimpleObject.__init__(self, False)
 
-        self.annot    = annot
-        self.colour   = colour
-        self.enabled  = enabled
-        self.width    = width
-        self.xform    = xform
-        self.expiry   = expiry
-        self.zmin     = zmin
-        self.zmax     = zmax
-        self.creation = time.time()
+        self.annot         = annot
+        self.colour        = colour
+        self.enabled       = enabled
+        self.width         = width
+        self.xform         = xform
+        self.expiry        = expiry
+        self.honourZLimits = honourZLimits
+        self.zmin          = zmin
+        self.zmax          = zmax
+        self.creation      = time.time()
 
         if self.xform is not None:
             self.xform = np.array(self.xform, dtype=np.float32)
@@ -424,7 +441,7 @@ class Point(AnnotationObject):
     """
 
 
-    size = props.Real(default=1)
+    size = props.Real(default=3)
     """Length (in display coordinates) of the horizontal and vertical lines
     that make up the crosshair.
     """
