@@ -277,6 +277,32 @@ altHandlerMap = {
         (('text',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('arrow',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
         (('ellipse', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+
+        # Right mouse click/drag allows
+        # annotations to be moved
+        (('nav',     'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('line',    'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('point',   'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('rect',    'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('text',    'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('arrow',   'RightMouseDown'),  ('move', 'RightMouseDown')),
+        (('ellipse', 'RightMouseDown'),  ('move', 'RightMouseDown')),
+
+        (('nav',     'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('line',    'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('point',   'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('rect',    'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('text',    'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('arrow',   'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+        (('ellipse', 'RightMouseDrag'),  ('move', 'RightMouseDrag')),
+
+        (('nav',     'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('line',    'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('point',   'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('rect',    'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('text',    'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('arrow',   'RightMouseUp'),    ('move', 'RightMouseUp')),
+        (('ellipse', 'RightMouseUp'),    ('move', 'RightMouseUp')),
     )),
 
     LightBoxViewProfile : OrderedDict((

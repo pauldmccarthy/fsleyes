@@ -435,6 +435,28 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.creation = time.time()
 
 
+    def hit(self, xy):
+        """Return ``True`` if the given X/Y point is within the bounds of this
+        annotation, ``False`` otherwise.  Must be implemented by sub-classes,
+        but only those annotations which are drawn by the
+        :class:`.OrthoAnnotateProfile`.
+
+        :arg xy: ``(x, y)`` tuple in display coordinates.
+        """
+        raise NotImplementedError()
+
+
+    def move(self, xy):
+        """Move this annotation acording to xy, which is specified as an offset
+        relative to the current location. Must be implemented by sub-classes,
+        but only those annotations which are drawn by the
+        :class:`.OrthoAnnotateProfile`.
+
+        :arg xy: ``(x, y)`` tuple in display coordinates.
+        """
+        raise NotImplementedError()
+
+
     def expired(self, now):
         """Returns ``True`` if this ``Annotation`` has expired, ``False``
         otherwise.
@@ -498,6 +520,21 @@ class Point(AnnotationObject):
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
+    def hit(self, xy):
+        """Returns ``True`` if ``xy`` is within the bounds of this ``Point``,
+        ``False`` otherwise.
+        """
+        x, y   = xy
+        px, py = self.xy
+        dist   = np.sqrt((x - px) ** 2 + (y - py) ** 2)
+        return dist <= self.lineWidth
+
+
+    def move(self, xy):
+        """Move this ``Point`` according to ``xy``. """
+        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
+
+
 class Line(AnnotationObject):
     """The ``Line`` class is an :class:`AnnotationObject` which represents a
     2D line.
@@ -540,6 +577,30 @@ class Line(AnnotationObject):
 
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+
+    def hit(self, xy):
+        """Returns ``True`` if ``xy`` is within the bounds of this ``Line``,
+        ``False`` otherwise.
+
+        https://en.wikipedia.org/wiki/\
+            Distance_from_a_point_to_a_line#Line_defined_by_two_points
+        """
+
+        x0, y0 = xy
+        x1, y1 = self.xy1
+        x2, y2 = self.xy2
+
+        area = np.abs((x2 - x1) * (y1 - y0) - (x1 - x0) * (y2 - y1))
+        dist = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+        return (area / dist) <= (self.lineWidth * 2)
+
+
+    def move(self, xy):
+        """Move this ``Line`` according to ``xy``."""
+        self.xy1 = (self.xy1[0] + xy[0], self.xy1[1] + xy[1])
+        self.xy2 = (self.xy2[0] + xy[0], self.xy2[1] + xy[1])
 
 
 class Arrow(Line):

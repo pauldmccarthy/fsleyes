@@ -66,11 +66,14 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['line', 'arrow', 'point', 'rect', 'text', 'ellipse'])
+            ['line', 'arrow', 'point', 'rect', 'text', 'ellipse', 'move'])
         self.mode = 'nav'
 
-        # Used to store a reference to annotations during mouse drags.
+        # Used to store a reference to an annotation
+        # and previous mouse location during mouse
+        # drags.
         self.__dragging = None
+        self.__lastPos  = None
 
 
     def __initialSettings(self, canvas, canvasPos):
@@ -115,6 +118,52 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             size = f'{size:.2f}'
 
         status.update(size)
+
+
+    def _moveModeRightMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """If the mouse lands on an annotation, save a reference to it
+        so it can be moved on mouse drag.
+        """
+        opts  = canvas.opts
+        annot = canvas.getAnnotations()
+        pos   = canvasPos[opts.xax], canvasPos[opts.yax]
+
+        for obj in annot.annotations:
+            try:
+                if obj.hit(pos):
+                    self.__dragging = obj
+                    self.__lastPos  = pos
+                    break
+            except NotImplementedError:
+                pass
+
+
+    def _moveModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Move the annotation that was clicked on. """
+
+        obj     = self.__dragging
+        lastPos = self.__lastPos
+
+        if obj is None:
+            return
+
+        opts   = canvas.opts
+        pos    = (canvasPos[opts.xax], canvasPos[opts.yax])
+        offset = (pos[0] - lastPos[0], pos[1] - lastPos[1])
+
+        try:
+            obj.move(offset)
+            self.__lastPos = pos
+        except NotImplementedError:
+            pass
+
+        canvas.Refresh()
+
+
+    def _moveModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Clears the reference to the annotation that was being moved. """
+        self.__dragging = None
+        self.__lastPos  = None
 
 
     def _lineModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
