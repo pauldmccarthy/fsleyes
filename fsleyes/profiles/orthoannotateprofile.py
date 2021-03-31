@@ -270,16 +270,15 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Show a dialog prompting the user for some text, then creates a new
         text annotation.
         """
+        opts     = canvas.opts
         annot    = canvas.getAnnotations()
         settings = self.__initialSettings(canvas, canvasPos)
+        pos      = (canvasPos[opts.xax], canvasPos[opts.yax])
         dlg      = fsldlg.TextEditDialog(self.viewPanel,
                                          style=fsldlg.TED_OK_CANCEL)
 
         if dlg.ShowModal() == wx.ID_OK:
-            annot.text(dlg.GetText(),
-                       canvasPos,
-                       coordinates='display',
-                       **settings)
+            annot.text(dlg.GetText(), pos, coordinates='display', **settings)
             canvas.Refresh()
 
 

@@ -649,7 +649,6 @@ class Arrow(Line):
         gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
-
 class Rect(AnnotationObject):
     """The ``Rect`` class is an :class:`AnnotationObject` which represents a
     2D rectangle.
@@ -692,6 +691,29 @@ class Rect(AnnotationObject):
         self.w      = w
         self.h      = h
         self.filled = filled
+
+
+    def hit(self, xy):
+        """Returns ``True`` if ``xy`` is within the bounds of this ``Rect``,
+        ``False`` otherwise.
+        """
+
+        x,  y    = xy
+        xlo, ylo = self.xy
+        xhi, yhi = (xlo + self.w, ylo + self.h)
+
+        xlo, xhi = sorted((xlo, xhi))
+        ylo, yhi = sorted((ylo, yhi))
+
+        return (x >= xlo and
+                x <= xhi and
+                y >= ylo and
+                y <= yhi)
+
+
+    def move(self, xy):
+        """Move this ``Rect`` according to ``xy``."""
+        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
 
 
     def draw2D(self, zpos, axes):
@@ -784,9 +806,9 @@ class Ellipse(AnnotationObject):
         :arg xy:      Tuple specifying the ellipse centre, in the display
                       coordinate system.
 
-        :arg width:   ellipse width.
+        :arg width:   Horizontal radius.
 
-        :arg height:  ellipse height.
+        :arg height:  Vertical radius.
 
         :arg npoints: Number of vertices used to draw the ellipse outline.
 
@@ -804,6 +826,23 @@ class Ellipse(AnnotationObject):
         self.height  = height
         self.npoints = npoints
         self.filled  = filled
+
+
+    def hit(self, xy):
+        """Returns ``True`` if ``xy`` is within the bounds of this ``Ellipse``,
+        ``False`` otherwise.
+        """
+
+        # https://math.stackexchange.com/a/76463
+        x,  y  = xy
+        h,  k  = self.xy
+        rx, ry = self.width, self.height
+        return ((x - h) ** 2) / (rx ** 2) + ((y - k) ** 2) / (ry ** 2) <= 1
+
+
+    def move(self, xy):
+        """Move this ``Rect`` according to ``xy``."""
+        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
 
 
     def draw2D(self, zpos, axes):
@@ -1134,7 +1173,12 @@ class TextAnnotation(AnnotationObject):
                 self.__initscale = canvas.zoomToScale(opts.zoom)
             scale = canvas.zoomToScale(opts.zoom)
 
-            text.pos         = canvas.worldToCanvas(self.pos)
+            pos           = [0] * 3
+            pos[opts.xax] = self.pos[0]
+            pos[opts.yax] = self.pos[1]
+            pos[opts.zax] = opts.pos[2]
+
+            text.pos         = canvas.worldToCanvas(pos)
             text.scale       = self.__initscale / scale
             text.coordinates = 'pixels'
         else:
@@ -1142,3 +1186,48 @@ class TextAnnotation(AnnotationObject):
             text.coordinates = self.coordinates
 
         text.draw(*canvas.GetSize())
+
+
+    def hit(self, xy):
+        """Returns ``True`` if ``xy`` is within the bounds of this
+        ``TextAnnotation``, ``False`` otherwise. Only supported for text
+        drawn relative to the display coordinate system
+        (``coordinates='display'``) - raises a ``NotImplementedError``
+        otherwise.
+        """
+
+        if self.coordinates != 'display':
+            raise NotImplementedError()
+
+        canvas     = self.annot.canvas
+        opts       = canvas.opts
+        x,    y    = xy
+        xlo,  ylo  = self.__text.pos
+        xlen, ylen = self.__text.size
+
+        # the Text object works in pixels,
+        # but here we're working in display
+        # coords
+        xy1 = canvas.canvasToWorld(xlo,        ylo)
+        xy2 = canvas.canvasToWorld(xlo + xlen, ylo + ylen)
+
+        xlo, xhi = sorted((xy1[opts.xax], xy2[opts.xax]))
+        ylo, yhi = sorted((xy1[opts.yax], xy2[opts.yax]))
+
+        return (x >= xlo and
+                x <= xhi and
+                y >= ylo and
+                y <= yhi)
+
+
+    def move(self, xy):
+        """Move this ``TextAnnotation`` according to ``xy``.
+
+        Only supported for text drawn relative to the display coordinate
+        system (``coordinates='display'``) - raises a ``NotImplementedError``
+        otherwise.
+        """
+        if self.coordinates != 'display':
+            raise NotImplementedError()
+
+        self.pos = (self.pos[0] + xy[0], self.pos[1] + xy[1])
