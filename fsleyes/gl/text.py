@@ -53,6 +53,7 @@ class Text:
                  valign=None,
                  colour=None,
                  bgColour=None,
+                 scale=None,
                  angle=None):
         """Create a ``Text`` object.
 
@@ -80,9 +81,10 @@ class Text:
 
         :arg bgColour:    Background colour (default: transparent).
 
+        :arg scale:       Scale the text by this factor.
+
         :arg angle:       Angle, in degrees, by which to rotate the text.
                           NOT IMPLEMENTED YET AND PROBABLY NEVER WILL BE
-
         """
 
         # Every time any display properties change,
@@ -105,6 +107,7 @@ class Text:
         self.coordinates = coordinates
         self.halign      = halign
         self.valign      = valign
+        self.scale       = scale
         self.angle       = angle
         self.__texture   = textures.Texture2D(
             '{}_{}'.format(type(self).__name__, id(self)),
@@ -179,6 +182,23 @@ class Text:
         self.__fontSize = value
 
 
+    @property
+    def size(self):
+        """Return the size of the text texture in pixels, scaled by
+        the ``scale`` factor if it is set. Returns ``None`` if the
+        text has not yet been drawn and the bitmap not created.
+        """
+        if self.__bitmap is None:
+            return None
+
+        size = self.__bitmap.shape[1:]
+
+        if self.scale is not None:
+            size = (size[0] * self.scale, size[1] * self.scale)
+
+        return size
+
+
     def __refreshBitmap(self):
         """Called when the text bitmap and texture data needs a refresh. """
         bmp = textbmp.textBitmap(self.text,
@@ -218,8 +238,7 @@ class Text:
             pos[0] = pos[0] * width
             pos[1] = pos[1] * height
 
-        bmp  = self.__bitmap
-        size = bmp.shape[1:]
+        size = self.size
 
         if   self.halign == 'centre': pos[0] -= size[0] / 2.0
         elif self.halign == 'right':  pos[0] -= size[0]
@@ -227,8 +246,10 @@ class Text:
         if   self.valign == 'centre': pos[1] -= size[1] / 2.0
         elif self.valign == 'top':    pos[1] -= size[1]
 
-        pos[0] += off[0]
-        pos[1] += off[1]
+        xlo = pos[0] + off[0]
+        ylo = pos[1] + off[1]
+        xhi = xlo    + size[0]
+        yhi = ylo    + size[1]
 
         # Set up an ortho view where the
         # display coordinates correspond
@@ -246,12 +267,7 @@ class Text:
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
-        self.__texture.drawOnBounds(0,
-                                    pos[0],
-                                    pos[0] + size[0],
-                                    pos[1],
-                                    pos[1] + size[1],
-                                    0, 1)
+        self.__texture.drawOnBounds(0, xlo, xhi, ylo, yhi, 0, 1)
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPopMatrix()

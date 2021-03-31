@@ -1095,6 +1095,7 @@ class TextAnnotation(AnnotationObject):
         self.colour      = colour
         self.bgColour    = bgColour
         self.angle       = angle
+        self.__initscale = None
         self.__text      = gltext.Text()
 
 
@@ -1116,6 +1117,7 @@ class TextAnnotation(AnnotationObject):
 
         text             = self.__text
         canvas           = self.annot.canvas
+        opts             = canvas.opts
         text.text        = self.text
         text.pos         = self.pos
         text.off         = self.off
@@ -1128,7 +1130,12 @@ class TextAnnotation(AnnotationObject):
         text.angle       = self.angle
 
         if self.coordinates == 'display':
+            if self.__initscale is None:
+                self.__initscale = canvas.zoomToScale(opts.zoom)
+            scale = canvas.zoomToScale(opts.zoom)
+
             text.pos         = canvas.worldToCanvas(self.pos)
+            text.scale       = self.__initscale / scale
             text.coordinates = 'pixels'
         else:
             text.pos         = self.pos
