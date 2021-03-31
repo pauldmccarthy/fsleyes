@@ -271,11 +271,12 @@ altHandlerMap = {
         (('crop', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')), )),
 
     OrthoAnnotateProfile : OrderedDict((
-        (('line',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
-        (('point',  'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
-        (('rect',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
-        (('text',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
-        (('circle', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('line',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('point',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('rect',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('text',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('arrow',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('ellipse', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
     )),
 
     LightBoxViewProfile : OrderedDict((
