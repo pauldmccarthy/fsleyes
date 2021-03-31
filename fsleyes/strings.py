@@ -956,6 +956,13 @@ labels = TypeDict({
 
     'ProjectImageToSurfaceAction.message' :
     'Select an image to project onto the surface',
+
+    'AnnotationPanel.colour'        : 'Colour',
+    'AnnotationPanel.lineWidth'     : 'Width/size',
+    'AnnotationPanel.fontSize'      : 'Font size',
+    'AnnotationPanel.filled'        : 'Draw filled',
+    'AnnotationPanel.alpha'         : 'Opacity',
+    'AnnotationPanel.honourZLimits' : 'Lock to depth',
 })
 
 

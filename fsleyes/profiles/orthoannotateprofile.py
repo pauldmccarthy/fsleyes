@@ -8,6 +8,8 @@
 interaction :class:`.Profile` for :class:`.OrthoPanel` views.
 """
 
+import copy
+
 import numpy as np
 import          wx
 
@@ -27,16 +29,28 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
     """
 
 
-    colour = props.Colour(default='#a00000')
+    colour = copy.copy(annotations.AnnotationObject.colour)
     """Initial colour to give all annotations. """
 
 
-    width = props.Int(minval=1, maxval=10, default=1, clamped=True)
+    lineWidth =  copy.copy(annotations.AnnotationObject.lineWidth)
     """Initial width to give line-based annotations. """
 
 
-    fontSize = props.Int(minval=6, maxval=48, default=10, clamped=False)
+    fontSize = copy.copy(annotations.TextAnnotation.fontSize)
     """Initial font size to give text annotations. """
+
+
+    filled = copy.copy(annotations.Rect.filled)
+    """Whether ellipses/rectangles are filled in or not."""
+
+
+    honourZLimits = copy.copy(annotations.AnnotationObject.honourZLimits)
+    """Whether annotations are drawn when outside their Z limits."""
+
+
+    alpha = copy.copy(annotations.AnnotationObject.alpha)
+    """Opacity."""
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):
@@ -66,13 +80,15 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         opts = canvas.opts
         zpos = canvasPos[opts.zax]
         return {
-            'colour'   : self.colour,
-            'width'    : self.width,
-            'fontSize' : self.fontSize,
-            'zmin'     : np.floor(zpos),
-            'zmax'     : np.ceil( zpos),
-            'filled'   : True,
-            'hold'     : True
+            'colour'        : self.colour,
+            'lineWidth'     : self.lineWidth,
+            'fontSize'      : self.fontSize,
+            'filled'        : self.filled,
+            'alpha'         : self.alpha,
+            'honourZLimits' : self.honourZLimits,
+            'zmin'          : np.floor(zpos),
+            'zmax'          : np.ceil( zpos),
+            'hold'          : True
         }
 
 
