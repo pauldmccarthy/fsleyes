@@ -52,7 +52,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             viewPanel,
             overlayList,
             displayCtx,
-            ['line', 'arrow', 'point', 'rect', 'text', 'circle'])
+            ['line', 'arrow', 'point', 'rect', 'text', 'ellipse'])
         self.mode = 'nav'
 
         # Used to store a reference to annotations during mouse drags.
@@ -256,37 +256,38 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         canvas.Refresh()
 
 
-    def _circleModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
-        """Create a new circle annotation. """
+    def _ellipseModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
+        """Create a new ellipse annotation. """
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
         pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.circle(pos, 0, **settings)
+        self.__dragging = annot.ellipse(pos, 0, 0, **settings)
 
 
-    def _circleModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
-        """Adjust the circle radius with the mouse drag. """
-        opts          = canvas.opts
-        circle        = self.__dragging
-        p1            = np.array(circle.xy)
-        p2            = np.array((canvasPos[opts.xax], canvasPos[opts.yax]))
-        circle.radius = np.sqrt(np.sum((p1 - p2) ** 2))
+    def _ellipseModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
+        """Adjust the ellipse radius with the mouse drag. """
+        opts           = canvas.opts
+        ellipse        = self.__dragging
+        p1             = np.array(ellipse.xy)
+        p2             = np.array((canvasPos[opts.xax], canvasPos[opts.yax]))
+        ellipse.width  = np.abs(p1[0] - p2[0])
+        ellipse.height = np.abs(p1[1] - p2[1])
 
-        # display circle area in status bar
-        self.__displaySize(np.pi * circle.radius ** 2, True)
+        # display ellipse area in status bar
+        self.__displaySize(np.pi * ellipse.width * ellipse.height, True)
         canvas.Refresh()
 
 
-    def _circleModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        """Clear the reference to the new circle annotation. If the circle
-        has no area (the user clicked without dragging), the circle is deleted.
+    def _ellipseModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
+        """Clear the reference to the new ellipse annotation. If the ellipse
+        has no area (the user clicked without dragging), the ellipse is deleted.
         """
-        circle          = self.__dragging
+        ellipse         = self.__dragging
         annot           = canvas.getAnnotations()
         self.__dragging = None
 
-        if circle.radius == 0:
-            annot.dequeue(circle, hold=True)
+        if (ellipse.width == 0) or (ellipse.height == 0):
+            annot.dequeue(ellipse, hold=True)
 
         canvas.Refresh()
