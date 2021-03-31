@@ -325,6 +325,10 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                   drawn.
     ``zmax``      Maximum z value above which this annotation will not be
                   drawn.
+    ``fixed``     Flag indicating that this annotation cannot be modified.
+                  This is not enforced in any way, but is used by the
+                  :class:`.OrthoAnnotateProfile` to determine which annotations
+                  can be manipulated by the user.
     ``creation``  Time of creation.
     ============  =============================================================
 
@@ -379,6 +383,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                  honourZLimits=False,
                  zmin=None,
                  zmax=None,
+                 fixed=True,
                  **kwargs):
         """Create an ``AnnotationObject``.
 
@@ -407,6 +412,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         :arg zmax:          Maximum z value above which this annotation should
                             not be drawn.
 
+        :arg fixed:         Flag indicating whether this ``AnnotationObject``
+                            can be modified.
+
         Any other arguments are ignored.
         """
         globject.GLSimpleObject.__init__(self, False)
@@ -414,6 +422,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.annot    = annot
         self.xform    = xform
         self.creation = time.time()
+        self.fixed    = fixed
         self.expiry   = expiry
 
         if colour        is not None: self.colour        = colour

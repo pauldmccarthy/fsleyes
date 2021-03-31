@@ -91,7 +91,8 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             'honourZLimits' : self.honourZLimits,
             'zmin'          : np.floor(zpos),
             'zmax'          : np.ceil( zpos),
-            'hold'          : True
+            'hold'          : True,
+            'fixed'         : False
         }
 
 
@@ -129,6 +130,8 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         pos   = canvasPos[opts.xax], canvasPos[opts.yax]
 
         for obj in annot.annotations:
+            if obj.fixed:
+                continue
             try:
                 if obj.hit(pos):
                     self.__dragging = obj
