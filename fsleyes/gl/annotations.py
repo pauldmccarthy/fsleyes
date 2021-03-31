@@ -28,7 +28,7 @@ following annotation types are defined:
    Line
    Arrow
    Rect
-   Circle
+   Ellipse
    VoxelGrid
    VoxelSelection
    TextAnnotation
@@ -162,11 +162,11 @@ class Annotations(props.HasProperties):
         return self.obj(obj, hold)
 
 
-    def circle(self, *args, **kwargs):
-        """Queues a circle for drawing - see the :class:`Circle` class.
+    def ellipse(self, *args, **kwargs):
+        """Queues a circle for drawing - see the :class:`Ellipse` class.
         """
         hold = kwargs.pop('hold', False)
-        obj  = Circle(self, *args, **kwargs)
+        obj  = Ellipse(self, *args, **kwargs)
 
         return self.obj(obj, hold)
 
@@ -284,10 +284,12 @@ class Annotations(props.HasProperties):
                 if len(obj.colour) == 3: colour = list(obj.colour) + [1.0]
                 else:                    colour = list(obj.colour)
 
+                colour[3] = obj.alpha / 100.0
+
                 gl.glColor4f(*colour)
 
-            if obj.width is not None:
-                gl.glLineWidth(obj.width)
+            if obj.lineWidth is not None:
+                gl.glLineWidth(obj.lineWidth)
 
             try:
                 obj.preDraw()
@@ -312,19 +314,19 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     by an :class:`Annotations` instance. The ``AnnotationObject`` contains some
     attributes which are common to all annotation types:
 
-    ============ =============================================================
-    ``colour``   Annotation colour
-    ``enabled``  Whether the annotation should be drawn or not.
-    ``width``    Annotation line width (if the annotation is made up of lines)
-    ``xform``    Custom transformation matrix to apply to annotation vertices.
-    ``expiry``   Time (in seconds) after which the annotation will expire and
-                 not be drawn.
-    ``zmin``     Minimum z value below which this annotation will not be
-                 drawn.
-    ``zmax``     Maximum z value above which this annotation will not be
-                 drawn.
-    ``creation`` Time of creation.
-    ============ =============================================================
+    ============  =============================================================
+    ``colour``    Annotation colour
+    ``enabled``   Whether the annotation should be drawn or not.
+    ``lineWidth`` Annotation line width (if the annotation is made up of lines)
+    ``xform``     Custom transformation matrix to apply to annotation vertices.
+    ``expiry``    Time (in seconds) after which the annotation will expire and
+                  not be drawn.
+    ``zmin``      Minimum z value below which this annotation will not be
+                  drawn.
+    ``zmax``      Maximum z value above which this annotation will not be
+                  drawn.
+    ``creation``  Time of creation.
+    ============  =============================================================
 
     All of these attributes can be modified directly, after which you should
     trigger a draw on the owning ``SliceCanvas`` to refresh the annotation.
@@ -335,16 +337,20 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """
 
 
-    enabled = props.Boolean()
+    enabled = props.Boolean(default=True)
     """Whether to draw this annotation or not. """
 
 
-    width = props.Int()
+    lineWidth = props.Int(default=1)
     """Line width, for annotations which are drawn with lines. """
 
 
-    colour = props.Colour()
+    colour = props.Colour(default='#a00000')
     """Annotation colour."""
+
+
+    alpha = props.Percentage(default=100)
+    """Opacity."""
 
 
     honourZLimits = props.Boolean(default=False)
@@ -366,7 +372,8 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                  annot,
                  xform=None,
                  colour=None,
-                 width=None,
+                 alpha=None,
+                 lineWidth=None,
                  enabled=True,
                  expiry=None,
                  honourZLimits=False,
@@ -383,7 +390,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         :arg colour:        RGB/RGBA tuple specifying the annotation colour.
 
-        :arg width:         Line width to use for the annotation.
+        :arg alpha:         Opacity.
+
+        :arg lineWidth:     Line width to use for the annotation.
 
         :arg enabled:       Initially enabled or disabled.
 
@@ -402,16 +411,18 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         """
         globject.GLSimpleObject.__init__(self, False)
 
-        self.annot         = annot
-        self.colour        = colour
-        self.enabled       = enabled
-        self.width         = width
-        self.xform         = xform
-        self.expiry        = expiry
-        self.honourZLimits = honourZLimits
-        self.zmin          = zmin
-        self.zmax          = zmax
-        self.creation      = time.time()
+        self.annot    = annot
+        self.xform    = xform
+        self.creation = time.time()
+        self.expiry   = expiry
+
+        if colour        is not None: self.colour        = colour
+        if alpha         is not None: self.alpha         = alpha
+        if enabled       is not None: self.enabled       = enabled
+        if lineWidth     is not None: self.lineWidth     = lineWidth
+        if honourZLimits is not None: self.honourZLimits = honourZLimits
+        if zmin          is not None: self.zmin          = zmin
+        if zmax          is not None: self.zmax          = zmax
 
         if self.xform is not None:
             self.xform = np.array(self.xform, dtype=np.float32)
@@ -446,13 +457,8 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 class Point(AnnotationObject):
     """The ``Point`` class is an :class:`AnnotationObject` which represents a
-    point, drawn as a small crosshair.
-    """
-
-
-    size = props.Real(default=3)
-    """Length (in display coordinates) of the horizontal and vertical lines
-    that make up the crosshair.
+    point, drawn as a small crosshair. The size of the point is proportional
+    to the :attr:`AnnotationObject.lineWidth`.
     """
 
 
@@ -474,10 +480,10 @@ class Point(AnnotationObject):
 
 
     def draw2D(self, zpos, axes):
-        """Draws this ``Line`` annotation. """
+        """Draws this ``Point`` annotation. """
 
         xax, yax, zax        = axes
-        offset               = self.size * 0.5
+        offset               = self.lineWidth * 0.5
         x, y                 = self.xy
         idxs                 = np.arange(4,     dtype=np.uint32)
         verts                = np.zeros((4, 3), dtype=np.float32)
@@ -496,6 +502,7 @@ class Line(AnnotationObject):
     """The ``Line`` class is an :class:`AnnotationObject` which represents a
     2D line.
     """
+
 
     def __init__(self, annot, xy1, xy2, *args, **kwargs):
         """Create a ``Line`` annotation.
@@ -537,26 +544,22 @@ class Line(AnnotationObject):
 
 class Arrow(Line):
     """The ``Arrow`` class is an :class:`AnnotationObject` which represents a
-    2D line with an arrow head at one end.
+    2D line with an arrow head at one end. The size of the is proportional
+    to the current :attr:`AnnotationObject.lineWidth`.
     """
 
 
-    headLength = props.Real(default=2)
-    """Size of the arrow head, in display coordinates. """
-
-
     def draw2D(self, zpos, axes):
-        """Draw an arrow. """
+        """Draw the arrow. """
 
         Line.draw2D(self, zpos, axes)
 
         xax, yax, zax = axes
 
-        # we draw the arrow head as a triangle
-        # at the second line vertex (xy2). We
-        # generate the two other vertices of
-        # the triangle by rotating +/- 30
-        # degrees around xy2
+        # We draw the arrow head as a triangle at the
+        # second line vertex (xy2). We generate the
+        # two other vertices of the triangle by
+        # rotating +/- 30 degrees around xy2.
         xy1   = np.array(self.xy1)
         xy2   = np.array(self.xy2)
         vec   = xy2 - xy1
@@ -567,8 +570,12 @@ class Arrow(Line):
         p1 = np.array((np.cos(angle + delta), np.sin(angle + delta)))
         p2 = np.array((np.cos(angle - delta), np.sin(angle - delta)))
 
-        p1 = xy2 - self.headLength * p1
-        p2 = xy2 - self.headLength * p2
+        # We also add a little padding to xy2 because
+        # otherwise the main line may appear beyond
+        # the triangle if a large line width is set.
+        xy2 = xy2 + self.lineWidth * vec * 0.5
+        p1  = xy2 - self.lineWidth * p1
+        p2  = xy2 - self.lineWidth * p2
 
         idxs  = np.arange(3, dtype=np.uint32)
         verts = np.zeros((3, 3), dtype=np.float32)
@@ -588,12 +595,8 @@ class Rect(AnnotationObject):
     """
 
 
-    filled = props.Boolean(default=False)
+    filled = props.Boolean(default=True)
     """Whether to fill the rectangle. """
-
-
-    fillColour = props.Colour()
-    """Colour to fill the rectangle with. """
 
 
     def __init__(self,
@@ -601,39 +604,33 @@ class Rect(AnnotationObject):
                  xy,
                  w,
                  h,
-                 filled=False,
-                 fillColour=None,
+                 filled=True,
                  *args,
                  **kwargs):
         """Create a :class:`Rect` annotation.
 
-        :arg annot:      The :class:`Annotations` object that owns this
-                         ``Rect``.
+        :arg annot:  The :class:`Annotations` object that owns this
+                     ``Rect``.
 
-        :arg xy:         Tuple specifying bottom left of the rectangle, in
-                         the display coordinate system.
+        :arg xy:     Tuple specifying bottom left of the rectangle, in
+                     the display coordinate system.
 
-        :arg w:          Rectangle width.
+        :arg w:      Rectangle width.
 
-        :arg h:          Rectangle height.
+        :arg h:      Rectangle height.
 
-        :arg filled:     If ``True``, the rectangle is filled with the
-                         ``fillColour``.
-
-        :arg fillColour: If ``filled=True``, the colour to fill the rectangle
-                         with. Defaults to a transparent version of the
-                         ``colour``.
+        :arg filled: If ``True``, the rectangle is filled with a transparent
+                     shade of :attr:`AnnotationObject.colour`.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
-        self.xy         = xy
-        self.w          = w
-        self.h          = h
-        self.filled     = filled
-        self.fillColour = fillColour
+        self.xy     = xy
+        self.w      = w
+        self.h      = h
+        self.filled = filled
 
 
     def draw2D(self, zpos, axes):
@@ -661,16 +658,10 @@ class Rect(AnnotationObject):
     def __drawFill(self, zpos, xax, yax, zax, bl, br, tl, tr):
         """Draw a filled version of the rectangle. """
 
-        fillColour = self.fillColour
+        if self.colour is not None: colour = list(self.colour[:3])
+        else:                       colour = [1, 1, 1]
 
-        if fillColour is None:
-            if self.colour is not None:
-                fillColour = list(self.colour[:3])
-            else:
-                fillColour = [1, 1, 1]
-
-        if len(fillColour) == 3:
-            fillColour = list(fillColour) + [0.2]
+        colour = colour + [0.25 * self.alpha / 100]
 
         idxs  = np.array([0, 1, 2, 2, 1, 3], dtype=np.uint32)
         verts = np.zeros((4, 3),             dtype=np.float32)
@@ -684,7 +675,7 @@ class Rect(AnnotationObject):
 
         # I'm assuming that glPolygonMode
         # is already set to GL_FILL
-        gl.glColor4f(*fillColour)
+        gl.glColor4f(*colour)
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
@@ -706,89 +697,77 @@ class Rect(AnnotationObject):
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
-class Circle(AnnotationObject):
-    """The ``Circle`` class is an :class:`AnnotationObject` which represents a
-    circle.
+class Ellipse(AnnotationObject):
+    """The ``Ellipse`` class is an :class:`AnnotationObject` which represents a
+    ellipse.
     """
 
 
-    filled = props.Boolean(default=False)
-    """Whether to fill the circle. """
-
-
-    fillColour = props.Colour()
-    """Colour to fill the circle with. """
+    filled = props.Boolean(default=True)
+    """Whether to fill the ellipse. """
 
 
     def __init__(self,
                  annot,
                  xy,
-                 radius=1,
+                 width,
+                 height,
                  npoints=60,
-                 filled=False,
-                 fillColour=None,
+                 filled=True,
                  *args, **kwargs):
-        """Create a ``Circle`` annotation.
+        """Create an ``Ellipse`` annotation.
 
-        :arg annot:      The :class:`Annotations` object that owns this
-                         ``Circle``.
+        :arg annot:   The :class:`Annotations` object that owns this
+                      ``Ellipse``.
 
-        :arg xy:         Tuple specifying the circle centre, in the display
-                         coordinate system.
+        :arg xy:      Tuple specifying the ellipse centre, in the display
+                      coordinate system.
 
-        :arg radius:     Circle radius.
+        :arg width:   ellipse width.
 
-        :arg npoints:    Number of vertices used to draw the circle outline.
+        :arg height:  ellipse height.
 
-        :arg filled:     If ``True``, the circle is filled with the
-                         ``fillColour``.
+        :arg npoints: Number of vertices used to draw the ellipse outline.
 
-        :arg fillColour: If ``filled=True``, the colour to fill the circle
-                         with. Defaults to a transparent version of the
-                         ``colour``.
+        :arg filled:  If ``True``, the ellipse is filled with a
+                      transparent shade of ``colour``.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
-
         """
 
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
-        self.xy         = xy
-        self.radius     = radius
-        self.npoints    = npoints
-        self.filled     = filled
-        self.fillColour = fillColour
+        self.xy      = xy
+        self.width   = width
+        self.height  = height
+        self.npoints = npoints
+        self.filled  = filled
 
 
     def draw2D(self, zpos, axes):
-        """Draws this ``Circle`` annotation. """
+        """Draws this ``Ellipse`` annotation. """
 
-        if self.radius == 0:
+        if (self.width == 0) or (self.height == 0):
             return
 
-        fillColour = self.fillColour
+        if self.colour is not None: colour = list(self.colour[:3])
+        else:                       colour = [1, 1, 1]
 
-        if fillColour is None:
-            if self.colour is not None:
-                fillColour = list(self.colour[:3])
-            else:
-                fillColour = [1, 1, 1]
-
-        if len(fillColour) == 3:
-            fillColour = list(fillColour) + [0.2]
+        colour = colour + [0.25 * self.alpha / 100]
 
         xax, yax, zax = axes
         x, y          = self.xy
-        r             = self.radius
+        w             = self.width
+        h             = self.height
 
         idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
         verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)
         samples = np.linspace(0, 2 * np.pi, self.npoints)
 
         verts[0, [xax, yax]] = x, y
-        verts[1:, xax]       = r * np.sin(samples) + x
-        verts[1:, yax]       = r * np.cos(samples) + y
+        verts[1:, xax]       = w * np.sin(samples) + x
+        verts[1:, yax]       = h * np.cos(samples) + y
         verts[:,  zax]       = zpos
 
         # outline
@@ -797,7 +776,7 @@ class Circle(AnnotationObject):
             gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
 
         if self.filled:
-            gl.glColor4f(*fillColour)
+            gl.glColor4f(*colour)
             gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
             gl.glDrawElements(
                 gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)
