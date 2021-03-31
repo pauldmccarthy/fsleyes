@@ -120,7 +120,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         status.update(size)
 
 
-    def _moveModeRightMouseDown(self, ev, canvas, mousePos, canvasPos):
+    def _moveModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """If the mouse lands on an annotation, save a reference to it
         so it can be moved on mouse drag.
         """
@@ -138,7 +138,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
                 pass
 
 
-    def _moveModeRightMouseDrag(self, ev, canvas, mousePos, canvasPos):
+    def _moveModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Move the annotation that was clicked on. """
 
         obj     = self.__dragging
@@ -160,7 +160,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         canvas.Refresh()
 
 
-    def _moveModeRightMouseUp(self, ev, canvas, mousePos, canvasPos):
+    def _moveModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
         """Clears the reference to the annotation that was being moved. """
         self.__dragging = None
         self.__lastPos  = None
