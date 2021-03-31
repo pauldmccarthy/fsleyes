@@ -403,6 +403,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.AnnotationPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
+        if self.profile == 'view': self.profile = 'annotate'
+        else:                      self.profile = 'view'
         self.togglePanel(annotationpanel.AnnotationPanel,
                          ortho=self,
                          location=wx.LEFT,
@@ -543,7 +545,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Returns all of the :class:`.SliceCanvas` instances contained
         within this ``OrthoPanel``.
         """
-        return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        canvas = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        return [c for c in canvas if c is not None]
 
 
     def getXCanvas(self):

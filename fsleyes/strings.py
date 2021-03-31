@@ -963,6 +963,13 @@ labels = TypeDict({
     'AnnotationPanel.filled'        : 'Draw filled',
     'AnnotationPanel.alpha'         : 'Opacity',
     'AnnotationPanel.honourZLimits' : 'Lock to depth',
+
+    'AnnotationPanel.Point'          : 'Point',
+    'AnnotationPanel.Line'           : 'Line',
+    'AnnotationPanel.Arrow'          : 'Arrow',
+    'AnnotationPanel.Rect'           : 'Rectangle',
+    'AnnotationPanel.Ellipse'        : 'Ellipse',
+    'AnnotationPanel.TextAnnotation' : 'Text',
 })
 
 

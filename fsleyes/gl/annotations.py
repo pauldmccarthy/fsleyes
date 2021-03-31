@@ -82,6 +82,9 @@ class Annotations(props.HasProperties):
     annotations = props.List()
     """Contains all persistent :class:`AnnotationObject` instances, which have
     been added to the queue with ``hold=True``.
+
+    Do not modify this list directly - use the :meth:`line`, :meth:`text`,
+    :meth:`obj` etc methods instead.
     """
 
 
@@ -255,8 +258,11 @@ class Annotations(props.HasProperties):
                        items.
         """
 
-        if not skipHold: objs = list(self.annotations) + self.__q
-        else:            objs = self.__q
+        holdq = list(self.annotations)
+        q     = list(self.__q)
+
+        if not skipHold: objs = holdq + q
+        else:            objs = q
 
         if xform is not None:
             gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -345,7 +351,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """Whether to draw this annotation or not. """
 
 
-    lineWidth = props.Int(default=1)
+    lineWidth = props.Int(default=1, minval=0.1, clamped=True)
     """Line width, for annotations which are drawn with lines. """
 
 
