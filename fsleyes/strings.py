@@ -323,6 +323,9 @@ messages = TypeDict({
     'ProjectImageToSurfaceAction.noOverlap' :
     'Cannot identify any loaded images which overlap with the surface in '
     'the display coordinate system.',
+
+    'OrthoAnnotateProfile.TextAnnotation' : 'Enter your text',
+    'SaveAnnotationAction.saveFile' : 'Save annotations to file'
 })
 
 

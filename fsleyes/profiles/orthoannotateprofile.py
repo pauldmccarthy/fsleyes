@@ -280,7 +280,9 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         annot    = canvas.getAnnotations()
         settings = self.__initialSettings(canvas, canvasPos)
         pos      = (canvasPos[opts.xax], canvasPos[opts.yax])
+        msg      = strings.messages[self, 'TextAnnotation']
         dlg      = fsldlg.TextEditDialog(self.viewPanel,
+                                         message=msg,
                                          style=fsldlg.TED_OK_CANCEL)
 
         if dlg.ShowModal() == wx.ID_OK:
