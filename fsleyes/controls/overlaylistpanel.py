@@ -60,7 +60,7 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 frame,
+                 viewPanel,
                  showVis=True,
                  showGroup=True,
                  showSave=True,
@@ -75,7 +75,7 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
 
         :arg displayCtx:      A :class:`.DisplayContext` instance.
 
-        :arg frame:           The :class:`.FSLeyesFrame` instance.
+        :arg viewPanel:       The :class:`.ViewPanel` instance.
 
         :arg showVis:         If ``True`` (the default), a button will be shown
                               alongside each overlay, allowing the user to
@@ -112,7 +112,7 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
             filterFunc = defaultFilter
 
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, viewPanel)
 
         self.__showVis         = showVis
         self.__showGroup       = showGroup

@@ -622,55 +622,10 @@ def _addControlPanel(viewPanel, panelType):
     :arg panelType: A control panel type.
     """
 
-    from fsleyes.views.plotpanel                     import OverlayPlotPanel
-    from fsleyes.views.orthopanel                    import OrthoPanel
-    from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
-    from fsleyes.controls.histogramcontrolpanel      import \
-        HistogramControlPanel
-    from fsleyes.controls.histogramtoolbar           import HistogramToolBar
-    from fsleyes.controls.locationpanel              import LocationPanel
-    from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
-    from fsleyes.controls.melodicclassificationpanel import \
-        MelodicClassificationPanel
-    from fsleyes.controls.orthoeditactiontoolbar     import \
-        OrthoEditActionToolBar
-    from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
-
-    from fsleyes.controls.orthotoolbar               import OrthoToolBar
-    from fsleyes.controls.overlaydisplaytoolbar      import \
-        OverlayDisplayToolBar
-    from fsleyes.controls.overlaylistpanel           import OverlayListPanel
-    from fsleyes.controls.plotlistpanel              import PlotListPanel
-    from fsleyes.controls.plottoolbar                import PlotToolBar
-    from fsleyes.controls.powerspectrumcontrolpanel  import \
-        PowerSpectrumControlPanel
-    from fsleyes.controls.powerspectrumtoolbar       import \
-        PowerSpectrumToolBar
-    from fsleyes.controls.scene3dtoolbar             import Scene3DToolBar
-    from fsleyes.controls.timeseriescontrolpanel     import \
-        TimeSeriesControlPanel
-    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
-
-    args = {
-        CanvasSettingsPanel        : {'canvasPanel' : viewPanel},
-        MelodicClassificationPanel : {'canvasPanel' : viewPanel},
-        HistogramControlPanel      : {'plotPanel'   : viewPanel},
-        HistogramToolBar           : {'histPanel'   : viewPanel},
-        LightBoxToolBar            : {'lb'          : viewPanel},
-        OrthoEditActionToolBar     : {'ortho'       : viewPanel},
-        OrthoEditToolBar           : {'ortho'       : viewPanel},
-        OrthoToolBar               : {'ortho'       : viewPanel},
-        OverlayDisplayToolBar      : {'viewPanel'   : viewPanel},
-        PlotListPanel              : {'plotPanel'   : viewPanel},
-        PlotToolBar                : {'plotPanel'   : viewPanel},
-        PowerSpectrumControlPanel  : {'plotPanel'   : viewPanel},
-        PowerSpectrumToolBar       : {'psPanel'     : viewPanel},
-        Scene3DToolBar             : {'panel'       : viewPanel},
-        TimeSeriesControlPanel     : {'plotPanel'   : viewPanel},
-        TimeSeriesToolBar          : {'tsPanel'     : viewPanel},
-    }
-
-    args = args.get(panelType, {})
+    from fsleyes.views.plotpanel           import OverlayPlotPanel
+    from fsleyes.views.orthopanel          import OrthoPanel
+    from fsleyes.controls.locationpanel    import LocationPanel
+    from fsleyes.controls.overlaylistpanel import OverlayListPanel
 
     # Slightly hacky ... some views
     # customies certain controls a
@@ -683,7 +638,7 @@ def _addControlPanel(viewPanel, panelType):
          panelType == LocationPanel:
         viewPanel.toggleLocationPanel()
     else:
-        viewPanel.togglePanel(panelType, **args)
+        viewPanel.togglePanel(panelType)
 
 
 def _getPanelProps(panel):

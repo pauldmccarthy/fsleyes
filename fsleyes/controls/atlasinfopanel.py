@@ -50,7 +50,7 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, atlasPanel):
+    def __init__(self, parent, overlayList, displayCtx, atlasPanel):
         """Create an ``AtlasInfoPanel``.
 
         :arg parent:      the :mod:`wx` parent object.
@@ -59,13 +59,11 @@ class AtlasInfoPanel(fslpanel.FSLeyesPanel):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
-
         :arg atlasPanel:  The :class:`.AtlasPanel` instance that has created
                           this ``AtlasInfoPanel``.
         """
         fslpanel.FSLeyesPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, atlasPanel.frame)
 
         self.__enabledAtlases = {}
         self.__atlasPanel     = atlasPanel

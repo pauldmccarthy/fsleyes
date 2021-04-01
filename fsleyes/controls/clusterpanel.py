@@ -70,7 +70,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame):
+    def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Create a ``ClusterPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -79,10 +79,10 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        :arg viewPanel:   The :class:`.ViewPanel` instance.
         """
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, viewPanel)
 
         self.__disabledText = wx.StaticText(
             self,

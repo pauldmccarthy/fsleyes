@@ -25,18 +25,17 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
     and adds a few controls specific to the :class:`.PoweSpectrumPanel`.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, psPanel):
+    def __init__(self, parent, overlayList, displayCtx, psPanel):
         """Create a ``PowerSpectrumToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg psPanel:     The :class:`.PowerSpectrumPanel` instance.
         """
 
         plottoolbar.PlotToolBar.__init__(
-            self, parent, overlayList, displayCtx, frame, psPanel)
+            self, parent, overlayList, displayCtx, psPanel)
 
         togControl = actions.ToggleActionButton(
             'togglePowerSpectrumControl',

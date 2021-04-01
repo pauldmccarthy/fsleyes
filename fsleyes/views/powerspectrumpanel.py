@@ -118,7 +118,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(pscontrol.PowerSpectrumControlPanel,
-                         self,
                          location=wx.RIGHT,
                          floatPane=floatPane)
 
@@ -128,8 +127,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.PlotToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(powerspectrumtoolbar.PowerSpectrumToolBar,
-                         psPanel=self)
+        self.togglePanel(powerspectrumtoolbar.PowerSpectrumToolBar)
 
 
     def getActions(self):

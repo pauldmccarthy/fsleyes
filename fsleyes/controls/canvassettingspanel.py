@@ -51,35 +51,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, canvasPanel):
-        """Create a ``CanvasSettingsPanel``.
-
-        :arg parent:      The :mod:`wx` parent object
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
-        :arg canvasPanel: The :class:`.CanvasPanel` instance.
-        """
-
-        ctrlpanel.SettingsPanel.__init__(self,
-                                         parent,
-                                         overlayList,
-                                         displayCtx,
-                                         frame,
-                                         kbFocus=True)
-
-        self.__canvasPanel = canvasPanel
-        self.__makeTools()
-
-
-    def destroy(self):
-        """Must be called when this ``CanvasSettingsPanel`` is no longer
-        needed. Clears references and calls the base class ``destroy`` method.
-        """
-        self.__canvasPanel = None
-        super(CanvasSettingsPanel, self).destroy()
-
-
     @staticmethod
     def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
@@ -90,13 +61,38 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         from fsleyes.views.orthopanel    import OrthoPanel
         from fsleyes.views.lightboxpanel import LightBoxPanel
         from fsleyes.views.scene3dpanel  import Scene3DPanel
-        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
+        """Create a ``CanvasSettingsPanel``.
+
+        :arg parent:      The :mod:`wx` parent object
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg canvasPanel: The :class:`.CanvasPanel` instance.
+        """
+
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         canvasPanel,
+                                         kbFocus=True)
+
+        self.__makeTools()
+
+
+    def destroy(self):
+        """Must be called when this ``CanvasSettingsPanel`` is no longer
+        needed. Clears references and calls the base class ``destroy`` method.
+        """
+        super(CanvasSettingsPanel, self).destroy()
 
 
     def __makeTools(self):
 
         displayCtx  = self.displayCtx
-        canvasPanel = self.__canvasPanel
+        canvasPanel = self.viewPanel
         widgets     = self.getWidgetList()
 
         canvasPanelProps = collections.OrderedDict((

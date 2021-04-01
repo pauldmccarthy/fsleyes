@@ -25,18 +25,17 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
     and adds a few controls specific to the :class:`.TimeSeriesPanel`.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, tsPanel):
+    def __init__(self, parent, overlayList, displayCtx, tsPanel):
         """Create a ``TimeSeriesToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg tsPanel:     The :class:`.TimeSeriesPanel` instance.
         """
 
         plottoolbar.PlotToolBar.__init__(
-            self, parent, overlayList, displayCtx, frame, tsPanel)
+            self, parent, overlayList, displayCtx, tsPanel)
 
         togControl = actions.ToggleActionButton(
             'toggleTimeSeriesControl',

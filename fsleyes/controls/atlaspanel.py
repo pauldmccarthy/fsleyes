@@ -146,17 +146,17 @@ class AtlasPanel(ctrlpanel.ControlPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame):
+    def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Create an ``AtlasPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        :arg viewPanel:   The :class:`.ViewPanel` instance.
         """
 
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, viewPanel)
 
         # Make sure the atlas
         # registry is up to date
@@ -179,15 +179,15 @@ class AtlasPanel(ctrlpanel.ControlPanel):
         self.SetSizer(self.__sizer)
 
         self.__infoPanel = atlasinfopanel.AtlasInfoPanel(
-            self.__notebook, overlayList, displayCtx, frame, self)
+            self.__notebook, overlayList, displayCtx, self)
 
         # Overlay panel, containing a list of regions,
         # allowing the user to add/remove overlays
         self.__overlayPanel = atlasoverlaypanel.AtlasOverlayPanel(
-            self.__notebook, overlayList, displayCtx, frame, self)
+            self.__notebook, overlayList, displayCtx, self)
 
         self.__managePanel = atlasmanagementpanel.AtlasManagementPanel(
-            self.__notebook, overlayList, displayCtx, frame, self)
+            self.__notebook, overlayList, displayCtx, self)
 
         self.__notebook.AddPage(self.__infoPanel,
                                 strings.titles[self.__infoPanel])

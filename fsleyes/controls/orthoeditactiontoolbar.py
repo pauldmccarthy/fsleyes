@@ -31,13 +31,23 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
      - Copy/paste data between images
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditActionToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditActionToolBar``.
 
         :arg parent:      The :mod:`wx` parent object
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
 
@@ -45,7 +55,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          ortho,
                                           height=24,
                                           orient=wx.VERTICAL,
                                           kbFocus=True)
@@ -64,16 +74,6 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         """
         self.__ortho.removeListener('profile', self.name)
         ctrlpanel.ControlToolBar.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``OrthoEditActionToolBar`` is only intended to be added to
-        :class:`.OrthoPanel` views.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
 
 
     def __profileChanged(self, *a):

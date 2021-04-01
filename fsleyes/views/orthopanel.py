@@ -352,7 +352,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
+        self.togglePanel(orthotoolbar.OrthoToolBar)
 
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
@@ -384,8 +384,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.togglePanel(edittransformpanel.EditTransformPanel,
                          floatPane=True,
                          floatOnly=True,
-                         closeable=False,
-                         ortho=self)
+                         closeable=False)
 
 
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
@@ -394,7 +393,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
-                         ortho=self,
                          floatPane=floatPane)
 
 
@@ -606,18 +604,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # be closed, or closed but should be open
         if (not editToolBarOpen) and      inEdit or \
                 editToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+            self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
 
         if (not editActionToolBarOpen) and      inEdit or \
                 editActionToolBarOpen  and (not inEdit):
             self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
-                             ortho=self,
                              location=wx.LEFT)
 
         if (not cropPanelOpen) and      inCrop or \
                 cropPanelOpen  and (not inCrop):
             self.togglePanel(cropimagepanel.CropImagePanel,
-                             ortho=self,
                              floatPane=True,
                              floatOnly=True,
                              closeable=False,

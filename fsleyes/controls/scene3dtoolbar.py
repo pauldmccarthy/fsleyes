@@ -31,13 +31,12 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, panel):
+    def __init__(self, parent, overlayList, displayCtx, panel):
         """Create a ``Scene3DToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg panel:       The :class:`.Scene3DPanel` instance.
         """
 
@@ -45,7 +44,7 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          panel,
                                           height=24,
                                           kbFocus=True)
 

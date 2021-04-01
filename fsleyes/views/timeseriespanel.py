@@ -209,7 +209,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
-                         self,
                          location=wx.RIGHT,
                          floatPane=floatPane)
 
@@ -219,7 +218,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.TimeSeriesToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar, tsPanel=self)
+        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar)
 
 
     @actions.action

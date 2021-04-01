@@ -67,7 +67,7 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, canvasPanel):
+    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
         """Create a ``MelodicClassificationPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -80,7 +80,7 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
                           classification panel.
         """
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, canvasPanel)
 
         self.__disabledText = wx.StaticText(
             self,
@@ -114,14 +114,14 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
             self.__notebook,
             overlayList,
             displayCtx,
-            frame,
+            canvasPanel.frame,
             self.__lut)
 
         self.__labelGrid     = labelgrid.LabelGrid(
             self.__notebook,
             overlayList,
             displayCtx,
-            frame,
+            canvasPanel.frame,
             self.__lut)
 
         self.__loadButton  = wx.Button(self)

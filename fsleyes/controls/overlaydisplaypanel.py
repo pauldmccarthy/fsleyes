@@ -56,13 +56,26 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame):
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OverlayDisplayPanel`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, canvasPanel):
         """Create an ``OverlayDisplayPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        :arg canvasPanel: The :class:`.CanvasPanel` instance.
         """
 
         from fsleyes.views.scene3dpanel import Scene3DPanel
@@ -71,7 +84,7 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                                          parent,
                                          overlayList,
                                          displayCtx,
-                                         frame,
+                                         canvasPanel,
                                          kbFocus=True)
 
         displayCtx .addListener('selectedOverlay',
@@ -82,7 +95,7 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                                  self.__selectedOverlayChanged)
 
         self.__threedee       = isinstance(parent, Scene3DPanel)
-        self.__viewPanel      = parent
+        self.__viewPanel      = canvasPanel
         self.__widgets        = None
         self.__currentOverlay = None
 
@@ -110,19 +123,6 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         self.__currentOverlay = None
 
         ctrlpanel.SettingsPanel.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``OverlayDisplayPanel`` is only intended to be added to
-        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
-        :class:`.Scene3DPanel` views.
-        """
-        from fsleyes.views.orthopanel    import OrthoPanel
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        from fsleyes.views.scene3dpanel  import Scene3DPanel
-        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
 
 
     def __selectedOverlayChanged(self, *a):

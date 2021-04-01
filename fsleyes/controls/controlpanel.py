@@ -102,6 +102,14 @@ class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
         self.__viewPanel = viewPanel
 
 
+    def destroy(self):
+        """Must be called when this ``ControlPanel`` is no longer needed.
+        Clears references and calls the base class ``destroy`` method.
+        """
+        fslpanel.FSLeyesPanel.destroy(self)
+        self.__viewPanel = None
+
+
     @property
     def viewPanel(self):
         """Returns a reference to the :class:`.ViewPanel` that owns this
