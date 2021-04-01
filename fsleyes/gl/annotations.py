@@ -563,7 +563,7 @@ class Point(AnnotationObject):
         x, y   = xy
         px, py = self.xy
         dist   = np.sqrt((x - px) ** 2 + (y - py) ** 2)
-        return dist <= self.lineWidth
+        return dist <= (self.lineWidth * 0.5)
 
 
     def move(self, xy):
@@ -619,18 +619,26 @@ class Line(AnnotationObject):
         """Returns ``True`` if ``xy`` is within the bounds of this ``Line``,
         ``False`` otherwise.
 
-        https://en.wikipedia.org/wiki/\
-            Distance_from_a_point_to_a_line#Line_defined_by_two_points
+        http://paulbourke.net/geometry/pointlineplane/
         """
 
-        x0, y0 = xy
         x1, y1 = self.xy1
         x2, y2 = self.xy2
+        x3, y3 = xy
 
-        area = np.abs((x2 - x1) * (y1 - y0) - (x1 - x0) * (y2 - y1))
-        dist = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        num = np.abs((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1))
+        dnm = (x2 - x1) ** 2 + (y2 - y1) ** 2
+        u   = num / dnm
 
-        return (area / dist) <= (self.lineWidth * 2)
+        ix   = x1 + u * (x2 - x1)
+        iy   = y1 + u * (y2 - y1)
+        dist = np.sqrt((x3 - ix) ** 2 + (y3 - iy) ** 2)
+
+        # convert line width (in pixels) to display
+        # coords, assume that pixels are isotropic
+        thres = self.lineWidth * self.annot.canvas.pixelSize()[0]
+
+        return dist <= (thres * 2)
 
 
     def move(self, xy):
@@ -1155,9 +1163,8 @@ class TextAnnotation(AnnotationObject):
         xlo,  ylo  = self.__text.pos
         xlen, ylen = self.__text.size
 
-        # the Text object works in pixels,
-        # but here we're working in display
-        # coords
+        # the Text object works in pixels, but
+        # here we're working in display coords
         xy1 = canvas.canvasToWorld(xlo,        ylo)
         xy2 = canvas.canvasToWorld(xlo + xlen, ylo + ylen)
 

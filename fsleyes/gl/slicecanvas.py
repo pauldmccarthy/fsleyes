@@ -118,6 +118,8 @@ class SliceCanvas(object):
        :nosignatures:
 
        canvasToWorld
+       worldToCanvas
+       pixelSize
        panDisplayBy
        centreDisplayAt
        panDisplayToShow
@@ -342,6 +344,16 @@ class SliceCanvas(object):
         if invertY: ypos = height - ypos
 
         return xpos, ypos
+
+
+    def pixelSize(self):
+        """Returns the current (x, y) size of one logical pixel in display
+        coordinates.
+        """
+        w, h = self.GetSize()
+        xlen = self.opts.displayBounds.xlen
+        ylen = self.opts.displayBounds.ylen
+        return (xlen / w, ylen / h)
 
 
     def panDisplayBy(self, xoff, yoff):
