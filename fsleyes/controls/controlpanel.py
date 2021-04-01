@@ -19,13 +19,14 @@ documentation).
 import                   wx
 import wx.lib.agw.aui as wxaui
 
+import fsl.utils.deprecated       as deprecated
 import fsleyes_widgets.widgetlist as widgetlist
-
+import fsleyes.frame              as fslframe
 import fsleyes.panel              as fslpanel
 import fsleyes.toolbar            as fsltoolbar
 
 
-class ControlMixin(object):
+class ControlMixin:
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
@@ -58,8 +59,55 @@ class ControlMixin(object):
 
 
 class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
-    """The ``ControlPanel`` is the base class for all FSLeyes controls. """
-    pass
+    """The ``ControlPanel`` is the base class for all FSLeyes controls.
+    All sub-classes must call ``__init__``.
+    """
+
+
+    def __init__(self,
+                 parent,
+                 overlayList,
+                 displayCtx,
+                 viewPanel,
+                 *args,
+                 **kwargs):
+        """Create a ``ControlPanel``.
+
+        :arg parent:      Parent ``wx`` object
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  The :class:`.DisplayContext` associated with
+                          ``viewPanel``.
+        :arg viewPanel:   The FSLeyes :class:`.ViewPanel` that owns this
+                          ``ControlPanel``
+
+        All other arguments are passed through to the ``FSLeyesPanel``.
+        """
+
+        # Prior to FSLeyes 0.35.0, the fourth argument
+        # was the FSLeyesFrame. This clause is in place
+        # to retain support for third-party FSLeyes
+        # plugins which were written before 0.35.0
+        if isinstance(viewPanel, fslframe.FSLeyesFrame):
+            frame     = viewPanel
+            viewPanel = None
+            raise RuntimeError()
+            deprecated.warn(
+                type(self).__name__, '0.35.0', '1.0.0',
+                'You should pass the view panel, not the FSLeyesFrame')
+        else:
+            frame = viewPanel.frame
+
+        fslpanel.FSLeyesPanel.__init__(
+            self, parent, overlayList, displayCtx, frame, *args, **kwargs)
+        self.__viewPanel = viewPanel
+
+
+    @property
+    def viewPanel(self):
+        """Returns a reference to the :class:`.ViewPanel` that owns this
+        :class:`.ControlPanel`.
+        """
+        return self.__viewPanel
 
 
 class ControlToolBar(fsltoolbar.FSLeyesToolBar, ControlMixin):

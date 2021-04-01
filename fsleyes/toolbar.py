@@ -61,7 +61,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 frame,
+                 viewPanel,
                  height=32,
                  orient=wx.HORIZONTAL,
                  *args,
@@ -76,7 +76,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         :arg displayCtx:  A :class:`.DisplayContext`, which defines how the
                           overlays are to be displayed.
 
-        :arg frame:       The :class:`.FSLeyesFrame` object.
+        :arg viewPanel:   The :class:`.ViewPanel` that owns this toolbar.
 
         :arg height:      Desired toolbar height in pixels. This value is used
                           to look up appropriately sized left/right arrow
@@ -96,7 +96,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
                                        parent,
                                        overlayList,
                                        displayCtx,
-                                       frame,
+                                       viewPanel.frame,
                                        *args,
                                        **kwargs)
 
