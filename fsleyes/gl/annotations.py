@@ -921,7 +921,7 @@ class Ellipse(AnnotationObject):
         """
 
         # https://math.stackexchange.com/a/76463
-        h,  k  = self.xy
+        h,  k  = self.x, self.y
         rx, ry = self.w, self.h
         return ((x - h) ** 2) / (rx ** 2) + ((y - k) ** 2) / (ry ** 2) <= 1
 

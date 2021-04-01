@@ -119,15 +119,15 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         # each of the canvases, showing
         # the current cropping box.
         self.__xrect   = annotations.Rect(self.__xcanvas.getAnnotations(),
-                                          (0, 0), 0, 0,
+                                          0, 0, 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           alpha=30)
         self.__yrect   = annotations.Rect(self.__ycanvas.getAnnotations(),
-                                          (0, 0), 0, 0,
+                                          0, 0, 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           alpha=30)
         self.__zrect   = annotations.Rect(self.__zcanvas.getAnnotations(),
-                                          (0, 0), 0, 0,
+                                          0, 0, 0, 0,
                                           colour=(0.3, 0.3, 1.0),
                                           alpha=30)
 
@@ -317,19 +317,22 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         maxs = coords.max(axis=0)
         pads = (maxs - mins) * 0.01
 
-        self.__xrect.xy   = mins[1],  mins[2]
+        self.__xrect.x    = mins[1]
+        self.__xrect.y    = mins[2]
         self.__xrect.w    = maxs[1] - mins[1]
         self.__xrect.h    = maxs[2] - mins[2]
         self.__xrect.zmin = mins[0] - pads[0]
         self.__xrect.zmax = maxs[0] + pads[0]
 
-        self.__yrect.xy   = mins[0],  mins[2]
+        self.__yrect.x    = mins[0]
+        self.__yrect.y    = mins[2]
         self.__yrect.w    = maxs[0] - mins[0]
         self.__yrect.h    = maxs[2] - mins[2]
         self.__yrect.zmin = mins[1] - pads[1]
         self.__yrect.zmax = maxs[1] + pads[1]
 
-        self.__zrect.xy   = mins[0],  mins[1]
+        self.__zrect.x    = mins[0]
+        self.__zrect.y    = mins[1]
         self.__zrect.w    = maxs[0] - mins[0]
         self.__zrect.h    = maxs[1] - mins[1]
         self.__zrect.zmin = mins[2] - pads[2]

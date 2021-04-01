@@ -136,7 +136,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
 
         for obj in annot.annotations:
             try:
-                if obj.hit(pos):
+                if obj.hit(*pos):
                     self.__dragging = obj
                     self.__lastPos  = pos
                     break
@@ -158,7 +158,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         offset = (pos[0] - lastPos[0], pos[1] - lastPos[1])
 
         try:
-            obj.move(offset)
+            obj.move(*offset)
             self.__lastPos = pos
         except NotImplementedError:
             pass
@@ -176,21 +176,22 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Adds a new line annotation."""
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
-        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y            = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.line(pos, pos, **settings)
+        self.__dragging = annot.line(x, y, x, y, **settings)
 
 
     def _lineModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Adjust the line end point so it tracks the mouse location."""
-        opts     = canvas.opts
-        line     = self.__dragging
-        line.xy2 = (canvasPos[opts.xax], canvasPos[opts.yax])
+        opts    = canvas.opts
+        line    = self.__dragging
+        line.x2 = canvasPos[opts.xax]
+        line.y2 = canvasPos[opts.yax]
 
         # display line length in the
         # FSLeyesFrame status bar
-        xy1    = np.array(line.xy1)
-        xy2    = np.array(line.xy2)
+        xy1    = np.array([line.x1, line.y1])
+        xy2    = np.array([line.x2, line.y2])
         length = np.sqrt(np.sum((xy1 - xy2) ** 2))
         self.__displaySize(length, False)
         canvas.Refresh()
@@ -204,7 +205,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         annot           = canvas.getAnnotations()
         self.__dragging = None
 
-        if line.xy1 == line.xy2:
+        if (line.x1 == line.x2 and line.y1 == line.y2):
             annot.dequeue(line, hold=True)
 
         canvas.Refresh()
@@ -214,21 +215,22 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Adds a new arrow annotation."""
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
-        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y            = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.arrow(pos, pos, **settings)
+        self.__dragging = annot.arrow(x, y, x, y, **settings)
 
 
     def _arrowModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Adjust the arrow end point so it tracks the mouse location."""
-        opts      = canvas.opts
-        arrow     = self.__dragging
-        arrow.xy2 = (canvasPos[opts.xax], canvasPos[opts.yax])
+        opts     = canvas.opts
+        arrow    = self.__dragging
+        arrow.x2 = canvasPos[opts.xax]
+        arrow.y2 = canvasPos[opts.yax]
 
         # display arrow length in the
         # FSLeyesFrame status bar
-        xy1    = np.array(arrow.xy1)
-        xy2    = np.array(arrow.xy2)
+        xy1    = np.array([arrow.x1, arrow.y1])
+        xy2    = np.array([arrow.x2, arrow.y2])
         length = np.sqrt(np.sum((xy1 - xy2) ** 2))
         self.__displaySize(length, False)
         canvas.Refresh()
@@ -242,7 +244,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         annot           = canvas.getAnnotations()
         self.__dragging = None
 
-        if arrow.xy1 == arrow.xy2:
+        if (arrow.x1 == arrow.x2 and arrow.y1 == arrow.y2):
             annot.dequeue(arrow, hold=True)
 
         canvas.Refresh()
@@ -252,9 +254,9 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Creates a new point annotation. """
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
-        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y            = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.point(pos, **settings)
+        self.__dragging = annot.point(x, y, **settings)
         canvas.Refresh()
 
 
@@ -262,8 +264,9 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Changes the location of the point annotation to track the mouse drag
         location.
         """
-        opts               = canvas.opts
-        self.__dragging.xy = (canvasPos[opts.xax], canvasPos[opts.yax])
+        opts              = canvas.opts
+        self.__dragging.x = canvasPos[opts.xax]
+        self.__dragging.y = canvasPos[opts.yax]
         canvas.Refresh()
 
 
@@ -279,14 +282,14 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         opts     = canvas.opts
         annot    = canvas.getAnnotations()
         settings = self.__initialSettings(canvas, canvasPos)
-        pos      = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y     = (canvasPos[opts.xax], canvasPos[opts.yax])
         msg      = strings.messages[self, 'TextAnnotation']
         dlg      = fsldlg.TextEditDialog(self.viewPanel,
                                          message=msg,
                                          style=fsldlg.TED_OK_CANCEL)
 
         if dlg.ShowModal() == wx.ID_OK:
-            annot.text(dlg.GetText(), pos, coordinates='display', **settings)
+            annot.text(dlg.GetText(), x, y, coordinates='display', **settings)
             canvas.Refresh()
 
 
@@ -295,17 +298,17 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
-        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y            = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.rect(pos, 0, 0, **settings)
+        self.__dragging = annot.rect(x, y, 0, 0, **settings)
 
 
     def _rectModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Adjust the size of the rectangle with the mouse drag. """
         opts   = canvas.opts
         rect   = self.__dragging
-        rect.w = canvasPos[opts.xax] - rect.xy[0]
-        rect.h = canvasPos[opts.yax] - rect.xy[1]
+        rect.w = canvasPos[opts.xax] - rect.x
+        rect.h = canvasPos[opts.yax] - rect.y
 
         # display rect area in status bar
         self.__displaySize(np.abs(rect.w * rect.h), True)
@@ -332,16 +335,16 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """Create a new ellipse annotation. """
         opts            = canvas.opts
         annot           = canvas.getAnnotations()
-        pos             = (canvasPos[opts.xax], canvasPos[opts.yax])
+        x, y            = (canvasPos[opts.xax], canvasPos[opts.yax])
         settings        = self.__initialSettings(canvas, canvasPos)
-        self.__dragging = annot.ellipse(pos, 0, 0, **settings)
+        self.__dragging = annot.ellipse(x, y, 0, 0, **settings)
 
 
     def _ellipseModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Adjust the ellipse radius with the mouse drag. """
         opts      = canvas.opts
         ellipse   = self.__dragging
-        p1        = np.array(ellipse.xy)
+        p1        = np.array((ellipse.x, ellipse.y))
         p2        = np.array((canvasPos[opts.xax], canvasPos[opts.yax]))
         ellipse.w = np.abs(p1[0] - p2[0])
         ellipse.h = np.abs(p1[1] - p2[1])
