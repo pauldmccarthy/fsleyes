@@ -552,7 +552,7 @@ ToolBarEvent = _ToolBarEvent
 """
 
 
-class ToolBarDivider(fslpanel.FSLeyesPanelBase):
+class ToolBarDivider(wx.Panel):
     """An empty ``wx.Panel`` intended to be used for dividing space in a
     :class:`FSLeyesToolBar`.
     """
@@ -563,7 +563,7 @@ class ToolBarDivider(fslpanel.FSLeyesPanelBase):
                  height=32,
                  orient=wx.VERTICAL):
 
-        fslpanel.FSLeyesPanelBase.__init__(self, parent)
+        wx.Panel.__init__(self, parent)
 
         if   orient == wx.VERTICAL:   size = (width,  height)
         elif orient == wx.HORIZONTAL: size = (height, width)
