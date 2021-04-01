@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 #
-# saveannotationsaction.py - Save annotations displayed on an OrthoPanel
+# saveannotationsaction.py - Load/save annotations displayed on an OrthoPanel
 #                            to file
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`SaveAnnotationsActions` class, a FSLeyes
-action which can be used to save :mod:`.annotations` to a file.  This module
-is tightly coupled to the implementations of the specific
-:class:`.AnnotationObject` types that are supported:
+"""This module provides the :class:`LoadAnnotationsAction` and
+:class:`SaveAnnotationsAction` classes, both FSLeyes actions which can be used
+to save/load :mod:`.annotations` to/from a file.  This module is tightly
+coupled to the implementations of the specific :class:`.AnnotationObject`
+types that are supported:
 
  - :class:`.Point`
  - :class:`.Line`
@@ -21,12 +22,11 @@ is tightly coupled to the implementations of the specific
 The ``SaveAnnotationsAction`` class is an action which is added to the
 FSLeyes Tools menu, and which allows the user to save all annotations that
 have been added to the canvases of an :class:`.OrthoPanel` to a file. This
-file can then be loaded back in via the :class:`.LoadAnnotationsAction`.
+file can then be loaded back in via the ``LoadAnnotationsAction``.
 
 
-The logic for serialising annotations to file is implemented in this module,
-and for de-serialising annotations from file in the
-:mod:`.loadannotationsaction` module.
+The logic for serialising and deserialising annotations to/from string
+represantations is also implemented in this module.
 
 
 A FSLeyes annotations file is a plain text file where each line contains
@@ -105,6 +105,7 @@ import fsl.utils.settings       as fslsettings
 import fsleyes.views.orthopanel as orthopanel
 import fsleyes.actions          as actions
 import fsleyes.strings          as strings
+import fsleyes.gl.annotations   as annotations
 
 
 class SaveAnnotationsAction(actions.Action):
@@ -155,6 +156,51 @@ class SaveAnnotationsAction(actions.Action):
         with open(filePath, 'wt') as f:
             f.write(serialiseAnnotations(ortho))
 
+class LoadAnnotationsAction(actions.Action):
+    """The ``LoadAnnotationsAction`` allos the user to load annotations
+    from a file into an :class:`.OrthoPanel`.
+    """
+
+
+    @staticmethod
+    def supportedViews():
+        """This action is only intended to work with :class:`.OrthoPanel`
+        views.
+        """
+        return [orthopanel.OrthoPanel]
+
+
+    def __init__(self, overlayList, displayCtx, ortho):
+        """Create a ``SaveAnnotationsAction``.
+
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  The :class:`.DisplayContext`
+        :arg ortho:       The :class:`.OrthoPanel`.
+        """
+        actions.Action.__init__(self, overlayList, displayCtx,
+                                self.__loadAnnotations)
+        self.__ortho = ortho
+
+
+    def __loadAnnotations(self):
+        """Show a dialog prompting the user for a file to load, then loads the
+        annotations contained in the file and adds them to the
+        :class:`OrthoPanel`.
+        """
+
+        ortho   = self.__ortho
+        msg     = strings.messages[self, 'loadFile']
+        fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+        dlg     = wx.FileDialog(wx.GetApp().GetTopWindow(),
+                                message=msg,
+                                defaultDir=fromDir,
+                                style=wx.FD_OPEN)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        filePath = dlg.GetPath()
+
 
 def serialiseAnnotations(ortho):
     """Serialise all of the annotations for each canvas of the given
@@ -177,56 +223,61 @@ def serialiseAnnotation(obj):
     """Convert the given :class:`.AnnotationObject` to a string representation.
     """
 
-    mod    = sys.modules[__name__]
-    otype  = type(obj).__name__
-    sfunc  = getattr(mod, '_serialise{}'.format(otype))
-    colour = [int(round(c * 255)) for c in obj.colour[:3]]
+    # All properties on all annotation
+    # types that are to be serialised
+    keys = ['colour', 'lineWidth', 'alpha', 'honourZLimits', 'zmin', 'zmax',
+            'filled', 'border', 'fontSize', 'text', 'x', 'y', 'w', 'h',
+            'x1', 'y1', 'x2', 'y2']
 
-    properties = {
-        'lineWidth'     : str(obj.lineWidth),
-        'colour'        : '#{:02x}{:02x}{:02x}'.format(*colour),
-        'alpha'         : str(obj.alpha),
-        'honourZLimits' : str(obj.honourZLimits),
-        'zmin'          : str(obj.zmin),
-        'zmax'          : str(obj.zmax),
+    # Custom formatters for some properties
+    def formatColour(colour):
+        colour = [int(round(c * 255)) for c in colour[:3]]
+        return '#{:02x}{:02x}{:02x}'.format(*colour)
+
+    formatters = {
+        'colour' : formatColour,
+        'text'   : shlex.quote
     }
 
-    s = ' '.join([
-        otype,
-        ' '.join(['{}={}'.format(k, v) for k, v in properties.items()]),
-        sfunc(obj)])
+    kvpairs = []
+    for key in keys:
+        val = getattr(obj, key, None)
+        if val is not None:
+            val = formatters.get(key, str)(val)
+            kvpairs.append('{}={}'.format(key, val))
 
-    return s
-
-
-def _serialisePoint(point):
-    """Convert the given :class:`.Point` to a string representation. """
-    return 'x={} y={}'.format(*point.xy)
+    return ' '.join(kvpairs)
 
 
-def _serialiseLine(line):
-    """Convert the given :class:`.Line` to a string representation. """
-    return 'x1={} y1={} x2={} y2={}'.format(*line.xy1, *line.xy2)
-
-
-def _serialiseArrow(arrow):
-    """Convert the given :class:`.Arrow` to a string representation. """
-    return _serialiseLine(arrow)
-
-
-def _serialiseRect(rect):
-    """Convert the given :class:`.Rect` to a string representation. """
-    return 'filled={} border={} x={} y={} w={} h={}'.format(
-        rect.filled, rect.border, *rect.xy, rect.w, rect.h)
-
-
-def _serialiseEllipse(ellipse):
-    """Convert the given :class:`.Ellipse` to a string representation. """
-    return _serialiseRect(ellipse)
-
-
-def _serialiseTextAnnotation(text):
-    """Convert the given :class:`.TextAnnotation` to a string representation.
+def deserialiseAnnotations(ortho, s):
+    """Deserialise all of the annotation specifications in the string ``s``,
+    and add them as :class:`.AnnotationObject` instances to the canvases
+    of the given :class:`.OrthoPanel`.
     """
-    return 'text={} fontSize={} x={} y={}'.format(
-        shlex.quote(text.text), text.fontSize, *text.pos)
+
+    annots  = {'X' : ortho.getXCanvas().getAnnotations(),
+               'Y' : ortho.getYCanvas().getAnnotations(),
+               'Z' : ortho.getZCanvas().getAnnotations()}
+
+    # Parser functions for some property types
+    # (default for unlisted properties is float)
+    parsers = {
+        'colour'        : str,
+        'honourZLimits' : bool,
+        'filled'        : bool,
+        'border'        : bool,
+        'text'          : str,
+    }
+
+    for line in s.split('\n'):
+        canvas, otype, kvpairs = line.strip().split(maxsplit=2)
+
+        cls     = getattr(annotations, otype)
+        canvas  = canvas.upper()
+        kvpairs = dict([kv.split('=') for kv in kvpairs.split()])
+        annot   = annots[canvas]
+
+        for k, v in kvpairs.items():
+            kvpairs[k] = parsers.get(k, float)(v)
+
+        annot.obj(cls(annot, **kvpairs), hold=True, fixed=False)
