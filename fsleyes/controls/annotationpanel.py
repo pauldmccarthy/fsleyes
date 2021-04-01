@@ -214,10 +214,8 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         """
         obj   = ev.data
         annot = obj.annot
-        print(f'Annotation listbox item removed: {ev.label}',
-              type(obj).__name__)
         with props.suppress(annot, 'annotations'):
-            annot.dequeue(obj, hold=True)
+            annot.dequeue(obj, hold=True, fixed=False)
         self.__annotListItemSelected()
         obj.annot.canvas.Refresh()
 
