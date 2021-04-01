@@ -34,8 +34,8 @@ following annotation types are defined:
 """
 
 
-import logging
 import time
+import logging
 
 import numpy       as np
 import OpenGL.GL   as gl
@@ -859,8 +859,8 @@ class Ellipse(AnnotationObject):
     def __init__(self,
                  annot,
                  xy,
-                 width,
-                 height,
+                 w,
+                 h,
                  npoints=60,
                  filled=True,
                  border=True,
@@ -873,9 +873,9 @@ class Ellipse(AnnotationObject):
         :arg xy:      Tuple specifying the ellipse centre, in the display
                       coordinate system.
 
-        :arg width:   Horizontal radius.
+        :arg w:       Horizontal radius.
 
-        :arg height:  Vertical radius.
+        :arg h:       Vertical radius.
 
         :arg npoints: Number of vertices used to draw the ellipse outline.
 
@@ -890,8 +890,8 @@ class Ellipse(AnnotationObject):
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
         self.xy      = xy
-        self.width   = width
-        self.height  = height
+        self.w       = w
+        self.h       = h
         self.npoints = npoints
         self.filled  = filled
         self.border  = border
@@ -905,7 +905,7 @@ class Ellipse(AnnotationObject):
         # https://math.stackexchange.com/a/76463
         x,  y  = xy
         h,  k  = self.xy
-        rx, ry = self.width, self.height
+        rx, ry = self.w, self.h
         return ((x - h) ** 2) / (rx ** 2) + ((y - k) ** 2) / (ry ** 2) <= 1
 
 
@@ -917,7 +917,7 @@ class Ellipse(AnnotationObject):
     def draw2D(self, zpos, axes):
         """Draws this ``Ellipse`` annotation. """
 
-        if (self.width == 0) or (self.height == 0):
+        if (self.w == 0) or (self.h == 0):
             return
 
         if self.colour is not None: colour = list(self.colour[:3])
@@ -928,8 +928,8 @@ class Ellipse(AnnotationObject):
 
         xax, yax, zax = axes
         x, y          = self.xy
-        w             = self.width
-        h             = self.height
+        w             = self.w
+        h             = self.h
 
         idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
         verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)

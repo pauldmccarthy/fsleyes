@@ -337,15 +337,15 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
 
     def _ellipseModeLeftMouseDrag(self, ev, canvas, mousePos, canvasPos):
         """Adjust the ellipse radius with the mouse drag. """
-        opts           = canvas.opts
-        ellipse        = self.__dragging
-        p1             = np.array(ellipse.xy)
-        p2             = np.array((canvasPos[opts.xax], canvasPos[opts.yax]))
-        ellipse.width  = np.abs(p1[0] - p2[0])
-        ellipse.height = np.abs(p1[1] - p2[1])
+        opts      = canvas.opts
+        ellipse   = self.__dragging
+        p1        = np.array(ellipse.xy)
+        p2        = np.array((canvasPos[opts.xax], canvasPos[opts.yax]))
+        ellipse.w = np.abs(p1[0] - p2[0])
+        ellipse.h = np.abs(p1[1] - p2[1])
 
         # display ellipse area in status bar
-        self.__displaySize(np.pi * ellipse.width * ellipse.height, True)
+        self.__displaySize(np.pi * ellipse.w * ellipse.h, True)
         canvas.Refresh()
 
 
@@ -357,7 +357,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         annot           = canvas.getAnnotations()
         self.__dragging = None
 
-        if (ellipse.width == 0) or (ellipse.height == 0):
+        if (ellipse.w == 0) or (ellipse.h == 0):
             annot.dequeue(ellipse, hold=True)
 
         canvas.Refresh()
