@@ -183,6 +183,7 @@ import                   pkg_resources
 
 import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
+import fsleyes.strings               as strings
 import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.controls.controlpanel as ctrlpanel
 
@@ -385,10 +386,17 @@ def _registerEntryPoints(name, module):
     for group, entries in entryPoints.items():
         entryMap[group] = {}
 
-        for name, item in entries.items():
-            ep = '{} = {}:{}'.format(name, modname, name)
+        for name in entries.keys():
+
+            # Look up label for built-in plugins
+            if group == 'fsleyes_tools':
+                label = strings.actions.get(name, name)
+            else:
+                label = strings.titles.get(name, name)
+
+            ep = '{} = {}:{}'.format(label, modname, name)
             ep = pkg_resources.EntryPoint.parse(ep, dist=dist)
-            entryMap[group][name] = ep
+            entryMap[group][label] = ep
 
     pkg_resources.working_set.add(dist)
 
