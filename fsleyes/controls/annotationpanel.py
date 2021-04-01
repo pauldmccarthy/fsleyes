@@ -181,8 +181,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         allAnnots = []
 
         for canvas in self.__ortho.getGLCanvases():
-            cannots = canvas.getAnnotations().annotations
-            allAnnots.extend([a for a in cannots if not a.fixed])
+            allAnnots.extend(canvas.getAnnotations().annotations)
 
         alist.Clear()
 
