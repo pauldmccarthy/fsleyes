@@ -472,24 +472,26 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.creation = time.time()
 
 
-    def hit(self, xy):
+    def hit(self, x, y):
         """Return ``True`` if the given X/Y point is within the bounds of this
         annotation, ``False`` otherwise.  Must be implemented by sub-classes,
         but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
 
-        :arg xy: ``(x, y)`` tuple in display coordinates.
+        :arg x: X coordinate (in display coordinates).
+        :arg y: Y coordinate (in display coordinates).
         """
         raise NotImplementedError()
 
 
-    def move(self, xy):
-        """Move this annotation acording to xy, which is specified as an offset
-        relative to the current location. Must be implemented by sub-classes,
-        but only those annotations which are drawn by the
+    def move(self, x, y):
+        """Move this annotation acording to ``(x, y)``, which is specified as
+        an offset relative to the current location. Must be implemented by
+        sub-classes, but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
 
-        :arg xy: ``(x, y)`` tuple in display coordinates.
+        :arg x: X coordinate (in display coordinates).
+        :arg y: Y coordinate (in display coordinates).
         """
         raise NotImplementedError()
 
@@ -521,7 +523,7 @@ class Point(AnnotationObject):
     """
 
 
-    def __init__(self, annot, xy, *args, **kwargs):
+    def __init__(self, annot, x, y, *args, **kwargs):
         """Create a ``Point`` annotation.
 
         The ``xy`` coordinate tuple should be in relation to the axes which
@@ -529,13 +531,16 @@ class Point(AnnotationObject):
 
         :arg annot: The :class:`Annotations` object that owns this ``Point``.
 
-        :arg xy:    Tuple containing the (x, y) coordinates of the point
+        :arg x:     X coordinates of the point
+
+        :arg y:     Y coordinates of the point
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
         AnnotationObject.__init__(self, annot, *args, **kwargs)
-        self.xy = xy
+        self.x = x
+        self.y = y
 
 
     def draw2D(self, zpos, axes):
@@ -543,7 +548,7 @@ class Point(AnnotationObject):
 
         xax, yax, zax        = axes
         offset               = self.lineWidth * 0.5
-        x, y                 = self.xy
+        x, y                 = self.x, self.y
         idxs                 = np.arange(4,     dtype=np.uint32)
         verts                = np.zeros((4, 3), dtype=np.float32)
         verts[0, [xax, yax]] = [x - offset, y]
@@ -557,19 +562,19 @@ class Point(AnnotationObject):
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
-    def hit(self, xy):
-        """Returns ``True`` if ``xy`` is within the bounds of this ``Point``,
-        ``False`` otherwise.
+    def hit(self, x, y):
+        """Returns ``True`` if ``(x, y)`` is within the bounds of this
+        ``Point``, ``False`` otherwise.
         """
-        x, y   = xy
-        px, py = self.xy
+        px, py = self.x, self.y
         dist   = np.sqrt((x - px) ** 2 + (y - py) ** 2)
         return dist <= (self.lineWidth * 0.5)
 
 
-    def move(self, xy):
-        """Move this ``Point`` according to ``xy``. """
-        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
+    def move(self, x, y):
+        """Move this ``Point`` according to ``x`` and ``y``. """
+        self.x = self.x + x
+        self.y = self.y + y
 
 
 class Line(AnnotationObject):
@@ -578,7 +583,7 @@ class Line(AnnotationObject):
     """
 
 
-    def __init__(self, annot, xy1, xy2, *args, **kwargs):
+    def __init__(self, annot, x1, y1, x2, y2, *args, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
@@ -586,18 +591,19 @@ class Line(AnnotationObject):
         canvas.
 
         :arg annot: The :class:`Annotations` object that owns this ``Line``.
-
-        :arg xy1:   Tuple containing the (x, y) coordinates of one endpoint.
-
-        :arg xy2:   Tuple containing the (x, y) coordinates of the second
-                    endpoint.
+        :arg x1:    X coordinate of one endpoint.
+        :arg y1:    Y coordinate of one endpoint.
+        :arg x2:    X coordinate of the other endpoint.
+        :arg y2:    Y coordinate of the second endpoint.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
         AnnotationObject.__init__(self, annot, *args, **kwargs)
-        self.xy1 = xy1
-        self.xy2 = xy2
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
 
 
     def draw2D(self, zpos, axes):
@@ -607,8 +613,8 @@ class Line(AnnotationObject):
 
         idxs                 = np.arange(2,     dtype=np.uint32)
         verts                = np.zeros((2, 3), dtype=np.float32)
-        verts[0, [xax, yax]] = self.xy1
-        verts[1, [xax, yax]] = self.xy2
+        verts[0, [xax, yax]] = self.x1, self.y1
+        verts[1, [xax, yax]] = self.x2, self.y2
         verts[:, zax]        = zpos
         verts                = verts.ravel('C')
 
@@ -616,16 +622,16 @@ class Line(AnnotationObject):
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
-    def hit(self, xy):
-        """Returns ``True`` if ``xy`` is within the bounds of this ``Line``,
-        ``False`` otherwise.
+    def hit(self, x, y):
+        """Returns ``True`` if ``(x, y)`` is within the bounds of this
+        ``Line``, ``False`` otherwise.
 
         http://paulbourke.net/geometry/pointlineplane/
         """
 
-        x1, y1 = self.xy1
-        x2, y2 = self.xy2
-        x3, y3 = xy
+        x1, y1 = self.x1, self.y1
+        x2, y2 = self.x2, self.y2
+        x3, y3 = x, y
 
         num = np.abs((x3 - x1) * (x2 - x1) + (y3 - y1) * (y2 - y1))
         dnm = (x2 - x1) ** 2 + (y2 - y1) ** 2
@@ -642,10 +648,12 @@ class Line(AnnotationObject):
         return dist <= (thres * 2)
 
 
-    def move(self, xy):
-        """Move this ``Line`` according to ``xy``."""
-        self.xy1 = (self.xy1[0] + xy[0], self.xy1[1] + xy[1])
-        self.xy2 = (self.xy2[0] + xy[0], self.xy2[1] + xy[1])
+    def move(self, x, y):
+        """Move this ``Line`` according to ``(x, y)``."""
+        self.x1 = self.x1 + x
+        self.y1 = self.y1 + y
+        self.x2 = self.x2 + x
+        self.y2 = self.y2 + y
 
 
 class Arrow(Line):
@@ -666,8 +674,8 @@ class Arrow(Line):
         # second line vertex (xy2). We generate the
         # two other vertices of the triangle by
         # rotating +/- 30 degrees around xy2.
-        xy1   = np.array(self.xy1)
-        xy2   = np.array(self.xy2)
+        xy1   = np.array([self.x1, self.y1])
+        xy2   = np.array([self.x2, self.y2])
         vec   = xy2 - xy1
         vec   = vec / np.sqrt(vec[0] ** 2 + vec[1] ** 2)
         angle = np.arccos(np.dot(vec, [1, 0])) * np.sign(vec[1])
@@ -710,7 +718,8 @@ class Rect(AnnotationObject):
 
     def __init__(self,
                  annot,
-                 xy,
+                 x,
+                 y,
                  w,
                  h,
                  filled=True,
@@ -722,12 +731,15 @@ class Rect(AnnotationObject):
         :arg annot:  The :class:`Annotations` object that owns this
                      ``Rect``.
 
-        :arg xy:     Tuple specifying bottom left of the rectangle, in
+        :arg x:      X coordinate of one  corner of the rectangle, in
                      the display coordinate system.
 
-        :arg w:      Rectangle width.
+        :arg y:      Y coordinate of one  corner of the rectangle, in
+                     the display coordinate system.
 
-        :arg h:      Rectangle height.
+        :arg w:      Rectangle width (actually an offset relative to ``x``)
+
+        :arg h:      Rectangle height (actually an offset relative to ``y``)
 
         :arg filled: If ``True``, the rectangle is filled
 
@@ -742,20 +754,20 @@ class Rect(AnnotationObject):
         """
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
-        self.xy     = xy
+        self.x      = x
+        self.y      = y
         self.w      = w
         self.h      = h
         self.filled = filled
         self.border = border
 
 
-    def hit(self, xy):
-        """Returns ``True`` if ``xy`` is within the bounds of this ``Rect``,
-        ``False`` otherwise.
+    def hit(self, x, y):
+        """Returns ``True`` if ``(x, y)`` is within the bounds of this
+        ``Rect``, ``False`` otherwise.
         """
 
-        x,  y    = xy
-        xlo, ylo = self.xy
+        xlo, ylo = self.x, self.y
         xhi, yhi = (xlo + self.w, ylo + self.h)
 
         xlo, xhi = sorted((xlo, xhi))
@@ -767,9 +779,10 @@ class Rect(AnnotationObject):
                 y <= yhi)
 
 
-    def move(self, xy):
-        """Move this ``Rect`` according to ``xy``."""
-        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
+    def move(self, x, y):
+        """Move this ``Rect`` according to ``(x, y)``."""
+        self.x = self.x + x
+        self.y = self.y + y
 
 
     def draw2D(self, zpos, axes):
@@ -779,14 +792,14 @@ class Rect(AnnotationObject):
             return
 
         xax, yax, zax = axes
-        xy            = self.xy
+        x, y          = self.x, self.y
         w             = self.w
         h             = self.h
 
-        bl = [xy[0],     xy[1]]
-        br = [xy[0] + w, xy[1]]
-        tl = [xy[0],     xy[1] + h]
-        tr = [xy[0] + w, xy[1] + h]
+        bl = [x,     y]
+        br = [x + w, y]
+        tl = [x,     y + h]
+        tr = [x + w, y + h]
 
         if self.border:
             self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
@@ -858,7 +871,8 @@ class Ellipse(AnnotationObject):
 
     def __init__(self,
                  annot,
-                 xy,
+                 x,
+                 y,
                  w,
                  h,
                  npoints=60,
@@ -870,7 +884,10 @@ class Ellipse(AnnotationObject):
         :arg annot:   The :class:`Annotations` object that owns this
                       ``Ellipse``.
 
-        :arg xy:      Tuple specifying the ellipse centre, in the display
+        :arg x:       X coordinate of ellipse centre, in the display
+                      coordinate system.
+
+        :arg y:       Y coordinate of ellipse centre, in the display
                       coordinate system.
 
         :arg w:       Horizontal radius.
@@ -889,7 +906,8 @@ class Ellipse(AnnotationObject):
 
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
-        self.xy      = xy
+        self.x       = x
+        self.y       = y
         self.w       = w
         self.h       = h
         self.npoints = npoints
@@ -897,21 +915,21 @@ class Ellipse(AnnotationObject):
         self.border  = border
 
 
-    def hit(self, xy):
-        """Returns ``True`` if ``xy`` is within the bounds of this ``Ellipse``,
-        ``False`` otherwise.
+    def hit(self, x, y):
+        """Returns ``True`` if ``(x, y)`` is within the bounds of this
+        ``Ellipse``, ``False`` otherwise.
         """
 
         # https://math.stackexchange.com/a/76463
-        x,  y  = xy
         h,  k  = self.xy
         rx, ry = self.w, self.h
         return ((x - h) ** 2) / (rx ** 2) + ((y - k) ** 2) / (ry ** 2) <= 1
 
 
-    def move(self, xy):
-        """Move this ``Rect`` according to ``xy``."""
-        self.xy = (self.xy[0] + xy[0], self.xy[1] + xy[1])
+    def move(self, x, y):
+        """Move this ``Rect`` according to ``(x, y)``."""
+        self.x = self.x + x
+        self.y = self.y + y
 
 
     def draw2D(self, zpos, axes):
@@ -927,9 +945,8 @@ class Ellipse(AnnotationObject):
         a       = self.alpha / 100
 
         xax, yax, zax = axes
-        x, y          = self.xy
-        w             = self.w
-        h             = self.h
+        x, y          = self.x, self.y
+        w, h          = self.w, self.h
 
         idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
         verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)
@@ -1093,7 +1110,8 @@ class TextAnnotation(AnnotationObject):
     def __init__(self,
                  annot,
                  text=None,
-                 pos=None,
+                 x=None,
+                 y=None,
                  off=None,
                  coordinates='proportions',
                  fontSize=10,
@@ -1111,7 +1129,8 @@ class TextAnnotation(AnnotationObject):
         AnnotationObject.__init__(self, annot, **kwargs)
 
         self.text        = text
-        self.pos         = pos
+        self.x           = x
+        self.y           = y
         self.off         = off
         self.coordinates = coordinates
         self.fontSize    = fontSize
@@ -1138,17 +1157,19 @@ class TextAnnotation(AnnotationObject):
     def draw2D(self, zpos, axes):
         """Draw this ``TextAnnotation``. """
 
+        if self.colour is not None: colour = self.colour[:3]
+        else:                       colour = [1, 1, 1]
+
         text             = self.__text
         canvas           = self.annot.canvas
         opts             = canvas.opts
         text.text        = self.text
-        text.pos         = self.pos
         text.off         = self.off
         text.coordinates = self.coordinates
         text.fontSize    = self.fontSize
         text.halign      = self.halign
         text.valign      = self.valign
-        text.colour      = self.colour[:3]
+        text.colour      = colour
         text.alpha       = self.alpha / 100
 
         if self.coordinates == 'display':
@@ -1157,22 +1178,22 @@ class TextAnnotation(AnnotationObject):
             scale = canvas.zoomToScale(opts.zoom)
 
             pos           = [0] * 3
-            pos[opts.xax] = self.pos[0]
-            pos[opts.yax] = self.pos[1]
+            pos[opts.xax] = self.x
+            pos[opts.yax] = self.y
             pos[opts.zax] = opts.pos[2]
 
             text.pos         = canvas.worldToCanvas(pos)
             text.scale       = self.__initscale / scale
             text.coordinates = 'pixels'
         else:
-            text.pos         = self.pos
+            text.pos         = self.x, self.y
             text.coordinates = self.coordinates
 
         text.draw(*canvas.GetSize())
 
 
-    def hit(self, xy):
-        """Returns ``True`` if ``xy`` is within the bounds of this
+    def hit(self, x, y):
+        """Returns ``True`` if ``(x, y)`` is within the bounds of this
         ``TextAnnotation``, ``False`` otherwise. Only supported for text
         drawn relative to the display coordinate system
         (``coordinates='display'``) - raises a ``NotImplementedError``
@@ -1184,7 +1205,6 @@ class TextAnnotation(AnnotationObject):
 
         canvas     = self.annot.canvas
         opts       = canvas.opts
-        x,    y    = xy
         xlo,  ylo  = self.__text.pos
         xlen, ylen = self.__text.size
 
@@ -1202,8 +1222,8 @@ class TextAnnotation(AnnotationObject):
                 y <= yhi)
 
 
-    def move(self, xy):
-        """Move this ``TextAnnotation`` according to ``xy``.
+    def move(self, x, y):
+        """Move this ``TextAnnotation`` according to ``(x, y)``.
 
         Only supported for text drawn relative to the display coordinate
         system (``coordinates='display'``) - raises a ``NotImplementedError``
@@ -1212,4 +1232,5 @@ class TextAnnotation(AnnotationObject):
         if self.coordinates != 'display':
             raise NotImplementedError()
 
-        self.pos = (self.pos[0] + xy[0], self.pos[1] + xy[1])
+        self.x = self.x + x
+        self.y = self.y + y
