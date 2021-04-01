@@ -739,8 +739,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         for lines in (rowLines, colLines):
             for i in range(0, len(lines), 2):
-                self.getAnnotations().line(lines[i],
-                                           lines[i + 1],
+                self.getAnnotations().line(*lines[i],
+                                           *lines[i + 1],
                                            colour=colour,
                                            width=2)
 
@@ -770,10 +770,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # in GL space, the top row is actually the bottom row
         row = self._totalRows - row - 1
 
-        self.getAnnotations().rect((xmin + xlen * col,
-                                    ymin + ylen * row),
+        self.getAnnotations().rect(xmin + xlen * col,
+                                   ymin + ylen * row,
                                    xlen,
                                    ylen,
+                                   filled=False,
                                    colour=(1, 0, 0),
                                    width=2)
 
@@ -822,8 +823,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             'width'  : 1
         }
 
-        annot.line(xverts[0], xverts[1], **kwargs)
-        annot.line(yverts[0], yverts[1], **kwargs)
+        annot.line(*xverts[0], *xverts[1], **kwargs)
+        annot.line(*yverts[0], *yverts[1], **kwargs)
 
 
     def _draw(self, *a):

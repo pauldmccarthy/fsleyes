@@ -103,7 +103,7 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
             annot = canvasPanel.getCanvas().getAnnotations()
             self.__textAnnotation = annot.text(
                 '',
-                (0.5, 1.0),
+                0.5, 1.0,
                 fontSize=30,
                 halign='centre',
                 valign='top',

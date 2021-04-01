@@ -1344,8 +1344,8 @@ class SliceCanvas(object):
         # Just show a vertical line at xpos,
         # and a horizontal line at ypos
         if not copts.cursorGap:
-            lines.append(((x,    ymin), (x,    ymax)))
-            lines.append(((xmin, y),    (xmax, y)))
+            lines.append((x,    ymin, x,    ymax))
+            lines.append((xmin, y,    xmax, y))
 
         # Draw vertical/horizontal cursor lines,
         # with a gap at the cursor centre
@@ -1354,10 +1354,10 @@ class SliceCanvas(object):
         # use a fixed gap size
         elif ovl is None or not isinstance(ovl, fslimage.Nifti):
 
-            lines.append(((xmin,    y),       (x - 0.5, y)))
-            lines.append(((x + 0.5, y),       (xmax,    y)))
-            lines.append(((x,       ymin),    (x,       y - 0.5)))
-            lines.append(((x,       y + 0.5), (x,       ymax)))
+            lines.append((xmin,    y,       x - 0.5, y))
+            lines.append((x + 0.5, y,       xmax,    y))
+            lines.append((x,       ymin,    x,       y - 0.5))
+            lines.append((x,       y + 0.5, x,       ymax))
 
         # If the current overlay is NIFTI, make
         # the gap size match its voxel size
@@ -1415,10 +1415,10 @@ class SliceCanvas(object):
                 ylow  = min(vloc[copts.yax], vlocy[copts.yax])
                 yhigh = max(vloc[copts.yax], vlocy[copts.yax])
 
-            lines.append(((xmin,  y),     (xlow, y)))
-            lines.append(((xhigh, y),     (xmax, y)))
-            lines.append(((x,     ymin),  (x,    ylow)))
-            lines.append(((x,     yhigh), (x,    ymax)))
+            lines.append((xmin,  y,     xlow, y))
+            lines.append((xhigh, y,     xmax, y))
+            lines.append((x,     ymin,  x,    ylow))
+            lines.append((x,     yhigh, x,    ymax))
 
         kwargs = {
             'colour' : copts.cursorColour,
@@ -1426,8 +1426,8 @@ class SliceCanvas(object):
         }
 
         for line in lines:
-            self._annotations.line(line[0], line[1], **kwargs)
-            self._annotations.line(line[0], line[1], **kwargs)
+            self._annotations.line(*line, **kwargs)
+            self._annotations.line(*line, **kwargs)
 
 
     def _drawOffscreenTextures(self):

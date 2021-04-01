@@ -63,7 +63,7 @@ class OrthoLabels:
         for side in ('left', 'right', 'top', 'bottom'):
             for canvas, cannots in zip(canvases, annots):
                 annot         = canvas.getAnnotations()
-                cannots[side] = annot.text('', (0, 0), hold=True)
+                cannots[side] = annot.text('', 0, 0, hold=True)
 
         # Initialise the display properties
         # of each Text annotation
@@ -78,10 +78,14 @@ class OrthoLabels:
             cannots['top']   .valign = 'top'
             cannots['bottom'].valign = 'bottom'
 
-            cannots['left']  .pos = (0.0, 0.5)
-            cannots['right'] .pos = (1.0, 0.5)
-            cannots['bottom'].pos = (0.5, 0.0)
-            cannots['top']   .pos = (0.5, 1.0)
+            cannots['left']  .x = 0.0
+            cannots['left']  .y = 0.5
+            cannots['right'] .x = 1.0
+            cannots['right'] .y = 0.5
+            cannots['bottom'].x = 0.5
+            cannots['bottom'].y = 0.0
+            cannots['top']   .x = 0.5
+            cannots['top']   .y = 1.0
 
             # Keep cannots 5 pixels away
             # from the canvas edges
