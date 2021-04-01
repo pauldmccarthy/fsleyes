@@ -221,13 +221,18 @@ def _loadBuiltIns():
     """Called by :func:`initialise`. Loads all bulit-in plugins, from
     sub-modules of the ``fsleyes.plugins`` directory.
     """
-    thismod = sys.modules[__name__]
-    submods = pkgutil.iter_modules(thismod.__path__, thismod.__name__ + '.')
-    for _, name, _ in submods:
-        log.debug('Loading built-in plugin module %s', name)
-        mod  = importlib.import_module(name)
-        name = name.split('.')[-1]
-        _registerEntryPoints(name, mod)
+
+    import fsleyes.plugins.views    as views
+    import fsleyes.plugins.controls as controls
+    import fsleyes.plugins.tools    as tools
+
+    for mod in (views, controls, tools):
+        submods = pkgutil.iter_modules(mod.__path__, mod.__name__ + '.')
+        for _, name, _ in submods:
+            log.debug('Loading built-in plugin module %s', name)
+            mod  = importlib.import_module(name)
+            name = name.split('.')[-1]
+            _registerEntryPoints(name, mod)
 
 
 def listPlugins():
