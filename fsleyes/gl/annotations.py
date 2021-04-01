@@ -352,6 +352,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
     ============  =============================================================
     ``colour``    Annotation colour
+    ``alpha``     Transparency
     ``enabled``   Whether the annotation should be drawn or not.
     ``lineWidth`` Annotation line width (if the annotation is made up of lines)
     ``xform``     Custom transformation matrix to apply to annotation vertices.
@@ -1084,7 +1085,9 @@ class TextAnnotation(AnnotationObject):
 
 
     fontSize = props.Int(minval=6, maxval=48)
-    """Text font size."""
+    """Text font size in points. The size of the text annotation is kept
+    proportional to the canvas zoom level.
+    """
 
 
     def __init__(self,
@@ -1097,8 +1100,6 @@ class TextAnnotation(AnnotationObject):
                  halign=None,
                  valign=None,
                  colour=None,
-                 bgColour=None,
-                 angle=None,
                  **kwargs):
         """Create a ``TextAnnotation``.
 
@@ -1117,8 +1118,6 @@ class TextAnnotation(AnnotationObject):
         self.halign      = halign
         self.valign      = valign
         self.colour      = colour
-        self.bgColour    = bgColour
-        self.angle       = angle
         self.__initscale = None
         self.__text      = gltext.Text()
 
@@ -1149,9 +1148,8 @@ class TextAnnotation(AnnotationObject):
         text.fontSize    = self.fontSize
         text.halign      = self.halign
         text.valign      = self.valign
-        text.colour      = self.colour
-        text.bgColour    = self.bgColour
-        text.angle       = self.angle
+        text.colour      = self.colour[:3]
+        text.alpha       = self.alpha / 100
 
         if self.coordinates == 'display':
             if self.__initscale is None:

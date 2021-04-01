@@ -53,6 +53,7 @@ class Text:
                  valign=None,
                  colour=None,
                  bgColour=None,
+                 alpha=None,
                  scale=None,
                  angle=None):
         """Create a ``Text`` object.
@@ -81,6 +82,8 @@ class Text:
 
         :arg bgColour:    Background colour (default: transparent).
 
+        :arg alpha:       Opacity between 0 and 1.
+
         :arg scale:       Scale the text by this factor.
 
         :arg angle:       Angle, in degrees, by which to rotate the text.
@@ -100,6 +103,7 @@ class Text:
         self.__fontSize = fontSize
         self.__colour   = colour
         self.__bgColour = bgColour
+        self.__alpha    = alpha
 
         # All othjer attributes can be assigned directly
         self.pos         = pos
@@ -157,6 +161,19 @@ class Text:
 
 
     @property
+    def alpha(self):
+        """Return the current opacity. """
+        return self.__alpha
+
+
+    @alpha.setter
+    def alpha(self, value):
+        """Set the opacity. """
+        self.__clearBitmap(self.__alpha, value)
+        self.__alpha = value
+
+
+    @property
     def text(self):
         """Returns the current text value."""
         return self.__text
@@ -204,9 +221,9 @@ class Text:
         bmp = textbmp.textBitmap(self.text,
                                  fontSize=self.fontSize,
                                  fgColour=self.colour,
-                                 bgColour=self.bgColour)
+                                 bgColour=self.bgColour,
+                                 alpha=self.alpha)
         bmp = np.flipud(bmp).transpose([2, 1, 0])
-
         self.__bitmap = bmp
         self.__texture.set(data=bmp)
 
