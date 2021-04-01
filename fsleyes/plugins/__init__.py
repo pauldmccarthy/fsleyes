@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 #
-# plugins.py - Accessing installed FSLeyes plugins.
+# __init__.py - Accessing installed FSLeyes plugins.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides access to installed FSLeyes plugins.
+"""This package provides access to installed and built-in FSLeyes plugins.
+
 
 FSLeyes uses a simple plugin architecture for loading custom views, controls,
 and tools. Plugins can be installed from Python libraries (e.g. as hosted on
 `PyPi <https://pypi.org/>`_), or installed directly from a ``.py`` file.
+
 
 In both cases, FSLeyes uses ``setuptools`` `entry points
 <https://setuptools.readthedocs.io/en/latest/pkg_resources.html#entry-points>`__
@@ -51,6 +53,8 @@ FSLeyes plugins are loaded into a running FSLeyes as follows:
  - Plugin ``.py`` files which are present in the FSLeyes settings directory,
    or which are found in the ``FSLEYES_PLUGIN_PATH`` environment variable, will
    be loaded by the :func:`initialise` function.
+
+ - Built-in plugins located within the ``fsleyes.plugins`` package.
 
 
 A plugin can be installed permanently into FSLeyes as follows:
@@ -163,17 +167,19 @@ The following functions can be used to access plugins:
    listViews
    listControls
    listTools
-
 """
 
 
-import os.path as op
-import            os
-import            sys
-import            glob
-import            logging
-import            collections
-import            pkg_resources
+import os.path        as op
+import                   os
+import                   sys
+import                   glob
+import                   pkgutil
+import                   logging
+import                   importlib
+import importlib.util as imputil
+import                   collections
+import                   pkg_resources
 
 import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
@@ -185,13 +191,19 @@ log = logging.getLogger(__name__)
 
 
 def initialise():
-    """Calls :func:`loadPlugin` on all plugin files in the FSLeyes settings
-    directory, and found on the ``FSLEYES_PLUGIN_PATH`` environment variable.
+    """Loads all plugins, including built-ins, plugin files in the FSLeyes
+    settings directory, and those found on the ``FSLEYES_PLUGIN_PATH``
+    environment variable.
     """
+
+    _loadBuiltIns()
+
+    # plugins in fsleyes settings dir
     pluginFiles = list(fslsettings.listFiles('plugins/*.py'))
     pluginFiles = [fslsettings.filePath(p) for p in pluginFiles]
-    fpp         = os.environ.get('FSLEYES_PLUGIN_PATH', None)
 
+    # plugins on path
+    fpp = os.environ.get('FSLEYES_PLUGIN_PATH', None)
     if fpp is not None:
         for dirname in fpp.split(op.pathsep):
             pluginFiles.extend(glob.glob(op.join(dirname, '*.py')))
@@ -201,6 +213,19 @@ def initialise():
             loadPlugin(fname)
         except Exception as e:
             log.warning('Failed to load plugin file %s: %s', fname, e)
+
+
+def _loadBuiltIns():
+    """Called by :func:`initialise`. Loads all bulit-in plugins, from
+    sub-modules of the ``fsleyes.plugins`` directory.
+    """
+    thismod = sys.modules[__name__]
+    submods = pkgutil.iter_modules(thismod.__path__, thismod.__name__ + '.')
+    for _, name, _ in submods:
+        log.debug('Loading built-in plugin module %s', name)
+        mod  = importlib.import_module(name)
+        name = name.split('.')[-1]
+        _registerEntryPoints(name, mod)
 
 
 def listPlugins():
@@ -285,33 +310,26 @@ def listTools():
     return tools
 
 
-def _findEntryPoints(filename, modname):
-    """Used by :func:`loadPlugin`. Imports the given Python file (setting the
-    module name to ``modname``), and finds the FSLeyes entry points (views,
-    controls, or tools) that are defined within.
+def _importModule(filename, modname):
+    """Used by :func:`loadPlugin`. Imports the given Python file, setting the
+    module name to ``modname``.
     """
-
     log.debug('Importing %s as %s', filename, modname)
 
-    entryPoints = collections.defaultdict(dict)
-    pyver       = sys.version_info[:2]
-
-    # Ugh.
-    if pyver >= (3, 5):
-        import importlib.util as imputil
-        spec = imputil.spec_from_file_location(modname, filename)
-        mod  = imputil.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-
-    elif pyver == (3, 4):
-        from importlib.machinery import SourceFileLoader
-        mod = SourceFileLoader(modname, filename).load_module()
-
-    else:
-        import imp
-        mod = imp.load_source(modname, filename)
+    spec = imputil.spec_from_file_location(modname, filename)
+    mod  = imputil.module_from_spec(spec)
+    spec.loader.exec_module(mod)
 
     sys.modules[modname] = mod
+    return mod
+
+
+def _findEntryPoints(mod):
+    """Used by :func:`loadPlugin`. Finds the FSLeyes entry points (views,
+    controls, or tools) that are defined within the given module.
+     """
+
+    entryPoints = collections.defaultdict(dict)
 
     for name in dir(mod):
 
@@ -338,25 +356,25 @@ def _findEntryPoints(filename, modname):
     return entryPoints
 
 
-def loadPlugin(filename):
-    """Loads the given Python file as a FSLeyes plugin. """
-
-    name     = op.splitext(op.basename(filename))[0]
-    modname  = 'fsleyes_plugin_{}'.format(name)
+def _registerEntryPoints(name, module):
+    """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
+    points defined within the gibven module.
+    """
+    modname  = module.__name__
+    filename = module.__file__
     distname = 'fsleyes-plugin-{}'.format(name)
 
     if distname in listPlugins():
         log.debug('Plugin %s is already in environment - skipping', distname)
         return
 
-    log.debug('Loading plugin %s [dist name %s]', filename, distname)
+    log.debug('Registering plugin %s [dist name %s]', filename, distname)
 
-    dist = pkg_resources.Distribution(
+    entryPoints = _findEntryPoints(module)
+    dist        = pkg_resources.Distribution(
         project_name=distname,
-        location=op.dirname(filename),
+        location=filename,
         version='0.0.0')
-
-    entryPoints = _findEntryPoints(filename, modname)
 
     # Here I'm relying on the fact that
     # Distribution.get_entry_map returns
@@ -373,6 +391,15 @@ def loadPlugin(filename):
             entryMap[group][name] = ep
 
     pkg_resources.working_set.add(dist)
+
+
+def loadPlugin(filename):
+    """Loads the given Python file as a FSLeyes plugin. """
+
+    name    = op.splitext(op.basename(filename))[0]
+    modname = 'fsleyes_plugin_{}'.format(name)
+    mod     = _importModule(filename, modname)
+    _registerEntryPoints(name, mod)
 
 
 def installPlugin(filename):
