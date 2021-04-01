@@ -961,6 +961,7 @@ labels = TypeDict({
     'AnnotationPanel.lineWidth'     : 'Width/size',
     'AnnotationPanel.fontSize'      : 'Font size',
     'AnnotationPanel.filled'        : 'Draw filled',
+    'AnnotationPanel.border'        : 'Draw border',
     'AnnotationPanel.alpha'         : 'Opacity',
     'AnnotationPanel.honourZLimits' : 'Lock to depth',
 

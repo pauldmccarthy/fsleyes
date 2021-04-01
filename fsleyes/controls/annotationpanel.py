@@ -44,12 +44,13 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
     fontSize      = copy.copy(annotprofile.OrthoAnnotateProfile.fontSize)
     lineWidth     = copy.copy(annotprofile.OrthoAnnotateProfile.lineWidth)
     filled        = copy.copy(annotprofile.OrthoAnnotateProfile.filled)
+    border        = copy.copy(annotprofile.OrthoAnnotateProfile.border)
     honourZLimits = copy.copy(annotprofile.OrthoAnnotateProfile.honourZLimits)
     alpha         = copy.copy(annotprofile.OrthoAnnotateProfile.alpha)
 
     # Just used as a convenience
-    DISPLAY_PROPERTIES = ['colour', 'fontSize', 'lineWidth',
-                          'filled', 'honourZLimits', 'alpha']
+    DISPLAY_PROPERTIES = ['colour', 'fontSize', 'lineWidth', 'filled',
+                          'border', 'honourZLimits', 'alpha']
 
 
     def __init__(self, parent, overlayList, displayCtx, frame, ortho):
@@ -86,6 +87,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         self.__widgets       = widgetlist.WidgetList(self, minHeight=24)
         self.__colour        = props.makeWidget(self.__widgets, self, 'colour')
         self.__filled        = props.makeWidget(self.__widgets, self, 'filled')
+        self.__border        = props.makeWidget(self.__widgets, self, 'border')
         self.__honourZLimits = props.makeWidget(self.__widgets, self,
                                                 'honourZLimits')
         self.__fontSize      = props.makeWidget(self.__widgets, self,
@@ -105,6 +107,8 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
                                  strings.labels[self, 'lineWidth'])
         self.__widgets.AddWidget(self.__filled,
                                  strings.labels[self, 'filled'])
+        self.__widgets.AddWidget(self.__border,
+                                 strings.labels[self, 'border'])
         self.__widgets.AddWidget(self.__honourZLimits,
                                  strings.labels[self, 'honourZLimits'])
 

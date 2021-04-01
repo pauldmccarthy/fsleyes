@@ -121,15 +121,15 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         self.__xrect   = annotations.Rect(self.__xcanvas.getAnnotations(),
                                           (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
-                                          filled=True)
+                                          alpha=30)
         self.__yrect   = annotations.Rect(self.__ycanvas.getAnnotations(),
                                           (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
-                                          filled=True)
+                                          alpha=30)
         self.__zrect   = annotations.Rect(self.__zcanvas.getAnnotations(),
                                           (0, 0), 0, 0,
                                           colour=(0.3, 0.3, 1.0),
-                                          filled=True)
+                                          alpha=30)
 
         displayCtx .addListener('displaySpace',
                                 self.name,

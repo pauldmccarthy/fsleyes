@@ -703,12 +703,17 @@ class Rect(AnnotationObject):
     """Whether to fill the rectangle. """
 
 
+    border = props.Boolean(default=True)
+    """Whether to draw a border around the rectangle. """
+
+
     def __init__(self,
                  annot,
                  xy,
                  w,
                  h,
                  filled=True,
+                 border=True,
                  *args,
                  **kwargs):
         """Create a :class:`Rect` annotation.
@@ -723,11 +728,16 @@ class Rect(AnnotationObject):
 
         :arg h:      Rectangle height.
 
-        :arg filled: If ``True``, the rectangle is filled with a transparent
-                     shade of :attr:`AnnotationObject.colour`.
+        :arg filled: If ``True``, the rectangle is filled
+
+        :arg border: If ``True``, a border is drawn around the rectangle.
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
+
+        Note that if ``filled=False`` and ``border=False``, nothing will be
+        drawn. The ``.AnnotationObject.alpha`` value is ignored when drawing
+        the border.
         """
         AnnotationObject.__init__(self, annot, *args, **kwargs)
 
@@ -735,6 +745,7 @@ class Rect(AnnotationObject):
         self.w      = w
         self.h      = h
         self.filled = filled
+        self.border = border
 
 
     def hit(self, xy):
@@ -776,7 +787,8 @@ class Rect(AnnotationObject):
         tl = [xy[0],     xy[1] + h]
         tr = [xy[0] + w, xy[1] + h]
 
-        self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
+        if self.border:
+            self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
 
         if self.filled:
             self.__drawFill(zpos, xax, yax, zax, bl, br, tl, tr)
@@ -788,7 +800,7 @@ class Rect(AnnotationObject):
         if self.colour is not None: colour = list(self.colour[:3])
         else:                       colour = [1, 1, 1]
 
-        colour = colour + [0.25 * self.alpha / 100]
+        colour = colour + [self.alpha / 100]
 
         idxs  = np.array([0, 1, 2, 2, 1, 3], dtype=np.uint32)
         verts = np.zeros((4, 3),             dtype=np.float32)
@@ -810,6 +822,9 @@ class Rect(AnnotationObject):
     def __drawRect(self, zpos, xax, yax, zax, bl, br, tl, tr):
         """Draw the rectangle outline. """
 
+        if self.colour is not None: colour = list(self.colour[:3]) + [1]
+        else:                       colour = [1, 1, 1, 1]
+
         idxs  = np.array([0, 1, 2, 3, 0, 2, 1, 3], dtype=np.uint32)
         verts = np.zeros((4, 3),                   dtype=np.float32)
 
@@ -819,6 +834,8 @@ class Rect(AnnotationObject):
         verts[3, [xax, yax]] = tr
         verts[:,  zax]       = zpos
         verts                = verts.ravel('C')
+
+        gl.glColor4f(*colour)
 
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
         gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
@@ -834,6 +851,10 @@ class Ellipse(AnnotationObject):
     """Whether to fill the ellipse. """
 
 
+    border = props.Boolean(default=True)
+    """Whether to draw a border around the ellipse. """
+
+
     def __init__(self,
                  annot,
                  xy,
@@ -841,6 +862,7 @@ class Ellipse(AnnotationObject):
                  height,
                  npoints=60,
                  filled=True,
+                 border=True,
                  *args, **kwargs):
         """Create an ``Ellipse`` annotation.
 
@@ -856,8 +878,9 @@ class Ellipse(AnnotationObject):
 
         :arg npoints: Number of vertices used to draw the ellipse outline.
 
-        :arg filled:  If ``True``, the ellipse is filled with a
-                      transparent shade of ``colour``.
+        :arg filled:  If ``True``, the ellipse is filled
+
+        :arg border: If ``True``, a border is drawn around the ellipse
 
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
@@ -870,6 +893,7 @@ class Ellipse(AnnotationObject):
         self.height  = height
         self.npoints = npoints
         self.filled  = filled
+        self.border  = border
 
 
     def hit(self, xy):
@@ -898,7 +922,8 @@ class Ellipse(AnnotationObject):
         if self.colour is not None: colour = list(self.colour[:3])
         else:                       colour = [1, 1, 1]
 
-        colour = colour + [0.25 * self.alpha / 100]
+        r, g, b = colour
+        a       = self.alpha / 100
 
         xax, yax, zax = axes
         x, y          = self.xy
@@ -914,13 +939,15 @@ class Ellipse(AnnotationObject):
         verts[1:, yax]       = h * np.cos(samples) + y
         verts[:,  zax]       = zpos
 
-        # outline
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts[1:-1])
-        gl.glDrawElements(
-            gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
+        # border
+        if self.border:
+            gl.glColor4f(r, g, b, 1)
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts[1:-1])
+            gl.glDrawElements(
+                gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
 
         if self.filled:
-            gl.glColor4f(*colour)
+            gl.glColor4f(r, g, b, a)
             gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
             gl.glDrawElements(
                 gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)

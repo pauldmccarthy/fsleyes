@@ -45,6 +45,10 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
     """Whether ellipses/rectangles are filled in or not."""
 
 
+    border = copy.copy(annotations.Rect.border)
+    """Whether ellipses/rectangles are drawn with a border or not."""
+
+
     honourZLimits = copy.copy(annotations.AnnotationObject.honourZLimits)
     """Whether annotations are drawn when outside their Z limits."""
 
@@ -87,6 +91,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             'lineWidth'     : self.lineWidth,
             'fontSize'      : self.fontSize,
             'filled'        : self.filled,
+            'border'        : self.border,
             'alpha'         : self.alpha,
             'honourZLimits' : self.honourZLimits,
             'zmin'          : np.floor(zpos),
