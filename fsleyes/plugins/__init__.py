@@ -74,7 +74,8 @@ Writing a FSLeyes plugin
 
 
 .. note:: A minimal example of a FSLeyes plugin library can be found in
-          ``tests/testdata/fsleyes_plugin_example/``.
+          ``tests/testdata/fsleyes_plugin_example/``, and a range of
+          built-in plugins can be found in ``fsleyes/plugins/``.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains

@@ -325,7 +325,7 @@ messages = TypeDict({
     'the display coordinate system.',
 
     'OrthoAnnotateProfile.TextAnnotation' : 'Enter your text',
-    'SaveAnnotationAction.saveFile' : 'Save annotations to file'
+    'SaveAnnotationsAction.saveFile' : 'Save annotations to file'
 })
 
 
@@ -518,6 +518,7 @@ actions = TypeDict({
     'ResampleAction'              : 'Resample image',
     'LoadPluginAction'            : 'Load plugin',
     'ProjectImageToSurfaceAction' : 'Project image data onto surface',
+    'SaveAnnotationsAction'       : 'Save annotations to file',
 
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
