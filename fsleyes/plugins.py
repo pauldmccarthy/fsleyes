@@ -83,7 +83,10 @@ definitions for custom views, controls, and tools.
    override the :mod:`.ControlMixin.supportedViews` static method to return
    the views that your control supports.
 
- - Tools must be sub-classes of the :class:`.Action` class.
+ - Tools must be sub-classes of the :class:`.Action` class. Similar to above,
+   if your custom tool is designed to only work with a specific view, you
+   should override the :mod:`.Action.supportedViews` static method to return
+   the views that your tool should be associated with.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
