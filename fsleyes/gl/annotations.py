@@ -29,7 +29,6 @@ following annotation types are defined:
    Arrow
    Rect
    Ellipse
-   VoxelGrid
    VoxelSelection
    TextAnnotation
 """
@@ -57,19 +56,52 @@ log = logging.getLogger(__name__)
 class Annotations(props.HasProperties):
     """An :class:`Annotations` object provides functionality to draw 2D
     annotations on a :class:`.SliceCanvas`. Annotations may be enqueued via
-    any of the :meth:`line`, :meth:`rect`, :meth:`circle`, :meth:`point`,
-    :meth:`grid`, :meth:`selection` or :meth:`obj`, methods.
+    any of the :meth:`line`, :meth:`rect`, :meth:`ellpse`, :meth:`point`,
+    :meth:`selection` or :meth:`obj`, methods, and de-queued via the
+    :meth:`dequeue` method.
 
 
-    A call to :meth:`draw` will then draw each of the queued annotations on
-    the canvas, and clear the queue.
+    Annotations can be enqueued in one of three ways, using the `hold` and
+    `fixed` parameters:
 
 
-    If an annotation is to be persisted, it can be enqueued, as above, but
-    passing ``hold=True`` to the queueing method.  The annotation will then
-    remain in the queue until it is removed via :meth:`dequeue`, or the
-    entire annotations queue is cleared via :meth:`clear`. Held, or persistent,
-    annotations are stored in the :attr:`annotations` attribute.
+      - **Transient**: When calling ``line``, ``rect``, etc, passing
+        ``hold=False` enqueues the annotation for the next call to
+        :meth:`draw`. After the annotation is drawn, it is removed from the
+        queue, and would need to be re-queued to draw it again. The ``fixed``
+        parameter has no effect for transient annotations.
+
+      - **Fixed**: When calling ``line``, ``rect``, etc, passing
+        ``hold=True`` and ```fixed=True`` enqueues the annotation for all
+        subsequent calls to :meth:`draw`. Fixed annotations are stored in
+        an internal, inaccessible queue, so if you need to manipulate a
+        fixed annotation, you need to maintain your own reference to it.
+
+      - `**Persistent`**: When calling ``line``, ``rect``, etc, passing
+        ``hold=True`` and ``fixed=False`` adds the annotation to the
+        accessible :attr:`annotations` list.
+
+
+    Transient annotations are intended for one-off annotations, e.g. a
+    cursor mark at the current mouse location.
+
+
+    Fixed annotations are intended for persistent annotations which are
+    intended to be immutable, i.e. that cannot be directly manipulated by the
+    user, e.g. anatomical orientation labels on the canvases of an
+    :class:`.OrthoPanel`.
+
+
+    Persistent annotations are intended for persistent annotations which are
+    intended to be manipulated by the user - these annotations are used by the
+    :class:`.AnnotationPanel` in conjunction with the
+    :class:`.OrthoAnnotateProfile`.
+
+
+    After annotations have been enqueued in one of the above manners, a call
+    to :meth:`draw` will draw each annotation on the canvas, and clear the
+    transient queue. The default value for ``hold`` is ``False``, and ``fixed``
+    is ``True``,
 
 
     Annotations can be queued by one of the helper methods on the
@@ -81,10 +113,7 @@ class Annotations(props.HasProperties):
 
     annotations = props.List()
     """Contains all persistent :class:`AnnotationObject` instances, which have
-    been added to the queue with ``hold=True``.
-
-    Do not modify this list directly - use the :meth:`line`, :meth:`text`,
-    :meth:`obj` etc methods instead.
+    been added to the queue with ``hold=True`` and ``fixed=False``.
     """
 
 
@@ -101,11 +130,12 @@ class Annotations(props.HasProperties):
                      corresponds to the vertical screen axis.
         """
 
-        self.__q      = []
-        self.__xax    = xax
-        self.__yax    = yax
-        self.__zax    = 3 - xax - yax
-        self.__canvas = canvas
+        self.__transient = []
+        self.__fixed     = []
+        self.__xax       = xax
+        self.__yax       = yax
+        self.__zax       = 3 - xax - yax
+        self.__canvas    = canvas
 
 
     @property
@@ -134,135 +164,135 @@ class Annotations(props.HasProperties):
 
     def line(self, *args, **kwargs):
         """Queues a line for drawing - see the :class:`Line` class. """
-        hold = kwargs.pop('hold', False)
-        obj  = Line(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = Line(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
 
     def arrow(self, *args, **kwargs):
         """Queues an arrow for drawing - see the :class:`Arrow` class. """
-        hold = kwargs.pop('hold', False)
-        obj  = Arrow(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = Arrow(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
 
     def point(self, *args, **kwargs):
         """Queues a point for drawing - see the :class:`Point` class. """
-        hold = kwargs.pop('hold', False)
-        obj  = Point(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = Point(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
 
     def rect(self, *args, **kwargs):
         """Queues a rectangle for drawing - see the :class:`Rectangle` class.
         """
-        hold = kwargs.pop('hold', False)
-        obj  = Rect(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = Rect(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
 
     def ellipse(self, *args, **kwargs):
         """Queues a circle for drawing - see the :class:`Ellipse` class.
         """
-        hold = kwargs.pop('hold', False)
-        obj  = Ellipse(self, *args, **kwargs)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = Ellipse(self, *args, **kwargs)
 
-        return self.obj(obj, hold)
-
-
-    def grid(self, *args, **kwargs):
-        """Queues a voxel grid for drawing - see the :class:`VoxelGrid` class.
-        """
-        hold = kwargs.pop('hold', False)
-        obj  = VoxelGrid(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        return self.obj(obj, hold, fixed)
 
 
     def selection(self, *args, **kwargs):
         """Queues a selection for drawing - see the :class:`VoxelSelection`
         class.
         """
-        hold = kwargs.pop('hold', False)
-        obj  = VoxelSelection(self, *args, **kwargs)
-
-        return self.obj(obj, hold)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = VoxelSelection(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
 
     def text(self, *args, **kwargs):
         """Queues a text annotation for drawing - see the :class:`Text`
         class.
         """
-        hold = kwargs.pop('hold', False)
-        obj  = TextAnnotation(self, *args, **kwargs)
+        hold  = kwargs.pop('hold',  False)
+        fixed = kwargs.pop('fixed', True)
+        obj   = TextAnnotation(self, *args, **kwargs)
+        return self.obj(obj, hold, fixed)
 
-        return self.obj(obj, hold)
 
-
-    def obj(self, obj, hold=False):
+    def obj(self, obj, hold=False, fixed=True):
         """Queues the given :class:`AnnotationObject` for drawing.
 
-        :arg hold: If ``True``, the given ``AnnotationObject`` will be kept in
-                   the queue until it is explicitly removed. Otherwise (the
-                   default), the object will be removed from the queue after
-                   it has been drawn.
+        :arg hold:  If ``True``, the given ``AnnotationObject`` will be added
+                    to the fixed or persistent queues, and will remain there
+                    until it is explicitly removed. Otherwise (the default),
+                    the object will be added to the transient queue, and
+                    removed from the queue after it has been drawn.
+
+        :arg fixed: If ``True`` (the default), and ``hold=True``, the given
+                    ``AnnotationObject`` will be added to the fixed queue, and
+                    will remain there until it is explicitly
+                    removed. Otherwise, the object will be added to the
+                    persistent queue and, again, will remain there until it is
+                    explicitly removed. Has no effect when ``hold=False``.
         """
-
-        if hold: self.annotations.append(obj)
-        else:    self.__q        .append(obj)
-
+        if   hold and fixed: self.__fixed    .append(obj)
+        elif hold:           self.annotations.append(obj)
+        else:                self.__transient.append(obj)
         return obj
 
 
-    def dequeue(self, obj, hold=False):
-        """Removes the given :class:`AnnotationObject` from the queue, but
-        does not call its :meth:`.GLObject.destroy` method - this is the
-        responsibility of the caller.
+    def dequeue(self, obj, hold=False, fixed=True):
+        """Removes the given :class:`AnnotationObject` from the appropriate
+        queue, but does not call its :meth:`.GLObject.destroy` method - this
+        is the responsibility of the caller.
         """
 
-        if hold:
+        if hold and fixed:
+            try:               self.__fixed.remove(obj)
+            except ValueError: pass
+        elif hold:
             try:               self.annotations.remove(obj)
             except ValueError: pass
         else:
-            try:               self.__q.remove(obj)
+            try:               self.__transient.remove(obj)
             except ValueError: pass
 
 
     def clear(self):
-        """Clears both the normal queue and the persistent (a.k.a. ``hold``)
-        queue, and calls the :meth:`.GLObject.destroy` method on every object
-        in the queue.
+        """Clears all queues, and calls the :meth:`.GLObject.destroy` method
+        on every object in the queue.
         """
 
-        for obj in self.__q:         obj.destroy()
+        for obj in self.__fixed:     obj.destroy()
+        for obj in self.__transient: obj.destroy()
         for obj in self.annotations: obj.destroy()
 
-        self.__q            = []
+        self.__fixed        = []
+        self.__transient    = []
         self.annotations[:] = []
 
 
-    def draw(self, zpos, xform=None, skipHold=False):
-        """Draws all enqueued annotations.
+    def draw(self, zpos, xform=None):
+        """Draws all enqueued annotations. Fixed annotations are drawn first,
+        then persistent, then transient - i.e. transient annotations will
+        be drawn on top of persistent, which will be drawn on to of fixed.
 
         :arg zpos:     Position along the Z axis, above which all annotations
                        should be drawn.
 
         :arg xform:    Transformation matrix which should be applied to all
                        objects.
-
-        :arg skipHold: Do not draw items on the hold queue - only draw one-off
-                       items.
         """
 
-        holdq = list(self.annotations)
-        q     = list(self.__q)
-
-        if not skipHold: objs = holdq + q
-        else:            objs = q
+        objs = (list(self.__fixed)     +
+                list(self.annotations) +
+                list(self.__transient))
 
         if xform is not None:
             gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -311,8 +341,8 @@ class Annotations(props.HasProperties):
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glPopMatrix()
 
-        # Clear the regular queue after each draw
-        self.__q = []
+        # Clear the transient queue after each draw
+        self.__transient = []
 
 
 class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
@@ -331,10 +361,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                   drawn.
     ``zmax``      Maximum z value above which this annotation will not be
                   drawn.
-    ``fixed``     Flag indicating that this annotation cannot be modified.
-                  This is not enforced in any way, but is used by the
-                  :class:`.OrthoAnnotateProfile` to determine which annotations
-                  can be manipulated by the user.
     ``creation``  Time of creation.
     ============  =============================================================
 
@@ -389,7 +415,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                  honourZLimits=False,
                  zmin=None,
                  zmax=None,
-                 fixed=True,
                  **kwargs):
         """Create an ``AnnotationObject``.
 
@@ -418,9 +443,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         :arg zmax:          Maximum z value above which this annotation should
                             not be drawn.
 
-        :arg fixed:         Flag indicating whether this ``AnnotationObject``
-                            can be modified.
-
         Any other arguments are ignored.
         """
         globject.GLSimpleObject.__init__(self, False)
@@ -428,7 +450,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.annot    = annot
         self.xform    = xform
         self.creation = time.time()
-        self.fixed    = fixed
         self.expiry   = expiry
 
         if colour        is not None: self.colour        = colour
@@ -895,92 +916,6 @@ class Ellipse(AnnotationObject):
             gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
             gl.glDrawElements(
                 gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)
-
-
-class VoxelGrid(AnnotationObject):
-    """The ``VoxelGrid`` is an :class:`AnnotationObject` which represents a
-    collection of selected voxels. See also the :class:`VoxelSelection`
-    annotation.
-
-    Each selected voxel is highlighted with a rectangle around its border.
-    """
-
-
-    def __init__(self,
-                 annot,
-                 selectMask,
-                 displayToVoxMat,
-                 voxToDisplayMat,
-                 offsets=None,
-                 *args,
-                 **kwargs):
-        """Create a ``VoxelGrid`` annotation.
-
-        :arg annot:           The :class:`Annotations` object that owns this
-                              ``VoxelGrid``.
-
-        :arg selectMask:      A 3D numpy array, the same shape as the image
-                              being annotated (or a sub-space of the image -
-                              see the ``offsets`` argument),  which is
-                              interpreted as a mask array - values which are
-                              ``True`` denote selected voxels.
-
-        :arg displayToVoxMat: A transformation matrix which transforms from
-                              display space coordinates into voxel space
-                              coordinates.
-
-        :arg voxToDisplayMat: A transformation matrix which transforms from
-                              voxel coordinates into display space
-                              coordinates.
-
-        :arg offsets:         If ``None`` (the default), the ``selectMask``
-                              must have the same shape as the image data
-                              being annotated. Alternately, you may set
-                              ``offsets`` to a sequence of three values,
-                              which are used as offsets for the xyz voxel
-                              values. This is to allow for a sub-space of
-                              the full image space to be annotated.
-        """
-
-        kwargs['xform'] = voxToDisplayMat
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
-
-        if offsets is None:
-            offsets = [0, 0, 0]
-
-        self.displayToVoxMat = displayToVoxMat
-        self.selectMask      = selectMask
-        self.offsets         = offsets
-
-
-    def draw2D(self, zpos, axes):
-        """Draws this ``VoxelGrid`` annotation. """
-
-        xax, yax, zax = axes
-        dispLoc       = [0] * 3
-        dispLoc[zax]  = zpos
-        voxLoc        = affine.transform([dispLoc], self.displayToVoxMat)[0]
-
-        vox = int(round(voxLoc[zax]))
-
-        restrictions = [slice(None)] * 3
-        restrictions[zax] = slice(vox - self.offsets[zax],
-                                  vox - self.offsets[zax] + 1)
-
-        xs, ys, zs = np.where(self.selectMask[restrictions])
-        voxels     = np.vstack((xs, ys, zs)).T
-
-        for ax in range(3):
-            off = restrictions[ax].start
-            if off is None:
-                off = 0
-            voxels[:, ax] += off + self.offsets[ax]
-
-        verts, idxs = glroutines.voxelGrid(voxels, xax, yax, 1, 1)
-        verts = verts.ravel('C')
-
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
 
 
 class VoxelSelection(AnnotationObject):
