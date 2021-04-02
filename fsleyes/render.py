@@ -89,6 +89,9 @@ def main(args=None, hook=None):
         bitmap, bg = render(
             namespace, overlayList, displayCtx, sceneOpts, hook)
 
+        if namespace.crop is not None:
+            bitmap = autocrop(bitmap, bg, namespace.crop)
+
         # Alpha-blending does work, but the final
         # pixel values seem to take on the alpha
         # value of the most recently drawn item,
@@ -96,8 +99,6 @@ def main(args=None, hook=None):
         # as rgb
         bitmap = bitmap[:, :, :3]
 
-        if namespace.crop is not None:
-            bitmap = autocrop(bitmap, bg, namespace.crop)
         mplimg.imsave(namespace.outfile, bitmap)
 
         # Clear the GL context
