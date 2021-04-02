@@ -5,10 +5,27 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import os.path as op
+
+from unittest import mock
+
+import pytest
+
+import fsl.utils.tempdir as tempdir
+import fsl.data.image    as fslimage
 
 import fsleyes.gl.annotations                as annotations
 import fsleyes.plugins.tools.saveannotations as saveannotations
-from .. import run_render_test
+from .. import (run_render_test,
+                run_with_orthopanel,
+                realYield,
+                MockFileDialog)
+
+
+pytestmark = pytest.mark.clitest
+
+
+datadir = op.join(op.dirname(__file__), '..', 'testdata')
 
 
 def test_serialise_deserialise():
@@ -79,3 +96,111 @@ def test_serialise_deserialise():
             text.y        == 2  and
             text.fontSize == 24 and
             text.colour   == (0, 1, 0, 1))
+
+
+
+
+# used by test_[save|load]Annotations
+ANNOTS = """
+X Rect colour=#ff0000 lineWidth=1 alpha=25.0 honourZLimits=False zmin=0.0 zmax=0.0 filled=True border=True x=10 y=10 w=14 h=14
+Y Arrow colour=#00ff00 lineWidth=3 alpha=100.0 honourZLimits=False zmin=0.0 zmax=0.0 x1=14 y1=14 x2=10 y2=7
+Z TextAnnotation colour=#0000ff lineWidth=1 alpha=100.0 honourZLimits=False zmin=0.0 zmax=0.0 fontSize=30 coordinates=proportions text=text1 x=5 y=5
+""".strip()
+
+
+def test_saveAnnotations():
+    run_with_orthopanel(_test_saveAnnotations)
+
+def _test_saveAnnotations(panel, overlayList, displayCtx):
+    overlayList.append(fslimage.Image(op.join(datadir, '3d')))
+    realYield()
+
+    xannot = panel.getXCanvas().getAnnotations()
+    yannot = panel.getYCanvas().getAnnotations()
+    zannot = panel.getZCanvas().getAnnotations()
+
+    xannot.rect( 10, 10, 14, 14, colour='#ff0000', alpha=25,
+                 hold=True, fixed=False)
+    yannot.arrow(14, 14, 10, 7, colour='#00ff00', lineWidth=3,
+                 hold=True, fixed=False)
+    zannot.text( 'text1', 5, 5, colour='#0000ff', fontSize=30,
+                 hold=True, fixed=False)
+
+    realYield()
+
+    with tempdir.tempdir(), MockFileDialog() as dlg:
+        dlg.GetPath_retval = 'annotations.txt'
+
+        saveannotations.SaveAnnotationsAction(overlayList,
+                                              displayCtx,
+                                              panel)()
+
+        with open('annotations.txt', 'rt') as f:
+            got = f.read()
+
+    assert ANNOTS.strip() == got.strip()
+
+
+def test_loadAnnotations():
+    run_with_orthopanel(_test_loadAnnotations)
+
+def _test_loadAnnotations(panel, overlayList, displayCtx):
+    overlayList.append(fslimage.Image(op.join(datadir, '3d')))
+    realYield()
+
+    with tempdir.tempdir(), MockFileDialog() as dlg:
+
+        with open('annotations.txt', 'wt') as f:
+            f.write(ANNOTS)
+
+        dlg.GetPath_retval = 'annotations.txt'
+        saveannotations.LoadAnnotationsAction(overlayList,
+                                              displayCtx,
+                                              panel)()
+
+    xannot = panel.getXCanvas().getAnnotations()
+    yannot = panel.getYCanvas().getAnnotations()
+    zannot = panel.getZCanvas().getAnnotations()
+
+    assert len(xannot.annotations) == 1
+    assert len(yannot.annotations) == 1
+    assert len(zannot.annotations) == 1
+
+    x = xannot.annotations[0]
+    y = yannot.annotations[0]
+    z = zannot.annotations[0]
+
+    assert isinstance(x, annotations.Rect)
+    assert isinstance(y, annotations.Arrow)
+    assert isinstance(z, annotations.TextAnnotation)
+
+
+    assert (x.x      == 10 and
+            x.y      == 10 and
+            x.w      == 14 and
+            x.h      == 14 and
+            x.alpha  == 25 and
+            x.colour == (1, 0, 0, 1))
+
+    assert (y.x1        == 14 and
+            y.y1        == 14 and
+            y.x2        == 10 and
+            y.y2        == 7  and
+            y.lineWidth == 3  and
+            y.colour    == (0, 1, 0, 1))
+
+    assert (z.x         == 5       and
+            z.y         == 5       and
+            z.fontSize  == 30      and
+            z.text      == 'text1' and
+            z.colour    == (0, 0, 1, 1))
+
+
+    xannot.rect( 10, 10, 14, 14, colour='#ff0000', alpha=25,
+                 hold=True, fixed=False)
+    yannot.arrow(14, 14, 10, 7, colour='#00ff00', lineWidth=3,
+                 hold=True, fixed=False)
+    zannot.text( 'text1', 5, 5, colour='#0000ff', fontSize=30,
+                 hold=True, fixed=False)
+
+    realYield()
