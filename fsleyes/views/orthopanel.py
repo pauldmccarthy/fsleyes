@@ -404,7 +404,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         if self.profile == 'view': self.profile = 'annotate'
         else:                      self.profile = 'view'
         self.togglePanel(annotationpanel.AnnotationPanel,
-                         ortho=self,
                          location=wx.LEFT,
                          floatPane=floatPane)
 

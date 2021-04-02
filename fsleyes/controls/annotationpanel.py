@@ -53,17 +53,16 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
                           'border', 'honourZLimits', 'alpha']
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
+    def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``AnnotationPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, ortho)
         self.__ortho = ortho
 
         self.__buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
