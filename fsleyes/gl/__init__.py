@@ -606,6 +606,7 @@ class GLContext(object):
         self.__context   = None
         self.__canvas    = None
         self.__parent    = None
+        self.__buffer    = None
         self.__app       = None
 
         osmesa     = os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa'
@@ -711,7 +712,14 @@ class GLContext(object):
         if self.__app is not None:
             self.__app.Destroy()
 
+        # We need to destroy the OSMesa context,
+        # otherwise it will stay in memory
+        if self.__buffer is not None:
+            import OpenGL.raw.osmesa.mesa as osmesa
+            osmesa.OSMesaDestroyContext(self.__context)
+
         self.__context = None
+        self.__buffer  = None
         self.__parent  = None
         self.__canvas  = None
         self.__app     = None
