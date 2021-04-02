@@ -1173,9 +1173,16 @@ class TextAnnotation(AnnotationObject):
         text.alpha       = self.alpha / 100
 
         if self.coordinates == 'display':
+
+            # Make sure the text is sized proportional
+            # to the display coordinate system, so
+            # invariant to zoom factor/canvas size
             if self.__initscale is None:
-                self.__initscale = canvas.zoomToScale(opts.zoom)
-            scale = canvas.zoomToScale(opts.zoom)
+                w, h             = canvas.pixelSize()
+                self.__initscale = np.sqrt(w * h)
+
+            w, h  = canvas.pixelSize()
+            scale = np.sqrt(w * h)
 
             pos           = [0] * 3
             pos[opts.xax] = self.x
