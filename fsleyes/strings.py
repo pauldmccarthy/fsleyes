@@ -325,8 +325,15 @@ messages = TypeDict({
     'the display coordinate system.',
 
     'OrthoAnnotateProfile.TextAnnotation' : 'Enter your text',
-    'SaveAnnotationsAction.saveFile' : 'Save annotations to file',
-    'LoadAnnotationsAction.loadFile' : 'Load annotations from file'
+
+    'SaveAnnotationsAction.saveFile' :
+    'Save annotations to file',
+    'SaveAnnotationsAction.saveFileError' :
+    'An errror occurred while saving the file.',
+    'LoadAnnotationsAction.loadFile' :
+    'Load annotations from file',
+    'LoadAnnotationsAction.loadFileError' :
+    'An errror occurred while loading the file.',
 })
 
 
@@ -486,6 +493,9 @@ titles = TypeDict({
     'LoadPluginAction.installError'  : 'Error installing plugin file',
 
     'ProjectImageToSurfaceAction.dialog'  : 'Select image',
+
+    'SaveAnnotationsAction.saveFileError' : 'Error saving file',
+    'LoadAnnotationsAction.loadFileError' : 'Error loading file',
 })
 
 

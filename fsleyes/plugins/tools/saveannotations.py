@@ -96,16 +96,20 @@ system.
 
 
 import os
-import sys
 import shlex
+import logging
 
 import wx
 
-import fsl.utils.settings       as fslsettings
-import fsleyes.views.orthopanel as orthopanel
-import fsleyes.actions          as actions
-import fsleyes.strings          as strings
-import fsleyes.gl.annotations   as annotations
+import fsleyes_widgets.utils.status as status
+import fsl.utils.settings           as fslsettings
+import fsleyes.views.orthopanel     as orthopanel
+import fsleyes.actions              as actions
+import fsleyes.strings              as strings
+import fsleyes.gl.annotations       as annotations
+
+
+log = logging.getLogger(__name__)
 
 
 class SaveAnnotationsAction(actions.Action):
@@ -152,9 +156,12 @@ class SaveAnnotationsAction(actions.Action):
             return
 
         filePath = dlg.GetPath()
+        errtitle = strings.titles[  self, 'saveFileError']
+        errmsg   = strings.messages[self, 'saveFileError']
+        with status.reportIfError(errtitle, errmsg, raiseError=False):
+            with open(filePath, 'wt') as f:
+                f.write(serialiseAnnotations(ortho))
 
-        with open(filePath, 'wt') as f:
-            f.write(serialiseAnnotations(ortho))
 
 class LoadAnnotationsAction(actions.Action):
     """The ``LoadAnnotationsAction`` allos the user to load annotations
@@ -200,6 +207,12 @@ class LoadAnnotationsAction(actions.Action):
             return
 
         filePath = dlg.GetPath()
+        errtitle = strings.titles[  self, 'loadFileError']
+        errmsg   = strings.messages[self, 'loadFileError']
+        with status.reportIfError(errtitle, errmsg, raiseError=False):
+            with open(filePath, 'rt') as f:
+                s = f.read().strip()
+            deserialiseAnnotations(ortho, s)
 
 
 def serialiseAnnotations(ortho):
@@ -214,7 +227,9 @@ def serialiseAnnotations(ortho):
 
     for canvas, annots in allAnnots.items():
         for obj in annots.annotations:
-            serialised.append('{} {}'.format(canvas, serialiseAnnotation(obj)))
+            otype = type(obj).__name__
+            serialised.append('{} {} {}'.format(
+                canvas, otype, serialiseAnnotation(obj)))
 
     return '\n'.join(serialised)
 
@@ -259,25 +274,50 @@ def deserialiseAnnotations(ortho, s):
                'Y' : ortho.getYCanvas().getAnnotations(),
                'Z' : ortho.getZCanvas().getAnnotations()}
 
+    for line in s.split('\n'):
+        try:
+            canvas, cls, kvpairs = deserialiseAnnotation(line)
+            annot                = annots[canvas]
+            obj                  = cls(annot, **kvpairs)
+            annot.obj(obj, hold=True, fixed=False)
+            pass
+        except Exception as e:
+            log.warning('Error parsing annotation (%s): %s ', e, line)
+
+
+def deserialiseAnnotation(s):
+    """Deserialises the annotation specification in the provided string.
+
+    Returns a tuple containing:
+      - The canvas identifier, one of ``'X'`` ``'Y'``, or ``'Z'``.
+      - the :class:`.AnnotationObject` type
+      - A dictionary of kwargs to use to create the ``AnnotationObject``.
+    """
+
     # Parser functions for some property types
     # (default for unlisted properties is float)
+    def tobool(v):
+        return v.lower() in 'true'
+
     parsers = {
         'colour'        : str,
-        'honourZLimits' : bool,
-        'filled'        : bool,
-        'border'        : bool,
+        'honourZLimits' : tobool,
+        'filled'        : tobool,
+        'border'        : tobool,
         'text'          : str,
     }
 
-    for line in s.split('\n'):
-        canvas, otype, kvpairs = line.strip().split(maxsplit=2)
+    canvas, otype, kvpairs = s.strip().split(maxsplit=2)
 
-        cls     = getattr(annotations, otype)
-        canvas  = canvas.upper()
-        kvpairs = dict([kv.split('=') for kv in kvpairs.split()])
-        annot   = annots[canvas]
+    canvas  = canvas.upper()
+    cls     = getattr(annotations, otype)
+    kvpairs = dict([kv.split('=') for kv in shlex.split(kvpairs)])
 
-        for k, v in kvpairs.items():
-            kvpairs[k] = parsers.get(k, float)(v)
+    if canvas not in 'XYZ':
+        raise ValueError('Canvas is not one of X, Y, '
+                         'or Z ({})'.format(canvas))
 
-        annot.obj(cls(annot, **kvpairs), hold=True, fixed=False)
+    for k, v in kvpairs.items():
+        kvpairs[k] = parsers.get(k, float)(v)
+
+    return canvas, cls, kvpairs
