@@ -15,6 +15,7 @@ import fsl.utils.tempdir as tempdir
 import fsl.data.image    as fslimage
 
 import fsleyes.gl.annotations                as annotations
+import fsleyes.controls.annotationpanel      as annotationpanel
 import fsleyes.plugins.tools.saveannotations as saveannotations
 from .. import (run_render_test,
                 run_with_orthopanel,
@@ -113,6 +114,7 @@ def test_saveAnnotations():
 
 def _test_saveAnnotations(panel, overlayList, displayCtx):
     overlayList.append(fslimage.Image(op.join(datadir, '3d')))
+    panel.togglePanel(annotationpanel.AnnotationPanel)
     realYield()
 
     xannot = panel.getXCanvas().getAnnotations()
@@ -125,7 +127,6 @@ def _test_saveAnnotations(panel, overlayList, displayCtx):
                  hold=True, fixed=False)
     zannot.text( 'text1', 5, 5, colour='#0000ff', fontSize=30,
                  hold=True, fixed=False)
-
     realYield()
 
     with tempdir.tempdir(), MockFileDialog() as dlg:
@@ -146,6 +147,7 @@ def test_loadAnnotations():
 
 def _test_loadAnnotations(panel, overlayList, displayCtx):
     overlayList.append(fslimage.Image(op.join(datadir, '3d')))
+    panel.togglePanel(annotationpanel.AnnotationPanel)
     realYield()
 
     with tempdir.tempdir(), MockFileDialog() as dlg:
@@ -157,6 +159,7 @@ def _test_loadAnnotations(panel, overlayList, displayCtx):
         saveannotations.LoadAnnotationsAction(overlayList,
                                               displayCtx,
                                               panel)()
+    realYield()
 
     xannot = panel.getXCanvas().getAnnotations()
     yannot = panel.getYCanvas().getAnnotations()
