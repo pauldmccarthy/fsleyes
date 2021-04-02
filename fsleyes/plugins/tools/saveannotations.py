@@ -155,12 +155,17 @@ class SaveAnnotationsAction(actions.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
+        annots  = {'X' : ortho.getXCanvas().getAnnotations().annotations,
+                   'Y' : ortho.getYCanvas().getAnnotations().annotations,
+                   'Z' : ortho.getZCanvas().getAnnotations().annotations}
+
         filePath = dlg.GetPath()
         errtitle = strings.titles[  self, 'saveFileError']
         errmsg   = strings.messages[self, 'saveFileError']
+
         with status.reportIfError(errtitle, errmsg, raiseError=False):
             with open(filePath, 'wt') as f:
-                f.write(serialiseAnnotations(ortho))
+                f.write(serialiseAnnotations(annots))
 
 
 class LoadAnnotationsAction(actions.Action):
@@ -206,27 +211,36 @@ class LoadAnnotationsAction(actions.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
+        annots  = {'X' : ortho.getXCanvas().getAnnotations(),
+                   'Y' : ortho.getYCanvas().getAnnotations(),
+                   'Z' : ortho.getZCanvas().getAnnotations()}
+
         filePath = dlg.GetPath()
         errtitle = strings.titles[  self, 'loadFileError']
         errmsg   = strings.messages[self, 'loadFileError']
         with status.reportIfError(errtitle, errmsg, raiseError=False):
             with open(filePath, 'rt') as f:
                 s = f.read().strip()
-            deserialiseAnnotations(ortho, s)
+            allObjs = deserialiseAnnotations(s, annots)
+
+            for canvas, objs in allObjs.items():
+                annots[canvas].annotations.extend(objs)
 
 
-def serialiseAnnotations(ortho):
-    """Serialise all of the annotations for each canvas of the given
+def serialiseAnnotations(allAnnots):
+    """Serialise all of the annotations for each canvas of an
     :class:`.OrthoPanel` to a string representation.
+
+    :arg allAnnots: Dictionary where the keys are one of ``'X'``, ``'Y'`` or
+                    ``'Z'``, and the values are lists of
+                    :class:`.AnnotationObject` instances to be serialised.
+    :returns:       String containing serialised annotations
     """
 
     serialised = []
-    allAnnots  = {'X' : ortho.getXCanvas().getAnnotations(),
-                  'Y' : ortho.getYCanvas().getAnnotations(),
-                  'Z' : ortho.getZCanvas().getAnnotations()}
 
     for canvas, annots in allAnnots.items():
-        for obj in annots.annotations:
+        for obj in annots:
             otype = type(obj).__name__
             serialised.append('{} {} {}'.format(
                 canvas, otype, serialiseAnnotation(obj)))
@@ -241,8 +255,8 @@ def serialiseAnnotation(obj):
     # All properties on all annotation
     # types that are to be serialised
     keys = ['colour', 'lineWidth', 'alpha', 'honourZLimits', 'zmin', 'zmax',
-            'filled', 'border', 'fontSize', 'text', 'x', 'y', 'w', 'h',
-            'x1', 'y1', 'x2', 'y2']
+            'filled', 'border', 'fontSize', 'coordinates', 'text', 'x', 'y',
+            'w', 'h', 'x1', 'y1', 'x2', 'y2']
 
     # Custom formatters for some properties
     def formatColour(colour):
@@ -264,34 +278,44 @@ def serialiseAnnotation(obj):
     return ' '.join(kvpairs)
 
 
-def deserialiseAnnotations(ortho, s):
+def deserialiseAnnotations(s, annots):
     """Deserialise all of the annotation specifications in the string ``s``,
-    and add them as :class:`.AnnotationObject` instances to the canvases
-    of the given :class:`.OrthoPanel`.
+    and create :class:`.AnnotationObject` instances from them. The
+    ``AnnotationObject`` instances are created, but not added to the
+    :class:`.Annotations`.
+
+    :arg s:      String containing serialised annotations
+    :arg annots: Dictionary where the keys are one of ``'X'``, ``'Y'`` or
+                 ``'Z'``, and the values are the :class:`.Annotations`
+                 instances for each :class:`.OrthoPanel` canvas.
+    :returns:    Dictionary of ``{canvas : [AnnotationObject]}`` mappings.
     """
 
-    annots  = {'X' : ortho.getXCanvas().getAnnotations(),
-               'Y' : ortho.getYCanvas().getAnnotations(),
-               'Z' : ortho.getZCanvas().getAnnotations()}
+    objs = {'X' : [], 'Y' : [], 'Z' : []}
 
     for line in s.split('\n'):
         try:
-            canvas, cls, kvpairs = deserialiseAnnotation(line)
-            annot                = annots[canvas]
-            obj                  = cls(annot, **kvpairs)
-            annot.obj(obj, hold=True, fixed=False)
-            pass
+            obj, canvas = deserialiseAnnotation(line, annots)
+            objs[canvas].append(obj)
         except Exception as e:
             log.warning('Error parsing annotation (%s): %s ', e, line)
 
+    return objs
 
-def deserialiseAnnotation(s):
-    """Deserialises the annotation specification in the provided string.
 
-    Returns a tuple containing:
-      - The canvas identifier, one of ``'X'`` ``'Y'``, or ``'Z'``.
-      - the :class:`.AnnotationObject` type
-      - A dictionary of kwargs to use to create the ``AnnotationObject``.
+def deserialiseAnnotation(s, annots):
+    """Deserialises the annotation specification in the provided string,
+    and creates an  :class:`.AnnotationObject` instance.
+
+    :arg s:      String containing serialised annotation
+    :arg annots: Dictionary where the keys are one of ``'X'``, ``'Y'`` or
+                 ``'Z'``, and the values are the :class:`.Annotations`
+                 instance for each :class:`.OrthoPanel` canvas.
+    :returns:    Tuple containing:
+
+                   - An :class:`.AnnotationObject` instance
+                   - ``'X'``, ``'Y'`` or ``'Z'``, denoting the canvas that
+                     the :class:`.AnnotationObject` is to be drawn on.
     """
 
     # Parser functions for some property types
@@ -305,6 +329,7 @@ def deserialiseAnnotation(s):
         'filled'        : tobool,
         'border'        : tobool,
         'text'          : str,
+        'coordinates'   : str,
     }
 
     canvas, otype, kvpairs = s.strip().split(maxsplit=2)
@@ -320,4 +345,4 @@ def deserialiseAnnotation(s):
     for k, v in kvpairs.items():
         kvpairs[k] = parsers.get(k, float)(v)
 
-    return canvas, cls, kvpairs
+    return cls(annots[canvas], **kvpairs), canvas
