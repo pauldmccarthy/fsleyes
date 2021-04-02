@@ -241,14 +241,12 @@ def serialiseAnnotations(allAnnots):
 
     for canvas, annots in allAnnots.items():
         for obj in annots:
-            otype = type(obj).__name__
-            serialised.append('{} {} {}'.format(
-                canvas, otype, serialiseAnnotation(obj)))
+            serialised.append(serialiseAnnotation(obj, canvas))
 
     return '\n'.join(serialised)
 
 
-def serialiseAnnotation(obj):
+def serialiseAnnotation(obj, canvas):
     """Convert the given :class:`.AnnotationObject` to a string representation.
     """
 
@@ -275,7 +273,9 @@ def serialiseAnnotation(obj):
             val = formatters.get(key, str)(val)
             kvpairs.append('{}={}'.format(key, val))
 
-    return ' '.join(kvpairs)
+    otype = type(obj).__name__
+
+    return '{} {} {}'.format(canvas, otype, ' '.join(kvpairs))
 
 
 def deserialiseAnnotations(s, annots):
