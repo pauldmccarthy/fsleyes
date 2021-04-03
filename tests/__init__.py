@@ -408,7 +408,8 @@ def run_render_test(
 
     # gaaargh, why is macos case insensitive??
     if not op.exists(benchmark):
-        benchmark = benchmark.lower()
+        head, tail = op.split(benchmark)
+        benchmark  = op.join(head, tail.lower())
 
     testimg  = mplimg.imread(outfile)
     benchimg = mplimg.imread(benchmark)

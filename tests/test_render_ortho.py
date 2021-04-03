@@ -37,6 +37,9 @@ cli_tests = """
 -lo vertical       -yh -zh   3d.nii.gz
 -lo vertical           -zh   3d.nii.gz
 
+# alpha blending
+mesh_ref mesh_l_thal.vtk -mc 0 1 0 -r mesh_ref -a 50
+
 -cb -ls 20 3d.nii.gz
 
 -cg -xz 2000 -yz 2000 -zz 2000 3d.nii.gz

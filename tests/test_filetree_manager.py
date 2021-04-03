@@ -464,4 +464,4 @@ def _test_OverlayManager(panel, overlayList, displayCtx):
         assert displayCtx.getOpts(t1).cmap.name == 'blue-lightblue'
         assert displayCtx.getOpts(sl).refImage  is t1
         assert displayCtx.getOpts(sl).outline   is True
-        assert displayCtx.getOpts(sr).colour    == [0.5,0.6,0.7,1.0]
+        assert displayCtx.getOpts(sr).colour    == (0.5, 0.6, 0.7, 1.0)
