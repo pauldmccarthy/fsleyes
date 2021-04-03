@@ -1144,6 +1144,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         cursorKwargs = {'colour'  : self.selectionCursorColour,
                         'width'   : 2,
                         'expiry'  : 0.5,
+                        'filled'  : False,
                         'enabled' : False}
 
         opts = self.displayCtx.getOpts(overlay)
@@ -1154,11 +1155,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 c.getAnnotations(),
                 editor.getSelection(),
                 opts,
+                alpha=self.selectionOverlayColour[3] * 100,
                 colour=self.selectionOverlayColour))
 
             curs.append(annotations.Rect(
                 c.getAnnotations(),
-                (0, 0), 0, 0,
+                0, 0, 0, 0,
                 **cursorKwargs))
 
         self.__xselAnnotation = sels[0]
@@ -1300,9 +1302,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 cur.h = 0
                 continue
 
-            cur.xy = cmin[[xax, yax]]
-            cur.w  = cmax[xax] - cmin[xax]
-            cur.h  = cmax[yax] - cmin[yax]
+            cur.x = cmin[xax]
+            cur.y = cmin[yax]
+            cur.w = cmax[xax] - cmin[xax]
+            cur.h = cmax[yax] - cmin[yax]
 
         # Only draw the cursor on the current
         # canvas if locFolMouse is false

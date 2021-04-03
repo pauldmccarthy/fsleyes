@@ -38,13 +38,22 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, lb):
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``LightBoxToolBar`` is only intended to be added to
+        :class:`.LightBoxPanel` views.
+        """
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        return [LightBoxPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, lb):
         """Create a ``LightBoxToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg lb:          The :class:`.LightBoxPanel` instance.
         """
 
@@ -52,7 +61,7 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          lb,
                                           height=24,
                                           kbFocus=True)
 
@@ -179,13 +188,3 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
 
         self.SetTools(tools)
         self.setNavOrder(nav)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``LightBoxToolBar`` is only intended to be added to
-        :class:`.LightBoxPanel` views.
-        """
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        return [LightBoxPanel]

@@ -64,6 +64,8 @@ actions = td.TypeDict({
 
     'CanvasPanel.toggleFileTreePanel'       : 'Ctrl-Alt-9',
 
+    'OrthoPanel.toggleAnnotationPanel'      : 'Ctrl-Alt-A',
+
     'CanvasPanel.toggleMovieMode'           : 'Alt-M',
     'CanvasPanel.toggleDisplaySync'         : 'Alt-S',
 

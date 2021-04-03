@@ -341,7 +341,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         window    = panelType(self,
                               self.overlayList,
                               self.displayCtx,
-                              self.frame,
+                              self,
                               *args,
                               **kwargs)
         isToolbar = isinstance(window, ctrlpanel.ControlToolBar)

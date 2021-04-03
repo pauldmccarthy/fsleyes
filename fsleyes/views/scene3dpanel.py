@@ -179,7 +179,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         """Shows/hides a :class:`.Scene3DToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(s3dtoolbar.Scene3DToolBar, panel=self)
+        self.togglePanel(s3dtoolbar.Scene3DToolBar)
 
 
     def getMovieFrame(self, overlay, opts):

@@ -237,6 +237,8 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         :arg displayCtx:   The :class:`.DisplayContext` instance.
 
+        :arb frame:        The :class:`.FSLeyesFrame` instance.
+
         :arg sceneOpts:    A :class:`.SceneOpts` instance for this
                            ``CanvasPanel`` - must be created by
                            sub-classes.
@@ -457,8 +459,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         """Toggles an :class:`.OverlayDisplayToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar,
-                         viewPanel=self)
+        self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar)
 
 
     @actions.toggleControlAction(overlaydisplaypanel.OverlayDisplayPanel)
@@ -477,7 +478,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(canvassettingspanel.CanvasSettingsPanel,
-                         canvasPanel=self,
                          floatPane=floatPane,
                          location=wx.LEFT)
 
@@ -517,8 +517,7 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
-                         location=wx.RIGHT,
-                         canvasPanel=self)
+                         location=wx.RIGHT)
 
 
     @actions.toggleControlAction(filetreepanel.FileTreePanel)

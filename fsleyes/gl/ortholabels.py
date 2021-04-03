@@ -78,21 +78,21 @@ class OrthoLabels:
             cannots['top']   .valign = 'top'
             cannots['bottom'].valign = 'bottom'
 
-            cannots['left']  .xpos = 0
-            cannots['left']  .ypos = 0.5
-            cannots['right'] .xpos = 1.0
-            cannots['right'] .ypos = 0.5
-            cannots['bottom'].xpos = 0.5
-            cannots['bottom'].ypos = 0
-            cannots['top']   .xpos = 0.5
-            cannots['top']   .ypos = 1.0
+            cannots['left']  .x = 0.0
+            cannots['left']  .y = 0.5
+            cannots['right'] .x = 1.0
+            cannots['right'] .y = 0.5
+            cannots['bottom'].x = 0.5
+            cannots['bottom'].y = 0.0
+            cannots['top']   .x = 0.5
+            cannots['top']   .y = 1.0
 
             # Keep cannots 5 pixels away
             # from the canvas edges
-            cannots['left']  .xoff =  5
-            cannots['right'] .xoff = -5
-            cannots['top']   .yoff = -5
-            cannots['bottom'].yoff =  5
+            cannots['left']  .off = ( 5,  0)
+            cannots['right'] .off = (-5,  0)
+            cannots['top']   .off = ( 0, -5)
+            cannots['bottom'].off = ( 0,  5)
 
         # Add listeners to properties
         # that need to trigger a label
@@ -274,7 +274,7 @@ class OrthoLabels:
 
                 cannots[side].enabled  = show
                 cannots[side].fontSize = fontSize
-                cannots[side].fgColour = fgColour
+                cannots[side].colour   = fgColour
 
             if vertOrient:
                 cannots['left'] .angle = 90

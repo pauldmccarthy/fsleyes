@@ -67,7 +67,7 @@ class LocationPanel(ctrlpanel.ControlPanel):
                  parent,
                  overlayList,
                  displayCtx,
-                 frame,
+                 viewPanel,
                  showHistory=False):
         """Creat a ``LocationPanel``.
 
@@ -78,13 +78,13 @@ class LocationPanel(ctrlpanel.ControlPanel):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
+        :arg viewPanel:   The :class:`.ViewPanel` instance.
 
         :arg showHistory: Defaults to ``False``. If ``True``, create and
                           display a :class:`LocationHistoryPanel`.
         """
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, viewPanel)
 
         # only use a notebook if showing history panel
         if showHistory:
@@ -98,12 +98,12 @@ class LocationPanel(ctrlpanel.ControlPanel):
 
         # We always create an info panel
         self.__info = LocationInfoPanel(
-            subparent, overlayList, displayCtx, frame)
+            subparent, overlayList, displayCtx, viewPanel.frame)
 
         # We don't always create a history panel
         if showHistory:
             self.__history = LocationHistoryPanel(
-                subparent, overlayList, displayCtx, frame, parent)
+                subparent, overlayList, displayCtx, viewPanel.frame, parent)
             self.__notebook.AddPage(self.__info,
                                     strings.labels[self, 'info'])
             self.__notebook.AddPage(self.__history,

@@ -12,6 +12,7 @@ import wx
 
 import fsl.data.image as fslimage
 import fsl.utils.idle as idle
+import fsleyes.gl     as fslgl
 import fsleyes.main   as fslmain
 
 import fsleyes.displaycontext.displaycontext as displaycontext
@@ -32,6 +33,7 @@ def test_embed():
 
     def finish():
         frame[0].Close()
+        fslgl.shutdown()
         app.ExitMainLoop()
 
     def open_fsleyes():
@@ -78,6 +80,7 @@ def test_embed_ownFrame():
 
     def finish():
         frame[0].Close()
+        fslgl.shutdown()
         app.ExitMainLoop()
 
     def reset():

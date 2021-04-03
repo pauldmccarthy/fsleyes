@@ -40,7 +40,7 @@ import fsleyes.gl.offscreenscene3dcanvas     as scene3dcanvas
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def main(args=None, hook=None):
     """Entry point for ``render``.
 
     Creates and renders an OpenGL scene, and saves it to a file, according
@@ -86,15 +86,23 @@ def main(args=None):
         import matplotlib.image as mplimg
 
         # Render that scene, and save it to file
-        bitmap, bg = render(namespace, overlayList, displayCtx, sceneOpts)
+        bitmap, bg = render(
+            namespace, overlayList, displayCtx, sceneOpts, hook)
 
         if namespace.crop is not None:
             bitmap = autocrop(bitmap, bg, namespace.crop)
+
+        # Alpha-blending does work, but the final
+        # pixel values seem to take on the alpha
+        # value of the most recently drawn item,
+        # which is undesirable. So we save out
+        # as rgb
+        bitmap = bitmap[:, :, :3]
+
         mplimg.imsave(namespace.outfile, bitmap)
 
         # Clear the GL context
         fslgl.shutdown()
-
 
 
 def parseArgs(argv):
@@ -112,7 +120,7 @@ def parseArgs(argv):
 
     mainParser.add_argument('-of',
                             '--outfile',
-                            help='Output image file name'),
+                            help='Output image file name')
     mainParser.add_argument('-c',
                             '--crop',
                             type=int,
@@ -223,7 +231,7 @@ def makeDisplayContext(namespace):
     elif namespace.scene == 'lightbox':
         sceneOpts = lightboxopts.LightBoxOpts(MockCanvasPanel(1))
     elif namespace.scene == '3d':
-        sceneOpts = scene3dopts. Scene3DOpts(MockCanvasPanel(1))
+        sceneOpts = scene3dopts.Scene3DOpts(MockCanvasPanel(1))
 
     # 3D views default to
     # world display space
@@ -259,16 +267,22 @@ def makeDisplayContext(namespace):
     return overlayList, childDisplayCtx, sceneOpts
 
 
-def render(namespace, overlayList, displayCtx, sceneOpts):
+def render(namespace, overlayList, displayCtx, sceneOpts, hook=None):
     """Renders the scene, and returns a tuple containing the bitmap and the
     background colour.
 
     :arg namespace:   ``argparse.Namespace`` object containing command line
                       arguments.
-
     :arg overlayList: The :class:`.OverlayList` instance.
     :arg displayCtx:  The :class:`.DisplayContext` instance.
     :arg sceneOpts:   The :class:`.SceneOpts` instance.
+    :arg hook:        Function which is called after the canvases have been
+                      created, but before the scene is rendered. Can be used
+                      to perform any configuration/drawing in addition to that
+                      specified via ``namespace``.
+
+    .. note:: The ``hook`` argument was added for testing purposes, but may
+              be useful in other situations.
     """
 
     # Calculate canvas and colour bar sizes
@@ -349,7 +363,11 @@ def render(namespace, overlayList, displayCtx, sceneOpts):
     # lightbox canvases) and render them one by one
     canvasBmps = []
 
-    for i, c in enumerate(canvases):
+    # Call hook if provided.
+    if hook is not None:
+        hook(overlayList, displayCtx, sceneOpts, canvases)
+
+    for c in canvases:
 
         c.opts.pos = displayCtx.location
 

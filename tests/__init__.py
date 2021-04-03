@@ -11,6 +11,7 @@ import            gc
 import            re
 import            sys
 import            time
+import            shlex
 import            shutil
 import            logging
 import            tempfile
@@ -44,6 +45,7 @@ import fsleyes.main                 as fslmain
 import fsleyes.render               as fslrender
 import fsleyes.actions.frameactions as frameactions  # noqa
 import fsleyes.gl                   as fslgl
+import fsleyes.gl.textures          as textures
 import fsleyes.colourmaps           as colourmaps
 import fsleyes.displaycontext       as dc
 import fsleyes.overlay              as fsloverlay
@@ -385,7 +387,11 @@ def run_render_test(
         benchmark,
         size=(640, 480),
         scene='ortho',
-        threshold=50):
+        threshold=50,
+        hook=None):
+    """Runs fsleyes render with the given arguments, and compares the result
+    against the given benchmark.
+    """
 
     glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
     glver = [int(v) for v in glver.split('.')]
@@ -398,11 +404,12 @@ def run_render_test(
 
     idle.idleLoop.reset()
     idle.idleLoop.allowErrors = True
-    fslrender.main(args)
+    fslrender.main(args, hook)
 
     # gaaargh, why is macos case insensitive??
     if not op.exists(benchmark):
-        benchmark = benchmark.lower()
+        head, tail = op.split(benchmark)
+        benchmark  = op.join(head, tail.lower())
 
     testimg  = mplimg.imread(outfile)
     benchimg = mplimg.imread(benchmark)
@@ -412,7 +419,9 @@ def run_render_test(
     assert result
 
 
-def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
+def run_cli_tests(
+        prefix, tests, extras=None, scene='ortho', threshold=10, hook=None):
+    """Calls run_render_test on every line in ``tests``. """
 
     if extras is None:
         extras = {}
@@ -460,7 +469,7 @@ def run_cli_tests(prefix, tests, extras=None, scene='ortho', threshold=10):
 
             try:
                 run_render_test(list(test.split()), testfile, benchmark,
-                                scene=scene, threshold=threshold)
+                                scene=scene, threshold=threshold, hook=hook)
                 print('CLI test passed [{}] {}'.format(prefix, test))
 
             except Exception as e:

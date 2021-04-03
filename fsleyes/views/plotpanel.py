@@ -1613,7 +1613,6 @@ class OverlayPlotPanel(PlotPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(plotlistpanel.PlotListPanel,
-                         self,
                          location=wx.LEFT,
                          floatPane=floatPane)
 

@@ -26,18 +26,17 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
     and adds a few controls specific to the :class:`.HistogramPanel`.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, histPanel):
+    def __init__(self, parent, overlayList, displayCtx, histPanel):
         """Create a ``HistogramToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg histPanel:   The :class:`.HistogramPanel` instance.
         """
 
         plottoolbar.PlotToolBar.__init__(
-            self, parent, overlayList, displayCtx, frame, histPanel)
+            self, parent, overlayList, displayCtx, histPanel)
 
         togControl = actions.ToggleActionButton(
             'toggleHistogramControl',

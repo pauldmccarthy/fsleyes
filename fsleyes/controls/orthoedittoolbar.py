@@ -72,20 +72,29 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoEditToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         ctrlpanel.ControlToolBar.__init__(self,
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          ortho,
                                           height=24,
                                           kbFocus=True)
 
@@ -116,16 +125,6 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
         self.__dsWarning  = None
 
         ctrlpanel.ControlToolBar.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``OrthoEditToolBar`` is only intended to be added to
-        :class:`.OrthoPanel` views.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
 
 
     def __profileChanged(self, *a):

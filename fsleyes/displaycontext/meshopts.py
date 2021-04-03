@@ -276,19 +276,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                              self.__coordSpaceChanged,
                              immediate=True)
 
-            # We need to keep colour[3]
-            # keeps colour[3] and Display.alpha
-            # consistent w.r.t. each other (see
-            # also MaskOpts)
-            self.display.addListener('alpha',
-                                     self.name,
-                                     self.__alphaChanged,
-                                     immediate=True)
-            self        .addListener('colour',
-                                     self.name,
-                                     self.__colourChanged,
-                                     immediate=True)
-
             self.addListener('vertexData',
                              self.name,
                              self.__vdataChanged,
@@ -865,37 +852,3 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
             mrange = True
 
         self.updateDataRange(drange, drange, mrange)
-
-
-    def __colourChanged(self, *a):
-        """Called when :attr:`.colour` changes. Updates :attr:`.Display.alpha`
-        from the alpha component.
-        """
-
-        # modulateAlpha may cause the
-        # alpha property to be disabled
-        if not self.display.propertyIsEnabled('alpha'):
-            return
-
-        alpha = self.colour[3] * 100
-
-        log.debug('Propagating MeshOpts.colour[3] to '
-                  'Display.alpha [{}]'.format(alpha))
-
-        with props.skip(self.display, 'alpha', self.name):
-            self.display.alpha = alpha
-
-
-    def __alphaChanged(self, *a):
-        """Called when :attr:`.Display.alpha` changes. Updates the alpha
-        component of :attr:`.colour`.
-        """
-
-        alpha      = self.display.alpha / 100.0
-        r, g, b, _ = self.colour
-
-        log.debug('Propagating Display.alpha to MeshOpts.'
-                  'colour[3] [{}]'.format(alpha))
-
-        with props.skip(self, 'colour', self.name):
-            self.colour = r, g, b, alpha

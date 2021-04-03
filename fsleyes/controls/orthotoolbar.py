@@ -55,13 +55,22 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OrthoToolBar`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
 
@@ -69,7 +78,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          ortho,
                                           height=24,
                                           kbFocus=True)
 
@@ -99,16 +108,6 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         self           .removeListener('showCursorAndLabels', self.name)
 
         ctrlpanel.ControlToolBar.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``OrthoToolBar`` is only intended to be added to
-        :class:`.OrthoPanel` views.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
 
 
     def __makeTools(self, *a):

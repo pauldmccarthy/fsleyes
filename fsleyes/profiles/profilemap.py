@@ -24,28 +24,29 @@ from collections import OrderedDict
 
 import wx
 
-from fsleyes.views.orthopanel             import OrthoPanel
-from fsleyes.views.lightboxpanel          import LightBoxPanel
-from fsleyes.views.timeseriespanel        import TimeSeriesPanel
-from fsleyes.views.histogrampanel         import HistogramPanel
-from fsleyes.views.powerspectrumpanel     import PowerSpectrumPanel
-from fsleyes.views.scene3dpanel           import Scene3DPanel
+from fsleyes.views.orthopanel              import OrthoPanel
+from fsleyes.views.lightboxpanel           import LightBoxPanel
+from fsleyes.views.timeseriespanel         import TimeSeriesPanel
+from fsleyes.views.histogrampanel          import HistogramPanel
+from fsleyes.views.powerspectrumpanel      import PowerSpectrumPanel
+from fsleyes.views.scene3dpanel            import Scene3DPanel
 
-from fsleyes.profiles.orthoviewprofile    import OrthoViewProfile
-from fsleyes.profiles.orthoeditprofile    import OrthoEditProfile
-from fsleyes.profiles.orthocropprofile    import OrthoCropProfile
-from fsleyes.profiles.lightboxviewprofile import LightBoxViewProfile
-from fsleyes.profiles.plotprofile         import PlotProfile
-from fsleyes.profiles.histogramprofile    import HistogramProfile
-from fsleyes.profiles.timeseriesprofile   import TimeSeriesProfile
-from fsleyes.profiles.scene3dviewprofile  import Scene3DViewProfile
+from fsleyes.profiles.orthoviewprofile     import OrthoViewProfile
+from fsleyes.profiles.orthoeditprofile     import OrthoEditProfile
+from fsleyes.profiles.orthocropprofile     import OrthoCropProfile
+from fsleyes.profiles.orthoannotateprofile import OrthoAnnotateProfile
+from fsleyes.profiles.lightboxviewprofile  import LightBoxViewProfile
+from fsleyes.profiles.plotprofile          import PlotProfile
+from fsleyes.profiles.histogramprofile     import HistogramProfile
+from fsleyes.profiles.timeseriesprofile    import TimeSeriesProfile
+from fsleyes.profiles.scene3dviewprofile   import Scene3DViewProfile
 
 
 log = logging.getLogger(__name__)
 
 
 profiles  = {
-    OrthoPanel         : ['view', 'edit', 'crop'],
+    OrthoPanel         : ['view', 'edit', 'crop', 'annotate'],
     LightBoxPanel      : ['view'],
     TimeSeriesPanel    : ['view'],
     HistogramPanel     : ['view'],
@@ -59,14 +60,15 @@ to the :attr:`.ViewPanel.profile` property.
 
 
 profileHandlers = {
-    (OrthoPanel,         'view') : OrthoViewProfile,
-    (OrthoPanel,         'edit') : OrthoEditProfile,
-    (OrthoPanel,         'crop') : OrthoCropProfile,
-    (LightBoxPanel,      'view') : LightBoxViewProfile,
-    (TimeSeriesPanel,    'view') : TimeSeriesProfile,
-    (HistogramPanel,     'view') : HistogramProfile,
-    (PowerSpectrumPanel, 'view') : PlotProfile,
-    (Scene3DPanel,       'view') : Scene3DViewProfile,
+    (OrthoPanel,         'view')     : OrthoViewProfile,
+    (OrthoPanel,         'edit')     : OrthoEditProfile,
+    (OrthoPanel,         'crop')     : OrthoCropProfile,
+    (OrthoPanel,         'annotate') : OrthoAnnotateProfile,
+    (LightBoxPanel,      'view')     : LightBoxViewProfile,
+    (TimeSeriesPanel,    'view')     : TimeSeriesProfile,
+    (HistogramPanel,     'view')     : HistogramProfile,
+    (PowerSpectrumPanel, 'view')     : PlotProfile,
+    (Scene3DPanel,       'view')     : Scene3DViewProfile,
 }
 """This dictionary is used by the :class:`.ProfileManager` class to figure out
 which :class:`.Profile` sub-class to create for a given :class:`.ViewPanel`
@@ -122,6 +124,34 @@ tempModeMap = {
         (('crop',  wx.WXK_CONTROL),                'zoom'),
         (('crop',  wx.WXK_ALT),                    'pan'),
         (('crop', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+    )),
+
+    OrthoAnnotateProfile : OrderedDict((
+
+        (('line',     wx.WXK_SHIFT),                  'nav'),
+        (('line',     wx.WXK_CONTROL),                'move'),
+        (('line',     wx.WXK_ALT),                    'pan'),
+        (('line',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+        (('point',    wx.WXK_SHIFT),                  'nav'),
+        (('point',    wx.WXK_CONTROL),                'move'),
+        (('point',    wx.WXK_ALT),                    'pan'),
+        (('point',   (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+        (('rect',     wx.WXK_SHIFT),                  'nav'),
+        (('rect',     wx.WXK_CONTROL),                'move'),
+        (('rect',     wx.WXK_ALT),                    'pan'),
+        (('rect',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+        (('text',     wx.WXK_SHIFT),                  'nav'),
+        (('text',     wx.WXK_CONTROL),                'move'),
+        (('text',     wx.WXK_ALT),                    'pan'),
+        (('text',    (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+        (('ellipse',  wx.WXK_SHIFT),                  'nav'),
+        (('ellipse',  wx.WXK_CONTROL),                'move'),
+        (('ellipse',  wx.WXK_ALT),                    'pan'),
+        (('ellipse', (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
+        (('arrow',    wx.WXK_SHIFT),                  'nav'),
+        (('arrow',    wx.WXK_CONTROL),                'move'),
+        (('arrow',    wx.WXK_ALT),                    'pan'),
+        (('arrow',   (wx.WXK_CONTROL, wx.WXK_SHIFT)), 'slice'),
     )),
 
     LightBoxViewProfile : OrderedDict((
@@ -238,6 +268,40 @@ altHandlerMap = {
 
     OrthoCropProfile : OrderedDict((
         (('crop', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')), )),
+
+    OrthoAnnotateProfile : OrderedDict((
+        (('line',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('point',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('rect',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('text',    'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('arrow',   'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+        (('ellipse', 'MiddleMouseDrag'), ('pan', 'LeftMouseDrag')),
+
+        (('move',    'MouseWheel'),      ('zoom', 'MouseWheel')),
+
+        # Right mouse click/drag allows
+        # annotations to be moved
+        (('line',    'RightMouseDown'),  ('move', 'LeftMouseDown')),
+        (('point',   'RightMouseDown'),  ('move', 'LeftMouseDown')),
+        (('rect',    'RightMouseDown'),  ('move', 'LeftMouseDown')),
+        (('text',    'RightMouseDown'),  ('move', 'LeftMouseDown')),
+        (('arrow',   'RightMouseDown'),  ('move', 'LeftMouseDown')),
+        (('ellipse', 'RightMouseDown'),  ('move', 'LeftMouseDown')),
+
+        (('line',    'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+        (('point',   'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+        (('rect',    'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+        (('text',    'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+        (('arrow',   'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+        (('ellipse', 'RightMouseDrag'),  ('move', 'LeftMouseDrag')),
+
+        (('line',    'RightMouseUp'),    ('move', 'LeftMouseUp')),
+        (('point',   'RightMouseUp'),    ('move', 'LeftMouseUp')),
+        (('rect',    'RightMouseUp'),    ('move', 'LeftMouseUp')),
+        (('text',    'RightMouseUp'),    ('move', 'LeftMouseUp')),
+        (('arrow',   'RightMouseUp'),    ('move', 'LeftMouseUp')),
+        (('ellipse', 'RightMouseUp'),    ('move', 'LeftMouseUp')),
+    )),
 
     LightBoxViewProfile : OrderedDict((
         (('view', 'LeftMouseDown'), ('view', 'LeftMouseDrag')), )),

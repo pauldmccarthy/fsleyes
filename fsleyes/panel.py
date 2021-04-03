@@ -47,7 +47,8 @@ should be made available available to the user can be added as
 import logging
 import six
 
-import wx
+import              wx
+import wx.siplib as sip
 
 import fsl.utils.deprecated        as deprecated
 import fsleyes_widgets             as fwidgets
@@ -340,39 +341,15 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
                         'this is probably a bug!'.format(type(self).__name__))
 
 
-FSLeyesPanelBase = None
-"""Under Python2/wxPython, we need to derive from ``wx.PyPanel``. But
-under Python3/wxPython-Phoenix, we need to derive from ``wx.Panel``.
-"""
-
-
-FSLeyesPanelMeta = None
-"""Under Python3/wxPython-Phoenix, we need to specify the meta-class as
-``wx.siplib.wrappertype``. This is not necessary under Python2/wxPython.
-"""
-
-# wxPython/Phoenix
-if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
-
-    import wx.siplib as sip
-
-    FSLeyesPanelMeta = sip.wrappertype
-    FSLeyesPanelBase = wx.Panel
-
-# Old wxPython
-else:
-    FSLeyesPanelMeta = type
-    FSLeyesPanelBase = wx.PyPanel
-
-
-class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
-                                      _FSLeyesPanel,
-                                      FSLeyesPanelBase)):
+class FSLeyesPanel(_FSLeyesPanel, wx.Panel):
     """The ``FSLeyesPanel`` is the base class for all view and control panels
     in *FSLeyes*. See the :mod:`fsleyes` documentation for more details.
 
     See also the :class:`.ViewPanel` and :class:`.ControlPanel` classes.
     """
+
+    __metaclass__ = sip.wrappertype
+
 
     def __init__(self,
                  parent,
@@ -394,7 +371,7 @@ class FSLeyesPanel(six.with_metaclass(FSLeyesPanelMeta,
             style = kwargs.get('style', wx.TAB_TRAVERSAL)
             kwargs['style'] = style | wx.WANTS_CHARS
 
-        FSLeyesPanelBase.__init__(self, parent, *args, **kwargs)
+        wx.Panel.__init__(self, parent, *args, **kwargs)
         _FSLeyesPanel.__init__(self, overlayList, displayCtx, frame, kbFocus)
 
 

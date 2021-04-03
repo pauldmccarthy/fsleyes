@@ -32,9 +32,8 @@ class Text:
 
         # modify various properties by direct attribute
         # assignment - see __init__ for definitions
-        text.xpos     = 0.5
-        text.ypos     = 0.5
-        text.fgColour = '#FFFFFF'
+        text.pos    = (0.5, 0.5)
+        text.colour = '#FFFFFF'
 
         # activate your GL context, and call draw()
         text.draw()
@@ -46,53 +45,49 @@ class Text:
 
     def __init__(self,
                  text=None,
-                 xpos=None,
-                 ypos=None,
-                 xpix=None,
-                 ypix=None,
+                 pos=None,
+                 off=None,
+                 coordinates='proportions',
                  fontSize=10,
-                 xoff=None,
-                 yoff=None,
                  halign=None,
                  valign=None,
-                 fgColour=None,
+                 colour=None,
                  bgColour=None,
+                 alpha=None,
+                 scale=None,
                  angle=None):
         """Create a ``Text`` object.
 
-        :arg text:     The text to draw.
+        :arg text:        The text to draw.
 
-        :arg xpos:     Position along the horizontal axis as a proportion
-                       between 0 (left) and 1 (right).
+        :arg pos:         (x, y) position along the horizontal/vertical axes as
+                          either a proportion between 0 (left/bottom) and 1
+                          (right/top), or as absolute pixels.
 
-        :arg xpos:     Position along the vertial axis as a proportion
-                       between 0 (bottom) and 1 (top).
+        :arg off:         Fixed (x, y) horizontal/vertical offsets in pixels
 
-        :arg xpix:     Position along the horizontal axis in absolute
-                       pixels - takes precedence over xpos.
+        :arg coordinates: Whether to interpret ``pos`` as ``'proportions'``
+                          (the default), or as absolute ``'pixels'``.
 
-        :arg ypix:     Position along the verticalk axis in absolute
-                       pixels - takes precedence over ypos.
+        :arg fontSize:    Font size in points.
 
-        :arg xoff:     Fixed horizontal offset in pixels
+        :arg halign:      Horizontal alignemnt - ``'left'``, ``'centre'``, or
+                          ``right``.
 
-        :arg yoff:     Fixed vertical offset in pixels
+        :arg valign:      Vertical alignemnt - ``'bottom'``, ``'centre'``, or
+                          ``top``.
 
-        :arg fontSize: Font size in points.
+        :arg colour:      Colour to draw the text in (any
+                          ``matplotlib``-compatible colour specification)
 
-        :arg halign:   Horizontal alignemnt - ``'left'``, ``'centre'``, or
-                       ``right``.
+        :arg bgColour:    Background colour (default: transparent).
 
-        :arg valign:   Vertical alignemnt - ``'bottom'``, ``'centre'``, or
-                       ``top``.
+        :arg alpha:       Opacity between 0 and 1.
 
-        :arg fgColour: Colour to draw the text in (any
-                       ``matplotlib``-compatible colour specification)
+        :arg scale:       Scale the text by this factor.
 
-        :arg bgColour: Background colour (default: transparent).
-
-        :arg angle:    Angle, in degrees, by which to rotate the text.
-                       NOT IMPLEMENTED YET
+        :arg angle:       Angle, in degrees, by which to rotate the text.
+                          NOT IMPLEMENTED YET AND PROBABLY NEVER WILL BE
         """
 
         # Every time any display properties change,
@@ -106,20 +101,19 @@ class Text:
         # as they induce a bitmap refresh
         self.__text     = text
         self.__fontSize = fontSize
-        self.__fgColour = fgColour
+        self.__colour   = colour
         self.__bgColour = bgColour
+        self.__alpha    = alpha
 
         # All othjer attributes can be assigned directly
-        self.xpos       = xpos
-        self.ypos       = ypos
-        self.xpix       = xpix
-        self.ypix       = ypix
-        self.xoff       = xoff
-        self.yoff       = yoff
-        self.halign     = halign
-        self.valign     = valign
-        self.angle      = angle
-        self.__texture  = textures.Texture2D(
+        self.pos         = pos
+        self.off         = off
+        self.coordinates = coordinates
+        self.halign      = halign
+        self.valign      = valign
+        self.scale       = scale
+        self.angle       = angle
+        self.__texture   = textures.Texture2D(
             '{}_{}'.format(type(self).__name__, id(self)),
             interp=gl.GL_LINEAR)
 
@@ -132,12 +126,6 @@ class Text:
         self.__texture = None
 
 
-    @property
-    def fgColour(self):
-        """Return the current foreground colour. """
-        return self.__fgColour
-
-
     def __clearBitmap(self, old, new):
         """Used by property setters to clear cached bitmap, if a value which
         requires the bitmap to be re-generated is changed.
@@ -146,11 +134,17 @@ class Text:
             self.__bitmap = None
 
 
-    @fgColour.setter
-    def fgColour(self, value):
+    @property
+    def colour(self):
+        """Return the current foreground colour. """
+        return self.__colour
+
+
+    @colour.setter
+    def colour(self, value):
         """Set the foreground colour. """
-        self.__clearBitmap(self.__fgColour, value)
-        self.__fgColour = value
+        self.__clearBitmap(self.__colour, value)
+        self.__colour = value
 
 
     @property
@@ -164,6 +158,19 @@ class Text:
         """Set the background colour. """
         self.__clearBitmap(self.__bgColour, value)
         self.__bgColour = value
+
+
+    @property
+    def alpha(self):
+        """Return the current opacity. """
+        return self.__alpha
+
+
+    @alpha.setter
+    def alpha(self, value):
+        """Set the opacity. """
+        self.__clearBitmap(self.__alpha, value)
+        self.__alpha = value
 
 
     @property
@@ -192,14 +199,31 @@ class Text:
         self.__fontSize = value
 
 
+    @property
+    def size(self):
+        """Return the size of the text texture in pixels, scaled by
+        the ``scale`` factor if it is set. Returns ``None`` if the
+        text has not yet been drawn and the bitmap not created.
+        """
+        if self.__bitmap is None:
+            return None
+
+        size = self.__bitmap.shape[1:]
+
+        if self.scale is not None:
+            size = (size[0] * self.scale, size[1] * self.scale)
+
+        return size
+
+
     def __refreshBitmap(self):
         """Called when the text bitmap and texture data needs a refresh. """
         bmp = textbmp.textBitmap(self.text,
                                  fontSize=self.fontSize,
-                                 fgColour=self.fgColour,
-                                 bgColour=self.bgColour)
+                                 fgColour=self.colour,
+                                 bgColour=self.bgColour,
+                                 alpha=self.alpha)
         bmp = np.flipud(bmp).transpose([2, 1, 0])
-
         self.__bitmap = bmp
         self.__texture.set(data=bmp)
 
@@ -214,8 +238,7 @@ class Text:
         if self.text is None or self.text == '':
             return
 
-        if (self.xpix is None) and (self.xpos is None) or \
-           (self.ypix is None) and (self.ypos is None):
+        if self.pos is None:
             return
 
         if (width == 0) or (height == 0):
@@ -224,15 +247,15 @@ class Text:
         if self.__bitmap is None:
             self.__refreshBitmap()
 
-        pos = []
+        if self.off is not None: off = list(self.off)
+        else:                    off = [0, 0]
 
-        if self.xpix is not None: pos.append(self.xpix)
-        else:                     pos.append(self.xpos * width)
-        if self.ypix is not None: pos.append(self.ypix)
-        else:                     pos.append(self.ypos * height)
+        pos = list(self.pos)
+        if self.coordinates == 'proportions':
+            pos[0] = pos[0] * width
+            pos[1] = pos[1] * height
 
-        bmp  = self.__bitmap
-        size = bmp.shape[1:]
+        size = self.size
 
         if   self.halign == 'centre': pos[0] -= size[0] / 2.0
         elif self.halign == 'right':  pos[0] -= size[0]
@@ -240,8 +263,10 @@ class Text:
         if   self.valign == 'centre': pos[1] -= size[1] / 2.0
         elif self.valign == 'top':    pos[1] -= size[1]
 
-        if self.xoff is not None: pos[0] += self.xoff
-        if self.yoff is not None: pos[1] += self.yoff
+        xlo = pos[0] + off[0]
+        ylo = pos[1] + off[1]
+        xhi = xlo    + size[0]
+        yhi = ylo    + size[1]
 
         # Set up an ortho view where the
         # display coordinates correspond
@@ -259,12 +284,7 @@ class Text:
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
-        self.__texture.drawOnBounds(0,
-                                    pos[0],
-                                    pos[0] + size[0],
-                                    pos[1],
-                                    pos[1] + size[1],
-                                    0, 1)
+        self.__texture.drawOnBounds(0, xlo, xhi, ylo, yhi, 0, 1)
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPopMatrix()

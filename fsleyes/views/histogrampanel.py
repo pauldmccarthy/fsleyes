@@ -153,7 +153,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(histogramcontrolpanel.HistogramControlPanel,
-                         self,
                          location=wx.RIGHT,
                          floatPane=floatPane)
 
@@ -163,7 +162,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         """Shows/hides a :class:`.HistogramToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(histogramtoolbar.HistogramToolBar, histPanel=self)
+        self.togglePanel(histogramtoolbar.HistogramToolBar)
 
 
     @actions.toggleAction

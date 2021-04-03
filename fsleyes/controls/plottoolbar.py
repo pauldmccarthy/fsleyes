@@ -23,13 +23,12 @@ class PlotToolBar(ctrlpanel.ControlToolBar):
     are common to all :class:`.OverlayPlotPanel` types.
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, plotPanel):
+    def __init__(self, parent, overlayList, displayCtx, plotPanel):
         """Create a ``PlotToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg plotPanel:   The :class:`.PlotPanel` instance.
         """
 
@@ -37,7 +36,7 @@ class PlotToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          plotPanel,
                                           height=24,
                                           kbFocus=True)
 

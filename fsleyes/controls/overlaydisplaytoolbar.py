@@ -67,7 +67,21 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
        _OverlayDisplayToolBar__makeMIPOptsTools
     """
 
-    def __init__(self, parent, overlayList, displayCtx, frame, viewPanel):
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``OverlayDisplayToolBar`` is only intended to be added to
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
+        :class:`.Scene3DPanel` views.
+        """
+        from fsleyes.views.orthopanel    import OrthoPanel
+        from fsleyes.views.lightboxpanel import LightBoxPanel
+        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Create an ``OverlyDisplyaToolBar``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -75,8 +89,6 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         :arg overlayList: The :class:`.OverlayList` instance.
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
 
         :arg viewPanel:   The :class:`.ViewPanel` which this
                           ``OverlayDisplayToolBar`` is owned by.
@@ -86,7 +98,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
                                           parent,
                                           overlayList,
                                           displayCtx,
-                                          frame,
+                                          viewPanel,
                                           height=24,
                                           kbFocus=True)
 
@@ -125,19 +137,6 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         self.__viewPanel      = None
 
         ctrlpanel.ControlToolBar.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``OverlayDisplayToolBar`` is only intended to be added to
-        :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
-        :class:`.Scene3DPanel` views.
-        """
-        from fsleyes.views.orthopanel    import OrthoPanel
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        from fsleyes.views.scene3dpanel  import Scene3DPanel
-        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
 
 
     def __showTools(self, overlay):

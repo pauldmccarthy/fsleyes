@@ -16,8 +16,7 @@ import functools as ft
 import itertools as it
 import              re
 import              logging
-
-import six
+import              collections
 
 import wx
 import wx.lib.agw.aui               as aui
@@ -1953,7 +1952,7 @@ class FSLeyesFrame(wx.Frame):
                 continue
 
             # Method on this FSLeyesFrame
-            if isinstance(action, six.string_types):
+            if isinstance(action, str):
 
                 title     = strings.actions[  self, action]
                 shortcut  = shortcuts.actions.get((self, action))
@@ -1976,13 +1975,16 @@ class FSLeyesFrame(wx.Frame):
     def __makeToolsMenu(self):
         """Called by :meth:`refreshToolsMenu`. Populates the *Tools* menu with
         tools that are not bound to a specific ``ViewPanel`` (and which are
-        always present).
+        always present), followed by tools which are specific to the open
+        views.
         """
 
         menu = self.__toolsMenu
 
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
+            # plugin tools not coupled to a specific view
+            # get a reference to me, the FSLeyesFrame
             actionObj = cls(self.__overlayList, self.__displayCtx, self)
 
             if shortcut is not None:
@@ -2014,7 +2016,12 @@ class FSLeyesFrame(wx.Frame):
         if len(pluginTools) > 0:
             menu.AppendSeparator()
             for name, cls in pluginTools.items():
-                actionItems.append(addTool(cls, name))
+                # some tools are independent of a specific view
+                # panel - we add these ones here. Tools/actions
+                # which are coupled to a specific view are added
+                # within __makeViewPanelTools
+                if cls.supportedViews() is None:
+                    actionItems.append(addTool(cls, name))
 
         actionItems.extend(self.__makeViewPanelTools())
         return actionItems
@@ -2028,6 +2035,8 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return
 
+        menu = self.__toolsMenu
+
         from fsleyes.views.orthopanel         import OrthoPanel
         from fsleyes.views.lightboxpanel      import LightBoxPanel
         from fsleyes.views.scene3dpanel       import Scene3DPanel
@@ -2036,7 +2045,25 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
         from fsleyes.views.shellpanel         import ShellPanel
 
-        menu = self.__toolsMenu
+        # We add tools from plugins which are specific to
+        # each view panel into the respective section -
+        # here we organise plugin-provided tools by the
+        # view panel(s) they support to make things easier
+        # below.
+        pluginTools = collections.defaultdict(list)
+        for name, cls in plugins.listTools().items():
+            views =  cls.supportedViews()
+            if views is not None:
+                for view in views:
+                    pluginTools[view].append((name, cls))
+
+        def addPluginTool(cls, name, view):
+            # plugin tools bound to a specific view
+            # get passed a reference to that view
+            actionObj = cls(self.__overlayList, self.__displayCtx, view)
+            menuItem  = menu.Append(wx.ID_ANY, name)
+            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
+            return actionObj, menuItem
 
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
@@ -2077,6 +2104,9 @@ class FSLeyesFrame(wx.Frame):
             menu.AppendSeparator()
             menu.Append(wx.ID_ANY, self.__viewPanelTitles[panel]).Enable(False)
             actionItems.extend(self.populateMenu(menu, panel, toolNames))
+
+            for name, cls in pluginTools[type(panel)]:
+                actionItems.append(addPluginTool(cls, name, panel))
 
         return actionItems
 

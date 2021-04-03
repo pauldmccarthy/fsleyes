@@ -77,6 +77,15 @@ class Action(props.HasProperties):
     """
 
 
+    @staticmethod
+    def supportedViews():
+        """May be overridden to declare that this Action should be associated
+        with a specific :class:`.ViewPanel`. If overridden, must return a
+        list containing all of the supported ``ViewPanel`` types.
+        """
+        return None
+
+
     def __init__(self,
                  overlayList,
                  displayCtx,

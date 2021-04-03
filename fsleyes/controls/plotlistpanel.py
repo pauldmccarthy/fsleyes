@@ -39,7 +39,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, plotPanel):
+    def __init__(self, parent, overlayList, displayCtx, plotPanel):
         """Create a ``PlotListPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
@@ -48,14 +48,12 @@ class PlotListPanel(ctrlpanel.ControlPanel):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
-
         :arg plotPanel:   The :class:`.OverlayPlotPanel` associated with this
                           ``PlotListPanel``.
         """
 
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, plotPanel)
 
         self.__plotPanel = plotPanel
         self.__dsList    = elistbox.EditableListBox(

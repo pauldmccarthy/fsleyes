@@ -485,14 +485,15 @@ class OrthoViewProfile(profiles.Profile):
 
         copts  = canvas.opts
 
-        corner = [canvasDownPos[copts.xax], canvasDownPos[copts.yax]]
-        width  = canvasPos[copts.xax] - corner[0]
-        height = canvasPos[copts.yax] - corner[1]
+        x, y   = [canvasDownPos[copts.xax], canvasDownPos[copts.yax]]
+        width  = canvasPos[copts.xax] - x
+        height = canvasPos[copts.yax] - y
 
-        self.__lastRect = canvas.getAnnotations().rect(corner,
+        self.__lastRect = canvas.getAnnotations().rect(x, y,
                                                        width,
                                                        height,
                                                        width=1,
+                                                       filled=False,
                                                        colour=(1, 1, 0))
         canvas.Refresh()
 

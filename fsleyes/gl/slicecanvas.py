@@ -118,6 +118,8 @@ class SliceCanvas(object):
        :nosignatures:
 
        canvasToWorld
+       worldToCanvas
+       pixelSize
        panDisplayBy
        centreDisplayAt
        panDisplayToShow
@@ -310,6 +312,48 @@ class SliceCanvas(object):
         pos[opts.zax] = opts.pos[opts.zax]
 
         return pos
+
+
+    def worldToCanvas(self, pos):
+        """Converts a location in the display coordinate system into
+        an x/y location in pixels relative to this ``SliceCanvas``.
+        """
+
+        opts    = self.opts
+        xpos    = pos[opts.xax]
+        ypos    = pos[opts.yax]
+        invertX = opts.invertX
+        invertY = opts.invertY
+
+        xmin          = opts.displayBounds.xlo
+        xlen          = opts.displayBounds.xlen
+        ymin          = opts.displayBounds.ylo
+        ylen          = opts.displayBounds.ylen
+        width, height = [float(s) for s in self.GetSize()]
+
+        if xlen   == 0 or \
+           ylen   == 0 or \
+           width  == 0 or \
+           height == 0:
+            return None
+
+        xpos = width  * ((xpos - xmin) / xlen)
+        ypos = height * ((ypos - ymin) / ylen)
+
+        if invertX: xpos = width  - xpos
+        if invertY: ypos = height - ypos
+
+        return xpos, ypos
+
+
+    def pixelSize(self):
+        """Returns the current (x, y) size of one logical pixel in display
+        coordinates.
+        """
+        w, h = self.GetSize()
+        xlen = self.opts.displayBounds.xlen
+        ylen = self.opts.displayBounds.ylen
+        return (xlen / w, ylen / h)
 
 
     def panDisplayBy(self, xoff, yoff):
@@ -1300,8 +1344,8 @@ class SliceCanvas(object):
         # Just show a vertical line at xpos,
         # and a horizontal line at ypos
         if not copts.cursorGap:
-            lines.append(((x,    ymin), (x,    ymax)))
-            lines.append(((xmin, y),    (xmax, y)))
+            lines.append((x,    ymin, x,    ymax))
+            lines.append((xmin, y,    xmax, y))
 
         # Draw vertical/horizontal cursor lines,
         # with a gap at the cursor centre
@@ -1310,10 +1354,10 @@ class SliceCanvas(object):
         # use a fixed gap size
         elif ovl is None or not isinstance(ovl, fslimage.Nifti):
 
-            lines.append(((xmin,    y),       (x - 0.5, y)))
-            lines.append(((x + 0.5, y),       (xmax,    y)))
-            lines.append(((x,       ymin),    (x,       y - 0.5)))
-            lines.append(((x,       y + 0.5), (x,       ymax)))
+            lines.append((xmin,    y,       x - 0.5, y))
+            lines.append((x + 0.5, y,       xmax,    y))
+            lines.append((x,       ymin,    x,       y - 0.5))
+            lines.append((x,       y + 0.5, x,       ymax))
 
         # If the current overlay is NIFTI, make
         # the gap size match its voxel size
@@ -1371,10 +1415,10 @@ class SliceCanvas(object):
                 ylow  = min(vloc[copts.yax], vlocy[copts.yax])
                 yhigh = max(vloc[copts.yax], vlocy[copts.yax])
 
-            lines.append(((xmin,  y),     (xlow, y)))
-            lines.append(((xhigh, y),     (xmax, y)))
-            lines.append(((x,     ymin),  (x,    ylow)))
-            lines.append(((x,     yhigh), (x,    ymax)))
+            lines.append((xmin,  y,     xlow, y))
+            lines.append((xhigh, y,     xmax, y))
+            lines.append((x,     ymin,  x,    ylow))
+            lines.append((x,     yhigh, x,    ymax))
 
         kwargs = {
             'colour' : copts.cursorColour,
@@ -1382,8 +1426,8 @@ class SliceCanvas(object):
         }
 
         for line in lines:
-            self._annotations.line(line[0], line[1], **kwargs)
-            self._annotations.line(line[0], line[1], **kwargs)
+            self._annotations.line(*line, **kwargs)
+            self._annotations.line(*line, **kwargs)
 
 
     def _drawOffscreenTextures(self):

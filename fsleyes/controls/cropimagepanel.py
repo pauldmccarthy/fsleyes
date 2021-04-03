@@ -42,17 +42,26 @@ class CropImagePanel(ctrlpanel.ControlPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``CropImagePanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create a ``CropImagePanel``.
 
         :arg parent:      The :mod:`wx` parent object.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
         :arg ortho:       The :class:`.OrthoPanel` instance.
         """
         ctrlpanel.ControlPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
+            self, parent, overlayList, displayCtx, ortho)
 
         profile = ortho.getCurrentProfile()
 
@@ -80,7 +89,7 @@ class CropImagePanel(ctrlpanel.ControlPanel):
             self,
             overlayList,
             displayCtx,
-            frame,
+            ortho.frame,
             strings.messages[self, 'dsWarning'],
             'not like overlay',
             'overlay')
@@ -179,16 +188,6 @@ class CropImagePanel(ctrlpanel.ControlPanel):
 
         dsWarning.destroy()
         ctrlpanel.ControlPanel.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``CropImagePanel`` is only intended to be added to
-        :class:`.OrthoPanel` views.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
 
 
     def __registerOverlay(self, overlay):

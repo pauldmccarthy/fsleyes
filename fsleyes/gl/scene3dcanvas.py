@@ -401,7 +401,8 @@ class Scene3DCanvas(object):
             return
 
         if self.__legendLabels is None:
-            self.__legendLabels = [gltext.Text() for _ in range(6)]
+            self.__legendLabels = [gltext.Text(coordinates='pixels')
+                                   for _ in range(6)]
 
         dopts  = self.__displayCtx.getOpts(overlay)
         labels = dopts.getLabels()[0]
@@ -417,7 +418,7 @@ class Scene3DCanvas(object):
 
         for label, text in zip(labels, self.__legendLabels):
             text.text     = label
-            text.fgColour = self.opts.legendColour
+            text.colour   = self.opts.legendColour
             text.fontSize = self.opts.labelSize
             text.halign   = 'centre'
             text.valign   = 'centre'
@@ -813,8 +814,7 @@ class Scene3DCanvas(object):
             # location for this label
             xx, xy = canvas * (labelPoses[i, :2] + 0.5 * view) / view
 
-            label.xpix = xx
-            label.ypix = xy
+            label.pos = (xx, xy)
 
             label.draw(w, h)
 

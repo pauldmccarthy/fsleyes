@@ -22,26 +22,6 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
     """
 
 
-    def __init__(self, parent, overlayList, displayCtx, frame, ortho):
-        """Create an ``OrthoEditSettingsPanel``.
-
-        :arg parent:      The :mod:`wx` parent object
-        :arg overlayList: The :class:`.OverlayList` instance.
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg frame:       The :class:`.FSLeyesFrame` instance.
-        :arg ortho:       The :class:`.OrthoPanel` instance.
-        """
-        ctrlpanel.SettingsPanel.__init__(self,
-                                         parent,
-                                         overlayList,
-                                         displayCtx,
-                                         frame,
-                                         kbFocus=True)
-
-        self.__ortho = ortho
-        self.__makeTools()
-
-
     @staticmethod
     def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
@@ -50,6 +30,25 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
         """
         from fsleyes.views.orthopanel import OrthoPanel
         return [OrthoPanel]
+
+
+    def __init__(self, parent, overlayList, displayCtx, ortho):
+        """Create an ``OrthoEditSettingsPanel``.
+
+        :arg parent:      The :mod:`wx` parent object
+        :arg overlayList: The :class:`.OverlayList` instance.
+        :arg displayCtx:  The :class:`.DisplayContext` instance.
+        :arg ortho:       The :class:`.OrthoPanel` instance.
+        """
+        ctrlpanel.SettingsPanel.__init__(self,
+                                         parent,
+                                         overlayList,
+                                         displayCtx,
+                                         ortho,
+                                         kbFocus=True)
+
+        self.__ortho = ortho
+        self.__makeTools()
 
 
     def __makeTools(self):

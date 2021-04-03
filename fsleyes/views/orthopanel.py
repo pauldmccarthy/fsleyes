@@ -36,6 +36,7 @@ import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
 import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
+import fsleyes.controls.annotationpanel        as annotationpanel
 import fsleyes.displaycontext.orthoopts        as orthoopts
 from . import                                     canvaspanel
 
@@ -116,6 +117,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        toggleEditTransformPanel
        toggleEditPanel
        toggleOrthoToolBar
+       toggleAnnotationPanel
        resetDisplay
        centreCursor
        centreCursorWorld
@@ -350,7 +352,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.OrthoToolBar`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        self.togglePanel(orthotoolbar.OrthoToolBar, ortho=self)
+        self.togglePanel(orthotoolbar.OrthoToolBar)
 
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
@@ -382,8 +384,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.togglePanel(edittransformpanel.EditTransformPanel,
                          floatPane=True,
                          floatOnly=True,
-                         closeable=False,
-                         ortho=self)
+                         closeable=False)
 
 
     @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
@@ -392,7 +393,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
-                         ortho=self,
+                         floatPane=floatPane)
+
+
+    @actions.toggleControlAction(annotationpanel.AnnotationPanel)
+    def toggleAnnotationPanel(self, floatPane=False):
+        """Shows/hides an :class:`.AnnotationPanel`. See
+        :meth:`.ViewPanel.togglePanel`.
+        """
+        if self.profile == 'view': self.profile = 'annotate'
+        else:                      self.profile = 'view'
+        self.togglePanel(annotationpanel.AnnotationPanel,
+                         location=wx.LEFT,
                          floatPane=floatPane)
 
 
@@ -491,6 +503,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
                    self.toggleFileTreePanel,
+                   self.toggleAnnotationPanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,
@@ -529,7 +542,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Returns all of the :class:`.SliceCanvas` instances contained
         within this ``OrthoPanel``.
         """
-        return [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        canvas = [self.__xcanvas, self.__ycanvas, self.__zcanvas]
+        return [c for c in canvas if c is not None]
 
 
     def getXCanvas(self):
@@ -589,18 +603,16 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # be closed, or closed but should be open
         if (not editToolBarOpen) and      inEdit or \
                 editToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar, ortho=self)
+            self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
 
         if (not editActionToolBarOpen) and      inEdit or \
                 editActionToolBarOpen  and (not inEdit):
             self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
-                             ortho=self,
                              location=wx.LEFT)
 
         if (not cropPanelOpen) and      inCrop or \
                 cropPanelOpen  and (not inCrop):
             self.togglePanel(cropimagepanel.CropImagePanel,
-                             ortho=self,
                              floatPane=True,
                              floatOnly=True,
                              closeable=False,

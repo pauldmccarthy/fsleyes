@@ -323,6 +323,17 @@ messages = TypeDict({
     'ProjectImageToSurfaceAction.noOverlap' :
     'Cannot identify any loaded images which overlap with the surface in '
     'the display coordinate system.',
+
+    'OrthoAnnotateProfile.TextAnnotation' : 'Enter your text',
+
+    'SaveAnnotationsAction.saveFile' :
+    'Save annotations to file',
+    'SaveAnnotationsAction.saveFileError' :
+    'An errror occurred while saving the file.',
+    'LoadAnnotationsAction.loadFile' :
+    'Load annotations from file',
+    'LoadAnnotationsAction.loadFileError' :
+    'An errror occurred while loading the file.',
 })
 
 
@@ -371,6 +382,7 @@ titles = TypeDict({
     'LookupTablePanel'          : 'Lookup tables',
     'LutLabelDialog'            : 'New LUT label',
     'Scene3DToolBar'            : '3D view toolbar',
+    'AnnotationPanel'           : 'Annotations',
     'FlirtFileDialog.load'      : 'Load affine transformation',
     'FlirtFileDialog.save'      : 'Save affine transformation',
 
@@ -481,6 +493,9 @@ titles = TypeDict({
     'LoadPluginAction.installError'  : 'Error installing plugin file',
 
     'ProjectImageToSurfaceAction.dialog'  : 'Select image',
+
+    'SaveAnnotationsAction.saveFileError' : 'Error saving file',
+    'LoadAnnotationsAction.loadFileError' : 'Error loading file',
 })
 
 
@@ -514,6 +529,8 @@ actions = TypeDict({
     'ResampleAction'              : 'Resample image',
     'LoadPluginAction'            : 'Load plugin',
     'ProjectImageToSurfaceAction' : 'Project image data onto surface',
+    'SaveAnnotationsAction'       : 'Save annotations to file',
+    'LoadAnnotationsAction'       : 'Load annotations from file',
 
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -557,6 +574,7 @@ actions = TypeDict({
     'OrthoPanel.toggleCropMode'           : 'Crop',
     'OrthoPanel.toggleEditTransformPanel' : 'Nudge',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
+    'OrthoPanel.toggleAnnotationPanel'    : 'Annotations panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
     'OrthoPanel.pearsonCorrelation'       : 'Seed correlation (Pearson)',
@@ -954,6 +972,21 @@ labels = TypeDict({
 
     'ProjectImageToSurfaceAction.message' :
     'Select an image to project onto the surface',
+
+    'AnnotationPanel.colour'        : 'Colour',
+    'AnnotationPanel.lineWidth'     : 'Width/size',
+    'AnnotationPanel.fontSize'      : 'Font size',
+    'AnnotationPanel.filled'        : 'Draw filled',
+    'AnnotationPanel.border'        : 'Draw border',
+    'AnnotationPanel.alpha'         : 'Opacity',
+    'AnnotationPanel.honourZLimits' : 'Lock to depth',
+
+    'AnnotationPanel.Point'          : 'Point',
+    'AnnotationPanel.Line'           : 'Line',
+    'AnnotationPanel.Arrow'          : 'Arrow',
+    'AnnotationPanel.Rect'           : 'Rectangle',
+    'AnnotationPanel.Ellipse'        : 'Ellipse',
+    'AnnotationPanel.TextAnnotation' : 'Text',
 })
 
 
