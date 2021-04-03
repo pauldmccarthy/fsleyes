@@ -23,9 +23,6 @@ from .. import (run_render_test,
                 MockFileDialog)
 
 
-pytestmark = pytest.mark.clitest
-
-
 datadir = op.join(op.dirname(__file__), '..', 'testdata')
 
 
