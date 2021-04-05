@@ -16,9 +16,9 @@ import                                  wx
 import wx.lib.agw.aui                as aui
 import wx.lib.agw.aui.framemanager   as auifm
 
+import fsl.utils.notifier            as notifier
 import fsl.utils.deprecated          as deprecated
 import fsleyes_widgets               as fwidgets
-import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
@@ -58,17 +58,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     **Profiles**
 
 
-    Some ``ViewPanel`` classes have relatively complex mouse and keyboard
-    interaction behaviour (e.g. the :class:`.OrthoPanel` and
-    :class:`.LightBoxPanel`). The logic defines this interaction is provided
-    by a :class:`.Profile` instance, and is managed by a
-    :class:`.ProfileManager`.  Some ``ViewPanel`` classes have multiple
-    interaction profiles - for example, the :class:`.OrthoPanel` has a
-    ``view`` profile, and an ``edit`` profile. The current interaction
-    profile can be changed with the :attr:`profile` property, and can be
-    accessed with the :meth:`getCurrentProfile` method. See the
-    :mod:`.profiles` package for more information on interaction profiles.
+    The logic which defines the way that a user interacts with a view panel
+    is defined by a  :class:`.Profile` object, which contains mouse and
+    keyboard event handlers for reacting to user input.
 
+    Sub-classes must call the :meth:`initProfile` method to initialise their
+    default profile. Other profiles may be associated with a particular
+    control panel - these profiles can be temporarily activated and deactivated
+    when the control panel is toggled via the :meth:`togglePanel` method.
+
+    The currently active interaction profile can be accessed with the
+    :meth:`getCurrentProfile` method. See the :mod:`.profiles` package for
+    more information on interaction profiles.
 
     **Programming interface**
 
@@ -92,13 +93,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    profile = props.Choice()
-    """The current interaction profile for this ``ViewPanel``. """
-
-
     def __init__(self, parent, overlayList, displayCtx, frame):
-        """Create a ``ViewPanel``. All arguments are passed through to the
-        :class:`.FSLeyesPanel` constructor.
+        """Create a ``ViewPanel``.
+
+        :arg parent:         ``wx`` parent object
+        :arg overlayList:    The :class:`.OverlayList`
+        :arg displayCtx:     A :class:`.DisplayContext` object unique to this
+                             ``ViewPanel``
+        :arg frame:          The :class:`.FSLeyesFrame`
         """
 
         fslpanel.FSLeyesPanel.__init__(
@@ -119,6 +121,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__centrePanel = None
         self.__panels      = {}
 
+        # Notifier instance for emitting events
+        self.__events = notifier.Notifier()
+
         # See note in FSLeyesFrame about
         # the user of aero docking guides.
         self.__auiMgr = aui.AuiManager(
@@ -131,12 +136,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
-
-        # Use a different listener name so that subclasses
-        # can register on the same properties with self.name
-        lName = 'ViewPanel_{}'.format(self.name)
-
-        self.addListener('profile', lName, self.__profileChanged)
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -164,15 +163,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """
 
         # Make sure that any control panels are correctly destroyed
-        for panelType, panel in self.__panels.items():
+        for panel in self.__panels.values():
             self.__auiMgr.DetachPane(panel)
             panel.destroy()
+
+        # Clear ref to the events Notifier - it
+        # will drop refs to any event handlers
+        self.__events = None
 
         # Remove listeners from the overlay
         # list and display context
         lName = 'ViewPanel_{}'.format(self.name)
 
-        self            .removeListener('profile',         lName)
         self.overlayList.removeListener('overlays',        lName)
         self.displayCtx .removeListener('selectedOverlay', lName)
 
@@ -196,12 +198,24 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         fslpanel.FSLeyesPanel.destroy(self)
 
 
-    def initProfile(self):
+    @property
+    def events(self):
+        """Return a reference to a :class:`.Notifier` instance which can be
+        used to be notified when certain events occur. Currently the only
+        event topic which occurs is ``'profile'``, when the current
+        interaction profile changes.
+        """
+        return self.__events
+
+
+    def initProfile(self, defaultProfile):
         """Must be called by subclasses, after they have initialised all
         of the attributes which may be needed by their associated
         :class:`.Profile` instances.
+
+        :arg defaultProfile: Default profile type
         """
-        self.__profileChanged()
+        self.__profileManager.activateProfile(defaultProfile)
 
 
     def getCurrentProfile(self):
@@ -497,17 +511,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         :class:`.FSLeyesFrame` *Tools* menu.
         """
         return []
-
-
-    def __profileChanged(self, *a):
-        """Called when the current :attr:`profile` property changes. Tells the
-        :class:`.ProfileManager` about the change.
-
-        The ``ProfileManager`` will create a new :class:`.Profile` instance of
-        the appropriate type.
-        """
-
-        self.__profileManager.changeProfile(self.profile)
 
 
     def __auiMgrUpdate(self, *args, **kwargs):

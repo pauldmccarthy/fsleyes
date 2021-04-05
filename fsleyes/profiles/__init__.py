@@ -33,10 +33,6 @@ This logic is encapsulated in four classes:
    create and change the ``Profile`` instance currently in use.
 
 
-The :mod:`.profilemap` module contains mappings between ``ViewPanel`` types,
-and their corresponding ``Profile`` types.
-
-
 The ``profiles`` package is also home to the :mod:`.shortcuts` module, which
 defines global *FSLeyes* keyboard shortcuts.
 """
@@ -64,40 +60,33 @@ class ProfileManager(object):
     instances for a :class:`.ViewPanel` instance.
 
     A :class:`ProfileManager` instance is created and used by every
-    :class:`.ViewPanel` instance. The :mod:`.profilemap` module defines the
-    :class:`Profile` types which should used for specific :class:`.ViewPanel`
-    types.
+    :class:`.ViewPanel` instance. The ``ProfileManager`` manages a stack of
+    :class:`.Profile` instances - profiles can be activated and deactivated
+    via the :meth:`activateProfile` and :meth:`deactivateProfile` methods.
     """
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create a :class:`ProfileManager`.
 
-        :arg viewPanel:   The :class:`.ViewPanel` instance which this
-                          :class:`ProfileManager` is to manage.
+        :arg viewPanel:      The :class:`.ViewPanel` instance which this
+                             :class:`ProfileManager` is to manage.
 
-        :arg overlayList: The :class:`.OverlayList` instance containing the
-                          overlays that are being displayed.
+        :arg overlayList:    The :class:`.OverlayList` instance containing the
+                             overlays that are being displayed.
 
-        :arg displayCtx:  The :class:`.DisplayContext` instance which defines
-                          how overlays are being displayed.
+        :arg displayCtx:     The :class:`.DisplayContext` instance which
+                             defines how overlays are being displayed.
         """
-        from . import profilemap
 
-        self.__viewPanel      = viewPanel
-        self.__viewCls        = viewPanel.__class__
-        self.__overlayList    = overlayList
-        self.__displayCtx     = displayCtx
-        self.__currentProfile = None
+        self.__viewPanel   = viewPanel
+        self.__viewCls     = viewPanel.__class__
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
 
-        profileProp = viewPanel.getProp('profile')
-        profilez    = profilemap.profiles.get(viewPanel.__class__, [])
-
-        for profile in profilez:
-            profileProp.addChoice(profile, instance=viewPanel)
-
-        if len(profilez) > 0:
-            viewPanel.profile = profilez[0]
+        # a stack of profiles - [0] is the
+        # default, and [-1] is currently active
+        self.__profileStack = []
 
 
     def destroy(self):
@@ -105,55 +94,65 @@ class ProfileManager(object):
         it is about to be destroyed (or when it no longer needs a
         ``ProfileManager``).
 
-        This method destroys the current :class:`Profile` (if any), and
-        clears some internal object references to avoid memory leaks.
+        This method destroys all class:`Profile` instances, and clears some
+        internal object references to avoid memory leaks.
         """
-        if self.__currentProfile is not None:
-            self.__currentProfile.deregister()
-            self.__currentProfile.destroy()
 
-        self.__currentProfile    = None
-        self.__viewPanel         = None
-        self.__overlayList       = None
-        self.__overlaydisplayCtx = None
+        if len(self.__profileStack) > 0:
+            self.__profileStack[-1].deregister()
+
+        for prof in self.__profileStack:
+            prof.destroy()
+
+        self.__profileStack = None
+        self.__viewPanel    = None
+        self.__overlayList  = None
+        self.__displayCtx   = None
 
 
     def getCurrentProfile(self):
         """Returns the :class:`Profile` instance currently in use."""
-        return self.__currentProfile
+
+        if len(self.__profileStack) > 0:
+            return self.__profileStack[-1]
+
+
+    def deactivateProfile(self):
+        """Deactivates and destroys the current profile, and re-activates
+        the previous one.
+        """
+
+        prof = self.__profileStack.pop()
+
+        log.debug('Deregistering {} profile from {}'.format(
+            type(prof).__name__, self.__viewCls.__name__))
+
+        prof.deregister()
+        prof.destroy()
+
+        if len(self.__profileStack) > 0:
+            self.__profileStack[-1].register()
 
 
     def changeProfile(self, profile):
-        """Deregisters the current :class:`Profile` instance (if necessary),
-        and creates a new one corresponding to the named profile.
+        print('Deprecated')
+        return self.activateProfile(profile)
+
+
+    def activateProfile(self, profileCls):
+        """Deregisters the current :class:`Profile` instance, and creates and
+        registers a new instance of type ``profileCls``.
         """
 
-        from . import profilemap
+        if len(self.__profileStack) > 0:
+            self.__profileStack[-1].deregister()
 
-        profileCls = profilemap.profileHandlers[self.__viewCls, profile]
+        prof = profileCls(self.__viewPanel,
+                          self.__overlayList,
+                          self.__displayCtx)
 
-        # the current profile is the requested profile
-        if (self.__currentProfile is not None) and \
-           (self.__currentProfile.__class__ is profileCls):
-            return
-
-        if self.__currentProfile is not None:
-            log.debug('Deregistering {} profile from {}'.format(
-                self.__currentProfile.__class__.__name__,
-                self.__viewCls.__name__))
-            self.__currentProfile.deregister()
-            self.__currentProfile.destroy()
-            self.__currentProfile = None
-
-        self.__currentProfile = profileCls(self.__viewPanel,
-                                           self.__overlayList,
-                                           self.__displayCtx)
-
-        log.debug('Registering {} profile with {}'.format(
-            self.__currentProfile.__class__.__name__,
-            self.__viewCls.__name__))
-
-        self.__currentProfile.register()
+        self.__profileStack.append(prof)
+        self.__profileStack[-1].register()
 
 
 class Profile(props.SyncableHasProperties, actions.ActionProvider):
@@ -174,7 +173,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     The ``Profile`` class currently only supports :class:`.CanvasPanel` and
     :class:`.PlotPanel` views. ``Profile`` instances use a
     :class:`.CanvasPanelEventManager` instance to manage GUI events on
-    :class:`.CanvasPanel` instances, or a:class:`.PlotPanelEventManager`
+     :class:`.CanvasPanel` instances, or a:class:`.PlotPanelEventManager`
     to manage GUI events on ``matplotlib Canvas`` objects.
 
 
@@ -364,6 +363,78 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     """
 
 
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.ViewPanel` type that is supported by this
+        ``Profile``. Must be implemented by sub-classes.
+        """
+        raise NotImplementedError()
+
+
+    @staticmethod
+    def tempModes():
+        """May be overridden by sub-classes.  Should return a dictionary
+        defining temporary modes which, when in a given mode, can be accessed
+        with a keyboard modifer (e.g. Control, Shift, etc). For example, a
+        temporary mode map of::
+
+            ('view', wx.WXK_SHIFT) : 'zoom'
+
+        states that when the ``Profile`` is in ``'view'`` mode, and the shift
+        key is held down, the ``Profile`` should temporarily switch to
+        ``'zoom'`` mode.
+
+        For multi-key combinations, the modifier key IDs must be provided as a
+        tuple, in alphabetical order. For example, to specify shift+ctrl, the
+        tuple must be (wx.WXK_CTRL, wx.WXK_SHIFT)
+
+        Important: Any temporary modes which use CTRL, ALT, or CTRL+ALT must
+        not handle character events, as these modifiers are reserved for
+        global shortcuts.
+        """
+        return None
+
+
+    @staticmethod
+    def altHandlers():
+        """May be overridden by sub-classes. Should return a dictionary
+        defining alternate handlers for a given mode and event type. Entries
+        in this dictionary allow a :class:`.Profile` sub-class to define a
+        handler for a single mode and event type, but to re-use that handler
+        for other modes and event types. For example, the following alternate
+        handler mapping::
+
+            ('zoom', 'MiddleMouseDrag') : ('pan',  'LeftMouseDrag')
+
+        states that when the ``Profile`` is in ``'zoom'`` mode, and a
+        ``MiddleMouseDrag`` event occurs, the ``LeftMouseDrag`` handler for
+        the ``'pan'`` mode should be called.
+
+        .. note:: Event bindings defined by ``altHandlers`` take precdence
+                  over the event bindings defined in the :class:`.Profile`
+                  sub-class. So you can use the ``altHandlers`` to override
+                  the default behaviour of a ``Profile``.
+        """
+        return None
+
+
+    @staticmethod
+    def fallbackHandlers():
+        """May be overridden by sub-classes. Should return a dictionary
+        defining handlers for a given mode and event type which will be called
+        if the handler for that mode/event type returns a value of ``False``,
+        indicating that it has not been handled. For example, the
+        following fallback handler mapping::
+
+            (('pick', 'LeftMouseDown'), ('nav', 'LeftMouseDown')),
+
+        states that when the profile is in ``'pick'`` mode, and the
+        ``LeftMouseDown`` handler for ``'pick'`` mode returns ``False``, the
+        ``LeftMouseDown`` handler for ``'nav'`` mode will be called.
+        """
+        return None
+
+
     def __init__(self,
                  viewPanel,
                  overlayList,
@@ -385,6 +456,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
                           identifiers for this profile. These are added as
                           options on the :attr:`mode` property.
         """
+
+        if type(viewPanel) != self.supportedView():
+            raise ValueError('Unsupported view: {}'.format(
+                type(viewPanel).__name__))
 
         actions.ActionProvider     .__init__(self, overlayList, displayCtx)
         props.SyncableHasProperties.__init__(self)
