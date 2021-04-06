@@ -58,6 +58,19 @@ class ControlMixin:
         return None
 
 
+    @staticmethod
+    def profileCls():
+        """Return the custom interaction profile associated with this control.
+        Must be a sub-class of :class:`.Profile`.
+
+        Control panels which are associated with an interaction profile can
+        assume that the profile has already been created by the time the
+        control is created. The :class:`.Profile` instance can be retrieved
+        via :meth:`.ViewPanel.getCurrentProfile`.
+        """
+        return None
+
+
 class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
     """The ``ControlPanel`` is the base class for all FSLeyes controls.
     All sub-classes must call ``__init__``.

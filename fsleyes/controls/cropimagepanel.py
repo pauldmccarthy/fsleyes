@@ -31,6 +31,7 @@ import fsleyes.displaycontext               as displaycontext
 import fsleyes.strings                      as strings
 import fsleyes.actions.copyoverlay          as copyoverlay
 import fsleyes.controls.displayspacewarning as dswarning
+import fsleyes.profiles.orthocropprofile    as orthocropprofile
 
 
 class CropImagePanel(ctrlpanel.ControlPanel):
@@ -50,6 +51,14 @@ class CropImagePanel(ctrlpanel.ControlPanel):
         """
         from fsleyes.views.orthopanel import OrthoPanel
         return [OrthoPanel]
+
+
+    @staticmethod
+    def profileCls():
+        """Returns the :class:`.OrthoCropProfile` class, which needs to be
+        activated in conjunction with the ``CropImagePanel``.
+        """
+        return orthocropprofile.OrthoCropProfile
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):

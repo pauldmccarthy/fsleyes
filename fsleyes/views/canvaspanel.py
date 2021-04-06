@@ -69,6 +69,9 @@ class CanvasPanel(viewpanel.ViewPanel):
       4. Override the :meth:`centrePanelLayout` method if any custom layout is
          necessary.
 
+      5. Call :meth:`.ViewPanel.initProfile` with the initial interaction
+         profile
+
 
     **Actions**
 

@@ -11,6 +11,7 @@
 
 import logging
 
+import          wx
 import numpy as np
 
 import fsl.data.image                     as fslimage
@@ -20,11 +21,10 @@ from   fsl.utils.platform import platform as fslplatform
 import fsleyes_props                      as props
 import fsleyes.actions                    as actions
 import fsleyes.gl.annotations             as annotations
-from . import                                orthoviewprofile
+import fsleyes.profiles.orthoviewprofile  as orthoviewprofile
 
 
 log = logging.getLogger(__name__)
-
 
 
 class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
@@ -66,6 +66,27 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
     of the cropping region, in the voxel coordinate system of the
     currently selected overlay.
     """
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``OrthoCropProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {
+            ('crop',  wx.WXK_SHIFT)                  : 'nav',
+            ('crop',  wx.WXK_CONTROL)                : 'zoom',
+            ('crop',  wx.WXK_ALT)                    : 'pan',
+            ('crop', (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return {('crop', 'MiddleMouseDrag') : ('pan', 'LeftMouseDrag')}
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):
