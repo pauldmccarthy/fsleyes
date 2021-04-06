@@ -66,7 +66,7 @@ class ProfileManager:
     """
 
 
-    def __init__(self, viewPanel, overlayList, displayCtx):
+    def __init__(self, viewPanel, overlayList, displayCtx, maxprofiles):
         """Create a :class:`ProfileManager`.
 
         :arg viewPanel:      The :class:`.ViewPanel` instance which this
@@ -77,12 +77,16 @@ class ProfileManager:
 
         :arg displayCtx:     The :class:`.DisplayContext` instance which
                              defines how overlays are being displayed.
+
+        :arg maxprofiles:    Maximum numbe of profiles which can be in the
+                             profile stack.
         """
 
         self.__viewPanel   = viewPanel
         self.__viewCls     = viewPanel.__class__
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__maxprofiles = maxprofiles
 
         # a stack of profiles - [0] is the
         # default, and [-1] is currently active
@@ -98,7 +102,7 @@ class ProfileManager:
         internal object references to avoid memory leaks.
         """
 
-        if len(self.__profileStack) > 0:
+        if self.numProfiles() > 0:
             self.__profileStack[-1].deregister()
 
         for prof in self.__profileStack:
@@ -110,11 +114,18 @@ class ProfileManager:
         self.__displayCtx   = None
 
 
+    def numProfiles(self):
+        """Returns the number of profiles that currently exist. """
+        return len(self.__profileStack)
+
+
     def getCurrentProfile(self):
         """Returns the :class:`Profile` instance currently in use."""
 
-        if len(self.__profileStack) > 0:
+        if self.numProfiles() > 0:
             return self.__profileStack[-1]
+        else:
+            return None
 
 
     def deactivateProfile(self):
@@ -130,7 +141,7 @@ class ProfileManager:
         prof.deregister()
         prof.destroy()
 
-        if len(self.__profileStack) > 0:
+        if self.numProfiles() > 0:
             self.__profileStack[-1].register()
 
 
@@ -144,7 +155,10 @@ class ProfileManager:
         registers a new instance of type ``profileCls``.
         """
 
-        if len(self.__profileStack) > 0:
+        if self.numProfiles() == self.__maxprofiles:
+            raise RuntimeError('Cannot create any more profiles!')
+
+        if self.numProfiles() > 0:
             self.__profileStack[-1].deregister()
 
         prof = profileCls(self.__viewPanel,
