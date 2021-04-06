@@ -1062,7 +1062,9 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         self.__save .Bind(wx.EVT_BUTTON,                 self.__onSave)
         self.__clear.Bind(wx.EVT_BUTTON,                 self.__onClear)
 
-        self.__canvas.addListener('profile', self.name, self.__profileChanged)
+        self.__canvas.events.register(self.name,
+                                      self.__profileChanged,
+                                      'profile')
         self.__profileChanged()
 
 
@@ -1071,7 +1073,7 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         needed.
         """
         self.__deregisterProfile()
-        self.__canvas.removeListener('profile', self.name)
+        self.__canvas.events.deregister(self.name, 'profile')
         self.__canvas = None
         fslpanel.FSLeyesPanel.destroy(self)
 

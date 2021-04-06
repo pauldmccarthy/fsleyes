@@ -90,7 +90,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         # Profile instance changes too, so we need
         # to re-create these action buttons. I'm being
         # lazy and just re-generating the entire toolbar.
-        ortho.addListener('profile', self.name, self.__makeTools)
+        ortho.events.register(self.name, self.__makeTools, 'profile')
 
         self.addListener('showCursorAndLabels',
                          self.name,
@@ -104,7 +104,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         Removes some property listeners, and calls the base class
         implementation.
         """
-        self.orthoPanel.removeListener('profile',             self.name)
+        self.orthoPanel.events.deregister(self.name, 'profile')
         self           .removeListener('showCursorAndLabels', self.name)
 
         ctrlpanel.ControlToolBar.destroy(self)
