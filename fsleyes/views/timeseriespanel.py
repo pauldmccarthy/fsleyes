@@ -26,6 +26,7 @@ import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
 import fsleyes.actions.addmaskdataseries       as addmaskdataseries
 import fsleyes.strings                         as strings
+import fsleyes.profiles.timeseriesprofile      as timeseriesprofile
 import fsleyes.plotting.timeseries             as timeseries
 import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
 import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
@@ -185,7 +186,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         self.addMaskDataSeries.bindProps('enabled', self.__addMaskAction)
 
-        self.initProfile()
+        self.initProfile(timeseriesprofile.TimeSeriesProfile)
 
 
     def destroy(self):

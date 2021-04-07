@@ -22,6 +22,7 @@ import fsleyes_props                          as props
 import fsleyes.actions                        as actions
 import fsleyes.actions.addroihistogram        as roihistogram
 import fsleyes.overlay                        as fsloverlay
+import fsleyes.profiles.histogramprofile      as histogramprofile
 import fsleyes.plotting.histogramseries       as histogramseries
 import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
 import fsleyes.controls.histogramtoolbar      as histogramtoolbar
@@ -125,7 +126,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         self.addROIHistogram.bindProps('enabled', self.__roiHistAction)
 
-        self.initProfile()
+        self.initProfile(histogramprofile.HistogramProfile)
         self.__selectedOverlayChanged()
 
 

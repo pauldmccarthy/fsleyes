@@ -348,7 +348,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             raise ValueError('Invalid value for location')
 
         supported = panelType.supportedViews()
-        if supported is not None and type(self) not in supported:
+        if supported is not None and not isinstance(self, tuple(supported)):
             raise ValueError(
                 '{} views are not supported by {} controls'.format(
                     type(self).__name__, panelType.__name__))

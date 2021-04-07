@@ -15,13 +15,14 @@ import wx
 
 import numpy as np
 
-import fsleyes_widgets.utils.layout        as fsllayout
+import fsleyes_widgets.utils.layout         as fsllayout
 
-import fsleyes.actions                     as actions
-import fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
-import fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
-import fsleyes.displaycontext.lightboxopts as lightboxopts
-from . import                                 canvaspanel
+import fsleyes.actions                      as actions
+import fsleyes.gl.wxgllightboxcanvas        as lightboxcanvas
+import fsleyes.profiles.lightboxviewprofile as lightboxviewprofile
+import fsleyes.controls.lightboxtoolbar     as lightboxtoolbar
+import fsleyes.displaycontext.lightboxopts  as lightboxopts
+from . import                                  canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -151,7 +152,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__selectedOverlayChanged()
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(lightboxviewprofile.LightBoxViewProfile)
 
 
     def destroy(self):

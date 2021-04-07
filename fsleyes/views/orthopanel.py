@@ -28,6 +28,7 @@ import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.editor                          as editor
+import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
@@ -301,7 +302,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__refreshLayout(refresh=False)
         self.__overlayListChanged()
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(orthoviewprofile.OrthoViewProfile)
 
 
     def destroy(self):

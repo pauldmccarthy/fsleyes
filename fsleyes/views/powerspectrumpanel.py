@@ -21,6 +21,7 @@ import fsl.data.melodicimage                      as fslmelimage
 import fsleyes_props                              as props
 
 import fsleyes.actions                            as actions
+import fsleyes.profiles.plotprofile               as plotprofile
 import fsleyes.plotting.powerspectrumseries       as psseries
 import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsleyes.controls.powerspectrumtoolbar      as powerspectrumtoolbar
@@ -98,7 +99,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                 self.name,
                                 self.__plotMelodicICsChanged)
 
-        self.initProfile()
+        self.initProfile(plotprofile.PlotProfile)
 
 
     def destroy(self):

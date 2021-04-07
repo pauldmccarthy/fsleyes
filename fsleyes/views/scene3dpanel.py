@@ -15,12 +15,13 @@ import wx
 
 import numpy as np
 
-import fsl.transform.affine               as affine
-import fsleyes.displaycontext.scene3dopts as scene3dopts
-import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
-import fsleyes.actions                    as actions
-import fsleyes.controls.scene3dtoolbar    as s3dtoolbar
-from . import                                canvaspanel
+import fsl.transform.affine                as affine
+import fsleyes.displaycontext.scene3dopts  as scene3dopts
+import fsleyes.gl.wxglscene3dcanvas        as scene3dcanvas
+import fsleyes.profiles.scene3dviewprofile as scene3dviewprofile
+import fsleyes.actions                     as actions
+import fsleyes.controls.scene3dtoolbar     as s3dtoolbar
+from . import                                 canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         contentPanel.SetSizer(sizer)
 
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(scene3dviewprofile.Scene3DViewProfile)
         self.syncLocation = True
 
 
