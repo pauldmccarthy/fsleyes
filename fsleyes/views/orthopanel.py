@@ -724,8 +724,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
         # Kill edit mode if a non-
         # image has been selected
-        if (not isEditable) and \
-           isinstance(self.currentProfile, orthoeditprofile.OrthoEditProfile):
+        if (not isEditable) and self.toggleEditMode.toggled:
             self.toggleEditMode()
 
         self.resetDisplay            .enabled = haveOverlays
