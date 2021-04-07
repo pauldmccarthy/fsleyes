@@ -234,6 +234,78 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
 
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``OrthoEditProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {
+            ('sel',     wx.WXK_SHIFT)                  : 'slice',
+            ('desel',   wx.WXK_SHIFT)                  : 'slice',
+            ('selint',  wx.WXK_SHIFT)                  : 'slice',
+            ('fill',    wx.WXK_SHIFT)                  : 'slice',
+            ('sel',     wx.WXK_ALT)                    : 'pan',
+            ('desel',   wx.WXK_ALT)                    : 'pan',
+            ('selint',  wx.WXK_ALT)                    : 'pan',
+            ('fill',    wx.WXK_ALT)                    : 'pan',
+            ('sel',     wx.WXK_CONTROL)                : 'zoom',
+            ('desel',   wx.WXK_CONTROL)                : 'zoom',
+            ('selint',  wx.WXK_CONTROL)                : 'zoom',
+            ('fill',    wx.WXK_CONTROL)                : 'zoom',
+            ('sel',    (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'chsize',
+            ('desel',  (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'chsize',
+            ('selint', (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'chthres',
+            ('selint', (wx.WXK_ALT,     wx.WXK_SHIFT)) : 'chrad'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return {
+            # The OrthoEditProfile is in
+            # 'nav' mode by default.
+
+            # View keyboard navigation
+            # works in major edit modes
+            ('sel',    'Char') : ('nav', 'Char'),
+            ('desel',  'Char') : ('nav', 'Char'),
+            ('selint', 'Char') : ('nav', 'Char'),
+            ('fill',   'Char') : ('nav', 'Char'),
+
+            # When in select mode, the right
+            # mouse button allows the user
+            # to deselect voxels.
+            ('sel',    'RightMouseDown') : ('desel',  'LeftMouseDown'),
+            ('sel',    'RightMouseDrag') : ('desel',  'LeftMouseDrag'),
+            ('sel',    'RightMouseUp')   : ('desel',  'LeftMouseUp'),
+
+            # And vice versa
+            ('desel',  'RightMouseDown') : ('sel',    'LeftMouseDown'),
+            ('desel',  'RightMouseDrag') : ('sel',    'LeftMouseDrag'),
+            ('desel',  'RightMouseUp')   : ('sel',    'LeftMouseUp'),
+
+            # Right mouse alsi deselects in fill and selint mode
+            ('fill',   'RightMouseDown') : ('desel',  'LeftMouseDown'),
+            ('fill',   'RightMouseDrag') : ('desel',  'LeftMouseDrag'),
+            ('fill',   'RightMouseUp')   : ('desel',  'LeftMouseUp'),
+
+            ('selint', 'RightMouseDown') : ('desel',  'LeftMouseDown'),
+            ('selint', 'RightMouseDrag') : ('desel',  'LeftMouseDrag'),
+            ('selint', 'RightMouseUp')   : ('desel',  'LeftMouseUp'),
+
+            # Make the selection cursor
+            # visible in desel mode
+            ('desel',  'MouseMove') : ('sel',    'MouseMove'),
+
+            # Middle mouse always pans.
+            ('sel',    'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('desel',  'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('selint', 'MiddleMouseDrag') : ('pan', 'LeftMouseDrag')}
+
+
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create an ``OrthoEditProfile``.
 

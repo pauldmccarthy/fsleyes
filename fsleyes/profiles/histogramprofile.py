@@ -59,7 +59,7 @@ class HistogramProfile(plotprofile.PlotProfile):
         which controls the use of modifier keys to temporarily enter other
         interaction modes.
         """
-        return {('panzoom', wx.WXK_CONTROL), 'overlayRange'}
+        return {('panzoom', wx.WXK_CONTROL) : 'overlayRange'}
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):

@@ -148,7 +148,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.removeAllPanels]
 
         names = [a.name if a is not None else None for a in actionz]
-        return list(zip(actionz, names))
+        return list(zip(names, actionz))
 
 
     @actions.action
