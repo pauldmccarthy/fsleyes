@@ -10,6 +10,8 @@ the addition/removal of control panels.
 """
 
 
+import wx.lib.agw.aui as aui
+
 from . import base
 
 
@@ -50,8 +52,6 @@ class ToggleControlPanelAction(base.ToggleAction):
                           when the action is called.
         """
 
-        import wx.lib.agw.aui as aui
-
         if instance: instance = viewPanel
         else:        instance = None
 
@@ -75,7 +75,13 @@ class ToggleControlPanelAction(base.ToggleAction):
         """Must be called when this ``ToggleControlPanelAction`` is no longer
         used. Clears references, and calls the base-class ``destroy`` method.
         """
+
+        if self.destroyed:
+            return
+
         base.ToggleAction.destroy(self)
+
+        self.__viewPanel.auiManager.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
         self.__viewPanel = None
 
 

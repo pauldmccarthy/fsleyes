@@ -120,6 +120,7 @@ class Action(props.HasProperties):
         self.__instance     = instance
         self.__func         = func
         self.__name         = name
+        self.__destroyed    = False
         self.__boundWidgets = []
 
         self.addListener('enabled',
@@ -181,9 +182,18 @@ class Action(props.HasProperties):
         return self.__func(*args, **kwargs)
 
 
+    @property
+    def destroyed(self):
+        """Returns ``True`` if :meth:`destroy` has been called, ``False``
+        otherwise.
+        """
+        return self.__destroyed
+
+
     def destroy(self):
         """Must be called when this ``Action`` is no longer needed. """
         self.unbindAllWidgets()
+        self.__destroyed   = True
         self.__overlayList = None
         self.__displayCtx  = None
         self.__func        = None
