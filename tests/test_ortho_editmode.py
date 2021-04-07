@@ -17,13 +17,17 @@ from fsl.data.image  import Image
 from fsl.data.bitmap import Bitmap
 from fsl.data.vtk    import VTKMesh
 
+from fsleyes.profiles.orthoviewprofile import OrthoViewProfile
+from fsleyes.profiles.orthoeditprofile import OrthoEditProfile
+
 from . import run_with_orthopanel, realYield
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
 
 
-def _test_select_and_fill(ortho, overlayList, displayCtx, img, canvas=None, vol=None):
+def _test_select_and_fill(
+        ortho, overlayList, displayCtx, img, canvas=None, vol=None):
 
     if canvas is None: cidx = 2
     else:              cidx = canvas
@@ -38,10 +42,10 @@ def _test_select_and_fill(ortho, overlayList, displayCtx, img, canvas=None, vol=
                                                    voxToWorldMat)
     realYield()
 
-    ortho.profile = 'edit'
+    ortho.profileManager.activateProfile(OrthoEditProfile)
     realYield(20)
 
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     profile.mode          = 'sel'
     profile.drawMode      = False
     profile.selectionSize = 1
@@ -169,25 +173,23 @@ def _test_editable(ortho, overlayList, displayCtx, ovl, ovlType, editable):
     # must have one value per voxel (e.g. no RGB)
     # must be displayed as volume, mask, or label
 
-    if editable: expect = 'edit'
-    else:        expect = 'view'
-
-    def setprof(profile):
-        ortho.profile = profile
-
-    savedprof = [None]
-
-    def saveprof():
-        savedprof[0] = ortho.profile
-
-    idle.idle(setprof, 'edit')
     idle.idle(overlayList.append, ovl, overlayType=ovlType)
     idle.idle(displayCtx.selectOverlay, ovl)
     idle.block(3)
-    idle.idle(saveprof)
+
+    try:
+        ortho.toggleEditMode()
+        assert editable
+    except Exception:
+        assert not editable
+
+    if editable: expect = OrthoEditProfile
+    else:        expect = OrthoViewProfile
+
+    assert isinstance(ortho.currentProfile, expect)
     idle.idle(overlayList.clear)
     idle.block(3)
-    assert savedprof[0] == expect
+    assert isinstance(ortho.currentProfile, OrthoViewProfile)
 
 
 def test_editable_volume():
@@ -232,10 +234,10 @@ def _test_newMask(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img]
     idle.block(2.5)
-    ortho.profile = 'edit'
+    ortho.profileManager.activateProfile(OrthoEditProfile)
     idle.block(2.5)
 
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
 
     profile.createMask()
     idle.block(2.5)
@@ -252,10 +254,10 @@ def _test_newMask_with_selection(ortho, overlayList, displayCtx):
     img = Image(np.random.randint(1, 65536, (20, 20, 20)))
     overlayList[:] = [img]
     idle.block(2.5)
-    ortho.profile = 'edit'
+    ortho.profileManager.activateProfile(OrthoEditProfile)
     idle.block(2.5)
 
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
 
     profile.mode = 'sel'
     idle.block(2.5)
@@ -280,9 +282,9 @@ def _setup_selectionAction_test(ortho, overlayList, displayCtx):
     overlayList[:] = [img1, img2]
     displayCtx.selectOverlay(img1)
     idle.block(2)
-    ortho.profile = 'edit'
+    ortho.profileManager.activateProfile(OrthoEditProfile)
     idle.block(2)
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     profile.mode = 'sel'
     profile.drawMode = False
     idle.block(2)
@@ -294,7 +296,7 @@ def test_clearSelection():
 def _test_clearSelection(ortho, overlayList, displayCtx):
     _setup_selectionAction_test(ortho, overlayList, displayCtx)
     img1 = overlayList[0]
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
@@ -310,7 +312,7 @@ def _test_fillSelection(ortho, overlayList, displayCtx):
 
     _setup_selectionAction_test(ortho, overlayList, displayCtx)
     img1 = overlayList[0]
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
@@ -330,7 +332,7 @@ def _test_eraseSelection(ortho, overlayList, displayCtx):
 
     _setup_selectionAction_test(ortho, overlayList, displayCtx)
     img1 = overlayList[0]
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     # erase
@@ -351,7 +353,7 @@ def _test_invertSelection(ortho, overlayList, displayCtx):
 
     _setup_selectionAction_test(ortho, overlayList, displayCtx)
     img1 = overlayList[0]
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     # invert
@@ -370,7 +372,7 @@ def _test_copyPasteData(ortho, overlayList, displayCtx):
 
     _setup_selectionAction_test(ortho, overlayList, displayCtx)
     img1, img2 = overlayList[:]
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     ed.getSelection().addToSelection(np.ones((4, 4, 4)), offset=(8, 8, 8))
@@ -395,7 +397,7 @@ def _test_copyPasteSelection(ortho, overlayList, displayCtx):
     displayCtx = ortho.displayCtx
     img1 = overlayList[0]
     opts = displayCtx.getOpts(img1)
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     ed = profile.editor(img1)
 
     ortho.getXCanvas().SetFocus()
@@ -436,10 +438,10 @@ def _test_applySelection_small_pixdim4(ortho, overlayList, displayCtx):
     displayCtx.displaySpace  = img
     realYield()
 
-    ortho.profile = 'edit'
+    ortho.profileManager.activateProfile(OrthoEditProfile)
     realYield(20)
 
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
     profile.mode          = 'sel'
     profile.drawMode      = False
     profile.selectionSize = 1
