@@ -383,6 +383,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         edit menu is added/removed from the menu bar.
         """
 
+        old, new = value
+
         if new is orthoeditprofile.OrthoEditProfile:
             self.__addEditMenu()
         elif old is orthoeditprofile.OrthoEditProfile:

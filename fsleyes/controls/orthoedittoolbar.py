@@ -82,6 +82,14 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
         return [OrthoPanel]
 
 
+    @staticmethod
+    def profileCls():
+        """The ``OrthoEditToolBar`` is intended to be activated with the
+        :class:`.OrthoEditProfile`.
+        """
+        return OrthoEditProfile
+
+
     def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditToolBar``.
 
@@ -108,9 +116,7 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
             'not like overlay',
             'overlay')
 
-        ortho.addListener('profile', self.name, self.__profileChanged)
-
-        self.__profileChanged()
+        self.__createTools()
 
 
     def destroy(self):
@@ -118,7 +124,6 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
         needed. Removes property listeners, and calls the
         :meth:`.ControlToolBar.destroy` method.
         """
-        self.__orthoPanel.removeListener('profile', self.name)
         self.__dsWarning.destroy()
 
         self.__orthoPanel = None
@@ -127,20 +132,14 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
-    def __profileChanged(self, *a):
-        """Called when the :attr:`.ViewPanel.profile` property of the
-        :class:`.OrthoPanel` changes. Shows/hides edit controls accordingly.
+    def __createTools(self):
+        """
         """
 
         self.ClearTools(destroy=True, postevent=False)
 
         ortho      = self.__orthoPanel
-        profile    = ortho.profile
         profileObj = ortho.getCurrentProfile()
-
-        if profile != 'edit':
-            self.__dsWarning.Show(False)
-            return
 
         allTools   = []
         allWidgets = []

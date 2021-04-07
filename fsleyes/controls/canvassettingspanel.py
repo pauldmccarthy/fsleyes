@@ -155,10 +155,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
 
         displayCtxProps = collections.OrderedDict((
             ('displaySpace',
-             props.Widget('displaySpace',
-                          labels=_displaySpaceOptionName,
-                          dependencies=[(canvasPanel, 'profile')],
-                          enabledWhen=lambda i, p: p == 'view')),
+             props.Widget('displaySpace', labels=_displaySpaceOptionName)),
             ('radioOrientation', props.Widget('radioOrientation'))))
 
         orthoOptsProps = collections.OrderedDict((
