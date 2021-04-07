@@ -14,6 +14,8 @@ import wx
 
 from fsl.data.image import Image
 
+from fsleyes.profiles.orthocropprofile import OrthoCropProfile
+
 from . import run_with_orthopanel, realYield, simclick
 
 
@@ -45,11 +47,8 @@ def _clickdrag(canvas, profile, startpos, endpos):
 
 
 def _do_crop(ortho, overlayList, displayCtx, img, roi):
-    realYield()
-    ortho.profile = 'crop'
-    realYield(30)
 
-    profile = ortho.getCurrentProfile()
+    profile = ortho.currentProfile
 
     xlo, xhi = roi[0]
     ylo, yhi = roi[1]
@@ -107,6 +106,10 @@ def _test_crop_interaction(ortho, overlayList, displayCtx):
     img  = Image(data)
     overlayList[:] = [img]
     displayCtx.displaySpace = img
+
+    realYield()
+    ortho.profileManager.activateProfile(OrthoCropProfile)
+    realYield(30)
 
     _do_crop(ortho, overlayList, displayCtx, img, [(5, 25), (5, 25), (5, 25)])
 

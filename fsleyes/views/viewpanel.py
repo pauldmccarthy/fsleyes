@@ -138,8 +138,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__centrePanel = None
         self.__panels      = {}
 
-        # Notifier instance for emitting events
-        self.__events = notifier.Notifier()
+        # Notifier instance for emitting events.
+        # Currently the only event is on profile
+        # changes, and the profilemanager emits
+        # these events anyway, so we can just
+        # use it
+        self.__events = self.__profileManager
 
         # See note in FSLeyesFrame about
         # the user of aero docking guides.
@@ -407,8 +411,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             # change profile
             self.__profileManager.activateProfile(profileCls)
-            self.__events.notify(topic='profile',
-                                 value=(type(profile), profileCls))
 
         # The PaneInfo Name is the control panel class name -
         # this is used for saving and restoring layouts.
@@ -774,10 +776,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 log.debug('Panel %s uses a custom interaction profile %s - '
                           'deactivating it and restoring default profile',
                           type(panels[0]).__name__, profileCls.__name__)
-                defaultProfile = self.__profileManager.deactivateProfile()
-                self.__events.notify(
-                    topic='profile',
-                    value=(profileCls, type(defaultProfile)))
+                self.__profileManager.deactivateProfile()
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)

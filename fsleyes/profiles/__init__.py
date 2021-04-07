@@ -46,6 +46,7 @@ import wx
 
 import matplotlib.backend_bases as mplbackend
 
+import fsl.utils.notifier   as notifier
 import fsl.utils.deprecated as deprecated
 import fsleyes_widgets      as fwidgets
 import fsleyes_props        as props
@@ -55,7 +56,7 @@ import fsleyes.actions      as actions
 log = logging.getLogger(__name__)
 
 
-class ProfileManager:
+class ProfileManager(notifier.Notifier):
     """Manages creation/registration/de-registration of :class:`Profile`
     instances for a :class:`.ViewPanel` instance.
 
@@ -63,6 +64,12 @@ class ProfileManager:
     :class:`.ViewPanel` instance. The ``ProfileManager`` manages a stack of
     :class:`.Profile` instances - profiles can be activated and deactivated
     via the :meth:`activateProfile` and :meth:`deactivateProfile` methods.
+
+    The ``ProfileManager`` uses the :class:`.Notifier` interface to notify any
+    interested listeners when the current profile is changed, using the topic
+    name ``'profile'``. Registered listeners are passed a tuple containing the
+    types (:class:`.Profile` sub-classes) of the de-registered and newly
+    registered profiles.
     """
 
 
@@ -128,25 +135,34 @@ class ProfileManager:
             return None
 
 
-    def deactivateProfile(self):
+    def deactivateProfile(self, notify=True):
         """Deactivates and destroys the current profile, and re-activates
         the previous one.
 
-        :returns: A reference to the re-activated profile.
+        :arg notify: If ``True`` (the default), a notification is emitted
+                     via the :class:`.Notifier` interface.
+        :returns:    A reference to the re-activated profile.
         """
 
-        prof = self.__profileStack.pop()
+        oldprof = self.__profileStack.pop()
 
         log.debug('Deregistering %s profile from view %s',
-            type(prof).__name__, self.__viewCls.__name__)
+                  type(oldprof).__name__, self.__viewCls.__name__)
 
-        prof.deregister()
-        prof.destroy()
+        oldprof.deregister()
+        oldprof.destroy()
 
         if self.numProfiles() > 0:
             self.__profileStack[-1].register()
 
-        return self.getCurrentProfile()
+        newprof = self.getCurrentProfile()
+
+        if notify:
+            if newprof is None: value = (type(oldprof), None)
+            else:               value = (type(oldprof), type(newprof))
+            self.notify(topic='profile', value=value)
+
+        return newprof
 
 
     def changeProfile(self, profile):
@@ -154,11 +170,13 @@ class ProfileManager:
         return self.activateProfile(profile)
 
 
-    def activateProfile(self, profileCls):
+    def activateProfile(self, profileCls, notify=True):
         """Deregisters the current :class:`Profile` instance, and creates and
         registers a new instance of type ``profileCls``.
 
-        :returns: A reference to the newly registered profile.
+        :arg notify: If ``True`` (the default), a notification is emitted
+                     via the :class:`.Notifier` interface.
+        :returns:    A reference to the newly registered profile.
         """
 
         if self.numProfiles() == self.__maxprofiles:
@@ -170,13 +188,20 @@ class ProfileManager:
         log.debug('Creating and registering profile %s with view %s',
                   profileCls.__name__, type(self.__viewPanel).__name__)
 
-        prof = profileCls(self.__viewPanel,
-                          self.__overlayList,
-                          self.__displayCtx)
+        oldprof = self.getCurrentProfile()
+        newprof = profileCls(self.__viewPanel,
+                             self.__overlayList,
+                             self.__displayCtx)
 
-        self.__profileStack.append(prof)
+        self.__profileStack.append(newprof)
         self.__profileStack[-1].register()
-        return self.getCurrentProfile()
+
+        if notify:
+            if oldprof is None: value = (None,          type(newprof))
+            else:               value = (type(oldprof), type(newprof))
+            self.notify(topic='profile', value=value)
+
+        return newprof
 
 
 class Profile(props.SyncableHasProperties, actions.ActionProvider):
