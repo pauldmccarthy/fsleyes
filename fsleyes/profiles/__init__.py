@@ -108,7 +108,7 @@ class ProfileManager:
         for prof in self.__profileStack:
             prof.destroy()
 
-        self.__profileStack = None
+        self.__profileStack = []
         self.__viewPanel    = None
         self.__overlayList  = None
         self.__displayCtx   = None
