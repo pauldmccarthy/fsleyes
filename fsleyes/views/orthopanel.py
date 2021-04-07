@@ -117,7 +117,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        toggleEditMode
        toggleCropMode
        toggleEditTransformPanel
-       toggleEditPanel
        toggleOrthoToolBar
        toggleAnnotationPanel
        resetDisplay
@@ -722,6 +721,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         else:
             isImage    = False
             isEditable = False
+
+        # Kill edit mode if a non-
+        # image has been selected
+        if (not isEditable) and \
+           isinstance(self.currentProfile, orthoeditprofile.OrthoEditProfile):
+            self.toggleEditMode()
 
         self.resetDisplay            .enabled = haveOverlays
         self.centreCursor            .enabled = haveOverlays
