@@ -82,7 +82,7 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
 
         panel   = self.panel
         opts    = panel.sceneOpts
-        profile = panel.getCurrentProfile()
+        profile = panel.currentProfile
 
         icons = {
             'screenshot'          : fslicons.findImageFile('camera24'),

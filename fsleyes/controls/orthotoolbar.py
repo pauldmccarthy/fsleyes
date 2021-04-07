@@ -119,7 +119,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
 
         ortho     = self.orthoPanel
         orthoOpts = ortho.sceneOpts
-        profile   = ortho.getCurrentProfile()
+        profile   = ortho.currentProfile
 
         coronalIcon          = 'coronalSlice24'
         coronalHighlightIcon = 'coronalSliceHighlight24'

@@ -432,19 +432,19 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     @actions.action
     def resetDisplay(self):
         """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
-        self.getCurrentProfile().resetDisplay()
+        self.currentProfile.resetDisplay()
 
 
     @actions.action
     def centreCursor(self):
         """Calls :meth:`.OrthoViewProfile.centreCursor`. """
-        self.getCurrentProfile().centreCursor()
+        self.currentProfile.centreCursor()
 
 
     @actions.action
     def centreCursorWorld(self):
         """Calls :meth:`.OrthoViewProfile.centreCursorWorld`. """
-        self.getCurrentProfile().centreCursorWorld()
+        self.currentProfile.centreCursorWorld()
 
 
     @actions.toggleAction
@@ -588,7 +588,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         menuName = strings.labels[self, 'editMenu']
         menuName = menuName.format(frame.getViewPanelID(self))
         menuBar  = frame.GetMenuBar()
-        profile  = self.getCurrentProfile()
+        profile  = self.currentProfile
         idx      = menuBar.FindMenu(menuName)
 
         if  idx == wx.NOT_FOUND: editMenu = None

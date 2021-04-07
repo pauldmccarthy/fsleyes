@@ -157,7 +157,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         (zoom/pan/rotation). See the :meth:`.Scene3DViewProfile.resetDisplay`
         method.
         """
-        self.getCurrentProfile().resetDisplay()
+        self.currentProfile.resetDisplay()
 
 
     @actions.toggleControlAction(s3dtoolbar.Scene3DToolBar)

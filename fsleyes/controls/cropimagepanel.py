@@ -72,7 +72,7 @@ class CropImagePanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, ortho)
 
-        profile = ortho.getCurrentProfile()
+        profile = ortho.currentProfile
 
         self.__ortho   = ortho
         self.__profile = profile

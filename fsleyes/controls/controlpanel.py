@@ -70,7 +70,7 @@ class ControlMixin:
         Control panels which are associated with an interaction profile can
         assume that the profile has already been created by the time the
         control is created. The :class:`.Profile` instance can be retrieved
-        via :meth:`.ViewPanel.getCurrentProfile`.
+        via :meth:`.ViewPanel.currentProfile`.
         """
         return None
 

@@ -285,7 +285,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         self.__annotList.ClearSelection()
         self.__annotListItemSelected()
 
-        profile = self.__ortho.getCurrentProfile()
+        profile = self.__ortho.currentProfile
 
         if ev.value:
             profile.mode = ev.clientData

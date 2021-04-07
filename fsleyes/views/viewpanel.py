@@ -68,7 +68,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     when the control panel is toggled via the :meth:`togglePanel` method.
 
     The currently active interaction profile can be accessed with the
-    :meth:`getCurrentProfile` method. See the :mod:`.profiles` package for
+    :meth:`currentProfile` method. See the :mod:`.profiles` package for
     more information on interaction profiles.
 
 
@@ -244,9 +244,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__profileManager.activateProfile(defaultProfile)
 
 
-    def getCurrentProfile(self):
+    @property
+    def currentProfile(self):
         """Returns the :class:`.Profile` instance currently in use. """
         return self.__profileManager.getCurrentProfile()
+
+
+    @property
+    def profileManager(self):
+        """Returns a reference to the :class:`.ProfileManager` used by
+        this ``ViewPanel``.
+        """
+        return self.__profileManager
 
 
     @property
@@ -379,7 +388,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # profile, check that that profile is active, create it
         # if needed, and close down any controls which are not
         # compatible with the new profile.
-        profile = self.__profileManager.getCurrentProfile()
+        profile = self.currentProfile
         if profileCls is not None and not isinstance(profile, profileCls):
 
             log.debug('New control %s requires interaction profile %s but '

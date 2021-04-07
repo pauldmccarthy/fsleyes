@@ -1117,7 +1117,7 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         mouse event listeners with the new :class:`.Profile` object.
         """
         self.__deregisterProfile()
-        self.__registerProfile(self.__canvas.getCurrentProfile())
+        self.__registerProfile(self.__canvas.currentProfile)
 
 
     def __addLocation(self, worldLoc, comment=None):

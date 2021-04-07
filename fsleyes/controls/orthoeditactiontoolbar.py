@@ -93,7 +93,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         self.ClearTools(destroy=True, postevent=False)
 
         ortho      = self.__ortho
-        profileObj = ortho.getCurrentProfile()
+        profileObj = ortho.currentProfile
 
         tools = []
         nav   = []

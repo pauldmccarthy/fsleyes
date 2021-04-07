@@ -68,7 +68,7 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
 
         ortho   = self.__ortho
         widgets = self.getWidgetList()
-        profile = ortho.getCurrentProfile()
+        profile = ortho.currentProfile
 
         generalProps = [
             props.Widget('mode',

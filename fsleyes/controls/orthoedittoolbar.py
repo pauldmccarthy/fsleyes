@@ -139,7 +139,7 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
         self.ClearTools(destroy=True, postevent=False)
 
         ortho      = self.__orthoPanel
-        profileObj = ortho.getCurrentProfile()
+        profileObj = ortho.currentProfile
 
         allTools   = []
         allWidgets = []
