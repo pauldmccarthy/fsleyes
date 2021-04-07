@@ -63,6 +63,10 @@ class ControlMixin:
         """Return the custom interaction profile associated with this control.
         Must be a sub-class of :class:`.Profile`.
 
+        When a control panel is opened, if it requires a different profile to
+        the one that is active, that profile is created and activated. If any
+        other controls required the previous profile, they are closed.
+
         Control panels which are associated with an interaction profile can
         assume that the profile has already been created by the time the
         control is created. The :class:`.Profile` instance can be retrieved

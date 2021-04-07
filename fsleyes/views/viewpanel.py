@@ -110,13 +110,19 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # Currently only two profiles are allowed at
         # any one time - the default profile, passed
         # to initProfiles. and one more profile
-        # associated with a control panel. If a
-        # control+profile is open, and the user opens
-        # another control+profile, the first one is
-        # destroyed, and the new one created. A ref
-        # to the active control is saved for this
-        # purpose.This all happens in togglePanel.
-        self.__activeControl  = None
+        # associated with a control panel.
+        #
+        # If the default profile is active, and a
+        # new control is opened which needs a different
+        # profile, that profile is activated.
+        #
+        # If a non-default profile (#1) is active, and
+        # a new control is opened which needs a
+        # different profile (#2), all controls which
+        # require profile #1 are closed, and profile
+        # #2 is activated.
+        #
+        # This all happens in togglePanel.
         self.__profileManager = profiles.ProfileManager(
             self, overlayList, displayCtx, 2)
 
@@ -322,10 +328,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         .. warning:: Do not define a control (a.k.a. secondary) panel
                      constructor to accept arguments with the names
-                     ``floatPane``, ``profileCls``, ``floatOnly``,
-                     ``floatPos``, ``closeable``, or ``location``, as
-                     arguments with those names will get eaten by this method
-                     before they can be passed to the constructor.
+                     ``floatPane``, ``floatOnly``, ``floatPos``,
+                     ``closeable``, or ``location``, as arguments with those
+                     names will get eaten by this method before they can be
+                     passed to the constructor.
         """
 
         if len(kwargs) == 0:
@@ -361,15 +367,27 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Otherwise, create a new panel of the specified type.
         # If this control is associated with a custom interaction
-        # profile, create it first, as the panel.__init__ should
-        # be allowed to assume that its profile is ready to go.
-        if profileCls is not None:
+        # profile, check that that profile is active, create it
+        # if needed, and close down any controls which are not
+        # compatible with the new profile.
+        profile = self.__profileManager.getCurrentProfile()
+        if profileCls is not None and not isinstance(profile, profileCls):
 
-            # Another control panel+custom profile is active.
-            # We only allow one custom profile at a time, so
-            # let's destroy the other one.
-            if self.__activeControl is not None:
-                self.__onPaneClose(None, self.__activeControl)
+            log.debug('New control %s requires interaction profile %s but '
+                      'profile %s is active', panelType.__name__,
+                      profileCls.__name__, type(profile).__name__)
+
+            # close down incompatible controls
+            for ctype, cpanel in list(self.__panels.items()):
+                cprofileCls = ctype.profileCls()
+                if cprofileCls is not None and \
+                   not issubclass(cprofileCls, profileCls):
+                    log.debug('Closing down control %s as it is incompatible '
+                              'with profile %s', ctype.__name__,
+                              profileCls.__name__)
+                    self.__onPaneClose(None, cpanel)
+
+            # change profile
             self.__profileManager.activateProfile(profileCls)
             self.__events.notify(topic='profile')
 
@@ -703,16 +721,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 # calling ControlPanel.destroy()
                 # here -  wx.Destroy is done below
                 else:
-                    log.debug('Panel closed: {}'.format(type(panel).__name__))
+                    log.debug('Panel closed: %s', type(panel).__name__)
                     panel.destroy()
-
-            # This control is associated with an
-            # interaction profile - destroy it,
-            # and restore the default profile
-            if panel is self.__activeControl:
-                self.__activeControl = None
-                self.__profileManager.deactivateProfile()
-                self.__events.notify(topic='profile')
 
         # Destroy all the panels
         for panel in panels:
@@ -722,6 +732,31 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # we have to do it manually
             self.__auiMgr.DetachPane(panel)
             wx.CallAfter(panel.Destroy)
+
+        # Update interaction profile. We do not
+        # consider multiple tabbed controls here.
+        # If the closed control is associated with
+        # an interaction profile, if no other other
+        # open panels rely on the same destroy the
+        # profile and restore the default profile
+        #
+        # We assume that, if a panel which requires
+        # a custom profile was open, that profile
+        # was active.
+        profileCls   = panels[0].profileCls()
+        closeProfile = True
+        if profileCls is not None:
+            for ctype in self.__panels:
+                cprofileCls = ctype.profileCls()
+                if cprofileCls is not None and \
+                   issubclass(cprofileCls, profileCls):
+                    closeProfile = False
+            if closeProfile:
+                log.debug('Panel %s uses a custom interaction profile %s - '
+                          'deactivating it and restoring default profile',
+                          type(panels[0]).__name__, profileCls.__name__)
+                self.__profileManager.deactivateProfile()
+                self.__events.notify(topic='profile')
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)
