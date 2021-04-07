@@ -138,6 +138,7 @@ class Action(props.HasProperties):
         return self.__str__()
 
 
+    @property
     def name(self):
         """Returns the name of this ``Action``. """
         return self.__name

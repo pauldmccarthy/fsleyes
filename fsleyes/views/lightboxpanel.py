@@ -185,7 +185,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``LightBoxPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.showCommandLineArgs,
                    self.applyCommandLineArgs,
                    None,
@@ -206,9 +206,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleClassificationPanel,
                    self.removeAllPanels]
 
-        names = [a.__name__ if a is not None else None for a in actions]
-
-        return list(zip(names, actions))
+        names = [a.name if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def getGLCanvases(self):

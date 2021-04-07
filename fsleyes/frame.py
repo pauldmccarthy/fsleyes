@@ -861,14 +861,6 @@ class FSLeyesFrame(wx.Frame):
                 menu.AppendSeparator()
                 continue
 
-            # If actionObj is a list, this is a
-            # hacky hint to insert a sub-menu.
-            elif isinstance(actionObj, list):
-                names, objs = list(zip(*actionObj))
-                titles = [strings.actions.get((target, n), n) for n in names]
-                currentMenu = wx.Menu()
-                menu.AppendSubMenu(currentMenu, actionName)
-
             # A single normal action <-> menu item
             else:
                 currentMenu = menu
@@ -2097,7 +2089,7 @@ class FSLeyesFrame(wx.Frame):
 
             vpType    = type(panel)
             tools     = panel.getTools()
-            toolNames = [t.name() for t in tools]
+            toolNames = [t.name for t in tools]
 
             # Only the first panel for each type
             # has its tools added to the menu.

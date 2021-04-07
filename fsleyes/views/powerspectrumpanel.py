@@ -135,7 +135,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.importDataSeries,
                    self.exportDataSeries,
                    None,
@@ -144,9 +144,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                    self.togglePowerSpectrumToolBar,
                    self.togglePowerSpectrumControl]
 
-        names = [a.__name__ if a is not None else None for a in actions]
-
-        return list(zip(names, actions))
+        names = [a.name if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def draw(self, *a):

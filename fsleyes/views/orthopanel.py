@@ -524,23 +524,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleClassificationPanel,
                    self.removeAllPanels]
 
-        def makeTuples(actionz):
-
-            tuples = []
-
-            for a in actionz:
-                if isinstance(a, actions.Action):
-                    tuples.append((a.__name__, a))
-
-                elif isinstance(a, tuple):
-                    tuples.append((a[0], makeTuples(a[1])))
-
-                elif a is None:
-                    tuples.append((None, None))
-
-            return tuples
-
-        return makeTuples(actionz)
+        names = [a.name if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def getTools(self):
