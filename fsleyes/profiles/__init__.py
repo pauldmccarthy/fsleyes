@@ -131,18 +131,22 @@ class ProfileManager:
     def deactivateProfile(self):
         """Deactivates and destroys the current profile, and re-activates
         the previous one.
+
+        :returns: A reference to the re-activated profile.
         """
 
         prof = self.__profileStack.pop()
 
-        log.debug('Deregistering {} profile from {}'.format(
-            type(prof).__name__, self.__viewCls.__name__))
+        log.debug('Deregistering %s profile from view %s',
+            type(prof).__name__, self.__viewCls.__name__)
 
         prof.deregister()
         prof.destroy()
 
         if self.numProfiles() > 0:
             self.__profileStack[-1].register()
+
+        return self.getCurrentProfile()
 
 
     def changeProfile(self, profile):
@@ -153,6 +157,8 @@ class ProfileManager:
     def activateProfile(self, profileCls):
         """Deregisters the current :class:`Profile` instance, and creates and
         registers a new instance of type ``profileCls``.
+
+        :returns: A reference to the newly registered profile.
         """
 
         if self.numProfiles() == self.__maxprofiles:
@@ -161,12 +167,16 @@ class ProfileManager:
         if self.numProfiles() > 0:
             self.__profileStack[-1].deregister()
 
+        log.debug('Creating and registering profile %s with view %s',
+                  profileCls.__name__, type(self.__viewPanel).__name__)
+
         prof = profileCls(self.__viewPanel,
                           self.__overlayList,
                           self.__displayCtx)
 
         self.__profileStack.append(prof)
         self.__profileStack[-1].register()
+        return self.getCurrentProfile()
 
 
 class Profile(props.SyncableHasProperties, actions.ActionProvider):

@@ -203,6 +203,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.Update()
         self.__auiMgr.UnInit()
 
+        # The ToggleControlPanelAction (which is used
+        # to keep toggle buttons/menu items in sync
+        # with reality) interacts with the AUI
+        # manager. These actions will be destroyed
+        # via FSLeyesPanel.destroy, so we don't clear
+        # the auimgr ref until afterwards.
+        fslpanel.FSLeyesPanel.destroy(self)
+
         # The AUI manager does not clear its
         # reference to this panel, so let's
         # do it here.
@@ -212,15 +220,16 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__panels         = None
         self.__centrePanel    = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
-
 
     @property
     def events(self):
         """Return a reference to a :class:`.Notifier` instance which can be
         used to be notified when certain events occur. Currently the only
         event topic which occurs is ``'profile'``, when the current
-        interaction profile changes.
+        interaction profile changes. Callbacks which are registered with
+        the ``'profile'`` topic will be passed a tuple containing the types
+        (:class:`.Profile` sub-classes) of the de-registered and newly
+        registered profiles.
         """
         return self.__events
 
@@ -389,7 +398,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
             # change profile
             self.__profileManager.activateProfile(profileCls)
-            self.__events.notify(topic='profile')
+            self.__events.notify(topic='profile',
+                                 value=(type(profile), profileCls))
 
         # The PaneInfo Name is the control panel class name -
         # this is used for saving and restoring layouts.
@@ -755,8 +765,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 log.debug('Panel %s uses a custom interaction profile %s - '
                           'deactivating it and restoring default profile',
                           type(panels[0]).__name__, profileCls.__name__)
-                self.__profileManager.deactivateProfile()
-                self.__events.notify(topic='profile')
+                defaultProfile = self.__profileManager.deactivateProfile()
+                self.__events.notify(
+                    topic='profile',
+                    value=(profileCls, type(defaultProfile)))
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)

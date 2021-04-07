@@ -29,6 +29,7 @@ import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.editor                          as editor
 import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
+import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
@@ -176,8 +177,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__ycanvas,
             self.__zcanvas)
 
-        # toggleEditMode adds/removes an edit
-        # menu - its name is stored here.
+        # Edit mode is entered via toggleEditMode,
+        # which displays an edit toolbar. But we
+        # do a bit more, in adding the edit action
+        # toolbar, and edit menu. In order to keep
+        # the menu state in sync with reality, we
+        # need to listen for changes to the
+        # interaction proflle, and store a ref
+        # to the edit menu so we can delete it later.
+        self.events.register(self.name, self.__profileChanged, 'profile')
         self.__editMenuTitle = None
 
         # The OrthoOpts and DisplayContext objects
@@ -355,13 +363,35 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
+        """Shows/hides an :class:`.OrthoEditToolBar`. This causes the
+        interaction profile to be changed, and a call to
+        :meth:`__profileChanged`, which makes a few other changes to the
+        interface.
         """
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
+        self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
+                         location=wx.LEFT)
+
+        if self.toggleEditMode.toggled and \
+           self.isPanelOpen(orthoeditsettingspanel.OrthoEditSettingsPanel):
+            self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
+
+
+    def __profileChanged(self, inst, topic, value):
+        """Called when the interaction profile changes (see
+        :meth:`.ViewPanel.events`). If entering or exiting edit mode, an
+        edit menu is added/removed from the menu bar.
         """
-        # todo
+
+        if new is orthoeditprofile.OrthoEditProfile:
+            self.__addEditMenu()
+        elif old is orthoeditprofile.OrthoEditProfile:
+            self.__removeEditMenu()
+
 
     @actions.toggleControlAction(cropimagepanel.CropImagePanel)
     def toggleCropMode(self):
-        """
+        """Opens a :class:`.CropImagePanel`.
         """
         self.togglePanel(cropimagepanel.CropImagePanel,
                          floatPane=True,
@@ -379,15 +409,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                          floatPane=True,
                          floatOnly=True,
                          closeable=False)
-
-
-    @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
-    def toggleEditPanel(self, floatPane=False):
-        """Shows/hides an :class:`.OrthoEditSettingsPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
-                         floatPane=floatPane)
 
 
     @actions.toggleControlAction(annotationpanel.AnnotationPanel)
