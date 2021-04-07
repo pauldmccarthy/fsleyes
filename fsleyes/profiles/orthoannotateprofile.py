@@ -57,6 +57,78 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
     """Opacity."""
 
 
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``OrthoAnnotateProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {
+            ('line',     wx.WXK_SHIFT)                  : 'nav',
+            ('line',     wx.WXK_CONTROL)                : 'move',
+            ('line',     wx.WXK_ALT)                    : 'pan',
+            ('line',    (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice',
+            ('point',    wx.WXK_SHIFT)                  : 'nav',
+            ('point',    wx.WXK_CONTROL)                : 'move',
+            ('point',    wx.WXK_ALT)                    : 'pan',
+            ('point',   (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice',
+            ('rect',     wx.WXK_SHIFT)                  : 'nav',
+            ('rect',     wx.WXK_CONTROL)                : 'move',
+            ('rect',     wx.WXK_ALT)                    : 'pan',
+            ('rect',    (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice',
+            ('text',     wx.WXK_SHIFT)                  : 'nav',
+            ('text',     wx.WXK_CONTROL)                : 'move',
+            ('text',     wx.WXK_ALT)                    : 'pan',
+            ('text',    (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice',
+            ('ellipse',  wx.WXK_SHIFT)                  : 'nav',
+            ('ellipse',  wx.WXK_CONTROL)                : 'move',
+            ('ellipse',  wx.WXK_ALT)                    : 'pan',
+            ('ellipse', (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice',
+            ('arrow',    wx.WXK_SHIFT)                  : 'nav',
+            ('arrow',    wx.WXK_CONTROL)                : 'move',
+            ('arrow',    wx.WXK_ALT)                    : 'pan',
+            ('arrow',   (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'slice'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return {
+            ('line',    'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('point',   'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('rect',    'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('text',    'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('arrow',   'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('ellipse', 'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+
+            ('move',    'MouseWheel') : ('zoom', 'MouseWheel'),
+
+            # Right mouse click/drag allows
+            # annotations to be moved
+            ('line',    'RightMouseDown') : ('move', 'LeftMouseDown'),
+            ('point',   'RightMouseDown') : ('move', 'LeftMouseDown'),
+            ('rect',    'RightMouseDown') : ('move', 'LeftMouseDown'),
+            ('text',    'RightMouseDown') : ('move', 'LeftMouseDown'),
+            ('arrow',   'RightMouseDown') : ('move', 'LeftMouseDown'),
+            ('ellipse', 'RightMouseDown') : ('move', 'LeftMouseDown'),
+
+            ('line',    'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+            ('point',   'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+            ('rect',    'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+            ('text',    'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+            ('arrow',   'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+            ('ellipse', 'RightMouseDrag') : ('move', 'LeftMouseDrag'),
+
+            ('line',    'RightMouseUp') : ('move', 'LeftMouseUp'),
+            ('point',   'RightMouseUp') : ('move', 'LeftMouseUp'),
+            ('rect',    'RightMouseUp') : ('move', 'LeftMouseUp'),
+            ('text',    'RightMouseUp') : ('move', 'LeftMouseUp'),
+            ('arrow',   'RightMouseUp') : ('move', 'LeftMouseUp'),
+            ('ellipse', 'RightMouseUp') : ('move', 'LeftMouseUp')}
+
+
     def __init__(self, viewPanel, overlayList, displayCtx):
         """Create an ``OrthoAnnotateProfile``.
 

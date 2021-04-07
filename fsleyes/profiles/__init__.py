@@ -478,7 +478,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
                           options on the :attr:`mode` property.
         """
 
-        if type(viewPanel) != self.supportedView():
+        if not isinstance(viewPanel, self.supportedView()):
             raise ValueError('Unsupported view: {}'.format(
                 type(viewPanel).__name__))
 
@@ -568,12 +568,8 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             self.mode = modes[0]
 
         # Configure temporary modes and alternate
-        # event handlers - see the profilemap
-        # module
-        from . import profilemap
-
-        # We reverse the mro, so that the
-        # modes/handlers defined on this
+        # event handlers. We reverse the mro, so
+        # that the modes/handlers defined on this
         # class take precedence.
         mro = list(reversed(inspect.getmro(self.__class__)))
         mro = mro[mro.index(Profile):]

@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoCropProfile` class, an interaction
-:class:`.Profile` for :class:`.OrthoPanel` views.
+:class:`.Profile` for :class:`.OrthoPanel` views, which is used by the
+:class:`.CropImagePanel`.
 """
 
 
@@ -28,7 +29,7 @@ log = logging.getLogger(__name__)
 
 
 class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
-    """The ``OrthoViewProfile`` class is a :class:`.Profile` for the
+    """The ``OrthoCropProfile`` class is a :class:`.Profile` for the
     :class:`.OrthoPanel` class, which allows the user to define a cropping
     region for :class:`.Image` overlays.
 

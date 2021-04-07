@@ -9,6 +9,8 @@ profile for the :class:`.TimeSeriesPanel`.
 """
 
 
+import wx
+
 import fsl.utils.idle        as idle
 import fsl.data.image        as fslimage
 import fsl.data.melodicimage as fslmelimage
@@ -24,6 +26,22 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
     which the user is able to click/drag on a plot to change the
     :attr:`.VolumeOpts.volume` for the currently selected overlay.
     """
+
+
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.TimeSeriesPanel` class. """
+        from fsleyes.views.timeseriespanel import TimeSeriesPanel
+        return TimeSeriesPanel
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``TimeSeriesProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {('panzoom', wx.WXK_CONTROL), 'volume'}
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):
