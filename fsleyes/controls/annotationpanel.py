@@ -48,9 +48,28 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
     honourZLimits = copy.copy(annotprofile.OrthoAnnotateProfile.honourZLimits)
     alpha         = copy.copy(annotprofile.OrthoAnnotateProfile.alpha)
 
+
     # Just used as a convenience
     DISPLAY_PROPERTIES = ['colour', 'fontSize', 'lineWidth', 'filled',
                           'border', 'honourZLimits', 'alpha']
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``CropImagePanel`` is only intended to be added to
+        :class:`.OrthoPanel` views.
+        """
+        from fsleyes.views.orthopanel import OrthoPanel
+        return [OrthoPanel]
+
+
+    @staticmethod
+    def profileCls():
+        """Returns the :class:`.OrthoAnnotateProfile` class, which needs to be
+        activated in conjunction with the ``AnnotationPanel``.
+        """
+        return annotprofile.OrthoAnnotateProfile
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):

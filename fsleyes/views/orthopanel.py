@@ -176,9 +176,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__ycanvas,
             self.__zcanvas)
 
-        # If an edit menu is added when in
-        # 'edit' profile (see __profileChanged),
-        # its name is stored here.
+        # toggleEditMode adds/removes an edit
+        # menu - its name is stored here.
         self.__editMenuTitle = None
 
         # The OrthoOpts and DisplayContext objects
@@ -270,8 +269,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener('fgColour',    name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
 
-        self.addListener('profile', name, self.__profileChanged)
-
         from fsleyes.actions.correlate import PearsonCorrelateAction
 
         self.__pCorrAction = PearsonCorrelateAction(
@@ -358,22 +355,18 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
-        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'edit'``. See :meth:`__profileChanged`.
         """
-
-        if self.profile == 'view': self.profile = 'edit'
-        else:                      self.profile = 'view'
-
+        """
+        # todo
 
     @actions.toggleControlAction(cropimagepanel.CropImagePanel)
     def toggleCropMode(self):
-        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'crop'``. See :meth:`__profileChanged`.
         """
-
-        if self.profile == 'view': self.profile = 'crop'
-        else:                      self.profile = 'view'
+        """
+        self.togglePanel(cropimagepanel.CropImagePanel,
+                         floatPane=True,
+                         floatOnly=True,
+                         closeable=False)
 
 
     @actions.toggleControlAction(edittransformpanel.EditTransformPanel)
@@ -402,8 +395,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Shows/hides an :class:`.AnnotationPanel`. See
         :meth:`.ViewPanel.togglePanel`.
         """
-        if self.profile == 'view': self.profile = 'annotate'
-        else:                      self.profile = 'view'
         self.togglePanel(annotationpanel.AnnotationPanel,
                          location=wx.LEFT,
                          floatPane=floatPane)
@@ -579,58 +570,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__focusedCanvas = ev.GetEventObject()
 
 
-    def __profileChanged(self, *a):
-        """Called when the :attr:`.ViewPanel.profile` changes. If ``'edit'``
-        mode has been enabled, :class:`.OrthEditToolBar` and
-        :class:`.OrthEditActionToolBar` toolbars are added as control panels,
-        and an "edit" menu is added to the :class:`.FSLeyesFrame` (if there
-        is one).
-        """
-
-        CropImagePanel         = cropimagepanel.CropImagePanel
-        OrthoEditToolBar       = orthoedittoolbar.OrthoEditToolBar
-        OrthoEditActionToolBar = orthoeditactiontoolbar.OrthoEditActionToolBar
-        OrthoEditSettingsPanel = orthoeditsettingspanel.OrthoEditSettingsPanel
-
-        cropPanelOpen          = self.isPanelOpen(CropImagePanel)
-        editToolBarOpen        = self.isPanelOpen(OrthoEditToolBar)
-        editActionToolBarOpen  = self.isPanelOpen(OrthoEditActionToolBar)
-        editPanelOpen          = self.isPanelOpen(OrthoEditSettingsPanel)
-
-        inEdit                 = self.profile == 'edit'
-        inCrop                 = self.profile == 'crop'
-
-        # Toggle toolbars if they are open but should
-        # be closed, or closed but should be open
-        if (not editToolBarOpen) and      inEdit or \
-                editToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
-
-        if (not editActionToolBarOpen) and      inEdit or \
-                editActionToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
-                             location=wx.LEFT)
-
-        if (not cropPanelOpen) and      inCrop or \
-                cropPanelOpen  and (not inCrop):
-            self.togglePanel(cropimagepanel.CropImagePanel,
-                             floatPane=True,
-                             floatOnly=True,
-                             closeable=False,
-                             floatPos=(0.85, 0.3))
-
-        # Don't open edit panel by default,
-        # but close it when we leave edit mode
-        if editPanelOpen and (not inEdit):
-            self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
-
-        # It's unlikely, but an OrthoPanel might be
-        # created without a ref to a FSLeyesFrame.
-        if self.frame is not None:
-            if inEdit: self.__addEditMenu()
-            else:      self.__removeEditMenu()
-
-
     def __addEditMenu(self):
         """Called by :meth:`__profleChanged` when the
         :attr:`.ViewPanel.profile` is changed to ``'edit'``. Adds a
@@ -782,11 +721,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.toggleEditMode          .enabled = isEditable
         self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
-
-        # Kill edit mode if a non-
-        # image has been selected
-        if (self.profile == 'edit') and (not isEditable):
-            self.profile = 'view'
 
 
     def __onResize(self, ev):
