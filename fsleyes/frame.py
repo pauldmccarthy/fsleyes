@@ -923,13 +923,21 @@ class FSLeyesFrame(wx.Frame):
                 else:
                     ctrlName = kwargs['title']
 
+                # This method may get called multiple times,
+                # so we give the control action a name, and
+                # don't re-create it if it was already added
+                # on a previous call.
                 func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
                 name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
                 if not hasattr(panel, name):
-                    act  = actions.ToggleAction(self.overlayList,
-                                                self.displayCtx,
-                                                func,
-                                                name=ctrlName)
+                    act  = actions.ToggleControlPanelAction(
+                        self.overlayList,
+                        self.displayCtx,
+                        func,
+                        panel,
+                        ctrlType,
+                        name=name,
+                        instance=False)
 
                     setattr(panel, name, act)
 
