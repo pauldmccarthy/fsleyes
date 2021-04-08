@@ -568,7 +568,6 @@ actions = TypeDict({
     'CanvasPanel.toggleClusterPanel'        : 'Cluster browser',
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
     'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
-    'CanvasPanel.toggleFileTreePanel'       : 'File tree',
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',

@@ -29,7 +29,6 @@ import fsleyes.controls.locationpanel              as locationpanel
 import fsleyes.controls.clusterpanel               as clusterpanel
 import fsleyes.controls.lookuptablepanel           as lookuptablepanel
 import fsleyes.controls.melodicclassificationpanel as melclasspanel
-import fsleyes.controls.filetreepanel              as filetreepanel
 from . import                                         colourbarpanel
 from . import                                         viewpanel
 
@@ -98,7 +97,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleClusterPanel
        toggleLookupTablePanel
        toggleClassificationPanel
-       toggleFileTreePanel
 
 
     .. _canvaspanel-adding-content:
@@ -521,14 +519,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         self.togglePanel(melclasspanel.MelodicClassificationPanel,
                          location=wx.RIGHT)
-
-
-    @actions.toggleControlAction(filetreepanel.FileTreePanel)
-    def toggleFileTreePanel(self):
-        """Toggles a :class:`.FileTreePanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(filetreepanel.FileTreePanel, location=wx.RIGHT)
 
 
     @property

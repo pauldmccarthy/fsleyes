@@ -29,6 +29,7 @@ import fsleyes_widgets.widgetgrid       as wgrid
 import fsleyes_widgets.elistbox         as elb
 
 import fsleyes.strings                  as strings
+import fsleyes.views.canvaspanel        as canvaspanel
 import fsleyes.controls.controlpanel    as ctrlpanel
 import fsleyes.filetree                 as filetree
 
@@ -77,6 +78,22 @@ class FileTreePanel(ctrlpanel.ControlPanel):
     list, so that the tree file dropdown box can be populated with previously
     loaded tree files.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``FileTreePanel``is intended for use with :class:`.CanvasPanel`
+        views (i.e. ortho, lightbox, 3D views).
+        """
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of arguments to be passed to
+        :meth:`.ViewPanel.togglePanel` when a ``FileTreePanel`` is opened.
+        """
+        return {'location' : wx.RIGHT}
 
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
