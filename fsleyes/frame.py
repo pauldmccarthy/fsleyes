@@ -2039,14 +2039,6 @@ class FSLeyesFrame(wx.Frame):
                 for view in views:
                     pluginTools[view].append((name, cls))
 
-        def addPluginTool(cls, name, view):
-            # plugin tools bound to a specific view
-            # get passed a reference to that view
-            actionObj = cls(self.__overlayList, self.__displayCtx, view)
-            menuItem  = menu.Append(wx.ID_ANY, name)
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
-            return actionObj, menuItem
-
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
         # panel types are always in a consistent
@@ -2069,9 +2061,10 @@ class FSLeyesFrame(wx.Frame):
 
         for panel in panels:
 
-            vpType    = type(panel)
-            tools     = panel.getTools()
-            toolNames = [t.name for t in tools]
+            vpType     = type(panel)
+            tools      = panel.getTools()
+            toolNames  = [t.name for t in tools]
+            toolTitles = {}
 
             # Only the first panel for each type
             # has its tools added to the menu.
@@ -2080,15 +2073,21 @@ class FSLeyesFrame(wx.Frame):
 
             vpTypesAdded.add(vpType)
 
+            for name, cls in pluginTools[type(panel)]:
+                actionObj = cls(self.__overlayList, panel.displayCtx, panel)
+                setattr(panel, cls.__name__, actionObj)
+                toolNames.append(cls.__name__)
+                toolTitles[cls.__name__] = name
+                print(f'Just created {type(panel).__name__}.{name} '
+                      f'= {cls.__name__}')
+
             # Each view panel added to the tools list
             # gets its own section, starting with a
             # separator, and the view panel title.
             menu.AppendSeparator()
             menu.Append(wx.ID_ANY, self.__viewPanelTitles[panel]).Enable(False)
-            actionItems.extend(self.populateMenu(menu, panel, toolNames))
-
-            for name, cls in pluginTools[type(panel)]:
-                actionItems.append(addPluginTool(cls, name, panel))
+            actionItems.extend(
+                self.populateMenu(menu, panel, toolNames, toolTitles))
 
         return actionItems
 
