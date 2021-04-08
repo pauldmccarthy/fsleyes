@@ -18,7 +18,7 @@ import fsl.data.image            as fslimage
 import fsl.utils.image.resample  as resample
 import fsleyes.strings           as strings
 import fsleyes.tooltips          as tooltips
-from . import                       base
+import fsleyes.actions.base      as base
 
 
 class ResampleAction(base.NeedOverlayAction):

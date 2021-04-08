@@ -29,10 +29,10 @@ import numpy as np
 
 import wx
 
-import fsl.data.image      as fslimage
-import fsl.transform.flirt as flirt
-import fsleyes.strings     as strings
-from . import                 base
+import fsl.data.image       as fslimage
+import fsl.transform.flirt  as flirt
+import fsleyes.strings      as strings
+import fsleyes.actions.base as base
 
 
 class ApplyFlirtXfmAction(base.NeedOverlayAction):

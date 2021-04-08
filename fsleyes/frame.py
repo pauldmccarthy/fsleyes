@@ -1979,7 +1979,9 @@ class FSLeyesFrame(wx.Frame):
         views.
         """
 
-        menu = self.__toolsMenu
+        menu        = self.__toolsMenu
+        actionItems = []
+        pluginTools = plugins.listTools()
 
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
@@ -1994,25 +1996,6 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        from fsleyes.actions.applyflirtxfm         import ApplyFlirtXfmAction
-        from fsleyes.actions.saveflirtxfm          import SaveFlirtXfmAction
-        from fsleyes.actions.resample              import ResampleAction
-        from fsleyes.actions.projectimagetosurface import \
-            ProjectImageToSurfaceAction
-
-        actionz = [
-            ApplyFlirtXfmAction,
-            SaveFlirtXfmAction,
-            ResampleAction,
-            ProjectImageToSurfaceAction,
-        ]
-
-        actionItems = []
-
-        for action in actionz:
-            actionItems.append(addTool(action, strings.actions[action]))
-
-        pluginTools = plugins.listTools()
         if len(pluginTools) > 0:
             menu.AppendSeparator()
             for name, cls in pluginTools.items():

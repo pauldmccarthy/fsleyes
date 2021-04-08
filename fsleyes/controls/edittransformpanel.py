@@ -26,8 +26,8 @@ import fsleyes_widgets.floatslider          as fslider
 import fsleyes.controls.controlpanel        as ctrlpanel
 import fsleyes.displaycontext               as displaycontext
 import fsleyes.strings                      as strings
-import fsleyes.actions.applyflirtxfm        as applyflirtxfm
-import fsleyes.actions.saveflirtxfm         as saveflirtxfm
+import fsleyes.plugins.tools.applyflirtxfm  as applyflirtxfm
+import fsleyes.plugins.tools.saveflirtxfm   as saveflirtxfm
 import fsleyes.controls.displayspacewarning as dswarning
 
 

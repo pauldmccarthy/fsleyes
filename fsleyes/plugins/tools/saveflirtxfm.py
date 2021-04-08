@@ -19,7 +19,7 @@ import fsl.transform.affine         as affine
 import fsl.transform.flirt          as flirt
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
-from . import                          base
+import fsleyes.actions.base         as base
 from . import                          applyflirtxfm
 
 

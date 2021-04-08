@@ -17,7 +17,7 @@ import fsl.transform.affine as affine
 import fsl.data.mesh        as fslmesh
 import fsl.data.image       as fslimage
 import fsleyes.strings      as strings
-from . import                  base
+import fsleyes.actions.base as base
 
 
 class ProjectImageToSurfaceAction(base.NeedOverlayAction):
