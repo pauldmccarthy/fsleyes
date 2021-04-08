@@ -352,6 +352,11 @@ def _findEntryPoints(mod):
            item is actions.Action:
             continue
 
+        # ignoreControl may be overridden
+        # to tell us to ignore this control
+        if issubclass(item, ctrlpanel.ControlPanel) and item.ignoreControl():
+            continue
+
         if   issubclass(item, viewpanel.ViewPanel):    group = 'views'
         elif issubclass(item, ctrlpanel.ControlPanel): group = 'controls'
         elif issubclass(item, actions.Action):         group = 'tools'

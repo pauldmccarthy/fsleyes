@@ -30,6 +30,19 @@ class ControlMixin:
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
+
+    @staticmethod
+    def ignoreControl():
+        """Tell FSLeyes that this control should not be considered a FSLeyes
+        plugin.
+
+        The default implementation returns ``False``, but may be overridden
+        by sub-classes to control whether a menu item should be added for
+        the control in the settings menu for the relevant FSLeyes view(s).
+        """
+        return False
+
+
     @staticmethod
     def supportedViews():
         """Return the views that this control supports.
