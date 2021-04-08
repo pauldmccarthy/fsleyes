@@ -13,8 +13,6 @@ import copy
 import numpy as np
 import          wx
 
-import fsl.data.image                    as fslimage
-import fsleyes_props                     as props
 import fsleyes_widgets.utils.status      as status
 import fsleyes_widgets.dialog            as fsldlg
 import fsleyes.strings                   as strings
@@ -183,7 +181,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
         """
         displayCtx = self.displayCtx
         opts       = displayCtx.getOpts(displayCtx.getSelectedOverlay())
-        refimage   = opts.getReferenceImage()
+        refimage   = opts.referenceImage
 
         if refimage is not None:
             units  = refimage.xyzUnits

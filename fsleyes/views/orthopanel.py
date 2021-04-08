@@ -37,7 +37,6 @@ import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
 import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
-import fsleyes.controls.annotationpanel        as annotationpanel
 import fsleyes.displaycontext.orthoopts        as orthoopts
 from . import                                     canvaspanel
 
@@ -116,7 +115,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        toggleEditMode
        toggleCropMode
        toggleOrthoToolBar
-       toggleAnnotationPanel
        resetDisplay
        centreCursor
        centreCursorWorld
@@ -398,16 +396,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                          closeable=False)
 
 
-    @actions.toggleControlAction(annotationpanel.AnnotationPanel)
-    def toggleAnnotationPanel(self, floatPane=False):
-        """Shows/hides an :class:`.AnnotationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(annotationpanel.AnnotationPanel,
-                         location=wx.LEFT,
-                         floatPane=floatPane)
-
-
     @actions.action
     def pearsonCorrelation(self):
         """Executes a :class:`.PearsonCorrelateAction`. """
@@ -502,7 +490,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
-                   self.toggleAnnotationPanel,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
                    self.toggleClassificationPanel,

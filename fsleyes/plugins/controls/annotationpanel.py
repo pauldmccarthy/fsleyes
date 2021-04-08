@@ -14,15 +14,16 @@ import copy
 
 import wx
 
-import fsleyes_widgets.elistbox              as elb
-import fsleyes_props                         as props
-import fsleyes_widgets.widgetlist            as widgetlist
-import fsleyes_widgets.bitmapradio           as bmpradio
-import fsleyes.strings                       as strings
-import fsleyes.icons                         as fslicons
-import fsleyes.controls.controlpanel         as ctrlpanel
-import fsleyes.profiles.orthoannotateprofile as annotprofile
-import fsleyes.gl.annotations                as annotations
+import fsleyes_widgets.elistbox                      as elb
+import fsleyes_props                                 as props
+import fsleyes_widgets.widgetlist                    as widgetlist
+import fsleyes_widgets.bitmapradio                   as bmpradio
+import fsleyes.strings                               as strings
+import fsleyes.icons                                 as fslicons
+import fsleyes.views.orthopanel                      as orthopanel
+import fsleyes.controls.controlpanel                 as ctrlpanel
+import fsleyes.plugins.profiles.orthoannotateprofile as annotprofile
+import fsleyes.gl.annotations                        as annotations
 
 
 class AnnotationPanel(ctrlpanel.ControlPanel):
@@ -60,8 +61,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         ``CropImagePanel`` is only intended to be added to
         :class:`.OrthoPanel` views.
         """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
+        return [orthopanel.OrthoPanel]
 
 
     @staticmethod
@@ -70,6 +70,13 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         activated in conjunction with the ``AnnotationPanel``.
         """
         return annotprofile.OrthoAnnotateProfile
+
+
+    @staticmethod
+    def defaultLayout():
+        """
+        """
+        return {'location' : wx.LEFT}
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):
