@@ -920,7 +920,7 @@ class FSLeyesFrame(wx.Frame):
                 # don't re-create it if it was already added
                 # on a previous call.
                 func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
-                name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
+                name = ctrlType.__name__
                 if not hasattr(panel, name):
                     act  = actions.ToggleControlPanelAction(
                         self.overlayList,
@@ -2078,8 +2078,6 @@ class FSLeyesFrame(wx.Frame):
                 setattr(panel, cls.__name__, actionObj)
                 toolNames.append(cls.__name__)
                 toolTitles[cls.__name__] = name
-                print(f'Just created {type(panel).__name__}.{name} '
-                      f'= {cls.__name__}')
 
             # Each view panel added to the tools list
             # gets its own section, starting with a

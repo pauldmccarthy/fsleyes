@@ -297,7 +297,7 @@ def listControls(viewType=None):
         supported = cls.supportedViews()
         if viewType  is not None and \
            supported is not None and \
-           viewType  not in supported:
+           not issubclass(viewType, tuple(supported)):
             ctrls.pop(name)
             continue
     return ctrls
