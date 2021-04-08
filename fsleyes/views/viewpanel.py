@@ -764,19 +764,23 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # We assume that, if a panel which requires
         # a custom profile was open, that profile
         # was active.
-        profileCls   = panels[0].profileCls()
-        closeProfile = True
-        if profileCls is not None:
-            for ctype in self.__panels:
-                cprofileCls = ctype.profileCls()
-                if cprofileCls is not None and \
-                   issubclass(cprofileCls, profileCls):
-                    closeProfile = False
-            if closeProfile:
-                log.debug('Panel %s uses a custom interaction profile %s - '
-                          'deactivating it and restoring default profile',
-                          type(panels[0]).__name__, profileCls.__name__)
-                self.__profileManager.deactivateProfile()
+        #
+        # See WTF AUI comment above for reason for
+        # len(panels) guard
+        if len(panels) > 0:
+            profileCls   = panels[0].profileCls()
+            closeProfile = True
+            if profileCls is not None:
+                for ctype in self.__panels:
+                    cprofileCls = ctype.profileCls()
+                    if cprofileCls is not None and \
+                       issubclass(cprofileCls, profileCls):
+                        closeProfile = False
+                if closeProfile:
+                    log.debug('Panel %s uses a custom interaction profile %s - '
+                              'deactivating it and restoring default profile',
+                              type(panels[0]).__name__, profileCls.__name__)
+                    self.__profileManager.deactivateProfile()
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)

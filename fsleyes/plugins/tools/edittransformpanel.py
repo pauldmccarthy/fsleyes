@@ -65,6 +65,9 @@ class EditTransformAction(actions.ToggleControlPanelAction):
         closed. Clears references, removes listeners, and calls the base
         class ``destroy`` method.
         """
+        if self.destroyed:
+            return
+
         self.__ortho = None
         self.displayCtx.removeListener('selectedOverlay', self.name)
         super().destroy()
