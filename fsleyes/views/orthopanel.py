@@ -33,7 +33,6 @@ import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
 import fsleyes.controls.cropimagepanel         as cropimagepanel
-import fsleyes.controls.edittransformpanel     as edittransformpanel
 import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
@@ -116,7 +115,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
        toggleEditMode
        toggleCropMode
-       toggleEditTransformPanel
        toggleOrthoToolBar
        toggleAnnotationPanel
        resetDisplay
@@ -400,18 +398,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                          closeable=False)
 
 
-    @actions.toggleControlAction(edittransformpanel.EditTransformPanel)
-    def toggleEditTransformPanel(self):
-        """Shows/hides an :class:`.EditTransformPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-
-        self.togglePanel(edittransformpanel.EditTransformPanel,
-                         floatPane=True,
-                         floatOnly=True,
-                         closeable=False)
-
-
     @actions.toggleControlAction(annotationpanel.AnnotationPanel)
     def toggleAnnotationPanel(self, floatPane=False):
         """Shows/hides an :class:`.AnnotationPanel`. See
@@ -533,7 +519,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """
         return [self.toggleEditMode,
                 self.toggleCropMode,
-                self.toggleEditTransformPanel,
                 self.pearsonCorrelation]
 
 
@@ -625,7 +610,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                            [None, 'toggleEditMode'],
                            ignoreFocus=True,
                            runOnIdle=True)
-
 
 
     def __removeEditMenu(self):
@@ -731,7 +715,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.centreCursor            .enabled = haveOverlays
         self.centreCursorWorld       .enabled = haveOverlays
         self.toggleEditMode          .enabled = isEditable
-        self.toggleEditTransformPanel.enabled = isImage
         self.toggleCropMode          .enabled = isImage
 
 

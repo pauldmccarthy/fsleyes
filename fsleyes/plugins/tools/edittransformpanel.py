@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`EditTransformPanel` class, a FSLeyes
-control panel which allows the user to adjust the ``voxToWorldMat`` of an
-:class:`.Image` overlay.
+"""This module provides the :class:`EditTransformPanel` (a.k.a. "Nudge")
+class, a FSLeyes control panel which allows the user to adjust the
+``voxToWorldMat`` of an :class:`.Image` overlay.
 """
 
 
@@ -23,6 +23,8 @@ import fsl.transform.affine                 as affine
 import fsleyes_props                        as props
 import fsleyes_widgets.floatslider          as fslider
 
+import fsleyes.actions                      as actions
+import fsleyes.views.orthopanel             as orthopanel
 import fsleyes.controls.controlpanel        as ctrlpanel
 import fsleyes.displaycontext               as displaycontext
 import fsleyes.strings                      as strings
@@ -32,6 +34,54 @@ import fsleyes.controls.displayspacewarning as dswarning
 
 
 log = logging.getLogger(__name__)
+
+
+class EditTransformAction(actions.ToggleControlPanelAction):
+    """The ``EditTransformAction`` just toggles an
+    :class:`.EditTransformPanel`. It is added under the FSLeyes Tools menu.
+    """
+
+    @staticmethod
+    def supportedViews():
+        """The ``EditTransformAction`` is restricted for use with
+        :class:`.OrthoPanel` views.
+        """
+        return [orthopanel.OrthoPanel]
+
+
+    def __init__(self, overlayList, displayCtx, ortho):
+        """Create an ``EditTransformAction``.
+        """
+        super().__init__(overlayList, displayCtx, self.__run, ortho,
+                         EditTransformPanel)
+        self.__ortho = ortho
+
+        displayCtx.addListener('selectedOverlay', self.name,
+                               self.__selectedOverlayChanged)
+
+
+    def destroy(self):
+        """Called when the :class:`.OrthoPanel` that owns this action is
+        closed. Clears references, removes listeners, and calls the base
+        class ``destroy`` method.
+        """
+        self.__ortho = None
+        self.displayCtx.removeListener('selectedOverlay', self.name)
+        super().destroy()
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the selected overlay changes. Enables/disables this
+        action (and hence the bound Tools menu item) depending on whether the
+        overlay is an image.
+        """
+        ovl = self.displayCtx.getSelectedOverlay()
+        self.enabled = isinstance(ovl, fslimage.Image)
+
+
+    def __run(self):
+        """Open/close an :class:`EditTransformPanel`. """
+        self.viewPanel.togglePanel(EditTransformPanel)
 
 
 class EditTransformPanel(ctrlpanel.ControlPanel):
@@ -63,13 +113,31 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
 
 
     @staticmethod
+    def ignoreControl():
+        """Tells the FSLeyes plugin system not to add the
+        ``EditTransformPanel`` as an option to the FSLeyes settings menu.
+        Instead, the :class:`EditTransformAction` action is added to the
+        tools menu.
+        """
+        return True
+
+
+    @staticmethod
     def supportedViews():
         """Overrides :meth:`.ControlMixin.supportedViews`. The
         ``EditTransformPanel`` is only intended to be added to
         :class:`.OrthoPanel` views.
         """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
+        return [orthopanel.OrthoPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of arguments to be passed to the
+        :meth:`.ViewPanel.togglePanel` method when an ``EditTransformPanel``
+        is created.
+        """
+        return dict(floatPane=True, floatOnly=True)
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):
@@ -638,7 +706,7 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
 
         except Exception as e:
 
-            log.warn('Error saving FLIRT matrix: {}'.format(e))
+            log.warning('Error saving FLIRT matrix: %s', e)
 
             wx.MessageDialog(
                 self,
@@ -654,4 +722,4 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         """
 
         self.__resetAllOverlays()
-        idle.idle(self.__ortho.toggleEditTransformPanel)
+        idle.idle(self.__ortho.togglePanel, type(self))

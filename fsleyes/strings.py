@@ -531,6 +531,7 @@ actions = TypeDict({
     'ProjectImageToSurfaceAction' : 'Project image data onto surface',
     'SaveAnnotationsAction'       : 'Save annotations to file',
     'LoadAnnotationsAction'       : 'Load annotations from file',
+    'EditTransformAction'         : 'Nudge',
 
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -572,7 +573,6 @@ actions = TypeDict({
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
     'OrthoPanel.toggleCropMode'           : 'Crop',
-    'OrthoPanel.toggleEditTransformPanel' : 'Nudge',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
     'OrthoPanel.toggleAnnotationPanel'    : 'Annotations panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
