@@ -133,7 +133,8 @@ def toggleControlAction(*args, **kwargs):
     """A decorator which identifies a class method as a
     :class:`.ToggleControlPanelAction`.
     """
-    return ActionFactory(ToggleControlPanelAction, *args, **kwargs)
+    return ActionFactory(
+        ToggleControlPanelAction, *args, instance=True, **kwargs)
 
 
 class ActionProvider:

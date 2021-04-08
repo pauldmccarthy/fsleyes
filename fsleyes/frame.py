@@ -928,8 +928,7 @@ class FSLeyesFrame(wx.Frame):
                         func,
                         panel,
                         ctrlType,
-                        name=name,
-                        instance=False)
+                        name=name)
 
                     setattr(panel, name, act)
 

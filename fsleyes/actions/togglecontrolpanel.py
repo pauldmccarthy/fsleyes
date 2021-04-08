@@ -36,7 +36,7 @@ class ToggleControlPanelAction(base.ToggleAction):
                  viewPanel,
                  cpType,
                  name=None,
-                 instance=True):
+                 instance=False):
         """Create a ``ToggleControlPanelAction``.
 
         :arg overlayList: The :class:`.OverlayList`
@@ -46,10 +46,13 @@ class ToggleControlPanelAction(base.ToggleAction):
         :arg cpType:      The type of the control panel being managed by this
                           ``ToggleControlPanelAction``.
         :arg name:        Name of this action - defaults to ``func.__name__``.
-        :arg instance:    If ``True`` (the default), it is assumed that this
-                          action encapsulates a method of the ``viewPanel``
-                          instance, which will be passed as the first argument
-                          when the action is called.
+
+        :arg instance:    Defaults to ``False``. If ``True``, it is assumed
+                          that this action encapsulates a method of the
+                          ``viewPanel`` instance, which will be passed as the
+                          first argument when the action is called. This should
+                          not need to be used by anything other than the
+                          :func:`.toggleControlPanelAction` decorator.
         """
 
         if instance: instance = viewPanel
