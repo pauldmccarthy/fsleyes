@@ -1,7 +1,7 @@
-``fsleyes.actions.addroihistogram``
+``fsleyes.plugins.tools.cropimage``
 ===================================
 
-.. automodule:: fsleyes.actions.addroihistogram
+.. automodule:: fsleyes.plugins.tools.cropimage
     :members:
     :undoc-members:
     :show-inheritance:

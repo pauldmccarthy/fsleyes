@@ -14,6 +14,7 @@ OpenGL.raw
 OpenGL.raw.GL
 OpenGL.raw.GL._types
 deprecation
+file_tree
 fsl
 fsl.data
 fsl.data.atlases
@@ -61,6 +62,7 @@ fsleyes_props
 fsleyes_props
 fsleyes_widgets
 fsleyes_widgets.bitmaptoggle
+fsleyes_widgets.bitmapradio
 fsleyes_widgets.dialog
 fsleyes_widgets.elistbox
 fsleyes_widgets.floatslider
@@ -72,6 +74,7 @@ fsleyes_widgets.placeholder_textctrl
 fsleyes_widgets.rangeslider
 fsleyes_widgets.texttag
 fsleyes_widgets.utils
+fsleyes_widgets.utils.textbitmap
 fsleyes_widgets.utils.colourbarbitmap
 fsleyes_widgets.utils.layout
 fsleyes_widgets.utils.overlay
@@ -113,4 +116,5 @@ wx.lib.newevent
 wx.py
 wx.py.interpreter
 wx.py.shell
+wx.siplib
 wxnat

@@ -1,7 +1,7 @@
-``fsleyes.controls.cropimagepanel``
+``fsleyes.plugins.tools.correlate``
 ===================================
 
-.. automodule:: fsleyes.controls.cropimagepanel
+.. automodule:: fsleyes.plugins.tools.correlate
     :members:
     :undoc-members:
     :show-inheritance:

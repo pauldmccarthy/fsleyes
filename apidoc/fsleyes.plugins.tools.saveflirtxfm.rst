@@ -1,7 +1,7 @@
-``fsleyes.controls.atlasoverlaypanel``
+``fsleyes.plugins.tools.saveflirtxfm``
 ======================================
 
-.. automodule:: fsleyes.controls.atlasoverlaypanel
+.. automodule:: fsleyes.plugins.tools.saveflirtxfm
     :members:
     :undoc-members:
     :show-inheritance:

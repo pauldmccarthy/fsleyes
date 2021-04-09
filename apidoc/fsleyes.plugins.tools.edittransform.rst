@@ -1,7 +1,7 @@
-``fsleyes.controls.edittransformpanel``
+``fsleyes.plugins.tools.edittransform``
 =======================================
 
-.. automodule:: fsleyes.controls.edittransformpanel
+.. automodule:: fsleyes.plugins.tools.edittransform
     :members:
     :undoc-members:
     :show-inheritance:

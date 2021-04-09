@@ -1,7 +1,7 @@
-``fsleyes.controls.atlasmanagementpanel``
+``fsleyes.plugins.controls.clusterpanel``
 =========================================
 
-.. automodule:: fsleyes.controls.atlasmanagementpanel
+.. automodule:: fsleyes.plugins.controls.clusterpanel
     :members:
     :undoc-members:
     :show-inheritance:

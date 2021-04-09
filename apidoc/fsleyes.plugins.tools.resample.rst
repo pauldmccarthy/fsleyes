@@ -1,7 +1,7 @@
-``fsleyes.controls.filetreepanel``
+``fsleyes.plugins.tools.resample``
 ==================================
 
-.. automodule:: fsleyes.controls.filetreepanel
+.. automodule:: fsleyes.plugins.tools.resample
     :members:
     :undoc-members:
     :show-inheritance:
