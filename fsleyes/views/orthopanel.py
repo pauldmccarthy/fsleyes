@@ -32,7 +32,6 @@ import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
 import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
-import fsleyes.controls.cropimagepanel         as cropimagepanel
 import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
@@ -88,19 +87,26 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     **Interaction**
 
 
-    The following interaction profiles are defined for use with the
-    ``OrthoPanel`` (see the :class:`.ViewPanel` for an overview of
-    *profiles*):
+    The :class:`.OrthoPanel` uses the :class:`.OrthoViewProfile` to handle
+    interaction with the user via the mouse and keyboard. Some control panels
+    will activate other interaction profiles while they are open, such as:
 
-    ======== =========================================================
-    ``view`` Viewing/navigation, using the :class:`.OrthoViewProfile`.
+    ========================== ==============================================
+    :class:`.OrthoEditToolBar` Simple editing of :class:`.Image`
+                               overlays, using the
+                               :class:`.OrthoEditProfile` (see also
+                               the :mod:`~fsleyes.editor` package).
 
-    ``edit`` Simple editing of :class:`.Image` overlays, using the
-             :class:`.OrthoEditProfile` (see also the
-             :mod:`~fsleyes.editor` package).
+    :class:`.CropImagePanel`   Allows the user to crop an ``Image`` overlay,
+                               using the :class:`.OrthoCropProfile`.
 
-    ``crop`` Allows the user to crop an ``Image`` overlay.
-    ======== =========================================================
+    :class:`.AnnotationPanel`  Allows the user to draw text and shapes on the
+                               :class:`.OrthoPanel` canvases, using the
+                               :class:`.OrthoAnnotatePanel`.
+    ========================== ==============================================
+
+    See the :class:`.ViewPanel`, and the :mod:`.profiles` package for more
+    information on interaction profiles.
 
 
     **Actions and control panels**
@@ -113,7 +119,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleEditMode
-       toggleCropMode
        toggleOrthoToolBar
        resetDisplay
        centreCursor
@@ -377,16 +382,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__removeEditMenu()
 
 
-    @actions.toggleControlAction(cropimagepanel.CropImagePanel)
-    def toggleCropMode(self):
-        """Opens a :class:`.CropImagePanel`.
-        """
-        self.togglePanel(cropimagepanel.CropImagePanel,
-                         floatPane=True,
-                         floatOnly=True,
-                         closeable=False)
-
-
     @actions.action
     def resetDisplay(self):
         """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
@@ -487,8 +482,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools
         menu for ``OrthoPanel`` views.
         """
-        return [self.toggleEditMode,
-                self.toggleCropMode]
+        return [self.toggleEditMode]
 
 
     def getGLCanvases(self):
@@ -684,7 +678,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.centreCursor            .enabled = haveOverlays
         self.centreCursorWorld       .enabled = haveOverlays
         self.toggleEditMode          .enabled = isEditable
-        self.toggleCropMode          .enabled = isImage
 
 
     def __onResize(self, ev):

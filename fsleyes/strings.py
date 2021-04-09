@@ -532,6 +532,7 @@ actions = TypeDict({
     'SaveAnnotationsAction'       : 'Save annotations to file',
     'LoadAnnotationsAction'       : 'Load annotations from file',
     'EditTransformAction'         : 'Nudge',
+    'CropImageAction'             : 'Crop',
 
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -570,7 +571,6 @@ actions = TypeDict({
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
-    'OrthoPanel.toggleCropMode'           : 'Crop',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',

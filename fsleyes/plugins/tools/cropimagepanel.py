@@ -19,19 +19,72 @@ import itertools as it
 import              wx
 import numpy     as np
 
-import fsl.utils.idle                       as idle
-import fsl.data.image                       as fslimage
+import fsl.utils.idle                            as idle
+import fsl.data.image                            as fslimage
 
-import fsleyes_props                        as props
-import fsleyes_widgets.rangeslider          as rslider
-import fsleyes_widgets.utils.status         as status
+import fsleyes_props                             as props
+import fsleyes_widgets.rangeslider               as rslider
+import fsleyes_widgets.utils.status              as status
 
-import fsleyes.controls.controlpanel        as ctrlpanel
-import fsleyes.displaycontext               as displaycontext
-import fsleyes.strings                      as strings
-import fsleyes.actions.copyoverlay          as copyoverlay
-import fsleyes.controls.displayspacewarning as dswarning
-import fsleyes.profiles.orthocropprofile    as orthocropprofile
+import fsleyes.controls.controlpanel             as ctrlpanel
+import fsleyes.displaycontext                    as displaycontext
+import fsleyes.views.orthopanel                  as orthopanel
+import fsleyes.strings                           as strings
+import fsleyes.actions                           as actions
+import fsleyes.actions.copyoverlay               as copyoverlay
+import fsleyes.controls.displayspacewarning      as dswarning
+import fsleyes.plugins.profiles.orthocropprofile as orthocropprofile
+
+
+class CropImageAction(actions.ToggleControlPanelAction):
+    """The ``CropImageAction`` just toggles a :class:`.CropImagePanel`. It is
+    added under the FSLeyes Tools menu.
+    """
+
+    @staticmethod
+    def supportedViews():
+        """The ``CropImageAction`` is restricted for use with
+        :class:`.OrthoPanel` views.
+        """
+        return [orthopanel.OrthoPanel]
+
+
+    def __init__(self, overlayList, displayCtx, ortho):
+        """Create  ``CropImageAction``. """
+        super().__init__(overlayList, displayCtx, self.__run, ortho,
+                         CropImagePanel)
+        self.__ortho = ortho
+        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+
+        displayCtx.addListener('selectedOverlay', self.__name,
+                               self.__selectedOverlayChanged)
+
+
+    def destroy(self):
+        """Called when the :class:`.OrthoPanel` that owns this action is
+        closed. Clears references, removes listeners, and calls the base
+        class ``destroy`` method.
+        """
+        if self.destroyed:
+            return
+
+        self.__ortho = None
+        self.displayCtx.removeListener('selectedOverlay', self.__name)
+        super().destroy()
+
+
+    def __selectedOverlayChanged(self, *a):
+        """Called when the selected overlay changes. Enables/disables this
+        action (and hence the bound Tools menu item) depending on whether the
+        overlay is an image.
+        """
+        ovl = self.displayCtx.getSelectedOverlay()
+        self.enabled = isinstance(ovl, fslimage.Image)
+
+
+    def __run(self):
+        """Open/close a :class:`CropImagePanel`. """
+        self.viewPanel.togglePanel(CropImagePanel)
 
 
 class CropImagePanel(ctrlpanel.ControlPanel):
@@ -54,11 +107,30 @@ class CropImagePanel(ctrlpanel.ControlPanel):
 
 
     @staticmethod
+    def ignoreControl():
+        """Tells FSLeyes not to add the ``CropImagePanel`` as an option to
+        the Settings menu. Instead, the :class:`CropImageAction` is added as
+        an option to the Tools menu.
+        """
+        return True
+
+
+    @staticmethod
     def profileCls():
         """Returns the :class:`.OrthoCropProfile` class, which needs to be
         activated in conjunction with the ``CropImagePanel``.
         """
         return orthocropprofile.OrthoCropProfile
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'floatPane' : True,
+                'floatOnly' : True}
+
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):
@@ -399,7 +471,7 @@ class CropImagePanel(ctrlpanel.ControlPanel):
 
     def __onCancel(self, ev=None):
         """Called when the Cancel button is pushed. Calls
-        :meth:`.OrthoPanel.toggleCropMode` - this will result in
+        :meth:`.OrthoPanel.togglePanel` - this will result in
         this ``CropImagePanel`` being destroyed.
 
         This method is also called programmatically from the :meth:`__onCrop`
@@ -409,7 +481,7 @@ class CropImagePanel(ctrlpanel.ControlPanel):
         # Do asynchronously, because we don't want
         # this CropImagePanel being destroyed from
         # its own event handler.
-        idle.idle(self.__ortho.toggleCropMode)
+        idle.idle(self.__ortho.togglePanel, CropImagePanel)
 
 
     def __onCrop(self, ev):
