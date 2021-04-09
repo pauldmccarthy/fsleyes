@@ -565,8 +565,6 @@ actions = TypeDict({
     'CanvasPanel.toggleCanvasSettingsPanel' : 'View settings panel',
     'CanvasPanel.toggleLocationPanel'       : 'Location panel',
     'CanvasPanel.toggleAtlasPanel'          : 'Atlas panel',
-    'CanvasPanel.toggleLookupTablePanel'    : 'Lookup tables',
-    'CanvasPanel.toggleClusterPanel'        : 'Cluster browser',
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',

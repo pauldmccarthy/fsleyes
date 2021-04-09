@@ -456,7 +456,6 @@ def deserialiseLayout(layout):
     from fsleyes.controls.histogramtoolbar           import HistogramToolBar
     from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
     from fsleyes.controls.locationpanel              import LocationPanel
-    from fsleyes.controls.lookuptablepanel           import LookupTablePanel
     from fsleyes.controls.orthoeditactiontoolbar     import \
         OrthoEditActionToolBar
     from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
@@ -494,7 +493,6 @@ def deserialiseLayout(layout):
         'HistogramToolBar'           : HistogramToolBar,
         'LightBoxToolBar'            : LightBoxToolBar,
         'LocationPanel'              : LocationPanel,
-        'LookupTablePanel'           : LookupTablePanel,
         'OrthoEditActionToolBar'     : OrthoEditActionToolBar,
         'OrthoEditToolBar'           : OrthoEditToolBar,
         'OrthoToolBar'               : OrthoToolBar,

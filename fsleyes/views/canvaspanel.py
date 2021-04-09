@@ -26,7 +26,6 @@ import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
 import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
 import fsleyes.controls.canvassettingspanel        as canvassettingspanel
 import fsleyes.controls.locationpanel              as locationpanel
-import fsleyes.controls.lookuptablepanel           as lookuptablepanel
 from . import                                         colourbarpanel
 from . import                                         viewpanel
 
@@ -92,7 +91,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleDisplayPanel
        toggleCanvasSettingsPanel
        toggleLocationPanel
-       toggleLookupTablePanel
 
 
     .. _canvaspanel-adding-content:
@@ -490,14 +488,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.togglePanel(locationpanel.LocationPanel,
                          showHistory=isinstance(self, OrthoPanel),
                          location=wx.BOTTOM)
-
-
-    @actions.toggleControlAction(lookuptablepanel.LookupTablePanel)
-    def toggleLookupTablePanel(self):
-        """Toggles a :class:`.LookupTablePanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.RIGHT)
 
 
     @property

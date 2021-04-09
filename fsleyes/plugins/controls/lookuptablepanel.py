@@ -34,6 +34,7 @@ import fsleyes_props                 as props
 import fsleyes_widgets.elistbox      as elistbox
 import fsleyes_widgets.utils.status  as status
 
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.displaycontext        as displayctx
 import fsleyes.colourmaps            as fslcmaps
@@ -73,6 +74,22 @@ class LookupTablePanel(ctrlpanel.ControlPanel):
     :class:`LookupTable` is changed through the ``LookupTablePanel``, and vice
     versa.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The :class:`.LookupTablePanel` is restricted for use with
+        ``OrthoPanel``, ``LightBoxPanel`` and ``Scene3DPanel`` views.
+        """
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.RIGHT}
 
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
