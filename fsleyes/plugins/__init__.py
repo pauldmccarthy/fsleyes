@@ -347,21 +347,23 @@ def _findEntryPoints(mod):
             continue
 
         # avoid module imports
-        if item is viewpanel.ViewPanel    or \
-           item is ctrlpanel.ControlPanel or \
+        if item is viewpanel.ViewPanel      or \
+           item is ctrlpanel.ControlPanel   or \
+           item is ctrlpanel.ControlToolBar or \
            item is actions.Action:
             continue
 
         # ignoreControl/ignoreTool may be overridden
         # to tell us to ignore this plugin
-        if issubclass(item, ctrlpanel.ControlPanel) and item.ignoreControl():
+        if issubclass(item, ctrlpanel.ControlMixin) and item.ignoreControl():
             continue
         if issubclass(item, actions.Action) and item.ignoreTool():
             continue
 
-        if   issubclass(item, viewpanel.ViewPanel):    group = 'views'
-        elif issubclass(item, ctrlpanel.ControlPanel): group = 'controls'
-        elif issubclass(item, actions.Action):         group = 'tools'
+        if   issubclass(item, viewpanel.ViewPanel):      group = 'views'
+        elif issubclass(item, ctrlpanel.ControlPanel):   group = 'controls'
+        elif issubclass(item, ctrlpanel.ControlToolBar): group = 'controls'
+        elif issubclass(item, actions.Action):           group = 'tools'
 
         if group is not None:
             log.debug('Found %s entry point: %s', group, name)
