@@ -26,7 +26,6 @@ import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
 import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
 import fsleyes.controls.canvassettingspanel        as canvassettingspanel
 import fsleyes.controls.locationpanel              as locationpanel
-import fsleyes.controls.clusterpanel               as clusterpanel
 import fsleyes.controls.lookuptablepanel           as lookuptablepanel
 from . import                                         colourbarpanel
 from . import                                         viewpanel
@@ -93,7 +92,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleDisplayPanel
        toggleCanvasSettingsPanel
        toggleLocationPanel
-       toggleClusterPanel
        toggleLookupTablePanel
 
 
@@ -492,14 +490,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.togglePanel(locationpanel.LocationPanel,
                          showHistory=isinstance(self, OrthoPanel),
                          location=wx.BOTTOM)
-
-
-    @actions.toggleControlAction(clusterpanel.ClusterPanel)
-    def toggleClusterPanel(self):
-        """Toggles a :class:`.ClusterPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP)
 
 
     @actions.toggleControlAction(lookuptablepanel.LookupTablePanel)

@@ -20,6 +20,7 @@ import fsl.data.featanalysis         as featanalysis
 import fsleyes_widgets               as fwidgets
 import fsleyes_widgets.utils.status  as status
 import fsleyes_widgets.widgetgrid    as widgetgrid
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.strings               as strings
 import fsleyes.autodisplay           as autodisplay
@@ -67,8 +68,24 @@ class ClusterPanel(ctrlpanel.ControlPanel):
     :class:`.FEATImage` overlay and contrasts. This means that when the user
     changes the currently selected overlay, or the current contrast, the
     displayed cluster information is updated quickly.
-
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The :class:`.ClusterPanel` is restricted for use with
+        ``OrthoPanel``, ``LightBoxPanel`` and ``Scene3DPanel`` views.
+        """
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.TOP}
+
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Create a ``ClusterPanel``.

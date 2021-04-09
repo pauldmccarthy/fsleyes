@@ -471,7 +471,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
                    self.toggleLookupTablePanel,
-                   self.toggleClusterPanel,
                    self.removeAllPanels]
 
         names = [a.actionName if a is not None else None for a in actionz]
