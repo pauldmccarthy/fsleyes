@@ -417,7 +417,9 @@ def _registerEntryPoints(name, module):
 def loadPlugin(filename):
     """Loads the given Python file as a FSLeyes plugin. """
 
-    name    = op.splitext(op.basename(filename))[0]
+    # strip underscores to handle e.g. __init__.py,
+    # as pkg_resources might otherwise have trouble
+    name    = op.splitext(op.basename(filename))[0].strip('_')
     modname = 'fsleyes_plugin_{}'.format(name)
     mod     = _importModule(filename, modname)
     _registerEntryPoints(name, mod)
