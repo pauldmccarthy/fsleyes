@@ -99,6 +99,8 @@ class CorrelateAction(base.Action):
         """Removes listeners from the :class:`.DisplayContext` and
         :class:`.OverlayList`, and calls :meth:`.Action.destroy`.
         """
+        if self.destroyed:
+            return
 
         self.displayCtx .removeListener('selectedOverlay', self.__name)
         self.overlayList.removeListener('overlays',        self.__name)
