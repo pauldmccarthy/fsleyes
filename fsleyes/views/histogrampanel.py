@@ -20,7 +20,6 @@ import fsl.data.mesh                          as fslmesh
 import fsleyes_props                          as props
 
 import fsleyes.actions                        as actions
-import fsleyes.actions.addroihistogram        as roihistogram
 import fsleyes.overlay                        as fsloverlay
 import fsleyes.profiles.histogramprofile      as histogramprofile
 import fsleyes.plotting.histogramseries       as histogramseries
@@ -63,13 +62,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
        toggleHistogramToolBar
        toggleHistogramControl
-
-    Some tools are also available, to do various things:
-
-    .. autosummary::
-       :nosignatures:
-
-       addROIHistogram
     """
 
 
@@ -119,13 +111,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                                 self.name,
                                 self.__selectedOverlayChanged)
 
-        self.__roiHistAction = roihistogram.AddROIHistogramAction(
-            overlayList,
-            displayCtx,
-            self)
-
-        self.addROIHistogram.bindProps('enabled', self.__roiHistAction)
-
         self.initProfile(histogramprofile.HistogramProfile)
         self.__selectedOverlayChanged()
 
@@ -135,10 +120,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.destroy`.
         """
 
-        self.__roiHistAction.destroy()
-
-        self.__currentHs     = None
-        self.__roiHistAction = None
+        self.__currentHs = None
 
         self            .removeListener('histType',        self.name)
         self            .removeListener('plotType',        self.name)
@@ -176,13 +158,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         pass
 
 
-    @actions.action
-    def addROIHistogram(self):
-        """Runs an :class:`.AddROIHistogramAction`. """
-
-        self.__roiHistAction()
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``HistogramPanel``.
@@ -199,13 +174,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
-
-
-    def getTools(self):
-        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
-        ``HistogramPanel`` views.
-        """
-        return [self.addROIHistogram]
 
 
     def draw(self, *a):

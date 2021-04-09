@@ -534,7 +534,7 @@ actions = TypeDict({
     'EditTransformAction'         : 'Nudge',
     'CropImageAction'             : 'Crop',
     'AddMaskDataSeriesAction'     : 'Add time series from ROI',
-
+    'AddROIHistogramAction'       : 'Add histogram from ROI',
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
@@ -596,7 +596,6 @@ actions = TypeDict({
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',
     'HistogramPanel.toggleHistogramOverlay'         : 'Histogram overlay',
-    'HistogramPanel.addROIHistogram'                : 'Add histogram from ROI',
     'PowerSpectrumPanel.togglePlotList'             : 'Power spectrum list',
     'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Power spectrum control',
     'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Power spectrum toolbar',

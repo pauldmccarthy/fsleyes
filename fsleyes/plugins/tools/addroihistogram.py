@@ -12,15 +12,14 @@ action used by the :class:`.HistogramPanel`.
 import          wx
 import numpy as np
 
-import fsl.data.image                   as fslimage
-
-import fsleyes.strings                  as strings
-import fsleyes.plotting.dataseries      as dataseries
-import fsleyes.plotting.histogramseries as histogramseries
-
-import fsleyes.actions.base             as base
-
+import fsl.data.image                          as fslimage
+import fsleyes.views.histogrampanel            as histogrampanel
+import fsleyes.strings                         as strings
+import fsleyes.plotting.dataseries             as dataseries
+import fsleyes.plotting.histogramseries        as histogramseries
 import fsleyes.plugins.tools.addmaskdataseries as addmaskdataseries
+import fsleyes.actions.base                    as base
+
 
 
 class AddROIHistogramAction(base.Action):
@@ -31,6 +30,14 @@ class AddROIHistogramAction(base.Action):
     the user selects a binary mask, the data within the base image is extracted
     for that mask, and the histogram of that data is added to the plot.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``AddROIHistogramAction`` is restricted for use with the
+        :class:`.HistogramPanel`.
+        """
+        return [histogrampanel.HistogramPanel]
 
 
     def __init__(self, overlayList, displayCtx, plotPanel):
@@ -45,14 +52,13 @@ class AddROIHistogramAction(base.Action):
             self, overlayList, displayCtx, self.__addROIHistogram)
 
         self.__plotPanel  = plotPanel
-        self.__name       = '{}_{}'.format(type(self).__name__, id(self))
         self.__roiOptions = []
 
         overlayList.addListener('overlays',
-                                self.__name,
+                                self.name,
                                 self.__overlayListChanged)
         displayCtx .addListener('selectedOverlay',
-                                self.__name,
+                                self.name,
                                 self.__overlayListChanged)
 
         self.__overlayListChanged()
@@ -62,8 +68,8 @@ class AddROIHistogramAction(base.Action):
         """Must be called when this ``AddROIHistogramAction`` is no
         longer in use.
         """
-        self.overlayList.removeListener('overlays',        self.__name)
-        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
         self.__plotPanel  = None
         self.__roiOptions = None
         base.Action.destroy(self)
