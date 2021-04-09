@@ -330,7 +330,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
         self.__removeEditMenu()
-        self.__pCorrAction.destroy()
 
         contentPanel.Unbind(wx.EVT_SIZE)
 
@@ -339,7 +338,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas       = None
         self.__focusedCanvas = None
         self.__labelMgr      = None
-        self.__pCorrAction   = None
 
         canvaspanel.CanvasPanel.destroy(self)
 

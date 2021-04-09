@@ -937,10 +937,7 @@ def _ColourMapOpts_ColourMapWidget(
         if bmp is None:
             return
 
-        if fwidgets.wxversion() == fwidgets.WX_PHOENIX:
-            bmp = wx.Bitmap.FromBufferRGBA(w, h, bmp.transpose(1, 0, 2))
-        else:
-            bmp = wx.BitmapFromBufferRGBA( w, h, bmp.transpose(1, 0, 2))
+        bmp = wx.Bitmap.FromBufferRGBA(w, h, bmp.transpose(1, 0, 2))
 
         cbpanel.SetImage(bmp.ConvertToImage())
 
