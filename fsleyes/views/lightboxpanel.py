@@ -197,7 +197,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleOverlayInfo,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleLightBoxToolBar,
                    self.removeAllPanels]

@@ -26,6 +26,7 @@ import fsleyes_props                 as props
 import fsleyes_widgets.notebook      as notebook
 import fsleyes_widgets.utils.status  as status
 
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.strings               as strings
 from . import                           atlasmanagementpanel
@@ -144,6 +145,24 @@ class AtlasPanel(ctrlpanel.ControlPanel):
     :attr:`.DisplayContext.location` to be moved to the location of a specific
     region in a specific atlas.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``MelodicClassificationPanel`` is restricted for use with
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
+        :class:`.Scene3DPanel` viewws.
+        """
+
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of arguments to be passed to the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
+        return {'location' : wx.BOTTOM}
 
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):

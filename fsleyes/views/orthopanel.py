@@ -467,7 +467,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleOverlayInfo,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleAtlasPanel,
                    self.toggleDisplayToolBar,
                    self.toggleOrthoToolBar,
                    self.removeAllPanels]

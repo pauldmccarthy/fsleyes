@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# edittransformpanel.py - The EditTransformPanel class.
+# edittransform.py - The EditTransformPanel class.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

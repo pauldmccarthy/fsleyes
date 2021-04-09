@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# cropimagepanel.py - The CropImagePanel class
+# cropimage.py - The CropImagePanel class
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

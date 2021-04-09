@@ -449,7 +449,6 @@ def deserialiseLayout(layout):
     from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
     from   fsleyes.views.shellpanel         import ShellPanel
 
-    from fsleyes.controls.atlaspanel                 import AtlasPanel
     from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
     from fsleyes.controls.histogramcontrolpanel      import \
         HistogramControlPanel
@@ -487,7 +486,6 @@ def deserialiseLayout(layout):
     }
 
     controls = {
-        'AtlasPanel'                 : AtlasPanel,
         'CanvasSettingsPanel'        : CanvasSettingsPanel,
         'HistogramControlPanel'      : HistogramControlPanel,
         'HistogramToolBar'           : HistogramToolBar,

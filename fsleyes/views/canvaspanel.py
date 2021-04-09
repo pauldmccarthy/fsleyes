@@ -21,7 +21,6 @@ import fsleyes.actions                             as actions
 import fsleyes.displaycontext                      as displayctx
 import fsleyes.controls.overlaylistpanel           as overlaylistpanel
 import fsleyes.controls.overlayinfopanel           as overlayinfopanel
-import fsleyes.controls.atlaspanel                 as atlaspanel
 import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
 import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
 import fsleyes.controls.canvassettingspanel        as canvassettingspanel
@@ -86,7 +85,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleVolumeSync
        toggleOverlayList
        toggleOverlayInfo
-       toggleAtlasPanel
        toggleDisplayToolBar
        toggleDisplayPanel
        toggleCanvasSettingsPanel
@@ -439,14 +437,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         self.togglePanel(overlayinfopanel.OverlayInfoPanel,
                          location=wx.RIGHT,
                          floatPane=floatPane)
-
-
-    @actions.toggleControlAction(atlaspanel.AtlasPanel)
-    def toggleAtlasPanel(self):
-        """Toggles an :class:`.AtlasPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM)
 
 
     @actions.toggleControlAction(overlaydisplaytoolbar.OverlayDisplayToolBar)
