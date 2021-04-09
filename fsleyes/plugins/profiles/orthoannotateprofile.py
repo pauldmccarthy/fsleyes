@@ -105,6 +105,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
 
             # Right mouse click/drag allows
             # annotations to be moved
+            ('nav',     'RightMouseDown') : ('move', 'LeftMouseDown'),
             ('line',    'RightMouseDown') : ('move', 'LeftMouseDown'),
             ('point',   'RightMouseDown') : ('move', 'LeftMouseDown'),
             ('rect',    'RightMouseDown') : ('move', 'LeftMouseDown'),
@@ -112,6 +113,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             ('arrow',   'RightMouseDown') : ('move', 'LeftMouseDown'),
             ('ellipse', 'RightMouseDown') : ('move', 'LeftMouseDown'),
 
+            ('nav',     'RightMouseDrag') : ('move', 'LeftMouseDrag'),
             ('line',    'RightMouseDrag') : ('move', 'LeftMouseDrag'),
             ('point',   'RightMouseDrag') : ('move', 'LeftMouseDrag'),
             ('rect',    'RightMouseDrag') : ('move', 'LeftMouseDrag'),
@@ -119,6 +121,7 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
             ('arrow',   'RightMouseDrag') : ('move', 'LeftMouseDrag'),
             ('ellipse', 'RightMouseDrag') : ('move', 'LeftMouseDrag'),
 
+            ('nav',     'RightMouseUp') : ('move', 'LeftMouseUp'),
             ('line',    'RightMouseUp') : ('move', 'LeftMouseUp'),
             ('point',   'RightMouseUp') : ('move', 'LeftMouseUp'),
             ('rect',    'RightMouseUp') : ('move', 'LeftMouseUp'),
