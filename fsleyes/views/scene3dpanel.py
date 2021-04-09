@@ -135,7 +135,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
-                   self.toggleOverlayInfo,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
                    self.toggleDisplayToolBar,

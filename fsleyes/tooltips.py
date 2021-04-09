@@ -803,7 +803,7 @@ actions = TypeDict({
     'CanvasPanel.toggleDisplayPanel' : 'Show more overlay display settings',
     'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
                                               'control settings',
-    'CanvasPanel.toggleOverlayInfo' : 'Show/hide the overlay '
+    'CanvasPanel.OverlayInfoPanel' : 'Show/hide the overlay '
                                       'information panel.',
 
     'OrthoPanel.toggleEditPanel' : 'Show/hide the edit settings panel',

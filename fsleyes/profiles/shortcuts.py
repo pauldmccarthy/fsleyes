@@ -51,7 +51,6 @@ actions = td.TypeDict({
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',
-    'CanvasPanel.toggleOverlayInfo'         : 'Ctrl-Alt-3',
     'CanvasPanel.toggleDisplayPanel'        : 'Ctrl-Alt-4',
     'CanvasPanel.toggleCanvasSettingsPanel' : 'Ctrl-Alt-5',
 
@@ -61,6 +60,7 @@ actions = td.TypeDict({
     'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
     'Scene3DPanel.toggleScene3DToolBar'     : 'Ctrl-Alt-8',
 
+    'CanvasPanel.OverlayInfoPanel'          : 'Ctrl-Alt-3',
     'CanvasPanel.AtlasPanel'                : 'Ctrl-Alt-6',
     'CanvasPanel.FileTreePanel'             : 'Ctrl-Alt-9',
 

@@ -462,7 +462,6 @@ def deserialiseLayout(layout):
     from fsleyes.controls.overlaydisplaypanel        import OverlayDisplayPanel
     from fsleyes.controls.overlaydisplaytoolbar      import \
         OverlayDisplayToolBar
-    from fsleyes.controls.overlayinfopanel           import OverlayInfoPanel
     from fsleyes.controls.overlaylistpanel           import OverlayListPanel
     from fsleyes.controls.plotlistpanel              import PlotListPanel
     from fsleyes.controls.plottoolbar                import PlotToolBar
@@ -496,7 +495,6 @@ def deserialiseLayout(layout):
         'OrthoToolBar'               : OrthoToolBar,
         'OverlayDisplayPanel'        : OverlayDisplayPanel,
         'OverlayDisplayToolBar'      : OverlayDisplayToolBar,
-        'OverlayInfoPanel'           : OverlayInfoPanel,
         'OverlayListPanel'           : OverlayListPanel,
         'PlotListPanel'              : PlotListPanel,
         'PlotToolBar'                : PlotToolBar,

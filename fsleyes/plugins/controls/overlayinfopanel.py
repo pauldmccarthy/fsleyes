@@ -22,6 +22,7 @@ import fsl.data.constants             as constants
 import fsl.transform.affine           as affine
 import fsleyes_widgets.utils.typedict as td
 
+import fsleyes.views.canvaspanel      as canvaspanel
 import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.strings                as strings
 
@@ -96,6 +97,24 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
     :class:`.FreesurferMesh` :meth:`__getFreesurferMeshInfo`
     ======================== =============================
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``OverlayInfoPanel`` is restricted for use with
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
+        :class:`.Scene3DPanel` viewws.
+        """
+
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of arguments to be passed to the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
+        return {'location' : wx.RIGHT}
 
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
