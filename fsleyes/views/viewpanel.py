@@ -594,6 +594,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """This method should be overridden by sub-classes (if necessary), and
         should return any ``action`` methods which should be added to the
         :class:`.FSLeyesFrame` *Tools* menu.
+
+        See also the :meth:`.ActionProvider.getActions` method, which can
+        also be overridden, and controls the actions which get added to the
+        FSLeyes *settings* menu.
         """
         return []
 

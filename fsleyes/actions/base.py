@@ -86,6 +86,16 @@ class Action(props.HasProperties):
         return None
 
 
+    @staticmethod
+    def ignoreTool():
+        """Used by the FSLeyes :mod:`.plugins` module for actions which are
+        loaded as plugins. Can be used to tell the ``plugins`` module that
+        a particular ``Action`` should not be added as an option to the
+        FSLeyes Tools menu.
+        """
+        return False
+
+
     def __init__(self,
                  overlayList,
                  displayCtx,

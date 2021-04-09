@@ -19,9 +19,10 @@ import scipy.spatial.distance as spd
 import fsl.data.image               as fslimage
 import fsl.utils.idle               as idle
 import fsleyes_props                as props
+import fsleyes.views.orthopanel     as orthopanel
 import fsleyes_widgets.utils.status as fslstatus
 import fsleyes.strings              as strings
-from . import                          base
+import fsleyes.actions.base         as base
 
 
 log = logging.getLogger(__name__)
@@ -40,12 +41,31 @@ class CorrelateAction(base.Action):
     and is used to store and display the correlation values.
     """
 
+
+    @staticmethod
+    def supportedViews():
+        """The ``CorrelateAction`` is restricted for use with
+        :class:`.OrthoPanel` views.
+        """
+        return [orthopanel.OrthoPanel]
+
+
+    @staticmethod
+    def ignoreTool():
+        """Tells the FSLeyes plugin system not to add the ``CorrelateAction``
+        class as an option to the FSLeyes toolsmenu.  Instead, the
+        :class:`PearsonCorrelateAction` action (and other potential future
+        sub-classes) is added.
+        """
+        return True
+
+
     def __init__(self, overlayList, displayCtx, panel):
         """Create a ``CorrelateAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg panel:       The :class:`.CanvasPanel` that owns this action.
+        :arg panel:       The :class:`.OrthoPanel` that owns this action.
         """
 
         base.Action.__init__(
@@ -262,6 +282,14 @@ class PearsonCorrelateAction(CorrelateAction):
     calculates Pearson correlation coefficient values between the seed voxel
     and all other voxels.
     """
+
+
+    @staticmethod
+    def ignoreTool():
+        """See :meth:`CorrelateAction.ignoreTool`. """
+        return False
+
+
     def calculateCorrelation(self, seed, data):
         """Calculates Pearson correlation between the data at the specified
         seed voxel, and all other voxels.

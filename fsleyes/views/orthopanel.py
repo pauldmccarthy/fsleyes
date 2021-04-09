@@ -272,15 +272,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener('fgColour',    name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
 
-        from fsleyes.actions.correlate import PearsonCorrelateAction
-
-        self.__pCorrAction = PearsonCorrelateAction(
-            self.overlayList,
-            self.displayCtx,
-            self)
-
-        self.pearsonCorrelation.bindProps('enabled', self.__pCorrAction)
-
         # The lastFocusedCanvas method allows
         # a ref to the most recently focused
         # canvas to be obtained. We listen
@@ -397,12 +388,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
 
 
     @actions.action
-    def pearsonCorrelation(self):
-        """Executes a :class:`.PearsonCorrelateAction`. """
-        self.__pCorrAction()
-
-
-    @actions.action
     def resetDisplay(self):
         """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
         self.currentProfile.resetDisplay()
@@ -503,8 +488,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         menu for ``OrthoPanel`` views.
         """
         return [self.toggleEditMode,
-                self.toggleCropMode,
-                self.pearsonCorrelation]
+                self.toggleCropMode]
 
 
     def getGLCanvases(self):

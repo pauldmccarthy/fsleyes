@@ -78,7 +78,9 @@ actions = td.TypeDict({
     'OrthoPanel.toggleXCanvas'              : 'Alt-X',
     'OrthoPanel.toggleYCanvas'              : 'Alt-Y',
     'OrthoPanel.toggleZCanvas'              : 'Alt-Z',
-    'OrthoPanel.pearsonCorrelation'         : 'Alt-I',
+
+
+    'OrthoPanel.PearsonCorrelateAction'     : 'Alt-I',
 
     'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',
