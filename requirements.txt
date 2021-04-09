@@ -10,4 +10,4 @@ numpy>=1.14
 pyparsing==2.*
 scipy>=0.18
 setuptools
-wxpython>=3.0.2.0
+wxpython>=4.*
