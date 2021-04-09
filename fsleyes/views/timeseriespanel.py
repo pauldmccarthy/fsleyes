@@ -24,7 +24,6 @@ import fsleyes_props                           as props
 
 import fsleyes.overlay                         as fsloverlay
 import fsleyes.actions                         as actions
-import fsleyes.actions.addmaskdataseries       as addmaskdataseries
 import fsleyes.strings                         as strings
 import fsleyes.profiles.timeseriesprofile      as timeseriesprofile
 import fsleyes.plotting.timeseries             as timeseries
@@ -85,14 +84,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
        toggleTimeSeriesToolBar
        toggleTimeSeriesControl
-
-
-    Some tools are also available, to do various things:
-
-    .. autosummary::
-       :nosignatures:
-
-       addMaskDataSeries
 
 
     **FEATures**
@@ -179,13 +170,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self.name,
                          self.__plotMelodicICsChanged)
 
-        self.__addMaskAction = addmaskdataseries.AddMaskDataSeriesAction(
-            overlayList,
-            displayCtx,
-            self)
-
-        self.addMaskDataSeries.bindProps('enabled', self.__addMaskAction)
-
         self.initProfile(timeseriesprofile.TimeSeriesProfile)
 
 
@@ -197,9 +181,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('plotMode',       self.name)
         self.removeListener('usePixdim',      self.name)
         self.removeListener('plotMelodicICs', self.name)
-
-        self.__addMaskAction.destroy()
-        self.__addMaskAction = None
 
         plotpanel.OverlayPlotPanel.destroy(self)
 
@@ -222,12 +203,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.togglePanel(timeseriestoolbar.TimeSeriesToolBar)
 
 
-    @actions.action
-    def addMaskDataSeries(self):
-        """Executes the :class:`AddMaskDataSeriesAction`. """
-        self.__addMaskAction()
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
@@ -243,13 +218,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
-
-
-    def getTools(self):
-        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
-        ``TimeSeriesPanel`` views.
-        """
-        return [self.addMaskDataSeries]
 
 
     def draw(self, *a):

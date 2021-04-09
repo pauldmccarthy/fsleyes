@@ -18,8 +18,9 @@ import fsleyes.strings                  as strings
 import fsleyes.plotting.dataseries      as dataseries
 import fsleyes.plotting.histogramseries as histogramseries
 
-from . import                         base
-from . import                         addmaskdataseries
+import fsleyes.actions.base             as base
+
+import fsleyes.plugins.tools.addmaskdataseries as addmaskdataseries
 
 
 class AddROIHistogramAction(base.Action):

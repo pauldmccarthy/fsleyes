@@ -533,6 +533,7 @@ actions = TypeDict({
     'LoadAnnotationsAction'       : 'Load annotations from file',
     'EditTransformAction'         : 'Nudge',
     'CropImageAction'             : 'Crop',
+    'AddMaskDataSeriesAction'     : 'Add time series from ROI',
 
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
@@ -591,7 +592,6 @@ actions = TypeDict({
     'TimeSeriesPanel.togglePlotList'                : 'Time series list',
     'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Time series control',
     'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Time series toolbar',
-    'TimeSeriesPanel.addMaskDataSeries'             : 'Add time series from ROI',
     'HistogramPanel.togglePlotList'                 : 'Histogram list',
     'HistogramPanel.toggleHistogramControl'         : 'Histogram control',
     'HistogramPanel.toggleHistogramToolBar'         : 'Histogram toolbar',

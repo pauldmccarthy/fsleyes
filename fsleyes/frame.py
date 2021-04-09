@@ -2062,22 +2062,21 @@ class FSLeyesFrame(wx.Frame):
         for panel in panels:
 
             vpType     = type(panel)
-            tools      = panel.getTools()
-            toolNames  = [t.actionName for t in tools]
+            toolNames  = [t.actionName for t in panel.getTools()]
             toolTitles = {}
-
-            # Only the first panel for each type
-            # has its tools added to the menu.
-            if len(tools) == 0 or vpType in vpTypesAdded:
-                continue
-
-            vpTypesAdded.add(vpType)
 
             for name, cls in pluginTools[type(panel)]:
                 actionObj = cls(self.__overlayList, panel.displayCtx, panel)
                 setattr(panel, cls.__name__, actionObj)
                 toolNames.append(cls.__name__)
                 toolTitles[cls.__name__] = name
+
+            # Only the first panel for each type
+            # has its tools added to the menu.
+            if len(toolNames) == 0 or vpType in vpTypesAdded:
+                continue
+
+            vpTypesAdded.add(vpType)
 
             # Each view panel added to the tools list
             # gets its own section, starting with a

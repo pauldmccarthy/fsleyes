@@ -12,11 +12,12 @@ used by the :class:`.TimeSeriesPanel`.
 import          wx
 import numpy as np
 
-import fsl.data.image              as fslimage
+import fsl.data.image                as fslimage
 
-import fsleyes.strings             as strings
-import fsleyes.plotting.dataseries as dataseries
-from . import                         base
+import fsleyes.strings               as strings
+import fsleyes.plotting.dataseries   as dataseries
+import fsleyes.views.timeseriespanel as timeseriespanel
+import fsleyes.actions.base          as base
 
 
 class AddMaskDataSeriesAction(base.Action):
@@ -28,6 +29,15 @@ class AddMaskDataSeriesAction(base.Action):
     the mean time series for the non-zero voxels within the mask, and adds
     them as a :class:`.DataSeries` to the ``TimeSeriesPanel``.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``AddMaskDataSeriesAction`` is restricted for use with
+        :class:`.TimeSeriesPanel` views.
+        """
+        return [timeseriespanel.TimeSeriesPanel]
+
 
     def __init__(self, overlayList, displayCtx, plotPanel):
         """Create an ``AddMaskDataSeriesAction``.
@@ -41,14 +51,13 @@ class AddMaskDataSeriesAction(base.Action):
             self, overlayList, displayCtx, self.__addMaskDataSeries)
 
         self.__plotPanel   = plotPanel
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
         self.__maskOptions = []
 
         overlayList.addListener('overlays',
-                                self.__name,
+                                self.name,
                                 self.__overlayListChanged)
         displayCtx .addListener('selectedOverlay',
-                                self.__name,
+                                self.name,
                                 self.__overlayListChanged)
 
         self.__overlayListChanged()
@@ -58,8 +67,8 @@ class AddMaskDataSeriesAction(base.Action):
         """Must be called when this ``AddMaskDataSeriesAction`` is no
         longer in use.
         """
-        self.overlayList.removeListener('overlays',        self.__name)
-        self.displayCtx .removeListener('selectedOverlay', self.__name)
+        self.overlayList.removeListener('overlays',        self.name)
+        self.displayCtx .removeListener('selectedOverlay', self.name)
         self.__plotPanel   = None
         self.__maskOptions = None
         base.Action.destroy(self)
