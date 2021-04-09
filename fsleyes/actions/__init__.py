@@ -134,7 +134,7 @@ def toggleControlAction(*args, **kwargs):
     :class:`.ToggleControlPanelAction`.
     """
     return ActionFactory(
-        ToggleControlPanelAction, *args, instance=True, **kwargs)
+        ToggleControlPanelAction, *args, ismethod=True, **kwargs)
 
 
 class ActionProvider:
@@ -381,9 +381,9 @@ class ActionFactory:
             action = self.__actionType(
                 instance.overlayList,
                 instance.displayCtx,
-                self.__func,
-                instance,
                 *self.__args,
+                func=self.__func,
+                instance=instance,
                 **self.__kwargs)
 
             # and replace this ActionFactory

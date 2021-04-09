@@ -32,22 +32,23 @@ class ToggleControlPanelAction(base.ToggleAction):
     def __init__(self,
                  overlayList,
                  displayCtx,
-                 func,
-                 viewPanel,
                  cpType,
+                 instance,
+                 func=None,
                  name=None,
-                 instance=False):
+                 ismethod=False):
         """Create a ``ToggleControlPanelAction``.
 
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext`
-        :arg func:        The function which toggles the control panel
-        :arg viewPanel:   The :class:`.ViewPanel` instance.
+
+        :arg instance:    The :class:`.ViewPanel` instance.
         :arg cpType:      The type of the control panel being managed by this
                           ``ToggleControlPanelAction``.
+        :arg func:        The function which toggles the control panel. If
+                          not provided, a default function is used.
         :arg name:        Name of this action - defaults to ``func.__name__``.
-
-        :arg instance:    Defaults to ``False``. If ``True``, it is assumed
+        :arg ismethod:    Defaults to ``False``. If ``True``, it is assumed
                           that this action encapsulates a method of the
                           ``viewPanel`` instance, which will be passed as the
                           first argument when the action is called. This should
@@ -55,8 +56,15 @@ class ToggleControlPanelAction(base.ToggleAction):
                           :func:`.toggleControlPanelAction` decorator.
         """
 
-        if instance: instance = viewPanel
+        # We do this dance because the ActionFactory
+        # passes instance as a kwarg
+        viewPanel = instance
+
+        if ismethod: instance = viewPanel
         else:        instance = None
+
+        if func is None:
+            func = self.__togglePanel
 
         base.ToggleAction.__init__(
             self, overlayList, displayCtx, func, instance=instance, name=name)
@@ -72,6 +80,13 @@ class ToggleControlPanelAction(base.ToggleAction):
         #      whenever the perspective changes. This
         #      includes sash resizes :(
         auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED, self.__viewPanelChanged)
+
+
+    def __togglePanel(self, *args, **kwargs):
+        """Default action to run if a ``func`` wasn't specified. Calls
+        :class:`.ViewPanel.togglePanel`,
+        """
+        self.viewPanel.togglePanel(self.__cpType, *args, **kwargs)
 
 
     @property

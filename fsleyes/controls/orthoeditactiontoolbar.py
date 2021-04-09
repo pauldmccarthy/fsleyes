@@ -70,8 +70,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
                                           kbFocus=True)
 
         self.toggleEditPanel = actions.ToggleControlPanelAction(
-            overlayList, displayCtx, self.toggleEditPanel, ortho,
-            editpanel.OrthoEditSettingsPanel, instance=False)
+            overlayList, displayCtx, editpanel.OrthoEditSettingsPanel, ortho)
 
         self.__ortho = ortho
         self.__createTools()
@@ -120,14 +119,6 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
 
         self.SetTools(tools)
         self.setNavOrder(nav)
-
-
-    def toggleEditPanel(self, *args, **kwargs):
-        """Toggles an :class:`.OrthoEditSettingsPanel` on the
-        :class:`.OrthoPanel`. Bound to a button on the toolbar.
-        """
-        self.__ortho.togglePanel(editpanel.OrthoEditSettingsPanel,
-                                 *args, **kwargs)
 
 
 _ICONS = {
