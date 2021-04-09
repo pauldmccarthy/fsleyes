@@ -204,7 +204,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleClusterPanel,
                    self.removeAllPanels]
 
-        names = [a.name if a is not None else None for a in actionz]
+        names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
 
 

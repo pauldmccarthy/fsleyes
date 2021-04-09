@@ -129,7 +129,8 @@ class Action(props.HasProperties):
         self.__displayCtx   = displayCtx
         self.__instance     = instance
         self.__func         = func
-        self.__name         = name
+        self.__name         = '{}_{}'.format(type(self).__name__, id(self))
+        self.__actionName   = name
         self.__destroyed    = False
         self.__boundWidgets = []
 
@@ -149,8 +150,20 @@ class Action(props.HasProperties):
 
 
     @property
+    def actionName(self):
+        """Returns the name of this ``Action``, often the method name of the
+        :class:`.ActionProvider` that implements the action. Not to be
+        confused with :meth:`name`.
+        """
+        return self.__actionName
+
+
+    @property
     def name(self):
-        """Returns the name of this ``Action``. """
+        """Not to be confused with :meth:`actionName`.
+        Returns a unique name for a specific ``Action`` instance, which
+        can be used (e.g.) for registering property listeners.
+        """
         return self.__name
 
 

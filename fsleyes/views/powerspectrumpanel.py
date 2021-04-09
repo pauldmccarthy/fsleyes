@@ -144,7 +144,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                    self.togglePowerSpectrumToolBar,
                    self.togglePowerSpectrumControl]
 
-        names = [a.name if a is not None else None for a in actionz]
+        names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
 
 

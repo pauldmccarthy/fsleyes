@@ -2063,7 +2063,7 @@ class FSLeyesFrame(wx.Frame):
 
             vpType     = type(panel)
             tools      = panel.getTools()
-            toolNames  = [t.name for t in tools]
+            toolNames  = [t.actionName for t in tools]
             toolTitles = {}
 
             # Only the first panel for each type
