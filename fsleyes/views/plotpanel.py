@@ -1135,7 +1135,7 @@ class OverlayPlotPanel(PlotPanel):
     See also :attr:`plotStyles`.
 
     Sub-classes should use the :meth:`getOverlayPlotColour` and
-    :meth:`getOverlayPlotStyle`methods to retrieve the initial colour and
+    :meth:`getOverlayPlotStyle` methods to retrieve the initial colour and
     linestyle to use for a given overlay.
     """
 
@@ -1309,7 +1309,7 @@ class OverlayPlotPanel(PlotPanel):
         added to ``plotStyles``, and returned.
 
         The format of the returned line style is suitable for use with the
-        ``linestyle`` argument of the ``matplotlib`` ``plot``functions.
+        ``linestyle`` argument of the ``matplotlib`` ``plot`` functions.
         """
 
         if isinstance(overlay, fsloverlay.ProxyImage):

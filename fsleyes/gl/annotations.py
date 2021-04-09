@@ -350,12 +350,14 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     by an :class:`Annotations` instance. The ``AnnotationObject`` contains some
     attributes which are common to all annotation types:
 
-    ============  =============================================================
+    ============= ============================================================
     ``colour``    Annotation colour
     ``alpha``     Transparency
     ``enabled``   Whether the annotation should be drawn or not.
-    ``lineWidth`` Annotation line width (if the annotation is made up of lines)
-    ``xform``     Custom transformation matrix to apply to annotation vertices.
+    ``lineWidth`` Annotation line width (if the annotation is made up of
+                  lines)
+    ``xform``     Custom transformation matrix to apply to annotation
+                  vertices.
     ``expiry``    Time (in seconds) after which the annotation will expire and
                   not be drawn.
     ``zmin``      Minimum z value below which this annotation will not be
@@ -363,7 +365,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     ``zmax``      Maximum z value above which this annotation will not be
                   drawn.
     ``creation``  Time of creation.
-    ============  =============================================================
+    ============= ============================================================
 
     All of these attributes can be modified directly, after which you should
     trigger a draw on the owning ``SliceCanvas`` to refresh the annotation.

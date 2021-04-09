@@ -18,7 +18,6 @@ defined in this module:
    :nosignatures:
 
    scan
-   allVariables
 """
 
 

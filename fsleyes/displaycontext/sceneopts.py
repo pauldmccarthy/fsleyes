@@ -123,7 +123,7 @@ class SceneOpts(props.HasProperties):
     def defaultMovieSyncRefresh(self):
         """In movie mode, the canvas refreshes are performed by the
         __syncMovieRefresh or __unsyncMovieRefresh methods of the CanvasPanel
-         class. Some platforms/GL drivers/environments seem to have a problem
+        class. Some platforms/GL drivers/environments seem to have a problem
         with separate renders/buffer swaps, so we have to use a shitty
         unsynchronised update routine.
 

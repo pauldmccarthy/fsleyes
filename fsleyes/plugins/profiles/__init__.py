@@ -5,7 +5,7 @@ that are used by built-in FSLeyes plugins.
 Profiles are not themselves registered as plugins, but are associated with a
 particular FSLeyes view or control. Views can specify their default
 interaction profile by passing the profile type to the
-:method:`.ViewPanel.initProfiles` when they are created.
+:meth:`.ViewPanel.initProfiles` when they are created.
 
 Controls can override the :meth:`.ControlPanel.profileCls` method to specify
 that, when they are added to a view, that profile is created and activated

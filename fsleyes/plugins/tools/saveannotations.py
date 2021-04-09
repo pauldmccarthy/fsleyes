@@ -54,44 +54,42 @@ where:
 
 The following key-value pairs are set for all annotation types:
 
- - ``colour``        - Annotation colour, as string of the form ``#RRGGBB``
- - ``lineWidth``     - Line width in pixels
- - ``alpha``         - Transparency, between 0 and 10
- - ``honourZLimits`` - ``True`` or ``False``, whether ``zmin`` and ``zmax``
-                       should be applied
- - ``zmin``          - Minimum depth value, as a floating point number
- - ``zmax``          - Maximum depth value, as a floating point number
+ * ``colour`` - Annotation colour, as string of the form ``#RRGGBB``
+ * ``lineWidth`` - Line width in pixels
+ * ``alpha`` - Transparency, between 0 and 10
+ * ``honourZLimits`` - ``True`` or ``False``, whether ``zmin`` and ``zmax``
+   should be applied
+ * ``zmin`` - Minimum depth value, as a floating point number
+ * ``zmax`` - Maximum depth value, as a floating point number
+
 
 The following additional key-value pairs are set for specific annotation
 types.  All coordinates and lengths are relative to the display coordinate
-system.
+system:
 
- - ``Point``
-   - ``x`` X coordinate
-   - ``y`` Y coordinate
-
- - ``Line`` and ``Arrow``
-   - ``x1`` X coordinate of first point
-   - ``y1`` Y coordinate of first point
-   - ``x2`` X coordinate of second point
-   - ``y2`` Y coordinate of second point
-
- - ``Rect`` and ``Ellipse``
-   - ``filled`` ``True`` or ``False``, whether the rectangle/ellipse is
-     filled
-   - ``border`` ``True`` or ``False``, whether the rectangle/ellipse is
-     drawn with a border
-   - ``x`` X coordinate of one corner of the rectangle, or the ellipse centre
-   - ``y`` Y coordinate of one corner of the rectangle, or the ellipse centre
-   - ``w`` Rectangle width, relative to ``x``, or horizontal radius of elliipse
-   - ``h`` Rectangle height, relative to ``y``, or vertical radius of elliipse
-
- - ``TextAnnotation``
-   - ``text`` Displayed text, quoted with ``shlex.quote``
-   - ``fontSize`` Font size in points (relative to the canvas scaling that
-     was in place at the time that the text was created)
-   - ``x`` Bottom left X coordinate of text
-   - ``y`` Bottom left Y coordinate of text
+ * ``Point``
+  * ``x`` X coordinate
+  * ``y`` Y coordinate
+ * ``Line`` and ``Arrow``
+  * ``x1`` X coordinate of first point
+  * ``y1`` Y coordinate of first point
+  * ``x2`` X coordinate of second point
+  * ``y2`` Y coordinate of second point
+ * ``Rect`` and ``Ellipse``
+  * ``filled`` ``True`` or ``False``, whether the rectangle/ellipse is
+    filled
+  * ``border`` ``True`` or ``False``, whether the rectangle/ellipse is
+    drawn with a border
+  * ``x`` X coordinate of one corner of the rectangle, or the ellipse centre
+  * ``y`` Y coordinate of one corner of the rectangle, or the ellipse centre
+  * ``w`` Rectangle width, relative to ``x``, or horizontal radius of elliipse
+  * ``h`` Rectangle height, relative to ``y``, or vertical radius of elliipse
+ * ``TextAnnotation``
+  * ``text`` Displayed text, quoted with ``shlex.quote``
+  * ``fontSize`` Font size in points (relative to the canvas scaling that
+    was in place at the time that the text was created)
+  * ``x`` Bottom left X coordinate of text
+  * ``y`` Bottom left Y coordinate of text
 """
 
 

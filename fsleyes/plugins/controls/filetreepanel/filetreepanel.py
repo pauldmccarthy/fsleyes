@@ -8,7 +8,7 @@
 to browse the contents of structured directories which are described with
 a `FileTree <https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_ specification.
 
-See also the :mod:`.filetreemanager` module, which contains the logic for
+See also the :mod:`.manager` module, which contains the logic for
 generating the file list.
 """
 
@@ -82,8 +82,8 @@ class FileTreePanel(ctrlpanel.ControlPanel):
 
     @staticmethod
     def supportedViews():
-        """The ``FileTreePanel``is intended for use with :class:`.CanvasPanel`
-        views (i.e. ortho, lightbox, 3D views).
+        """The ``FileTreePanel`` is intended for use with
+        :class:`.CanvasPanel` views (i.e. ortho, lightbox, 3D views).
         """
         return [canvaspanel.CanvasPanel]
 
