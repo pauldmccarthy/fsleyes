@@ -68,8 +68,15 @@ Changed
 * :class:`.annotations.TextAnnotation` objects can now be positioned in the
   display coordinate system, in addition to being positioned at pixel locations
   on a canvas.
+* Changes to the FSLeyes plugin system to ease the development of FSLeyes
+  controls that use custom interaction profiles.
 * The FSLeyes plugin system now supports tools which are bound to a specific
   view panel.
+* Many built-in FSLeyes control panels and tools have been migrated into the
+  FSLeyes plugin system so that they are dynamically loaded as plugins, rather
+  than being hard-coded.
+* It is now possible to save and re-load view/control panel layouts with
+  plugin-provided views and control panels.
 
 
 Fixed
