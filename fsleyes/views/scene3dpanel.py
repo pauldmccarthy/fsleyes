@@ -143,7 +143,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.toggleScene3DToolBar,
                    self.toggleLookupTablePanel,
                    self.toggleClusterPanel,
-                   self.toggleClassificationPanel,
                    self.removeAllPanels]
 
         names = [a.name if a is not None else None for a in actionz]

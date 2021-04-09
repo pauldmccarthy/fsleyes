@@ -567,13 +567,11 @@ actions = TypeDict({
     'CanvasPanel.toggleLookupTablePanel'    : 'Lookup tables',
     'CanvasPanel.toggleClusterPanel'        : 'Cluster browser',
     'CanvasPanel.toggleOverlayInfo'         : 'Overlay information',
-    'CanvasPanel.toggleClassificationPanel' : 'Melodic IC classification',
 
     'OrthoPanel.toggleOrthoToolBar'       : 'Ortho toolbar',
     'OrthoPanel.toggleEditMode'           : 'Edit mode',
     'OrthoPanel.toggleCropMode'           : 'Crop',
     'OrthoPanel.toggleEditPanel'          : 'Edit settings panel',
-    'OrthoPanel.toggleAnnotationPanel'    : 'Annotations panel',
     'OrthoPanel.resetDisplay'             : 'Reset display',
     'OrthoPanel.centreCursor'             : 'Centre cursor',
     'OrthoPanel.pearsonCorrelation'       : 'Seed correlation (Pearson)',

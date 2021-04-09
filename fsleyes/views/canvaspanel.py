@@ -28,7 +28,6 @@ import fsleyes.controls.canvassettingspanel        as canvassettingspanel
 import fsleyes.controls.locationpanel              as locationpanel
 import fsleyes.controls.clusterpanel               as clusterpanel
 import fsleyes.controls.lookuptablepanel           as lookuptablepanel
-import fsleyes.controls.melodicclassificationpanel as melclasspanel
 from . import                                         colourbarpanel
 from . import                                         viewpanel
 
@@ -96,7 +95,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleLocationPanel
        toggleClusterPanel
        toggleLookupTablePanel
-       toggleClassificationPanel
 
 
     .. _canvaspanel-adding-content:
@@ -510,15 +508,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         :meth:`.ViewPanel.togglePanel`.
         """
         self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.RIGHT)
-
-
-    @actions.toggleControlAction(melclasspanel.MelodicClassificationPanel)
-    def toggleClassificationPanel(self):
-        """Toggles a :class:`.MelodicClassificationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(melclasspanel.MelodicClassificationPanel,
-                         location=wx.RIGHT)
 
 
     @property

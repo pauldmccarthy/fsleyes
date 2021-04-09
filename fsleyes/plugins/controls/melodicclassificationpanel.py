@@ -26,6 +26,7 @@ import fsleyes_props                 as props
 import fsleyes_widgets.notebook      as notebook
 import fsleyes_widgets.utils.status  as status
 
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.displaycontext        as displaycontext
 import fsleyes.colourmaps            as fslcm
 import fsleyes.controls.controlpanel as ctrlpanel
@@ -65,6 +66,24 @@ class MelodicClassificationPanel(ctrlpanel.ControlPanel):
     each overlay is stored in the :class:`.OverlayList` via its
     :meth:`.OverlayList.setData` method.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``MelodicClassificationPanel`` is restricted for use with
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
+        :class:`.Scene3DPanel` viewws.
+        """
+
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of arguments to be passed to the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
+        return {'location' : wx.RIGHT}
 
 
     def __init__(self, parent, overlayList, displayCtx, canvasPanel):
