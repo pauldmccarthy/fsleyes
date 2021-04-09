@@ -41,13 +41,21 @@ All of this information is stored as a string - see the
 """
 
 
-import logging
-import textwrap
-import collections
+import functools as ft
+import              logging
+import              pkgutil
+import              textwrap
+import              importlib
+import              collections
 
-import fsl.utils.settings           as fslsettings
-import fsleyes_widgets.utils.status as status
-import fsleyes.strings              as strings
+import fsl.utils.settings            as fslsettings
+import fsleyes_widgets.utils.status  as status
+import fsleyes.strings               as strings
+import fsleyes.plugins               as plugins
+import fsleyes.controls              as controls
+import fsleyes.views                 as views
+import fsleyes.views.viewpanel       as viewpanel
+import fsleyes.controls.controlpanel as controlpanel
 
 
 log = logging.getLogger(__name__)
@@ -232,22 +240,28 @@ def serialiseLayout(frame):
 
      This function queries each of the AuiManagers, and extracts the following:
 
-        - A layout string for the :class:`.FSLeyesFrame`.
+        1. A layout string for the :class:`.FSLeyesFrame`.
 
-        - A string containing a comma-separated list of :class:`.ViewPanel`
-          class names, in the same order as they are specified in the frame
-          layout string.
+        2. A string containing a comma-separated list of :class:`.ViewPanel`
+           class names, in the same order as they are specified in the frame
+           layout string.
 
-        - For each ``ViewPanel``:
+        3.  For each ``ViewPanel``:
 
-           - A layout string for the ``ViewPanel``
+             - A layout string for the ``ViewPanel``
 
-           - A string containing a comma-separated list of control panel class
-             names, in the same order as specified in the ``ViewPanel`` layout
-             string.
+             - A string containing a comma-separated list of control panel
+               class names, in the same order as specified in the
+               ``ViewPanel`` layout string.
 
     Each of these pieces of information are then concatenated into a single
     newline separated string.
+
+    In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel`` class
+    names was changed from containing just the class names
+    (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
+    (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
+    :func:`deserialiseLayout` function is compatible with both formats.
     """
 
     # We'll start by defining this silly function, which
@@ -355,7 +369,8 @@ def serialiseLayout(frame):
     # Generate the frame layout string, and a
     # list of the children of the frame
     frameLayout   = patchLayoutString(auiMgr, viewPanels, True)
-    frameChildren = [type(vp).__name__ for vp in viewPanels]
+    frameChildren = ['.'.join((type(vp).__module__, type(vp).__qualname__))
+                     for vp in viewPanels]
     frameChildren = ','.join(frameChildren)
 
     # We are going to build a list of layout strings,
@@ -381,7 +396,8 @@ def serialiseLayout(frame):
         # string and a list of control panels - the
         # children of the view panel.
         vpLayout    = patchLayoutString(vpAuiMgr, [centrePanel] + ctrlPanels)
-        vpChildren  = [type(cp).__name__ for cp in ctrlPanels]
+        vpChildren  = ['.'.join((type(cp).__module__, type(cp).__qualname__))
+                       for cp in ctrlPanels]
         vpChildren  = ','.join(vpChildren)
 
         # Get the panel and scene settings
@@ -441,69 +457,56 @@ def deserialiseLayout(layout):
                   :class:`.CanvasPanel`, the dictionary will be empty.
     """
 
-    from   fsleyes.views.orthopanel         import OrthoPanel
-    from   fsleyes.views.lightboxpanel      import LightBoxPanel
-    from   fsleyes.views.scene3dpanel       import Scene3DPanel
-    from   fsleyes.views.timeseriespanel    import TimeSeriesPanel
-    from   fsleyes.views.histogrampanel     import HistogramPanel
-    from   fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-    from   fsleyes.views.shellpanel         import ShellPanel
+    # Versions of FSLeyes prior to 0.35.0 would just
+    # save the view/control class name. This was
+    # changed in 0.35.0 so that the full path to the
+    # class is saved. This function aims to be
+    # compatible with both formats - given a class
+    # name, or a fully resolved class name, it will
+    # return the corresponding type object.
+    def findViewOrControl(panelname, paneltype):
 
-    from fsleyes.controls.canvassettingspanel        import CanvasSettingsPanel
-    from fsleyes.controls.histogramcontrolpanel      import \
-        HistogramControlPanel
-    from fsleyes.controls.histogramtoolbar           import HistogramToolBar
-    from fsleyes.controls.lightboxtoolbar            import LightBoxToolBar
-    from fsleyes.controls.locationpanel              import LocationPanel
-    from fsleyes.controls.orthoeditactiontoolbar     import \
-        OrthoEditActionToolBar
-    from fsleyes.controls.orthoedittoolbar           import OrthoEditToolBar
-    from fsleyes.controls.orthotoolbar               import OrthoToolBar
-    from fsleyes.controls.overlaydisplaypanel        import OverlayDisplayPanel
-    from fsleyes.controls.overlaydisplaytoolbar      import \
-        OverlayDisplayToolBar
-    from fsleyes.controls.overlaylistpanel           import OverlayListPanel
-    from fsleyes.controls.plotlistpanel              import PlotListPanel
-    from fsleyes.controls.plottoolbar                import PlotToolBar
-    from fsleyes.controls.powerspectrumcontrolpanel  import \
-        PowerSpectrumControlPanel
-    from fsleyes.controls.powerspectrumtoolbar       import \
-        PowerSpectrumToolBar
-    from fsleyes.controls.scene3dtoolbar             import Scene3DToolBar
-    from fsleyes.controls.timeseriescontrolpanel     import \
-        TimeSeriesControlPanel
-    from fsleyes.controls.timeseriestoolbar          import TimeSeriesToolBar
+        # new format
+        if '.' in panelname:
+            mod, cls = panelname.rsplit('.', maxsplit=1)
+            mod      = importlib.import_module(mod)
+            return getattr(mod, cls)
 
-    views = {
-        'OrthoPanel'         : OrthoPanel,
-        'LightBoxPanel'      : LightBoxPanel,
-        'Scene3DPanel'       : Scene3DPanel,
-        'TimeSeriesPanel'    : TimeSeriesPanel,
-        'HistogramPanel'     : HistogramPanel,
-        'PowerSpectrumPanel' : PowerSpectrumPanel,
-        'ShellPanel'         : ShellPanel
-    }
+        # make a list of all candidate types,
+        # then search through them for a match
+        panels = []
 
-    controls = {
-        'CanvasSettingsPanel'        : CanvasSettingsPanel,
-        'HistogramControlPanel'      : HistogramControlPanel,
-        'HistogramToolBar'           : HistogramToolBar,
-        'LightBoxToolBar'            : LightBoxToolBar,
-        'LocationPanel'              : LocationPanel,
-        'OrthoEditActionToolBar'     : OrthoEditActionToolBar,
-        'OrthoEditToolBar'           : OrthoEditToolBar,
-        'OrthoToolBar'               : OrthoToolBar,
-        'OverlayDisplayPanel'        : OverlayDisplayPanel,
-        'OverlayDisplayToolBar'      : OverlayDisplayToolBar,
-        'OverlayListPanel'           : OverlayListPanel,
-        'PlotListPanel'              : PlotListPanel,
-        'PlotToolBar'                : PlotToolBar,
-        'PowerSpectrumControlPanel'  : PowerSpectrumControlPanel,
-        'PowerSpectrumToolBar'       : PowerSpectrumToolBar,
-        'Scene3DToolBar'             : Scene3DToolBar,
-        'TimeSeriesControlPanel'     : TimeSeriesControlPanel,
-        'TimeSeriesToolBar'          : TimeSeriesToolBar,
-    }
+        # builtins
+        if paneltype == 'control':
+            basemod  = controls
+            basetype = (controlpanel.ControlPanel,
+                        controlpanel.ControlToolBar)
+        else:
+            basemod  = views
+            basetype = viewpanel.ViewPanel
+
+        mods = pkgutil.iter_modules(basemod.__path__, basemod.__name__ + '.')
+        for _, mod, _  in mods:
+            mod = importlib.import_module(mod)
+            for att in dir(mod):
+                att = getattr(mod, att)
+                if isinstance(att, type) and issubclass(att, basetype):
+                    panels.append(att)
+
+        # plugins
+        if paneltype == 'control':
+            panels.extend(plugins.listControls().values())
+        else:
+            panels.extend(plugins.listViews().values())
+
+        for panel in panels:
+            if panel.__name__ == panelname:
+                return panel
+
+        raise ValueError('Unknown FSLeyes panel type: {}'.format(panelname))
+
+    findView    = ft.partial(findViewOrControl, paneltype='view')
+    findControl = ft.partial(findViewOrControl, paneltype='control')
 
     lines = layout.split('\n')
     lines = [line.strip() for line in lines]
@@ -517,9 +520,9 @@ def deserialiseLayout(layout):
     # which are all defined in the fsleyes.views
     # package.
     frameChildren = frameChildren.split(',')
-    frameChildren = [fc.strip() for fc in frameChildren]
-    frameChildren = [fc         for fc in frameChildren if fc != '']
-    frameChildren = [views[fc]  for fc in frameChildren]
+    frameChildren = [fc.strip()   for fc in frameChildren]
+    frameChildren = [fc           for fc in frameChildren if fc != '']
+    frameChildren = [findView(fc) for fc in frameChildren]
 
     # Collate the children/layouts for each view panel
     vpChildren   = []
@@ -547,9 +550,9 @@ def deserialiseLayout(layout):
     for i in range(len(vpChildren)):
 
         children      = vpChildren[i].split(',')
-        children      = [vpc.strip()   for vpc in children]
-        children      = [vpc           for vpc in children if vpc != '']
-        children      = [controls[vpc] for vpc in children]
+        children      = [vpc.strip()      for vpc in children]
+        children      = [vpc              for vpc in children if vpc != '']
+        children      = [findControl(vpc) for vpc in children]
         vpChildren[i] = children
 
     # The panel props and scene props strings are
@@ -763,17 +766,17 @@ VIEWPANEL_PROPS = {
 BUILT_IN_LAYOUTS = collections.OrderedDict((
     ('default',
      textwrap.dedent("""
-                     OrthoPanel
+                     fsleyes.views.orthopanel.OrthoPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     OrthoToolBar,OverlayDisplayToolBar,OverlayListPanel,LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
+                     fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
                      """)),  # noqa
 
     ('melodic',
      textwrap.dedent("""
-                     LightBoxPanel,TimeSeriesPanel,PowerSpectrumPanel
+                     fsleyes.views.lightboxpanel.LightBoxPanel,fsleyes.views.timeseriespanel.TimeSeriesPanel,fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
                      layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=PowerSpectrumPanel 3;caption=Power spectra 3;state=67377148;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=224|
-                     LocationPanel,OverlayListPanel,MelodicClassificationPanel,LightBoxToolBar,OverlayDisplayToolBar;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
+                     fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.plugins.controls.melodicclassificationpanel.MelodicClassificationPanel,fsleyes.controls.lightboxtoolbar.LightBoxToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=MelodicClassificationPanel;caption=Melodic IC classification;state=67373052;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LightBoxToolBar;caption=Lightbox view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=45|dock_size(1,11,0)=51|dock_size(2,0,0)=402|
                      TimeSeriesToolBar;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|
@@ -783,9 +786,9 @@ BUILT_IN_LAYOUTS = collections.OrderedDict((
 
     ('feat',
      textwrap.dedent("""
-                     OrthoPanel,TimeSeriesPanel
+                     fsleyes.views.orthopanel.OrthoPanel,fsleyes.views.timeseriespanel.TimeSeriesPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=282|
-                     OverlayListPanel,OverlayDisplayToolBar,OrthoToolBar,LocationPanel,ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.locationpanel.LocationPanel,fsleyes.plugins.controls.clusterpanel.ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=0;prop=114760;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
                      OverlayListPanel,TimeSeriesToolBar;;
                      layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|dock_size(4,0,0)=206|
@@ -793,14 +796,14 @@ BUILT_IN_LAYOUTS = collections.OrderedDict((
 
     ('ortho',
      textwrap.dedent("""
-                     OrthoPanel
+                     fsleyes.views.orthopanel.OrthoPanel
                      layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      """)),  # noqa
     ('3d',
      textwrap.dedent("""
-                     Scene3DPanel
+                     fsleyes.views.scene3dpanel.Scene3DPanel
                      layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=24|
                      ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#9999c0ff,fgColour=#00ff00ff
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
@@ -808,7 +811,7 @@ BUILT_IN_LAYOUTS = collections.OrderedDict((
 
     ('lightbox',
      textwrap.dedent("""
-                     LightBoxPanel
+                     fsleyes.views.lightboxpanel.LightBoxPanel
                      layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
                      ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
                      layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10|
