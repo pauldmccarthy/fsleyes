@@ -25,11 +25,8 @@ defined in this module:
 import              logging
 import              collections
 import functools as ft
-import itertools as it
 
-import os.path as op
-
-import numpy as np
+import numpy     as np
 
 
 log = logging.getLogger(__name__)

@@ -21,17 +21,17 @@ import              collections
 
 import              wx
 
-import fsl.utils.idle                   as idle
-import fsl.utils.settings               as fslsettings
-import fsleyes_widgets.utils.overlay    as fwoverlay
-import fsleyes_widgets.widgetlist       as wlist
-import fsleyes_widgets.widgetgrid       as wgrid
-import fsleyes_widgets.elistbox         as elb
+import fsl.utils.idle                         as idle
+import fsl.utils.settings                     as fslsettings
+import fsleyes_widgets.utils.overlay          as fwoverlay
+import fsleyes_widgets.widgetlist             as wlist
+import fsleyes_widgets.widgetgrid             as wgrid
+import fsleyes_widgets.elistbox               as elb
 
-import fsleyes.strings                  as strings
-import fsleyes.views.canvaspanel        as canvaspanel
-import fsleyes.controls.controlpanel    as ctrlpanel
-import fsleyes.filetree                 as filetree
+import fsleyes.strings                        as strings
+import fsleyes.views.canvaspanel              as canvaspanel
+import fsleyes.controls.controlpanel          as ctrlpanel
+import fsleyes.plugins.controls.filetreepanel as filetree
 
 
 log = logging.getLogger(__name__)

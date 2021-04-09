@@ -16,8 +16,9 @@ import            glob
 
 import file_tree
 
-from fsleyes.filetree.manager import FileTreeManager
-from fsleyes.filetree.query   import FileTreeQuery
+from .filetreepanel import FileTreePanel
+from .manager       import FileTreeManager
+from .query         import FileTreeQuery
 
 
 def list_all_trees():
