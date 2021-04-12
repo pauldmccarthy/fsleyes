@@ -185,24 +185,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleControlAction(timeseriescontrolpanel.TimeSeriesControlPanel)
-    def toggleTimeSeriesControl(self, floatPane=False):
-        """Shows/hides a :class:`.TimeSeriesControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(timeseriestoolbar.TimeSeriesToolBar)
-    def toggleTimeSeriesToolBar(self):
-        """Shows/hides a :class:`.TimeSeriesToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar)
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``TimeSeriesPanel``.
@@ -213,8 +195,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                    None,
                    self.toggleOverlayList,
                    self.togglePlotList,
-                   self.toggleTimeSeriesToolBar,
-                   self.toggleTimeSeriesControl]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

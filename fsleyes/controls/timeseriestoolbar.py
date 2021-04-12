@@ -9,12 +9,12 @@ a :class:`.TimeSeriesPanel`.
 """
 
 
-import fsleyes_props    as props
-
-import fsleyes.icons    as icons
-import fsleyes.strings  as strings
-import fsleyes.tooltips as tooltips
-import fsleyes.actions  as actions
+import fsleyes_props                 as props
+import fsleyes.icons                 as icons
+import fsleyes.strings               as strings
+import fsleyes.tooltips              as tooltips
+import fsleyes.actions               as actions
+import fsleyes.views.timeseriespanel as timeseriespanel
 
 from . import plottoolbar
 
@@ -24,6 +24,16 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
     :class:`.TimeSeriesPanel`. It extends :class:`.PlotToolBar`,
     and adds a few controls specific to the :class:`.TimeSeriesPanel`.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``TimeSeriesToolBar`` is only intended to be added to
+        :class:`.TimeSeriesPanel` views.
+        """
+        return [timeseriespanel.TimeSeriesPanel]
+
 
     def __init__(self, parent, overlayList, displayCtx, tsPanel):
         """Create a ``TimeSeriesToolBar``.
@@ -67,13 +77,3 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
 
         nav = [togControl, togList] + self.getCommonNavOrder() + [mode]
         self.setNavOrder(nav)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``TimeSeriesToolBar`` is only intended to be added to
-        :class:`.TimeSeriesPanel` views.
-        """
-        from fsleyes.views.timeseriespanel import TimeSeriesPanel
-        return [TimeSeriesPanel]

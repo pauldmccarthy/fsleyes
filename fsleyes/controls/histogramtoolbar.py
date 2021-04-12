@@ -9,13 +9,12 @@ a :class:`.HistogramPanel`.
 """
 
 
-import fsleyes_props    as props
-
-import fsleyes.icons    as icons
-import fsleyes.strings  as strings
-import fsleyes.tooltips as tooltips
-import fsleyes.actions  as actions
-
+import fsleyes_props                as props
+import fsleyes.icons                as icons
+import fsleyes.strings              as strings
+import fsleyes.tooltips             as tooltips
+import fsleyes.actions              as actions
+import fsleyes.views.histogrampanel as histogrampanel
 
 from . import plottoolbar
 
@@ -25,6 +24,18 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
     :class:`.HistogramPanel`. It extends :class:`.PlotToolBar`,
     and adds a few controls specific to the :class:`.HistogramPanel`.
     """
+
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``HistogramToolBar`` is only intended to be added to
+        :class:`.HistogramPanel` views.
+        """
+
+        return [histogrampanel.HistogramPanel]
+
 
     def __init__(self, parent, overlayList, displayCtx, histPanel):
         """Create a ``HistogramToolBar``.
@@ -81,13 +92,3 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
               [togOverlay, mode]
 
         self.setNavOrder(nav)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``HistogramToolBar`` is only intended to be added to
-        :class:`.HistogramPanel` views.
-        """
-        from fsleyes.views.histogrampanel import HistogramPanel
-        return [HistogramPanel]

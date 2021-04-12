@@ -8,12 +8,13 @@
 control* panel which allows a :class:`.HistogramPanel` to be configured.
 """
 
+import wx
 
 import fsleyes_props                     as props
-
 import fsleyes.tooltips                  as fsltooltips
 import fsleyes.strings                   as strings
 import fsleyes.plotting.histogramseries  as hseries
+import fsleyes.views.histogrampanel      as histogrampanel
 from . import                               plotcontrolpanel
 
 
@@ -27,13 +28,12 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
        :align: center
     """
 
-
-    def __init__(self, *args, **kwargs):
-        """Create a ``HistogramControlPanel``. All arguments are passed
-        through to the :meth:`.PlotControlPanel.__init__` method.
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
         """
-
-        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
+        return {'location' : wx.RIGHT}
 
 
     @staticmethod
@@ -42,8 +42,15 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         ``HistogramControlPanel`` is only intended to be added to
         :class:`.HistogramPanel` views.
         """
-        from fsleyes.views.histogrampanel import HistogramPanel
-        return [HistogramPanel]
+        return [histogrampanel.HistogramPanel]
+
+
+    def __init__(self, *args, **kwargs):
+        """Create a ``HistogramControlPanel``. All arguments are passed
+        through to the :meth:`.PlotControlPanel.__init__` method.
+        """
+
+        plotcontrolpanel.PlotControlPanel.__init__(self, *args, **kwargs)
 
 
     def generateCustomPlotPanelWidgets(self, groupName):

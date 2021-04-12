@@ -113,24 +113,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleControlAction(pscontrol.PowerSpectrumControlPanel)
-    def togglePowerSpectrumControl(self, floatPane=False):
-        """Shows/hides a :class:`.PowerSpectrumControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(pscontrol.PowerSpectrumControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(powerspectrumtoolbar.PowerSpectrumToolBar)
-    def togglePowerSpectrumToolBar(self):
-        """Shows/hides a :class:`.PlotToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(powerspectrumtoolbar.PowerSpectrumToolBar)
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
@@ -141,8 +123,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                    None,
                    self.toggleOverlayList,
                    self.togglePlotList,
-                   self.togglePowerSpectrumToolBar,
-                   self.togglePowerSpectrumControl]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

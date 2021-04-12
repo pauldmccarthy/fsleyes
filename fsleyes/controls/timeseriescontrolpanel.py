@@ -9,14 +9,17 @@ control* which allows the user to configure a :class:`.TimeSeriesPanel`.
 """
 
 
-import fsleyes_props               as props
-import fsl.data.image              as fslimage
-import fsl.data.featimage          as fslfeatimage
+import wx
 
-import fsleyes.tooltips            as fsltooltips
-import fsleyes.plotting.timeseries as timeseries
-import fsleyes.strings             as strings
-from . import plotcontrolpanel     as plotctrl
+import fsleyes_props                 as props
+import fsl.data.image                as fslimage
+import fsl.data.featimage            as fslfeatimage
+
+import fsleyes.tooltips              as fsltooltips
+import fsleyes.plotting.timeseries   as timeseries
+import fsleyes.strings               as strings
+import fsleyes.views.timeseriespanel as timeseriespanel
+from . import plotcontrolpanel       as plotctrl
 
 
 class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
@@ -54,6 +57,24 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     """
 
 
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``TimeSeriesControlPanel`` is only intended to be added to
+        :class:`.TimeSeriesPanel` views.
+        """
+
+        return [timeseriespanel.TimeSeriesPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.RIGHT}
+
+
     def __init__(self, *args, **kwargs):
         """Create a ``TimeSeriesControlPanel``. All arguments are passed
         through to the :meth:`.PlotControlPanel.__init__` method.
@@ -75,16 +96,6 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self.name)
         plotctrl.PlotControlPanel.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``TimeSeriesControlPanel`` is only intended to be added to
-        :class:`.TimeSeriesPanel` views.
-        """
-        from fsleyes.views.timeseriespanel import TimeSeriesPanel
-        return [TimeSeriesPanel]
 
 
     def generateCustomPlotPanelWidgets(self, groupName):

@@ -130,24 +130,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleControlAction(histogramcontrolpanel.HistogramControlPanel)
-    def toggleHistogramControl(self, floatPane=False):
-        """Shows/hides a :class:`.HistogramControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(histogramcontrolpanel.HistogramControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(histogramtoolbar.HistogramToolBar)
-    def toggleHistogramToolBar(self):
-        """Shows/hides a :class:`.HistogramToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(histogramtoolbar.HistogramToolBar)
-
-
     @actions.toggleAction
     def toggleHistogramOverlay(self):
         """Toggles the value of the :attr:`.HistogramSeries.showOverlay`
@@ -168,8 +150,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                    None,
                    self.toggleOverlayList,
                    self.togglePlotList,
-                   self.toggleHistogramToolBar,
-                   self.toggleHistogramControl,
                    self.toggleHistogramOverlay]
 
         names = [a.actionName if a is not None else None for a in actionz]
