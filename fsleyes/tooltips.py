@@ -800,11 +800,10 @@ properties = TypeDict({
 
 actions = TypeDict({
     'CanvasPanel.screenshot'        : 'Take a screenshot of the current scene',
-    'CanvasPanel.toggleDisplayPanel' : 'Show more overlay display settings',
-    'CanvasPanel.toggleCanvasSettingsPanel' : 'Show more view '
-                                              'control settings',
-    'CanvasPanel.OverlayInfoPanel' : 'Show/hide the overlay '
-                                      'information panel.',
+    'CanvasPanel.OverlayDisplayPanel' : 'Show more overlay display settings',
+    'CanvasPanel.CanvasSettingsPanel' : 'Show more view control settings',
+    'CanvasPanel.OverlayInfoPanel'    : 'Show/hide the overlay '
+                                        'information panel.',
 
     'OrthoPanel.toggleEditPanel' : 'Show/hide the edit settings panel',
 

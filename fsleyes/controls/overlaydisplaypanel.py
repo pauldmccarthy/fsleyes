@@ -14,6 +14,8 @@ import functools
 import collections
 import collections.abc as abc
 
+import wx
+
 import fsleyes_props                  as props
 import fsleyes.views.canvaspanel      as canvaspanel
 import fsleyes.controls.controlpanel  as ctrlpanel
@@ -64,6 +66,14 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         :class:`.Scene3DPanel` views.
         """
         return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.LEFT}
 
 
     def __init__(self, parent, overlayList, displayCtx, canvasPanel):

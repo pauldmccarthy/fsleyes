@@ -17,6 +17,7 @@ import wx
 import fsl.data.image                as fslimage
 import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.gl                    as fslgl
 import fsleyes.tooltips              as fsltooltips
 import fsleyes.strings               as strings
@@ -58,9 +59,15 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
         :class:`.Scene3DPanel` views.
         """
-        from fsleyes.views.orthopanel    import OrthoPanel
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        from fsleyes.views.scene3dpanel  import Scene3DPanel
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary of settings to be passed to the
+        :meth:`.ViewPanel.togglePanel` method.
+        """
+        return {'location' : wx.LEFT}
 
 
     def __init__(self, parent, overlayList, displayCtx, canvasPanel):

@@ -248,19 +248,21 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         briSpec   = _TOOLBAR_PROPS[display, 'brightness']
         conSpec   = _TOOLBAR_PROPS[display, 'contrast']
 
+
         # Buttons which toggle overlay
         # info and display panel
+        # This is really hacky. The FSLeyesFrame
+        # setattrs toggleControlPanelAction for every
+        # built-in control to the view panel object,
+        # so here we access attributes called
+        # "OverlayDisplayPanel" and "OverlayInfoPanel".
+        # This will hopefully change in the future.
         panelSpec = actions.ToggleActionButton(
-            'toggleDisplayPanel',
+            'OverlayDisplayPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('gearHighlight24'),
                   icons.findImageFile('gear24')],
-            tooltip=fsltooltips.actions[viewPanel, 'toggleDisplayPanel'])
-
-        # This is really hacky. The FSLeyesFrame
-        # setattrs toggleControlPanelAction for every
-        # built-in control to the view panel object.
-        # This will hopefully change in the future.
+            tooltip=fsltooltips.actions[viewPanel, 'OverlayDisplayPanel'])
         infoSpec = actions.ToggleActionButton(
             'OverlayInfoPanel',
             actionKwargs={'floatPane' : True},

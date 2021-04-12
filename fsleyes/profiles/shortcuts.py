@@ -51,14 +51,14 @@ actions = td.TypeDict({
 
     'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
     'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',
-    'CanvasPanel.toggleDisplayPanel'        : 'Ctrl-Alt-4',
-    'CanvasPanel.toggleCanvasSettingsPanel' : 'Ctrl-Alt-5',
+    'CanvasPanel.OverlayDisplayPanel'       : 'Ctrl-Alt-4',
+    'CanvasPanel.CanvasSettingsPanel'       : 'Ctrl-Alt-5',
 
-    'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
+    'CanvasPanel.OverlayDisplayToolBar'     : 'Ctrl-Alt-7',
 
-    'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
-    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
-    'Scene3DPanel.toggleScene3DToolBar'     : 'Ctrl-Alt-8',
+    'OrthoPanel.OrthoToolBar'               : 'Ctrl-Alt-8',
+    'LightBoxPanel.LightBoxToolBar'         : 'Ctrl-Alt-8',
+    'Scene3DPanel.Scene3DToolBar'           : 'Ctrl-Alt-8',
 
     'CanvasPanel.OverlayInfoPanel'          : 'Ctrl-Alt-3',
     'CanvasPanel.AtlasPanel'                : 'Ctrl-Alt-6',

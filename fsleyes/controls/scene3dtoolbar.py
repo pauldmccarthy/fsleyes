@@ -96,7 +96,7 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
             'movieMode'        : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
-            'toggleCanvasSettingsPanel' : [
+            'CanvasSettingsPanel' : [
                 fslicons.findImageFile('spannerHighlight24'),
                 fslicons.findImageFile('spanner24')],
         }
@@ -108,25 +108,25 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
             'showCursorAndLegend' : fsltooltips.properties[
                 self, 'showCursorAndLegend'],
             'zoom'         : fsltooltips.properties[opts, 'zoom'],
-            'toggleCanvasSettingsPanel' : fsltooltips.actions[
-                panel, 'toggleCanvasSettingsPanel'],
+            'CanvasSettingsPanel' : fsltooltips.actions[
+                panel, 'CanvasSettingsPanel'],
         }
 
         targets = {
-            'screenshot'                : panel,
-            'resetDisplay'              : profile,
-            'movieMode'                 : panel,
-            'showCursorAndLegend'       : self,
-            'zoom'                      : opts,
-            'toggleCanvasSettingsPanel' : panel,
+            'screenshot'          : panel,
+            'resetDisplay'        : profile,
+            'movieMode'           : panel,
+            'showCursorAndLegend' : self,
+            'zoom'                : opts,
+            'CanvasSettingsPanel' : panel,
         }
 
         toolSpecs = [
             actions.ToggleActionButton(
-                'toggleCanvasSettingsPanel',
+                'CanvasSettingsPanel',
                 actionKwargs={'floatPane' : True},
-                icon=icons['toggleCanvasSettingsPanel'],
-                tooltip=tooltips['toggleCanvasSettingsPanel']),
+                icon=icons['CanvasSettingsPanel'],
+                tooltip=tooltips['CanvasSettingsPanel']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),

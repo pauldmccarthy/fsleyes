@@ -426,26 +426,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         """
         self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
 
-    @actions.toggleControlAction(overlaydisplaypanel.OverlayDisplayPanel)
-    def toggleDisplayPanel(self, floatPane=False):
-        """Toggles an :class:`.OverlayDisplayPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlaydisplaypanel.OverlayDisplayPanel,
-                         floatPane=floatPane,
-                         location=wx.LEFT)
-
-
-    @actions.toggleControlAction(canvassettingspanel.CanvasSettingsPanel)
-    def toggleCanvasSettingsPanel(self, floatPane=False):
-        """Toggles a :class:`.CanvasSettingsPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(canvassettingspanel.CanvasSettingsPanel,
-                         floatPane=floatPane,
-                         location=wx.LEFT)
-
-
     @actions.toggleControlAction(locationpanel.LocationPanel)
     def toggleLocationPanel(self):
         """Toggles a :class:`.LocationPanel`. See
