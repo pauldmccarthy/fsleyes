@@ -32,9 +32,9 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    :class:`.MelodicClassificationPanel`. Controls provided by plugins are
    added to the *Settings* menu for each active view.
 
- - A *tool* is an :class:`.Action` which is associated with a menu item
-   under the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`
-   and the :class:`.ResampleAction`.
+ - A *tool* is an :class:`.Action` which is associated with a menu item under
+   the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`, the
+   :class:`.CropImageAction`, and the :class:`.ResampleAction`.
 
 
 Loading/installing FSLeyes plugins
@@ -84,15 +84,9 @@ definitions for custom views, controls, and tools.
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
  - Controls must be sub-classes of the :class:`.ControlPanel` or
-   :class:`.ControlToolBar` classes. If your custom control is designed to
-   only work with a specific view, you should override the
-   :mod:`.ControlMixin.supportedViews` static method to return the views that
-   your control supports.
+   :class:`.ControlToolBar` classes.
 
- - Tools must be sub-classes of the :class:`.Action` class. Similar to above,
-   if your custom tool is designed to only work with a specific view, you
-   should override the :mod:`.Action.supportedViews` static method to return
-   the views that your tool should be associated with.
+ - Tools must be sub-classes of the :class:`.Action` class.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
