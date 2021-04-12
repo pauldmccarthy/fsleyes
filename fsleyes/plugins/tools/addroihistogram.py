@@ -68,6 +68,8 @@ class AddROIHistogramAction(base.Action):
         """Must be called when this ``AddROIHistogramAction`` is no
         longer in use.
         """
+        if self.destroyed:
+            return
         self.overlayList.removeListener('overlays',        self.name)
         self.displayCtx .removeListener('selectedOverlay', self.name)
         self.__plotPanel  = None
