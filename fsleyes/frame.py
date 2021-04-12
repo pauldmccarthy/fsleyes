@@ -704,8 +704,6 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in it.chain(*self.__viewPanelMenuActions.values()):
             action.unbindWidget(item)
-            if action.instance is None:
-                action.destroy()
 
         for menu in self.__viewPanelMenus.values():
             menu = menu.GetSubMenu()
@@ -915,22 +913,23 @@ class FSLeyesFrame(wx.Frame):
                 else:
                     ctrlName = kwargs['title']
 
+                # We add toggle actions as attributes to the
+                # ViewPanel instance, which is horribly hacky
+                # and will hopefully be changed in the future.
                 # This method may get called multiple times,
-                # so we give the control action a name, and
-                # don't re-create it if it was already added
-                # on a previous call.
+                # so we create the action only on the first
+                # time.
                 name = ctrlType.__name__
                 if not hasattr(panel, name):
-                    act  = actions.ToggleControlPanelAction(
+                    act = actions.ToggleControlPanelAction(
                         self.overlayList,
                         self.displayCtx,
                         ctrlType,
                         panel,
                         name=name)
-
                     setattr(panel, name, act)
-                    actionNames .append(name)
-                    actionTitles[name] = ctrlName
+                actionNames .append(name)
+                actionTitles[name] = ctrlName
 
         if len(actionNames) == 0:
             return None, []
