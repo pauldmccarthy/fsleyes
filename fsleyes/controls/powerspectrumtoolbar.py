@@ -47,11 +47,11 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
             self, parent, overlayList, displayCtx, psPanel)
 
         togControl = actions.ToggleActionButton(
-            'togglePowerSpectrumControl',
+            'PowerSpectrumControlPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
-            tooltip=tooltips.actions[psPanel, 'togglePowerSpectrumControl'])
+            tooltip=tooltips.actions[psPanel, 'PowerSpectrumControlPanel'])
 
         togList = actions.ToggleActionButton(
             'togglePlotList',

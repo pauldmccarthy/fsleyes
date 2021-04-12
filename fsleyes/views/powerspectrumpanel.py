@@ -46,16 +46,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
        ~fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
 
 
-    The following actions are provided, in addition to those already provided
-    by the :class:`.PlotPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       togglePowerSpectrumToolBar
-       togglePowerSpectrumControl
-
-
     **Melodic images**
 
 

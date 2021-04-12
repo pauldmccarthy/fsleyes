@@ -48,11 +48,11 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
             self, parent, overlayList, displayCtx, tsPanel)
 
         togControl = actions.ToggleActionButton(
-            'toggleTimeSeriesControl',
+            'TimeSeriesControlPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
-            tooltip=tooltips.actions[tsPanel, 'toggleTimeSeriesControl'])
+            tooltip=tooltips.actions[tsPanel, 'TimeSeriesControlPanel'])
 
         togList = actions.ToggleActionButton(
             'togglePlotList',

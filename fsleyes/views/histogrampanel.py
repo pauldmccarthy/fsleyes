@@ -52,16 +52,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-
-
-    The following :mod:`actions` are provided, in addition to those already
-    provided by the :class:`.PlotPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleHistogramToolBar
-       toggleHistogramControl
     """
 
 

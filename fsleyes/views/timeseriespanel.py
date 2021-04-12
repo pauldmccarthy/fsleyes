@@ -76,16 +76,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
        ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
 
 
-    The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
-    to show/hide these control panels:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleTimeSeriesToolBar
-       toggleTimeSeriesControl
-
-
     **FEATures**
 
 
