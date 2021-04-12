@@ -18,7 +18,7 @@ import numpy as np
 
 import fsl.data.image as fslimage
 
-import fsleyes.actions.addmaskdataseries as amds
+import fsleyes.plugins.tools.addmaskdataseries as amds
 
 from .. import run_with_timeseriespanel, run_with_fsleyes, simclick, realYield
 

@@ -17,7 +17,7 @@ import wx
 import fsl.transform.affine as affine
 import fsl.data.image as fslimage
 
-import fsleyes.actions.resample as resample
+import fsleyes.plugins.tools.resample as resample
 
 from .. import (run_with_fsleyes,
                 run_with_orthopanel,

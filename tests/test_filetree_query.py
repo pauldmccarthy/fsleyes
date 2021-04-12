@@ -15,7 +15,7 @@ import itertools as it
 
 import pytest
 
-import fsleyes.filetree.query as ftquery
+import fsleyes.plugins.controls.filetreepanel.query as ftquery
 
 from . import testdir as _testdir
 

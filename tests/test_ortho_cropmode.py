@@ -14,7 +14,7 @@ import wx
 
 from fsl.data.image import Image
 
-from fsleyes.profiles.orthocropprofile import OrthoCropProfile
+from fsleyes.plugins.profiles.orthocropprofile import OrthoCropProfile
 
 from . import run_with_orthopanel, realYield, simclick
 

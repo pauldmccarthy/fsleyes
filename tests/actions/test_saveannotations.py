@@ -14,9 +14,9 @@ import pytest
 import fsl.utils.tempdir as tempdir
 import fsl.data.image    as fslimage
 
-import fsleyes.gl.annotations                as annotations
-import fsleyes.controls.annotationpanel      as annotationpanel
-import fsleyes.plugins.tools.saveannotations as saveannotations
+import fsleyes.gl.annotations                   as annotations
+import fsleyes.plugins.controls.annotationpanel as annotationpanel
+import fsleyes.plugins.tools.saveannotations    as saveannotations
 from .. import (run_render_test,
                 run_with_orthopanel,
                 realYield,

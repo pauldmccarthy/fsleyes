@@ -4,7 +4,7 @@
 import os
 import os.path as op
 
-from fsleyes.controls.filetreepanel import FileTreePanel
+from fsleyes.plugins.controls.filetreepanel import FileTreePanel
 
 from . import run_with_orthopanel, realYield, MockFileDialog
 

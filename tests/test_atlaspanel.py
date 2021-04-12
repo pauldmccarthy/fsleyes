@@ -6,7 +6,7 @@
 #
 
 
-import fsleyes.controls.atlaspanel as ap
+import fsleyes.plugins.controls.atlaspanel as ap
 
 from . import run_with_orthopanel, yieldUntil, realYield
 
@@ -22,7 +22,7 @@ def _test_atlaspanel_toggleOverlay(panel, overlayList, displayCtx):
     def hasloaded():
         return loaded[0]
 
-    panel.toggleAtlasPanel()
+    panel.togglePanel(ap.AtlasPanel)
     atlaspanel = panel.getPanel(ap.AtlasPanel)
 
     atlaspanel.toggleOverlay('harvardoxford-cortical',
@@ -35,5 +35,5 @@ def _test_atlaspanel_toggleOverlay(panel, overlayList, displayCtx):
     atlaspanel = None
     overlayList.clear()
     realYield()
-    panel.toggleAtlasPanel()
+    panel.togglePanel(ap.AtlasPanel)
     realYield()

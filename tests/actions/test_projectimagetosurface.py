@@ -18,7 +18,7 @@ import fsl.data.image       as fslimage
 import fsl.data.vtk         as fslvtk
 import fsl.transform.affine as affine
 
-import fsleyes.actions.projectimagetosurface as pits
+import fsleyes.plugins.tools.projectimagetosurface as pits
 
 
 datadir = op.join(op.dirname(__file__), '..', 'testdata')

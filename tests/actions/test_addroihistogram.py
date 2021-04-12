@@ -18,7 +18,7 @@ import numpy as np
 
 import fsl.data.image as fslimage
 
-import fsleyes.actions.addroihistogram as arh
+import fsleyes.plugins.tools.addroihistogram as arh
 
 from .. import run_with_histogrampanel
 

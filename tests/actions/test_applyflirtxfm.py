@@ -12,7 +12,7 @@ from contextlib import contextmanager
 import numpy as np
 
 import wx
-import fsleyes.actions.applyflirtxfm as applyflirtxfm
+import fsleyes.plugins.tools.applyflirtxfm as applyflirtxfm
 
 from fsl.utils.tempdir import tempdir
 from fsl.data.image import Image

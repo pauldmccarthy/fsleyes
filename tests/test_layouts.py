@@ -14,8 +14,8 @@ import fsleyes.layouts as layouts
 
 
 from fsleyes.views.orthopanel                   import OrthoPanel
-from fsleyes.controls.atlaspanel                import AtlasPanel
-from fsleyes.controls.lookuptablepanel          import LookupTablePanel
+from fsleyes.plugins.controls.atlaspanel        import AtlasPanel
+from fsleyes.plugins.controls.lookuptablepanel  import LookupTablePanel
 from fsleyes.views.powerspectrumpanel           import PowerSpectrumPanel
 from fsleyes.controls.plotlistpanel             import PlotListPanel
 from fsleyes.controls.powerspectrumcontrolpanel import PowerSpectrumControlPanel  # noqa

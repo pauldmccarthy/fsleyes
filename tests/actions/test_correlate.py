@@ -11,7 +11,7 @@ import numpy as np
 
 from fsl.data.image import Image
 
-import fsleyes.actions.correlate as correlate
+import fsleyes.plugins.tools.correlate as correlate
 
 from .. import realYield, run_with_orthopanel
 
