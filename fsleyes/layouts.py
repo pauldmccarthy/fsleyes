@@ -611,24 +611,7 @@ def _addControlPanel(viewPanel, panelType):
     :arg viewPanel: A :class:`.ViewPanel` instance.
     :arg panelType: A control panel type.
     """
-
-    from fsleyes.views.plotpanel           import OverlayPlotPanel
-    from fsleyes.views.orthopanel          import OrthoPanel
-    from fsleyes.controls.locationpanel    import LocationPanel
-    from fsleyes.controls.overlaylistpanel import OverlayListPanel
-
-    # Slightly hacky ... some views
-    # customies certain controls a
-    # bit, so we call specific
-    # methods to add them.
-    if   isinstance(viewPanel, OverlayPlotPanel) and \
-         panelType == OverlayListPanel:
-        viewPanel.toggleOverlayList()
-    elif isinstance(viewPanel, OrthoPanel) and \
-         panelType == LocationPanel:
-        viewPanel.toggleLocationPanel()
-    else:
-        viewPanel.togglePanel(panelType)
+    viewPanel.togglePanel(panelType)
 
 
 def _getPanelProps(panel):
