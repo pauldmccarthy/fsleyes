@@ -181,11 +181,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.applyCommandLineArgs,
                    None,
                    self.toggleMovieMode,
-                   self.toggleDisplaySync,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.removeAllPanels]
+                   self.toggleDisplaySync]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

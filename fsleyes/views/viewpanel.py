@@ -10,7 +10,8 @@ documentation for more details.
 """
 
 
-import logging
+import              logging
+import itertools as it
 
 import                                  wx
 import wx.lib.agw.aui                as aui
@@ -92,6 +93,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
        getPanelInfo
        auiManager
     """
+
+
+    def controlOptions(self, cpType):
+        """May be overridden by sub-classes. Given a control panel type,
+        may return a dictionary containing arguments to be passed to
+        the  ``__init__`` method when the control panel is created.
+        """
+        return None
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -356,10 +365,20 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                      passed to the constructor.
         """
 
-        if len(kwargs) == 0:
-            kwargs = panelType.defaultLayout()
-            if kwargs is None:
-                kwargs = {}
+        # Merge in default options for this control,
+        # with precedence (highest to lowest):
+        #  1. kwargs
+        #  2. ControlPanel.defaultLayout
+        #  3. ViewPanel.controlOptions
+        layout = panelType.defaultLayout()
+        cpopts = self.controlOptions(panelType)
+
+        if layout is None: layout = {}
+        if cpopts is None: cpopts = {}
+
+        for k, v in it.chain(layout.items(), cpopts.items()):
+            if k not in kwargs:
+                kwargs[k] = v
 
         location   = kwargs.pop('location',  None)
         floatPane  = kwargs.pop('floatPane', False)

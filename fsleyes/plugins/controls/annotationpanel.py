@@ -74,7 +74,8 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
 
     @staticmethod
     def defaultLayout():
-        """
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
         """
         return {'location' : wx.LEFT}
 

@@ -130,11 +130,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.applyCommandLineArgs,
                    None,
                    self.toggleDisplaySync,
-                   self.resetDisplay,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.removeAllPanels]
+                   self.resetDisplay]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

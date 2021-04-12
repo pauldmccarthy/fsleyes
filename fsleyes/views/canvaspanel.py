@@ -13,19 +13,13 @@ import logging
 
 import wx
 
-import fsl.utils.idle                              as idle
-import fsl.utils.deprecated                        as deprecated
-import fsleyes_props                               as props
-
-import fsleyes.actions                             as actions
-import fsleyes.displaycontext                      as displayctx
-import fsleyes.controls.overlaylistpanel           as overlaylistpanel
-import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
-import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
-import fsleyes.controls.canvassettingspanel        as canvassettingspanel
-import fsleyes.controls.locationpanel              as locationpanel
-from . import                                         colourbarpanel
-from . import                                         viewpanel
+import fsl.utils.idle         as idle
+import fsl.utils.deprecated   as deprecated
+import fsleyes_props          as props
+import fsleyes.actions        as actions
+import fsleyes.displaycontext as displayctx
+from . import                    colourbarpanel
+from . import                    viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -82,12 +76,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleMovieMode
        toggleDisplaySync
        toggleVolumeSync
-       toggleOverlayList
-       toggleDisplayToolBar
-       toggleDisplayPanel
-       toggleCanvasSettingsPanel
-       toggleLocationPanel
-
 
     .. _canvaspanel-adding-content:
 
@@ -417,26 +405,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         # The state of this action gets bound to
         # the syncOverlayVolume attribute in __init__
         pass
-
-
-    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
-    def toggleOverlayList(self):
-        """Toggles an :class:`.OverlayListPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
-
-    @actions.toggleControlAction(locationpanel.LocationPanel)
-    def toggleLocationPanel(self):
-        """Toggles a :class:`.LocationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-
-        # location history only shown in ortho panels
-        self.togglePanel(locationpanel.LocationPanel,
-                         showHistory=isinstance(self, OrthoPanel),
-                         location=wx.BOTTOM)
 
 
     @property

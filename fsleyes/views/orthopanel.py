@@ -32,6 +32,7 @@ import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
 import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
+import fsleyes.controls.locationpanel          as locationpanel
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
 import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
@@ -128,6 +129,14 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        toggleYCanvas
        toggleZCanvas
     """
+
+
+    def controlOptions(self, cpType):
+        """Returns some options to be used by :meth:`.ViewPanel.togglePanel`
+        for certain control panel types.
+        """
+        if cpType is locationpanel.LocationPanel:
+            return {'showHistory' : True}
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -449,11 +458,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleCursor,
                    self.toggleXCanvas,
                    self.toggleYCanvas,
-                   self.toggleZCanvas,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.removeAllPanels]
+                   self.toggleZCanvas]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
