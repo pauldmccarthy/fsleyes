@@ -218,10 +218,11 @@ def _loadBuiltIns():
     """
 
     import fsleyes.plugins.views    as views
-    import fsleyes.plugins.controls as controls
+    import fsleyes.controls         as controls
+    import fsleyes.plugins.controls as pcontrols
     import fsleyes.plugins.tools    as tools
 
-    for mod in (views, controls, tools):
+    for mod in (views, controls, pcontrols, tools):
         submods = pkgutil.iter_modules(mod.__path__, mod.__name__ + '.')
         for _, name, _ in submods:
             log.debug('Loading built-in plugin module %s', name)
@@ -348,11 +349,14 @@ def _findEntryPoints(mod, ignoreBuiltins):
         if not isinstance(item, type):
             continue
 
+        bases = [viewpanel.ViewPanel,
+                 ctrlpanel.ControlPanel,
+                 ctrlpanel.ControlToolBar,
+                 ctrlpanel.SettingsPanel,
+                 actions.Action]
+
         # avoid base-classes and built-ins
-        if item is viewpanel.ViewPanel      or \
-           item is ctrlpanel.ControlPanel   or \
-           item is ctrlpanel.ControlToolBar or \
-           item is actions.Action:
+        if item in bases:
             continue
         if ignoreBuiltins and str(item.__module__).startswith('fsleyes.'):
             continue

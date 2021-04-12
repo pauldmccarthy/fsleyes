@@ -134,8 +134,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    None,
                    self.toggleOverlayList,
                    self.toggleLocationPanel,
-                   self.toggleDisplayPanel,
-                   self.toggleCanvasSettingsPanel,
                    self.removeAllPanels]
 
         names = [a.actionName if a is not None else None for a in actionz]
