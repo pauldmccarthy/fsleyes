@@ -83,10 +83,11 @@ definitions for custom views, controls, and tools.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
- - Controls must be sub-classes of the :class:`.ControlPanel` class. If your
-   custom control is designed to only work with a specific view, you should
-   override the :mod:`.ControlMixin.supportedViews` static method to return
-   the views that your control supports.
+ - Controls must be sub-classes of the :class:`.ControlPanel` or
+   :class:`.ControlToolBar` classes. If your custom control is designed to
+   only work with a specific view, you should override the
+   :mod:`.ControlMixin.supportedViews` static method to return the views that
+   your control supports.
 
  - Tools must be sub-classes of the :class:`.Action` class. Similar to above,
    if your custom tool is designed to only work with a specific view, you
@@ -232,7 +233,7 @@ def _loadBuiltIns():
             log.debug('Loading built-in plugin module %s', name)
             mod  = importlib.import_module(name)
             name = name.split('.')[-1]
-            _registerEntryPoints(name, mod)
+            _registerEntryPoints(name, mod, False)
 
 
 def listPlugins():
@@ -331,10 +332,17 @@ def _importModule(filename, modname):
     return mod
 
 
-def _findEntryPoints(mod):
+def _findEntryPoints(mod, ignoreBuiltins):
     """Used by :func:`loadPlugin`. Finds the FSLeyes entry points (views,
     controls, or tools) that are defined within the given module.
-     """
+
+    :arg mod:            The module to search
+    :arg ignoreBuiltins: If ``True``, all, views, controls and tools which are
+                         built into FSLeyes will be ignored. The
+                         :class:`.ViewPanel`, :class:`.ControlPanel`,
+                         :class:`.ControlToolBar` and :class:`.Action` base
+                         classes are always ignored.
+    """
 
     entryPoints = collections.defaultdict(dict)
 
@@ -346,11 +354,13 @@ def _findEntryPoints(mod):
         if not isinstance(item, type):
             continue
 
-        # avoid module imports
+        # avoid base-classes and built-ins
         if item is viewpanel.ViewPanel      or \
            item is ctrlpanel.ControlPanel   or \
            item is ctrlpanel.ControlToolBar or \
            item is actions.Action:
+            continue
+        if ignoreBuiltins and str(item.__module__).startswith('fsleyes.'):
             continue
 
         # ignoreControl/ignoreTool may be overridden
@@ -372,7 +382,7 @@ def _findEntryPoints(mod):
     return entryPoints
 
 
-def _registerEntryPoints(name, module):
+def _registerEntryPoints(name, module, ignoreBuiltins):
     """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
     points defined within the gibven module.
     """
@@ -386,7 +396,7 @@ def _registerEntryPoints(name, module):
 
     log.debug('Registering plugin %s [dist name %s]', filename, distname)
 
-    entryPoints = _findEntryPoints(module)
+    entryPoints = _findEntryPoints(module, ignoreBuiltins)
     dist        = pkg_resources.Distribution(
         project_name=distname,
         location=filename,
@@ -424,7 +434,7 @@ def loadPlugin(filename):
     name    = op.splitext(op.basename(filename))[0].strip('_')
     modname = 'fsleyes_plugin_{}'.format(name)
     mod     = _importModule(filename, modname)
-    _registerEntryPoints(name, mod)
+    _registerEntryPoints(name, mod, True)
 
 
 def installPlugin(filename):
