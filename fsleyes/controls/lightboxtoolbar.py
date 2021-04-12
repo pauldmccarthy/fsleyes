@@ -14,6 +14,7 @@ import wx
 import fsleyes_props                 as props
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.lightboxpanel   as lightboxpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.actions               as actions
 import fsleyes.icons                 as fslicons
@@ -44,8 +45,8 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
         ``LightBoxToolBar`` is only intended to be added to
         :class:`.LightBoxPanel` views.
         """
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        return [LightBoxPanel]
+
+        return [lightboxpanel.LightBoxPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, lb):

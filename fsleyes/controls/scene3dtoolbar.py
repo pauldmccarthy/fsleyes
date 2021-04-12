@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# scene3dtoolbar.py -
+# scene3dtoolbar.py - The Scene3DToolBar class
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`Scene3DToolBar` class, a FSLeyes control
+which implements a toolbar for use with the :class:`.Scene3DPanel`.
+"""
 
 
 import wx
@@ -11,6 +14,7 @@ import wx
 
 import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.scene3dpanel    as scene3dpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.strings               as strings
 import fsleyes.actions               as actions
@@ -20,7 +24,8 @@ import fsleyes.tooltips              as fsltooltips
 
 
 class Scene3DToolBar(ctrlpanel.ControlToolBar):
-    """
+    """The ``Scene3DToolBar`` is a FSLeyes control which implements a toolbar for
+    use with the :class:`.Scene3DPanel`.
     """
 
 
@@ -29,6 +34,14 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
     user to simultaneously toggle the :attr:`.SceneOpts.showCursor` and
     :attr:`.Scene3DOpts.showLegend` properties.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``Scene3DToolBar`` is restricted for use with the
+        :class:`.Scene3DPanel`.
+        """
+        return [scene3dpanel.Scene3DPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, panel):
@@ -65,16 +78,6 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
         self.removeListener('showCursorAndLegend', self.name)
 
         ctrlpanel.ControlToolBar.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``Scene3DToolBar`` is only intended to be added to
-        :class:`.Scene3DPanel` views.
-        """
-        from fsleyes.views.scene3dpanel import Scene3DPanel
-        return [Scene3DPanel]
 
 
     def __makeTools(self):

@@ -20,7 +20,6 @@ import fsleyes_widgets.utils.layout         as fsllayout
 import fsleyes.actions                      as actions
 import fsleyes.gl.wxgllightboxcanvas        as lightboxcanvas
 import fsleyes.profiles.lightboxviewprofile as lightboxviewprofile
-import fsleyes.controls.lightboxtoolbar     as lightboxtoolbar
 import fsleyes.displaycontext.lightboxopts  as lightboxopts
 from . import                                  canvaspanel
 
@@ -173,14 +172,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas = None
 
 
-    @actions.toggleControlAction(lightboxtoolbar.LightBoxToolBar)
-    def toggleLightBoxToolBar(self):
-        """Shows/hides a :class:`.LightBoxToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(lightboxtoolbar.LightBoxToolBar)
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``LightBoxPanel``.
@@ -196,8 +187,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                    self.toggleLocationPanel,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleLightBoxToolBar,
                    self.removeAllPanels]
 
         names = [a.actionName if a is not None else None for a in actionz]

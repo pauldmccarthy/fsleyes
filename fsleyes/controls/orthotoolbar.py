@@ -11,9 +11,9 @@
 
 import wx
 
-import fsleyes_props    as props
-
+import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.orthopanel      as orthopanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.icons                 as fslicons
 import fsleyes.tooltips              as fsltooltips
@@ -61,8 +61,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         ``OrthoToolBar`` is only intended to be added to
         :class:`.OrthoPanel` views.
         """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
+        return [orthopanel.OrthoPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):

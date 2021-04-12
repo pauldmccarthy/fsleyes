@@ -20,7 +20,6 @@ import fsleyes.displaycontext.scene3dopts  as scene3dopts
 import fsleyes.gl.wxglscene3dcanvas        as scene3dcanvas
 import fsleyes.profiles.scene3dviewprofile as scene3dviewprofile
 import fsleyes.actions                     as actions
-import fsleyes.controls.scene3dtoolbar     as s3dtoolbar
 from . import                                 canvaspanel
 
 
@@ -137,8 +136,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.toggleLocationPanel,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleScene3DToolBar,
                    self.removeAllPanels]
 
         names = [a.actionName if a is not None else None for a in actionz]
@@ -152,14 +149,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         method.
         """
         self.currentProfile.resetDisplay()
-
-
-    @actions.toggleControlAction(s3dtoolbar.Scene3DToolBar)
-    def toggleScene3DToolBar(self):
-        """Shows/hides a :class:`.Scene3DToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(s3dtoolbar.Scene3DToolBar)
 
 
     def getMovieFrame(self, overlay, opts):

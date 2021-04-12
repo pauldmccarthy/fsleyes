@@ -15,7 +15,7 @@ import collections
 import collections.abc as abc
 
 import fsleyes_props                  as props
-
+import fsleyes.views.canvaspanel      as canvaspanel
 import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
@@ -63,10 +63,7 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
         :class:`.Scene3DPanel` views.
         """
-        from fsleyes.views.orthopanel    import OrthoPanel
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        from fsleyes.views.scene3dpanel  import Scene3DPanel
-        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+        return [canvaspanel.CanvasPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, canvasPanel):

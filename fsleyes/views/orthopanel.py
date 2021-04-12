@@ -32,7 +32,6 @@ import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
 import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
-import fsleyes.controls.orthotoolbar           as orthotoolbar
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
 import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
@@ -342,14 +341,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         canvaspanel.CanvasPanel.destroy(self)
 
 
-    @actions.toggleControlAction(orthotoolbar.OrthoToolBar)
-    def toggleOrthoToolBar(self):
-        """Shows/hides an :class:`.OrthoToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(orthotoolbar.OrthoToolBar)
-
-
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
         """Shows/hides an :class:`.OrthoEditToolBar`. This causes the
@@ -464,8 +455,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleLocationPanel,
                    self.toggleDisplayPanel,
                    self.toggleCanvasSettingsPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleOrthoToolBar,
                    self.removeAllPanels]
 
         names = [a.actionName if a is not None else None for a in actionz]
