@@ -11,11 +11,6 @@ FSLeyes |version| has a simple plugin architecture, allowing you to write and
 install custom views, controls, and tools.
 
 
-.. note:: The FSLeyes plugin architecture is new to FSLeyes 0.26.0 - as of the
-          release of this version there are no FSLeyes plugins in existence,
-          so don't bother searching for any just yet.
-
-
 For users
 ---------
 
@@ -121,8 +116,10 @@ Writing a FSLeyes plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+
 .. note:: A minimal example of a FSLeyes plugin library can be found in
-          ``tests/testdata/fsleyes_plugin_example/``.
+          ``tests/testdata/fsleyes_plugin_example/``, and a range of
+          built-in plugins can be found in ``fsleyes/plugins/``.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
@@ -130,25 +127,10 @@ definitions for custom views, controls, and tools.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
- - Controls must be sub-classes of the :class:`.ControlPanel` class.
+ - Controls must be sub-classes of the :class:`.ControlPanel` or
+   :class:`.ControlToolBar` classes.
 
  - Tools must be sub-classes of the :class:`.Action` class.
-
-
-.. sidebar:: Customising control panels
-
-             If you are writing a custom control panel which is designed to
-             only work with a specific view (e.g. an ortho view), you can
-             override the :mod:`.ControlMixin.supportedViews` static method to
-             limit the views that your control supports.
-
-             Furthermore, if you want to customise how your custom control is
-             displayed (e.g. on the bottom, left, right, or top, or as a
-             separate floating panel), you can override the
-             :mod:`.ControlMixin.defaultLayout` static method to return
-             default layout options that will be passed to the
-             :meth:`.ViewPanel.togglePanel` method when your control panel
-             is opened.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
@@ -198,3 +180,27 @@ A minimal ``setup.py`` file for a FSLeyes plugin might look like this::
 See the `Python Packaging guide
 <https://packaging.python.org/tutorials/packaging-projects/>`_ for more
 details on writing a ``setup.py`` file.
+
+
+Customising control panels
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+If you are writing a custom control panel which is designed to only work with
+a specific view (e.g. an ortho view), you can override the
+:mod:`.ControlMixin.supportedViews` static method to limit the views that your
+control supports.
+
+
+Furthermore, if you want to customise how your custom control is displayed
+(e.g. on the bottom, left, right, or top, or as a separate floating panel),
+you can override the :mod:`.ControlMixin.defaultLayout` static method to
+return default layout options that will be passed to the
+:meth:`.ViewPanel.togglePanel` method when your control panel is opened.
+
+
+If you would like to add custom mouse/keyboard interaction in conjunction with
+your control panel, you can do so by writing a custom :class:`.Profile` class,
+and overriding the :class:`.ControlMixin.profileCls` method. See the
+:class:`.CropImageAction` and :class:`.AnnotationPanel` for examples of
+custom interaction profiles.
