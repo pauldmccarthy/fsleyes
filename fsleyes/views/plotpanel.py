@@ -219,6 +219,36 @@ class PlotPanel(viewpanel.ViewPanel):
     """
 
 
+    def controlOptions(self, cpType):
+        """Returns some options to be used by :meth:`.ViewPanel.togglePanel`
+        for certain control panel types.
+        """
+        # Tell the overlay list panel to disable
+        # all overlays that aren't being plotted.
+        #
+        # This OverlayPlotPanel will always be
+        # notified about a new overlay before
+        # this OverlayListPanel, so a DataSeries
+        # instance will always have been created
+        # by the time the list panel calls this
+        # filter function.
+        def listFilter(overlay):
+            return self.getDataSeries(overlay) is not None
+
+        if cpType is overlaylistpanel.OverlayListPanel:
+            return dict(showVis=True,
+                        showSave=False,
+                        showGroup=False,
+                        propagateSelect=True,
+                        elistboxStyle=(elistbox.ELB_REVERSE      |
+                                       elistbox.ELB_TOOLTIP_DOWN |
+                                       elistbox.ELB_NO_ADD       |
+                                       elistbox.ELB_NO_REMOVE    |
+                                       elistbox.ELB_NO_MOVE),
+                        location=wx.LEFT,
+                        filterFunc=listFilter)
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``PlotPanel``.
 
@@ -1573,48 +1603,6 @@ class OverlayPlotPanel(PlotPanel):
                                        self.__name,
                                        self.asyncDraw,
                                        overwrite=True)
-
-
-    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
-    def toggleOverlayList(self):
-        """Shows/hides an :class:`.OverlayListPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-
-        # Tell the overlay list panel to disable
-        # all overlays that aren't being plotted.
-        #
-        # This OverlayPlotPanel will always be
-        # notified about a new overlay before
-        # this OverlayListPanel, so a DataSeries
-        # instance will always have been created
-        # by the time the list panel calls this
-        # filter function.
-        def listFilter(overlay):
-            return self.getDataSeries(overlay) is not None
-
-        self.togglePanel(overlaylistpanel.OverlayListPanel,
-                         showVis=True,
-                         showSave=False,
-                         showGroup=False,
-                         propagateSelect=True,
-                         elistboxStyle=(elistbox.ELB_REVERSE      |
-                                        elistbox.ELB_TOOLTIP_DOWN |
-                                        elistbox.ELB_NO_ADD       |
-                                        elistbox.ELB_NO_REMOVE    |
-                                        elistbox.ELB_NO_MOVE),
-                         location=wx.LEFT,
-                         filterFunc=listFilter)
-
-
-    @actions.toggleControlAction(plotlistpanel.PlotListPanel)
-    def togglePlotList(self, floatPane=False):
-        """Shows/hides a :class:`.PlotListPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(plotlistpanel.PlotListPanel,
-                         location=wx.LEFT,
-                         floatPane=floatPane)
 
 
     def __dataSeriesChanged(self, *a):

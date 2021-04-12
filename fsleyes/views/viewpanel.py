@@ -368,15 +368,15 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # Merge in default options for this control,
         # with precedence (highest to lowest):
         #  1. kwargs
-        #  2. ControlPanel.defaultLayout
-        #  3. ViewPanel.controlOptions
+        #  2. ViewPanel.controlOptions
+        #  3. ControlPanel.defaultLayout
         layout = panelType.defaultLayout()
         cpopts = self.controlOptions(panelType)
 
         if layout is None: layout = {}
         if cpopts is None: cpopts = {}
 
-        for k, v in it.chain(layout.items(), cpopts.items()):
+        for k, v in it.chain(cpopts.items(), layout.items()):
             if k not in kwargs:
                 kwargs[k] = v
 

@@ -57,11 +57,11 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
             tooltip=tooltips.actions[histPanel, 'HistogramControlPanel'])
 
         togList = actions.ToggleActionButton(
-            'togglePlotList',
+            'PlotListPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[histPanel, 'togglePlotList'])
+            tooltip=tooltips.actions[histPanel, 'PlotListPanel'])
 
         togOverlay = actions.ToggleActionButton(
             'toggleHistogramOverlay',

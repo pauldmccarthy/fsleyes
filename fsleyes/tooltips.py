@@ -815,22 +815,21 @@ actions = TypeDict({
     'PlotPanel.removeDataSeries' : 'Remove the most recently '
                                    'added data series.',
 
-    'TimeSeriesPanel.toggleTimeSeriesControl' : 'Show/hide the time '
+    'TimeSeriesPanel.TimeSeriesControlPanel'  : 'Show/hide the time '
                                                 'series control panel.',
-    'TimeSeriesPanel.togglePlotList'          : 'Show/hide the time '
+    'TimeSeriesPanel.PlotListPanel'           : 'Show/hide the time '
                                                 'series list panel.',
-    'HistogramPanel.toggleHistogramControl'   : 'Show/hide the histogram '
+    'HistogramPanel.HistogramControlPanel'    : 'Show/hide the histogram '
                                                 'control panel.',
-    'HistogramPanel.togglePlotList'           : 'Show/hide the histogram '
+    'HistogramPanel.PlotListPanel'            : 'Show/hide the histogram '
                                                 'list panel.',
 
-    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Show/hide the power '
+    'PowerSpectrumPanel.PowerSpectrumControlPanel'  : 'Show/hide the power '
                                                       'spectrum control '
                                                       'panel.',
-    'PowerSpectrumPanel.togglePlotList'             : 'Show/hide the power '
+    'PowerSpectrumPanel.PlotListPanel'              : 'Show/hide the power '
                                                       'spectrum list '
                                                       'panel.',
-
 
     'OrthoViewProfile.resetDisplay' : 'Reset the display on all canvases.',
     'OrthoViewProfile.centreCursor' : 'Reset location to centre of scene',

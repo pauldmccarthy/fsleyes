@@ -109,10 +109,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         """
         actionz = [self.screenshot,
                    self.importDataSeries,
-                   self.exportDataSeries,
-                   None,
-                   self.toggleOverlayList,
-                   self.togglePlotList,
+                   self.exportDataSeries]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

@@ -16,20 +16,18 @@ import numpy as np
 
 import wx
 
-import fsl.data.featimage                      as fslfeatimage
-import fsl.data.melodicimage                   as fslmelimage
-import fsl.data.image                          as fslimage
-import fsl.data.mesh                           as fslmesh
-import fsleyes_props                           as props
+import fsl.data.featimage                 as fslfeatimage
+import fsl.data.melodicimage              as fslmelimage
+import fsl.data.image                     as fslimage
+import fsl.data.mesh                      as fslmesh
+import fsleyes_props                      as props
 
-import fsleyes.overlay                         as fsloverlay
-import fsleyes.actions                         as actions
-import fsleyes.strings                         as strings
-import fsleyes.profiles.timeseriesprofile      as timeseriesprofile
-import fsleyes.plotting.timeseries             as timeseries
-import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
-import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
-from . import                                     plotpanel
+import fsleyes.overlay                    as fsloverlay
+import fsleyes.actions                    as actions
+import fsleyes.strings                    as strings
+import fsleyes.profiles.timeseriesprofile as timeseriesprofile
+import fsleyes.plotting.timeseries        as timeseries
+from . import                                plotpanel
 
 
 log = logging.getLogger(__name__)
@@ -181,10 +179,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """
         actionz = [self.screenshot,
                    self.importDataSeries,
-                   self.exportDataSeries,
-                   None,
-                   self.toggleOverlayList,
-                   self.togglePlotList,
+                   self.exportDataSeries]
 
         names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))

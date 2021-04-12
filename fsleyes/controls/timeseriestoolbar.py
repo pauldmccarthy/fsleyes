@@ -55,11 +55,11 @@ class TimeSeriesToolBar(plottoolbar.PlotToolBar):
             tooltip=tooltips.actions[tsPanel, 'TimeSeriesControlPanel'])
 
         togList = actions.ToggleActionButton(
-            'togglePlotList',
+            'PlotListPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[tsPanel, 'togglePlotList'])
+            tooltip=tooltips.actions[tsPanel, 'PlotListPanel'])
 
         mode = props.Widget('plotMode',
                             labels=strings.choices[     tsPanel, 'plotMode'],

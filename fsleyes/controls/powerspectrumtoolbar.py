@@ -54,11 +54,11 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
             tooltip=tooltips.actions[psPanel, 'PowerSpectrumControlPanel'])
 
         togList = actions.ToggleActionButton(
-            'togglePlotList',
+            'PlotListPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[psPanel, 'togglePlotList'])
+            tooltip=tooltips.actions[psPanel, 'PlotListPanel'])
 
         togControl = props.buildGUI(self, psPanel, togControl)
         togList    = props.buildGUI(self, psPanel, togList)
