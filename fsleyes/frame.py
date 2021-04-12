@@ -853,6 +853,9 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return None, []
 
+        # The settings menu for a view is a list of its
+        # actions, followed by a list of supported control
+        # types. followed by a "removeAllPanels" action
         actionItems  = []
         actionNames  = [name for (name, obj) in panel.getActions()]
         actionTitles = {}
@@ -860,6 +863,18 @@ class FSLeyesFrame(wx.Frame):
 
         if len(pluginCtrls) > 0:
             actionNames.append(None)
+
+            # ViewPanel.controlOrder can suggest an ordering
+            # of the control panels in the settings menu
+            ctrlOrder = panel.controlOrder()
+            if ctrlOrder is not None:
+                names, clss = zip(*pluginCtrls.items())
+                ctrlOrder   = [plugins.lookupControl(c) for c in ctrlOrder]
+                indices     = [ctrlOrder.index(c) if c in ctrlOrder
+                               else len(pluginCtrls)
+                               for c in clss]
+                astuples    = sorted(zip(indices, names, clss))
+                pluginCtrls = {t[1] : t[2] for t in astuples}
 
             # A bit hacky, For each plugin control, we
             # create a ToggleAction, and add it as an
@@ -899,6 +914,9 @@ class FSLeyesFrame(wx.Frame):
                 actionNames .append(name)
                 actionTitles[name] = ctrlName
 
+            # add a "remove all panels" item
+            actionNames.append('removeAllPanels')
+
         if len(actionNames) == 0:
             return None, []
 
@@ -908,9 +926,8 @@ class FSLeyesFrame(wx.Frame):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
-        if 'removeFromFrame' not in actionNames:
-            actionNames.append(None)
-            actionNames.append('removeFromFrame')
+        actionNames.append(None)
+        actionNames.append('removeFromFrame')
 
         # Most of the work is
         # done in populateMenu

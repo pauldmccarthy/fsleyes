@@ -49,8 +49,8 @@ actions = td.TypeDict({
     'ViewPanel.removeFromFrame'             : 'Ctrl-W',
     'ViewPanel.removeAllPanels'             : 'Ctrl-Alt-X',
 
-    'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
-    'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',
+    'CanvasPanel.OverlayListPanel'          : 'Ctrl-Alt-1',
+    'CanvasPanel.LocationPanel'             : 'Ctrl-Alt-2',
     'CanvasPanel.OverlayDisplayPanel'       : 'Ctrl-Alt-4',
     'CanvasPanel.CanvasSettingsPanel'       : 'Ctrl-Alt-5',
 

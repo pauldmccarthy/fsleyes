@@ -104,6 +104,15 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
+    def controlOrder():
+        """May be overridden by sub-classes. Returns a list of names of
+        control panel types, specifying a suggested order for the
+        settings menu for views of this type.
+        """
+        return None
+
+
+    @staticmethod
     def defaultLayout():
         """May be overridden by sub-classes. Should return a list of names of
         FSLeyes :class:`.ControlPanel` types which form the default layout for
