@@ -78,6 +78,16 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        histogram panel layout.
+        """
+        return ['HistogramToolBar',
+                'OverlayListPanel',
+                'PlotListPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``HistogramPanel``.
 

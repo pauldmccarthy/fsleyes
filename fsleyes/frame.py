@@ -615,47 +615,15 @@ class FSLeyesFrame(wx.Frame):
         basically amounts to adding toolbars.
         """
 
-        from fsleyes.views.orthopanel         import OrthoPanel
-        from fsleyes.views.lightboxpanel      import LightBoxPanel
-        from fsleyes.views.scene3dpanel       import Scene3DPanel
-        from fsleyes.views.timeseriespanel    import TimeSeriesPanel
-        from fsleyes.views.histogrampanel     import HistogramPanel
-        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-
         viewPanel.removeAllPanels()
+        ctrls = viewPanel.defaultLayout()
+        if ctrls is None:
+            return
 
-        if isinstance(viewPanel, TimeSeriesPanel):
-            viewPanel.toggleTimeSeriesToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
+        ctrls = [plugins.lookupControl(c) for c in ctrls]
 
-        elif isinstance(viewPanel, HistogramPanel):
-            viewPanel.toggleHistogramToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
-
-        elif isinstance(viewPanel, PowerSpectrumPanel):
-            viewPanel.togglePowerSpectrumToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
-
-        elif isinstance(viewPanel, OrthoPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleOrthoToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
-
-        elif isinstance(viewPanel, LightBoxPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleLightBoxToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
-
-        elif isinstance(viewPanel, Scene3DPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleScene3DToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
+        for ctrl in ctrls:
+            viewPanel.togglePanel(ctrl)
 
 
     def refreshViewMenu(self):

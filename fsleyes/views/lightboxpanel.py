@@ -55,6 +55,17 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        lightbox panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'LightBoxToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``LightBoxPanel``.
 

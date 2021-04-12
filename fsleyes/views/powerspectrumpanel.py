@@ -69,6 +69,16 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     """If ``True``, the x axis is scaled so that it represents frequency. """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        power spectrum panel layout.
+        """
+        return ['PowerSpectrumToolBar',
+                'OverlayListPanel',
+                'PlotListPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``PowerSpectrumPanel``.
 

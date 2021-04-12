@@ -139,6 +139,19 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             return {'showHistory' : True}
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        ortho panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'OrthoToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OrthoPanel``.
 

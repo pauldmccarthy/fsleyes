@@ -78,6 +78,11 @@ Writing a FSLeyes plugin
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
+.. warning:: FSLeyes assumes that all views, controls, and tools have unique
+             class names.  So expect problems if, for example, you define your
+             own FSLeyes control with the name ``OverlayListPanel``.
+
+
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
 definitions for custom views, controls, and tools.
 
@@ -163,6 +168,9 @@ The following functions can be used to access plugins:
    listViews
    listControls
    listTools
+   lookupView
+   lookupControl
+   lookupTool
 """
 
 
@@ -311,6 +319,30 @@ def listTools():
             tools.pop(name)
             continue
     return tools
+
+
+def _lookupPlugin(clsname, group):
+    """Looks up the FSLeyes plugin with the given class name. """
+    entries = _listEntryPoints('fsleyes_{}'.format(group))
+    for cls in entries.values():
+        if cls.__name__ == clsname:
+            return cls
+    return None
+
+
+def lookupView(clsName):
+    """Looks up the FSLeyes view with the given class name. """
+    return _lookupPlugin(clsName, 'views')
+
+
+def lookupControl(clsName):
+    """Looks up the FSLeyes control with the given class name. """
+    return _lookupPlugin(clsName, 'controls')
+
+
+def lookupTool(clsName):
+    """Looks up the FSLeyes tool with the given class name. """
+    return _lookupPlugin(clsName, 'tools')
 
 
 def _importModule(filename, modname):

@@ -103,6 +103,15 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return None
 
 
+    @staticmethod
+    def defaultLayout():
+        """May be overridden by sub-classes. Should return a list of names of
+        FSLeyes :class:`.ControlPanel` types which form the default layout for
+        this view.
+        """
+        return None
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ViewPanel``.
 

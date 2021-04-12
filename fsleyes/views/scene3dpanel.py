@@ -42,6 +42,17 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        3D panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'Scene3DToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``Scene3dPanel``.
 
