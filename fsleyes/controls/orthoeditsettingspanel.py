@@ -42,6 +42,17 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
         return orthoeditprofile.OrthoEditProfile
 
 
+    @staticmethod
+    def ignoreControl():
+        """The ``OrthoEditSettingsPanel`` is not intended to be explicitly
+        added by the user - it is added a button on the
+        :class:`OrthoEditActionToolBar`. Overriding this method tells the
+        :class:`.FSLeyesFrame` that it should not be added to the ortho panel
+        settings menu.
+        """
+        return True
+
+
     def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditSettingsPanel``.
 

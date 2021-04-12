@@ -15,6 +15,7 @@ import wx
 import fsleyes_props                 as props
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.plotpanel       as plotpanel
 import fsleyes.tooltips              as fsltooltips
 import fsleyes.displaycontext        as fsldisplay
 import fsleyes.strings               as strings
@@ -57,6 +58,15 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
        getWidgetList
        refreshDataSeriesWidgets
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``PlotControlPanel`` is restricted for use with
+        :class:`.OverlayPlotPanel` views. This method may be overridden by
+        sub-classes.
+        """
+        return [plotpanel.OverlayPlotPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):

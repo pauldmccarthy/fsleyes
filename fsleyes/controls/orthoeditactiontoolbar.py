@@ -51,6 +51,17 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         return orthoeditprofile.OrthoEditProfile
 
 
+
+    @staticmethod
+    def ignoreControl():
+        """The ``OrthoEditActionToolBar`` is not intended to be explicitly
+        added by the user - it is added via :meth:`.OrthoPanel.toggleEditMode`.
+        Overriding this method tells the :class:`.FSLeyesFrame` that it
+        should not be added to the ortho panel settings menu.
+        """
+        return True
+
+
     def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditActionToolBar``.
 
