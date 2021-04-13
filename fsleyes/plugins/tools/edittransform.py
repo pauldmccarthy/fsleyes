@@ -52,8 +52,7 @@ class EditTransformAction(actions.ToggleControlPanelAction):
     def __init__(self, overlayList, displayCtx, ortho):
         """Create an ``EditTransformAction``.
         """
-        super().__init__(overlayList, displayCtx, self.__run, ortho,
-                         EditTransformPanel)
+        super().__init__(overlayList, displayCtx, EditTransformPanel, ortho)
         self.__ortho = ortho
 
         displayCtx.addListener('selectedOverlay', self.name,
@@ -80,11 +79,6 @@ class EditTransformAction(actions.ToggleControlPanelAction):
         """
         ovl = self.displayCtx.getSelectedOverlay()
         self.enabled = isinstance(ovl, fslimage.Image)
-
-
-    def __run(self):
-        """Open/close an :class:`EditTransformPanel`. """
-        self.viewPanel.togglePanel(EditTransformPanel)
 
 
 class EditTransformPanel(ctrlpanel.ControlPanel):

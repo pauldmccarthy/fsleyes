@@ -51,8 +51,7 @@ class CropImageAction(actions.ToggleControlPanelAction):
 
     def __init__(self, overlayList, displayCtx, ortho):
         """Create  ``CropImageAction``. """
-        super().__init__(overlayList, displayCtx, self.__run, ortho,
-                         CropImagePanel)
+        super().__init__(overlayList, displayCtx, CropImagePanel, ortho)
         self.__ortho = ortho
         self.__name  = '{}_{}'.format(type(self).__name__, id(self))
 
@@ -80,11 +79,6 @@ class CropImageAction(actions.ToggleControlPanelAction):
         """
         ovl = self.displayCtx.getSelectedOverlay()
         self.enabled = isinstance(ovl, fslimage.Image)
-
-
-    def __run(self):
-        """Open/close a :class:`CropImagePanel`. """
-        self.viewPanel.togglePanel(CropImagePanel)
 
 
 class CropImagePanel(ctrlpanel.ControlPanel):
