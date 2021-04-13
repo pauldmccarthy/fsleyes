@@ -226,8 +226,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         xlabel, ylabel = self.__generateDefaultLabels(tss)
 
-        self.drawDataSeries(extraSeries=tss, xlabel=xlabel, ylabel=ylabel)
-        self.drawArtists()
+        self.canvas.drawDataSeries(extraSeries=tss,
+                                   xlabel=xlabel,
+                                   ylabel=ylabel)
+        self.canvas.drawArtists()
 
 
     def createDataSeries(self, overlay):
@@ -363,8 +365,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         to generate default labels.
         """
 
-        xlabel = self.xlabel
-        ylabel = self.ylabel
+        xlabel = self.canvas.xlabel
+        ylabel = self.canvas.ylabel
 
         if xlabel is not None:
             return xlabel, ylabel
@@ -390,7 +392,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         #      time series (e.g. MeshOpts)
 
         # Get all the unique overlays
-        overlays = [ts.overlay for ts in it.chain(timeSeries, self.dataSeries)]
+        overlays = [ts.overlay
+                    for ts in it.chain(timeSeries, self.canvas.dataSeries)]
         overlays = set(overlays)
 
         if not all([isinstance(o, fslimage.Image) for o in overlays]):

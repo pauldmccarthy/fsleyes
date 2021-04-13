@@ -148,7 +148,7 @@ messages = TypeDict({
     'All of your images must be saved to a file before a command line can be '
     'generated!',
 
-    'PlotPanel.preparingData'          : 'Preparing data - please wait...',
+    'PlotCanvas.preparingData'          : 'Preparing data - please wait...',
 
     'HistogramPanel.calcHist'           : 'Calculating histogram for {} ...',
 

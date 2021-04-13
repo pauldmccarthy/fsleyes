@@ -96,7 +96,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         """
 
         tsPanel = self.viewPanel
-        canvas  = tsPanel.getCanvas()
+        canvas  = tsPanel.canvas.getCanvas()
         overlay = self.displayCtx.getSelectedOverlay()
         opts    = self.displayCtx.getOpts(overlay)
 
@@ -140,8 +140,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         if canvasPos is None: xvalue = None
         else:                 xvalue = canvasPos[0]
 
-        tsPanel = self.viewPanel
-        axis    = tsPanel.getAxis()
+        axis = self.viewPanel.canvas.getAxis()
 
         self.__volumeLine = axis.axvline(0, c='#000080', lw=3)
 
@@ -169,4 +168,4 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         self.__volumeLine.remove()
         self.__volumeLine = None
 
-        self.viewPanel.getCanvas().draw()
+        self.viewPanel.canvas.getCanvas().draw()

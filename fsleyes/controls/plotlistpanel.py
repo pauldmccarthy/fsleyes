@@ -89,9 +89,9 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         self.__dsList.Bind(elistbox.EVT_ELB_EDIT_EVENT,   self.__onListEdit)
         self.__dsList.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__onListSelect)
 
-        self.__plotPanel.addListener('dataSeries',
-                                     self.name,
-                                     self.__dataSeriesChanged)
+        self.__plotPanel.canvas.addListener('dataSeries',
+                                            self.name,
+                                            self.__dataSeriesChanged)
 
         self.__dataSeriesChanged()
         self.Layout()
@@ -104,7 +104,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         :meth:`.ControlPanel.destroy` method.
         """
 
-        self.__plotPanel.removeListener('dataSeries', self.name)
+        self.__plotPanel.canvas.removeListener('dataSeries', self.name)
         self.__plotPanel = None
         self.__dsList.Clear()
         ctrlpanel.ControlPanel.destroy(self)
@@ -118,7 +118,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
 
         self.__dsList.Clear()
 
-        for ds in self.__plotPanel.dataSeries:
+        for ds in self.__plotPanel.canvas.dataSeries:
             widg = DataSeriesWidget(self, ds)
             self.__dsList.Append(
                 ds.label,

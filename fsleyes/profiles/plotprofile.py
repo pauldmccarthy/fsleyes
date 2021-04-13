@@ -61,8 +61,8 @@ class PlotProfile(profiles.Profile):
                                   displayCtx,
                                   modes)
 
-        self.__canvas  = viewPanel.getCanvas()
-        self.__axis    = viewPanel.getAxis()
+        self.__canvas  = viewPanel.canvas.getCanvas()
+        self.__axis    = viewPanel.canvas.getAxis()
 
         # Pan/zoom functionality is actually
         # implemented by the NavigationToolbar2Wx
@@ -106,9 +106,9 @@ class PlotProfile(profiles.Profile):
         xlims = list(self.__axis.get_xlim())
         ylims = list(self.__axis.get_ylim())
 
-        with props.suppress(self.viewPanel, 'limits'):
-            self.viewPanel.limits.x = xlims
-            self.viewPanel.limits.y = ylims
+        with props.suppress(self.viewPanel.canvas, 'limits'):
+            self.viewPanel.canvas.limits.x = xlims
+            self.viewPanel.canvas.limits.y = ylims
 
 
     def _panzoomModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
