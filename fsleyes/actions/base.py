@@ -92,6 +92,10 @@ class Action(props.HasProperties):
         loaded as plugins. Can be used to tell the ``plugins`` module that
         a particular ``Action`` should not be added as an option to the
         FSLeyes Tools menu.
+
+        Note that this method must be implemented on the class that is to
+        be ignored - inherited implementations from base classes are not
+        considered.
         """
         return False
 

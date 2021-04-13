@@ -39,6 +39,10 @@ class ControlMixin:
         The default implementation returns ``False``, but may be overridden
         by sub-classes to control whether a menu item should be added for
         the control in the settings menu for the relevant FSLeyes view(s).
+
+        Note that this method must be implemented on the class that is to
+        be ignored - inherited implementations from base classes are not
+        considered.
         """
         return False
 

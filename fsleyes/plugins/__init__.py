@@ -180,6 +180,7 @@ import                   sys
 import                   glob
 import                   pkgutil
 import                   logging
+import                   inspect
 import                   importlib
 import importlib.util as imputil
 import                   collections
@@ -189,6 +190,7 @@ import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
 import fsleyes.strings               as strings
 import fsleyes.views.viewpanel       as viewpanel
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.controls.controlpanel as ctrlpanel
 
 
@@ -373,6 +375,12 @@ def _findEntryPoints(mod, ignoreBuiltins):
 
     entryPoints = collections.defaultdict(dict)
 
+    # Action.ignoreTool and ControlMixin.ignoreControl need
+    # to be implemented on the specific class - inherited
+    # base class implementations are not considered.
+    def class_defines_method(cls, methname):
+        return methname in cls.__dict__
+
     for name in dir(mod):
 
         item  = getattr(mod, name)
@@ -382,6 +390,7 @@ def _findEntryPoints(mod, ignoreBuiltins):
             continue
 
         bases = [viewpanel.ViewPanel,
+                 canvaspanel.CanvasPanel,
                  ctrlpanel.ControlPanel,
                  ctrlpanel.ControlToolBar,
                  ctrlpanel.SettingsPanel,
@@ -395,9 +404,13 @@ def _findEntryPoints(mod, ignoreBuiltins):
 
         # ignoreControl/ignoreTool may be overridden
         # to tell us to ignore this plugin
-        if issubclass(item, ctrlpanel.ControlMixin) and item.ignoreControl():
+        if issubclass(item, ctrlpanel.ControlMixin)    and \
+           class_defines_method(item, 'ignoreControl') and \
+           item.ignoreControl():
             continue
-        if issubclass(item, actions.Action) and item.ignoreTool():
+        if issubclass(item, actions.Action)         and \
+           class_defines_method(item, 'ignoreTool') and \
+           item.ignoreTool():
             continue
 
         if   issubclass(item, viewpanel.ViewPanel):      group = 'views'
