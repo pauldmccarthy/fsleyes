@@ -21,6 +21,8 @@ def test_PearsonCorrelateAction():
 
 def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
 
+    pcorr = correlate.PearsonCorrelateAction(overlayList, displayCtx, panel)
+
     displayCtx = panel.displayCtx
     pcorr = correlate.PearsonCorrelateAction(overlayList, displayCtx, panel)
     img3d = Image(np.random.randint(0, 1000, (10, 10, 10)))
