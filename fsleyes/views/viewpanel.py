@@ -23,6 +23,7 @@ import fsleyes_widgets               as fwidgets
 
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
+import fsleyes.plugins               as plugins
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.profiles              as profiles
 import fsleyes.strings               as strings
@@ -197,11 +198,27 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         ff         = wx.MiniFrame(self)
         size       = ff.GetSize().Get()
         clientSize = ff.GetClientSize().Get()
-
         self.__floatOffset = (size[0] - clientSize[0],
                               size[1] - clientSize[1])
-
         ff.Destroy()
+
+        # A bit hacky, For each plugin control, we create
+        # a ToggleControlPanelAction, and add it as an
+        # attribute on the view panel. Then it will work
+        # with the ActionProvider interface, and hence the
+        # FSLEeyesFrame.populateMenu method.
+        for ctrlType in plugins.listControls(type(self)).values():
+            # We add toggle actions as attributes to the
+            # ViewPanel instance, which is horribly hacky
+            # and will hopefully be changed in the future.
+            name = ctrlType.__name__
+            act  = actions.ToggleControlPanelAction(
+                self.overlayList,
+                self.displayCtx,
+                ctrlType,
+                self,
+                name=name)
+            setattr(self, name, act)
 
 
     def destroy(self):

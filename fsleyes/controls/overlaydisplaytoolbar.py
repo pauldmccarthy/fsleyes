@@ -252,7 +252,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         # Buttons which toggle overlay
         # info and display panel
         # This is really hacky. The FSLeyesFrame
-        # setattrs toggleControlPanelAction for every
+        # setattrs a ToggleControlPanelAction for every
         # built-in control to the view panel object,
         # so here we access attributes called
         # "OverlayDisplayPanel" and "OverlayInfoPanel".

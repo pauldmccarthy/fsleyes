@@ -876,42 +876,12 @@ class FSLeyesFrame(wx.Frame):
                 astuples    = sorted(zip(indices, names, clss))
                 pluginCtrls = {t[1] : t[2] for t in astuples}
 
-            # A bit hacky, For each plugin control, we
-            # create a ToggleAction, and add it as an
-            # attribute on the view panel. Then it will
-            # work with the ActionProvider interface,
-            # and hence the populateMenu method.
+            # ViewPanels have a ToggleControlPanelActiopn
+            # added as an attributee for every supported
+            # control panel
             for ctrlName, ctrlType in pluginCtrls.items():
-
-                # Use default arguments to togglePanel
-                # if the class specifies them
-                kwargs = ctrlType.defaultLayout()
-                if kwargs is None:
-                    kwargs = {}
-
-                # If defaultLayout specifies a
-                # title, it takes precedence.
-                if 'title' not in kwargs:
-                    kwargs['title'] = ctrlName
-                else:
-                    ctrlName = kwargs['title']
-
-                # We add toggle actions as attributes to the
-                # ViewPanel instance, which is horribly hacky
-                # and will hopefully be changed in the future.
-                # This method may get called multiple times,
-                # so we create the action only on the first
-                # time.
                 name = ctrlType.__name__
-                if not hasattr(panel, name):
-                    act = actions.ToggleControlPanelAction(
-                        self.overlayList,
-                        self.displayCtx,
-                        ctrlType,
-                        panel,
-                        name=name)
-                    setattr(panel, name, act)
-                actionNames .append(name)
+                actionNames.append(name)
                 actionTitles[name] = ctrlName
 
             # add a "remove all panels" item
