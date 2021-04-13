@@ -285,13 +285,6 @@ class PearsonCorrelateAction(CorrelateAction):
     and all other voxels.
     """
 
-
-    @staticmethod
-    def ignoreTool():
-        """See :meth:`CorrelateAction.ignoreTool`. """
-        return False
-
-
     def calculateCorrelation(self, seed, data):
         """Calculates Pearson correlation between the data at the specified
         seed voxel, and all other voxels.

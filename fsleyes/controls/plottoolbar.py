@@ -34,6 +34,12 @@ class PlotToolBar(ctrlpanel.ControlToolBar):
         return [plotpanel.OverlayPlotPanel]
 
 
+    @staticmethod
+    def ignoreControl():
+        """The ``PlotToolBar`` is not intended to be used directly. """
+        return True
+
+
     def __init__(self, parent, overlayList, displayCtx, plotPanel):
         """Create a ``PlotToolBar``.
 

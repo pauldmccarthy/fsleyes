@@ -24,8 +24,7 @@ import fsleyes.strings               as strings
 class PlotControlPanel(ctrlpanel.SettingsPanel):
     """The ``PlotControlPanel`` is a *FSLeyes control* panel which allows
     the user to control a :class:`.OverlayPlotPanel`. The ``PlotControlPanel``
-    may be used as is, or may be sub-classed for more customisation.
-
+    is intended to be sub-classed.
 
     Sub-class implementations may:
 
@@ -67,6 +66,12 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         sub-classes.
         """
         return [plotpanel.OverlayPlotPanel]
+
+
+    @staticmethod
+    def ignoreControl():
+        """The ``PlotControlPanel`` is not intended to be used directly. """
+        return True
 
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):
