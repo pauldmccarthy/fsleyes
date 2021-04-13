@@ -64,12 +64,12 @@ def _test_custom(frame, overlayList, displayCtx):
     ortho = frame.addViewPanel(OrthoPanel)
     ps    = frame.addViewPanel(PowerSpectrumPanel)
 
-    ortho.toggleAtlasPanel()
-    ortho.toggleLookupTablePanel()
+    ortho.togglePanel(AtlasPanel)
+    ortho.togglePanel(LookupTablePanel)
     ortho.sceneOpts.showColourBar = True
 
-    ps.togglePlotList()
-    ps.togglePowerSpectrumControl()
+    ps.togglePanel(PlotListPanel)
+    ps.togglePanel(PowerSpectrumControlPanel)
 
     realYield(50)
     layouts.saveLayout(frame, 'custom_custom')

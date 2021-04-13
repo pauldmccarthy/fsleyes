@@ -55,7 +55,8 @@ def _test_AddROIHistogramAction(panel, overlayList, displayCtx):
 
     act = arh.AddROIHistogramAction(overlayList, displayCtx, panel)
 
-    with mock.patch('fsleyes.actions.addmaskdataseries.MaskDialog', MaskDialog):
+    with mock.patch('fsleyes.plugins.tools.addmaskdataseries.MaskDialog',
+                    MaskDialog):
         displayCtx.selectOverlay(other)
         assert not act.enabled
         displayCtx.selectOverlay(mask)

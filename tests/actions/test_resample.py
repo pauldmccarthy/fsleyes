@@ -68,7 +68,8 @@ def _test_resample(panel, overlayList, displayCtx):
 
     act = resample.ResampleAction(overlayList, displayCtx, panel.frame)
 
-    with mock.patch('fsleyes.actions.resample.ResampleDialog', ResampleDialog):
+    with mock.patch('fsleyes.plugins.tools.resample.ResampleDialog',
+                    ResampleDialog):
 
         img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
         overlayList.append(img)

@@ -18,7 +18,7 @@ def _test_filetreepanel(ortho, overlayList, displayCtx):
 
     with _query(realdata=True) as query:
 
-        ortho.toggleFileTreePanel()
+        ortho.togglePanel(FileTreePanel)
         realYield()
 
         ftpanel = [p for p in ortho.getPanels()

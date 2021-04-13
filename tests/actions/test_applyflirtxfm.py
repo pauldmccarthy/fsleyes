@@ -106,7 +106,7 @@ def _test_promptForFlirtFiles(panel, overlayList, displayCtx):
     overlayList.append(ovl)
     realYield()
 
-    with mock.patch('fsleyes.actions.applyflirtxfm.FlirtFileDialog',
+    with mock.patch('fsleyes.plugins.tools.applyflirtxfm.FlirtFileDialog',
                     MockFlirtFileDialog):
         MockFlirtFileDialog.ShowModalRet = wx.ID_CANCEL
         got = applyflirtxfm.promptForFlirtFiles(
@@ -205,7 +205,7 @@ def test_ApplyFlirtXfmAction():
     run_with_orthopanel(_test_ApplyFlirtXfmAction)
 
 def _test_ApplyFlirtXfmAction(panel, overlayList, displayCtx):
-    with mock.patch('fsleyes.actions.applyflirtxfm.FlirtFileDialog',
+    with mock.patch('fsleyes.plugins.tools.applyflirtxfm.FlirtFileDialog',
                     MockFlirtFileDialog), tempdir():
 
         act = applyflirtxfm.ApplyFlirtXfmAction(

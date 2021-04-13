@@ -54,7 +54,8 @@ def _test_AddMaskDataSeriesAction(panel, overlayList, displayCtx):
 
     act = amds.AddMaskDataSeriesAction(overlayList, displayCtx, panel)
 
-    with mock.patch('fsleyes.actions.addmaskdataseries.MaskDialog', MaskDialog):
+    with mock.patch('fsleyes.plugins.tools.addmaskdataseries.MaskDialog',
+                    MaskDialog):
         displayCtx.selectOverlay(mask)
         assert not act.enabled
         displayCtx.selectOverlay(img)

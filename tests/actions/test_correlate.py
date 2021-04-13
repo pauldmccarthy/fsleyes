@@ -22,6 +22,7 @@ def test_PearsonCorrelateAction():
 def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
 
     displayCtx = panel.displayCtx
+    pcorr = correlate.PearsonCorrelateAction(overlayList, displayCtx, panel)
     img3d = Image(np.random.randint(0, 1000, (10, 10, 10)))
     img4d = Image(np.random.randint(0, 1000, (10, 10, 10, 50)))
     overlayList.extend((img3d, img4d))
@@ -30,11 +31,11 @@ def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
     displayCtx.location = opts.transformCoords((5, 5, 5), 'voxel', 'display')
     displayCtx.selectOverlay(img3d)
     realYield()
-    assert not panel.pearsonCorrelation.enabled
+    assert not pcorr.enabled
     displayCtx.selectOverlay(img4d)
     realYield()
-    assert panel.pearsonCorrelation.enabled
-    panel.pearsonCorrelation()
+    assert pcorr.enabled
+    pcorr()
     realYield(100)
     assert len(overlayList) == 3
     corr = overlayList[2]
