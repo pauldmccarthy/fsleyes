@@ -133,6 +133,17 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                 'PlotListPanel']
 
 
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'PlotListPanel',
+                'TimeSeriesToolBar',
+                'TimeSeriesControlPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``TimeSeriesPanel``.
 

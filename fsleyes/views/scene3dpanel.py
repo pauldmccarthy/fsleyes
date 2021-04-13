@@ -53,6 +53,22 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                 'LocationPanel']
 
 
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'LocationPanel',
+                'OverlayInfoPanel',
+                'OverlayDisplayPanel',
+                'CanvasSettingsPanel',
+                'AtlasPanel',
+                'OverlayDisplayToolBar',
+                'Scene3DToolBar',
+                'FileTreePanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``Scene3dPanel``.
 
