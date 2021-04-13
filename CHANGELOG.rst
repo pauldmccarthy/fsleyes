@@ -69,7 +69,8 @@ Changed
   display coordinate system, in addition to being positioned at pixel locations
   on a canvas.
 * Changes to the FSLeyes plugin system to ease the development of FSLeyes
-  controls that use custom interaction profiles.
+  controls that use custom interaction profiles, and to improve switching
+  between different interaction proflies.
 * The FSLeyes plugin system now supports tools which are bound to a specific
   view panel.
 * Many built-in FSLeyes control panels and tools have been migrated into the
