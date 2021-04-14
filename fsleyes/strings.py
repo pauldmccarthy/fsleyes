@@ -497,6 +497,9 @@ titles = TypeDict({
 
     'SaveAnnotationsAction.saveFileError' : 'Error saving file',
     'LoadAnnotationsAction.loadFileError' : 'Error loading file',
+
+    'ExportSampledDataDialog'  : 'Export sampled data to file',
+    'SampleLinePanel.savefile' : 'Select file to save sampled data to',
 })
 
 
@@ -978,6 +981,10 @@ labels = TypeDict({
     'SampleLinePanel.lineWidth'  : 'Line width',
     'SampleLinePanel.lineStyle'  : 'Line style',
 
+    'ExportSampledDataDialog.ok'     : 'Ok',
+    'ExportSampledDataDialog.cancel' : 'Cancel',
+    'ExportSampledDataDialog.series' : 'Series',
+    'ExportSampledDataDialog.coords' : 'Save coordinates',
 })
 
 
@@ -1410,6 +1417,12 @@ choices = TypeDict({
                                    'x'    : 'Normalise along X axis',
                                    'y'    : 'Normalise along Y axis',
                                    'xy'   : 'Normalise along X and Y axes'},
+
+    'ExportSampledDataDialog.saveCoordinates' : {
+        'no'    : 'Do not save coordinates',
+        'voxel' : 'Save voxel coordinates',
+        'world' : 'Save world coordinates',
+    },
 })
 
 

@@ -11,6 +11,7 @@ an :class:`.OrthoPanel`, and plot the data along that line from the currently
 selected :class:`.Image` overlay.
 """
 
+import                  os
 import                  copy
 
 import numpy         as np
@@ -18,6 +19,7 @@ import scipy.ndimage as ndimage
 import                  wx
 
 import fsl.data.image                             as fslimage
+import fsl.utils.settings                         as fslsettings
 import fsl.transform.affine                       as affine
 import fsleyes_widgets.widgetlist                 as widgetlist
 import fsleyes_props                              as props
@@ -271,6 +273,10 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         # Controls which allow the user to select
         # interpolation/resolution, line colour, etc
         widgets = widgetlist.WidgetList(self)
+        legend = props.makeWidget(
+            widgets, canvas, 'legend',
+            labels=strings.properties['PlotCanvas.legend'])
+
         interp = props.makeWidget(
             widgets, self, 'interp', labels=strings.choices[self, 'interp'])
         resolution = props.makeWidget(
@@ -285,14 +291,11 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         lineStyle = props.makeWidget(
             widgets, self, 'lineStyle',
             labels=strings.choices['DataSeries.lineStyle'])
-        legend = props.makeWidget(
-            widgets, canvas, 'legend',
-            labels=strings.properties['PlotCanvas.legend'])
 
+        widgets.AddWidget(legend,     strings.labels[self, 'legend'])
         widgets.AddWidget(interp,     strings.labels[self, 'interp'])
         widgets.AddWidget(resolution, strings.labels[self, 'resolution'])
         widgets.AddWidget(normalise,  strings.labels[self, 'normalise'])
-        widgets.AddWidget(legend,     strings.labels[self, 'legend'])
         widgets.AddWidget(colour,     strings.labels[self, 'colour'])
         widgets.AddWidget(lineWidth,  strings.labels[self, 'lineWidth'])
         widgets.AddWidget(lineStyle,  strings.labels[self, 'lineStyle'])
@@ -301,8 +304,6 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         # sample lines from the plot to save the
         # data to a file, and to save a screenshot
         # of the plot
-        #
-        # (todo)
         ctrlSizer  = wx.BoxSizer(wx.HORIZONTAL)
         screenshot = actions.ActionButton(
             'screenshot',
@@ -426,8 +427,37 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
     @actions.action
     def export(self):
-        if self.__current is None:
+        """Prompts the user to save the sampled data to a file. """
+
+        if self.__current is None: series = []
+        else:                   series    = [self.__current]
+
+        series.extend(reversed(self.__canvas.dataSeries))
+
+        if len(series) == 0:
             return
+
+        parent = self.GetParent()
+        dlg    = ExportSampledDataDialog(parent, series)
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        series = dlg.GetSeries()
+        coords = dlg.GetCoordinates()
+
+        fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
+        msg     = strings.titles[self, 'savefile']
+        dlg     = wx.FileDialog(parent,
+                                message=msg,
+                                defaultDir=fromDir,
+                                defaultFile='sample.txt',
+                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        filename = dlg.GetPath()
+
 
 
     @actions.action
@@ -551,3 +581,112 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         if self.__current is None: extras = None
         else:                      extras = [self.__current]
         self.__canvas.drawDataSeries(extraSeries=extras, refresh=True)
+
+
+class ExportSampledDataDialog(wx.Dialog):
+    """The ``ExportSampledDataDialog`` is used by the
+    :meth:`SampleLinePanel.export` method to ask the user which sample data
+    they want to save, and whether they want to save the sample point
+    coordinates to file as well as the samples themselves.
+    """
+
+
+    def __init__(self, parent, series):
+        """Create an ``ExportSampledDataDialog``.
+
+        :arg parent: ``wx`` parent object
+        :arg series: Sequence of ``SampleLineDataSeries`` instances - the user
+                     is asked to choose one.
+        """
+        title        = strings.titles[self]
+        coords       = strings.choices[self, 'saveCoordinates']
+        seriesLabels = [s.label for s in series]
+        coordsLabels = list(coords.values())
+        coords       = list(coords.keys())
+
+        wx.Dialog.__init__(self,
+                           parent,
+                           title=title,
+                           style=wx.DEFAULT_DIALOG_STYLE)
+
+        self.__series       = series
+        self.__coords       = coords
+        self.__coordsChoice = wx.Choice(self, choices=coordsLabels)
+        self.__seriesChoice = wx.Choice(self, choices=seriesLabels)
+
+        self.__coordsChoice.SetSelection(0)
+        self.__seriesChoice.SetSelection(0)
+
+        # todo title, better layout
+
+        seriesLabel = wx.StaticText(self)
+        coordsLabel = wx.StaticText(self)
+        ok          = wx.Button(self, id=wx.OK)
+        cancel      = wx.Button(self, id=wx.CANCEL)
+
+        seriesLabel.SetLabel(strings.labels[self, 'series'])
+        coordsLabel.SetLabel(strings.labels[self, 'coords'])
+        ok         .SetLabel(strings.labels[self, 'ok'])
+        cancel     .SetLabel(strings.labels[self, 'cancel'])
+
+        ok.SetDefault()
+
+        ok    .Bind(wx.EVT_BUTTON, self.__onOk)
+        cancel.Bind(wx.EVT_BUTTON, self.__onCancel)
+
+        seriesSizer = wx.BoxSizer(wx.HORIZONTAL)
+        coordsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer   = wx.BoxSizer(wx.VERTICAL)
+
+        seriesSizer.Add((10, 10))
+        seriesSizer.Add(seriesLabel)
+        seriesSizer.Add((10, 10))
+        seriesSizer.Add(self.__seriesChoice)
+        seriesSizer.Add((10, 10))
+        coordsSizer.Add((10, 10))
+        coordsSizer.Add(coordsLabel)
+        coordsSizer.Add((10, 10))
+        coordsSizer.Add(self.__coordsChoice)
+        coordsSizer.Add((10, 10))
+
+        buttonSizer.Add((10, 10))
+        buttonSizer.Add(ok)
+        buttonSizer.Add((10, 10))
+        buttonSizer.Add(cancel)
+        buttonSizer.Add((10, 10))
+
+        mainSizer.Add((10, 10))
+        mainSizer.Add(seriesSizer)
+        mainSizer.Add((10, 10))
+        mainSizer.Add(coordsSizer)
+        mainSizer.Add((10, 10))
+        mainSizer.Add(buttonSizer)
+        mainSizer.Add((10, 10))
+
+        self.SetSizer(mainSizer)
+        self.Layout()
+
+
+    def __onOk(self, ev):
+        """Called when the ok button is pushed. Closes the dialog. """
+        self.EndModal(wx.ID_OK)
+
+
+    def __onCancel(self, ev):
+        """Called when the cancel button is pushed. Closes the dialog. """
+        self.EndModal(wx.ID_CANCEL)
+
+
+    def GetCoordinates(self):
+        """Return one of ``'none'``, ``'voxel'``, or ``'world'``, denoting
+        the user's preference for saving coordinates to the file.
+        """
+        idx = self.__coordsChoice.GetSelection()
+        return self.__coords[idx]
+
+
+    def GetSeries(self):
+        """Return the :class:`.SampleLineDataSeries` that was selected."""
+        idx = self.__seriesChoice.GetSelection()
+        return self.__series[idx]
