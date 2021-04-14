@@ -402,6 +402,7 @@ titles = TypeDict({
 
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
+    'SampleLinePanel'            : 'Sample along line',
 
     'FileTreePanel'              : 'File tree',
 
@@ -533,6 +534,7 @@ actions = TypeDict({
     'LoadAnnotationsAction'       : 'Load annotations from file',
     'EditTransformAction'         : 'Nudge',
     'CropImageAction'             : 'Crop',
+    'SampleLineAction'            : 'Sample along line',
     'AddMaskDataSeriesAction'     : 'Add time series from ROI',
     'AddROIHistogramAction'       : 'Add histogram from ROI',
 
@@ -961,6 +963,14 @@ labels = TypeDict({
     'AnnotationPanel.Rect'           : 'Rectangle',
     'AnnotationPanel.Ellipse'        : 'Ellipse',
     'AnnotationPanel.TextAnnotation' : 'Text',
+
+
+    'SampleLinePanel.voxelfrom' : 'From voxel coordinates:',
+    'SampleLinePanel.voxelto'   : 'to:',
+    'SampleLinePanel.worldfrom' : 'From world coordinates:',
+    'SampleLinePanel.worldto'   : 'to:',
+    'SampleLinePanel.length'    : 'Length:',
+
 })
 
 

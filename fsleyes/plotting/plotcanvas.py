@@ -55,6 +55,10 @@ class PlotCanvas(props.HasProperties):
     :meth:`drawArtists`, so you can alternately call those methods directly,
     or pass your own  ``drawFunc`` when creating a ``PlotCanvas``.
 
+    The ``PlotCanvas`` itself is not a ``wx`` object, so cannot be displayed -
+    the ``matplotilb Canvas`` object, accessible through the :meth:`canvas`
+    method, is what you should add to a ``wx`` parent object.
+
 
     **Data series**
 
