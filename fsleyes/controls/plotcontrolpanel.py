@@ -158,9 +158,13 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         self.displayCtx .removeListener('selectedOverlay', self.name)
         self.overlayList.removeListener('overlays',        self.name)
 
-        plotCanvas = self.__plotPanel.canvas
-        plotCanvas.removeListener('xAutoScale', self.name)
-        plotCanvas.removeListener('yAutoScale', self.name)
+        # the plot panel may have already
+        # cleared its canvas ref before we
+        # get destroyed
+        canvas = self.__plotPanel.canvas
+        if canvas is not None:
+            canvas.removeListener('xAutoScale', self.name)
+            canvas.removeListener('yAutoScale', self.name)
 
         self.__plotPanel   = None
         self.__plotWidgets = None

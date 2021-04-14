@@ -346,13 +346,16 @@ class RangePolygon(patches.Polygon):
         hsPanel = self._rp_hsPanel
         canvas  = hsPanel.canvas
 
+        # plot panel may have already cleared
+        # its ref if it is being destroyed too
+        if canvas is not None:
+            canvas.removeListener('smooth', self._rp_name)
+            if self in canvas.artists:
+                canvas.artists.remove(self)
+
         hs.removeGlobalListener(           self._rp_name)
-        canavs .removeListener('smooth',   self._rp_name)
         hsPanel.removeListener('histType', self._rp_name)
         hsPanel.removeListener('plotType', self._rp_name)
-
-        if self in hsPanel.artists:
-            hsPanel.artists.remove(self)
 
         self._rp_hs      = None
         self._rp_hsPanel = None

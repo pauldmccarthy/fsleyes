@@ -11,21 +11,17 @@
 
 import logging
 
-import wx
-
 import numpy as np
 
-import fsl.data.image                             as fslimage
-import fsl.data.mesh                              as fslmesh
-import fsl.data.melodicimage                      as fslmelimage
-import fsleyes_props                              as props
+import fsl.data.image                       as fslimage
+import fsl.data.mesh                        as fslmesh
+import fsl.data.melodicimage                as fslmelimage
+import fsleyes_props                        as props
 
-import fsleyes.actions                            as actions
-import fsleyes.profiles.plotprofile               as plotprofile
-import fsleyes.plotting.powerspectrumseries       as psseries
-import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
-import fsleyes.controls.powerspectrumtoolbar      as powerspectrumtoolbar
-from . import                                        plotpanel
+import fsleyes.actions                      as actions
+import fsleyes.views.plotpanel              as plotpanel
+import fsleyes.profiles.plotprofile         as plotprofile
+import fsleyes.plotting.powerspectrumseries as psseries
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +33,8 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     :class:`.PowerSpectrumSeries` to plot the power spectra of overlay data.
 
 
-    A couple of control panels may be shown on a ``PowerSpectrumPanel``:
+    A couple of control panels may be shown on a ``PowerSpectrumPanel`` via
+    :meth:`.ViewPanel.togglePanel`.
 
     .. autosummary::
        :nosignatures:
@@ -146,14 +143,15 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         if not self or self.destroyed:
             return
 
-        pss = self.getDataSeriesToPlot()
+        canvas = self.canvas
+        pss    = self.getDataSeriesToPlot()
 
         for ps in pss:
             with props.suppress(ps, 'label'):
                 ps.label = ps.makeLabel()
 
-        self.drawDataSeries(extraSeries=pss)
-        self.drawArtists()
+        canvas.drawDataSeries(extraSeries=pss)
+        canvas.drawArtists()
 
 
     def createDataSeries(self, overlay):
