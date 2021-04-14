@@ -66,6 +66,19 @@ class SampleLineProfile(orthoviewprofile.OrthoViewProfile):
         self.__sampleEnd   = None
 
 
+    def destroy(self):
+        """Called when this ``SampleLineProfile`` is no longer used.
+        Clears the current line annotation, if there is one, then calls
+        the base class ``destroy`` method.
+        """
+        if self.__sampleLine is not None:
+            line = self.__sampleLine
+            line.annot.dequeue(line, hold=True, fixed=False)
+            self.__sampleLine = None
+            line.annot.canvas.Refresh()
+
+        super().destroy()
+
     @property
     def sampleLine(self):
         """Returns a reference to the :class:`.Line` annotation that has most

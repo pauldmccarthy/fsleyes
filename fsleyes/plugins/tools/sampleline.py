@@ -22,7 +22,10 @@ import fsl.transform.affine                       as affine
 import fsleyes_widgets.widgetlist                 as widgetlist
 import fsleyes_props                              as props
 import fsleyes.strings                            as strings
+import fsleyes.tooltips                           as tooltips
+import fsleyes.icons                              as fslicons
 import fsleyes.actions                            as actions
+import fsleyes.actions.screenshot                 as screenshot
 import fsleyes.views.orthopanel                   as orthopanel
 import fsleyes.controls.controlpanel              as ctrlpanel
 import fsleyes.plotting                           as plotting
@@ -90,14 +93,14 @@ class SampleLineDataSeries(plotting.DataSeries):
     """
 
 
-    interp = props.Choice((0, 1, 2, 3), default=1)
+    interp = props.Choice((0, 1, 2, 3), default=0)
     """How to interpolate the sampled data when it is plotted. The value is
     used directly as the ``order`` parameter to the
     ``scipy.ndimage.map_coordinates`` function.
     """
 
 
-    resolution = props.Int(minval=2, maxval=1000, default=100, clamped=True)
+    resolution = props.Int(minval=2, maxval=200, default=100, clamped=False)
     """The number of points (uniformly spaced) to sample along the line. """
 
 
@@ -253,10 +256,12 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
         # plot which displays the sampled data
         canvas = plotcanvas.PlotCanvas(self, drawFunc=self.__draw)
+        canvas.canvas.SetMinSize((-1, 150))
 
         self.__ortho   = ortho
         self.__profile = profile
         self.__canvas  = canvas
+        self.__current = None
 
         # initial settings
         self.colour    = '#000050'
@@ -265,7 +270,7 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
         # Controls which allow the user to select
         # interpolation/resolution, line colour, etc
-        widgets = widgetlist.WidgetList(self, minHeight=24)
+        widgets = widgetlist.WidgetList(self)
         interp = props.makeWidget(
             widgets, self, 'interp', labels=strings.choices[self, 'interp'])
         resolution = props.makeWidget(
@@ -298,7 +303,33 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         # of the plot
         #
         # (todo)
-        ctrlSizer = wx.BoxSizer(wx.HORIZONTAL)
+        ctrlSizer  = wx.BoxSizer(wx.HORIZONTAL)
+        screenshot = actions.ActionButton(
+            'screenshot',
+            icon=fslicons.findImageFile('camera24'),
+            tooltip=tooltips.actions['PlotPanel.screenshot'])
+        export = actions.ActionButton(
+            'export',
+            icon=fslicons.findImageFile('exportDataSeries24'),
+            tooltip=tooltips.actions['PlotPanel.exportDataSeries'])
+        add = actions.ActionButton(
+            'addDataSeries',
+            icon=fslicons.findImageFile('add24'),
+            tooltip=tooltips.actions[self, 'addDataSeries'])
+        remove = actions.ActionButton(
+            'removeDataSeries',
+            icon=fslicons.findImageFile('remove24'),
+            tooltip=tooltips.actions[self, 'removeDataSeries'])
+
+        screenshot = props.buildGUI(self, self, screenshot)
+        export     = props.buildGUI(self, self, export)
+        add        = props.buildGUI(self, self, add)
+        remove     = props.buildGUI(self, self, remove)
+
+        ctrlSizer.Add(screenshot, flag=wx.EXPAND)
+        ctrlSizer.Add(export,     flag=wx.EXPAND)
+        ctrlSizer.Add(add,        flag=wx.EXPAND)
+        ctrlSizer.Add(remove,     flag=wx.EXPAND)
 
         # Labels which show the start and end
         # coordinates of the sample line in voxel
@@ -314,6 +345,12 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         wtoval   = wx.StaticText(self)
         lenlbl   = wx.StaticText(self)
         lenval   = wx.StaticText(self)
+
+        self.__vfromval = vfromval
+        self.__vtoval   = vtoval
+        self.__wfromval = wfromval
+        self.__wtoval   = wtoval
+        self.__lenval   = lenval
 
         vfromlbl.SetLabel(strings.labels[self, 'voxelfrom'])
         vtolbl  .SetLabel(strings.labels[self, 'voxelto'])
@@ -350,15 +387,69 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         profile.registerHandler('LeftMouseDrag', self.name, self.__onMouseDrag)
         profile.registerHandler('LeftMouseUp',   self.name, self.__onMouseUp)
 
+        self.addListener('interp',     self.name, canvas.asyncDraw)
+        self.addListener('resolution', self.name, canvas.asyncDraw)
+        self.addListener('normalise',  self.name, canvas.asyncDraw)
+        self.addListener('colour',     self.name, canvas.asyncDraw)
+        self.addListener('lineWidth',  self.name, canvas.asyncDraw)
+        self.addListener('lineStyle',  self.name, canvas.asyncDraw)
+
 
     def destroy(self):
         """Called when this ``SampleLinePanel`` is no longer needed. Clears
         references, and calls :meth:`.ControlPanel.destroy`.
         """
         super().destroy()
+        self.__canvas.destroy()
         self.__ortho   = None
         self.__profile = None
         self.__canvas  = None
+        self.__current = None
+
+
+    @actions.action
+    def addDataSeries(self):
+        """Holds/persists the most recently sampled line to the plot. """
+        if self.__current is not None:
+            self.__canvas.dataSeries.append(self.__current)
+            self.__bindToDataSeries(self.__current, False)
+            self.__current = None
+
+
+    @actions.action
+    def removeDataSeries(self):
+        """Removes the most recently held/persisted line from the plot. """
+        canvas = self.__canvas
+        if len(canvas.dataSeries) > 0:
+            canvas.dataSeries.pop()
+
+
+    @actions.action
+    def export(self):
+        if self.__current is None:
+            return
+
+
+    @actions.action
+    def screenshot(self):
+        """Creates and runs a :class:`.ScreenshotAction`, which propmts the
+        user to save the plot to a file.
+        """
+        screenshot.ScreenshotAction(self.overlayList,
+                                    self.displayCtx,
+                                    self.__canvas)()
+
+
+    def __bindToDataSeries(self, ds, bind=True):
+        """Binds/unbinds the GUI widgets (:attr:`colour`, :attr:`resolution`),
+        etc to/from the given :class:`SampleLineDataSeries` instance.
+        """
+        ds.bindProps('colour',     self, unbind=not bind)
+        ds.bindProps('lineWidth',  self, unbind=not bind)
+        ds.bindProps('lineStyle',  self, unbind=not bind)
+        ds.bindProps('resolution', self, unbind=not bind)
+        ds.bindProps('interp',     self, unbind=not bind)
+        ds.bindProps('normalise',  self, unbind=not bind)
 
 
     def __updateInfo(self):
@@ -424,7 +515,6 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         the drawn sample line.
         """
 
-        canvas = self.__canvas
         start  = self.__profile.sampleStart
         end    = self.__profile.sampleEnd
         image  = self.displayCtx.getSelectedOverlay()
@@ -435,14 +525,8 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         if image is None or not isinstance(image, fslimage.Image):
             return
 
-        if len(canvas.dataSeries) > 0:
-            ds = canvas.dataSeries[-1]
-            ds.unbindProps('colour',    self)
-            ds.unbindProps('lineWidth', self)
-            ds.unbindProps('lineStyle', self)
-            ds.unbindProps('resolution', self)
-            ds.unbindProps('interp',     self)
-            ds.unbindProps('normalise',  self)
+        if self.__current is not None:
+            self.__bindToDataSeries(self.__current, False)
 
         opts   = self.displayCtx.getOpts(image)
         vstart = opts.transformCoords(start, 'display', 'voxel')
@@ -455,17 +539,15 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
                                       vstart,
                                       vend)
 
-        series.bindProps('colour',     self)
-        series.bindProps('lineWidth',  self)
-        series.bindProps('lineStyle',  self)
-        series.bindProps('resolution', self)
-        series.bindProps('interp',     self)
-        series.bindProps('normalise',  self)
-        canvas.dataSeries.append(series)
+        self.__bindToDataSeries(series)
+        self.__current = series
+        self.__canvas.asyncDraw()
 
 
     def __draw(self):
         """Passed as the ``drawFunc`` to the :class:`.PlotCanvas`. Calls
         :meth:`.PlotCanvas.drawDataSeries`.
         """
-        self.__canvas.drawDataSeries(refresh=True)
+        if self.__current is None: extras = None
+        else:                      extras = [self.__current]
+        self.__canvas.drawDataSeries(extraSeries=extras, refresh=True)

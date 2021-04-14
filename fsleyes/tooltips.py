@@ -879,6 +879,12 @@ actions = TypeDict({
     'ListItemWidget.group' : 'Link some properties of this overlay '
                              'with other linked overlays (e.g. '
                              'volume)',
+
+    'SampleLinePanel.screenshot' : 'Save the plot to a file',
+    'SampleLinePanel.addDataSeries'    :
+    'Add (hold) the most recently drawn data series.',
+    'SampleLinePanel.removeDataSeries' :
+    'Remove the most recently added data series.',
 })
 
 
