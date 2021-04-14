@@ -104,7 +104,11 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         :meth:`.ControlPanel.destroy` method.
         """
 
-        self.__plotPanel.canvas.removeListener('dataSeries', self.name)
+        # the plot panel may have already
+        # cleared its canvas ref before we
+        # get destroyed
+        if self.__plotPanel.canvas is not None:
+            self.__plotPanel.canvas.removeListener('dataSeries', self.name)
         self.__plotPanel = None
         self.__dsList.Clear()
         ctrlpanel.ControlPanel.destroy(self)

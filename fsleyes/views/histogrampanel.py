@@ -11,21 +11,18 @@ that plots the histogram of data from :class:`.Image` overlays.
 
 import logging
 
-import wx
-
 import numpy as np
 
-import fsl.data.image                         as fslimage
-import fsl.data.mesh                          as fslmesh
-import fsleyes_props                          as props
+import fsl.data.image                    as fslimage
+import fsl.data.mesh                     as fslmesh
+import fsleyes_props                     as props
 
-import fsleyes.actions                        as actions
-import fsleyes.overlay                        as fsloverlay
-import fsleyes.profiles.histogramprofile      as histogramprofile
-import fsleyes.plotting.histogramseries       as histogramseries
-import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
-import fsleyes.controls.histogramtoolbar      as histogramtoolbar
-from . import                                    plotpanel
+import fsleyes.actions                   as actions
+import fsleyes.overlay                   as fsloverlay
+import fsleyes.views.plotpanel           as plotpanel
+import fsleyes.profiles.histogramprofile as histogramprofile
+import fsleyes.plotting.histogramseries  as histogramseries
+
 
 
 log = logging.getLogger(__name__)
@@ -45,7 +42,8 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     each of which encapsulate histogram data from an :class:`.Image` overlay.
 
 
-    A couple of control panels may be shown on a ``HistogramPanel``:
+    A couple of control panels may be shown on a ``HistogramPanel``, via
+    :meth:`.ViewPanel.togglePanel`:
 
     .. autosummary::
        :nosignatures:
@@ -173,20 +171,21 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         if not self or self.destroyed:
             return
 
-        hss = self.getDataSeriesToPlot()
+        canvas = self.canvas
+        hss    = self.getDataSeriesToPlot()
 
         for hs in hss:
             with props.suppress(hs, 'label'):
                 hs.label = self.displayCtx.getDisplay(hs.overlay).name
 
-        if self.smooth or self.plotType == 'centre':
-            self.drawDataSeries(hss)
+        if canvas.smooth or self.plotType == 'centre':
+            canvas.drawDataSeries(hss)
 
         # use a step plot when plotting bin edges
         else:
-            self.drawDataSeries(hss, drawstyle='steps-pre')
+            canvas.drawDataSeries(hss, drawstyle='steps-pre')
 
-        self.drawArtists()
+        canvas.drawArtists()
 
 
     def createDataSeries(self, overlay):
@@ -233,7 +232,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
         # If smoothing is enabled, we just
         # need to provide the data as-is
-        if self.smooth:
+        if self.canvas.smooth:
             xdata = np.array(xdata[:-1], dtype=np.float32)
             ydata = np.array(ydata,      dtype=np.float32)
 

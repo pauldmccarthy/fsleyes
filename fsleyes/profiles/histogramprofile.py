@@ -326,8 +326,10 @@ class RangePolygon(patches.Polygon):
         self._rp_hsPanel = hsPanel
         self._rp_name    = '{}_{}'.format(type(self).__name__, id(self))
 
+        canvas = hsPanel.canvas
+
         hs.addGlobalListener(           self._rp_name, self.asyncUpdatePolygon)
-        hsPanel.addListener('smooth',   self._rp_name, self.asyncUpdatePolygon)
+        canvas .addListener('smooth',   self._rp_name, self.asyncUpdatePolygon)
         hsPanel.addListener('histType', self._rp_name, self.asyncUpdatePolygon)
         hsPanel.addListener('plotType', self._rp_name, self.asyncUpdatePolygon)
 
@@ -342,9 +344,10 @@ class RangePolygon(patches.Polygon):
 
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
+        canvas  = hsPanel.canvas
 
         hs.removeGlobalListener(           self._rp_name)
-        hsPanel.removeListener('smooth',   self._rp_name)
+        canavs .removeListener('smooth',   self._rp_name)
         hsPanel.removeListener('histType', self._rp_name)
         hsPanel.removeListener('plotType', self._rp_name)
 
@@ -385,7 +388,7 @@ class RangePolygon(patches.Polygon):
         # We need to wait until all of the above has
         # completed before updating the range polygon.
 
-        q        = self._rp_hsPanel.getDrawQueue()
+        q        = self._rp_hsPanel.canvas.getDrawQueue()
         taskName = '{}.draw'.format(id(self))
 
         idle.idle(idle.run,
@@ -406,6 +409,7 @@ class RangePolygon(patches.Polygon):
 
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
+        canvas  = hsPanel.canvas
 
         # destroy may have been called while
         # this call was asynchronously scheduled
@@ -422,10 +426,10 @@ class RangePolygon(patches.Polygon):
         #
         # Try/except because the HistogramSeries
         # may not yet have been plotted.
-        if hsPanel.smooth or hsPanel.plotType == 'centre':
+        if canvas.smooth or hsPanel.plotType == 'centre':
             try:
 
-                hsArtist = hsPanel.getArtist(hs)
+                hsArtist = canvas.getArtist(hs)
                 x        = hsArtist.get_xdata()
                 y        = hsArtist.get_ydata()
                 vertices = np.array([x, y]).T
@@ -451,10 +455,8 @@ class RangePolygon(patches.Polygon):
         # Nothing to plot, or we shouldn't
         # be plotting the range overlay
         if not ((vertices.size > 0) and hs.enabled and hs.showOverlay):
-
-            if self in hsPanel.artists:
-                hsPanel.artists.remove(self)
-
+            if self in canvas.artists:
+                canvas.artists.remove(self)
             return
 
         lo, hi   = hs.showOverlayRange
@@ -514,8 +516,8 @@ class RangePolygon(patches.Polygon):
 
         # Add to the artists list if needed,
         # so the polygon gets shown.
-        if self not in hsPanel.artists: hsPanel.artists.append(self)
-        else:                           hsPanel.drawArtists(immediate=True)
+        if self not in canvas.artists: canvas.artists.append(self)
+        else:                          canvas.drawArtists(immediate=True)
 
 
 class HistogramOverlay(object):
