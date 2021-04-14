@@ -965,11 +965,18 @@ labels = TypeDict({
     'AnnotationPanel.TextAnnotation' : 'Text',
 
 
-    'SampleLinePanel.voxelfrom' : 'From voxel coordinates:',
-    'SampleLinePanel.voxelto'   : 'to:',
-    'SampleLinePanel.worldfrom' : 'From world coordinates:',
-    'SampleLinePanel.worldto'   : 'to:',
-    'SampleLinePanel.length'    : 'Length:',
+    'SampleLinePanel.voxelfrom'  : 'From voxel coordinates:',
+    'SampleLinePanel.voxelto'    : 'to:',
+    'SampleLinePanel.worldfrom'  : 'From world coordinates:',
+    'SampleLinePanel.worldto'    : 'to:',
+    'SampleLinePanel.length'     : 'Length:',
+    'SampleLinePanel.interp'     : 'Interpolation',
+    'SampleLinePanel.resolution' : 'Resolution',
+    'SampleLinePanel.normalise'  : 'Normalise',
+    'SampleLinePanel.legend'     : 'Show legend',
+    'SampleLinePanel.colour'     : 'Colour',
+    'SampleLinePanel.lineWidth'  : 'Line width',
+    'SampleLinePanel.lineStyle'  : 'Line style',
 
 })
 
@@ -1393,7 +1400,16 @@ choices = TypeDict({
                                      'A'    : 'A'},
 
     'FileTreePanel.notes' : {'left'  : 'Left',
-                             'right' : 'Right'}
+                             'right' : 'Right'},
+
+    'SampleLinePanel.interp' : {0 : 'Nearest neighbour',
+                                1 : 'Linear',
+                                2 : 'Quadratic',
+                                3 : 'Cubic'},
+    'SampleLinePanel.normalise' : {'none' : 'No normalisation',
+                                   'x'    : 'Normalise along X axis',
+                                   'y'    : 'Normalise along Y axis',
+                                   'xy'   : 'Normalise along X and Y axes'},
 })
 
 

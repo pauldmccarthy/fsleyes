@@ -11,12 +11,15 @@ an :class:`.OrthoPanel`, and plot the data along that line from the currently
 selected :class:`.Image` overlay.
 """
 
+import                  copy
 
 import numpy         as np
 import scipy.ndimage as ndimage
 import                  wx
 
 import fsl.data.image                             as fslimage
+import fsl.transform.affine                       as affine
+import fsleyes_widgets.widgetlist                 as widgetlist
 import fsleyes_props                              as props
 import fsleyes.strings                            as strings
 import fsleyes.actions                            as actions
@@ -78,6 +81,104 @@ class SampleLineAction(actions.ToggleControlPanelAction):
         self.viewPanel.togglePanel(SampleLinePanel)
 
 
+class SampleLineDataSeries(plotting.DataSeries):
+    """The ``SampleLineDataSeries`` represents data that is sampled along
+    a straight line through a 3D volume from an :class:`.Image` overlay.
+
+    ``SampleLineDataSeries`` objects are created by the
+    :class:`SampleLinePanel`.
+    """
+
+
+    interp = props.Choice((0, 1, 2, 3), default=1)
+    """How to interpolate the sampled data when it is plotted. The value is
+    used directly as the ``order`` parameter to the
+    ``scipy.ndimage.map_coordinates`` function.
+    """
+
+
+    resolution = props.Int(minval=2, maxval=1000, default=100, clamped=True)
+    """The number of points (uniformly spaced) to sample along the line. """
+
+
+    normalise = props.Choice(('none', 'y', 'x', 'xy'))
+    """Whether to normalise all plotted data along the x, or y, or both, axes.
+    """
+
+
+    def __init__(self,
+                 overlay,
+                 overlayList,
+                 displayCtx,
+                 plotCanvas,
+                 index,
+                 start,
+                 end):
+        """Create a ``SampleLineDataSeries``.
+
+        :arg overlay:     The :class:`.Image` overlay to sample from
+        :arg overlayList: The :class:`.OverlayList`
+        :arg displayCtx:  A :class:`.DisplayContext` instance
+        :arg plotCanvas:  The :class:`.PlotCanvas` that is plotting this
+                          ``DataSeries``.
+        :arg index:       Volume index, for images with more than 3
+                          dimensions (see :meth:`.NiftiOpts.index`)
+        :arg start:       Start of sampling line, in voxel coordinates
+        :arg end:         End of sampling line, in voxel coordinates
+        """
+
+        plotting.DataSeries.__init__(
+            self, overlay, overlayList, displayCtx, plotCanvas)
+
+        self.index = index
+        self.start = start
+        self.end   = end
+
+        self.addListener('resolution', self.name, self.__refreshData)
+        self.addListener('interp',     self.name, self.__refreshData)
+        self.addListener('normalise',  self.name, self.__refreshData)
+
+        self.label = ('{}: [{:.2f} {:.2f} {:.2f}] -> '
+                      '[{:.2f} {:.2f} {:.2f}]'.format(
+                          overlay.name, *start, *end))
+
+
+    def __refreshData(self, *a):
+        """Called when :attr:`resolution`, :attr:`interp` or :attr:`normalise`
+        change. Re-samples the data from the image.
+        """
+
+        resolution   = self.resolution
+        order        = self.interp
+        normalisex   = 'x' in self.normalise
+        normalisey   = 'y' in self.normalise
+        opts         = self.displayCtx.getOpts(self.overlay)
+        data         = self.overlay[self.index]
+        start        = self.start
+        end          = self.end
+
+        points       = np.zeros((3, resolution))
+        points[0, :] = np.linspace(start[0], end[0], resolution)
+        points[1, :] = np.linspace(start[1], end[1], resolution)
+        points[2, :] = np.linspace(start[2], end[2], resolution)
+
+        y = ndimage.map_coordinates(data, points, order=order)
+
+        if normalisey:
+            y = (y - y.min()) / (y.max() - y.min())
+
+        if normalisex:
+            xmax = 1
+        else:
+            wstart = opts.transformCoords(start, 'voxel', 'world')
+            wend   = opts.transformCoords(end,   'voxel', 'world')
+            xmax   = affine.veclength(wstart - wend)[0]
+
+        x = np.linspace(0, xmax, resolution)
+
+        self.setData(x, y)
+
+
 class SampleLinePanel(ctrlpanel.ControlPanel):
     """The ``SampleLinePanel`` is a FSLeyes control which can be used in
     conjunction with an :class:`.OrthoPanel` view. It allows the user to draw
@@ -89,11 +190,17 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
     """
 
 
-    interp = props.Int(minval=0, maxval=5, default=1, clamped=True)
-    """How to interpolate the sampled data when it is plotted. The value is
-    used directly as the ``order`` parameter to the
-    ``scipy.ndimage.map_coordinates`` function.
-    """
+    # Used to synchronise between GUI widgets
+    # and SampleLineDataSeries property values
+    # The GUI widgets are bound to the most
+    # recently added SampleLineDataSeries
+    # instance
+    interp     = copy.copy(SampleLineDataSeries.interp)
+    resolution = copy.copy(SampleLineDataSeries.resolution)
+    normalise  = copy.copy(SampleLineDataSeries.normalise)
+    colour     = copy.copy(plotting.DataSeries.colour)
+    lineWidth  = copy.copy(plotting.DataSeries.lineWidth)
+    lineStyle  = copy.copy(plotting.DataSeries.lineStyle)
 
 
     @staticmethod
@@ -144,72 +251,117 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
         profile = ortho.currentProfile
 
+        # plot which displays the sampled data
+        canvas = plotcanvas.PlotCanvas(self, drawFunc=self.__draw)
+
         self.__ortho   = ortho
         self.__profile = profile
-        self.__ds      = None
+        self.__canvas  = canvas
+
+        # initial settings
+        self.colour    = '#000050'
+        self.lineWidth = 2
+        canvas.legend  = False
+
+        # Controls which allow the user to select
+        # interpolation/resolution, line colour, etc
+        widgets = widgetlist.WidgetList(self, minHeight=24)
+        interp = props.makeWidget(
+            widgets, self, 'interp', labels=strings.choices[self, 'interp'])
+        resolution = props.makeWidget(
+            widgets, self, 'resolution', slider=True, spin=True,
+            showLimits=False)
+        normalise = props.makeWidget(
+            widgets, self, 'normalise',
+            labels=strings.choices[self, 'normalise'])
+
+        colour    = props.makeWidget(widgets, self, 'colour')
+        lineWidth = props.makeWidget(widgets, self, 'lineWidth')
+        lineStyle = props.makeWidget(
+            widgets, self, 'lineStyle',
+            labels=strings.choices['DataSeries.lineStyle'])
+        legend = props.makeWidget(
+            widgets, canvas, 'legend',
+            labels=strings.properties['PlotCanvas.legend'])
+
+        widgets.AddWidget(interp,     strings.labels[self, 'interp'])
+        widgets.AddWidget(resolution, strings.labels[self, 'resolution'])
+        widgets.AddWidget(normalise,  strings.labels[self, 'normalise'])
+        widgets.AddWidget(legend,     strings.labels[self, 'legend'])
+        widgets.AddWidget(colour,     strings.labels[self, 'colour'])
+        widgets.AddWidget(lineWidth,  strings.labels[self, 'lineWidth'])
+        widgets.AddWidget(lineStyle,  strings.labels[self, 'lineStyle'])
+
+        # Controls allowing the user to add/remove
+        # sample lines from the plot to save the
+        # data to a file, and to save a screenshot
+        # of the plot
+        #
+        # (todo)
+        ctrlSizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # Labels which show the start and end
         # coordinates of the sample line in voxel
         # ("v") and world ("w") coordinates, and
         # the line length in [units] (probably mm)
-        self.__vfromlbl = wx.StaticText(self)
-        self.__vtolbl   = wx.StaticText(self)
-        self.__wfromlbl = wx.StaticText(self)
-        self.__wtolbl   = wx.StaticText(self)
-        self.__vfromval = wx.StaticText(self)
-        self.__vtoval   = wx.StaticText(self)
-        self.__wfromval = wx.StaticText(self)
-        self.__wtoval   = wx.StaticText(self)
-        self.__lenlbl   = wx.StaticText(self)
-        self.__lenval   = wx.StaticText(self)
+        vfromlbl = wx.StaticText(self)
+        vtolbl   = wx.StaticText(self)
+        wfromlbl = wx.StaticText(self)
+        wtolbl   = wx.StaticText(self)
+        vfromval = wx.StaticText(self)
+        vtoval   = wx.StaticText(self)
+        wfromval = wx.StaticText(self)
+        wtoval   = wx.StaticText(self)
+        lenlbl   = wx.StaticText(self)
+        lenval   = wx.StaticText(self)
 
-        self.__vfromlbl.SetLabel(strings.labels[self, 'voxelfrom'])
-        self.__vtolbl  .SetLabel(strings.labels[self, 'voxelto'])
-        self.__wfromlbl.SetLabel(strings.labels[self, 'worldfrom'])
-        self.__wtolbl  .SetLabel(strings.labels[self, 'worldto'])
-        self.__lenlbl  .SetLabel(strings.labels[self, 'length'])
+        vfromlbl.SetLabel(strings.labels[self, 'voxelfrom'])
+        vtolbl  .SetLabel(strings.labels[self, 'voxelto'])
+        wfromlbl.SetLabel(strings.labels[self, 'worldfrom'])
+        wtolbl  .SetLabel(strings.labels[self, 'worldto'])
+        lenlbl  .SetLabel(strings.labels[self, 'length'])
 
-        self.__infoSizer = wx.FlexGridSizer(3, 4, 5, 5)
-        self.__infoSizer.AddGrowableCol(1)
-        self.__infoSizer.AddGrowableCol(3)
-        self.__infoSizer.Add(self.__vfromlbl)
-        self.__infoSizer.Add(self.__vfromval)
-        self.__infoSizer.Add(self.__vtolbl)
-        self.__infoSizer.Add(self.__vtoval)
-        self.__infoSizer.Add(self.__wfromlbl)
-        self.__infoSizer.Add(self.__wfromval)
-        self.__infoSizer.Add(self.__wtolbl)
-        self.__infoSizer.Add(self.__wtoval)
-        self.__infoSizer.Add(self.__lenlbl)
-        self.__infoSizer.Add(self.__lenval)
-        self.__infoSizer.Add((1, 1))
-        self.__infoSizer.Add((1, 1))
+        infoSizer = wx.FlexGridSizer(3, 4, 5, 5)
+        infoSizer.AddGrowableCol(1)
+        infoSizer.AddGrowableCol(3)
+        infoSizer.Add(vfromlbl)
+        infoSizer.Add(vfromval)
+        infoSizer.Add(vtolbl)
+        infoSizer.Add(vtoval)
+        infoSizer.Add(wfromlbl)
+        infoSizer.Add(wfromval)
+        infoSizer.Add(wtolbl)
+        infoSizer.Add(wtoval)
+        infoSizer.Add(lenlbl)
+        infoSizer.Add(lenval)
+        infoSizer.Add((1, 1))
+        infoSizer.Add((1, 1))
 
-        # Controls which allow the user to select
-        # interpolation, to save the data to a file,
-        # and to save a screenshot of the plot
-        # todo
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(ctrlSizer,     flag=wx.EXPAND)
+        mainSizer.Add(widgets,       flag=wx.EXPAND)
+        mainSizer.Add(infoSizer,     flag=wx.EXPAND)
+        mainSizer.Add(canvas.canvas, flag=wx.EXPAND, proportion=1)
 
-        # plot which displays the sampled data
-        self.__canvas = plotcanvas.PlotCanvas(self, drawFunc=self.__draw)
-
-        self.__mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.__mainSizer.Add(self.__infoSizer,     flag=wx.EXPAND)
-        self.__mainSizer.Add(self.__canvas.canvas, flag=wx.EXPAND,
-                             proportion=1)
-
-        profile.registerHandler(
-            'LeftMouseDown', self.name, self.__onMouseDown)
-        profile.registerHandler(
-            'LeftMouseDrag', self.name, self.__onMouseDrag)
-        profile.registerHandler(
-            'LeftMouseUp', self.name, self.__onMouseUp)
-
-        self.SetSizer(self.__mainSizer)
+        self.SetSizer(mainSizer)
         self.Layout()
 
+        profile.registerHandler('LeftMouseDown', self.name, self.__onMouseDown)
+        profile.registerHandler('LeftMouseDrag', self.name, self.__onMouseDrag)
+        profile.registerHandler('LeftMouseUp',   self.name, self.__onMouseUp)
 
-    def __updateInfo(self, canvas):
+
+    def destroy(self):
+        """Called when this ``SampleLinePanel`` is no longer needed. Clears
+        references, and calls :meth:`.ControlPanel.destroy`.
+        """
+        super().destroy()
+        self.__ortho   = None
+        self.__profile = None
+        self.__canvas  = None
+
+
+    def __updateInfo(self):
         """Called while the mouse is being dragged. Updates the information
         about the sampling line (e.g. start/end voxel coordinates) that is
         displayed at the top of the ``SampleLinePanel``.
@@ -237,7 +389,7 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
             we     = opts.transformCoords(end,   'display', 'world')
             vs     = opts.transformCoords(start, 'display', 'voxel')
             ve     = opts.transformCoords(end,   'display', 'voxel')
-            length = np.sqrt(np.sum((ws - we) ** 2))
+            length = affine.veclength(ws - we)[0]
 
             vs     = '[{:.2f}, {:.2f}, {:.2f}]'.format(*vs)
             ve     = '[{:.2f}, {:.2f}, {:.2f}]'.format(*ve)
@@ -252,29 +404,30 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
             self.__lenval  .SetLabel(length)
 
 
-    def __onMouseDown(self, ev, canvas, mousePos, canvasPos):
+    def __onMouseDown(self, *a):
         """Called on mouse down events on an :class:`.OrthoPanel` canvas.
         Calls :meth:`__updateInfo`.
         """
-        self.__updateInfo(canvas)
+        self.__updateInfo()
 
 
-    def __onMouseDrag(self, ev, canvas, mousePos, canvasPos):
+    def __onMouseDrag(self, *a):
         """Called on mouse drag events on an :class:`.OrthoPanel` canvas.
         Calls :meth:`__updateInfo`.
         """
-        self.__updateInfo(canvas)
+        self.__updateInfo()
 
 
-    def __onMouseUp(self, ev, canvas, mousePos, canvasPos):
+    def __onMouseUp(self, *a):
         """Called on mouse up events on an :class:`.OrthoPanel` canvas.
         Samples and plots data from the currently selected overlay along
         the drawn sample line.
         """
 
-        start = self.__profile.sampleStart
-        end   = self.__profile.sampleEnd
-        image = self.displayCtx.getSelectedOverlay()
+        canvas = self.__canvas
+        start  = self.__profile.sampleStart
+        end    = self.__profile.sampleEnd
+        image  = self.displayCtx.getSelectedOverlay()
 
         if start is None or end is None:
             return
@@ -282,37 +435,37 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         if image is None or not isinstance(image, fslimage.Image):
             return
 
+        if len(canvas.dataSeries) > 0:
+            ds = canvas.dataSeries[-1]
+            ds.unbindProps('colour',    self)
+            ds.unbindProps('lineWidth', self)
+            ds.unbindProps('lineStyle', self)
+            ds.unbindProps('resolution', self)
+            ds.unbindProps('interp',     self)
+            ds.unbindProps('normalise',  self)
+
         opts   = self.displayCtx.getOpts(image)
-        data   = image[opts.index()]
         vstart = opts.transformCoords(start, 'display', 'voxel')
         vend   = opts.transformCoords(end,   'display', 'voxel')
+        series = SampleLineDataSeries(image,
+                                      self.overlayList,
+                                      self.displayCtx,
+                                      self.__canvas,
+                                      opts.index(),
+                                      vstart,
+                                      vend)
 
-        order        = self.interp
-        resolution   = 100
-        points       = np.zeros((3, resolution))
-        points[0, :] = np.linspace(vstart[0], vend[0], resolution)
-        points[1, :] = np.linspace(vstart[1], vend[1], resolution)
-        points[2, :] = np.linspace(vstart[2], vend[2], resolution)
-
-        x      = np.linspace(0, 1, resolution)
-        y      = ndimage.map_coordinates(data, points, order=order)
-        series = plotting.DataSeries(image,
-                                     self.overlayList,
-                                     self.displayCtx,
-                                     self.__canvas)
-        series.colour    = '#000050'
-        series.lineWidth = 2
-        series.setData(x, y)
-        self.__ds = series
-        self.__canvas.asyncDraw()
+        series.bindProps('colour',     self)
+        series.bindProps('lineWidth',  self)
+        series.bindProps('lineStyle',  self)
+        series.bindProps('resolution', self)
+        series.bindProps('interp',     self)
+        series.bindProps('normalise',  self)
+        canvas.dataSeries.append(series)
 
 
     def __draw(self):
         """Passed as the ``drawFunc`` to the :class:`.PlotCanvas`. Calls
         :meth:`.PlotCanvas.drawDataSeries`.
         """
-
-        if self.__ds is None: series = None
-        else:                 series = [self.__ds]
-
-        self.__canvas.drawDataSeries(extraSeries=series, refresh=True)
+        self.__canvas.drawDataSeries(refresh=True)
