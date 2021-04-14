@@ -10,6 +10,8 @@ the addition/removal of control panels.
 """
 
 
+import wx.lib.agw.aui as aui
+
 from . import base
 
 
@@ -27,25 +29,50 @@ class ToggleControlPanelAction(base.ToggleAction):
     managed by a ``ToggleControlPanelAction`` is added/removed.
     """
 
-    def __init__(self, overlayList, displayCtx, func, instance, cpType):
+    def __init__(self,
+                 overlayList,
+                 displayCtx,
+                 cpType,
+                 instance,
+                 func=None,
+                 name=None,
+                 ismethod=False):
         """Create a ``ToggleControlPanelAction``.
 
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext`
-        :arg func:        The function which toggles the
+
         :arg instance:    The :class:`.ViewPanel` instance.
         :arg cpType:      The type of the control panel being managed by this
                           ``ToggleControlPanelAction``.
+        :arg func:        The function which toggles the control panel. If
+                          not provided, a default function is used.
+        :arg name:        Name of this action - defaults to ``func.__name__``.
+        :arg ismethod:    Defaults to ``False``. If ``True``, it is assumed
+                          that this action encapsulates a method of the
+                          ``viewPanel`` instance, which will be passed as the
+                          first argument when the action is called. This should
+                          not need to be used by anything other than the
+                          :func:`.toggleControlPanelAction` decorator.
         """
 
-        import wx.lib.agw.aui as aui
+        # We do this dance because the ActionFactory
+        # passes instance as a kwarg
+        viewPanel = instance
 
-        base.ToggleAction.__init__(self, overlayList, displayCtx, func, instance)
+        if ismethod: instance = viewPanel
+        else:        instance = None
 
-        self.__viewPanel = instance
+        if func is None:
+            func = self.__togglePanel
+
+        base.ToggleAction.__init__(
+            self, overlayList, displayCtx, func, instance=instance, name=name)
+
+        self.__viewPanel = viewPanel
         self.__cpType    = cpType
 
-        auiMgr = instance.auiManager
+        auiMgr = viewPanel.auiManager
 
         # WTF. The AuiManager does not post an event
         #      when a pane is added - only when one
@@ -55,11 +82,32 @@ class ToggleControlPanelAction(base.ToggleAction):
         auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED, self.__viewPanelChanged)
 
 
+    def __togglePanel(self, *args, **kwargs):
+        """Default action to run if a ``func`` wasn't specified. Calls
+        :class:`.ViewPanel.togglePanel`,
+        """
+        self.viewPanel.togglePanel(self.__cpType, *args, **kwargs)
+
+
+    @property
+    def viewPanel(self):
+        """Returns a reference to the :class:`.ViewPanel` that is associated
+        with this action.
+        """
+        return self.__viewPanel
+
+
     def destroy(self):
         """Must be called when this ``ToggleControlPanelAction`` is no longer
         used. Clears references, and calls the base-class ``destroy`` method.
         """
+
+        if self.destroyed:
+            return
+
         base.ToggleAction.destroy(self)
+
+        self.__viewPanel.auiManager.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
         self.__viewPanel = None
 
 

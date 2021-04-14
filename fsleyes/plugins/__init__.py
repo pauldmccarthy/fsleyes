@@ -32,9 +32,9 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    :class:`.MelodicClassificationPanel`. Controls provided by plugins are
    added to the *Settings* menu for each active view.
 
- - A *tool* is an :class:`.Action` which is associated with a menu item
-   under the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`
-   and the :class:`.ResampleAction`.
+ - A *tool* is an :class:`.Action` which is associated with a menu item under
+   the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`, the
+   :class:`.CropImageAction`, and the :class:`.ResampleAction`.
 
 
 Loading/installing FSLeyes plugins
@@ -78,20 +78,20 @@ Writing a FSLeyes plugin
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
+.. warning:: FSLeyes assumes that all views, controls, and tools have unique
+             class names.  So expect problems if, for example, you define your
+             own FSLeyes control with the name ``OverlayListPanel``.
+
+
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
 definitions for custom views, controls, and tools.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
- - Controls must be sub-classes of the :class:`.ControlPanel` class. If your
-   custom control is designed to only work with a specific view, you should
-   override the :mod:`.ControlMixin.supportedViews` static method to return
-   the views that your control supports.
+ - Controls must be sub-classes of the :class:`.ControlPanel` or
+   :class:`.ControlToolBar` classes.
 
- - Tools must be sub-classes of the :class:`.Action` class. Similar to above,
-   if your custom tool is designed to only work with a specific view, you
-   should override the :mod:`.Action.supportedViews` static method to return
-   the views that your tool should be associated with.
+ - Tools must be sub-classes of the :class:`.Action` class.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
@@ -168,6 +168,9 @@ The following functions can be used to access plugins:
    listViews
    listControls
    listTools
+   lookupView
+   lookupControl
+   lookupTool
 """
 
 
@@ -177,6 +180,7 @@ import                   sys
 import                   glob
 import                   pkgutil
 import                   logging
+import                   inspect
 import                   importlib
 import importlib.util as imputil
 import                   collections
@@ -186,6 +190,7 @@ import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
 import fsleyes.strings               as strings
 import fsleyes.views.viewpanel       as viewpanel
+import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.controls.controlpanel as ctrlpanel
 
 
@@ -223,16 +228,17 @@ def _loadBuiltIns():
     """
 
     import fsleyes.plugins.views    as views
-    import fsleyes.plugins.controls as controls
+    import fsleyes.controls         as controls
+    import fsleyes.plugins.controls as pcontrols
     import fsleyes.plugins.tools    as tools
 
-    for mod in (views, controls, tools):
+    for mod in (views, controls, pcontrols, tools):
         submods = pkgutil.iter_modules(mod.__path__, mod.__name__ + '.')
         for _, name, _ in submods:
             log.debug('Loading built-in plugin module %s', name)
             mod  = importlib.import_module(name)
             name = name.split('.')[-1]
-            _registerEntryPoints(name, mod)
+            _registerEntryPoints(name, mod, False)
 
 
 def listPlugins():
@@ -297,7 +303,7 @@ def listControls(viewType=None):
         supported = cls.supportedViews()
         if viewType  is not None and \
            supported is not None and \
-           viewType  not in supported:
+           not issubclass(viewType, tuple(supported)):
             ctrls.pop(name)
             continue
     return ctrls
@@ -317,6 +323,30 @@ def listTools():
     return tools
 
 
+def _lookupPlugin(clsname, group):
+    """Looks up the FSLeyes plugin with the given class name. """
+    entries = _listEntryPoints('fsleyes_{}'.format(group))
+    for cls in entries.values():
+        if cls.__name__ == clsname:
+            return cls
+    return None
+
+
+def lookupView(clsName):
+    """Looks up the FSLeyes view with the given class name. """
+    return _lookupPlugin(clsName, 'views')
+
+
+def lookupControl(clsName):
+    """Looks up the FSLeyes control with the given class name. """
+    return _lookupPlugin(clsName, 'controls')
+
+
+def lookupTool(clsName):
+    """Looks up the FSLeyes tool with the given class name. """
+    return _lookupPlugin(clsName, 'tools')
+
+
 def _importModule(filename, modname):
     """Used by :func:`loadPlugin`. Imports the given Python file, setting the
     module name to ``modname``.
@@ -331,12 +361,25 @@ def _importModule(filename, modname):
     return mod
 
 
-def _findEntryPoints(mod):
+def _findEntryPoints(mod, ignoreBuiltins):
     """Used by :func:`loadPlugin`. Finds the FSLeyes entry points (views,
     controls, or tools) that are defined within the given module.
-     """
+
+    :arg mod:            The module to search
+    :arg ignoreBuiltins: If ``True``, all, views, controls and tools which are
+                         built into FSLeyes will be ignored. The
+                         :class:`.ViewPanel`, :class:`.ControlPanel`,
+                         :class:`.ControlToolBar` and :class:`.Action` base
+                         classes are always ignored.
+    """
 
     entryPoints = collections.defaultdict(dict)
+
+    # Action.ignoreTool and ControlMixin.ignoreControl need
+    # to be implemented on the specific class - inherited
+    # base class implementations are not considered.
+    def class_defines_method(cls, methname):
+        return methname in cls.__dict__
 
     for name in dir(mod):
 
@@ -346,15 +389,34 @@ def _findEntryPoints(mod):
         if not isinstance(item, type):
             continue
 
-        # avoid module imports
-        if item is viewpanel.ViewPanel    or \
-           item is ctrlpanel.ControlPanel or \
-           item is actions.Action:
+        bases = [viewpanel.ViewPanel,
+                 canvaspanel.CanvasPanel,
+                 ctrlpanel.ControlPanel,
+                 ctrlpanel.ControlToolBar,
+                 ctrlpanel.SettingsPanel,
+                 actions.Action]
+
+        # avoid base-classes and built-ins
+        if item in bases:
+            continue
+        if ignoreBuiltins and str(item.__module__).startswith('fsleyes.'):
             continue
 
-        if   issubclass(item, viewpanel.ViewPanel):    group = 'views'
-        elif issubclass(item, ctrlpanel.ControlPanel): group = 'controls'
-        elif issubclass(item, actions.Action):         group = 'tools'
+        # ignoreControl/ignoreTool may be overridden
+        # to tell us to ignore this plugin
+        if issubclass(item, ctrlpanel.ControlMixin)    and \
+           class_defines_method(item, 'ignoreControl') and \
+           item.ignoreControl():
+            continue
+        if issubclass(item, actions.Action)         and \
+           class_defines_method(item, 'ignoreTool') and \
+           item.ignoreTool():
+            continue
+
+        if   issubclass(item, viewpanel.ViewPanel):      group = 'views'
+        elif issubclass(item, ctrlpanel.ControlPanel):   group = 'controls'
+        elif issubclass(item, ctrlpanel.ControlToolBar): group = 'controls'
+        elif issubclass(item, actions.Action):           group = 'tools'
 
         if group is not None:
             log.debug('Found %s entry point: %s', group, name)
@@ -363,7 +425,7 @@ def _findEntryPoints(mod):
     return entryPoints
 
 
-def _registerEntryPoints(name, module):
+def _registerEntryPoints(name, module, ignoreBuiltins):
     """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
     points defined within the gibven module.
     """
@@ -377,7 +439,7 @@ def _registerEntryPoints(name, module):
 
     log.debug('Registering plugin %s [dist name %s]', filename, distname)
 
-    entryPoints = _findEntryPoints(module)
+    entryPoints = _findEntryPoints(module, ignoreBuiltins)
     dist        = pkg_resources.Distribution(
         project_name=distname,
         location=filename,
@@ -410,10 +472,12 @@ def _registerEntryPoints(name, module):
 def loadPlugin(filename):
     """Loads the given Python file as a FSLeyes plugin. """
 
-    name    = op.splitext(op.basename(filename))[0]
+    # strip underscores to handle e.g. __init__.py,
+    # as pkg_resources might otherwise have trouble
+    name    = op.splitext(op.basename(filename))[0].strip('_')
     modname = 'fsleyes_plugin_{}'.format(name)
     mod     = _importModule(filename, modname)
-    _registerEntryPoints(name, mod)
+    _registerEntryPoints(name, mod, True)
 
 
 def installPlugin(filename):

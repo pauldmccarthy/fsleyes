@@ -14,6 +14,7 @@ import wx
 import fsleyes_props                 as props
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.lightboxpanel   as lightboxpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.actions               as actions
 import fsleyes.icons                 as fslicons
@@ -44,8 +45,8 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
         ``LightBoxToolBar`` is only intended to be added to
         :class:`.LightBoxPanel` views.
         """
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        return [LightBoxPanel]
+
+        return [lightboxpanel.LightBoxPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, lb):
@@ -77,7 +78,7 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
             'movieMode'                 : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
-            'toggleCanvasSettingsPanel' : [
+            'CanvasSettingsPanel' : [
                 fslicons.findImageFile('spannerHighlight24'),
                 fslicons.findImageFile('spanner24')],
 
@@ -99,17 +100,17 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
             'sliceSpacing' : fsltooltips.properties[lbOpts,  'sliceSpacing'],
             'zrange'       : fsltooltips.properties[lbOpts,  'zrange'],
             'zoom'         : fsltooltips.properties[lbOpts,  'zoom'],
-            'toggleCanvasSettingsPanel' : fsltooltips.actions[
-                lb, 'toggleCanvasSettingsPanel'],
+            'CanvasSettingsPanel' : fsltooltips.actions[
+                lb, 'CanvasSettingsPanel'],
         }
 
         specs = {
 
-            'toggleCanvasSettingsPanel' : actions.ToggleActionButton(
-                'toggleCanvasSettingsPanel',
+            'CanvasSettingsPanel' : actions.ToggleActionButton(
+                'CanvasSettingsPanel',
                 actionKwargs={'floatPane' : True},
-                icon=icons['toggleCanvasSettingsPanel'],
-                tooltip=tooltips['toggleCanvasSettingsPanel']),
+                icon=icons['CanvasSettingsPanel'],
+                tooltip=tooltips['CanvasSettingsPanel']),
 
             'screenshot' : actions.ActionButton(
                 'screenshot',
@@ -154,7 +155,7 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
 
         more         = props.buildGUI(self,
                                       lb,
-                                      specs['toggleCanvasSettingsPanel'])
+                                      specs['CanvasSettingsPanel'])
         screenshot   = props.buildGUI(self,  lb,         specs['screenshot'])
         movieMode    = props.buildGUI(self,  lb,         specs['movieMode'])
         zax          = props.buildGUI(self,  lbOpts,     specs['zax'])

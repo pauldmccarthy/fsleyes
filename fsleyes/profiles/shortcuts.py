@@ -49,22 +49,23 @@ actions = td.TypeDict({
     'ViewPanel.removeFromFrame'             : 'Ctrl-W',
     'ViewPanel.removeAllPanels'             : 'Ctrl-Alt-X',
 
-    'CanvasPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
-    'CanvasPanel.toggleLocationPanel'       : 'Ctrl-Alt-2',
-    'CanvasPanel.toggleOverlayInfo'         : 'Ctrl-Alt-3',
-    'CanvasPanel.toggleDisplayPanel'        : 'Ctrl-Alt-4',
-    'CanvasPanel.toggleCanvasSettingsPanel' : 'Ctrl-Alt-5',
-    'CanvasPanel.toggleAtlasPanel'          : 'Ctrl-Alt-6',
+    'CanvasPanel.OverlayListPanel'          : 'Ctrl-Alt-1',
+    'CanvasPanel.LocationPanel'             : 'Ctrl-Alt-2',
+    'CanvasPanel.OverlayDisplayPanel'       : 'Ctrl-Alt-4',
+    'CanvasPanel.CanvasSettingsPanel'       : 'Ctrl-Alt-5',
 
-    'CanvasPanel.toggleDisplayToolBar'      : 'Ctrl-Alt-7',
+    'CanvasPanel.OverlayDisplayToolBar'     : 'Ctrl-Alt-7',
 
-    'OrthoPanel.toggleOrthoToolBar'         : 'Ctrl-Alt-8',
-    'LightBoxPanel.toggleLightBoxToolBar'   : 'Ctrl-Alt-8',
-    'Scene3DPanel.toggleScene3DToolBar'     : 'Ctrl-Alt-8',
+    'OrthoPanel.OrthoToolBar'               : 'Ctrl-Alt-8',
+    'LightBoxPanel.LightBoxToolBar'         : 'Ctrl-Alt-8',
+    'Scene3DPanel.Scene3DToolBar'           : 'Ctrl-Alt-8',
 
-    'CanvasPanel.toggleFileTreePanel'       : 'Ctrl-Alt-9',
+    'CanvasPanel.OverlayInfoPanel'          : 'Ctrl-Alt-3',
+    'CanvasPanel.AtlasPanel'                : 'Ctrl-Alt-6',
+    'CanvasPanel.FileTreePanel'             : 'Ctrl-Alt-9',
 
-    'OrthoPanel.toggleAnnotationPanel'      : 'Ctrl-Alt-A',
+
+    'OrthoPanel.AnnotationPanel'            : 'Ctrl-Alt-A',
 
     'CanvasPanel.toggleMovieMode'           : 'Alt-M',
     'CanvasPanel.toggleDisplaySync'         : 'Alt-S',
@@ -78,19 +79,20 @@ actions = td.TypeDict({
     'OrthoPanel.toggleXCanvas'              : 'Alt-X',
     'OrthoPanel.toggleYCanvas'              : 'Alt-Y',
     'OrthoPanel.toggleZCanvas'              : 'Alt-Z',
-    'OrthoPanel.pearsonCorrelation'         : 'Alt-I',
 
-    'PlotPanel.toggleOverlayList'         : 'Ctrl-Alt-1',
-    'PlotPanel.togglePlotList'            : 'Ctrl-Alt-2',
+    'OrthoPanel.PearsonCorrelateAction'     : 'Alt-I',
+
+    'PlotPanel.OverlayListPanel'          : 'Ctrl-Alt-1',
+    'PlotPanel.PlotListPanel'             : 'Ctrl-Alt-2',
     'PlotPanel.importDataSeries'          : 'Ctrl-I',
     'PlotPanel.exportDataSeries'          : 'Ctrl-E',
 
-    'TimeSeriesPanel.toggleTimeSeriesToolBar'       : 'Ctrl-Alt-3',
-    'TimeSeriesPanel.toggleTimeSeriesControl'       : 'Ctrl-Alt-4',
-    'HistogramPanel.toggleHistogramToolBar'         : 'Ctrl-Alt-3',
-    'HistogramPanel.toggleHistogramControl'         : 'Ctrl-Alt-4',
-    'PowerSpectrumPanel.togglePowerSpectrumToolBar' : 'Ctrl-Alt-3',
-    'PowerSpectrumPanel.togglePowerSpectrumControl' : 'Ctrl-Alt-4',
+    'TimeSeriesPanel.TimeSeriesToolBar'            : 'Ctrl-Alt-3',
+    'TimeSeriesPanel.TimeSeriesControlPanel'       : 'Ctrl-Alt-4',
+    'HistogramPanel.HistogramToolBar'              : 'Ctrl-Alt-3',
+    'HistogramPanel.HistogramControlPanel'         : 'Ctrl-Alt-4',
+    'PowerSpectrumPanel.PowerSpectrumToolBar'      : 'Ctrl-Alt-3',
+    'PowerSpectrumPanel.PowerSpectrumControlPanel' : 'Ctrl-Alt-4',
 
     'OrthoEditProfile.undo'               : 'Ctrl-Z',
     'OrthoEditProfile.redo'               : 'Ctrl-Y',

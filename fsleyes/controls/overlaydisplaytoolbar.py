@@ -17,8 +17,8 @@ import wx
 
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
-
 import fsleyes.controls.controlpanel  as ctrlpanel
+import fsleyes.views.canvaspanel      as canvaspanel
 import fsleyes.icons                  as icons
 import fsleyes.tooltips               as fsltooltips
 import fsleyes.actions                as actions
@@ -75,10 +75,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         :class:`.OrthoPanel`, :class:`.LightBoxPanel`, or
         :class:`.Scene3DPanel` views.
         """
-        from fsleyes.views.orthopanel    import OrthoPanel
-        from fsleyes.views.lightboxpanel import LightBoxPanel
-        from fsleyes.views.scene3dpanel  import Scene3DPanel
-        return [OrthoPanel, LightBoxPanel, Scene3DPanel]
+        return [canvaspanel.CanvasPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
@@ -251,21 +248,27 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         briSpec   = _TOOLBAR_PROPS[display, 'brightness']
         conSpec   = _TOOLBAR_PROPS[display, 'contrast']
 
+
         # Buttons which toggle overlay
         # info and display panel
+        # This is really hacky. The FSLeyesFrame
+        # setattrs a ToggleControlPanelAction for every
+        # built-in control to the view panel object,
+        # so here we access attributes called
+        # "OverlayDisplayPanel" and "OverlayInfoPanel".
+        # This will hopefully change in the future.
         panelSpec = actions.ToggleActionButton(
-            'toggleDisplayPanel',
+            'OverlayDisplayPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('gearHighlight24'),
                   icons.findImageFile('gear24')],
-            tooltip=fsltooltips.actions[viewPanel, 'toggleDisplayPanel'])
-
+            tooltip=fsltooltips.actions[viewPanel, 'OverlayDisplayPanel'])
         infoSpec = actions.ToggleActionButton(
-            'toggleOverlayInfo',
+            'OverlayInfoPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('informationHighlight24'),
                   icons.findImageFile('information24')],
-            tooltip=fsltooltips.actions[viewPanel, 'toggleOverlayInfo'])
+            tooltip=fsltooltips.actions[viewPanel, 'OverlayInfoPanel'])
 
         # Name/overlay type and brightness/contrast
         # are respectively placed together

@@ -11,13 +11,14 @@ allowing the user to run various edit-related actions.
 
 import wx
 
-import fsleyes_props                 as props
-
-import fsleyes.controls.controlpanel as ctrlpanel
-import fsleyes.toolbar               as fsltoolbar
-import fsleyes.actions               as actions
-import fsleyes.icons                 as fslicons
-import fsleyes.tooltips              as fsltooltips
+import fsleyes_props                           as props
+import fsleyes.controls.controlpanel           as ctrlpanel
+import fsleyes.controls.orthoeditsettingspanel as editpanel
+import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
+import fsleyes.toolbar                         as fsltoolbar
+import fsleyes.actions                         as actions
+import fsleyes.icons                           as fslicons
+import fsleyes.tooltips                        as fsltooltips
 
 
 class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
@@ -42,6 +43,25 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         return [OrthoPanel]
 
 
+    @staticmethod
+    def profileCls():
+        """The ``OrthoEditActionToolBar`` is intended to be activated with the
+        :class:`.OrthoEditProfile`.
+        """
+        return orthoeditprofile.OrthoEditProfile
+
+
+
+    @staticmethod
+    def ignoreControl():
+        """The ``OrthoEditActionToolBar`` is not intended to be explicitly
+        added by the user - it is added via :meth:`.OrthoPanel.toggleEditMode`.
+        Overriding this method tells the :class:`.FSLeyesFrame` that it
+        should not be added to the ortho panel settings menu.
+        """
+        return True
+
+
     def __init__(self, parent, overlayList, displayCtx, ortho):
         """Create an ``OrthoEditActionToolBar``.
 
@@ -60,23 +80,22 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
                                           orient=wx.VERTICAL,
                                           kbFocus=True)
 
+        self.toggleEditPanel = actions.ToggleControlPanelAction(
+            overlayList, displayCtx, editpanel.OrthoEditSettingsPanel, ortho)
+
         self.__ortho = ortho
-
-        ortho.addListener('profile', self.name, self.__profileChanged)
-
-        self.__profileChanged()
+        self.__createTools()
 
 
     def destroy(self):
-        """Must be called when this ``OrthoEditAction`` is no longer
-        needed. Removes property listeners, and calls the
-        :meth:`.ControlToolBar.destroy` method.
+        """Must be called when this ``OrthoEditActionToolBar`` is no longer
+        needed. Clears references, and calls the base-class ``destroy`` method.
         """
-        self.__ortho.removeListener('profile', self.name)
-        ctrlpanel.ControlToolBar.destroy(self)
+        super().destroy()
+        self.__ortho = None
 
 
-    def __profileChanged(self, *a):
+    def __createTools(self):
         """Called when the :attr:`.ViewPanel.profile` property of the
         :class:`.OrthoPanel` changes. Shows/hides edit controls accordingly.
         """
@@ -84,11 +103,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
         self.ClearTools(destroy=True, postevent=False)
 
         ortho      = self.__ortho
-        profile    = ortho.profile
-        profileObj = ortho.getCurrentProfile()
-
-        if profile != 'edit':
-            return
+        profileObj = ortho.currentProfile
 
         tools = []
         nav   = []
@@ -101,7 +116,7 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
                                                        orient=wx.HORIZONTAL))
                 continue
 
-            if spec.key == 'toggleEditPanel': target = ortho
+            if spec.key == 'toggleEditPanel': target = self
             else:                             target = profileObj
 
             widget    = props.buildGUI(self, target, spec)

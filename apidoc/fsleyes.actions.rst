@@ -6,15 +6,11 @@
 
    fsleyes.actions.base
    fsleyes.actions.about
-   fsleyes.actions.addmaskdataseries
-   fsleyes.actions.addroihistogram
    fsleyes.actions.applycommandline
-   fsleyes.actions.applyflirtxfm
    fsleyes.actions.browsexnat
    fsleyes.actions.clearlayouts
    fsleyes.actions.clearsettings
    fsleyes.actions.copyoverlay
-   fsleyes.actions.correlate
    fsleyes.actions.diagnosticreport
    fsleyes.actions.exportdataseries
    fsleyes.actions.frameactions
@@ -34,9 +30,7 @@
    fsleyes.actions.reloadoverlay
    fsleyes.actions.removealloverlays
    fsleyes.actions.removeoverlay
-   fsleyes.actions.resample
    fsleyes.actions.runscript
-   fsleyes.actions.saveflirtxfm
    fsleyes.actions.saveoverlay
    fsleyes.actions.savelayout
    fsleyes.actions.screenshot

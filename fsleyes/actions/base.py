@@ -86,6 +86,20 @@ class Action(props.HasProperties):
         return None
 
 
+    @staticmethod
+    def ignoreTool():
+        """Used by the FSLeyes :mod:`.plugins` module for actions which are
+        loaded as plugins. Can be used to tell the ``plugins`` module that
+        a particular ``Action`` should not be added as an option to the
+        FSLeyes Tools menu.
+
+        Note that this method must be implemented on the class that is to
+        be ignored - inherited implementations from base classes are not
+        considered.
+        """
+        return False
+
+
     def __init__(self,
                  overlayList,
                  displayCtx,
@@ -119,7 +133,9 @@ class Action(props.HasProperties):
         self.__displayCtx   = displayCtx
         self.__instance     = instance
         self.__func         = func
-        self.__name         = name
+        self.__name         = '{}_{}'.format(type(self).__name__, id(self))
+        self.__actionName   = name
+        self.__destroyed    = False
         self.__boundWidgets = []
 
         self.addListener('enabled',
@@ -137,8 +153,21 @@ class Action(props.HasProperties):
         return self.__str__()
 
 
+    @property
+    def actionName(self):
+        """Returns the name of this ``Action``, often the method name of the
+        :class:`.ActionProvider` that implements the action. Not to be
+        confused with :meth:`name`.
+        """
+        return self.__actionName
+
+
+    @property
     def name(self):
-        """Returns the name of this ``Action``. """
+        """Not to be confused with :meth:`actionName`.
+        Returns a unique name for a specific ``Action`` instance, which
+        can be used (e.g.) for registering property listeners.
+        """
         return self.__name
 
 
@@ -181,9 +210,18 @@ class Action(props.HasProperties):
         return self.__func(*args, **kwargs)
 
 
+    @property
+    def destroyed(self):
+        """Returns ``True`` if :meth:`destroy` has been called, ``False``
+        otherwise.
+        """
+        return self.__destroyed
+
+
     def destroy(self):
         """Must be called when this ``Action`` is no longer needed. """
         self.unbindAllWidgets()
+        self.__destroyed   = True
         self.__overlayList = None
         self.__displayCtx  = None
         self.__func        = None

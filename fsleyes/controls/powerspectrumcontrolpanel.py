@@ -8,12 +8,13 @@
 *FSLeyes control* panel for controlling a :class:`.PowerSpectrumPanel`.
 """
 
+import wx
 
 import fsleyes_props                        as props
-
 import fsleyes.tooltips                     as fsltooltips
-import fsleyes.plotting.powerspectrumseries as powerspectrumseries
 import fsleyes.strings                      as strings
+import fsleyes.plotting.powerspectrumseries as powerspectrumseries
+import fsleyes.views.powerspectrumpanel     as powerspectrumpanel
 from . import plotcontrolpanel              as plotcontrol
 
 
@@ -21,6 +22,24 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
     """The ``PowerSpectrumControlPanel`` class is a :class:`.PlotControlPanel`
     which allows the user to control a :class:`.PowerSpectrumPanel`.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``PowerSpectrumControlPanel`` is only intended to be added to
+        :class:`.PowerSpectrumPanel` views.
+        """
+        return [powerspectrumpanel.PowerSpectrumPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.RIGHT}
+
 
     def __init__(self, *args, **kwargs):
         """Create a ``PowerSpectrumControlPanel``. All arguments are passed
@@ -43,16 +62,6 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         psPanel = self.getPlotPanel()
         psPanel.removeListener('plotMelodicICs', self.name)
         plotcontrol.PlotControlPanel.destroy(self)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``PowerSpectrumControlPanel`` is only intended to be added to
-        :class:`.PowerSpectrumPanel` views.
-        """
-        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-        return [PowerSpectrumPanel]
 
 
     def generateCustomPlotPanelWidgets(self, groupName):

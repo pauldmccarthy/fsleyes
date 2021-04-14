@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 #
-# scene3dtoolbar.py -
+# scene3dtoolbar.py - The Scene3DToolBar class
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`Scene3DToolBar` class, a FSLeyes control
+which implements a toolbar for use with the :class:`.Scene3DPanel`.
+"""
 
 
 import wx
@@ -11,6 +14,7 @@ import wx
 
 import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.scene3dpanel    as scene3dpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.strings               as strings
 import fsleyes.actions               as actions
@@ -20,7 +24,8 @@ import fsleyes.tooltips              as fsltooltips
 
 
 class Scene3DToolBar(ctrlpanel.ControlToolBar):
-    """
+    """The ``Scene3DToolBar`` is a FSLeyes control which implements a toolbar for
+    use with the :class:`.Scene3DPanel`.
     """
 
 
@@ -29,6 +34,14 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
     user to simultaneously toggle the :attr:`.SceneOpts.showCursor` and
     :attr:`.Scene3DOpts.showLegend` properties.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``Scene3DToolBar`` is restricted for use with the
+        :class:`.Scene3DPanel`.
+        """
+        return [scene3dpanel.Scene3DPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, panel):
@@ -67,22 +80,12 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
         ctrlpanel.ControlToolBar.destroy(self)
 
 
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``Scene3DToolBar`` is only intended to be added to
-        :class:`.Scene3DPanel` views.
-        """
-        from fsleyes.views.scene3dpanel import Scene3DPanel
-        return [Scene3DPanel]
-
-
     def __makeTools(self):
         """Called by :meth:`__init__`. Creates the toolbar widgets. """
 
         panel   = self.panel
         opts    = panel.sceneOpts
-        profile = panel.getCurrentProfile()
+        profile = panel.currentProfile
 
         icons = {
             'screenshot'          : fslicons.findImageFile('camera24'),
@@ -93,7 +96,7 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
             'movieMode'        : [
                 fslicons.findImageFile('movieHighlight24'),
                 fslicons.findImageFile('movie24')],
-            'toggleCanvasSettingsPanel' : [
+            'CanvasSettingsPanel' : [
                 fslicons.findImageFile('spannerHighlight24'),
                 fslicons.findImageFile('spanner24')],
         }
@@ -105,25 +108,25 @@ class Scene3DToolBar(ctrlpanel.ControlToolBar):
             'showCursorAndLegend' : fsltooltips.properties[
                 self, 'showCursorAndLegend'],
             'zoom'         : fsltooltips.properties[opts, 'zoom'],
-            'toggleCanvasSettingsPanel' : fsltooltips.actions[
-                panel, 'toggleCanvasSettingsPanel'],
+            'CanvasSettingsPanel' : fsltooltips.actions[
+                panel, 'CanvasSettingsPanel'],
         }
 
         targets = {
-            'screenshot'                : panel,
-            'resetDisplay'              : profile,
-            'movieMode'                 : panel,
-            'showCursorAndLegend'       : self,
-            'zoom'                      : opts,
-            'toggleCanvasSettingsPanel' : panel,
+            'screenshot'          : panel,
+            'resetDisplay'        : profile,
+            'movieMode'           : panel,
+            'showCursorAndLegend' : self,
+            'zoom'                : opts,
+            'CanvasSettingsPanel' : panel,
         }
 
         toolSpecs = [
             actions.ToggleActionButton(
-                'toggleCanvasSettingsPanel',
+                'CanvasSettingsPanel',
                 actionKwargs={'floatPane' : True},
-                icon=icons['toggleCanvasSettingsPanel'],
-                tooltip=tooltips['toggleCanvasSettingsPanel']),
+                icon=icons['CanvasSettingsPanel'],
+                tooltip=tooltips['CanvasSettingsPanel']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),

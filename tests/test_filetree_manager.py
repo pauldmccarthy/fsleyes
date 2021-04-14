@@ -11,11 +11,12 @@ from collections import OrderedDict
 
 import pytest
 
-from   fsl.utils.tempdir              import tempdir
-from   fsl.data.image                 import Image
-from   fsl.data.gifti                 import GiftiMesh
-import fsleyes.filetree.query         as     ftquery
-import fsleyes.filetree.manager       as     ftman
+from   fsl.utils.tempdir import tempdir
+from   fsl.data.image    import Image
+from   fsl.data.gifti    import GiftiMesh
+
+import fsleyes.plugins.controls.filetreepanel.query   as ftquery
+import fsleyes.plugins.controls.filetreepanel.manager as ftman
 
 from . import run_with_fsleyes, run_with_orthopanel, yieldUntil
 

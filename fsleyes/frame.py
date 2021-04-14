@@ -615,47 +615,15 @@ class FSLeyesFrame(wx.Frame):
         basically amounts to adding toolbars.
         """
 
-        from fsleyes.views.orthopanel         import OrthoPanel
-        from fsleyes.views.lightboxpanel      import LightBoxPanel
-        from fsleyes.views.scene3dpanel       import Scene3DPanel
-        from fsleyes.views.timeseriespanel    import TimeSeriesPanel
-        from fsleyes.views.histogrampanel     import HistogramPanel
-        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-
         viewPanel.removeAllPanels()
+        ctrls = viewPanel.defaultLayout()
+        if ctrls is None:
+            return
 
-        if isinstance(viewPanel, TimeSeriesPanel):
-            viewPanel.toggleTimeSeriesToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
+        ctrls = [plugins.lookupControl(c) for c in ctrls]
 
-        elif isinstance(viewPanel, HistogramPanel):
-            viewPanel.toggleHistogramToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
-
-        elif isinstance(viewPanel, PowerSpectrumPanel):
-            viewPanel.togglePowerSpectrumToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.togglePlotList()
-
-        elif isinstance(viewPanel, OrthoPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleOrthoToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
-
-        elif isinstance(viewPanel, LightBoxPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleLightBoxToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
-
-        elif isinstance(viewPanel, Scene3DPanel):
-            viewPanel.toggleDisplayToolBar()
-            viewPanel.toggleScene3DToolBar()
-            viewPanel.toggleOverlayList()
-            viewPanel.toggleLocationPanel()
+        for ctrl in ctrls:
+            viewPanel.togglePanel(ctrl)
 
 
     def refreshViewMenu(self):
@@ -704,8 +672,6 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in it.chain(*self.__viewPanelMenuActions.values()):
             action.unbindWidget(item)
-            if action.instance is None:
-                action.destroy()
 
         for menu in self.__viewPanelMenus.values():
             menu = menu.GetSubMenu()
@@ -861,14 +827,6 @@ class FSLeyesFrame(wx.Frame):
                 menu.AppendSeparator()
                 continue
 
-            # If actionObj is a list, this is a
-            # hacky hint to insert a sub-menu.
-            elif isinstance(actionObj, list):
-                names, objs = list(zip(*actionObj))
-                titles = [strings.actions.get((target, n), n) for n in names]
-                currentMenu = wx.Menu()
-                menu.AppendSubMenu(currentMenu, actionName)
-
             # A single normal action <-> menu item
             else:
                 currentMenu = menu
@@ -895,6 +853,9 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return None, []
 
+        # The settings menu for a view is a list of its
+        # actions, followed by a list of supported control
+        # types. followed by a "removeAllPanels" action
         actionItems  = []
         actionNames  = [name for (name, obj) in panel.getActions()]
         actionTitles = {}
@@ -903,38 +864,28 @@ class FSLeyesFrame(wx.Frame):
         if len(pluginCtrls) > 0:
             actionNames.append(None)
 
-            # A bit hacky, For each plugin control, we
-            # create a ToggleAction, and add it as an
-            # attribute on the view panel. Then it will
-            # work with the ActionProvider interface,
-            # and hence the populateMenu method.
+            # ViewPanel.controlOrder can suggest an ordering
+            # of the control panels in the settings menu
+            ctrlOrder = panel.controlOrder()
+            if ctrlOrder is not None:
+                names, clss = zip(*pluginCtrls.items())
+                ctrlOrder   = [plugins.lookupControl(c) for c in ctrlOrder]
+                indices     = [ctrlOrder.index(c) if c in ctrlOrder
+                               else len(pluginCtrls)
+                               for c in clss]
+                astuples    = sorted(zip(indices, names, clss))
+                pluginCtrls = {t[1] : t[2] for t in astuples}
+
+            # ViewPanels have a ToggleControlPanelActiopn
+            # added as an attributee for every supported
+            # control panel
             for ctrlName, ctrlType in pluginCtrls.items():
+                name = ctrlType.__name__
+                actionNames.append(name)
+                actionTitles[name] = ctrlName
 
-                # Use default arguments to togglePanel
-                # if the class specifies them
-                kwargs = ctrlType.defaultLayout()
-                if kwargs is None:
-                    kwargs = {}
-
-                # If defaultLayout specifies a
-                # title, it takes precedence.
-                if 'title' not in kwargs:
-                    kwargs['title'] = ctrlName
-                else:
-                    ctrlName = kwargs['title']
-
-                func = ft.partial(panel.togglePanel, ctrlType, **kwargs)
-                name = re.sub('[^a-zA-z0-9_]', '_', ctrlName)
-                if not hasattr(panel, name):
-                    act  = actions.ToggleAction(self.overlayList,
-                                                self.displayCtx,
-                                                func,
-                                                name=ctrlName)
-
-                    setattr(panel, name, act)
-
-                    actionNames .append(name)
-                    actionTitles[name] = ctrlName
+            # add a "remove all panels" item
+            actionNames.append('removeAllPanels')
 
         if len(actionNames) == 0:
             return None, []
@@ -945,9 +896,8 @@ class FSLeyesFrame(wx.Frame):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
-        if 'removeFromFrame' not in actionNames:
-            actionNames.append(None)
-            actionNames.append('removeFromFrame')
+        actionNames.append(None)
+        actionNames.append('removeFromFrame')
 
         # Most of the work is
         # done in populateMenu
@@ -1979,7 +1929,9 @@ class FSLeyesFrame(wx.Frame):
         views.
         """
 
-        menu = self.__toolsMenu
+        menu        = self.__toolsMenu
+        actionItems = []
+        pluginTools = plugins.listTools()
 
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
@@ -1994,25 +1946,6 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        from fsleyes.actions.applyflirtxfm         import ApplyFlirtXfmAction
-        from fsleyes.actions.saveflirtxfm          import SaveFlirtXfmAction
-        from fsleyes.actions.resample              import ResampleAction
-        from fsleyes.actions.projectimagetosurface import \
-            ProjectImageToSurfaceAction
-
-        actionz = [
-            ApplyFlirtXfmAction,
-            SaveFlirtXfmAction,
-            ResampleAction,
-            ProjectImageToSurfaceAction,
-        ]
-
-        actionItems = []
-
-        for action in actionz:
-            actionItems.append(addTool(action, strings.actions[action]))
-
-        pluginTools = plugins.listTools()
         if len(pluginTools) > 0:
             menu.AppendSeparator()
             for name, cls in pluginTools.items():
@@ -2057,14 +1990,6 @@ class FSLeyesFrame(wx.Frame):
                 for view in views:
                     pluginTools[view].append((name, cls))
 
-        def addPluginTool(cls, name, view):
-            # plugin tools bound to a specific view
-            # get passed a reference to that view
-            actionObj = cls(self.__overlayList, self.__displayCtx, view)
-            menuItem  = menu.Append(wx.ID_ANY, name)
-            actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
-            return actionObj, menuItem
-
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
         # panel types are always in a consistent
@@ -2087,13 +2012,19 @@ class FSLeyesFrame(wx.Frame):
 
         for panel in panels:
 
-            vpType    = type(panel)
-            tools     = panel.getTools()
-            toolNames = [t.name() for t in tools]
+            vpType     = type(panel)
+            toolNames  = [t.actionName for t in panel.getTools()]
+            toolTitles = {}
+
+            for name, cls in pluginTools[type(panel)]:
+                actionObj = cls(self.__overlayList, panel.displayCtx, panel)
+                setattr(panel, cls.__name__, actionObj)
+                toolNames.append(cls.__name__)
+                toolTitles[cls.__name__] = name
 
             # Only the first panel for each type
             # has its tools added to the menu.
-            if len(tools) == 0 or vpType in vpTypesAdded:
+            if len(toolNames) == 0 or vpType in vpTypesAdded:
                 continue
 
             vpTypesAdded.add(vpType)
@@ -2103,10 +2034,8 @@ class FSLeyesFrame(wx.Frame):
             # separator, and the view panel title.
             menu.AppendSeparator()
             menu.Append(wx.ID_ANY, self.__viewPanelTitles[panel]).Enable(False)
-            actionItems.extend(self.populateMenu(menu, panel, toolNames))
-
-            for name, cls in pluginTools[type(panel)]:
-                actionItems.append(addPluginTool(cls, name, panel))
+            actionItems.extend(
+                self.populateMenu(menu, panel, toolNames, toolTitles))
 
         return actionItems
 

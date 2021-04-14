@@ -20,8 +20,8 @@ import fsl.data.mesh                          as fslmesh
 import fsleyes_props                          as props
 
 import fsleyes.actions                        as actions
-import fsleyes.actions.addroihistogram        as roihistogram
 import fsleyes.overlay                        as fsloverlay
+import fsleyes.profiles.histogramprofile      as histogramprofile
 import fsleyes.plotting.histogramseries       as histogramseries
 import fsleyes.controls.histogramcontrolpanel as histogramcontrolpanel
 import fsleyes.controls.histogramtoolbar      as histogramtoolbar
@@ -52,23 +52,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
 
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.histogramcontrolpanel.HistogramControlPanel
-
-
-    The following :mod:`actions` are provided, in addition to those already
-    provided by the :class:`.PlotPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleHistogramToolBar
-       toggleHistogramControl
-
-    Some tools are also available, to do various things:
-
-    .. autosummary::
-       :nosignatures:
-
-       addROIHistogram
     """
 
 
@@ -95,6 +78,27 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        histogram panel layout.
+        """
+        return ['HistogramToolBar',
+                'OverlayListPanel',
+                'PlotListPanel']
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'PlotListPanel',
+                'HistogramToolBar',
+                'HistogramControlPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``HistogramPanel``.
 
@@ -118,14 +122,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
                                 self.name,
                                 self.__selectedOverlayChanged)
 
-        self.__roiHistAction = roihistogram.AddROIHistogramAction(
-            overlayList,
-            displayCtx,
-            self)
-
-        self.addROIHistogram.bindProps('enabled', self.__roiHistAction)
-
-        self.initProfile()
+        self.initProfile(histogramprofile.HistogramProfile)
         self.__selectedOverlayChanged()
 
 
@@ -134,10 +131,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         :meth:`.PlotPanel.destroy`.
         """
 
-        self.__roiHistAction.destroy()
-
-        self.__currentHs     = None
-        self.__roiHistAction = None
+        self.__currentHs = None
 
         self            .removeListener('histType',        self.name)
         self            .removeListener('plotType',        self.name)
@@ -145,24 +139,6 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         self.displayCtx .removeListener('selectedOverlay', self.name)
 
         plotpanel.OverlayPlotPanel.destroy(self)
-
-
-    @actions.toggleControlAction(histogramcontrolpanel.HistogramControlPanel)
-    def toggleHistogramControl(self, floatPane=False):
-        """Shows/hides a :class:`.HistogramControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(histogramcontrolpanel.HistogramControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(histogramtoolbar.HistogramToolBar)
-    def toggleHistogramToolBar(self):
-        """Shows/hides a :class:`.HistogramToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(histogramtoolbar.HistogramToolBar)
 
 
     @actions.toggleAction
@@ -175,37 +151,17 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         pass
 
 
-    @actions.action
-    def addROIHistogram(self):
-        """Runs an :class:`.AddROIHistogramAction`. """
-
-        self.__roiHistAction()
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``HistogramPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.importDataSeries,
                    self.exportDataSeries,
-                   None,
-                   self.toggleOverlayList,
-                   self.togglePlotList,
-                   self.toggleHistogramToolBar,
-                   self.toggleHistogramControl,
                    self.toggleHistogramOverlay]
 
-        names = [a.__name__ if a is not None else None for a in actions]
-
-        return list(zip(names, actions))
-
-
-    def getTools(self):
-        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
-        ``HistogramPanel`` views.
-        """
-        return [self.addROIHistogram]
+        names = [a.actionName if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def draw(self, *a):

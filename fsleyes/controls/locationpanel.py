@@ -31,6 +31,7 @@ import fsleyes_widgets.utils.status   as status
 import fsleyes_widgets.utils.typedict as td
 
 import fsleyes.controls.controlpanel  as ctrlpanel
+import fsleyes.views.canvaspanel      as canvaspanel
 import fsleyes.panel                  as fslpanel
 import fsleyes.strings                as strings
 
@@ -61,6 +62,22 @@ class LocationPanel(ctrlpanel.ControlPanel):
     The history panel is optional - if the ``showHistory`` parameter to
     ``__init__`` is ``False`` then only the information panel will be shown.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``LocationPanel`` is restricted for use with
+        :class:`.CanvasPanel` views.
+        """
+        return [canvaspanel.CanvasPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.BOTTOM}
 
 
     def __init__(self,
@@ -1062,7 +1079,9 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         self.__save .Bind(wx.EVT_BUTTON,                 self.__onSave)
         self.__clear.Bind(wx.EVT_BUTTON,                 self.__onClear)
 
-        self.__canvas.addListener('profile', self.name, self.__profileChanged)
+        self.__canvas.events.register(self.name,
+                                      self.__profileChanged,
+                                      'profile')
         self.__profileChanged()
 
 
@@ -1071,7 +1090,7 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         needed.
         """
         self.__deregisterProfile()
-        self.__canvas.removeListener('profile', self.name)
+        self.__canvas.events.deregister(self.name, 'profile')
         self.__canvas = None
         fslpanel.FSLeyesPanel.destroy(self)
 
@@ -1115,7 +1134,7 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         mouse event listeners with the new :class:`.Profile` object.
         """
         self.__deregisterProfile()
-        self.__registerProfile(self.__canvas.getCurrentProfile())
+        self.__registerProfile(self.__canvas.currentProfile)
 
 
     def __addLocation(self, worldLoc, comment=None):

@@ -10,18 +10,20 @@ documentation for more details.
 """
 
 
-import logging
+import              logging
+import itertools as it
 
 import                                  wx
 import wx.lib.agw.aui                as aui
 import wx.lib.agw.aui.framemanager   as auifm
 
+import fsl.utils.notifier            as notifier
 import fsl.utils.deprecated          as deprecated
 import fsleyes_widgets               as fwidgets
-import fsleyes_props                 as props
 
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
+import fsleyes.plugins               as plugins
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.profiles              as profiles
 import fsleyes.strings               as strings
@@ -58,16 +60,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     **Profiles**
 
 
-    Some ``ViewPanel`` classes have relatively complex mouse and keyboard
-    interaction behaviour (e.g. the :class:`.OrthoPanel` and
-    :class:`.LightBoxPanel`). The logic defines this interaction is provided
-    by a :class:`.Profile` instance, and is managed by a
-    :class:`.ProfileManager`.  Some ``ViewPanel`` classes have multiple
-    interaction profiles - for example, the :class:`.OrthoPanel` has a
-    ``view`` profile, and an ``edit`` profile. The current interaction
-    profile can be changed with the :attr:`profile` property, and can be
-    accessed with the :meth:`getCurrentProfile` method. See the
-    :mod:`.profiles` package for more information on interaction profiles.
+    The logic which defines the way that a user interacts with a view panel
+    is defined by a  :class:`.Profile` object, which contains mouse and
+    keyboard event handlers for reacting to user input.
+
+    Sub-classes must call the :meth:`initProfile` method to initialise their
+    default profile. Other profiles may be associated with a particular
+    control panel - these profiles can be temporarily activated and deactivated
+    when the control panel is toggled via the :meth:`togglePanel` method.
+
+    The currently active interaction profile can be accessed with the
+    :meth:`currentProfile` method. See the :mod:`.profiles` package for
+    more information on interaction profiles.
 
 
     **Programming interface**
@@ -92,20 +96,63 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    profile = props.Choice()
-    """The current interaction profile for this ``ViewPanel``. """
+    def controlOptions(self, cpType):
+        """May be overridden by sub-classes. Given a control panel type,
+        may return a dictionary containing arguments to be passed to
+        the  ``__init__`` method when the control panel is created.
+        """
+        return None
+
+
+    @staticmethod
+    def controlOrder():
+        """May be overridden by sub-classes. Returns a list of names of
+        control panel types, specifying a suggested order for the
+        settings menu for views of this type.
+        """
+        return None
+
+
+    @staticmethod
+    def defaultLayout():
+        """May be overridden by sub-classes. Should return a list of names of
+        FSLeyes :class:`.ControlPanel` types which form the default layout for
+        this view.
+        """
+        return None
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
-        """Create a ``ViewPanel``. All arguments are passed through to the
-        :class:`.FSLeyesPanel` constructor.
+        """Create a ``ViewPanel``.
+
+        :arg parent:         ``wx`` parent object
+        :arg overlayList:    The :class:`.OverlayList`
+        :arg displayCtx:     A :class:`.DisplayContext` object unique to this
+                             ``ViewPanel``
+        :arg frame:          The :class:`.FSLeyesFrame`
         """
 
         fslpanel.FSLeyesPanel.__init__(
             self, parent, overlayList, displayCtx, frame)
 
+        # Currently only two profiles are allowed at
+        # any one time - the default profile, passed
+        # to initProfiles. and one more profile
+        # associated with a control panel.
+        #
+        # If the default profile is active, and a
+        # new control is opened which needs a different
+        # profile, that profile is activated.
+        #
+        # If a non-default profile (#1) is active, and
+        # a new control is opened which needs a
+        # different profile (#2), all controls which
+        # require profile #1 are closed, and profile
+        # #2 is activated.
+        #
+        # This all happens in togglePanel.
         self.__profileManager = profiles.ProfileManager(
-            self, overlayList, displayCtx)
+            self, overlayList, displayCtx, 2)
 
         # The __centrePanel attribute stores a reference
         # to the main (centre) panel on this ViewPanel.
@@ -118,6 +165,13 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # in this view panel.
         self.__centrePanel = None
         self.__panels      = {}
+
+        # Notifier instance for emitting events.
+        # Currently the only event is on profile
+        # changes, and the profilemanager emits
+        # these events anyway, so we can just
+        # use it
+        self.__events = self.__profileManager
 
         # See note in FSLeyesFrame about
         # the user of aero docking guides.
@@ -132,12 +186,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
 
-        # Use a different listener name so that subclasses
-        # can register on the same properties with self.name
-        lName = 'ViewPanel_{}'.format(self.name)
-
-        self.addListener('profile', lName, self.__profileChanged)
-
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
         # to the minimum size of the panel, without taking
@@ -150,11 +198,27 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         ff         = wx.MiniFrame(self)
         size       = ff.GetSize().Get()
         clientSize = ff.GetClientSize().Get()
-
         self.__floatOffset = (size[0] - clientSize[0],
                               size[1] - clientSize[1])
-
         ff.Destroy()
+
+        # A bit hacky, For each plugin control, we create
+        # a ToggleControlPanelAction, and add it as an
+        # attribute on the view panel. Then it will work
+        # with the ActionProvider interface, and hence the
+        # FSLEeyesFrame.populateMenu method.
+        for ctrlType in plugins.listControls(type(self)).values():
+            # We add toggle actions as attributes to the
+            # ViewPanel instance, which is horribly hacky
+            # and will hopefully be changed in the future.
+            name = ctrlType.__name__
+            act  = actions.ToggleControlPanelAction(
+                self.overlayList,
+                self.displayCtx,
+                ctrlType,
+                self,
+                name=name)
+            setattr(self, name, act)
 
 
     def destroy(self):
@@ -164,15 +228,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """
 
         # Make sure that any control panels are correctly destroyed
-        for panelType, panel in self.__panels.items():
+        for panel in self.__panels.values():
             self.__auiMgr.DetachPane(panel)
             panel.destroy()
+
+        # Clear ref to the events Notifier - it
+        # will drop refs to any event handlers
+        self.__events = None
 
         # Remove listeners from the overlay
         # list and display context
         lName = 'ViewPanel_{}'.format(self.name)
 
-        self            .removeListener('profile',         lName)
         self.overlayList.removeListener('overlays',        lName)
         self.displayCtx .removeListener('selectedOverlay', lName)
 
@@ -184,6 +251,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.Update()
         self.__auiMgr.UnInit()
 
+        # The ToggleControlPanelAction (which is used
+        # to keep toggle buttons/menu items in sync
+        # with reality) interacts with the AUI
+        # manager. These actions will be destroyed
+        # via FSLeyesPanel.destroy, so we don't clear
+        # the auimgr ref until afterwards.
+        fslpanel.FSLeyesPanel.destroy(self)
+
         # The AUI manager does not clear its
         # reference to this panel, so let's
         # do it here.
@@ -193,20 +268,42 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__panels         = None
         self.__centrePanel    = None
 
-        fslpanel.FSLeyesPanel.destroy(self)
+
+    @property
+    def events(self):
+        """Return a reference to a :class:`.Notifier` instance which can be
+        used to be notified when certain events occur. Currently the only
+        event topic which occurs is ``'profile'``, when the current
+        interaction profile changes. Callbacks which are registered with
+        the ``'profile'`` topic will be passed a tuple containing the types
+        (:class:`.Profile` sub-classes) of the de-registered and newly
+        registered profiles.
+        """
+        return self.__events
 
 
-    def initProfile(self):
+    def initProfile(self, defaultProfile):
         """Must be called by subclasses, after they have initialised all
         of the attributes which may be needed by their associated
         :class:`.Profile` instances.
+
+        :arg defaultProfile: Default profile type
         """
-        self.__profileChanged()
+        self.__profileManager.activateProfile(defaultProfile)
 
 
-    def getCurrentProfile(self):
+    @property
+    def currentProfile(self):
         """Returns the :class:`.Profile` instance currently in use. """
         return self.__profileManager.getCurrentProfile()
+
+
+    @property
+    def profileManager(self):
+        """Returns a reference to the :class:`.ProfileManager` used by
+        this ``ViewPanel``.
+        """
+        return self.__profileManager
 
 
     @property
@@ -248,8 +345,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     def togglePanel(self, panelType, *args, **kwargs):
-        """Add/remove the secondary panel of the specified type to/from this
-        ``ViewPanel``.
+        """Add/remove the secondary control panel of the specified type to/from
+        this ``ViewPanel``.
 
         If no keyword argunents are specified, the arguments returned by the
         :meth:`.ControlMixin.defaultLayout` method are returned.
@@ -295,25 +392,36 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                                               *args,
                                               **kwargs)
 
-        .. warning::    Do not define a control (a.k.a. secondary) panel
-                        constructor to accept arguments with the names
-                        ``floatPane``, ``floatOnly``, ``floatPos``,
-                        ``closeable``, or ``location``, as arguments with
-                        those names will get eaten by this method before they
-                        can be passed to the constructor.
+        .. warning:: Do not define a control (a.k.a. secondary) panel
+                     constructor to accept arguments with the names
+                     ``floatPane``, ``floatOnly``, ``floatPos``,
+                     ``closeable``, or ``location``, as arguments with those
+                     names will get eaten by this method before they can be
+                     passed to the constructor.
         """
 
-        if len(kwargs) == 0:
-            kwargs = panelType.defaultLayout()
-            if kwargs is None:
-                kwargs = {}
+        # Merge in default options for this control,
+        # with precedence (highest to lowest):
+        #  1. kwargs
+        #  2. ViewPanel.controlOptions
+        #  3. ControlPanel.defaultLayout
+        layout = panelType.defaultLayout()
+        cpopts = self.controlOptions(panelType)
 
-        location  = kwargs.pop('location',  None)
-        floatPane = kwargs.pop('floatPane', False)
-        floatOnly = kwargs.pop('floatOnly', False)
-        closeable = kwargs.pop('closeable', True)
-        title     = kwargs.pop('title',     None)
-        floatPos  = kwargs.pop('floatPos',  (0.5, 0.5))
+        if layout is None: layout = {}
+        if cpopts is None: cpopts = {}
+
+        for k, v in it.chain(cpopts.items(), layout.items()):
+            if k not in kwargs:
+                kwargs[k] = v
+
+        location   = kwargs.pop('location',  None)
+        floatPane  = kwargs.pop('floatPane', False)
+        floatOnly  = kwargs.pop('floatOnly', False)
+        closeable  = kwargs.pop('closeable', True)
+        title      = kwargs.pop('title',     None)
+        floatPos   = kwargs.pop('floatPos',  (0.5, 0.5))
+        profileCls = panelType.profileCls()
 
         if title is None:
             title = strings.titles.get(panelType, type(panelType).__name__)
@@ -322,36 +430,84 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             raise ValueError('Invalid value for location')
 
         supported = panelType.supportedViews()
-        if supported is not None and type(self) not in supported:
+        if supported is not None and not isinstance(self, tuple(supported)):
             raise ValueError(
                 '{} views are not supported by {} controls'.format(
                     type(self).__name__, panelType.__name__))
 
-        window = self.__panels.get(panelType, None)
-
         # The panel is already open - close it
+        window = self.__panels.get(panelType, None)
         if window is not None:
             self.__onPaneClose(None, window)
             return
 
         # Otherwise, create a new panel of the specified type.
+        # If this control is associated with a custom interaction
+        # profile, check that that profile is active, create it
+        # if needed, and close down any controls which are not
+        # compatible with the new profile.
+        profile = self.currentProfile
+        if profileCls is not None and not isinstance(profile, profileCls):
+
+            log.debug('New control %s requires interaction profile %s but '
+                      'profile %s is active', panelType.__name__,
+                      profileCls.__name__, type(profile).__name__)
+
+            # close down incompatible controls
+            for ctype, cpanel in list(self.__panels.items()):
+                cprofileCls = ctype.profileCls()
+                if cprofileCls is not None and \
+                   not issubclass(cprofileCls, profileCls):
+                    log.debug('Closing down control %s as it is incompatible '
+                              'with profile %s', ctype.__name__,
+                              profileCls.__name__)
+                    self.__onPaneClose(None, cpanel)
+
+            # change profile
+            self.__profileManager.activateProfile(profileCls)
+
         # The PaneInfo Name is the control panel class name -
         # this is used for saving and restoring layouts.
-        paneInfo  = aui.AuiPaneInfo().Name(panelType.__name__)
-        window    = panelType(self,
-                              self.overlayList,
-                              self.displayCtx,
-                              self,
-                              *args,
-                              **kwargs)
-        isToolbar = isinstance(window, ctrlpanel.ControlToolBar)
+        window = panelType(self,
+                           self.overlayList,
+                           self.displayCtx,
+                           self,
+                           *args,
+                           **kwargs)
+        # save a ref to the control if it has a custom
+        # profile so, when it is destroyed, we know
+        if profileCls is not None:
+            self.__activeControl = window
+
+        paneInfo = self.__layoutNewPanel(window, title, location, floatPane,
+                                         floatPos, floatOnly, closeable)
+        self.__auiMgr.AddPane(window, paneInfo)
+        self.__panels[panelType] = window
+        self.__auiMgrUpdate(newPanel=window)
+
+
+    def __layoutNewPanel(self,
+                         panel,
+                         title,
+                         location,
+                         floatPane,
+                         floatPos,
+                         floatOnly,
+                         closeable):
+        """Sub-method of :meth:`togglePanel`. Creates and returns an
+        ``AuiPaneInfo`` instance describing the initial layout of a new
+        control panel. See ``togglePanel`` for an explanation of the
+        arguments.
+        """
+        paneInfo  = aui.AuiPaneInfo().Name(type(panel).__name__)
+        isToolbar = isinstance(panel, ctrlpanel.ControlToolBar)
 
         if isToolbar:
 
             # ToolbarPane sets the panel layer to 10
             paneInfo.ToolbarPane()
 
-            if window.GetOrient() == wx.VERTICAL:
+            if panel.GetOrient() == wx.VERTICAL:
                 paneInfo.GripperTop()
 
             # We are going to put any new toolbars on
@@ -381,7 +537,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # When the toolbar contents change,
             # update the layout, so that the
             # toolbar's new size is accommodated
-            window.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
+            panel.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
 
         paneInfo.Caption(title)
 
@@ -413,7 +569,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             selfCentre = (selfPos[0] + selfSize[0] * floatPos[0],
                           selfPos[1] + selfSize[1] * floatPos[1])
 
-            paneSize = window.GetBestSize().Get()
+            paneSize = panel.GetBestSize().Get()
             panePos  = (selfCentre[0] - paneSize[0] * 0.5,
                         selfCentre[1] - paneSize[1] * 0.5)
 
@@ -423,9 +579,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                     .CloseButton(closeable)  \
                     .FloatingPosition(panePos)
 
-        self.__auiMgr.AddPane(window, paneInfo)
-        self.__panels[panelType] = window
-        self.__auiMgrUpdate(newPanel=window)
+        return paneInfo
 
 
     def isPanelOpen(self, panelType):
@@ -446,8 +600,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     @actions.action
     def removeAllPanels(self):
         """Remove all control panels from this ``ViewPanel``."""
-
-        for panelType, instance in list(self.__panels.items()):
+        for panelType in list(self.__panels.keys()):
             self.togglePanel(panelType)
 
 
@@ -495,19 +648,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """This method should be overridden by sub-classes (if necessary), and
         should return any ``action`` methods which should be added to the
         :class:`.FSLeyesFrame` *Tools* menu.
+
+        See also the :meth:`.ActionProvider.getActions` method, which can
+        also be overridden, and controls the actions which get added to the
+        FSLeyes *settings* menu.
         """
         return []
-
-
-    def __profileChanged(self, *a):
-        """Called when the current :attr:`profile` property changes. Tells the
-        :class:`.ProfileManager` about the change.
-
-        The ``ProfileManager`` will create a new :class:`.Profile` instance of
-        the appropriate type.
-        """
-
-        self.__profileManager.changeProfile(self.profile)
 
 
     def __auiMgrUpdate(self, *args, **kwargs):
@@ -634,9 +780,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         else:
             panels = [panel]
 
-
         for panel in list(panels):
 
+            # note: in theory, all panels  should be sub-classes
+            # of ControlPanel/ControlToolBar. But this check is
+            # kept here to support third party scripts which don't
+            # honour the FSLeyes plugin rules.
             if isinstance(panel, (ctrlpanel.ControlPanel,
                                   ctrlpanel.ControlToolBar)):
 
@@ -651,7 +800,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 # calling ControlPanel.destroy()
                 # here -  wx.Destroy is done below
                 else:
-                    log.debug('Panel closed: {}'.format(type(panel).__name__))
+                    log.debug('Panel closed: %s', type(panel).__name__)
                     panel.destroy()
 
         # Destroy all the panels
@@ -662,6 +811,34 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # we have to do it manually
             self.__auiMgr.DetachPane(panel)
             wx.CallAfter(panel.Destroy)
+
+        # Update interaction profile. We do not
+        # consider multiple tabbed controls here.
+        # If the closed control is associated with
+        # an interaction profile, if no other other
+        # open panels rely on the same destroy the
+        # profile and restore the default profile
+        #
+        # We assume that, if a panel which requires
+        # a custom profile was open, that profile
+        # was active.
+        #
+        # See WTF AUI comment above for reason for
+        # len(panels) guard
+        if len(panels) > 0:
+            profileCls   = panels[0].profileCls()
+            closeProfile = True
+            if profileCls is not None:
+                for ctype in self.__panels:
+                    cprofileCls = ctype.profileCls()
+                    if cprofileCls is not None and \
+                       issubclass(cprofileCls, profileCls):
+                        closeProfile = False
+                if closeProfile:
+                    log.debug('Panel %s uses a custom interaction profile %s - '
+                              'deactivating it and restoring default profile',
+                              type(panels[0]).__name__, profileCls.__name__)
+                    self.__profileManager.deactivateProfile()
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)

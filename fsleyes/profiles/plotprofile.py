@@ -25,6 +25,14 @@ class PlotProfile(profiles.Profile):
      - Right click and drag to zoom the plot.
     """
 
+
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.PlotPanel` class. """
+        from fsleyes.views.plotpanel import PlotPanel
+        return PlotPanel
+
+
     def __init__(self,
                  viewPanel,
                  overlayList,

@@ -11,6 +11,7 @@
 
 import logging
 
+import          wx
 import numpy as np
 
 import fsleyes_props        as props
@@ -38,6 +39,39 @@ class Scene3DViewProfile(profiles.Profile):
     ``pick``   Clicking changes the :attr:`.DisplayContext.location`
     ========== ========================================================
     """
+
+
+    @staticmethod
+    def supportedView():
+        """Specifies that this profile can only work with the
+        :class:`.Scene3DPanel` view.
+        """
+        from fsleyes.views.scene3dpanel import Scene3DPanel
+        return Scene3DPanel
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``Scene3DViewProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {
+            ('rotate', wx.WXK_CONTROL) : 'zoom',
+            ('rotate', wx.WXK_ALT)     : 'pan',
+            ('rotate', wx.WXK_SHIFT)   : 'pick'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return {
+            ('rotate', 'MiddleMouseDown') : ('pan', 'LeftMouseDown'),
+            ('rotate', 'MiddleMouseDrag') : ('pan', 'LeftMouseDrag'),
+            ('rotate', 'MiddleMouseUp')   : ('pan', 'LeftMouseUp')}
+
 
     def __init__(self,
                  viewPanel,

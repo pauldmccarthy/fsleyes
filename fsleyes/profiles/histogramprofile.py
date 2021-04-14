@@ -11,6 +11,7 @@ profile for the :class:`.HistogramPanel`.
 
 import logging
 
+import                       wx
 import numpy              as np
 import matplotlib.patches as patches
 
@@ -43,6 +44,22 @@ class HistogramProfile(plotprofile.PlotProfile):
     linked to the mask :class:`.Image` managed by the
     :class:`.HistogramOverlay`.
     """
+
+
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.HistogramPanel` class. """
+        from fsleyes.views.histogrampanel import HistogramPanel
+        return HistogramPanel
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``HistogramProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        return {('panzoom', wx.WXK_CONTROL) : 'overlayRange'}
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):

@@ -14,8 +14,8 @@ import fsleyes.layouts as layouts
 
 
 from fsleyes.views.orthopanel                   import OrthoPanel
-from fsleyes.controls.atlaspanel                import AtlasPanel
-from fsleyes.controls.lookuptablepanel          import LookupTablePanel
+from fsleyes.plugins.controls.atlaspanel        import AtlasPanel
+from fsleyes.plugins.controls.lookuptablepanel  import LookupTablePanel
 from fsleyes.views.powerspectrumpanel           import PowerSpectrumPanel
 from fsleyes.controls.plotlistpanel             import PlotListPanel
 from fsleyes.controls.powerspectrumcontrolpanel import PowerSpectrumControlPanel  # noqa
@@ -64,12 +64,12 @@ def _test_custom(frame, overlayList, displayCtx):
     ortho = frame.addViewPanel(OrthoPanel)
     ps    = frame.addViewPanel(PowerSpectrumPanel)
 
-    ortho.toggleAtlasPanel()
-    ortho.toggleLookupTablePanel()
+    ortho.togglePanel(AtlasPanel)
+    ortho.togglePanel(LookupTablePanel)
     ortho.sceneOpts.showColourBar = True
 
-    ps.togglePlotList()
-    ps.togglePowerSpectrumControl()
+    ps.togglePanel(PlotListPanel)
+    ps.togglePanel(PowerSpectrumControlPanel)
 
     realYield(50)
     layouts.saveLayout(frame, 'custom_custom')

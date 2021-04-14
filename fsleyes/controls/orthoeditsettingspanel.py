@@ -9,10 +9,12 @@ control panel which contains settings to manage an
 :class:`.OrthoEditProfile`.
 """
 
-import fsleyes.controls.controlpanel as ctrlpanel
-import fsleyes_props                 as props
-import fsleyes.strings               as strings
-import fsleyes.tooltips              as fsltooltips
+
+import fsleyes.controls.controlpanel     as ctrlpanel
+import fsleyes.profiles.orthoeditprofile as orthoeditprofile
+import fsleyes_props                     as props
+import fsleyes.strings                   as strings
+import fsleyes.tooltips                  as fsltooltips
 
 
 class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
@@ -30,6 +32,25 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
         """
         from fsleyes.views.orthopanel import OrthoPanel
         return [OrthoPanel]
+
+
+    @staticmethod
+    def profileCls():
+        """The ``OrthoEditSettingsPanel`` is intended to be activated with the
+        :class:`.OrthoEditProfile`.
+        """
+        return orthoeditprofile.OrthoEditProfile
+
+
+    @staticmethod
+    def ignoreControl():
+        """The ``OrthoEditSettingsPanel`` is not intended to be explicitly
+        added by the user - it is added a button on the
+        :class:`OrthoEditActionToolBar`. Overriding this method tells the
+        :class:`.FSLeyesFrame` that it should not be added to the ortho panel
+        settings menu.
+        """
+        return True
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):
@@ -58,10 +79,7 @@ class OrthoEditSettingsPanel(ctrlpanel.SettingsPanel):
 
         ortho   = self.__ortho
         widgets = self.getWidgetList()
-        profile = ortho.getCurrentProfile()
-
-        if ortho.profile != 'edit':
-            return
+        profile = ortho.currentProfile
 
         generalProps = [
             props.Widget('mode',

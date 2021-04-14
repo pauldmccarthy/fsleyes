@@ -18,6 +18,7 @@ import fsleyes_props                 as props
 import fsleyes_widgets.elistbox      as elistbox
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.plotpanel       as plotpanel
 import fsleyes.tooltips              as fsltooltips
 import fsleyes.strings               as strings
 
@@ -37,6 +38,23 @@ class PlotListPanel(ctrlpanel.ControlPanel):
     each :class:`.DataSeries` instance, and the associated
     :class:`.DataSeriesWidget` controls.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``PlotListPanel`` is restricted for use with
+        :class:`.OverlayPlotPanel` views. This method may be overridden by
+        sub-classes.
+        """
+        return [plotpanel.OverlayPlotPanel]
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.LEFT}
 
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):

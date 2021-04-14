@@ -15,13 +15,13 @@ import wx
 
 import numpy as np
 
-import fsleyes_widgets.utils.layout        as fsllayout
+import fsleyes_widgets.utils.layout         as fsllayout
 
-import fsleyes.actions                     as actions
-import fsleyes.gl.wxgllightboxcanvas       as lightboxcanvas
-import fsleyes.controls.lightboxtoolbar    as lightboxtoolbar
-import fsleyes.displaycontext.lightboxopts as lightboxopts
-from . import                                 canvaspanel
+import fsleyes.actions                      as actions
+import fsleyes.gl.wxgllightboxcanvas        as lightboxcanvas
+import fsleyes.profiles.lightboxviewprofile as lightboxviewprofile
+import fsleyes.displaycontext.lightboxopts  as lightboxopts
+from . import                                  canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -53,6 +53,33 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
        toggleLightBoxToolBar
     """
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        lightbox panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'LightBoxToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'LocationPanel',
+                'OverlayInfoPanel',
+                'OverlayDisplayPanel',
+                'CanvasSettingsPanel',
+                'AtlasPanel',
+                'OverlayDisplayToolBar',
+                'LigbhtBoxToolBar',
+                'FileTreePanel']
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -151,7 +178,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__selectedOverlayChanged()
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(lightboxviewprofile.LightBoxViewProfile)
 
 
     def destroy(self):
@@ -172,42 +199,19 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__lbCanvas = None
 
 
-    @actions.toggleControlAction(lightboxtoolbar.LightBoxToolBar)
-    def toggleLightBoxToolBar(self):
-        """Shows/hides a :class:`.LightBoxToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(lightboxtoolbar.LightBoxToolBar)
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``LightBoxPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.showCommandLineArgs,
                    self.applyCommandLineArgs,
                    None,
                    self.toggleMovieMode,
-                   self.toggleDisplaySync,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.toggleOverlayInfo,
-                   self.toggleDisplayPanel,
-                   self.toggleCanvasSettingsPanel,
-                   self.toggleAtlasPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleLightBoxToolBar,
-                   self.toggleFileTreePanel,
-                   self.toggleLookupTablePanel,
-                   self.toggleClusterPanel,
-                   self.toggleClassificationPanel,
-                   self.removeAllPanels]
+                   self.toggleDisplaySync]
 
-        names = [a.__name__ if a is not None else None for a in actions]
-
-        return list(zip(names, actions))
+        names = [a.actionName if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def getGLCanvases(self):

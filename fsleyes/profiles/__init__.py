@@ -33,10 +33,6 @@ This logic is encapsulated in four classes:
    create and change the ``Profile`` instance currently in use.
 
 
-The :mod:`.profilemap` module contains mappings between ``ViewPanel`` types,
-and their corresponding ``Profile`` types.
-
-
 The ``profiles`` package is also home to the :mod:`.shortcuts` module, which
 defines global *FSLeyes* keyboard shortcuts.
 """
@@ -50,6 +46,7 @@ import wx
 
 import matplotlib.backend_bases as mplbackend
 
+import fsl.utils.notifier   as notifier
 import fsl.utils.deprecated as deprecated
 import fsleyes_widgets      as fwidgets
 import fsleyes_props        as props
@@ -59,45 +56,48 @@ import fsleyes.actions      as actions
 log = logging.getLogger(__name__)
 
 
-class ProfileManager(object):
+class ProfileManager(notifier.Notifier):
     """Manages creation/registration/de-registration of :class:`Profile`
     instances for a :class:`.ViewPanel` instance.
 
     A :class:`ProfileManager` instance is created and used by every
-    :class:`.ViewPanel` instance. The :mod:`.profilemap` module defines the
-    :class:`Profile` types which should used for specific :class:`.ViewPanel`
-    types.
+    :class:`.ViewPanel` instance. The ``ProfileManager`` manages a stack of
+    :class:`.Profile` instances - profiles can be activated and deactivated
+    via the :meth:`activateProfile` and :meth:`deactivateProfile` methods.
+
+    The ``ProfileManager`` uses the :class:`.Notifier` interface to notify any
+    interested listeners when the current profile is changed, using the topic
+    name ``'profile'``. Registered listeners are passed a tuple containing the
+    types (:class:`.Profile` sub-classes) of the de-registered and newly
+    registered profiles.
     """
 
 
-    def __init__(self, viewPanel, overlayList, displayCtx):
+    def __init__(self, viewPanel, overlayList, displayCtx, maxprofiles):
         """Create a :class:`ProfileManager`.
 
-        :arg viewPanel:   The :class:`.ViewPanel` instance which this
-                          :class:`ProfileManager` is to manage.
+        :arg viewPanel:      The :class:`.ViewPanel` instance which this
+                             :class:`ProfileManager` is to manage.
 
-        :arg overlayList: The :class:`.OverlayList` instance containing the
-                          overlays that are being displayed.
+        :arg overlayList:    The :class:`.OverlayList` instance containing the
+                             overlays that are being displayed.
 
-        :arg displayCtx:  The :class:`.DisplayContext` instance which defines
-                          how overlays are being displayed.
+        :arg displayCtx:     The :class:`.DisplayContext` instance which
+                             defines how overlays are being displayed.
+
+        :arg maxprofiles:    Maximum numbe of profiles which can be in the
+                             profile stack.
         """
-        from . import profilemap
 
-        self.__viewPanel      = viewPanel
-        self.__viewCls        = viewPanel.__class__
-        self.__overlayList    = overlayList
-        self.__displayCtx     = displayCtx
-        self.__currentProfile = None
+        self.__viewPanel   = viewPanel
+        self.__viewCls     = viewPanel.__class__
+        self.__overlayList = overlayList
+        self.__displayCtx  = displayCtx
+        self.__maxprofiles = maxprofiles
 
-        profileProp = viewPanel.getProp('profile')
-        profilez    = profilemap.profiles.get(viewPanel.__class__, [])
-
-        for profile in profilez:
-            profileProp.addChoice(profile, instance=viewPanel)
-
-        if len(profilez) > 0:
-            viewPanel.profile = profilez[0]
+        # a stack of profiles - [0] is the
+        # default, and [-1] is currently active
+        self.__profileStack = []
 
 
     def destroy(self):
@@ -105,55 +105,103 @@ class ProfileManager(object):
         it is about to be destroyed (or when it no longer needs a
         ``ProfileManager``).
 
-        This method destroys the current :class:`Profile` (if any), and
-        clears some internal object references to avoid memory leaks.
+        This method destroys all class:`Profile` instances, and clears some
+        internal object references to avoid memory leaks.
         """
-        if self.__currentProfile is not None:
-            self.__currentProfile.deregister()
-            self.__currentProfile.destroy()
 
-        self.__currentProfile    = None
-        self.__viewPanel         = None
-        self.__overlayList       = None
-        self.__overlaydisplayCtx = None
+        if self.numProfiles() > 0:
+            self.__profileStack[-1].deregister()
+
+        for prof in self.__profileStack:
+            prof.destroy()
+
+        self.__profileStack = []
+        self.__viewPanel    = None
+        self.__overlayList  = None
+        self.__displayCtx   = None
+
+
+    def numProfiles(self):
+        """Returns the number of profiles that currently exist. """
+        return len(self.__profileStack)
 
 
     def getCurrentProfile(self):
         """Returns the :class:`Profile` instance currently in use."""
-        return self.__currentProfile
+
+        if self.numProfiles() > 0:
+            return self.__profileStack[-1]
+        else:
+            return None
+
+
+    def deactivateProfile(self, notify=True):
+        """Deactivates and destroys the current profile, and re-activates
+        the previous one.
+
+        :arg notify: If ``True`` (the default), a notification is emitted
+                     via the :class:`.Notifier` interface.
+        :returns:    A reference to the re-activated profile.
+        """
+
+        oldprof = self.__profileStack.pop()
+
+        log.debug('Deregistering %s profile from view %s',
+                  type(oldprof).__name__, self.__viewCls.__name__)
+
+        oldprof.deregister()
+        oldprof.destroy()
+
+        if self.numProfiles() > 0:
+            self.__profileStack[-1].register()
+
+        newprof = self.getCurrentProfile()
+
+        if notify:
+            if newprof is None: value = (type(oldprof), None)
+            else:               value = (type(oldprof), type(newprof))
+            self.notify(topic='profile', value=value)
+
+        return newprof
 
 
     def changeProfile(self, profile):
-        """Deregisters the current :class:`Profile` instance (if necessary),
-        and creates a new one corresponding to the named profile.
+        print('Deprecated')
+        return self.activateProfile(profile)
+
+
+    def activateProfile(self, profileCls, notify=True):
+        """Deregisters the current :class:`Profile` instance, and creates and
+        registers a new instance of type ``profileCls``.
+
+        :arg notify: If ``True`` (the default), a notification is emitted
+                     via the :class:`.Notifier` interface.
+        :returns:    A reference to the newly registered profile.
         """
 
-        from . import profilemap
+        if self.numProfiles() == self.__maxprofiles:
+            raise RuntimeError('Cannot create any more profiles!')
 
-        profileCls = profilemap.profileHandlers[self.__viewCls, profile]
+        if self.numProfiles() > 0:
+            self.__profileStack[-1].deregister()
 
-        # the current profile is the requested profile
-        if (self.__currentProfile is not None) and \
-           (self.__currentProfile.__class__ is profileCls):
-            return
+        log.debug('Creating and registering profile %s with view %s',
+                  profileCls.__name__, type(self.__viewPanel).__name__)
 
-        if self.__currentProfile is not None:
-            log.debug('Deregistering {} profile from {}'.format(
-                self.__currentProfile.__class__.__name__,
-                self.__viewCls.__name__))
-            self.__currentProfile.deregister()
-            self.__currentProfile.destroy()
-            self.__currentProfile = None
+        oldprof = self.getCurrentProfile()
+        newprof = profileCls(self.__viewPanel,
+                             self.__overlayList,
+                             self.__displayCtx)
 
-        self.__currentProfile = profileCls(self.__viewPanel,
-                                           self.__overlayList,
-                                           self.__displayCtx)
+        self.__profileStack.append(newprof)
+        self.__profileStack[-1].register()
 
-        log.debug('Registering {} profile with {}'.format(
-            self.__currentProfile.__class__.__name__,
-            self.__viewCls.__name__))
+        if notify:
+            if oldprof is None: value = (None,          type(newprof))
+            else:               value = (type(oldprof), type(newprof))
+            self.notify(topic='profile', value=value)
 
-        self.__currentProfile.register()
+        return newprof
 
 
 class Profile(props.SyncableHasProperties, actions.ActionProvider):
@@ -310,31 +358,26 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     **Temporary, alternate and fallback handlers**
 
 
-    The :mod:`.profilemap` module contains a set of dictionaries which define
-    temporary, alternate, and fallback handlers.
-
-
-    The :attr:`.profilemap.tempModeMap` defines, for each profile and each
-    mod, a keyboard modifier which may be used to temporarily redirect
-    mouse/keyboard events to the handlers for a different mode. For example,
-    if while in ``nav`` mode, you would like the user to be able to switch to
-    ``zoom`` mode with the control key, you can add a temporary mode map in
-    the ``tempModeMap``. Additional temporary modes can be added via the
+    The :meth:`tempModes` function may be overridden to define a keyboard
+    modifier which may be used to temporarily redirect mouse/keyboard events
+    to the handlers for a different mode. For example, if while in ``nav``
+    mode, you would like the user to be able to switch to ``zoom`` mode with
+    the control key, you can add a temporary mode map in the dictionary
+    returned by ``tempModes``. Additional temporary modes can be added via the
     :meth:`addTempMode` method.
 
-
-    The :attr:`.profilemap.altHandlerMap`. dictionary allows you to re-use
+    The :meth:`altHandlers` function may be overridden to allow the re-use of
     event handlers that have been defined for one mode in another mode. For
     example, if you would like right clicks in ``zoom`` mode to behave like
-    left clicks in ``nav`` mode, you can set up such a mapping using the
-    ``altHandlerMap`` dictionary. Additional alternate handlers can be added
+    left clicks in ``nav`` mode, you can return such a mapping from the
+    ``altHandler`` function. Additional alternate handlers can be added
     via the :meth:`addAltHandler` method.
 
-    The :attr:`.profilemap.fallbackHandlerMap` dictionary allows you to
-    define fallback handlers - if the default handler for a specific mode/event
-    type returns a value of ``False``, the event will be forwarded to
-    the fallback handler instead. Additional fallback handlers can be added
-    via the :meth:`addFallbackHandler` method.
+    The :meth:`fallbackHandlers` function may be overridden to define fallback
+    handlers - if the default handler for a specific mode/event type returns a
+    value of ``False``, the event will be forwarded to the fallback handler
+    instead. Additional fallback handlers can be added via the
+    :meth:`addFallbackHandler` method.
 
 
     **Actions and attributes**
@@ -364,6 +407,90 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     """
 
 
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.ViewPanel` type that is supported by this
+        ``Profile``. Must be implemented by sub-classes.
+        """
+        raise NotImplementedError()
+
+
+    @staticmethod
+    def tempModes():
+        """May be overridden by sub-classes.  Should return a dictionary
+        defining temporary modes which, when in a given mode, can be accessed
+        with a keyboard modifer (e.g. Control, Shift, etc). For example, a
+        temporary mode map of::
+
+            ('view', wx.WXK_SHIFT) : 'zoom'
+
+        states that when the ``Profile`` is in ``'view'`` mode, and the shift
+        key is held down, the ``Profile`` should temporarily switch to
+        ``'zoom'`` mode.
+
+        For multi-key combinations, the modifier key IDs must be provided as a
+        tuple, in alphabetical order. For example, to specify shift+ctrl, the
+        tuple must be (wx.WXK_CTRL, wx.WXK_SHIFT)
+
+        Important: Any temporary modes which use CTRL, ALT, or CTRL+ALT must
+        not handle character events, as these modifiers are reserved for
+        global shortcuts.
+
+        Temporary modes honour the ``Profile`` class hierarchy, so if you
+        sub-class an existing ``Profile`` class, your class will inherit all
+        of the temporary modes defined on the base class.
+        """
+        return None
+
+
+    @staticmethod
+    def altHandlers():
+        """May be overridden by sub-classes. Should return a dictionary
+        defining alternate handlers for a given mode and event type. Entries
+        in this dictionary allow a :class:`.Profile` sub-class to define a
+        handler for a single mode and event type, but to re-use that handler
+        for other modes and event types. For example, the following alternate
+        handler mapping::
+
+            ('zoom', 'MiddleMouseDrag') : ('pan',  'LeftMouseDrag')
+
+        states that when the ``Profile`` is in ``'zoom'`` mode, and a
+        ``MiddleMouseDrag`` event occurs, the ``LeftMouseDrag`` handler for
+        the ``'pan'`` mode should be called.
+
+        Alternate handlers honour the ``Profile`` class hierarchy, so if you
+        sub-class an existing ``Profile`` class, your class will inherit all
+        of the alternate handlers defined on the base class.
+
+        .. note:: Event bindings defined by ``altHandlers`` take precdence
+                  over the event bindings defined in the :class:`.Profile`
+                  sub-class. So you can use the ``altHandlers`` to override
+                  the default behaviour of a ``Profile``.
+        """
+        return None
+
+
+    @staticmethod
+    def fallbackHandlers():
+        """May be overridden by sub-classes. Should return a dictionary
+        defining handlers for a given mode and event type which will be called
+        if the handler for that mode/event type returns a value of ``False``,
+        indicating that it has not been handled. For example, the
+        following fallback handler mapping::
+
+            (('pick', 'LeftMouseDown'), ('nav', 'LeftMouseDown')),
+
+        states that when the profile is in ``'pick'`` mode, and the
+        ``LeftMouseDown`` handler for ``'pick'`` mode returns ``False``, the
+        ``LeftMouseDown`` handler for ``'nav'`` mode will be called.
+
+        Fallback handlers honour the ``Profile`` class hierarchy, so if you
+        sub-class an existing ``Profile`` class, your class will inherit all
+        of the fallback handlers defined on the base class.
+        """
+        return None
+
+
     def __init__(self,
                  viewPanel,
                  overlayList,
@@ -385,6 +512,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
                           identifiers for this profile. These are added as
                           options on the :attr:`mode` property.
         """
+
+        if not isinstance(viewPanel, self.supportedView()):
+            raise ValueError('Unsupported view: {}'.format(
+                type(viewPanel).__name__))
 
         actions.ActionProvider     .__init__(self, overlayList, displayCtx)
         props.SyncableHasProperties.__init__(self)
@@ -472,18 +603,16 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             self.mode = modes[0]
 
         # Configure temporary modes and alternate
-        # event handlers - see the profilemap
-        # module
-        from . import profilemap
-
-        # We reverse the mro, so that the
-        # modes/handlers defined on this
+        # event handlers. We reverse the mro, so
+        # that the modes/handlers defined on this
         # class take precedence.
-        for cls in reversed(inspect.getmro(self.__class__)):
+        mro = list(reversed(inspect.getmro(self.__class__)))
+        mro = mro[mro.index(Profile):]
+        for cls in mro:
 
-            tempModes   = profilemap.tempModeMap       .get(cls, {})
-            altHandlers = profilemap.altHandlerMap     .get(cls, {})
-            fbHandlers  = profilemap.fallbackHandlerMap.get(cls, {})
+            tempModes   = cls.tempModes()        or {}
+            altHandlers = cls.altHandlers()      or {}
+            fbHandlers  = cls.fallbackHandlers() or {}
 
             for (mode, keymod), tempMode in tempModes.items():
                 self.addTempMode(mode, keymod, tempMode)
@@ -643,7 +772,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
     def addTempMode(self, mode, modifier, tempMode):
         """Add a temporary mode to this ``Profile``, in addition to those
-        defined in the :attr:`.profilemap.tempModeMap` dictionary.
+        defined by the :meth:`tempModes` function.
 
         :arg mode:     The mode to change from.
 
@@ -658,8 +787,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
     def addAltHandler(self, mode, event, altMode, altEvent):
         """Add an alternate handler to this ``Profile``, in addition to
-        those already defined in the :attr:`.profilemap.altHandleMap`
-        dictionary.
+        those already defined by the :meth:`altHandlers` function.
 
         :arg mode:     The source mode.
 
@@ -674,8 +802,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
 
     def addFallbackHandler(self, mode, event, fbMode, fbEvent):
         """Add a fallback handler to this ``Profile``, in addition to
-        those already defined in the :attr:`.profilemap.fallbackHandleMap`
-        dictionary.
+        those already defined by the :meth:`fallbackHandlers` function.
 
         :arg mode:    The source mode.
 

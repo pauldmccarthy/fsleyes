@@ -13,25 +13,13 @@ import logging
 
 import wx
 
-import fsl.utils.idle                              as idle
-import fsl.utils.deprecated                        as deprecated
-import fsleyes_props                               as props
-
-import fsleyes.actions                             as actions
-import fsleyes.displaycontext                      as displayctx
-import fsleyes.controls.overlaylistpanel           as overlaylistpanel
-import fsleyes.controls.overlayinfopanel           as overlayinfopanel
-import fsleyes.controls.atlaspanel                 as atlaspanel
-import fsleyes.controls.overlaydisplaytoolbar      as overlaydisplaytoolbar
-import fsleyes.controls.overlaydisplaypanel        as overlaydisplaypanel
-import fsleyes.controls.canvassettingspanel        as canvassettingspanel
-import fsleyes.controls.locationpanel              as locationpanel
-import fsleyes.controls.clusterpanel               as clusterpanel
-import fsleyes.controls.lookuptablepanel           as lookuptablepanel
-import fsleyes.controls.melodicclassificationpanel as melclasspanel
-import fsleyes.controls.filetreepanel              as filetreepanel
-from . import                                         colourbarpanel
-from . import                                         viewpanel
+import fsl.utils.idle         as idle
+import fsl.utils.deprecated   as deprecated
+import fsleyes_props          as props
+import fsleyes.actions        as actions
+import fsleyes.displaycontext as displayctx
+from . import                    colourbarpanel
+from . import                    viewpanel
 
 
 log = logging.getLogger(__name__)
@@ -69,6 +57,9 @@ class CanvasPanel(viewpanel.ViewPanel):
       4. Override the :meth:`centrePanelLayout` method if any custom layout is
          necessary.
 
+      5. Call :meth:`.ViewPanel.initProfile` with the initial interaction
+         profile
+
 
     **Actions**
 
@@ -85,18 +76,6 @@ class CanvasPanel(viewpanel.ViewPanel):
        toggleMovieMode
        toggleDisplaySync
        toggleVolumeSync
-       toggleOverlayList
-       toggleOverlayInfo
-       toggleAtlasPanel
-       toggleDisplayToolBar
-       toggleDisplayPanel
-       toggleCanvasSettingsPanel
-       toggleLocationPanel
-       toggleClusterPanel
-       toggleLookupTablePanel
-       toggleClassificationPanel
-       toggleFileTreePanel
-
 
     .. _canvaspanel-adding-content:
 
@@ -426,106 +405,6 @@ class CanvasPanel(viewpanel.ViewPanel):
         # The state of this action gets bound to
         # the syncOverlayVolume attribute in __init__
         pass
-
-
-    @actions.toggleControlAction(overlaylistpanel.OverlayListPanel)
-    def toggleOverlayList(self):
-        """Toggles an :class:`.OverlayListPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlaylistpanel.OverlayListPanel, location=wx.BOTTOM)
-
-
-    @actions.toggleControlAction(overlayinfopanel.OverlayInfoPanel)
-    def toggleOverlayInfo(self, floatPane=False):
-        """Toggles an :class:`.OverlayInfoPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlayinfopanel.OverlayInfoPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(atlaspanel.AtlasPanel)
-    def toggleAtlasPanel(self):
-        """Toggles an :class:`.AtlasPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(atlaspanel.AtlasPanel, location=wx.BOTTOM)
-
-
-    @actions.toggleControlAction(overlaydisplaytoolbar.OverlayDisplayToolBar)
-    def toggleDisplayToolBar(self):
-        """Toggles an :class:`.OverlayDisplayToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlaydisplaytoolbar.OverlayDisplayToolBar)
-
-
-    @actions.toggleControlAction(overlaydisplaypanel.OverlayDisplayPanel)
-    def toggleDisplayPanel(self, floatPane=False):
-        """Toggles an :class:`.OverlayDisplayPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(overlaydisplaypanel.OverlayDisplayPanel,
-                         floatPane=floatPane,
-                         location=wx.LEFT)
-
-
-    @actions.toggleControlAction(canvassettingspanel.CanvasSettingsPanel)
-    def toggleCanvasSettingsPanel(self, floatPane=False):
-        """Toggles a :class:`.CanvasSettingsPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(canvassettingspanel.CanvasSettingsPanel,
-                         floatPane=floatPane,
-                         location=wx.LEFT)
-
-
-    @actions.toggleControlAction(locationpanel.LocationPanel)
-    def toggleLocationPanel(self):
-        """Toggles a :class:`.LocationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        from fsleyes.views.orthopanel import OrthoPanel
-
-        # location history only shown in ortho panels
-        self.togglePanel(locationpanel.LocationPanel,
-                         showHistory=isinstance(self, OrthoPanel),
-                         location=wx.BOTTOM)
-
-
-    @actions.toggleControlAction(clusterpanel.ClusterPanel)
-    def toggleClusterPanel(self):
-        """Toggles a :class:`.ClusterPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(clusterpanel.ClusterPanel, location=wx.TOP)
-
-
-    @actions.toggleControlAction(lookuptablepanel.LookupTablePanel)
-    def toggleLookupTablePanel(self):
-        """Toggles a :class:`.LookupTablePanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(lookuptablepanel.LookupTablePanel, location=wx.RIGHT)
-
-
-    @actions.toggleControlAction(melclasspanel.MelodicClassificationPanel)
-    def toggleClassificationPanel(self):
-        """Toggles a :class:`.MelodicClassificationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(melclasspanel.MelodicClassificationPanel,
-                         location=wx.RIGHT)
-
-
-    @actions.toggleControlAction(filetreepanel.FileTreePanel)
-    def toggleFileTreePanel(self):
-        """Toggles a :class:`.FileTreePanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(filetreepanel.FileTreePanel, location=wx.RIGHT)
 
 
     @property

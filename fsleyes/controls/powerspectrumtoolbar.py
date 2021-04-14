@@ -9,12 +9,11 @@ with a :class:`.PowerSpectrumPanel`.
 """
 
 
-import fsleyes_props    as props
-
-import fsleyes.icons    as icons
-import fsleyes.tooltips as tooltips
-import fsleyes.actions  as actions
-
+import fsleyes_props                    as props
+import fsleyes.icons                    as icons
+import fsleyes.tooltips                 as tooltips
+import fsleyes.actions                  as actions
+import fsleyes.views.powerspectrumpanel as powerspectrumpanel
 
 from . import plottoolbar
 
@@ -24,6 +23,16 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
     :class:`.PowerSpectrumPanel`. It extends :class:`.PlotToolBar`,
     and adds a few controls specific to the :class:`.PoweSpectrumPanel`.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``PowerSpectrumToolBar`` is only intended to be added to
+        :class:`.PowerSpectrumPanel` views.
+        """
+        return [powerspectrumpanel.PowerSpectrumPanel]
+
 
     def __init__(self, parent, overlayList, displayCtx, psPanel):
         """Create a ``PowerSpectrumToolBar``.
@@ -38,18 +47,18 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
             self, parent, overlayList, displayCtx, psPanel)
 
         togControl = actions.ToggleActionButton(
-            'togglePowerSpectrumControl',
+            'PowerSpectrumControlPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
-            tooltip=tooltips.actions[psPanel, 'togglePowerSpectrumControl'])
+            tooltip=tooltips.actions[psPanel, 'PowerSpectrumControlPanel'])
 
         togList = actions.ToggleActionButton(
-            'togglePlotList',
+            'PlotListPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[psPanel, 'togglePlotList'])
+            tooltip=tooltips.actions[psPanel, 'PlotListPanel'])
 
         togControl = props.buildGUI(self, psPanel, togControl)
         togList    = props.buildGUI(self, psPanel, togList)
@@ -59,13 +68,3 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         nav = [togControl, togList] + self.getCommonNavOrder()
 
         self.setNavOrder(nav)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``PowerSpectrumToolBar`` is only intended to be added to
-        :class:`.PowerSpectrumPanel` views.
-        """
-        from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
-        return [PowerSpectrumPanel]

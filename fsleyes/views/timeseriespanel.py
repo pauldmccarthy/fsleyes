@@ -16,20 +16,18 @@ import numpy as np
 
 import wx
 
-import fsl.data.featimage                      as fslfeatimage
-import fsl.data.melodicimage                   as fslmelimage
-import fsl.data.image                          as fslimage
-import fsl.data.mesh                           as fslmesh
-import fsleyes_props                           as props
+import fsl.data.featimage                 as fslfeatimage
+import fsl.data.melodicimage              as fslmelimage
+import fsl.data.image                     as fslimage
+import fsl.data.mesh                      as fslmesh
+import fsleyes_props                      as props
 
-import fsleyes.overlay                         as fsloverlay
-import fsleyes.actions                         as actions
-import fsleyes.actions.addmaskdataseries       as addmaskdataseries
-import fsleyes.strings                         as strings
-import fsleyes.plotting.timeseries             as timeseries
-import fsleyes.controls.timeseriescontrolpanel as timeseriescontrolpanel
-import fsleyes.controls.timeseriestoolbar      as timeseriestoolbar
-from . import                                     plotpanel
+import fsleyes.overlay                    as fsloverlay
+import fsleyes.actions                    as actions
+import fsleyes.strings                    as strings
+import fsleyes.profiles.timeseriesprofile as timeseriesprofile
+import fsleyes.plotting.timeseries        as timeseries
+from . import                                plotpanel
 
 
 log = logging.getLogger(__name__)
@@ -74,24 +72,6 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.timeseriescontrolpanel.TimeSeriesControlPanel
-
-
-    The ``TimeSeriesPanel`` defines some :mod:`.actions`, allowing the user
-    to show/hide these control panels:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleTimeSeriesToolBar
-       toggleTimeSeriesControl
-
-
-    Some tools are also available, to do various things:
-
-    .. autosummary::
-       :nosignatures:
-
-       addMaskDataSeries
 
 
     **FEATures**
@@ -143,6 +123,27 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        time series panel layout.
+        """
+        return ['TimeSeriesToolBar',
+                'OverlayListPanel',
+                'PlotListPanel']
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'PlotListPanel',
+                'TimeSeriesToolBar',
+                'TimeSeriesControlPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``TimeSeriesPanel``.
 
@@ -178,14 +179,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
                          self.name,
                          self.__plotMelodicICsChanged)
 
-        self.__addMaskAction = addmaskdataseries.AddMaskDataSeriesAction(
-            overlayList,
-            displayCtx,
-            self)
-
-        self.addMaskDataSeries.bindProps('enabled', self.__addMaskAction)
-
-        self.initProfile()
+        self.initProfile(timeseriesprofile.TimeSeriesProfile)
 
 
     def destroy(self):
@@ -197,34 +191,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         self.removeListener('usePixdim',      self.name)
         self.removeListener('plotMelodicICs', self.name)
 
-        self.__addMaskAction.destroy()
-        self.__addMaskAction = None
-
         plotpanel.OverlayPlotPanel.destroy(self)
-
-
-    @actions.toggleControlAction(timeseriescontrolpanel.TimeSeriesControlPanel)
-    def toggleTimeSeriesControl(self, floatPane=False):
-        """Shows/hides a :class:`.TimeSeriesControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(timeseriescontrolpanel.TimeSeriesControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(timeseriestoolbar.TimeSeriesToolBar)
-    def toggleTimeSeriesToolBar(self):
-        """Shows/hides a :class:`.TimeSeriesToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(timeseriestoolbar.TimeSeriesToolBar)
-
-
-    @actions.action
-    def addMaskDataSeries(self):
-        """Executes the :class:`AddMaskDataSeriesAction`. """
-        self.__addMaskAction()
 
 
     def getActions(self):
@@ -233,23 +200,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         """
         actionz = [self.screenshot,
                    self.importDataSeries,
-                   self.exportDataSeries,
-                   None,
-                   self.toggleOverlayList,
-                   self.togglePlotList,
-                   self.toggleTimeSeriesToolBar,
-                   self.toggleTimeSeriesControl]
+                   self.exportDataSeries]
 
-        names = [a.__name__ if a is not None else None for a in actionz]
-
+        names = [a.actionName if a is not None else None for a in actionz]
         return list(zip(names, actionz))
-
-
-    def getTools(self):
-        """Returns a list of tools to be added to the ``FSLeyesFrame`` for
-        ``TimeSeriesPanel`` views.
-        """
-        return [self.addMaskDataSeries]
 
 
     def draw(self, *a):

@@ -133,10 +133,11 @@ def toggleControlAction(*args, **kwargs):
     """A decorator which identifies a class method as a
     :class:`.ToggleControlPanelAction`.
     """
-    return ActionFactory(ToggleControlPanelAction, *args, **kwargs)
+    return ActionFactory(
+        ToggleControlPanelAction, *args, ismethod=True, **kwargs)
 
 
-class ActionProvider(object):
+class ActionProvider:
     """The ``ActionProvider`` class is intended to be used as a base class for
     classes which contain actions. The :func:`action` and :func:`toggleAction`
     functions can be used as decorators on class methods, to denote them as
@@ -180,10 +181,6 @@ class ActionProvider(object):
             if actionz is None:
                 continue
 
-            # Or may be ('groupName', [('actionName', action), ...])
-            elif isinstance(actionz, list):
-                actionz = [a[1] for a in actionz]
-
             # Or may be ('actionName', action)
             else:
                 actionz = [actionz]
@@ -221,16 +218,10 @@ class ActionProvider(object):
         Sub-classes may wish to override this method to enforce a specific
         ordering of their actions.
 
-        .. note:: The list returned by this method may contain:
-
-                    - Entries equal to ``(None, None)``. This is used as a
-                      hint for GUIs which display action widgets/menu items to
+        .. note:: The list returned by this method may contain entries equal
+                      to ``(None, None)``. This is used as a hint for the
+                      :class:`.FSLeyesFrame`, which creates menu items, to
                       indicate that a separator should be inserted.
-
-                    - Entries equal to ``(name, [(name, Action), ...])``.
-                      This is used as a hint for GUIs that the nested list
-                      of actions should appear as a sub-menu with the
-                      specified ``name``.
         """
 
         acts = []
@@ -244,7 +235,7 @@ class ActionProvider(object):
         return acts
 
 
-class ActionFactory(object):
+class ActionFactory:
     """The ``ActionFactory`` is used by the :func:`action` and
     :func:`toggleAction` decorators. Its job is to create :class:`Action`
     instances for :class:`ActionProvider` instances.
@@ -390,9 +381,9 @@ class ActionFactory(object):
             action = self.__actionType(
                 instance.overlayList,
                 instance.displayCtx,
-                self.__func,
-                instance,
                 *self.__args,
+                func=self.__func,
+                instance=instance,
                 **self.__kwargs)
 
             # and replace this ActionFactory

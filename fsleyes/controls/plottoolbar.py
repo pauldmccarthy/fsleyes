@@ -12,6 +12,7 @@ an :class:`.OverlayPlotPanel`.
 import fsleyes_props    as props
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.plotpanel       as plotpanel
 import fsleyes.icons                 as icons
 import fsleyes.actions               as actions
 import fsleyes.tooltips              as tooltips
@@ -22,6 +23,22 @@ class PlotToolBar(ctrlpanel.ControlToolBar):
     :class:`.OverlayPlotPanel`. It creates toolbar controls which
     are common to all :class:`.OverlayPlotPanel` types.
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``PlotToolBar`` is restricted for use with
+        :class:`.OverlayPlotPanel` views. This method may be overridden by
+        sub-classes.
+        """
+        return [plotpanel.OverlayPlotPanel]
+
+
+    @staticmethod
+    def ignoreControl():
+        """The ``PlotToolBar`` is not intended to be used directly. """
+        return True
+
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):
         """Create a ``PlotToolBar``.

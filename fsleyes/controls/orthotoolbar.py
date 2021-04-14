@@ -11,9 +11,9 @@
 
 import wx
 
-import fsleyes_props    as props
-
+import fsleyes_props                 as props
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.orthopanel      as orthopanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.icons                 as fslicons
 import fsleyes.tooltips              as fsltooltips
@@ -61,8 +61,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         ``OrthoToolBar`` is only intended to be added to
         :class:`.OrthoPanel` views.
         """
-        from fsleyes.views.orthopanel import OrthoPanel
-        return [OrthoPanel]
+        return [orthopanel.OrthoPanel]
 
 
     def __init__(self, parent, overlayList, displayCtx, ortho):
@@ -90,7 +89,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         # Profile instance changes too, so we need
         # to re-create these action buttons. I'm being
         # lazy and just re-generating the entire toolbar.
-        ortho.addListener('profile', self.name, self.__makeTools)
+        ortho.events.register(self.name, self.__makeTools, 'profile')
 
         self.addListener('showCursorAndLabels',
                          self.name,
@@ -104,7 +103,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
         Removes some property listeners, and calls the base class
         implementation.
         """
-        self.orthoPanel.removeListener('profile',             self.name)
+        self.orthoPanel.events.deregister(self.name, 'profile')
         self           .removeListener('showCursorAndLabels', self.name)
 
         ctrlpanel.ControlToolBar.destroy(self)
@@ -119,7 +118,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
 
         ortho     = self.orthoPanel
         orthoOpts = ortho.sceneOpts
-        profile   = ortho.getCurrentProfile()
+        profile   = ortho.currentProfile
 
         coronalIcon          = 'coronalSlice24'
         coronalHighlightIcon = 'coronalSliceHighlight24'
@@ -142,7 +141,7 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
             'showZCanvas'      : [
                 fslicons.findImageFile('axialSliceHighlight24'),
                 fslicons.findImageFile('axialSlice24')],
-            'toggleCanvasSettingsPanel' : [
+            'CanvasSettingsPanel' : [
                 fslicons.findImageFile('spannerHighlight24'),
                 fslicons.findImageFile('spanner24')],
 
@@ -169,30 +168,29 @@ class OrthoToolBar(ctrlpanel.ControlToolBar):
             'showXCanvas'  : fsltooltips.properties[orthoOpts, 'showXCanvas'],
             'showYCanvas'  : fsltooltips.properties[orthoOpts, 'showYCanvas'],
             'showZCanvas'  : fsltooltips.properties[orthoOpts, 'showZCanvas'],
-            'toggleCanvasSettingsPanel' : fsltooltips.actions[
-                ortho, 'toggleCanvasSettingsPanel'],
+            'CanvasSettingsPanel' : fsltooltips.actions[ortho,
+                                                        'CanvasSettingsPanel'],
 
         }
 
-        targets    = {'screenshot'                : ortho,
-                      'movieMode'                 : ortho,
-                      'showCursorAndLabels'       : self,
-                      'resetDisplay'              : profile,
-                      'zoom'                      : orthoOpts,
-                      'layout'                    : orthoOpts,
-                      'showXCanvas'               : orthoOpts,
-                      'showYCanvas'               : orthoOpts,
-                      'showZCanvas'               : orthoOpts,
-                      'toggleCanvasSettingsPanel' : ortho}
-
+        targets    = {'screenshot'          : ortho,
+                      'movieMode'           : ortho,
+                      'showCursorAndLabels' : self,
+                      'resetDisplay'        : profile,
+                      'zoom'                : orthoOpts,
+                      'layout'              : orthoOpts,
+                      'showXCanvas'         : orthoOpts,
+                      'showYCanvas'         : orthoOpts,
+                      'showZCanvas'         : orthoOpts,
+                      'CanvasSettingsPanel' : ortho}
 
         toolSpecs = [
 
             actions.ToggleActionButton(
-                'toggleCanvasSettingsPanel',
+                'CanvasSettingsPanel',
                 actionKwargs={'floatPane' : True},
-                icon=icons['toggleCanvasSettingsPanel'],
-                tooltip=tooltips['toggleCanvasSettingsPanel']),
+                icon=icons['CanvasSettingsPanel'],
+                tooltip=tooltips['CanvasSettingsPanel']),
             actions.ActionButton('screenshot',
                                  icon=icons['screenshot'],
                                  tooltip=tooltips['screenshot']),

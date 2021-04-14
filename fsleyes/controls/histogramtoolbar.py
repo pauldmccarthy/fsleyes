@@ -9,13 +9,12 @@ a :class:`.HistogramPanel`.
 """
 
 
-import fsleyes_props    as props
-
-import fsleyes.icons    as icons
-import fsleyes.strings  as strings
-import fsleyes.tooltips as tooltips
-import fsleyes.actions  as actions
-
+import fsleyes_props                as props
+import fsleyes.icons                as icons
+import fsleyes.strings              as strings
+import fsleyes.tooltips             as tooltips
+import fsleyes.actions              as actions
+import fsleyes.views.histogrampanel as histogrampanel
 
 from . import plottoolbar
 
@@ -25,6 +24,18 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
     :class:`.HistogramPanel`. It extends :class:`.PlotToolBar`,
     and adds a few controls specific to the :class:`.HistogramPanel`.
     """
+
+
+
+    @staticmethod
+    def supportedViews():
+        """Overrides :meth:`.ControlMixin.supportedViews`. The
+        ``HistogramToolBar`` is only intended to be added to
+        :class:`.HistogramPanel` views.
+        """
+
+        return [histogrampanel.HistogramPanel]
+
 
     def __init__(self, parent, overlayList, displayCtx, histPanel):
         """Create a ``HistogramToolBar``.
@@ -39,18 +50,18 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
             self, parent, overlayList, displayCtx, histPanel)
 
         togControl = actions.ToggleActionButton(
-            'toggleHistogramControl',
+            'HistogramControlPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('spannerHighlight24'),
                   icons.findImageFile('spanner24')],
-            tooltip=tooltips.actions[histPanel, 'toggleHistogramControl'])
+            tooltip=tooltips.actions[histPanel, 'HistogramControlPanel'])
 
         togList = actions.ToggleActionButton(
-            'togglePlotList',
+            'PlotListPanel',
             actionKwargs={'floatPane' : True},
             icon=[icons.findImageFile('listHighlight24'),
                   icons.findImageFile('list24')],
-            tooltip=tooltips.actions[histPanel, 'togglePlotList'])
+            tooltip=tooltips.actions[histPanel, 'PlotListPanel'])
 
         togOverlay = actions.ToggleActionButton(
             'toggleHistogramOverlay',
@@ -81,13 +92,3 @@ class HistogramToolBar(plottoolbar.PlotToolBar):
               [togOverlay, mode]
 
         self.setNavOrder(nav)
-
-
-    @staticmethod
-    def supportedViews():
-        """Overrides :meth:`.ControlMixin.supportedViews`. The
-        ``HistogramToolBar`` is only intended to be added to
-        :class:`.HistogramPanel` views.
-        """
-        from fsleyes.views.histogrampanel import HistogramPanel
-        return [HistogramPanel]

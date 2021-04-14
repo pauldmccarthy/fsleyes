@@ -70,6 +70,79 @@ class OrthoViewProfile(profiles.Profile):
     """
 
 
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.OrthoPanel` class. """
+        import fsleyes.views.orthopanel as orthopanel
+        return orthopanel.OrthoPanel
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``OrthoViewProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        # Command/CTRL puts the user in zoom mode,
+        # and ALT puts the user in pan mode
+        return {
+            ('nav',  wx.WXK_CONTROL)                : 'zoom',
+            ('nav',  wx.WXK_ALT)                    : 'pan',
+            ('nav',  wx.WXK_SHIFT)                  : 'slice',
+            ('nav', (wx.WXK_CONTROL, wx.WXK_SHIFT)) : 'bricon'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return {
+            # in navigate, slice, and zoom mode, the
+            # left mouse button navigates, the right
+            # mouse button draws a zoom rectangle,
+            # and the middle button pans.
+            ('nav',  'LeftMouseDown')   : ('nav',  'LeftMouseDrag'),
+            ('nav',  'MiddleMouseDrag') : ('pan',  'LeftMouseDrag'),
+            ('nav',  'RightMouseDown')  : ('zoom', 'RightMouseDown'),
+            ('nav',  'RightMouseDrag')  : ('zoom', 'RightMouseDrag'),
+            ('nav',  'RightMouseUp')    : ('zoom', 'RightMouseUp'),
+
+            # In slice mode, the left and right
+            # mouse buttons work as for pick mode.
+            # Middle and right mouse works the
+            # same as for nav mode, defined above.
+            ('slice', 'LeftMouseDown')   : ('pick', 'LeftMouseDown'),
+            ('slice', 'LeftMouseDrag')   : ('pick', 'LeftMouseDrag'),
+            ('slice', 'MiddleMouseDrag') : ('pan',  'LeftMouseDrag'),
+            ('slice', 'RightMouseDown')  : ('zoom', 'RightMouseDown'),
+            ('slice', 'RightMouseDrag')  : ('zoom', 'RightMouseDrag'),
+            ('slice', 'RightMouseUp')    : ('zoom', 'RightMouseUp'),
+
+            # In zoom mode, the left mouse button
+            # navigates, the right mouse button
+            # draws a zoom rectangle, and the
+            # middle mouse button pans
+            ('zoom', 'RightMouseDown')  : ('zoom', 'RightMouseDrag'),
+            ('zoom', 'LeftMouseDown')   : ('nav',  'LeftMouseDown'),
+            ('zoom', 'LeftMouseDrag')   : ('nav',  'LeftMouseDrag'),
+            ('zoom', 'MiddleMouseDrag') : ('pan',  'LeftMouseDrag'),
+
+            # In pick mode, left mouse down
+            # is the same as left mouse drag.
+            ('pick', 'LeftMouseDown') : ('pick', 'LeftMouseDrag')}
+
+
+    @staticmethod
+    def fallbackHandlers():
+        """Returns the fallback handler map, which allows an event to be
+        forwarded to a second handler if the primary handler returns ``False``.
+        """
+        return {
+            ('pick', 'LeftMouseDown') : ('nav', 'LeftMouseDown'),
+            ('pick', 'LeftMouseDrag') : ('nav', 'LeftMouseDrag')}
+
+
     def __init__(self,
                  viewPanel,
                  overlayList,

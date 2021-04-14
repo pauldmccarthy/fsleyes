@@ -28,15 +28,14 @@ import fsleyes.strings                         as strings
 import fsleyes.gl                              as fslgl
 import fsleyes.actions                         as actions
 import fsleyes.editor                          as editor
+import fsleyes.profiles.orthoviewprofile       as orthoviewprofile
+import fsleyes.profiles.orthoeditprofile       as orthoeditprofile
 import fsleyes.gl.ortholabels                  as ortholabels
 import fsleyes.gl.wxglslicecanvas              as slicecanvas
-import fsleyes.controls.cropimagepanel         as cropimagepanel
-import fsleyes.controls.edittransformpanel     as edittransformpanel
-import fsleyes.controls.orthotoolbar           as orthotoolbar
+import fsleyes.controls.locationpanel          as locationpanel
 import fsleyes.controls.orthoedittoolbar       as orthoedittoolbar
 import fsleyes.controls.orthoeditactiontoolbar as orthoeditactiontoolbar
 import fsleyes.controls.orthoeditsettingspanel as orthoeditsettingspanel
-import fsleyes.controls.annotationpanel        as annotationpanel
 import fsleyes.displaycontext.orthoopts        as orthoopts
 from . import                                     canvaspanel
 
@@ -88,19 +87,26 @@ class OrthoPanel(canvaspanel.CanvasPanel):
     **Interaction**
 
 
-    The following interaction profiles are defined for use with the
-    ``OrthoPanel`` (see the :class:`.ViewPanel` for an overview of
-    *profiles*):
+    The :class:`.OrthoPanel` uses the :class:`.OrthoViewProfile` to handle
+    interaction with the user via the mouse and keyboard. Some control panels
+    will activate other interaction profiles while they are open, such as:
 
-    ======== =========================================================
-    ``view`` Viewing/navigation, using the :class:`.OrthoViewProfile`.
+    ========================== ==============================================
+    :class:`.OrthoEditToolBar` Simple editing of :class:`.Image`
+                               overlays, using the
+                               :class:`.OrthoEditProfile` (see also
+                               the :mod:`~fsleyes.editor` package).
 
-    ``edit`` Simple editing of :class:`.Image` overlays, using the
-             :class:`.OrthoEditProfile` (see also the
-             :mod:`~fsleyes.editor` package).
+    :class:`.CropImagePanel`   Allows the user to crop an ``Image`` overlay,
+                               using the :class:`.OrthoCropProfile`.
 
-    ``crop`` Allows the user to crop an ``Image`` overlay.
-    ======== =========================================================
+    :class:`.AnnotationPanel`  Allows the user to draw text and shapes on the
+                               :class:`.OrthoPanel` canvases, using the
+                               :class:`.OrthoAnnotatePanel`.
+    ========================== ==============================================
+
+    See the :class:`.ViewPanel`, and the :mod:`.profiles` package for more
+    information on interaction profiles.
 
 
     **Actions and control panels**
@@ -113,11 +119,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleEditMode
-       toggleCropMode
-       toggleEditTransformPanel
-       toggleEditPanel
        toggleOrthoToolBar
-       toggleAnnotationPanel
        resetDisplay
        centreCursor
        centreCursorWorld
@@ -127,6 +129,41 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        toggleYCanvas
        toggleZCanvas
     """
+
+
+    def controlOptions(self, cpType):
+        """Returns some options to be used by :meth:`.ViewPanel.togglePanel`
+        for certain control panel types.
+        """
+        if cpType is locationpanel.LocationPanel:
+            return {'showHistory' : True}
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        ortho panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'OrthoToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'LocationPanel',
+                'OverlayInfoPanel',
+                'OverlayDisplayPanel',
+                'CanvasSettingsPanel',
+                'AtlasPanel',
+                'OverlayDisplayToolBar',
+                'OrthoToolBar',
+                'FileTreePanel']
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -175,9 +212,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             self.__ycanvas,
             self.__zcanvas)
 
-        # If an edit menu is added when in
-        # 'edit' profile (see __profileChanged),
-        # its name is stored here.
+        # Edit mode is entered via toggleEditMode,
+        # which displays an edit toolbar. But we
+        # do a bit more, in adding the edit action
+        # toolbar, and edit menu. In order to keep
+        # the menu state in sync with reality, we
+        # need to listen for changes to the
+        # interaction proflle, and store a ref
+        # to the edit menu so we can delete it later.
+        self.events.register(self.name, self.__profileChanged, 'profile')
         self.__editMenuTitle = None
 
         # The OrthoOpts and DisplayContext objects
@@ -269,17 +312,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener('fgColour',    name, refresh, weak=False)
         sceneOpts.addListener('showLabels',  name, refresh, weak=False)
 
-        self.addListener('profile', name, self.__profileChanged)
-
-        from fsleyes.actions.correlate import PearsonCorrelateAction
-
-        self.__pCorrAction = PearsonCorrelateAction(
-            self.overlayList,
-            self.displayCtx,
-            self)
-
-        self.pearsonCorrelation.bindProps('enabled', self.__pCorrAction)
-
         # The lastFocusedCanvas method allows
         # a ref to the most recently focused
         # canvas to be obtained. We listen
@@ -301,7 +333,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__refreshLayout(refresh=False)
         self.__overlayListChanged()
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(orthoviewprofile.OrthoViewProfile)
 
 
     def destroy(self):
@@ -333,7 +365,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__ycanvas.destroy()
         self.__zcanvas.destroy()
         self.__removeEditMenu()
-        self.__pCorrAction.destroy()
 
         contentPanel.Unbind(wx.EVT_SIZE)
 
@@ -342,94 +373,56 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__zcanvas       = None
         self.__focusedCanvas = None
         self.__labelMgr      = None
-        self.__pCorrAction   = None
 
         canvaspanel.CanvasPanel.destroy(self)
 
 
-    @actions.toggleControlAction(orthotoolbar.OrthoToolBar)
-    def toggleOrthoToolBar(self):
-        """Shows/hides an :class:`.OrthoToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(orthotoolbar.OrthoToolBar)
-
-
     @actions.toggleControlAction(orthoedittoolbar.OrthoEditToolBar)
     def toggleEditMode(self):
-        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'edit'``. See :meth:`__profileChanged`.
+        """Shows/hides an :class:`.OrthoEditToolBar`. This causes the
+        interaction profile to be changed, and a call to
+        :meth:`__profileChanged`, which makes a few other changes to the
+        interface.
+        """
+        self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
+        self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
+                         location=wx.LEFT)
+
+        if self.toggleEditMode.toggled and \
+           self.isPanelOpen(orthoeditsettingspanel.OrthoEditSettingsPanel):
+            self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
+
+
+    def __profileChanged(self, inst, topic, value):
+        """Called when the interaction profile changes (see
+        :meth:`.ViewPanel.events`). If entering or exiting edit mode, an
+        edit menu is added/removed from the menu bar.
         """
 
-        if self.profile == 'view': self.profile = 'edit'
-        else:                      self.profile = 'view'
+        old, new = value
 
-
-    @actions.toggleControlAction(cropimagepanel.CropImagePanel)
-    def toggleCropMode(self):
-        """Toggles the :attr:`.ViewPanel.profile` between ``'view'`` and
-        ``'crop'``. See :meth:`__profileChanged`.
-        """
-
-        if self.profile == 'view': self.profile = 'crop'
-        else:                      self.profile = 'view'
-
-
-    @actions.toggleControlAction(edittransformpanel.EditTransformPanel)
-    def toggleEditTransformPanel(self):
-        """Shows/hides an :class:`.EditTransformPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-
-        self.togglePanel(edittransformpanel.EditTransformPanel,
-                         floatPane=True,
-                         floatOnly=True,
-                         closeable=False)
-
-
-    @actions.toggleControlAction(orthoeditsettingspanel.OrthoEditSettingsPanel)
-    def toggleEditPanel(self, floatPane=False):
-        """Shows/hides an :class:`.OrthoEditSettingsPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(annotationpanel.AnnotationPanel)
-    def toggleAnnotationPanel(self, floatPane=False):
-        """Shows/hides an :class:`.AnnotationPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        if self.profile == 'view': self.profile = 'annotate'
-        else:                      self.profile = 'view'
-        self.togglePanel(annotationpanel.AnnotationPanel,
-                         location=wx.LEFT,
-                         floatPane=floatPane)
-
-
-    @actions.action
-    def pearsonCorrelation(self):
-        """Executes a :class:`.PearsonCorrelateAction`. """
-        self.__pCorrAction()
+        if new is orthoeditprofile.OrthoEditProfile:
+            self.__addEditMenu()
+        elif old is orthoeditprofile.OrthoEditProfile:
+            self.__removeEditMenu()
 
 
     @actions.action
     def resetDisplay(self):
         """Calls :meth:`.OrthoViewProfile.resetDisplay`. """
-        self.getCurrentProfile().resetDisplay()
+        self.currentProfile.resetDisplay()
 
 
     @actions.action
     def centreCursor(self):
         """Calls :meth:`.OrthoViewProfile.centreCursor`. """
-        self.getCurrentProfile().centreCursor()
+        self.currentProfile.centreCursor()
 
 
     @actions.action
     def centreCursorWorld(self):
         """Calls :meth:`.OrthoViewProfile.centreCursorWorld`. """
-        self.getCurrentProfile().centreCursorWorld()
+        self.currentProfile.centreCursorWorld()
 
 
     @actions.toggleAction
@@ -492,50 +485,17 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                    self.toggleCursor,
                    self.toggleXCanvas,
                    self.toggleYCanvas,
-                   self.toggleZCanvas,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.toggleOverlayInfo,
-                   self.toggleDisplayPanel,
-                   self.toggleCanvasSettingsPanel,
-                   self.toggleAtlasPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleOrthoToolBar,
-                   self.toggleFileTreePanel,
-                   self.toggleAnnotationPanel,
-                   self.toggleLookupTablePanel,
-                   self.toggleClusterPanel,
-                   self.toggleClassificationPanel,
-                   self.removeAllPanels]
+                   self.toggleZCanvas]
 
-        def makeTuples(actionz):
-
-            tuples = []
-
-            for a in actionz:
-                if isinstance(a, actions.Action):
-                    tuples.append((a.__name__, a))
-
-                elif isinstance(a, tuple):
-                    tuples.append((a[0], makeTuples(a[1])))
-
-                elif a is None:
-                    tuples.append((None, None))
-
-            return tuples
-
-        return makeTuples(actionz)
+        names = [a.actionName if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def getTools(self):
         """Returns a list of methods to be added to the ``FSLeyesFrame`` Tools
         menu for ``OrthoPanel`` views.
         """
-        return [self.toggleEditMode,
-                self.toggleCropMode,
-                self.toggleEditTransformPanel,
-                self.pearsonCorrelation]
+        return [self.toggleEditMode]
 
 
     def getGLCanvases(self):
@@ -578,58 +538,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__focusedCanvas = ev.GetEventObject()
 
 
-    def __profileChanged(self, *a):
-        """Called when the :attr:`.ViewPanel.profile` changes. If ``'edit'``
-        mode has been enabled, :class:`.OrthEditToolBar` and
-        :class:`.OrthEditActionToolBar` toolbars are added as control panels,
-        and an "edit" menu is added to the :class:`.FSLeyesFrame` (if there
-        is one).
-        """
-
-        CropImagePanel         = cropimagepanel.CropImagePanel
-        OrthoEditToolBar       = orthoedittoolbar.OrthoEditToolBar
-        OrthoEditActionToolBar = orthoeditactiontoolbar.OrthoEditActionToolBar
-        OrthoEditSettingsPanel = orthoeditsettingspanel.OrthoEditSettingsPanel
-
-        cropPanelOpen          = self.isPanelOpen(CropImagePanel)
-        editToolBarOpen        = self.isPanelOpen(OrthoEditToolBar)
-        editActionToolBarOpen  = self.isPanelOpen(OrthoEditActionToolBar)
-        editPanelOpen          = self.isPanelOpen(OrthoEditSettingsPanel)
-
-        inEdit                 = self.profile == 'edit'
-        inCrop                 = self.profile == 'crop'
-
-        # Toggle toolbars if they are open but should
-        # be closed, or closed but should be open
-        if (not editToolBarOpen) and      inEdit or \
-                editToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoedittoolbar.OrthoEditToolBar)
-
-        if (not editActionToolBarOpen) and      inEdit or \
-                editActionToolBarOpen  and (not inEdit):
-            self.togglePanel(orthoeditactiontoolbar.OrthoEditActionToolBar,
-                             location=wx.LEFT)
-
-        if (not cropPanelOpen) and      inCrop or \
-                cropPanelOpen  and (not inCrop):
-            self.togglePanel(cropimagepanel.CropImagePanel,
-                             floatPane=True,
-                             floatOnly=True,
-                             closeable=False,
-                             floatPos=(0.85, 0.3))
-
-        # Don't open edit panel by default,
-        # but close it when we leave edit mode
-        if editPanelOpen and (not inEdit):
-            self.togglePanel(orthoeditsettingspanel.OrthoEditSettingsPanel)
-
-        # It's unlikely, but an OrthoPanel might be
-        # created without a ref to a FSLeyesFrame.
-        if self.frame is not None:
-            if inEdit: self.__addEditMenu()
-            else:      self.__removeEditMenu()
-
-
     def __addEditMenu(self):
         """Called by :meth:`__profleChanged` when the
         :attr:`.ViewPanel.profile` is changed to ``'edit'``. Adds a
@@ -640,7 +548,7 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         menuName = strings.labels[self, 'editMenu']
         menuName = menuName.format(frame.getViewPanelID(self))
         menuBar  = frame.GetMenuBar()
-        profile  = self.getCurrentProfile()
+        profile  = self.currentProfile
         idx      = menuBar.FindMenu(menuName)
 
         if  idx == wx.NOT_FOUND: editMenu = None
@@ -678,7 +586,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                            [None, 'toggleEditMode'],
                            ignoreFocus=True,
                            runOnIdle=True)
-
 
 
     def __removeEditMenu(self):
@@ -775,17 +682,15 @@ class OrthoPanel(canvaspanel.CanvasPanel):
             isImage    = False
             isEditable = False
 
+        # Kill edit mode if a non-
+        # image has been selected
+        if (not isEditable) and self.toggleEditMode.toggled:
+            self.toggleEditMode()
+
         self.resetDisplay            .enabled = haveOverlays
         self.centreCursor            .enabled = haveOverlays
         self.centreCursorWorld       .enabled = haveOverlays
         self.toggleEditMode          .enabled = isEditable
-        self.toggleEditTransformPanel.enabled = isImage
-        self.toggleCropMode          .enabled = isImage
-
-        # Kill edit mode if a non-
-        # image has been selected
-        if (self.profile == 'edit') and (not isEditable):
-            self.profile = 'view'
 
 
     def __onResize(self, ev):

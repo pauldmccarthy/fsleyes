@@ -509,7 +509,7 @@ class GLContext(object):
 
       - :meth:`setTarget`, which may be used to set a
         :class:`.WXGLCanvasTarget` or an :class:`OffScreenCanvasTarget` as the
-         GL rendering target.
+        GL rendering target.
       - :meth:`destroy`, which must be called when the context is no longer
         needed.
 

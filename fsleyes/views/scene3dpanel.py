@@ -15,12 +15,12 @@ import wx
 
 import numpy as np
 
-import fsl.transform.affine               as affine
-import fsleyes.displaycontext.scene3dopts as scene3dopts
-import fsleyes.gl.wxglscene3dcanvas       as scene3dcanvas
-import fsleyes.actions                    as actions
-import fsleyes.controls.scene3dtoolbar    as s3dtoolbar
-from . import                                canvaspanel
+import fsl.transform.affine                as affine
+import fsleyes.displaycontext.scene3dopts  as scene3dopts
+import fsleyes.gl.wxglscene3dcanvas        as scene3dcanvas
+import fsleyes.profiles.scene3dviewprofile as scene3dviewprofile
+import fsleyes.actions                     as actions
+from . import                                 canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -40,6 +40,33 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
     instance, accessible through the :meth:`.CanvasPanel.sceneOpts`
     property.
     """
+
+
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        3D panel layout.
+        """
+        return ['OverlayDisplayToolBar',
+                'Scene3DToolBar',
+                'OverlayListPanel',
+                'LocationPanel']
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'LocationPanel',
+                'OverlayInfoPanel',
+                'OverlayDisplayPanel',
+                'CanvasSettingsPanel',
+                'AtlasPanel',
+                'OverlayDisplayToolBar',
+                'Scene3DToolBar',
+                'FileTreePanel']
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):
@@ -99,7 +126,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         contentPanel.SetSizer(sizer)
 
         self.centrePanelLayout()
-        self.initProfile()
+        self.initProfile(scene3dviewprofile.Scene3DViewProfile)
         self.syncLocation = True
 
 
@@ -130,39 +157,10 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                    self.applyCommandLineArgs,
                    None,
                    self.toggleDisplaySync,
-                   self.resetDisplay,
-                   None,
-                   self.toggleOverlayList,
-                   self.toggleLocationPanel,
-                   self.toggleOverlayInfo,
-                   self.toggleDisplayPanel,
-                   self.toggleCanvasSettingsPanel,
-                   self.toggleAtlasPanel,
-                   self.toggleDisplayToolBar,
-                   self.toggleScene3DToolBar,
-                   self.toggleFileTreePanel,
-                   self.toggleLookupTablePanel,
-                   self.toggleClusterPanel,
-                   self.toggleClassificationPanel,
-                   self.removeAllPanels]
+                   self.resetDisplay]
 
-        def makeTuples(actionz):
-
-            tuples = []
-
-            for a in actionz:
-                if isinstance(a, actions.Action):
-                    tuples.append((a.__name__, a))
-
-                elif isinstance(a, tuple):
-                    tuples.append((a[0], makeTuples(a[1])))
-
-                elif a is None:
-                    tuples.append((None, None))
-
-            return tuples
-
-        return makeTuples(actionz)
+        names = [a.actionName if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     @actions.action
@@ -171,15 +169,7 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         (zoom/pan/rotation). See the :meth:`.Scene3DViewProfile.resetDisplay`
         method.
         """
-        self.getCurrentProfile().resetDisplay()
-
-
-    @actions.toggleControlAction(s3dtoolbar.Scene3DToolBar)
-    def toggleScene3DToolBar(self):
-        """Shows/hides a :class:`.Scene3DToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(s3dtoolbar.Scene3DToolBar)
+        self.currentProfile.resetDisplay()
 
 
     def getMovieFrame(self, overlay, opts):

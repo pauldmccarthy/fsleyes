@@ -56,6 +56,14 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
     """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a dictionary containing layout settings to be passed to
+        :class:`.ViewPanel.togglePanel`.
+        """
+        return {'location' : wx.BOTTOM}
+
+
     def __init__(self,
                  parent,
                  overlayList,

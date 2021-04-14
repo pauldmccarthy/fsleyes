@@ -30,6 +30,23 @@ class ControlMixin:
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
+
+    @staticmethod
+    def ignoreControl():
+        """Tell FSLeyes that this control should not be considered a FSLeyes
+        plugin.
+
+        The default implementation returns ``False``, but may be overridden
+        by sub-classes to control whether a menu item should be added for
+        the control in the settings menu for the relevant FSLeyes view(s).
+
+        Note that this method must be implemented on the class that is to
+        be ignored - inherited implementations from base classes are not
+        considered.
+        """
+        return False
+
+
     @staticmethod
     def supportedViews():
         """Return the views that this control supports.
@@ -54,6 +71,23 @@ class ControlMixin:
         :meth:`.ViewPanel.togglePanel` method when a control panel of this
         type is added. When ``togglePanel`` is called, if any arguments are
         provided, the arguments returned by this method are not used.
+        """
+        return None
+
+
+    @staticmethod
+    def profileCls():
+        """Return the custom interaction profile associated with this control.
+        Must be a sub-class of :class:`.Profile`.
+
+        When a control panel is opened, if it requires a different profile to
+        the one that is active, that profile is created and activated. If any
+        other controls required the previous profile, they are closed.
+
+        Control panels which are associated with an interaction profile can
+        assume that the profile has already been created by the time the
+        control is created. The :class:`.Profile` instance can be retrieved
+        via :meth:`.ViewPanel.currentProfile`.
         """
         return None
 

@@ -10,6 +10,8 @@
 
 import logging
 
+import wx
+
 import fsleyes.profiles as profiles
 import fsl.utils.idle   as idle
 
@@ -35,6 +37,32 @@ class LightBoxViewProfile(profiles.Profile):
              with the mouse wheel (effectively zooming in/out of the canvas).
     ======== ==================================================================
     """
+
+
+    @staticmethod
+    def supportedView():
+        """Returns the :class:`.LightBoxPanel` class. """
+        import fsleyes.views.lightboxpanel as lightboxpanel
+        return lightboxpanel.LightBoxPanel
+
+
+    @staticmethod
+    def tempModes():
+        """Returns the temporary mode map for the ``LightBoxViewProfile``,
+        which controls the use of modifier keys to temporarily enter other
+        interaction modes.
+        """
+        # Command/CTRL puts the user in zoom mode,
+        # and ALT puts the user in pan mode
+        return {('view', wx.WXK_CONTROL) : 'zoom'}
+
+
+    @staticmethod
+    def altHandlers():
+        """Returns the alternate handlers map, which allows event handlers
+        defined in one mode to be re-used whilst in another mode.
+        """
+        return { ('view', 'LeftMouseDown') :('view', 'LeftMouseDrag')}
 
 
     def __init__(self, viewPanel, overlayList, displayCtx):

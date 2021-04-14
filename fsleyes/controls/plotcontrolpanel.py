@@ -15,6 +15,7 @@ import wx
 import fsleyes_props                 as props
 
 import fsleyes.controls.controlpanel as ctrlpanel
+import fsleyes.views.plotpanel       as plotpanel
 import fsleyes.tooltips              as fsltooltips
 import fsleyes.displaycontext        as fsldisplay
 import fsleyes.strings               as strings
@@ -23,8 +24,7 @@ import fsleyes.strings               as strings
 class PlotControlPanel(ctrlpanel.SettingsPanel):
     """The ``PlotControlPanel`` is a *FSLeyes control* panel which allows
     the user to control a :class:`.OverlayPlotPanel`. The ``PlotControlPanel``
-    may be used as is, or may be sub-classed for more customisation.
-
+    is intended to be sub-classed.
 
     Sub-class implementations may:
 
@@ -57,6 +57,21 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
        getWidgetList
        refreshDataSeriesWidgets
     """
+
+
+    @staticmethod
+    def supportedViews():
+        """The ``PlotControlPanel`` is restricted for use with
+        :class:`.OverlayPlotPanel` views. This method may be overridden by
+        sub-classes.
+        """
+        return [plotpanel.OverlayPlotPanel]
+
+
+    @staticmethod
+    def ignoreControl():
+        """The ``PlotControlPanel`` is not intended to be used directly. """
+        return True
 
 
     def __init__(self, parent, overlayList, displayCtx, plotPanel):

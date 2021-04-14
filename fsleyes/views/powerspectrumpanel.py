@@ -21,6 +21,7 @@ import fsl.data.melodicimage                      as fslmelimage
 import fsleyes_props                              as props
 
 import fsleyes.actions                            as actions
+import fsleyes.profiles.plotprofile               as plotprofile
 import fsleyes.plotting.powerspectrumseries       as psseries
 import fsleyes.controls.powerspectrumcontrolpanel as pscontrol
 import fsleyes.controls.powerspectrumtoolbar      as powerspectrumtoolbar
@@ -43,16 +44,6 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
 
        ~fsleyes.controls.plotlistpanel.PlotListPanel
        ~fsleyes.controls.powerspectrumcontrolpanel.PowerSpectrumControlPanel
-
-
-    The following actions are provided, in addition to those already provided
-    by the :class:`.PlotPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       togglePowerSpectrumToolBar
-       togglePowerSpectrumControl
 
 
     **Melodic images**
@@ -78,6 +69,28 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
     """If ``True``, the x axis is scaled so that it represents frequency. """
 
 
+    @staticmethod
+    def defaultLayout():
+        """Returns a list of control panel types to be added for the default
+        power spectrum panel layout.
+        """
+        return ['PowerSpectrumToolBar',
+                'OverlayListPanel',
+                'PlotListPanel']
+
+
+
+    @staticmethod
+    def controlOrder():
+        """Returns a list of control panel names, specifying the order in
+        which they should appear in the  FSLeyes ortho panel settings menu.
+        """
+        return ['OverlayListPanel',
+                'PlotListPanel',
+                'PowerSpectrumToolBar',
+                'PowerSpectrumControlPanel']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``PowerSpectrumPanel``.
 
@@ -98,7 +111,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
                                 self.name,
                                 self.__plotMelodicICsChanged)
 
-        self.initProfile()
+        self.initProfile(plotprofile.PlotProfile)
 
 
     def destroy(self):
@@ -112,40 +125,16 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         plotpanel.OverlayPlotPanel.destroy(self)
 
 
-    @actions.toggleControlAction(pscontrol.PowerSpectrumControlPanel)
-    def togglePowerSpectrumControl(self, floatPane=False):
-        """Shows/hides a :class:`.PowerSpectrumControlPanel`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(pscontrol.PowerSpectrumControlPanel,
-                         location=wx.RIGHT,
-                         floatPane=floatPane)
-
-
-    @actions.toggleControlAction(powerspectrumtoolbar.PowerSpectrumToolBar)
-    def togglePowerSpectrumToolBar(self):
-        """Shows/hides a :class:`.PlotToolBar`. See
-        :meth:`.ViewPanel.togglePanel`.
-        """
-        self.togglePanel(powerspectrumtoolbar.PowerSpectrumToolBar)
-
-
     def getActions(self):
         """Overrides :meth:`.ActionProvider.getActions`. Returns all of the
         :mod:`.actions` that are defined on this ``PowerSpectrumPanel``.
         """
-        actions = [self.screenshot,
+        actionz = [self.screenshot,
                    self.importDataSeries,
-                   self.exportDataSeries,
-                   None,
-                   self.toggleOverlayList,
-                   self.togglePlotList,
-                   self.togglePowerSpectrumToolBar,
-                   self.togglePowerSpectrumControl]
+                   self.exportDataSeries]
 
-        names = [a.__name__ if a is not None else None for a in actions]
-
-        return list(zip(names, actions))
+        names = [a.actionName if a is not None else None for a in actionz]
+        return list(zip(names, actionz))
 
 
     def draw(self, *a):
