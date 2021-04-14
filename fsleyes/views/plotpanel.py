@@ -515,7 +515,7 @@ class OverlayPlotPanel(PlotPanel):
             copy           = plotting.DataSeries(ds.overlay,
                                                  self.overlayList,
                                                  self.displayCtx,
-                                                 self)
+                                                 self.canvas)
             toAdd[i]       = copy
 
             copy.alpha     = ds.alpha

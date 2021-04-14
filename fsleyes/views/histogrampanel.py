@@ -206,7 +206,7 @@ class HistogramPanel(plotpanel.OverlayPlotPanel):
         else:
             return None, None, None
 
-        hs = hsType(overlay, self.overlayList, self.displayCtx, self)
+        hs = hsType(overlay, self.overlayList, self.displayCtx, self.canvas)
         hs.colour      = self.getOverlayPlotColour(overlay)
         hs.lineStyle   = self.getOverlayPlotStyle(overlay)
         hs.lineWidth   = 2

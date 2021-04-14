@@ -162,7 +162,7 @@ class PowerSpectrumPanel(plotpanel.OverlayPlotPanel):
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
 
-        psargs = [overlay, overlayList, displayCtx, self]
+        psargs = [overlay, overlayList, displayCtx, self.canavs]
 
         if isinstance(overlay, fslmesh.Mesh):
             ps        = psseries.MeshPowerSpectrumSeries(*psargs)

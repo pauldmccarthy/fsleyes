@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`DataSeries` class, the base class for
-classes used by :class:`.PlotPanel` views for plotting data.
+classes used by the :class:`.PlotCanvas` for plotting data.
 """
 
 
@@ -22,14 +22,14 @@ log = logging.getLogger(__name__)
 
 
 class DataSeries(props.HasProperties):
-    """A ``DataSeries`` instance encapsulates some data to be plotted by
-    a :class:`PlotPanel`, with the data extracted from an overlay in the
-    :class:`.OverlayList`.
+    """A ``DataSeries`` instance encapsulates some data to be plotted by a
+    :class:`PlotCanvas`, possibly with the data extracted from an overlay in
+    the :class:`.OverlayList`.
 
     Sub-class implementations must:
 
       - Accept an overlay object, :class:`.OverlayList`,
-        :class:`.DisplayContext`, and :class:`.PlotPanel` in their
+        :class:`.DisplayContext`, and :class:`.PlotCanvas` in their
         ``__init__`` method, and pass these through to
         :meth:`.DataSeries.__init__`.
       - Override the :meth:`getData` method
@@ -84,14 +84,14 @@ class DataSeries(props.HasProperties):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``DataSeries``.
 
         :arg overlay:     The overlay from which the data to be plotted is
                           retrieved.  May be ``None``.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`.PlotPanel` that owns this
+        :arg plotCanvas:  The :class:`.PlotCanvas` that owns this
                           ``DataSeries``.
         """
 
@@ -99,7 +99,7 @@ class DataSeries(props.HasProperties):
         self.__overlay     = overlay
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        self.__plotPanel   = plotPanel
+        self.__plotCanvas  = plotCanvas
         self.setData([], [])
 
         log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
@@ -144,11 +144,11 @@ class DataSeries(props.HasProperties):
 
 
     @property
-    def plotPanel(self):
-        """Returns the :class:`.PlotPanel` that owns this ``DataSeries``
+    def plotCanvas(self):
+        """Returns the :class:`.PlotCanvas` that owns this ``DataSeries``
         instance.
         """
-        return self.__plotPanel
+        return self.__plotCanvas
 
 
     def destroy(self):
@@ -160,7 +160,7 @@ class DataSeries(props.HasProperties):
         self.__overlay     = None
         self.__overlayList = None
         self.__displayCtx  = None
-        self.__plotPanel   = None
+        self.__plotCanvas  = None
 
 
     def redrawProperties(self):
@@ -275,7 +275,7 @@ class VoxelDataSeries(DataSeries):
         return xdata, ydata
 
 
-    # The PlotPanel uses a new thread to access
+    # The PlotCanvas uses a new thread to access
     # data every time the displaycontext location
     # changes. So we mark this method as mutually
     # exclusive to prevent multiple

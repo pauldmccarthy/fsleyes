@@ -224,23 +224,23 @@ class ComplexPowerSpectrumSeries(VoxelPowerSpectrumSeries):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``ComplexPowerSpectrumSeries``. All arguments are
         passed through to the :class:`VoxelPowerSpectrumSeries` constructor.
         """
 
         VoxelPowerSpectrumSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         # Separate DataSeries for the imaginary/
         # magnitude/phase signals, returned by
         # the extraSeries method
         self.__imagps = ImaginaryPowerSpectrumSeries(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
         self.__magps = MagnitudePowerSpectrumSeries(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
         self.__phaseps = PhasePowerSpectrumSeries(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         for ps in (self.__imagps, self.__magps, self.__phaseps):
             ps.colour = fslcm.randomDarkColour()

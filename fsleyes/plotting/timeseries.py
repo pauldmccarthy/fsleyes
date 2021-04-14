@@ -87,20 +87,20 @@ class ComplexTimeSeries(VoxelTimeSeries):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``ComplexTimeSeries``. All arguments are passed
         through to the :class:`VoxelTimeSeries` constructor.
         """
 
         VoxelTimeSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         self.__imagts = ImaginaryTimeSeries(
-            overlay, overlayList, displayCtx, plotPanel)
+            overlay, overlayList, displayCtx, plotCanvas)
         self.__magts = MagnitudeTimeSeries(
-            overlay, overlayList, displayCtx, plotPanel)
+            overlay, overlayList, displayCtx, plotCanvas)
         self.__phasets = PhaseTimeSeries(
-            overlay, overlayList, displayCtx, plotPanel)
+            overlay, overlayList, displayCtx, plotCanvas)
 
         for ts in (self.__imagts, self.__magts, self.__phasets):
             ts.colour = fslcm.randomDarkColour()
@@ -431,7 +431,7 @@ class FEATTimeSeries(VoxelTimeSeries):
         ts = tsType(self.overlay,
                     self.overlayList,
                     self.displayCtx,
-                    self.plotPanel,
+                    self.plotCanvas,
                     self,
                     *args,
                     **kwargs)
@@ -569,7 +569,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
                  overlay,
                  overlayList,
                  displayCtx,
-                 plotPanel,
+                 plotCanvas,
                  parentTs,
                  contrast,
                  fitType,
@@ -583,7 +583,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``FEATPartialFitTimeSeries``.
 
         :arg parentTs:    The :class:`.FEATTimeSeries` instance that has
@@ -599,7 +599,7 @@ class FEATPartialFitTimeSeries(VoxelTimeSeries):
                           the EV/contrast index.
         """
         VoxelTimeSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         self.parentTs = parentTs
         self.contrast = contrast
@@ -632,7 +632,7 @@ class FEATEVTimeSeries(dataseries.DataSeries):
                  overlay,
                  overlayList,
                  displayCtx,
-                 plotPanel,
+                 plotCanvas,
                  parentTs,
                  idx):
         """Create a ``FEATEVTimeSeries``.
@@ -644,7 +644,7 @@ class FEATEVTimeSeries(dataseries.DataSeries):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``FEATEVTimeSeries``.
 
         :arg parentTs:    The :class:`.FEATTimeSeries` instance that has
@@ -653,7 +653,7 @@ class FEATEVTimeSeries(dataseries.DataSeries):
         :arg idx:         The EV index.
         """
         dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         self.parentTs = parentTs
         self.idx      = idx
@@ -690,7 +690,7 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
     class are created by the :class:`FEATTimeSeries` class.
     """
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel, parentTs):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas, parentTs):
         """Create a ``FEATResidualTimeSeries``.
 
         :arg overlay:     The :class:`.FEATImage` instance to extract the data
@@ -700,14 +700,14 @@ class FEATResidualTimeSeries(VoxelTimeSeries):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``FEATResidualTimeSeries``.
 
         :arg parentTs:    The :class:`.FEATTimeSeries` instance that has
                           created this ``FEATResidualTimeSeries``.
         """
         VoxelTimeSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
         self.parentTs = parentTs
 
 
@@ -744,7 +744,7 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
                  overlay,
                  overlayList,
                  displayCtx,
-                 plotPanel,
+                 plotCanvas,
                  parentTs,
                  contrast,
                  fitType,
@@ -758,7 +758,7 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
 
         :arg displayCtx:  The :class:`.DisplayContext` instance.
 
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``FEATModelFitTimeSeries``.
 
         :arg parentTs:    The :class:`.FEATTimeSeries` instance that has
@@ -777,7 +777,7 @@ class FEATModelFitTimeSeries(VoxelTimeSeries):
             raise ValueError('Unknown model fit type {}'.format(fitType))
 
         VoxelTimeSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
         self.parentTs = parentTs
         self.fitType  = fitType
         self.idx      = idx
@@ -825,17 +825,17 @@ class MelodicTimeSeries(dataseries.DataSeries):
     :class:`.NiftiOpts.volume`.
     """
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``MelodicTimeSeries``.
 
         :arg overlay:     A :class:`.MelodicImage` overlay.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``MelodicTimeSeries``.
         """
         dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
 
     def getComponent(self):
@@ -870,17 +870,17 @@ class MeshTimeSeries(dataseries.DataSeries):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``MeshTimeSeries`` instance.
 
         :arg overlay:     The :class:`.Mesh` instance to extract the data from.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`TimeSeriesPanel` which owns this
+        :arg plotCanvas:   The :class:`TimeSeriesPanel` which owns this
                           ``TimeSeries``.
         """
         dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
 
     def makeLabel(self):

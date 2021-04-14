@@ -251,7 +251,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
-        tsargs      = (overlay, overlayList, displayCtx, self)
+        tsargs      = (overlay, overlayList, displayCtx, self.canvas)
 
         # Is this a mesh?
         if isinstance(overlay, fslmesh.Mesh):

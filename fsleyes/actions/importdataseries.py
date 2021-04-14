@@ -130,7 +130,7 @@ class ImportDataSeriesAction(base.Action):
             ds = plotting.DataSeries(None,
                                      self.overlayList,
                                      self.displayCtx,
-                                     self.__plotPanel)
+                                     self.__plotPanel.canvas)
             ds.setData(x, y)
 
             # If we recognise the file name,
