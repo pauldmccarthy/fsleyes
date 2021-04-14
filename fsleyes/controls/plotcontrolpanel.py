@@ -132,12 +132,13 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
                                 self.name,
                                 self.__selectedOverlayChanged)
 
-        plotPanel.addListener('xAutoScale',
-                              self.name,
-                              self.__autoScaleChanged)
-        plotPanel.addListener('yAutoScale',
-                              self.name,
-                              self.__autoScaleChanged)
+        plotCanvas = plotPanel.canvas
+        plotCanvas.addListener('xAutoScale',
+                               self.name,
+                               self.__autoScaleChanged)
+        plotCanvas.addListener('yAutoScale',
+                               self.name,
+                               self.__autoScaleChanged)
 
         # This attribute keeps track of the currently
         # selected overlay, so the widget list group
@@ -156,8 +157,12 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         """
         self.displayCtx .removeListener('selectedOverlay', self.name)
         self.overlayList.removeListener('overlays',        self.name)
-        self.__plotPanel.removeListener('limits',          self.name)
 
+        plotCanvas = self.__plotPanel.canvas
+        plotCanvas.removeListener('xAutoScale', self.name)
+        plotCanvas.removeListener('yAutoScale', self.name)
+
+        self.__plotPanel   = None
         self.__plotWidgets = None
         self.__dsWidgets   = None
 
@@ -168,11 +173,20 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         ctrlpanel.SettingsPanel.destroy(self)
 
 
-    def getPlotPanel(self):
+    @property
+    def plotPanel(self):
         """Returns the :class:`.OverlayPlotPanel` associated with this
         ``PlotControlPanel``.
         """
         return self.__plotPanel
+
+
+    @property
+    def plotCanvas(self):
+        """Returns the :class:`.PlotCanvas` associated with this
+        ``PlotControlPanel``.
+        """
+        return self.__plotPanel.canvas
 
 
     def generateCustomPlotPanelWidgets(self, groupName):
@@ -205,7 +219,8 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         """
 
         widgetList = self.getWidgetList()
-        plotPanel  = self.__plotPanel
+        plotPanel  = self.plotPanel
+        plotCanvas = self.plotCanvas
         allWidgets = []
 
         plotProps = ['smooth',
@@ -216,27 +231,27 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
                      'bgColour']
 
         for prop in plotProps:
-            widget = props.makeWidget(widgetList, plotPanel, prop)
+            widget = props.makeWidget(widgetList, plotCanvas, prop)
             allWidgets.append(widget)
             widgetList.AddWidget(
                 widget,
-                displayName=strings.properties[plotPanel, prop],
-                tooltip=fsltooltips.properties[plotPanel, prop],
+                displayName=strings.properties[plotCanvas, prop],
+                tooltip=fsltooltips.properties[plotCanvas, prop],
                 groupName=groupName)
 
-        limits     = props.makeListWidgets(widgetList, plotPanel, 'limits')
-        xlogscale  = props.makeWidget(widgetList, plotPanel, 'xLogScale')
-        ylogscale  = props.makeWidget(widgetList, plotPanel, 'yLogScale')
-        xinvert    = props.makeWidget(widgetList, plotPanel, 'invertX')
-        yinvert    = props.makeWidget(widgetList, plotPanel, 'invertY')
-        xscale     = props.makeWidget(widgetList, plotPanel, 'xScale')
-        yscale     = props.makeWidget(widgetList, plotPanel, 'yScale')
-        xoffset    = props.makeWidget(widgetList, plotPanel, 'xOffset')
-        yoffset    = props.makeWidget(widgetList, plotPanel, 'yOffset')
-        xautoscale = props.makeWidget(widgetList, plotPanel, 'xAutoScale')
-        yautoscale = props.makeWidget(widgetList, plotPanel, 'yAutoScale')
-        xlabel     = props.makeWidget(widgetList, plotPanel, 'xlabel')
-        ylabel     = props.makeWidget(widgetList, plotPanel, 'ylabel')
+        limits     = props.makeListWidgets(widgetList, plotCanvas, 'limits')
+        xlogscale  = props.makeWidget(widgetList, plotCanvas, 'xLogScale')
+        ylogscale  = props.makeWidget(widgetList, plotCanvas, 'yLogScale')
+        xinvert    = props.makeWidget(widgetList, plotCanvas, 'invertX')
+        yinvert    = props.makeWidget(widgetList, plotCanvas, 'invertY')
+        xscale     = props.makeWidget(widgetList, plotCanvas, 'xScale')
+        yscale     = props.makeWidget(widgetList, plotCanvas, 'yScale')
+        xoffset    = props.makeWidget(widgetList, plotCanvas, 'xOffset')
+        yoffset    = props.makeWidget(widgetList, plotCanvas, 'yOffset')
+        xautoscale = props.makeWidget(widgetList, plotCanvas, 'xAutoScale')
+        yautoscale = props.makeWidget(widgetList, plotCanvas, 'yAutoScale')
+        xlabel     = props.makeWidget(widgetList, plotCanvas, 'xlabel')
+        ylabel     = props.makeWidget(widgetList, plotCanvas, 'ylabel')
 
         allWidgets.extend(limits)
         allWidgets.extend([xlogscale,
@@ -334,7 +349,7 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
         if overlay is None:
             return
 
-        ds = self.__plotPanel.getDataSeries(overlay)
+        ds = self.plotPanel.getDataSeries(overlay)
 
         if ds is None:
             return
@@ -477,6 +492,6 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
             return
 
         for l in self.__xLimitWidgets:
-            l.Enable(not self.__plotPanel.xAutoScale)
+            l.Enable(not self.plotCanvas.xAutoScale)
         for l in self.__yLimitWidgets:
-            l.Enable(not self.__plotPanel.yAutoScale)
+            l.Enable(not self.plotCanvas.yAutoScale)

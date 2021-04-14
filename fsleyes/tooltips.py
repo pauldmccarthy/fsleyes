@@ -568,29 +568,29 @@ properties = TypeDict({
     'manner. This is not possible under certain platforms/environments, '
     'where the canvas updates cannot be synchronised.',
 
-    'PlotPanel.legend'     : 'Show / hide a legend for series which have '
+    'PlotCanvas.legend'     : 'Show / hide a legend for series which have '
                              'been added to the plot.',
-    'PlotPanel.xAutoScale' : 'If checked, the plot X axis limits are '
+    'PlotCanvas.xAutoScale' : 'If checked, the plot X axis limits are '
                              'automatically adjusted whenever the plot '
                              'contents change.',
-    'PlotPanel.yAutoScale' : 'If checked, the plot Y axis limits are '
+    'PlotCanvas.yAutoScale' : 'If checked, the plot Y axis limits are '
                              'automatically adjusted whenever the plot '
                              'contents change.',
-    'PlotPanel.xLogScale'  : 'If checked, a log (base 10) scale is used for '
+    'PlotCanvas.xLogScale'  : 'If checked, a log (base 10) scale is used for '
                              'the x axis.',
-    'PlotPanel.yLogScale'  : 'If checked, a log (base 10) scale is used for '
+    'PlotCanvas.yLogScale'  : 'If checked, a log (base 10) scale is used for '
                              'the y axis.',
-    'PlotPanel.invertX'    : 'Invert the plot along the X axis.',
-    'PlotPanel.invertY'    : 'Invert the plot along the Y axis.',
-    'PlotPanel.ticks'      : 'Show / hide axis ticks and tick labels.',
-    'PlotPanel.grid'       : 'Show hide plot grid.' ,
-    'PlotPanel.gridColour' : 'Set the plot grid colour.' ,
-    'PlotPanel.bgColour'   : 'Set the plot background colour.' ,
-    'PlotPanel.smooth'     : 'Smooth displayed data series (with cubic spline '
+    'PlotCanvas.invertX'    : 'Invert the plot along the X axis.',
+    'PlotCanvas.invertY'    : 'Invert the plot along the Y axis.',
+    'PlotCanvas.ticks'      : 'Show / hide axis ticks and tick labels.',
+    'PlotCanvas.grid'       : 'Show hide plot grid.' ,
+    'PlotCanvas.gridColour' : 'Set the plot grid colour.' ,
+    'PlotCanvas.bgColour'   : 'Set the plot background colour.' ,
+    'PlotCanvas.smooth'     : 'Smooth displayed data series (with cubic spline '
                              'interpolation).',
-    'PlotPanel.xlabel'     : 'Set the x axis label.',
-    'PlotPanel.ylabel'     : 'Set the y axis label.',
-    'PlotPanel.limits'     : 'Manually set the x/y axis limits.',
+    'PlotCanvas.xlabel'     : 'Set the x axis label.',
+    'PlotCanvas.ylabel'     : 'Set the y axis label.',
+    'PlotCanvas.limits'     : 'Manually set the x/y axis limits.',
 
     'TimeSeriesPanel.usePixdim'        : 'If checked, the x axis data is '
                                          'scaled by the time dimension pixdim '

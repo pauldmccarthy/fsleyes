@@ -61,8 +61,9 @@ class PlotProfile(profiles.Profile):
                                   displayCtx,
                                   modes)
 
-        self.__canvas  = viewPanel.canvas.getCanvas()
-        self.__axis    = viewPanel.canvas.getAxis()
+        # store our own refs to the matplotlib objects
+        self.__canvas  = viewPanel.canvas.canvas
+        self.__axis    = viewPanel.canvas.axis
 
         # Pan/zoom functionality is actually
         # implemented by the NavigationToolbar2Wx

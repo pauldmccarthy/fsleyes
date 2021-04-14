@@ -9,34 +9,26 @@ classes.  The ``PlotPanel`` class is the base class for all *FSLeyes views*
 which display some sort of data plot. The ``OverlayPlotPanel`` is a
 ``PlotPanel`` which contains some extra logic for displaying plots related to
 the currently selected overlay.
+
+The actual plotting logic (using ``matplotilb``) is implemented within the
+:class:`.PlotCanvas` class.
 """
 
 
 import logging
-import collections
 
 import wx
 
-import numpy             as np
-import scipy.interpolate as interp
-
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as Canvas
-
-import fsl.utils.idle                     as idle
-import fsleyes_props                      as props
-import fsleyes_widgets                    as fwidgets
 import fsleyes_widgets.elistbox           as elistbox
 
-import fsleyes.strings                    as strings
 import fsleyes.actions                    as actions
 import fsleyes.overlay                    as fsloverlay
 import fsleyes.colourmaps                 as fslcm
+import fsleyes.views.viewpanel            as viewpanel
 import fsleyes.plotting                   as plotting
 import fsleyes.plotting.plotcanvas        as plotcanvas
 import fsleyes.controls.overlaylistpanel  as overlaylistpanel
-import fsleyes.controls.plotlistpanel     as plotlistpanel
-from . import                                viewpanel
+
 
 
 log = logging.getLogger(__name__)
@@ -46,15 +38,20 @@ class PlotPanel(viewpanel.ViewPanel):
     """The ``PlotPanel`` class is the base class for all *FSLeyes views*
     which display some sort of 2D data plot, such as the
     :class:`.TimeSeriesPanel`, and the :class:`.HistogramPanel`.
-    See also the :class:`OverlayPlotPanel`, which contains extra logic for
-    displaying plots related to the currently selected overlay.
+
+    .. note:: See also the :class:`OverlayPlotPanel`, which contains extra
+              logic for displaying plots related to the currently selected
+              overlay, and which is the actual base class used by the
+              ``TimeSeriesPanel``, ``HistogramPanel`` and
+              ``PowerSpectrumPanel``.
 
 
-    ``PlotPanel`` uses :mod:`matplotlib` for its plotting. The ``matplotlib``
+    ``PlotPanel`` uses a :class:`.PlotCanvas`, which in turn uses
+    :mod`:matplotlib` for its plotting.  The ``PlotCanvas`` instance used by a
+    ``PlotPanel`` can be accessed via the :meth:`canvas` method, which in turn
+    can be used to manipulate the plot display settings. The ``matplotlib``
     ``Figure``, ``Axis``, and ``Canvas`` instances can be accessed via the
-    :meth:`getFigure`, :meth:`getAxis`, and :meth:`getCanvas` methods, if they
-    are needed. Various display settings can be configured through
-    ``PlotPanel`` properties, including :attr:`legend`, :attr:`smooth`, etc.
+    ``PlotCanvas`` instance, if they are needed.
 
 
     **Sub-class requirements**
@@ -63,49 +60,22 @@ class PlotPanel(viewpanel.ViewPanel):
 
       1. Call the ``PlotPanel`` constructor.
 
-      2. Define a :class:`.DataSeries` sub-class.
+      2. Define one or more :class:`.DataSeries` sub-classes if needed.
 
       3. Override the :meth:`draw` method, so it calls the
-         :meth:`drawDataSeries` method.
+         :meth:`.PlotCanvas.drawDataSeries` and
+         :meth:`.PlotCanvas.drawArtists` methods (:meth:`draw` is passed
+         to the ``PlotCanvas`` as a custom ``drawFunc``).
 
       4. If necessary, override the :meth:`prepareDataSeries` method to
          perform any preprocessing on ``extraSeries`` passed to the
          :meth:`drawDataSeries` method (but not applied to
          :class:`.DataSeries` that have been added to the :attr:`dataSeries`
-         list).
+         list) (:meth:`prepareDataSeries` is passed
+         to the ``PlotCanvas`` as a custom ``prepareFunc``).
 
       5. If necessary, override the :meth:`destroy` method, but make
          sure that the base-class implementation is called.
-
-
-    **Data series**
-
-    A ``PlotPanel`` instance plots data contained in one or more
-    :class:`.DataSeries` instances; all ``DataSeries`` classes are defined in
-    the :mod:`.plotting` sub-package.  Therefore, ``PlotPanel`` sub-classes
-    also need to define a sub-class of the :class:`.DataSeries` base class.
-
-    ``DataSeries`` objects can be plotted by passing them to the
-    :meth:`drawDataSeries` method.
-
-    Or, if you want one or more ``DataSeries`` to be *held*, i.e. plotted
-    every time, you can add them to the :attr:`dataSeries` list. The
-    ``DataSeries`` in the :attr:`dataSeries` list will be plotted on every
-    call to :meth:`drawDataSeries` (in addition to any ``DataSeries`` passed
-    directly to :meth:`drawDataSeries`) until they are removed from the
-    :attr:`dataSeries` list.
-
-
-    **The draw queue**
-
-
-    The ``PlotPanel`` uses a :class:`.async.TaskThread` to asynchronously
-    extract and prepare data for plotting, This is because data preparation
-    may take a long time for large :class:`.Image` overlays, and the main
-    application thread should not be blocked while this is occurring. The
-    ``TaskThread`` instance is accessible through the :meth:`getDrawQueue`
-    method, in case anything needs to be scheduled on it.
-
 
     **Plot panel actions**
 
@@ -158,11 +128,8 @@ class PlotPanel(viewpanel.ViewPanel):
         """Create a ``PlotPanel``.
 
         :arg parent:      The :mod:`wx` parent object.
-
         :arg overlayList: An :class:`.OverlayList` instance.
-
         :arg displayCtx:  A :class:`.DisplayContext` instance.
-
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
@@ -170,7 +137,7 @@ class PlotPanel(viewpanel.ViewPanel):
             self, parent, overlayList, displayCtx, frame)
         self.__canvas = plotcanvas.PlotCanvas(
             self, self.draw, self.prepareDataSeries)
-        self.centrePanel = self.__canvas.getCanvas()
+        self.centrePanel = self.__canvas.canvas
 
 
     def destroy(self):
@@ -190,10 +157,6 @@ class PlotPanel(viewpanel.ViewPanel):
 
     def draw(self, *a):
         """This method must be overridden by ``PlotPanel`` sub-classes.
-
-        It is called whenever a :class:`.DataSeries` is added to the
-        :attr:`dataSeries` list, or when any plot display properties change.
-
         Sub-class implementations should call the :meth:`drawDataSeries`
         and meth:`drawArtists` methods.
         """
@@ -220,12 +183,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         See the :class:`.ScreenshotAction`.
         """
-
         from fsleyes.actions.screenshot import ScreenshotAction
-
-        ScreenshotAction(self.overlayList,
-                         self.displayCtx,
-                         self)()
+        ScreenshotAction(self.overlayList, self.displayCtx, self)()
 
 
     @actions.action
@@ -234,12 +193,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         See the :class:`.ImportDataSeriesAction`.
         """
-
         from fsleyes.actions.importdataseries import ImportDataSeriesAction
-
-        ImportDataSeriesAction(self.overlayList,
-                               self.displayCtx,
-                               self)()
+        ImportDataSeriesAction(self.overlayList, self.displayCtx, self)()
 
 
     @actions.action
@@ -248,12 +203,8 @@ class PlotPanel(viewpanel.ViewPanel):
 
         See the :class:`.ExportDataSeriesAction`.
         """
-
         from fsleyes.actions.exportdataseries import ExportDataSeriesAction
-
-        ExportDataSeriesAction(self.overlayList,
-                               self.displayCtx,
-                               self)()
+        ExportDataSeriesAction(self.overlayList, self.displayCtx, self)()
 
 
 class OverlayPlotPanel(PlotPanel):
@@ -270,9 +221,9 @@ class OverlayPlotPanel(PlotPanel):
         :class:`.DataSeries` instance for a specified overlay.
 
      2. Implement the :meth:`PlotPanel.draw` method so it calls the
-        :meth:`.PlotPanel.drawDataSeries`, passing :class:`.DataSeries`
+        :meth:`.PlotCanvas.drawDataSeries`, passing :class:`.DataSeries`
         instances for all overlays where :attr:`.Display.enabled` is
-        ``True``.
+        ``True``, and the call :meth:`.PlotCanvas.drawArtists` method.
 
      3. Optionally implement the :meth:`prepareDataSeries` method to
         perform any custom preprocessing.
@@ -318,15 +269,9 @@ class OverlayPlotPanel(PlotPanel):
     The :class:`.PlotControlPanel`, :class:`.PlotListPanel`, and
     :class:`.OverlayListPanel` are *FSLeyes control* panels which work with
     the :class:`.OverlayPlotPanel`. The ``PlotControlPanel`` is not intended
-    to be used directly - plot-specific sub-classes are used instead. The
-    following actions can be used to toggle control panels on an
-    ``OverlayPlotPanel``:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleOverlayList
-       togglePlotList
+    to be used directly - view-specific sub-classes are used instead. These
+    panels can be added/removed via the :meth:`.ViewPanel.togglePanel`
+    method.
 
 
     **Sub-classes**
@@ -545,7 +490,7 @@ class OverlayPlotPanel(PlotPanel):
     @actions.action
     def addDataSeries(self):
         """Every :class:`.DataSeries` which is currently plotted, and has not
-        been added to the :attr:`PlotPanel.dataSeries` list, is added to said
+        been added to the :attr:`.PlotCanvas.dataSeries` list, is added to said
         list.
         """
 
@@ -620,11 +565,11 @@ class OverlayPlotPanel(PlotPanel):
 
     @actions.action
     def removeDataSeries(self, *a):
-        """Removes the most recently added :class:`.DataSeries` from this
-        ``OverlayPlotPanel``.
+        """Removes the most recently added :class:`.DataSeries` from the
+        :attr:`.PlotCanvas.dataSeries`.
         """
-        if len(self.dataSeries) > 0:
-            self.dataSeries.pop()
+        if len(self.canvas.dataSeries) > 0:
+            self.canvas.dataSeries.pop()
 
 
     def createDataSeries(self, overlay):
@@ -644,6 +589,7 @@ class OverlayPlotPanel(PlotPanel):
         needs to be redrawn when the :attr:`.DisplayContext.location` property
         changes, whereas a :class:`.MelodicTimeSeries` instance needs to be
         redrawn when the :attr:`.VolumeOpts.volume` property changes.
+
 
         Therefore, in addition to creating and returning a ``DataSeries``
         instance for the given overlay, sub-class implementations must also
@@ -793,8 +739,9 @@ class OverlayPlotPanel(PlotPanel):
 
 
     def __dataSeriesChanged(self, *a):
-        """Called when the :attr:`dataSeries` list changes. Enables/disables
-        the :meth:`removeDataSeries` action accordingly.
+        """Called when the :attr:`.PlotCanvas.dataSeries` list
+        changes. Enables/disables the :meth:`removeDataSeries` action
+        accordingly.
         """
         self.removeDataSeries.enabled = len(self.canvas.dataSeries) > 0
 
@@ -802,7 +749,7 @@ class OverlayPlotPanel(PlotPanel):
     def __overlayListChanged(self, *a, **kwa):
         """Called when the :class:`.OverlayList` changes. Makes sure that
         there are no :class:`.DataSeries` instances in the
-        :attr:`.PlotPanel.dataSeries` list, or in the internal cache, which
+        :attr:`.PlotCanvas.dataSeries` list, or in the internal cache, which
         refer to overlays that no longer exist.
 
         :arg initialState: Must be passed as a keyword argument. If provided,
