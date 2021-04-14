@@ -7,7 +7,8 @@
 """This module provides the :class:`PlotCanvas` class, which plots
 :class:`.DataSeries` instances on a ``matplotlib`` canvas. The ``PlotCanvas``
 is used by the :class:`.TimeSeriesPanel`, :class:`.HistogramPanel`, and
-:class:`.PowerSpectrumPanel` views.
+:class:`.PowerSpectrumPanel` views, and potentially by other FSLeyes control
+panels.
 """
 
 
@@ -24,7 +25,6 @@ import fsleyes_props                     as props
 import fsleyes_widgets                   as fwidgets
 
 import fsleyes.strings                   as strings
-import fsleyes.actions                   as actions
 
 
 log = logging.getLogger(__name__)
@@ -45,9 +45,15 @@ class PlotCanvas(props.HasProperties):
     ``PlotCanvas`` properties, including :attr:`legend`, :attr:`smooth`, etc.
 
 
-    **Usage**
+    **Basic usage**
 
-    todo
+    After you have created a ``PlotCanvas``, you can add :class:`.DataSeries`
+    instances to the :attr:`dataSeries` property, then call :meth:`draw` or
+    :meth:`asyncDraw`.
+
+    The :meth:`draw` method simply calls :meth:`drawDataSeries` and
+    :meth:`drawArtists`, so you can alternately call those methods directly,
+    or pass your own  ``drawFunc`` when creating a ``PlotCanvas``.
 
 
     **Data series**
@@ -72,10 +78,12 @@ class PlotCanvas(props.HasProperties):
 
     The ``PlotCanvas`` uses a :class:`.async.TaskThread` to asynchronously
     extract and prepare data for plotting, This is because data preparation
-    may take a long time for large :class:`.Image` overlays, and the main
-    application thread should not be blocked while this is occurring. The
-    ``TaskThread`` instance is accessible through the :meth:`getDrawQueue`
-    method, in case anything needs to be scheduled on it.
+    may take a long time for certain types of ``DataSeries``
+    (e.g. :class:`TimeSeries` which are retrieving data from large
+    :class:`.Image` overlays), and the main application thread should not be
+    blocked while this is occurring. The ``TaskThread`` instance is accessible
+    through the :meth:`getDrawQueue` method, in case anything needs to be
+    scheduled on it.
     """
 
 
@@ -183,16 +191,17 @@ class PlotCanvas(props.HasProperties):
                  parent,
                  drawFunc=None,
                  prepareFunc=None):
-        """Create a ``PlotPanel``.
+        """Create a ``PlotCanvas``.
 
         :arg parent:      The :mod:`wx` parent object.
-        :arg drawFunc:    Function w
-        :arg prepareFunc:
+        :arg drawFunc:    Custon function to call instead of :meth:`draw`.
+        :arg prepareFunc: Custom function to call instead of
+                          :meth:`prepareDataSeries`.
         """
 
         figure = plt.Figure()
         axis   = figure.add_subplot(111)
-        canvas = Canvas(parent, -1, figure)
+        canvas = wxagg.FigureCanvasWxAgg(parent, -1, figure)
 
         figure.subplots_adjust(top=1.0, bottom=0.0, left=0.0, right=1.0)
         figure.patch.set_visible(False)
@@ -282,8 +291,8 @@ class PlotCanvas(props.HasProperties):
 
 
     def destroy(self):
-        """Removes some property listeners, and then calls
-        :meth:`.ViewPanel.destroy`.
+        """Removes some property listeners, and clears references to all
+        :class:`.DataSeries`, ``matplotlib`` and ``wx`` objects.
         """
 
         for propName in ['dataSeries',
@@ -327,22 +336,25 @@ class PlotCanvas(props.HasProperties):
 
     @property
     def destroyed(self):
-        """
+        """Returns True if :meth:`destroy` has been called, ``False``
+        otherwise.
         """
         return self.__destroyed
 
 
-    def getFigure(self):
+    @property
+    def figure(self):
         """Returns the ``matplotlib`` ``Figure`` instance."""
         return self.__figure
 
-
-    def getAxis(self):
+    @property
+    def axis(self):
         """Returns the ``matplotlib`` ``Axis`` instance."""
         return self.__axis
 
 
-    def getCanvas(self):
+    @property
+    def canvas(self):
         """Returns the ``matplotlib`` ``Canvas`` instance."""
         return self.__canvas
 
@@ -355,13 +367,11 @@ class PlotCanvas(props.HasProperties):
 
 
     def draw(self, *a):
-        """This method must be overridden by ``PlotPanel`` sub-classes.
+        """Call :meth:`drawDataSeries` and then :meth:`drawArtists`.
+        Or, if a ``drawFunc`` was provided, calls that instead.
 
-        It is called whenever a :class:`.DataSeries` is added to the
-        :attr:`dataSeries` list, or when any plot display properties change.
-
-        Sub-class implementations should call the :meth:`drawDataSeries`
-        and meth:`drawArtists` methods.
+        You will generally want to call :meth:`asyncDraw` instead of this
+        method.
         """
         if self.__drawFunc:
             self.__drawFunc(*a)
@@ -375,55 +385,17 @@ class PlotCanvas(props.HasProperties):
         should be used in preference to calling :meth:`draw` directly
         in most cases, particularly where the call occurs within a
         property callback function.
+
+        This method is automatically called called whenever a
+        :class:`.DataSeries` is added to the :attr:`dataSeries` list, or when
+        any plot display properties change.
         """
 
+        # don't run the task if it's
+        # already scheduled on the idle loop
         idleName = '{}.draw'.format(id(self))
-
         if not self.destroyed and not idle.idleLoop.inIdle(idleName):
             idle.idle(self.draw, name=idleName)
-
-
-    @actions.action
-    def screenshot(self, *a):
-        """Prompts the user to select a file name, then saves a screenshot
-        of the current plot.
-
-        See the :class:`.ScreenshotAction`.
-        """
-
-        from fsleyes.actions.screenshot import ScreenshotAction
-
-        ScreenshotAction(self.overlayList,
-                         self.displayCtx,
-                         self)()
-
-
-    @actions.action
-    def importDataSeries(self, *a):
-        """Imports data series from a text file.
-
-        See the :class:`.ImportDataSeriesAction`.
-        """
-
-        from fsleyes.actions.importdataseries import ImportDataSeriesAction
-
-        ImportDataSeriesAction(self.overlayList,
-                               self.displayCtx,
-                               self)()
-
-
-    @actions.action
-    def exportDataSeries(self, *args, **kwargs):
-        """Exports displayed data series to a text file.
-
-        See the :class:`.ExportDataSeriesAction`.
-        """
-
-        from fsleyes.actions.exportdataseries import ExportDataSeriesAction
-
-        ExportDataSeriesAction(self.overlayList,
-                               self.displayCtx,
-                               self)()
 
 
     def message(self, msg, clear=True, border=False):
@@ -432,7 +404,7 @@ class PlotCanvas(props.HasProperties):
         This is a convenience method provided for use by subclasses.
         """
 
-        axis = self.getAxis()
+        axis = self.axis
 
         if clear:
             self.__drawnDataSeries.clear()
@@ -453,7 +425,7 @@ class PlotCanvas(props.HasProperties):
                   transform=axis.transAxes,
                   bbox=bbox)
 
-        self.getCanvas().draw()
+        self.canvas.draw()
 
 
     def getArtist(self, ds):
@@ -470,7 +442,6 @@ class PlotCanvas(props.HasProperties):
         ``(DataSeries, x, y)`` data for one ``DataSeries`` instance
         as it is shown on the plot.
         """
-
         return [(ds, np.array(l.get_xdata()), np.array(l.get_ydata()))
                 for ds, l in self.__drawnDataSeries.items()]
 
@@ -479,11 +450,12 @@ class PlotCanvas(props.HasProperties):
         """Prepares the data from the given :class:`.DataSeries` so it is
         ready to be plotted. Called by the :meth:`__drawOneDataSeries` method
         for any ``extraSeries`` passed to the :meth:`drawDataSeries` method
-        (but not applied to :class:`.DataSeries` that have been added to the
-        :attr:`dataSeries` list).
+        (but **not** applied to :class:`.DataSeries` that have been added to
+        the :attr:`dataSeries` list).
 
-        This implementation just returns :class:`.DataSeries.getData` -
-        override it to perform any custom preprocessing.
+        This implementation just returns :class:`.DataSeries.getData` - you
+        can pass a ``prepareFunc`` to ``__init__`` to perform any custom
+        preprocessing.
         """
         if self.__prepareFunc:
             return self.__prepareFunc(ds)
@@ -498,8 +470,8 @@ class PlotCanvas(props.HasProperties):
         :arg refresh: If ``True`` (default), the canvas is refreshed.
         """
 
-        axis   = self.getAxis()
-        canvas = self.getCanvas()
+        axis   = self.axis
+        canvas = self.canvas
 
         def realDraw():
 
@@ -557,7 +529,6 @@ class PlotCanvas(props.HasProperties):
         :arg plotArgs:    Passed through to the :meth:`__drawDataSeries`
                           method.
 
-
         .. note:: This method must only be called from the main application
                   thread (the ``wx`` event loop).
         """
@@ -565,8 +536,8 @@ class PlotCanvas(props.HasProperties):
         if extraSeries is None:
             extraSeries = []
 
-        canvas      = self.getCanvas()
-        axis        = self.getAxis()
+        canvas      = self.canvas
+        axis        = self.axis
         toPlot      = self.dataSeries[:]
 
         toPlot      = [ds for ds in toPlot      if ds.enabled]
@@ -703,8 +674,8 @@ class PlotCanvas(props.HasProperties):
         if self.__drawRequests != 0:
             return
 
-        axis          = self.getAxis()
-        canvas        = self.getCanvas()
+        axis          = self.axis
+        canvas        = self.canvas
         width, height = canvas.get_width_height()
 
         self.__drawnDataSeries.clear()
@@ -782,9 +753,6 @@ class PlotCanvas(props.HasProperties):
 
         # Limits
         if xmin != xmax:
-
-            print('Setting limits', xmin, xmax)
-            print('              ', ymin, ymax)
             if self.invertX: axis.set_xlim((xmax, xmin))
             else:            axis.set_xlim((xmin, xmax))
             if self.invertY: axis.set_ylim((ymax, ymin))
@@ -818,7 +786,7 @@ class PlotCanvas(props.HasProperties):
 
         axis.set_axisbelow(True)
         axis.patch.set_facecolor(self.bgColour)
-        self.getFigure().patch.set_alpha(0)
+        self.figure.patch.set_alpha(0)
 
         if refresh:
             canvas.draw()
@@ -881,7 +849,7 @@ class PlotCanvas(props.HasProperties):
         kwargs['label'] = kwargs.get('label', ds.label)
         kwargs['ls']    = kwargs.get('ls',    ds.lineStyle)
 
-        axis = self.getAxis()
+        axis = self.axis
         line = axis.plot(xdata, ydata, **kwargs)[0]
 
         self.__drawnDataSeries[ds] = line
@@ -931,7 +899,7 @@ class PlotCanvas(props.HasProperties):
         accordingly.
         """
 
-        axis = self.getAxis()
+        axis = self.axis
         axis.set_xlim(self.limits.x)
         axis.set_ylim(self.limits.y)
         self.asyncDraw()
