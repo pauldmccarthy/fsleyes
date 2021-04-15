@@ -166,6 +166,20 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                 'FileTreePanel']
 
 
+    @staticmethod
+    def toolOrder():
+        """Returns a list of tool names, specifying the order in which they
+        should appear in the FSLeyes ortho panel settings menu.
+        """
+        return ['PearsonCorrelateAction',
+                'ResampleAction',
+                'CropImageAction',
+                'SampleLineAction',
+                'LoadAnnotationsAction',
+                'SaveAnnotationsAction',
+                'EditTransformAction']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create an ``OrthoPanel``.
 

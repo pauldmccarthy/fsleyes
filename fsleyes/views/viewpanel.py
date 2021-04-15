@@ -114,6 +114,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
+    def toolOrder():
+        """May be overridden by sub-classes. Returns a list of names of
+        tools, specifying a suggested order for the corresponding entries
+        in the FSLeyes tools menu. Note that the ordering of tools returned
+        by the :meth:`getTools` method is honoured - the ordering returned
+        by *this* method relates to tools which are implemented as plugins.
+        """
+        return None
+
+
+    @staticmethod
     def defaultLayout():
         """May be overridden by sub-classes. Should return a list of names of
         FSLeyes :class:`.ControlPanel` types which form the default layout for
@@ -202,15 +213,33 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                               size[1] - clientSize[1])
         ff.Destroy()
 
-        # A bit hacky, For each plugin control, we create
-        # a ToggleControlPanelAction, and add it as an
-        # attribute on the view panel. Then it will work
-        # with the ActionProvider interface, and hence the
-        # FSLEeyesFrame.populateMenu method.
+        self.__loadPlugins()
+
+
+    def __loadPlugins(self):
+        """Called by :meth:`__init__`. This is a bit of a hack, but less hacky
+        than it used to be.  All plugin-provided control panels and tools
+        which support this ``ViewPanel`` are looked up via the :mod:`.plugins.`
+        module. Then, for each control, we create a
+        :class:`.ToggleControlPanelAction`, and add it as an attribute on this
+        ``ViewPanel``.
+
+        Similarly, all plugin-provided tools which support this ``ViewPanel``
+        are created and added as attributes.
+
+        In both cases, the class name of the control/tool is used as the
+        attribute name.
+
+        This is done so that these actions will work with the
+        :class:`.ActionProvider` interface, and hence the
+        :meth:`.FSLEeyesFrame.populateMenu` method.
+
+        This implementation may change in the future if it becomes problematic
+        (e.g. due to naming conflicts).
+        """
+
+        # controls
         for ctrlType in plugins.listControls(type(self)).values():
-            # We add toggle actions as attributes to the
-            # ViewPanel instance, which is horribly hacky
-            # and will hopefully be changed in the future.
             name = ctrlType.__name__
             act  = actions.ToggleControlPanelAction(
                 self.overlayList,
@@ -218,6 +247,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 ctrlType,
                 self,
                 name=name)
+            setattr(self, name, act)
+
+        # tools
+        for toolType in plugins.listTools(type(self)).values():
+            name = toolType.__name__
+            act  = toolType(self.overlayList, self.displayCtx, self)
             setattr(self, name, act)
 
 

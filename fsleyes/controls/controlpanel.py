@@ -21,7 +21,6 @@ import wx.lib.agw.aui as wxaui
 
 import fsl.utils.deprecated       as deprecated
 import fsleyes_widgets.widgetlist as widgetlist
-import fsleyes.frame              as fslframe
 import fsleyes.panel              as fslpanel
 import fsleyes.toolbar            as fsltoolbar
 
@@ -121,10 +120,10 @@ class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
         # was the FSLeyesFrame. This clause is in place
         # to retain support for third-party FSLeyes
         # plugins which were written before 0.35.0
+        import fsleyes.frame as fslframe
         if isinstance(viewPanel, fslframe.FSLeyesFrame):
             frame     = viewPanel
             viewPanel = None
-            raise RuntimeError()
             deprecated.warn(
                 type(self).__name__, '0.35.0', '1.0.0',
                 'You should pass the view panel, not the FSLeyesFrame')
