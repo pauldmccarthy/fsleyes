@@ -33,6 +33,8 @@ Added
 * New *annotation* panel, allowing simple shapes and text to be overlaid on
   the canvases of an ortho view. Annotations can be saved to/loaded from file,
   via new options in the *Tools* menu.
+* New *Sample along line* tool, allowing data from an image to be sampled
+  along a line and plotted.
 
 
 Changed
