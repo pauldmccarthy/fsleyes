@@ -377,6 +377,9 @@ class PlotCanvas(props.HasProperties):
         You will generally want to call :meth:`asyncDraw` instead of this
         method.
         """
+        if self.destroyed:
+            return
+
         if self.__drawFunc:
             self.__drawFunc(*a)
         else:

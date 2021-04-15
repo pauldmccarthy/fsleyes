@@ -421,6 +421,14 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         self.__current = None
 
 
+    @property
+    def canvas(self):
+        """Return a reference to the :class:`.PlotCanvas` that is used to
+        plot sampled data from lines that the user has drawn.
+        """
+        return self.__canvas
+
+
     @actions.action
     def addDataSeries(self):
         """Holds/persists the most recently sampled line to the plot. """

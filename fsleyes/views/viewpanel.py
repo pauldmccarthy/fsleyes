@@ -381,6 +381,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         :arg kwargs:    All other keyword arguments, are passed to the
                         ``panelType`` constructor.
 
+        :returns:       The newly created control panel.
+
         .. note::       The ``panelType`` type must be a sub-class of
                         :class:`.ControlPanel` or :class:`.ControlToolBar`,
                         which can be created like so::
@@ -484,6 +486,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.AddPane(window, paneInfo)
         self.__panels[panelType] = window
         self.__auiMgrUpdate(newPanel=window)
+        return window
 
 
     def __layoutNewPanel(self,
