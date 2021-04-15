@@ -334,6 +334,9 @@ messages = TypeDict({
     'Load annotations from file',
     'LoadAnnotationsAction.loadFileError' :
     'An errror occurred while loading the file.',
+
+    'SampleLinePanel.exportError'  :
+    'An error occurred exporting the data!',
 })
 
 
@@ -498,8 +501,9 @@ titles = TypeDict({
     'SaveAnnotationsAction.saveFileError' : 'Error saving file',
     'LoadAnnotationsAction.loadFileError' : 'Error loading file',
 
-    'ExportSampledDataDialog'  : 'Export sampled data to file',
     'SampleLinePanel.savefile' : 'Select file to save sampled data to',
+    'SampleLinePanel.exportError'  : 'Error saving file',
+    'ExportSampledDataDialog'  : 'Export sampled data to file',
 })
 
 
@@ -983,8 +987,10 @@ labels = TypeDict({
 
     'ExportSampledDataDialog.ok'     : 'Ok',
     'ExportSampledDataDialog.cancel' : 'Cancel',
-    'ExportSampledDataDialog.series' : 'Series',
-    'ExportSampledDataDialog.coords' : 'Save coordinates',
+    'ExportSampledDataDialog.series' :
+    'Which line do you want to export data for?',
+    'ExportSampledDataDialog.coords' :
+    'Do you want to save the sample point\ncoordinates?',
 })
 
 
@@ -1419,7 +1425,7 @@ choices = TypeDict({
                                    'xy'   : 'Normalise along X and Y axes'},
 
     'ExportSampledDataDialog.saveCoordinates' : {
-        'no'    : 'Do not save coordinates',
+        'none'  : 'Do not save coordinates',
         'voxel' : 'Save voxel coordinates',
         'world' : 'Save world coordinates',
     },

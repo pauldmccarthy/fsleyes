@@ -22,6 +22,7 @@ import fsl.data.image                             as fslimage
 import fsl.utils.settings                         as fslsettings
 import fsl.transform.affine                       as affine
 import fsleyes_widgets.widgetlist                 as widgetlist
+import fsleyes_widgets.utils.status               as status
 import fsleyes_props                              as props
 import fsleyes.strings                            as strings
 import fsleyes.tooltips                           as tooltips
@@ -135,9 +136,10 @@ class SampleLineDataSeries(plotting.DataSeries):
         plotting.DataSeries.__init__(
             self, overlay, overlayList, displayCtx, plotCanvas)
 
-        self.index = index
-        self.start = start
-        self.end   = end
+        self.__index  = index
+        self.__start  = start
+        self.__end    = end
+        self.__coords = None
 
         self.addListener('resolution', self.name, self.__refreshData)
         self.addListener('interp',     self.name, self.__refreshData)
@@ -146,6 +148,15 @@ class SampleLineDataSeries(plotting.DataSeries):
         self.label = ('{}: [{:.2f} {:.2f} {:.2f}] -> '
                       '[{:.2f} {:.2f} {:.2f}]'.format(
                           overlay.name, *start, *end))
+
+
+    @property
+    def coords(self):
+        """Return a ``(3, n)`` array containing the voxel coordinates of
+        each sampled point for the most recently generated data, or ``None``
+        if no data has been sampled yet.
+        """
+        return self.__coords
 
 
     def __refreshData(self, *a):
@@ -158,16 +169,17 @@ class SampleLineDataSeries(plotting.DataSeries):
         normalisex   = 'x' in self.normalise
         normalisey   = 'y' in self.normalise
         opts         = self.displayCtx.getOpts(self.overlay)
-        data         = self.overlay[self.index]
-        start        = self.start
-        end          = self.end
+        data         = self.overlay[self.__index]
+        start        = self.__start
+        end          = self.__end
 
-        points       = np.zeros((3, resolution))
-        points[0, :] = np.linspace(start[0], end[0], resolution)
-        points[1, :] = np.linspace(start[1], end[1], resolution)
-        points[2, :] = np.linspace(start[2], end[2], resolution)
+        coords       = np.zeros((3, resolution))
+        coords[0, :] = np.linspace(start[0], end[0], resolution)
+        coords[1, :] = np.linspace(start[1], end[1], resolution)
+        coords[2, :] = np.linspace(start[2], end[2], resolution)
 
-        y = ndimage.map_coordinates(data, points, order=order)
+        y = ndimage.map_coordinates(data, coords, order=order,
+                                    output=np.float64)
 
         if normalisey:
             y = (y - y.min()) / (y.max() - y.min())
@@ -181,6 +193,7 @@ class SampleLineDataSeries(plotting.DataSeries):
 
         x = np.linspace(0, xmax, resolution)
 
+        self.__coords = coords
         self.setData(x, y)
 
 
@@ -429,22 +442,27 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
     def export(self):
         """Prompts the user to save the sampled data to a file. """
 
+        # only one series can be saved - the
+        # user is asked to select which one
         if self.__current is None: series = []
-        else:                   series    = [self.__current]
+        else:                      series = [self.__current]
 
         series.extend(reversed(self.__canvas.dataSeries))
 
         if len(series) == 0:
             return
 
+        # ask what series, and whether they
+        # want coordinates of sample points
         parent = self.GetParent()
         dlg    = ExportSampledDataDialog(parent, series)
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        series = dlg.GetSeries()
-        coords = dlg.GetCoordinates()
+        series     = dlg.GetSeries()
+        saveCoords = dlg.GetCoordinates()
 
+        # ask where to save the file
         fromDir = fslsettings.read('loadSaveOverlayDir', os.getcwd())
         msg     = strings.titles[self, 'savefile']
         dlg     = wx.FileDialog(parent,
@@ -458,6 +476,27 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
         filename = dlg.GetPath()
 
+        # prepare the data
+        if saveCoords == 'none':
+            data = series.getData()[1]
+        else:
+            image      = series.overlay
+            opts       = self.displayCtx.getOpts(image)
+            samples    = series.getData()[1]
+            coords     = series.coords.T
+            data       = np.zeros((len(samples), 4))
+            data[:, 0] = samples
+
+            if saveCoords == 'voxel':
+                data[:, 1:] = coords
+            else:
+                data[:, 1:] = opts.transformCoords(coords, 'voxel', 'world')
+
+        # save the file
+        errTitle = strings.titles[  self, 'exportError']
+        errMsg   = strings.messages[self, 'exportError']
+        with status.reportIfError(errTitle, errMsg):
+            np.savetxt(filename, data, fmt='%0.8f')
 
 
     @actions.action
@@ -595,8 +634,9 @@ class ExportSampledDataDialog(wx.Dialog):
         """Create an ``ExportSampledDataDialog``.
 
         :arg parent: ``wx`` parent object
-        :arg series: Sequence of ``SampleLineDataSeries`` instances - the user
-                     is asked to choose one.
+        :arg series: Sequence of ``SampleLineDataSeries`` instances. Must
+                     contain at least one series. If there is more than one
+                     series, the user is asked to choose one.
         """
         title        = strings.titles[self]
         coords       = strings.choices[self, 'saveCoordinates']
@@ -612,60 +652,57 @@ class ExportSampledDataDialog(wx.Dialog):
         self.__series       = series
         self.__coords       = coords
         self.__coordsChoice = wx.Choice(self, choices=coordsLabels)
-        self.__seriesChoice = wx.Choice(self, choices=seriesLabels)
-
         self.__coordsChoice.SetSelection(0)
-        self.__seriesChoice.SetSelection(0)
 
-        # todo title, better layout
-
-        seriesLabel = wx.StaticText(self)
         coordsLabel = wx.StaticText(self)
-        ok          = wx.Button(self, id=wx.OK)
-        cancel      = wx.Button(self, id=wx.CANCEL)
+        ok          = wx.Button(self, id=wx.ID_OK)
+        cancel      = wx.Button(self, id=wx.ID_CANCEL)
 
-        seriesLabel.SetLabel(strings.labels[self, 'series'])
         coordsLabel.SetLabel(strings.labels[self, 'coords'])
         ok         .SetLabel(strings.labels[self, 'ok'])
         cancel     .SetLabel(strings.labels[self, 'cancel'])
 
-        ok.SetDefault()
+        if len(series) > 1:
+            self.__seriesChoice = wx.Choice(self, choices=seriesLabels)
+            self.__seriesChoice.SetSelection(0)
+            seriesLabel = wx.StaticText(self)
+            seriesLabel.SetLabel(strings.labels[self, 'series'])
 
+        ok.SetDefault()
         ok    .Bind(wx.EVT_BUTTON, self.__onOk)
         cancel.Bind(wx.EVT_BUTTON, self.__onCancel)
 
-        seriesSizer = wx.BoxSizer(wx.HORIZONTAL)
-        coordsSizer = wx.BoxSizer(wx.HORIZONTAL)
         buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
         mainSizer   = wx.BoxSizer(wx.VERTICAL)
 
-        seriesSizer.Add((10, 10))
-        seriesSizer.Add(seriesLabel)
-        seriesSizer.Add((10, 10))
-        seriesSizer.Add(self.__seriesChoice)
-        seriesSizer.Add((10, 10))
-        coordsSizer.Add((10, 10))
-        coordsSizer.Add(coordsLabel)
-        coordsSizer.Add((10, 10))
-        coordsSizer.Add(self.__coordsChoice)
-        coordsSizer.Add((10, 10))
-
-        buttonSizer.Add((10, 10))
+        buttonSizer.Add((10, 10), proportion=1)
         buttonSizer.Add(ok)
         buttonSizer.Add((10, 10))
         buttonSizer.Add(cancel)
-        buttonSizer.Add((10, 10))
+        buttonSizer.Add((10, 10), proportion=1)
 
+        mainSizer.Add((10, 10), proportion=1)
+
+        if len(series) > 1:
+            mainSizer.Add(seriesLabel,
+                          flag=wx.ALIGN_CENTRE | wx.ALL, border=10)
+            mainSizer.Add((10, 10))
+            mainSizer.Add(self.__seriesChoice,
+                          flag=wx.ALIGN_CENTRE | wx.ALL, border=10)
+            mainSizer.Add((10, 10))
+
+        mainSizer.Add(coordsLabel, flag=wx.ALIGN_CENTRE | wx.ALL, border=10)
         mainSizer.Add((10, 10))
-        mainSizer.Add(seriesSizer)
-        mainSizer.Add((10, 10))
-        mainSizer.Add(coordsSizer)
-        mainSizer.Add((10, 10))
-        mainSizer.Add(buttonSizer)
+        mainSizer.Add(self.__coordsChoice,
+                      flag=wx.ALIGN_CENTRE | wx.ALL, border=10)
+        mainSizer.Add((10, 10), proportion=1)
+        mainSizer.Add(buttonSizer, flag=wx.ALIGN_CENTRE | wx.ALL, border=10)
         mainSizer.Add((10, 10))
 
         self.SetSizer(mainSizer)
         self.Layout()
+        self.Fit()
+        self.CentreOnParent()
 
 
     def __onOk(self, ev):
@@ -688,5 +725,7 @@ class ExportSampledDataDialog(wx.Dialog):
 
     def GetSeries(self):
         """Return the :class:`.SampleLineDataSeries` that was selected."""
+        if len(self.__series) == 1:
+            return self.__series[0]
         idx = self.__seriesChoice.GetSelection()
         return self.__series[idx]
