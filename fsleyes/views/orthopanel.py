@@ -171,13 +171,12 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         """Returns a list of tool names, specifying the order in which they
         should appear in the FSLeyes ortho panel settings menu.
         """
-        return ['PearsonCorrelateAction',
-                'ResampleAction',
-                'CropImageAction',
+        return ['CropImageAction',
+                'EditTransformAction',
                 'SampleLineAction',
                 'LoadAnnotationsAction',
                 'SaveAnnotationsAction',
-                'EditTransformAction']
+                'PearsonCorrelateAction']
 
 
     def __init__(self, parent, overlayList, displayCtx, frame):

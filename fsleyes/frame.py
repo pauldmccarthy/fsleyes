@@ -1928,6 +1928,13 @@ class FSLeyesFrame(wx.Frame):
         actionItems = []
         pluginTools = plugins.listTools()
 
+        # Tools are either restricted for use with a
+        # specific view, or independent of any view.
+        # We create the latter here first, and then
+        # use __makeViewPanelTools to create the former
+        pluginTools = {n : c for n, c in pluginTools.items()
+                       if c.supportedViews() is None}
+
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
             # plugin tools not coupled to a specific view
@@ -1941,15 +1948,8 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        if len(pluginTools) > 0:
-            menu.AppendSeparator()
-            for name, cls in pluginTools.items():
-                # some tools are independent of a specific view
-                # panel - we add these ones here. Tools/actions
-                # which are coupled to a specific view are added
-                # within __makeViewPanelTools
-                if cls.supportedViews() is None:
-                    actionItems.append(addTool(cls, name))
+        for name, cls in pluginTools.items():
+            actionItems.append(addTool(cls, name))
 
         actionItems.extend(self.__makeViewPanelTools())
         return actionItems
