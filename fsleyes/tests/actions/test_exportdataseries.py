@@ -53,7 +53,7 @@ def _test_ExportDataSeriesAction(panel, overlayList, displayCtx):
     ds1.setData(np.arange(10), np.random.randint(1, 100, 10))
     ds2.setData(np.arange(10), np.random.randint(1, 100, 10))
 
-    panel.dataSeries.extend((ds1, ds2))
+    panel.canvas.dataSeries.extend((ds1, ds2))
     realYield(500)
 
     with tempdir.tempdir(), \

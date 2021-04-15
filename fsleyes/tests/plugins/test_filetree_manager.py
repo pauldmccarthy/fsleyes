@@ -24,7 +24,7 @@ from fsleyes.tests import run_with_fsleyes, run_with_orthopanel, yieldUntil
 file_tree = pytest.importorskip('file_tree')
 
 
-datadir = op.join(op.dirname(__file__), 'testdata')
+datadir = op.join(op.dirname(__file__), '..', 'testdata')
 
 
 treespec = tw.dedent("""

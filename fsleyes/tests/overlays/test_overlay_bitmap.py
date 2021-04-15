@@ -12,6 +12,7 @@ import os.path as op
 import pytest
 
 from fsleyes.tests import run_cli_tests
+import fsleyes
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -24,8 +25,8 @@ cli_tests = """
 
 
 def splash():
-    testdir   = op.dirname(__file__)
-    splashimg = op.join(testdir, '..', '..', 'assets', 'icons', 'splash', 'splash.png')
+    basedir   = op.join(op.dirname(fsleyes.__file__), '..')
+    splashimg = op.join(basedir, 'assets', 'icons', 'splash', 'splash.png')
     shutil.copy(splashimg, '.')
     return 'splash.png'
 

@@ -155,4 +155,4 @@ class AddROIHistogramAction(base.Action):
         ds.setData(xdata, ydata)
         ds.setData(*self.__plotPanel.prepareDataSeries(ds))
 
-        self.__plotPanel.dataSeries.append(ds)
+        self.__plotPanel.canvas.dataSeries.append(ds)

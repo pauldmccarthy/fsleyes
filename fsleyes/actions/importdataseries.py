@@ -145,4 +145,4 @@ class ImportDataSeriesAction(base.Action):
 
             series.append(ds)
 
-        self.__plotPanel.dataSeries.extend(series)
+        self.__plotPanel.canvas.dataSeries.extend(series)
