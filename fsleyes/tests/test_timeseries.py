@@ -27,7 +27,7 @@ def test_DataSeries():
     assert ds.overlay     == '1'
     assert ds.overlayList == '2'
     assert ds.displayCtx  == '3'
-    assert ds.plotPanel   == '4'
+    assert ds.plotCanvas  == '4'
     assert list(sorted(ds.redrawProperties())) == [
         'alpha',
         'colour',
