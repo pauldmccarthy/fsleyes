@@ -492,6 +492,10 @@ def run_with_viewpanel(func, vptype, *args, **kwargs):
             while not panel.IsShownOnScreen():
                 realYield()
             result = func(panel, overlayList, displayCtx, *a, **kwa)
+        except Exception as e:
+            print(e)
+            traceback.print_exception(type(e), e, e.__traceback__)
+            raise
         finally:
             frame.removeViewPanel(panel)
         return result
