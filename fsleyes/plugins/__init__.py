@@ -288,7 +288,7 @@ def listViews() -> Dict[str, View]:
     return views
 
 
-def listControls(viewType : View = None) -> Dict[str, Control]:
+def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
     """Returns a dictionary of ``{name : ControlPanel}`` mappings containing
     the custom controls provided by all installed FSLeyes plugins.
 
@@ -316,7 +316,7 @@ def listControls(viewType : View = None) -> Dict[str, Control]:
     return ctrls
 
 
-def listTools(viewType : View = None) -> Dict[str, Tool]:
+def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
     """Returns a dictionary of ``{name : Action}`` mappings containing
     the custom tools provided by all installed FSLeyes plugins.
 
@@ -335,11 +335,13 @@ def listTools(viewType : View = None) -> Dict[str, Tool]:
             continue
 
         supported = cls.supportedViews()
-        if viewType  is not None and \
-           supported is not None and \
-           not issubclass(viewType, tuple(supported)):
-            tools.pop(name)
-            continue
+
+        if viewType is not None:
+            # If a viewType is provided, we don't
+            # return view-independent views
+            if (supported is None) or \
+               (not issubclass(viewType, tuple(supported))):
+                tools.pop(name)
 
     return tools
 
