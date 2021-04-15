@@ -412,12 +412,13 @@ class RangePolygon(patches.Polygon):
 
         hs      = self._rp_hs
         hsPanel = self._rp_hsPanel
-        canvas  = hsPanel.canvas
 
         # destroy may have been called while
         # this call was asynchronously scheduled
         if hs is None or hsPanel is None:
             return
+
+        canvas = hsPanel.canvas
 
         # If smoothing is enabled, or we are
         # plotting bin centres, we get
