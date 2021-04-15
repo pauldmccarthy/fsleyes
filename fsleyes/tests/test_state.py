@@ -43,8 +43,8 @@ def _test_state(frame, overlayList, displayCtx):
     oopts = frame.viewPanels[0].sceneOpts
     oopts.showXCanvas = False
     oopts.zzoom       = 2000
-    frame.viewPanels[1].smooth   = True
-    frame.viewPanels[1].histType = 'count'
+    frame.viewPanels[1].canvas.smooth = True
+    frame.viewPanels[1].histType      = 'count'
 
     realYield(200)
     st = state.getState(frame)
@@ -62,7 +62,7 @@ def _test_state(frame, overlayList, displayCtx):
 
     assert not ortho.sceneOpts.showXCanvas
     assert     ortho.sceneOpts.zzoom == 2000
-    assert     hist.smooth
+    assert     hist.canvas.smooth
     assert     hist.histType == 'count'
 
     ref, mesh = overlayList
