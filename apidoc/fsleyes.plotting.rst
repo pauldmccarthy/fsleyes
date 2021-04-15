@@ -6,6 +6,7 @@
 
    fsleyes.plotting.dataseries
    fsleyes.plotting.histogramseries
+   fsleyes.plotting.plotcanvas
    fsleyes.plotting.powerspectrumseries
    fsleyes.plotting.timeseries
 
