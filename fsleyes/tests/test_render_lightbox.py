@@ -7,7 +7,7 @@
 
 import pytest
 
-from  import run_cli_tests
+from fsleyes.tests import run_cli_tests
 
 
 pytestmark = pytest.mark.clitest
