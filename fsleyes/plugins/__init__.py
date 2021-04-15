@@ -180,11 +180,13 @@ import                   sys
 import                   glob
 import                   pkgutil
 import                   logging
-import                   inspect
 import                   importlib
 import importlib.util as imputil
 import                   collections
 import                   pkg_resources
+
+from typing import List, Dict, Union, Type, Optional
+from types  import ModuleType
 
 import fsl.utils.settings            as fslsettings
 import fsleyes.actions               as actions
@@ -195,6 +197,11 @@ import fsleyes.controls.controlpanel as ctrlpanel
 
 
 log = logging.getLogger(__name__)
+
+View    = Type[viewpanel.ViewPanel]
+Control = Type[ctrlpanel.ControlPanel]
+Tool    = Type[actions.Action]
+Plugin  = Union[View, Control, Tool]
 
 
 def initialise():
@@ -241,7 +248,7 @@ def _loadBuiltIns():
             _registerEntryPoints(name, mod, False)
 
 
-def listPlugins():
+def listPlugins() -> List[str]:
     """Returns a list containing the names of all installed FSLeyes plugins.
     """
     plugins = []
@@ -251,7 +258,7 @@ def listPlugins():
     return list(sorted(plugins))
 
 
-def _listEntryPoints(group):
+def _listEntryPoints(group : str) -> Dict[str, Plugin]:
     """Returns a dictionary containing ``{name : type}`` entry points for the
     given entry point group.
 
@@ -267,7 +274,7 @@ def _listEntryPoints(group):
     return items
 
 
-def listViews():
+def listViews() -> Dict[str, View]:
     """Returns a dictionary of ``{name : ViewPanel}`` mappings containing
     the custom views provided by all installed FSLeyes plugins.
     """
@@ -281,7 +288,7 @@ def listViews():
     return views
 
 
-def listControls(viewType=None):
+def listControls(viewType : View = None) -> Dict[str, Control]:
     """Returns a dictionary of ``{name : ControlPanel}`` mappings containing
     the custom controls provided by all installed FSLeyes plugins.
 
@@ -309,21 +316,35 @@ def listControls(viewType=None):
     return ctrls
 
 
-def listTools():
+def listTools(viewType : View = None) -> Dict[str, Tool]:
     """Returns a dictionary of ``{name : Action}`` mappings containing
     the custom tools provided by all installed FSLeyes plugins.
+
+    :arg viewType: Sub-class of :class:`.ViewPanel` - if provided, only
+                   tools which are compatible with this view type are
+                   returned (as determined by
+                   :meth:`.Action.supportedViews.`).
     """
     tools = _listEntryPoints('fsleyes_tools')
     for name, cls in list(tools.items()):
+
         if not issubclass(cls, actions.Action):
             log.debug('Ignoring fsleyes_tools entry point '
                       '{} - not an Action'.format(name))
             tools.pop(name)
             continue
+
+        supported = cls.supportedViews()
+        if viewType  is not None and \
+           supported is not None and \
+           not issubclass(viewType, tuple(supported)):
+            tools.pop(name)
+            continue
+
     return tools
 
 
-def _lookupPlugin(clsname, group):
+def _lookupPlugin(clsname : str, group : str) -> Optional[Plugin]:
     """Looks up the FSLeyes plugin with the given class name. """
     entries = _listEntryPoints('fsleyes_{}'.format(group))
     for cls in entries.values():
@@ -332,22 +353,22 @@ def _lookupPlugin(clsname, group):
     return None
 
 
-def lookupView(clsName):
+def lookupView(clsName : str) -> View:
     """Looks up the FSLeyes view with the given class name. """
     return _lookupPlugin(clsName, 'views')
 
 
-def lookupControl(clsName):
+def lookupControl(clsName : str) -> Control:
     """Looks up the FSLeyes control with the given class name. """
     return _lookupPlugin(clsName, 'controls')
 
 
-def lookupTool(clsName):
+def lookupTool(clsName : str) -> Tool:
     """Looks up the FSLeyes tool with the given class name. """
     return _lookupPlugin(clsName, 'tools')
 
 
-def _importModule(filename, modname):
+def _importModule(filename : str, modname : str) -> ModuleType:
     """Used by :func:`loadPlugin`. Imports the given Python file, setting the
     module name to ``modname``.
     """
@@ -361,7 +382,8 @@ def _importModule(filename, modname):
     return mod
 
 
-def _findEntryPoints(mod, ignoreBuiltins):
+def _findEntryPoints(mod            : ModuleType,
+                     ignoreBuiltins : bool) -> Dict[str, Dict[str, Plugin]]:
     """Used by :func:`loadPlugin`. Finds the FSLeyes entry points (views,
     controls, or tools) that are defined within the given module.
 
@@ -425,7 +447,9 @@ def _findEntryPoints(mod, ignoreBuiltins):
     return entryPoints
 
 
-def _registerEntryPoints(name, module, ignoreBuiltins):
+def _registerEntryPoints(name           : str,
+                         module         : ModuleType,
+                         ignoreBuiltins : bool):
     """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
     points defined within the gibven module.
     """
@@ -469,7 +493,7 @@ def _registerEntryPoints(name, module, ignoreBuiltins):
     pkg_resources.working_set.add(dist)
 
 
-def loadPlugin(filename):
+def loadPlugin(filename : str):
     """Loads the given Python file as a FSLeyes plugin. """
 
     # strip underscores to handle e.g. __init__.py,
@@ -480,7 +504,7 @@ def loadPlugin(filename):
     _registerEntryPoints(name, mod, True)
 
 
-def installPlugin(filename):
+def installPlugin(filename : str):
     """Copies the given Python file into the FSLeyes settings directory,
     within a sub-directory called ``plugins``. After the file has been
     copied, the path to the copy is passed to :func:`loadPlugin`.
