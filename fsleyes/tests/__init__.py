@@ -486,7 +486,8 @@ def run_cli_tests(
 
 def run_with_viewpanel(func, vptype, *args, **kwargs):
     def inner(frame, overlayList, displayCtx, *a, **kwa):
-        panel = frame.addViewPanel(vptype)
+        panel      = frame.addViewPanel(vptype)
+        displayCtx = panel.displayCtx
         try:
             while not panel.IsShownOnScreen():
                 realYield()
@@ -814,3 +815,36 @@ def invert(infile):
         np.savetxt(outfile, data)
 
     return outfile
+
+
+def mockMouseEvent(profile, canvas, evType, canvasLoc):
+    """Mock a mouse event on a SliceCanvas
+    """
+    # Uses intimate knowledge of the fsleyes.profiles.Profile class
+    class MockEvent:
+        def GetEventObject(self):
+            return canvas
+        def GetEventType(self):
+            return {'LeftMouseDown' : wx.EVT_LEFT_DOWN.typeId,
+                    'LeftMouseUp'   : wx.EVT_LEFT_UP.typeId,
+                    'LeftMouseDrag' : wx.EVT_MOTION.typeId}[evType]
+        def Dragging(self):
+            return 'Drag' in evType
+        def AltDown(self):
+            return False
+        def ControlDown(self):
+            return False
+        def ShiftDown(self):
+            return False
+        def Skip(self):
+            pass
+        def GetButton(self):
+            if   'Left'   in evType: return wx.MOUSE_BTN_LEFT
+            elif 'Right'  in evType: return wx.MOUSE_BTN_RIGHT
+            elif 'Middle' in evType: return wx.MOUSE_BTN_MIDDLE
+        def GetPosition(self):
+            w, h = canvas.GetClientSize().Get()
+            x, y = canvas.worldToCanvas(canvasLoc)
+            return x, h - y
+
+    profile.handleEvent(MockEvent())
