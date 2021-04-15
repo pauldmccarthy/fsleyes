@@ -14,9 +14,7 @@ from __future__ import division
 
 import functools as ft
 import itertools as it
-import              re
 import              logging
-import              collections
 
 import wx
 import wx.lib.agw.aui               as aui
@@ -32,11 +30,10 @@ import fsleyes.strings              as strings
 import fsleyes.plugins              as plugins
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.profiles.shortcuts   as shortcuts
-
-from . import actions
-from . import tooltips
-from . import layouts
-from . import displaycontext
+import fsleyes.actions              as actions
+import fsleyes.tooltips             as tooltips
+import fsleyes.layouts              as layouts
+import fsleyes.displaycontext       as displaycontext
 
 
 log = logging.getLogger(__name__)
@@ -871,14 +868,12 @@ class FSLeyesFrame(wx.Frame):
                 names, clss = zip(*pluginCtrls.items())
                 ctrlOrder   = [plugins.lookupControl(c) for c in ctrlOrder]
                 indices     = [ctrlOrder.index(c) if c in ctrlOrder
-                               else len(pluginCtrls)
-                               for c in clss]
-                astuples    = sorted(zip(indices, names, clss))
-                pluginCtrls = {t[1] : t[2] for t in astuples}
+                               else len(pluginCtrls) for c in clss]
+                pluginCtrls = sorted(zip(indices, names, clss))
+                pluginCtrls = {t[1] : t[2] for t in pluginCtrls}
 
-            # ViewPanels have a ToggleControlPanelActiopn
-            # added as an attributee for every supported
-            # control panel
+            # ViewPanels have a ToggleControlPanelAction added as
+            # an attributee for every supported control panel
             for ctrlName, ctrlType in pluginCtrls.items():
                 name = ctrlType.__name__
                 actionNames.append(name)
@@ -1978,18 +1973,6 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
         from fsleyes.views.shellpanel         import ShellPanel
 
-        # We add tools from plugins which are specific to
-        # each view panel into the respective section -
-        # here we organise plugin-provided tools by the
-        # view panel(s) they support to make things easier
-        # below.
-        pluginTools = collections.defaultdict(list)
-        for name, cls in plugins.listTools().items():
-            views =  cls.supportedViews()
-            if views is not None:
-                for view in views:
-                    pluginTools[view].append((name, cls))
-
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
         # panel types are always in a consistent
@@ -2005,22 +1988,44 @@ class FSLeyesFrame(wx.Frame):
         for p in panels:
             if type(p) not in vpOrder:
                 vpOrder.append(type(p))
-        panels  = sorted(panels, key=lambda p: vpOrder.index(type(p)))
+        panels = sorted(panels, key=lambda p: vpOrder.index(type(p)))
 
         actionItems  = []
         vpTypesAdded = set()
 
         for panel in panels:
 
-            vpType     = type(panel)
+            vpType = type(panel)
+
+            # built-in tools, implemented
+            # by the viewpanel itself
             toolNames  = [t.actionName for t in panel.getTools()]
             toolTitles = {}
 
-            for name, cls in pluginTools[type(panel)]:
-                actionObj = cls(self.__overlayList, panel.displayCtx, panel)
-                setattr(panel, cls.__name__, actionObj)
-                toolNames.append(cls.__name__)
-                toolTitles[cls.__name__] = name
+            # Plugin-provided tools, which are created
+            # by the ViewPanel and added as attributes
+            # to itself (see ViewPanel.__loadPlugins)
+            pluginTools = plugins.listTools(vpType)
+
+            # ViewPanel.toolOrder can suggest an
+            # ordering of plugin-provided tools.
+            toolOrder = vpType.toolOrder()
+            if len(pluginTools) > 0 and toolOrder is not None:
+                names, clss = zip(*pluginTools.items())
+                toolOrder   = [plugins.lookupTool(t) for t in toolOrder]
+                indices     = [toolOrder.index(c) if c in toolOrder
+                               else len(pluginTools) for c in clss]
+                pluginTools = sorted(zip(indices, names, clss))
+                pluginTools = {t[1] : t[2] for t in pluginTools}
+
+            # See ViewPanel.__loadPlugins. All supported tools
+            # are added as attributes to the ViewPanel instance
+            # when it is created, with the class name used as
+            # the attribute name.
+            for toolName, cls in pluginTools.items():
+                name = cls.__name__
+                toolNames.append(name)
+                toolTitles[name] = toolName
 
             # Only the first panel for each type
             # has its tools added to the menu.
