@@ -1935,6 +1935,20 @@ class FSLeyesFrame(wx.Frame):
         pluginTools = {n : c for n, c in pluginTools.items()
                        if c.supportedViews() is None}
 
+        # Fix the ordering for view-independent plugins
+        # (the equivalent of what is done with
+        # ViewPanel.toolOrder, in __makeViewPanelTools).
+        toolOrder   = ['ApplyFlirtXfmAction',
+                       'SaveFlirtXfmAction',
+                       'ResampleAction',
+                       'ProjectImageToSurfaceAction']
+        names, clss = zip(*pluginTools.items())
+        toolOrder   = [plugins.lookupTool(t) for t in toolOrder]
+        indices     = [toolOrder.index(c) if c in toolOrder
+                       else len(pluginTools) for c in clss]
+        pluginTools = sorted(zip(indices, names, clss))
+        pluginTools = {t[1]: t[2] for t in pluginTools}
+
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
             # plugin tools not coupled to a specific view
