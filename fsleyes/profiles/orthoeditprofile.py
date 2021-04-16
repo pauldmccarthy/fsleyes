@@ -14,7 +14,6 @@ import numpy as np
 import          wx
 
 import fsl.utils.idle               as idle
-import fsl.utils.deprecated         as deprecated
 import fsleyes_props                as props
 import fsleyes.actions              as actions
 import fsleyes.actions.copyoverlay  as copyoverlay
@@ -839,16 +838,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                 self.__xselAnnotation.texture.refresh()
 
         self.__refreshCanvases()
-
-
-    @deprecated.deprecated('0.31.0',
-                           '1.0.0',
-                           'Use fsleyes.editor.isEditable instead')
-    def isEditable(self, overlay):
-        """Returns ``True`` if the given overlay is editable, ``False``
-        otherwise.
-        """
-        return fsleditor.isEditable(overlay, self.displayCtx)
 
 
     def __modeChanged(self, *a):

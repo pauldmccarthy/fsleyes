@@ -47,7 +47,6 @@ import wx
 import matplotlib.backend_bases as mplbackend
 
 import fsl.utils.notifier   as notifier
-import fsl.utils.deprecated as deprecated
 import fsleyes_widgets      as fwidgets
 import fsleyes_props        as props
 import fsleyes.actions      as actions
@@ -163,11 +162,6 @@ class ProfileManager(notifier.Notifier):
             self.notify(topic='profile', value=value)
 
         return newprof
-
-
-    def changeProfile(self, profile):
-        print('Deprecated')
-        return self.activateProfile(profile)
 
 
     def activateProfile(self, profileCls, notify=True):
@@ -672,30 +666,6 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         """Returns the :class:`.ViewPanel` associated with this ``Profile``.
         """
         return self.__viewPanel
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanel instead')
-    def _viewPanel(self):
-        return self.__viewPanel
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use name instead')
-    def _name(self):
-        return self.__name
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
-    def _displayCtx(self):
-        return self.displayCtx
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
-    def _overlayList(self):
-        return self.overlayList
 
 
     def getEventTargets(self):

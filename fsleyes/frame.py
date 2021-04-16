@@ -21,7 +21,6 @@ import wx.lib.agw.aui               as aui
 
 import fsl.utils.idle               as idle
 import fsl.utils.settings           as fslsettings
-import fsl.utils.deprecated         as deprecated
 import fsleyes_widgets              as fwidgets
 import fsleyes_widgets.dialog       as fsldlg
 import fsleyes_widgets.utils.status as status
@@ -390,38 +389,6 @@ class FSLeyesFrame(wx.Frame):
         return dict(self.__menuActions)
 
 
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
-    def getOverlayList(self):
-        """Returns the :class:`.OverlayList` which contains the overlays
-        being displayed by this ``FSLeyesFrame``.
-        """
-        return self.__overlayList
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
-    def getDisplayContext(self):
-        """Returns the top-level :class:`.DisplayContext` associated with this
-        ``FSLeyesFrame``.
-        """
-        return self.__displayCtx
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanels instead')
-    def getViewPanels(self):
-        """Returns a list of all :class:`.ViewPanel` instances that are
-        currenlty displayed in this ``FSLeyesFrame``.
-        """
-        return list(self.__viewPanels)
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use focusedViewPanel instead')
-    def getFocusedViewPanel(self):
-        """Returns the :class:`.ViewPanel` which currently has focus, or
-        ``None`` if no ``ViewPanel`` has focus.
-        """
-        return self.focusedViewPanel
-
-
     def getViewPanelID(self, viewPanel):
         """Returns the ID that was assigned to the given :class:`.ViewPanel`.
         This is a sequentially increasing integer, starting from 1.
@@ -445,14 +412,6 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def auiManager(self):
-        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
-        the layout of this ``FSLeyesFrame``.
-        """
-        return self.__auiManager
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use auiManager instead')
-    def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
         the layout of this ``FSLeyesFrame``.
         """
@@ -706,12 +665,6 @@ class FSLeyesFrame(wx.Frame):
             menu.Delete(item.GetId())
 
         self.__toolsMenuActions = self.__makeToolsMenu()
-
-
-    @deprecated.deprecated('0.24.0', '1.0.0', 'Use refreshLayoutMenu')
-    def refreshPerspectiveMenu(self):
-        """Deprecated."""
-        self.refreshLayoutMenu()
 
 
     def populateMenu(self,
@@ -1689,11 +1642,7 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.actions.loadoverlay as loadoverlay
 
         for path in self.__recentPathsMenu.GetMenuItems():
-            # RemoveItem is deprecated in phoenix
-            if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
-                self.__recentPathsMenu.Remove(path)
-            else:
-                self.__recentPathsMenu.RemoveItem(path)
+            self.__recentPathsMenu.Remove(path)
 
         paths = loadoverlay.recentPathManager.listRecentPaths()
 

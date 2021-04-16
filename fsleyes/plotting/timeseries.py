@@ -27,11 +27,10 @@ are use by the :class:`.TimeSeriesPanel`. The following classes are provided:
 
 import numpy as np
 
-import fsl.utils.deprecated as deprecated
-import fsleyes_props        as props
-import fsleyes.strings      as strings
-import fsleyes.colourmaps   as fslcm
-from . import                  dataseries
+import fsleyes_props      as props
+import fsleyes.strings    as strings
+import fsleyes.colourmaps as fslcm
+from . import                dataseries
 
 
 class VoxelTimeSeries(dataseries.VoxelDataSeries):
@@ -388,11 +387,6 @@ class FEATTimeSeries(VoxelTimeSeries):
                 modelts.append(self.__copeTs[i])
 
         return modelts
-
-
-    @deprecated.deprecated('0.31.0', '1.0.0', 'Use extraSeries instead')
-    def getModelTimeSeries(self):
-        return self.extraSeries()
 
 
     def __getContrast(self, fitType, idx):

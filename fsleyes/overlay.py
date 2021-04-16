@@ -77,10 +77,9 @@ import            logging
 import            weakref
 import            collections
 
-import fsl.utils.deprecated as deprecated
-import fsl.data.utils       as dutils
-import fsl.data.image       as fslimage
-import fsleyes_props        as props
+import fsl.data.utils as dutils
+import fsl.data.image as fslimage
+import fsleyes_props  as props
 
 
 log = logging.getLogger(__name__)
@@ -364,139 +363,6 @@ class ProxyImage(fslimage.Image):
     def getBase(self):
         """Returns the base :class:`Image` of this ``ProxyImage``. """
         return self.__base
-
-
-class PropCache(object):
-    """Deprecated - use :class:`fsleyes_props.PropCache` instead.
-
-    A little convenience class which can be used to track and cache
-    property values, related to each overlay in the :class:`.OverlayList`,
-    on some :class:`.HasProperties` object.
-
-
-    Whenever the selected overlay changes, the property values of the
-    previously selected overlay are cached. Later on, when that overlay
-    is re-selected, the cached property values may be retrieved via
-    the :meth:`get` method.
-    """
-
-
-    @deprecated.deprecated(
-        '0.22.0', '1.0.0', 'Use fsleyes_props.PropCache instead')
-    def __init__(self, overlayList, displayCtx, target, propNames):
-        """Create a ``PropCache``.
-
-        :arg overlayList: The :class:`.OverlayList`.
-
-        :arg displayCtx:  The :class:`.DisplayContext` instance.
-
-        :arg target:      The :class:`.HasProperties` instance containing
-                          the properties that are to be cached.
-
-        :arg propNames:   List containing the names of ``target`` properties
-                          to be cached.
-        """
-
-        self.__name           = '{}_{}'.format(type(self).__name__, id(self))
-        self.__overlayList    = overlayList
-        self.__displayCtx     = displayCtx
-        self.__target         = target
-        self.__propNames      = propNames
-        self.__currentOverlay = None
-
-        # { (overlay, propName) : value }
-        self.__cache          = {}
-
-        self.__overlayList.addListener('overlays',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
-        self.__displayCtx .addListener('selectedOverlay',
-                                       self.__name,
-                                       self.__selectedOverlayChanged)
-
-        self.__selectedOverlayChanged()
-
-
-    def destroy(self):
-        """Must be called when this ``PropCache`` is no longer needed.
-        Removes property listeners and clears references.
-        """
-        self.__overlayList.removeListener('overlays',        self.__name)
-        self.__displayCtx .removeListener('selectedOverlay', self.__name)
-
-        self.__overlayList    = None
-        self.__displayCtx     = None
-        self.__currentOverlay = None
-        self.__cache          = None
-
-
-    def get(self, overlay, propName, *args):
-        """Returns the cached property value for the specified ``overlay``.
-        If there is no cached property value for the overlay, the specified
-        ``default`` value is returned. If a ``default`` value is not
-        provided, the current property value is returned.
-
-        :arg overlay:  Overlay to retrieve the property value for
-
-        :arg propName: Name of the property to return a value for
-
-        :arg default:  Value to return if a value for the the
-                       overlay/property is not cached
-        """
-
-        if len(args) not in (0, 1):
-            raise ValueError('Invalid arguments passed to PropCache.get')
-
-        defaultProvided = len(args) == 1
-
-        val = self.__cache.get((overlay, propName), None)
-
-        if val is None:
-            if defaultProvided: val = args[0]
-            else:               val = getattr(self.__target, propName)
-
-        return val
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when either the :attr:`.DisplayContext.selectedOverlay`,
-        or the :attr:`.OverlayList.overlays` change. Caches property values
-        pertaining to the previously selected overlay.
-        """
-
-        self.__cacheGC()
-
-        oldOverlay = self.__currentOverlay
-        newOverlay = self.__displayCtx.getSelectedOverlay()
-
-        self.__currentOverlay = newOverlay
-
-        if oldOverlay     is None       or \
-           oldOverlay     is newOverlay or \
-           oldOverlay not in self.__overlayList:
-            return
-
-        for prop in self.__propNames:
-            self.__cache[oldOverlay, prop] = getattr(self.__target, prop)
-
-
-    def __cacheGC(self):
-        """Removes any obsolete entries (those pertaining to overlays which
-        are no longer present in the :class:`.OverlayList`) from the cache.
-        """
-
-        keys = list(self.__cache.keys())
-
-        for overlay, prop in keys:
-            if overlay not in self.__overlayList:
-                self.__cache.pop((overlay, prop))
-
-
-@deprecated.deprecated(
-    '0.28.0', '1.0.0', 'Use fsl.data.utils.guessType instead')
-def guessDataSourceType(path):
-    """Deprecated - use `fsl.data.utils.guessType` instead. """
-    return dutils.guessType(path)
 
 
 def findFEATImage(overlayList, overlay):

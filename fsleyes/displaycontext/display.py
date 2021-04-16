@@ -14,7 +14,6 @@ import inspect
 
 import fsl.data.image                 as fslimage
 import fsl.data.constants             as constants
-import fsl.utils.deprecated           as deprecated
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
 
@@ -210,12 +209,6 @@ class Display(props.SyncableHasProperties):
         self.__overlay      = None
 
 
-    @deprecated.deprecated('0.14.3', '1.0.0', 'Use overlay instead')
-    def getOverlay(self):
-        """Deprecated - use :meth:`overlay` instead."""
-        return self.__overlay
-
-
     @property
     def overlay(self):
         """Returns the overlay associated with this ``Display`` instance."""
@@ -224,30 +217,6 @@ class Display(props.SyncableHasProperties):
 
     @property
     def opts(self):
-        """Return the :class:`.DisplayOpts` instance associated with this
-        ``Display``, which contains overlay type specific display settings.
-
-        If a ``DisplayOpts`` instance has not yet been created, or the
-        :attr:`overlayType` property no longer matches the type of the
-        existing ``DisplayOpts`` instance, a new ``DisplayOpts`` instance
-        is created (and the old one destroyed if necessary).
-
-        See the :meth:`__makeDisplayOpts` method.
-        """
-
-        if (self.__displayOpts             is None) or \
-           (self.__displayOpts.overlayType != self.overlayType):
-
-            if self.__displayOpts is not None:
-                self.__displayOpts.destroy()
-
-            self.__displayOpts = self.__makeDisplayOpts()
-
-        return self.__displayOpts
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use opts instead')
-    def getDisplayOpts(self):
         """Return the :class:`.DisplayOpts` instance associated with this
         ``Display``, which contains overlay type specific display settings.
 
@@ -570,12 +539,6 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         if isinstance(self.overlay, fslimage.Nifti):
             return self.overlay
         return None
-
-
-    @deprecated.deprecated('0.14.3', '1.0.0', 'Use referenceImage instead')
-    def getReferenceImage(self):
-        """Deprecated - use :meth:`referenceImage` instead. """
-        return self.referenceImage
 
 
     def getLabels(self):

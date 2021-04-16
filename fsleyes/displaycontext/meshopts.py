@@ -18,7 +18,6 @@ import fsl.data.image       as fslimage
 import fsl.data.mghimage    as fslmgh
 import fsl.data.utils       as dutils
 import fsl.transform.affine as affine
-import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
 
 import fsleyes.overlay      as fsloverlay
@@ -494,24 +493,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         is returned.
         """
         return self.refImage
-
-
-    @deprecated.deprecated('0.22.3', '1.0.0', 'Use getTransform instead')
-    def getCoordSpaceTransform(self):
-        """Returns a transformation matrix which can be used to transform
-        the :class:`.Mesh` vertex coordinates into the display
-        coordinate system.
-
-        If no :attr:`refImage` is selected, this method returns an identity
-        transformation.
-        """
-
-        if self.refImage is None or self.refImage not in self.overlayList:
-            return np.eye(4)
-
-        opts = self.displayCtx.getOpts(self.refImage)
-
-        return opts.getTransform(self.coordSpace, opts.transform)
 
 
     def getVertex(self, xyz=None, tol=1):

@@ -116,16 +116,16 @@ class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
         All other arguments are passed through to the ``FSLeyesPanel``.
         """
 
-        # Prior to FSLeyes 0.35.0, the fourth argument
+        # Prior to FSLeyes 1.0.0, the fourth argument
         # was the FSLeyesFrame. This clause is in place
         # to retain support for third-party FSLeyes
-        # plugins which were written before 0.35.0
+        # plugins which were written before 1.0.0
         import fsleyes.frame as fslframe
         if isinstance(viewPanel, fslframe.FSLeyesFrame):
             frame     = viewPanel
             viewPanel = None
             deprecated.warn(
-                type(self).__name__, '0.35.0', '1.0.0',
+                type(self).__name__, '1.0.0', '2.0.0',
                 'You should pass the view panel, not the FSLeyesFrame')
         else:
             frame = viewPanel.frame
