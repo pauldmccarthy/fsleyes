@@ -336,7 +336,7 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
 
         obj.annot.canvas.Refresh()
 
-        if self.__annotList.Getcount() > 0:
+        if self.__annotList.GetCount() > 0:
             self.__annotListItemSelected(idx - 1)
 
 
