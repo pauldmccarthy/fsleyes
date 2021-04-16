@@ -26,7 +26,7 @@ file can then be loaded back in via the ``LoadAnnotationsAction``.
 
 
 The logic for serialising and deserialising annotations to/from string
-represantations is also implemented in this module.
+representations is also implemented in this module.
 
 
 A FSLeyes annotations file is a plain text file where each line contains
@@ -97,6 +97,8 @@ import os
 import shlex
 import logging
 
+from typing import Dict, List
+
 import wx
 
 import fsleyes_widgets.utils.status as status
@@ -114,6 +116,14 @@ class SaveAnnotationsAction(actions.Action):
     """The ``SaveAnnotationsAction`` allos the user to save annotations
     that have been added to an :class:`.OrthoPanel` to a file.
     """
+
+
+    @staticmethod
+    def ignoreTool():
+        """This action is not intended to be loaded as a FSLeyes plugin.
+        Rather, it is used directly by the :class:`.AnnotationPanel` class.
+        """
+        return True
 
 
     @staticmethod
@@ -173,6 +183,14 @@ class LoadAnnotationsAction(actions.Action):
 
 
     @staticmethod
+    def ignoreTool():
+        """This action is not intended to be loaded as a FSLeyes plugin.
+        Rather, it is used directly by the :class:`.AnnotationPanel` class.
+        """
+        return True
+
+
+    @staticmethod
     def supportedViews():
         """This action is only intended to work with :class:`.OrthoPanel`
         views.
@@ -225,7 +243,8 @@ class LoadAnnotationsAction(actions.Action):
                 annots[canvas].annotations.extend(objs)
 
 
-def serialiseAnnotations(allAnnots):
+def serialiseAnnotations(
+        allAnnots : Dict[str, List[annotations.AnnotationObject]]) -> str:
     """Serialise all of the annotations for each canvas of an
     :class:`.OrthoPanel` to a string representation.
 
@@ -244,7 +263,8 @@ def serialiseAnnotations(allAnnots):
     return '\n'.join(serialised)
 
 
-def serialiseAnnotation(obj, canvas):
+def serialiseAnnotation(obj    : annotations.AnnotationObject,
+                        canvas : str) -> str:
     """Convert the given :class:`.AnnotationObject` to a string representation.
     """
 
@@ -276,7 +296,10 @@ def serialiseAnnotation(obj, canvas):
     return '{} {} {}'.format(canvas, otype, ' '.join(kvpairs))
 
 
-def deserialiseAnnotations(s, annots):
+def deserialiseAnnotations(
+        s      : str,
+        annots : Dict[str, annotations.Annotations]
+) -> Dict[str, List[annotations.AnnotationObject]]:
     """Deserialise all of the annotation specifications in the string ``s``,
     and create :class:`.AnnotationObject` instances from them. The
     ``AnnotationObject`` instances are created, but not added to the
@@ -301,7 +324,10 @@ def deserialiseAnnotations(s, annots):
     return objs
 
 
-def deserialiseAnnotation(s, annots):
+def deserialiseAnnotation(
+        s      : str,
+        annots : Dict[str, annotations.Annotations]
+) -> annotations.AnnotationObject:
     """Deserialises the annotation specification in the provided string,
     and creates an  :class:`.AnnotationObject` instance.
 

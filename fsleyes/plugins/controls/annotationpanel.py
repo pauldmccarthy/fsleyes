@@ -18,11 +18,14 @@ import fsleyes_widgets.elistbox                      as elb
 import fsleyes_props                                 as props
 import fsleyes_widgets.widgetlist                    as widgetlist
 import fsleyes_widgets.bitmapradio                   as bmpradio
+import fsleyes.actions                               as actions
 import fsleyes.strings                               as strings
 import fsleyes.icons                                 as fslicons
+import fsleyes.tooltips                              as tooltips
 import fsleyes.views.orthopanel                      as orthopanel
 import fsleyes.controls.controlpanel                 as ctrlpanel
 import fsleyes.plugins.profiles.orthoannotateprofile as annotprofile
+import fsleyes.plugins.tools.saveannotations         as saveannotations
 import fsleyes.gl.annotations                        as annotations
 
 
@@ -35,6 +38,10 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
     When a user selects an annotation to add, the
     :class:`.OrthoAnnotateProfile` is enabled on the ``OrthoPanel``, which
     provides user interaction.
+
+    The :class:`.SaveAnnotationsAction` and :class:`.LoadAnnotationsAction`
+    actions, for saving/loading annotations to/from files, are bound to
+    buttons in the ``AnnotationPanel``.
     """
 
 
@@ -92,14 +99,63 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
             self, parent, overlayList, displayCtx, ortho)
         self.__ortho = ortho
 
-        self.__buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__mainSizer   = wx.BoxSizer(wx.VERTICAL)
+        # load/save actions are bound to buttons below
+        self.loadAnnotations = saveannotations.LoadAnnotationsAction(
+            overlayList, displayCtx, ortho)
+        self.saveAnnotations = saveannotations.SaveAnnotationsAction(
+            overlayList, displayCtx, ortho)
 
-        # Listbox containing all annotations
-        # that have been added to all canvases,
-        # sorted by creation time
-        self.__annotList   = elb.EditableListBox(
-            self, style=(elb.ELB_NO_ADD | elb.ELB_REVERSE))
+        # The interface comprises a list of annotations,
+        # a set of controls below the list, a column of
+        # buttons down the side, and a row of buttons
+        # along the bottom
+        self.__mainSizer       = wx.BoxSizer(wx.VERTICAL)
+        self.__listSizer       = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sideButtonSizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Listbox containing all annotations that
+        # have been added to all canvases, sorted
+        # by creation time. We add our own buttons
+        # to remove/reorder anontations below
+        self.__annotList = elb.EditableListBox(
+            self, style=(elb.ELB_NO_ADD    |
+                         elb.ELB_NO_REMOVE |
+                         elb.ELB_NO_MOVE   |
+                         elb.ELB_REVERSE))
+
+        # Buttons running down the side of the list,
+        # for loading/saving annotations, and for
+        # removing/reordering annotations from/within
+        # the list
+        loadSpec = actions.ActionButton(
+            'loadAnnotations',
+            icon=fslicons.findImageFile('folder16'),
+            tooltip=tooltips.actions[self, 'saveAnnotations'])
+        saveSpec = actions.ActionButton(
+            'saveAnnotations',
+            icon=fslicons.findImageFile('floppydisk16'),
+            tooltip=tooltips.actions[self, 'loadAnnotations'])
+
+        self.__loadButton   = props.buildGUI(self, self, loadSpec)
+        self.__saveButton   = props.buildGUI(self, self, saveSpec)
+        self.__upButton     = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.__downButton   = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.__removeButton = wx.Button(self, style=wx.BU_EXACTFIT)
+
+        upicon     = wx.Bitmap(fslicons.findImageFile('up16'))
+        downicon   = wx.Bitmap(fslicons.findImageFile('down16'))
+        removeicon = wx.Bitmap(fslicons.findImageFile('remove16'))
+
+        self.__upButton    .SetBitmapLabel(upicon)
+        self.__downButton  .SetBitmapLabel(downicon)
+        self.__removeButton.SetBitmapLabel(removeicon)
+
+        self.__sideButtonSizer.Add(self.__loadButton)
+        self.__sideButtonSizer.Add(self.__saveButton)
+        self.__sideButtonSizer.Add(self.__upButton)
+        self.__sideButtonSizer.Add(self.__downButton)
+        self.__sideButtonSizer.Add(self.__removeButton)
+        self.__sideButtonSizer.Add((1, 1), proportion=1)
 
         # Stores a reference to the most recently
         # selected annotation object, as we need
@@ -161,19 +217,22 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         for option, icons in icons.items():
             self.__annotOptions.AddChoice(*icons, clientData=option)
 
-        self.__mainSizer.Add(self.__annotList,    flag=wx.EXPAND, proportion=1)
+        self.__listSizer.Add(self.__sideButtonSizer)
+        self.__listSizer.Add(self.__annotList, flag=wx.EXPAND, proportion=1)
+
+        self.__mainSizer.Add(self.__listSizer,    flag=wx.EXPAND, proportion=1)
         self.__mainSizer.Add(self.__widgets,      flag=wx.EXPAND)
         self.__mainSizer.Add(self.__annotOptions, flag=wx.EXPAND)
 
         self.SetSizer(self.__mainSizer)
 
+        self.__upButton    .Bind(wx.EVT_BUTTON, self.__onMoveUp)
+        self.__downButton  .Bind(wx.EVT_BUTTON, self.__onMoveDown)
+        self.__removeButton.Bind(wx.EVT_BUTTON, self.__onRemove)
+
         self.__annotOptions.Bind(bmpradio.EVT_BITMAP_RADIO_EVENT,
                                  self.__onAnnotOption)
 
-        self.__annotList.Bind(elb.EVT_ELB_REMOVE_EVENT,
-                              self.__annotListItemRemoved)
-        self.__annotList.Bind(elb.EVT_ELB_MOVE_EVENT,
-                              self.__annotListItemMoved)
         self.__annotList.Bind(elb.EVT_ELB_SELECT_EVENT,
                               self.__annotListItemSelected)
 
@@ -207,12 +266,28 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         added annotation.
         """
 
+        # This is a little awkward. Each XYZ canvas has its own
+        # separate list of annotation objects, but we display
+        # all objects in a single list, and the user is able to
+        # arbitrarily re-order the objects, independently of
+        # which canvas they are from (even though reordering
+        # two objects from different canvases has no effect on
+        # how they are drawn).
+        #
+        # The __onMove method keeps the ordering of the GUI list
+        # and canvas lists in sync. But this method (which is
+        # typically called when new annotations are added) just
+        # clears and re-creates the GUI list from the canvas
+        # lists. This keeps the code simple, but does mean that
+        # new annotations will appear after the last annotation
+        # *from the same canvas*, meaning that they may appear
+        # in the middle of the GUI list.
         alist     = self.__annotList
         allAnnots = []
-
         for canvas in self.__ortho.getGLCanvases():
             allAnnots.extend(canvas.getAnnotations().annotations)
 
+        listAnnots = alist.GetData()
         alist.Clear()
 
         for obj in allAnnots:
@@ -223,11 +298,15 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
                 name = strings.labels[self, obj]
             alist.Append('[{}] {}'.format(canvas, name), obj)
 
-        # select the most recently added annotation,
-        # and bind it to the display settings widgets
-        if len(allAnnots) > 0:
-            alist.SetSelection(len(allAnnots) - 1)
-            self.__annotListItemSelected(obj=allAnnots[-1])
+        # select the most recently added annotation
+        # (we just take the first one which was not
+        # originally in the GUI list) and bind it
+        # to the display settings widgets
+        for i, obj in enumerate(allAnnots):
+            if obj not in listAnnots:
+                alist.SetSelection(i)
+                self.__annotListItemSelected(obj=obj)
+                break
 
 
     def __displayPropertyChanged(self, *a):
@@ -237,30 +316,60 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
             self.__ortho.Refresh()
 
 
-    def __annotListItemRemoved(self, ev):
-        """Called when an item is removed from the annotations list box.
-        Removes it from the corresponding :attr:`.Annotations.annotations`
-        list.
-        """
-        obj   = ev.data
-        annot = obj.annot
-        with props.suppress(annot, 'annotations'):
-            annot.dequeue(obj, hold=True, fixed=False)
-        self.__annotListItemSelected()
-        obj.annot.canvas.Refresh()
-
-
-    def __annotListItemMoved(self, ev):
-        """Called when an item is moved in the annotations list box.  Syncs
-        the new item order on the corresponding
+    def __onRemove(self, ev):
+        """Called when the "remove item" button is pushed.  Removes the
+        item from the list box widget, and from the corresponding
         :attr:`.Annotations.annotations` list.
         """
-        alist   = self.__annotList
-        obj     = ev.data
-        annot   = obj.annot
-        allobjs = [o for o in alist.GetData() if o.annot is annot]
+
+        idx = self.__annotList.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+
+        obj   = self.__annotList.GetItemData(idx)
+        annot = obj.annot
+
+        self.__annotList.Delete(idx)
 
         with props.suppress(annot, 'annotations'):
+            annot.dequeue(obj, hold=True, fixed=False)
+
+        obj.annot.canvas.Refresh()
+
+        if self.__annotList.Getcount() > 0:
+            self.__annotListItemSelected(idx - 1)
+
+
+    def __onMoveUp(self, ev):
+        """Called when the "move item up" button is pushed. """
+        self.__onMove(-1)
+
+
+    def __onMoveDown(self, ev):
+        """Called when the "move item down" button is pushed. """
+        self.__onMove(1)
+
+
+    def __onMove(self, offset):
+        """Called when one of the move buttons is pushed. Moves the item in the
+        list box, then syncs the new item order on the corresponding
+        :attr:`.Annotations.annotations` list.
+        """
+        alist = self.__annotList
+        idx   = alist.GetSelection()
+
+        if idx == wx.NOT_FOUND:
+            return
+
+        obj   = alist.GetItemData(idx)
+        annot = obj.annot
+
+        alist.MoveItem(offset)
+
+        # Sync the order of the canvas annotations
+        # list with the new order in the GUI list
+        with props.suppress(annot, 'annotations'):
+            allobjs = [o for o in alist.GetData() if o.annot is annot]
             annot.annotations[:] = list(allobjs)
         annot.canvas.Refresh()
 

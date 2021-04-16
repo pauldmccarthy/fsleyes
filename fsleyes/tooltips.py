@@ -885,6 +885,11 @@ actions = TypeDict({
     'Add (hold) the most recently drawn data series.',
     'SampleLinePanel.removeDataSeries' :
     'Remove the most recently added data series.',
+
+    'AnnotationPanel.loadAnnotations' :
+    'Load annotations from a file',
+    'AnnotationPanel.saveAnnotations' :
+    'Save the currently displayed annotations to a file',
 })
 
 
