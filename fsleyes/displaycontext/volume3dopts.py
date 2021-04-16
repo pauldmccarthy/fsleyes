@@ -11,7 +11,6 @@ use with :class:`.DisplayOpts` classes.
 import numpy as np
 
 import fsl.transform.affine as affine
-import fsl.utils.deprecated as deprecated
 import fsleyes_props        as props
 import fsleyes_widgets      as fwidgets
 import fsleyes.gl           as fslgl
@@ -159,14 +158,6 @@ class Volume3DOpts(object):
 
     def destroy(self):
         """Does nothing. """
-        pass
-
-
-    @property
-    @deprecated.deprecated(
-        '0.17.0', '1.0.0', 'Dithering is automatically calculated')
-    def dithering(self):
-        """Deprecated."""
         pass
 
 

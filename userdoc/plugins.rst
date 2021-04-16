@@ -116,7 +116,6 @@ Writing a FSLeyes plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-
 .. note:: A minimal example of a FSLeyes plugin library can be found in
           ``tests/testdata/fsleyes_plugin_example/``, and a range of
           built-in plugins can be found in ``fsleyes/plugins/``.
@@ -134,8 +133,8 @@ definitions for custom views, controls, and tools.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
-define your views, controls, and tools in the file. The file path can then
-be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
+define your views, controls, and tools in the file. The file can then
+be loaded into FSLeyes via the *File* |right_arrow| *Load plugin* menu item.
 
 
 To release a FSLeyes plugin as a library, you need to organise your code
@@ -166,13 +165,13 @@ A minimal ``setup.py`` file for a FSLeyes plugin might look like this::
         # "fsleyes_tools" respectively.
         entry_points={
             'fsleyes_views' : [
-                'My cool view = myplugin:MyView'
+                'My view = myplugin:MyView'
             ]
             'fsleyes_controls' : [
-                'My cool control = myplugin:MyControl'
+                'My control = myplugin:MyControl'
             ]
             'fsleyes_tools' : [
-                'My cool tool = myplugin:MyTool'
+                'My tool = myplugin:MyTool'
             ]
         }
     )

@@ -36,6 +36,7 @@ import fsleyes_widgets.utils.status       as status
 import fsl.utils.settings                 as fslsettings
 import fsleyes.views.canvaspanel          as canvaspanel
 import fsleyes.views.plotpanel            as plotpanel
+import fsleyes.plotting.plotcanvas        as plotcanvas
 
 import fsleyes.strings as strings
 from . import             base
@@ -55,7 +56,8 @@ class ScreenshotAction(base.Action):
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
         :arg panel:       The :class:`.CanvasPanel` or :class:`.PlotPanel` to
-                          take a screenshot of.
+                          take a screenshot of. :class:`.PlotCanvas` instances
+                          are also accepted.
         """
 
         base.Action.__init__(
@@ -92,7 +94,7 @@ class ScreenshotAction(base.Action):
         wildcard = '|'.join(wildcard)
         filename = 'screenshot'
 
-        dlg = wx.FileDialog(self.__panel,
+        dlg = wx.FileDialog(wx.GetTopLevelWindows()[0],
                             message=strings.messages[self, 'screenshot'],
                             wildcard=wildcard,
                             defaultDir=fromDir,
@@ -127,13 +129,14 @@ class ScreenshotAction(base.Action):
 
 
 def screenshot(panel, filename):
-    """Capture a screenshot of the contents of the given :class:`.CanvasPanel`
-    or :class:`.PlotPanel`, saving it to the given ``filename``.
+    """Capture a screenshot of the contents of the given :class:`.CanvasPanel`,
+    :class:`.PlotPanel`, or :class:`.PlotCanvas`, saving it to the given
+    ``filename``.
     """
 
     if isinstance(panel, canvaspanel.CanvasPanel):
         canvasPanelScreenshot(panel, filename)
-    elif isinstance(panel, plotpanel.PlotPanel):
+    elif isinstance(panel, (plotpanel.PlotPanel, plotcanvas.PlotCanvas)):
         plotPanelScreenshot(panel, filename)
 
 
@@ -141,7 +144,14 @@ def plotPanelScreenshot(panel, filename):
     """Capture a screenshot of the contents of the given :class:`.PlotPanel`
     or :class:`.PlotPanel`, saving it to the given ``filename``.
     """
-    panel.getFigure().savefig(filename)
+    if isinstance(panel, plotpanel.PlotPanel):
+        figure = panel.canvas.figure
+    elif isinstance(panel, plotcanvas.PlotCanvas):
+        figure = panel.figure
+    else:
+        raise ValueError('Unsupported panel type: {}'.format(type(panel)))
+
+    figure.savefig(filename)
 
 
 def canvasPanelScreenshot(panel, filename):

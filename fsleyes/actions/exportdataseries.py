@@ -62,7 +62,7 @@ class ExportDataSeriesAction(base.Action):
 
         filePath = dlg.GetPath()
 
-        dss = self.__plotPanel.getDrawnDataSeries()
+        dss = self.__plotPanel.canvas.getDrawnDataSeries()
         xs  = [ds[1] for ds in dss]
         ys  = [ds[2] for ds in dss]
         dss = [ds[0] for ds in dss]

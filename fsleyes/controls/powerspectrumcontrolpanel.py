@@ -48,7 +48,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
         plotcontrol.PlotControlPanel.__init__(self, *args, **kwargs)
 
-        psPanel = self.getPlotPanel()
+        psPanel = self.plotPanel
         psPanel.addListener('plotMelodicICs',
                             self.name,
                             self.__plotMelodicICsChanged)
@@ -59,7 +59,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         longer needed. Removes some property listeners and calls the
         :meth:`.PlotControlPanel.destroy` method.
         """
-        psPanel = self.getPlotPanel()
+        psPanel = self.plotPanel
         psPanel.removeListener('plotMelodicICs', self.name)
         plotcontrol.PlotControlPanel.destroy(self)
 
@@ -70,7 +70,7 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
         Adds some widgets for controlling the :class:`.PowerSpectrumPanel`.
         """
 
-        psPanel    = self.getPlotPanel()
+        psPanel    = self.plotPanel
         widgetList = self.getWidgetList()
         allWidgets = []
         psProps    = ['plotFrequencies',

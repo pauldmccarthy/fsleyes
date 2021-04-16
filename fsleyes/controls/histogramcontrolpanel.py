@@ -59,7 +59,7 @@ class HistogramControlPanel(plotcontrolpanel.PlotControlPanel):
         :class:`.HistogramPanel`.
         """
 
-        hsPanel    = self.getPlotPanel()
+        hsPanel    = self.plotPanel
         widgetList = self.getWidgetList()
         allWidgets = []
         histProps  = ['histType', 'plotType']

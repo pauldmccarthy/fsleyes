@@ -525,7 +525,6 @@ OPTIONS = td.TypeDict({
                         'blendByIntensity',
                         'smoothing',
                         'resolution',
-                        'dithering',
                         'numInnerSteps',
                         'clipMode',
                         'clipPlane'],
@@ -856,7 +855,6 @@ ARGUMENTS = td.TypeDict({
     'Volume3DOpts.blendByIntensity' : ('bi',  'noBlendByIntensity', False),
     'Volume3DOpts.smoothing'        : ('s',   'smoothing',          True),
     'Volume3DOpts.resolution'       : ('r',   'resolution',         True),
-    'Volume3DOpts.dithering'        : ('dt',  'dithering',          True),
     'Volume3DOpts.numInnerSteps'    : ('nis', 'numInnerSteps',      True),
     'Volume3DOpts.clipPlane'        : ('cp',  'clipPlane',          True),
     'Volume3DOpts.clipMode'         : ('m',   'clipMode',           True),
@@ -1151,8 +1149,6 @@ HELP = td.TypeDict({
     '3D only. Smoothing radius [0-10, default: 0]',
     'Volume3DOpts.resolution' :
     '3D only. Resolution/quality [1-100, default: 100]',
-    'Volume3DOpts.dithering' :
-    '3D only. Deprecated, has no effect.',
     'Volume3DOpts.numInnerSteps' :
     '3D/GL14 only. Number of samples to run on GPU',
     'Volume3DOpts.clipPlane' :
@@ -3208,28 +3204,6 @@ def _applySpecial_Volume3DOpts_clipPlane(
     target.clipPosition[   :ncp] = [cp[0] for cp in args.clipPlane]
     target.clipAzimuth[    :ncp] = [cp[1] for cp in args.clipPlane]
     target.clipInclination[:ncp] = [cp[2] for cp in args.clipPlane]
-
-
-def _configSpecial_Volume3DOpts_dithering(
-        target, parser, shortArg, longArg, helpText):
-    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
-    parser.add_argument(shortArg,
-                        longArg,
-                        type=float,
-                        help=helpText)
-
-
-def _applySpecial_Volume3DOpts_dithering(
-        args, overlayList, displayCtx, target):
-    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
-    warnings.warn('dithering is deprecated - it is automatically calculated',
-                  DeprecationWarning)
-
-
-def _generateSpecial_Volume3DOpts_dithering(
-        overlayList, displayCtx, source, longArg):
-    """Handle the deprecated ``Volume3DOpts.dithering`` property. """
-    return []
 
 
 def _generateSpecial_Volume3DOpts_clipPlane(

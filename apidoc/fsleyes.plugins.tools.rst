@@ -11,6 +11,7 @@
    fsleyes.plugins.tools.edittransform
    fsleyes.plugins.tools.projectimagetosurface
    fsleyes.plugins.tools.resample
+   fsleyes.plugins.tools.sampleline
    fsleyes.plugins.tools.saveannotations
    fsleyes.plugins.tools.saveflirtxfm
 

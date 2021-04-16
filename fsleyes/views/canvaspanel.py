@@ -14,7 +14,6 @@ import logging
 import wx
 
 import fsl.utils.idle         as idle
-import fsl.utils.deprecated   as deprecated
 import fsleyes_props          as props
 import fsleyes.actions        as actions
 import fsleyes.displaycontext as displayctx
@@ -435,45 +434,6 @@ class CanvasPanel(viewpanel.ViewPanel):
 
     @property
     def colourBarCanvas(self):
-        """If a colour bar is being displayed, this method returns
-        the :class:`.ColourBarCanvas` instance which is used by the
-        :class:`.ColourBarPanel` to render the colour bar.
-
-        Otherwise, ``None`` is returned.
-        """
-        if self.__colourBar is not None:
-            return self.__colourBar.getCanvas()
-        return None
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use sceneOpts instead')
-    def getSceneOptions(self):
-        """Returns the :class:`.SceneOpts` instance used by this
-        ``CanvasPanel``.
-        """
-        return self.__opts
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use contentPanel instead')
-    def getContentPanel(self):
-        """Returns the ``wx.Panel`` to which sub-classes must add their content.
-        See the note on :ref:`adding content <canvaspanel-adding-content>`.
-        """
-        return self.__contentPanel
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use containerPanel instead')
-    def getContainerPanel(self):
-        """Returns the ``wx.Panel`` which contains the
-        :class:`.ColourBarPanel` if it is being displayed, and the content
-        panel. See the note on
-        :ref:`adding content <canvaspanel-adding-content>`.
-        """
-        return self.__containerPanel
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use colourBarCanvas instead')
-    def getColourBarCanvas(self):
         """If a colour bar is being displayed, this method returns
         the :class:`.ColourBarCanvas` instance which is used by the
         :class:`.ColourBarPanel` to render the colour bar.

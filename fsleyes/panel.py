@@ -45,13 +45,10 @@ should be made available available to the user can be added as
 
 
 import logging
-import six
 
 import              wx
 import wx.siplib as sip
 
-import fsl.utils.deprecated        as deprecated
-import fsleyes_widgets             as fwidgets
 import fsleyes_props               as props
 import fsleyes_widgets.floatspin   as floatspin
 import fsleyes_widgets.floatslider as floatslider
@@ -241,53 +238,6 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         return self.__frame
 
 
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
-    def _overlayList(self):
-        return self.overlayList
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
-    def _displayCtx(self):
-        return self.displayCtx
-
-
-    @property
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use name instead')
-    def _name(self):
-        return self.__name
-
-
-    @deprecated.deprecated('0.15.2', '1.0.0', 'Use name instead')
-    def getName(self):
-        """Returns a unique name associated with this ``_FSLeyesPanel``. """
-        return self.__name
-
-
-    @deprecated.deprecated('0.15.2', '1.0.0', 'Use frame instead')
-    def getFrame(self):
-        """Returns the :class:`.FSLeyesFrame` which created this
-        ``_FSLeyesPanel``. May be ``None``, if this panel was not created
-        by a ``FSLeyesFrame``.
-        """
-        return self.__frame
-
-
-    @deprecated.deprecated('0.15.2', '1.0.0', 'Use displayCtx instead')
-    def getDisplayContext(self):
-        """Returns a reference to the :class:`.DisplayContext` that is
-        associated with this ``_FSLeyesPanel``.
-        """
-        return self.displayCtx
-
-
-    @deprecated.deprecated('0.15.2', '1.0.0', 'Use overlayList instead')
-    def getOverlayList(self):
-        """Returns a reference to the :class:`.OverlayList`. """
-        return self.overlayList
-
-
     def destroy(self):
         """This method must be called by whatever is managing this
         ``_FSLeyesPanel`` when it is to be closed/destroyed.
@@ -373,22 +323,3 @@ class FSLeyesPanel(_FSLeyesPanel, wx.Panel):
 
         wx.Panel.__init__(self, parent, *args, **kwargs)
         _FSLeyesPanel.__init__(self, overlayList, displayCtx, frame, kbFocus)
-
-
-class FSLeyesSettingsPanel(FSLeyesPanel):
-    """The ``FSLeyesSettingsPanel`` is deprecated - it has been replaced
-    with the :class:`.controls.controlpanel.SettingsPanel`.
-    """
-    @deprecated.deprecated(
-        '0.26.0', '1.0.0', 'Use controls.controlpanel.SettingsPanel instead')
-    def __init__(self, parent, *args, **kwargs):
-        FSLeyesPanel.__init__(self, parent, *args, **kwargs)
-
-        from fsleyes.controls.controlpanel import SettingsPanel
-
-        self.__sizer = wx.BoxSizer(wx.VERTICAL)
-        self.__panel = SettingsPanel(self, *args, **kwargs)
-        self.__sizer.Add(self.__panel, flag=wx.EXPAND, proportion=1)
-        self.SetSizer(self.__sizer)
-    def getWidgetList(self):
-        return self.__panel.getWidgetList()

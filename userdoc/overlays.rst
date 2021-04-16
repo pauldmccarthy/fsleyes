@@ -613,8 +613,9 @@ The following settings are available on vector overlays:
   the voxel intensities in another image. This is not very useful for RGB
   vector overlays, but can be useful for line vectors.
 
-- **Modulate by** This setting allows you to modulate the brightness of
-  the vector overlay according to the voxel intensities in another image.
+- **Modulate by** This setting allows you to modulate the brightness or
+  transparency of the vector overlay according to the voxel intensities in
+  another image.
 
 - **Clip by** This setting allows you to clip the voxels in the vector overlay
   according to the voxel intensities in another image.
@@ -629,6 +630,9 @@ The following settings are available on vector overlays:
 - **Modulation range** If you have selected a *Modulate by* image, this
   setting allows you to adjust the modulation range. The range limits are
   relative to the selected *Modulate by* image.
+
+- **Modulation mode** This setting allows you to choose between modulating
+  either brightness or transparency, of the vector overlay by another image.
 
 - **X Colour** The colour to be used for the X vector component.
 

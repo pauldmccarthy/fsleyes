@@ -41,7 +41,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
     or four sections:
 
      - The *Time series plot settings* section has controls which are linked to
-       properties of the :class:`.TimeSeriesPanel` class.
+       properties of the :class:`.PlotCanvas` class.
 
      - The *General plot settings* section has controls which are linked to
        properties of the :class:`.PlotPanel` base class.
@@ -82,10 +82,9 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
 
         plotctrl.PlotControlPanel.__init__(self, *args, **kwargs)
 
-        tsPanel = self.getPlotPanel()
-        tsPanel.addListener('plotMelodicICs',
-                            self.name,
-                            self.__plotMelodicICsChanged)
+        self.plotPanel.addListener('plotMelodicICs',
+                                   self.name,
+                                   self.__plotMelodicICsChanged)
 
 
     def destroy(self):
@@ -107,7 +106,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
 
         widgetList = self.getWidgetList()
         allWidgets = []
-        tsPanel    = self.getPlotPanel()
+        tsPanel    = self.plotPanel
         tsProps    = ['plotMode',
                       'usePixdim',
                       'plotMelodicICs']

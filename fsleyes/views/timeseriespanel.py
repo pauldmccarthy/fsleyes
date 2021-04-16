@@ -14,8 +14,6 @@ import itertools as it
 
 import numpy as np
 
-import wx
-
 import fsl.data.featimage                 as fslfeatimage
 import fsl.data.melodicimage              as fslmelimage
 import fsl.data.image                     as fslimage
@@ -23,11 +21,10 @@ import fsl.data.mesh                      as fslmesh
 import fsleyes_props                      as props
 
 import fsleyes.overlay                    as fsloverlay
-import fsleyes.actions                    as actions
 import fsleyes.strings                    as strings
 import fsleyes.profiles.timeseriesprofile as timeseriesprofile
 import fsleyes.plotting.timeseries        as timeseries
-from . import                                plotpanel
+import fsleyes.views.plotpanel            as plotpanel
 
 
 log = logging.getLogger(__name__)
@@ -65,7 +62,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     Some *FSLeyes control* panels are associated with the
-    :class:`.TimeSeriesPanel`:
+    :class:`.TimeSeriesPanel`, and can be added/removed via
+    :meth:`.ViewPanel.togglePanel`.
 
     .. autosummary::
        :nosignatures:
@@ -208,7 +206,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
     def draw(self, *a):
         """Overrides :meth:`.PlotPanel.draw`. Passes some :class:`.DataSeries`
-        instances to the :meth:`.PlotPanel.drawDataSeries` method.
+        instances to the :meth:`.PlotCanvas.drawDataSeries` method, then
+        calls :meth:`.PlotCanvas.drawArtists`.
         """
 
         if not self or self.destroyed:
@@ -226,8 +225,10 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         xlabel, ylabel = self.__generateDefaultLabels(tss)
 
-        self.drawDataSeries(extraSeries=tss, xlabel=xlabel, ylabel=ylabel)
-        self.drawArtists()
+        self.canvas.drawDataSeries(extraSeries=tss,
+                                   xlabel=xlabel,
+                                   ylabel=ylabel)
+        self.canvas.drawArtists()
 
 
     def createDataSeries(self, overlay):
@@ -250,7 +251,7 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
         displayCtx  = self.displayCtx
         overlayList = self.overlayList
-        tsargs      = (overlay, overlayList, displayCtx, self)
+        tsargs      = (overlay, overlayList, displayCtx, self.canvas)
 
         # Is this a mesh?
         if isinstance(overlay, fslmesh.Mesh):
@@ -358,13 +359,13 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
 
 
     def __generateDefaultLabels(self, timeSeries):
-        """Called by :meth:`draw`. If the :attr:`.PlotPanel.xlabel` or
-        :attr:`.PlotPanel.ylabel` properties are unset, an attempt is made
+        """Called by :meth:`draw`. If the :attr:`.PlotCanvas.xlabel` or
+        :attr:`.PlotCanvas.ylabel` properties are unset, an attempt is made
         to generate default labels.
         """
 
-        xlabel = self.xlabel
-        ylabel = self.ylabel
+        xlabel = self.canvas.xlabel
+        ylabel = self.canvas.ylabel
 
         if xlabel is not None:
             return xlabel, ylabel
@@ -390,7 +391,8 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         #      time series (e.g. MeshOpts)
 
         # Get all the unique overlays
-        overlays = [ts.overlay for ts in it.chain(timeSeries, self.dataSeries)]
+        overlays = [ts.overlay
+                    for ts in it.chain(timeSeries, self.canvas.dataSeries)]
         overlays = set(overlays)
 
         if not all([isinstance(o, fslimage.Image) for o in overlays]):

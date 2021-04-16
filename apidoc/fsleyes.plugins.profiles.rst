@@ -6,6 +6,7 @@
 
    fsleyes.plugins.profiles.orthoannotateprofile
    fsleyes.plugins.profiles.orthocropprofile
+   fsleyes.plugins.profiles.samplelineprofile
 
 
 .. automodule:: fsleyes.plugins.profiles

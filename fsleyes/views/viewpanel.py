@@ -18,7 +18,6 @@ import wx.lib.agw.aui                as aui
 import wx.lib.agw.aui.framemanager   as auifm
 
 import fsl.utils.notifier            as notifier
-import fsl.utils.deprecated          as deprecated
 import fsleyes_widgets               as fwidgets
 
 import fsleyes.panel                 as fslpanel
@@ -114,6 +113,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
+    def toolOrder():
+        """May be overridden by sub-classes. Returns a list of names of
+        tools, specifying a suggested order for the corresponding entries
+        in the FSLeyes tools menu. Note that the ordering of tools returned
+        by the :meth:`getTools` method is honoured - the ordering returned
+        by *this* method relates to tools which are implemented as plugins.
+        """
+        return None
+
+
+    @staticmethod
     def defaultLayout():
         """May be overridden by sub-classes. Should return a list of names of
         FSLeyes :class:`.ControlPanel` types which form the default layout for
@@ -167,10 +177,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__panels      = {}
 
         # Notifier instance for emitting events.
-        # Currently the only event is on profile
-        # changes, and the profilemanager emits
-        # these events anyway, so we can just
-        # use it
+        # Currently only two events are emitted
+        # - one of them is profile changes, and
+        # the profilemanager emits these events
+        # anyway, so we can just use it. As for
+        # the other event (aui layout changes),
+        # well, we're being a bit dodgy and
+        # emitting these events via the
+        # profilemanager.
         self.__events = self.__profileManager
 
         # See note in FSLeyesFrame about
@@ -184,7 +198,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                       aui.AUI_MGR_LIVE_RESIZE))
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
-        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
+        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE,
+                           self.__onPaneClose)
+        self.__auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED,
+                           self.__onPerspectiveChange)
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -202,15 +219,33 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                               size[1] - clientSize[1])
         ff.Destroy()
 
-        # A bit hacky, For each plugin control, we create
-        # a ToggleControlPanelAction, and add it as an
-        # attribute on the view panel. Then it will work
-        # with the ActionProvider interface, and hence the
-        # FSLEeyesFrame.populateMenu method.
+        self.__loadPlugins()
+
+
+    def __loadPlugins(self):
+        """Called by :meth:`__init__`. This is a bit of a hack, but less hacky
+        than it used to be.  All plugin-provided control panels and tools
+        which support this ``ViewPanel`` are looked up via the :mod:`.plugins.`
+        module. Then, for each control, we create a
+        :class:`.ToggleControlPanelAction`, and add it as an attribute on this
+        ``ViewPanel``.
+
+        Similarly, all plugin-provided tools which support this ``ViewPanel``
+        are created and added as attributes.
+
+        In both cases, the class name of the control/tool is used as the
+        attribute name.
+
+        This is done so that these actions will work with the
+        :class:`.ActionProvider` interface, and hence the
+        :meth:`.FSLEeyesFrame.populateMenu` method.
+
+        This implementation may change in the future if it becomes problematic
+        (e.g. due to naming conflicts).
+        """
+
+        # controls
         for ctrlType in plugins.listControls(type(self)).values():
-            # We add toggle actions as attributes to the
-            # ViewPanel instance, which is horribly hacky
-            # and will hopefully be changed in the future.
             name = ctrlType.__name__
             act  = actions.ToggleControlPanelAction(
                 self.overlayList,
@@ -220,6 +255,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 name=name)
             setattr(self, name, act)
 
+        # tools
+        for toolType in plugins.listTools(type(self)).values():
+            name = toolType.__name__
+            act  = toolType(self.overlayList, self.displayCtx, self)
+            setattr(self, name, act)
+
 
     def destroy(self):
         """Removes some property listeners, destroys all child panels,
@@ -227,37 +268,32 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         calls :meth:`.FSLeyesPanel.destroy`.
         """
 
+        # Order of operations is important. For example,
+        # FSLeyesPanel.destroy will result in all Actions
+        # associated with this ViewPanel being destroyed,
+        # and their destroy routines may interact with
+        # this ViewPanel.
+
+        # remove listeners from overlaylist and display context
+        lName = 'ViewPanel_{}'.format(self.name)
+        self.overlayList.removeListener('overlays',        lName)
+        self.displayCtx .removeListener('selectedOverlay', lName)
+
+        fslpanel.FSLeyesPanel.destroy(self)
+
         # Make sure that any control panels are correctly destroyed
         for panel in self.__panels.values():
             self.__auiMgr.DetachPane(panel)
             panel.destroy()
-
-        # Clear ref to the events Notifier - it
-        # will drop refs to any event handlers
-        self.__events = None
-
-        # Remove listeners from the overlay
-        # list and display context
-        lName = 'ViewPanel_{}'.format(self.name)
-
-        self.overlayList.removeListener('overlays',        lName)
-        self.displayCtx .removeListener('selectedOverlay', lName)
 
         # Disable the  ProfileManager
         self.__profileManager.destroy()
 
         # Un-initialise the AUI manager
         self.__auiMgr.Unbind(aui.EVT_AUI_PANE_CLOSE)
+        self.__auiMgr.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
         self.__auiMgr.Update()
         self.__auiMgr.UnInit()
-
-        # The ToggleControlPanelAction (which is used
-        # to keep toggle buttons/menu items in sync
-        # with reality) interacts with the AUI
-        # manager. These actions will be destroyed
-        # via FSLeyesPanel.destroy, so we don't clear
-        # the auimgr ref until afterwards.
-        fslpanel.FSLeyesPanel.destroy(self)
 
         # The AUI manager does not clear its
         # reference to this panel, so let's
@@ -267,17 +303,26 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr         = None
         self.__panels         = None
         self.__centrePanel    = None
+        self.__events         = None
 
 
     @property
-    def events(self):
+    def events(self) -> notifier.Notifier:
         """Return a reference to a :class:`.Notifier` instance which can be
-        used to be notified when certain events occur. Currently the only
-        event topic which occurs is ``'profile'``, when the current
-        interaction profile changes. Callbacks which are registered with
-        the ``'profile'`` topic will be passed a tuple containing the types
-        (:class:`.Profile` sub-classes) of the de-registered and newly
-        registered profiles.
+        used to be notified when certain events occur. Currently the following
+        events are emitted:
+
+         - ``'profile'``, when the current interaction profile changes.
+           Callbacks which are registered with the ``'profile'`` topic will
+           be passed a tuple containing the types (:class:`.Profile`
+           sub-classes) of the de-registered and newly registered profiles.
+
+         - ``'aui_perspective'``, when the AUI-managed layout changes, e.g.
+           sash resizes, control panels added/removed, etc. This event is
+           emitted whenever the ``AuiManager`` emits a
+           ``EVT_AUI_PERSPECTIVE_CHANGED`` event. It is re-emitted via the
+           :class:`.Notifer` interface so that non-wx entities can be
+           notified (see e.g. the :class:`.ToggleControlPanelAction`).
         """
         return self.__events
 
@@ -313,13 +358,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__centrePanel
 
 
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use centrePanel instead')
-    def getCentrePanel(self):
-        """Returns the primary (centre) panel on this ``ViewPanel``.
-        """
-        return self.centrePanel
-
-
     @centrePanel.setter
     def centrePanel(self, panel):
         """Set the primary centre panel for this ``ViewPanel``. This method
@@ -334,14 +372,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.AddPane(panel, paneInfo)
         self.__auiMgrUpdate()
         self.__centrePanel = panel
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use centrePanel instead')
-    def setCentrePanel(self, panel):
-        """Set the primary centre panel for this ``ViewPanel``. This method
-        is only intended to be called by sub-classes.
-        """
-        self.centrePanel = panel
 
 
     def togglePanel(self, panelType, *args, **kwargs):
@@ -380,6 +410,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         :arg kwargs:    All other keyword arguments, are passed to the
                         ``panelType`` constructor.
+
+        :returns:       The newly created control panel.
 
         .. note::       The ``panelType`` type must be a sub-class of
                         :class:`.ControlPanel` or :class:`.ControlToolBar`,
@@ -484,6 +516,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.AddPane(window, paneInfo)
         self.__panels[panelType] = window
         self.__auiMgrUpdate(newPanel=window)
+        return window
 
 
     def __layoutNewPanel(self,
@@ -630,14 +663,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
     @property
     def auiManager(self):
-        """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
-        layout of this ``ViewPanel``.
-        """
-        return self.__auiMgr
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use auiManager instead')
-    def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
         layout of this ``ViewPanel``.
         """
@@ -842,6 +867,15 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)
+
+
+    def __onPerspectiveChange(self, ev):
+        """Called on ``EVT_AUI_PERSPECTIVE_CHANGED`` events. Re-emits the
+        event via the :meth:`events` notifier, with topic ``'aui_perspective'``.
+        This is performed for the benefit of non-wx entities which need to
+        know about layout changes.
+        """
+        self.events.notify(topic='aui_perspective')
 
 
 class MyAuiFloatingFrame(auifm.AuiFloatingFrame):

@@ -55,6 +55,8 @@ import fsleyes.plugins               as plugins
 import fsleyes.controls              as controls
 import fsleyes.views                 as views
 import fsleyes.views.viewpanel       as viewpanel
+import fsleyes.views.canvaspanel     as canvaspanel
+import fsleyes.views.plotpanel       as plotpanel
 import fsleyes.controls.controlpanel as controlpanel
 
 
@@ -168,14 +170,16 @@ def applyLayout(frame, name, layout, message=None):
                 type(vp).__name__, name, val))
             vp.deserialise(name, val)
 
-        # And, if it is a CanvasPanel,
-        # to its SceneOpts instance.
-        if isinstance(vp, canvaspanel.CanvasPanel):
-            opts = vp.sceneOpts
-            for name, val in sceneProps.items():
-                log.debug('Setting {}.{} = {}'.format(
-                    type(opts).__name__, name, val))
-                opts.deserialise(name, val)
+        # And to its SceneOpts instance if
+        # it is a CanvasPanel, or its
+        # PlotCanvas if it is a PlotPanel
+        if   isinstance(vp, canvaspanel.CanvasPanel): aux = vp.sceneOpts
+        elif isinstance(vp, plotpanel.PlotPanel):     aux = vp.canvas
+
+        for name, val in sceneProps.items():
+            log.debug('Setting {}.{} = {}'.format(
+                type(aux).__name__, name, val))
+            aux.deserialise(name, val)
 
 
 def saveLayout(frame, name):
@@ -453,13 +457,14 @@ def deserialiseLayout(layout):
                 - A list of dictionaries, one for each ``ViewPanel``,
                   containing property ``{name : value}`` pairs to be applied
                   to the :class:`.SceneOpts` instance associated with the
-                  ``ViewPanel``. If the ``ViewPanel`` is not a
-                  :class:`.CanvasPanel`, the dictionary will be empty.
+                  ``ViewPanel``, if it is a :class:`.CanvasPanel`, or the
+                  :class:`.PlotCanvas` instance associated with the
+                  ``ViewPanel``, if it is a :class:`.PlotPanel`.
     """
 
-    # Versions of FSLeyes prior to 0.35.0 would just
+    # Versions of FSLeyes prior to 1.0.0 would just
     # save the view/control class name. This was
-    # changed in 0.35.0 so that the full path to the
+    # changed in 1.0.0 so that the full path to the
     # class is saved. This function aims to be
     # compatible with both formats - given a class
     # name, or a fully resolved class name, it will
@@ -570,7 +575,6 @@ def deserialiseLayout(layout):
         props           = [p.split('=') for p in props]
         vpSceneProps[i] = collections.OrderedDict(props)
 
-
     return (frameChildren,
             frameLayout,
             vpChildren,
@@ -617,127 +621,125 @@ def _addControlPanel(viewPanel, panelType):
 def _getPanelProps(panel):
     """Creates and returns two dictionaries, containing properties of the given
     :class:`.ViewPanel` (and its associated :class:`.SceneOpts` instance, if
-    it is a :class:`.CanvasPanel`), which are to be saved as part of a
-    seriaised *FSLeyes* layout. The properties to be saved are listed in
-    the :data:`VIEWPANEL_PROPS` dictionary.
+    it is a :class:`.CanvasPanel`, or :class:`.PlotCanvas`, if it is a
+    :class:`.PlotPanel`), which are to be saved as part of a seriaised
+    *FSLeyes* layout. The properties to be saved are listed in the
+    :data:`VIEWPANEL_PROPS` dictionary.
     """
-
-    import fsleyes.views.canvaspanel as canvaspanel
-    import fsleyes.views.plotpanel   as plotpanel
 
     if not isinstance(panel, (canvaspanel.CanvasPanel, plotpanel.PlotPanel)):
         return {}, {}
 
-    panelType  = type(panel).__name__
-    panelProps = VIEWPANEL_PROPS[panelType]
-    sceneProps = {}
+    panelType              = type(panel).__name__
+    panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
 
     if isinstance(panel, canvaspanel.CanvasPanel):
-        opts                   = panel.sceneOpts
-        panelProps, sceneProps = panelProps
-        sceneProps = {name : opts .serialise(name) for name in sceneProps}
+        aux = panel.sceneOpts
+    elif isinstance(panel, plotpanel.PlotPanel):
+        aux = panel.canvas
 
     panelProps = {name : panel.serialise(name) for name in panelProps}
+    sceneProps = {name : aux  .serialise(name) for name in sceneProps}
 
     return panelProps, sceneProps
 
 
 VIEWPANEL_PROPS = {
-    'OrthoPanel'        : [['syncLocation',
-                            'syncOverlayOrder',
-                            'syncOverlayDisplay',
-                            'syncOverlayVolume',
-                            'movieRate',
-                            'movieAxis'],
-                           ['showCursor',
-                            'bgColour',
-                            'fgColour',
-                            'cursorColour',
-                            'cursorGap',
-                            'showColourBar',
-                            'colourBarLocation',
-                            'colourBarLabelSide',
-                            'showXCanvas',
-                            'showYCanvas',
-                            'showZCanvas',
-                            'showLabels',
-                            'labelSize',
-                            'layout',
-                            'xzoom',
-                            'yzoom',
-                            'zzoom',
-                            'highDpi']],
-    'LightBoxPanel'     : [['syncLocation',
-                            'syncOverlayOrder',
-                            'syncOverlayDisplay',
-                            'syncOverlayVolume',
-                            'movieRate',
-                            'movieAxis'],
-                           ['showCursor',
-                            'bgColour',
-                            'fgColour',
-                            'cursorColour',
-                            'showColourBar',
-                            'colourBarLocation',
-                            'colourBarLabelSide',
-                            'zax',
-                            'showGridLines',
-                            'highlightSlice',
-                            'highDpi']],
-    'Scene3DPanel'      : [['syncLocation',
-                            'syncOverlayOrder',
-                            'syncOverlayDisplay',
-                            'syncOverlayVolume'],
-                           ['showCursor',
-                            'bgColour',
-                            'fgColour',
-                            'cursorColour',
-                            'showColourBar',
-                            'colourBarLocation',
-                            'colourBarLabelSide',
-                            'occlusion',
-                            'light',
-                            'lightPos',
-                            'offset',
-                            'rotation',
-                            'showLegend']],
-    'TimeSeriesPanel'    : ['legend',
-                            'xAutoScale',
-                            'yAutoScale',
-                            'xLogScale',
-                            'yLogScale',
-                            'ticks',
-                            'grid',
-                            'gridColour',
-                            'bgColour',
-                            'smooth',
-                            'usePixdim',
-                            'plotMode',
-                            'plotMelodicICs'],
-    'HistogramPanel'     : ['legend',
-                            'xAutoScale',
-                            'yAutoScale',
-                            'xLogScale',
-                            'yLogScale',
-                            'ticks',
-                            'grid',
-                            'gridColour',
-                            'bgColour',
-                            'smooth',
-                            'histType',
-                            'plotType'],
-    'PowerSpectrumPanel' : ['legend',
-                            'xAutoScale',
-                            'yAutoScale',
-                            'xLogScale',
-                            'yLogScale',
-                            'ticks',
-                            'grid',
-                            'gridColour',
-                            'bgColour',
-                            'smooth',
-                            'plotMelodicICs',
-                            'plotFrequencies']}
+    'OrthoPanel'         : [['syncLocation',
+                             'syncOverlayOrder',
+                             'syncOverlayDisplay',
+                             'syncOverlayVolume',
+                             'movieRate',
+                             'movieAxis'],
+                            ['showCursor',
+                             'bgColour',
+                             'fgColour',
+                             'cursorColour',
+                             'cursorGap',
+                             'showColourBar',
+                             'colourBarLocation',
+                             'colourBarLabelSide',
+                             'showXCanvas',
+                             'showYCanvas',
+                             'showZCanvas',
+                             'showLabels',
+                             'labelSize',
+                             'layout',
+                             'xzoom',
+                             'yzoom',
+                             'zzoom',
+                             'highDpi']],
+    'LightBoxPanel'      : [['syncLocation',
+                             'syncOverlayOrder',
+                             'syncOverlayDisplay',
+                             'syncOverlayVolume',
+                             'movieRate',
+                             'movieAxis'],
+                            ['showCursor',
+                             'bgColour',
+                             'fgColour',
+                             'cursorColour',
+                             'showColourBar',
+                             'colourBarLocation',
+                             'colourBarLabelSide',
+                             'zax',
+                             'showGridLines',
+                             'highlightSlice',
+                             'highDpi']],
+    'Scene3DPanel'       : [['syncLocation',
+                             'syncOverlayOrder',
+                             'syncOverlayDisplay',
+                             'syncOverlayVolume'],
+                            ['showCursor',
+                             'bgColour',
+                             'fgColour',
+                             'cursorColour',
+                             'showColourBar',
+                             'colourBarLocation',
+                             'colourBarLabelSide',
+                             'occlusion',
+                             'light',
+                             'lightPos',
+                             'offset',
+                             'rotation',
+                             'showLegend']],
+    'TimeSeriesPanel'    : [['usePixdim',
+                             'plotMode',
+                             'plotMelodicICs'],
+                            ['legend',
+                             'xAutoScale',
+                             'yAutoScale',
+                             'xLogScale',
+                             'yLogScale',
+                             'ticks',
+                             'grid',
+                             'gridColour',
+                             'bgColour',
+                             'smooth']],
+    'HistogramPanel'     : [['histType',
+                             'plotType'],
+                            ['legend',
+                             'xAutoScale',
+                             'yAutoScale',
+                             'xLogScale',
+                             'yLogScale',
+                             'ticks',
+                             'grid',
+                             'gridColour',
+                             'bgColour',
+                             'smooth']],
+    'PowerSpectrumPanel' : [['plotMelodicICs',
+                             'plotFrequencies'],
+                            ['legend',
+                             'xAutoScale',
+                             'yAutoScale',
+                             'xLogScale',
+                             'yLogScale',
+                             'ticks',
+                             'grid',
+                             'gridColour',
+                             'bgColour',
+                             'smooth']]}
 
 
 # The order in which properties are defined in

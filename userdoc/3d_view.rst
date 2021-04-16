@@ -95,6 +95,10 @@ The following settings can be used to control the ray-casting:
 - **Blending** This setting controls the extent to which adjacent samples
   along each ray are blended together.
 
+- **Blend by intensity** By default, areas of the image with lower voxel
+  intensities will be made more transparent. This setting allows that
+  behaviour to be disabled.
+
 - **Number of samples** This setting controls how many samples are taken
   through the volume. A higher number of samples will result in a better
   quality rendering.

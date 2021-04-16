@@ -68,21 +68,21 @@ class HistogramSeries(dataseries.DataSeries):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, plotPanel):
+    def __init__(self, overlay, overlayList, displayCtx, plotCanvas):
         """Create a ``HistogramSeries``.
 
         :arg overlay:     The overlay from which the data to be plotted is
                           retrieved.
         :arg overlayList: The :class:`.OverlayList` instance.
         :arg displayCtx:  The :class:`.DisplayContext` instance.
-        :arg plotPanel:   The :class:`.HistogramPanel` that owns this
+        :arg plotCanvas:   The :class:`.HistogramPanel` that owns this
                           ``HistogramSeries``.
         """
 
         log.debug('New HistogramSeries instance for {} '.format(overlay.name))
 
         dataseries.DataSeries.__init__(
-            self, overlay, overlayList, displayCtx, plotPanel)
+            self, overlay, overlayList, displayCtx, plotCanvas)
 
         self.__nvals              = 0
         self.__dataKey            = None

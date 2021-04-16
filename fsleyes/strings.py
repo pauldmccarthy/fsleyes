@@ -148,7 +148,7 @@ messages = TypeDict({
     'All of your images must be saved to a file before a command line can be '
     'generated!',
 
-    'PlotPanel.preparingData'          : 'Preparing data - please wait...',
+    'PlotCanvas.preparingData'          : 'Preparing data - please wait...',
 
     'HistogramPanel.calcHist'           : 'Calculating histogram for {} ...',
 
@@ -334,6 +334,9 @@ messages = TypeDict({
     'Load annotations from file',
     'LoadAnnotationsAction.loadFileError' :
     'An errror occurred while loading the file.',
+
+    'SampleLinePanel.exportError'  :
+    'An error occurred exporting the data!',
 })
 
 
@@ -402,6 +405,7 @@ titles = TypeDict({
 
     'CropImagePanel'             : 'Crop',
     'EditTransformPanel'         : 'Nudge',
+    'SampleLinePanel'            : 'Sample along line',
 
     'FileTreePanel'              : 'File tree',
 
@@ -496,6 +500,10 @@ titles = TypeDict({
 
     'SaveAnnotationsAction.saveFileError' : 'Error saving file',
     'LoadAnnotationsAction.loadFileError' : 'Error loading file',
+
+    'SampleLinePanel.savefile' : 'Select file to save sampled data to',
+    'SampleLinePanel.exportError'  : 'Error saving file',
+    'ExportSampledDataDialog'  : 'Export sampled data to file',
 })
 
 
@@ -533,6 +541,7 @@ actions = TypeDict({
     'LoadAnnotationsAction'       : 'Load annotations from file',
     'EditTransformAction'         : 'Nudge',
     'CropImageAction'             : 'Crop',
+    'SampleLineAction'            : 'Sample along line',
     'AddMaskDataSeriesAction'     : 'Add time series from ROI',
     'AddROIHistogramAction'       : 'Add histogram from ROI',
 
@@ -961,6 +970,27 @@ labels = TypeDict({
     'AnnotationPanel.Rect'           : 'Rectangle',
     'AnnotationPanel.Ellipse'        : 'Ellipse',
     'AnnotationPanel.TextAnnotation' : 'Text',
+
+
+    'SampleLinePanel.voxelfrom'  : 'From voxel coordinates:',
+    'SampleLinePanel.voxelto'    : 'to:',
+    'SampleLinePanel.worldfrom'  : 'From world coordinates:',
+    'SampleLinePanel.worldto'    : 'to:',
+    'SampleLinePanel.length'     : 'Length:',
+    'SampleLinePanel.interp'     : 'Interpolation',
+    'SampleLinePanel.resolution' : 'Resolution',
+    'SampleLinePanel.normalise'  : 'Normalise',
+    'SampleLinePanel.legend'     : 'Show legend',
+    'SampleLinePanel.colour'     : 'Colour',
+    'SampleLinePanel.lineWidth'  : 'Line width',
+    'SampleLinePanel.lineStyle'  : 'Line style',
+
+    'ExportSampledDataDialog.ok'     : 'Ok',
+    'ExportSampledDataDialog.cancel' : 'Cancel',
+    'ExportSampledDataDialog.series' :
+    'Which line do you want to export data for?',
+    'ExportSampledDataDialog.coords' :
+    'Do you want to save the sample point\ncoordinates?',
 })
 
 
@@ -1016,20 +1046,20 @@ properties = TypeDict({
     'Scene3DOpts.lightDistance' : 'Light distance',
     'Scene3DOpts.occlusion'     : 'Volume occlusion',
 
-    'PlotPanel.legend'     : 'Show legend',
-    'PlotPanel.ticks'      : 'Show ticks',
-    'PlotPanel.grid'       : 'Show grid',
-    'PlotPanel.gridColour' : 'Grid colour',
-    'PlotPanel.bgColour'   : 'Background colour',
-    'PlotPanel.smooth'     : 'Smooth',
-    'PlotPanel.xAutoScale' : 'Auto-scale (x axis)',
-    'PlotPanel.yAutoScale' : 'Auto-scale (y axis)',
-    'PlotPanel.xLogScale'  : 'Log scale (x axis)',
-    'PlotPanel.yLogScale'  : 'Log scale (y axis)',
-    'PlotPanel.invertX'    : 'Invert X axis',
-    'PlotPanel.invertY'    : 'Invert Y axis',
-    'PlotPanel.xlabel'     : 'X label',
-    'PlotPanel.ylabel'     : 'Y label',
+    'PlotCanvas.legend'     : 'Show legend',
+    'PlotCanvas.ticks'      : 'Show ticks',
+    'PlotCanvas.grid'       : 'Show grid',
+    'PlotCanvas.gridColour' : 'Grid colour',
+    'PlotCanvas.bgColour'   : 'Background colour',
+    'PlotCanvas.smooth'     : 'Smooth',
+    'PlotCanvas.xAutoScale' : 'Auto-scale (x axis)',
+    'PlotCanvas.yAutoScale' : 'Auto-scale (y axis)',
+    'PlotCanvas.xLogScale'  : 'Log scale (x axis)',
+    'PlotCanvas.yLogScale'  : 'Log scale (y axis)',
+    'PlotCanvas.invertX'    : 'Invert X axis',
+    'PlotCanvas.invertY'    : 'Invert Y axis',
+    'PlotCanvas.xlabel'     : 'X label',
+    'PlotCanvas.ylabel'     : 'Y label',
 
     'TimeSeriesPanel.plotMode'         : 'Plotting mode',
     'TimeSeriesPanel.usePixdim'        : 'Use pixdims',
@@ -1383,7 +1413,22 @@ choices = TypeDict({
                                      'A'    : 'A'},
 
     'FileTreePanel.notes' : {'left'  : 'Left',
-                             'right' : 'Right'}
+                             'right' : 'Right'},
+
+    'SampleLinePanel.interp' : {0 : 'Nearest neighbour',
+                                1 : 'Linear',
+                                2 : 'Quadratic',
+                                3 : 'Cubic'},
+    'SampleLinePanel.normalise' : {'none' : 'No normalisation',
+                                   'x'    : 'Normalise along X axis',
+                                   'y'    : 'Normalise along Y axis',
+                                   'xy'   : 'Normalise along X and Y axes'},
+
+    'ExportSampledDataDialog.saveCoordinates' : {
+        'none'  : 'Do not save coordinates',
+        'voxel' : 'Save voxel coordinates',
+        'world' : 'Save world coordinates',
+    },
 })
 
 

@@ -14,16 +14,13 @@ from __future__ import division
 
 import functools as ft
 import itertools as it
-import              re
 import              logging
-import              collections
 
 import wx
 import wx.lib.agw.aui               as aui
 
 import fsl.utils.idle               as idle
 import fsl.utils.settings           as fslsettings
-import fsl.utils.deprecated         as deprecated
 import fsleyes_widgets              as fwidgets
 import fsleyes_widgets.dialog       as fsldlg
 import fsleyes_widgets.utils.status as status
@@ -32,11 +29,10 @@ import fsleyes.strings              as strings
 import fsleyes.plugins              as plugins
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.profiles.shortcuts   as shortcuts
-
-from . import actions
-from . import tooltips
-from . import layouts
-from . import displaycontext
+import fsleyes.actions              as actions
+import fsleyes.tooltips             as tooltips
+import fsleyes.layouts              as layouts
+import fsleyes.displaycontext       as displaycontext
 
 
 log = logging.getLogger(__name__)
@@ -393,38 +389,6 @@ class FSLeyesFrame(wx.Frame):
         return dict(self.__menuActions)
 
 
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use overlayList instead')
-    def getOverlayList(self):
-        """Returns the :class:`.OverlayList` which contains the overlays
-        being displayed by this ``FSLeyesFrame``.
-        """
-        return self.__overlayList
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use displayCtx instead')
-    def getDisplayContext(self):
-        """Returns the top-level :class:`.DisplayContext` associated with this
-        ``FSLeyesFrame``.
-        """
-        return self.__displayCtx
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use viewPanels instead')
-    def getViewPanels(self):
-        """Returns a list of all :class:`.ViewPanel` instances that are
-        currenlty displayed in this ``FSLeyesFrame``.
-        """
-        return list(self.__viewPanels)
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use focusedViewPanel instead')
-    def getFocusedViewPanel(self):
-        """Returns the :class:`.ViewPanel` which currently has focus, or
-        ``None`` if no ``ViewPanel`` has focus.
-        """
-        return self.focusedViewPanel
-
-
     def getViewPanelID(self, viewPanel):
         """Returns the ID that was assigned to the given :class:`.ViewPanel`.
         This is a sequentially increasing integer, starting from 1.
@@ -448,14 +412,6 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def auiManager(self):
-        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
-        the layout of this ``FSLeyesFrame``.
-        """
-        return self.__auiManager
-
-
-    @deprecated.deprecated('0.16.0', '1.0.0', 'Use auiManager instead')
-    def getAuiManager(self):
         """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
         the layout of this ``FSLeyesFrame``.
         """
@@ -711,12 +667,6 @@ class FSLeyesFrame(wx.Frame):
         self.__toolsMenuActions = self.__makeToolsMenu()
 
 
-    @deprecated.deprecated('0.24.0', '1.0.0', 'Use refreshLayoutMenu')
-    def refreshPerspectiveMenu(self):
-        """Deprecated."""
-        self.refreshLayoutMenu()
-
-
     def populateMenu(self,
                      menu,
                      target,
@@ -871,14 +821,12 @@ class FSLeyesFrame(wx.Frame):
                 names, clss = zip(*pluginCtrls.items())
                 ctrlOrder   = [plugins.lookupControl(c) for c in ctrlOrder]
                 indices     = [ctrlOrder.index(c) if c in ctrlOrder
-                               else len(pluginCtrls)
-                               for c in clss]
-                astuples    = sorted(zip(indices, names, clss))
-                pluginCtrls = {t[1] : t[2] for t in astuples}
+                               else len(pluginCtrls) for c in clss]
+                pluginCtrls = sorted(zip(indices, names, clss))
+                pluginCtrls = {t[1] : t[2] for t in pluginCtrls}
 
-            # ViewPanels have a ToggleControlPanelActiopn
-            # added as an attributee for every supported
-            # control panel
+            # ViewPanels have a ToggleControlPanelAction added as
+            # an attributee for every supported control panel
             for ctrlName, ctrlType in pluginCtrls.items():
                 name = ctrlType.__name__
                 actionNames.append(name)
@@ -1694,11 +1642,7 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.actions.loadoverlay as loadoverlay
 
         for path in self.__recentPathsMenu.GetMenuItems():
-            # RemoveItem is deprecated in phoenix
-            if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
-                self.__recentPathsMenu.Remove(path)
-            else:
-                self.__recentPathsMenu.RemoveItem(path)
+            self.__recentPathsMenu.Remove(path)
 
         paths = loadoverlay.recentPathManager.listRecentPaths()
 
@@ -1933,6 +1877,27 @@ class FSLeyesFrame(wx.Frame):
         actionItems = []
         pluginTools = plugins.listTools()
 
+        # Tools are either restricted for use with a
+        # specific view, or independent of any view.
+        # We create the latter here first, and then
+        # use __makeViewPanelTools to create the former
+        pluginTools = {n : c for n, c in pluginTools.items()
+                       if c.supportedViews() is None}
+
+        # Fix the ordering for view-independent plugins
+        # (the equivalent of what is done with
+        # ViewPanel.toolOrder, in __makeViewPanelTools).
+        toolOrder   = ['ApplyFlirtXfmAction',
+                       'SaveFlirtXfmAction',
+                       'ResampleAction',
+                       'ProjectImageToSurfaceAction']
+        names, clss = zip(*pluginTools.items())
+        toolOrder   = [plugins.lookupTool(t) for t in toolOrder]
+        indices     = [toolOrder.index(c) if c in toolOrder
+                       else len(pluginTools) for c in clss]
+        pluginTools = sorted(zip(indices, names, clss))
+        pluginTools = {t[1]: t[2] for t in pluginTools}
+
         def addTool(cls, name):
             shortcut  = shortcuts.actions.get(cls)
             # plugin tools not coupled to a specific view
@@ -1946,15 +1911,8 @@ class FSLeyesFrame(wx.Frame):
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
             return actionObj, menuItem
 
-        if len(pluginTools) > 0:
-            menu.AppendSeparator()
-            for name, cls in pluginTools.items():
-                # some tools are independent of a specific view
-                # panel - we add these ones here. Tools/actions
-                # which are coupled to a specific view are added
-                # within __makeViewPanelTools
-                if cls.supportedViews() is None:
-                    actionItems.append(addTool(cls, name))
+        for name, cls in pluginTools.items():
+            actionItems.append(addTool(cls, name))
 
         actionItems.extend(self.__makeViewPanelTools())
         return actionItems
@@ -1978,18 +1936,6 @@ class FSLeyesFrame(wx.Frame):
         from fsleyes.views.powerspectrumpanel import PowerSpectrumPanel
         from fsleyes.views.shellpanel         import ShellPanel
 
-        # We add tools from plugins which are specific to
-        # each view panel into the respective section -
-        # here we organise plugin-provided tools by the
-        # view panel(s) they support to make things easier
-        # below.
-        pluginTools = collections.defaultdict(list)
-        for name, cls in plugins.listTools().items():
-            views =  cls.supportedViews()
-            if views is not None:
-                for view in views:
-                    pluginTools[view].append((name, cls))
-
         # Recreate tools for each view panel. We
         # ensure that the tools for different view
         # panel types are always in a consistent
@@ -2005,22 +1951,44 @@ class FSLeyesFrame(wx.Frame):
         for p in panels:
             if type(p) not in vpOrder:
                 vpOrder.append(type(p))
-        panels  = sorted(panels, key=lambda p: vpOrder.index(type(p)))
+        panels = sorted(panels, key=lambda p: vpOrder.index(type(p)))
 
         actionItems  = []
         vpTypesAdded = set()
 
         for panel in panels:
 
-            vpType     = type(panel)
+            vpType = type(panel)
+
+            # built-in tools, implemented
+            # by the viewpanel itself
             toolNames  = [t.actionName for t in panel.getTools()]
             toolTitles = {}
 
-            for name, cls in pluginTools[type(panel)]:
-                actionObj = cls(self.__overlayList, panel.displayCtx, panel)
-                setattr(panel, cls.__name__, actionObj)
-                toolNames.append(cls.__name__)
-                toolTitles[cls.__name__] = name
+            # Plugin-provided tools, which are created
+            # by the ViewPanel and added as attributes
+            # to itself (see ViewPanel.__loadPlugins)
+            pluginTools = plugins.listTools(vpType)
+
+            # ViewPanel.toolOrder can suggest an
+            # ordering of plugin-provided tools.
+            toolOrder = vpType.toolOrder()
+            if len(pluginTools) > 0 and toolOrder is not None:
+                names, clss = zip(*pluginTools.items())
+                toolOrder   = [plugins.lookupTool(t) for t in toolOrder]
+                indices     = [toolOrder.index(c) if c in toolOrder
+                               else len(pluginTools) for c in clss]
+                pluginTools = sorted(zip(indices, names, clss))
+                pluginTools = {t[1] : t[2] for t in pluginTools}
+
+            # See ViewPanel.__loadPlugins. All supported tools
+            # are added as attributes to the ViewPanel instance
+            # when it is created, with the class name used as
+            # the attribute name.
+            for toolName, cls in pluginTools.items():
+                name = cls.__name__
+                toolNames.append(name)
+                toolTitles[name] = toolName
 
             # Only the first panel for each type
             # has its tools added to the menu.

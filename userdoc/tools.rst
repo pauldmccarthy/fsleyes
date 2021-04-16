@@ -1,3 +1,6 @@
+.. |export_data_series_icon| image:: images/export_data_series_icon.png
+.. |camera_icon|             image:: images/camera_icon.png
+
 .. _tools:
 
 Tools
@@ -96,7 +99,7 @@ Project image onto surface
 
 
 This tool is available when the currently selected overlay is a `mesh
-<overlays_mesh>`. If you have an image with some data that you would like
+<overlays_mesh>`_. If you have an image with some data that you would like
 displayed on the mesh, you can select this option to project the volumetric
 data from the image onto the surface of the mesh. The image and the mesh
 are assumed to be aligned in the display coordinate system
@@ -187,6 +190,46 @@ the section on :ref:`FLIRT/affine transformations
 Once you are happy with your adjustments, click the **Apply** button to apply
 it to the image. You may then need to save the image to file, to make your
 adjustments permanent.
+
+
+.. _tools_sample_line:
+
+Sample along line
+^^^^^^^^^^^^^^^^^
+
+
+The **Sample along line** tool allows you to plot data along a straight line
+through a 3D NIFTI image.
+
+
+.. image:: images/tools_sample_line.png
+   :width: 75%
+   :align: center
+
+After opening the *Sample along line* dialog, simply click and drag across
+one of the ortho view canvases. When you release the mouse button, the voxel
+intensities from the currently selected image are sampled and plotted.
+
+
+If you draw another line, the data is discarded, and values from the new line
+are sampled and plotted. The + button allows you to save the current data so
+that it is kept on the plot, which allows you to plot data from multiple
+lines. The - button will discard the most recently saved data.
+
+
+The controls on the *Sample along line* dialog allow you to control some
+properties of the most recently plotted data. You can change some display
+settings, interpolation, resolution (number of sample points taken along the
+line), and whether to normalise the data. By default, the Y axis displays
+voxel intensities from the sampled image, and the X axis shows the position
+along the line (typically millimetres). If you are plotting data from
+different lines, you may find it useful to normalise the data along either the
+X or Y axes, or to normalise along both axes.
+
+
+Finally, the |camera_icon| button allows you to save the current plot as an
+image (e.g. `.png`), and the |export_data_series_icon| button allows you to
+save the data from one sample line to a plain text file.
 
 
 .. _tools_seed_correlation:
