@@ -28,7 +28,6 @@ import               webbrowser
 import               wx
 import jinja2     as j2
 
-import fsleyes_widgets                as fwidgets
 import fsleyes_widgets.utils.progress as progress
 import fsleyes_widgets.utils.status   as status
 import fsl.utils.settings             as settings
@@ -40,8 +39,8 @@ import fsleyes.main                   as fsleyes_main
 import fsleyes.strings                as strings
 import fsleyes.actions.screenshot     as screenshot
 
-from . import                            base
-from . import                            runscript
+import fsleyes.actions.base           as base
+import fsleyes.actions.runscript      as runscript
 
 try:
     import                            zmq
@@ -212,7 +211,7 @@ class NotebookAction(base.Action):
         return server
 
 
-class BackgroundIPythonKernel(object):
+class BackgroundIPythonKernel:
     """The BackgroundIPythonKernel creates an IPython jupyter kernel and makes
     it accessible over tcp (on the local machine only).
 
@@ -601,15 +600,7 @@ class NotebookServer(threading.Thread):
         # in a sub-process - we run the server
         # via a wrapper function called nbmain,
         # defined below.
-        #
-        # But with frozen FSLeyes versions, we
-        # can't just call a python interpreter,
-        # so we use a hook in fsleyes.main to
-        # call actions.notebook_main.main.
-        if fwidgets.frozen():
-            cmd = [op.join(op.dirname(sys.executable), 'fsleyes')]
-        else:
-            cmd = [sys.executable, fsleyes_main.__file__]
+        cmd = [sys.executable, fsleyes_main.__file__]
 
         # py2app manipulates the PYTHONPATH,
         # so we pass the cfgdir through as a

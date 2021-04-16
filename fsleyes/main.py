@@ -235,8 +235,8 @@ def main(args=None):
     fsleyes.initialise()
 
     # Hook which allows us to run a jupyter
-    # notebook server from a frozen version
-    # of FSLeyes
+    # notebook server from an existing FSLeyes
+    # instance
     if len(args) >= 1 and args[0] == 'notebook':
         from fsleyes.actions.notebook import nbmain
         fsleyes.configLogging()
@@ -556,36 +556,6 @@ def initialise(splash, namespace, callback):
     # The save/load directory defaults
     # to the current working directory.
     curDir = op.normpath(os.getcwd())
-
-    # But if we are running as a frozen application, check to
-    # see if FSLeyes has been started by the system (e.g.
-    # double-clicking instead of being called from the CLI).
-    #
-    # If so, we set the save/load directory
-    # to the user's home directory instead.
-    if fwidgets.frozen():
-
-        fsleyesDir = op.dirname(__file__)
-
-        # If we're a frozen OSX application,
-        # we need to adjust the FSLeyes dir
-        # (which will be:
-        #   [install_dir]/FSLeyes.app/Contents/MacOS/fsleyes/),
-        #
-        # Because the cwd will default to:
-        #   [install_dir]/
-
-        if fslplatform.os == 'Darwin':
-
-            fsleyesDir = op.normpath(op.join(fsleyesDir,
-                                             '..', '..', '..', '..'))
-
-        # Similar adjustment for linux
-        elif fslplatform.os == 'Linux':
-            fsleyesDir = op.normpath(op.join(fsleyesDir, '..'))
-
-        if curDir == fsleyesDir:
-            curDir = op.expanduser('~')
 
     fslsettings.write('loadSaveOverlayDir', curDir)
 
