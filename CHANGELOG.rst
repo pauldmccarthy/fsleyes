@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-0.35.0 (Under development)
---------------------------
+1.0.0 (Under development)
+-------------------------
 
 
 Added
