@@ -72,14 +72,16 @@ class ToggleControlPanelAction(base.ToggleAction):
         self.__viewPanel = viewPanel
         self.__cpType    = cpType
 
-        auiMgr = viewPanel.auiManager
-
-        # WTF. The AuiManager does not post an event
-        #      when a pane is added - only when one
-        #      is closed. So I have to listen for
-        #      whenever the perspective changes. This
-        #      includes sash resizes :(
-        auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED, self.__viewPanelChanged)
+        # Listen for changes to the view panel layout
+        # so we can detect when the user closes our
+        # control panel. The granularity of AuiManager
+        # event notifications is somewhat coarse, so
+        # this callback will be called whenever the
+        # perspective changes. This includes sash
+        # resizes :(
+        viewPanel.events.register(self.name,
+                                  self.__viewPanelChanged,
+                                  topic='aui_perspective')
 
 
     def __togglePanel(self, *args, **kwargs):
@@ -105,20 +107,23 @@ class ToggleControlPanelAction(base.ToggleAction):
         if self.destroyed:
             return
 
-        base.ToggleAction.destroy(self)
-
-        self.__viewPanel.auiManager.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
+        if not self.__viewPanel.destroyed:
+            self.__viewPanel.events.deregister(
+                self.name, topic='aui_perspective')
         self.__viewPanel = None
 
+        base.ToggleAction.destroy(self)
 
-    def __viewPanelChanged(self, ev):
+
+    def __viewPanelChanged(self, *a):
         """Called whenever a control panel is added to/removed from the
         :class:`.ViewPanel` that owns this ``ToggleControlPanelAction``.
         Updates the :attr:`.ToggleAction.toggled` attribute of this action.
         """
-        ev.Skip()
+
+        if self.destroyed:
+            return
 
         controlPanels = self.__viewPanel.getPanels()
         controlPanels = [type(cp) for cp in controlPanels]
-
         self.toggled = self.__cpType in controlPanels

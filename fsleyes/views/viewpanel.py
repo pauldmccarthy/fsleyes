@@ -178,10 +178,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__panels      = {}
 
         # Notifier instance for emitting events.
-        # Currently the only event is on profile
-        # changes, and the profilemanager emits
-        # these events anyway, so we can just
-        # use it
+        # Currently only two events are emitted
+        # - one of them is profile changes, and
+        # the profilemanager emits these events
+        # anyway, so we can just use it. As for
+        # the other event (aui layout changes),
+        # well, we're being a bit dodgy and
+        # emitting these events via the
+        # profilemanager.
         self.__events = self.__profileManager
 
         # See note in FSLeyesFrame about
@@ -195,7 +199,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                       aui.AUI_MGR_LIVE_RESIZE))
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
-        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
+        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE,
+                           self.__onPaneClose)
+        self.__auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED,
+                           self.__onPerspectiveChange)
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -262,37 +269,32 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         calls :meth:`.FSLeyesPanel.destroy`.
         """
 
+        # Order of operations is important. For example,
+        # FSLeyesPanel.destroy will result in all Actions
+        # associated with this ViewPanel being destroyed,
+        # and their destroy routines may interact with
+        # this ViewPanel.
+
+        # remove listeners from overlaylist and display context
+        lName = 'ViewPanel_{}'.format(self.name)
+        self.overlayList.removeListener('overlays',        lName)
+        self.displayCtx .removeListener('selectedOverlay', lName)
+
+        fslpanel.FSLeyesPanel.destroy(self)
+
         # Make sure that any control panels are correctly destroyed
         for panel in self.__panels.values():
             self.__auiMgr.DetachPane(panel)
             panel.destroy()
-
-        # Clear ref to the events Notifier - it
-        # will drop refs to any event handlers
-        self.__events = None
-
-        # Remove listeners from the overlay
-        # list and display context
-        lName = 'ViewPanel_{}'.format(self.name)
-
-        self.overlayList.removeListener('overlays',        lName)
-        self.displayCtx .removeListener('selectedOverlay', lName)
 
         # Disable the  ProfileManager
         self.__profileManager.destroy()
 
         # Un-initialise the AUI manager
         self.__auiMgr.Unbind(aui.EVT_AUI_PANE_CLOSE)
+        self.__auiMgr.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
         self.__auiMgr.Update()
         self.__auiMgr.UnInit()
-
-        # The ToggleControlPanelAction (which is used
-        # to keep toggle buttons/menu items in sync
-        # with reality) interacts with the AUI
-        # manager. These actions will be destroyed
-        # via FSLeyesPanel.destroy, so we don't clear
-        # the auimgr ref until afterwards.
-        fslpanel.FSLeyesPanel.destroy(self)
 
         # The AUI manager does not clear its
         # reference to this panel, so let's
@@ -302,17 +304,26 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr         = None
         self.__panels         = None
         self.__centrePanel    = None
+        self.__events         = None
 
 
     @property
-    def events(self):
+    def events(self) -> notifier.Notifier:
         """Return a reference to a :class:`.Notifier` instance which can be
-        used to be notified when certain events occur. Currently the only
-        event topic which occurs is ``'profile'``, when the current
-        interaction profile changes. Callbacks which are registered with
-        the ``'profile'`` topic will be passed a tuple containing the types
-        (:class:`.Profile` sub-classes) of the de-registered and newly
-        registered profiles.
+        used to be notified when certain events occur. Currently the following
+        events are emitted:
+
+         - ``'profile'``, when the current interaction profile changes.
+           Callbacks which are registered with the ``'profile'`` topic will
+           be passed a tuple containing the types (:class:`.Profile`
+           sub-classes) of the de-registered and newly registered profiles.
+
+         - ``'aui_perspective'``, when the AUI-managed layout changes, e.g.
+           sash resizes, control panels added/removed, etc. This event is
+           emitted whenever the ``AuiManager`` emits a
+           ``EVT_AUI_PERSPECTIVE_CHANGED`` event. It is re-emitted via the
+           :class:`.Notifer` interface so that non-wx entities can be
+           notified (see e.g. the :class:`.ToggleControlPanelAction`).
         """
         return self.__events
 
@@ -880,6 +891,15 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)
+
+
+    def __onPerspectiveChange(self, ev):
+        """Called on ``EVT_AUI_PERSPECTIVE_CHANGED`` events. Re-emits the
+        event via the :meth:`events` notifier, with topic ``'aui_perspective'``.
+        This is performed for the benefit of non-wx entities which need to
+        know about layout changes.
+        """
+        self.events.notify(topic='aui_perspective')
 
 
 class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
