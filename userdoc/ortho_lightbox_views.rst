@@ -13,6 +13,7 @@
 .. |reset_zoom_icon|  image:: images/reset_zoom_icon.png
 .. |spanner_icon|     image:: images/spanner_icon.png
 .. |floppy_icon|      image:: images/floppy_icon.png
+.. |folder_icon|      image:: images/folder_icon.png
 .. |camera_icon|      image:: images/camera_icon.png
 
 .. _ortho_lightbox_views:
@@ -26,6 +27,7 @@ and the *lightbox* view.
 
 
 .. _ortho_lightbox_views_ortho:
+
 
 Ortho view
 ----------
@@ -337,6 +339,44 @@ Clicking on a location will take you back to that location. You can also
 double-click on an entry to add a comment about that location. You can save
 the location history out to a text file, and load in a previously saved
 history using the buttons along the top.
+
+
+.. _ortho_lightbox_views_annotations:
+
+Annotations
+-----------
+
+The ortho view allows you to add *annotations* to any of its three canvases -
+you can add text and simple shapes to a scene. Opening the *Annotations* panel
+(*Settings* |right_arrow| *Ortho view* |right_arrow| *Annotations*) will add
+the annotations panel to the ortho view:
+
+
+.. image:: images/ortho_lightbox_views_annotations.png
+   :width: 75%
+   :align: center
+
+
+The buttons along the bottom allow you to choose the annotation type -
+currently you can choose from text, rectangles, lines, arrows, crosshairs and
+ellipses. After selecting the annotation type, you can click (for text and
+crosshairs), or click and drag (for rectangles, lines, arrows and ellipses) on
+an ortho canvas to add the annotation. After you have added an annotation you
+can right-click and drag on it to move it around, and you can use the controls
+on the annotation panel to adjust display settings such as colour, opacity,
+and line width.
+
+
+Each annotation that you add will appear in the annotations list. You can
+select an annotation in this list, and use the controls to adjust its display
+properties. You can also change the order in which the annotations are drawn
+by selecting an annotation and using the |up_arrow| and |down_arrow| buttons.
+The - button will remove the currently selected annotation.
+
+
+If you need to save the annotations you have drawn, you can do so using the
+|floppy_icon| button. This will save your annotations to a plain text file.
+You can load an annotation file back in via the |folder_icon| button.
 
 
 .. _ortho_lightbox_views_view_settings:
