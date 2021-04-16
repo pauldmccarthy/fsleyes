@@ -273,12 +273,11 @@ def initialise():
     assetDir   = None
     options    = []
 
-    # We are running from a code install, or from a
-    # source distribution. The assets directory is
-    # either inside, or alongside, the FSLeyes
-    # package directory.
-    else:
-        options = [op.join(fsleyesDir, '..'), fsleyesDir]
+    # The assets directory is either inside, or
+    # alongside, the FSLeyes package directory,
+    # depending on whether we are running from
+    # a code install, or from a source distribution.
+    options = [op.join(fsleyesDir, '..'), fsleyesDir]
 
     for opt in options:
         if op.exists(op.join(opt, 'assets')):
