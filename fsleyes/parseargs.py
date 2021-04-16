@@ -1694,9 +1694,9 @@ def _configMainParser(mainParser):
                             action='store_true',
                             help=mainHelp['updatecheck'])
 
-    # Debug messages are stripped from frozen
-    # versions of FSLeyes, so there's no point
-    # in keeping these arguments.
+    # disableLogging disables logging (duh),
+    # so we don't bother exposing logging-
+    # related arguments
     if not fsleyes.disableLogging:
         mainParser.add_argument(*mainArgs['verbose'],
                                 action='count',

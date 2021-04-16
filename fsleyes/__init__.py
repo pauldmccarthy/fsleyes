@@ -214,7 +214,7 @@ log = None
 
 
 # If set to True, logging will not be configured
-disableLogging = fwidgets.frozen()
+disableLogging = False
 
 
 __version__ = version.__version__
@@ -273,22 +273,11 @@ def initialise():
     assetDir   = None
     options    = []
 
-    # If we are running from a bundled
-    # application, we'll guess at the
-    # location, which will differ depending
-    # on the platform
-    if fwidgets.frozen():
-        mac = op.join(fsleyesDir, '..', '..', '..', '..', 'Resources')
-        lnx = op.join(fsleyesDir, '..', 'share', 'FSLeyes')
-        options.append(op.normpath(mac))
-        options.append(op.normpath(lnx))
-
-    # Otherwise we are running from a code install,
-    # or from a source distribution. The assets
-    # directory is either inside, or alongside, the
-    # FSLeyes package directory.
-    else:
-        options = [op.join(fsleyesDir, '..'), fsleyesDir]
+    # The assets directory is either inside, or
+    # alongside, the FSLeyes package directory,
+    # depending on whether we are running from
+    # a code install, or from a source distribution.
+    options = [op.join(fsleyesDir, '..'), fsleyesDir]
 
     for opt in options:
         if op.exists(op.join(opt, 'assets')):
@@ -309,27 +298,6 @@ def _hacksAndWorkarounds():
     # wx.html package must be imported
     # before a wx.App has been created
     import wx.html  # noqa
-
-    # PyInstaller 3.2.1 forces matplotlib to use a
-    # temporary directory for its settings and font
-    # cache, and then deletes the directory on exit.
-    # This is silly, because the font cache can take
-    # a long time to create.  Clearing the environment
-    # variable should cause matplotlib to use
-    # $HOME/.matplotlib (or, failing that, a temporary
-    # directory).
-    #
-    # https://matplotlib.org/faq/environment_variables_faq.html#\
-    #   envvar-MPLCONFIGDIR
-    #
-    # https://github.com/pyinstaller/pyinstaller/blob/v3.2.1/\
-    #   PyInstaller/loader/rthooks/pyi_rth_mplconfig.py
-    #
-    # n.b. This will cause issues if building FSLeyes
-    #      with the pyinstaller '--onefile' option, as
-    #      discussed in the above pyinstaller file.
-    if fwidgets.frozen():
-        os.environ.pop('MPLCONFIGDIR', None)
 
     # nibabel rejects NIfTI images where the
     # quaternion vector has a length greater
@@ -354,19 +322,9 @@ def _hacksAndWorkarounds():
     except ValueError:
         os.environ['LC_ALL'] = 'C.UTF-8'
 
-    # Add the current directory to the python
-    # path, so that modules can be imported
-    # from within notebook/shell environments
-    if fwidgets.frozen():
-        sys.path.insert(0, '')
-
 
 def configLogging(verbose=0, noisy=None):
     """Configures *FSLeyes* ``logging``.
-
-    .. note:: All logging calls are usually stripped from frozen
-              versions of *FSLeyes*, so this function does nothing
-              when we are running a frozen version.
 
     :arg verbose: A number between 0 and 3, indicating the verbosity level.
     :arg noisy:   A sequence of module names - logging will be enabled on these
@@ -382,11 +340,7 @@ def configLogging(verbose=0, noisy=None):
     if noisy is None:
         noisy = []
 
-    # Show deprecations if running from code
-    if fwidgets.frozen():
-        warnings.filterwarnings('ignore', category=DeprecationWarning)
-    else:
-        warnings.filterwarnings('default', category=DeprecationWarning)
+    warnings.filterwarnings('default', category=DeprecationWarning)
 
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
@@ -403,9 +357,7 @@ def configLogging(verbose=0, noisy=None):
     # Everything below this point sets up verbosity
     # as requested by the user. But verbosity-related
     # command line arguments are not exposed to the
-    # user in frozen versions of FSLeyes, so if we're
-    # running as a frozen app, there's nothing else
-    # to do.
+    # user if disableLogging is set.
     if disableLogging:
         return
 
