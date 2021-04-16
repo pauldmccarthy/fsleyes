@@ -126,6 +126,7 @@ Some additional shortcuts are available within ortho views.
 ================================= =====================================
 Shortcut                          Action
 ================================= =====================================
+|command_key| + |alt_key| + ``a`` Open/close annotations panel
 |alt_key| + ``e``                 Toggle edit mode
 |alt_key| + ``r``                 Reset zoom/pan
 |alt_key| + ``c``                 Reset location to centre
