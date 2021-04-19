@@ -10,7 +10,8 @@
 #
 #    2. style:     Check coding style
 #
-#    3. doc:       Building user and API documentation (upstream only)
+#    3. doc:       Building/uploading user and API documentation using
+#                  GitLab Pages.
 #
 #    4. build:     Building source and wheel distributions for
 #                  releases (tags on upstream only)
@@ -29,13 +30,12 @@
 # The test and style stages are executed on all branches of upstream and
 # fork repositories.
 #
-# The doc stage executed on all branches of the upastream repository.
-
+# The doc stage executed on release branches of the upstream repository.
+#
 # The build and deploy stages are only executed on release tags on
 # the upstream repository.
 #
 # Source and wheel distributions are deployed to pypi for release tags.
-#
 ###########################################################################
 
 
@@ -61,22 +61,8 @@ stages:
 #   - SSH_PRIVATE_KEY_GIT            - private key for git login to remote host
 #                                      (UPSTREAM_URL)
 #
-#   - SSH_PRIVATE_KEY_APIDOC_DEPLOY  - private key for rsyncing documentation
-#                                      to remote host (APIDOC_HOST)
-#
-#   - SSH_PRIVATE_KEY_USERDOC_DEPLOY - private key for rsyncing documentation
-#                                      to remote host (USERDOC_HOST)
-#
 #   - SSH_PRIVATE_KEY_FSL_DOWNLOAD   - private key for downloading some FSL
 #                                      files from a remote server (FSL_HOST)
-#
-#   - APIDOC_HOST:                   - Username@host to upload API
-#                                      documentation to (e.g.
-#                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
-#
-#   - USERDOC_HOST:                  - Username@host to upload user
-#                                      documentation to (e.g.
-#                                      "paulmc@jalapeno.fmrib.ox.ac.uk")
 #
 #   - FSL_HOST:                      - Username@host to download FSL data from
 #                                      (e.g. "paulmc@jalapeno.fmrib.ox.ac.uk")
@@ -117,6 +103,11 @@ variables:
 .only_master: &only_master
   only:
     - master@fsl/fsleyes/fsleyes
+
+
+.only_release_branches: &only_release_branches
+  only:
+    - /^v.+$/@fsl/fsleyes/fsleyes
 
 
 .only_releases: &only_releases
@@ -216,7 +207,7 @@ test:3.9:
 
 test:build-pypi-dist:
   stage: test
-  image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
   <<: *except_releases
 
   tags:
@@ -234,49 +225,33 @@ test:build-pypi-dist:
 
 style:
   stage: style
-  image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
   <<: *test_template
   variables:
     TEST_STYLE: "true"
 
 
-###########
-# Doc stage
-###########
+#############
+# Pages stage
+#############
 
 
-.build_doc: &build_doc
-  <<: *only_upstream
+pages:
+  <<: *only_release_branches
 
   tags:
     - docker
 
   stage: doc
-  image: python:3.7
-
-
-build-userdoc:
-  <<: *build_doc
+  image: python3.7
 
   script:
     - bash ./.ci/build_userdoc.sh
-
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - userdoc/$CI_COMMIT_REF_NAME
-
-
-build-apidoc:
-  <<: *build_doc
-
-  script:
     - bash ./.ci/build_apidoc.sh
 
   artifacts:
-    expire_in: 1 day
     paths:
-      - apidoc/$CI_COMMIT_REF_NAME
+      - public
 
 
 #############
@@ -288,7 +263,7 @@ build-pypi-dist:
   <<: *only_releases
 
   stage: build
-  image: pauldmccarthy/fsleyes-py36-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
 
   tags:
     - docker
@@ -311,24 +286,6 @@ build-pypi-dist:
 ##############
 # Deploy stage
 ##############
-
-
-deploy-doc:
-  <<: *only_upstream
-  <<: *setup_ssh
-  stage: deploy
-  when:  manual
-  image: python:3.7
-
-  tags:
-    - docker
-
-  dependencies:
-    - build-userdoc
-    - build-apidoc
-
-  script:
-    - bash ./.ci/deploy_doc.sh
 
 
 deploy-pypi:
