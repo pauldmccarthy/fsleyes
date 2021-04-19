@@ -225,6 +225,7 @@ import numpy as np
 
 import fsleyes_props      as props
 import                       fsleyes
+import fsl.version        as fslversion
 import fsl.utils.settings as fslsettings
 import fsl.utils.notifier as notifier
 import fsl.data.vest      as vest
@@ -544,6 +545,7 @@ def registerColourMap(cmapFile,
     :returns:         The key that the ``ColourMap`` was registered under.
     """
 
+    import matplotlib        as mpl
     import matplotlib.cm     as mplcm
     import matplotlib.colors as colors
 
@@ -563,7 +565,14 @@ def registerColourMap(cmapFile,
     log.debug('Loading and registering custom '
               'colour map: {}'.format(cmapFile))
 
-    mplcm.register_cmap(key, cmap)
+    # matplotlib 3.3.4 and newer will raise an error
+    # when trying to register a colour map with the
+    # same name as a built-in, unless override_builtin
+    # (also added in that version) is set to True.
+    if fslversion.compareVersions(mpl.__version__, '3.3.4') > 0:
+        mplcm.register_cmap(key, cmap, override_builtin=True)
+    else:
+        mplcm.register_cmap(key, cmap)
 
     _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
 
