@@ -233,6 +233,7 @@ def main():
         author='Paul McCarthy',
         author_email='pauldmccarthy@gmail.com',
         license='Apache License Version 2.0',
+        python_requires='>=3.7',
 
         classifiers=[
             'Development Status :: 3 - Alpha',
