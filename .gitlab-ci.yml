@@ -243,7 +243,7 @@ pages:
     - docker
 
   stage: doc
-  image: python3.7
+  image: python:3.7
 
   script:
     - bash ./.ci/build_userdoc.sh
