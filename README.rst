@@ -71,6 +71,11 @@ following versions:
 Documentation
 -------------
 
+The FSLeyes user and API documentation are hosted at:
+
+ - https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/
+ - https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/
+
 
 The FSLeyes user and API documentation is written in ReStructuredText, and can
 be built using `sphinx <http://www.sphinx-doc.org/>`_::
