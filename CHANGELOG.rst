@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.1 (Tuesday 20th April 2021)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a compatibility issue with recent versions of matplotlib.
+
+
 1.0.0 (Monday 19th April 2021)
 ------------------------------
 
