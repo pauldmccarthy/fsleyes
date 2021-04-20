@@ -204,6 +204,17 @@ Tool    = Type[actions.Action]
 Plugin  = Union[View, Control, Tool]
 
 
+def class_defines_method(cls, methname):
+    """Check to see whether ``methname`` is implemented on ``cls``, and not
+    on a base-class.
+
+    :meth:`.Action.ignoreTool`, :meth:`.ControlMixin.ignoreControl`, and
+    :meth:`.ControlMixin.supportSubClasses` need to be implemented on the
+    specific class - inherited base class implementations are not considered.
+    """
+    return methname in cls.__dict__
+
+
 def initialise():
     """Loads all plugins, including built-ins, plugin files in the FSLeyes
     settings directory, and those found on the ``FSLEYES_PLUGIN_PATH``
@@ -307,12 +318,25 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
             ctrls.pop(name)
             continue
 
+        # views that this control supports - might be None,
+        # in which case the control is assumed to support
+        # all views.
         supported = cls.supportedViews()
+
+        # does the control support sub-classes of the
+        # views that it supports, or only the specific
+        # view classes returned by supportedViews?
+        subclassok = True
+        if class_defines_method(cls, 'supportSubClasses'):
+            subclassok = cls.supportSubClasses()
+
         if viewType  is not None and \
-           supported is not None and \
-           not issubclass(viewType, tuple(supported)):
-            ctrls.pop(name)
-            continue
+           supported is not None:
+            if subclassok:
+                if not issubclass(viewType, tuple(supported)):
+                    ctrls.pop(name)
+            elif viewType not in supported:
+                ctrls.pop(name)
     return ctrls
 
 
@@ -398,12 +422,6 @@ def _findEntryPoints(mod            : ModuleType,
     """
 
     entryPoints = collections.defaultdict(dict)
-
-    # Action.ignoreTool and ControlMixin.ignoreControl need
-    # to be implemented on the specific class - inherited
-    # base class implementations are not considered.
-    def class_defines_method(cls, methname):
-        return methname in cls.__dict__
 
     for name in dir(mod):
 
