@@ -69,6 +69,8 @@ mesh_ref mesh_l_thal.vtk -mc 0 1 0 -r mesh_ref -a 50
 -hl -z 50 -c 10 -bg 0.2 0.2 0.2 3d.nii.gz
 
 -ixh -ixv -iyh -iyv -izh -izv 3d.nii.gz
+
+-a annotations.txt 3d
 """
 
 
