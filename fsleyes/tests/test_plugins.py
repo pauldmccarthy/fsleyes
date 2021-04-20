@@ -22,6 +22,8 @@ import fsl.utils.tempdir  as tempdir
 import fsl.utils.settings as fslsettings
 import fsleyes.plugins    as plugins
 
+from fsleyes.tests import run_with_fsleyes, realYield
+
 
 plugindirs = ['fsleyes_plugin_example', 'fsleyes_plugin_bad_example']
 plugindirs = [op.join(op.dirname(__file__), 'testdata', d) for d in plugindirs]
@@ -156,3 +158,25 @@ def test_initialise():
             assert ctrls['Plugin2Control'] is p2.Plugin2Control
             assert tools['Plugin1Tool']    is p1.Plugin1Tool
             assert tools['Plugin2Tool']    is p2.Plugin2Tool
+
+
+
+
+def test_runPlugin():
+    plugins.initialise()
+    run_with_fsleyes(_test_runPlugin)
+
+
+def _test_runPlugin(frame, overlayList, displayCtx):
+    with tempdir.tempdir(changeto=False) as td:
+        with open(op.join(td, 'test_loadplugin.py'), 'wt') as f:
+            f.write(code.format(prefix='Run'))
+
+        plugins.loadPlugin(op.join(td, 'test_loadplugin.py'))
+
+        mod  = sys.modules['fsleyes_plugin_test_loadplugin']
+        view = frame.addViewPanel(mod.RunView, title='View')
+        realYield()
+        ctrl = view.togglePanel(mod.RunControl)
+        realYield()
+        mod.RunTool(overlayList, displayCtx, frame)()
