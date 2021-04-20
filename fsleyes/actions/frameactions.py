@@ -23,7 +23,6 @@ from   fsleyes.frame import FSLeyesFrame
 def addViewPanel(self, vpType, **kwargs):
     """Function shared by the add*Panel functions below. """
     vp = self.addViewPanel(vpType, **kwargs)
-    self.viewPanelDefaultLayout(vp)
     vp.SetFocus()
     return vp
 
