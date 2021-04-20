@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.2 (Tuesday 20th April 2021)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed some issues with FSLeyes plugin management.
+* Fixed some issues with GL initialisations on GTK2 versions of ``wxpython``.
+
+
 1.0.1 (Tuesday 20th April 2021)
 -------------------------------
 
