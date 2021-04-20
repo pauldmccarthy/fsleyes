@@ -423,7 +423,8 @@ OPTIONS = td.TypeDict({
                        'fontSize',
                        'notebook',
                        'notebookFile',
-                       'notebookPort'],
+                       'notebookPort',
+                       'annotations'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -770,6 +771,7 @@ ARGUMENTS = td.TypeDict({
     'Main.notebook'            : ('nb',      'notebook',            False),
     'Main.notebookFile'        : ('nbf',     'notebookFile',        True),
     'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
+    'Main.annotations'         : ('a',       'annotations',         True),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -1018,6 +1020,9 @@ HELP = td.TypeDict({
     'Main.notebookFile'     : 'Start the Jupyter notebook server and open '
                               'the specified notebook file.',
     'Main.notebookPort'     : 'Jupyter notebook server port',
+    'Main.annotations'      :
+    'Load annotations from file (only applied to ortho views)',
+
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -1775,6 +1780,9 @@ def _configMainParser(mainParser):
                             type=int,
                             help=mainHelp['notebookPort'],
                             default=8888)
+    mainParser.add_argument(*mainArgs['annotations'],
+                            type=str,
+                            help=mainHelp['annotations'])
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):

@@ -746,13 +746,15 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
     :returns: the :class:`.FSLeyesFrame` that was created.
     """
 
-    import fsl.utils.idle               as idle
-    import fsleyes_widgets.utils.status as status
-    import fsleyes.parseargs            as parseargs
-    import fsleyes.frame                as fsleyesframe
-    import fsleyes.displaycontext       as fsldisplay
-    import fsleyes.layouts              as layouts
-    import fsleyes.views.canvaspanel    as canvaspanel
+    import fsl.utils.idle                        as idle
+    import fsleyes_widgets.utils.status          as status
+    import fsleyes.parseargs                     as parseargs
+    import fsleyes.frame                         as fsleyesframe
+    import fsleyes.displaycontext                as fsldisplay
+    import fsleyes.layouts                       as layouts
+    import fsleyes.views.canvaspanel             as canvaspanel
+    import fsleyes.views.orthopanel              as orthopanel
+    import fsleyes.plugins.tools.saveannotations as saveannotations
 
     # Set up the frame scene (a.k.a. layout)
     # The scene argument can be:
@@ -840,6 +842,18 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
 
         parseargs.applySceneArgs(
             namespace, overlayList, displayCtx, viewOpts)
+
+    # If an annotations file has eben specified,
+    # and an ortho view was opened, load the
+    # annotations file, and apply it to the
+    # first ortho view
+    orthos = [vp for vp in viewPanels if isinstance(vp, orthopanel.OrthoPanel)]
+    if namespace.annotations is not None and len(orthos) > 0:
+        try:
+            saveannotations.loadAnnotations(orthos[0], namespace.annotations)
+        except Exception as e:
+            log.warning('Error loading annotations from %s: %s',
+                        namespace.annotations, e, exc_info=True)
 
     # If a script has been specified, we run
     # the script. This has to be done on the
