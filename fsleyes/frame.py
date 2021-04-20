@@ -16,6 +16,8 @@ import functools as ft
 import itertools as it
 import              logging
 
+from typing import Type
+
 import wx
 import wx.lib.agw.aui               as aui
 
@@ -29,6 +31,7 @@ import fsleyes.strings              as strings
 import fsleyes.plugins              as plugins
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.profiles.shortcuts   as shortcuts
+import fsleyes.views.viewpanel      as viewpanel
 import fsleyes.actions              as actions
 import fsleyes.tooltips             as tooltips
 import fsleyes.layouts              as layouts
@@ -369,8 +372,6 @@ class FSLeyesFrame(wx.Frame):
         if len(self.viewPanels) == 0:
             return None
 
-        import fsleyes.views.viewpanel as viewpanel
-
         focused = wx.Window.FindFocus()
 
         while focused is not None:
@@ -459,15 +460,24 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
 
 
-    def addViewPanel(self, panelCls, title=None, **kwargs):
+    def addViewPanel(
+            self,
+            panelCls      : Type[viewpanel.ViewPanel],
+            title         : str  = None,
+            defaultLayout : bool = True,
+            **kwargs) -> viewpanel.ViewPanel:
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
 
-        :arg panelCls: The :class:`.ViewPanel` type to be added.
+        :arg panelCls:      The :class:`.ViewPanel` type to be added.
 
-        :arg title: Title to give the view. If not provided, it is assumed
-                    that a name is present for the view type in
-                    :attr:`.strings.titles`.
+        :arg title:         Title to give the view. If not provided, it is
+                            assumed that a name is present for the view type
+                            in :attr:`.strings.titles`.
+
+        :arg defaultLayout: If ``True`` (the default),
+                            :meth:`viewPanelDefaultLayout` is called, to add
+                            a default set of control panels to the view.
 
         :returns: The newly created ``ViewPanel``.
 
@@ -566,10 +576,13 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
         self.__enableMenus(True)
 
+        if defaultLayout:
+            self.viewPanelDefaultLayout(panel)
+
         return panel
 
 
-    def viewPanelDefaultLayout(self, viewPanel):
+    def viewPanelDefaultLayout(self, viewPanel : viewpanel.ViewPanel):
         """After a :class:`.ViewPanel` is added via the view menu, this method
         is called to perform some basic initialisation on the panel. This
         basically amounts to adding toolbars.

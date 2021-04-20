@@ -140,7 +140,7 @@ def applyLayout(frame, name, layout, message=None):
     # specified in the layout
     for vp in frameChildren:
         log.debug('Adding view panel {} to frame'.format(vp.__name__))
-        frame.addViewPanel(vp)
+        frame.addViewPanel(vp, defaultLayout=False)
 
     # Apply the layout to those view panels
     frame.auiManager.LoadPerspective(frameLayout)
