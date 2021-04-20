@@ -69,6 +69,21 @@ class ControlMixin:
 
 
     @staticmethod
+    def supportSubClasses():
+        """May be overridden by sub-classes. If this control panel is intended
+        for use with specific views, via the :meth:`supportedViews` method,
+        this method specifies whether sub-classes of the :meth:`supportedViews`
+        are supported (the default), or whether only the specific classes in
+        :meth:`supportedViews` are supported.
+
+        Note that this method must be implemented on the specific control
+        class that wishes to use it - it is not considered if implemented in a
+        base classe.
+        """
+        return True
+
+
+    @staticmethod
     def defaultLayout():
         """Return default options for :meth:`.ViewPanel.togglePanel`.
 

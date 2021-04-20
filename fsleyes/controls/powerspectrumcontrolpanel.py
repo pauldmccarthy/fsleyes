@@ -34,6 +34,15 @@ class PowerSpectrumControlPanel(plotcontrol.PlotControlPanel):
 
 
     @staticmethod
+    def supportSubClasses():
+        """Overrides :meth:`.ControlPanel.supportSubClasses`. Returns
+        ``False`` - the ``PowerSpectrumToolBar`` is only intended to be
+        used with the :class:`.PowerSpectrumPanel`.
+        """
+        return False
+
+
+    @staticmethod
     def defaultLayout():
         """Returns a dictionary containing layout settings to be passed to
         :class:`.ViewPanel.togglePanel`.
