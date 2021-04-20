@@ -32,42 +32,27 @@ class ToggleControlPanelAction(base.ToggleAction):
     def __init__(self,
                  overlayList,
                  displayCtx,
+                 viewPanel,
                  cpType,
-                 instance,
                  func=None,
-                 name=None,
-                 ismethod=False):
+                 name=None):
         """Create a ``ToggleControlPanelAction``.
 
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext`
-
-        :arg instance:    The :class:`.ViewPanel` instance.
+        :arg viewPanel:   The :class:`.ViewPanel` instance.
         :arg cpType:      The type of the control panel being managed by this
                           ``ToggleControlPanelAction``.
         :arg func:        The function which toggles the control panel. If
                           not provided, a default function is used.
         :arg name:        Name of this action - defaults to ``func.__name__``.
-        :arg ismethod:    Defaults to ``False``. If ``True``, it is assumed
-                          that this action encapsulates a method of the
-                          ``viewPanel`` instance, which will be passed as the
-                          first argument when the action is called. This should
-                          not need to be used by anything other than the
-                          :func:`.toggleControlPanelAction` decorator.
         """
-
-        # We do this dance because the ActionFactory
-        # passes instance as a kwarg
-        viewPanel = instance
-
-        if ismethod: instance = viewPanel
-        else:        instance = None
 
         if func is None:
             func = self.__togglePanel
 
         base.ToggleAction.__init__(
-            self, overlayList, displayCtx, func, instance=instance, name=name)
+            self, overlayList, displayCtx, func, name=name)
 
         self.__viewPanel = viewPanel
         self.__cpType    = cpType

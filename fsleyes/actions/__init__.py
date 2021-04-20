@@ -133,8 +133,7 @@ def toggleControlAction(*args, **kwargs):
     """A decorator which identifies a class method as a
     :class:`.ToggleControlPanelAction`.
     """
-    return ActionFactory(
-        ToggleControlPanelAction, *args, ismethod=True, **kwargs)
+    return ActionFactory(ToggleControlPanelAction, *args, **kwargs)
 
 
 class ActionProvider:
@@ -236,9 +235,10 @@ class ActionProvider:
 
 
 class ActionFactory:
-    """The ``ActionFactory`` is used by the :func:`action` and
-    :func:`toggleAction` decorators. Its job is to create :class:`Action`
-    instances for :class:`ActionProvider` instances.
+    """The ``ActionFactory`` is used by the :func:`action`,
+    :func:`toggleAction`, and :func:`toggleControlPanelAction` decorators.
+    Its job is to create :class:`Action` instances for :class:`ActionProvider`
+    instances.
 
 
     .. warning:: This class contains difficult-to-understand code. Read up
@@ -354,9 +354,9 @@ class ActionFactory:
         """
 
         if self.__func is not None:
-            log.warn('ActionFactory.__call__ was called, but function is '
-                     'alreday set ({})! I\'m really confused.'.format(
-                         self.__func.__name__))
+            log.warning('ActionFactory.__call__ was called, but function is '
+                        'alreday set (%s)! I\'m really confused.',
+                        self.__func.__name__)
 
         self.__func = func
         return self
@@ -377,13 +377,20 @@ class ActionFactory:
 
         else:
 
+            # first argument will be the
+            # instance (the "self" argument)
+            func = functools.partial(self.__func, instance)
+            func = functools.update_wrapper(func, self.__func)
+
+            args = [instance.overlayList, instance.displayCtx]
+            if self.__actionType is ToggleControlPanelAction:
+                args.append(instance)
+
             # Create an Action for the instance
             action = self.__actionType(
-                instance.overlayList,
-                instance.displayCtx,
+                *args,
                 *self.__args,
-                func=self.__func,
-                instance=instance,
+                func=func,
                 **self.__kwargs)
 
             # and replace this ActionFactory

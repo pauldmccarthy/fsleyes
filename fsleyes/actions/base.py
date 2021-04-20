@@ -104,7 +104,6 @@ class Action(props.HasProperties):
                  overlayList,
                  displayCtx,
                  func,
-                 instance=None,
                  name=None):
         """Create an ``Action``.
 
@@ -115,9 +114,6 @@ class Action(props.HasProperties):
                           master :class:`.DisplayContext`.
 
         :arg func:        The action function.
-
-        :arg instance:    Object associated with the function, if this
-                          ``Action`` is encapsulating an instance method.
 
         :arg name:        Action name. Defaults to ``func.__name__``.
 
@@ -131,7 +127,6 @@ class Action(props.HasProperties):
 
         self.__overlayList  = overlayList
         self.__displayCtx   = displayCtx
-        self.__instance     = instance
         self.__func         = func
         self.__name         = '{}_{}'.format(type(self).__name__, id(self))
         self.__actionName   = name
@@ -183,14 +178,6 @@ class Action(props.HasProperties):
         return self.__displayCtx
 
 
-    @property
-    def instance(self):
-        """Return the instance which owns this ``Action``, if relevant.
-        Returns ``None`` otherwise.
-        """
-        return self.__instance
-
-
     def __call__(self, *args, **kwargs):
         """Calls this action. An :exc:`ActionDisabledError` will be raised
         if :attr:`enabled` is ``False``.
@@ -200,12 +187,7 @@ class Action(props.HasProperties):
             raise ActionDisabledError('Action {} is disabled'.format(
                 self.__name))
 
-        log.debug('Action {}.{} called'.format(
-            type(self.__instance).__name__,
-            self.__name))
-
-        if self.__instance is not None:
-            args = [self.__instance] + list(args)
+        log.debug('Action %s called', self.__name)
 
         return self.__func(*args, **kwargs)
 
@@ -225,7 +207,6 @@ class Action(props.HasProperties):
         self.__overlayList = None
         self.__displayCtx  = None
         self.__func        = None
-        self.__instance    = None
 
 
     def bindToWidget(self, parent, evType, widget, wrapper=None):
