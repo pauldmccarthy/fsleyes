@@ -478,7 +478,9 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.views.shellpanel as shellpanel
 
         if title is None:
-            title = strings.titles[panelCls]
+            title = panelCls.title()
+        if title is None:
+            title = strings.titles.get(panelCls, panelCls.__name__)
 
         if len(self.__viewPanelIDs) == 0:
             panelId = 1

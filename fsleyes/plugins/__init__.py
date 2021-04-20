@@ -453,7 +453,7 @@ def _registerEntryPoints(name           : str,
                          module         : ModuleType,
                          ignoreBuiltins : bool):
     """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
-    points defined within the gibven module.
+    points defined within the given module.
     """
     modname  = module.__name__
     filename = module.__file__
@@ -480,13 +480,16 @@ def _registerEntryPoints(name           : str,
     for group, entries in entryPoints.items():
         entryMap[group] = {}
 
-        for name in entries.keys():
+        for name, cls in entries.items():
+
+            label = cls.title()
 
             # Look up label for built-in plugins
-            if group == 'fsleyes_tools':
-                label = strings.actions.get(name, name)
-            else:
-                label = strings.titles.get(name, name)
+            if label is None:
+                if group == 'fsleyes_tools':
+                    label = strings.actions.get(name, name)
+                else:
+                    label = strings.titles.get(name, name)
 
             ep = '{} = {}:{}'.format(label, modname, name)
             ep = pkg_resources.EntryPoint.parse(ep, dist=dist)
