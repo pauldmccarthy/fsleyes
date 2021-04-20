@@ -90,14 +90,15 @@ system:
     was in place at the time that the text was created)
   * ``x`` Bottom left X coordinate of text
   * ``y`` Bottom left Y coordinate of text
-"""
+"""  # noqa: E501
 
 
 import os
 import shlex
 import logging
+import pathlib
 
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import wx
 
@@ -163,17 +164,12 @@ class SaveAnnotationsAction(actions.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        annots  = {'X' : ortho.getXCanvas().getAnnotations().annotations,
-                   'Y' : ortho.getYCanvas().getAnnotations().annotations,
-                   'Z' : ortho.getZCanvas().getAnnotations().annotations}
-
         filePath = dlg.GetPath()
         errtitle = strings.titles[  self, 'saveFileError']
         errmsg   = strings.messages[self, 'saveFileError']
 
         with status.reportIfError(errtitle, errmsg, raiseError=False):
-            with open(filePath, 'wt') as f:
-                f.write(serialiseAnnotations(annots))
+            saveAnnotations(ortho, filePath)
 
 
 class LoadAnnotationsAction(actions.Action):
@@ -227,20 +223,43 @@ class LoadAnnotationsAction(actions.Action):
         if dlg.ShowModal() != wx.ID_OK:
             return
 
-        annots  = {'X' : ortho.getXCanvas().getAnnotations(),
-                   'Y' : ortho.getYCanvas().getAnnotations(),
-                   'Z' : ortho.getZCanvas().getAnnotations()}
-
         filePath = dlg.GetPath()
         errtitle = strings.titles[  self, 'loadFileError']
         errmsg   = strings.messages[self, 'loadFileError']
         with status.reportIfError(errtitle, errmsg, raiseError=False):
-            with open(filePath, 'rt') as f:
-                s = f.read().strip()
-            allObjs = deserialiseAnnotations(s, annots)
+            loadAnnotations(ortho, filePath)
 
-            for canvas, objs in allObjs.items():
-                annots[canvas].annotations.extend(objs)
+
+def saveAnnotations(ortho    : orthopanel.OrthoPanel,
+                    filename : Union[pathlib.Path, str]):
+    """Saves annotations on the canvases of the :class:`.OrthoPanel` to the
+    specified ``filename``.
+    """
+    annots = {'X' : ortho.getXCanvas().getAnnotations().annotations,
+              'Y' : ortho.getYCanvas().getAnnotations().annotations,
+              'Z' : ortho.getZCanvas().getAnnotations().annotations}
+
+    with open(filename, 'wt') as f:
+        f.write(serialiseAnnotations(annots))
+
+
+def loadAnnotations(ortho    : orthopanel.OrthoPanel,
+                    filename : Union[pathlib.Path, str]):
+    """Loads annotations from the specified ``filename``, and add them to the
+    canvases of the :class:`.OrthoPanel`.
+    """
+
+    with open(filename, 'rt') as f:
+        s = f.read().strip()
+
+    annots  = {'X' : ortho.getXCanvas().getAnnotations(),
+               'Y' : ortho.getYCanvas().getAnnotations(),
+               'Z' : ortho.getZCanvas().getAnnotations()}
+
+    allObjs = deserialiseAnnotations(s, annots)
+
+    for canvas, objs in allObjs.items():
+        annots[canvas].annotations.extend(objs)
 
 
 def serialiseAnnotations(
