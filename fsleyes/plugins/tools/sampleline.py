@@ -51,7 +51,7 @@ class SampleLineAction(actions.ToggleControlPanelAction):
 
     def __init__(self, overlayList, displayCtx, ortho):
         """Create a  ``SampleLineAction``. """
-        super().__init__(overlayList, displayCtx, SampleLinePanel, ortho)
+        super().__init__(overlayList, displayCtx, ortho, SampleLinePanel)
 
         self.__ortho = ortho
         self.__name  = '{}_{}'.format(type(self).__name__, id(self))
