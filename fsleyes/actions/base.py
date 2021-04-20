@@ -78,6 +78,14 @@ class Action(props.HasProperties):
 
 
     @staticmethod
+    def title():
+        """May be overridden by sub-classes. Returns a title to be used
+        in menus.
+        """
+        return None
+
+
+    @staticmethod
     def supportedViews():
         """May be overridden to declare that this Action should be associated
         with a specific :class:`.ViewPanel`. If overridden, must return a

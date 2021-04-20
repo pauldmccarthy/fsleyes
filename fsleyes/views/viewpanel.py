@@ -104,6 +104,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
+    def title():
+        """May be overridden by sub-classes. Returns a title for this
+        ``ViewPanel``, to be used in menus and window title bars.
+        """
+        return None
+
+
+    @staticmethod
     def controlOrder():
         """May be overridden by sub-classes. Returns a list of names of
         control panel types, specifying a suggested order for the

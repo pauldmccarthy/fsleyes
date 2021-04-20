@@ -29,6 +29,13 @@ class ControlMixin:
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
+    @staticmethod
+    def title():
+        """May be overridden by sub-classes. Returns a title to be used
+        in menus and window title bars.
+        """
+        return None
+
 
     @staticmethod
     def ignoreControl():
