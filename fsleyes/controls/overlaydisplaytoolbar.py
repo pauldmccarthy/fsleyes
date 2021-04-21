@@ -16,6 +16,7 @@ import os.path as op
 import wx
 
 import fsleyes_props                  as props
+import fsleyes_widgets                as fwidgets
 import fsleyes_widgets.utils.typedict as td
 import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.views.canvaspanel      as canvaspanel
@@ -145,8 +146,11 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
 
         # See long comment at bottom
         def destroyOldTools():
+            if self.destroyed:
+                return
             for t in oldTools:
-                t.Destroy()
+                if fwidgets.isalive(t):
+                    t.Destroy()
 
         for t in oldTools:
             t.Show(False)
