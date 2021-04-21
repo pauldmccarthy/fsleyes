@@ -182,7 +182,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         :class:`.DataSeries` instance from the :attr:`.PlotPanel.dataSeries`
         list of the :class:`.OverlayPlotPanel`.
         """
-        with props.skip(self.__plotPanel, 'dataSeries', self.name):
+        with props.skip(self.__plotPanel.canvas, 'dataSeries', self.name):
             self.__plotPanel.dataSeries.remove(ev.data)
 
 
