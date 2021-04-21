@@ -44,6 +44,7 @@ def _test_screenshot(panel, overlayList, displayCtx, stype, imgfile):
 
         realYield(100)
         idle.idle(screenshot.screenshot, panel, fname)
+        idle.block(10, until=lambda : op.exists(fname))
         realYield()
 
         bfname     = op.join(datadir, 'test_screenshot_{}.png'.format(stype))
