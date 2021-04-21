@@ -61,8 +61,8 @@ def test_feat():
 
 def _test_custom(frame, overlayList, displayCtx):
 
-    ortho = frame.addViewPanel(OrthoPanel)
-    ps    = frame.addViewPanel(PowerSpectrumPanel)
+    ortho = frame.addViewPanel(OrthoPanel,         defaultLayout=False)
+    ps    = frame.addViewPanel(PowerSpectrumPanel, defaultLayout=False)
 
     ortho.togglePanel(AtlasPanel)
     ortho.togglePanel(LookupTablePanel)

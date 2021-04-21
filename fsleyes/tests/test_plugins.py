@@ -169,12 +169,12 @@ def test_runPlugin():
 
 def _test_runPlugin(frame, overlayList, displayCtx):
     with tempdir.tempdir(changeto=False) as td:
-        with open(op.join(td, 'test_loadplugin.py'), 'wt') as f:
+        with open(op.join(td, 'test_runplugin.py'), 'wt') as f:
             f.write(code.format(prefix='Run'))
 
-        plugins.loadPlugin(op.join(td, 'test_loadplugin.py'))
+        plugins.loadPlugin(op.join(td, 'test_runplugin.py'))
 
-        mod  = sys.modules['fsleyes_plugin_test_loadplugin']
+        mod  = sys.modules['fsleyes_plugin_test_runplugin']
         view = frame.addViewPanel(mod.RunView, title='View')
         realYield()
         ctrl = view.togglePanel(mod.RunControl)

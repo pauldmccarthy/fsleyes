@@ -74,7 +74,7 @@ def mockCmaps():
 
 def clearCmaps(func):
 
-    def regcmap(*a):
+    def regcmap(*a, **kwa):
         pass
 
     mo = mock.MagicMock()
