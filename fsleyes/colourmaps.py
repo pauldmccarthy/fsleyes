@@ -218,17 +218,18 @@ import              string
 import              logging
 import              colorsys
 
-from collections import OrderedDict
+import numpy             as np
+import matplotlib        as mpl
+import matplotlib.cm     as mplcm
+import matplotlib.colors as colors
 
-import          six
-import numpy as np
-
-import fsleyes_props      as props
-import                       fsleyes
-import fsl.version        as fslversion
-import fsl.utils.settings as fslsettings
-import fsl.utils.notifier as notifier
-import fsl.data.vest      as vest
+import fsl.version            as fslversion
+import fsl.utils.settings     as fslsettings
+import fsl.utils.notifier     as notifier
+import fsl.data.vest          as vest
+import fsleyes_props          as props
+import                           fsleyes
+import fsleyes.displaycontext as fsldisplay
 
 
 log = logging.getLogger(__name__)
@@ -346,7 +347,7 @@ def isValidMapKey(key):
     """
 
     valid = string.ascii_lowercase + string.digits + '_-'
-    return all([c in valid for c in key])
+    return all(c in valid for c in key)
 
 
 def scanColourMaps():
@@ -366,14 +367,14 @@ def scanLookupTables():
 
 
 _cmaps = None
-"""An ``OrderedDict`` which contains all registered colour maps as
-``{key : _Map}`` mappings.
+"""A dict which contains all registered colour maps as ``{key : _Map}``
+mappings.
 """
 
 
 _luts = None
-"""An ``OrderedDict`` which contains all registered lookup tables as
-``{key : _Map}`` mappings.
+"""A dict which contains all registered lookup tables as ``{key : _Map}``
+mappings.
 """
 
 
@@ -395,15 +396,15 @@ def init(force=False):
     if not force and (_cmaps is not None) and (_luts is not None):
         return
 
-    _cmaps = OrderedDict()
-    _luts  = OrderedDict()
+    _cmaps = {}
+    _luts  = {}
 
     # Reads the order.txt file from the built-in
     # /colourmaps/ or /luts/ directory. This file
     # contains display names and defines the order
     # in which built-in maps should be displayed.
     def readOrderTxt(filename):
-        maps = OrderedDict()
+        maps = {}
 
         if not op.exists(filename):
             return maps
@@ -431,7 +432,7 @@ def init(force=False):
     def readDisplayNames(mapType):
         if   mapType == 'cmap': key = 'fsleyes.colourmaps'
         elif mapType == 'lut':  key = 'fsleyes.luts'
-        return fslsettings.read(key, OrderedDict())
+        return fslsettings.read(key, {})
 
     # Get all colour map/lut IDs and
     # paths to the cmap/lut files. We
@@ -457,7 +458,7 @@ def init(force=False):
 
         allIDs   = builtinIDs   + userIDs
         allFiles = builtinFiles + userFiles
-        allFiles = {mid : mfile for mid, mfile in zip(allIDs, allFiles)}
+        allFiles = dict(zip(allIDs, allFiles))
 
         # Read order/display names from order.txt -
         # if an order.txt file exists in the user
@@ -545,10 +546,6 @@ def registerColourMap(cmapFile,
     :returns:         The key that the ``ColourMap`` was registered under.
     """
 
-    import matplotlib        as mpl
-    import matplotlib.cm     as mplcm
-    import matplotlib.colors as colors
-
     if key is not None and not isValidMapKey(key):
         raise ValueError('{} is not a valid colour map identifier'.format(key))
 
@@ -578,8 +575,6 @@ def registerColourMap(cmapFile,
 
     log.debug('Patching DisplayOpts instances and class '
               'to support new colour map {}'.format(key))
-
-    import fsleyes.displaycontext as fsldisplay
 
     # A list of all DisplayOpts colour map properties.
     # n.b. We can't simply list the ColourMapOpts class
@@ -645,8 +640,8 @@ def registerLookupTable(lut,
     :returns:         The :class:`LookupTable` object
     """
 
-    if isinstance(lut, six.string_types): lutFile = lut
-    else:                                 lutFile = None
+    if isinstance(lut, str): lutFile = lut
+    else:                    lutFile = None
 
     if overlayList is None:
         overlayList = []
@@ -682,8 +677,6 @@ def registerLookupTable(lut,
 
     log.debug('Patching LabelOpts classes to support '
               'new LookupTable {}'.format(key))
-
-    import fsleyes.displaycontext as fsldisplay
 
     # See similar situation in the registerColourMap
     # function above. All DisplayOpts classes which
@@ -806,7 +799,7 @@ def installColourMap(key):
         np.savetxt(f, data, '%0.6f')
 
     # Update user-added settings
-    cmapNames      = fslsettings.read('fsleyes.colourmaps', OrderedDict())
+    cmapNames      = fslsettings.read('fsleyes.colourmaps', {})
     cmapNames[key] = cmap.name
 
     fslsettings.write('fsleyes.colourmaps', cmapNames)
@@ -833,7 +826,7 @@ def installLookupTable(key):
     lut.mapObj.save(destFile)
 
     # Update user-added settings
-    lutNames      = fslsettings.read('fsleyes.luts', OrderedDict())
+    lutNames      = fslsettings.read('fsleyes.luts', {})
     lutNames[key] = lut.name
     fslsettings.write('fsleyes.luts', lutNames)
 
@@ -1214,7 +1207,7 @@ def _caseInsensitiveLookup(d, k, default=None):
     return d[keys[idx]]
 
 
-class _Map(object):
+class _Map:
     """A little class for storing details on registered colour maps and lookup
     tables. This class is only used internally.
     """
@@ -1566,7 +1559,7 @@ class LookupTable(notifier.Notifier):
 
         :returns: The newly created ``LutLabel`` instance.
         """
-        if not isinstance(value, six.integer_types + (np.integer,)) or \
+        if not isinstance(value, (int, np.integer)) or \
            value < 0 or value > 65535:
             raise ValueError('Lookup table values must be '
                              '16 bit unsigned integers ({}: {}).'.format(
