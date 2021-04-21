@@ -301,16 +301,13 @@ class AtlasOverlayPanel(fslpanel.FSLeyesPanel):
 
         if nhits == 0:
             weight = wx.FONTWEIGHT_LIGHT
-            colour = '#404040'
         else:
             weight = wx.FONTWEIGHT_BOLD
-            colour = '#000000'
 
         font = self.__atlasList.GetItemFont(atlasIdx)
         font.SetWeight(weight)
 
         self.__atlasList.SetItemFont(atlasIdx, font)
-        self.__atlasList.SetItemForegroundColour(atlasIdx, colour, colour)
 
 
     def __onAtlasSelect(self, ev=None, atlasDesc=None):

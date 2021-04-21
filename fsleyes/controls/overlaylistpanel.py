@@ -10,8 +10,10 @@ displays a list of all overlays currently in the :class:`.OverlayList`.
 
 
 import logging
+import colorsys
 
-import wx
+import          wx
+import numpy as np
 
 import fsl.data.image                as fslimage
 import fsl.utils.idle                as idle
@@ -391,32 +393,6 @@ class ListItemWidget(wx.Panel):
     """
 
 
-    enabledFG  = '#000000'
-    """This colour is used as the foreground (text) colour for overlays
-    where their :attr:`.Display.enabled` property is ``True``.
-    """
-
-
-    disabledFG = '#888888'
-    """This colour is used as the foreground (text) colour for overlays
-    where their :attr:`.Display.enabled` property is ``False``.
-    """
-
-
-    unsavedDefaultBG = '#ffeeee'
-    """This colour is used as the default background colour for
-    :class:`.Image` overlays with an :attr:`.Image.saved` property
-    of ``False``.
-    """
-
-
-    unsavedSelectedBG = '#ffcdcd'
-    """This colour is used as the background colour for :class:`.Image`
-    overlays with an :attr:`.Image.saved` property of ``False``, when
-    they are selected in the :class:`OverlayListPanel`.
-    """
-
-
     def __init__(self,
                  parent,
                  overlay,
@@ -451,6 +427,17 @@ class ListItemWidget(wx.Panel):
                               updated accordingly.
         """
         wx.Panel.__init__(self, parent)
+
+        self.enabledFG  = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        self.disabledFG = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+
+        # give unsaved overlays  reddish colours
+        if wx.SystemSettings.GetAppearance().IsDark():
+            self.unsavedDefaultBG  = '#443333'
+            self.unsavedSelectedBG = '#551111'
+        else:
+            self.unsavedDefaultBG  = '#ffeeee'
+            self.unsavedSelectedBG = '#ffcdcd'
 
         self.__overlay         = overlay
         self.__display         = display
@@ -580,8 +567,8 @@ class ListItemWidget(wx.Panel):
         with props.suppress(self.__display, 'enabled', self.__name):
             self.__display.enabled = enabled
 
-        if enabled: fgColour = ListItemWidget.enabledFG
-        else:       fgColour = ListItemWidget.disabledFG
+        if enabled: fgColour = self.enabledFG
+        else:       fgColour = self.disabledFG
 
         self.__listBox.SetItemForegroundColour(idx, fgColour)
 
@@ -596,8 +583,8 @@ class ListItemWidget(wx.Panel):
 
         enabled = self.__display.enabled
 
-        if enabled: fgColour = ListItemWidget.enabledFG
-        else:       fgColour = ListItemWidget.disabledFG
+        if enabled: fgColour = self.enabledFG
+        else:       fgColour = self.disabledFG
 
         self.__visibility.SetValue(enabled)
         self.__listBox.SetItemForegroundColour(idx, fgColour)
@@ -648,8 +635,8 @@ class ListItemWidget(wx.Panel):
         else:
             self.__listBox.SetItemBackgroundColour(
                 idx,
-                ListItemWidget.unsavedDefaultBG,
-                ListItemWidget.unsavedSelectedBG),
+                self.unsavedDefaultBG,
+                self.unsavedSelectedBG),
 
         tooltip = self.__overlay.dataSource
         if tooltip is None:
