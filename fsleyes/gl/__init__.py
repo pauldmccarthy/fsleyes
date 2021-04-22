@@ -247,14 +247,16 @@ def _selectPyOpenGLPlatform():
     if not fwidgets.canHaveGui():
         os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
 
-    # Versions of wxpython 4.1.1 and newer
+    # GTK3 versions of wxpython 4.1.1 and newer
     # default to using EGL for GL initialisation,
-    # but pyopengl doesn't seem to1
+    # but pyopengl defaults to glx.
     elif fslplatform.os.lower() == 'linux':
-        wxver = fwidgets.wxVersion()
+        wxver  = fwidgets.wxVersion()
+        wxplat = fwidgets.wxPlatform()
 
-        if wxver is not None and \
-           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+        if wxver is not None                               and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0 and \
+           wxplat == fwidgets.WX_GTK3:
             os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 
@@ -834,10 +836,17 @@ class GLContext(object):
         # corresponding to wxpython 4.1 and newer) allow
         # us to select a GL compatibility profile (required,
         # because we rely on GL 1.4/2.1).
-        wxver = fwidgets.wxVersion()
-        if wxver is not None and \
-           fslversion.compareVersions(wxver, '4.1.1') >= 0:
-            attrs  = wxgl.GLContextAttrs()
+        #
+        # This only seems to work with wayland/EGL builds of
+        # wxPython. We assume that gtk3+wxpython>=4.1.1
+        # supports requesting a compatibility profile,
+        # but don't bother for gtk2+older wxpython
+        wxver  = fwidgets.wxVersion()
+        wxplat = fwidgets.wxPlatform()
+        if wxver is not None                               and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0 and \
+           wxplat in (fwidgets.WX_MAC_COCOA, fwidgets.WX_GTK3):
+            attrs = wxgl.GLContextAttrs()
             attrs.CompatibilityProfile()
             attrs.EndList()
             kwargs = {'ctxAttrs' : attrs}

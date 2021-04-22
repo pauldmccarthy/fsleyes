@@ -29,6 +29,7 @@ import fsleyes.displaycontext.orthoopts      as orthoopts
 import fsleyes.displaycontext.lightboxopts   as lightboxopts
 import fsleyes.displaycontext.scene3dopts    as scene3dopts
 import fsleyes.controls.colourbar            as cbar
+import fsleyes.plugins.tools.saveannotations as saveannotations
 import fsleyes.gl                            as fslgl
 import fsleyes.gl.textures.imagetexture      as imagetexture
 import fsleyes.gl.ortholabels                as ortholabels
@@ -358,12 +359,17 @@ def render(namespace, overlayList, displayCtx, sceneOpts, hook=None):
     if namespace.scene == 'ortho' and sceneOpts.layout == 'grid':
         canvases[1].opts.invertX = True
 
+    # Load annotations, only on ortho
+    if namespace.scene == 'ortho' and namespace.annotations is not None:
+        saveannotations.loadAnnotations(MockOrthoPanel(canvases),
+                                        namespace.annotations)
+
     # Configure each of the canvases (with those
     # properties that are common to both ortho and
     # lightbox canvases) and render them one by one
     canvasBmps = []
 
-    # Call hook if provided.
+    # Call hook if provided (used for testing)
     if hook is not None:
         hook(overlayList, displayCtx, sceneOpts, canvases)
 
@@ -826,7 +832,7 @@ def autocrop(data, bgColour, border=0):
     return data
 
 
-class MockSliceCanvas(object):
+class MockSliceCanvas:
     """Used in place of a :class:`.SliceCanvas`. The :mod:`.parseargs` module
     needs access to ``SliceCanvas`` instances to apply some command line
     options. However, ``render`` calls :func:`.parseargs.applySceneArgs`
@@ -846,7 +852,7 @@ class MockSliceCanvas(object):
         self.centre = x, y
 
 
-class MockCanvasPanel(object):
+class MockCanvasPanel:
     """Used in place of a :class:`.CanvasPanel`. This is used as a container
     for :class:`MockSliceCanvas` instances.
     """
@@ -854,6 +860,22 @@ class MockCanvasPanel(object):
         self.canvases = [MockSliceCanvas() for i in range(ncanvases)]
     def getGLCanvases(self):
         return self.canvases
+
+
+class MockOrthoPanel:
+    """Used in place of an :class:`.OrthoPanel`. This is used as a container
+    for three :class:`SliceCanvas` instances.
+    """
+    def __init__(self, canvases):
+        self.canvases = canvases
+    def getGLCanvases(self):
+        return self.canvases
+    def getXCanvas(self):
+        return self.canvases[0]
+    def getYCanvas(self):
+        return self.canvases[1]
+    def getZCanvas(self):
+        return self.canvases[2]
 
 
 if __name__ == '__main__':

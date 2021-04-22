@@ -29,6 +29,13 @@ class ControlMixin:
     """Mixin class for the :class:`ControlPanel` and :class:`ControlToolBar`.
     """
 
+    @staticmethod
+    def title():
+        """May be overridden by sub-classes. Returns a title to be used
+        in menus and window title bars.
+        """
+        return None
+
 
     @staticmethod
     def ignoreControl():
@@ -59,6 +66,21 @@ class ControlMixin:
         as being compatible with all views.
         """
         return None
+
+
+    @staticmethod
+    def supportSubClasses():
+        """May be overridden by sub-classes. If this control panel is intended
+        for use with specific views, via the :meth:`supportedViews` method,
+        this method specifies whether sub-classes of the :meth:`supportedViews`
+        are supported (the default), or whether only the specific classes in
+        :meth:`supportedViews` are supported.
+
+        Note that this method must be implemented on the specific control
+        class that wishes to use it - it is not considered if implemented in a
+        base classe.
+        """
+        return True
 
 
     @staticmethod

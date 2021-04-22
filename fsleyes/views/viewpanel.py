@@ -104,6 +104,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
+    def title():
+        """May be overridden by sub-classes. Returns a title for this
+        ``ViewPanel``, to be used in menus and window title bars.
+        """
+        return None
+
+
+    @staticmethod
     def controlOrder():
         """May be overridden by sub-classes. Returns a list of names of
         control panel types, specifying a suggested order for the
@@ -219,16 +227,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                               size[1] - clientSize[1])
         ff.Destroy()
 
-        self.__loadPlugins()
+        self.reloadPlugins()
 
 
-    def __loadPlugins(self):
-        """Called by :meth:`__init__`. This is a bit of a hack, but less hacky
-        than it used to be.  All plugin-provided control panels and tools
-        which support this ``ViewPanel`` are looked up via the :mod:`.plugins.`
-        module. Then, for each control, we create a
-        :class:`.ToggleControlPanelAction`, and add it as an attribute on this
-        ``ViewPanel``.
+    def reloadPlugins(self):
+        """Called by :meth:`__init__`, and by the :class:`.LoadPluginAction`
+        when new plugins are registered.
+
+        This is a bit of a hack, but less hacky than it used to be.  All
+        plugin-provided control panels and tools which support this
+        ``ViewPanel`` are looked up via the :mod:`.plugins.` module. Then, for
+        each control, we create a :class:`.ToggleControlPanelAction`, and add
+        it as an attribute on this ``ViewPanel``.
 
         Similarly, all plugin-provided tools which support this ``ViewPanel``
         are created and added as attributes.
@@ -247,19 +257,21 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # controls
         for ctrlType in plugins.listControls(type(self)).values():
             name = ctrlType.__name__
-            act  = actions.ToggleControlPanelAction(
-                self.overlayList,
-                self.displayCtx,
-                ctrlType,
-                self,
-                name=name)
-            setattr(self, name, act)
+            if not hasattr(self, name):
+                act = actions.ToggleControlPanelAction(
+                    self.overlayList,
+                    self.displayCtx,
+                    self,
+                    ctrlType,
+                    name=name)
+                setattr(self, name, act)
 
         # tools
         for toolType in plugins.listTools(type(self)).values():
             name = toolType.__name__
-            act  = toolType(self.overlayList, self.displayCtx, self)
-            setattr(self, name, act)
+            if not hasattr(self, name):
+                act = toolType(self.overlayList, self.displayCtx, self)
+                setattr(self, name, act)
 
 
     def destroy(self):

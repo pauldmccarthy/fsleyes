@@ -400,6 +400,7 @@ titles = TypeDict({
     'PlotToolBar'               : 'Plot toolbar',
     'TimeSeriesToolBar'         : 'Time series toolbar',
     'HistogramToolBar'          : 'Histogram toolbar',
+    'PowerSpectrumToolBar'      : 'Power spectrum toolbar',
 
     'MelodicClassificationPanel' : 'Melodic IC classification',
 

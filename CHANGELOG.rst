@@ -9,6 +9,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.2 (Thursday 22nd April 2021)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed some issues with FSLeyes plugin management.
+* Fixed some issues with GL initialisations on GTK2 versions of ``wxpython``.
+* New ``--annotations`` command-line option, allowing annotations to be
+  loaded from a file into an ortho view.
+
+
 1.0.1 (Tuesday 20th April 2021)
 -------------------------------
 
