@@ -25,8 +25,7 @@ cli_tests = """
 
 
 def splash():
-    basedir   = op.join(op.dirname(fsleyes.__file__), '..')
-    splashimg = op.join(basedir, 'assets', 'icons', 'splash', 'splash.png')
+    splashimg = op.join(fsleyes.assetDir, 'icons', 'splash', 'splash.png')
     shutil.copy(splashimg, '.')
     return 'splash.png'
 

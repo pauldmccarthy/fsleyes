@@ -114,7 +114,7 @@ class FSLeyesApp(wx.App):
         try:
             self.__icon = wx.adv.TaskBarIcon(iconType=wx.adv.TBI_DOCK)
             self.__icon.SetIcon(wx.Icon(
-                op.join(fsleyes.assetDir, 'assets', 'icons', 'app_icon.png')))
+                op.join(fsleyes.assetDir, 'icons', 'app_icon.png')))
         except Exception:
             self.__icon = None
 

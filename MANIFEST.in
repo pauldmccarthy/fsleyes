@@ -5,21 +5,17 @@ include           requirements.txt
 include           requirements-dev.txt
 include           requirements-extra.txt
 include           requirements-notebook.txt
-recursive-exclude fsleyes/tests               *
-recursive-include userdoc                     *
-recursive-include apidoc                      *
-recursive-exclude userdoc/html                *
-recursive-exclude apidoc/html                 *
-recursive-include assets                      *
-recursive-exclude assets/icons/splash/sources *
-recursive-exclude assets/icons/sources        *
-recursive-exclude assets/icons/app_icon       *
+recursive-include fsleyes/assets *
 
-# these directories are temporarily
-# created for built distributions
-recursive-include fsleyes/userdoc *
-recursive-include fsleyes/assets  *
+# Source (e.g. .xcf) files for some image files
+recursive-exclude fsleyes/assets/icons/splash/sources *
+recursive-exclude fsleyes/assets/icons/sources        *
+recursive-exclude fsleyes/assets/icons/app_icon       *
+
+# Tests and docs are too big for pypi
+recursive-exclude fsleyes/tests *
+recursive-exclude userdoc       *
+recursive-exclude apidoc        *
 
 global-exclude *.py[cod]
 global-exclude __pycache__
-global-exclude *.xcf

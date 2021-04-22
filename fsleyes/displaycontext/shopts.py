@@ -186,7 +186,6 @@ class SHOpts(vectoropts.VectorOpts):
         ftype, _   = SH_COEFFICIENT_TYPE[ncoefs]
         fname     = op.join(
             fsleyes.assetDir,
-            'assets',
             'sh',
             '{}_coef_{}_{}.txt'.format(ftype, resolution, order))
 
@@ -204,7 +203,6 @@ class SHOpts(vectoropts.VectorOpts):
         """
         fname = op.join(
             fsleyes.assetDir,
-            'assets',
             'sh',
             'vert_{}.txt'.format(self.shResolution))
 
@@ -218,7 +216,6 @@ class SHOpts(vectoropts.VectorOpts):
         """
         fname = op.join(
             fsleyes.assetDir,
-            'assets',
             'sh',
             'face_{}.txt'.format(self.shResolution))
 

@@ -132,30 +132,6 @@ class apidoc(docbuilder):
     docdir      = op.join(basedir, 'apidoc')
 
 
-class custom_build(build):
-    description = 'Custom build command'
-
-    def run(self):
-
-        # In its source form, the FSLeyes asset files
-        # and documentation live outside the FSLeyes
-        # package directroy hierarchy. But setuptools
-        # does not like this arrangement. So here I am
-        # linking the assets and userdocs into the
-        # fsleyes package directory, to trick setuptools
-        # into including them in bdists and installations.
-        #
-        # I can't believe that this is so difficult to
-        # accomplish.
-        targets = ['assets']
-        dests   = ['assets']
-        targets = [op.join(basedir, t)            for t in targets]
-        dests   = [op.join(basedir, 'fsleyes', d) for d in dests]
-
-        with templinks(targets, dests):
-            build.run(self)
-
-
 def get_fsleyes_version():
     """Returns the current FSLeyes version number. """
     version = {}
@@ -258,7 +234,6 @@ def main():
         test_suite='tests',
 
         cmdclass={
-            'build'   : custom_build,
             'userdoc' : userdoc,
             'apidoc'  : apidoc,
         },

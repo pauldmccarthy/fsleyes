@@ -60,7 +60,7 @@ def getShaderDir():
     if   fslgl.GL_COMPATIBILITY == '2.1': subdir = 'gl21'
     elif fslgl.GL_COMPATIBILITY == '1.4': subdir = 'gl14'
 
-    return op.join(fsleyes.assetDir, 'assets', 'gl', subdir)
+    return op.join(fsleyes.assetDir, 'gl', subdir)
 
 
 def getShaderSuffix():
