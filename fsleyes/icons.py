@@ -37,7 +37,7 @@ def getIconDir():
     """Returns the directory which contains all of the icons used in
      *FSLeyes*.
     """
-    return op.join(fsleyes.assetDir, 'assets', 'icons')
+    return op.join(fsleyes.assetDir, 'icons')
 
 
 def findImageFile(iconId):

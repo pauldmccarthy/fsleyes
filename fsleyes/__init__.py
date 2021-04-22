@@ -223,9 +223,9 @@ module).
 """
 
 
-assetDir = op.join(op.dirname(__file__), '..')
-"""Base directory which contains all *FSLeyes* assets/resources (e.g. icon
-files). This is set in the :func:`initialise` function.
+assetDir = op.abspath(op.join(op.dirname(__file__), 'assets'))
+"""Directory which contains all *FSLeyes* assets/resources (e.g. icon
+files).
 """
 
 
@@ -233,23 +233,13 @@ def canWriteToAssetDir():
     """Returns ``True`` if the user can write to the FSLeyes asset directory,
     ``False`` otherwise.
     """
-    return os.access(op.join(assetDir, 'assets'), os.W_OK | os.X_OK)
+    return os.access(assetDir, os.W_OK | os.X_OK)
 
 
 def initialise():
     """Called when `FSLeyes`` is started as a standalone application.  This
     function *must* be called before most other things in *FSLeyes* are used.
-
-    Does a few initialisation steps::
-
-      - Initialises the :mod:`fsl.utils.settings` module, for persistent
-        storage  of application settings.
-
-      - Sets the :data:`assetDir` attribute.
     """
-
-    global assetDir
-
     import fsleyes.plugins as plugins
 
     # implement various hacks and workarounds
@@ -268,25 +258,6 @@ def initialise():
     # imported immediately after fsleyes.frame.
     import fsleyes.frame                 # noqa
     import fsleyes.actions.frameactions  # noqa
-
-    fsleyesDir = op.dirname(__file__)
-    assetDir   = None
-    options    = []
-
-    # The assets directory is either inside, or
-    # alongside, the FSLeyes package directory,
-    # depending on whether we are running from
-    # a code install, or from a source distribution.
-    options = [op.join(fsleyesDir, '..'), fsleyesDir]
-
-    for opt in options:
-        if op.exists(op.join(opt, 'assets')):
-            assetDir = op.abspath(opt)
-            break
-
-    if assetDir is None:
-        raise RuntimeError('Could not find FSLeyes asset directory! '
-                           'Searched: {}'.format(options))
 
 
 def _hacksAndWorkarounds():
