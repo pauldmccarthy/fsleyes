@@ -28,9 +28,9 @@ import fsleyes.colourmaps as fslcm
 def mockAssetDir():
     with tempdir(changeto=False) as td:
         with mock.patch('fsleyes.assetDir', td):
-            os.makedirs(op.join(td, 'assets', 'colourmaps'))
-            os.makedirs(op.join(td, 'assets', 'luts'))
-            yield op.join(td, 'assets')
+            os.makedirs(op.join(td, 'colourmaps'))
+            os.makedirs(op.join(td, 'luts'))
+            yield op.join(td)
 
 
 @contextmanager
