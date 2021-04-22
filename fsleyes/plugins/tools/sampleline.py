@@ -605,9 +605,11 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         if self.__current is not None:
             self.__bindToDataSeries(self.__current, False)
 
+        # Round to avoid floating point imprecision
         opts   = self.displayCtx.getOpts(image)
-        vstart = opts.transformCoords(start, 'display', 'voxel')
-        vend   = opts.transformCoords(end,   'display', 'voxel')
+        vstart = opts.transformCoords(start, 'display', 'voxel').round(6)
+        vend   = opts.transformCoords(end,   'display', 'voxel').round(6)
+
         series = SampleLineDataSeries(image,
                                       self.overlayList,
                                       self.displayCtx,
