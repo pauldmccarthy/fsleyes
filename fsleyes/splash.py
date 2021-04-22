@@ -21,7 +21,7 @@ import fsleyes.strings            as strings
 
 def getSplashFile():
     """Returns the path to the splash screen image file. """
-    return op.join(fsleyes.assetDir, 'assets', 'icons', 'splash', 'splash.png')
+    return op.join(fsleyes.assetDir, 'icons', 'splash', 'splash.png')
 
 
 class FSLeyesSplash(wx.Frame):

@@ -579,7 +579,7 @@ class NotebookServer(threading.Thread):
         # directory to a temporary location that
         # will be deleted on exit.
         cfgdir = op.join(tempfile.mkdtemp(prefix='fsleyes-jupyter'), 'config')
-        shutil.copytree(op.join(fsleyes.assetDir, 'assets', 'jupyter'), cfgdir)
+        shutil.copytree(op.join(fsleyes.assetDir, 'jupyter'), cfgdir)
 
         log.debug('Copied notebook configuration to %s', cfgdir)
 

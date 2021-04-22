@@ -15,8 +15,8 @@ tables can be accessed [*]_.
 FSLeyes colour maps and lookup tables are stored in the following locations:
 
 
-   - ``[assetsbase]/assets/colourmaps/``
-   - ``[assetsbase]/assets/luts/``
+   - ``[assetsbase]/colourmaps/``
+   - ``[assetsbase]/luts/``
    - ``[settingsbase]/colourmaps/``
    - ``[settingsbase]/luts/``
 
@@ -238,13 +238,13 @@ log = logging.getLogger(__name__)
 def getCmapDir():
     """Returns the directory in which all built-in colour map files are stored.
     """
-    return op.join(fsleyes.assetDir, 'assets', 'colourmaps')
+    return op.join(fsleyes.assetDir, 'colourmaps')
 
 
 def getLutDir():
     """Returns the directory in which all built-in lookup table files are stored.
     """
-    return op.join(fsleyes.assetDir, 'assets', 'luts')
+    return op.join(fsleyes.assetDir, 'luts')
 
 
 def _walk(dirname, suffix):
