@@ -85,6 +85,9 @@ class LoadPluginAction(base.Action):
         with status.reportIfError(title=etitle, msg=emsg, raiseError=False):
             func(fname)
 
+        for panel in self.__frame.viewPanels:
+            panel.reloadPlugins()
+
         self.__frame.refreshViewMenu()
         self.__frame.refreshToolsMenu()
         self.__frame.refreshSettingsMenu()

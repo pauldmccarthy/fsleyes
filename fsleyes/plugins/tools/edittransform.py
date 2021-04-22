@@ -52,7 +52,7 @@ class EditTransformAction(actions.ToggleControlPanelAction):
     def __init__(self, overlayList, displayCtx, ortho):
         """Create an ``EditTransformAction``.
         """
-        super().__init__(overlayList, displayCtx, EditTransformPanel, ortho)
+        super().__init__(overlayList, displayCtx, ortho, EditTransformPanel)
         self.__ortho = ortho
 
         displayCtx.addListener('selectedOverlay', self.name,

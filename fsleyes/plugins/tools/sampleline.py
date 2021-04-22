@@ -51,7 +51,7 @@ class SampleLineAction(actions.ToggleControlPanelAction):
 
     def __init__(self, overlayList, displayCtx, ortho):
         """Create a  ``SampleLineAction``. """
-        super().__init__(overlayList, displayCtx, SampleLinePanel, ortho)
+        super().__init__(overlayList, displayCtx, ortho, SampleLinePanel)
 
         self.__ortho = ortho
         self.__name  = '{}_{}'.format(type(self).__name__, id(self))
@@ -605,9 +605,11 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         if self.__current is not None:
             self.__bindToDataSeries(self.__current, False)
 
+        # Round to avoid floating point imprecision
         opts   = self.displayCtx.getOpts(image)
-        vstart = opts.transformCoords(start, 'display', 'voxel')
-        vend   = opts.transformCoords(end,   'display', 'voxel')
+        vstart = opts.transformCoords(start, 'display', 'voxel').round(6)
+        vend   = opts.transformCoords(end,   'display', 'voxel').round(6)
+
         series = SampleLineDataSeries(image,
                                       self.overlayList,
                                       self.displayCtx,

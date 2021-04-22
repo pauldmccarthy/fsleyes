@@ -34,6 +34,15 @@ class PowerSpectrumToolBar(plottoolbar.PlotToolBar):
         return [powerspectrumpanel.PowerSpectrumPanel]
 
 
+    @staticmethod
+    def supportSubClasses():
+        """Overrides :meth:`.ControlPanel.supportSubClasses`. Returns
+        ``False`` - the ``PowerSpectrumToolBar`` is only intended to be
+        used with the :class:`.PowerSpectrumPanel`.
+        """
+        return False
+
+
     def __init__(self, parent, overlayList, displayCtx, psPanel):
         """Create a ``PowerSpectrumToolBar``.
 

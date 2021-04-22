@@ -1,0 +1,6 @@
+X Rect colour=#ff0000 lineWidth=3 alpha=21.052631577721943 honourZLimits=False zmin=15.0 zmax=16.0 filled=True border=True x=0.3301567566932804 y=6.149592567226385 w=11.638871621066203 h=-4.722056486261144
+X Arrow colour=#00ff1d lineWidth=2 alpha=100.0 honourZLimits=False zmin=15.0 zmax=16.0 x1=10.90490297240486 y1=10.406094188644882 x2=8.178081621183635 y2=4.220865270021131
+Y TextAnnotation colour=#00fcff lineWidth=3 alpha=100.0 honourZLimits=False zmin=14.0 zmax=15.0 fontSize=25 coordinates=display text='hello kitty' x=5.054759195406143 y=19.38733813627359
+Y Rect colour=#00ff1d lineWidth=2 alpha=19.883040925460644 honourZLimits=False zmin=14.0 zmax=15.0 filled=False border=True x=5.8531889794157435 y=12.534149156857847 w=12.508733282817087 h=-6.853188979415744
+Z Ellipse colour=#00ff1d lineWidth=2 alpha=19.883040925460644 honourZLimits=False zmin=10.0 zmax=11.0 filled=False border=True x=10.953055262565613 y=15.390510916709903 w=3.18748140335083 h=6.441368669271469
+Z Point colour=#ffdb00 lineWidth=2 alpha=100.0 honourZLimits=False zmin=10.0 zmax=11.0 x=8.761661797761917 y=15.788946092128757

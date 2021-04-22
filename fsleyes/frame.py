@@ -16,6 +16,8 @@ import functools as ft
 import itertools as it
 import              logging
 
+from typing import Type
+
 import wx
 import wx.lib.agw.aui               as aui
 
@@ -29,6 +31,7 @@ import fsleyes.strings              as strings
 import fsleyes.plugins              as plugins
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.profiles.shortcuts   as shortcuts
+import fsleyes.views.viewpanel      as viewpanel
 import fsleyes.actions              as actions
 import fsleyes.tooltips             as tooltips
 import fsleyes.layouts              as layouts
@@ -272,9 +275,11 @@ class FSLeyesFrame(wx.Frame):
         self.__toolsMenu      = None
         self.__recentPathMenu = None
 
-        # Refs to Action objects that
-        # are bound to menu options,
-        # as { type : instance } mappings
+        # Refs to Action objects that are managed
+        # by this FSLeyesFrame, and are bound to
+        # menu options, as { type : instance }
+        # mappings. This includes items in the
+        # File, Overlay, View, and Tools menus
         self.__menuActions = {}
 
         # We keep refs to the (Action, wx.MenuItem)
@@ -367,8 +372,6 @@ class FSLeyesFrame(wx.Frame):
         if len(self.viewPanels) == 0:
             return None
 
-        import fsleyes.views.viewpanel as viewpanel
-
         focused = wx.Window.FindFocus()
 
         while focused is not None:
@@ -457,15 +460,24 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
 
 
-    def addViewPanel(self, panelCls, title=None, **kwargs):
+    def addViewPanel(
+            self,
+            panelCls      : Type[viewpanel.ViewPanel],
+            title         : str  = None,
+            defaultLayout : bool = True,
+            **kwargs) -> viewpanel.ViewPanel:
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
 
-        :arg panelCls: The :class:`.ViewPanel` type to be added.
+        :arg panelCls:      The :class:`.ViewPanel` type to be added.
 
-        :arg title: Title to give the view. If not provided, it is assumed
-                    that a name is present for the view type in
-                    :attr:`.strings.titles`.
+        :arg title:         Title to give the view. If not provided, it is
+                            assumed that a name is present for the view type
+                            in :attr:`.strings.titles`.
+
+        :arg defaultLayout: If ``True`` (the default),
+                            :meth:`viewPanelDefaultLayout` is called, to add
+                            a default set of control panels to the view.
 
         :returns: The newly created ``ViewPanel``.
 
@@ -476,7 +488,9 @@ class FSLeyesFrame(wx.Frame):
         import fsleyes.views.shellpanel as shellpanel
 
         if title is None:
-            title = strings.titles[panelCls]
+            title = panelCls.title()
+        if title is None:
+            title = strings.titles.get(panelCls, panelCls.__name__)
 
         if len(self.__viewPanelIDs) == 0:
             panelId = 1
@@ -562,10 +576,13 @@ class FSLeyesFrame(wx.Frame):
         self.__auiManager.Update()
         self.__enableMenus(True)
 
+        if defaultLayout:
+            self.viewPanelDefaultLayout(panel)
+
         return panel
 
 
-    def viewPanelDefaultLayout(self, viewPanel):
+    def viewPanelDefaultLayout(self, viewPanel : viewpanel.ViewPanel):
         """After a :class:`.ViewPanel` is added via the view menu, this method
         is called to perform some basic initialisation on the panel. This
         basically amounts to adding toolbars.
@@ -588,13 +605,11 @@ class FSLeyesFrame(wx.Frame):
         if not self.__haveMenu:
             return
 
-        viewMenu   = self.__viewMenu
-        items      = self.__viewMenuActions
+        viewMenu = self.__viewMenu
+        items    = self.__viewMenuActions
 
         for action, item in items:
             action.unbindWidget(item)
-            if action.instance is None:
-                action.destroy()
 
         for item in viewMenu.GetMenuItems():
             viewMenu.Delete(item.GetId())
@@ -611,8 +626,7 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in self.__layoutMenuActions:
             action.unbindWidget(item)
-            if action.instance is None:
-                action.destroy()
+            action.destroy()
 
         for item in self.__layoutMenu.GetMenuItems():
             self.__layoutMenu.Delete(item.GetId())
@@ -658,9 +672,11 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
-            if action.instance is None:
-                action.destroy()
 
+        # all items from self.__toolMenuActions
+        # will also be returned by GetMenuItems,
+        # along with other things (e.g. section
+        # dividers)
         for item in menu.GetMenuItems():
             menu.Delete(item.GetId())
 
@@ -1287,11 +1303,10 @@ class FSLeyesFrame(wx.Frame):
             allactions.extend([a for a, _ in vpactions])
 
         for action in allactions:
-
             # actions associated with some object
             # (e.g. a ViewPanel) will have already
             # been destroyed by them
-            if action.instance is None or action.instance is self:
+            if not action.destroyed:
                 action.destroy()
 
         self.__layoutMenuActions    = None
@@ -1898,21 +1913,28 @@ class FSLeyesFrame(wx.Frame):
         pluginTools = sorted(zip(indices, names, clss))
         pluginTools = {t[1]: t[2] for t in pluginTools}
 
-        def addTool(cls, name):
-            shortcut  = shortcuts.actions.get(cls)
-            # plugin tools not coupled to a specific view
-            # get a reference to me, the FSLeyesFrame
-            actionObj = cls(self.__overlayList, self.__displayCtx, self)
+        for name, cls in pluginTools.items():
+
+            # Refs to view-independent tools are stored in
+            # __menuActions. This method may be called
+            # multiple times, so we only create the Action
+            # object on the first invocation.
+            if cls in self.__menuActions:
+                actionObj = self.__menuActions[cls]
+            else:
+                # plugin tools not coupled to a specific view
+                # get a reference to me, the FSLeyesFrame
+                actionObj = cls(self.__overlayList, self.__displayCtx, self)
+
+            shortcut = shortcuts.actions.get(cls)
 
             if shortcut is not None:
                 name = '{}\t{}'.format(name, shortcut)
 
             menuItem = menu.Append(wx.ID_ANY, name)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
-            return actionObj, menuItem
 
-        for name, cls in pluginTools.items():
-            actionItems.append(addTool(cls, name))
+            actionItems.append((actionObj, menuItem))
 
         actionItems.extend(self.__makeViewPanelTools())
         return actionItems
@@ -1967,7 +1989,7 @@ class FSLeyesFrame(wx.Frame):
 
             # Plugin-provided tools, which are created
             # by the ViewPanel and added as attributes
-            # to itself (see ViewPanel.__loadPlugins)
+            # to itself (see ViewPanel.reloadPlugins)
             pluginTools = plugins.listTools(vpType)
 
             # ViewPanel.toolOrder can suggest an
@@ -1981,9 +2003,9 @@ class FSLeyesFrame(wx.Frame):
                 pluginTools = sorted(zip(indices, names, clss))
                 pluginTools = {t[1] : t[2] for t in pluginTools}
 
-            # See ViewPanel.__loadPlugins. All supported tools
-            # are added as attributes to the ViewPanel instance
-            # when it is created, with the class name used as
+            # See ViewPanel.reloadPlugins. and LoadPluginAction.
+            # All supported tools are added as attributes to the
+            # ViewPanel instance, with the class name used as
             # the attribute name.
             for toolName, cls in pluginTools.items():
                 name = cls.__name__

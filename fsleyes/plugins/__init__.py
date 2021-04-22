@@ -204,6 +204,17 @@ Tool    = Type[actions.Action]
 Plugin  = Union[View, Control, Tool]
 
 
+def class_defines_method(cls, methname):
+    """Check to see whether ``methname`` is implemented on ``cls``, and not
+    on a base-class.
+
+    :meth:`.Action.ignoreTool`, :meth:`.ControlMixin.ignoreControl`, and
+    :meth:`.ControlMixin.supportSubClasses` need to be implemented on the
+    specific class - inherited base class implementations are not considered.
+    """
+    return methname in cls.__dict__
+
+
 def initialise():
     """Loads all plugins, including built-ins, plugin files in the FSLeyes
     settings directory, and those found on the ``FSLEYES_PLUGIN_PATH``
@@ -307,12 +318,25 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
             ctrls.pop(name)
             continue
 
+        # views that this control supports - might be None,
+        # in which case the control is assumed to support
+        # all views.
         supported = cls.supportedViews()
+
+        # does the control support sub-classes of the
+        # views that it supports, or only the specific
+        # view classes returned by supportedViews?
+        subclassok = True
+        if class_defines_method(cls, 'supportSubClasses'):
+            subclassok = cls.supportSubClasses()
+
         if viewType  is not None and \
-           supported is not None and \
-           not issubclass(viewType, tuple(supported)):
-            ctrls.pop(name)
-            continue
+           supported is not None:
+            if subclassok:
+                if not issubclass(viewType, tuple(supported)):
+                    ctrls.pop(name)
+            elif viewType not in supported:
+                ctrls.pop(name)
     return ctrls
 
 
@@ -399,12 +423,6 @@ def _findEntryPoints(mod            : ModuleType,
 
     entryPoints = collections.defaultdict(dict)
 
-    # Action.ignoreTool and ControlMixin.ignoreControl need
-    # to be implemented on the specific class - inherited
-    # base class implementations are not considered.
-    def class_defines_method(cls, methname):
-        return methname in cls.__dict__
-
     for name in dir(mod):
 
         item  = getattr(mod, name)
@@ -453,7 +471,7 @@ def _registerEntryPoints(name           : str,
                          module         : ModuleType,
                          ignoreBuiltins : bool):
     """Called by :func:`loadPlugin`. Finds and registers all FSLeyes entry
-    points defined within the gibven module.
+    points defined within the given module.
     """
     modname  = module.__name__
     filename = module.__file__
@@ -480,13 +498,16 @@ def _registerEntryPoints(name           : str,
     for group, entries in entryPoints.items():
         entryMap[group] = {}
 
-        for name in entries.keys():
+        for name, cls in entries.items():
+
+            label = cls.title()
 
             # Look up label for built-in plugins
-            if group == 'fsleyes_tools':
-                label = strings.actions.get(name, name)
-            else:
-                label = strings.titles.get(name, name)
+            if label is None:
+                if group == 'fsleyes_tools':
+                    label = strings.actions.get(name, name)
+                else:
+                    label = strings.titles.get(name, name)
 
             ep = '{} = {}:{}'.format(label, modname, name)
             ep = pkg_resources.EntryPoint.parse(ep, dist=dist)

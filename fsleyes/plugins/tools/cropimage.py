@@ -51,7 +51,7 @@ class CropImageAction(actions.ToggleControlPanelAction):
 
     def __init__(self, overlayList, displayCtx, ortho):
         """Create  ``CropImageAction``. """
-        super().__init__(overlayList, displayCtx, CropImagePanel, ortho)
+        super().__init__(overlayList, displayCtx, ortho, CropImagePanel)
         self.__ortho = ortho
         self.__name  = '{}_{}'.format(type(self).__name__, id(self))
 
