@@ -9,6 +9,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.0.3 (Friday 23rd April 2021)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with the management of built-in asset files (e.g. icons,
+  colour maps, etc). Asset files are now located inside the ``fsleyes``
+  package directory.
+
+
 1.0.2 (Thursday 22nd April 2021)
 --------------------------------
 

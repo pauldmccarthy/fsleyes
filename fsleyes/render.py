@@ -52,9 +52,9 @@ def main(args=None, hook=None):
     if args is None:
         args = sys.argv[1:]
 
-    # Initialise FSLeyes and implement hacks.
-    # This must come first as, amongst other
-    # things, it sets the fsleyes.assetDir.
+    # Initialise FSLeyes and implement
+    # hacks. This must come first as it
+    # does a number of important things.
     fsleyes.initialise()
 
     # Initialise colour maps module
