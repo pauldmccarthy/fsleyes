@@ -183,6 +183,7 @@ def main(args=None):
     warnings.filterwarnings('ignore', module='trimesh')
     warnings.filterwarnings('ignore', module='h5py')
     warnings.filterwarnings('ignore', category=DeprecationWarning)
+    warnings.filterwarnings('ignore', category=UserWarning)
     logging.getLogger('nibabel')  .setLevel(logging.CRITICAL)
     logging.getLogger('trimesh')  .setLevel(logging.CRITICAL)
     logging.getLogger('traitlets').setLevel(logging.CRITICAL)
