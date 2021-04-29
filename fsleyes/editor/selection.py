@@ -951,7 +951,7 @@ def selectLine(shape,
 
     # Allocate a selection block
     # which will contain the line
-    block = np.zeros(size, dtype=np.bool)
+    block = np.zeros(size, dtype=bool)
 
     # Generate a voxel block
     # at each point

@@ -770,7 +770,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             # desired slice index with a list)
             slc       = [slice(None)] * 3
             slc[axis] = [voxel[axis]]
-            selection = selection[slc]
+            selection = selection[tuple(slc)]
 
             self.__selectClipboard     = selection
             self.__selectClipboardAxis = axis
