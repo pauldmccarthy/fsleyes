@@ -311,8 +311,6 @@ def configLogging(verbose=0, noisy=None):
     if noisy is None:
         noisy = []
 
-    warnings.filterwarnings('default', category=DeprecationWarning)
-
     # Set up the root logger
     logFormatter = logging.Formatter('%(levelname)8.8s '
                                      '%(filename)20.20s '
@@ -331,6 +329,9 @@ def configLogging(verbose=0, noisy=None):
     # user if disableLogging is set.
     if disableLogging:
         return
+
+    # show dep warnings
+    warnings.filterwarnings('default', category=DeprecationWarning)
 
     # Now we can set up logging
     if verbose == 1:
