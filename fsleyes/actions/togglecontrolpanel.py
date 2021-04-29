@@ -35,7 +35,8 @@ class ToggleControlPanelAction(base.ToggleAction):
                  viewPanel,
                  cpType,
                  func=None,
-                 name=None):
+                 name=None,
+                 **kwargs):
         """Create a ``ToggleControlPanelAction``.
 
         :arg overlayList: The :class:`.OverlayList`
@@ -46,6 +47,9 @@ class ToggleControlPanelAction(base.ToggleAction):
         :arg func:        The function which toggles the control panel. If
                           not provided, a default function is used.
         :arg name:        Name of this action - defaults to ``func.__name__``.
+
+        All other arguments will be passed to the
+        :meth:`.ViewPanel.togglePanel` method.
         """
 
         if func is None:
@@ -56,6 +60,7 @@ class ToggleControlPanelAction(base.ToggleAction):
 
         self.__viewPanel = viewPanel
         self.__cpType    = cpType
+        self.__kwargs    = kwargs
 
         # Listen for changes to the view panel layout
         # so we can detect when the user closes our
@@ -73,7 +78,10 @@ class ToggleControlPanelAction(base.ToggleAction):
         """Default action to run if a ``func`` wasn't specified. Calls
         :class:`.ViewPanel.togglePanel`,
         """
-        self.viewPanel.togglePanel(self.__cpType, *args, **kwargs)
+        self.viewPanel.togglePanel(self.__cpType,
+                                   *args,
+                                   **kwargs,
+                                   **self.__kwargs)
 
 
     @property

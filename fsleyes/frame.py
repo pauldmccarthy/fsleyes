@@ -596,7 +596,8 @@ class FSLeyesFrame(wx.Frame):
         ctrls = [plugins.lookupControl(c) for c in ctrls]
 
         for ctrl in ctrls:
-            viewPanel.togglePanel(ctrl)
+            title = plugins.pluginTitle(ctrl)
+            viewPanel.togglePanel(ctrl, title=title)
 
 
     def refreshViewMenu(self):
