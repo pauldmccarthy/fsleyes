@@ -14,7 +14,10 @@
 import os.path as op
 import            glob
 
-import file_tree
+try:
+    import file_tree
+except ImportError:
+    file_tree = None
 
 from .filetreepanel import FileTreePanel
 from .manager       import FileTreeManager

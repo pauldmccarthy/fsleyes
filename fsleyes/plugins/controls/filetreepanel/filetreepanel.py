@@ -96,6 +96,15 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         return {'location' : wx.RIGHT}
 
 
+    @staticmethod
+    def ignoreControl():
+        """If the ``file_tree`` library is not installed, returns ``True``,
+        which causes the ``FileTreePanel`` to not be added as an option in
+        the FSLeyes interface.
+        """
+        return filetree.file_tree is None
+
+
     def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Create a ``FileTreePanel``.
 
