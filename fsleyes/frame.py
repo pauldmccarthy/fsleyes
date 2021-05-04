@@ -596,7 +596,8 @@ class FSLeyesFrame(wx.Frame):
         ctrls = [plugins.lookupControl(c) for c in ctrls]
 
         for ctrl in ctrls:
-            viewPanel.togglePanel(ctrl)
+            title = plugins.pluginTitle(ctrl)
+            viewPanel.togglePanel(ctrl, title=title)
 
 
     def refreshViewMenu(self):
@@ -1286,8 +1287,8 @@ class FSLeyesFrame(wx.Frame):
         # It's nice to explicitly clean
         # up our FSLeyesPanels, otherwise
         # they'll probably complain
-        for panel in self.__viewPanels:
-            panel.destroy()
+        for vp in self.__viewPanels:
+            self.__onViewPanelClose(panel=vp, displaySync=False)
 
         # (not created) self.__overlayMenuActions
 

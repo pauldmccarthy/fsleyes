@@ -1323,7 +1323,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             ev.Skip()
 
 
-class CanvasPanelEventManager(object):
+class CanvasPanelEventManager:
     """This class manages ``wx`` mouse/keyboard events originating from
     :class:`.SliceCanvas` instances contained within :class:`.CanvasPanel`
     views.
@@ -1395,7 +1395,7 @@ class CanvasPanelEventManager(object):
         self.__profile.handleEvent(ev)
 
 
-class PlotPanelEventManager(object):
+class PlotPanelEventManager:
     """This class manages events originating from ``matplotlib`` ``Canvas``
     objects contained within :class:`.PlotPanel` views.
 

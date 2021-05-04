@@ -10,6 +10,7 @@
 
 
 import logging
+import platform
 
 import numpy          as np
 import OpenGL.GL      as gl
@@ -136,10 +137,14 @@ class Texture3D(texture.Texture):
 
             # The macOS GL driver sometimes corrupts
             # the texture data if we don't generate
-            # mipmaps
+            # mipmaps. But generating mipmaps can be
+            # very slow, so we only enable it on macOS
+            if platform.system() == 'Darwin': mipmap = gl.GL_TRUE
+            else:                             mipmap = gl.GL_FALSE
+
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_GENERATE_MIPMAP,
-                               gl.GL_TRUE)
+                               mipmap)
 
             # create the texture according to
             # the format determined by the

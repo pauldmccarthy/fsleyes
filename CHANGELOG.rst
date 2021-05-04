@@ -9,6 +9,26 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.4 (Tuesday 4th May 2021)
+----------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Improved ortho edit mode performance on large images (!246).
+* Suppressed some warning messages (!246).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with the :attr:`.PlotCanvas.limits` becoming out of sync with
+  the ``matplotlib.Axes`` limits (!246).
+* The ``file-tree`` library is now optional (!246).
+
 
 1.0.3 (Friday 23rd April 2021)
 ------------------------------
@@ -20,7 +40,7 @@ Fixed
 
 * Fixed an issue with the management of built-in asset files (e.g. icons,
   colour maps, etc). Asset files are now located inside the ``fsleyes``
-  package directory.
+  package directory (!244).
 
 
 1.0.2 (Thursday 22nd April 2021)
@@ -31,10 +51,11 @@ Fixed
 ^^^^^
 
 
-* Fixed some issues with FSLeyes plugin management.
-* Fixed some issues with GL initialisations on GTK2 versions of ``wxpython``.
+* Fixed some issues with FSLeyes plugin management (!242).
+* Fixed some issues with GL initialisations on GTK2 versions of ``wxpython``
+  (!242).
 * New ``--annotations`` command-line option, allowing annotations to be
-  loaded from a file into an ortho view.
+  loaded from a file into an ortho view (!242).
 
 
 1.0.1 (Tuesday 20th April 2021)
@@ -45,7 +66,7 @@ Fixed
 ^^^^^
 
 
-* Fixed a compatibility issue with recent versions of matplotlib.
+* Fixed compatibility issues with recent versions of matplotlib (!240).
 
 
 1.0.0 (Monday 19th April 2021)
@@ -57,23 +78,23 @@ Added
 
 
 * The lighting effect in the 3D view is now applied to ``volume`` overlays
-  (OpenGL 2.1 or newer only).
-* New ``--lightDistance`` option (for 3D view), allowing the distance of
-  the light source from the centre of the display bounding box to be set.
+  (OpenGL 2.1 or newer only) (!222).
+* New ``--lightDistance`` option (for 3D view), allowing the distance of the
+  light source from the centre of the display bounding box to be set (!222).
 * New ``--noBlendByIntensity`` option, for ``volume`` overlays in the 3D view,
-  allowing the modulation of samples by voxel intensity to be disabled.
+  allowing the modulation of samples by voxel intensity to be disabled (!222).
 * New ``-ixh``, ``-ixv``, ``-iyh``, ``-iyv``, ``-izh``, and ``-izv`` options,
-  allowing ortho canvases to be inverted vertically or horizontally.
+  allowing ortho canvases to be inverted vertically or horizontally (!225).
 * New ``--modulateMode`` option for ``rgbvector``, ``linevector``, ``tensor``
   and ``sh`` overlays, allowing modulation to be applied to either brightness
-  or transparency.
+  or transparency (!231).
 * New option to copy/paste 2D selections between slices when editing a NIFTI
-  image.
+  image (!232).
 * New *annotation* panel, allowing simple shapes and text to be overlaid on
   the canvases of an ortho view. Annotations can be saved to/loaded from file,
-  via new options in the *Tools* menu.
+  via new options in the *Tools* menu (!233).
 * New *Sample along line* tool, allowing data from an image to be sampled
-  along a line and plotted.
+  along a line and plotted (!235).
 
 
 Changed
@@ -81,44 +102,44 @@ Changed
 
 
 * Text labels drawn on GL canvases are now created using ``matplotilb`` rather
-  than [Free]GLUT.
+  than [Free]GLUT (!221).
 * Removed dependence on [Free]GLUT - this means that ``fsleyes render`` can
   now be used on headless systems without using ``xvfb-run``, as long as
-  `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed.
+  `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed (!221).
 * The ``--lightPos`` command-line option (for the 3D view) has been changed to
   expect three rotation values (in degrees), which specify the position of the
   light source with respect to the centre of the display bounding box. This
   can be combined with the new ``--lightDistance`` option to specify the
-  position of the light source.
+  position of the light source (!222).
 * FSLeyes no longer ignores the ``LIBGL_ALWAYS_INDIRECT`` environment
-  variable.
+  variable (!222).
 * FSLeyes attempts to determine a suitable value for ``PYOPENGL_PLATFORM``
-  if it is not already set.
+  if it is not already set (!222).
 * FSLeyes should now work with both Wayland/EGL and X11/GLX builds of wxPython
-  on Linux.
+  on Linux (!222).
 * The normalisation method used in the power spectrum panel has been adjusted
   so that, instead of the data being normalised to unit variance before the
   fourier transform, the fourier-transformed data itself is normalised to the
-  range [-1, 1].
+  range [-1, 1] (!224).
 * The *Show command line for scene* option will display a warning if any
-  overlays are not saved.
+  overlays are not saved (!226).
 * The :class:`.FileTreePanel` has been updated to work with the
-  new `file-tree <https://pypi.org/project/file-tree/>`_ library.
+  new `file-tree <https://pypi.org/project/file-tree/>`_ library (!230).
 * Change to the interface for copying/pasting data between images - there is
-  now a single button for copying, pasting, and clearing the clipboard.
+  now a single button for copying, pasting, and clearing the clipboard (!232).
 * :class:`.annotations.TextAnnotation` objects can now be positioned in the
   display coordinate system, in addition to being positioned at pixel locations
-  on a canvas.
+  on a canvas (!232).
 * Changes to the FSLeyes plugin system to ease the development of FSLeyes
   controls that use custom interaction profiles, and to improve switching
-  between different interaction proflies.
+  between different interaction proflies (!234).
 * The FSLeyes plugin system now supports tools which are bound to a specific
-  view panel.
+  view panel (!234).
 * Many built-in FSLeyes control panels and tools have been migrated into the
   FSLeyes plugin system so that they are dynamically loaded as plugins, rather
-  than being hard-coded.
+  than being hard-coded (!234).
 * It is now possible to save and re-load view/control panel layouts with
-  plugin-provided views and control panels.
+  plugin-provided views and control panels (!234).
 
 
 Fixed
@@ -126,21 +147,21 @@ Fixed
 
 
 * Various fixes and improvements to the lighting effect on ``mesh`` overlays
-  in the 3D view.
+  in the 3D view (!222).
 * When opening a ``melodic_IC.nii.gz`` file with the
   ``--autoDisplay'`/``-ad``, option, the ``melodic_IC`` file is now selected
-  by default, instead of the ``mean`` underlay.
+  by default, instead of the ``mean`` underlay (!219).
 * Fixed a bug in image texture preparation for complex data types, when
-  running in a limited GL environment (e.g. VNC).
-* Compatibility fixes for newer versions of Jupyter `notebook`.
+  running in a limited GL environment (e.g. VNC) (!220).
+* Compatibility fixes for newer versions of Jupyter `notebook` (!227).
 * Fixed a problem with macOS desktop integration - it should now be possible
   to open a file with FSLeyes as the default application, and to drag a file
-  onto the FSLeyes.app icon.
-* Improved stability when running under macOS+XQuartz.
+  onto the FSLeyes.app icon (!228).
+* Improved stability when running under macOS+XQuartz (!229).
 * Fixed an issue with screenshots generated by ``fsleyes render`` containing
-  transparent pixels.
+  transparent pixels (!233).
 * Fixed a collision between the ``-mc`` and ``-a`` command-line options for
-  mesh overlays.
+  mesh overlays (!233).
 
 
 0.34.2 (Tuesday 14th July 2020)
