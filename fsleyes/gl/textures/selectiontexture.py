@@ -26,7 +26,7 @@ from . import                  texture3d
 log = logging.getLogger(__name__)
 
 
-class SelectionTextureBase(object):
+class SelectionTextureBase:
     """Base class shared by the :class:`SelectionTexture2D` and
     :class:`SelectionTexture3D`. Manages updates from the :class:`.Selection`
     object.
