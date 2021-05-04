@@ -164,14 +164,16 @@ class Editor(actions.ActionProvider):
         return self.__selection
 
 
-    def clearSelection(self):
+    def clearSelection(self, *args, **kwargs):
         """Clears the :class:`.selection.Selection` (see
         :meth:`.selection.Selection.clearSelection`). If this ``Editor`` is
         not recording all selection changes (``recordSelection=False`` in
         :meth:`__init__`), the selection state before being cleared is saved
         in the change history.
+
+        All arguments are passed through to :meth:`.Selection.clearSelection`.
         """
-        self.__selection.clearSelection()
+        self.__selection.clearSelection(*args, **kwargs)
 
         if (not self.__recordSelection) and self.__recordChanges:
 
@@ -445,13 +447,13 @@ class Editor(actions.ActionProvider):
         opts  = self.displayCtx.getOpts(image)
 
         if isinstance(change, ValueChange):
-            log.debug('{}: changing image {} data - offset '
-                      '{}, volume {}, size {}'.format(
-                          self.__image.name,
-                          change.overlay.name,
-                          change.offset,
-                          change.volume,
-                          change.oldVals.shape))
+            log.debug('%s: changing image %s data - offset '
+                      '%s, volume %s, size %s',
+                      self.__image.name,
+                      change.overlay.name,
+                      change.offset,
+                      change.volume,
+                      change.oldVals.shape)
 
             sliceobj = self.__makeSlice(change.offset,
                                         change.newVals.shape,

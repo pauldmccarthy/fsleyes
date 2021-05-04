@@ -2,6 +2,8 @@
 
 set -e
 
+projdir=$(pwd)
+
 source /test.venv/bin/activate
 
 pip install wheel setuptools twine
@@ -25,7 +27,15 @@ fi
 
 
 pip install dist/*.whl
+pushd / > /dev/null
+fsleyes -V
+fsleyes render -of out1.png $projdir/fsleyes/tests/testdata/3d
 pip uninstall -y fsleyes
+popd
 
 pip install dist/*.tar.gz
+pushd / > /dev/null
+fsleyes -V
+fsleyes render -of out2.png $projdir/fsleyes/tests/testdata/3d
 pip uninstall -y fsleyes
+popd

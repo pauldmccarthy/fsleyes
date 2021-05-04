@@ -30,7 +30,7 @@ From FSL 6.0.2 onwards, FSLeyes is installed into the ``fslpython`` conda
 environment, which is a part of the FSL installation. You can update to the
 latest version of FSLeyes by running the following command::
 
-    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-deps fsleyes
+    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-all fsleyes
 
 
 FSL 6.0.1 and older
@@ -51,11 +51,11 @@ Or, if you are using Linux::
 
 Now you can install FSLeyes with the following command::
 
-    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge fsleyes
+    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge --update-all fsleyes
 
 When you want to update FSLeyes again in the future, use this command instead::
 
-    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-deps fsleyes
+    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-all fsleyes
 
 
 Install from ``conda-forge`` (recommended)

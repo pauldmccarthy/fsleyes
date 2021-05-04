@@ -38,7 +38,7 @@ def createImageTexture(name, image, *args, **kwargs):
     else:          return ImageTexture2D(name, image, *args, **kwargs)
 
 
-class ImageTextureBase(object):
+class ImageTextureBase:
     """Base class shared by the :class:`ImageTexture` and
     :class:`ImageTexture2D` classes. Contains logic for retrieving a
     specific volume from a 3D + time or 2D + time :class:`.Image`, and
@@ -310,19 +310,17 @@ class ImageTextureBase(object):
             offset[:3] = affine.transform(
                 offset[:3], self.texCoordXform(image.shape))
 
-            log.debug('{} data changed - refreshing part of '
-                      'texture (offset: {}, size: {})'.format(
-                          image.name,
-                          offset, data.shape))
+            log.debug('%s data changed - refreshing part of '
+                      'texture (offset: %s, size: %s)',
+                      image.name, offset, data.shape)
 
             self.patchData(data, offset)
 
         # Otherwise (boolean array indexing) we have
         # to replace the whole image texture.
         else:
-
-            log.debug('{} data changed - refreshing full '
-                      'texture'.format(image.name))
+            log.debug('%s data changed - refreshing '
+                      'full texture', image.name)
 
             self.set()
 

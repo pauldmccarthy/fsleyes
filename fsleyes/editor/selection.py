@@ -106,6 +106,13 @@ class Selection(notifier.Notifier):
         self.__lastChangeOldBlock = None
         self.__lastChangeNewBlock = None
 
+        # We keep track of regions of the selection
+        # that have been modified, as a sequence of
+        # (xlo, ylo, zlo, xhi, yhi, zhi) values.
+        # This is used by the getBoundedSelection
+        # method,
+        self.__dirty = None
+
         if selection is None:
             selection = np.zeros(image.shape[:3], dtype=np.uint8)
 
@@ -256,23 +263,29 @@ class Selection(notifier.Notifier):
         Returns a tuple containing the region, as a ``numpy.uint8`` array, and
         the coordinates specifying its location in the full :attr:`selection`
         array.
-
-        .. warning:: This method is slow, and in many cases it may be
-                     faster simply to access the full selection array.
         """
 
-        xs, ys, zs = np.where(self.__selection > 0)
+        # If this method is called when a dirty
+        # region has not been saved (e.g. after
+        # a call to clearSelection), we fall
+        # back to manually calculating it, which
+        # is quite slow.
+        if self.__dirty is None:
+            xs, ys, zs = self.__selection.nonzero()
 
-        if len(xs) == 0:
-            return np.array([]).reshape((0, 0, 0)), (0, 0, 0)
+            if len(xs) == 0:
+                xlo = ylo = zlo = xhi = yhi = zhi = 0
+            else:
+                xlo = int(xs.min())
+                ylo = int(ys.min())
+                zlo = int(zs.min())
+                xhi = int(xs.max() + 1)
+                yhi = int(ys.max() + 1)
+                zhi = int(zs.max() + 1)
 
-        xlo = int(xs.min())
-        ylo = int(ys.min())
-        zlo = int(zs.min())
-        xhi = int(xs.max() + 1)
-        yhi = int(ys.max() + 1)
-        zhi = int(zs.max() + 1)
+            self.__dirty = xlo, ylo, zlo, xhi, yhi, zhi
 
+        xlo, ylo, zlo, xhi, yhi, zhi = self.__dirty
         selection = self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]
 
         return selection, (xlo, ylo, zlo)
@@ -316,6 +329,15 @@ class Selection(notifier.Notifier):
         # redundant clears.
         if restrict is None:
             self.__clear = True
+
+        # Always clear the dirty region - in
+        # theory we could adjust the dirty
+        # region by the restrict slices (if
+        # provided), but this is awkward to
+        # do. The getBoundedSelection method
+        # will resort to np.ndarray.nonzero
+        # if the dirty region is not set.
+        self.__dirty = None
 
         self.notify()
 
@@ -652,10 +674,21 @@ class Selection(notifier.Notifier):
             offset,
             combine)
 
-        log.debug('Updating selection ({}) block [{}:{}, {}:{}, {}:{}]'.format(
-            id(self), xlo, xhi, ylo, yhi, zlo, zhi))
+        log.debug('Updating selection (%i) block [%i:%i, %i:%i, %i:%i]',
+                  id(self), xlo, xhi, ylo, yhi, zlo, zhi)
 
         self.__selection[xlo:xhi, ylo:yhi, zlo:zhi] = block
+
+        # Save/update the dirty region - the region
+        # of the selection that has been modified
+        # and therefore is potentially non-zero.
+        if self.__dirty is None:
+            self.__dirty = [xlo, ylo, zlo, xhi, yhi, zhi]
+        else:
+            self.__dirty[:3] = np.min([self.__dirty[:3],
+                                       [xlo, ylo, zlo]], axis=0)
+            self.__dirty[3:] = np.max([self.__dirty[3:],
+                                       [xhi, yhi, zhi]], axis=0)
 
         self.__clear = False
 
@@ -951,7 +984,7 @@ def selectLine(shape,
 
     # Allocate a selection block
     # which will contain the line
-    block = np.zeros(size, dtype=np.bool)
+    block = np.zeros(size, dtype=bool)
 
     # Generate a voxel block
     # at each point

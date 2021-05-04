@@ -171,6 +171,7 @@ The following functions can be used to access plugins:
    lookupView
    lookupControl
    lookupTool
+   pluginTitle
 """
 
 
@@ -238,6 +239,17 @@ def initialise():
             loadPlugin(fname)
         except Exception as e:
             log.warning('Failed to load plugin file %s: %s', fname, e)
+
+
+def _pluginGroup(cls : Plugin) -> Optional[str]:
+    """Returns the type/group of the given plugin, one of ``'views'``,
+    ``'controls'``, or ``'tools'``.
+    """
+    if   issubclass(cls, viewpanel.ViewPanel):      return 'views'
+    elif issubclass(cls, ctrlpanel.ControlPanel):   return 'controls'
+    elif issubclass(cls, ctrlpanel.ControlToolBar): return 'controls'
+    elif issubclass(cls, actions.Action):           return 'tools'
+    return None
 
 
 def _loadBuiltIns():
@@ -394,6 +406,17 @@ def lookupTool(clsName : str) -> Tool:
     return _lookupPlugin(clsName, 'tools')
 
 
+def pluginTitle(plugin : Plugin) -> Optional[str]:
+    """Looks and returns up the title under which the given ``plugin`` is
+    registered.
+    """
+    group   = _pluginGroup(plugin)
+    entries = _listEntryPoints('fsleyes_{}'.format(group))
+    for title, cls in entries.items():
+        if cls is plugin:
+            return title
+
+
 def _importModule(filename : str, modname : str) -> ModuleType:
     """Used by :func:`loadPlugin`. Imports the given Python file, setting the
     module name to ``modname``.
@@ -425,8 +448,7 @@ def _findEntryPoints(mod            : ModuleType,
 
     for name in dir(mod):
 
-        item  = getattr(mod, name)
-        group = None
+        item = getattr(mod, name)
 
         if not isinstance(item, type):
             continue
@@ -455,11 +477,7 @@ def _findEntryPoints(mod            : ModuleType,
            item.ignoreTool():
             continue
 
-        if   issubclass(item, viewpanel.ViewPanel):      group = 'views'
-        elif issubclass(item, ctrlpanel.ControlPanel):   group = 'controls'
-        elif issubclass(item, ctrlpanel.ControlToolBar): group = 'controls'
-        elif issubclass(item, actions.Action):           group = 'tools'
-
+        group = _pluginGroup(item)
         if group is not None:
             log.debug('Found %s entry point: %s', group, name)
             entryPoints['fsleyes_{}'.format(group)][name] = item

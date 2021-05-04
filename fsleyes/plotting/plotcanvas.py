@@ -571,8 +571,8 @@ class PlotCanvas(props.HasProperties):
         # Make sure the limits are ordered
         # as (min, max), as they won't be
         # if invertX/invertY are active.
-        axxlim = list(sorted(axis.get_xlim()))
-        axylim = list(sorted(axis.get_ylim()))
+        axxlim = list(sorted(self.limits.x))
+        axylim = list(sorted(self.limits.y))
 
         # Here we are preparing the data for
         # each data series on separate threads,

@@ -255,7 +255,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """
 
         # controls
-        for ctrlType in plugins.listControls(type(self)).values():
+        for ctrlTitle, ctrlType in plugins.listControls(type(self)).items():
             name = ctrlType.__name__
             if not hasattr(self, name):
                 act = actions.ToggleControlPanelAction(
@@ -263,7 +263,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                     self.displayCtx,
                     self,
                     ctrlType,
-                    name=name)
+                    name=name,
+                    title=ctrlTitle)
                 setattr(self, name, act)
 
         # tools
@@ -468,7 +469,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         profileCls = panelType.profileCls()
 
         if title is None:
-            title = strings.titles.get(panelType, type(panelType).__name__)
+            title = panelType.title()
+        if title is None:
+            title = strings.titles.get(panelType, panelType.__name__)
 
         if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
             raise ValueError('Invalid value for location')
