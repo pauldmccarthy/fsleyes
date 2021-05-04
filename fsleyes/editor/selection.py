@@ -272,19 +272,20 @@ class Selection(notifier.Notifier):
         # is quite slow.
         if self.__dirty is None:
             xs, ys, zs = self.__selection.nonzero()
+
             if len(xs) == 0:
-                return np.array([]).reshape((0, 0, 0)), (0, 0, 0)
+                xlo = ylo = zlo = xhi = yhi = zhi = 0
+            else:
+                xlo = int(xs.min())
+                ylo = int(ys.min())
+                zlo = int(zs.min())
+                xhi = int(xs.max() + 1)
+                yhi = int(ys.max() + 1)
+                zhi = int(zs.max() + 1)
 
-            xlo = int(xs.min())
-            ylo = int(ys.min())
-            zlo = int(zs.min())
-            xhi = int(xs.max() + 1)
-            yhi = int(ys.max() + 1)
-            zhi = int(zs.max() + 1)
+            self.__dirty = xlo, ylo, zlo, xhi, yhi, zhi
 
-        else:
-            xlo, ylo, zlo, xhi, yhi, zhi = self.__dirty
-
+        xlo, ylo, zlo, xhi, yhi, zhi = self.__dirty
         selection = self.__selection[xlo:xhi, ylo:yhi, zlo:zhi]
 
         return selection, (xlo, ylo, zlo)

@@ -598,11 +598,15 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if self.targetImage is not None:
             editor = self.__getTargetImageEditor(editor)
 
-        # TODO  You could get the bounded selection from
-        # fillSelection, and pass it to clearSelection
+        # Get the bounds for the non-zero
+        # selection region, so we only need
+        # to clear that region
+        sel, off = editor.getSelection().getBoundedSelection()
+        restrict = [slice(o, o + s) for o, s in zip(off, sel.shape)]
+
         editor.startChangeGroup()
         editor.fillSelection(self.fillValue)
-        editor.clearSelection()
+        editor.clearSelection(restrict=restrict)
         editor.endChangeGroup()
 
 
