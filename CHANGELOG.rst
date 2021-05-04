@@ -13,6 +13,14 @@ chronological order.
 ----------------------------
 
 
+Changed
+^^^^^^^
+
+
+* Improved ortho edit mode performance on large images (!246).
+* Suppressed some warning messages (!246).
+
+
 Fixed
 ^^^^^
 
@@ -20,13 +28,6 @@ Fixed
 * Fixed an issue with the :attr:`.PlotCanvas.limits` becoming out of sync with
   the ``matplotlib.Axes`` limits (!246).
 * The ``file-tree`` library is now optional (!246).
-
-
-Changed
-^^^^^^^
-
-
-* Suppressed some warning messages (!246).
 
 
 1.0.3 (Friday 23rd April 2021)
