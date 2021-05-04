@@ -1287,7 +1287,8 @@ class FSLeyesFrame(wx.Frame):
         # It's nice to explicitly clean
         # up our FSLeyesPanels, otherwise
         # they'll probably complain
-        self.removeAllViewPanels()
+        for vp in self.__viewPanels:
+            self.__onViewPanelClose(panel=vp, displaySync=False)
 
         # (not created) self.__overlayMenuActions
 
