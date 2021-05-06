@@ -631,7 +631,7 @@ def _getPanelProps(panel):
         return {}, {}
 
     panelType              = type(panel).__name__
-    panelProps, sceneProps = VIEWPANEL_PROPS[panelType]
+    panelProps, sceneProps = VIEWPANEL_PROPS.get(panelType, ({}, {}))
 
     if isinstance(panel, canvaspanel.CanvasPanel):
         aux = panel.sceneOpts
