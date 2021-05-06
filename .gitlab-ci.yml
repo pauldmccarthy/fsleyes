@@ -185,7 +185,8 @@ build-docker-image-fsleyes-py39-wxpy4-gtk3:
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
       when: never
-    - when: on_success
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: always
 
   tags:
     - docker
