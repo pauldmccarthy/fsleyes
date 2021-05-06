@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.0.5 (Thursday 6th May 2021)
+-----------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed some issues with shutting down cleanly (!248).
+* Fixed a bug when saving a layout with plugin-provided view panels (!248).
+
+
 1.0.4 (Tuesday 4th May 2021)
 ----------------------------
 
