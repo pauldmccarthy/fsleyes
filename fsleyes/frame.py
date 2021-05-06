@@ -1290,6 +1290,10 @@ class FSLeyesFrame(wx.Frame):
         for vp in self.__viewPanels:
             self.__onViewPanelClose(panel=vp, displaySync=False)
 
+        self.__auiManager.UnInit()
+        self.__auiManager._frame = None
+        self.__auiManager        = None
+
         # (not created) self.__overlayMenuActions
 
         # Cleanly destroy all

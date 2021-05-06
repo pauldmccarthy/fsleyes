@@ -176,9 +176,17 @@ build-docker-image-fsleyes-py39-wxpy4-gtk3:
 .test: &test_template
   <<: *setup_ssh
 
-  # Releases are just tags on a release
-  # branch, so we don't need to test them.
-  <<: *except_releases
+  rules:
+    # Releases are just tags on a release
+    # branch, so we don't need to test them.
+    - if:   '$CI_COMMIT_TAG != null'
+      when: never
+    # Don't test if  "[skip-tests]"
+    # is in the commit message
+    - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: always
 
   tags:
     - docker
