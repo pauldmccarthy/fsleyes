@@ -303,9 +303,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__profileManager.destroy()
 
         # Un-initialise the AUI manager
-        self.__auiMgr.Unbind(aui.EVT_AUI_PANE_CLOSE)
-        self.__auiMgr.Unbind(aui.EVT_AUI_PERSPECTIVE_CHANGED)
-        self.__auiMgr.Update()
         self.__auiMgr.UnInit()
 
         # The AUI manager does not clear its
