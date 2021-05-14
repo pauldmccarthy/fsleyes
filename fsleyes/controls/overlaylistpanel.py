@@ -431,8 +431,18 @@ class ListItemWidget(wx.Panel):
         self.enabledFG  = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
         self.disabledFG = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
 
-        # give unsaved overlays  reddish colours
-        if wx.SystemSettings.GetAppearance().IsDark():
+        # give unsaved overlays reddish colours
+        isdark = False
+
+        # GetAppearance added in wxwidgets 3.1.3 (~=wxpython 4.1.0)
+        if hasattr(wx.SystemSettings, 'GetAppearance'):
+            isdark = wx.SystemSettings.GetAppearance().IsDark()
+        else:
+            # Guess whether we have a light or dark theme
+            colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW).Get()
+            isdark = all(c < 128 for c in colour[:3])
+
+        if isdark:
             self.unsavedDefaultBG  = '#443333'
             self.unsavedSelectedBG = '#551111'
         else:
