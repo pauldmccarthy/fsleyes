@@ -340,10 +340,8 @@ class GLImageObject(globject.GLObject):
 
         if opts.transform == 'id':
             resolution = [1, 1, 1]
-        elif opts.transform in ('pixdim', 'pixdim-flip'):
-            resolution = image.pixdim[:3]
         else:
-            resolution = [min(image.pixdim[:3])] * 3
+            resolution = image.pixdim[:3]
 
         voxels = glroutines.pointGrid(
             image.shape,
