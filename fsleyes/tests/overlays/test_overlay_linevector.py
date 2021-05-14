@@ -32,6 +32,9 @@ dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -ld -ls 500 -lw 3
 
 # test RGB images
 dti/dti_FA.nii.gz {{asrgb('dti/dti_V1.nii.gz')}} -ot linevector
+
+# test anisotropic voxels
+dti/anisotropic/dti_FA dti/anisotropic/dti_V1 -ot linevector
 """
 
 
