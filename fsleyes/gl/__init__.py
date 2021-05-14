@@ -505,7 +505,7 @@ def shutdown():
         delattr(thismod, '_glContext')
 
 
-class GLContext(object):
+class GLContext:
     """The ``GLContext`` class manages the creation of, and access to, an
     OpenGL context. This class abstracts away the differences between
     creation of on-screen and off-screen rendering contexts.
@@ -898,7 +898,7 @@ class GLContext(object):
         self.__context = context
 
 
-class OffScreenCanvasTarget(object):
+class OffScreenCanvasTarget:
     """Base class for canvas objects which support off-screen rendering. """
 
     def __init__(self, width, height):
@@ -1025,22 +1025,7 @@ class OffScreenCanvasTarget(object):
         mplimg.imsave(filename, self.getBitmap())
 
 
-WXGLMetaClass = None
-"""Under Python3/wxPython-Phoenix, we must specify ``wx.siplib.wrappertype``
-as the meta-class.  This is not necessary under Python2/wxPython.
-"""
-
-
-if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
-
-    import wx.siplib as sip
-    WXGLMetaClass = sip.wrappertype
-
-else:
-    WXGLMetaClass = type
-
-
-class WXGLCanvasTarget(object):
+class WXGLCanvasTarget:
     """Base class for :class:`wx.glcanvas.GLCanvas` objects.
 
     It is assumed that subclasses of this base class are also subclasses of

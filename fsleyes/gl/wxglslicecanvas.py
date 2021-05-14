@@ -12,6 +12,7 @@
 import six
 
 import wx
+import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes_widgets as     fwidgets
@@ -21,10 +22,9 @@ import fsleyes.gl      as     fslgl
 from   .               import slicecanvas
 
 
-class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
-                                         slicecanvas.SliceCanvas,
-                                         fslgl.WXGLCanvasTarget,
-                                         wxgl.GLCanvas)):
+class WXGLSliceCanvas(slicecanvas.SliceCanvas,
+                      fslgl.WXGLCanvasTarget,
+                      wxgl.GLCanvas):
     """The ``WXGLSliceCanvas`` is a :class:`.SliceCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.SliceCanvas` in your :mod:`wx` application, then
@@ -33,6 +33,8 @@ class WXGLSliceCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
     .. note:: The ``WXGLSliceCanvas`` assumes the existence of the
               :meth:`.SliceCanvas._updateDisplayBounds` method.
     """
+
+    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx, zax=0):
         """Create a ``WXGLSliceCanvas``. See :meth:`.SliceCanvas.__init__` for

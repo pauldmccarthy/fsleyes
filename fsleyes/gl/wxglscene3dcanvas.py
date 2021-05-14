@@ -9,24 +9,23 @@
 """
 
 
-import six
-
+import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl               as fslgl
 import fsleyes.gl.scene3dcanvas as scene3dcanvas
 
 
-class WXGLScene3DCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
-                                           scene3dcanvas.Scene3DCanvas,
-                                           fslgl.WXGLCanvasTarget,
-                                           wxgl.GLCanvas)):
+class WXGLScene3DCanvas(scene3dcanvas.Scene3DCanvas,
+                        fslgl.WXGLCanvasTarget,
+                        wxgl.GLCanvas):
     """The ``WXGLScene3DCanvas`` is a :class:`.Scene3DCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.Scene3DCanvas` in your :mod:`wx` application, then
     you should use a ``WXGLScene3DCanvas``.
     """
 
+    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx):
         """Create a ``WXGLScene3DCanvas``. See :meth:`.Scene3DCanvas.__init__`
