@@ -9,19 +9,17 @@
 """
 
 
-import six
-
 import wx
+import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl                 as fslgl
 import fsleyes.gl.colourbarcanvas as cbarcanvas
 
 
-class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
-                                             cbarcanvas.ColourBarCanvas,
-                                             fslgl.WXGLCanvasTarget,
-                                             wxgl.GLCanvas)):
+class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,
+                          fslgl.WXGLCanvasTarget,
+                          wxgl.GLCanvas):
     """The ``WXGLColourBarCanvas`` is a :class:`.ColourBarCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.ColourBarCanvas` in your :mod:`wx` application, then
@@ -30,6 +28,9 @@ class WXGLColourBarCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
     .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
               :meth:`.ColourBarCanvas.updateColourBarTexture` method.
     """
+
+    __metaclass__ = sip.wrappertype
+
     def __init__(self, parent, overlayList, displayCtx):
 
         attrs = fslgl.WXGLCanvasTarget.displayAttribues()
