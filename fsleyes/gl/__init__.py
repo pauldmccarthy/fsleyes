@@ -272,13 +272,21 @@ def glIsSoftwareRenderer():
     """
     if GL_RENDERER is None:
         return None
+
     # There doesn't seem to be any quantitative
     # method for determining whether we are using
     # software-based rendering, so a hack is
     # necessary.
     renderer = GL_RENDERER.lower()
-    return any(('software' in renderer,
-                'chromium' in renderer))
+
+    # "software" / "chromium" -> software renderer
+    # But SVGA3D/llvmpipe are super fast, so if
+    # we're using either of them, pretend that
+    # we're on hardware
+    sw     = any(('software' in renderer, 'chromium' in renderer))
+    fastsw = any(('llvmpipe' in renderer, 'svga3d'   in renderer))
+
+    return sw and (not fastsw)
 
 
 def bootstrap(glVersion=None):
@@ -442,13 +450,7 @@ def bootstrap(glVersion=None):
 
     # If we're using a software based renderer,
     # reduce the default performance settings
-    #
-    # But SVGA3D/llvmpipe are super fast, so if
-    # we're using either of them, pretend that
-    # we're on hardware
-    if glIsSoftwareRenderer()                and \
-       'llvmpipe' not in GL_RENDERER.lower() and \
-       'svga3d'   not in GL_RENDERER.lower():
+    if glIsSoftwareRenderer():
 
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')
