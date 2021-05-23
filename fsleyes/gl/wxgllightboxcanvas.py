@@ -15,16 +15,16 @@
 import six
 
 import wx
+import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl  as fslgl
 from . import         lightboxcanvas
 
 
-class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
-                                            lightboxcanvas.LightBoxCanvas,
-                                            fslgl.WXGLCanvasTarget,
-                                            wxgl.GLCanvas)):
+class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
+                         fslgl.WXGLCanvasTarget,
+                         wxgl.GLCanvas):
     """The ``WXGLLightBoxCanvas`` is a :class:`.LightBoxCanvas`, a
     :class:`wx.glcanvas.GLCanvas` and a :class:`.WXGLCanvasTarget`. If you
     want to use a :class:`.LightBoxCanvas` in your :mod:`wx` application,
@@ -34,6 +34,7 @@ class WXGLLightBoxCanvas(six.with_metaclass(fslgl.WXGLMetaClass,
               :meth:`.LightBoxCanvas._updateDisplayBounds` method.
     """
 
+    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx, zax=0):
         """Create a ``WXGLLightBoxCanvas``. See

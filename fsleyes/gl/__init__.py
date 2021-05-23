@@ -272,13 +272,21 @@ def glIsSoftwareRenderer():
     """
     if GL_RENDERER is None:
         return None
+
     # There doesn't seem to be any quantitative
     # method for determining whether we are using
     # software-based rendering, so a hack is
     # necessary.
     renderer = GL_RENDERER.lower()
-    return any(('software' in renderer,
-                'chromium' in renderer))
+
+    # "software" / "chromium" -> software renderer
+    # But SVGA3D/llvmpipe are super fast, so if
+    # we're using either of them, pretend that
+    # we're on hardware
+    sw     = any(('software' in renderer, 'chromium' in renderer))
+    fastsw = any(('llvmpipe' in renderer, 'svga3d'   in renderer))
+
+    return sw and (not fastsw)
 
 
 def bootstrap(glVersion=None):
@@ -442,13 +450,7 @@ def bootstrap(glVersion=None):
 
     # If we're using a software based renderer,
     # reduce the default performance settings
-    #
-    # But SVGA3D/llvmpipe are super fast, so if
-    # we're using either of them, pretend that
-    # we're on hardware
-    if glIsSoftwareRenderer()                and \
-       'llvmpipe' not in GL_RENDERER.lower() and \
-       'svga3d'   not in GL_RENDERER.lower():
+    if glIsSoftwareRenderer():
 
         log.debug('Software-based rendering detected - '
                   'lowering default performance settings.')
@@ -503,7 +505,7 @@ def shutdown():
         delattr(thismod, '_glContext')
 
 
-class GLContext(object):
+class GLContext:
     """The ``GLContext`` class manages the creation of, and access to, an
     OpenGL context. This class abstracts away the differences between
     creation of on-screen and off-screen rendering contexts.
@@ -711,20 +713,24 @@ class GLContext(object):
         initialisation are destroyed.
         """
 
-        if self.__app is not None:
-            self.__app.Destroy()
-
         # We need to destroy the OSMesa context,
         # otherwise it will stay in memory
         if self.__buffer is not None:
             import OpenGL.raw.osmesa.mesa as osmesa
             osmesa.OSMesaDestroyContext(self.__context)
 
+        # Clear refs to wx frame/canvas
+        # before destroying the wx.App,
+        # as problems can otherwise occur
+        app            = self.__app
+        self.__app     = None
         self.__context = None
         self.__buffer  = None
         self.__parent  = None
         self.__canvas  = None
-        self.__app     = None
+
+        if app is not None:
+            app.Destroy()
 
 
     def setTarget(self, target=None):
@@ -896,7 +902,7 @@ class GLContext(object):
         self.__context = context
 
 
-class OffScreenCanvasTarget(object):
+class OffScreenCanvasTarget:
     """Base class for canvas objects which support off-screen rendering. """
 
     def __init__(self, width, height):
@@ -1023,22 +1029,7 @@ class OffScreenCanvasTarget(object):
         mplimg.imsave(filename, self.getBitmap())
 
 
-WXGLMetaClass = None
-"""Under Python3/wxPython-Phoenix, we must specify ``wx.siplib.wrappertype``
-as the meta-class.  This is not necessary under Python2/wxPython.
-"""
-
-
-if fwidgets.wxFlavour() == fwidgets.WX_PHOENIX:
-
-    import wx.siplib as sip
-    WXGLMetaClass = sip.wrappertype
-
-else:
-    WXGLMetaClass = type
-
-
-class WXGLCanvasTarget(object):
+class WXGLCanvasTarget:
     """Base class for :class:`wx.glcanvas.GLCanvas` objects.
 
     It is assumed that subclasses of this base class are also subclasses of
