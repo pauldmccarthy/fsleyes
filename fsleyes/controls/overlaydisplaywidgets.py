@@ -45,8 +45,6 @@ _WIDGET_SPECS    = td.TypeDict()
 _3D_WIDGET_SPECS = td.TypeDict()
 
 
-
-
 def _merge_dicts(d1, d2):
     d3 = d1.copy()
     d3.update(d2)
@@ -73,9 +71,10 @@ def get3DPropertyList(target):
     return functools.reduce(lambda a, b: a + b, plist)
 
 
-def getWidgetSpecs(target, threedee=False):
+def getWidgetSpecs(target, displayCtx, threedee=False):
 
-    sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS, threedee)
+    sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS,
+                       displayCtx, threedee)
 
     if sdicts is None:
         return {}
@@ -83,9 +82,10 @@ def getWidgetSpecs(target, threedee=False):
     return functools.reduce(_merge_dicts, sdicts)
 
 
-def get3DWidgetSpecs(target):
+def get3DWidgetSpecs(target, displayCtx):
 
-    sdicts = _getThing(target, '_init3DWidgetSpec_', _3D_WIDGET_SPECS)
+    sdicts = _getThing(target, '_init3DWidgetSpec_', _3D_WIDGET_SPECS,
+                       displayCtx)
 
     if sdicts is None:
         return {}
@@ -338,7 +338,7 @@ def _initPropertyList_VolumeRGBOpts(threedee):
             'suppressMode']
 
 
-def _initWidgetSpec_Display(threedee):
+def _initWidgetSpec_Display(displayCtx, threedee):
     return {
         'name'        : props.Widget('name'),
         'overlayType' : props.Widget(
@@ -351,7 +351,7 @@ def _initWidgetSpec_Display(threedee):
     }
 
 
-def _initWidgetSpec_ColourMapOpts(threedee):
+def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
     return {
         'custom_cmap'     : _ColourMapOpts_ColourMapWidget,
         'cmap'            : props.Widget(
@@ -402,7 +402,7 @@ def _initWidgetSpec_ColourMapOpts(threedee):
     }
 
 
-def _initWidgetSpec_VolumeOpts(threedee):
+def _initWidgetSpec_VolumeOpts(displayCtx, threedee):
 
     def imageName(img):
         if img is None: return 'None'
@@ -445,7 +445,7 @@ def _initWidgetSpec_VolumeOpts(threedee):
     }
 
 
-def _init3DWidgetSpec_VolumeOpts():
+def _init3DWidgetSpec_VolumeOpts(displayCtx):
 
     return {
         'numSteps'          : props.Widget('numSteps',
@@ -473,7 +473,7 @@ def _init3DWidgetSpec_VolumeOpts():
     }
 
 
-def _initWidgetSpec_ComplexOpts(threedee):
+def _initWidgetSpec_ComplexOpts(displayCtx, threedee):
     return {
         'component' : props.Widget(
             'component',
@@ -481,7 +481,7 @@ def _initWidgetSpec_ComplexOpts(threedee):
     }
 
 
-def _initWidgetSpec_MaskOpts(threedee):
+def _initWidgetSpec_MaskOpts(displayCtx, threedee):
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
         'volume'         : props.Widget(
@@ -506,7 +506,7 @@ def _initWidgetSpec_MaskOpts(threedee):
     }
 
 
-def _initWidgetSpec_LabelOpts(threedee):
+def _initWidgetSpec_LabelOpts(displayCtx, threedee):
     return {
         'lut'          : props.Widget('lut', labels=lambda l: l.name),
         'outline'      : props.Widget('outline'),
@@ -526,7 +526,7 @@ def _initWidgetSpec_LabelOpts(threedee):
     }
 
 
-def _initWidgetSpec_VectorOpts(threedee):
+def _initWidgetSpec_VectorOpts(displayCtx, threedee):
     def imageName(img):
         if img is None: return 'None'
         else:           return img.name
@@ -599,7 +599,7 @@ def _initWidgetSpec_VectorOpts(threedee):
     }
 
 
-def _initWidgetSpec_RGBVectorOpts(threedee):
+def _initWidgetSpec_RGBVectorOpts(displayCtx, threedee):
     return {
         'interpolation' : props.Widget(
             'interpolation',
@@ -608,7 +608,7 @@ def _initWidgetSpec_RGBVectorOpts(threedee):
     }
 
 
-def _initWidgetSpec_LineVectorOpts(threedee):
+def _initWidgetSpec_LineVectorOpts(displayCtx, threedee):
     return {
         'directed'    : props.Widget('directed'),
         'unitLength'  : props.Widget('unitLength'),
@@ -618,7 +618,7 @@ def _initWidgetSpec_LineVectorOpts(threedee):
     }
 
 
-def _initWidgetSpec_TensorOpts(threedee):
+def _initWidgetSpec_TensorOpts(displayCtx, threedee):
     return {
         'lighting'         : props.Widget('lighting'),
         'orientFlip'       : props.Widget('orientFlip'),
@@ -634,7 +634,7 @@ def _initWidgetSpec_TensorOpts(threedee):
             spin=False),
     }
 
-def _initWidgetSpec_SHOpts(threedee):
+def _initWidgetSpec_SHOpts(displayCtx, threedee):
     return {
         'shResolution'    : props.Widget(
             'shResolution',
@@ -694,7 +694,7 @@ def _initWidgetSpec_SHOpts(threedee):
 
 
 
-def _initWidgetSpec_MeshOpts(threedee):
+def _initWidgetSpec_MeshOpts(displayCtx, threedee):
 
     def imageName(img):
         if img is None: return 'None'
@@ -812,7 +812,7 @@ def _initWidgetSpec_MeshOpts(threedee):
     }
 
 
-def _init3DWidgetSpec_MeshOpts():
+def _init3DWidgetSpec_MeshOpts(displayCtx):
     return {
         'wireframe' : props.Widget('wireframe'),
         'flatShading' : props.Widget(
@@ -822,19 +822,19 @@ def _init3DWidgetSpec_MeshOpts():
     }
 
 
-def _initWidgetSpec_GiftiOpts(threedee):
+def _initWidgetSpec_GiftiOpts(displayCtx, threedee):
     return {}
-def _init3DWidgetSpec_GiftiOpts():
-    return {}
-
-
-def _initWidgetSpec_FreesurferOpts(threedee):
-    return {}
-def _init3DWidgetSpec_FreesurferOpts():
+def _init3DWidgetSpec_GiftiOpts(displayCtx):
     return {}
 
 
-def _initWidgetSpec_MIPOpts(threedee):
+def _initWidgetSpec_FreesurferOpts(displayCtx, threedee):
+    return {}
+def _init3DWidgetSpec_FreesurferOpts(displayCtx):
+    return {}
+
+
+def _initWidgetSpec_MIPOpts(displayCtx, threedee):
 
     return {
         'custom_volume' : _NiftiOpts_VolumeWidget,
@@ -861,7 +861,7 @@ def _initWidgetSpec_MIPOpts(threedee):
     }
 
 
-def _initWidgetSpec_VolumeRGBOpts(threedee):
+def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
 
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
