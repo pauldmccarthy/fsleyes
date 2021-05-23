@@ -9,6 +9,27 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.1.0 (Under development)
+-------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Overlay display options which refer to other overlays (e.g. *Clip by*) now
+  use the display name of the other overlay, rather than their file base name
+  (!251).
+* Restored compatibiilty with wxPython 4.0.* (!250).
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug related to positioning of line vectors, tensors and FODs for
+  images with non-isotropic voxels (!250).
+
 
 1.0.5 (Thursday 6th May 2021)
 -----------------------------
