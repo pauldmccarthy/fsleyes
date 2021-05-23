@@ -223,45 +223,6 @@ setting can be changed through *System Preferences* |right_arrow| *Keyboard*
 controls*.
 
 
-macOS - FSLeyes breaks after updating
--------------------------------------
-
-
-Under macOS, you may encounter the following error after overwriting an old
-version of FSLeyes with a new version:
-
-
-.. image:: images/troubleshooting_fsleyes_update_error.png
-   :width: 50%
-   :align: center
-
-
-This is happening because macOS is caching the old version of the FSLeyes
-application specification file (found in ``FSLeyes.app/Contents/Info.plist``),
-and ignoring the new version. You can fix this problem by temporarily moving
-this file to a different location, and then moving it back again, for example::
-
-
-  cd /Path/to/FSLeyes.app
-  mv Contents/Info.plist ./Info.plist.backup
-  # This command will fail
-  ./Contents/MacOS/fsleyes
-  mv ./Info.plist.backup Contents/Info.plist
-  # FSLeyes should now work
-  ./Contents/MacOS/fsleyes
-
-
-If, after the above, the problem is still occurring, it may be that you are
-using a symbolic link to call FSLeyes (e.g. a link called
-``$FSLDIR/bin/fsleyes`` which points to
-``/Applications/FSLeyes.app/Contents/MacOS/fsleyes``. If this is the case,
-try replacing the symlink with a wrapper script that contains the following::
-
-
-  #!/bin/bash
-  /path/to/FSLeyes.app/Contents/MacOS/fsleyes $@
-
-
 macOS - I can't start FSLeyes from IPython/Jupyter Notebook
 -----------------------------------------------------------
 
@@ -325,6 +286,8 @@ The next time you start a new Jupyter notebook, select the *Python 3 (GUI)*
 kernel.
 
 
+.. _running_fsleyes_remotely:
+
 Running FSLeyes remotely
 ------------------------
 
@@ -334,21 +297,68 @@ from within VNC or other remote desktop tools. However, you may need to
 configure your environment before FSLeyes will work correctly.
 
 
-OpenGL 1.4 or newer is required (detected version: 1.2)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note:: `This web page
+          <https://www.scm.com/doc/Installation/Remote_GUI.html>`_ is a very
+          good resource to consult if you are having trouble getting FSLeyes
+          working over a SSH connection.
 
 
-FSLeyes requires OpenGL 1.4 or newer. In some remote desktop environments, the
-OpenGL version may be restricted. If you receive this error when trying to
-start FSLeyes, try the following::
+SSH/X11, VNC, NoMachine, etc - FSLeyes won't start
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-  unset LIBGL_ALWAYS_INDIRECT
-  fsleyes
+If you are having trouble running FSLeyes on a remote server, there are
+several things you may need to check.
 
 
-If you are running FSLeyes within a VNC session, you may need to force
-software-based rendering::
+If you are using ``ssh -X`` or ``ssh -Y`` to connect to a remote server, you
+you should make sure that the X server on your local machine allows indirect
+rendering via GLX. The way to go about doing this depends on your operating
+system - see below if you are using a mac with XQuartz. If your local machine
+is using Linux, you may find a solution on one of these web pages:
+
+
+ * https://www.scm.com/doc/Installation/Remote_GUI.html#enabling-indirect-rendering-on-xorg-1-17-and-newer
+ * https://www.programmersought.com/article/71135109048/
+ * https://kb.tecplot.com/2019/12/18/linux-remote-display-issues/
+ * http://whiteboard.ping.se/Linux/GLX
+
+
+After you have enabled indirect rendering, if you have ``glxinfo`` or
+``glxgears`` installed, check to see that they work. Try running them both
+with the ``LIBGL_ALWAYS_INDIRECT`` variable set, and un-set, e.g.:
+
+```
+unset LIBGL_ALWAYS_INDIRECT
+glxinfo
+glxgears
+
+# or, if the above doesn't work
+
+export LIBGL_ALWAYS_INDIRECT=1
+glxinfo
+glxgears
+```
+
+
+If ``glxinfo`` or ``glxgears`` doesn't work, then FSLeyes is unlikely to work.
+
+
+If you have older versions of `mesa <https://mesa3d.org/>`_ installed on
+either the local or remote machines, update them to the latest available using
+your OS package manager. Also make sure that your X server (which runs on your
+local machine, e.g. XQuartz on macOS) is updated to the latest
+avaialble.
+
+
+After upgrading your X Server, you may need to re-enable indirect rendering
+via GLX, as outilned above (or below, if you are using macOS and XQuartz).
+
+
+If, after doing all of the above, FSLeyes still won't start, or if you are
+running FSLeyes within a VNC session, you may need to force software-based
+rendering::
+
 
   export LIBGL_ALWAYS_SOFTWARE=1
   fsleyes
@@ -366,7 +376,7 @@ X11, the following options will not be available:
  - Spline interpolation for :ref:`volume <overlays_volume>` and :ref:`RGB
    vector <overlays_vector>` overlays
  - :ref:`Tensor <overlays_tensor>` display
- - :ref:`Diffusion  SH <overlays_diffusion_sh>` display
+ - :ref:`Diffusion SH <overlays_diffusion_sh>` display
  - 3D lighting effects on for :ref:`volume <overlays_volume>` overlays.
 
 
@@ -390,8 +400,8 @@ following error::
   aborting...
 
 
-This is caused by a configuration issue with XQuartz - you will be unable to
-run any OpenGL application, not just FSLeyes. Fortunately, there is a
+This is likely due to a configuration issue with XQuartz - you will be unable
+to run any OpenGL application, not just FSLeyes. Fortunately, there is a
 solution: if you are using XQuartz 2.7.10 or newer, run this command (locally,
 not within the SSH session)::
 
@@ -415,7 +425,10 @@ this section, add the following line::
   defaultserverargs="$defaultserverargs +iglx"
 
 
-After making this change, restart XQuartz - FSLeyes should now start.
+After making this change, restart XQuartz - FSLeyes should now start. If
+FSLeyes is still not working, the problem may be with the remote server -
+refer to the information on :ref:`Running FSLeyes remotely
+<running_fsleyes_remotely>`, above.
 
 
 XQuartz - keyboard shortcuts don't work
