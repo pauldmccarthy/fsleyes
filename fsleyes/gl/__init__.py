@@ -713,20 +713,24 @@ class GLContext:
         initialisation are destroyed.
         """
 
-        if self.__app is not None:
-            self.__app.Destroy()
-
         # We need to destroy the OSMesa context,
         # otherwise it will stay in memory
         if self.__buffer is not None:
             import OpenGL.raw.osmesa.mesa as osmesa
             osmesa.OSMesaDestroyContext(self.__context)
 
+        # Clear refs to wx frame/canvas
+        # before destroying the wx.App,
+        # as problems can otherwise occur
+        app            = self.__app
+        self.__app     = None
         self.__context = None
         self.__buffer  = None
         self.__parent  = None
         self.__canvas  = None
-        self.__app     = None
+
+        if app is not None:
+            app.Destroy()
 
 
     def setTarget(self, target=None):
