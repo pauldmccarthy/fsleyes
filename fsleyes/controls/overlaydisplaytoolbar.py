@@ -47,7 +47,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
 
 
     The specific controls which are displayed are defined in the
-    :attr:`_TOOLBAR_PROPS` dictionary, and are created by the following
+    :attr:`self.__widgetSpecs` dictionary, and are created by the following
     methods:
 
     .. autosummary::
@@ -112,6 +112,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
             self.name,
             self.__selectedOverlayChanged)
 
+        self.__generateWidgetSpecs()
         self.__selectedOverlayChanged()
 
 
@@ -246,11 +247,11 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         viewPanel = self.__viewPanel
 
         # Display settings
-        nameSpec  = _TOOLBAR_PROPS[display, 'name']
-        typeSpec  = _TOOLBAR_PROPS[display, 'overlayType']
-        alphaSpec = _TOOLBAR_PROPS[display, 'alpha']
-        briSpec   = _TOOLBAR_PROPS[display, 'brightness']
-        conSpec   = _TOOLBAR_PROPS[display, 'contrast']
+        nameSpec  = self.__widgetSpecs[display, 'name']
+        typeSpec  = self.__widgetSpecs[display, 'overlayType']
+        alphaSpec = self.__widgetSpecs[display, 'alpha']
+        briSpec   = self.__widgetSpecs[display, 'brightness']
+        conSpec   = self.__widgetSpecs[display, 'contrast']
 
 
         # Buttons which toggle overlay
@@ -334,11 +335,11 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.VolumeOpts` instance.
         """
-        rangeSpec      = _TOOLBAR_PROPS[opts, 'displayRange']
-        resetSpec      = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
-        cmapSpec       = _TOOLBAR_PROPS[opts, 'cmap']
-        negCmapSpec    = _TOOLBAR_PROPS[opts, 'negativeCmap']
-        useNegCmapSpec = _TOOLBAR_PROPS[opts, 'useNegativeCmap']
+        rangeSpec      = self.__widgetSpecs[opts, 'displayRange']
+        resetSpec      = self.__widgetSpecs[opts, 'resetDisplayRange']
+        cmapSpec       = self.__widgetSpecs[opts, 'cmap']
+        negCmapSpec    = self.__widgetSpecs[opts, 'negativeCmap']
+        useNegCmapSpec = self.__widgetSpecs[opts, 'useNegativeCmap']
 
         cmapPanel = wx.Panel(self)
 
@@ -364,10 +365,10 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.ComplexOpts` instance.
         """
-        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
-        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
-        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
-        compSpec  = _TOOLBAR_PROPS[opts, 'component']
+        rangeSpec = self.__widgetSpecs[opts, 'displayRange']
+        resetSpec = self.__widgetSpecs[opts, 'resetDisplayRange']
+        cmapSpec  = self.__widgetSpecs[opts, 'cmap']
+        compSpec  = self.__widgetSpecs[opts, 'component']
         ccpanel   = wx.Panel(self)
 
         rangeWidget = props.buildGUI(self,    opts, rangeSpec)
@@ -390,8 +391,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MaskOpts` instance.
         """
-        thresSpec  = _TOOLBAR_PROPS[opts, 'threshold']
-        colourSpec = _TOOLBAR_PROPS[opts, 'colour']
+        thresSpec  = self.__widgetSpecs[opts, 'threshold']
+        colourSpec = self.__widgetSpecs[opts, 'colour']
 
         thresWidget  = props.buildGUI(self, opts, thresSpec)
         colourWidget = props.buildGUI(self, opts, colourSpec)
@@ -406,9 +407,9 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         of the given :class:`.LabelOpts` instance.
         """
 
-        lutSpec     = _TOOLBAR_PROPS[opts, 'lut']
-        outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
-        widthSpec   = _TOOLBAR_PROPS[opts, 'outlineWidth']
+        lutSpec     = self.__widgetSpecs[opts, 'lut']
+        outlineSpec = self.__widgetSpecs[opts, 'outline']
+        widthSpec   = self.__widgetSpecs[opts, 'outlineWidth']
 
         # lut/outline width widgets
         # are on a single panel
@@ -442,9 +443,9 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         of the given :class:`.VectorOpts` instance.
         """
 
-        modSpec   = _TOOLBAR_PROPS[opts, 'modulateImage']
-        clipSpec  = _TOOLBAR_PROPS[opts, 'clipImage']
-        rangeSpec = _TOOLBAR_PROPS[opts, 'clippingRange']
+        modSpec   = self.__widgetSpecs[opts, 'modulateImage']
+        clipSpec  = self.__widgetSpecs[opts, 'clipImage']
+        rangeSpec = self.__widgetSpecs[opts, 'clippingRange']
 
         panel = wx.Panel(self)
         sizer = wx.GridBagSizer()
@@ -482,7 +483,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.LineVectorOpts` instance.
         """
-        widthSpec = _TOOLBAR_PROPS[opts, 'lineWidth']
+        widthSpec = self.__widgetSpecs[opts, 'lineWidth']
 
         widget    = props.buildGUI(self, opts, widthSpec)
         lblWidget = self.MakeLabelledTool(
@@ -497,9 +498,9 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MeshOpts` instance.
         """
-        colourSpec  = _TOOLBAR_PROPS[opts, 'colour']
-        outlineSpec = _TOOLBAR_PROPS[opts, 'outline']
-        widthSpec   = _TOOLBAR_PROPS[opts, 'outlineWidth']
+        colourSpec  = self.__widgetSpecs[opts, 'colour']
+        outlineSpec = self.__widgetSpecs[opts, 'outline']
+        widthSpec   = self.__widgetSpecs[opts, 'outlineWidth']
 
         colourWidget  = props.buildGUI(self, opts, colourSpec)
         outlineWidget = props.buildGUI(self, opts, outlineSpec)
@@ -520,8 +521,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """
         tools, nav = self.__makeMeshOptsTools(opts)
 
-        vertWidget  = _TOOLBAR_PROPS[opts, 'vertexSet']
-        vdataWidget = _TOOLBAR_PROPS[opts, 'vertexData']
+        vertWidget  = self.__widgetSpecs[opts, 'vertexSet']
+        vdataWidget = self.__widgetSpecs[opts, 'vertexData']
 
         panel       = wx.Panel(self)
         sizer       = wx.BoxSizer(wx.VERTICAL)
@@ -549,7 +550,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.TensorOpts` instance.
         """
-        lightingSpec   = _TOOLBAR_PROPS[opts, 'lighting']
+        lightingSpec   = self.__widgetSpecs[opts, 'lighting']
         lightingWidget = props.buildGUI(self, opts, lightingSpec)
 
         tools, nav = self.__makeVectorOptsTools(opts)
@@ -561,8 +562,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.SHOpts` instance.
         """
-        sizeSpec = _TOOLBAR_PROPS[opts, 'size']
-        radSpec  = _TOOLBAR_PROPS[opts, 'radiusThreshold']
+        sizeSpec = self.__widgetSpecs[opts, 'size']
+        radSpec  = self.__widgetSpecs[opts, 'radiusThreshold']
 
         panel = wx.Panel(self)
         sizer = wx.FlexGridSizer(2, 2, 0, 0)
@@ -594,9 +595,9 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MIPOpts` instance.
         """
-        rangeSpec = _TOOLBAR_PROPS[opts, 'displayRange']
-        resetSpec = _TOOLBAR_PROPS[opts, 'resetDisplayRange']
-        cmapSpec  = _TOOLBAR_PROPS[opts, 'cmap']
+        rangeSpec = self.__widgetSpecs[opts, 'displayRange']
+        resetSpec = self.__widgetSpecs[opts, 'resetDisplayRange']
+        cmapSpec  = self.__widgetSpecs[opts, 'cmap']
 
         cmapPanel = wx.Panel(self)
 
@@ -614,19 +615,206 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         return tools, nav
 
 
-def _imageLabel(img):
-    """Used to generate labels for the :attr:`.VectorOpts.modulateImage`,
-    :attr:`.VectorOpts.clipImage`, and other :class:`.Image`-based
-    choice properties.
-    """
-    if img is None: return 'None'
-    else:           return img.name
+    def __generateWidgetSpecs(self):
+        """Called by :meth:`__init__`. Creates specifications for the toolbar
+        widgets for all overlay types.
+        """
 
+        def _imageLabel(img):
+            """Used to generate labels for the :attr:`.VectorOpts.modulateImage`,
+            :attr:`.VectorOpts.clipImage`, and other :class:`.Image`-based
+            choice properties.
+            """
+            if img is None: return 'None'
+            else:           return self.displayCtx.getDisplay(img).name
 
+        def _pathLabel(p):
+            if p is None: return 'None'
+            else:         return op.basename(p)
 
-def _pathLabel(p):
-    if p is None: return 'None'
-    else:         return op.basename(p)
+        self.__widgetSpecs = td.TypeDict({
+
+            'Display.name'         : props.Widget(
+                'name',
+                tooltip=_TOOLTIPS['Display.name']),
+            'Display.overlayType'  : props.Widget(
+                'overlayType',
+                tooltip=_TOOLTIPS['Display.overlayType'],
+                labels=strings.choices['Display.overlayType']),
+            'Display.alpha'        : props.Widget(
+                'alpha',
+                spin=False,
+                showLimits=False,
+                tooltip=_TOOLTIPS['Display.alpha']),
+            'Display.brightness'   : props.Widget(
+                'brightness',
+                spin=False,
+                showLimits=False,
+                tooltip=_TOOLTIPS['Display.brightness']),
+            'Display.contrast'     : props.Widget(
+                'contrast',
+                spin=False,
+                showLimits=False,
+                tooltip=_TOOLTIPS['Display.contrast']),
+
+            'VolumeOpts.resetDisplayRange' : actions.ActionButton(
+                'resetDisplayRange',
+                icon=icons.findImageFile('verticalReset32')
+            ),
+
+            'VolumeOpts.displayRange' : props.Widget(
+                'displayRange',
+                slider=False,
+                showLimits=False,
+                spinWidth=10,
+                tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
+                labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                        strings.choices['ColourMapOpts.displayRange.max']]),
+            'VolumeOpts.cmap' : props.Widget(
+                'cmap',
+                labels=fslcm.getColourMapLabel,
+                tooltip=_TOOLTIPS['VolumeOpts.cmap']),
+            'VolumeOpts.useNegativeCmap' : props.Widget(
+                'useNegativeCmap',
+                icon=[icons.findImageFile('twocmaps24'),
+                      icons.findImageFile('onecmap24')],
+                toggle=True,
+                tooltip=_TOOLTIPS['VolumeOpts.useNegativeCmap']),
+
+            'VolumeOpts.negativeCmap' : props.Widget(
+                'negativeCmap',
+                labels=fslcm.getColourMapLabel,
+                tooltip=_TOOLTIPS['VolumeOpts.negativeCmap'],
+                dependencies=['useNegativeCmap'],
+                enabledWhen=lambda i, unc : unc),
+
+            'ComplexOpts.component' : props.Widget(
+                'component',
+                labels=strings.choices['ComplexOpts.component'],
+                tooltip=_TOOLTIPS['ComplexOpts.component']),
+
+            'MaskOpts.threshold' : props.Widget(
+                'threshold',
+                showLimits=False,
+                spin=True,
+                tooltip=_TOOLTIPS['MaskOpts.threshold'],
+                labels=[strings.choices['MaskOpts.threshold.min'],
+                        strings.choices['MaskOpts.threshold.max']]),
+            'MaskOpts.colour'    : props.Widget(
+                'colour',
+                size=(24, 24),
+                tooltip=_TOOLTIPS['MaskOpts.colour']),
+
+            'LabelOpts.lut'     : props.Widget(
+                'lut',
+                tooltip=_TOOLTIPS['LabelOpts.lut'],
+                labels=lambda l: l.name),
+            'LabelOpts.outline' : props.Widget(
+                'outline',
+                tooltip=_TOOLTIPS['LabelOpts.outline'],
+                icon=[icons.findImageFile('outline24'),
+                      icons.findImageFile('filled24')],
+                toggle=True),
+            'LabelOpts.outlineWidth' : props.Widget(
+                'outlineWidth',
+                tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
+                showLimits=False,
+                spin=False),
+
+            'MeshOpts.colour'       : props.Widget(
+                'colour',
+                size=(24, 24),
+                tooltip=_TOOLTIPS['MeshOpts.colour']),
+            'MeshOpts.outline'      : props.Widget(
+                'outline',
+                tooltip=_TOOLTIPS['MeshOpts.outline'],
+                icon=[icons.findImageFile('outline24'),
+                      icons.findImageFile('filled24')],
+                toggle=True),
+            'MeshOpts.outlineWidth' : props.Widget(
+                'outlineWidth',
+                showLimits=False,
+                spin=False,
+                tooltip=_TOOLTIPS['MeshOpts.outlineWidth'],
+                enabledWhen=lambda i: i.outline),
+            'MeshOpts.vertexSet' : props.Widget(
+                'vertexSet',
+                labels=_pathLabel,
+                tooltip=_TOOLTIPS['MeshOpts.vertexSet']
+            ),
+            'MeshOpts.vertexData' : props.Widget(
+                'vertexData',
+                labels=_pathLabel,
+                tooltip=_TOOLTIPS['MeshOpts.vertexData']
+            ),
+
+            'VectorOpts.modulateImage' : props.Widget(
+                'modulateImage',
+                labels=_imageLabel,
+                tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
+            'VectorOpts.clipImage' : props.Widget(
+                'clipImage',
+                labels=_imageLabel,
+                tooltip=_TOOLTIPS['VectorOpts.clipImage']),
+            'VectorOpts.clippingRange' : props.Widget(
+                'clippingRange',
+                showLimits=False,
+                slider=True,
+                spin=False,
+                tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
+                labels=[strings.choices['VectorOpts.clippingRange.min'],
+                        strings.choices['VectorOpts.clippingRange.max']],
+                dependencies=['clipImage'],
+                enabledWhen=lambda o, ci: ci is not None),
+
+            'LineVectorOpts.lineWidth' : props.Widget(
+                'lineWidth',
+                showLimits=False,
+                spin=False,
+                tooltip=_TOOLTIPS['LineVectorOpts.lineWidth']),
+
+            'TensorOpts.lighting'      : props.Widget(
+                'lighting',
+                icon=[icons.findImageFile('lightbulbHighlight24'),
+                      icons.findImageFile('lightbulb24')],
+                tooltip=_TOOLTIPS['TensorOpts.lighting']),
+
+            'SHOpts.lighting'        : props.Widget(
+                'lighting',
+                icon=[icons.findImageFile('lightbulbHighlight24'),
+                      icons.findImageFile('lightbulb24')],
+                tooltip=_TOOLTIPS['SHOpts.lighting']),
+            'SHOpts.size'            : props.Widget(
+                'size',
+                showLimits=False,
+                slider=True,
+                spin=False,
+                tooltip=_TOOLTIPS['SHOpts.size']),
+            'SHOpts.radiusThreshold' : props.Widget(
+                'radiusThreshold',
+                slider=True,
+                spin=False,
+                showLimits=False,
+                tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
+
+            'MIPOpts.resetDisplayRange' : actions.ActionButton(
+                'resetDisplayRange',
+                icon=icons.findImageFile('verticalReset32')
+            ),
+
+            'MIPOpts.displayRange' : props.Widget(
+                'displayRange',
+                slider=False,
+                showLimits=False,
+                spinWidth=10,
+                tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
+                labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                        strings.choices['ColourMapOpts.displayRange.max']]),
+            'MIPOpts.cmap' : props.Widget(
+                'cmap',
+                labels=fslcm.getColourMapLabel,
+                tooltip=_TOOLTIPS['VolumeOpts.cmap']),
+        })
 
 
 _TOOLTIPS = td.TypeDict({
@@ -683,195 +871,6 @@ _TOOLTIPS = td.TypeDict({
                                                       'radiusThreshold'],
 })
 """This dictionary contains tooltips for :class:`.Display` and
-:class:`.DisplayOpts` properties. It is referenced in the
-:attr:`_TOOLBAR_PROPS` dictionary definition.
-"""
-
-
-_TOOLBAR_PROPS = td.TypeDict({
-
-    'Display.name'         : props.Widget(
-        'name',
-        tooltip=_TOOLTIPS['Display.name']),
-    'Display.overlayType'  : props.Widget(
-        'overlayType',
-        tooltip=_TOOLTIPS['Display.overlayType'],
-        labels=strings.choices['Display.overlayType']),
-    'Display.alpha'        : props.Widget(
-        'alpha',
-        spin=False,
-        showLimits=False,
-        tooltip=_TOOLTIPS['Display.alpha']),
-    'Display.brightness'   : props.Widget(
-        'brightness',
-        spin=False,
-        showLimits=False,
-        tooltip=_TOOLTIPS['Display.brightness']),
-    'Display.contrast'     : props.Widget(
-        'contrast',
-        spin=False,
-        showLimits=False,
-        tooltip=_TOOLTIPS['Display.contrast']),
-
-    'VolumeOpts.resetDisplayRange' : actions.ActionButton(
-        'resetDisplayRange',
-        icon=icons.findImageFile('verticalReset32')
-    ),
-
-    'VolumeOpts.displayRange' : props.Widget(
-        'displayRange',
-        slider=False,
-        showLimits=False,
-        spinWidth=10,
-        tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']]),
-    'VolumeOpts.cmap' : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel,
-        tooltip=_TOOLTIPS['VolumeOpts.cmap']),
-    'VolumeOpts.useNegativeCmap' : props.Widget(
-        'useNegativeCmap',
-        icon=[icons.findImageFile('twocmaps24'),
-              icons.findImageFile('onecmap24')],
-        toggle=True,
-        tooltip=_TOOLTIPS['VolumeOpts.useNegativeCmap']),
-
-    'VolumeOpts.negativeCmap' : props.Widget(
-        'negativeCmap',
-        labels=fslcm.getColourMapLabel,
-        tooltip=_TOOLTIPS['VolumeOpts.negativeCmap'],
-        dependencies=['useNegativeCmap'],
-        enabledWhen=lambda i, unc : unc),
-
-    'ComplexOpts.component' : props.Widget(
-        'component',
-        labels=strings.choices['ComplexOpts.component'],
-        tooltip=_TOOLTIPS['ComplexOpts.component']),
-
-    'MaskOpts.threshold' : props.Widget(
-        'threshold',
-        showLimits=False,
-        spin=True,
-        tooltip=_TOOLTIPS['MaskOpts.threshold'],
-        labels=[strings.choices['MaskOpts.threshold.min'],
-                strings.choices['MaskOpts.threshold.max']]),
-    'MaskOpts.colour'    : props.Widget(
-        'colour',
-        size=(24, 24),
-        tooltip=_TOOLTIPS['MaskOpts.colour']),
-
-    'LabelOpts.lut'     : props.Widget(
-        'lut',
-        tooltip=_TOOLTIPS['LabelOpts.lut'],
-        labels=lambda l: l.name),
-    'LabelOpts.outline' : props.Widget(
-        'outline',
-        tooltip=_TOOLTIPS['LabelOpts.outline'],
-        icon=[icons.findImageFile('outline24'),
-              icons.findImageFile('filled24')],
-        toggle=True),
-    'LabelOpts.outlineWidth' : props.Widget(
-        'outlineWidth',
-        tooltip=_TOOLTIPS['LabelOpts.outlineWidth'],
-        showLimits=False,
-        spin=False),
-
-    'MeshOpts.colour'       : props.Widget(
-        'colour',
-        size=(24, 24),
-        tooltip=_TOOLTIPS['MeshOpts.colour']),
-    'MeshOpts.outline'      : props.Widget(
-        'outline',
-        tooltip=_TOOLTIPS['MeshOpts.outline'],
-        icon=[icons.findImageFile('outline24'),
-              icons.findImageFile('filled24')],
-        toggle=True),
-    'MeshOpts.outlineWidth' : props.Widget(
-        'outlineWidth',
-        showLimits=False,
-        spin=False,
-        tooltip=_TOOLTIPS['MeshOpts.outlineWidth'],
-        enabledWhen=lambda i: i.outline),
-    'MeshOpts.vertexSet' : props.Widget(
-        'vertexSet',
-        labels=_pathLabel,
-        tooltip=_TOOLTIPS['MeshOpts.vertexSet']
-    ),
-    'MeshOpts.vertexData' : props.Widget(
-        'vertexData',
-        labels=_pathLabel,
-        tooltip=_TOOLTIPS['MeshOpts.vertexData']
-    ),
-
-    'VectorOpts.modulateImage' : props.Widget(
-        'modulateImage',
-        labels=_imageLabel,
-        tooltip=_TOOLTIPS['VectorOpts.modulateImage']),
-    'VectorOpts.clipImage' : props.Widget(
-        'clipImage',
-        labels=_imageLabel,
-        tooltip=_TOOLTIPS['VectorOpts.clipImage']),
-    'VectorOpts.clippingRange' : props.Widget(
-        'clippingRange',
-        showLimits=False,
-        slider=True,
-        spin=False,
-        tooltip=_TOOLTIPS['VectorOpts.clippingRange'],
-        labels=[strings.choices['VectorOpts.clippingRange.min'],
-                strings.choices['VectorOpts.clippingRange.max']],
-        dependencies=['clipImage'],
-        enabledWhen=lambda o, ci: ci is not None),
-
-    'LineVectorOpts.lineWidth' : props.Widget(
-        'lineWidth',
-        showLimits=False,
-        spin=False,
-        tooltip=_TOOLTIPS['LineVectorOpts.lineWidth']),
-
-    'TensorOpts.lighting'      : props.Widget(
-        'lighting',
-        icon=[icons.findImageFile('lightbulbHighlight24'),
-              icons.findImageFile('lightbulb24')],
-        tooltip=_TOOLTIPS['TensorOpts.lighting']),
-
-    'SHOpts.lighting'        : props.Widget(
-        'lighting',
-        icon=[icons.findImageFile('lightbulbHighlight24'),
-              icons.findImageFile('lightbulb24')],
-        tooltip=_TOOLTIPS['SHOpts.lighting']),
-    'SHOpts.size'            : props.Widget(
-        'size',
-        showLimits=False,
-        slider=True,
-        spin=False,
-        tooltip=_TOOLTIPS['SHOpts.size']),
-    'SHOpts.radiusThreshold' : props.Widget(
-        'radiusThreshold',
-        slider=True,
-        spin=False,
-        showLimits=False,
-        tooltip=_TOOLTIPS['SHOpts.radiusThreshold']),
-
-
-    'MIPOpts.resetDisplayRange' : actions.ActionButton(
-        'resetDisplayRange',
-        icon=icons.findImageFile('verticalReset32')
-    ),
-
-    'MIPOpts.displayRange' : props.Widget(
-        'displayRange',
-        slider=False,
-        showLimits=False,
-        spinWidth=10,
-        tooltip=_TOOLTIPS['ColourMapOpts.displayRange'],
-        labels=[strings.choices['ColourMapOpts.displayRange.min'],
-                strings.choices['ColourMapOpts.displayRange.max']]),
-    'MIPOpts.cmap' : props.Widget(
-        'cmap',
-        labels=fslcm.getColourMapLabel,
-        tooltip=_TOOLTIPS['VolumeOpts.cmap']),
-})
-"""This dictionary defines specifications for all controls shown on an
-:class:`OverlayDisplayToolBar`.
+:class:`.DisplayOpts` properties. It is used by the
+:meth:`OverlayDisplayToolBar.__generateWidgetSpecs` method.
 """
