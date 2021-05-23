@@ -406,7 +406,7 @@ def _initWidgetSpec_VolumeOpts(displayCtx, threedee):
 
     def imageName(img):
         if img is None: return 'None'
-        else:           return img.name
+        else:           return displayCtx.getDisplay(img).name
 
     return {
         'custom_volume'            : _NiftiOpts_VolumeWidget,
@@ -529,7 +529,7 @@ def _initWidgetSpec_LabelOpts(displayCtx, threedee):
 def _initWidgetSpec_VectorOpts(displayCtx, threedee):
     def imageName(img):
         if img is None: return 'None'
-        else:           return img.name
+        else:           return displayCtx.getDisplay(img).name
 
     return {
         'colourImage'   : props.Widget(
@@ -698,7 +698,7 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
 
     def imageName(img):
         if img is None: return 'None'
-        else:           return img.name
+        else:           return displayCtx.getDisplay(img).name
 
     def pathName(vdata):
         if vdata is None: return 'None'
