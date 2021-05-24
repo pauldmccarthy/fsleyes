@@ -1153,6 +1153,7 @@ properties = TypeDict({
     'ColourMapOpts.cmap'             : 'Colour map',
     'ColourMapOpts.custom_cmap'      : 'Colour map',
     'ColourMapOpts.cmapResolution'   : 'Colour map resolution',
+    'ColourMapOpts.logScale'         : 'Logarithmic scaling',
     'ColourMapOpts.gamma'            : 'Gamma correction',
     'ColourMapOpts.interpolateCmaps' : 'Interpolate colour maps',
     'ColourMapOpts.negativeCmap'     : '-ve colour map',
