@@ -257,10 +257,13 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
         if groupName == '3d':
             dispProps = odwidgets.get3DPropertyList(target)
-            dispSpecs = odwidgets.get3DWidgetSpecs( target)
+            dispSpecs = odwidgets.get3DWidgetSpecs( target, self.displayCtx)
         else:
-            dispProps = odwidgets.getPropertyList(target, self.__threedee)
-            dispSpecs = odwidgets.getWidgetSpecs( target, self.__threedee)
+            dispProps = odwidgets.getPropertyList(target,
+                                                  self.__threedee)
+            dispSpecs = odwidgets.getWidgetSpecs( target,
+                                                  self.displayCtx,
+                                                  self.__threedee)
 
         allLabels     = []
         allTooltips   = []

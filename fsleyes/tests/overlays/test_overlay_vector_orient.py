@@ -59,6 +59,8 @@ def flipdir(dirname):
     for f in os.listdir(dirname):
         if not op.exists(op.join(dirname, f)):
             continue
+        if not fslimage.looksLikeImage(f):
+            continue
         flipped = fliporient(op.join(dirname, f))
         flipped = fslimage.addExt(flipped)
         shutil.move(flipped, op.join(newdir, f))
