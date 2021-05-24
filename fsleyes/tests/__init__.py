@@ -32,21 +32,6 @@ try:
 except ImportError:
     import mock
 
-# When doing multiple test runs in parallel
-# on the same machine, we sometimes get
-# docker/xvfb-related conflicts.
-
-if 'DISPLAY' in os.environ:
-    for i in range(5):
-        try:
-            import matplotlib as mpl
-            mpl.use('wxagg')
-            import matplotlib.pyplot as plt
-            break
-        except ImportError:
-            if i == 4:
-                raise
-            time.sleep(np.random.randint(1, 10))
 
 import matplotlib.image as mplimg
 
