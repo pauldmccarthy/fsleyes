@@ -58,6 +58,7 @@ class ColourMapTexture(texture.Texture):
        setInvert
        setResolution
        setGamma
+       setLogScale
        setInterp
        setBorder
     """
@@ -74,6 +75,7 @@ class ColourMapTexture(texture.Texture):
         self.__invert       = False
         self.__interp       = None
         self.__gamma        = None
+        self.__logScale     = None
         self.__alpha        = None
         self.__displayRange = None
         self.__border       = None
@@ -122,6 +124,13 @@ class ColourMapTexture(texture.Texture):
         self.set(gamma=gamma)
 
 
+    def setLogScale(self, logScale):
+        """Log scaling . Only applied if the colour map (see
+        :meth:`setColourMap`) is specified as a function.
+        """
+        self.set(logScale=logScale)
+
+
     def setInterp(self, interp):
         """Set the interpolation used by this ``ColourMapTexture`` - either
         ``GL_NEAREST`` or ``GL_LINEAR``.
@@ -163,6 +172,7 @@ class ColourMapTexture(texture.Texture):
         ``alpha``        See :meth:`setAlpha`.
         ``resolution``   See :meth:`setResolution`.
         ``gamma``        See :meth:`setGamma`.
+        ``logScale``     See :meth:`setLogScale`.
         ``displayRange`` See :meth:`setDisplayRange`.
         ``border``       See :meth:`setBorder`.
         ================ ============================
@@ -177,6 +187,7 @@ class ColourMapTexture(texture.Texture):
         alpha        = kwargs.get('alpha',        self)
         resolution   = kwargs.get('resolution',   self)
         gamma        = kwargs.get('gamma',        self)
+        logScale     = kwargs.get('logScale',     self)
         displayRange = kwargs.get('displayRange', self)
         border       = kwargs.get('border',       self)
 
@@ -188,6 +199,7 @@ class ColourMapTexture(texture.Texture):
         if border       is not self: self.__border       = border
         if resolution   is not self: self.__resolution   = resolution
         if gamma        is not self: self.__gamma        = gamma
+        if logScale     is not self: self.__logScale     = logScale
 
         self.__refresh()
 
@@ -204,21 +216,23 @@ class ColourMapTexture(texture.Texture):
 
         import matplotlib.colors as colors
 
-        alpha  = self.__alpha
-        cmap   = self.__cmap
-        drange = self.__displayRange
-        invert = self.__invert
-        interp = self.__interp
-        res    = self.__resolution
-        gamma  = self.__gamma
-        border = self.__border
+        alpha    = self.__alpha
+        cmap     = self.__cmap
+        drange   = self.__displayRange
+        invert   = self.__invert
+        interp   = self.__interp
+        res      = self.__resolution
+        gamma    = self.__gamma
+        logScale = self.__logScale
+        border   = self.__border
 
-        if drange is None: drange = [0.0, 1.0]
-        if invert is None: invert = False
-        if interp is None: interp = gl.GL_NEAREST
-        if cmap   is None: cmap   = np.zeros((4, 4), dtype=np.float32)
-        if res    is None: res    = 256
-        if gamma  is None: gamma  = 1
+        if drange   is None: drange   = [0.0, 1.0]
+        if invert   is None: invert   = False
+        if interp   is None: interp   = gl.GL_NEAREST
+        if cmap     is None: cmap     = np.zeros((4, 4), dtype =np.float32)
+        if res      is None: res      = 256
+        if gamma    is None: gamma    = 1
+        if logScale is None: logScale = False
 
         # The fsleyes.colourmaps module creates
         # ListedColormap instances. If the given
@@ -235,9 +249,23 @@ class ColourMapTexture(texture.Texture):
         # colours, as global alpha takes precedence
         if isinstance(cmap, abc.Callable):
 
-            # Apply gamma scaling to weight
-            # towards one end of the colour map
-            idxs = np.linspace(0.0, 1.0, res) ** gamma
+            # Map display range to colour map logarithmicly
+            if logScale:
+                idxs   = np.linspace(drange[0], drange[1], res)
+                idxs   = np.log(idxs)
+                finite = np.isfinite(idxs)
+                imax   = idxs[finite].max()
+                imin   = idxs[finite].min()
+                idxs   = (idxs - imin) / (imax - imin)
+                idxs[~finite] = 0
+
+            # Map display range to colour map
+            # linearly, applying gamma scaling to
+            # weight towards one end of the colour
+            # map
+            else:
+                idxs = np.linspace(0.0, 1.0, res) ** gamma
+
             cmap = cmap(idxs)
             cmap = cmap[:, :3]
 

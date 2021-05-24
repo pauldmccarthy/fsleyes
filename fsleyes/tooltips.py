@@ -119,6 +119,14 @@ properties = TypeDict({
     'regions with a value near to the high display range will have opacity '
     'near 1.',
 
+    'ColourMapOpts.gamma' :
+    'Apply an exponential factor to to give more weighting to lower or higher '
+    'values. ',
+
+    'ColourMapOpts.logScale' :
+    'Map intensities to colours logarithmically (using the natural logarithm) '
+    'rather than linearly. ',
+
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '

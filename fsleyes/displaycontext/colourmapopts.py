@@ -114,6 +114,8 @@ class ColourMapOpts(object):
     """Gamma correction factor - exponentially weights the :attr:`cmap`
     and :attr:`negCmap` towards the low or high ends.
 
+    Ignored if :attr:`logScale` is enabled.
+
     This property takes values between -1 and +1. The exponential weight
     that should actually be used to apply gamma correction should be derived
     as follows:
@@ -124,6 +126,15 @@ class ColourMapOpts(object):
 
     The :meth:`realGamma` method will apply this scaling and return the
     exponent to be used.
+    """
+
+
+    logScale = props.Boolean(default=False)
+    """Applies a logarithmic function to the display range.
+
+    Normally, the display range is linearly mapped to the colour map - if this
+    setting is enabled, the logarithm of the display range is linearly mapped
+    to the colour map.
     """
 
 
