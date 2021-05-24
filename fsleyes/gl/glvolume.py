@@ -373,6 +373,7 @@ class GLVolume(glimageobject.GLImageObject):
                              self._invertClippingChanged)
         opts    .addListener('cmap',             name, self._cmapChanged)
         opts    .addListener('gamma',            name, self._cmapChanged)
+        opts    .addListener('logScale',         name, self._cmapChanged)
         opts    .addListener('interpolateCmaps', name, self._cmapChanged)
         opts    .addListener('negativeCmap',     name, self._cmapChanged)
         opts    .addListener('cmapResolution',   name, self._cmapChanged)
@@ -462,6 +463,7 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener('invertClipping',          name)
         opts    .removeListener('cmap',                    name)
         opts    .removeListener('gamma',                   name)
+        opts    .removeListener('logScale',                name)
         opts    .removeListener('interpolateCmaps',        name)
         opts    .removeListener('negativeCmap',            name)
         opts    .removeListener('useNegativeCmap',         name)
@@ -631,17 +633,18 @@ class GLVolume(glimageobject.GLImageObject):
         image voxels.
         """
 
-        display = self.display
-        opts    = self.opts
-        alpha   = display.alpha / 100.0
-        cmap    = opts.cmap
-        interp  = opts.interpolateCmaps
-        res     = opts.cmapResolution
-        gamma   = opts.realGamma(opts.gamma)
-        negCmap = opts.negativeCmap
-        invert  = opts.invert
-        dmin    = opts.displayRange[0]
-        dmax    = opts.displayRange[1]
+        display  = self.display
+        opts     = self.opts
+        alpha    = display.alpha / 100.0
+        cmap     = opts.cmap
+        interp   = opts.interpolateCmaps
+        res      = opts.cmapResolution
+        logScale = opts.logScale
+        gamma    = opts.realGamma(opts.gamma)
+        negCmap  = opts.negativeCmap
+        invert   = opts.invert
+        dmin     = opts.displayRange[0]
+        dmax     = opts.displayRange[1]
 
         if interp: interp = gl.GL_LINEAR
         else:      interp = gl.GL_NEAREST
@@ -651,6 +654,7 @@ class GLVolume(glimageobject.GLImageObject):
                                alpha=alpha,
                                resolution=res,
                                gamma=gamma,
+                               logScale=logScale,
                                interp=interp,
                                displayRange=(dmin, dmax))
 

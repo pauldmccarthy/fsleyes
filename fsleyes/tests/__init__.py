@@ -32,6 +32,7 @@ try:
 except ImportError:
     import mock
 
+
 import matplotlib.image as mplimg
 
 import fsleyes_props                as props

@@ -154,6 +154,7 @@ def _initPropertyList_VolumeOpts(threedee):
              'custom_cmap',
              'cmapResolution',
              'gamma',
+             'logScale',
              'interpolateCmaps',
              'invert',
              'invertClipping',
@@ -374,11 +375,14 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
         'linkLowRanges'    : props.Widget('linkLowRanges'),
         'linkHighRanges'   : props.Widget('linkHighRanges'),
         'modulateAlpha'    : props.Widget('modulateAlpha'),
+        'logScale'         : props.Widget('logScale'),
         'gamma'            : props.Widget(
             'gamma',
             showLimits=False,
             slider=True,
-            spin=True),
+            spin=True,
+            dependencies=['logScale'],
+            enabledWhen=lambda i, ls : not ls),
         'displayRange'     : props.Widget(
             'displayRange',
             showLimits=False,

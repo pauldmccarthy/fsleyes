@@ -132,6 +132,10 @@ cli_tests = """
 -bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+
+# logarithmic scaling
+{{logdata()}}
+{{logdata()}} -ls
 """  # noqa
 
 
@@ -172,6 +176,7 @@ def test_overlay_volume():
         'roi'         : roi,
         'complex'     : complex,
         'invert'      : invert,
+        'logdata'     : logdata,
     }
     run_cli_tests('test_overlay_volume', cli_tests, extras=extras)
 
@@ -200,8 +205,11 @@ def silly_range():
     fslimage.Image(data).save('silly_range.nii.gz')
     return 'silly_range.nii.gz'
 
-
-
+def logdata():
+    data = np.concatenate((np.linspace(0, 1,  20),
+                           np.linspace(1, 10, 20))).reshape((1, 2, 20))
+    fslimage.Image(data).save('logdata.nii.gz')
+    return 'logdata.nii.gz'
 
 
 def swapdim(infile):
