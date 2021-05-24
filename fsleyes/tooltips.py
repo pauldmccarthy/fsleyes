@@ -124,7 +124,8 @@ properties = TypeDict({
     'values. ',
 
     'ColourMapOpts.logScale' :
-    'Map intensities to colours logarithmically rather than linearly. ',
+    'Map intensities to colours logarithmically (using the natural logarithm) '
+    'rather than linearly. ',
 
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
