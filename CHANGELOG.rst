@@ -9,6 +9,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.7 (Monday 24th May 2021)
+----------------------------
+
+
+Added
+^^^^^
+
+
+* New *logarithmic scaling* option (``--logScale`` on the command-line) for
+  volume overlays, which causes voxel intensities to be mapped to the colour
+  map logarithmically, rather than linearly.
+
+
 1.0.6 (Monday 24th May 2021)
 ----------------------------
 
