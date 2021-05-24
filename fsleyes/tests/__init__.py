@@ -39,9 +39,10 @@ except ImportError:
 if 'DISPLAY' in os.environ:
     for i in range(5):
         try:
-            import matplotib as mpl
+            import matplotlib as mpl
             mpl.use('wxagg')
             import matplotlib.pyplot as plt
+            break
         except ImportError:
             if i == 4:
                 raise
