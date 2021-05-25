@@ -248,7 +248,7 @@ You can also access the view settings for a specific view::
    <fsleyes.views.orthopanel.OrthoPanel; proxy of <Swig Object of type 'wxPyPanel *' at 0x11593dba0> >]
 
   >>> ortho                = frame.viewPanels[1]
-  >>> orthoOpts            = ortho.getSceneOptions()
+  >>> orthoOpts            = ortho.sceneOpts
   >>> orthoOpts.layout     = 'grid'
   >>> orthoOpts.showLabels = False
 

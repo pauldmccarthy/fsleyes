@@ -74,7 +74,7 @@ import setup
 version = setup.get_fsleyes_version()
 release = version
 
-fsleyes_apidoc = 'http://users.fmrib.ox.ac.uk/~paulmc/fsleyes/apidoc/latest'
+fsleyes_apidoc = 'http://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/'
 
 
 # Things which I want to be able to
