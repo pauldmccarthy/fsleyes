@@ -114,8 +114,6 @@ class ColourMapOpts(object):
     """Gamma correction factor - exponentially weights the :attr:`cmap`
     and :attr:`negCmap` towards the low or high ends.
 
-    Ignored if :attr:`logScale` is enabled.
-
     This property takes values between -1 and +1. The exponential weight
     that should actually be used to apply gamma correction should be derived
     as follows:

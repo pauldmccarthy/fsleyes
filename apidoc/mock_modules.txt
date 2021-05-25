@@ -88,6 +88,8 @@ matplotlib.backend_bases
 matplotlib.backends
 matplotlib.backends.backend_wx
 matplotlib.backends.backend_wxagg
+matplotlib.cm
+matplotlib.colors
 matplotlib.image
 matplotlib.patches
 matplotlib.pyplot
