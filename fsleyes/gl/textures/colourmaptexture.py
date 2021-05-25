@@ -242,14 +242,15 @@ class ColourMapTexture(texture.Texture):
         if isinstance(cmap, colors.ListedColormap):
             res = min(res, cmap.colors.shape[0])
 
-        # If cmap is a function, assume that it accepts
-        # one or more scalar values between 0 and 1,
-        # and converts said values into a numpy array
-        # containing RGB/RGBA colours.  Crop the RGB
-        # colours, as global alpha takes precedence
+        # If cmap is a function, assume that it
+        # accepts one or more scalar values
+        # between 0 and 1, and converts said
+        # values into a numpy array containing
+        # RGB/RGBA colours.
         if isinstance(cmap, abc.Callable):
 
-            # Map display range to colour map logarithmicly
+            # Map display range to colour
+            # map logarithmically
             if logScale:
                 idxs   = np.linspace(drange[0], drange[1], res)
                 idxs   = np.log(idxs)
@@ -259,15 +260,18 @@ class ColourMapTexture(texture.Texture):
                 idxs   = (idxs - imin) / (imax - imin)
                 idxs[~finite] = 0
 
-            # Map display range to colour map
-            # linearly, applying gamma scaling to
-            # weight towards one end of the colour
-            # map
+            # Map display range to colour map linearly
             else:
-                idxs = np.linspace(0.0, 1.0, res) ** gamma
+                idxs = np.linspace(0.0, 1.0, res)
 
-            cmap = cmap(idxs)
-            cmap = cmap[:, :3]
+            # Transform display range to
+            # colours, applying gamma scaling to
+            # weight towards one end of the
+            # colour map Discard the alpha
+            # component from the colour map,
+            # colours, as global alpha takes
+            # precedence.
+            cmap = cmap(idxs ** gamma)[:, :3]
 
         # If RGB, turn into RGBA. If an RGBA cmap
         # has been provided, their alpha values take

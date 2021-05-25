@@ -380,9 +380,7 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
             'gamma',
             showLimits=False,
             slider=True,
-            spin=True,
-            dependencies=['logScale'],
-            enabledWhen=lambda i, ls : not ls),
+            spin=True),
         'displayRange'     : props.Widget(
             'displayRange',
             showLimits=False,
