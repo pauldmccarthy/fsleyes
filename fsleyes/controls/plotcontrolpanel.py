@@ -46,16 +46,6 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
     two methods are called whenever the
     :class:`.DisplayContext.selectedOverlay` changes, and may also be called
     at other times.
-
-
-    The following methods are available on a :class:`.PlotControlPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       getPlotPanel
-       getWidgetList
-       refreshDataSeriesWidgets
     """
 
 

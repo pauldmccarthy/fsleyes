@@ -43,15 +43,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     settings. The canvas is accessed through the :meth:`getCanvas` and
     :meth:`getGLCanvases` methods, and the ``LightBoxOpts`` instanace can
     be retrieved via the :meth:`.CanvasPanel.sceneOpts` property.
-
-
-    The ``LightBoxPanel`` adds the following actions to those already
-    provided by the :class:`.CanvasPanel`:
-
-    .. autosummary::
-       :nosignatures:
-
-       toggleLightBoxToolBar
     """
 
 
