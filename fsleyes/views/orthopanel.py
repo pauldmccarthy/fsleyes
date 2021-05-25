@@ -119,7 +119,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
        :nosignatures:
 
        toggleEditMode
-       toggleOrthoToolBar
        resetDisplay
        centreCursor
        centreCursorWorld
