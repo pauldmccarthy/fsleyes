@@ -9,6 +9,24 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.8 (Tuesday 25th May 2021)
+-----------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Gamma correction is no longer disabled when log scaling is active.
+
+
+Fixed
+^^^^^
+
+
+* Fixed a problem with API documentation generation
+
+
 1.0.7 (Monday 24th May 2021)
 ----------------------------
 
