@@ -326,19 +326,17 @@ is using Linux, you may find a solution on one of these web pages:
 
 After you have enabled indirect rendering, if you have ``glxinfo`` or
 ``glxgears`` installed, check to see that they work. Try running them both
-with the ``LIBGL_ALWAYS_INDIRECT`` variable set, and un-set, e.g.:
+with the ``LIBGL_ALWAYS_INDIRECT`` variable set, and un-set, e.g.::
 
-```
-unset LIBGL_ALWAYS_INDIRECT
-glxinfo
-glxgears
+    unset LIBGL_ALWAYS_INDIRECT
+    glxinfo
+    glxgears
 
-# or, if the above doesn't work
+    # or, if the above doesn't work
 
-export LIBGL_ALWAYS_INDIRECT=1
-glxinfo
-glxgears
-```
+    export LIBGL_ALWAYS_INDIRECT=1
+    glxinfo
+    glxgears
 
 
 If ``glxinfo`` or ``glxgears`` doesn't work, then FSLeyes is unlikely to work.
