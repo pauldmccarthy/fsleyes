@@ -9,8 +9,10 @@ the display properties of one or more overlays to be linked.
 """
 
 
-import logging
+import sys
 import copy
+import logging
+
 
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
