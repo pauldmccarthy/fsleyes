@@ -105,6 +105,7 @@ scipy.ndimage
 scipy.ndimage.measurements
 scipy.spatial
 scipy.spatial.distance
+six
 wx
 wx.adv
 wx.glcanvas
