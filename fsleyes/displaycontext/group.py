@@ -9,10 +9,10 @@ the display properties of one or more overlays to be linked.
 """
 
 
-import logging
+import sys
 import copy
+import logging
 
-import six
 
 import fsleyes_props                  as props
 import fsleyes_widgets.utils.typedict as td
@@ -150,7 +150,7 @@ class OverlayGroup(props.HasProperties):
 
         # Special case - make sure that the NiftiOpts
         # volume property is not constrained
-        self.setAttribute('NiftiOpts_volume', 'maxval', six.MAXSIZE)
+        self.setAttribute('NiftiOpts_volume', 'maxval', sys.maxsize)
 
 
     def __copy__(self):
