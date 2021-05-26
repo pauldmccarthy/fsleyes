@@ -9,8 +9,6 @@
 """
 
 
-import six
-
 import wx
 import wx.siplib   as sip
 import wx.glcanvas as wxgl

@@ -264,12 +264,12 @@ import os.path          as op
 import itertools        as it
 import                     sys
 import                     types
+import                     urllib
 import                     logging
 import                     warnings
 import                     textwrap
 import                     argparse
 import                     collections
-import six.moves.urllib as urllib
 import numpy            as np
 
 import fsl.data.image                     as fslimage
