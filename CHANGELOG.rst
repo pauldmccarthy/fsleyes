@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.9 (Wednesday 2nd June 2021)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with opening the overlay display panel in 3D views (!260).
+
+
 1.0.8 (Wednesday 26th May 2021)
 -------------------------------
 
@@ -17,14 +28,14 @@ Changed
 ^^^^^^^
 
 
-* Gamma correction is no longer disabled when log scaling is active.
+* Gamma correction is no longer disabled when log scaling is active (!256).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed a problem with API documentation generation
+* Fixed a problem with API documentation generation (!256, !258).
 
 
 1.0.7 (Monday 24th May 2021)
@@ -37,7 +48,7 @@ Added
 
 * New *logarithmic scaling* option (``--logScale`` on the command-line) for
   volume overlays, which causes voxel intensities to be mapped to the colour
-  map logarithmically, rather than linearly.
+  map logarithmically, rather than linearly (!254).
 
 
 1.0.6 (Monday 24th May 2021)
