@@ -1066,12 +1066,12 @@ def _VolumeOpts_3DClipPlanes(
                        weak=False)
 
     numPlanes    = target.numClipPlanes
-    numPlaneSpec = get3DWidgetSpecs(target)['numClipPlanes']
-    clipMode     = get3DWidgetSpecs(target)['clipMode']
-    showPlanes   = get3DWidgetSpecs(target)['showClipPlanes']
-    position     = get3DWidgetSpecs(target)['clipPosition']
-    azimuth      = get3DWidgetSpecs(target)['clipAzimuth']
-    inclination  = get3DWidgetSpecs(target)['clipInclination']
+    numPlaneSpec = get3DWidgetSpecs(target, displayCtx)['numClipPlanes']
+    clipMode     = get3DWidgetSpecs(target, displayCtx)['clipMode']
+    showPlanes   = get3DWidgetSpecs(target, displayCtx)['showClipPlanes']
+    position     = get3DWidgetSpecs(target, displayCtx)['clipPosition']
+    azimuth      = get3DWidgetSpecs(target, displayCtx)['clipAzimuth']
+    inclination  = get3DWidgetSpecs(target, displayCtx)['clipInclination']
 
     specs = [numPlaneSpec, showPlanes, clipMode]
 
