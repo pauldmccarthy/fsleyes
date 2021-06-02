@@ -18,7 +18,7 @@ import pytest
 
 import fsleyes.cliserver as cliserver
 
-from six import StringIO
+from io import StringIO
 
 
 class MockSettings(object):

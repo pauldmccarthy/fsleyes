@@ -22,15 +22,9 @@ import            wx
 
 import numpy   as np
 
-from six import StringIO
+from io import StringIO
 
-# python 3
-try:
-    from unittest import mock
-
-# python 2
-except ImportError:
-    import mock
+from unittest import mock
 
 
 import matplotlib.image as mplimg
