@@ -359,8 +359,14 @@ class DisplayContext(props.SyncableHasProperties):
 
     def __del__(self):
         """Prints a log message."""
-        if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+
+        # The log atribute, and internals of the
+        # logging module, be GC'd before this
+        # method is called, so absorb any errors.
+        try:
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
+        except Exception:
+            pass
 
 
     def destroy(self):
