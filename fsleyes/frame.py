@@ -362,6 +362,13 @@ class FSLeyesFrame(wx.Frame):
         return list(self.__viewPanels)
 
 
+    def getView(self, panelType):
+        """Return a list of all :class:`.ViewPanel` instances of the specified
+        type.
+        """
+        return [v for v in self.__viewPanels if isinstance(v, panelType)]
+
+
     @property
     def focusedViewPanel(self):
         """Returns the :class:`.ViewPanel` which currently has focus,
