@@ -92,7 +92,7 @@ class TimeSeriesControlPanel(plotctrl.PlotControlPanel):
         needed. Removes some property listeners, and calls
         :meth:`.PlotControlPanel.destroy`.
         """
-        psPanel = self.getPlotPanel()
+        psPanel = self.plotPanel
         psPanel.removeListener('plotMelodicICs', self.name)
         plotctrl.PlotControlPanel.destroy(self)
 
