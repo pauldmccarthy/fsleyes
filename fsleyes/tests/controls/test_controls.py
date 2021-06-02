@@ -44,7 +44,7 @@ from fsleyes.tests import (run_with_scene3dpanel,
                            realYield)
 
 
-datadir = op.join(op.dirname(__file__), 'testdata')
+datadir = op.join(op.dirname(__file__), '..', 'testdata')
 
 
 def test_controls_OrthoPanel():
