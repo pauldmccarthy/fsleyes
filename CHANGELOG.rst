@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.10 (Wednesday 2nd June 2021)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with removing data series from plot views (!262).
+
+
 1.0.9 (Wednesday 2nd June 2021)
 -------------------------------
 
