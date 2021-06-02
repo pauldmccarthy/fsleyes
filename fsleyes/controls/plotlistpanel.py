@@ -191,7 +191,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         list of the :class:`.OverlayPlotPanel`.
         """
         with props.skip(self.__plotPanel.canvas, 'dataSeries', self.name):
-            self.__plotPanel.dataSeries.remove(ev.data)
+            self.__plotPanel.canvas.dataSeries.remove(ev.data)
 
 
 class DataSeriesWidget(wx.Panel):
