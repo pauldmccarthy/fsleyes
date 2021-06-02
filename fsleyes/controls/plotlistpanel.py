@@ -84,16 +84,16 @@ class PlotListPanel(ctrlpanel.ControlPanel):
 
         self.__sizer.Add(self.__dsList, flag=wx.EXPAND, proportion=1)
 
-        self.__dsList.Bind(elistbox.EVT_ELB_ADD_EVENT,    self.__onListAdd)
-        self.__dsList.Bind(elistbox.EVT_ELB_REMOVE_EVENT, self.__onListRemove)
-        self.__dsList.Bind(elistbox.EVT_ELB_EDIT_EVENT,   self.__onListEdit)
-        self.__dsList.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.__onListSelect)
+        self.__dsList.Bind(elistbox.EVT_ELB_ADD_EVENT,    self.onListAdd)
+        self.__dsList.Bind(elistbox.EVT_ELB_REMOVE_EVENT, self.onListRemove)
+        self.__dsList.Bind(elistbox.EVT_ELB_EDIT_EVENT,   self.onListEdit)
+        self.__dsList.Bind(elistbox.EVT_ELB_SELECT_EVENT, self.onListSelect)
 
         self.__plotPanel.canvas.addListener('dataSeries',
                                             self.name,
-                                            self.__dataSeriesChanged)
+                                            self.dataSeriesChanged)
 
-        self.__dataSeriesChanged()
+        self.dataSeriesChanged()
         self.Layout()
         self.SetMinSize(self.__sizer.GetMinSize())
 
@@ -114,7 +114,15 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.destroy(self)
 
 
-    def __dataSeriesChanged(self, *a):
+    @property
+    def dsList(self):
+        """Return a reference to the :class:`.EditableListBox` widget that
+        contains the list of :class:`.DataSeries`.
+        """
+        return self.__dsList
+
+
+    def dataSeriesChanged(self, *a):
         """Called when the :attr:`.PlotPanel.dataSeries` list of the
         :class:`.OverlayPlotPanel` changes. Updates the list of
         :class:`.TimeSeriesWidget` controls.
@@ -131,7 +139,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
                 extraWidget=widg)
 
 
-    def __onListAdd(self, ev):
+    def onListAdd(self, ev):
         """Called when the user pushes the *add* button on the
         :class:`.EditableListBox`.  Adds the :class:`.DataSeries` associated
         with the currently selected overlay to the
@@ -141,7 +149,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         self.__plotPanel.addDataSeries()
 
 
-    def __onListEdit(self, ev):
+    def onListEdit(self, ev):
         """Called when the user edits a label on the
         :class:`.EditableListBox`. Updates the :attr:`.DataSeries.label`
         property of the corresponding :class:`DataSeries` instance.
@@ -149,7 +157,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
         ev.data.label = ev.label
 
 
-    def __onListSelect(self, ev):
+    def onListSelect(self, ev):
         """Called when the user selects an item in the
         :class:`.EditableListBox`. Sets the
         :attr:`.DisplayContext.selectedOverlay` to the overlay associated
@@ -176,7 +184,7 @@ class PlotListPanel(ctrlpanel.ControlPanel):
             self.displayCtx.location = disLoc
 
 
-    def __onListRemove(self, ev):
+    def onListRemove(self, ev):
         """Called when the user removes an item from the
         :class:`.EditableListBox`. Removes the corresponding
         :class:`.DataSeries` instance from the :attr:`.PlotPanel.dataSeries`
