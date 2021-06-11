@@ -814,6 +814,7 @@ class GLContext:
         # control over depth/stencil buffer sizes,
         # under these remote desktop environments.
         except Exception:
+            WXGLCanvasTarget.displayAttributes.disabled = True
             self.__canvas = wxgl.GLCanvas(self.__parent)
             self.__canvas.SetSize((0, 0))
 
@@ -1081,11 +1082,24 @@ class WXGLCanvasTarget:
         sub-classes.
 
         Return a dict to be passed as keyword arguments to the
-        ``wx.glcanvas.GLCanvas.__init__`` method, defining display attributes.
+        ``wx.glcanvas.GLCanvas.__init__`` method, defining desired OpenGL
+        display attributes (e.g. depth/stencil buffer sizes).
+
         The ``GLCanvas`` interface changed between wxWidgets 3.0.x and 3.1.x
         (roughly corresponding to wxPython 4.0.x and 4.1.x) - this method
         checks the wxPython version and returns a suitable set of arguments.
+
+        In certain remote environments (e.g. x2go), this method may return
+        an empty dictionary, as in some environments it does not seem to be
+        possible to request display attributes.
         """
+
+        # The GLContext.__createWXGLCanvas method
+        # might set a disabled flag on this method
+        # if it appears that we can't request
+        # specific values for display attributes
+        if getattr(WXGLCanvasTarget.displayAttributes, 'disabled', False):
+            return {}
 
         import wx
         import wx.glcanvas as wxgl
