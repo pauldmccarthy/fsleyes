@@ -800,7 +800,7 @@ class GLContext:
         # the first canvas, all canvases that are
         # subsequently created will inherit the
         # same properties.
-        attrs = WXGLCanvasTarget.displayAttribues()
+        attrs = WXGLCanvasTarget.displayAttributes()
 
         # GLCanvas initialisation with an attribute
         # list fails when running in a nomachine-like
@@ -1076,7 +1076,7 @@ class WXGLCanvasTarget:
 
 
     @staticmethod
-    def displayAttribues():
+    def displayAttributes():
         """Used within ``__init__`` methods of ``WXGLCanvasTarget``
         sub-classes.
 
