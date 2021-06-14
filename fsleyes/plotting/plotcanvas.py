@@ -191,6 +191,11 @@ class PlotCanvas(props.HasProperties):
     """
 
 
+    showPreparingMessage = props.Boolean(default=True)
+    """Show a message on the canvas whilst data is being prepared for plotting.
+    """
+
+
     def __init__(self,
                  parent,
                  drawFunc=None,
@@ -607,9 +612,10 @@ class PlotCanvas(props.HasProperties):
 
         # Show a message while we're
         # preparing the data.
-        self.message(strings.messages[self, 'preparingData'],
-                     clear=False,
-                     border=True)
+        if self.showPreparingMessage:
+            self.message(strings.messages[self, 'preparingData'],
+                         clear=False,
+                         border=True)
 
         # Wait until data preparation is
         # done, then call __drawDataSeries.

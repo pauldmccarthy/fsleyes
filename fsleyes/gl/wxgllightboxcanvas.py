@@ -39,7 +39,7 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
         :meth:`.LightBoxCanvas.__init__` for details on the arguments.
         """
 
-        attrs = fslgl.WXGLCanvasTarget.displayAttribues()
+        attrs = fslgl.WXGLCanvasTarget.displayAttributes()
 
         wxgl.GLCanvas                .__init__(self, parent, **attrs)
         fslgl.WXGLCanvasTarget       .__init__(self)
