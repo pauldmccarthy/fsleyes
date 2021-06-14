@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.11 (Monday 14th June 2021)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a compatibility issue with NoMachine/x2go-like remote environments
+  (!264).
+
+
 1.0.10 (Wednesday 2nd June 2021)
 --------------------------------
 
