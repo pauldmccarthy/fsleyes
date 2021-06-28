@@ -13,6 +13,7 @@ to interact with FSLeyes via a jupyter notebook.
 import               os
 import os.path    as op
 import subprocess as sp
+import itertools  as it
 import               sys
 import               time
 import               atexit
@@ -481,7 +482,6 @@ class FSLeyesIPythonShell(zmqshell.ZMQInteractiveShell):
         in the :class:`BackgroundIPythonKernel`. So this implementation
         does nothing.
         """
-        pass
 
 
 class NotebookServer(threading.Thread):
@@ -600,7 +600,7 @@ class NotebookServer(threading.Thread):
         # in a sub-process - we run the server
         # via a wrapper function called nbmain,
         # defined below.
-        cmd = [sys.executable, fsleyes_main.__file__]
+        cmd = [findPythonExecutable(), fsleyes_main.__file__]
 
         # py2app manipulates the PYTHONPATH,
         # so we pass the cfgdir through as a
@@ -712,3 +712,47 @@ def nbmain(argv):
     # remaining arguments are passed
     # through to notebookapp.main
     return nbmain(argv=argv[1:])
+
+
+def findPythonExecutable():
+    """Returns the path to the python executable. Used by the
+    :meth:`NotebookServer.run` method to start the notebook server in
+    a separate process.
+    """
+
+    # No problem if we're not on macOS, or
+    # we're not running in a conda environment
+    if sys.platform != 'darwin':
+        return sys.executable
+
+    # Don't rely on environment variables to
+    # detect conda, because we may have been
+    # called without our environment being
+    # activated
+    if not op.exists(op.join(sys.prefix, 'conda-meta')):
+        return sys.executable
+
+    # On macOS+conda, we need to make sure
+    # that a framework interpreter is used,
+    # The conda-forge python.app package
+    # sets the PYTHONEXECUTABLE variable,
+    # which causes sys.executable to be
+    # clobbered. So we need to try and find
+    # an appropriate executable to use.
+    #
+    # (Note: we could solve this problem by
+    # changing how the notebook server is
+    # executed, e.g. via an independent
+    # script instead of via fsleyes.main).
+    executable = sys.executable
+    exes       = ['pythonw', 'python.app', 'python']
+    dirs       = [op.join(sys.exec_prefix, 'bin'),
+                  op.dirname(sys.executable)]
+
+    for exe, dirname in it.product(exes, dirs):
+        exe = op.join(dirname, exe)
+        if op.exists(exe):
+            executable = exe
+            break
+
+    return executable
