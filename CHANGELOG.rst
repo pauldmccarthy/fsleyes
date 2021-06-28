@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.12 (Monday 28th June 2021)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with Jupyter Notebook integration on macOS (!266).
+
+
 1.0.11 (Monday 14th June 2021)
 ------------------------------
 
