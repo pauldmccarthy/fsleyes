@@ -22,7 +22,6 @@ import fsleyes_widgets               as fwidgets
 
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
-import fsleyes.plugins               as plugins
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.profiles              as profiles
 import fsleyes.strings               as strings
@@ -253,6 +252,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         This implementation may change in the future if it becomes problematic
         (e.g. due to naming conflicts).
         """
+
+        import fsleyes.plugins as plugins
 
         # controls
         for ctrlTitle, ctrlType in plugins.listControls(type(self)).items():
