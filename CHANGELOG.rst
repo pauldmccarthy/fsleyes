@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.0.13 (Tuesday 6th July 2021)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a circular import issue, affecting programmatic use of FSLeyes (!268).
+
+
 1.0.12 (Monday 28th June 2021)
 ------------------------------
 
