@@ -252,7 +252,7 @@ def copyImage(overlayList,
     if not isROI:
         slc     = tuple(slice(lo, hi) for lo, hi in roi)
         imgdata = overlay[slc]
-        xform   = overlay.voxToWorldMat
+        xform   = None
 
     # if an ROI is specified, we use the
     # fsl.utils.image.roi module to generate
