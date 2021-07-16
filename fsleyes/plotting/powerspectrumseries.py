@@ -481,11 +481,13 @@ class MelodicPowerSpectrumSeries(dataseries.DataSeries,
         property.
         """
 
-        opts      = self.displayCtx.getOpts(self.overlay)
+        overlay   = self.overlay
+        opts      = self.displayCtx.getOpts(overlay)
         component = opts.volume
 
-        ydata = self.overlay.getComponentPowerSpectrum(component)
-        xdata = np.arange(len(ydata), dtype=np.float32)
+        ydata     = overlay.getComponentPowerSpectrum(component)
+        nsamples  = len(overlay.getComponentTimeSeries(component))
+        xdata     = calcFrequencies(nsamples, overlay.tr, np.float32)
 
         return xdata, ydata
 
