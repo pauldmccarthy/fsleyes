@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.14 (Friday 16th July 2021)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with image copying, which could cause pixdims to be changed
+  slightly.
+
 
 1.0.13 (Tuesday 6th July 2021)
 ------------------------------
