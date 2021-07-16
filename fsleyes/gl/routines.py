@@ -736,7 +736,8 @@ def voxelBox(voxel,
 
     :arg boxSize: Desired width/height/depth of the box in scaled voxels.
                   May be either a single value, or a sequence of three
-                  values.
+                  values. The box size is forced to be at least one voxel
+                  in each dimension.
 
     :arg axes:    Axes along which the block is to be located.
 
@@ -764,18 +765,20 @@ def voxelBox(voxel,
     if not isinstance(boxSize, abc.Iterable):
         boxSize = [boxSize] * 3
 
+    # Limit the box span to the specified
+    # axes (e.g. a 2D plane)
     for i in range(3):
         if i not in axes:
             boxSize[i] = dims[i]
 
-    voxel       = np.array(voxel)
-    dims        = np.array(dims[:3])
-    shape       = np.array(shape[:3])
-    boxSize     = np.array(boxSize[:3])
+    voxel   = np.array(voxel)
+    dims    = np.array(dims[:3])
+    shape   = np.array(shape[:3])
+    boxSize = np.array(boxSize[:3])
 
     # The block size must be at least
     # one voxel across each dimension
-    boxSize     = np.clip(boxSize, dims, boxSize)
+    boxSize = np.clip(boxSize, dims, None)
 
     # Voxel location and box low/
     # high bounds in scaled voxels.
