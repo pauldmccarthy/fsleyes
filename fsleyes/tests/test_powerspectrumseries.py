@@ -177,9 +177,15 @@ def test_MelodicPowerSpectrumSeries():
 def _test_MelodicPowerSpectrumSeries(panel, overlayList, displayCtx):
 
     class MockMelodicImage(Image):
+        tr = 1
         def getComponentPowerSpectrum(self, comp):
             x, y, z = self.shape[0] // 2, self.shape[1] // 2, self.shape[2] // 2
             return self[x, y, z, :] * comp
+        def getComponentTimeSeries(self, comp):
+            x, y, z = self.shape[0] // 2, self.shape[1] // 2, self.shape[2] // 2
+            ts = self[x, y, z, :] * comp
+            return np.concatenate((ts, ts))
+
 
     with tempdir(), mock.patch('fsl.data.melodicimage.MelodicImage',
                                MockMelodicImage):
