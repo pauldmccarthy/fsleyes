@@ -12,7 +12,8 @@ except ImportError:
 
 import wx
 
-import numpy as np
+import numpy   as np
+import nibabel as nib
 
 import fsl.data.image              as fslimage
 import fsleyes.actions.copyoverlay as copyoverlay
@@ -444,3 +445,31 @@ def _test_copyDisplayProperties(panel, overlayList, displayCtx):
     assert disp2.name == 'herp derp'
     assert np.isclose(opts2.gamma,      0.2)
     assert opts2.cmap.name  == 'hot'
+
+
+def test_copyOverlay_pixdims_preserved():
+    run_with_orthopanel(_test_copyOverlay_pixdims_preserved)
+def _test_copyOverlay_pixdims_preserved(panel, overlayList, displayCtx):
+    displayCtx = panel.displayCtx
+    # fsl/fsleyes/fsleyes!270 - make sure
+    # pixdims don't change when creating a
+    # copy of an image with a weird xform
+    data  = np.zeros((181, 200, 192))
+    xform = np.array([
+        [-0.992611944675, 0.0,            -0.121332846582,   98.26725769043],
+        [ 0.041004236788, 0.941164672375, -0.335451543331,  -81.241249084473],
+        [-0.114194184542, 0.337948352098,  0.93421125412 , -115.231803894043],
+        [ 0.0,            0.0,             0.0,               1.0]])
+
+    # use nibabel to make sure pixdims are exactly 1
+    image = nib.Nifti1Image(data, xform)
+    image.header.set_zooms((1, 1, 1))
+    image = fslimage.Image(image)
+    overlayList.append(image)
+
+    copy = copyoverlay.copyImage(overlayList, displayCtx, image)
+
+    assert np.all(copy.shape  == np.array(image.shape))
+    assert np.all(copy.pixdim == np.array((1, 1, 1)))
+    assert np.all(copy.getAffine('voxel', 'world') ==
+                  image.getAffine('voxel', 'world'))
