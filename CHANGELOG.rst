@@ -9,6 +9,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.0.15 (Thursday 22nd July 2021)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a subtle bug affecting ``fsleyes render``, where taking a screenshot
+  of a large 4D image could result in an infinite loop or segmentation fault
+  (!275).
+
+
 1.0.14 (Friday 16th July 2021)
 ------------------------------
 
