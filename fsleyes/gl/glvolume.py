@@ -208,10 +208,6 @@ class GLVolume(glimageobject.GLImageObject):
                                              canvas,
                                              threedee)
 
-        # Add listeners to this image so the view can be
-        # updated when its display properties are changed
-        self.addDisplayListeners()
-
         # Create an image texture, clip texture, and a colour map texture
         #
         # We use the gl.resources module to manage texture
@@ -258,6 +254,10 @@ class GLVolume(glimageobject.GLImageObject):
 
         self.refreshColourTextures()
         self.refreshImageTexture()
+
+        # Add listeners to this image so the view can be
+        # updated when its display properties are changed
+        self.addDisplayListeners()
 
         # Call glvolume_funcs.init when the image
         # and clip textures are ready to be used.
