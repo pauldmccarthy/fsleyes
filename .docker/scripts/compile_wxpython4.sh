@@ -57,6 +57,10 @@ echo "$configopts"                                 >> tmp
 tail -n +"$endline" buildtools/build_wxwidgets.py  >> tmp
 mv tmp buildtools/build_wxwidgets.py
 
+# Above we add --disable-webview to the
+# wxwidgets config opts - we also need to
+# prevent the wx.html2 sip wrappers from
+# being compiled.
 sed -ie "s/^\(.*html2.*\)$/#\1/g" wscript
 
 # As of wxPython 4.0.0, build.py forces the
