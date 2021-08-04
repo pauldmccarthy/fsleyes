@@ -550,7 +550,7 @@ def registerColourMap(cmapFile,
         raise ValueError('{} is not a valid colour map identifier'.format(key))
 
     if key is None:
-        key = op.basename(cmapFile).split('.')[0]
+        key = op.splitext(op.basename(cmapFile))[0]
         key = makeValidMapKey(key)
 
     if name        is None: name        = key
@@ -651,7 +651,7 @@ def registerLookupTable(lut,
     if lutFile is not None:
 
         if key is None:
-            key = op.basename(lutFile).split('.')[0]
+            key = op.splitext(op.basename(lutFile))[0]
             key = makeValidMapKey(key)
 
         if name is None:
