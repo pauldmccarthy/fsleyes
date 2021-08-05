@@ -72,6 +72,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMap
    getColourMapLabel
    getColourMapFile
+   getColourMapKey
    loadColourMapFile
    registerColourMap
    installColourMap
@@ -162,6 +163,7 @@ access and manage :class:`LookupTable` instances:
    getLookupTables
    getLookupTable
    getLookupTableFile
+   getLookupTableKey
    loadLookupTableFile
    registerLookupTable
    installLookupTable
@@ -733,16 +735,38 @@ def getColourMapLabel(key):
 
 def getColourMapFile(key):
     """Returns the file associated with the specified colour map, or ``None``
-    if the colour map is registered but not installed.
+    if the colour map does not exist as a file.
     """
     return _cmaps[key].mapFile
 
 
 def getLookupTableFile(key):
     """Returns the file associated with the specified lookup table, or ``None``
-    if the lookup table is registered but not installed.
+    if the lookup table does not exist as a file.
     """
     return _luts[key].mapFile
+
+
+def getColourMapKey(filename):
+    """Returns the key associated with the specified colour map file. Raises
+    a ``ValueError`` if there is no colour map associated with the file.
+    """
+    filename = op.abspath(filename)
+    for key, cmap in _cmaps.items():
+        if cmap.mapFile is not None and op.abspath(cmap.mapFile) == filename:
+            return key
+    raise ValueError(f'No colour map associated with {filename}')
+
+
+def getLookupTableKey(filename):
+    """Returns the key associated with the specified lookup table file. Raises
+    a ``ValueError`` if there is no lookup table associated with the file.
+    """
+    filename = op.abspath(filename)
+    for key, lut in _luts.items():
+        if lut.mapFile is not None and op.abspath(lut.mapFile) == filename:
+            return key
+    raise ValueError(f'No lookup table associated with {filename}')
 
 
 def isColourMapRegistered(key=None, filename=None):
