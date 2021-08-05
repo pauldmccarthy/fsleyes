@@ -163,8 +163,12 @@ def test_init():
         assert fslcm.getColourMapLabel( 'cmap2') == 'cmap2'
         assert fslcm.getColourMapFile(  'cmap1') == cmap1
         assert fslcm.getColourMapFile(  'cmap2') == cmap2
+        assert fslcm.getColourMapKey(cmap1)      == 'cmap1'
+        assert fslcm.getColourMapKey(cmap2)      == 'cmap2'
         assert fslcm.getLookupTableFile('lut1')  == lut1
         assert fslcm.getLookupTableFile('lut2')  == lut2
+        assert fslcm.getLookupTableKey(lut1)     == 'lut1'
+        assert fslcm.getLookupTableKey(lut2)     == 'lut2'
 
         assert     fslcm.isColourMapInstalled(   'cmap1')
         assert     fslcm.isColourMapInstalled(   'cmap2')
