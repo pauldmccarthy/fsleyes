@@ -245,9 +245,9 @@ def _initPropertyList_MeshOpts(threedee):
              'custom_vertexSet',
              'custom_vertexData',
              'vertexDataIndex',
+             'interpolation',
              'custom_lut',
              'custom_cmap',
-             'interpolation',
              'cmapResolution',
              'gamma',
              'interpolateCmaps',
@@ -710,6 +710,14 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
     def colourEnabledWhen(opts, vdata, useLut):
         return (vdata is not None) and (not useLut)
 
+    def interpEnabledWhen(opts, vdata):
+        return vdata is not None
+
+    interpKwargs = {
+        'dependencies' : ['vertexData'],
+        'enabledWhen'  : interpEnabledWhen
+    }
+
     colourKwargs = {
         'dependencies' : ['vertexData', 'useLut'],
         'enabledWhen'  : colourEnabledWhen
@@ -785,7 +793,7 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
         'interpolation'  : props.Widget(
             'interpolation',
             labels=strings.choices['VolumeOpts.interpolation'],
-            **colourKwargs),
+            **interpKwargs),
         'invert'           : props.Widget(
             'invert',
             **colourKwargs),

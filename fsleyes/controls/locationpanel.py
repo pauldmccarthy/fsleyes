@@ -918,27 +918,38 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         if vidx is None:
             info = '[no vertex]'
 
-        else:
-            # some vertex data has been
-            # loaded for this mesh.
-            if vd is not None:
 
-                # time series/multiple data points per
-                # vertex - display the time/data index
-                # as well
-                if vd.shape[1] > 1:
-                    info = '[{}, {}]: {}'.format(vidx,
-                                                 vdidx,
-                                                 vd[vidx, vdidx])
+        # some vertex data has been
+        # loaded for this mesh.
+        elif vd is not None:
 
-                # Only one scalar value per vertex -
-                # don't bother showing the vertex
-                # data index
-                else:
-                    info = '[{}]: {}'.format(vidx, vd[vidx, vdidx])
+            value = vd[vidx, vdidx]
 
+            # time series/multiple data points per
+            # vertex - display the time/data index
+            # as well
+            if vd.shape[1] > 1:
+                info = '[{}, {}]: {}'.format(vidx, vdidx, value)
+
+            # Only one scalar value per vertex -
+            # don't bother showing the vertex data
+            # index. If LUT is enabled, show the
+            # label for the value at the current
+            # vertex
+            elif opts.useLut:
+                lut   = opts.lut
+                label = lut.get(value)
+                if label is None: label = 'no label'
+                else:             label = label.name
+                info   = '[{}]: {} / {}'.format(vidx, value, label)
+
+            # Otherwise just show the vertex data value
             else:
-                info = '[{}]'.format(vidx)
+                info = '[{}]: {}'.format(vidx, value)
+
+        # No vertex data - just show the vertex index
+        else:
+            info = '[{}]'.format(vidx)
         return info
 
 
