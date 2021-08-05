@@ -281,7 +281,7 @@ messages = TypeDict({
     'Your version of FSLeyes ({}) is up to date.',
 
     'UpdateCheckAction.updateUrl' :
-    'The latest version of FSLeyes is available from:',
+    'Information about updating FSLeyes can be found at:',
 
     'UpdateCheckAction.newVersionError' :
     'An error occurred while checking for FSLeyes updates. Try again later.',

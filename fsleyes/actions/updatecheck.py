@@ -13,16 +13,10 @@ import logging
 
 import urllib.request as request
 import ssl
+import json
 
 import wx
-
-# The HyperLinkCtrl is in wx.adv in wxPython/Phoenix
-try:
-    import wx.adv as wxadv
-
-# But it is in wx in wxpython 3.
-except ImportError:
-    wxadv = wx
+import wx.adv as wxadv
 
 import fsl.version                  as fslversion
 
@@ -40,10 +34,9 @@ _FSLEYES_URL = 'https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes'
 """
 
 
-_FSLEYES_VERSION_URL = 'https://fsl.fmrib.ox.ac.uk/'\
-                       'fsldownloads/fsleyes/version.txt'
-"""A url which points to a text file that contains the most recently released
-FSLeyes version number.
+_FSLEYES_VERSION_URL = 'https://api.anaconda.org/package/conda-forge/fsleyes'
+"""A url which points to a JSON file that contains information about the
+FSLeyes package on conda-forge.
 """
 
 
@@ -96,8 +89,10 @@ class UpdateCheckAction(base.Action):
             ctx.check_hostname = False
             ctx.verify_mode    = ssl.CERT_NONE
 
-            f        = request.urlopen(_FSLEYES_VERSION_URL, context=ctx)
-            latest   = f.read().decode('utf-8').strip()
+            with request.urlopen(_FSLEYES_VERSION_URL, context=ctx) as f:
+                info   = json.loads(f.read().decode('utf-8'))
+                latest = info['latest_version']
+
             current  = version.__version__
             upToDate = fslversion.compareVersions(latest,
                                                   current,
