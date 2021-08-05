@@ -745,18 +745,42 @@ def getLookupTableFile(key):
     return _luts[key].mapFile
 
 
-def isColourMapRegistered(key):
+def isColourMapRegistered(key=None, filename=None):
     """Returns ``True`` if the specified colourmap is registered, ``False``
     otherwise.
+
+    If ``key`` is provided, a colour map with the specified identifier is
+    searched for. Otherwise if ``filename`` is provided, a colour map which
+    was loaded from that file is searched for. Otherwise a ``ValueError``
+    is raised.
     """
-    return key in _cmaps
+    if key is not None:
+        return key in _cmaps
+    elif filename is not None:
+        cmapFiles = [m.mapFile for m in _cmaps.values() if m is not None]
+        cmapFiles = [op.abspath(m) for m in cmapFiles]
+        return op.abspath(filename) in cmapFiles
+    else:
+        return ValueError('One of key or filename must be provided')
 
 
-def isLookupTableRegistered(key):
+def isLookupTableRegistered(key=None, filename=None):
     """Returns ``True`` if the specified lookup table is registered, ``False``
     otherwise.
+
+    If ``key`` is provided, a lookup table with the specified identifier is
+    searched for. Otherwise if ``filename`` is provided, a lookup table which
+    was loaded from that file is searched for. Otherwise a ``ValueError``
+    is raised.
     """
-    return key in _luts
+    if key is not None:
+        return key in _luts
+    elif filename is not None:
+        lutFiles = [m.mapFile for m in _luts.values() if m is not None]
+        lutFiles = [op.abspath(m) for m in lutFiles]
+        return op.abspath(filename) in lutFiles
+    else:
+        return ValueError('One of key or filename must be provided')
 
 
 def isColourMapInstalled(key):
