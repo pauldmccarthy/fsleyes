@@ -258,8 +258,6 @@ to modify both the ``clippingRange`` and ``displayRange`` properties of the
 """
 
 
-from __future__ import print_function
-
 import os.path          as op
 import itertools        as it
 import                     sys
@@ -276,6 +274,7 @@ import fsl.data.image                     as fslimage
 import fsl.data.bitmap                    as fslbmp
 import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
+import fsl.utils.deprecated               as deprecated
 import fsl.transform.affine               as affine
 from   fsl.utils.platform import platform as fslplatform
 
@@ -581,6 +580,7 @@ OPTIONS = td.TypeDict({
                         'negativeCmap',
                         'cmapResolution',
                         'flatShading',
+                        'interpolation',
                         'interpolateCmaps',
                         'invert',
                         'modulateAlpha',
@@ -911,6 +911,7 @@ ARGUMENTS = td.TypeDict({
     'MeshOpts.lut'             : ('l',   'lut',             True),
     'MeshOpts.discardClipped'  : ('dc',  'discardClipped',  False),
     'MeshOpts.wireframe'       : ('wf',  'wireframe',       False),
+    'MeshOpts.interpolation'   : ('in',  'interpolation',   True),
     'MeshOpts.flatShading'     : ('f',   'flatShading',     False),
 
     'LabelOpts.lut'          : ('l',  'lut',          True),
@@ -1236,7 +1237,9 @@ HELP = td.TypeDict({
     'MeshOpts.wireframe' :
     '3D only. Draw as wireframe',
     'MeshOpts.flatShading' :
-    '3D only. Do not interpolate colours between adjacent vertices.',
+    'Deprecated - use the --interpolation option instead.',
+    'MeshOpts.interpolation' :
+    'Interpolation method, when colouring a mesh with vertex data.',
 
     'TensorOpts.lighting'         : 'Disable lighting effect',
     'TensorOpts.tensorResolution' : 'Tensor resolution/quality '
@@ -1658,8 +1661,7 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
         if propExtra is not None:
             extra[propName] = propExtra
 
-        if _isSpecialConfigOption(target, propName) or \
-           not hasattr(target, propName):
+        if _isSpecialConfigOption(target, propName):
             propNames.remove(propName)
             special  .append(propName)
 
@@ -2450,7 +2452,7 @@ def _applyArgs(args,
 
     for name in list(propNames):
         applied = False
-        if _isSpecialApplyOption(target, name) or not hasattr(target, name):
+        if _isSpecialApplyOption(target, name):
 
             applied = not _applySpecialOption(
                 args, overlayList, displayCtx, target, name, longArgs[name])
@@ -2488,8 +2490,7 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
     args      = []
 
     for name in list(propNames):
-        if _isSpecialGenerateOption(source, name) or \
-           not hasattr(source, name):
+        if _isSpecialGenerateOption(source, name):
 
             nargs = _generateSpecialOption(overlayList,
                                            displayCtx,
@@ -3298,6 +3299,37 @@ def _generateSpecial_VectorOpts_orientFlip(
     else:    return []
 
 
+def _configSpecial_MeshOpts_flatShading(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the deprecated MeshOpts.flatShading option. This has
+    been replaced by :attr:`MeshOpts.interpolation`, and is the equivalent
+    of setting ``MeshOpts.interpolation`` to ``'nearest'``.
+    """
+    parser.add_argument(shortArg,
+                        longArg,
+                        action='store_true',
+                        help=helpText)
+
+
+def _applySpecial_MeshOpts_flatShading(
+        args, overlayList, displayCtx, target):
+    """Applies the deprecated :attr:`.MeshOpts.flatShading` option. """
+    if not args.flatShading:
+        return
+    deprecated.warn(name='MeshOpts.flatShading', vin='1.1.0', rin='2.0.0',
+                    msg='The --flatShading option is deprecated - '
+                        'use "--interpolation nearest" insteaad')
+    target.interpolation = 'nearest'
+
+
+def _generateSpecial_MeshOpts_flatShading(
+        overlayList, displayCtx, source, longArg):
+    """Returns no argument - the :attr:`.MeshOpts.flatShading` option is
+    deprecated.
+    """
+    return []
+
+
 def _applySpecial_MeshOpts_vertexData(
         args, overlayList, displayCtx, target):
     """Applies the :attr:`.MeshOpts.vertexData` option. """
@@ -3453,8 +3485,19 @@ def _applyColourMap(cmap, overlayList, displayCtx):
     it is loaded and registered with the :mod:`.colourmaps` module. Returns
     a new value for the colour map argument.
     """
+    # Identifier for built-in cmap (or bad
+    # path, which will result in an error)
+    if not op.exists(cmap):
+        return cmap
+
+    # cmap file name
     if op.exists(cmap):
-        cmap = colourmaps.registerColourMap(cmap, overlayList, displayCtx)
+        if not colourmaps.isColourMapRegistered(filename=cmap):
+            cmap = colourmaps.registerColourMap(
+                cmap, overlayList, displayCtx)
+        else:
+            cmap = colourmaps.getColourMapKey(cmap)
+
     return cmap
 
 
@@ -3529,8 +3572,19 @@ def _applyLookupTable(lut, overlayList, displayCtx):
     file, it is loaded and registered with the :mod:`.colourmaps` module.
     Returns a new value for the lookup table argument.
     """
+    # Identifier for built-in LUT (or bad
+    # path, which will result in an error)
+    if not op.exists(lut):
+        return lut
+
+    # lut file name
     if op.exists(lut):
-        lut = colourmaps.registerLookupTable(lut, overlayList, displayCtx).key
+        if not colourmaps.isLookupTableRegistered(filename=lut):
+            lut = colourmaps.registerLookupTable(
+                lut, overlayList, displayCtx).key
+        else:
+            lut = colourmaps.getLookupTableKey(lut)
+
     return lut
 
 

@@ -195,10 +195,12 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
-    flatShading = props.Boolean(default=False)
-    """3D only. If ``True``, colours between vertices are not interpolated -
-    each triangle is coloured with the colour assigned to the first vertex.
-    Only has an effect when the mesh is being coloured with vertex data.
+    interpolation = props.Choice(('linear', 'nearest'), default='linear')
+    """Interpolate across vertices when colouring a mesh with vertex data.
+    When using nearest neighbour interpolation, each face is coloured
+    according to the data value from the first vertex in the face. Otherwise
+    the colour is linearly interpolated across the face according to the
+    data values at all three vertices.
     """
 
 

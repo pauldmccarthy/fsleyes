@@ -72,6 +72,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMap
    getColourMapLabel
    getColourMapFile
+   getColourMapKey
    loadColourMapFile
    registerColourMap
    installColourMap
@@ -162,6 +163,7 @@ access and manage :class:`LookupTable` instances:
    getLookupTables
    getLookupTable
    getLookupTableFile
+   getLookupTableKey
    loadLookupTableFile
    registerLookupTable
    installLookupTable
@@ -550,7 +552,7 @@ def registerColourMap(cmapFile,
         raise ValueError('{} is not a valid colour map identifier'.format(key))
 
     if key is None:
-        key = op.basename(cmapFile).split('.')[0]
+        key = op.splitext(op.basename(cmapFile))[0]
         key = makeValidMapKey(key)
 
     if name        is None: name        = key
@@ -651,7 +653,7 @@ def registerLookupTable(lut,
     if lutFile is not None:
 
         if key is None:
-            key = op.basename(lutFile).split('.')[0]
+            key = op.splitext(op.basename(lutFile))[0]
             key = makeValidMapKey(key)
 
         if name is None:
@@ -733,30 +735,76 @@ def getColourMapLabel(key):
 
 def getColourMapFile(key):
     """Returns the file associated with the specified colour map, or ``None``
-    if the colour map is registered but not installed.
+    if the colour map does not exist as a file.
     """
     return _cmaps[key].mapFile
 
 
 def getLookupTableFile(key):
     """Returns the file associated with the specified lookup table, or ``None``
-    if the lookup table is registered but not installed.
+    if the lookup table does not exist as a file.
     """
     return _luts[key].mapFile
 
 
-def isColourMapRegistered(key):
+def getColourMapKey(filename):
+    """Returns the key associated with the specified colour map file. Raises
+    a ``ValueError`` if there is no colour map associated with the file.
+    """
+    filename = op.abspath(filename)
+    for key, cmap in _cmaps.items():
+        if cmap.mapFile is not None and op.abspath(cmap.mapFile) == filename:
+            return key
+    raise ValueError(f'No colour map associated with {filename}')
+
+
+def getLookupTableKey(filename):
+    """Returns the key associated with the specified lookup table file. Raises
+    a ``ValueError`` if there is no lookup table associated with the file.
+    """
+    filename = op.abspath(filename)
+    for key, lut in _luts.items():
+        if lut.mapFile is not None and op.abspath(lut.mapFile) == filename:
+            return key
+    raise ValueError(f'No lookup table associated with {filename}')
+
+
+def isColourMapRegistered(key=None, filename=None):
     """Returns ``True`` if the specified colourmap is registered, ``False``
     otherwise.
+
+    If ``key`` is provided, a colour map with the specified identifier is
+    searched for. Otherwise if ``filename`` is provided, a colour map which
+    was loaded from that file is searched for. Otherwise a ``ValueError``
+    is raised.
     """
-    return key in _cmaps
+    if key is not None:
+        return key in _cmaps
+    elif filename is not None:
+        cmapFiles = [m.mapFile for m in _cmaps.values() if m is not None]
+        cmapFiles = [op.abspath(m) for m in cmapFiles]
+        return op.abspath(filename) in cmapFiles
+    else:
+        return ValueError('One of key or filename must be provided')
 
 
-def isLookupTableRegistered(key):
+def isLookupTableRegistered(key=None, filename=None):
     """Returns ``True`` if the specified lookup table is registered, ``False``
     otherwise.
+
+    If ``key`` is provided, a lookup table with the specified identifier is
+    searched for. Otherwise if ``filename`` is provided, a lookup table which
+    was loaded from that file is searched for. Otherwise a ``ValueError``
+    is raised.
     """
-    return key in _luts
+    if key is not None:
+        return key in _luts
+    elif filename is not None:
+        lutFiles = [m.mapFile for m in _luts.values() if m is not None]
+        lutFiles = [op.abspath(m) for m in lutFiles]
+        return op.abspath(filename) in lutFiles
+    else:
+        return ValueError('One of key or filename must be provided')
 
 
 def isColourMapInstalled(key):

@@ -129,16 +129,17 @@ class GLMesh(globject.GLObject):
     simple lighting effect.
 
 
-    **Flat shading**
+    **Interpolation**
 
-    When the :attr:`.MeshOpts.flatShading` property is active (only possible
-    when 3D rendering), the mesh vertices and indices need to be modified.
-    In order to achive flat shading, each vertex of a triangle must be given
-    the same vertex data value. This means that vertices cannot be shared by
-    different triangles. So when the ``flatShading`` property changes, the
-    :meth:`updateVertices` method will re-generate the vertices and indices
-    accordingly. The :meth:`getVertexData` method will modify the vertex
-    data that gets passed to the shader accordingly too.
+    When the :attr:`.MeshOpts.interpolation` property is set to ``'nearest'``,
+    the mesh vertices and indices need to be modified.  In order to achieve
+    nearest neighbour interpolation (a.k.a. flat shading) , each vertex of a
+    triangle must be given the same vertex data value. This means that
+    vertices cannot be shared by different triangles. So when the
+    ``interpolation`` property changes, the :meth:`updateVertices` method will
+    re-generate the vertices and indices accordingly. The
+    :meth:`getVertexData` method will modify the vertex data that gets passed
+    to the shader accordingly too.
     """
 
 
@@ -281,7 +282,7 @@ class GLMesh(globject.GLObject):
         opts   .addListener('useLut',           name, shader,      weak=False)
         opts   .addListener('lut',              name, registerLut, weak=False)
         opts   .addListener('modulateAlpha',    name, shader,      weak=False)
-        opts   .addListener('flatShading',      name, vertices,    weak=False)
+        opts   .addListener('interpolation',    name, vertices,    weak=False)
         display.addListener('alpha',            name, refreshCmap, weak=False)
 
         # We don't need to listen for
@@ -317,7 +318,7 @@ class GLMesh(globject.GLObject):
         self.opts   .removeListener('useLut',           self.name)
         self.opts   .removeListener('lut',              self.name)
         self.opts   .removeListener('modulateAlpha',    self.name)
-        self.opts   .removeListener('flatShading',      self.name)
+        self.opts   .removeListener('interpolation',    self.name)
         self.display.removeListener('alpha',            self.name)
 
 
@@ -357,7 +358,8 @@ class GLMesh(globject.GLObject):
         threedee = self.threedee
         vertices = overlay.vertices
         indices  = overlay.indices
-        normals  = self.overlay.vnormals
+        interp   = opts.interpolation
+        normals  = overlay.vnormals
         vdata    = opts.getVertexData('vertex')
         xform    = opts.getTransform('mesh', 'display')
 
@@ -371,14 +373,14 @@ class GLMesh(globject.GLObject):
         self.origIndices = indices
         indices          = np.asarray(indices.flatten(), dtype=np.uint32)
 
-        # If flatShading is active, we cannot share
+        # If interp == nn, we cannot share
         # vertices between triangles, so we generate
         # a set of unique vertices for each triangle,
         # and then re-generate the triangle indices.
         # The original indices are saved above, as
         # they will be used by the getVertexData
         # method to duplicate the vertex data.
-        if threedee and (vdata is not None) and opts.flatShading:
+        if threedee and (vdata is not None) and interp == 'nearest':
             self.vertices = vertices[indices].astype(np.float32)
             self.indices  = np.arange(0, len(self.vertices), dtype=np.uint32)
             normals       = normals[indices, :]
@@ -957,8 +959,9 @@ class GLMesh(globject.GLObject):
                      ``'modulate'`` for :attr:`.MeshOpts.modulateData`.
         """
 
-        opts  = self.opts
-        vdata = opts.getVertexData(vdtype)
+        opts   = self.opts
+        interp = opts.interpolation
+        vdata  = opts.getVertexData(vdtype)
 
         if vdata is None:
             return None
@@ -967,20 +970,30 @@ class GLMesh(globject.GLObject):
         if vdtype == 'vertex': vdata = vdata[:, opts.vertexDataIndex]
         else:                  vdata = vdata[:, 0]
 
-        # when flat-shading, we colour each
-        # triangle according to the data
-        # value for its first vertex. This
-        # should really be pre-generated
-        # whenever the vertex data or flat-
-        # shading option is changed, but it
-        # is quick for typical surfaces, so
-        # I'm not bothering for now.
-        if self.threedee and (vdata is not None) and opts.flatShading:
+        # when using nn interp, we colour each
+        # triangle according to the data value
+        # for its first vertex. This should
+        # really be pre-generated whenever the
+        # vertex data or flat- shading option
+        # is changed, but it is quick for
+        # typical surfaces, so I'm not
+        # bothering for now.
+        if self.threedee and (vdata is not None) and interp == 'nearest':
             vdata = vdata[self.origIndices[:, 0]].repeat(3)
 
-        if faces is not None and dists is not None:
-            vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
-            vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
+        # Used by drawOutline - retrieve the
+        # vertex data associated with the faces
+        # of the mesh that are intersected by
+        # the cross section, and linearly
+        # interpolate across the face if needed.
+        # Otherwise colour according to the
+        # first vertex in each face.
+        elif faces is not None and dists is not None:
+            if interp == 'linear':
+                vdata = vdata[faces].repeat(2, axis=0).reshape(-1, 2, 3)
+                vdata = (vdata * dists).reshape(-1, 3).sum(axis=1)
+            else:
+                vdata = vdata[faces[:, 0]].repeat(2)
 
         return np.asarray(vdata, np.float32)
 

@@ -163,17 +163,31 @@ def test_init():
         assert fslcm.getColourMapLabel( 'cmap2') == 'cmap2'
         assert fslcm.getColourMapFile(  'cmap1') == cmap1
         assert fslcm.getColourMapFile(  'cmap2') == cmap2
+        assert fslcm.getColourMapKey(cmap1)      == 'cmap1'
+        assert fslcm.getColourMapKey(cmap2)      == 'cmap2'
         assert fslcm.getLookupTableFile('lut1')  == lut1
         assert fslcm.getLookupTableFile('lut2')  == lut2
+        assert fslcm.getLookupTableKey(lut1)     == 'lut1'
+        assert fslcm.getLookupTableKey(lut2)     == 'lut2'
 
-        assert fslcm.isColourMapInstalled(   'cmap1')
-        assert fslcm.isColourMapInstalled(   'cmap2')
-        assert fslcm.isColourMapRegistered(  'cmap1')
-        assert fslcm.isColourMapRegistered(  'cmap2')
-        assert fslcm.isLookupTableInstalled( 'lut1')
-        assert fslcm.isLookupTableInstalled( 'lut2')
-        assert fslcm.isLookupTableRegistered('lut1')
-        assert fslcm.isLookupTableRegistered('lut2')
+        assert     fslcm.isColourMapInstalled(   'cmap1')
+        assert     fslcm.isColourMapInstalled(   'cmap2')
+        assert     fslcm.isColourMapRegistered(  'cmap1')
+        assert     fslcm.isColourMapRegistered(  'cmap2')
+        assert not fslcm.isColourMapRegistered(  'lut1')
+        assert     fslcm.isColourMapRegistered(filename=cmap1)
+        assert     fslcm.isColourMapRegistered(filename=cmap2)
+        assert     fslcm.isColourMapRegistered(filename=cmap1)
+        assert     fslcm.isColourMapRegistered(filename=cmap2)
+        assert not fslcm.isColourMapRegistered(filename=lut1)
+        assert     fslcm.isLookupTableInstalled( 'lut1')
+        assert     fslcm.isLookupTableInstalled( 'lut2')
+        assert     fslcm.isLookupTableRegistered('lut1')
+        assert     fslcm.isLookupTableRegistered('lut2')
+        assert not fslcm.isLookupTableRegistered('cmap1')
+        assert     fslcm.isLookupTableRegistered(filename=lut1)
+        assert     fslcm.isLookupTableRegistered(filename=lut2)
+        assert not fslcm.isLookupTableRegistered(filename=cmap1)
 
         luts = fslcm.getLookupTables()
         assert len(luts)              == 2

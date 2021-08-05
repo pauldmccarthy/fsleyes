@@ -9,6 +9,43 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.1.0 (Thursday 5th August 2021)
+--------------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--interpolation`` option for ``mesh`` overlays, which allows
+  nearest-neighbour or linear interpolation to be selected when colouring
+  meshes with vertex data. This replaces the ``--flatShading`` option (!278).
+
+
+Changed
+^^^^^^^
+
+
+* The Location panel now displays the region label associated with the current
+  vertex for mesh overlays which are being coloured with a lookup table (!278).
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug which was preventing the same colour map or lookup table file to
+  be specified more than once on the command line (!278).
+
+
+Deprecated
+^^^^^^^^^^
+
+
+* The ``--flatShading`` option for ``mesh`` overlays is equivalent to using
+  ``--interpolation nearest`` (!278).
+
+
 1.0.15 (Thursday 22nd July 2021)
 --------------------------------
 

@@ -245,6 +245,7 @@ def _initPropertyList_MeshOpts(threedee):
              'custom_vertexSet',
              'custom_vertexData',
              'vertexDataIndex',
+             'interpolation',
              'custom_lut',
              'custom_cmap',
              'cmapResolution',
@@ -271,7 +272,7 @@ def _initPropertyList_MeshOpts(threedee):
 
 
 def _init3DPropertyList_MeshOpts():
-    return ['flatShading', 'wireframe']
+    return ['wireframe']
 
 
 def _initPropertyList_GiftiOpts(threedee):
@@ -709,6 +710,14 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
     def colourEnabledWhen(opts, vdata, useLut):
         return (vdata is not None) and (not useLut)
 
+    def interpEnabledWhen(opts, vdata):
+        return vdata is not None
+
+    interpKwargs = {
+        'dependencies' : ['vertexData'],
+        'enabledWhen'  : interpEnabledWhen
+    }
+
     colourKwargs = {
         'dependencies' : ['vertexData', 'useLut'],
         'enabledWhen'  : colourEnabledWhen
@@ -781,6 +790,10 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
         'interpolateCmaps' : props.Widget(
             'interpolateCmaps',
             **colourKwargs),
+        'interpolation'  : props.Widget(
+            'interpolation',
+            labels=strings.choices['VolumeOpts.interpolation'],
+            **interpKwargs),
         'invert'           : props.Widget(
             'invert',
             **colourKwargs),
@@ -815,13 +828,7 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
 
 
 def _init3DWidgetSpec_MeshOpts(displayCtx):
-    return {
-        'wireframe' : props.Widget('wireframe'),
-        'flatShading' : props.Widget(
-            'flatShading',
-            dependencies=['vertexData'],
-            enabledWhen=lambda o, vd: vd is not None),
-    }
+    return {'wireframe' : props.Widget('wireframe')}
 
 
 def _initWidgetSpec_GiftiOpts(displayCtx, threedee):
