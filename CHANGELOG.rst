@@ -22,6 +22,14 @@ Added
   meshes with vertex data. This replaces the ``--flatShading`` option (!278).
 
 
+Changed
+^^^^^^^
+
+
+* The Location panel now displays the region label associated with the current
+  vertex for mesh overlays which are being coloured with a lookup table.
+
+
 Fixed
 ^^^^^
 
