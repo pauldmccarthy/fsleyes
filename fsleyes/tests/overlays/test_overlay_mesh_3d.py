@@ -36,11 +36,11 @@ cli_tests = """
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma -mr  1 50 -md {{invert('gifti/data3d.txt')}}
 -s3d gifti/white.surf.gii -vd gifti/data3d.txt -mc 0.7 0.7 0.7 -cm hot -ma -mr 50 99 -md {{invert('gifti/data3d.txt')}}
 
-# flat shading
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data3d.txt -f
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -ul -l random -vd gifti/data3d.txt -f
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -f
--s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -f -vdi 2
+# nn interp
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data3d.txt -in nearest
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -ul -l random -vd gifti/data3d.txt -in nearest
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -in nearest
+-s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -in nearest -vdi 2
 """
 
 

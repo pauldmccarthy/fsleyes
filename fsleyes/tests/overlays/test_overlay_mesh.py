@@ -65,6 +65,9 @@ mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100
 mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -l random -ul -cr 25 100 -dc
 
+# nn interp
+mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -cm hot -in nearest
+
 # Regression: incorrect mesh bounds calculation
 # when reference image affine has rotations
 -ds world {{oblique('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0.5 0.5 1 -r mesh_ref_oblique
