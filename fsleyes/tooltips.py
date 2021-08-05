@@ -388,10 +388,11 @@ properties = TypeDict({
     'filled.',
     'MeshOpts.lighting' :
     'When selected, a lighting effect is applied to the mesh.',
-    'MeshOpts.flatShading' :
-    'When selected, interpolation of the colours between adjacent vertices'
-    'is not performed - each triangle in the mesh is coloured according to '
-    'its first triangle.',
+    'MeshOpts.interpolation' :
+    'Interpolation of vertex data values - when linear interpolation is '
+    'selected, each triangle is coloured according to the vertex data values '
+    'at each vertex. When nearest neighbour interpolation is selected, each '
+    'triangle in the mesh is coloured according to its first triangle.',
 
     'TensorOpts.lighting'         : 'If enabled, a simple lighting model is '
                                     'used to highlight the tensor '

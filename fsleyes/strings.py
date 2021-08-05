@@ -1232,7 +1232,7 @@ properties = TypeDict({
     'MeshOpts.discardClipped'    : 'Hide clipped areas',
     'MeshOpts.wireframe'         : 'Show as wireframe',
     'MeshOpts.lighting'          : 'Enable lighting',
-    'MeshOpts.flatShading'       : 'Flat shading',
+    'MeshOpts.interpolation'     : 'Interpolation',
 
     'LabelOpts.lut'          : 'Look-up table',
     'LabelOpts.outline'      : 'Show outline only',
@@ -1354,9 +1354,10 @@ choices = TypeDict({
                              'id'          : 'Voxels',
                              'reference'   : 'Reference image'},
 
-    'VolumeOpts.interpolation' : {'none'   : 'No interpolation',
-                                  'linear' : 'Linear interpolation',
-                                  'spline' : 'Spline interpolation'},
+    'VolumeOpts.interpolation' : {'none'    : 'No interpolation',
+                                  'nearest' : 'Nearest neighbour interpolation',
+                                  'linear'  : 'Linear interpolation',
+                                  'spline'  : 'Spline interpolation'},
 
     'Volume3DOpts.clipMode' : {'intersection' : 'Intersection',
                                'union'        : 'Union',
