@@ -3453,9 +3453,19 @@ def _applyColourMap(cmap, overlayList, displayCtx):
     it is loaded and registered with the :mod:`.colourmaps` module. Returns
     a new value for the colour map argument.
     """
-    if op.exists(cmap) and \
-       not colourmaps.isColourMapRegistered(filename=cmap):
-        cmap = colourmaps.registerColourMap(cmap, overlayList, displayCtx)
+    # Identifier for built-in cmap (or bad
+    # path, which will result in an error)
+    if not op.exists(cmap):
+        return cmap
+
+    # cmap file name
+    if op.exists(cmap):
+        if not colourmaps.isColourMapRegistered(filename=cmap):
+            cmap = colourmaps.registerColourMap(
+                cmap, overlayList, displayCtx)
+        else:
+            cmap = colourmaps.getColourMapKey(cmap)
+
     return cmap
 
 
@@ -3530,9 +3540,19 @@ def _applyLookupTable(lut, overlayList, displayCtx):
     file, it is loaded and registered with the :mod:`.colourmaps` module.
     Returns a new value for the lookup table argument.
     """
-    if op.exists(lut) and \
-       not colourmaps.isLookupTableRegistered(filename=lut):
-        lut = colourmaps.registerLookupTable(lut, overlayList, displayCtx).key
+    # Identifier for built-in LUT (or bad
+    # path, which will result in an error)
+    if not op.exists(lut):
+        return lut
+
+    # lut file name
+    if op.exists(lut):
+        if not colourmaps.isLookupTableRegistered(filename=lut):
+            lut = colourmaps.registerLookupTable(
+                lut, overlayList, displayCtx).key
+        else:
+            lut = colourmaps.getLookupTableKey(lut)
+
     return lut
 
 
