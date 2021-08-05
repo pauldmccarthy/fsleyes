@@ -27,7 +27,7 @@ Changed
 
 
 * The Location panel now displays the region label associated with the current
-  vertex for mesh overlays which are being coloured with a lookup table.
+  vertex for mesh overlays which are being coloured with a lookup table (!278).
 
 
 Fixed
