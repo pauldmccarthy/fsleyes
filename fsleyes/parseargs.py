@@ -1661,8 +1661,7 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
         if propExtra is not None:
             extra[propName] = propExtra
 
-        if _isSpecialConfigOption(target, propName) or \
-           not hasattr(target, propName):
+        if _isSpecialConfigOption(target, propName):
             propNames.remove(propName)
             special  .append(propName)
 
@@ -2453,7 +2452,7 @@ def _applyArgs(args,
 
     for name in list(propNames):
         applied = False
-        if _isSpecialApplyOption(target, name) or not hasattr(target, name):
+        if _isSpecialApplyOption(target, name):
 
             applied = not _applySpecialOption(
                 args, overlayList, displayCtx, target, name, longArgs[name])
@@ -2491,8 +2490,7 @@ def _generateArgs(overlayList, displayCtx, source, propNames=None):
     args      = []
 
     for name in list(propNames):
-        if _isSpecialGenerateOption(source, name) or \
-           not hasattr(source, name):
+        if _isSpecialGenerateOption(source, name):
 
             nargs = _generateSpecialOption(overlayList,
                                            displayCtx,
@@ -3322,6 +3320,14 @@ def _applySpecial_MeshOpts_flatShading(
                     msg='The --flatShading option is deprecated - '
                         'use "--interpolation nearest" insteaad')
     target.interpolation = 'nearest'
+
+
+def _generateSpecial_MeshOpts_flatShading(
+        overlayList, displayCtx, source, longArg):
+    """Returns no argument - the :attr:`.MeshOpts.flatShading` option is
+    deprecated.
+    """
+    return []
 
 
 def _applySpecial_MeshOpts_vertexData(
