@@ -36,6 +36,8 @@ Fixed
 
 * Fixed a bug which was preventing the same colour map or lookup table file to
   be specified more than once on the command line (!278).
+* Fixed the *Check for updates* menu item - it now queries ``conda-forge`` for
+  the latest available FSLeyes version (!279).
 
 
 Deprecated
