@@ -140,7 +140,7 @@ class TimeSeriesProfile(plotprofile.PlotProfile):
         if canvasPos is None: xvalue = None
         else:                 xvalue = canvasPos[0]
 
-        axis = self.viewPanel.canvas.getAxis()
+        axis = self.viewPanel.canvas.axis
 
         self.__volumeLine = axis.axvline(0, c='#000080', lw=3)
 

@@ -9,8 +9,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.1.0 (Thursday 5th August 2021)
---------------------------------
+1.1.0 (Friday 6th August 2021)
+------------------------------
 
 
 Added
@@ -38,6 +38,8 @@ Fixed
   be specified more than once on the command line (!278).
 * Fixed the *Check for updates* menu item - it now queries ``conda-forge`` for
   the latest available FSLeyes version (!279).
+* Fixed a bug which had broken volume navigation in the time series view
+  (!283).
 
 
 Deprecated
