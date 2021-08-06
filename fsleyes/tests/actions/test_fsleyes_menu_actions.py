@@ -81,10 +81,11 @@ def _test_updatecheck(frame, overlayList, displayCtx):
 
     with tempdir(), \
          mock.patch('fsleyes.version.__version__', '1.0.0'), \
+         mock.patch('fsleyes_widgets.utils.status.reportIfError', mock.MagicMock()), \
          mock.patch('fsleyes.actions.updatecheck.UrlDialog', mock.MagicMock()):
 
         with open('version.txt', 'wt') as f:
-            f.write('0.10.0')
+            f.write('{"latest_version" : "0.10.0"}')
         with open('version.txt', 'rb') as f:
             with mock.patch('urllib.request.urlopen', return_value=f):
                 uc()
