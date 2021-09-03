@@ -12,7 +12,7 @@
 uniform sampler3D vectorTexture;
 
 /*
- * Transformations between voxel and 
+ * Transformations between voxel and
  * display coordinate systems.
  */
 uniform mat4 displayToVoxMat;
@@ -44,7 +44,7 @@ uniform vec3 imageShape;
 uniform vec3 imageDims;
 
 /*
- * If true, the vectors are 
+ * If true, the vectors are
  * inverted about the x axis.
  */
 uniform bool xFlip;
@@ -57,7 +57,7 @@ uniform bool xFlip;
 uniform bool directed;
 
 /*
- * If true, each vector is scaled to have a length 
+ * If true, each vector is scaled to have a length
  * of 1*lengthScale in the image coordinate system.
  */
 uniform bool unitLength;
@@ -88,7 +88,7 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
-  
+
   vec3  texCoord;
   vec3  vector;
   vec3  voxCoord;
@@ -122,11 +122,11 @@ void main(void) {
   if (xFlip)
     vector.x = -vector.x;
 
-  /* 
-   * Kill the vector if its length is 0. 
-   * We have to be tolerant of errors, 
+  /*
+   * Kill the vector if its length is 0.
+   * We have to be tolerant of errors,
    * because of the transformation to/
-   * from the texture data range. This 
+   * from the texture data range. This
    * may end up being too tolerant.
    */
   if (vectorLen < 0.0001) {
@@ -134,17 +134,16 @@ void main(void) {
     return;
   }
 
-
   if (unitLength) {
 
     /*
-     * Scale the vector so it has length 0.5. 
+     * Scale the vector so it has length 0.5.
      */
     vector /= 2 * vectorLen;
 
     /*
      * Scale the vector by the minimum voxel length,
-     * so it is a unit vector within real world space 
+     * so it is a unit vector within real world space
      */
     vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
   }

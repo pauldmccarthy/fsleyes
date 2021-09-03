@@ -7,10 +7,8 @@
 """This module provides the :class:`GLLineVector` class, for displaying 3D
 vector :class:`.Image` overlays in line mode.
 
-
 The :class:`.GLLineVertices` class is also defined in this module, and is used
-in certain rendering situations - specifically, when running in OpenGL
-1.4. See the :mod:`.gl14.gllinevector_funcs` and
+when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 :mod:`.gl21.gllinevector_funcs` modules for more details.
 """
 
@@ -160,10 +158,17 @@ class GLLineVector(glvector.GLVector):
 
 
 class GLLineVertices(object):
-    """The ``GLLineVertices`` class is used in some cases when rendering a
-    :class:`GLLineVector`. It contains logic to generate vertices for every
-    vector in the vector :class:`.Image` that is being displayed by a
-    ``GLLineVector`` instance.
+    """The ``GLLineVertices`` class is used when rendering a
+    :class:`GLLineVector` with OpenGL 1.4. It contains logic to generate
+    vertices for every vector in the vector :class:`.Image` that is being
+    displayed by a ``GLLineVector`` instance.
+
+
+    This class is used by the OpenGL 1.4 implementation - when using OpenGL
+    2.1, the logic encoded in this class is implemented in the line vector
+    vertex shader. This is because OpenGL 1.4 vertex programs (using the
+    ARB_vertex_program extension) are unable to perform texture lookups,
+    so cannot retrieve the vector data.
 
 
     After a ``GLLineVertices`` instance has been created, the :meth:`refresh`
