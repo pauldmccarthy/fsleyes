@@ -189,6 +189,14 @@ class FSLeyesApp(wx.App):
         # queue the files to open them later
         # in SetOverlayListAndDisplayContext
         if self.__overlayList is None:
+
+            # On certain systems (observed on Big Sur), when
+            # files are passed as command-line arguments, they
+            # are passed to MacOpenFiles. We don't want that,
+            # because cli arguments are parsed separately. So
+            # we remove dupes here.
+
+            filenames = [f for f in filenames if f not in sys.argv]
             self.__filesToOpen.extend(filenames)
             return
 
