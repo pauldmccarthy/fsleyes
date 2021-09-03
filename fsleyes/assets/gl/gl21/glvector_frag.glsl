@@ -207,7 +207,7 @@ void main(void) {
 
   /*
    * Combine the xyz component colours.
-   * Opacity should be ident0ical across
+   * Opacity should be identical across
    * the three colours.
    */
   vec4 voxColour = voxValue.x * xColour +

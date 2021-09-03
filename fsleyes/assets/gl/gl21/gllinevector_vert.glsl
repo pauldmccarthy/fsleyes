@@ -57,12 +57,6 @@ uniform bool xFlip;
 uniform bool directed;
 
 /*
- * If true, each vector is scaled to have a length
- * of 1*lengthScale in the image coordinate system.
- */
-uniform bool unitLength;
-
-/*
  * Scale vector lengths by this amount.
  */
 uniform float lengthScale;
@@ -132,20 +126,6 @@ void main(void) {
   if (vectorLen < 0.0001) {
     fragColourFactor = vec4(0, 0, 0, 0);
     return;
-  }
-
-  if (unitLength) {
-
-    /*
-     * Scale the vector so it has length 0.5.
-     */
-    vector /= 2 * vectorLen;
-
-    /*
-     * Scale the vector by the minimum voxel length,
-     * so it is a unit vector within real world space
-     */
-    vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
   }
 
   vector *= lengthScale;
