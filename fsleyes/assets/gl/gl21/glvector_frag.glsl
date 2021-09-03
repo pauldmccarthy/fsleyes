@@ -142,6 +142,12 @@ void main(void) {
     voxValue = texture3D(vectorTexture, fragVecTexCoord).xyz;
   }
 
+  /* Do not draw vectors with length 0 or with NaNs */
+  float len = length(voxValue.xyz);
+  if (len == 0 || len != len) {
+    discard;
+  }
+
   /* Look up the modulation and clipping values */
   float modValue;
   float clipValue;
@@ -199,10 +205,15 @@ void main(void) {
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
 
-  /* Combine the xyz component colours. */
+  /*
+   * Combine the xyz component colours.
+   * Opacity should be ident0ical across
+   * the three colours.
+   */
   vec4 voxColour = voxValue.x * xColour +
                    voxValue.y * yColour +
                    voxValue.z * zColour;
+  voxColour.a    = xColour.a;
 
   /*
    * Apply the colour scale/offset -
