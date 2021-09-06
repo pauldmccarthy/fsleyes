@@ -205,15 +205,17 @@ void main(void) {
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
 
-  /*
-   * Combine the xyz component colours.
-   * Opacity should be identical across
-   * the three colours.
+  /* Combine the xyz component colours,
+   * modulating them by the vector values.
+   * Opacity is not modulated by vector
+   * value.
    */
   vec4 voxColour = voxValue.x * xColour +
                    voxValue.y * yColour +
                    voxValue.z * zColour;
-  voxColour.a    = xColour.a;
+  voxColour.a    = (xColour.a +
+                    yColour.a +
+                    zColour.a) / 3;
 
   /*
    * Apply the colour scale/offset -

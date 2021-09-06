@@ -184,12 +184,17 @@ MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 ABS voxValue, voxValue;
 
 # Cumulatively combine the rgb
-# channels of those three colours
+# channels of those three colours.
+# Opacity is not modulated by
+# vector values.
 MOV fragColour,   0;
 MAD fragColour,   voxValue.x, xColour, fragColour;
 MAD fragColour,   voxValue.y, yColour, fragColour;
 MAD fragColour,   voxValue.z, zColour, fragColour;
 MOV fragColour.w, xColour.w;
+ADD fragColour.w, fragColour.w, yColour.w;
+ADD fragColour.w, fragColour.w, zColour.w;
+MUL fragColour.w, fragColour.w, 0.333333;
 
 # Apply the bri/con scale and offset
 MAD fragColour.rgb, fragColour, colourXform.x, colourXform.y;
