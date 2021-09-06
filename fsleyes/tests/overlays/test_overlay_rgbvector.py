@@ -9,7 +9,7 @@ from unittest import mock
 
 import pytest
 
-from fsleyes.tests import run_cli_tests, asrgb
+from fsleyes.tests import run_cli_tests, asrgb, mul
 
 import fsleyes.gl.textures.data as texdata
 
@@ -32,11 +32,18 @@ dti/dti_V1 -ot rgbvector -in linear -b 25 -c 25
 dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
 
 {{asrgb('dti/dti_V1')}} -ot rgbvector
+
+# unit length scaling
+{{mul('dti/dti_V1', 0.5)}} -ot rgbvector -u
+{{mul('dti/dti_V1', 0.5)}} -ot rgbvector
+{{mul('dti/dti_V1', 2.0)}} -ot rgbvector -u
+{{mul('dti/dti_V1', 2.0)}} -ot rgbvector
 """
 
 def test_overlay_rgbvector():
     extras = {
         'asrgb' : asrgb,
+        'mul'   : mul,
     }
     run_cli_tests('test_overlay_rgbvector', cli_tests, extras=extras)
 
