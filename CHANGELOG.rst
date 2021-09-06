@@ -9,15 +9,34 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-
 1.2.0 (Under development)
 -------------------------
+
+
+Added
+^^^^^
 
 
 * The **Display space** setting can now be set to *Scaled voxel coordinates*
   on ortho and lightbox views. This causes all images to be displayed in
   scaled voxels, with the origin for each image set to the centre of voxel
   ``(0, 0, 0)`` (!286).
+
+
+Changed
+^^^^^^^
+
+
+* The *scale vectors to unit length* option for line vector overlays now
+  scales the vector colouring, in addition to lengths (!285).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue on macOS / Big Sur whereby an image specified on the
+  command-line could be loaded twice (!285).
 
 
 1.1.0 (Friday 6th August 2021)
