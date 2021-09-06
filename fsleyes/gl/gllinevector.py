@@ -76,28 +76,25 @@ class GLLineVector(glvector.GLVector):
             data = np.copy(data)
 
             with np.errstate(invalid='ignore'):
+
                 # calculate lengths
                 x    = data[0, ...]
                 y    = data[1, ...]
                 z    = data[2, ...]
                 lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
-                # scale lengths to 0.5
-                data[0, ...] = 0.5 * x / lens
-                data[1, ...] = 0.5 * y / lens
-                data[2, ...] = 0.5 * z / lens
-
-                # Scale the vector data by the minimum
-                # voxel length, so it is a unit vector
-                # within real world space
-                fac   = (image.pixdim[:3] / min(image.pixdim[:3]))
-                data /= fac.reshape((3, 1, 1, 1))
+                # scale lengths to 1
+                data[0, ...] = x / lens
+                data[1, ...] = y / lens
+                data[2, ...] = z / lens
 
             return data
 
         def prefilterRange(dmin, dmax):
-            if self.opts.unitLength: return 0, 0.5 # todo pixdim
-            else:                    return dmin, dmax
+            if self.opts.unitLength:
+                return 0, 1.0
+            else:
+                return dmin, dmax
 
         glvector.GLVector.__init__(self,
                                    image,
@@ -198,9 +195,10 @@ class GLLineVector(glvector.GLVector):
         changes. Refreshes the vector image texture data.
         """
         self.imageTexture.refresh()
+        self.updateShaderState()
 
 
-class GLLineVertices(object):
+class GLLineVertices:
     """The ``GLLineVertices`` class is used when rendering a
     :class:`GLLineVector` with OpenGL 1.4. It contains logic to generate
     vertices for every vector in the vector :class:`.Image` that is being

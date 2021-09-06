@@ -82,11 +82,9 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
-
-  vec3  texCoord;
-  vec3  vector;
-  vec3  voxCoord;
-  float vectorLen;
+  vec3 texCoord;
+  vec3 vector;
+  vec3 voxCoord;
 
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
@@ -108,13 +106,13 @@ void main(void) {
    * texture range of [0,1] to the original
    * data range
    */
-  vector   *= voxValXform[0].x;
-  vector   += voxValXform[3].x;
-  vectorLen = length(vector);
+  vector *= voxValXform[0].x;
+  vector += voxValXform[3].x;
 
   /* Invert about the x axis if necessary */
-  if (xFlip)
+  if (xFlip) {
     vector.x = -vector.x;
+  }
 
   /*
    * Kill the vector if its length is 0.
@@ -123,7 +121,7 @@ void main(void) {
    * from the texture data range. This
    * may end up being too tolerant.
    */
-  if (vectorLen < 0.0001) {
+  if (length(vector) < 0.0001) {
     fragColourFactor = vec4(0, 0, 0, 0);
     return;
   }

@@ -118,6 +118,20 @@ def updateShaderState(self):
     v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = opts.orientFlip
 
+    # If the unitLength option is on, the vector
+    # data will have already been scaled to have
+    # length 1 (see GLLineVector.__init__). But
+    # we draw vectors in two parts, from the voxel
+    # centre. So we have to half the vector lengths.
+    if opts.unitLength:
+        lengthScale /= 2
+        # We also scale the vector data by the
+        # minimum voxel length, so that each
+        # vector has unit length relative to
+        # the voxel dimensions.
+        fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
+        lengthScale /= fac
+
     changed |= shader.set('vectorTexture',   4)
     changed |= shader.set('displayToVoxMat', d2vMat)
     changed |= shader.set('voxToDisplayMat', v2dMat)
