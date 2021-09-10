@@ -27,15 +27,16 @@ in one of several ways:
 
  **scaled voxels**              (a.k.a. ``pixdim``) The image data voxel
                                 coordinates are scaled by the ``pixdim`` values
-                                stored in the NIFTI header.
-
+                                stored in the NIFTI header. The origin is
+                                fixed at the centre of voxel ``(0, 0, 0)``.
 
  **radioloigcal scaled voxels** (a.k.a. ``pixdim-flip``) The image data voxel
-                                coordinates are scaled by the ``pixdim`` values
-                                stored in the NIFTI header and, if the image
-                                appears to be stored in neurological order,
-                                the X (left-right) axis is inverted.
-
+                                coordinates are scaled by the ``pixdim``
+                                values stored in the NIFTI header and, if the
+                                image appears to be stored in neurological
+                                order, the X (left-right) axis is
+                                inverted. The origin is fixed at the centre of
+                                voxel ``(0, 0, 0)``.
 
  **world**                      (a.k.a. ``affine``) The image data voxel
                                 coordinates are transformed by the
@@ -443,6 +444,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # on the value of displaySpace
         if ds == 'world':
             voxToRefMat = voxToWorldMat
+        elif ds == 'scaledVoxel':
+            voxToRefMat = voxToPixFlipMat
         elif ds is self.overlay:
             voxToRefMat = voxToPixFlipMat
         else:
@@ -455,7 +458,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         # the note on coordinate systems at
         # the top of this file).
         voxToTexMat        = affine.scaleOffsetXform(tuple(1.0 / shape),
-                                                        tuple(0.5 / shape))
+                                                     tuple(0.5 / shape))
 
         idToVoxMat         = affine.invert(voxToIdMat)
         idToPixdimMat      = affine.concat(voxToPixdimMat,  idToVoxMat)

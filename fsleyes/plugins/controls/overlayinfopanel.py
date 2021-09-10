@@ -345,11 +345,11 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
                 dsDisplay    = self.displayCtx.getDisplay(dsImg)
                 displaySpace = displaySpace.format(dsDisplay.name)
             else:
-                log.warn('{} transform ({}) seems to be out '
-                         'of date (display space: {})'.format(
-                             overlay,
-                             opts.transform,
-                             self.displayCtx.displaySpace))
+                log.warning('{} transform ({}) seems to be out '
+                            'of date (display space: {})'.format(
+                                overlay,
+                                opts.transform,
+                                self.displayCtx.displaySpace))
 
         dataType = strings.nifti.get(('datatype', int(hdr['datatype'])),
                                      'Unknown')
