@@ -20,6 +20,10 @@ Added
 * New ``--interpolation`` option for ``mesh`` overlays, which allows
   nearest-neighbour or linear interpolation to be selected when colouring
   meshes with vertex data. This replaces the ``--flatShading`` option (!278).
+* The **Display space** setting can now be set to *Scaled voxel coordinates*
+  on ortho and lightbox views. This causes all images to be displayed in
+  scaled voxels, with the origin for each image set to the centre of voxel
+  ``(0, 0, 0)`` (!286).
 
 
 Changed
