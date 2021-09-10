@@ -165,7 +165,7 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    displaySpace = props.Choice(('world', ))
+    displaySpace = props.Choice(('world', 'scaledVoxel'))
     """The *space* in which overlays are displayed. This property defines the
     display coordinate system for this ``DisplayContext``. When it is changed,
     the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti` overlays
@@ -179,7 +179,15 @@ class DisplayContext(props.SyncableHasProperties):
        their affine transformation matrix - the :attr:`.NiftiOpts.transform`
        property for every ``Nifti`` overlay is set to ``affine``.
 
-    2. **Reference image** space
+    2. **Scaled-voxel** space (a.k.a. ``'scaledVoxel'``)
+
+       All :class:`.Nifti` overlays are displayed in a scaled-voxel coordinate
+       system, with origin set to the centre of voxel ``(0, 0, 0)``, and
+       voxels scaled by image pixdims. This is accomplished by setting the
+       :attr:`.NiftiOpts.transform` property for every ``Nifti`` overlay to
+       ``pixdim-flip``.
+
+    3. **Reference image** space
 
        A single :class:`.Nifti` overlay is selected as a *reference* image,
        and is displayed in scaled voxel space (with a potential L/R flip for
@@ -495,50 +503,6 @@ class DisplayContext(props.SyncableHasProperties):
         return self.getOpts(overlay).referenceImage
 
 
-    def displayToWorld(self, dloc, *args, **kwargs):
-        """Transforms the given coordinates from the display coordinate
-        system into the world coordinate system.
-
-        .. warning:: If any :attr:`.NiftiOpts.transform` properties have
-                     been modified manually, this method will return invalid
-                     results.
-
-        All other arguments are passed to the
-        :meth:`.NiftiOpts.transformCoords` method.
-        """
-
-        displaySpace = self.displaySpace
-
-        if displaySpace == 'world' or len(self.__overlayList) == 0:
-            return dloc
-
-        opts = self.getOpts(displaySpace)
-
-        return opts.transformCoords(dloc, 'display', 'world', *args, **kwargs)
-
-
-    def worldToDisplay(self, wloc, *args, **kwargs):
-        """Transforms the given coordinates from the world coordinate
-        system into the display coordinate system.
-
-        .. warning:: If any :attr:`.NiftiOpts.transform` properties have
-                     been modified manually, this method will return invalid
-                     results.
-
-        All other arguments are passed to the
-        :meth:`.NiftiOpts.transformCoords` method.
-        """
-
-        displaySpace = self.displaySpace
-
-        if displaySpace == 'world' or len(self.__overlayList) == 0:
-            return wloc
-
-        opts = self.getOpts(displaySpace)
-
-        return opts.transformCoords(wloc, 'world', 'display', *args, **kwargs)
-
-
     def displaySpaceIsRadiological(self):
         """Returns ``True`` if the current :attr:`displaySpace` aligns with
         a radiological orientation. A radiological orientation is one in
@@ -552,6 +516,7 @@ class DisplayContext(props.SyncableHasProperties):
         if len(self.__overlayList) == 0:
             return True
 
+        opts  = None
         space = self.displaySpace
 
         # Display space is either 'world', or an image.
@@ -562,11 +527,26 @@ class DisplayContext(props.SyncableHasProperties):
         # right).
         if space == 'world':
             return False
-        else:
-            opts  = self.getOpts(space)
-            xform = opts.getTransform('pixdim-flip', 'display')
 
-            return npla.det(xform) > 0
+        # If space == scaledVoxel, we decide based on
+        # the currently selected overlay.  Otherwise
+        # (reference image), we decide based on the ref
+        # image.
+        elif space == 'scaledVoxel':
+            space = self.getSelectedOverlay()
+
+        # Use the FSL / FLIRT convention - if the affine
+        # determinant is negative, assume neurological
+        # storage order.
+        if space is not None:
+            ref = self.getOpts(space).referenceImage
+            if ref is not None:
+                opts  = self.getOpts(space)
+                xform = opts.getTransform('pixdim-flip', 'display')
+                return npla.det(xform) > 0
+
+        # no nifti overlays loaded
+        return False
 
 
     def selectOverlay(self, overlay):
@@ -691,9 +671,9 @@ class DisplayContext(props.SyncableHasProperties):
     def defaultDisplaySpace(self, ds):
         """Sets the :meth:`defaultDisplaySpace`.
 
-        :arg ds: Either ``'ref'`` or ``'world'``.
+        :arg ds: Either ``'ref'``, ``'scaledVoxel'``, or ``'world'``.
         """
-        if ds not in ('world', 'ref'):
+        if ds not in ('world', 'scaledVoxel', 'ref'):
             raise ValueError('Invalid default display space: {}'.format(ds))
         self.__defaultDisplaySpace = ds
 
@@ -893,7 +873,7 @@ class DisplayContext(props.SyncableHasProperties):
             if isinstance(overlay, fslimage.Nifti):
                 choices.append(overlay)
 
-        choices.append('world')
+        choices.extend(('world', 'scaledVoxel'))
 
         choiceProp.setChoices(choices, instance=self)
 
@@ -920,9 +900,10 @@ class DisplayContext(props.SyncableHasProperties):
         # get called before we have registered a
         # listener on the bounds property.
         with props.skip(opts, 'bounds', self.__name, ignoreInvalid=True):
-            if   space == 'world':  opts.transform = 'affine'
-            elif image is space:    opts.transform = 'pixdim-flip'
-            else:                   opts.transform = 'reference'
+            if   space == 'world':       opts.transform = 'affine'
+            elif space == 'scaledVoxel': opts.transform = 'pixdim-flip'
+            elif image is space:         opts.transform = 'pixdim-flip'
+            else:                        opts.transform = 'reference'
 
 
     def __displaySpaceChanged(self, *a):
@@ -1185,14 +1166,23 @@ class DisplayContext(props.SyncableHasProperties):
                     self.location = self.worldLocation
             return
 
-        ref  = self.displaySpace
+        if self.displaySpace == 'scaledVoxel':
+            ref      = self.getSelectedOverlay()
+            srcSpace = 'pixdim-flip'
+        else:
+            ref      = self.displaySpace
+            srcSpace = 'display'
+
+        if ref is None:
+            return
+
         opts = self.getOpts(ref)
 
         if dest == 'world':
             with props.skip(self, 'location', self.__name):
                 self.worldLocation = opts.transformCoords(
-                    self.location, 'display', 'world')
+                    self.location, srcSpace, 'world')
         else:
             with props.skip(self, 'worldLocation', self.__name):
                 self.location = opts.transformCoords(
-                    self.worldLocation, 'world', 'display')
+                    self.worldLocation, 'world', srcSpace)

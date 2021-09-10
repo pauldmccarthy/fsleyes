@@ -1274,7 +1274,9 @@ properties = TypeDict({
 
 choices = TypeDict({
 
-    'DisplayContext.displaySpace' : {'world'  : 'World coordinates'},
+    'DisplayContext.displaySpace' : {'world'       : 'World coordinates',
+                                     'scaledVoxel' : 'Scaled voxel coordinates',
+                                     },
 
     'SceneOpts.colourBarLocation'  : {'top'          : 'Top',
                                       'bottom'       : 'Bottom',

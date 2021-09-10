@@ -159,6 +159,21 @@ coordinate system <display_space_world_coordinate_system>` of the images you
 are viewing.
 
 
+.. _display_space_scaled_voxel_space:
+
+Scaled voxel space
+^^^^^^^^^^^^^^^^^^
+
+
+FSLeyes is also capable of displaying all images in their respective scaled
+voxel coordinate system - this is achieved by setting the **Display space** to
+*Scaled voxel coordinates*. Each image is positioned relative to an origin at
+the centre of voxel ``(0, 0, 0)``.
+
+.. note:: This is an advanced option that should not normally be needed, but
+          can sometimes be useful for troubleshooting problematic images.
+
+
 .. _display_space_nifti_image_orientation:
 
 NIFTI image orientation

@@ -9,6 +9,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.2.0 (Under development)
+-------------------------
+
+
+* The **Display space** setting can now be set to *Scaled voxel coordinates*
+  on ortho and lightbox views. This causes all images to be displayed in
+  scaled voxels, with the origin for each image set to the centre of voxel
+  ``(0, 0, 0)`` (!286).
+
+
 1.1.0 (Friday 6th August 2021)
 ------------------------------
 

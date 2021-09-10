@@ -2607,6 +2607,8 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
         if args.displaySpace == 'world':
             displaySpace = 'world'
+        elif args.displaySpace == 'scaledVoxel':
+            displaySpace = 'scaledVoxel'
 
         elif args.displaySpace is not None:
             try:
