@@ -32,6 +32,7 @@ import matplotlib.image as mplimg
 import fsleyes_props                as props
 from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
+import fsl.utils.image.resample     as resample
 import fsl.transform.affine         as affine
 import fsl.data.image               as fslimage
 import                                 fsleyes
@@ -691,6 +692,18 @@ def roi(fname, roi):
     img.save(outfile)
 
     return outfile
+
+
+def resampled(fname, fac):
+
+    base        = fslimage.removeExt(op.basename(fname))
+    outfile     = '{}_resampled_{}'.format(base, fac)
+    img         = fslimage.Image(fname)
+    pix         = np.array(img.pixdim[:3]) * fac
+    data, xform = resample.resampleToPixdims(img, pix)
+    fslimage.Image(data, header=img.header, xform=xform).save(outfile)
+    return outfile
+
 
 
 def asrgb(infile):
