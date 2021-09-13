@@ -80,7 +80,7 @@ class GLLineVector(glvector.GLVector):
                 # Vector images stored as RGB24 data
                 # type are assumed to map from [0, 255]
                 # to [-1, 1], so cannot be normalised
-                if image.nvals > 1:
+                if vecImage.nvals > 1:
                     return data
 
                 # calculate lengths
