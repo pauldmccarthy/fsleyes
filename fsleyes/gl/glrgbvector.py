@@ -82,6 +82,13 @@ class GLRGBVector(glvector.GLVector):
         else:                                      vecImage = image
 
         def prefilter(data):
+
+            # Vector images stored as RGB24 data
+            # type are assumed to map from [0, 255]
+            # to [-1, 1], so cannot be normalised
+            if image.nvals > 1:
+                return data
+
             # make absolute, and scale to unit
             # length if required. We must make
             # the data absolute, otherwise we

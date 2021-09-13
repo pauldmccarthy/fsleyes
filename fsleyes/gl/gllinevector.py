@@ -77,6 +77,12 @@ class GLLineVector(glvector.GLVector):
 
             with np.errstate(invalid='ignore'):
 
+                # Vector images stored as RGB24 data
+                # type are assumed to map from [0, 255]
+                # to [-1, 1], so cannot be normalised
+                if image.nvals > 1:
+                    return data
+
                 # calculate lengths
                 x    = data[0, ...]
                 y    = data[1, ...]
@@ -92,7 +98,7 @@ class GLLineVector(glvector.GLVector):
 
         def prefilterRange(dmin, dmax):
             if self.opts.unitLength:
-                return 0, 1.0
+                return 0, 1
             else:
                 return dmin, dmax
 
@@ -305,7 +311,6 @@ class GLLineVertices:
 
         # The image may either
         # have shape (X, Y, Z, 3)
-
         if image.nvals == 1:
             vertices = np.array(data, dtype=np.float32)
         # Or (we assume) a RGB
