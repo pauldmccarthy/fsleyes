@@ -303,9 +303,6 @@ class Texture2D(texture.Texture):
         if origShape is None:
             return None
 
-        if self.nvals > 1:
-            origShape = origShape[1:]
-
         # Here we apply a rotation to the
         # coordinates to force the two major
         # voxel axes to map to the first two
