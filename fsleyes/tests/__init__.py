@@ -793,8 +793,6 @@ def zero_centre(infile):
     return outfile
 
 
-
-
 def complex():
 
     data =      np.linspace(0, 1, 1000).reshape((10, 10, 10)) + \
@@ -826,6 +824,16 @@ def invert(infile):
         outfile       = '{}_inverted.{}'.format(basename, ext)
         np.savetxt(outfile, data)
 
+    return outfile
+
+
+def mul(infile, factor):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_mul_{}.nii.gz'.format(basename, factor)
+    img      = fslimage.Image(infile)
+    data     = img[:]
+    img[:]   = data * factor
+    img.save(outfile)
     return outfile
 
 

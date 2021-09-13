@@ -5,9 +5,13 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import os.path as op
+
 import pytest
 
-from fsleyes.tests import run_cli_tests, roi, asrgb
+import fsl.data.image as fslimage
+
+from fsleyes.tests import run_cli_tests, roi, asrgb, mul
 
 
 pytestmark = pytest.mark.overlayclitest
@@ -35,13 +39,20 @@ dti/dti_FA.nii.gz {{asrgb('dti/dti_V1.nii.gz')}} -ot linevector
 
 # test anisotropic voxels
 dti/anisotropic/dti_FA dti/anisotropic/dti_V1 -ot linevector
-"""
 
+# unit length / colour scaling
+dti/dti_FA.nii.gz        dti/dti_V1.nii.gz          -ot linevector -nu
+dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 0.5)}} -ot linevector
+dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 0.5)}} -ot linevector -nu
+dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector
+dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector -nu
+"""
 
 def test_overlay_linevector():
     extras = {
         'roi'   : roi,
         'asrgb' : asrgb,
+        'mul'   : mul,
     }
     run_cli_tests('test_overlay_linevector',
                   cli_tests,

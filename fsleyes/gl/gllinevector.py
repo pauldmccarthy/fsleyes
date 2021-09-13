@@ -7,10 +7,8 @@
 """This module provides the :class:`GLLineVector` class, for displaying 3D
 vector :class:`.Image` overlays in line mode.
 
-
 The :class:`.GLLineVertices` class is also defined in this module, and is used
-in certain rendering situations - specifically, when running in OpenGL
-1.4. See the :mod:`.gl14.gllinevector_funcs` and
+when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 :mod:`.gl21.gllinevector_funcs` modules for more details.
 """
 
@@ -70,17 +68,55 @@ class GLLineVector(glvector.GLVector):
         if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
         else:                                      vecImage = image
 
+        def prefilter(data):
+            # Scale to unit length if required.
+            if not self.opts.unitLength:
+                return data
+
+            data = np.copy(data)
+
+            with np.errstate(invalid='ignore'):
+
+                # Vector images stored as RGB24 data
+                # type are assumed to map from [0, 255]
+                # to [-1, 1], so cannot be normalised
+                if vecImage.nvals > 1:
+                    return data
+
+                # calculate lengths
+                x    = data[0, ...]
+                y    = data[1, ...]
+                z    = data[2, ...]
+                lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+                # scale lengths to 1
+                data[0, ...] = x / lens
+                data[1, ...] = y / lens
+                data[2, ...] = z / lens
+
+            return data
+
+        def prefilterRange(dmin, dmax):
+            if self.opts.unitLength:
+                return 0, 1
+            else:
+                return dmin, dmax
+
         glvector.GLVector.__init__(self,
                                    image,
                                    overlayList,
                                    displayCtx,
                                    canvas,
                                    threedee,
+                                   prefilter=prefilter,
+                                   prefilterRange=prefilterRange,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))
 
-        self.opts.addListener('lineWidth', self.name, self.notify)
+        self.opts.addListener('lineWidth',  self.name, self.notify)
+        self.opts.addListener('unitLength', self.name,
+                              self.__unitLengthChanged)
 
 
     def destroy(self):
@@ -89,7 +125,8 @@ class GLLineVector(glvector.GLVector):
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
         """
-        self.opts.removeListener('lineWidth', self.name)
+        self.opts.removeListener('lineWidth',  self.name)
+        self.opts.removeListener('unitLength', self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -159,11 +196,26 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.postDraw(self, xform, bbox)
 
 
-class GLLineVertices(object):
-    """The ``GLLineVertices`` class is used in some cases when rendering a
-    :class:`GLLineVector`. It contains logic to generate vertices for every
-    vector in the vector :class:`.Image` that is being displayed by a
-    ``GLLineVector`` instance.
+    def __unitLengthChanged(self, *a):
+        """Called when the :attr:`.LineVectorOptsunitLength` property
+        changes. Refreshes the vector image texture data.
+        """
+        self.imageTexture.refresh()
+        self.updateShaderState()
+
+
+class GLLineVertices:
+    """The ``GLLineVertices`` class is used when rendering a
+    :class:`GLLineVector` with OpenGL 1.4. It contains logic to generate
+    vertices for every vector in the vector :class:`.Image` that is being
+    displayed by a ``GLLineVector`` instance.
+
+
+    This class is used by the OpenGL 1.4 implementation - when using OpenGL
+    2.1, the logic encoded in this class is implemented in the line vector
+    vertex shader. This is because OpenGL 1.4 vertex programs (using the
+    ARB_vertex_program extension) are unable to perform texture lookups,
+    so cannot retrieve the vector data.
 
 
     After a ``GLLineVertices`` instance has been created, the :meth:`refresh`
@@ -259,7 +311,6 @@ class GLLineVertices(object):
 
         # The image may either
         # have shape (X, Y, Z, 3)
-
         if image.nvals == 1:
             vertices = np.array(data, dtype=np.float32)
         # Or (we assume) a RGB

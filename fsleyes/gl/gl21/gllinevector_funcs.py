@@ -65,7 +65,6 @@ def init(self):
     # changes.
     self.opts.addListener('orientFlip',  name, update, weak=False)
     self.opts.addListener('directed',    name, update, weak=False)
-    self.opts.addListener('unitLength',  name, update, weak=False)
     self.opts.addListener('lengthScale', name, update, weak=False)
     self.opts.addListener('transform',
                           name,
@@ -79,7 +78,6 @@ def destroy(self):
 
     self.opts.removeListener('orientFlip',  self.name)
     self.opts.removeListener('directed',    self.name)
-    self.opts.removeListener('unitLength',  self.name)
     self.opts.removeListener('lengthScale', self.name)
     self.opts.removeListener('transform',   self.name)
 
@@ -114,12 +112,25 @@ def updateShaderState(self):
         vvxMat = self.imageTexture.voxValXform
 
     directed    = opts.directed
-    unitLength  = opts.unitLength
     lengthScale = opts.lengthScale / 100.0
     imageDims   = image.pixdim[:3]
     d2vMat      = opts.getTransform('display', 'voxel')
     v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = opts.orientFlip
+
+    # If the unitLength option is on, the vector
+    # data will have already been scaled to have
+    # length 1 (see GLLineVector.__init__). But
+    # we draw vectors in two parts, from the voxel
+    # centre. So we have to half the vector lengths.
+    if opts.unitLength:
+        lengthScale /= 2
+        # We also scale the vector data by the
+        # minimum voxel length, so that each
+        # vector has unit length relative to
+        # the voxel dimensions.
+        fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
+        lengthScale /= fac
 
     changed |= shader.set('vectorTexture',   4)
     changed |= shader.set('displayToVoxMat', d2vMat)
@@ -127,7 +138,6 @@ def updateShaderState(self):
     changed |= shader.set('voxValXform',     vvxMat)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
-    changed |= shader.set('unitLength',      unitLength)
     changed |= shader.set('lengthScale',     lengthScale)
     changed |= shader.set('xFlip',           xFlip)
 

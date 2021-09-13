@@ -12,7 +12,7 @@
 uniform sampler3D vectorTexture;
 
 /*
- * Transformations between voxel and 
+ * Transformations between voxel and
  * display coordinate systems.
  */
 uniform mat4 displayToVoxMat;
@@ -44,7 +44,7 @@ uniform vec3 imageShape;
 uniform vec3 imageDims;
 
 /*
- * If true, the vectors are 
+ * If true, the vectors are
  * inverted about the x axis.
  */
 uniform bool xFlip;
@@ -55,12 +55,6 @@ uniform bool xFlip;
  * outwards.
  */
 uniform bool directed;
-
-/*
- * If true, each vector is scaled to have a length 
- * of 1*lengthScale in the image coordinate system.
- */
-uniform bool unitLength;
 
 /*
  * Scale vector lengths by this amount.
@@ -88,11 +82,9 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
-  
-  vec3  texCoord;
-  vec3  vector;
-  vec3  voxCoord;
-  float vectorLen;
+  vec3 texCoord;
+  vec3 vector;
+  vec3 voxCoord;
 
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
@@ -114,39 +106,24 @@ void main(void) {
    * texture range of [0,1] to the original
    * data range
    */
-  vector   *= voxValXform[0].x;
-  vector   += voxValXform[3].x;
-  vectorLen = length(vector);
+  vector *= voxValXform[0].x;
+  vector += voxValXform[3].x;
 
   /* Invert about the x axis if necessary */
-  if (xFlip)
+  if (xFlip) {
     vector.x = -vector.x;
-
-  /* 
-   * Kill the vector if its length is 0. 
-   * We have to be tolerant of errors, 
-   * because of the transformation to/
-   * from the texture data range. This 
-   * may end up being too tolerant.
-   */
-  if (vectorLen < 0.0001) {
-    fragColourFactor = vec4(0, 0, 0, 0);
-    return;
   }
 
-
-  if (unitLength) {
-
-    /*
-     * Scale the vector so it has length 0.5. 
-     */
-    vector /= 2 * vectorLen;
-
-    /*
-     * Scale the vector by the minimum voxel length,
-     * so it is a unit vector within real world space 
-     */
-    vector /= imageDims / min(imageDims.x, min(imageDims.y, imageDims.z));
+  /*
+   * Kill the vector if its length is 0.
+   * We have to be tolerant of errors,
+   * because of the transformation to/
+   * from the texture data range. This
+   * may end up being too tolerant.
+   */
+  if (length(vector) < 0.0001) {
+    fragColourFactor = vec4(0, 0, 0, 0);
+    return;
   }
 
   vector *= lengthScale;

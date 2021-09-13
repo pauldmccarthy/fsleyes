@@ -88,9 +88,9 @@ PARAM zColour      = {{ param_zColour         }};
 PARAM colourXform  = {{ param_colourXform     }};
 
 
-# Bail if the textureq coordinate
+# Bail if the texture coordinate
 # is out of the image space.
-# We use voxValue out of convenience
+# We use voxValue as a temporary
 {{
 arb_call('textest.prog',
          texCoord='{{ varying_vecTexCoord }}',
@@ -104,6 +104,26 @@ KIL voxValue.x;
 TEX voxValue,  {{ varying_vecTexCoord  }}, {{ texture_vectorTexture   }}, 3D;
 TEX modValue,  {{ varying_modTexCoord  }}, {{ texture_modulateTexture }}, 3D;
 TEX clipValue, {{ varying_clipTexCoord }}, {{ texture_clipTexture     }}, 3D;
+
+# Kill the fragment if this vector
+# has length 0 or contains NaNs
+# We use clipResult as a temporary
+# kill if length is 0
+DP3 clipResult.x, voxValue, voxValue;
+MUL clipResult.x, clipResult.x, -1;
+SGE clipResult.x, clipResult.x, 0;
+MUL clipResult.x, clipResult.x, -1;
+KIL clipResult.x;
+# kill if vector contains NaNs.
+# There is no nan test, or equality
+# test, so we test whether
+# (value >= value) || (value < value)
+DP3 clipResult.x, voxValue, voxValue;
+SGE clipResult.y, clipResult.x, clipResult.x;
+SLT clipResult.z, clipResult.x, clipResult.x;
+ADD clipResult.x, clipResult.y, clipResult.z;
+SUB clipResult.x, clipResult.x, 0.5;
+KIL clipResult.x;
 
 # Clobber the clipping/modulation
 # values we just looked up if their
@@ -164,11 +184,17 @@ MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 ABS voxValue, voxValue;
 
 # Cumulatively combine the rgb
-# channels of those three colours
-MOV fragColour, 0;
-MAD fragColour, voxValue.x, xColour, fragColour;
-MAD fragColour, voxValue.y, yColour, fragColour;
-MAD fragColour, voxValue.z, zColour, fragColour;
+# channels of those three colours.
+# Opacity is not modulated by
+# vector values.
+MOV fragColour,   0;
+MAD fragColour,   voxValue.x, xColour, fragColour;
+MAD fragColour,   voxValue.y, yColour, fragColour;
+MAD fragColour,   voxValue.z, zColour, fragColour;
+MOV fragColour.w, xColour.w;
+ADD fragColour.w, fragColour.w, yColour.w;
+ADD fragColour.w, fragColour.w, zColour.w;
+MUL fragColour.w, fragColour.w, 0.333333;
 
 # Apply the bri/con scale and offset
 MAD fragColour.rgb, fragColour, colourXform.x, colourXform.y;

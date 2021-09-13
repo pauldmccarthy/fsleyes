@@ -62,6 +62,9 @@ cli_tests = """
 {{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}}
 {{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}}
 {{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}}
+{{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}} -ot rgb
+{{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}} -ot rgb
+{{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}} -ot rgb
 {{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}} -ot rgbvector

@@ -13,6 +13,7 @@ import numpy                as np
 import OpenGL.GL            as gl
 
 import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
 
 import fsleyes.gl           as fslgl
 import fsleyes.gl.routines  as glroutines
@@ -188,6 +189,23 @@ class GLRGBVolume(glimageobject.GLImageObject):
         :meth:`updateShaderState`.
         """
         self.updateShaderState()
+
+
+    def generateVertices2D(self, zpos, axes, bbox=None):
+        """Overrides :meth:`.GLImageObject.generateVertices2D`.
+
+        Appliies the :meth:`.ImageTextureBase.texCoordXform` to the texture
+        coordinates - this is performed to support 2D images/textures.
+        """
+
+        vertices, voxCoords, texCoords = \
+            glimageobject.GLImageObject.generateVertices2D(
+                self, zpos, axes, bbox)
+
+        texCoords = affine.transform(
+            texCoords, self.imageTexture.texCoordXform(self.overlay.shape))
+
+        return vertices, voxCoords, texCoords
 
 
     def channelColours(self):
