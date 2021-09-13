@@ -37,6 +37,8 @@ Fixed
 
 * Fixed an issue on macOS / Big Sur whereby an image specified on the
   command-line could be loaded twice (!285).
+* Fixed some rendering issues for images stored as type ``NIFTI_TYPE_RGB24``
+  (!285).
 
 
 1.1.0 (Friday 6th August 2021)
