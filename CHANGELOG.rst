@@ -9,6 +9,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.2.1 (Under development)
+-------------------------
+
+
+Fixed
+^^^^^
+
+* The **Display space** |right_arrow| *Scaled voxel coordinates* setting no
+  longer applies a L/R flip for images with neurological data storage order
+  (!289).
+
+
 1.2.0 (Monday 13th September 2021)
 ----------------------------------
 

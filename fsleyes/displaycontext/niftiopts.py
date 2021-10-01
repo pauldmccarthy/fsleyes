@@ -36,7 +36,8 @@ in one of several ways:
                                 image appears to be stored in neurological
                                 order, the X (left-right) axis is
                                 inverted. The origin is fixed at the centre of
-                                voxel ``(0, 0, 0)``.
+                                voxel ``(0, 0, 0)`` (or ``(X-1, 0, 0)`` for
+                                 inverted images).
 
  **world**                      (a.k.a. ``affine``) The image data voxel
                                 coordinates are transformed by the
@@ -445,7 +446,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         if ds == 'world':
             voxToRefMat = voxToWorldMat
         elif ds == 'scaledVoxel':
-            voxToRefMat = voxToPixFlipMat
+            voxToRefMat = voxToPixdimMat
         elif ds is self.overlay:
             voxToRefMat = voxToPixFlipMat
         else:
