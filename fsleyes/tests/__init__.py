@@ -672,6 +672,40 @@ def fliporient(filename):
     return outfile
 
 
+def swapdim(filename, d0, d1, d2):
+
+    indices = { 'x' : 0, '-x' : 0,
+                'y' : 1, '-y' : 1,
+                'z' : 2, '-z' : 2}
+    base    = fslimage.removeExt(filename)
+    outfile = '{}_swapdim_{}_{}_{}'.format(base, d0, d1, d2)
+    img     = fslimage.Image(filename)
+
+    s0, s1, s2 = [-1 if d.startswith('-') else 1 for d in (d0, d1, d2)]
+    d0, d1, d2 = [indices[d]                     for d in (d0, d1, d2)]
+
+    if len(img.shape) == 3:
+        order = (d0, d1, d2)
+    else:
+        order =  (d0, d1, d2) + tuple(range(3, len(img.shape)))
+
+    data = img.data
+    if s0 < 0: data = np.flip(data, d0)
+    if s1 < 0: data = np.flip(data, d1)
+    if s2 < 0: data = np.flip(data, d2)
+    data = data.transpose(order)
+
+    aff        = np.zeros((4, 4))
+    aff[0, d0] = s0
+    aff[1, d1] = s1
+    aff[2, d2] = s2
+    aff[3, 3]  = 1
+    aff        = affine.concat(aff, img.voxToWorldMat)
+
+    img = fslimage.Image(data, xform=aff)
+    img.save(outfile)
+    return outfile
+
 
 def roi(fname, roi):
 
