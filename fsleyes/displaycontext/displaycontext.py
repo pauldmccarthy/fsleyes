@@ -185,7 +185,7 @@ class DisplayContext(props.SyncableHasProperties):
        system, with origin set to the centre of voxel ``(0, 0, 0)``, and
        voxels scaled by image pixdims. This is accomplished by setting the
        :attr:`.NiftiOpts.transform` property for every ``Nifti`` overlay to
-       ``pixdim-flip``.
+       ``pixdim``.
 
     3. **Reference image** space
 
@@ -533,7 +533,10 @@ class DisplayContext(props.SyncableHasProperties):
         # (reference image), we decide based on the ref
         # image.
         elif space == 'scaledVoxel':
-            space = self.getSelectedOverlay()
+            space    = self.getSelectedOverlay()
+            srcSpace = 'pixdim'
+        else:
+            srcSpace = 'pixdim-flip'
 
         # Use the FSL / FLIRT convention - if the affine
         # determinant is negative, assume neurological
@@ -542,7 +545,7 @@ class DisplayContext(props.SyncableHasProperties):
             ref = self.getOpts(space).referenceImage
             if ref is not None:
                 opts  = self.getOpts(space)
-                xform = opts.getTransform('pixdim-flip', 'display')
+                xform = opts.getTransform(srcSpace, 'display')
                 return npla.det(xform) > 0
 
         # no nifti overlays loaded
@@ -901,7 +904,7 @@ class DisplayContext(props.SyncableHasProperties):
         # listener on the bounds property.
         with props.skip(opts, 'bounds', self.__name, ignoreInvalid=True):
             if   space == 'world':       opts.transform = 'affine'
-            elif space == 'scaledVoxel': opts.transform = 'pixdim-flip'
+            elif space == 'scaledVoxel': opts.transform = 'pixdim'
             elif image is space:         opts.transform = 'pixdim-flip'
             else:                        opts.transform = 'reference'
 
@@ -1168,7 +1171,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         if self.displaySpace == 'scaledVoxel':
             ref      = self.getSelectedOverlay()
-            srcSpace = 'pixdim-flip'
+            srcSpace = 'pixdim'
         else:
             ref      = self.displaySpace
             srcSpace = 'display'
