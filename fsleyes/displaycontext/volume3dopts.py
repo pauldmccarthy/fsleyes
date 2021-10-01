@@ -261,8 +261,18 @@ class Volume3DOpts(object):
         #
         # The projection matrix puts depth into
         # [-1, 1], but we want it in [0, 1]
-        zscale = affine.scaleOffsetXform([1, 1, 0.5], [0, 0, 0.5])
+        zscale = affine.scaleOffsetXform([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         xform  = affine.concat(zscale, proj, xform)
+
+        # The Scene3DViewProfile needs to know the image
+        # texture to screen transformation so it can
+        # transform screen locations into image
+        # coordinates.  So we construct an appropriate
+        # transform and cache it in the overlay list
+        # whenever it is recalculated.
+        scr2disp = affine.concat(t2dmat, affine.invert(xform))
+        self.overlayList.setData(
+            self.overlay, 'screen2DisplayXform_{}'.format(id(self)), scr2disp)
 
         return rayStep, xform
 

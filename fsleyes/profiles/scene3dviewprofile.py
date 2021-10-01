@@ -11,8 +11,9 @@
 
 import logging
 
-import          wx
-import numpy as np
+import              wx
+import numpy     as np
+import OpenGL.GL as gl
 
 import fsleyes_props        as props
 import fsl.transform.affine as affine
@@ -153,8 +154,8 @@ class Scene3DViewProfile(profiles.Profile):
         self.__rotateMousePos = mousePos
 
         canvas.opts.rotation = affine.concat(rot,
-                                                self.__lastRot,
-                                                self.__baseXform)
+                                             self.__lastRot,
+                                             self.__baseXform)
 
 
     def _rotateModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
@@ -228,13 +229,17 @@ class Scene3DViewProfile(profiles.Profile):
         Updates the :attr:`DisplayContext.location` property.
         """
 
-        from fsl.data.mesh import Mesh
+        from fsl.data.mesh  import Mesh
+        from fsl.data.image import Image
 
-        displayCtx = self.displayCtx
-        ovl        = displayCtx.getSelectedOverlay()
+        displayCtx  = self.displayCtx
+        overlayList = self.overlayList
+        ovl         = displayCtx.getSelectedOverlay()
 
         if ovl is None:
             return
+
+        opts = self.displayCtx.getOpts(ovl)
 
         # The canvasPos is located on the near clipping
         # plane (see Scene3DCanvas.canvasToWorld).
@@ -242,16 +247,33 @@ class Scene3DViewProfile(profiles.Profile):
         # far clipping plane.
         farPos = canvas.canvasToWorld(mousePos[0], mousePos[1], near=False)
 
-        # For non-mesh overlays, we select a point which
-        # is in between the near/far clipping planes.
-        if not isinstance(ovl, Mesh):
+        # For image overlays, we transform screen
+        # coordinates into display coordinates, via
+        # a texture to screen coord affine, which
+        # is cached by the glvolume draw functions.
+        if isinstance(ovl, Image):
 
-            posDir = farPos - canvasPos
-            dist   = affine.veclength(posDir)
-            posDir = affine.normalise(posDir)
-            midPos = canvasPos + 0.5 * dist * posDir
+            screen2Display = overlayList.getData(
+                ovl, 'screen2DisplayXform_{}'.format(id(opts)), None)
 
-            self.displayCtx.location.xyz = midPos
+            if screen2Display is None:
+                return
+
+            # Transform the mouse coords into normalised device
+            # coordinates (NDCs, in the range [0, 1] - see
+            # Volume3DOpts.calculateRayCastSettings), and query
+            # the depth for the current fragment (this is saved
+            # by the glvolume 3d fragment shader).
+            x, y = mousePos
+            w, h = canvas.GetSize()
+            z    = gl.glReadPixels(
+                x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
+            x    = x / w
+            y    = y / h
+
+            # Transform NDCs into display coordinates
+            xyz  = affine.transform((x, y, z), screen2Display)
+            self.displayCtx.location.xyz = xyz
 
         else:
             opts      = self.displayCtx.getOpts(ovl)
