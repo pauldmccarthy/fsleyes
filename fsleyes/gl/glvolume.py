@@ -240,6 +240,12 @@ class GLVolume(glimageobject.GLImageObject):
             self.smoothFilter = glfilter.Filter('smooth', texture=0)
             self.smoothFilter.set(kernSize=self.opts.smoothing * 2)
 
+            # One of renderTexture1 or 2 will be be used
+            # as the target for the final draw, depending
+            # on settings. A reference to whichever one
+            # is used is saved to the "renderTexture"
+            # attribute on each draw.
+            self.renderTexture  = None
             self.renderTexture1 = textures.RenderTexture(
                 self.name, interp=gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(
@@ -759,7 +765,7 @@ class GLVolume(glimageobject.GLImageObject):
             # contains the final render. Otherwise,
             # rt2 contains the final render, but rt1
             # contains the depth information. So we
-            # need to # temporarily replace rt2.depth
+            # need to temporarily replace rt2.depth
             # with rt1.depth.
             if opts.smoothing > 0:
                 src    = self.renderTexture2
@@ -773,6 +779,7 @@ class GLVolume(glimageobject.GLImageObject):
             src.depthTexture = dep
             src.draw(verts, useDepth=True)
             src.depthTexture = olddep
+            self.renderTexture = src
 
 
     def drawAll(self, *args, **kwargs):

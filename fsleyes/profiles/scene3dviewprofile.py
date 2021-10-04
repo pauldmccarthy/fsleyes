@@ -259,20 +259,39 @@ class Scene3DViewProfile(profiles.Profile):
             if screen2Display is None:
                 return
 
-            # Transform the mouse coords into normalised device
-            # coordinates (NDCs, in the range [0, 1] - see
-            # Volume3DOpts.calculateRayCastSettings), and query
-            # the depth for the current fragment (this is saved
-            # by the glvolume 3d fragment shader).
+            # Retrieve the depth for the current
+            # fragment. Images are drawn to an off-screen
+            # texture (see GLVolume.draw3d), so we can get
+            # the depth from there.
+            globj = canvas.getGLObject(ovl)
+            tex   = globj.renderTexture.depthTexture
+            with tex.bound():
+                # There's no function to read part of
+                # a texture in GL < 4.5, so we have
+                # to read the entire depth testure.
+                buf = gl.glGetTexImage(gl.GL_TEXTURE_2D,
+                                       0,
+                                       tex.baseFormat,
+                                       tex.textureType,
+                                       None)
+
+            # Get the mouse coords, and transform
+            # them into normalised device coordinates
+            # (NDCs, in the range [0, 1] - see
+            # Volume3DOpts.calculateRayCastSettings),
             x, y = mousePos
             w, h = canvas.GetSize()
-            z    = gl.glReadPixels(
-                x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
-            x    = x / w
-            y    = y / h
+
+            # The depth texure is stored as uint32,
+            # but represents floating point values in
+            # the range [0, 1].
+            buf = np.frombuffer(buf, dtype=tex.dtype).reshape(h, w)
+            z   = buf[y, x] / 4294967295.0
+            x   = x / w
+            y   = y / h
 
             # Transform NDCs into display coordinates
-            xyz  = affine.transform((x, y, z), screen2Display)
+            xyz = affine.transform([x, y, z], screen2Display)
             self.displayCtx.location.xyz = xyz
 
         else:
