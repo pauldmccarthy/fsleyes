@@ -344,7 +344,7 @@ void main(void) {
     vec3  texCoord    = fragTexCoord;
     vec4  colour      = vec4(0);
     vec4  finalColour = vec4(0);
-    vec4  depth       = vec4(0);
+    float depth       = 0;
     int   nsamples    = 0;
     float voxValue;
     int   clipIdx;
@@ -385,47 +385,61 @@ void main(void) {
        * voxel was not clipped and was
        * not NaN.
        */
-      if (sample_volume(texCoord, vec3(0, 0, 0), vec3(0, 0, 0), voxValue, colour)) {
+      if (!sample_volume(texCoord, vec3(0, 0, 0), vec3(0, 0, 0), voxValue, colour)) {
+        continue;
+      }
 
-        if (lighting) {
-          colour.rgb = volume_lighting(texCoord,
-                                       imageTexture,
-                                       lightPos,
-                                       colour.rgb,
-                                       numClipPlanes,
-                                       clipPlanes,
-                                       clipMode);
-        }
+      if (lighting) {
+        colour.rgb = volume_lighting(texCoord,
+                                     imageTexture,
+                                     lightPos,
+                                     colour.rgb,
+                                     numClipPlanes,
+                                     clipPlanes,
+                                     clipMode);
+      }
 
-        /*
-         * weight the sample opacity by the voxel intensity
-         * (normalised w.r.t. the current display range)
-         */
-        if (blendByIntensity) {
-          colour.a = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
-        }
-        /* Or just weight by blend factor */
-        else {
-          colour.a = 1 - blendFactor;
-        }
-        colour.rgb  *= colour.a;
-        finalColour += (1 - finalColour.a) * colour;
-        nsamples    += 1;
+      /*
+       * weight the sample opacity by the voxel intensity
+       * (normalised w.r.t. the current display range)
+       */
+      if (blendByIntensity) {
+        colour.a = 1 - pow(1 - clamp(voxValue, 0, 1), 1 - blendFactor);
 
         /*
-         * If this is the first sample on the ray,
-         * set the fragment depth to its location
+         * When alpha is being modulated by voxel intensity,
+         * we set the fragment depth to the location of the
+         * first sample with intensity greater than 0.1
+         * (voxValue is normalised to [0, 1] w.r.t. the
+         * current display range). The 0.1 threshold is
+         * completely arbitrary, but seems to work well.
          */
-        if (nsamples == 1) {
-          depth = tex2ScreenXform * vec4(texCoord, 1.0);
+        if (depth == 0 && voxValue >= 0.1) {
+          depth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
         }
       }
+      /* Or just weight by blend factor */
+      else {
+        colour.a = 1 - blendFactor;
+
+        /*
+         * When alpha is not modulated by voxel intensity,
+         * we simply set the fragment depth to the
+         * position of the first sample on the ray.
+         */
+        if (nsamples == 1) {
+          depth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
+        }
+      }
+      colour.rgb  *= colour.a;
+      finalColour += (1 - finalColour.a) * colour;
+      nsamples    += 1;
     }
 
     if (nsamples > 0) {
 
       finalColour.a *= alpha;
-      gl_FragDepth   = depth.z;
+      gl_FragDepth   = depth;
       gl_FragColor   = finalColour;
     }
     else {
