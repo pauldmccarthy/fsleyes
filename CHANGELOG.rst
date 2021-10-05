@@ -13,14 +13,22 @@ chronological order.
 -------------------------
 
 
+Added
+^^^^^
+
+
+* The 3D view now allows the display location to be set to the corresponding
+  location under the mouse on a volume overlay, by shift+clicking (!290).
+
+
 Changed
 ^^^^^^^
 
 
-* Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog.
 * The *Sample along line* tool now supports 2D and multi-channel (e.g. RGB)
   images (currently plotting the mean intensity across channels for the
   latter).
+* Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog (!291).
 
 
 Fixed
