@@ -240,12 +240,6 @@ class GLVolume(glimageobject.GLImageObject):
             self.smoothFilter = glfilter.Filter('smooth', texture=0)
             self.smoothFilter.set(kernSize=self.opts.smoothing * 2)
 
-            # One of renderTexture1 or 2 will be be used
-            # as the target for the final draw, depending
-            # on settings. A reference to whichever one
-            # is used is saved to the "renderTexture"
-            # attribute on each draw.
-            self.renderTexture  = None
             self.renderTexture1 = textures.RenderTexture(
                 self.name, interp=gl.GL_LINEAR, rttype='cd')
             self.renderTexture2 = textures.RenderTexture(
@@ -737,8 +731,8 @@ class GLVolume(glimageobject.GLImageObject):
             fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
 
         # Apply smoothing if needed. If smoothing
-        # is enabled, the final final render will
-        # be in renderTexture2
+        # is enabled, the final render will be in
+        # renderTexture2
         if opts.smoothing > 0:
             self.smoothFilter.set(offsets=[1.0 / sw, 1.0 / sh])
             self.smoothFilter.osApply(self.renderTexture1,
@@ -779,7 +773,6 @@ class GLVolume(glimageobject.GLImageObject):
             src.depthTexture = dep
             src.draw(verts, useDepth=True)
             src.depthTexture = olddep
-            self.renderTexture = src
 
 
     def drawAll(self, *args, **kwargs):

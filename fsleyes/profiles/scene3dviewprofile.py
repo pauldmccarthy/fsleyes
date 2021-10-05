@@ -264,7 +264,7 @@ class Scene3DViewProfile(profiles.Profile):
             # texture (see GLVolume.draw3d), so we can get
             # the depth from there.
             globj = canvas.getGLObject(ovl)
-            tex   = globj.renderTexture.depthTexture
+            tex = globj.renderTexture1.depthTexture
             with tex.bound():
                 # There's no function to read part of
                 # a texture in GL < 4.5, so we have
