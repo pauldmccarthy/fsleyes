@@ -281,9 +281,11 @@ MAD tempColour, tempVar.x, colour, finalColour;
 # tempVar.x, such that it is == 0 if we should
 # take the depth value from this sample, < 0
 # otherwise.
-SLT tempVar.x, skipTest.x, 0;                       # set if should skip
-SLT tempVar.y, depth.w,    0;                       # set if already have depth
-SLT tempVar.z, voxValue.x, 0.1;                     # set if below threshold
+SLT tempVar.x, skipTest.x, 0; # set x if should skip
+SLT tempVar.y, depth.w,    0; # set y if already have depth
+
+SUB tempVar.z, voxValue.x, {{ param_negCmap }}.y;   # set z if below threshold
+SLT tempVar.z, voxValue.x, 0.1;
 ADD tempVar.z, tempVar.z, {{ param_screenSize }}.z; # and blending by intensity
 SGE tempVar.z, tempVar.z, 2;
 ADD tempVar.x, tempVar.x, tempVar.y;

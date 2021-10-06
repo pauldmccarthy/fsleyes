@@ -414,7 +414,7 @@ void main(void) {
          * current display range). The 0.1 threshold is
          * completely arbitrary, but seems to work well.
          */
-        if (depth == 0 && voxValue >= 0.1) {
+        if (depth == 0 && (voxValue - texZero) >= 0.1) {
           depth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
         }
       }
