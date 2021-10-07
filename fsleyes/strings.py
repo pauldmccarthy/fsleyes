@@ -928,8 +928,9 @@ labels = TypeDict({
     'NewImageDialog.link'          : 'link with dimensions',
     'NewImageDialog.affine'        : 'Affine',
 
-    'XNATBrowser.ok'        : 'Download',
-    'XNATBrowser.cancel'    : 'Cancel',
+    'XNATBrowser.download'  : 'Download',
+    'XNATBrowser.close'     : 'Close',
+    'XNATBrowser.fullPaths' : 'Save full XNAT paths',
     'XNATBrowser.choosedir' : 'Choose a download location',
 
     'BrowseDicomPanel.dicomdir'          : 'Directory',
