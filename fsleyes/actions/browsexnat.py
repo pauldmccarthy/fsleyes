@@ -113,7 +113,7 @@ class XNATBrowser(wx.Dialog):
         wx.Dialog.__init__(self,
                            parent,
                            title=strings.titles[self],
-                           style=wx.RESIZE_BORDER)
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         hosts    = fslsettings.read('fsleyes.xnat.hosts',    [])
         accounts = fslsettings.read('fsleyes.xnat.accounts', {})
