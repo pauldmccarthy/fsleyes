@@ -58,31 +58,6 @@ class BrowseXNATAction(base.Action):
         selected to the :class:`.OverlayList`.
         """
 
-        hosts    = fslsettings.read('fsleyes.xnat.hosts',    [])
-        accounts = fslsettings.read('fsleyes.xnat.accounts', {})
-
-        dlg = XNATBrowser(self.__frame, hosts, accounts)
-
-        dlg.Layout()
-        dlg.Fit()
-        dlg.SetSize((-1, 400))
-        dlg.CentreOnParent()
-
-        if dlg.ShowModal() != wx.ID_OK:
-            return
-
-        paths    = dlg.GetPaths()
-        hosts    = dlg.GetHosts()
-        accounts = dlg.GetAccounts()
-
-        # No files downloaded
-        if len(paths) == 0:
-            return
-
-        # Save successful hosts/credentials
-        fslsettings.write('fsleyes.xnat.hosts',    hosts)
-        fslsettings.write('fsleyes.xnat.accounts', accounts)
-
         def onLoad(paths, overlays):
 
             if len(overlays) == 0:
@@ -97,85 +72,104 @@ class BrowseXNATAction(base.Action):
                                             self.overlayList,
                                             self.displayCtx)
 
-        loadoverlay.loadOverlays(paths,
-                                 onLoad=onLoad,
-                                 saveDir=False,
-                                 inmem=self.displayCtx.loadInMemory)
+        def load(paths):
+            if len(paths) == []:
+                return
+            loadoverlay.loadOverlays(paths,
+                                     onLoad=onLoad,
+                                     saveDir=False,
+                                     inmem=self.displayCtx.loadInMemory)
+
+
+        dlg = XNATBrowser(self.__frame, load)
+        dlg.Layout()
+        dlg.Fit()
+        dlg.SetSize((-1, 400))
+        dlg.CentreOnParent()
+        dlg.Show()
 
 
 class XNATBrowser(wx.Dialog):
     """The ``XNATBrowser`` contains a ``wxnat.XNATBrowserPanel``, allowing the
     user to connect to and browse an XNAT repository. It contains a *Download*
     button which, when clicked, downloads all selected files from the
-    repository into a temporary directory. Once the files have been downloaded,
-    their paths can be retrieved via the :meth:`GetPaths` method.
+    repository into a temporary directory, and passes the file paths to a
+    provided callback function.
     """
 
 
-    def __init__(self,
-                 parent,
-                 knownHosts=None,
-                 knownAccounts=None):
+    def __init__(self, parent, loadFunc=None):
         """Create a ``XNATBrowser``.
 
-        :arg parent:        ``wx`` parent object
+        :arg parent:   ``wx`` parent object
 
-        :arg knownHosts:    List of hosts to use as auto-complete options
-
-        :arg knownAccounts: Mapping containing login credentials, in the
-                            ``{ host : (username, password) }``.
+        :arg loadFunc: Function to call when the user has downloaded
+                       some files. Passed a list of files paths.
         """
-
-        wx.Dialog.__init__(self,
-                           parent,
-                           title=strings.titles[self],
-                           style=wx.RESIZE_BORDER)
 
         if wxnat is None:
             raise RuntimeError('wxnatpy is not available!')
 
-        filters = {'file' : '*.nii|*.nii.gz|*.img|*.img.gz|*.gii|*.vtk'}
+        wx.Dialog.__init__(self,
+                           parent,
+                           title=strings.titles[self],
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
-        self.__panel = wxnat.XNATBrowserPanel(
+        hosts    = fslsettings.read('fsleyes.xnat.hosts',    [])
+        accounts = fslsettings.read('fsleyes.xnat.accounts', {})
+        filters  = {'file' : '*.nii|*.nii.gz|*.img|*.img.gz|*.gii|*.vtk'}
+
+        self.__loadFunc = loadFunc
+        self.__destDir  = None
+        self.__panel    = wxnat.XNATBrowserPanel(
             self,
-            knownHosts=knownHosts,
-            knownAccounts=knownAccounts,
+            knownHosts=hosts,
+            knownAccounts=accounts,
             filterType='glob',
             filters=filters)
 
-        self.__ok       = wx.Button(self, wx.ID_OK)
-        self.__cancel   = wx.Button(self, wx.ID_CANCEL)
-        self.__btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__sizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__download     = wx.Button(self, wx.ID_OK)
+        self.__close        = wx.Button(self, wx.ID_CANCEL)
+        self.__fullPathsLbl = wx.StaticText(self)
+        self.__fullPaths    = wx.CheckBox(self)
+        self.__ctrlSizer    = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer        = wx.BoxSizer(wx.VERTICAL)
 
-        self.__ok    .SetLabel(strings.labels[self, 'ok'])
-        self.__cancel.SetLabel(strings.labels[self, 'cancel'])
+        self.__fullPathsLbl.SetLabel(strings.labels[self, 'fullPaths'])
+        self.__download    .SetLabel(strings.labels[self, 'download'])
+        self.__close       .SetLabel(strings.labels[self, 'close'])
 
-        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND, proportion=1)
-        self.__btnSizer.Add(self.__ok,     flag=wx.EXPAND)
-        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
-        self.__btnSizer.Add(self.__cancel, flag=wx.EXPAND)
-        self.__btnSizer.Add((10, 1),       flag=wx.EXPAND)
+        self.__ctrlSizer.Add((10, 1),             flag=wx.EXPAND, proportion=1)
+        self.__ctrlSizer.Add(self.__fullPathsLbl, flag=wx.EXPAND)
+        self.__ctrlSizer.Add(self.__fullPaths,    flag=wx.EXPAND)
+        self.__ctrlSizer.Add((10, 1),             flag=wx.EXPAND)
+        self.__ctrlSizer.Add(self.__download,     flag=wx.EXPAND)
+        self.__ctrlSizer.Add((10, 1),             flag=wx.EXPAND)
+        self.__ctrlSizer.Add(self.__close,        flag=wx.EXPAND)
+        self.__ctrlSizer.Add((10, 1),             flag=wx.EXPAND)
 
-        self.__sizer.Add((1, 10),         flag=wx.EXPAND)
-        self.__sizer.Add(self.__panel,    flag=wx.EXPAND, proportion=1)
-        self.__sizer.Add((1, 10),         flag=wx.EXPAND)
-        self.__sizer.Add(self.__btnSizer, flag=wx.EXPAND)
-        self.__sizer.Add((1, 10),         flag=wx.EXPAND)
+        self.__sizer.Add((1, 10),          flag=wx.EXPAND)
+        self.__sizer.Add(self.__panel,     flag=wx.EXPAND, proportion=1)
+        self.__sizer.Add((1, 10),          flag=wx.EXPAND)
+        self.__sizer.Add(self.__ctrlSizer, flag=wx.EXPAND)
+        self.__sizer.Add((1, 10),          flag=wx.EXPAND)
 
         self.SetSizer(self.__sizer)
-        self.__ok.SetDefault()
+        self.__download.SetDefault()
 
-        self.__panel .Bind(wxnat.EVT_XNAT_FILE_SELECT_EVENT, self.__onOk)
-        self.__ok    .Bind(wx.EVT_BUTTON,                    self.__onOk)
-        self.__cancel.Bind(wx.EVT_BUTTON,                    self.__onCancel)
+        self.__panel   .Bind(wxnat.EVT_XNAT_ITEM_HIGHLIGHT_EVENT,
+                             self.__onHighlight)
+        self.__panel   .Bind(wxnat.EVT_XNAT_FILE_SELECT_EVENT,
+                             self.__onDownload)
+        self.__download.Bind(wx.EVT_BUTTON, self.__onDownload)
+        self.__close   .Bind(wx.EVT_BUTTON, self.__onCloseButton)
+        self           .Bind(wx.EVT_CLOSE,  self.__onClose)
 
-        self.__paths = []
+        self.__fullPaths.SetValue(True)
 
-
-    def GetPaths(self):
-        """Returns paths to the files that were downloaded. """
-        return self.__paths
+        # ok/download button only enabled when file
+        # items are selected in the tree view
+        self.__download.Disable()
 
 
     def GetHosts(self):
@@ -188,38 +182,69 @@ class XNATBrowser(wx.Dialog):
         return self.__panel.GetAccounts()
 
 
-    def __onOk(self, ev):
-        """Called when the *Ok* button is pushed. Prompts the user to select a
-        directory, and then downloads the files.
+    def __onHighlight(self, ev):
+        """Called when the item selection in the tree browser is changed.
+        Enables/disables the download button depending on whether any
+        files are highlighted.
+        """
+        self.__download.Enable(len(self.__panel.GetSelectedFiles()) > 0)
+
+
+    def __onDownload(self, ev):
+        """Called when the *Download* button is pushed. Prompts the user to
+        select a directory, and then downloads the files.
         """
 
         files = self.__panel.GetSelectedFiles()
 
         if len(files) == 0:
-            self.EndModal(wx.ID_OK)
-
-        destdir = fslsettings.read('fsleyes.xnat.downloaddir', os.getcwd())
-        dlg     = wx.DirDialog(self,
-                               strings.labels[self, 'choosedir'],
-                               defaultPath=destdir)
-
-        if dlg.ShowModal() != wx.ID_OK:
             return
 
-        destdir = dlg.GetPath()
+        destDir = self.__destDir
+
+        if destDir is None:
+            destDir = fslsettings.read('fsleyes.xnat.downloaddir', os.getcwd())
+            dlg     = wx.DirDialog(self,
+                                   strings.labels[self, 'choosedir'],
+                                   defaultPath=destDir)
+
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+
+            destDir        = dlg.GetPath()
+            self.__destDir = destDir
+
+        paths = []
 
         for f in files:
-            dest = self.__panel.DownloadFile(f, op.join(destdir, f.id))
+            if self.__fullPaths.GetValue():
+                dest = wxnat.generateFilePath(f)
+                dest = op.join(destDir, dest)
+                os.makedirs(op.dirname(dest), exist_ok=True)
+            else:
+                dest = op.join(destDir, op.basename(dest))
+
+            dest = self.__panel.DownloadFile(f, dest)
 
             if dest is not None:
-                self.__paths.append(dest)
+                paths.append(dest)
 
-        fslsettings.write('fsleyes.xnat.downloaddir', destdir)
+        if self.__loadFunc is not None:
+            self.__loadFunc(paths)
 
+        fslsettings.write('fsleyes.xnat.downloaddir', destDir)
+
+
+    def __onClose(self, ev):
+        """Called on EVT_CLOSE events. Destroys this dialog. """
         self.__panel.EndSession()
-        self.EndModal(wx.ID_OK)
+        fslsettings.write('fsleyes.xnat.hosts',    self.GetHosts())
+        fslsettings.write('fsleyes.xnat.accounts', self.GetAccounts())
+
+        if self.IsModal(): self.EndModal(wx.ID_CANCEL)
+        else:              self.Destroy()
 
 
-    def __onCancel(self, ev):
-        """Called when the *Cancel* button is pushed. Closes the dialog. """
-        self.EndModal(wx.ID_CANCEL)
+    def __onCloseButton(self, ev):
+        """Called when the *Close* button is pushed. Closes the dialog. """
+        self.Close()
