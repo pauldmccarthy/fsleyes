@@ -9,8 +9,15 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.2.1 (Under development)
+1.3.0 (Under development)
 -------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog.
 
 
 Fixed
