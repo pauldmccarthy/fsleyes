@@ -36,6 +36,60 @@ import fsleyes.plotting.plotcanvas                as plotcanvas
 import fsleyes.plugins.profiles.samplelineprofile as samplelineprofile
 
 
+def sampleAlongLine(data, start, end, resolution, order):
+    """Samples from ``data``, along a line between ``start`` and ``end``.
+
+    :arg data:       3D array
+    :arg start:      Start coordinate
+    :arg end:        End coordinate
+    :arg resolution: Number of points to sample
+    :arg order:      Interpolation  (see ``scipy.ndimage.map_coordinates``)
+    :returns:        Tuple containing:
+                       - 1D Numpy array containing the sampled values
+                       - ``(3, N)`` numpy array containing the coordinates for
+                         each sample
+    """
+
+    start  = list(start)
+    end    = list(end)
+    shape  = data.shape
+    coords = np.linspace(start, end, resolution).T
+
+    # map_coordinates doesn't take
+    # kindly to dims of length 1
+    data = data.squeeze()
+    if any(s == 1 for s in shape):
+        drop      = [i for i, s in enumerate(shape) if s == 1]
+        mapcoords = np.delete(coords, drop, axis=0)
+    else:
+        mapcoords = coords
+
+    # multi-channel data?
+    if len(data.dtype) == 1:
+        data = [data]
+    else:
+        channels = []
+        for chan in data.dtype.fields.keys():
+            channels.append(data[chan])
+        data = channels
+
+    ys = []
+    for arr in data:
+        ys.append(ndimage.map_coordinates(arr,
+                                          mapcoords,
+                                          order=order,
+                                          output=np.float64))
+
+    # For multi channel data, we currently
+    # just take the mean across all
+    # channels, but this might change in
+    # the future (if there is any need).
+    if len(ys) > 1: y = np.mean(ys, axis=0)
+    else:           y = ys[0]
+
+    return y, coords
+
+
 class SampleLineAction(actions.ToggleControlPanelAction):
     """The ``SampleLineAction`` simply shows/hides a :class:`SampleLinePanel`.
     """
@@ -164,22 +218,17 @@ class SampleLineDataSeries(plotting.DataSeries):
         change. Re-samples the data from the image.
         """
 
+        overlay      = self.overlay
+        opts         = self.displayCtx.getOpts(overlay)
+        data         = overlay[self.__index]
         resolution   = self.resolution
         order        = self.interp
         normalisex   = 'x' in self.normalise
         normalisey   = 'y' in self.normalise
-        opts         = self.displayCtx.getOpts(self.overlay)
-        data         = self.overlay[self.__index]
         start        = self.__start
         end          = self.__end
 
-        coords       = np.zeros((3, resolution))
-        coords[0, :] = np.linspace(start[0], end[0], resolution)
-        coords[1, :] = np.linspace(start[1], end[1], resolution)
-        coords[2, :] = np.linspace(start[2], end[2], resolution)
-
-        y = ndimage.map_coordinates(data, coords, order=order,
-                                    output=np.float64)
+        y, coords = sampleAlongLine(data, start, end, resolution, order)
 
         if normalisey:
             y = (y - y.min()) / (y.max() - y.min())
