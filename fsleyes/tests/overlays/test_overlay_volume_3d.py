@@ -60,8 +60,9 @@ cli_tests = """
 -dl 3d -cp 25 0 0 -cp 50 90 45 -cp 50 90 -45 -m intersection
 -dl 3d -cp 75 0 0 -cp 50 90 45 -cp 50 90 -45 -m union
 -dl 3d -cp 75 0 0 -cp 50 90 45 -cp 50 90 -45 -m complement
+"""
 
-
+cli_tests_2d =  """
 # 2D images
 -dl -rot -45 -30 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
 -dl -rot 125 -45 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
@@ -87,6 +88,21 @@ def test_overlay_volume_3d():
     }
     run_cli_tests('test_overlay_volume_3d',
                   cli_tests,
+                  extras=extras,
+                  scene='3d',
+                  threshold=40)
+
+
+# Blending multiple volumes in GL14 doesn't quite work,
+# because of limitations in the fragment shader w.r.t.
+# calculating fragment depth.
+@pytest.mark.skipif('not haveGL21()')
+def test_overlay_volume_3d_2d():
+    extras = {
+        'roi' : roi
+    }
+    run_cli_tests('test_overlay_volume_3d',
+                  cli_tests_2d,
                   extras=extras,
                   scene='3d',
                   threshold=40)
