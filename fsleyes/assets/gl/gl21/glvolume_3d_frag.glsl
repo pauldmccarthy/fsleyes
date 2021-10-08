@@ -345,6 +345,7 @@ void main(void) {
     vec4  colour      = vec4(0);
     vec4  finalColour = vec4(0);
     float depth       = 0;
+    float firstDepth  = 0;
     int   nsamples    = 0;
     float voxValue;
     int   clipIdx;
@@ -389,6 +390,10 @@ void main(void) {
         continue;
       }
 
+      if (nsamples == 1) {
+        firstDepth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
+      }
+
       if (lighting) {
         colour.rgb = volume_lighting(texCoord,
                                      imageTexture,
@@ -428,7 +433,7 @@ void main(void) {
          * position of the first sample on the ray.
          */
         if (nsamples == 1) {
-          depth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
+          depth = firstDepth;
         }
       }
       colour.rgb  *= colour.a;
@@ -437,7 +442,9 @@ void main(void) {
     }
 
     if (nsamples > 0) {
-
+      if (depth == 0) {
+        depth = firstDepth;
+      }
       finalColour.a *= alpha;
       gl_FragDepth   = depth;
       gl_FragColor   = finalColour;
