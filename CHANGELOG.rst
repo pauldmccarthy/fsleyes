@@ -18,6 +18,9 @@ Changed
 
 
 * Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog.
+* The *Sample along line* tool now supports 2D and multi-channel (e.g. RGB)
+  images (currently plotting the mean intensity across channels for the
+  latter).
 
 
 Fixed

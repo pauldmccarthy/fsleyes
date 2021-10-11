@@ -23,6 +23,57 @@ from fsleyes.tests import (run_with_orthopanel,
 
 datadir = op.join(op.dirname(__file__), '..', 'testdata')
 
+
+def test_sampleAlongLine():
+    data  = np.random.randint(1, 100, (20, 20, 20))
+    start = [0, 0, 0]
+    end   = [0, 0, data.shape[2] - 1]
+
+    y, coords = sampleline.sampleAlongLine(data, start, end, data.shape[2], 0)
+
+    assert np.all(np.isclose(y, data[0, 0, :]))
+    assert np.all(coords[0, :] == 0)
+    assert np.all(coords[1, :] == 0)
+    assert np.all(coords[2, :] == np.arange(data.shape[2]))
+
+
+def test_sampleAlongLine_2D():
+
+    data  = np.random.randint(1, 100, (20, 20, 1))
+    start = [0, 0,  0]
+    end   = [0, 19, 0]
+
+    y, coords = sampleline.sampleAlongLine(data, start, end, 20, 0)
+
+    assert np.all(np.isclose(y, data[0, :, 0]))
+    assert np.all(coords[0, :] == 0)
+    assert np.all(coords[1, :] == np.arange(20))
+    assert np.all(coords[2, :] == 0)
+
+
+def test_sampleAlongLine_RGB():
+
+    rgbdtype = np.dtype([('R', 'uint8'), ('G', 'uint8'), ('B', 'uint8')])
+    data     = np.zeros((20, 20, 20), dtype=rgbdtype)
+
+    data['R']  = np.random.randint(1, 100, (20, 20, 20))
+    data['G']  = np.random.randint(1, 100, (20, 20, 20))
+    data['B']  = np.random.randint(1, 100, (20, 20, 20))
+    start = [0, 0, 0]
+    end   = [0, 0, 19]
+
+    y, coords = sampleline.sampleAlongLine(data, start, end, 20, 0)
+
+    expy = np.mean((data['R'][0, 0, :],
+                    data['G'][0, 0, :],
+                    data['B'][0, 0, :]), axis=0)
+
+    assert np.all(np.isclose(y, expy))
+    assert np.all(coords[0, :] == 0)
+    assert np.all(coords[1, :] == 0)
+    assert np.all(coords[2, :] == np.arange(20))
+
+
 def test_SampleLineDataSeries():
     run_with_orthopanel(_test_SampleLineDataSeries)
 def _test_SampleLineDataSeries(panel, overlayList, displayCtx):
