@@ -33,31 +33,40 @@ class OrthoViewProfile(profiles.Profile):
     ``OrthoViewProfile`` defines the following *modes* (see the
     :class:`.Profile` class documentation):
 
-    ========== ==============================================================
-    ``nav``    The user can change the currently displayed location. This is
-               accomplished by updating the :attr:`.DisplayContext.location`
-               property on left mouse drags.
+    ================ ========================================================
+    ``nav``          The user can change the currently displayed location.
+                     This is accomplished by updating the
+                     :attr:`.DisplayContext.location` property on left mouse
+                     drags.
 
-    ``slice``  The user can change the current slice shown on a single
-               canvas.
+    ``slice``        The user can change the current slice shown on a single
+                     canvas.
 
-    ``zoom``   The user can zoom in/out of a canvas with the mouse wheel, and
-               draw a rectangle on a canvas in which to zoom. This is
-               accomplished by updating the :attr:`.SliceCanvasOpts.zoom`
-               property on mouse wheel changes, and displaying a
-               :class:`~.annotations.Rect` annotation on left mouse drags.
+    ``zoom``         The user can zoom in/out of a canvas with the mouse
+                     wheel, and draw a rectangle on a canvas in which to
+                     zoom. This is accomplished by updating the
+                     :attr:`.SliceCanvasOpts.zoom` property on mouse wheel
+                     changes, and displaying a :class:`~.annotations.Rect`
+                     annotation on left mouse drags.
 
-    ``pan``    The user can pan around a canvas (if the canvas is zoomed in).
-               This is accomplished by calling the
-               :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
+    ``pan``          The user can pan around a canvas (if the canvas is
+                     zoomed in). This is accomplished by calling the
+                     :meth:`.SliceCanvas.panDisplayBy` on left mouse drags.
 
-    ``bricon`` The user can drag the mouse along a canvas to change the
-               brightness/contrast of the currently selected overlay.
+    ``bricon``       The user can drag the mouse along a canvas to change
+                     the brightness/contrast of the currently selected
+                     overlay.
 
-    ``pick``   If the currently selected overlay is a :class:`.Mesh`,
-               the user can select the mesh vertex which is nearest to the
-               mouse click.
-    ========== ==============================================================
+    ``regionBricon`` The user can draw a rectangle on a canvas; the minimum /
+                     maximum display range of the currently selected overlay
+                     (assuming it is an :class:`.Image` being displayed as
+                     a ``volume``) is set to the minimum/maxmimum intensity
+                     within the region.
+
+    ``pick``         If the currently selected overlay is a :class:`.Mesh`,
+                     the user can select the mesh vertex which is nearest to
+                     the mouse click.
+    ================ ========================================================
 
 
     The ``OrthoViewProfile`` class also defines a few :mod:`.actions`:
@@ -130,7 +139,13 @@ class OrthoViewProfile(profiles.Profile):
 
             # In pick mode, left mouse down
             # is the same as left mouse drag.
-            ('pick', 'LeftMouseDown') : ('pick', 'LeftMouseDrag')}
+            ('pick', 'LeftMouseDown') : ('pick', 'LeftMouseDrag'),
+
+            # In bricon mode, right click+drag
+            # invokes regionBricon mode
+            ('bricon', 'RightMouseDown') : ('regionBricon', 'LeftMouseDrag'),
+            ('bricon', 'RightMouseDrag') : ('regionBricon', 'LeftMouseDrag'),
+            ('bricon', 'RightMouseUp')   : ('regionBricon', 'LeftMouseUp')}
 
 
     @staticmethod
@@ -170,7 +185,8 @@ class OrthoViewProfile(profiles.Profile):
         if extraModes is None:
             extraModes = []
 
-        modes = ['nav', 'slice', 'pan', 'zoom', 'bricon', 'pick'] + extraModes
+        modes = ['nav', 'slice', 'pan', 'zoom', 'bricon',
+                 'pick', 'regionBricon'] + extraModes
 
         profiles.Profile.__init__(self,
                                   viewPanel,
@@ -188,10 +204,12 @@ class OrthoViewProfile(profiles.Profile):
         self.__ycanvas = viewPanel.getYCanvas()
         self.__zcanvas = viewPanel.getZCanvas()
 
-        # This attribute will occasionally store a
-        # reference to a gl.annotations.Rect -
-        # see the _zoomModeLeftMouse* handlers
-        self.__lastRect = None
+        # These attributes will occasionally store
+        # references to gl.annotations.Rect objects -
+        # see the _zoomModeRightMouse*  and
+        # _regionBriconModeLeftMouse* handlers
+        self.__zoomLastRect         = None
+        self.__regionBriconLastRect = None
 
         # This attribute is used by the
         # bricon mode methods
@@ -557,17 +575,17 @@ class OrthoViewProfile(profiles.Profile):
             return False
 
         copts  = canvas.opts
-
         x, y   = [canvasDownPos[copts.xax], canvasDownPos[copts.yax]]
         width  = canvasPos[copts.xax] - x
         height = canvasPos[copts.yax] - y
 
-        self.__lastRect = canvas.getAnnotations().rect(x, y,
-                                                       width,
-                                                       height,
-                                                       width=1,
-                                                       filled=False,
-                                                       colour=(1, 1, 0))
+        self.__zoomLastRect = canvas.getAnnotations().rect(
+            x, y,
+            width,
+            height,
+            width=1,
+            filled=False,
+            colour=(1, 1, 0))
         canvas.Refresh()
 
         return True
@@ -588,9 +606,9 @@ class OrthoViewProfile(profiles.Profile):
            canvasDownPos is None:
             return False
 
-        if self.__lastRect is not None:
-            canvas.getAnnotations().dequeue(self.__lastRect)
-            self.__lastRect = None
+        if self.__zoomLastRect is not None:
+            canvas.getAnnotations().dequeue(self.__zoomLastRect)
+            self.__zoomLastRect = None
 
         copts = canvas.opts
         xlo   = min(canvasPos[copts.xax], canvasDownPos[copts.xax])
@@ -807,3 +825,100 @@ class OrthoViewProfile(profiles.Profile):
         loc    = opts.transformCoords(loc, 'mesh', 'display')
 
         self.displayCtx.location.xyz = loc
+
+
+    ###################
+    # regionBricon mode
+    ###################
+
+
+    def _regionBriconModeLeftMouseDrag(
+            self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse drags in ``regionBricon`` mode.
+
+        Right mouse drags in this mode draw a rectangle on the target
+        canvas. When the user releases the mouse (see
+        :meth:`_regionBriconModeLeftMouseUp`), the min/max display range
+        of the currently selected overlay (assuming it is a ``volume``)
+        is set to the minimum/maximum intensities within the region.
+        """
+
+        mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+
+        if canvasPos is None or canvasDownPos is None:
+            return False
+
+        overlay = self.displayCtx.getSelectedOverlay()
+        if overlay is None:
+            return
+        display = self.displayCtx.getDisplay(overlay)
+        opts    = self.displayCtx.getOpts(   overlay)
+        if display.overlayType != 'volume':
+            return
+
+        copts  = canvas.opts
+        x, y   = [canvasDownPos[copts.xax], canvasDownPos[copts.yax]]
+        width  = canvasPos[copts.xax] - x
+        height = canvasPos[copts.yax] - y
+
+        self.__regionBriconLastRect = canvas.getAnnotations().rect(
+            x, y,
+            width,
+            height,
+            width=1,
+            filled=False,
+            colour=(0, 1, 1))
+        canvas.Refresh()
+
+        return True
+
+
+    def _regionBriconModeLeftMouseUp(
+            self, ev, canvas, mousePos, canvasPos):
+        """Handles mouse up events in ``regionBricon`` mode.
+
+        Sets the min/max display range of the currently selected overlay
+        (assuming it is a ``volume``) to the minimum/maximum
+        intensities within the region.
+        """
+        mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+
+        if canvasPos     is None or \
+           mouseDownPos  is None or \
+           canvasDownPos is None:
+            return False
+
+        if self.__regionBriconLastRect is not None:
+            canvas.getAnnotations().dequeue(self.__regionBriconLastRect)
+            self.__regionBriconLastRect = None
+
+        overlay = self.displayCtx.getSelectedOverlay()
+        if overlay is None:
+            return
+        display = self.displayCtx.getDisplay(overlay)
+        opts    = self.displayCtx.getOpts(   overlay)
+        print(display.overlayType)
+        if display.overlayType != 'volume':
+            return
+
+        coords        = opts.transformCoords([canvasDownPos, canvasPos],
+                                             'display', 'voxel', vround=True)
+        coords        = coords.astype(np.int)
+        xlo, ylo, zlo = coords.min(axis=0)
+        xhi, yhi, zhi = coords.max(axis=0) + 1
+        slc           = (slice(xlo, xhi),
+                         slice(ylo, yhi),
+                         slice(zlo, zhi))
+
+        data = overlay.data[opts.index(slc)]
+
+        if data.size == 0:
+            return
+
+        dmin              = np.nanmin(data)
+        dmax              = np.nanmax(data)
+        opts.displayRange = dmin, dmax
+
+        canvas.Refresh()
+
+        return True
