@@ -2,6 +2,7 @@
 .. |alt_key|     unicode:: U+2325
 .. |command_key| unicode:: U+2318
 .. |control_key| unicode:: U+2303
+.. |shift_key|   unicode:: U+21E7
 
 .. |reset_zoom_icon|  image:: images/reset_zoom_icon.png
 .. |gear_icon|        image:: images/gear_icon.png
@@ -32,6 +33,9 @@ You can interact with the 3D view in the following ways:
 
  - Hold down the |command_key| or |control_key| and spin the mouse wheel to
    zoom in and out.
+
+ - Hold down the |shift_key| and click to change the display location,
+   relative to the currently selected image or surface.
 
 To reset the view, click on the |reset_zoom_icon| button on the toolbar.
 

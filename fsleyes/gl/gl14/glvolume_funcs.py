@@ -256,6 +256,14 @@ def draw3D(self, xform=None, bbox=None):
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND)):
 
+        # The depth value for a fragment will
+        # not necessary be set at the same
+        # time that the fragment colour is
+        # set, so we need to use <= for depth
+        # testing so that unset depth values
+        # do not cause depth clipping.
+        gl.glDepthFunc(gl.GL_LEQUAL)
+
         for i in range(outerLoop):
 
             settings    = list(settings)
@@ -279,6 +287,8 @@ def draw3D(self, xform=None, bbox=None):
             dest.unbindAsRenderTarget()
 
             dest, src = src, dest
+
+    gl.glDepthFunc(gl.GL_LESS)
 
     shader.unloadAtts()
     shader.unload()

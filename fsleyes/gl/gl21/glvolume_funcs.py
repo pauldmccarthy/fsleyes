@@ -231,6 +231,7 @@ def draw3D(self, xform=None, bbox=None):
     :arg bbox:    An optional bounding box.
     """
 
+    ovl                            = self.overlay
     opts                           = self.opts
     canvas                         = self.canvas
     copts                          = canvas.opts
@@ -240,9 +241,9 @@ def draw3D(self, xform=None, bbox=None):
     rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
 
     rayStep = affine.transformNormal(
-        rayStep, self.imageTexture.texCoordXform(self.overlay.shape))
+        rayStep, self.imageTexture.texCoordXform(ovl.shape))
     texform = affine.concat(
-        texform, self.imageTexture.invTexCoordXform(self.overlay.shape))
+        texform, self.imageTexture.invTexCoordXform(ovl.shape))
 
     # If lighting is enabled, we specify the light
     # position in image texture coordinates, to make

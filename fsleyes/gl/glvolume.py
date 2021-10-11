@@ -731,8 +731,8 @@ class GLVolume(glimageobject.GLImageObject):
             fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
 
         # Apply smoothing if needed. If smoothing
-        # is enabled, the final final render will
-        # be in renderTexture2
+        # is enabled, the final render will be in
+        # renderTexture2
         if opts.smoothing > 0:
             self.smoothFilter.set(offsets=[1.0 / sw, 1.0 / sh])
             self.smoothFilter.osApply(self.renderTexture1,
@@ -759,7 +759,7 @@ class GLVolume(glimageobject.GLImageObject):
             # contains the final render. Otherwise,
             # rt2 contains the final render, but rt1
             # contains the depth information. So we
-            # need to # temporarily replace rt2.depth
+            # need to temporarily replace rt2.depth
             # with rt1.depth.
             if opts.smoothing > 0:
                 src    = self.renderTexture2
