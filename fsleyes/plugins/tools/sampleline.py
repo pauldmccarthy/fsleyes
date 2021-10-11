@@ -65,13 +65,13 @@ def sampleAlongLine(data, start, end, resolution, order):
         mapcoords = coords
 
     # multi-channel data?
-    if len(data.dtype) == 1:
-        data = [data]
-    else:
+    if len(data.dtype) > 1:
         channels = []
         for chan in data.dtype.fields.keys():
             channels.append(data[chan])
         data = channels
+    else:
+        data = [data]
 
     ys = []
     for arr in data:
