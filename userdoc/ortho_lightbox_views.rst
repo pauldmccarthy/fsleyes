@@ -75,6 +75,11 @@ You can interact with an ortho view in a number of ways:
    currently selected overlay. Moving the mouse vertically will adjust the
    contrast, and horizontally will adjust the brightness.
 
+ - Hold down the |shift_key| key and the |command_key|/|control_key| key, then
+   right-click and drag the mouse to select a region in the currently selected
+   image. When you release the mouse, the image display range will be set to
+   the minimum/maxmimum voxel intensities within the selected region.
+
  - You can reset the view to its default zoom/pan settings by pressing the
    |reset_zoom_icon| button on the :ref:`ortho toolbar
    <ortho_lightbox_views_ortho_toolbar>`, or selecting the *Settings*
