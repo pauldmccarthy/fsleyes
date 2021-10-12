@@ -843,7 +843,7 @@ class OrthoViewProfile(profiles.Profile):
         is set to the minimum/maximum intensities within the region.
         """
 
-        mouseDownPos, canvasDownPos = self.getMouseDownLocation()
+        canvasDownPos = self.getMouseDownLocation()[1]
 
         if canvasPos is None or canvasDownPos is None:
             return False
@@ -883,24 +883,27 @@ class OrthoViewProfile(profiles.Profile):
         """
         mouseDownPos, canvasDownPos = self.getMouseDownLocation()
 
-        if canvasPos     is None or \
-           mouseDownPos  is None or \
-           canvasDownPos is None:
+        if canvasPos                   is None or \
+           mouseDownPos                is None or \
+           canvasDownPos               is None or \
+           self.__regionBriconLastRect is None:
             return False
 
-        if self.__regionBriconLastRect is not None:
-            canvas.getAnnotations().dequeue(self.__regionBriconLastRect)
-            self.__regionBriconLastRect = None
+        # Clear canvas annotation
+        canvas.getAnnotations().dequeue(self.__regionBriconLastRect)
+        self.__regionBriconLastRect = None
+        canvas.Refresh()
 
+        # Bail if not volume
         overlay = self.displayCtx.getSelectedOverlay()
         if overlay is None:
             return
         display = self.displayCtx.getDisplay(overlay)
         opts    = self.displayCtx.getOpts(   overlay)
-        print(display.overlayType)
         if display.overlayType != 'volume':
             return
 
+        # Turn box coordinates into voxels
         coords        = opts.transformCoords([canvasDownPos, canvasPos],
                                              'display', 'voxel', vround=True)
         coords        = coords.astype(np.int)
@@ -910,6 +913,7 @@ class OrthoViewProfile(profiles.Profile):
                          slice(ylo, yhi),
                          slice(zlo, zhi))
 
+        # Calculate min/max, set display range
         data = overlay.data[opts.index(slc)]
 
         if data.size == 0:
@@ -918,7 +922,5 @@ class OrthoViewProfile(profiles.Profile):
         dmin              = np.nanmin(data)
         dmax              = np.nanmax(data)
         opts.displayRange = dmin, dmax
-
-        canvas.Refresh()
 
         return True
