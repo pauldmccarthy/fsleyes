@@ -56,6 +56,8 @@ FILTERS = [
     r'\*\*\* BUG \*\*\*',
     r'In pixman',
     r'Set a breakpoint',
+    r'^ *$',
+    r'Warning: Expected min height of view:',
 ]
 
 
