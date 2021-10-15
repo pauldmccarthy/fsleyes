@@ -196,11 +196,11 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
         dmin = 3
         dmax = 10
 
-    opts.cmap            = 'Red-Yellow'
-    opts.negativeCmap    = 'Blue-LightBlue'
-    opts.useNegativeCmap = True
-    opts.displayRange    = [dmin, dmax]
-    opts.clippingRange   = [dmin, dmax]
+    opts.cmap              = 'Red-Yellow'
+    opts.negativeCmap      = 'Blue-LightBlue'
+    opts.useNegativeCmap   = True
+    opts.displayRange      = [dmin, dmax]
+    opts.clippingRange.xlo =  dmin
 
     # Add the mean as an underlay
     idx      = overlayList.index(overlay)
