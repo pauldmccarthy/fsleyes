@@ -1,5 +1,6 @@
 .. |right_arrow|  unicode:: U+21D2
 .. |command_key|  unicode:: U+2318
+.. |shift_key|    unicode:: U+21E7
 .. |control_key|  unicode:: U+2303
 .. |eye_icon|     image::   images/eye_icon.png
 .. |spanner_icon| image::   images/spanner_icon.png
@@ -9,8 +10,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.3.0 (Under development)
--------------------------
+1.3.0 (Monday 18th October 2021)
+--------------------------------
 
 
 Added
@@ -19,6 +20,10 @@ Added
 
 * The 3D view now allows the display location to be set to the corresponding
   location under the mouse on a volume overlay, by shift+clicking (!290).
+* The display range for a ``volume`` overlay can now be adjusted interactively
+  by |command_key| + |shift_key| + right clicking (|control_key| + |shift_key|
+  on Linux) and dragging to select a region - the display range will be set to
+  the minimum/maximum voxel intensities within that region (!293).
 
 
 Changed
@@ -34,9 +39,12 @@ Changed
 Fixed
 ^^^^^
 
+
 * The **Display space** |right_arrow| *Scaled voxel coordinates* setting no
   longer applies a L/R flip for images with neurological data storage order
   (!289).
+* The high clipping range is no longer set when loading a Melodic image
+  with the ``--autoDisplay`` / ``-ad`` option.(!293).
 
 
 1.2.0 (Monday 13th September 2021)

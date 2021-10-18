@@ -1074,8 +1074,10 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
             return retval
 
         if len(handlers) > 0:
-            log.debug('{} Handler(s) found for mode {}, event {}'.format(
-                len(handlers), mode, evType))
+            log.debug('%i Handler(s) found for mode %s, event %s '
+                      '(ctrl: %s, shift: %s, alt: %s)',
+                      len(handlers), mode, evType, ev.ControlDown(),
+                      ev.ShiftDown(), ev.AltDown())
             return handlerWrapper
 
         return None

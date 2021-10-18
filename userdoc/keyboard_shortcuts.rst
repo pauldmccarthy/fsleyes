@@ -33,10 +33,10 @@ Modifier keys
 
 The following symbols and terms are used to represent various keyboard keys:
 
- - |shift_key|: Shift
- - |control_key|: Control
- - |command_key|: Command (on macOS; Control on other platforms)
- - |alt_key|: Option (on macOS; Alt on other platforms)
+ - |shift_key|: Shift key
+ - |control_key|: Control key
+ - |command_key|: Command key (on macOS; Control key on other platforms)
+ - |alt_key|: Option key (on macOS; Alt on other platforms)
  - |up_key|: Up arrow key
  - |down_key|: Down arrow key
  - |left_key|: Left arrow key
@@ -187,20 +187,34 @@ The following actions are available in the ortho view.
 
 .. rst-class:: linewrap-table
 
-======================================== =====================================
-Shortcut                                 Action
-======================================== =====================================
-Left mouse click/drag                    Change location
-Right mouse drag                         Zoom to rectangle
-Middle mouse drag                        Pan
-|command_key| + mouse wheel/scroll       Zoom
-|alt_key| + mouse drag                   Pan
-|shift_key| + mouse wheel/scroll         Change slice
-|shift_key| + mouse click/drag           Select nearest vertex (when a
-                                         :ref:`mesh overlay <overlays_mesh>`
-                                         is selected
-|command_key| + |shift_key| + mouse drag Adjust brightness/contrast
-======================================== =====================================
++-----------------------------------+-----------------------------------------+
+| Shortcut                          | Action                                  |
++-----------------------------------+-----------------------------------------+
+| Left mouse click/drag             | Change location                         |
++-----------------------------------+-----------------------------------------+
+| Right mouse drag                  | Zoom to rectangle                       |
++-----------------------------------+-----------------------------------------+
+| Middle mouse drag                 | Pan                                     |
++-----------------------------------+-----------------------------------------+
+| |command_key| + mouse wheel/      | Zoom                                    |
+| scroll                            |                                         |
++-----------------------------------+-----------------------------------------+
+| |alt_key| + mouse drag            | Pan                                     |
++-----------------------------------+-----------------------------------------+
+| |shift_key| + mouse wheel/scroll  | Change slice                            |
++-----------------------------------+-----------------------------------------+
+| |shift_key| + mouse click+drag    | Select nearest vertex (when a           |
+|                                   | :ref:`mesh overlay <overlays_mesh>`     |
+|                                   | is selected)                            |
++-----------------------------------+-----------------------------------------+
+| |command_key| + |shift_key| +     | Adjust brightness/contrast with the     |
+| mouse click+drag                  | mouse                                   |
++-----------------------------------+-----------------------------------------+
+| |command_key| + |shift_key| +     | Adjust brightness/contrast by           |
+| right mouse click+drag            | selecting a region (when a              |
+|                                   | :ref:`volume overlay <overlays_volume>` |
+|                                   | is selected)                            |
++-----------------------------------+-----------------------------------------+
 
 
 The following actions are available in the lightbox view.
@@ -211,7 +225,7 @@ The following actions are available in the lightbox view.
 ======================================== =====================================
 Shortcut                                 Action
 ======================================== =====================================
-Left mouse click/drag                    Change location
+Left mouse click+drag                    Change location
 |command_key| + mouse wheel/scroll       Zoom
 ======================================== =====================================
 
@@ -221,17 +235,21 @@ The following actions are available in the 3D view.
 
 .. rst-class:: linewrap-table
 
-======================================== =====================================
-Shortcut                                 Action
-======================================== =====================================
-Left mouse click/drag                    Rotate scene
-Moddle mouse click/drag                  Pan
-|command_key| + mouse wheel/scroll       Zoom
-|alt_key| + mouse click/drag             Pan
-|shift_key| + mouse click/drag           Change location, or select nearest
-                                         vertex, when a mesh overlay is
-                                         selected
-======================================== =====================================
++---------------------------------------+---------------------------------+
+| Shortcut                              | Action                          |
++---------------------------------------+---------------------------------+
+| Left mouse click+drag                 | Rotate scene                    |
++---------------------------------------+---------------------------------+
+| Middle mouse click+drag               | Pan                             |
++---------------------------------------+---------------------------------+
+| |command_key| + mouse wheel/scroll    | Zoom                            |
++---------------------------------------+---------------------------------+
+| |alt_key| + mouse click+drag          | Pan                             |
++---------------------------------------+---------------------------------+
+| |shift_key| + mouse click+drag        | Select nearest vertex (for mesh |
+|                                       | overlays) or voxel (for volume  |
+|                                       | overlays)                       |
++---------------------------------------+---------------------------------+
 
 
 Ortho edit mode
@@ -270,27 +288,27 @@ select-by-intensity tools:
 +-------------------------------------+---------------------------------------+
 | *All tools*                                                                 |
 +-------------------------------------+---------------------------------------+
-| |shift_key| + left mouse click/drag | Change location                       |
+| |shift_key| + left mouse click+drag | Change location                       |
 +-------------------------------------+---------------------------------------+
 | |shift_key| + mouse wheel/scroll    | Change slice                          |
 +-------------------------------------+---------------------------------------+
-| |alt_key| + left mouse click/drag   | Pan                                   |
+| |alt_key| + left mouse click+drag   | Pan                                   |
 +-------------------------------------+---------------------------------------+
 | |command_key| + mouse wheel/scroll  | Zoom                                  |
 +-------------------------------------+---------------------------------------+
-| Middle mouse click/drag             | Pan                                   |
+| Middle mouse click+drag             | Pan                                   |
 +-------------------------------------+---------------------------------------+
 | *Pencil tool*                                                               |
 +-------------------------------------+---------------------------------------+
-| Left mouse click/drag               | Draw/select voxels                    |
+| Left mouse click+drag               | Draw/select voxels                    |
 +-------------------------------------+---------------------------------------+
-| Right mouse click/drag              | Erase/de-select voxels                |
+| Right mouse click+drag              | Erase/de-select voxels                |
 +-------------------------------------+---------------------------------------+
 | *Eraser tool*                                                               |
 +-------------------------------------+---------------------------------------+
-| Left mouse click/drag               | Erase/de-select voxels                |
+| Left mouse click+drag               | Erase/de-select voxels                |
 +-------------------------------------+---------------------------------------+
-| Right mouse click/drag              | Draw/select voxels                    |
+| Right mouse click+drag              | Draw/select voxels                    |
 +-------------------------------------+---------------------------------------+
 | *Pencil and eraser tools*                                                   |
 +-------------------------------------+---------------------------------------+
@@ -318,9 +336,9 @@ The following actions are available when using the ortho crop tool.
 ======================================== =====================================
 Shortcut                                 Action
 ======================================== =====================================
-Left mouse click/drag                    Adjust crop box
-|shift_key| + left mouse click/drag      Change location
-|shift_key| + left mouse click/drag      Change location
-|alt_key| + left mouse click/drag        Pan
+Left mouse click+drag                    Adjust crop box
+|shift_key| + left mouse click+drag      Change location
+|shift_key| + left mouse click+drag      Change location
+|alt_key| + left mouse click+drag        Pan
 |command_key| + mouse wheel/scroll       Zoom
 ======================================== =====================================
