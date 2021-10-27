@@ -58,6 +58,7 @@ FILTERS = [
     r'Set a breakpoint',
     r'^ *$',
     r'Warning: Expected min height of view:',
+    r'Failed to connect to session manager',
 ]
 
 
