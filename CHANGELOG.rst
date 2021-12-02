@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.3.1  (Thursday 2nd December 2021)
+-----------------------------------
+
+
+Fixed
+^^^^^
+
+* Updated Jupyter notebook integration to work with newer versions of
+  ``ipykernel`` (!297).
+* Various small tweaks for Python 3.10 compatibility (!297).
+
+
 1.3.0 (Monday 18th October 2021)
 --------------------------------
 
