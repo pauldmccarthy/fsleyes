@@ -45,6 +45,7 @@ import fsleyes.actions.runscript      as runscript
 
 try:
     import                            zmq
+    import                            tornado
 
     import zmq.eventloop.zmqstream as zmqstream
 
@@ -300,13 +301,18 @@ class BackgroundIPythonKernel:
             iopubport   = iopubsock  .bind_to_random_port(addr)
             hbport      = self.__heartbeat.port
 
-            # Create the kernel
+            # Create the kernel. On ipykernel <=5.*, we
+            # pass the shell/control streams via the
+            # shell_streams argument.  On ipykernel
+            # >=6.*, we pass them as separate arguments.
             self.__kernel = FSLeyesIPythonKernel.instance(
                 stdout,
                 stderr,
                 shell_class=FSLeyesIPythonShell,
                 session=session,
                 shell_streams=[shellstrm, controlstrm],
+                shell_stream=shellstrm,
+                control_stream=controlstrm,
                 iopub_socket=iopubsock,
                 stdin_socket=stdinsock,
                 user_ns=self.__env,
@@ -408,13 +414,23 @@ class BackgroundIPythonKernel:
         idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
 
 
+    async def __do_one_iteration(self):
+        """Wrapper around IpythonKernel.do_one_iteration, to work around
+        https://github.com/ipython/ipykernel/issues/763
+        """
+        try:
+            await self.__kernel.do_one_iteration()
+        except tornado.queues.QueueEmpty:
+            pass
+
+
     def __kernelDispatch(self):
         """Execute one kernel iteration, by scheduling a call to
         ``IPythonKernel.do_one_iteration`` on the kernel's io loop.
         """
         try:
             loop = self.__kernel.io_loop
-            loop.run_sync(self.__kernel.do_one_iteration)
+            loop.run_sync(self.__do_one_iteration)
 
             # save the time on each iteration,
             # so the is_alive method has an
@@ -437,6 +453,7 @@ class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
         self.__stdout = stdout
         self.__stderr = stderr
         super(FSLeyesIPythonKernel, self).__init__(*args, **kwargs)
+
 
     @contextlib.contextmanager
     def __patch_streams(self):
