@@ -248,13 +248,14 @@ You will need to define a custom Jupyter kernel specification file, which uses
 ``pythonw``. The easiest way to do this is to create a copy of the default
 kernel specification, e.g::
 
-  cp -r [conda environment location]/share/jupyter/python3 \
-        ~/Library/Jupyter/kernels/python3w
+  cp -r [conda environment location]/share/jupyter/kernels/python3 \
+        [conda environment location]/share/jupyter/kernels/python3w
 
 
-Then open ``~/Library/Jupyter/kernels/python3w/kernel.json`` in a text editor,
-and change the first element in the ``argv`` list to ``pythonw`` instead of
-``python``. For example, if the contents of ``kernel.json`` look like this::
+Then open ``[conda environment location]/share/jupyter/kernels/python3w/kernel.json``
+in a text editor, and change the first element in the ``argv`` list to
+``pythonw`` instead of ``python``. For example, if the contents of
+``kernel.json`` look like this::
 
     {
      "argv": [

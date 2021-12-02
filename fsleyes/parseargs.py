@@ -2353,12 +2353,27 @@ def _printShortHelp(mainParser, extra=None):
             if all([o not in args for o in action.option_strings]):
                 action.help = argparse.SUPPRESS
 
-        ovlHelp   = parser.format_help()
-        skipTo    = 'optional arguments:'
-        optStart  = ovlHelp.index(skipTo)
+        # Generate help for the sub-parser, but trim the
+        # pre-amble ("usage: .." etc), and only save the
+        # option help.  Depending on the python version,
+        # we need to search for a different string to
+        # find the start of the option help section.
+        ovlHelp = parser.format_help()
+        skipTo  = ['optional arguments:',
+                   'options:']
+
+        for candidate in skipTo:
+            try:
+                optStart = ovlHelp.index(candidate)
+                skipTo   = candidate
+                break
+            except Exception:
+                pass
+        else:
+            raise ValueError('Cannot parse sub-parser help output: ' + ovlHelp)
+
         optStart += len(skipTo) + 1
         ovlHelp   = ovlHelp[optStart:]
-
         helpText += ovlHelp
 
     helpText += '\n' + groupEpilog(fsldisplay.VolumeOpts) + '\n'
