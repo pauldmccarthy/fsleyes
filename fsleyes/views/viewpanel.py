@@ -616,8 +616,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                           selfPos[1] + selfSize[1] * floatPos[1])
 
             paneSize = panel.GetBestSize().Get()
-            panePos  = (selfCentre[0] - paneSize[0] * 0.5,
-                        selfCentre[1] - paneSize[1] * 0.5)
+            panePos  = (int(round(selfCentre[0] - paneSize[0] * 0.5)),
+                        int(round(selfCentre[1] - paneSize[1] * 0.5)))
 
             paneInfo.Float()                 \
                     .Resizable(True)         \
