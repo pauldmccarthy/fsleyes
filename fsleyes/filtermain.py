@@ -60,6 +60,7 @@ FILTERS = [
     r'Warning: Expected min height of view:',
     r'Failed to connect to session manager',
     r'is not a valid AllowedFileType',
+    r'failed in wxFreePoolGC(): Wrong GC',
 ]
 
 
