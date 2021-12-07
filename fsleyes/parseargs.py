@@ -272,7 +272,6 @@ import numpy            as np
 
 import fsl.data.image                     as fslimage
 import fsl.data.bitmap                    as fslbmp
-import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
 import fsl.utils.deprecated               as deprecated
 import fsl.transform.affine               as affine
@@ -282,6 +281,7 @@ import fsleyes_props                      as props
 import fsleyes_widgets.utils.typedict     as td
 import fsleyes_widgets.utils.status       as status
 
+import fsleyes.data          as dutils
 from . import displaycontext as fsldisplay
 from . import                   colourmaps
 from . import                   autodisplay
@@ -626,6 +626,7 @@ OPTIONS = td.TypeDict({
                          'suppressA',
                          'suppressMode'],
     'ComplexOpts'      : ['component'],
+    'TractogramOpts'   : [],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -657,6 +658,7 @@ GROUPNAMES = td.TypeDict({
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
     'MIPOpts'        : 'MIP options',
+    'TractogramOpts' : 'Tractogram options',
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
@@ -696,6 +698,7 @@ GROUPDESCS = td.TypeDict({
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
     'MIPOpts'        : 'These options are applied to \'mip\' overlays.',
+    'TractogramOpts' : 'These options are applied to \'tractogram\' overlays.',
 })
 """This dictionary contains descriptions for each argument group. """
 
@@ -1838,6 +1841,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
     MIPOpts        = fsldisplay.MIPOpts
+    TractogramOpts = fsldisplay.TractogramOpts
 
     # A parser is created and returned
     # for each one of these types.
@@ -1845,7 +1849,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
                    MaskOpts, LabelOpts, MeshOpts, GiftiOpts,
                    FreesurferOpts, LineVectorOpts,
                    RGBVectorOpts, TensorOpts, SHOpts,
-                   MIPOpts]
+                   MIPOpts, TractogramOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use
