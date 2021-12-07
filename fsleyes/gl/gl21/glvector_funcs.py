@@ -108,7 +108,7 @@ def updateShaderState(self, useSpline=False):
         else:
             voxValXform = self.imageTexture.voxValXform
 
-        colours, colourXform = self.getVectorColours()
+        colours, colourXform = opts.getVectorColours()
 
         changed |= shader.set('modulateTexture', 0)
         changed |= shader.set('clipTexture',     1)

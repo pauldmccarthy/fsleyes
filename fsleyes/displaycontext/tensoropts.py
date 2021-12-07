@@ -13,7 +13,7 @@ import fsleyes_props as props
 from . import           vectoropts
 
 
-class TensorOpts(vectoropts.VectorOpts):
+class TensorOpts(vectoropts.NiftiVectorOpts):
     """The ``TensorOpts`` class defines options for displaying :class:`.GLTensor`
     instances.
     """
@@ -42,4 +42,4 @@ class TensorOpts(vectoropts.VectorOpts):
         to :meth:`.VectorOpts.__init__`.
         """
 
-        vectoropts.VectorOpts.__init__(self, *args, **kwargs)
+        vectoropts.NiftiVectorOpts.__init__(self, *args, **kwargs)

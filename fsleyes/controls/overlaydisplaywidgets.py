@@ -199,7 +199,7 @@ def _initPropertyList_MaskOpts(threedee):
             'outlineWidth']
 
 
-def _initPropertyList_VectorOpts(threedee):
+def _initPropertyList_NiftiVectorOpts(threedee):
     return ['colourImage',
             'modulateImage',
             'clipImage',
@@ -529,7 +529,7 @@ def _initWidgetSpec_LabelOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_VectorOpts(displayCtx, threedee):
+def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
     def imageName(img):
         if img is None: return 'None'
         else:           return displayCtx.getDisplay(img).name

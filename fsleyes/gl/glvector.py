@@ -335,53 +335,6 @@ class GLVectorBase(glimageobject.GLImageObject):
                              displayRange=(dmin, dmax))
 
 
-    def getVectorColours(self):
-        """Prepares the colours that represent each direction.
-
-
-        Returns:
-          - a ``numpy`` array of size ``(3, 4)`` containing the
-            RGBA colours that correspond to the ``x``, ``y``, and ``z``
-            vector directions.
-
-          - A ``numpy`` array of shape ``(4, 4)`` which encodes a scale
-            and offset to be applied to the vector value before it
-            is combined with the colours, encoding the current
-            brightness and contrast settings.
-        """
-        display = self.display
-        opts    = self.opts
-        bri     = display.brightness / 100.0
-        con     = display.contrast   / 100.0
-        alpha   = display.alpha      / 100.0
-
-        colours       = np.array([opts.xColour, opts.yColour, opts.zColour])
-        colours[:, 3] = alpha
-
-        if   opts.suppressMode == 'white':       suppress = [1, 1, 1, alpha]
-        elif opts.suppressMode == 'black':       suppress = [0, 0, 0, alpha]
-        elif opts.suppressMode == 'transparent': suppress = [0, 0, 0, 0]
-
-        # Transparent suppression
-        if opts.suppressX: colours[0, :] = suppress
-        if opts.suppressY: colours[1, :] = suppress
-        if opts.suppressZ: colours[2, :] = suppress
-
-        # Scale/offset for brightness/contrast.
-        # Note: This code is a duplicate of
-        # that found in ColourMapTexture.
-        lo, hi = fslcm.briconToDisplayRange((0, 1), bri, con)
-
-        if hi == lo: scale = 0.0000000000001
-        else:        scale = hi - lo
-
-        xform = np.identity(4, dtype=np.float32)
-        xform[0, 0] = 1.0 / scale
-        xform[0, 3] = -lo * xform[0, 0]
-
-        return colours, xform
-
-
     def getClippingRange(self):
         """Returns the :attr:`clippingRange`, suitable for use in the fragment
         shader. The returned values are transformed into the clip image

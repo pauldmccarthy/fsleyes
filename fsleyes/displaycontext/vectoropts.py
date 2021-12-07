@@ -12,39 +12,20 @@ vector images.
 
 import copy
 
-import fsleyes_props   as props
-import fsl.data.image  as fslimage
-import fsleyes.gl      as fslgl
-from . import             niftiopts
-from . import             volumeopts
+import numpy as np
+
+import fsleyes_props      as props
+import fsl.data.image     as fslimage
+import fsleyes.gl         as fslgl
+import fsleyes.colourmaps as fslcm
+from . import                niftiopts
+from . import                volumeopts
 
 
-class VectorOpts(niftiopts.NiftiOpts):
-    """The ``VectorOpts`` class is the base class for :class:`LineVectorOpts`,
-    :class:`RGBVectorOpts`, :class:`.TensorOpts`, and :class:`.SHOpts`. It
-    contains display settings which are common to each of them.
-
-
-    *A note on orientation*
-
-
-    The :attr:`orientFlip` property allows you to flip the left-right
-    orientation of line vectors, tensors, and SH functions. This option is
-    necessary, because different tools may output vector data in different
-    ways, depending on the image orientation.
-
-
-    For images which are stored radiologically (with the X axis increasaing
-    from right to left), the FSL tools (e.g. `dtifit`) will generate vectors
-    which are oriented according to the voxel coordinate system. However, for
-    neurologically stored images (X axis increasing from left to right), FSL
-    tools generate vectors which are radiologically oriented, and thus are
-    inverted with respect to the X axis in the voxel coordinate system.
-    Therefore, in order to correctly display vectors from such an image, we
-    must flip each vector about the X axis.
-
-
-    This issue is also applicable to ``tensor`` and ``sh`` overlays.
+class VectorOpts:
+    """The ``VectorOpts`` class is a mixin for use with :class:`.DisplayOpts`
+    sub-classes, providng properties and logic for displaying overlays which
+    can be coloured according to XYZ orientations.
     """
 
 
@@ -74,6 +55,81 @@ class VectorOpts(niftiopts.NiftiOpts):
 
     suppressMode = props.Choice(('white', 'black', 'transparent'))
     """How vector direction colours should be suppressed. """
+
+
+    def getVectorColours(self):
+        """Prepares the colours that represent each direction.
+
+        Returns:
+          - a ``numpy`` array of size ``(3, 4)`` containing the
+            RGBA colours that correspond to the ``x``, ``y``, and ``z``
+            vector directions.
+
+          - A ``numpy`` array of shape ``(4, 4)`` which encodes a scale
+            and offset to be applied to the vector value before it
+            is combined with the colours, encoding the current
+            brightness and contrast settings.
+        """
+        display = self.display
+        bri     = display.brightness / 100.0
+        con     = display.contrast   / 100.0
+        alpha   = display.alpha      / 100.0
+
+        colours       = np.array([self.xColour, self.yColour, self.zColour])
+        colours[:, 3] = alpha
+
+        if   self.suppressMode == 'white':       suppress = [1, 1, 1, alpha]
+        elif self.suppressMode == 'black':       suppress = [0, 0, 0, alpha]
+        elif self.suppressMode == 'transparent': suppress = [0, 0, 0, 0]
+
+        # Transparent suppression
+        if self.suppressX: colours[0, :] = suppress
+        if self.suppressY: colours[1, :] = suppress
+        if self.suppressZ: colours[2, :] = suppress
+
+        # Scale/offset for brightness/contrast.
+        # Note: This code is a duplicate of
+        # that found in ColourMapTexture.
+        lo, hi = fslcm.briconToDisplayRange((0, 1), bri, con)
+
+        if hi == lo: scale = 0.0000000000001
+        else:        scale = hi - lo
+
+        xform = np.identity(4, dtype=np.float32)
+        xform[0, 0] = 1.0 / scale
+        xform[0, 3] = -lo * xform[0, 0]
+
+        return colours, xform
+
+
+class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
+    """The ``NiftiVectorOpts`` class is the base class for
+    :class:`LineVectorOpts`, :class:`RGBVectorOpts`, :class:`.TensorOpts`, and
+    :class:`.SHOpts`. It contains display settings which are common to each of
+    them.
+
+
+    *A note on orientation*
+
+
+    The :attr:`orientFlip` property allows you to flip the left-right
+    orientation of line vectors, tensors, and SH functions. This option is
+    necessary, because different tools may output vector data in different
+    ways, depending on the image orientation.
+
+
+    For images which are stored radiologically (with the X axis increasaing
+    from right to left), the FSL tools (e.g. `dtifit`) will generate vectors
+    which are oriented according to the voxel coordinate system. However, for
+    neurologically stored images (X axis increasing from left to right), FSL
+    tools generate vectors which are radiologically oriented, and thus are
+    inverted with respect to the X axis in the voxel coordinate system.
+    Therefore, in order to correctly display vectors from such an image, we
+    must flip each vector about the X axis.
+
+
+    This issue is also applicable to ``tensor`` and ``sh`` overlays.
+    """
 
 
     orientFlip = props.Boolean(default=True)
@@ -284,7 +340,7 @@ class VectorOpts(niftiopts.NiftiOpts):
         else:              setattr(self, imageName, None)
 
 
-class LineVectorOpts(VectorOpts):
+class LineVectorOpts(NiftiVectorOpts):
     """The ``LineVectorOpts`` class contains settings for displaying vector
     images, using a line to represent the vector value at each voxel.
     """
@@ -317,10 +373,10 @@ class LineVectorOpts(VectorOpts):
 
         kwargs['nounbind'] = ['directed', 'unitLength', 'lengthScale']
 
-        VectorOpts.__init__(self, *args, **kwargs)
+        NiftiVectorOpts.__init__(self, *args, **kwargs)
 
 
-class RGBVectorOpts(VectorOpts):
+class RGBVectorOpts(NiftiVectorOpts):
     """The ``RGBVectorOpts`` class contains settings for displaying vector
     images, using a combination of three colours to represent the vector value
     at each voxel.
@@ -348,4 +404,4 @@ class RGBVectorOpts(VectorOpts):
             interp.updateChoice('linear', instance=self, newAlt=['spline'])
 
         kwargs['nounbind'] = ['interpolation']
-        VectorOpts.__init__(self, *args, **kwargs)
+        NiftiVectorOpts.__init__(self, *args, **kwargs)

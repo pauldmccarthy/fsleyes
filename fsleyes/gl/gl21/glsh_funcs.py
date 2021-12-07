@@ -135,7 +135,7 @@ def updateShaderState(self):
         else:
 
             cmapXform            = self.cmapTexture.getCoordinateTransform()
-            colours, colourXform = self.getVectorColours()
+            colours, colourXform = opts.getVectorColours()
 
             changed |= shader.set('modulateTexture',  0)
             changed |= shader.set('clipTexture',      1)

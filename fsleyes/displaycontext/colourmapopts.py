@@ -19,7 +19,7 @@ import fsleyes.colourmaps as fslcm
 log = logging.getLogger(__name__)
 
 
-class ColourMapOpts(object):
+class ColourMapOpts:
     """The ``ColourMapOpts`` class is a mixin for use with
     :class:`.DisplayOpts` sub-classes. It provides properties and logic
     for displaying overlays which are coloured according to some data values.

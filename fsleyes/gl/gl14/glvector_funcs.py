@@ -116,7 +116,7 @@ def updateShaderState(self):
 
     else:
 
-        colours, colourXform = self.getVectorColours()
+        colours, colourXform = opts.getVectorColours()
 
         # See comments in gl21/glvector_funcs.py
         if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:

@@ -586,11 +586,11 @@ def registerColourMap(cmapFile,
     # TODO Any new DisplayOpts sub-types which have a
     #      colour map will need to be patched here
     cmapProps = []
-    cmapProps.append((fsldisplay.VolumeOpts, 'cmap'))
-    cmapProps.append((fsldisplay.VolumeOpts, 'negativeCmap'))
-    cmapProps.append((fsldisplay.VectorOpts, 'cmap'))
-    cmapProps.append((fsldisplay.MeshOpts,   'cmap'))
-    cmapProps.append((fsldisplay.MeshOpts,   'negativeCmap'))
+    cmapProps.append((fsldisplay.VolumeOpts,      'cmap'))
+    cmapProps.append((fsldisplay.VolumeOpts,      'negativeCmap'))
+    cmapProps.append((fsldisplay.NiftiVectorOpts, 'cmap'))
+    cmapProps.append((fsldisplay.MeshOpts,        'cmap'))
+    cmapProps.append((fsldisplay.MeshOpts,        'negativeCmap'))
 
     # Update the colour map properties
     # for any existing instances
