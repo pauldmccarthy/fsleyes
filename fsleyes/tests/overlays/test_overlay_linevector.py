@@ -5,11 +5,11 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-import os.path as op
+from unittest import mock
 
 import pytest
 
-import fsl.data.image as fslimage
+import fsleyes.gl.textures.data as texdata
 
 from fsleyes.tests import run_cli_tests, roi, asrgb, mul
 
@@ -48,13 +48,24 @@ dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector
 dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector -nu
 """
 
+extras = {
+    'roi': roi,
+    'asrgb': asrgb,
+    'mul': mul,
+}
+
+
 def test_overlay_linevector():
-    extras = {
-        'roi'   : roi,
-        'asrgb' : asrgb,
-        'mul'   : mul,
-    }
     run_cli_tests('test_overlay_linevector',
                   cli_tests,
-                  extras=extras,
-                  threshold=35)
+                  extras=extras)
+
+
+import fsleyes.gl.textures.data as d
+def test_overlay_linevector_nofloattextures():
+    texdata.canUseFloatTextures.invalidate()
+    with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
+                    return_value=(False, None, None)):
+        run_cli_tests('test_overlay_linevector_nofloattextures',
+                      cli_tests,
+                      extras=extras)
