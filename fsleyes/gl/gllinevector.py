@@ -97,8 +97,9 @@ class GLLineVector(glvector.GLVector):
             return data
 
         def prefilterRange(dmin, dmax):
+
             if self.opts.unitLength:
-                return 0, 1
+                return -1, 1
             else:
                 return dmin, dmax
 
