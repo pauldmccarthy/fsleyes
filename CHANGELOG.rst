@@ -10,6 +10,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.3.2 (Thursday 9th December 2021)
+----------------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed an issue with line vector display when running FSLeyes in an
+  environment which doesn't support floating point textures (!299).
+
+
 1.3.1  (Thursday 2nd December 2021)
 -----------------------------------
 

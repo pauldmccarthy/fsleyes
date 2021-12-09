@@ -84,8 +84,8 @@ if __name__ == '__main__':
     else:              threshold = int(argv[2])
 
     # TODO use imageio instead of mplimg
-    image1 = mplimg.imread(image1) * 255
-    image2 = mplimg.imread(image2) * 255
+    image1 = mplimg.imread(image1)
+    image2 = mplimg.imread(image2)
 
     passed, diff = compare_images(image1, image2, threshold)
 
