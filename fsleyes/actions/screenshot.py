@@ -215,9 +215,14 @@ def canvasPanelScreenshot(panel, filename):
 
     data[:, :, :3] = rgb.reshape(height, width, 3)
 
-    # OSX and SSh/X11 both have complications
-    inSSH = fwidgets.inSSHSession() and not fwidgets.inVNCSession()
-    if inSSH or fslplatform.os == 'Darwin':
+    # On some platforms/in some environments, the Blit
+    # call above will not capture the contents of
+    # GL canavses, resulting in an all-black screenshot.
+    # In this case, we have to use alternate means to
+    # capture the contents of the GL canvases. This
+    # is required on macOS, and over SSH/X11 (but not
+    # mobaxterm for some reason).
+    if np.all(data[:, :, :3] == 0):
         data = _patchInCanvases(cpanel, panel, data, bgColour)
 
     data[:, :,  3] = 255
