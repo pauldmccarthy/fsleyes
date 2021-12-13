@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.4.0 (Under development)
+-------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with black screenshot images in some environments (e.g.
+  SSH sessions in mobaxterm) (!301).
+
+
 1.3.2 (Thursday 9th December 2021)
 ----------------------------------
 
