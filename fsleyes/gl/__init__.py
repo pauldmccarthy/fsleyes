@@ -1411,7 +1411,7 @@ class WXGLCanvasTarget:
 
         # on macOS, we have to set
         # scaling on the GL canvas
-        highdpi.enable(self, enable)
+        highdpi.toggle(self, enable)
 
         if enable: self.__dpiscale = scale
         else:      self.__dpiscale = 1.0
