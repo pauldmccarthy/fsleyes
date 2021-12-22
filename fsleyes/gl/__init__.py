@@ -193,6 +193,7 @@ import fsl.utils.idle                     as idle
 import fsl.version                        as fslversion
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
+import fsleyes.gl.highdpi                 as highdpi
 
 
 log = logging.getLogger(__name__)
@@ -1052,28 +1053,8 @@ class WXGLCanvasTarget:
     def canToggleHighDPI():
         """Return ``True`` if high-DPI scaling can be toggled, ``False``
         otherwise.
-
-        Under GTK, high DPI support is not possible with wxPython < 4.0.7, as
-        ``wx.Window.GetContentScaleFactor`` always returns 1. Under GTK and
-        from wxPython 4.0.7 onwards, GL canvases are scaled automatically.
-
-        Under macOS and wxpython < 4.1.0, high DPI must be explicitly requested
-        for GL canvases via a Cocoa API call. This can be done via the
-        :meth:`EnableHighDPI` method.
-
-        Under macOS and with wxpython >= 4.1.0, GL canvases are scaled
-        automatically.
         """
-
-        import wx
-
-        if platform.system() != 'Darwin':
-            return False
-
-        wxver = getattr(wx, '__version__', '1.0.0')
-        wxver = [int(v) for v in wxver.split('.')[:3]]
-
-        return wxver < [4, 1, 0]
+        return highdpi.needsToggling()
 
 
     @staticmethod
@@ -1157,7 +1138,7 @@ class WXGLCanvasTarget:
         self.__freezeSwapBuffers = False
         self.__context           = context
 
-        if WXGLCanvasTarget.canToggleHighDPI():
+        if highdpi.needsToggling():
             self.__dpiscale = 1.0
         else:
             self.__dpiscale = self.GetContentScaleFactor()
@@ -1413,9 +1394,8 @@ class WXGLCanvasTarget:
         """
 
         # We don't necessarily need to
-        # enable high-DPI support - see
-        # __init__.
-        if not WXGLCanvasTarget.canToggleHighDPI():
+        # enable high-DPI support
+        if not highdpi.needsToggling():
             return
 
         if not self._setGLContext():
@@ -1431,14 +1411,7 @@ class WXGLCanvasTarget:
 
         # on macOS, we have to set
         # scaling on the GL canvas
-        try:
-            import objc
-            nsview = objc.objc_object(c_void_p=self.GetHandle())
-            nsview.setWantsBestResolutionOpenGLSurface_(enable)
-
-        # objc library not present
-        except ImportError:
-            return
+        highdpi.enable(self, enable)
 
         if enable: self.__dpiscale = scale
         else:      self.__dpiscale = 1.0
