@@ -37,7 +37,7 @@ def cast(infile, dtype):
 
     img = fslimage.Image(infile)
 
-    data = img[:].astype(np.float)
+    data = img[:].astype(float)
 
     # force range to 0-255 so it looks
     # the same regardless of dtype

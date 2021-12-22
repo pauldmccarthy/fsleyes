@@ -10,6 +10,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.3.3 (Thursday 23rd December 2021)
+-----------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with black screenshot images in some environments (e.g.
+  SSH sessions in mobaxterm) (!301).
+* Removed ``pyobj-core`` and ``pyobjc-framework-cocoa`` from the list
+  of dependencies (!302).
+
+
 1.3.2 (Thursday 9th December 2021)
 ----------------------------------
 

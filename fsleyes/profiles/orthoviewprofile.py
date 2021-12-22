@@ -906,7 +906,7 @@ class OrthoViewProfile(profiles.Profile):
         # Turn box coordinates into voxels
         coords        = opts.transformCoords([canvasDownPos, canvasPos],
                                              'display', 'voxel', vround=True)
-        coords        = coords.astype(np.int)
+        coords        = coords.astype(int)
         xlo, ylo, zlo = coords.min(axis=0)
         xhi, yhi, zhi = coords.max(axis=0) + 1
         slc           = (slice(xlo, xhi),
