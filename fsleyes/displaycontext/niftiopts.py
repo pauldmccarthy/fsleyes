@@ -839,6 +839,18 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return vox
 
 
+    def setIndex(self, indices):
+        """Sets the indexes of all non-spatial dimensions. The :attr:`volume`
+        property is also updated.
+        """
+        if len(indices) != self.overlay.ndim - 3:
+            raise ValueError(
+                f'Wrong number of indices - {self.display.name} '
+                f'has {self.overlay.ndim-3} non-spatial dimensions')
+        self.setAttribute('volume', 'cache', indices)
+        self.volume = indices[self.volumeDim]
+
+
     def index(self, slc=None, atVolume=True):
         """Given a slice object ``slc``, which indexes into the X, Y, and Z
         dimensions, fills it to slice every dimension of the image, using
