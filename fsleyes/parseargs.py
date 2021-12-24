@@ -490,7 +490,8 @@ OPTIONS = td.TypeDict({
                         'alpha',
                         'brightness',
                         'contrast'],
-    'NiftiOpts'      : ['volume'],
+    'NiftiOpts'      : ['volume',
+                        'index'],
 
     # n.b. I could list the ColourMapOpts
     # properties separately here, and
@@ -831,6 +832,7 @@ ARGUMENTS = td.TypeDict({
     'Display.contrast'      : ('c',  'contrast',    True),
 
     'NiftiOpts.volume'       : ('v',  'volume',     True),
+    'NiftiOpts.index'        : ('x',  'index',      True),
 
     'ColourMapOpts.displayRange'     : ('dr',  'displayRange',     True),
     'ColourMapOpts.clippingRange'    : ('cr',  'clippingRange',    True),
@@ -1104,7 +1106,12 @@ HELP = td.TypeDict({
     'Display.brightness'    : 'Brightness (0-100, default: 50)',
     'Display.contrast'      : 'Contrast (0-100, default: 50)',
 
-    'NiftiOpts.volume'     : 'Volume (index, starting from 0)',
+    'NiftiOpts.volume' :
+    'Volume (index, starting from 0).',
+    'NiftiOpts.index' :
+    'Index into each dimension, for images with more than four dimensions, '
+    'Specify as a comma-separated list of indices (starting from 0), where '
+    'the first value is the index into the fourth dimension.',
 
     'ColourMapOpts.displayRange'      :
     'Display range. Setting this will override brightnes/contrast '
@@ -3206,6 +3213,41 @@ def _applySpecial_SceneOpts_movieSyncRefresh(
 
     if args.movieSync:
         target.movieSyncRefresh = not target.defaultMovieSyncRefresh
+
+
+def _configSpecial_NiftiOpts_index(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``index`` option for the ``NiftiOpts`` class.
+    This option allows the index for each >3rd dimension to be
+    specified, for images with four or dimensions. For images with
+    four dimensions, the --volume option can also be used.
+    """
+    parser.add_argument(shortArg,
+                        longArg,
+                        type=str,
+                        metavar='IDX4,IDX5,...',
+                        help=helpText)
+
+
+def _applySpecial_NiftiOpts_index(
+        args, overlayList, displayCtx, target):
+    """Applies the ``NiftiOpts.index`` option. """
+    indices = [int(i) for i in args.index.split(',')]
+    target.setIndex(indices)
+
+
+def _generateSpecial_NiftiOpts_index(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguemnts for the ``NiftiOpts.index`` option. """
+
+    # Irrelevant for < 4D images
+    # Covered by --volume for == 4D images
+    if source.overlay.ndim <= 4:
+        return []
+
+    indices = [str(i) for i in source.index()[4:]]
+
+    return [longArg, ','.join(indices)]
 
 
 def _configSpecial_Volume3DOpts_clipPlane(
