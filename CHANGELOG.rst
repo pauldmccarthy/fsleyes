@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.4.0 (Under development)
+-------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--index`` command-line option for ``volume`` overlays, allowing
+  the indices for all non-spatial dimensions to be specified (!304).
+
+
 1.3.3 (Thursday 23rd December 2021)
 -----------------------------------
 
