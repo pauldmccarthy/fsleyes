@@ -12,9 +12,12 @@ import fsleyes_props as props
 
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts
+from . import                  vectoropts
 
 
-class TractogramOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
+class TractogramOpts(fsldisplay.DisplayOpts,
+                     cmapopts.ColourMapOpts,
+                     vectoropts.VectorOpts):
     """
     """
 
@@ -27,3 +30,24 @@ class TractogramOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     pointData = props.Choice((None,))
 
     streamlineData = props.Choice((None,))
+
+
+    def __init__(self, *args, **kwargs):
+        fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
+        cmapopts  .ColourMapOpts.__init__(self)
+        vectoropts.VectorOpts   .__init__(self)
+
+        self.__updateBounds()
+
+
+    def getDataRange(self):
+        return 0, 1
+
+
+    def __updateBounds(self):
+
+        lo, hi        = self.overlay.bounds
+        xlo, ylo, zlo = lo
+        xhi, yhi, zhi = hi
+
+        self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
