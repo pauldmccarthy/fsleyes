@@ -19,6 +19,7 @@ import fsl.data.image       as fslimage
 import fsl.utils.idle       as idle
 import fsl.transform.affine as affine
 
+import fsleyes.data.tractogram           as fsltractogram
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
 import fsleyes.gl.annotations            as annotations
@@ -496,7 +497,9 @@ class Scene3DCanvas:
         Creates a ``GLObject`` for it, and registers property listeners.
         """
 
-        if not isinstance(overlay, (fslmesh.Mesh, fslimage.Image)):
+        if not isinstance(overlay, (fslmesh.Mesh,
+                                    fslimage.Image,
+                                    fsltractogram.Tractogram)):
             return
 
         log.debug('Registering overlay {}'.format(overlay))
@@ -543,7 +546,7 @@ class Scene3DCanvas:
 
         display = self.__displayCtx.getDisplay(overlay)
 
-        if display.overlayType not in ('volume', 'mesh'):
+        if display.overlayType not in ('volume', 'mesh', 'tractogram'):
             return False
 
         self.__glObjects[overlay] = False

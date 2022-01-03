@@ -19,3 +19,4 @@ from . import gllabel_funcs        # noqa
 from . import gltensor_funcs       # noqa
 from . import glsh_funcs           # noqa
 from . import glmip_funcs          # noqa
+from . import gltractogram_funcs   # noqa

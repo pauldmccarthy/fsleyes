@@ -54,6 +54,7 @@ def getGLObjectType(overlayType):
     from . import gltensor
     from . import glsh
     from . import glmip
+    from . import gltractogram
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -66,7 +67,8 @@ def getGLObjectType(overlayType):
         'sh'         : glsh        .GLSH,
         'mip'        : glmip       .GLMIP,
         'rgb'        : glrgbvolume .GLRGBVolume,
-        'complex'    : glcomplex   .GLComplex
+        'complex'    : glcomplex   .GLComplex,
+        'tractogram' : gltractogram.GLTractogram
     }
 
     return typeMap.get(overlayType, None)

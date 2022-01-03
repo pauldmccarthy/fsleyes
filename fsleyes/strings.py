@@ -1381,6 +1381,7 @@ choices = TypeDict({
         'mesh'           : '3D mesh',
         'tensor'         : 'Diffusion tensor',
         'sh'             : 'Diffusion SH',
+        'tractogram'     : 'Streamline tractogram'
     },
 
     'HistogramPanel.histType' : {'probability' : 'Probability',

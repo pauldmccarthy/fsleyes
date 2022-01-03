@@ -136,6 +136,7 @@ be displayed as:
    ~fsleyes.gl.glmip.GLMIP
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
+   ~fsleyes.gl.gltractogram.GLTractogram
 
 
 These objects are created and destroyed automatically by the canvas classes
@@ -377,6 +378,8 @@ def bootstrap(glVersion=None):
 
     ``glmip_funcs``        The version-specific module containing functions for
                            rendering :class:`.GLMIP` instances.
+    ``gltractogram_funcs`` The version-specific module containing functions for
+                           rendering :class:`.GLTractogram` instances.
     ====================== ====================================================
 
 
@@ -480,6 +483,7 @@ def bootstrap(glVersion=None):
     thismod.gltensor_funcs     = glpkg.gltensor_funcs
     thismod.glsh_funcs         = glpkg.glsh_funcs
     thismod.glmip_funcs        = glpkg.glmip_funcs
+    thismod.gltractogram_funcs = glpkg.gltractogram_funcs
     thismod._bootstrapped      = True
 
     # Initialise extensions module.
