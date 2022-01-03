@@ -10,7 +10,7 @@ for displaying streamline tractography ``.trk`` or ``.tck`` files.
 
 import os.path as op
 
-import nibabel.streamlines as streamlines
+import nibabel.streamlines as nibstrm
 
 
 ALLOWED_EXTENSIONS     = ['.tck', '.trk']
@@ -22,7 +22,7 @@ class Tractogram:
 
         self.dataSource = op.abspath(fname)
         self.name       = op.basename(fname)
-        self.tractFile  = streamlines.load(fname)
+        self.tractFile  = nibstrm.load(fname)
 
 
     @property
@@ -39,9 +39,16 @@ class Tractogram:
         return len(self.tractFile.streamlines)
 
 
-    def streamlineData(self, sdataId):
-        pass
+    @property
+    def vertices(self):
+        return self.tractFile.streamlines.get_data()
 
 
-    def pointData(self, pdataId):
-        pass
+    @property
+    def lengths(self):
+        return self.tractFile.streamlines._lengths
+
+
+    @property
+    def offsets(self):
+        return self.tractFile.streamlines._offsets

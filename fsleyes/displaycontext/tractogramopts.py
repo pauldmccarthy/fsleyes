@@ -8,7 +8,12 @@
 display properties for :class:`.Tractogram` overlays.
 """
 
-import fsleyes_props as props
+import functools            as ft
+
+import numpy                as np
+
+import fsl.transform.affine as affine
+import fsleyes_props        as props
 
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts
@@ -31,6 +36,8 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     streamlineData = props.Choice((None,))
 
+    lineWidth = props.Int(min=1, max=10, default=1)
+
 
     def __init__(self, *args, **kwargs):
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
@@ -51,3 +58,26 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         xhi, yhi, zhi = hi
 
         self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
+
+
+    @property
+    @ft.lru_cache()
+    def orientation(self):
+        """Calculates and returns an orientation vector for every vertex of
+        every streamline in the tractogram.
+
+        The orientation assigned to a vertex is just the difference between
+        that vertex and the previous vertex in the streamline. The first
+        vertex in a streamline is given the same orientation as the second
+        (i.e. o0 = o1 = (v1 - v0)).
+        """
+
+        ovl     = self.overlay
+        verts   = ovl.vertices
+        orients = np.zeros(verts.shape, dtype=np.float32)
+
+        diffs                   = verts[1:, :] - verts[:-1, :]
+        orients[1:, :]          = affine.normalise(diffs)
+        orients[ovl.offsets, :] = orients[ovl.offsets + 1, :]
+
+        return orients

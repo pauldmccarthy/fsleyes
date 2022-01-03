@@ -8,8 +8,8 @@
 import numpy     as np
 import OpenGL.GL as gl
 
-
-import fsleyes.gl.shaders as shaders
+import fsleyes.gl.routines as glroutines
+import fsleyes.gl.shaders  as shaders
 
 
 def compileShaders(self):
@@ -20,29 +20,41 @@ def compileShaders(self):
     self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
 
 
-def preDraw(self, xform=None, bbox=None):
-    self.shader.load()
+
+def updateShaderState(self):
+
+    shader = self.shader
+    shader.load()
+    shader.setAtt('vertex', self.vertices)
+    shader.setAtt('orient', self.orients)
+    shader.unload()
+
 
 
 def draw3D(self, xform=None, bbox=None):
 
-    shader = self.shader
+    shader  = self.shader
+    ovl     = self.overlay
+    opts    = self.opts
+    nstrms  = ovl.numStreamlines
 
-    ovl    = self.overlay
-    verts   = ovl.tractFile.streamlines
-    nstrms  = len(verts)
-    offsets = np.asarray(verts._offsets,   dtype=np.int32)
-    counts  = np.asarray(verts._lengths,   dtype=np.int32)
-    verts   = np.asarray(verts.get_data(), dtype=np.float32)
+    offsets = self.offsets
+    counts  = self.counts
+    nstrms  = len(offsets)
 
-    shader.setAtt('vertex', verts)
-
+    shader.load()
     shader.loadAtts()
 
-    gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+    if xform is not None:
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
 
+    with glroutines.enabled(gl.GL_DEPTH_TEST):
+        gl.glLineWidth(opts.lineWidth)
+        gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+
+    if xform is not None:
+        gl.glPopMatrix()
     shader.unloadAtts()
-
-
-def postDraw(self, xform=None, bbox=None):
-    self.shader.unload()
+    shader.unload()

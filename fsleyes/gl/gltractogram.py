@@ -29,6 +29,8 @@ class GLTractogram(globject.GLObject):
 
         fslgl.gltractogram_funcs.compileShaders(self)
 
+        self.__refreshData()
+
 
     def destroy(self):
         """
@@ -53,29 +55,33 @@ class GLTractogram(globject.GLObject):
         """Overrides :meth:`.GLObject.getDisplayBounds`. Returns a bounding
         box which contains the mesh vertices.
         """
-        return (self.overlay.bounds.getLo(),
-                self.overlay.bounds.getHi())
+        return (self.opts.bounds.getLo(),
+                self.opts.bounds.getHi())
+
+
+    def __refreshData(self, *a):
+
+        ovl  = self.overlay
+        opts = self.opts
+
+        self.vertices = np.asarray(ovl.vertices, dtype=np.float32)
+        self.offsets  = np.asarray(ovl.offsets,  dtype=np.int32)
+        self.counts   = np.asarray(ovl.lengths,  dtype=np.int32)
+        self.orients  = opts.orientation
+        fslgl.gltractogram_funcs.updateShaderState(self)
 
 
     def preDraw(self, xform=None, bbox=None):
-        if not self.threedee:
-            pass
-        fslgl.gltractogram_funcs.preDraw(self, xform=None, bbox=None)
+        pass
+
 
     def draw2D(self, zpos, axes, xform=None, bbox=None):
         pass
 
-    def draw3D(self, xform=None, bbox=None):
 
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPushMatrix()
-            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
+    def draw3D(self, xform=None, bbox=None):
         fslgl.gltractogram_funcs.draw3D(self, xform, bbox)
-        if xform is not None:
-            gl.glPopMatrix()
 
 
     def postDraw(self, xform=None, bbox=None):
-        if not self.threedee:
-            pass
+        pass
