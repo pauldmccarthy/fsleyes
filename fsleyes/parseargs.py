@@ -2432,13 +2432,24 @@ def _printFullHelp(mainParser):
         if groupDesc is not None:
             helpText += '  ' + groupDesc + '\n'
 
+        # Trim the help pre-amble (see inline
+        # comments in _printShortHelp for more
+        # details on this)
         ovlHelp = parser.format_help()
+        skipTo  = ['optional arguments:',
+                   'options:']
+        for candidate in skipTo:
+            try:
+                optStart = ovlHelp.index(candidate)
+                skipTo   = candidate
+                break
+            except Exception:
+                pass
+        else:
+            raise ValueError('Cannot parse sub-parser help output: ' + ovlHelp)
 
-        skipTo    = 'optional arguments:'
-        optStart  = ovlHelp.index(skipTo)
         optStart += len(skipTo) + 1
         ovlHelp   = ovlHelp[optStart:]
-
         helpText += '\n' + ovlHelp
 
     print(helpText)
