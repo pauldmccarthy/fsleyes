@@ -290,6 +290,16 @@ def glIsSoftwareRenderer():
     return sw and (not fastsw)
 
 
+def hasExtension(ext):
+    """Wrapper around ``OpenGL.extensions.hasExtension``. Short-circuits
+    and always returns ``True`` if the OpenGL version in use is >= 3.2.
+    """
+    if float(GL_COMPATIBILITY) >= 3.2:
+        return True
+    import OpenGL.extensions as glexts
+    return glexts.hasExtension(ext)
+
+
 def bootstrap(glVersion=None):
     """Imports modules appropriate to the specified OpenGL version.
 
