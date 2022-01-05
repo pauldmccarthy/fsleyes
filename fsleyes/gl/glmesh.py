@@ -445,7 +445,7 @@ class GLMesh(globject.GLObject):
                  self.opts.vertexData is not None))
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLObject.preDraw`. Performs some pre-drawing
         configuration, which might involve loading shaders, and/or setting the
         size of the backing :class:`.RenderTexture` instance based on the
@@ -580,7 +580,7 @@ class GLMesh(globject.GLObject):
             gl.glPopMatrix()
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. May call the
         :func:`.gl14.glmesh_funcs.postDraw` or
         :func:`.gl21.glmesh_funcs.postDraw` function.

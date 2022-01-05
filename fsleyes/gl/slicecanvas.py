@@ -1516,9 +1516,9 @@ class SliceCanvas(object):
                           'directly to canvas'.format(
                               copts.zax, display.name))
 
-                globj.preDraw(bbox=bbox)
+                globj.preDraw()
                 globj.draw2D(zpos, axes, bbox=bbox)
-                globj.postDraw(bbox=bbox)
+                globj.postDraw()
 
             # Off-screen rendering - each overlay is
             # rendered to an off-screen texture -

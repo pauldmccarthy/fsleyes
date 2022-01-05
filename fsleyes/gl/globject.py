@@ -385,17 +385,12 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """This method is called at the start of a draw routine.
 
         It should perform any initialisation which is required before one or
         more calls to the :meth:`draw2D`/:meth:`draw3D` methods are made, such
         as binding and configuring textures.
-
-        See :meth:`draw2D` for details on the ``xform`` and ``bbox``
-        arguments.  They are only guaranteed to be passed to the ``preDraw``
-        method in scenarios where only a single call to ``draw2D``
-        or``draw3D`` is made between calls to ``preDraw`` and ``postDraw``.
         """
         raise NotImplementedError()
 
@@ -460,15 +455,12 @@ class GLObject(notifier.Notifier):
             self.draw2D(zpos, axes, xform)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """This method is called after the :meth:`draw2D`/:meth:`draw3D`
         methods have been called one or more times.
 
         It should perform any necessary cleaning up, such as unbinding
         textures.
-
-        See the :meth:`draw2D` method for details on the ``xform`` and
-        ``bbox`` arguments.
         """
         raise NotImplementedError()
 
@@ -518,11 +510,9 @@ class GLSimpleObject(GLObject):
         return self.__destroyed
 
 
-    def preDraw(self, *args, **kwargs):
+    def preDraw(self):
         """Overrides :meth:`GLObject.preDraw`. Does nothing. """
-        pass
 
 
-    def postDraw(self, *args, **kwargs):
+    def postDraw(self):
         """Overrides :meth:`GLObject.postDraw`. Does nothing. """
-        pass

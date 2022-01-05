@@ -51,14 +51,14 @@ class GLRGBVector(glvector.GLVector):
                                                shaders.
     ``updateShaderState(GLRGBVector)``         Updates vertex/fragment
                                                shaders.
-    ``preDraw(GLRGBVector, xform, bbox)``      Prepare the GL state for
+    ``preDraw(GLRGBVector)``                   Prepare the GL state for
                                                drawing.
     ``draw2D(GLRGBVector, zpos, xform, bbox)`` Draw the slice specified by
                                                ``zpos``.
     ``draw3D(GLRGBVector, zpos, xform)``       Draw the volume in 3D
     ``drawAll(GLRGBVector, zposes, xforms)``   Draw all slices specified by
                                                ``zposes``.
-    ``postDraw(GLRGBVector, xform, bbox)``     Clean up the GL state after
+    ``postDraw(GLRGBVector)``                  Clean up the GL state after
                                                drawing.
     ========================================== ===============================
     """
@@ -207,12 +207,12 @@ class GLRGBVector(glvector.GLVector):
         return fslgl.glrgbvector_funcs.updateShaderState(self)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and the OpenGL version-specific ``preDraw`` function.
         """
-        glvector.GLVector.preDraw(self, xform, bbox)
-        fslgl.glrgbvector_funcs.preDraw(self, xform, bbox)
+        glvector.GLVector.preDraw(self)
+        fslgl.glrgbvector_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -240,10 +240,10 @@ class GLRGBVector(glvector.GLVector):
         fslgl.glrgbvector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self, xform, bbox)
-        fslgl.glrgbvector_funcs.postDraw(self, xform, bbox)
+        glvector.GLVector.postDraw(self)
+        fslgl.glrgbvector_funcs.postDraw(self)

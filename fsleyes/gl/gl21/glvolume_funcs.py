@@ -175,7 +175,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Sets up the GL state to draw a slice from the given :class:`.GLVolume`
     instance.
     """
@@ -272,6 +272,7 @@ def draw3D(self, xform=None, bbox=None):
 
     self.shader.unloadAtts()
     self.shader.unload()
+    self.drawClipPlanes(xform=xform)
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -298,12 +299,9 @@ def drawAll(self, axes, zposes, xforms):
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
     self.shader.unloadAtts()
     self.shader.unload()
-
-    if self.threedee:
-        self.drawClipPlanes(xform=xform)

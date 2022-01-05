@@ -436,7 +436,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         return self.auxmgr.textureXform(which)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Must be called by subclass implementations.
 
         Ensures that all of the textures managed by this ``GLVectorBase`` are
@@ -449,7 +449,7 @@ class GLVectorBase(glimageobject.GLImageObject):
         self.cmapTexture    .bindTexture(gl.GL_TEXTURE3)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Must be called by subclass implementations.
 
         Unbinds all of the textures managed by this ``GLVectorBase``.
@@ -689,17 +689,17 @@ class GLVector(GLVectorBase):
         self.imageTexture.register(self.name, self.__textureChanged)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`GLVectorBase`. Binds the vector image texture.
         """
-        GLVectorBase.preDraw(self, xform, bbox)
+        GLVectorBase.preDraw(self)
         self.imageTexture.bindTexture(gl.GL_TEXTURE4)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`GLVectorBase`. Unbinds the vector image texture.
         """
-        GLVectorBase.postDraw(self, xform, bbox)
+        GLVectorBase.postDraw(self)
         self.imageTexture.unbindTexture()
 
 

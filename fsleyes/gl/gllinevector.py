@@ -158,13 +158,13 @@ class GLLineVector(glvector.GLVector):
         return fslgl.gllinevector_funcs.updateShaderState(self)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``preDraw``
         function.
         """
-        glvector.GLVector.preDraw(self, xform, bbox)
-        fslgl.gllinevector_funcs.preDraw(self, xform, bbox)
+        glvector.GLVector.preDraw(self)
+        fslgl.gllinevector_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -188,13 +188,13 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self, xform, bbox)
-        fslgl.gllinevector_funcs.postDraw(self, xform, bbox)
+        glvector.GLVector.postDraw(self)
+        fslgl.gllinevector_funcs.postDraw(self)
 
 
     def __unitLengthChanged(self, *a):

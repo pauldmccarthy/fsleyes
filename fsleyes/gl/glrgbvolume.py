@@ -234,7 +234,7 @@ class GLRGBVolume(glimageobject.GLImageObject):
         return colours
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Called before a draw. Binds the image texture. """
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
@@ -258,6 +258,6 @@ class GLRGBVolume(glimageobject.GLImageObject):
         pass
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Called after a draw. Unbinds the image texture. """
         self.imageTexture.unbindTexture()

@@ -275,7 +275,7 @@ class GLMask(glimageobject.GLImageObject):
         return (lo, hi)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Binds the :class:`.ImageTexture` and calls the version-dependent
         ``preDraw`` function.
         """
@@ -367,7 +367,7 @@ class GLMask(glimageobject.GLImageObject):
         pass
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Unbinds the ``ImageTexture``. """
         self.imageTexture.unbindTexture()
 

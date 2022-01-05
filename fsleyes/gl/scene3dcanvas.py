@@ -698,9 +698,9 @@ class Scene3DCanvas(object):
 
             log.debug('Drawing {} [{}]'.format(ovl, globj))
 
-            globj.preDraw( xform=xform)
-            globj.draw3D(  xform=xform)
-            globj.postDraw(xform=xform)
+            globj.preDraw()
+            globj.draw3D(xform=xform)
+            globj.postDraw()
 
         if opts.showCursor:
             with glroutines.enabled((gl.GL_DEPTH_TEST)):

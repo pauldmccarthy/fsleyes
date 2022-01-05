@@ -248,9 +248,8 @@ class GLLabel(glimageobject.GLImageObject):
                 self.__lut.register(self.name, self.__colourPropChanged, topic)
 
 
-    def preDraw(self, xform=None, bbox=None):
-        """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`,
-        and calls the version-dependent ``preDraw`` function.
+    def preDraw(self):
+        """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
         """
 
         w, h = self.canvas.GetSize()
@@ -322,9 +321,8 @@ class GLLabel(glimageobject.GLImageObject):
             textureUnit=gl.GL_TEXTURE2)
 
 
-    def postDraw(self, xform=None, bbox=None):
-        """Unbinds the ``ImageTexture`` and ``LookupTableTexture``, and calls
-        the version-dependent ``postDraw`` function.
+    def postDraw(self):
+        """Unbinds the ``ImageTexture`` and ``LookupTableTexture``.
         """
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()

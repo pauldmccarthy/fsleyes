@@ -484,7 +484,7 @@ class GLSH(glvector.GLVectorBase):
                 glvector.GLVectorBase.texturesReady(self))
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLVectorBase.preDraw`.  Binds textures, and calls
         :func:`.glsh_funcs.preDraw`.
         """
@@ -494,9 +494,9 @@ class GLSH(glvector.GLVectorBase):
         # be called through draw, and if radTexture
         # is not the most recently bound texture,
         # the update will fail.
-        glvector.GLVectorBase.preDraw(self, xform, bbox)
+        glvector.GLVectorBase.preDraw(self)
         self.radTexture.bindTexture(gl.GL_TEXTURE4)
-        fslgl.glsh_funcs.preDraw(self, xform, bbox)
+        fslgl.glsh_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -511,10 +511,10 @@ class GLSH(glvector.GLVectorBase):
         fslgl.glsh_funcs.draw3D(self, *args, **kwargs)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLVectorBase.postDraw`.  Unbinds textures, and
         calls :func:`.glsh_funcs.postDraw`.
         """
-        glvector.GLVectorBase.postDraw(self, xform, bbox)
+        glvector.GLVectorBase.postDraw(self)
         self.radTexture.unbindTexture()
-        fslgl.glsh_funcs.postDraw(self, xform, bbox)
+        fslgl.glsh_funcs.postDraw(self)

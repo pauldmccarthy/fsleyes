@@ -62,7 +62,7 @@ class GLVolume(glimageobject.GLImageObject):
     ``updateShaderState(GLVolume)``       Updates the shader program states
                                           when display parameters are changed.
 
-    ``preDraw(GLVolume, xform, bbox)``    Initialise the GL state, ready for
+    ``preDraw(GLVolume)``                 Initialise the GL state, ready for
                                           drawing.
 
     ``draw2D(GLVolume, zpos, xform)``     Draw a slice of the image at the
@@ -80,7 +80,7 @@ class GLVolume(glimageobject.GLImageObject):
                                           specified ``zposes``, applying the
                                           corresponding ``xforms`` to each.
 
-    ``postDraw(GLVolume, xform, bbox)``   Clear the GL state after drawing.
+    ``postDraw(GLVolume)``                Clear the GL state after drawing.
     ===================================== =====================================
 
 
@@ -667,7 +667,7 @@ class GLVolume(glimageobject.GLImageObject):
                                   displayRange=(dmin, dmax))
 
 
-    def preDraw(self, *args, **kwargs):
+    def preDraw(self):
         """Binds the :class:`.ImageTexture` to ``GL_TEXTURE0`` and the
         :class:`.ColourMapTexture` to ``GL_TEXTURE1, and calls the
         version-dependent ``preDraw`` function.
@@ -680,7 +680,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipTexture     .bindTexture(gl.GL_TEXTURE3)
         self.modulateTexture .bindTexture(gl.GL_TEXTURE4)
 
-        fslgl.glvolume_funcs.preDraw(self, *args, **kwargs)
+        fslgl.glvolume_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -781,7 +781,7 @@ class GLVolume(glimageobject.GLImageObject):
         fslgl.glvolume_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, *args, **kwargs):
+    def postDraw(self):
         """Unbinds the ``ImageTexture`` and ``ColourMapTexture``, and calls the
         version-dependent ``postDraw`` function.
         """
@@ -792,7 +792,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipTexture     .unbindTexture()
         self.modulateTexture .unbindTexture()
 
-        fslgl.glvolume_funcs.postDraw(self, *args, **kwargs)
+        fslgl.glvolume_funcs.postDraw(self)
 
 
     def getAuxTextureXform(self, which):

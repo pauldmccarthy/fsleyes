@@ -256,7 +256,7 @@ class GLMIP(glimageobject.GLImageObject):
         return self.imageTexture is not None and self.imageTexture.ready()
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Binds textures. """
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
         self.cmapTexture .bindTexture(gl.GL_TEXTURE1)
@@ -268,11 +268,10 @@ class GLMIP(glimageobject.GLImageObject):
 
 
     def draw3D(self, xform=None, bbox=None):
-        """Does nothing. """
-        pass
+        """Does nothing - not supported. """
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Unbinds textures. """
         self.imageTexture  .unbindTexture()
         self.cmapTexture   .unbindTexture()
