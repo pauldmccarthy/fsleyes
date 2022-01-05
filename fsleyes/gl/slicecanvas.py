@@ -853,12 +853,6 @@ class SliceCanvas(object):
             if globj is not None:
                 globj.register(self.name, self.__onGLObjectUpdate)
 
-                # A hack which allows us to easily
-                # retrieve the overlay associated
-                # with a given GLObject. See the
-                # __onGLObjectUpdate method.
-                globj._sc_overlay = overlay
-
             self._glObjects[overlay] = globj
 
             if updateRenderTextures:
@@ -900,7 +894,7 @@ class SliceCanvas(object):
         # for this GLObject to update itself.
         if self.opts.renderMode == 'prerender':
 
-            overlay  = globj._sc_overlay
+            overlay  = globj.overlay
             rt, name = self._prerenderTextures.get(overlay, (None, None))
 
             if rt is not None:
