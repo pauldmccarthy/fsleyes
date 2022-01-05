@@ -51,10 +51,6 @@ cli_tests = """
 # Colour bar for other overlay types
 -cb gifti/white.surf.gii -vd gifti/data3d.txt -cm hot
 
--p 1 3d.nii.gz
--p 2 3d.nii.gz
--p 3 3d.nii.gz
-
 # default display/clipping range as percentiles
 -idr 50 100 3d.nii.gz
 
