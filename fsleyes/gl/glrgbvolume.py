@@ -239,13 +239,13 @@ class GLRGBVolume(glimageobject.GLImageObject):
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls :func:`.glrgbvolume_funcs.draw2D`. """
         with glroutines.enabled((gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glCullFace(gl.GL_BACK)
             gl.glFrontFace(self.frontFace())
-            fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
+            fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform)
 
 
     def drawAll(self, axes, zposes, xforms):
@@ -253,7 +253,7 @@ class GLRGBVolume(glimageobject.GLImageObject):
         fslgl.glrgbvolume_funcs.drawAll(self, axes, zposes, xforms)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
         """Does nothing. """
         pass
 

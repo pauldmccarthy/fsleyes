@@ -175,9 +175,10 @@ def preDraw(self):
         self.shader.setVertParam('modCoordXform',  modCoordXform)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice of the image at the given Z location. """
 
+    bbox                           = self.canvas.viewport
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
@@ -195,7 +196,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     """Draws the image in 3D on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -203,8 +204,6 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
     opts    = self.opts
     canvas  = self.canvas
@@ -212,6 +211,7 @@ def draw3D(self, xform=None, bbox=None):
     shader  = self.shader
     shape   = self.image.shape
     proj    = canvas.projectionMatrix
+    bbox    = canvas.viewport
     src     = self.renderTexture1
     dest    = self.renderTexture2
     w, h    = src.shape

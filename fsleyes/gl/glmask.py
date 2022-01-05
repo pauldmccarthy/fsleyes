@@ -291,7 +291,7 @@ class GLMask(glimageobject.GLImageObject):
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls the version-dependent ``draw2D`` function, then applies
         the edge filter if necessary.
         """
@@ -299,13 +299,13 @@ class GLMask(glimageobject.GLImageObject):
         opts = self.opts
 
         if not opts.outline:
-            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
+            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
             return
 
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.getViewport()
+        bbox       = self.canvas.viewport
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
@@ -316,7 +316,7 @@ class GLMask(glimageobject.GLImageObject):
 
         # Draw the mask to the off-screen texture
         with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
-            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform, bbox)
+            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
@@ -338,7 +338,7 @@ class GLMask(glimageobject.GLImageObject):
         zpos       = max(zposes)
         owidth     = opts.outlineWidth
         w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.getViewport()
+        bbox       = self.canvas.viewport
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]

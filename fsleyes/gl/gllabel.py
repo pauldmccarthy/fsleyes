@@ -264,7 +264,7 @@ class GLLabel(glimageobject.GLImageObject):
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls the version-dependent ``draw2D`` function. """
 
         opts       = self.opts
@@ -272,7 +272,7 @@ class GLLabel(glimageobject.GLImageObject):
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.getViewport()
+        bbox       = self.canvas.viewport
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
@@ -283,7 +283,7 @@ class GLLabel(glimageobject.GLImageObject):
 
         # draw the label to the offscreen texture
         with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
-            fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform, bbox)
+            fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform)
 
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
@@ -305,7 +305,7 @@ class GLLabel(glimageobject.GLImageObject):
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.getViewport()
+        bbox       = self.canvas.viewport
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]

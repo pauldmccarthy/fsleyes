@@ -395,7 +395,7 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 2D rendering. It should draw a view of this
         ``GLObject`` - a 2D slice at the given Z location, which specifies
@@ -410,27 +410,17 @@ class GLObject(notifier.Notifier):
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
-
-        :arg bbox:  If provided, defines the bounding box, in the display
-                    coordinate system, which is to be displayed. Can be used
-                    as a performance hint (i.e. to limit the number of things
-                    that are rendered).
         """
         raise NotImplementedError()
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 3D rendering. It should draw a 3D view of this
         ``GLObject``.
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
-
-        :arg bbox:  If provided, defines the bounding box, in the display
-                    coordinate system, which is to be displayed. Can be used
-                    as a performance hint (i.e. to limit the number of things
-                    that are rendered).
         """
         raise NotImplementedError()
 

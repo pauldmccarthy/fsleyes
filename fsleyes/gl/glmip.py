@@ -262,12 +262,12 @@ class GLMIP(glimageobject.GLImageObject):
         self.cmapTexture .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls :func:`.gl21.glmip_funcs.draw2D`. """
-        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform, bbox)
+        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform,)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
         """Does nothing - not supported. """
 
 

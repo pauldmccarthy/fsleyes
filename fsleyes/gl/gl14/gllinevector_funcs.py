@@ -151,12 +151,13 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
     opts                = self.opts
+    bbox                = self.canvas.viewport
     vertices, voxCoords = self.lineVertices.getVertices2D(self,
                                                           zpos,
                                                           axes,
@@ -185,7 +186,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     gl.glPopMatrix()
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     pass
 
 

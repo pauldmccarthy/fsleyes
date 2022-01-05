@@ -87,13 +87,13 @@ def updateShaderState(self):
     return changed
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl14.glvolume_funcs.draw2D` function.
     """
     self.shader.load()
     self.shader.loadAtts()
-    glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
+    glvolume_funcs.draw2D(self, zpos, axes, xform)
     self.shader.unloadAtts()
     self.shader.unload()
 

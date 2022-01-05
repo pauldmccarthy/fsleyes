@@ -140,8 +140,6 @@ def draw(self,
 
     if normals is not None:
 
-        # NOTE You are assuming here that the canvas
-        #      view matrix is the GL model view matrix.
         normalMatrix = self.canvas.viewMatrix[:3, :3]
         normalMatrix = affine.invert(normalMatrix).T
         normalMatrix = np.hstack((normalMatrix, np.zeros((3, 1))))

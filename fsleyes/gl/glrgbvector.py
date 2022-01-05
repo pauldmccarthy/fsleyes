@@ -43,24 +43,24 @@ class GLRGBVector(glvector.GLVector):
     These modules are assumed to provide the following functions:
 
 
-    ========================================== ===============================
-    ``init(GLRGBVector)``                      Perform any necessary
-                                               initialisation.
-    ``destroy(GLRGBVector)``                   Perform any necessary clean up.
-    ``compileShaders(GLRGBVector)``            Compiles vertex/fragment
-                                               shaders.
-    ``updateShaderState(GLRGBVector)``         Updates vertex/fragment
-                                               shaders.
-    ``preDraw(GLRGBVector)``                   Prepare the GL state for
-                                               drawing.
-    ``draw2D(GLRGBVector, zpos, xform, bbox)`` Draw the slice specified by
-                                               ``zpos``.
-    ``draw3D(GLRGBVector, zpos, xform)``       Draw the volume in 3D
-    ``drawAll(GLRGBVector, zposes, xforms)``   Draw all slices specified by
-                                               ``zposes``.
-    ``postDraw(GLRGBVector)``                  Clean up the GL state after
-                                               drawing.
-    ========================================== ===============================
+    ======================================== ===============================
+    ``init(GLRGBVector)``                    Perform any necessary
+                                             initialisation.
+    ``destroy(GLRGBVector)``                 Perform any necessary clean up.
+    ``compileShaders(GLRGBVector)``          Compiles vertex/fragment
+                                             shaders.
+    ``updateShaderState(GLRGBVector)``       Updates vertex/fragment
+                                             shaders.
+    ``preDraw(GLRGBVector)``                 Prepare the GL state for
+                                             drawing.
+    ``draw2D(GLRGBVector, zpos, xform)``     Draw the slice specified by
+                                             ``zpos``.
+    ``draw3D(GLRGBVector, zpos, xform)``     Draw the volume in 3D
+    ``drawAll(GLRGBVector, zposes, xforms)`` Draw all slices specified by
+                                             ``zposes``.
+    ``postDraw(GLRGBVector)``                Clean up the GL state after
+                                             drawing.
+    ======================================== ===============================
     """
 
 

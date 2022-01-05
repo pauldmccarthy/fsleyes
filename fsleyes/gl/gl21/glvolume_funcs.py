@@ -188,7 +188,7 @@ def preDraw(self):
         self.shader.set('modCoordXform',  modCoordXform)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -200,10 +200,9 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
 
+    bbox                           = self.canvas.viewport
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
@@ -219,7 +218,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     """Draws the image in 3D on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -227,14 +226,13 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
 
     ovl                            = self.overlay
     opts                           = self.opts
     canvas                         = self.canvas
     copts                          = canvas.opts
+    bbox                           = canvas.viewport
     tex                            = self.renderTexture1
     proj                           = self.canvas.projectionMatrix
     vertices, voxCoords, texCoords = self.generateVertices3D(bbox)

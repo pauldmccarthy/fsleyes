@@ -481,13 +481,14 @@ class GLMesh(globject.GLObject):
                 self.renderTexture.shape = width, height
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
         :class:`.Mesh`, at the specified Z location.
         """
 
         overlay       = self.overlay
         lo,  hi       = self.getDisplayBounds()
+        bbox          = self.canvas.viewport
         xax, yax, zax = axes
         outline       = self.draw2DOutlineEnabled()
 
@@ -529,7 +530,7 @@ class GLMesh(globject.GLObject):
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
         """Overrides :meth:`.GLObject.draw3D`. Draws a 3D rendering of the
         mesh.
         """

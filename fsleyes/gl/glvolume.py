@@ -71,7 +71,7 @@ class GLVolume(glimageobject.GLImageObject):
                                           transformation on the vertex
                                           coordinates.
 
-    ``draw3D(GLVolume, xform, bbox)``     Draw the image in 3D. If ``xform``
+    ``draw3D(GLVolume, xform)``           Draw the image in 3D. If ``xform``
                                           is not ``None``, it must be applied
                                           as a transformation on the vertex
                                           coordinates.

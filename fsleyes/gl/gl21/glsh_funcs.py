@@ -164,7 +164,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Called by :meth:`.GLSH.preDraw`. Loads the shader program, and updates
     some shader attributes.
     """
@@ -174,8 +174,7 @@ def preDraw(self, xform=None, bbox=None):
 
     # Calculate a transformation matrix for
     # normal vectors - T(I(MV matrix))
-    # We transpose mvMat because OpenGL is column-major
-    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
+    mvMat        = self.canvas.viewMatrix
     v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = affine.concat(mvMat, v2dMat)
@@ -189,12 +188,13 @@ def preDraw(self, xform=None, bbox=None):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
     opts   = self.opts
     shader = self.shader
-    v2dMat = opts.getTransform('voxel',   'display')
+    bbox   = self.canvas.viewport
+    v2dMat = opts.getTransform('voxel', 'display')
 
     if xform is None: xform = v2dMat
     else:             xform = affine.concat(v2dMat, xform)
@@ -219,11 +219,11 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     pass
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """

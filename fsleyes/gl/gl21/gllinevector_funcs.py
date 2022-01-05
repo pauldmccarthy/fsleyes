@@ -146,14 +146,14 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Prepares the GL state for drawing. This amounts to loading the
     vertex/fragment shader programs.
     """
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
@@ -161,6 +161,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     opts   = self.opts
     shader = self.shader
+    bbox   = self.canvas.viewport
     v2dMat = opts.getTransform('voxel', 'display')
 
     voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
@@ -181,7 +182,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     shader.unloadAtts()
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     """Draws the line vectors in 3D space. """
     pass
 
@@ -193,6 +194,6 @@ def drawAll(self, axes, zposes, xforms):
         self.draw2D(zpos, axes, xform)
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Clears the GL state after drawing. """
     self.shader.unload()
