@@ -220,7 +220,7 @@ class Scene3DCanvas(object):
         """Returns the projection matrix. This is an affine matrix which
         converts from normalised device coordinates (NDCs, coordinates between
         -1 and +1) into viewport coordinates. The initial viewport for a
-        :class:`Scene3DCanvas` is configured by the :func:`.routines.ortho`
+        :class:`Scene3DCanvas` is configured by the :func:`.routines.ortho3D`
         function.
 
         See :meth:`__setViewport`.
@@ -588,7 +588,7 @@ class Scene3DCanvas(object):
         # where the horizontal axis maps to
         # (-xhalf, xhalf), and the vertical axis
         # maps to (-yhalf, yhalf). See
-        # gl.routines.ortho.
+        # gl.routines.ortho3D.
         offset     = np.array(opts.offset[:] + [0])
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
         offset[0]  = xlen * offset[0] / 2
@@ -637,7 +637,8 @@ class Scene3DCanvas(object):
 
         # Generate the view and projection matrices
         self.__genViewMatrix(width, height)
-        projmat, viewport     = glroutines.ortho(blo, bhi, width, height, zoom)
+        projmat, viewport     = glroutines.ortho3D(blo, bhi,
+                                                   width, height, zoom)
         self.__projMat        = projmat
         self.__viewport       = viewport
         self.__invViewProjMat = affine.concat(self.__projMat, self.__viewMat)

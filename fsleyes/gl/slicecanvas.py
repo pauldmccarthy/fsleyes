@@ -98,7 +98,9 @@ class SliceCanvas:
        zoomTo
        resetDisplay
        getAnnotations
-       getViewport
+       viewport
+       projectionMatrix
+       viewMatrix
     """
 
 
@@ -128,11 +130,14 @@ class SliceCanvas:
         # and stored in this dictionary
         self._glObjects = {}
 
-        # A copy of the final viewport is
-        # stored here on each call to _draw.
-        # It is accessible via the getViewport
-        # method.
-        self.__viewport = None
+        # Copies of the final viewport, modelView and
+        # projection matrices are stored here on each
+        # call to _draw.  They can be accessed via the
+        # viewport, projectionMatrix, and viewMatrix
+        # methods.
+        self.__viewport         = None
+        self.__projectionMatrix = None
+        self.__viewMatrix       = None
 
         # The zax property is the image axis which
         # maps to the 'depth' axis of this canvas.
@@ -459,7 +464,8 @@ class SliceCanvas:
         else:         return globj
 
 
-    def getViewport(self):
+    @property
+    def viewport(self):
         """Return the current viewport, as  a sequence of three ``(low, high)``
         values, defining the bounding box in the display coordinate system.
 
@@ -472,13 +478,13 @@ class SliceCanvas:
     @property
     def viewMatrix(self):
         """Returns the current model view matrix. """
-        return gl.glGetFloat(gl.GL_MODELVIEW_MATRIX)
+        return self.__viewMatrix
 
 
     @property
     def projectionMatrix(self):
         """Returns the current projection matrix. """
-        return gl.glGetFloat(gl.GL_PROJECTION_MATRIX)
+        return self.__projectionMatrix
 
 
     def _initGL(self):
@@ -980,7 +986,10 @@ class SliceCanvas:
 
 
     def _setViewport(self, invertX=None, invertY=None):
-        """Sets up the GL canvas size, viewport, and projection.
+        """Calculates the GL bounds, projection, and model view matrices. They
+        are stored as attributes which are accessible via the
+        :meth:`viewport`, :meth:`projectionMatrix` and :meth:`viewMatrix`
+        methods.
 
         :arg invertX: Invert the X axis. If not provided, taken from
                       :attr:`invertX`.
@@ -999,25 +1008,13 @@ class SliceCanvas:
         ymax          = opts.displayBounds.yhi
         zmin          = self.displayCtx.bounds.getLo(zax)
         zmax          = self.displayCtx.bounds.getHi(zax)
-        width, height = self.GetScaledSize()
 
         if invertX is None: invertX = opts.invertX
         if invertY is None: invertY = opts.invertY
 
-        # If there are no images to be displayed,
-        # or no space to draw, do nothing
-        if (len(self.overlayList) == 0) or \
-           (width  == 0)                or \
-           (height == 0)                or \
-           (xmin   == xmax)             or \
-           (ymin   == ymax):
-            return [(0, 0), (0, 0), (0, 0)]
-
-        log.debug('Setting canvas bounds (size {}, {}): '
-                  'X {: 5.1f} - {: 5.1f},'
-                  'Y {: 5.1f} - {: 5.1f},'
-                  'Z {: 5.1f} - {: 5.1f}'.format(
-                      width, height, xmin, xmax, ymin, ymax, zmin, zmax))
+        # If there is  no space to draw, do nothing
+        if (xmin == xmax) or (ymin == ymax):
+            return
 
         # Add a bit of padding to the depth limits
         zmin -= 1e-3
@@ -1030,21 +1027,18 @@ class SliceCanvas:
         lo[yax], hi[yax] = ymin, ymax
         lo[zax], hi[zax] = zmin, zmax
 
-        # store a copy of the final bounds -
-        # interested parties can retrieve it
-        # via the getViewport method.
+        # calculate projection and mv
+        # matrices for 2D ortho
+        projmat, mvmat = glroutines.show2D(
+            xax, yax, lo, hi, invertX, invertY)
 
-        # set up 2D orthographic drawing
-        glroutines.show2D(xax,
-                          yax,
-                          width,
-                          height,
-                          lo,
-                          hi,
-                          invertX,
-                          invertY)
-
+        # store a copy of the final bounds and
+        # proj/mv matrices interested parties can
+        # retrieve them via the viewport/
+        # projectionMatrix/ viewMatrix methods.
         self.__viewport         = [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
+        self.__projectionMatrix = projmat
+        self.__viewMatrix       = mvmat
 
 
     def _drawCursor(self):
@@ -1153,24 +1147,27 @@ class SliceCanvas:
         if self.destroyed:
             return
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
+        copts         = self.opts
+        zpos          = copts.pos[copts.zax]
+        axes          = (copts.xax, copts.yax, copts.zax)
+
         if width == 0 or height == 0:
             return
 
         if not self._setGLContext():
             return
 
+        glroutines.clear(copts.bgColour)
+
         overlays, globjs = self._getGLObjects()
 
-        copts = self.opts
-        bbox  = None
-        zpos  = copts.pos[copts.zax]
-        axes  = (copts.xax, copts.yax, copts.zax)
+        if len(overlays) == 0:
+            return
 
-        # Set the viewport to match the current
-        # display bounds and canvas size
-        bbox = self._setViewport()
-        glroutines.clear(copts.bgColour)
+        # Calculate viewport bounds and
+        # projection/modelview matrices
+        self._setViewport()
 
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
@@ -1179,25 +1176,20 @@ class SliceCanvas:
         # that is being asynchronously refreshed),
         # drawing the scene now would cause
         # flickering of that GLObject.
-        if len(globjs) == 0 or any([not g.ready() for g in globjs]):
+        if len(globjs) == 0 or any(not g.ready() for g in globjs):
             return
 
         for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
-            dopts   = display.opts
-
             if not display.enabled:
                 continue
 
-            # On-screen rendering - the globject is
-            # rendered directly to the screen canvas
-            log.debug('Drawing {} slice for overlay {} '
-                      'directly to canvas'.format(
-                          copts.zax, display.name))
+            log.debug('Drawing %u slice for overlay %s',
+                      copts.zax, display.name)
 
             globj.preDraw()
-            globj.draw2D(zpos, axes, bbox=bbox)
+            globj.draw2D(zpos, axes)
             globj.postDraw()
 
         if copts.showCursor:

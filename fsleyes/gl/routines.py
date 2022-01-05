@@ -125,23 +125,23 @@ def disabled(capabilities):
         yield
 
 
-def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
-    """Configures the OpenGL viewport for 2D othorgraphic display.
+def show2D(xax, yax, lo, hi, flipx=False, flipy=False):
+    """Generates a projection and model view matrix for 2D orthographic
+    display for the given axes and bounds.
 
-    :arg xax:    Index (into ``lo`` and ``hi``) of the axis which
-                 corresponds to the horizontal screen axis.
-    :arg yax:    Index (into ``lo`` and ``hi``) of the axis which
-                 corresponds to the vertical screen axis.
-    :arg width:  Canvas width in pixels.
-    :arg height: Canvas height in pixels.
-    :arg lo:     Tuple containing the mininum ``(x, y, z)`` display
-                 coordinates.
-    :arg hi:     Tuple containing the maxinum ``(x, y, z)`` display
-                 coordinates.
+    :arg xax:   Index (into ``lo`` and ``hi``) of the axis which
+                corresponds to the horizontal screen axis.
+    :arg yax:   Index (into ``lo`` and ``hi``) of the axis which
+                corresponds to the vertical screen axis.
+    :arg lo:    Tuple containing the mininum ``(x, y, z)`` display
+                coordinates.
+    :arg hi:    Tuple containing the maxinum ``(x, y, z)`` display
+                coordinates.
+    :arg flipx: If ``True``, the x axis is inverted.
 
-    :arg flipx:  If ``True``, the x axis is inverted.
+    :arg flipy: If ``True``, the y axis is inverted.
 
-    :arg flipy:  If ``True``, the y axis is inverted.
+    Returns a tuple containing the projection and modelview matrices.
     """
 
     zax = 3 - xax - yax
@@ -150,41 +150,35 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     ymin, ymax = lo[yax], hi[yax]
     zmin, zmax = lo[zax], hi[zax]
 
+    # Expand the Z range so we don't
+    # accidentally clip anything
+    zdist      = max(abs(zmin), abs(zmax))
+    zmin       = -zdist
+    zmax       =  zdist
+
     projmat = np.eye(4, dtype=np.float32)
 
     if flipx: projmat[0, 0] = -1
     if flipy: projmat[1, 1] = -1
 
-    gl.glViewport(0, 0, width, height)
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glLoadMatrixf(projmat)
-
-    zdist = max(abs(zmin), abs(zmax))
-
-    log.debug('Configuring orthographic viewport: '
-              'X: [{} - {}] Y: [{} - {}] Z: [{} - {}]'.format(
-                  xmin, xmax, ymin, ymax, -zdist, zdist))
-
-    gl.glOrtho(xmin, xmax, ymin, ymax, -zdist, zdist)
-
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glLoadIdentity()
+    omat    = ortho2D(xmin, xmax, ymin, ymax, zmin, zmax)
+    projmat = affine.concat(omat, projmat)
 
     # Rotate world space so the displayed slice
     # is visible and correctly oriented
-    # TODO There's got to be a more generic way
-    # to perform this rotation. This will break
-    # if I add functionality allowing the user
-    # to specifty the x/y axes on initialisation.
     if zax == 0:
-        gl.glRotatef(270, 1, 0, 0)
-        gl.glRotatef(270, 0, 0, 1)
+        viewmat = affine.concat(rotate(270, 1, 0, 0),
+                                rotate(270, 0, 0, 1))
     elif zax == 1:
-        gl.glRotatef(270, 1, 0, 0)
+        viewmat = rotate(270, 1, 0, 0)
+    else:
+        viewmat = np.eye(4, dtype=np.float32)
+
+    return projmat, viewmat
 
 
 def lookAt(eye, centre, up):
-    """Replacement for ``gluLookAt`. Creates a transformation matrix which
+    """Replacement for ``gluLookAt``. Creates a transformation matrix which
     transforms the display coordinate system such that a camera at position
     (0, 0, 0), and looking towards (0, 0, -1), will see a scene as if from
     position ``eye``, oriented ``up``, and looking towards ``centre``.
@@ -217,9 +211,47 @@ def lookAt(eye, centre, up):
     return proj
 
 
-def ortho(lo, hi, width, height, zoom):
-    """Generates an orthographic projection matrix. The display coordinate
-    system origin ``(0, 0, 0)`` is mapped to the centre of the clipping space.
+def rotate(degrees, x, y, z):
+    """Replacement for ``glRotatef``. Generates an affine matrix which
+    contains a rotation of degrees around the x,y,z vector.
+    """
+    rads = degrees * np.pi / 180
+    c    = np.cos(rads)
+    s    = np.sin(rads)
+    xf   = np.eye(4, dtype=np.float32)
+
+    xf[0, 0] = x * x * (1 - c) + c
+    xf[0, 1] = x * y * (1 - c) - z * s
+    xf[0, 2] = x * z * (1 - c) + y * s
+    xf[1, 0] = x * y * (1 - c) + z * s
+    xf[1, 1] = y * y * (1 - c) + c
+    xf[1, 2] = y * z * (1 - c) - x * s
+    xf[2, 0] = x * z * (1 - c) - y * s
+    xf[2, 1] = y * z * (1 - c) + x * s
+    xf[2, 2] = z * z * (1 - c) + c
+
+    return xf
+
+
+def ortho2D(xmin, xmax, ymin, ymax, zmin, zmax):
+    """Generates an orthographic projection matrix for 2D views, for the given
+    display bounds. Replacement for the ``glOrtho`` function.
+    """
+    omat       = np.eye(4, dtype=np.float32)
+    omat[0, 0] =  2 / (xmax - xmin)
+    omat[1, 1] =  2 / (ymax - ymin)
+    omat[2, 2] = -2 / (zmax - zmin)
+    omat[0, 3] = -(xmax  + xmin) / (xmax - xmin)
+    omat[1, 3] = -(ymax  + ymin) / (ymax - ymin)
+    omat[2, 3] = -(zmax  + zmin) / (zmax - zmin)
+
+    return omat
+
+
+def ortho3D(lo, hi, width, height, zoom):
+    """Generates an orthographic projection matrix for 3D views. The display
+    coordinate system origin ``(0, 0, 0)`` is mapped to the centre of the
+    clipping space.
 
       - The horizontal axis is scaled to::
           [-(hi[0] - lo[0]) / 2, (hi[0] - lo[0]) / 2]
