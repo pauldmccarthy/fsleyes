@@ -78,16 +78,6 @@ class SceneOpts(props.HasProperties):
     """
 
 
-    # NOTE: If you change the maximum performance value,
-    #       make sure you update all references to
-    #       performance because, for example, the
-    #       OrthoEditProfile does numerical comparisons
-    #       to it.
-    performance = props.Choice((1, 2, 3), default=3, allowStr=True)
-    """Obsolete.
-    """
-
-
     movieSyncRefresh = props.Boolean(default=True)
     """Whether, when in movie mode, to synchronise the refresh for GL
     canvases. This is not possible in some platforms/environments. See
