@@ -311,7 +311,13 @@ class RenderTexture(texture2d.Texture2D):
         self.__oldProjMat = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
         self.__oldMVMat   = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
 
-        glroutines.show2D(xax, yax, width, height, lo, hi)
+        projmat, mvmat = glroutines.show2D(xax, yax, lo, hi)
+
+        gl.glViewport(0, 0, width, height)
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadMatrixf(projmat.ravel('F'))
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadMatrixf(mvmat.ravel('F'))
 
 
     def restoreViewport(self):

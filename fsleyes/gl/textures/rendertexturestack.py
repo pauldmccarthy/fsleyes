@@ -293,7 +293,12 @@ class RenderTextureStack(object):
         oldMVMat      = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
 
         with tex.target():
-            glroutines.show2D(xax, yax, width, height, lo, hi)
+            projmat, mvmat = glroutines.show2D(xax, yax, lo, hi)
+            gl.glViewport(0, 0, width, height)
+            gl.glMatrixMode(gl.GL_PROJECTION)
+            gl.glLoadMatrixf(projmat)
+            gl.glMatrixMode(gl.GL_MODELVIEW)
+            gl.glLoadMatrixf(mvmat)
             glroutines.clear((0, 0, 0, 0))
 
             with glroutines.disabled(gl.GL_BLEND):
