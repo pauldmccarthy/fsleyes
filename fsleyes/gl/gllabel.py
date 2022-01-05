@@ -272,11 +272,13 @@ class GLLabel(glimageobject.GLImageObject):
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
-        lo, hi     = self.canvas.getViewport()
+        bbox       = self.canvas.getViewport()
+        lo         = [ax[0] for ax in bbox]
+        hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = lo[xax], hi[xax]
-        ymin, ymax = lo[yax], hi[yax]
+        xmin, xmax = bbox[xax]
+        ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
         # draw the label to the offscreen texture
@@ -303,11 +305,13 @@ class GLLabel(glimageobject.GLImageObject):
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = self.canvas.GetSize()
-        lo, hi     = self.canvas.getViewport()
+        bbox       = self.canvas.getViewport()
+        lo         = [ax[0] for ax in bbox]
+        hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = lo[xax], hi[xax]
-        ymin, ymax = lo[yax], hi[yax]
+        xmin, xmax = bbox[xax]
+        ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
         # draw all slices to the offscreen texture

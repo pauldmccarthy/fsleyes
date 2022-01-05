@@ -460,8 +460,8 @@ class SliceCanvas:
 
 
     def getViewport(self):
-        """Return the current viewport, as two tuples containing the
-        ``(xlo, ylo, zlo)`` and ``(xhi, yhi, zhi)`` bounds.
+        """Return the current viewport, as  a sequence of three ``(low, high)``
+        values, defining the bounding box in the display coordinate system.
 
         This method will return ``None`` if :meth:`_draw` has not yet been
         called.
@@ -987,9 +987,6 @@ class SliceCanvas:
 
         :arg invertY: Invert the Y axis. If not provided, taken from
                       :attr:`invertY`.
-
-        :returns: A sequence of three ``(low, high)`` values, defining the
-                  display coordinate system bounding box.
         """
 
         opts          = self.opts
@@ -1036,7 +1033,6 @@ class SliceCanvas:
         # store a copy of the final bounds -
         # interested parties can retrieve it
         # via the getViewport method.
-        self.__viewport = (tuple(lo), tuple(hi))
 
         # set up 2D orthographic drawing
         glroutines.show2D(xax,
@@ -1048,7 +1044,7 @@ class SliceCanvas:
                           invertX,
                           invertY)
 
-        return [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
+        self.__viewport         = [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
 
 
     def _drawCursor(self):
