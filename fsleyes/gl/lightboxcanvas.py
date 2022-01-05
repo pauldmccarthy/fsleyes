@@ -13,6 +13,7 @@ import sys
 import logging
 
 import numpy     as np
+import OpenGL.GL as gl
 
 import fsl.data.image                    as fslimage
 import fsl.transform.affine              as affine
@@ -754,15 +755,18 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.destroyed:
             return
 
-        width, height = self.GetSize()
+        width, height = self.GetScaledSize()
+        opts          = self.opts
+        axes          = (opts.xax, opts.yax, opts.zax)
+
         if width == 0 or height == 0:
             return
 
         if not self._setGLContext():
             return
 
-        opts = self.opts
-        axes = (opts.xax, opts.yax, opts.zax)
+        gl.glViewport(0, 0, width, height)
+        glroutines.clear(opts.bgColour)
 
         overlays, globjs = self._getGLObjects()
 
@@ -772,7 +776,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return
 
         self._setViewport(invertX=False, invertY=False)
-        glroutines.clear(opts.bgColour)
+        if self.projectionMatrix is None:
+            return
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadMatrixf(self.projectionMatrix.ravel('F'))
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadMatrixf(self.viewMatrix.ravel('F'))
 
         startSlice = opts.ncols * opts.topRow
         endSlice   = startSlice + opts.nrows * opts.ncols

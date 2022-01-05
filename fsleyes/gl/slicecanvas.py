@@ -1014,6 +1014,9 @@ class SliceCanvas:
 
         # If there is  no space to draw, do nothing
         if (xmin == xmax) or (ymin == ymax):
+            self.__viewport         = None
+            self.__projectionMatrix = None
+            self.__viewMatrix       = None
             return
 
         # Add a bit of padding to the depth limits
@@ -1158,6 +1161,7 @@ class SliceCanvas:
         if not self._setGLContext():
             return
 
+        gl.glViewport(0, 0, width, height)
         glroutines.clear(copts.bgColour)
 
         overlays, globjs = self._getGLObjects()
@@ -1168,6 +1172,13 @@ class SliceCanvas:
         # Calculate viewport bounds and
         # projection/modelview matrices
         self._setViewport()
+        if self.projectionMatrix is None:
+            return
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadMatrixf(self.projectionMatrix.ravel('F'))
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadMatrixf(self.viewMatrix.ravel('F'))
 
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
