@@ -467,7 +467,7 @@ def bootstrap(glVersion=None):
                   'lowering default performance settings.')
 
         import fsleyes.displaycontext as dc
-        dc.SceneOpts.performance.setAttribute(None, 'default', 1)
+        dc.SceneOpts.highDpi = False
 
 
 def getGLContext(**kwargs):

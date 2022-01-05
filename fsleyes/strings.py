@@ -1017,7 +1017,6 @@ properties = TypeDict({
     'SceneOpts.fgColour'           : 'Foreground colour',
     'SceneOpts.cursorColour'       : 'Location cursor colour',
     'SceneOpts.showColourBar'      : 'Show colour bar',
-    'SceneOpts.performance'        : 'Rendering performance',
     'SceneOpts.zoom'               : 'Zoom',
     'SceneOpts.highDpi'            : 'Enable high-DPI rendering',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
@@ -1285,10 +1284,6 @@ choices = TypeDict({
                                       'right'        : 'Right'},
     'SceneOpts.colourBarLabelSide' : {'top-left'     : 'Top / Left',
                                       'bottom-right' : 'Bottom / Right'},
-
-    'SceneOpts.performance' : {1 : 'Fastest',
-                               2 : 'Faster',
-                               3 : 'Best looking'},
 
     'CanvasOpts.zax' : {0 : 'X axis',
                         1 : 'Y axis',

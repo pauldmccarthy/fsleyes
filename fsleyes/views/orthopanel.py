@@ -270,10 +270,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yopts.bindProps('zoom',         sceneOpts, 'yzoom')
         zopts.bindProps('zoom',         sceneOpts, 'zzoom')
 
-        xopts.bindProps('renderMode',   sceneOpts)
-        yopts.bindProps('renderMode',   sceneOpts)
-        zopts.bindProps('renderMode',   sceneOpts)
-
         xopts.bindProps('highDpi',      sceneOpts)
         yopts.bindProps('highDpi',      sceneOpts)
         zopts.bindProps('highDpi',      sceneOpts)

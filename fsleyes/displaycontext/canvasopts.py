@@ -105,13 +105,6 @@ class SliceCanvasOpts(props.HasProperties):
     """Canvas background colour."""
 
 
-    renderMode = props.Choice(('onscreen', 'offscreen', 'prerender'))
-    """How the :class:`.GLObject` instances are rendered to the canvas.
-
-    See the :class:`.SliceCanvas` for more details.
-    """
-
-
     highDpi = props.Boolean(default=False)
     """If FSLeyes is being displayed on a high-DPI screen, try to display
     the scene at full resolution.

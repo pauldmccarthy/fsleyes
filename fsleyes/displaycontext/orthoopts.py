@@ -120,19 +120,3 @@ class OrthoOpts(sceneopts.SceneOpts):
         self.xzoom = self.zoom
         self.yzoom = self.zoom
         self.zzoom = self.zoom
-
-
-    def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
-        value of the :attr:`renderMode` and :attr:`highDpi` properties
-        according to the performance setting.
-        """
-
-        if   self.performance == 3: self.renderMode = 'onscreen'
-        elif self.performance == 2: self.renderMode = 'offscreen'
-        elif self.performance == 1: self.renderMode = 'prerender'
-
-        self.highDpi = self.performance == 3 and self.highDpi
-
-        log.debug('Performance settings changed: '
-                  'renderMode={}'.format(self.renderMode))
