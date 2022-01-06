@@ -166,3 +166,35 @@ def draw2D_Rect(self, zpos, axes):
 
 
 draw2D_Ellipse = draw2D_Rect
+
+
+def init_VoxelSelection(self):
+    """Initialise shaders for a :class:`.VoxelSelection` annotation. """
+    constants   = {'textureIs2D' : self.texture.ndim == 2}
+    vertSrc     = shaders.getVertexShader(  'annotations_voxelselection')
+    fragSrc     = shaders.getFragmentShader('annotations_voxelselection')
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc, constants=constants)
+
+
+def draw2D_VoxelSelection(self, zpos, axes):
+    """Draw a :class:`.VoxelSelection` annotation. """
+
+    shader              = self.shader
+    canvas              = self.canvas
+    texture             = self.texture
+    viewmat             = canvas.viewMatrix
+    projmat             = canvas.projectionMatrix
+    colour              = list(self.colour[:3]) + [self.alpha / 100.0]
+    vertices, texCoords = self.vertices2D(zpos, axes)
+
+    with texture.bound(gl.GL_TEXTURE0), shader.loaded():
+
+        shader.set(   'tex',      0)
+        shader.set(   'MV',       viewmat)
+        shader.set(   'P',        projmat)
+        shader.set(   'colour',   colour)
+        shader.setAtt('vertex',   vertices)
+        shader.setAtt('texCoord', texCoords)
+
+        with shader.loadedAtts():
+            gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))

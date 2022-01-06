@@ -947,8 +947,6 @@ class VoxelSelection(AnnotationObject):
         :meth:`AnnotationObject.__init__` method.
         """
 
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
-
         if offsets is None:
             offsets = [0, 0, 0]
 
@@ -969,6 +967,12 @@ class VoxelSelection(AnnotationObject):
             texName,
             selection)
 
+        # Call base class init afterwards,
+        # as the annotation_funcs init
+        # function may need to access the
+        # texture created above.
+        AnnotationObject.__init__(self, annot, *args, **kwargs)
+
 
     def destroy(self):
         """Must be called when this ``VoxelSelection`` is no longer needed.
@@ -988,42 +992,33 @@ class VoxelSelection(AnnotationObject):
         return self.__texture
 
 
+    def vertices2D(self, zpos, axes):
+        """Returns vertices and texture coordinates to draw this
+        ``VoxelSelection``.
+        """
 
+        xax, yax, zax = axes
+        opts          = self.__opts
+        texture       = self.__texture
+        shape         = self.__selection.getSelection().shape
+        displayToVox  = opts.getTransform('display', 'voxel')
+        voxToDisplay  = opts.getTransform('voxel',   'display')
+        voxToTex      = opts.getTransform('voxel',   'texture')
+        voxToTex      = affine.concat(texture.texCoordXform(shape), voxToTex)
+        verts, voxs   = glroutines.slice2D(shape,
+                                           xax,
+                                           yax,
+                                           zpos,
+                                           voxToDisplay,
+                                           displayToVox)
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``VoxelSelection``."""
-
-        xax, yax     = axes[:2]
-        opts         = self.__opts
-        texture      = self.__texture
-        shape        = self.__selection.getSelection().shape
-        displayToVox = opts.getTransform('display', 'voxel')
-        voxToDisplay = opts.getTransform('voxel',   'display')
-        voxToTex     = opts.getTransform('voxel',   'texture')
-        voxToTex     = affine.concat(texture.texCoordXform(shape), voxToTex)
-        verts, voxs  = glroutines.slice2D(shape,
-                                          xax,
-                                          yax,
-                                          zpos,
-                                          voxToDisplay,
-                                          displayToVox)
-
-        texs  = affine.transform(voxs, voxToTex)[:, :texture.ndim]
+        # See note in GLImageObject.generateVoxelCoordinates2D
+        voxs  = opts.roundVoxels(voxs, daxes=[zax])
+        texs  = affine.transform(voxs, voxToTex)
         verts = np.array(verts, dtype=np.float32).ravel('C')
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
-        texture.bindTexture(gl.GL_TEXTURE0)
-        gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
-
-        with glroutines.enabled((texture.target,
-                                 gl.GL_TEXTURE_COORD_ARRAY,
-                                 gl.GL_VERTEX_ARRAY)):
-            gl.glVertexPointer(  3,            gl.GL_FLOAT, 0, verts)
-            gl.glTexCoordPointer(texture.ndim, gl.GL_FLOAT, 0, texs)
-            gl.glDrawArrays(     gl.GL_TRIANGLES, 0, 6)
-
-        texture.unbindTexture()
+        return verts, texs
 
 
 class TextAnnotation(AnnotationObject):
