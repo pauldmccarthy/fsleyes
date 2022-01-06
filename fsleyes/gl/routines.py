@@ -162,7 +162,7 @@ def show2D(xax, yax, lo, hi, flipx=False, flipy=False):
     if flipy: projmat[1, 1] = -1
 
     omat    = ortho2D(xmin, xmax, ymin, ymax, zmin, zmax)
-    projmat = affine.concat(omat, projmat)
+    projmat = affine.concat(projmat, omat)
 
     # Rotate world space so the displayed slice
     # is visible and correctly oriented
