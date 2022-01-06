@@ -471,13 +471,14 @@ class GLSimpleObject(GLObject):
     .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
               :attr:`GLObject.opts`, :attr:`GLObject.canvas`,
               :attr:`GLObject.overlayList` and :attr:`GLObject.displayCtx`
-              properties of a ``GLSimpleObject`` are all set to ``None``.
+              properties of a ``GLSimpleObject`` will all potentially be
+              set to ``None``.
     """
 
 
-    def __init__(self, threedee):
+    def __init__(self, canvas, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, None, None, None, None, threedee)
+        GLObject.__init__(self, None, None, None, canvas, threedee)
         self.__destroyed = False
 
 

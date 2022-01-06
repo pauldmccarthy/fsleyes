@@ -216,8 +216,8 @@ class Annotations(props.HasProperties):
 
 
     def text(self, *args, **kwargs):
-        """Queues a text annotation for drawing - see the :class:`Text`
-        class.
+        """Queues a text annotation for drawing - see the
+        :class:`TextAnnotation` class.
         """
         hold  = kwargs.pop('hold',  False)
         fixed = kwargs.pop('fixed', True)
@@ -278,26 +278,18 @@ class Annotations(props.HasProperties):
         self.annotations[:] = []
 
 
-    def draw(self, zpos, xform=None):
+    def draw(self, zpos):
         """Draws all enqueued annotations. Fixed annotations are drawn first,
         then persistent, then transient - i.e. transient annotations will
         be drawn on top of persistent, which will be drawn on to of fixed.
 
         :arg zpos:     Position along the Z axis, above which all annotations
                        should be drawn.
-
-        :arg xform:    Transformation matrix which should be applied to all
-                       objects.
         """
 
         objs = (list(self.__fixed)     +
                 list(self.annotations) +
                 list(self.__transient))
-
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPushMatrix()
-            gl.glMultMatrixf(xform.ravel('F'))
 
         drawTime = time.time()
         axes     = (self.__xax, self.__yax, self.__zax)
@@ -310,36 +302,10 @@ class Annotations(props.HasProperties):
                 if obj.zmin is not None and zpos < obj.zmin: continue
                 if obj.zmax is not None and zpos > obj.zmax: continue
 
-            if obj.xform is not None:
-                gl.glMatrixMode(gl.GL_MODELVIEW)
-                gl.glPushMatrix()
-                gl.glMultMatrixf(obj.xform.ravel('F'))
-
-            if obj.colour is not None:
-
-                if len(obj.colour) == 3: colour = list(obj.colour) + [1.0]
-                else:                    colour = list(obj.colour)
-
-                colour[3] = obj.alpha / 100.0
-
-                gl.glColor4f(*colour)
-
-            if obj.lineWidth is not None:
-                gl.glLineWidth(obj.lineWidth)
-
             try:
-                obj.preDraw()
                 obj.draw2D(zpos, axes)
-                obj.postDraw()
             except Exception as e:
-                log.warning('{}'.format(e), exc_info=True)
-
-            if obj.xform is not None:
-                gl.glPopMatrix()
-
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPopMatrix()
+                log.warning(e, exc_info=True)
 
         # Clear the transient queue after each draw
         self.__transient = []
@@ -448,7 +414,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         Any other arguments are ignored.
         """
-        globject.GLSimpleObject.__init__(self, False)
+        globject.GLSimpleObject.__init__(self, annot.canvas, False)
 
         self.annot    = annot
         self.xform    = xform
@@ -465,6 +431,8 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         if self.xform is not None:
             self.xform = np.array(self.xform, dtype=np.float32)
+
+        fslgl.annotation_funcs.init(self)
 
 
     def resetExpiry(self):
@@ -510,12 +478,19 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         return (self.creation + self.expiry) < now
 
 
-    def preDraw(self, *args, **kwargs):
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+    def vertices2D(self, zpos, axes):
+        """Must be implemented by sub-classes. Must return a sequence of
+        tuples, with each tuple containing an OpenGL primitive type (e.g.
+        ``GL_LINES``), and a``(N, 3)`` numpy array containing vertices.
+        """
+        raise NotImplementedError()
 
 
-    def postDraw(self, *args, **kwargs):
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    def draw2D(self, zpos, axes):
+        """Draw this annotation. This is implemented in the GL-version-
+        specific  ``annotation_funcs`` modules.
+        """
+        fslgl.annotation_funcs.draw2D(self, zpos, axes)
 
 
 class Point(AnnotationObject):
