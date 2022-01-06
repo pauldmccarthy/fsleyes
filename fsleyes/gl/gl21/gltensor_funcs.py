@@ -153,7 +153,7 @@ def preDraw(self):
 
     # Calculate a transformation matrix for
     # normal vectors - T(I(MV matrix))
-    mvMat        = self.canavs.viewMatrix
+    mvMat        = self.canvas.viewMatrix[:3, :3]
     v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = affine.concat(mvMat, v2dMat)

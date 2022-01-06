@@ -264,7 +264,7 @@ class GLMIP(glimageobject.GLImageObject):
 
     def draw2D(self, zpos, axes, xform=None):
         """Calls :func:`.gl21.glmip_funcs.draw2D`. """
-        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform,)
+        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform)
 
 
     def draw3D(self, xform=None):
