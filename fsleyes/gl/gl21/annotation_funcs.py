@@ -79,6 +79,10 @@ def draw2D_default(self, zpos, axes):
     projmat    = canvas.projectionMatrix
     viewmat    = canvas.viewMatrix
     vertices   = self.vertices2D(zpos, axes)
+
+    if vertices is None or len(vertices) == 0:
+        return
+
     primitives = [v[0] for v in vertices]
     vertices   = [v[1] for v in vertices]
 

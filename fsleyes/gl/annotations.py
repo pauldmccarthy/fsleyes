@@ -753,8 +753,8 @@ class Rect(AnnotationObject):
         self.y = self.y + y
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Rectangle`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Generates vertices to draw this ``Rectangle`` annotation. """
 
         if self.w == 0 or self.h == 0:
             return
@@ -769,58 +769,43 @@ class Rect(AnnotationObject):
         tl = [x,     y + h]
         tr = [x + w, y + h]
 
+        verts = []
+
         if self.border:
-            self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
+            verts.append(self.__outline(zpos, xax, yax, zax, bl, br, tl, tr))
 
         if self.filled:
-            self.__drawFill(zpos, xax, yax, zax, bl, br, tl, tr)
+            verts.append(self.__fill(zpos, xax, yax, zax, bl, br, tl, tr))
+
+        return verts
 
 
-    def __drawFill(self, zpos, xax, yax, zax, bl, br, tl, tr):
-        """Draw a filled version of the rectangle. """
+    def __fill(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Generate the rectangle fill. """
+        verts = np.zeros((6, 3), dtype=np.float32)
+        verts[0, [xax, yax]] = bl
+        verts[1, [xax, yax]] = br
+        verts[2, [xax, yax]] = tl
+        verts[3, [xax, yax]] = tl
+        verts[4, [xax, yax]] = br
+        verts[5, [xax, yax]] = tr
+        verts[:,       zax]  = zpos
+        return gl.GL_TRIANGLES, verts
 
-        if self.colour is not None: colour = list(self.colour[:3])
-        else:                       colour = [1, 1, 1]
 
-        colour = colour + [self.alpha / 100]
-
-        idxs  = np.array([0, 1, 2, 2, 1, 3], dtype=np.uint32)
-        verts = np.zeros((4, 3),             dtype=np.float32)
-
+    def __outline(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Generate the rectangle outline. """
+        verts = np.zeros((8, 3), dtype=np.float32)
         verts[0, [xax, yax]] = bl
         verts[1, [xax, yax]] = br
         verts[2, [xax, yax]] = tl
         verts[3, [xax, yax]] = tr
-        verts[:,  zax]       = zpos
-        verts                = verts.ravel('C')
-
-        # I'm assuming that glPolygonMode
-        # is already set to GL_FILL
-        gl.glColor4f(*colour)
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
-
-
-    def __drawRect(self, zpos, xax, yax, zax, bl, br, tl, tr):
-        """Draw the rectangle outline. """
-
-        if self.colour is not None: colour = list(self.colour[:3]) + [1]
-        else:                       colour = [1, 1, 1, 1]
-
-        idxs  = np.array([0, 1, 2, 3, 0, 2, 1, 3], dtype=np.uint32)
-        verts = np.zeros((4, 3),                   dtype=np.float32)
-
-        verts[0, [xax, yax]] = bl
-        verts[1, [xax, yax]] = br
-        verts[2, [xax, yax]] = tl
-        verts[3, [xax, yax]] = tr
-        verts[:,  zax]       = zpos
-        verts                = verts.ravel('C')
-
-        gl.glColor4f(*colour)
-
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        verts[4, [xax, yax]] = bl
+        verts[5, [xax, yax]] = tl
+        verts[6, [xax, yax]] = br
+        verts[7, [xax, yax]] = tr
+        verts[:,       zax]  = zpos
+        return gl.GL_LINES, verts
 
 
 class Ellipse(AnnotationObject):
