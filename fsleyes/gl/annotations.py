@@ -338,8 +338,11 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     trigger a draw on the owning ``SliceCanvas`` to refresh the annotation.
     You shouldn't touch the ``expiry`` or ``creation`` attributes though.
 
+    OpenGL logic for drawing :class:`.AnnotationObject` instances is contained
+    in the ``annotation_funcs`` modules for each supported OpenGL version.
+
     Subclasses must, at the very least, override the
-    :meth:`globject.GLObject.draw2D` method.
+    :meth:`globject.GLObject.vertices2D` method.
     """
 
 
@@ -436,6 +439,10 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         fslgl.annotation_funcs.init(self)
 
 
+    def destroy(self):
+        fslgl.annotation_funcs.destroy(self)
+
+
     def resetExpiry(self):
         """Resets the expiry for this ``AnnotationObject`` so that it is
         valid from the current time.
@@ -480,9 +487,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     def vertices2D(self, zpos, axes):
-        """Must be implemented by sub-classes. Must return a sequence of
-        tuples, with each tuple containing an OpenGL primitive type (e.g.
-        ``GL_LINES``), and a``(N, 3)`` numpy array containing vertices.
+        """Must be implemented by sub-classes. Generates and returns verticws
+        to display this annotation. The exact return type may differ depending
+        on the annotation type.
         """
         raise NotImplementedError()
 
@@ -772,7 +779,7 @@ class Rect(AnnotationObject):
         verts = []
 
         if self.border:
-            verts.append(self.__outline(zpos, xax, yax, zax, bl, br, tl, tr))
+            verts.append(self.__border(zpos, xax, yax, zax, bl, br, tl, tr))
 
         if self.filled:
             verts.append(self.__fill(zpos, xax, yax, zax, bl, br, tl, tr))
@@ -793,7 +800,7 @@ class Rect(AnnotationObject):
         return gl.GL_TRIANGLES, verts
 
 
-    def __outline(self, zpos, xax, yax, zax, bl, br, tl, tr):
+    def __border(self, zpos, xax, yax, zax, bl, br, tl, tr):
         """Generate the rectangle outline. """
         verts = np.zeros((8, 3), dtype=np.float32)
         verts[0, [xax, yax]] = bl
@@ -885,23 +892,16 @@ class Ellipse(AnnotationObject):
         self.y = self.y + y
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Ellipse`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Generate vertices for this ``Ellipse`` annotation. """
 
         if (self.w == 0) or (self.h == 0):
             return
-
-        if self.colour is not None: colour = list(self.colour[:3])
-        else:                       colour = [1, 1, 1]
-
-        r, g, b = colour
-        a       = self.alpha / 100
 
         xax, yax, zax = axes
         x, y          = self.x, self.y
         w, h          = self.w, self.h
 
-        idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
         verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)
         samples = np.linspace(0, 2 * np.pi, self.npoints)
 
@@ -910,18 +910,15 @@ class Ellipse(AnnotationObject):
         verts[1:, yax]       = h * np.cos(samples) + y
         verts[:,  zax]       = zpos
 
+        allVertices = []
+
         # border
         if self.border:
-            gl.glColor4f(r, g, b, 1)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts[1:-1])
-            gl.glDrawElements(
-                gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
-
+            allVertices.append((gl.GL_LINE_LOOP, verts[1:-1]))
         if self.filled:
-            gl.glColor4f(r, g, b, a)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-            gl.glDrawElements(
-                gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+            allVertices.append((gl.GL_TRIANGLE_FAN, verts))
+
+        return allVertices
 
 
 class VoxelSelection(AnnotationObject):
@@ -987,6 +984,7 @@ class VoxelSelection(AnnotationObject):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
+        super().destroy()
         glresources.delete(self.__texture.name)
         self.__texture = None
         self.__opts    = None
@@ -998,6 +996,8 @@ class VoxelSelection(AnnotationObject):
         ``VoxelSelection``.
         """
         return self.__texture
+
+
 
 
     def draw2D(self, zpos, axes):
@@ -1102,7 +1102,7 @@ class TextAnnotation(AnnotationObject):
     def destroy(self):
         """Must be called when this ``TextAnnotation`` is no longer needed.
         """
-        AnnotationObject.destroy(self)
+        super().destroy()
         self.__text.destroy()
         self.__text = None
 
