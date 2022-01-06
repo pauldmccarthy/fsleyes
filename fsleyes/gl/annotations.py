@@ -42,6 +42,7 @@ import OpenGL.GL   as gl
 
 import fsl.transform.affine     as affine
 import fsleyes_props            as props
+import fsleyes.gl               as fslgl
 import fsleyes.gl.globject      as globject
 import fsleyes.gl.routines      as glroutines
 import fsleyes.gl.resources     as glresources
@@ -520,23 +521,20 @@ class Point(AnnotationObject):
         self.y = y
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Point`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Returns vertices to draw this ``Point`` annotation. """
 
         xax, yax, zax        = axes
         offset               = self.lineWidth * 0.5
         x, y                 = self.x, self.y
-        idxs                 = np.arange(4,     dtype=np.uint32)
         verts                = np.zeros((4, 3), dtype=np.float32)
         verts[0, [xax, yax]] = [x - offset, y]
         verts[1, [xax, yax]] = [x + offset, y]
         verts[2, [xax, yax]] = [x, y - offset]
         verts[3, [xax, yax]] = [x, y + offset]
         verts[:, zax]        = zpos
-        verts                = verts.ravel('C')
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        return [(gl.GL_LINES, verts)]
 
 
     def hit(self, x, y):
@@ -583,20 +581,13 @@ class Line(AnnotationObject):
         self.y2 = y2
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Line`` annotation. """
-
-        xax, yax, zax = axes
-
-        idxs                 = np.arange(2,     dtype=np.uint32)
+    def vertices2D(self, zpos, axes):
+        xax, yax, zax        = axes
         verts                = np.zeros((2, 3), dtype=np.float32)
         verts[0, [xax, yax]] = self.x1, self.y1
         verts[1, [xax, yax]] = self.x2, self.y2
         verts[:, zax]        = zpos
-        verts                = verts.ravel('C')
-
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        return [(gl.GL_LINES, verts)]
 
 
     def hit(self, x, y):
@@ -640,10 +631,10 @@ class Arrow(Line):
     """
 
 
-    def draw2D(self, zpos, axes):
+    def vertices2D(self, zpos, axes):
         """Draw the arrow. """
 
-        Line.draw2D(self, zpos, axes)
+        lineverts = Line.vertices2D(self, zpos, axes)
 
         xax, yax, zax = axes
 
@@ -668,15 +659,15 @@ class Arrow(Line):
         p1  = xy2 - self.lineWidth * p1
         p2  = xy2 - self.lineWidth * p2
 
-        idxs  = np.arange(3, dtype=np.uint32)
         verts = np.zeros((3, 3), dtype=np.float32)
         verts[0, [xax, yax]] = xy2
         verts[1, [xax, yax]] = p1
         verts[2, [xax, yax]] = p2
         verts[:, zax]        = zpos
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        verts = [(gl.GL_TRIANGLES, verts)]
+
+        return lineverts + verts
 
 
 class Rect(AnnotationObject):

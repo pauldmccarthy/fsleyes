@@ -96,7 +96,7 @@ def draw2D_default(self, zpos, axes):
     shader.load()
     shader.set('P',      projmat)
     shader.set('MV',     viewmat)
-    shader.set('colour', self.colour)
+    shader.set('colour', colour)
 
     # load all vertex types, and use offsets
     # to draw each vertex group separately
