@@ -110,13 +110,7 @@ def draw2D_default(self, zpos, axes):
     if self.lineWidth is not None:
         gl.glLineWidth(self.lineWidth)
 
-    if self.colour is not None:
-        if len(self.colour) == 3: colour = list(self.colour) + [1.0]
-        else:                     colour = list(self.colour)
-        colour[3] = self.alpha / 100.0
-
-    if self.xform is not None:
-        viewmat = affine.concat(self.xform, viewmat)
+    colour = list(self.colour[:3]) + [self.alpha / 100.0]
 
     # load all vertex types, and use offsets
     # to draw each vertex group separately
@@ -160,9 +154,6 @@ def draw2D_Rect(self, zpos, axes):
 
     colour = list(self.colour[:3])
     alpha  = self.alpha / 100.0
-
-    if self.xform is not None:
-        viewmat = affine.concat(self.xform, viewmat)
 
     shader.load()
     shader.set(   'P',      projmat)

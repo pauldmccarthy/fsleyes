@@ -323,8 +323,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     ``enabled``   Whether the annotation should be drawn or not.
     ``lineWidth`` Annotation line width (if the annotation is made up of
                   lines)
-    ``xform``     Custom transformation matrix to apply to annotation
-                  vertices.
     ``expiry``    Time (in seconds) after which the annotation will expire and
                   not be drawn.
     ``zmin``      Minimum z value below which this annotation will not be
@@ -379,7 +377,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
     def __init__(self,
                  annot,
-                 xform=None,
                  colour=None,
                  alpha=None,
                  lineWidth=None,
@@ -393,9 +390,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         :arg annot:         The :class:`Annotations` object that created this
                             ``AnnotationObject``.
-
-        :arg xform:         Transformation matrix which will be applied to all
-                            vertex coordinates.
 
         :arg colour:        RGB/RGBA tuple specifying the annotation colour.
 
@@ -421,7 +415,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         globject.GLSimpleObject.__init__(self, annot.canvas, False)
 
         self.annot    = annot
-        self.xform    = xform
         self.creation = time.time()
         self.expiry   = expiry
 
@@ -432,9 +425,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         if honourZLimits is not None: self.honourZLimits = honourZLimits
         if zmin          is not None: self.zmin          = zmin
         if zmax          is not None: self.zmax          = zmax
-
-        if self.xform is not None:
-            self.xform = np.array(self.xform, dtype=np.float32)
 
         fslgl.annotation_funcs.init(self)
 
