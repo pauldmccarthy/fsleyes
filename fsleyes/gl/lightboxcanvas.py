@@ -779,11 +779,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.projectionMatrix is None:
             return
 
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.projectionMatrix.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(self.viewMatrix.ravel('F'))
-
         startSlice = opts.ncols * opts.topRow
         endSlice   = startSlice + opts.nrows * opts.ncols
 

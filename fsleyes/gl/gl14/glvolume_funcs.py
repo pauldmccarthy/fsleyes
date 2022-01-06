@@ -178,17 +178,21 @@ def preDraw(self):
 def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice of the image at the given Z location. """
 
-    bbox                           = self.canvas.viewport
-    vertices, voxCoords, texCoords = self.generateVertices2D(
+    bbox                   = self.canvas.viewport
+    projmat                = self.canvas.projectionMatrix
+    viewmat                = self.canvas.viewMatrix
+    vertices, _, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
+    if xform is None: xform = affine.concat(projmat, viewmat)
+    else:             xform = affine.concat(projmat, viewmat, xform)
 
-    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+    vertices = affine.transform(vertices, xform)
+    vertices = np.asarray(vertices, dtype=np.float32).ravel('C')
 
     # Voxel coordinates are calculated
-    # in the vertex program
+    # in the vertex program, so we
+    # only pass texCoords and vertices
     self.shader.setAtt('texCoord', texCoords)
 
     with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
@@ -305,13 +309,16 @@ def drawAll(self, axes, zposes, xforms):
     """
 
     nslices   = len(zposes)
+    projmat   = self.canvas.projectionMatrix
+    viewmat   = self.canvas.viewMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     indices   = np.arange(nslices * 6,     dtype=np.uint32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, axes)
+        xform    = affine.concat(projmat, viewmat, xform)
+        v, _, tc = self.generateVertices2D(zpos, axes)
 
         vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         texCoords[i * 6: i * 6 + 6, :] = tc

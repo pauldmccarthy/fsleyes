@@ -1175,11 +1175,6 @@ class SliceCanvas:
         if self.projectionMatrix is None:
             return
 
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.projectionMatrix.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(self.viewMatrix.ravel('F'))
-
         # Do not draw anything if some globjects
         # are not ready. This is because, if a
         # GLObject was drawn, but is now temporarily

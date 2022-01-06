@@ -203,11 +203,17 @@ def draw2D(self, zpos, axes, xform=None):
     """
 
     bbox                           = self.canvas.viewport
+    projmat                        = self.canvas.projectionMatrix
+    viewmat                        = self.canvas.viewMatrix
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
+    # We apply the MVP matrix here rather than in
+    # the shader, as we're only drawing 6 vertices.
+    if xform is None: xform = affine.concat(projmat, viewmat)
+    else:             xform = affine.concat(projmat, viewmat, xform)
+
+    vertices = affine.transform(vertices, xform)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -277,12 +283,15 @@ def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
+    projmat   = self.canvas.projectionMatrix
+    viewmat   = self.canvas.viewMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     voxCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
+        xform     = affine.concat(projmat, viewmat, xform)
         v, vc, tc = self.generateVertices2D(zpos, axes)
         vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc

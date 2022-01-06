@@ -777,7 +777,6 @@ class GLVolume(glimageobject.GLImageObject):
 
     def drawAll(self, *args, **kwargs):
         """Calls the version dependent ``drawAll`` function. """
-
         fslgl.glvolume_funcs.drawAll(self, *args, **kwargs)
 
 
