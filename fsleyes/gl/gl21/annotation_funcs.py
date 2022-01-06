@@ -102,6 +102,7 @@ def draw2D_default(self, zpos, axes):
     canvas   = self.canvas
     projmat  = canvas.projectionMatrix
     viewmat  = canvas.viewMatrix
+    colour   = list(self.colour[:3]) + [self.alpha / 100.0]
     vertices = self.vertices2D(zpos, axes)
 
     if vertices is None or len(vertices) == 0:
@@ -110,26 +111,20 @@ def draw2D_default(self, zpos, axes):
     if self.lineWidth is not None:
         gl.glLineWidth(self.lineWidth)
 
-    colour = list(self.colour[:3]) + [self.alpha / 100.0]
-
     # load all vertex types, and use offsets
     # to draw each vertex group separately
     primitives              = [v[0] for v in vertices]
     vertices                = [v[1] for v in vertices]
     vertices, lens, offsets = stackVertices(vertices)
 
-    shader.load()
-    shader.set(   'P',      projmat)
-    shader.set(   'MV',     viewmat)
-    shader.set(   'colour', colour)
-    shader.setAtt('vertex', vertices)
-    shader.loadAtts()
-
-    for primitive, length, offset in zip(primitives, lens, offsets):
-        gl.glDrawArrays(primitive, offset, length)
-
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with shader.loaded():
+        shader.set(   'P',      projmat)
+        shader.set(   'MV',     viewmat)
+        shader.set(   'colour', colour)
+        shader.setAtt('vertex', vertices)
+        with shader.loadedAtts():
+            for primitive, length, offset in zip(primitives, lens, offsets):
+                gl.glDrawArrays(primitive, offset, length)
 
 
 def draw2D_Rect(self, zpos, axes):
@@ -155,22 +150,19 @@ def draw2D_Rect(self, zpos, axes):
     colour = list(self.colour[:3])
     alpha  = self.alpha / 100.0
 
-    shader.load()
-    shader.set(   'P',      projmat)
-    shader.set(   'MV',     viewmat)
-    shader.setAtt('vertex', vertices)
-    shader.loadAtts()
+    with shader.loaded():
+        shader.set(   'P',      projmat)
+        shader.set(   'MV',     viewmat)
+        shader.setAtt('vertex', vertices)
 
-    if self.border:
-        if self.filled: shader.set('colour', colour + [1.0])
-        else:           shader.set('colour', colour + [alpha])
-        gl.glDrawArrays(primitives.pop(0), offsets.pop(0), lens.pop(0))
-    if self.filled:
-        shader.set('colour', colour + [alpha])
-        gl.glDrawArrays(primitives.pop(0), offsets.pop(0), lens.pop(0))
-
-    self.shader.unloadAtts()
-    self.shader.unload()
+        with shader.loadedAtts():
+            if self.border:
+                if self.filled: shader.set('colour', colour + [1.0])
+                else:           shader.set('colour', colour + [alpha])
+                gl.glDrawArrays(primitives.pop(0), offsets.pop(0), lens.pop(0))
+            if self.filled:
+                shader.set('colour', colour + [alpha])
+                gl.glDrawArrays(primitives.pop(0), offsets.pop(0), lens.pop(0))
 
 
 draw2D_Ellipse = draw2D_Rect

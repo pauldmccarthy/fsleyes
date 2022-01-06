@@ -10,6 +10,7 @@ a GLSL shader program comprising a vertex shader and a fragment shader.
 
 
 import logging
+import contextlib
 
 import jinja2                         as j2
 import numpy                          as np
@@ -52,9 +53,11 @@ class GLSLShader(object):
 
        load
        unload
+       loaded
        destroy
        loadAtts
        unloadAtts
+       loadedAtts
        set
        setAtt
        setIndices
@@ -69,28 +72,22 @@ class GLSLShader(object):
         program = GLSLShader(vertSrc, fragSrc)
 
         # Load the program
-        program.load()
+        with shader.loaded():
 
-        # Set some uniform values
-        program.set('lighting', True)
-        program.set('lightPos', [0, 0, -1])
+            # Set some uniform values
+            program.set('lighting', True)
+            program.set('lightPos', [0, 0, -1])
 
-        # Create and set vertex attributes
-        vertices, normals = createVertices()
+            # Create and set vertex attributes
+            vertices, normals = createVertices()
 
-        program.setAtt('vertex', vertices)
-        program.setAtt('normal', normals)
+            program.setAtt('vertex', vertices)
+            program.setAtt('normal', normals)
 
-        # Load the attributes
-        program.loadAtts()
-
-        # Draw the scene
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
-
-        # Clear the GL state
-        program.unload()
-        program.unloadAtts()
-
+            # Load the attributes
+            with shader.loadedAtts():
+                # Draw the scene
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
         # Delete the program when
         # we no longer need it
@@ -182,6 +179,30 @@ class GLSLShader(object):
         """Prints a log message. """
         if log:
             log.debug('{}.del({})'.format(type(self).__name__, id(self)))
+
+
+    @contextlib.contextmanager
+    def loaded(self):
+        """Context manager which calls :meth:`load`, yields, then
+        calls :meth:`unload`.
+        """
+        self.load()
+        try:
+            yield
+        finally:
+            self.unload()
+
+
+    @contextlib.contextmanager
+    def loadedAtts(self):
+        """Context manager which calls :meth:`loadAtts`, yields, then
+        calls :meth:`unloadAtts`.
+        """
+        self.loadAtts()
+        try:
+            yield
+        finally:
+            self.unloadAtts()
 
 
     def load(self):
