@@ -117,15 +117,16 @@ class RenderTexture(texture2d.Texture2D):
                                      dtype=np.uint8,
                                      **kwargs)
 
-        self.__frameBuffer     = glfbo.glGenFramebuffersEXT(1)
-        self.__rttype          = rttype
-        self.__renderBuffer    = None
-        self.__depthTexture    = None
-        self.__oldSize         = None
-        self.__oldProjMat      = None
-        self.__oldMVMat        = None
-        self.__oldFrameBuffer  = None
-        self.__oldRenderBuffer = None
+        self.__frameBuffer      = glfbo.glGenFramebuffersEXT(1)
+        self.__rttype           = rttype
+        self.__renderBuffer     = None
+        self.__depthTexture     = None
+        self.__oldFrameBuffer   = None
+        self.__oldRenderBuffer  = None
+        self.__oldSize          = None
+        self.__projectionMatrix = None
+        self.__viewMatrix       = None
+        self.__viewport         = None
 
         # Use a single renderbuffer as
         # the depth+stencil attachment
@@ -199,6 +200,34 @@ class RenderTexture(texture2d.Texture2D):
         self.__depthTexture    = None
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
+
+
+    @property
+    def projectionMatrix(self):
+        """Return the projection matrix to use when drawing to this
+        ``RenderTexture``. Only returns a value when this ``RenderTexture``
+        is bound - returns ``None``at all other times.
+        """
+        return self.__projectionMatrix
+
+
+    @property
+    def viewMatrix(self):
+        """Return the model-view matrix to use when drawing to this
+        ``RenderTexture``. Only returns a value when this ``RenderTexture``
+        is bound - returns ``None``at all other times.
+        """
+        return self.__viewMatrix
+
+
+    @property
+    def viewport(self):
+        """Return the display coordinate system bounding box for this
+        ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
+        Only returns a value when this ``RenderTexture`` is bound - returns
+        ``None``at all other times.
+        """
+        return self.__viewport
 
 
     @texture2d.Texture2D.data.setter
@@ -294,9 +323,7 @@ class RenderTexture(texture2d.Texture2D):
                   coordinates.
         """
 
-        if self.__oldSize    is not None or \
-           self.__oldProjMat is not None or \
-           self.__oldMVMat   is not None:
+        if self.__oldSize is not None:
             raise RuntimeError('RenderTexture RB{}/FBO{} has already '
                                'configured the viewport'.format(
                                    self.__renderBuffer,
@@ -305,19 +332,16 @@ class RenderTexture(texture2d.Texture2D):
         log.debug('Configuring viewport for RB%s/FBO%s',
                   self.__renderBuffer, self.__frameBuffer)
 
-        width, height = self.shape
+        self.__oldSize = gl.glGetIntegerv(gl.GL_VIEWPORT)
 
-        self.__oldSize    = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        self.__oldProjMat = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
-        self.__oldMVMat   = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
-
+        width, height  = self.shape
         projmat, mvmat = glroutines.show2D(xax, yax, lo, hi)
 
         gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(projmat.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(mvmat.ravel('F'))
+
+        self.__viewport         = list(zip(lo, hi))
+        self.__projectionMatrix = projmat
+        self.__viewMatrix       = mvmat
 
 
     def restoreViewport(self):
@@ -325,9 +349,7 @@ class RenderTexture(texture2d.Texture2D):
         to :meth:`setRenderViewport`.
         """
 
-        if self.__oldSize    is None or \
-           self.__oldProjMat is None or \
-           self.__oldMVMat   is None:
+        if self.__oldSize is None:
             raise RuntimeError('RenderTexture RB{}/FBO{} has not '
                                'configured the viewport'.format(
                                    self.__renderBuffer,
@@ -337,14 +359,10 @@ class RenderTexture(texture2d.Texture2D):
                   self.__renderBuffer, self.__frameBuffer)
 
         gl.glViewport(*self.__oldSize)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.__oldProjMat)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(self.__oldMVMat)
-
-        self.__oldSize    = None
-        self.__oldProjMat = None
-        self.__oldMVMat   = None
+        self.__oldSize          = None
+        self.__projectionMatrix = None
+        self.__viewMatrix       = None
+        self.__viewport         = None
 
 
     @contextlib.contextmanager

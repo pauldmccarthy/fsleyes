@@ -29,6 +29,7 @@ This module also provides a few functions, most importantly
    createGLObject
 """
 
+import contextlib
 import logging
 
 import fsl.utils.notifier as notifier
@@ -263,6 +264,20 @@ class GLObject(notifier.Notifier):
     def canvas(self):
         """The canvas which is drawing this ``GLObject``."""
         return self.__canvas
+
+
+    @contextlib.contextmanager
+    def renderTarget(self, target):
+        """Context manager to temporarily set the rendering target to another
+        target, e.g. a :class:`.RenderTexture`.  The given ``target`` will be
+        returned by :meth:`canvas` during the context.
+        """
+        canvas = self.__canvas
+        try:
+            self.__canvas = target
+            yield
+        finally:
+            self.__canvas = canvas
 
 
     @property
