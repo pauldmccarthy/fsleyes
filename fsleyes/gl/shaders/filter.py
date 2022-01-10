@@ -12,10 +12,11 @@ to loading and running simple filter shader programs, which require a
 
 import collections
 
-import OpenGL.GL          as gl
+import OpenGL.GL            as gl
 
-import fsleyes.gl         as fslgl
-import fsleyes.gl.shaders as shaders
+import fsl.transform.affine as affine
+import fsleyes.gl           as fslgl
+import fsleyes.gl.shaders   as shaders
 
 
 GL14_CONSTANTS = collections.defaultdict(dict, {
@@ -139,8 +140,7 @@ class Filter(object):
               ymax,
               xax,
               yax,
-              xform=None,
-              **kwargs):
+              xform=None):
         """Apply the filter to the given ``source`` texture, and render the
         results according to the given bounds.
 
@@ -163,21 +163,18 @@ class Filter(object):
 
         shader    = self.__shader
         vertices  = source.generateVertices(
-            zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
+            zpos, xmin, xmax, ymin, ymax, xax, yax)
         texCoords = source.generateTextureCoords()
 
-        shader.load()
-        shader.loadAtts()
-        shader.setAtt('texCoord', texCoords)
+        if xform is not None:
+            vertices = affine.transform(vertices, xform)
 
-        if float(fslgl.GL_COMPATIBILITY) >= 2.1:
-            shader.setAtt('vertex', vertices)
-            source.draw(**kwargs)
-        else:
-            source.draw(vertices=vertices, **kwargs)
-
-        shader.unloadAtts()
-        shader.unload()
+        # TODO see if we can load GL14 vertices like thi
+        with source.bound(gl.GL_TEXTURE0), shader.loaded():
+            shader.setAtt('vertex',   vertices)
+            shader.setAtt('texCoord', texCoords)
+            with shader.loadedAtts():
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
 
     def osApply(self, source, dest, clearDest=True, **kwargs):

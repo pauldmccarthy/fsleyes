@@ -425,7 +425,7 @@ class Texture2D(texture.Texture):
     def generateVertices(cls, zpos, xmin, xmax, ymin, ymax, xax, yax):
         """Generates a set of vertices suitable for passing to the
         :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D
-        canvas.
+        canvas, with the ``GL_TRIANGLES`` primitive.
 
         :arg zpos:  Position along the Z axis, in the display coordinate
                     system.
