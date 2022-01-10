@@ -16,6 +16,7 @@ import OpenGL.GL            as gl
 
 import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
 import fsleyes.gl.shaders   as shaders
 
 
@@ -32,7 +33,8 @@ recompiled.
 """
 
 
-class Filter(object):
+
+class Filter:
     """A ``Filter`` object encapsulates a shader program which applies some
     sort of image filter to a :class:`.Texture2D`.
 
@@ -67,12 +69,13 @@ class Filter(object):
                          OpenGL 1.4.
         """
 
-        basename        = filterName
-        filterName      = 'filter_{}'.format(filterName)
-        vertSrc         = shaders.getVertexShader( 'filter')
-        fragSrc         = shaders.getFragmentShader(filterName)
-        self.__texture  = texture
-        self.__basename = basename
+        basename           = filterName
+        filterName         = 'filter_{}'.format(filterName)
+        vertSrc            = shaders.getVertexShader( 'filter')
+        fragSrc            = shaders.getFragmentShader(filterName)
+        self.__texture     = texture
+        self.__textureUnit = glroutines.textureUnit(texture)
+        self.__basename    = basename
 
         if float(fslgl.GL_COMPATIBILITY) >= 2.1:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
@@ -162,15 +165,14 @@ class Filter(object):
         """
 
         shader    = self.__shader
+        texCoords = source.generateTextureCoords()
         vertices  = source.generateVertices(
             zpos, xmin, xmax, ymin, ymax, xax, yax)
-        texCoords = source.generateTextureCoords()
 
         if xform is not None:
             vertices = affine.transform(vertices, xform)
 
-        # TODO see if we can load GL14 vertices like thi
-        with source.bound(gl.GL_TEXTURE0), shader.loaded():
+        with source.bound(self.__textureUnit), shader.loaded():
             shader.setAtt('vertex',   vertices)
             shader.setAtt('texCoord', texCoords)
             with shader.loadedAtts():

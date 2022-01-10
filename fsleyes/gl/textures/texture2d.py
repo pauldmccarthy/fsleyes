@@ -359,14 +359,13 @@ class Texture2D(texture.Texture):
         if self.__defaultShader is None:
             vertSrc   = shaders.getVertexShader(  'texture2d')
             fragSrc   = shaders.getFragmentShader('texture2d')
-            texCoords = self.generateTextureCoords()
+
             if float(fslgl.GL_COMPATIBILITY) < 2.1:
                 shader = shaders.ARBPShader(vertSrc, fragSrc, {'texture' : 0})
             else:
                 shader = shaders.GLSLShader(vertSrc, fragSrc)
                 with shader.loaded():
-                    shader.set(   'texture',  0)
-                    shader.setAtt('texCoord', texCoords)
+                    shader.set('texture', 0)
             self.__defaultShader = shader
         return self.__defaultShader
 
@@ -376,12 +375,13 @@ class Texture2D(texture.Texture):
         the given vertices.
         """
 
-        shader   = self.__shader()
-        vertices = np.array(vertices, dtype=np.float32)
+        shader    = self.__shader()
+        vertices  = np.array(vertices, dtype=np.float32)
+        texCoords = self.generateTextureCoords()
 
-        # TODO see if we can set vertices like this in GL14
         with self.bound(gl.GL_TEXTURE0), shader.loaded():
-            shader.setAtt('vertex', vertices)
+            shader.setAtt('vertex',   vertices)
+            shader.setAtt('texCoord', texCoords)
             with shader.loadedAtts():
                 gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 

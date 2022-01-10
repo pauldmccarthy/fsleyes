@@ -1,0 +1,10 @@
+!!ARBvp1.0
+#
+# Vertex shader used by Texture2D instances.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+MOV    result.position,     {{ attr_vertex }};
+MOV {{ varying_texCoord }}, {{ attr_texCoord }};
+END

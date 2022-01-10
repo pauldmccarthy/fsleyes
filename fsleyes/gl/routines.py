@@ -41,6 +41,13 @@ def clear(bgColour):
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 
+def textureUnit(number):
+    """Given a GL texture unit number (0, 1, 2, etc), returns the
+    GL identifier (GL_TEXTURE0,  GL_TEXTURE1, GL_TEXTURE2, etc).
+    """
+    return getattr(gl, 'GL_TEXTURE{}'.format(number))
+
+
 @contextlib.contextmanager
 def enabled(capabilities, enable=True):
     """This function can be used as a context manager to temporarily

@@ -14,6 +14,7 @@ from __future__ import division
 
 import re
 import logging
+import contextlib
 
 import numpy                          as np
 
@@ -54,6 +55,11 @@ class ARBPShader:
 
        load
        unload
+       loaded
+       loaded
+       loadAtts
+       unloadAtts
+       loadedAtts
        destroy
        recompile
        setVertParam
@@ -259,6 +265,25 @@ class ARBPShader:
         arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
                                self.fragmentProgram)
 
+
+    def unload(self):
+        """Unloads the shader program. """
+        gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
+        gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
+
+
+    @contextlib.contextmanager
+    def loaded(self):
+        """Context manager which calls :meth:`load`, yields, then
+        calls :meth:`unload`.
+        """
+        self.load()
+        try:
+            yield
+        finally:
+            self.unload()
+
+
     def loadAtts(self):
         """Enables texture coordinates for all shader program attributes. """
         for attr in self.attrs:
@@ -266,12 +291,6 @@ class ARBPShader:
 
             gl.glClientActiveTexture(texUnit)
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-
-    def unload(self):
-        """Unloads the shader program. """
-        gl.glDisable(arbfp.GL_FRAGMENT_PROGRAM_ARB)
-        gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
 
 
     def unloadAtts(self):
@@ -283,6 +302,18 @@ class ARBPShader:
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
         self.__attCache = {}
+
+
+    @contextlib.contextmanager
+    def loadedAtts(self):
+        """Context manager which calls :meth:`loadAtts`, yields, then
+        calls :meth:`unloadAtts`.
+        """
+        self.loadAtts()
+        try:
+            yield
+        finally:
+            self.unloadAtts()
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
