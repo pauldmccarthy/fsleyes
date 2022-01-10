@@ -16,6 +16,8 @@ import OpenGL.GL as gl
 
 import fsl.transform.affine as affine
 import fsl.data.utils       as dutils
+import fsleyes.gl           as fslgl
+import fsleyes.gl.shaders   as shaders
 import fsleyes.gl.routines  as glroutines
 from . import                  texture
 
@@ -149,7 +151,22 @@ class Texture2D(texture.Texture):
         self.__width  = None
         self.__height = None
 
+        # If this texture is drawn via
+        # the draw method, a shader
+        # program is compiled and used.
+        # The __shader method compiles
+        # it and stores it here.
+        self.__defaultShader = None
+
         texture.Texture.__init__(self, name, 2, nvals, **kwargs)
+
+
+    def destroy(self):
+        """Must be called when this ``Texture2D`` is no longer needed. """
+        super().destroy()
+        if self.__defaultShader is not None:
+            self.__defaultShader.destroy()
+            self.__defaultShader = None
 
 
     def doRefresh(self):
@@ -335,86 +352,38 @@ class Texture2D(texture.Texture):
                                data)
 
 
-    def __prepareCoords(self, vertices, xform=None):
-        """Called by :meth:`draw`. Prepares vertices, texture coordinates and
-        indices for drawing the texture.
-
-        If ``vertices is None``, it is assumed that the caller has already
-        assigned vertices and texture coordinates, either via a shader, or
-        via vertex/texture coordinate pointers. In this case,
-
-        :returns: A tuple containing the vertices, texture coordinates, and
-                  indices, or ``(None, None, indices)`` if
-                  ``vertices is None``
+    def __shader(self):
+        """Returns a shader program to draw the contents of this ``Texture2D``.
+        Used by :meth:`draw`.
         """
-
-        indices = np.arange(6, dtype=np.uint32)
-
-        if vertices is None:
-            return None, None, indices
-
-        if vertices.shape != (6, 3):
-            raise ValueError('Six vertices must be provided')
-
-        if xform is not None:
-            vertices = affine.transform(vertices, xform)
-
-        vertices  = np.array(vertices, dtype=np.float32).ravel('C')
-        texCoords = self.generateTextureCoords()        .ravel('C')
-
-        return vertices, texCoords, indices
+        if self.__defaultShader is None:
+            vertSrc   = shaders.getVertexShader(  'texture2d')
+            fragSrc   = shaders.getFragmentShader('texture2d')
+            texCoords = self.generateTextureCoords()
+            if float(fslgl.GL_COMPATIBILITY) < 2.1:
+                shader = shaders.ARBPShader(vertSrc, fragSrc, {'texture' : 0})
+            else:
+                shader = shaders.GLSLShader(vertSrc, fragSrc)
+                with shader.loaded():
+                    shader.set(   'texture',  0)
+                    shader.setAtt('texCoord', texCoords)
+            self.__defaultShader = shader
+        return self.__defaultShader
 
 
-    def draw(self,
-             vertices=None,
-             xform=None,
-             textureUnit=None):
+    def draw(self, vertices):
         """Draw the contents of this ``Texture2D`` to a region specified by
-        the given vertices. The texture is bound to texture unit 0.
-
-        :arg vertices:    A ``numpy`` array of shape ``6 * 3`` specifying the
-                          region, made up of two triangles, to which this
-                          ``Texture2D`` should be drawn. If ``None``, it is
-                          assumed that the vertices and texture coordinates
-                          have already been configured (e.g. via a shader
-                          program).
-
-        :arg xform:       A transformation to be applied to the vertices.
-                          Ignored if ``vertices is None``.
-
-        :arg textureUnit: Texture unit to bind to. Defaults to
-                          ``gl.GL_TEXTURE0``.
+        the given vertices.
         """
 
-        if textureUnit is None:
-            textureUnit = gl.GL_TEXTURE0
+        shader   = self.__shader()
+        vertices = np.array(vertices, dtype=np.float32)
 
-        vertices, texCoords, indices = self.__prepareCoords(vertices, xform)
-
-        with self.bound(textureUnit):
-            gl.glClientActiveTexture(textureUnit)
-            gl.glTexEnvf(gl.GL_TEXTURE_ENV,
-                         gl.GL_TEXTURE_ENV_MODE,
-                         gl.GL_REPLACE)
-
-            glfeatures = [gl.GL_TEXTURE_2D, gl.GL_VERTEX_ARRAY]
-
-            # Only enable texture coordinates if we know
-            # that there are texture coordinates. Some GL
-            # platforms will crash if texcoords are
-            # enabled on a texture unit, but no texcoords
-            # are loaded.
-            if vertices is not None:
-                glfeatures.append(gl.GL_TEXTURE_COORD_ARRAY)
-
-            with glroutines.enabled(glfeatures):
-
-                if vertices is not None:
-                    gl.glVertexPointer(  3, gl.GL_FLOAT, 0, vertices)
-                    gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, texCoords)
-
-                gl.glDrawElements(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT,
-                                  indices)
+        # TODO see if we can set vertices like this in GL14
+        with self.bound(gl.GL_TEXTURE0), shader.loaded():
+            shader.setAtt('vertex', vertices)
+            with shader.loadedAtts():
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
 
     def drawOnBounds(self,
@@ -425,8 +394,7 @@ class Texture2D(texture.Texture):
                      ymax,
                      xax,
                      yax,
-                     *args,
-                     **kwargs):
+                     xform=None):
         """Draws the contents of this ``Texture2D`` to a rectangle.  This is a
         convenience method which creates a set of vertices, and passes them to
         the :meth:`draw` method.
@@ -441,18 +409,20 @@ class Texture2D(texture.Texture):
                     axis.
         :arg yax:   Display space axis which maps to the vertical screen
                     axis.
+        :arg xform: Transformation matrix to apply to the vertices.
 
         All other arguments are passed to the :meth:`draw` method.
         """
 
         vertices = self.generateVertices(
             zpos, xmin, xmax, ymin, ymax, xax, yax)
-        self.draw(vertices, *args, **kwargs)
+        if xform is not None:
+            vertices = affine.transform(vertices, xform)
+        self.draw(vertices)
 
 
     @classmethod
-    def generateVertices(
-            cls, zpos, xmin, xmax, ymin, ymax, xax, yax, xform=None):
+    def generateVertices(cls, zpos, xmin, xmax, ymin, ymax, xax, yax):
         """Generates a set of vertices suitable for passing to the
         :meth:`.Texture2D.draw` method, for drawing a ``Texture2D`` to a 2D
         canvas.
@@ -467,7 +437,6 @@ class Texture2D(texture.Texture):
                     axis.
         :arg yax:   Display space axis which maps to the vertical screen
                     axis.
-        :arg xform: Transformation matrix to appply to vertices.
         """
 
         zax              = 3 - xax - yax
@@ -480,9 +449,6 @@ class Texture2D(texture.Texture):
         vertices[ 3, [xax, yax]] = [xmax, ymin]
         vertices[ 4, [xax, yax]] = [xmin, ymax]
         vertices[ 5, [xax, yax]] = [xmax, ymax]
-
-        if xform is not None:
-            vertices = affine.transform(vertices, xform)
 
         return vertices
 
