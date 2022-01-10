@@ -14,6 +14,7 @@ import OpenGL.GL as gl
 import numpy     as np
 
 import fsleyes.gl.textures              as textures
+import fsleyes.gl.routines              as glroutines
 import fsleyes_widgets.utils.textbitmap as textbmp
 
 
@@ -271,23 +272,5 @@ class Text:
         # Set up an ortho view where the
         # display coordinates correspond
         # to the canvas pixel coordinates.
-        mm = gl.glGetInteger(gl.GL_MATRIX_MODE)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPushMatrix()
-        gl.glLoadIdentity()
-        gl.glOrtho(0, width, 0, height, -1, 1)
-
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPushMatrix()
-        gl.glLoadIdentity()
-
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-        self.__texture.drawOnBounds(0, xlo, xhi, ylo, yhi, 0, 1)
-
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPopMatrix()
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPopMatrix()
-        gl.glMatrixMode(mm)
+        xform = glroutines.ortho2D(0, width, 0, height, -1, 1)
+        self.__texture.drawOnBounds(0, xlo, xhi, ylo, yhi, 0, 1, xform)

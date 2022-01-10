@@ -486,7 +486,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
     def draw2D(self, zpos, axes):
         """Draw this annotation. This is implemented in the GL-version-
-        specific  ``annotation_funcs`` modules.
+        specific ``annotation_funcs`` modules for most annotation types.
+        The :class:`.Text` annotation overrides this method to implement
+        its own rendering logic.
         """
         fslgl.annotation_funcs.draw2D(self, zpos, axes)
 

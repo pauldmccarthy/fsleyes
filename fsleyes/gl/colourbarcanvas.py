@@ -20,10 +20,11 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsleyes_props                         as props
-import fsl.utils.idle                        as idle
-import fsleyes.controls.colourbar            as cbar
-import fsleyes.gl.textures                   as textures
+import fsleyes_props              as props
+import fsl.utils.idle             as idle
+import fsleyes.controls.colourbar as cbar
+import fsleyes.gl.textures        as textures
+import fsleyes.gl.routines        as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -159,19 +160,11 @@ class ColourBarCanvas(props.HasProperties):
             return
 
         width, height = self.GetScaledSize()
+        xform         = glroutines.ortho2D(0, 1, 0, 1, -1, 1)
 
         # viewport
         gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadIdentity()
-        gl.glOrtho(0, 1, 0, 1, -1, 1)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-
-        gl.glClearColor(*self.__cbar.bgColour)
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        glroutines.clear(self.__cbar.bgColour)
         gl.glShadeModel(gl.GL_FLAT)
 
         xmin, xmax = 0, 1
@@ -185,4 +178,4 @@ class ColourBarCanvas(props.HasProperties):
             xmin += off / 2.0
             xmax -= off / 2.0
 
-        self.__tex.drawOnBounds(0, xmin, xmax, ymin, ymax, 0, 1)
+        self.__tex.drawOnBounds(0, xmin, xmax, ymin, ymax, 0, 1, xform)
