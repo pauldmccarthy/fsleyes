@@ -80,8 +80,7 @@ class Filter(object):
             self.__shader = shaders.ARBPShader(
                 vertSrc,
                 fragSrc,
-                shaders.getShaderDir(),
-                {'texture' : texture},
+                textureMap={'texture' : texture},
                 constants=constants)
 
 

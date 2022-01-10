@@ -42,10 +42,7 @@ def compileShaders(self):
         'imageTexture' : 0,
     }
 
-    self.shader = shaders.ARBPShader(vertSrc,
-                                     fragSrc,
-                                     shaders.getShaderDir(),
-                                     textures)
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
 def updateShaderState(self):

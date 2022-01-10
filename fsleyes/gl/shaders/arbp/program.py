@@ -29,7 +29,7 @@ from . import                            parse
 log = logging.getLogger(__name__)
 
 
-class ARBPShader(object):
+class ARBPShader:
     """The ``ARBPShader`` class encapsulates an OpenGL shader program
     written according to the ``ARB_vertex_program`` and
     ``ARB_fragment_program`` extensions. It parses and compiles vertex
@@ -116,10 +116,10 @@ class ARBPShader(object):
     def __init__(self,
                  vertSrc,
                  fragSrc,
-                 includePath,
                  textureMap=None,
                  constants=None,
-                 clean=True):
+                 clean=True,
+                 includePath=None):
         """Create an ``ARBPShader``.
 
         :arg vertSrc:     Vertex program source.
@@ -134,15 +134,20 @@ class ARBPShader(object):
                           programs. It is assumed that constant parameters are
                           shared by the vertex and fragment programs.
 
-        :arg includePath: Path to a directory which contains any additional
-                          files that may be included in the given source
-                          files.
-
         :arg clean:       If ``True`` (the default), the vertex and fragment
                           program source is 'cleaned' before compilation - all
                           comments, empty lines, and unncessary spaces are
                           removed before compilation.
+
+        :arg includePath: Path to a directory which contains any additional
+                          files that may be included in the given source
+                          files. Defaults to
+                          :func:`fsleyes.gl.shaders.getShaderDir`.
         """
+
+        if includePath is None:
+            from fsleyes.gl.shaders import getShaderDir
+            includePath = getShaderDir()
 
         decs = parse.parseARBP(vertSrc, fragSrc)
 

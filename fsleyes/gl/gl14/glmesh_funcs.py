@@ -32,8 +32,6 @@ def compileShaders(self):
         'negCmap' : 1
     }
 
-    shaderDir = shaders.getShaderDir()
-
     if self.threedee:
 
         flatVertSrc = shaders.getVertexShader(  'glmesh_3d_flat')
@@ -42,11 +40,9 @@ def compileShaders(self):
         dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
 
         self.flatShader = shaders.ARBPShader(flatVertSrc,
-                                             flatFragSrc,
-                                             shaderDir)
+                                             flatFragSrc)
         self.dataShader = shaders.ARBPShader(dataVertSrc,
                                              dataFragSrc,
-                                             shaderDir,
                                              textures)
 
     else:
@@ -54,7 +50,7 @@ def compileShaders(self):
         vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
         fragSrc = shaders.getFragmentShader('glmesh_2d_data')
 
-        self.dataShader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
+        self.dataShader = shaders.ARBPShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self, **kwargs):

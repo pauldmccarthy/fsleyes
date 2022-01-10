@@ -80,11 +80,7 @@ def compileShaders(self):
         texes[    'startingTexture'] = 5
         texes[    'depthTexture']    = 6
 
-    self.shader = shaders.ARBPShader(vertSrc,
-                                     fragSrc,
-                                     shaders.getShaderDir(),
-                                     texes,
-                                     constants)
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, texes, constants)
 
 
 def updateShaderState(self):

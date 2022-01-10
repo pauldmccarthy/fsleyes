@@ -162,14 +162,11 @@ class RenderTexture(texture2d.Texture2D):
 
         vertSrc   = shaders.getVertexShader(  'rendertexture')
         fragSrc   = shaders.getFragmentShader('rendertexture')
-        shaderDir = shaders.getShaderDir()
 
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
-            self.__shader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
-
+            self.__shader = shaders.ARBPShader(vertSrc, fragSrc)
         else:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
-
             self.__shader.load()
             self.__shader.set('colourTexture', 0)
             self.__shader.set('depthTexture',  1)

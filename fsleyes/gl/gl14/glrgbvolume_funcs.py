@@ -48,7 +48,6 @@ def compileShaders(self):
 
     self.shader = shaders.ARBPShader(vertSrc,
                                      fragSrc,
-                                     shaders.getShaderDir(),
                                      textureMap=textures,
                                      constants=constants)
 
