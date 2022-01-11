@@ -107,7 +107,8 @@ def draw(self,
          indices=None,
          normals=None,
          vdata=None,
-         mdata=None):
+         mdata=None,
+         xform=None):
     """Called for 3D meshes, and :attr:`.MeshOpts.vertexData` is not
     ``None``. Loads and runs the shader program.
 
@@ -124,6 +125,9 @@ def draw(self,
 
     :arg mdata:    ``(n, )`` array containing alpha modulation data for
                    each vertex.
+
+    :arg xform:    Transformation matrix to apply to the vertices, in
+                   addition to the canvas mvp matrix.
     """
 
     canvas = self.canvas
@@ -134,19 +138,26 @@ def draw(self,
     if vdata   is not None: shader.setAtt('vertexData',   vdata.reshape(-1, 1))
     if mdata   is not None: shader.setAtt('modulateData', mdata.reshape(-1, 1))
 
-    if normals is not None:
-
-        normalMatrix = self.canvas.viewMatrix[:3, :3]
-        normalMatrix = affine.invert(normalMatrix).T
-        normalMatrix = np.hstack((normalMatrix, np.zeros((3, 1))))
-        shader.setVertParam('normalMatrix', normalMatrix)
-
     if self.threedee:
+        mvmat  = canvas.viewMatrix
+        mvpmat = canvas.mvpMatrix
+
+        if xform is not None:
+            mvmat  = affine.concat(mvmat,  xform)
+            mvpmat = affine.concat(mvpmat, xform)
+
+        normmat = affine.invert(mvmat[:3, :3]).T
+        normmat = np.hstack((normmat, np.zeros((3, 1))))
+
         if not copts.light:
             lighting = [0, 0, 0, -1]
         else:
             lighting = affine.transform(canvas.lightPos, canvas.viewMatrix)
             lighting = list(lighting) + [1]
+
+        shader.setVertParam('mvmat',    mvmat)
+        shader.setVertParam('mvpmat',   mvpmat)
+        shader.setVertParam('normmat',  normmat)
         shader.setFragParam('lighting', lighting)
 
     shader.loadAtts()

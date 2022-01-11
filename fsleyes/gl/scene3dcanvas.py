@@ -29,7 +29,7 @@ import fsleyes.displaycontext.canvasopts as canvasopts
 log = logging.getLogger(__name__)
 
 
-class Scene3DCanvas(object):
+class Scene3DCanvas:
     """The ``Scene3DCanvas`` is an OpenGL canvas used to draw overlays in a 3D
     view. Currently only ``volume`` and ``mesh`` overlay types are supported.
     """
@@ -226,6 +226,12 @@ class Scene3DCanvas(object):
         See :meth:`__setViewport`.
         """
         return self.__projMat
+
+
+    @property
+    def mvpMatrix(self):
+        """Returns the current model*view*projection matrix. """
+        return affine.concat(self.__projMat, self.__viewMat)
 
 
     @property
@@ -644,12 +650,6 @@ class Scene3DCanvas(object):
         self.__invViewProjMat = affine.concat(self.__projMat, self.__viewMat)
         self.__invViewProjMat = affine.invert(self.__invViewProjMat)
 
-        gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.__projMat.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-
         return True
 
 
@@ -662,11 +662,14 @@ class Scene3DCanvas(object):
         if not self._setGLContext():
             return
 
-        opts = self.opts
-        glroutines.clear(opts.bgColour)
+        opts          = self.opts
+        width, height = self.GetScaledSize()
 
         if not self.__setViewport():
             return
+
+        gl.glViewport(0, 0, width, height)
+        glroutines.clear(opts.bgColour)
 
         overlays, globjs = self.getGLObjects()
 
@@ -679,9 +682,11 @@ class Scene3DCanvas(object):
         # which are higher in the list will get
         # drawn above (closer to the screen)
         # than lower ones.
-        depthOffset = affine.scaleOffsetXform(1, [0, 0, 0.1])
-        depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
-        xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
+        if opts.occlusion:
+            xform = affine.scaleOffsetXform(1, [0, 0, 0.1])
+            xform = np.array(xform, dtype=np.float32, copy=False)
+        else:
+            xform = None
 
         for ovl, globj in zip(overlays, globjs):
 
@@ -693,7 +698,8 @@ class Scene3DCanvas(object):
                 continue
 
             if opts.occlusion:
-                xform = affine.concat(depthOffset, xform)
+                xform = affine.concat(xform, xform)
+
             elif isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
@@ -742,7 +748,7 @@ class Scene3DCanvas(object):
             [b.xlo, pos.y, pos.z],
             [b.xhi, pos.y, pos.z],
         ], dtype=np.float32)
-        points = affine.transform(points, self.__viewMat)
+        points = affine.transform(points, self.mvpMatrix)
         gl.glLineWidth(1)
 
         r, g, b = opts.cursorColour[:3]
@@ -787,22 +793,23 @@ class Scene3DCanvas(object):
         # to the legend vertices. Offset
         # anatomical labels off each
         # axis line by a small amount.
-        rotation   = affine.decompose(self.__viewMat)[2]
-        xform      = affine.compose(scale, offset, rotation)
-        labelPoses = affine.transform(vertices * 1.2, xform)
-        vertices   = affine.transform(vertices,       xform)
+        rotation   = affine.decompose(self.viewMatrix)[2]
+        labelxform = affine.compose(scale, offset, rotation)
+        linexform  = affine.concat(self.projectionMatrix, labelxform)
+        labelverts = affine.transform(vertices * 1.2, labelxform)
+        lineverts  = affine.transform(vertices,       linexform)
 
         # Draw the legend lines
         gl.glDisable(gl.GL_DEPTH_TEST)
         gl.glColor3f(*copts.cursorColour[:3])
         gl.glLineWidth(2)
         gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*vertices[0])
-        gl.glVertex3f(*vertices[1])
-        gl.glVertex3f(*vertices[2])
-        gl.glVertex3f(*vertices[3])
-        gl.glVertex3f(*vertices[4])
-        gl.glVertex3f(*vertices[5])
+        gl.glVertex3f(*lineverts[0])
+        gl.glVertex3f(*lineverts[1])
+        gl.glVertex3f(*lineverts[2])
+        gl.glVertex3f(*lineverts[3])
+        gl.glVertex3f(*lineverts[4])
+        gl.glVertex3f(*lineverts[5])
         gl.glEnd()
 
         canvas = np.array([w, h])
@@ -813,10 +820,8 @@ class Scene3DCanvas(object):
 
             # Calculate pixel x/y
             # location for this label
-            xx, xy = canvas * (labelPoses[i, :2] + 0.5 * view) / view
-
+            xx, xy    = canvas * (labelverts[i, :2] + 0.5 * view) / view
             label.pos = (xx, xy)
-
             label.draw(w, h)
 
 
@@ -824,12 +829,13 @@ class Scene3DCanvas(object):
         """Draws a representation of the light source. """
 
         lightPos  = self.lightPos
+        mvp       = self.mvpMatrix
         bounds    = self.__displayCtx.bounds
         centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
                               bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
                               bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
-        lightPos  = affine.transform(lightPos, self.__viewMat)
-        centre    = affine.transform(centre,   self.__viewMat)
+        lightPos  = affine.transform(lightPos, mvp)
+        centre    = affine.transform(centre,   mvp)
 
         # draw the light as a point
         gl.glColor4f(1, 1, 0, 1)
@@ -882,8 +888,7 @@ class Scene3DCanvas(object):
             [xlo, yhi, zhi],
             [xhi, yhi, zhi],
         ])
-        vertices = affine.transform(vertices, self.__viewMat)
-
+        vertices = affine.transform(vertices, self.mvpMatrix)
 
         gl.glLineWidth(2)
         gl.glColor3f(0.5, 0, 0)

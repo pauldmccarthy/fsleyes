@@ -553,11 +553,6 @@ class GLMesh(globject.GLObject):
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPushMatrix()
-            gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
-
         if is2D or opts.wireframe:
             enable = (gl.GL_DEPTH_TEST)
         else:
@@ -575,10 +570,8 @@ class GLMesh(globject.GLObject):
                 normals=normals,
                 indices=idxs,
                 vdata=vdata,
-                mdata=mdata)
-
-        if xform is not None:
-            gl.glPopMatrix()
+                mdata=mdata,
+                xform=xform)
 
 
     def postDraw(self):
@@ -1072,7 +1065,6 @@ class GLMesh(globject.GLObject):
         """
 
         dopts      = self.opts
-        canvas     = self.canvas
         flatColour = dopts.getConstantColour()
         useNegCmap = (not dopts.useLut) and dopts.useNegativeCmap
 

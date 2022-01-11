@@ -118,13 +118,14 @@ def draw(self,
          indices=None,
          normals=None,
          vdata=None,
-         mdata=None):
+         mdata=None,
+         xform=None):
     """Called for 3D meshes, and when :attr:`.MeshOpts.vertexData` is not
     ``None``. Loads and runs the shader program.
 
     :arg glType:   The OpenGL primitive type.
 
-    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
+    :arg vertices: ``(n, 3)`` array containing the mesh vertices to draw.
 
     :arg indices:  Indices into the ``vertices`` array. If not provided,
                    ``glDrawArrays`` is used.
@@ -135,6 +136,9 @@ def draw(self,
 
     :arg mdata:    ``(n, )`` array containing alpha modulation data for
                    each vertex.
+
+    :arg xform:    Transformation matrix to apply to the vertices, in
+                   addition to the canvas mvp matrix.
     """
 
     canvas = self.canvas
@@ -154,9 +158,21 @@ def draw(self,
     if mdata    is not None: shader.setAtt('modulateData', mdata)
 
     if self.threedee:
-        lightPos = affine.transform(canvas.lightPos, canvas.viewMatrix)
-        shader.set('lighting', canvas.opts.light)
-        shader.set('lightPos', lightPos)
+        mvmat    = canvas.viewMatrix
+        mvpmat   = canvas.mvpMatrix
+
+        if xform is not None:
+            mvmat  = affine.concat(mvmat,  xform)
+            mvpmat = affine.concat(mvpmat, xform)
+
+        normmat  = affine.invert(mvmat[:3, :3]).T
+        lightPos = affine.transform(canvas.lightPos, mvmat)
+
+        shader.set('lighting',  canvas.opts.light)
+        shader.set('lightPos',  lightPos)
+        shader.set('mvmat',     mvmat)
+        shader.set('mvpmat',    mvpmat)
+        shader.set('normalmat', normmat)
 
     shader.loadAtts()
 
