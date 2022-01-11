@@ -255,7 +255,6 @@ class GLRGBVolume(glimageobject.GLImageObject):
 
     def draw3D(self, xform=None):
         """Does nothing. """
-        pass
 
 
     def postDraw(self):

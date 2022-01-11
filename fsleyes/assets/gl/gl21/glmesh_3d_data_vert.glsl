@@ -5,8 +5,8 @@
  */
 #version 120
 
-uniform   mat4 mvmat;
-uniform   mat4 mvpmat;
+uniform   mat4 MV;
+uniform   mat4 MVP;
 uniform   mat3 normalmat;
 
 attribute vec3  vertex;
@@ -22,9 +22,9 @@ varying   float fragModulateData;
 
 void main(void) {
 
-  fragVertex       = (mvmat * vec4(vertex, 1)).xyz;
+  fragVertex       = (MV * vec4(vertex, 1)).xyz;
   fragNormal       = normalize(normalmat * normal);
   fragVertexData   = vertexData;
   fragModulateData = modulateData;
-  gl_Position      = mvpmat * vec4(vertex, 1);
+  gl_Position      = MVP * vec4(vertex, 1);
 }

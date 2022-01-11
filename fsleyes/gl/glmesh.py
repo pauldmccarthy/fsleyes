@@ -436,15 +436,6 @@ class GLMesh(globject.GLObject):
                 (opts.outline or opts.vertexData is not None))
 
 
-    def needShader(self):
-        """Returns ``True`` if a shader should be loaded, ``False`` otherwise.
-        Relevant for both 2D and 3D rendering.
-        """
-        return (self.threedee or
-                (self.draw2DOutlineEnabled() and
-                 self.opts.vertexData is not None))
-
-
     def preDraw(self):
         """Overrides :meth:`.GLObject.preDraw`. Performs some pre-drawing
         configuration, which might involve loading shaders, and/or setting the
@@ -452,12 +443,12 @@ class GLMesh(globject.GLObject):
         current viewport size.
         """
 
-        useShader  = self.needShader()
         outline    = self.draw2DOutlineEnabled()
         useTexture = not (self.threedee or outline)
+        useShader  = self.threedee or outline
 
-        # A shader program is used either in 3D, or
-        # in 2D when some vertex data is being shown
+        # Currently 2D cross section rendering
+        # does not use a shader program.
         if useShader:
             fslgl.glmesh_funcs.preDraw(self)
 
@@ -468,8 +459,8 @@ class GLMesh(globject.GLObject):
                     self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
                     self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
-        # An off-screen texture is used when
-        # drawing off-screen textures in 2D
+        # An off-screen texture is used
+        # when drawing 2D cross-sectins
         if useTexture:
             size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
             width  = size[2]
@@ -488,7 +479,8 @@ class GLMesh(globject.GLObject):
 
         overlay       = self.overlay
         lo,  hi       = self.getDisplayBounds()
-        bbox          = self.canvas.viewport
+        canvas        = self.canvas
+        bbox          = canvas.viewport
         xax, yax, zax = axes
         outline       = self.draw2DOutlineEnabled()
 
@@ -526,6 +518,14 @@ class GLMesh(globject.GLObject):
             tex    = self.renderTexture
 
             self.drawCrossSection(zpos, axes, lo, hi, tex)
+
+            if xform is None:
+                xform = affine.concat(canvas.projectionMatrix,
+                                      canvas.viewMatrix)
+            else:
+                xform = affine.concat(canvas.projectionMatrix,
+                                      canvas.viewMatrix,
+                                      xform)
 
             tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
@@ -580,15 +580,17 @@ class GLMesh(globject.GLObject):
         :func:`.gl21.glmesh_funcs.postDraw` function.
         """
 
-        if self.needShader():
+        useShader = self.threedee or self.draw2DOutlineEnabled()
+
+        if useShader:
             fslgl.glmesh_funcs.postDraw(self)
 
-            if self.opts.vertexData is not None:
-                if self.opts.useLut:
-                    self.lutTexture.unbindTexture()
-                else:
-                    self.cmapTexture   .unbindTexture()
-                    self.negCmapTexture.unbindTexture()
+        if self.opts.vertexData is not None:
+            if self.opts.useLut:
+                self.lutTexture.unbindTexture()
+            else:
+                self.cmapTexture   .unbindTexture()
+                self.negCmapTexture.unbindTexture()
 
 
     def drawOutline(self, zpos, axes, xform=None, bbox=None):
@@ -605,50 +607,31 @@ class GLMesh(globject.GLObject):
 
         opts = self.opts
 
-        # Makes code below a bit nicer
-        if xform is None:
-            xform = np.eye(4)
-
         vertices, faces, dists, vertXform = self.calculateIntersection(
             zpos, axes, bbox)
 
+        if xform is None:
+            xform = np.eye(4)
         if vertXform is not None:
             xform = affine.concat(xform, vertXform)
 
         vdata     = self.getVertexData('vertex',   faces, dists)
         mdata     = self.getVertexData('modulate', faces, dists)
-        useShader = vdata is not None
         vertices  = vertices.reshape(-1, 3)
-        nvertices = vertices.shape[0]
 
         if mdata is None:
             mdata = vdata
 
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPushMatrix()
-        gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
-
         gl.glLineWidth(opts.outlineWidth)
 
-        # Constant colour
-        if not useShader:
-            vertices = vertices.ravel('C')
-            gl.glColor(*opts.getConstantColour())
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-            gl.glDrawArrays(gl.GL_LINES, 0, nvertices)
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
         # Coloured from vertex data
-        else:
-            fslgl.glmesh_funcs.draw(
-                self,
-                gl.GL_LINES,
-                vertices,
-                vdata=vdata,
-                mdata=mdata)
-
-        gl.glPopMatrix()
+        fslgl.glmesh_funcs.draw(
+            self,
+            gl.GL_LINES,
+            vertices,
+            vdata=vdata,
+            mdata=mdata,
+            xform=xform)
 
 
     def draw2DMesh(self, xform=None, bbox=None):
@@ -727,6 +710,11 @@ class GLMesh(globject.GLObject):
 
         dest.bindAsRenderTarget()
         dest.setRenderViewport(xax, yax, lo, hi)
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadMatrixf(dest.projectionMatrix.ravel('F'))
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadMatrixf(dest.viewMatrix.ravel('F'))
 
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and

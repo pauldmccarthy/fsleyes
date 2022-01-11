@@ -40,10 +40,13 @@ def compileShaders(self):
 
     else:
 
-        vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
-        fragSrc = shaders.getFragmentShader('glmesh_2d_data')
+        flatVertSrc = shaders.getVertexShader(  'glmesh_2d_flat')
+        flatFragSrc = shaders.getFragmentShader('glmesh_2d_flat')
+        dataVertSrc = shaders.getVertexShader(  'glmesh_2d_data')
+        dataFragSrc = shaders.getFragmentShader('glmesh_2d_data')
 
-        self.dataShader = shaders.GLSLShader(vertSrc, fragSrc)
+        self.dataShader = shaders.GLSLShader(dataVertSrc, dataFragSrc)
+        self.flatShader = shaders.GLSLShader(flatVertSrc, flatFragSrc)
 
 
 def updateShaderState(self, **kwargs):
@@ -88,14 +91,12 @@ def updateShaderState(self, **kwargs):
 
     dshader.unload()
 
-    if self.threedee:
-        fshader.load()
-        fshader.set('colour',   kwargs['flatColour'])
-
+    with fshader.loaded():
+        fshader.set(   'colour', kwargs['flatColour'])
         fshader.setAtt('vertex', self.vertices)
-        fshader.setAtt('normal', self.normals)
-        fshader.setIndices(self.indices)
-        fshader.unload()
+        if self.threedee:
+            fshader.setAtt('normal', self.normals)
+            fshader.setIndices(self.indices)
 
 
 def preDraw(self):
@@ -143,6 +144,12 @@ def draw(self,
 
     canvas = self.canvas
     shader = self.activeShader
+    mvmat  = canvas.viewMatrix
+    mvpmat = canvas.mvpMatrix
+
+    if xform is not None:
+        mvmat  = affine.concat(mvmat,  xform)
+        mvpmat = affine.concat(mvpmat, xform)
 
     # for 3D, shader attributes are
     # configured in updateShaderState
@@ -152,26 +159,21 @@ def draw(self,
         vdata    = None
         mdata    = None
 
+    shader.set('MVP', mvpmat)
+
     if vertices is not None: shader.setAtt('vertex',       vertices)
     if normals  is not None: shader.setAtt('normal',       normals)
     if vdata    is not None: shader.setAtt('vertexData',   vdata)
     if mdata    is not None: shader.setAtt('modulateData', mdata)
 
     if self.threedee:
-        mvmat    = canvas.viewMatrix
-        mvpmat   = canvas.mvpMatrix
-
-        if xform is not None:
-            mvmat  = affine.concat(mvmat,  xform)
-            mvpmat = affine.concat(mvpmat, xform)
 
         normmat  = affine.invert(mvmat[:3, :3]).T
         lightPos = affine.transform(canvas.lightPos, mvmat)
 
         shader.set('lighting',  canvas.opts.light)
         shader.set('lightPos',  lightPos)
-        shader.set('mvmat',     mvmat)
-        shader.set('mvpmat',    mvpmat)
+        shader.set('MV',        mvmat)
         shader.set('normalmat', normmat)
 
     shader.loadAtts()
