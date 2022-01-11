@@ -1057,7 +1057,7 @@ class VoxelSelection(AnnotationObject):
         fragSrc     = shaders.getFragmentShader('annotations_voxelselection')
 
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
-            pass
+            return shaders.ARBPShader(vertSrc, fragSrc, constants=constants)
         else:
             return shaders.GLSLShader(vertSrc, fragSrc, constants=constants)
 
@@ -1103,8 +1103,8 @@ class VoxelSelection(AnnotationObject):
         # See note in GLImageObject.generateVoxelCoordinates2D
         voxs  = opts.roundVoxels(voxs, daxes=[zax])
         texs  = affine.transform(voxs, voxToTex)
-        verts = np.array(verts, dtype=np.float32).ravel('C')
-        texs  = np.array(texs,  dtype=np.float32).ravel('C')
+        verts = np.array(verts, dtype=np.float32)
+        texs  = np.array(texs,  dtype=np.float32)
 
         return verts, texs
 
@@ -1129,7 +1129,6 @@ class VoxelSelection(AnnotationObject):
 
             with shader.loadedAtts():
                 gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
-
 
 
 class TextAnnotation(AnnotationObject):
