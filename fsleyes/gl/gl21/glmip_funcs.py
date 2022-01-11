@@ -112,3 +112,16 @@ def draw2D(self, zpos, axes, xform=None):
     glvolume_funcs.draw2D(self, zpos, axes, xform)
     self.shader.unloadAtts()
     self.shader.unload()
+
+
+def drawAll(self, zposes, axes, xforms):
+    self.shader.load()
+
+    viewmat       = self.canvas.viewMatrix
+    cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
+
+    self.shader.set('cameraDir', cdir)
+    self.shader.set('rayStep',   rayStep)
+    glvolume_funcs.drawAll(self, zposes, axes, xforms)
+    self.shader.unloadAtts()
+    self.shader.unload()

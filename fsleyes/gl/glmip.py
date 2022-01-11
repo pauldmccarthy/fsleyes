@@ -267,6 +267,11 @@ class GLMIP(glimageobject.GLImageObject):
         fslgl.glmip_funcs.draw2D(self, zpos, axes, xform)
 
 
+    def drawAll(self, zposes, axes, xforms):
+        """Calls :func:`.gl21.glmip_funcs.draw2D`. """
+        fslgl.glmip_funcs.drawAll(self, zposes, axes, xforms)
+
+
     def draw3D(self, xform=None):
         """Does nothing - not supported. """
 
