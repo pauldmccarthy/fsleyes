@@ -71,7 +71,6 @@ def updateShaderState(self):
         return
 
     opts    = self.opts
-    copts   = self.canvas.opts
     display = self.display
     shader  = self.shader
 
@@ -234,15 +233,22 @@ def draw3D(self, xform=None):
                   data.
     """
 
-    ovl                            = self.overlay
-    opts                           = self.opts
-    canvas                         = self.canvas
-    copts                          = canvas.opts
-    bbox                           = canvas.viewport
-    tex                            = self.renderTexture1
-    proj                           = self.canvas.projectionMatrix
-    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
+    ovl     = self.overlay
+    opts    = self.opts
+    canvas  = self.canvas
+    copts   = canvas.opts
+    bbox    = canvas.viewport
+    mvmat   = canvas.viewMatrix
+    mvpmat  = canvas.mvpMatrix
+    projmat = canvas.projectionMatrix
+    tex     = self.renderTexture1
+
+    if xform is not None:
+        mvmat  = affine.concat(mvmat,  xform)
+        mvpmat = affine.concat(mvpmat, xform)
+
+    vertices, _, texCoords = self.generateVertices3D(bbox)
+    rayStep , texform      = opts.calculateRayCastSettings(mvmat, projmat)
 
     rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(ovl.shape))
@@ -265,14 +271,14 @@ def draw3D(self, xform=None):
     self.shader.set(   'tex2ScreenXform', texform)
     self.shader.set(   'rayStep',         rayStep)
     self.shader.set(   'lightPos',        lightPos)
+    self.shader.set(   'mvmat',           mvmat)
+    self.shader.set(   'mvpmat',          mvpmat)
     self.shader.setAtt('vertex',          vertices)
     self.shader.setAtt('texCoord',        texCoords)
 
     self.shader.loadAtts()
-
-    tex.bindAsRenderTarget()
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
-    tex.unbindAsRenderTarget()
+    with tex.target():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
     self.shader.unloadAtts()
     self.shader.unload()

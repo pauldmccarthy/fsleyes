@@ -315,7 +315,7 @@ vec3 volume_lighting(vec3      texCoord,
                                    clipPlanes,
                                    clipMode);
 
-  normal = normalize(gl_NormalMatrix * normal);
+  normal = normalize(normal);
   return phong_lighting(texCoord, normal, lightPos, colour);
 }
 vec3 volume_lighting(vec3      texCoord,
@@ -334,7 +334,7 @@ vec3 volume_lighting(vec3      texCoord,
                                    clipPlanes,
                                    clipMode);
 
-  normal = normalize(gl_NormalMatrix * normal);
+  normal = normalize(normal);
   return phong_lighting(texCoord, normal, lightPos, colour);
 }
 

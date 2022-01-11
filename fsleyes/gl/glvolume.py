@@ -693,7 +693,7 @@ class GLVolume(glimageobject.GLImageObject):
             fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, *args, **kwargs):
+    def draw3D(self, xform=None):
         """Calls the version dependent ``draw3D`` function. """
 
         opts = self.opts
@@ -705,14 +705,11 @@ class GLVolume(glimageobject.GLImageObject):
         # Initialise and resize
         # the offscreen textures
         for rt in [self.renderTexture1, self.renderTexture2]:
-            if rt.shape != (sw, sh):
-                rt.shape = sw, sh
-
+            rt.shape = sw, sh
             with rt.target():
-                gl.glClearColor(0, 0, 0, 0)
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+                glroutines.clear((0, 0, 0, 0))
 
-        if opts.resolution != 100:
+        if self.opts.resolution != 100:
             gl.glViewport(0, 0, sw, sh)
 
         # Do the render. Even though we're
@@ -728,7 +725,10 @@ class GLVolume(glimageobject.GLImageObject):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
-            fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
+            fslgl.glvolume_funcs.draw3D(self, xform)
+
+        if self.opts.resolution != 100:
+            gl.glViewport(0, 0, w, h)
 
         # Apply smoothing if needed. If smoothing
         # is enabled, the final render will be in
@@ -746,12 +746,6 @@ class GLVolume(glimageobject.GLImageObject):
                           [ 1, -1, 0],
                           [-1,  1, 0],
                           [ 1,  1, 0]], dtype=np.float32)
-
-        invproj = affine.invert(self.canvas.projectionMatrix)
-        verts   = affine.transform(verts, invproj)
-
-        if opts.resolution != 100:
-            gl.glViewport(0, 0, w, h)
 
         with glroutines.enabled(gl.GL_DEPTH_TEST):
 
