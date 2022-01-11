@@ -55,7 +55,6 @@ class GLRGBVector(glvector.GLVector):
                                              drawing.
     ``draw2D(GLRGBVector, zpos, xform)``     Draw the slice specified by
                                              ``zpos``.
-    ``draw3D(GLRGBVector, zpos, xform)``     Draw the volume in 3D
     ``drawAll(GLRGBVector, zposes, xforms)`` Draw all slices specified by
                                              ``zposes``.
     ``postDraw(GLRGBVector)``                Clean up the GL state after
@@ -227,10 +226,7 @@ class GLRGBVector(glvector.GLVector):
 
 
     def draw3D(self, *args, **kwargs):
-        """Overrides :meth:`.GLVector.draw3D`. Calls the OpenGL
-        version-specific ``draw3D`` function.
-        """
-        fslgl.glrgbvector_funcs.draw3D(self, *args, **kwargs)
+        """Does nothing. """
 
 
     def drawAll(self, *args, **kwargs):

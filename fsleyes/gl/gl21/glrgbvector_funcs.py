@@ -71,6 +71,5 @@ def updateShaderState(self):
 
 preDraw  = glvolume_funcs.preDraw
 draw2D   = glvolume_funcs.draw2D
-draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

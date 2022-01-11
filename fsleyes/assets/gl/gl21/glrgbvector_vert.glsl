@@ -10,8 +10,8 @@ attribute vec3 voxCoord;
 attribute vec3 texCoord;
 
 /*
- * Transformation matrices to transform image texture 
- * coordinates into clip/modulate image texture 
+ * Transformation matrices to transform image texture
+ * coordinates into clip/modulate image texture
  * coordinates.
  */
 uniform mat4 colourCoordXform;
@@ -35,5 +35,5 @@ void main(void) {
   fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(1, 1, 1, 1);
 
-  gl_Position = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  gl_Position = vec4(vertex, 1);
 }
