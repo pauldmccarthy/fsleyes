@@ -179,7 +179,7 @@ class Filter:
                 gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
 
-    def osApply(self, source, dest, clearDest=True, **kwargs):
+    def osApply(self, source, dest, clearDest=True):
         """Apply the filter to the given ``source`` texture, rendering
         the results to the given ``dest`` texture.
 
@@ -201,4 +201,5 @@ class Filter:
                 gl.glClear(gl.GL_COLOR_BUFFER_BIT |
                            gl.GL_DEPTH_BUFFER_BIT |
                            gl.GL_STENCIL_BUFFER_BIT)
-            self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, **kwargs)
+            xform = affine.concat(dest.projectionMatrix, dest.viewMatrix)
+            self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, xform)

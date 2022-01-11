@@ -23,10 +23,11 @@ import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
 import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-import fsleyes.gl          as fslgl
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.shaders  as shaders
-from . import                 texture2d
+import fsl.transform.affine as affine
+import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.shaders   as shaders
+from . import                  texture2d
 
 
 log = logging.getLogger(__name__)
@@ -164,7 +165,10 @@ class RenderTexture(texture2d.Texture2D):
         fragSrc   = shaders.getFragmentShader('rendertexture')
 
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
-            self.__shader = shaders.ARBPShader(vertSrc, fragSrc)
+            self.__shader = shaders.ARBPShader(vertSrc,
+                                               fragSrc,
+                                               {'colourTexture' : 0,
+                                                'depthTexture'  : 1})
         else:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
             self.__shader.load()
@@ -215,6 +219,12 @@ class RenderTexture(texture2d.Texture2D):
         is bound - returns ``None``at all other times.
         """
         return self.__viewMatrix
+
+
+    @property
+    def mvpMatrix(self):
+        """Returns the current model*view*projection matrix. """
+        return affine.concat(self.__projectionMatrix, self.__viewMatrix)
 
 
     @property
@@ -496,16 +506,15 @@ class RenderTexture(texture2d.Texture2D):
                                'the frame buffer [{}]'.format(status))
 
 
-    def draw(self, *args, **kwargs):
+    def draw(self, vertices, useDepth=False):
         """Overrides :meth:`.Texture2D.draw`. Calls that method, optionally
         using the information in the depth texture.
 
 
-        :arg useDepth: Must be passed as a keyword argument. Defaults to
-                       ``False``. If ``True``, and this ``RenderTexture``
-                       was configured to use a depth texture, the texture
-                       is rendered with depth information using a fragment
-                       program
+        :arg useDepth: Defaults to ``False``. If ``True``, and this
+                       ``RenderTexture`` was configured to use a depth
+                       texture, the texture is rendered with depth
+                       information using a fragment program.
 
 
         A ``RuntimeError`` will be raised if ``useDepth is True``, but this
@@ -513,21 +522,24 @@ class RenderTexture(texture2d.Texture2D):
         setting in :meth:`__init__`).
         """
 
-        useDepth = kwargs.pop('useDepth', False)
-
         if useDepth and self.__depthTexture is None:
             raise RuntimeError('useDepth is True but I don\'t '
                                'have a depth texture!')
 
-        if useDepth:
-            self.__depthTexture.bindTexture(gl.GL_TEXTURE1)
-            self.__shader.load()
-
-        texture2d.Texture2D.draw(self, *args, **kwargs)
-
-        if useDepth:
-            self.__shader.unload()
-            self.__depthTexture.unbindTexture()
+        # Draw using the default Texture2D shader
+        if not useDepth:
+            texture2d.Texture2D.draw(self, vertices)
+        else:
+            shader    = self.__shader
+            depthTex  = self.__depthTexture
+            texCoords = self.generateTextureCoords()
+            with shader.loaded():
+                shader.setAtt('vertex',   vertices)
+                shader.setAtt('texCoord', texCoords)
+                with self    .bound(gl.GL_TEXTURE0), \
+                     depthTex.bound(gl.GL_TEXTURE1), \
+                     shader.loadedAtts():
+                    gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
 
 class GLObjectRenderTexture(RenderTexture):
