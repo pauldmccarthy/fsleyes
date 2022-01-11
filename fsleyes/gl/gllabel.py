@@ -302,20 +302,22 @@ class GLLabel(glimageobject.GLImageObject):
                               ymin, ymax, xax, yax, xform)
 
 
-    def draw3D(self, *args, **kwargs):
-        """Calls the version-dependent ``draw3D`` function. """
-        fslgl.gllabel_funcs.draw3D(self, *args, **kwargs)
+    def draw3D(self, xform=None):
+        """Not implemented."""
 
 
     def drawAll(self, axes, zposes, xforms):
         """Calls the version-dependent ``drawAll`` function. """
 
         opts       = self.opts
+        canvas     = self.canvas
         outline    = opts.outline
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
-        w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.viewport
+        w, h       = canvas.GetSize()
+        bbox       = canvas.viewport
+        projmat    = canvas.projectionMatrix
+        viewmat    = canvas.viewMatrix
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
@@ -325,14 +327,17 @@ class GLLabel(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # draw all slices to the offscreen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), \
+             rtex.target(xax, yax, lo, hi),    \
+             self.renderTarget(rtex):
             fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
+
+        xform = affine.concat(projmat, viewmat)
 
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
-        self.edgeFilter.apply(
-            rtex, max(zposes), xmin, xmax, ymin, ymax, xax, yax,
-            textureUnit=gl.GL_TEXTURE2)
+        self.edgeFilter.apply(rtex, max(zposes), xmin, xmax,
+                              ymin, ymax, xax, yax, xform)
 
 
     def postDraw(self):

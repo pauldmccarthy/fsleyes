@@ -90,7 +90,3 @@ def drawAll(self, *args, **kwargs):
     glvolume_funcs.drawAll(self, *args, **kwargs)
     self.shader.unloadAtts()
     self.shader.unload()
-
-
-def draw3D(self, *args, **kwargs):
-    pass

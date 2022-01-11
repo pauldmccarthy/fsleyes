@@ -13,6 +13,7 @@ import logging
 import OpenGL.GL                 as gl
 
 import fsl.utils.idle            as idle
+import fsl.transform.affine      as affine
 import fsleyes.colourmaps        as colourmaps
 import fsleyes.gl                as fslgl
 import fsleyes.gl.textures       as textures
@@ -302,10 +303,13 @@ class GLMask(glimageobject.GLImageObject):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
             return
 
+        canvas     = self.canvas
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
-        w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.viewport
+        w, h       = canvas.GetSize()
+        bbox       = canvas.viewport
+        projmat    = canvas.projectionMatrix
+        viewmat    = canvas.viewMatrix
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
@@ -315,15 +319,19 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw the mask to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), \
+             rtex.target(xax, yax, lo, hi),    \
+             self.renderTarget(rtex):
             fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
+
+        if xform is None: xform = affine.concat(projmat, viewmat)
+        else:             xform = affine.concat(projmat, viewmat, xform)
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
         self.edgeFilter.set(offsets=offsets, outline=1)
-        self.edgeFilter.apply(
-            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
-            textureUnit=gl.GL_TEXTURE1)
+        self.edgeFilter.apply(rtex, zpos, xmin, xmax,
+                              ymin, ymax, xax, yax, xform)
 
 
     def drawAll(self, axes, zposes, xforms):
@@ -331,14 +339,22 @@ class GLMask(glimageobject.GLImageObject):
         the edge filter if necessary.
         """
 
-        opts = self.opts
-        rtex = self.renderTexture
+
+        opts   = self.opts
+        rtex   = self.renderTexture
+        canvas = self.canvas
+
+        if not opts.outline:
+            fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
+            return
 
         # Is taking max(z) hacky? It seems to work ok.
         zpos       = max(zposes)
         owidth     = opts.outlineWidth
-        w, h       = self.canvas.GetSize()
-        bbox       = self.canvas.viewport
+        w, h       = canvas.GetSize()
+        bbox       = canvas.viewport
+        projmat    = canvas.projectionMatrix
+        viewmat    = canvas.viewMatrix
         lo         = [ax[0] for ax in bbox]
         hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
@@ -348,27 +364,22 @@ class GLMask(glimageobject.GLImageObject):
         offsets    = [owidth / w, owidth / h]
 
         # Draw all slices to the off-screen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), \
+             rtex.target(xax, yax, lo, hi),    \
+             self.renderTarget(rtex):
             fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
 
-        # if no outline, draw the texture directly
-        if not opts.outline:
-            rtex.drawOnBounds(
-                zpos, xmin, xmax, ymin, ymax, xax, yax,
-                textureUnit=gl.GL_TEXTURE1)
+        xform = affine.concat(projmat, viewmat)
 
-        else:
-            # Run the texture through an edge detection
-            # filter, drawing the result to screen
-            self.edgeFilter.set(offsets=offsets, outline=1)
-            self.edgeFilter.apply(
-                rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
-                textureUnit=gl.GL_TEXTURE1)
+        # Run the texture through an edge detection
+        # filter, drawing the result to screen
+        self.edgeFilter.set(offsets=offsets, outline=1)
+        self.edgeFilter.apply(rtex, zpos, xmin, xmax,
+                              ymin, ymax, xax, yax, xform)
 
 
     def draw3D(self, *args, **kwargs):
         """Does nothing. """
-        pass
 
 
     def postDraw(self):
