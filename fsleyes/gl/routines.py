@@ -1462,3 +1462,16 @@ def polygonIndices(nverts):
     indices[::3]  = 0
 
     return indices
+
+
+def stackVertices(vertices):
+    """Convenience function to concatenate several arrays of vertices into
+    a single array.
+    """
+    # load all vertex types, and use offsets
+    # to draw each vertex group separately
+    lens     = [len(v) for v in vertices]
+    offsets  = [0] + lens[:-1]
+    vertices = np.vstack(vertices)
+
+    return vertices, lens, offsets

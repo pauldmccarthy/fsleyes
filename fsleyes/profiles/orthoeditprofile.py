@@ -126,7 +126,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
 
-    locationFollowsMouse = props.Boolean(deafult=True)
+    locationFollowsMouse = props.Boolean(default=True)
     """If ``True``, when the user is drawing/erasing/selectiong by clicking and
     dragging with the mouse, the :attr:`.DisplayContext.location` is updated to
     track the mouse.

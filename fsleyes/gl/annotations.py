@@ -44,6 +44,7 @@ import fsl.transform.affine     as affine
 import fsleyes_props            as props
 import fsleyes.gl               as fslgl
 import fsleyes.gl.globject      as globject
+import fsleyes.gl.shaders       as shaders
 import fsleyes.gl.routines      as glroutines
 import fsleyes.gl.resources     as glresources
 import fsleyes.gl.textures      as textures
@@ -336,9 +337,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     trigger a draw on the owning ``SliceCanvas`` to refresh the annotation.
     You shouldn't touch the ``expiry`` or ``creation`` attributes though.
 
-    OpenGL logic for drawing :class:`.AnnotationObject` instances is contained
-    in the ``annotation_funcs`` modules for each supported OpenGL version.
-
     Subclasses must, at the very least, override the
     :meth:`globject.GLObject.vertices2D` method.
     """
@@ -417,6 +415,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.annot    = annot
         self.creation = time.time()
         self.expiry   = expiry
+        self.shader   = self.createShader()
 
         if colour        is not None: self.colour        = colour
         if alpha         is not None: self.alpha         = alpha
@@ -426,11 +425,27 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         if zmin          is not None: self.zmin          = zmin
         if zmax          is not None: self.zmax          = zmax
 
-        fslgl.annotation_funcs.init(self)
-
 
     def destroy(self):
-        fslgl.annotation_funcs.destroy(self)
+        """Must be called when  this ``AnnotationObject`` is no longer needed.
+        """
+        if self.shader is not None:
+            self.shader.destroy()
+            self.shader = None
+
+
+    def createShader(self):
+        """Compile and return the shader program to draw this
+        ``AnnotationObject``. Called by ``__init__``. Most types use a default
+        shader program, but this method may be overridden for annotation types
+        which require a different shader.
+        """
+        vertSrc     = shaders.getVertexShader(  'annotations')
+        fragSrc     = shaders.getFragmentShader('annotations')
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            return shaders.ARBPShader(vertSrc, fragSrc)
+        else:
+            return shaders.GLSLShader(vertSrc, fragSrc)
 
 
     def resetExpiry(self):
@@ -485,12 +500,35 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     def draw2D(self, zpos, axes):
-        """Draw this annotation. This is implemented in the GL-version-
-        specific ``annotation_funcs`` modules for most annotation types.
-        The :class:`.Text` annotation overrides this method to implement
-        its own rendering logic.
+        """Draw this annotation. This method implements a default routine
+        used by most annotation types. It may be overridden by sub-classes
+        which require a different routine.
         """
-        fslgl.annotation_funcs.draw2D(self, zpos, axes)
+        shader   = self.shader
+        canvas   = self.canvas
+        mvpmat   = canvas.mvpMatrix
+        colour   = list(self.colour[:3]) + [self.alpha / 100.0]
+        vertices = self.vertices2D(zpos, axes)
+
+        if vertices is None or len(vertices) == 0:
+            return
+
+        if self.lineWidth is not None:
+            gl.glLineWidth(self.lineWidth)
+
+        # load all vertex types, and use offsets
+        # to draw each vertex group separately
+        primitives              = [v[0] for v in vertices]
+        vertices                = [v[1] for v in vertices]
+        vertices, lens, offsets = glroutines.stackVertices(vertices)
+
+        with shader.loaded():
+            shader.set(   'MVP',    mvpmat)
+            shader.set(   'colour', colour)
+            shader.setAtt('vertex', vertices)
+            with shader.loadedAtts():
+                for prim, length, off in zip(primitives, lens, offsets):
+                    gl.glDrawArrays(prim, off, length)
 
 
 class Point(AnnotationObject):
@@ -669,9 +707,9 @@ class Arrow(Line):
         return lineverts + verts
 
 
-class Rect(AnnotationObject):
-    """The ``Rect`` class is an :class:`AnnotationObject` which represents a
-    2D rectangle.
+class BorderMixin:
+    """Mixin for ``AnnotationObject`` classes which display a shape which
+    can be filled or unfilled, and can have a border or no border.
     """
 
 
@@ -681,6 +719,51 @@ class Rect(AnnotationObject):
 
     border = props.Boolean(default=True)
     """Whether to draw a border around the rectangle. """
+
+
+    def draw2D(self, zpos, axes):
+        shader   = self.shader
+        canvas   = self.canvas
+        mvpmat   = canvas.mvpMatrix
+        vertices = self.vertices2D(zpos, axes)
+
+        if vertices is None or len(vertices) == 0:
+            return
+
+        primitives              = [v[0] for v in vertices]
+        vertices                = [v[1] for v in vertices]
+        vertices, lens, offsets = glroutines.stackVertices(vertices)
+
+        if self.lineWidth is not None:
+            gl.glLineWidth(self.lineWidth)
+
+        colour = list(self.colour[:3])
+        alpha  = self.alpha / 100.0
+
+        with shader.loaded():
+            shader.set(   'MVP',    mvpmat)
+            shader.setAtt('vertex', vertices)
+
+            with shader.loadedAtts():
+                if self.border:
+                    prim   = primitives.pop(0)
+                    off    = offsets   .pop(0)
+                    length = lens      .pop(0)
+                    if self.filled: shader.set('colour', colour + [1.0])
+                    else:           shader.set('colour', colour + [alpha])
+                    gl.glDrawArrays(prim, off, length)
+                if self.filled:
+                    prim   = primitives.pop(0)
+                    off    = offsets   .pop(0)
+                    length = lens      .pop(0)
+                    shader.set('colour', colour + [alpha])
+                    gl.glDrawArrays(prim, off, length)
+
+
+class Rect(BorderMixin, AnnotationObject):
+    """The ``Rect`` class is an :class:`AnnotationObject` which represents a
+    2D rectangle.
+    """
 
 
     def __init__(self,
@@ -807,18 +890,10 @@ class Rect(AnnotationObject):
         return gl.GL_LINES, verts
 
 
-class Ellipse(AnnotationObject):
+class Ellipse(BorderMixin, AnnotationObject):
     """The ``Ellipse`` class is an :class:`AnnotationObject` which represents a
     ellipse.
     """
-
-
-    filled = props.Boolean(default=True)
-    """Whether to fill the ellipse. """
-
-
-    border = props.Boolean(default=True)
-    """Whether to draw a border around the ellipse. """
 
 
     def __init__(self,
@@ -970,10 +1045,21 @@ class VoxelSelection(AnnotationObject):
             selection)
 
         # Call base class init afterwards,
-        # as the annotation_funcs init
-        # function may need to access the
-        # texture created above.
+        # as the init function may need to
+        # access the texture created above.
         AnnotationObject.__init__(self, annot, *args, **kwargs)
+
+    def createShader(self):
+        """Overrides :meth:`AnnotationObject.createShader`.
+        """
+        constants   = {'textureIs2D' : self.texture.ndim == 2}
+        vertSrc     = shaders.getVertexShader(  'annotations_voxelselection')
+        fragSrc     = shaders.getFragmentShader('annotations_voxelselection')
+
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            pass
+        else:
+            return shaders.GLSLShader(vertSrc, fragSrc, constants=constants)
 
 
     def destroy(self):
@@ -1021,6 +1107,29 @@ class VoxelSelection(AnnotationObject):
         texs  = np.array(texs,  dtype=np.float32).ravel('C')
 
         return verts, texs
+
+
+    def draw2D(self, zpos, axes):
+        """Draw a :class:`.VoxelSelection` annotation. """
+
+        shader              = self.shader
+        canvas              = self.canvas
+        texture             = self.texture
+        mvpmat              = canvas.mvpMatrix
+        colour              = list(self.colour[:3]) + [self.alpha / 100.0]
+        vertices, texCoords = self.vertices2D(zpos, axes)
+
+        with texture.bound(gl.GL_TEXTURE0), shader.loaded():
+
+            shader.set(   'tex',      0)
+            shader.set(   'MVP',      mvpmat)
+            shader.set(   'colour',   colour)
+            shader.setAtt('vertex',   vertices)
+            shader.setAtt('texCoord', texCoords)
+
+            with shader.loadedAtts():
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+
 
 
 class TextAnnotation(AnnotationObject):

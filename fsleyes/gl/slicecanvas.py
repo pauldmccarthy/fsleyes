@@ -17,6 +17,7 @@ import numpy as np
 
 import fsl.data.image                     as fslimage
 import fsl.utils.idle                     as idle
+import fsl.transform.affine               as affine
 import fsleyes_widgets.utils.status       as status
 import fsleyes_props                      as props
 
@@ -485,6 +486,12 @@ class SliceCanvas:
     def projectionMatrix(self):
         """Returns the current projection matrix. """
         return self.__projectionMatrix
+
+
+    @property
+    def mvpMatrix(self):
+        """Returns the current model*view*projection matrix. """
+        return affine.concat(self.__projectionMatrix, self.__viewMatrix)
 
 
     def _initGL(self):

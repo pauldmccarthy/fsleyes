@@ -9,7 +9,6 @@ types in an OpenGL 2.1 compatible manner.
 """
 
 
-from . import annotation_funcs     # noqa
 from . import glvolume_funcs       # noqa
 from . import glrgbvolume_funcs    # noqa
 from . import glrgbvector_funcs    # noqa

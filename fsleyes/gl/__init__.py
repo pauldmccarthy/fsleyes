@@ -329,9 +329,6 @@ def bootstrap(glVersion=None):
 
     ``GL_RENDERER``        A string containing the name of the OpenGL renderer.
 
-    ``annotation_funcs``   The version-specific module containing functions
-                           used by :class:`.AnnotationObject` instances.
-
     ``glvolume_funcs``     The version-specific module containing functions for
                            rendering :class:`.GLVolume` instances.
 
@@ -450,7 +447,6 @@ def bootstrap(glVersion=None):
     thismod.GL_VERSION         = str(glVersion)
     thismod.GL_COMPATIBILITY   = verstr
     thismod.GL_RENDERER        = renderer
-    thismod.annotation_funcs   = glpkg.annotation_funcs
     thismod.glvolume_funcs     = glpkg.glvolume_funcs
     thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
     thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs

@@ -3,13 +3,12 @@
  */
 #version 120
 
-uniform    mat4  MV;
-uniform    mat4  P;
+uniform    mat4  MVP;
 attribute  vec3  vertex;
 attribute  vec3  texCoord;
 varying    vec3  fragTexCoord;
 
 void main(void) {
-  gl_Position  = P * MV * vec4(vertex, 1);
+  gl_Position  = MVP * vec4(vertex, 1);
   fragTexCoord = texCoord;
 }

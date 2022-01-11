@@ -64,6 +64,7 @@ class ARBPShader:
        recompile
        setVertParam
        setFragParam
+       set
        setAtt
        setConstant
 
@@ -314,6 +315,14 @@ class ARBPShader:
             yield
         finally:
             self.unloadAtts()
+
+
+    def set(self, name, value):
+        """Set the value of the specified parameter on the vertex program
+        and/or the fragment program.
+        """
+        if name in self.vertParamPositions: self.setVertParam(name, value)
+        if name in self.fragParamPositions: self.setFragParam(name, value)
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
