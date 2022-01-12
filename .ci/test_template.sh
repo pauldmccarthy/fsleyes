@@ -26,7 +26,8 @@ fi;
 # tests, and need $FSLDIR to be defined
 export FSLDIR=/fsl/
 mkdir -p $FSLDIR/data/
-rsync -rv "fsldownload:$FSL_ATLAS_DIR" "$FSLDIR/data/atlases/"
+rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
+rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
 
 source /test.venv/bin/activate
 pip install --upgrade pip
