@@ -2,13 +2,6 @@
 #
 # Vertex program for rendering GLMesh instances in 2D.
 #
-# Input attributes:
-#    {{ attr_vertexData }} - Data associated with the current vertex
-#
-# Outputs:
-#    {{ varying_vertexData}}    - As above, passed through to fragment shader.
-#    {{ varying_modulateeData}} - As above, passed through to fragment shader.
-#
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
@@ -19,9 +12,4 @@ DP4 result.position.x, mvpmat[0], {{ attr_vertex }};
 DP4 result.position.y, mvpmat[1], {{ attr_vertex }};
 DP4 result.position.z, mvpmat[2], {{ attr_vertex }};
 DP4 result.position.w, mvpmat[3], {{ attr_vertex }};
-
-# Copy the vertex/modulate data
-MOV {{ varying_vertexData }},   {{ attr_vertexData }};
-MOV {{ varying_modulateData }}, {{ attr_modulateData }};
-
 END

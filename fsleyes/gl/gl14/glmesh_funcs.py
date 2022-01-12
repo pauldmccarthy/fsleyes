@@ -47,10 +47,13 @@ def compileShaders(self):
 
     else:
 
-        vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
-        fragSrc = shaders.getFragmentShader('glmesh_2d_data')
+        flatVertSrc = shaders.getVertexShader(  'glmesh_2d_flat')
+        flatFragSrc = shaders.getFragmentShader('glmesh_2d_flat')
+        dataVertSrc = shaders.getVertexShader(  'glmesh_2d_data')
+        dataFragSrc = shaders.getFragmentShader('glmesh_2d_data')
 
-        self.dataShader = shaders.ARBPShader(vertSrc, fragSrc)
+        self.flatShader = shaders.ARBPShader(flatVertSrc, flatFragSrc)
+        self.dataShader = shaders.ARBPShader(dataVertSrc, dataFragSrc)
 
 
 def updateShaderState(self, **kwargs):
@@ -81,10 +84,9 @@ def updateShaderState(self, **kwargs):
     dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
     dshader.unload()
 
-    if self.threedee:
-        fshader.load()
-        fshader.setFragParam('colour', kwargs['flatColour'])
-        fshader.unload()
+    fshader.load()
+    fshader.setFragParam('colour', kwargs['flatColour'])
+    fshader.unload()
 
 
 def preDraw(self):
@@ -133,18 +135,20 @@ def draw(self,
     canvas = self.canvas
     copts  = canvas.opts
     shader = self.activeShader
+    mvmat  = canvas.viewMatrix
+    mvpmat = canvas.mvpMatrix
+
+    if xform is not None:
+        mvmat  = affine.concat(mvmat,  xform)
+        mvpmat = affine.concat(mvpmat, xform)
 
     if normals is not None: shader.setAtt('normal',       normals)
     if vdata   is not None: shader.setAtt('vertexData',   vdata.reshape(-1, 1))
     if mdata   is not None: shader.setAtt('modulateData', mdata.reshape(-1, 1))
 
-    if self.threedee:
-        mvmat  = canvas.viewMatrix
-        mvpmat = canvas.mvpMatrix
+    shader.setAtt('vertex', vertices)
 
-        if xform is not None:
-            mvmat  = affine.concat(mvmat,  xform)
-            mvpmat = affine.concat(mvpmat, xform)
+    if self.threedee:
 
         normmat = affine.invert(mvmat[:3, :3]).T
         normmat = np.hstack((normmat, np.zeros((3, 1))))
@@ -159,22 +163,20 @@ def draw(self,
         shader.setVertParam('mvpmat',   mvpmat)
         shader.setVertParam('normmat',  normmat)
         shader.setFragParam('lighting', lighting)
+    else:
+        shader.setVertParam('mvpmat',   mvpmat)
 
     shader.loadAtts()
 
     nvertices = vertices.shape[0]
-    vertices  = vertices.ravel('C')
 
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-        if indices is None:
-            gl.glDrawArrays(glType, 0, nvertices)
-        else:
-            gl.glDrawElements(glType,
-                              indices.shape[0],
-                              gl.GL_UNSIGNED_INT,
-                              indices.ravel('C'))
+    if indices is None:
+        gl.glDrawArrays(glType, 0, nvertices)
+    else:
+        gl.glDrawElements(glType,
+                          indices.shape[0],
+                          gl.GL_UNSIGNED_INT,
+                          indices.ravel('C'))
 
 
 def postDraw(self):

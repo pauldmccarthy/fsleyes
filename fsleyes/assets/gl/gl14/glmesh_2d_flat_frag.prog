@@ -1,0 +1,11 @@
+!!ARBfp1.0
+#
+# Fragment program used for rendering GLMesh instances in 2D.
+#
+
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+PARAM colour = {{ param_colour }};
+MOV result.color, colour;
+END

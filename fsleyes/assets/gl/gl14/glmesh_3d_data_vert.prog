@@ -29,16 +29,16 @@ PARAM mvpmat[4]  = {{ param4_mvpmat }};
 
 TEMP normal;
 
-DP4 result.position.x, mvpmat[0], vertex.position;
-DP4 result.position.y, mvpmat[1], vertex.position;
-DP4 result.position.z, mvpmat[2], vertex.position;
-DP4 result.position.w, mvpmat[3], vertex.position;
+DP4 result.position.x, mvpmat[0], {{ attr_vertex }};
+DP4 result.position.y, mvpmat[1], {{ attr_vertex }};
+DP4 result.position.z, mvpmat[2], {{ attr_vertex }};
+DP4 result.position.w, mvpmat[3], {{ attr_vertex }};
 
 # Transform the vertex position into display coordinates
-DP4 {{ varying_vertex }}.x, mvmat[0], vertex.position;
-DP4 {{ varying_vertex }}.y, mvmat[1], vertex.position;
-DP4 {{ varying_vertex }}.z, mvmat[2], vertex.position;
-DP4 {{ varying_vertex }}.w, mvmat[3], vertex.position;
+DP4 {{ varying_vertex }}.x, mvmat[0], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.y, mvmat[1], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.z, mvmat[2], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.w, mvmat[3], {{ attr_vertex }};
 
 # Transform the normal vector
 DP3 normal.x, normmat[0], {{ attr_normal }};
