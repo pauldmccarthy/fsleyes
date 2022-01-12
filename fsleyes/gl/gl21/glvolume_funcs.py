@@ -243,9 +243,13 @@ def draw3D(self, xform=None):
     projmat = canvas.projectionMatrix
     tex     = self.renderTexture1
 
+    # The xform, if provided, is an occlusion
+    # depth offset (see Scene3DCanvas._draw).
+    # We have to apply it *after* the mv
+    # transform for occlusion work.
     if xform is not None:
-        mvmat  = affine.concat(mvmat,  xform)
-        mvpmat = affine.concat(mvpmat, xform)
+        mvmat  = affine.concat(         xform, mvmat)
+        mvpmat = affine.concat(projmat, xform, mvmat)
 
     vertices, _, texCoords = self.generateVertices3D(bbox)
     rayStep , texform      = opts.calculateRayCastSettings(mvmat, projmat)
@@ -263,9 +267,6 @@ def draw3D(self, xform=None):
         lightPos = affine.transform(canvas.lightPos, lxform)
     else:
         lightPos = [0, 0, 0]
-
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
 
     self.shader.set(   'lighting',        copts.light)
     self.shader.set(   'tex2ScreenXform', texform)

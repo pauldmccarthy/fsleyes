@@ -697,17 +697,20 @@ class Scene3DCanvas:
             if not display.enabled:
                 continue
 
-            if opts.occlusion:
-                xform = affine.concat(xform, xform)
-
-            elif isinstance(ovl, fslimage.Image):
+            # Clear depth on each overlay
+            # if occlusion is disabled
+            if (not opts.occlusion) and isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
-            log.debug('Drawing {} [{}]'.format(ovl, globj))
+            log.debug('Drawing %s [%s]', ovl, globj)
 
             globj.preDraw()
             globj.draw3D(xform=xform)
             globj.postDraw()
+
+            # Accumulate the depth offset for each overlay
+            if opts.occlusion:
+                xform = affine.concat(xform, xform)
 
         if opts.showCursor:
             with glroutines.enabled((gl.GL_DEPTH_TEST)):
