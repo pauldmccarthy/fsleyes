@@ -80,7 +80,12 @@ mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma 
 mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma           -md {{invert('mesh_l_thal_data3d.txt')}}
 mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr  1 50 -md {{invert('mesh_l_thal_data3d.txt')}}
 mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr 50 99 -md {{invert('mesh_l_thal_data3d.txt')}}
+
+# 2D meshes
+mesh_2d_x.vtk -mc 1 0 0 mesh_2d_y.vtk -mc 0 1 0 mesh_2d_z.vtk -mc 0 0 1
+mesh_2d_x.vtk -cm blue-lightblue -vd mesh_2d_data.txt mesh_2d_y.vtk -cm red-yellow -vd mesh_2d_data.txt  mesh_2d_z.vtk -cm green -vd mesh_2d_data.txt
 """
+
 
 
 def oblique(infile):
