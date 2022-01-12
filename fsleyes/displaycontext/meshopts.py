@@ -216,8 +216,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         """
 
         # Set a default colour
-        colour      = genMeshColour(overlay)
-        self.colour = np.concatenate((colour, [1.0]))
+        self.colour = genMeshColour(overlay)
 
         # ColourMapOpts.linkLowRanges defaults to
         # True, which is annoying for surfaces.
