@@ -443,9 +443,11 @@ class GLMesh(globject.GLObject):
         current viewport size.
         """
 
+        lo,  hi    = self.getDisplayBounds()
+        is2D       = np.any(np.isclose(lo, hi))
         outline    = self.draw2DOutlineEnabled()
         useTexture = not (self.threedee or outline)
-        useShader  = self.threedee or outline
+        useShader  = is2D or self.threedee or outline
 
         # Currently 2D cross section rendering
         # does not use a shader program.
@@ -643,7 +645,6 @@ class GLMesh(globject.GLObject):
         opts      = self.opts
         vdata     = opts.getVertexData('vertex')
         mdata     = opts.getVertexData('modulate')
-        useShader = self.needShader()
         vertices  = self.vertices
         faces     = self.indices
 
@@ -656,32 +657,14 @@ class GLMesh(globject.GLObject):
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        # Constant colour
-        if not useShader:
-
-            gl.glColor(*opts.getConstantColour())
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices.ravel('C'))
-            gl.glDrawElements(gl.GL_TRIANGLES,
-                              faces.shape[0],
-                              gl.GL_UNSIGNED_INT,
-                              faces.ravel('C'))
-
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-
-        # Coloured from vertex data
-        else:
-            # TODO separate modulateDataIndex?
-            vdata = vdata[:, opts.vertexDataIndex]
-            mdata = mdata[:, 0]
-            fslgl.glmesh_funcs.draw(
-                self,
-                gl.GL_TRIANGLES,
-                vertices,
-                indices=faces,
-                vdata=vdata,
-                mdata=mdata)
+        fslgl.glmesh_funcs.draw(
+            self,
+            gl.GL_TRIANGLES,
+            vertices,
+            indices=faces,
+            vdata=vdata,
+            mdata=mdata,
+            xform=xform)
 
 
     def drawCrossSection(self, zpos, axes, lo, hi, dest):
