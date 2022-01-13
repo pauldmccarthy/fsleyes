@@ -260,10 +260,14 @@ class GLTensor(glvector.GLVector):
 
 
     def draw3D(self, *args, **kwargs):
-        """Overrides :meth:`.GLVector.draw3D`. Calls the
-        :func:`.gl21.gltensor_funcs.draw3D` function.
+        """Does nothing"""
+
+
+    def drawAll(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.drawAll`. Calls the
+        :func:`.gl21.gltensor_funcs.drawAll` function.
         """
-        fslgl.gltensor_funcs.draw3D(self, *args, **kwargs)
+        fslgl.gltensor_funcs.drawAll(self, *args, **kwargs)
 
 
     def postDraw(self):

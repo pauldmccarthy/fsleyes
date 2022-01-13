@@ -6,8 +6,8 @@
 #version 120
 
 /*
- * Textures containing the eigenvectors (v1, v2, v3) 
- * and eigenvalues (l1, l2, l3) of the diffusion 
+ * Textures containing the eigenvectors (v1, v2, v3)
+ * and eigenvalues (l1, l2, l3) of the diffusion
  * tensor matrix.
  */
 uniform sampler3D v1Texture;
@@ -18,8 +18,8 @@ uniform sampler3D l2Texture;
 uniform sampler3D l3Texture;
 
 /*
- * Transforms (scales/offsets) for transforming from 
- * data in the above textures to their original data 
+ * Transforms (scales/offsets) for transforming from
+ * data in the above textures to their original data
  * range.
  */
 uniform mat4 v1ValXform;
@@ -30,13 +30,14 @@ uniform mat4 l2ValXform;
 uniform mat4 l3ValXform;
 
 /*
- * Transformation matrix which transforms voxel 
- * coordinates into the display coordinate system.
+ * Transformation matrix which transforms voxel
+ * coordinates into the display coordinate system,
+ * incorporating the MVP transform.
  */
 uniform mat4 voxToDisplayMat;
 
 /*
- * Matrices to transform from vector 
+ * Matrices to transform from vector
  * texture coordinates to colour/clip/
  * modulate image texture coordinates.
  */
@@ -45,12 +46,12 @@ uniform mat4 clipCoordXform;
 uniform mat4 modCoordXform;
 
 /*
- * Transformation matrix which transforms normal 
+ * Transformation matrix which transforms normal
  * vectors. This should be set to the transpose
  * of the inverse of the model-view matrix (see
  * http://www.scratchapixel.com/lessons/\
  * mathematics-physics-for-computer-graphics/\
- * geometry/transforming-normals for a good 
+ * geometry/transforming-normals for a good
  * explanation).
  */
 uniform mat3 normalMatrix;
@@ -61,13 +62,13 @@ uniform mat3 normalMatrix;
 uniform vec3 imageShape;
 
 /*
- * Scaling factor for eigenvalues - this controls 
- * the maximum size that any tensor ellipsoid is 
+ * Scaling factor for eigenvalues - this controls
+ * the maximum size that any tensor ellipsoid is
  * drawn. Set this to:
- * 
+ *
  *   0.5 / max(abs(l1))
- * 
- * to make the maximum ellipsoid circumference the 
+ *
+ * to make the maximum ellipsoid circumference the
  * size of one voxel.
  */
 uniform float eigValNorm;
@@ -78,13 +79,13 @@ uniform float eigValNorm;
 uniform bool lighting;
 
 /*
- * Position of the directional light - must be 
+ * Position of the directional light - must be
  * specified in eye/screen space.
  */
 uniform vec3 lightPos;
 
 /*
- * If true, the V1, V2 and V3 eigenvectors 
+ * If true, the V1, V2 and V3 eigenvectors
  * are flipped about the x axis.
  */
 uniform bool xFlip;
@@ -96,7 +97,7 @@ attribute vec3 voxel;
 
 /*
  * The current vertex on a unit sphere. The vertex
- * will be transformed into an ellipsoid using the 
+ * will be transformed into an ellipsoid using the
  * tensor matrix eigen-decomposition.
  */
 attribute vec3 vertex;
@@ -107,7 +108,7 @@ attribute vec3 vertex;
 varying vec3 fragVoxCoord;
 
 /*
- * Vector image texture coordinate passed through to the 
+ * Vector image texture coordinate passed through to the
  * fragment shader.
  */
 varying vec3 fragVecTexCoord;
@@ -121,7 +122,7 @@ varying vec3 fragModTexCoord;
 
 
 /*
- * Multiplicative colour factor passed through to the 
+ * Multiplicative colour factor passed through to the
  * fragment shader, used for lighting.
  */
 varying vec4 fragColourFactor;
@@ -139,7 +140,7 @@ void main(void) {
   float l2 = texture3D(l2Texture, texCoord).x;
   float l3 = texture3D(l3Texture, texCoord).x;
 
-  // Transform from normalised 
+  // Transform from normalised
   // texture values to real values
   v1 = v1 * v1ValXform[0].x + v1ValXform[3].x;
   v2 = v2 * v2ValXform[0].x + v2ValXform[3].x;
@@ -267,9 +268,7 @@ void main(void) {
   // Transform the vertex from the
   // voxel coordinate system into
   // the display coordinate system.
-  gl_Position = gl_ModelViewProjectionMatrix *
-                voxToDisplayMat              *
-                vec4(pos, 1);
+  gl_Position = voxToDisplayMat * vec4(pos, 1);
 
   // Send the voxel and texture coordinates, and
   // the colour scaling factor to the fragment shader.
@@ -277,6 +276,6 @@ void main(void) {
   fragVecTexCoord  = texCoord;
   fragTexCoord     = (colourCoordXform * vec4(texCoord, 1)).xyz;
   fragClipTexCoord = (clipCoordXform   * vec4(texCoord, 1)).xyz;
-  fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz; 
+  fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(light, 1);
 }

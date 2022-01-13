@@ -167,18 +167,22 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
 
     opts   = self.opts
     shader = self.shader
-    bbox   = self.canvas.viewport
-    v2dMat = opts.getTransform('voxel',   'display')
+    canvas = self.canvas
+    mvp    = canvas.mvpMatrix
+    v2dMat = opts.getTransform('voxel', 'display')
 
-    if xform is None: xform = v2dMat
-    else:             xform = affine.concat(v2dMat, xform)
+    if applyBbox: bbox = canvas.viewport
+    else:         bbox = None
+
+    if xform is None: xform = affine.concat(mvp, v2dMat)
+    else:             xform = affine.concat(mvp, xform, v2dMat)
 
     voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     nVoxels = len(voxels)
@@ -187,14 +191,17 @@ def draw2D(self, zpos, axes, xform=None):
     # voxel coordinates for every sphere drawn
     shader.setAtt('voxel',           voxels, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
+
     shader.loadAtts()
 
     arbdi.glDrawElementsInstancedARB(
         gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
 
-def draw3D(self, xform=None):
-    pass
+def drawAll(self, axes, zposes, xforms):
+    """Draws all of the specified slices. """
+    for zpos, xform in zip(zposes, xforms):
+        draw2D(self, zpos, axes, xform, applyBbox=False)
 
 
 def postDraw(self):
