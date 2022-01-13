@@ -175,10 +175,7 @@ class GLLineVector(glvector.GLVector):
 
 
     def draw3D(self, *args, **kwargs):
-        """Overrides :meth:`.GLObject.draw3D`. Calls the OpenGL
-        version-specific ``draw3D`` function.
-        """
-        fslgl.gllinevector_funcs.draw3D(self, *args, **kwargs)
+        """Does nothing. """
 
 
     def drawAll(self, *args, **kwargs):

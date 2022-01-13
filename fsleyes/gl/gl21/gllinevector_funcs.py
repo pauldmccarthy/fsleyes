@@ -180,10 +180,6 @@ def draw2D(self, zpos, axes, xform=None):
     shader.unloadAtts()
 
 
-def draw3D(self, xform=None):
-    """Does nothing at the moment. """
-
-
 def drawAll(self, axes, zposes, xforms):
     """Draws the line vectors at every slice specified by the Z locations. """
 

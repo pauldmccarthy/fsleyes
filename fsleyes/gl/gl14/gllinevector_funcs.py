@@ -157,7 +157,10 @@ def draw2D(self, zpos, axes, xform=None):
     """
 
     opts                = self.opts
-    bbox                = self.canvas.viewport
+    canvas              = self.canvas
+    shader              = self.shader
+    bbox                = canvas.viewport
+    mvpmat              = canvas.mvpMatrix
     vertices, voxCoords = self.lineVertices.getVertices2D(self,
                                                           zpos,
                                                           axes,
@@ -166,34 +169,50 @@ def draw2D(self, zpos, axes, xform=None):
     if vertices.size == 0:
         return
 
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.loadAtts()
-
     v2d = opts.getTransform('voxel', 'display')
 
-    if xform is None: xform = v2d
-    else:             xform = affine.concat(xform, v2d)
+    if xform is None: xform = affine.concat(mvpmat, v2d)
+    else:             xform = affine.concat(mvpmat, xform, v2d)
 
-    gl.glPushMatrix()
-    gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
+    shader.setVertParam('voxToDisplayMat', xform)
+    shader.setAtt('voxCoord', voxCoords)
 
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
-
-    gl.glPopMatrix()
-
-
-def draw3D(self, xform=None):
-    pass
+    with shader.loadedAtts():
+        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+        gl.glLineWidth(opts.lineWidth)
+        gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
-    for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, axes, xform)
+
+    opts   = self.opts
+    canvas = self.canvas
+    shader = self.shader
+    mvpmat = canvas.mvpMatrix
+    v2d    = opts.getTransform('voxel', 'display')
+
+    gl.glLineWidth(opts.lineWidth)
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
+    with shader.loadedAtts():
+        for zpos, xform in zip(zposes, xforms):
+
+            vertices, voxCoords = self.lineVertices.getVertices2D(self,
+                                                                  zpos,
+                                                                  axes)
+
+            if xform is None: xform = affine.concat(mvpmat, v2d)
+            else:             xform = affine.concat(mvpmat, xform, v2d)
+
+            shader.setVertParam('voxToDisplayMat', xform)
+            shader.setAtt('voxCoord', voxCoords)
+
+            with shader.loadedAtts():
+                gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+                gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
+
 
 
 def postDraw(self):
