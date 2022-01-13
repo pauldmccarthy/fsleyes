@@ -43,8 +43,8 @@ cli_tests = """
 -s3d gifti/white.surf.gii -mc 0.7 0.7 0.7 -cm hsv       -vd gifti/data4d.txt -in nearest -vdi 2
 
 # 2D meshes
-mesh_2d_x.vtk -mc 1 0 0 mesh_2d_y.vtk -mc 0 1 0 mesh_2d_z.vtk -mc 0 0 1
-mesh_2d_x.vtk -cm blue-lightblue -vd mesh_2d_data.txt mesh_2d_y.vtk -cm red-yellow -vd mesh_2d_data.txt  mesh_2d_z.vtk -cm green -vd mesh_2d_data.txt
+-s3d mesh_2d_x.vtk -mc 1 0 0 mesh_2d_y.vtk -mc 0 1 0 mesh_2d_z.vtk -mc 0 0 1
+-s3d mesh_2d_x.vtk -cm blue-lightblue -vd mesh_2d_data.txt mesh_2d_y.vtk -cm red-yellow -vd mesh_2d_data.txt  mesh_2d_z.vtk -cm green -vd mesh_2d_data.txt
 """
 
 
