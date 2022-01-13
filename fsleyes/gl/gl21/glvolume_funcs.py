@@ -202,17 +202,16 @@ def draw2D(self, zpos, axes, xform=None):
     """
 
     bbox                           = self.canvas.viewport
-    projmat                        = self.canvas.projectionMatrix
-    viewmat                        = self.canvas.viewMatrix
+    mvpmat                         = self.canvas.mvpMatrix
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
     # We apply the MVP matrix here rather than in
     # the shader, as we're only drawing 6 vertices.
-    if xform is None: xform = affine.concat(projmat, viewmat)
-    else:             xform = affine.concat(projmat, viewmat, xform)
+    if xform is not None:
+        mvpmat = affine.concat(mvpmat, xform)
 
-    vertices = affine.transform(vertices, xform)
+    vertices = affine.transform(vertices, mvpmat)
 
     self.shader.setAtt('vertex',   vertices)
     self.shader.setAtt('voxCoord', voxCoords)
@@ -248,8 +247,8 @@ def draw3D(self, xform=None):
     # We have to apply it *after* the mv
     # transform for occlusion work.
     if xform is not None:
-        mvmat  = affine.concat(         xform, mvmat)
-        mvpmat = affine.concat(projmat, xform, mvmat)
+        mvmat  = affine.concat(mvmat,  xform)
+        mvpmat = affine.concat(mvpmat, xform)
 
     vertices, _, texCoords = self.generateVertices3D(bbox)
     rayStep , texform      = opts.calculateRayCastSettings(mvmat, projmat)
@@ -290,15 +289,14 @@ def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
-    projmat   = self.canvas.projectionMatrix
-    viewmat   = self.canvas.viewMatrix
+    mvpmat    = self.mvpMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     voxCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        xform     = affine.concat(projmat, viewmat, xform)
+        xform     = affine.concat(mvpmat, xform)
         v, vc, tc = self.generateVertices2D(zpos, axes)
         vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc

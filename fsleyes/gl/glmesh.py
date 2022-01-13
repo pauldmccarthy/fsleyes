@@ -547,7 +547,7 @@ class GLMesh(globject.GLObject):
         if mdata is None:
             mdata = vdata
 
-        is2D = np.isclose(bhi[2], blo[2])
+        is2D = np.any(np.isclose(bhi, blo))
 
         if opts.wireframe:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)

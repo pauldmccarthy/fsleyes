@@ -115,6 +115,13 @@ class Scene3DCanvas:
 
 
     @property
+    def displayCtx(self):
+        """Returns a reference to the :class:`.DisplayContext` for this canvas.
+        """
+        return self.__displayCtx
+
+
+    @property
     def lightPos(self):
         """Takes the values of :attr:`.Scene3DOpts.lightPos` and
         :attr:`.Scene3DOpts.lightDistance`, and converts it to a position in
@@ -601,7 +608,9 @@ class Scene3DCanvas:
         offset[1]  = ylen * offset[1] / 2
         offset     = affine.scaleOffsetXform(1, offset)
 
-        # And finally the camera.
+        # And finally the camera. Typically
+        # the Z axis is inferior-superior,
+        # so we want that to be pointing up.
         eye     = list(centre)
         eye[1] += 1
         up      = [0, 0, 1]
@@ -683,7 +692,21 @@ class Scene3DCanvas:
         # drawn above (closer to the screen)
         # than lower ones.
         if opts.occlusion:
-            xform = affine.scaleOffsetXform(1, [0, 0, 0.1])
+
+            # The offset is set as a proportion
+            # of the length of the longest axis
+            # in the display bounding box.
+            bounds = self.displayCtx.bounds
+            lens   = [bounds.xlen, bounds.ylen, bounds.zlen]
+            offset = np.max(lens) * 0.01
+
+            # Define the offset vector in view space,
+            # then rotate it into model space (depth
+            # axis is second - see __genViewMatrix)
+            rot   = affine.invert(self.__viewRotate)
+            vec   = affine.transform([0, 1, 0], rot, vector=True)
+            vec   = affine.normalise(vec) * offset
+            xform = affine.scaleOffsetXform(1, vec)
             xform = np.array(xform, dtype=np.float32, copy=False)
         else:
             xform = None
