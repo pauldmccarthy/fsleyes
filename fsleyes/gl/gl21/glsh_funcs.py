@@ -188,16 +188,20 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
     opts   = self.opts
     shader = self.shader
-    bbox   = self.canvas.viewport
+    canvas = self.canvas
+    mvp    = canvas.mvpMatrix
     v2dMat = opts.getTransform('voxel', 'display')
 
-    if xform is None: xform = v2dMat
-    else:             xform = affine.concat(v2dMat, xform)
+    if applyBbox: bbox = canvas.viewport
+    else:         bbox = None
+
+    if xform is None: xform = affine.concat(mvp, v2dMat)
+    else:             xform = affine.concat(mvp, xform, v2dMat)
 
     voxels              = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
@@ -219,15 +223,16 @@ def draw2D(self, zpos, axes, xform=None):
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 
-def draw3D(self, xform=None):
-    pass
+def drawAll(self, axes, zposes, xforms):
+    """Draws all of the specified slices. """
+    for zpos, xform in zip(zposes, xforms):
+        draw2D(self, zpos, axes, xform, applyBbox=False)
 
 
 def postDraw(self):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """
-
     self.shader.unloadAtts()
     self.shader.unload()
     gl.glDisable(gl.GL_CULL_FACE)
