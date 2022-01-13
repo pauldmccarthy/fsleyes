@@ -114,8 +114,6 @@ def updateShaderState(self):
     directed    = opts.directed
     lengthScale = opts.lengthScale / 100.0
     imageDims   = image.pixdim[:3]
-    d2vMat      = opts.getTransform('display', 'voxel')
-    v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = opts.orientFlip
 
     # If the unitLength option is on, the vector
@@ -133,8 +131,6 @@ def updateShaderState(self):
         lengthScale /= fac
 
     changed |= shader.set('vectorTexture',   4)
-    changed |= shader.set('displayToVoxMat', d2vMat)
-    changed |= shader.set('voxToDisplayMat', v2dMat)
     changed |= shader.set('voxValXform',     vvxMat)
     changed |= shader.set('imageDims',       imageDims)
     changed |= shader.set('directed',        directed)
@@ -161,15 +157,17 @@ def draw2D(self, zpos, axes, xform=None):
 
     opts   = self.opts
     shader = self.shader
-    bbox   = self.canvas.viewport
+    canvas = self.canvas
+    bbox   = canvas.viewport
+    mvpmat = canvas.mvpMatrix
     v2dMat = opts.getTransform('voxel', 'display')
 
     voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
     voxels  = np.repeat(voxels, 2, 0)
     indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
-    if xform is None: xform = v2dMat
-    else:             xform = affine.concat(xform, v2dMat)
+    if xform is None: xform = affine.concat(mvpmat, v2dMat)
+    else:             xform = affine.concat(mvpmat, xform, v2dMat)
 
     shader.set(   'voxToDisplayMat', xform)
     shader.setAtt('vertexID',        indices)
@@ -183,15 +181,32 @@ def draw2D(self, zpos, axes, xform=None):
 
 
 def draw3D(self, xform=None):
-    """Draws the line vectors in 3D space. """
-    pass
+    """Does nothing at the moment. """
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws the line vectors at every slice specified by the Z locations. """
 
-    for zpos, xform in zip(zposes, xforms):
-        self.draw2D(zpos, axes, xform)
+    opts   = self.opts
+    shader = self.shader
+    mvpmat = self.canvas.mvpMatrix
+    v2dMat = opts.getTransform('voxel', 'display')
+
+    gl.glLineWidth(opts.lineWidth)
+    with shader.loadedAtts():
+        for zpos, xform in zip(zposes, xforms):
+            voxels  = self.generateVoxelCoordinates2D(zpos, axes)
+            voxels  = np.repeat(voxels, 2, 0)
+            indices = np.arange(voxels.shape[0], dtype=np.uint32)
+
+            if xform is None: xform = affine.concat(mvpmat, v2dMat)
+            else:             xform = affine.concat(mvpmat, xform, v2dMat)
+
+            shader.set(   'voxToDisplayMat', xform)
+            shader.setAtt('vertexID',        indices)
+            shader.setAtt('voxel',           voxels)
+
+            gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
 
 
 def postDraw(self):

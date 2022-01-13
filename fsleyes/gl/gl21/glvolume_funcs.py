@@ -289,7 +289,7 @@ def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
-    mvpmat    = self.mvpMatrix
+    mvpmat    = self.canvas.mvpMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     voxCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)

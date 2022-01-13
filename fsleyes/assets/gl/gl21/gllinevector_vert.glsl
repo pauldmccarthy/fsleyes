@@ -13,9 +13,9 @@ uniform sampler3D vectorTexture;
 
 /*
  * Transformations between voxel and
- * display coordinate systems.
+ * display coordinate systems, incorporating
+ * the model view projection transform.
  */
-uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
 
 /*
@@ -142,9 +142,7 @@ void main(void) {
    * the voxel coordinates by the vector values,
    * and transform back to display coordinates
    */
-  gl_Position = gl_ModelViewProjectionMatrix *
-                voxToDisplayMat              *
-                vec4(voxCoord + vector, 1);
+  gl_Position = voxToDisplayMat * vec4(voxCoord + vector, 1);
 
   fragVoxCoord     = voxCoord;
   fragVecTexCoord  = texCoord;
