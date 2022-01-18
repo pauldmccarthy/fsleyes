@@ -10,8 +10,7 @@ sub-classes intended to be used as targets for off-screen rendering.
 
 These classes are used by the :class:`.SliceCanvas` and
 :class:`.LightBoxCanvas` classes for off-screen rendering, and in various
-other situations throughout FSLeyes. See also the
-:class:`.RenderTextureStack`, which uses :class:`RenderTexture` instances.
+other situations throughout FSLeyes.
 """
 
 
