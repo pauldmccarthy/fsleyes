@@ -211,22 +211,26 @@ def draw3D(self, xform=None):
     shader  = self.shader
     shape   = self.image.shape
     proj    = canvas.projectionMatrix
+    mvpmat  = canvas.mvpMatrix
+    mvmat   = canvas.viewMatrix
     bbox    = canvas.viewport
     src     = self.renderTexture1
     dest    = self.renderTexture2
     w, h    = src.shape
 
-    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
+    if xform is not None:
+        mvpmat = affine.concat(mvpmat, xform)
+        mvmat  = affine.concat(mvmat,  xform)
+
+    vertices, _, texCoords = self.generateVertices3D(bbox)
+    rayStep, texform       = opts.calculateRayCastSettings(mvmat, proj)
 
     rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(shape))
     texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(shape))
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
-
+    vertices = affine.transform(vertices, mvpmat)
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
     outerLoop  = opts.getNumOuterSteps()
