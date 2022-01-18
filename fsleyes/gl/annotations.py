@@ -286,6 +286,40 @@ class Annotations(props.HasProperties):
         self.__transient = []
 
 
+    def draw3D(self, xform=None):
+        """Draws all enqueued annotations. Fixed annotations are drawn first,
+        then persistent, then transient - i.e. transient annotations will
+        be drawn on top of persistent, which will be drawn on to of fixed.
+
+        :arg xform:
+        """
+
+        objs = (list(self.__fixed)     +
+                list(self.annotations) +
+                list(self.__transient))
+
+        drawTime = time.time()
+
+        for obj in objs:
+
+            if obj.expired(drawTime): continue
+            if not obj.enabled:       continue
+
+            if obj.occlusion:
+                features = [gl.GL_DEPTH_TEST]
+            else:
+                features = []
+
+            try:
+                with glroutines.enabled(features):
+                    obj.draw3D(xform)
+            except Exception as e:
+                log.warning(e, exc_info=True)
+
+        # Clear the transient queue after each draw
+        self.__transient = []
+
+
 class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """Base class for all annotation objects. An ``AnnotationObject`` is drawn
     by an :class:`Annotations` instance. The ``AnnotationObject`` contains some
@@ -346,16 +380,23 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """Maximum z value below which this annotation will not be drawn. """
 
 
+    occlusion = props.Boolean(default=False)
+    """Only relevant when drawing via :meth:`draw3D`. If ``True``,
+    depth testing is enabled.
+    """
+
+
     def __init__(self,
                  annot,
                  colour=None,
                  alpha=None,
                  lineWidth=None,
-                 enabled=True,
+                 enabled=None,
                  expiry=None,
-                 honourZLimits=False,
+                 honourZLimits=None,
                  zmin=None,
                  zmax=None,
+                 occlusion=None,
                  **kwargs):
         """Create an ``AnnotationObject``.
 
@@ -381,6 +422,8 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         :arg zmax:          Maximum z value above which this annotation should
                             not be drawn.
 
+        :arg occlusion:     Whether to draw with depth testing.
+
         Any other arguments are ignored.
         """
         globject.GLSimpleObject.__init__(self, annot.canvas, False)
@@ -392,11 +435,12 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         if colour        is not None: self.colour        = colour
         if alpha         is not None: self.alpha         = alpha
-        if enabled       is not None: self.enabled       = enabled
         if lineWidth     is not None: self.lineWidth     = lineWidth
+        if enabled       is not None: self.enabled       = enabled
         if honourZLimits is not None: self.honourZLimits = honourZLimits
         if zmin          is not None: self.zmin          = zmin
         if zmax          is not None: self.zmax          = zmax
+        if occlusion     is not None: self.occlusion     = occlusion
 
 
     def destroy(self):
@@ -434,6 +478,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
 
+        Only relevant for annotations drawn on a :meth:`.SliceCanvas` of an
+        :class:`.OrthoPanel`.
+
         :arg x: X coordinate (in display coordinates).
         :arg y: Y coordinate (in display coordinates).
         """
@@ -445,6 +492,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         an offset relative to the current location. Must be implemented by
         sub-classes, but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
+
+        Only relevant for annotations drawn on a :meth:`.SliceCanvas` of an
+        :class:`.OrthoPanel`.
 
         :arg x: X coordinate (in display coordinates).
         :arg y: Y coordinate (in display coordinates).
@@ -465,26 +515,37 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     def vertices2D(self, zpos, axes):
-        """Must be implemented by sub-classes. Generates and returns verticws
-        to display this annotation. The exact return type may differ depending
+        """Must be implemented by sub-classes which rely on the default
+        :meth:`draw2D` implementation. Generates and returns verticws to
+        display this annotation. The exact return type may differ depending
         on the annotation type.
         """
         raise NotImplementedError()
 
 
-    def draw2D(self, zpos, axes):
-        """Draw this annotation. This method implements a default routine
-        used by most annotation types. It may be overridden by sub-classes
-        which require a different routine.
+    def vertices3D(self):
+        """Must be implemented by sub-classes which rely on the default
+        :meth:`draw3D` implementation. Generates and returns verticws to
+        display this annotation. The exact return type may differ depending
+        on the annotation type.
+        """
+        raise NotImplementedError()
+
+
+    def __draw(self, vertices, xform=None):
+        """Used by the default :meth:`draw2D` and :meth:`draw3D`
+        implementations.
         """
         shader   = self.shader
         canvas   = self.canvas
         mvpmat   = canvas.mvpMatrix
         colour   = list(self.colour[:3]) + [self.alpha / 100.0]
-        vertices = self.vertices2D(zpos, axes)
 
         if vertices is None or len(vertices) == 0:
             return
+
+        if xform is not None:
+            mvpmat = affine.concat(mvpmat, xform)
 
         if self.lineWidth is not None:
             gl.glLineWidth(self.lineWidth)
@@ -502,6 +563,32 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
             with shader.loadedAtts():
                 for prim, length, off in zip(primitives, lens, offsets):
                     gl.glDrawArrays(prim, off, length)
+
+
+    def draw2D(self, zpos, axes, xform=None):
+        """Draw this annotation on a 2D plane. This method implements a
+        default routine used by most annotation types - the annotation is
+        drawn using vertices returned by the overridden :meth:`vertices2D`
+        method.
+
+        This method may be overridden by sub-classes which require a different
+        routine.
+        """
+        vertices = self.vertices2D(zpos, axes)
+        self.__draw(vertices, xform)
+
+
+    def draw3D(self, xform=None):
+        """Draw this annotation in 3D. This method implements a
+        default routine used by most annotation types - the annotation is
+        drawn using vertices returned by the overridden :meth:`vertices3D`
+        method.
+
+        This method may be overridden by sub-classes which require a different
+        routine.
+        """
+        vertices = self.vertices3D()
+        self.__draw(vertices, xform)
 
 
 class Point(AnnotationObject):
@@ -568,7 +655,7 @@ class Line(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x1, y1, x2, y2, **kwargs):
+    def __init__(self, annot, x1, y1, x2, y2, z1=None, z2=None, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
@@ -589,6 +676,8 @@ class Line(AnnotationObject):
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.z1 = z1
+        self.z2 = z2
 
 
     def vertices2D(self, zpos, axes):
@@ -597,6 +686,12 @@ class Line(AnnotationObject):
         verts[0, [xax, yax]] = self.x1, self.y1
         verts[1, [xax, yax]] = self.x2, self.y2
         verts[:, zax]        = zpos
+        return [(gl.GL_LINES, verts)]
+
+    def vertices3D(self):
+        verts                = np.zeros((2, 3), dtype=np.float32)
+        verts[0, :] = self.x1, self.y1, self.z1
+        verts[1, :] = self.x2, self.y2, self.z2
         return [(gl.GL_LINES, verts)]
 
 

@@ -21,6 +21,7 @@ import fsl.transform.affine as affine
 
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
+import fsleyes.gl.annotations            as annotations
 import fsleyes.gl.text                   as gltext
 import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
@@ -40,6 +41,7 @@ class Scene3DCanvas:
         self.__opts           = canvasopts.Scene3DCanvasOpts()
         self.__overlayList    = overlayList
         self.__displayCtx     = displayCtx
+        self.__annotations    = annotations.Annotations(self)
         self.__viewMat        = np.eye(4)
         self.__projMat        = np.eye(4)
         self.__invViewProjMat = np.eye(4)
@@ -119,6 +121,13 @@ class Scene3DCanvas:
         """Returns a reference to the :class:`.DisplayContext` for this canvas.
         """
         return self.__displayCtx
+
+
+    def getAnnotations(self):
+        """Return the :class:`.Annotations` object, for drawing annotations
+        on this ``Scene3DCanvas``.
+        """
+        return self.__annotations
 
 
     @property
@@ -736,8 +745,7 @@ class Scene3DCanvas:
                 xform = affine.concat(xform, xform)
 
         if opts.showCursor:
-            with glroutines.enabled((gl.GL_DEPTH_TEST)):
-                self.__drawCursor()
+            self.__drawCursor()
 
         if opts.showLegend:
             self.__drawLegend()
@@ -745,45 +753,24 @@ class Scene3DCanvas:
         if opts.showLight:
             self.__drawLight()
 
-        # Testing click-to-near/far clipping plane transformation
-        if hasattr(self, 'points'):
-            colours = [(1, 0, 0, 1), (0, 0, 1, 1)]
-            gl.glPointSize(5)
-
-            gl.glBegin(gl.GL_LINES)
-            for i, p in enumerate(self.points):
-                gl.glColor4f(*colours[i % 2])
-                p = affine.transform(p, self.viewMatrix)
-                gl.glVertex3f(*p)
-            gl.glEnd()
+        self.getAnnotations().draw3D()
 
 
     def __drawCursor(self):
         """Draws three lines at the current :attr:`.DisplayContext.location`.
         """
 
-        opts = self.opts
-        b    = self.__displayCtx.bounds
-        pos  = opts.pos
+        opts  = self.opts
+        b     = self.__displayCtx.bounds
+        pos   = opts.pos
+        annot = self.getAnnotations()
+        args  = {'colour'    : opts.cursorColour[:3],
+                 'lineWidth' : 1,
+                 'occlusion' : True}
 
-        points = np.array([
-            [pos.x, pos.y, b.zlo],
-            [pos.x, pos.y, b.zhi],
-            [pos.x, b.ylo, pos.z],
-            [pos.x, b.yhi, pos.z],
-            [b.xlo, pos.y, pos.z],
-            [b.xhi, pos.y, pos.z],
-        ], dtype=np.float32)
-        points = affine.transform(points, self.mvpMatrix)
-        gl.glLineWidth(1)
-
-        r, g, b = opts.cursorColour[:3]
-
-        gl.glColor4f(r, g, b, 1)
-        gl.glBegin(gl.GL_LINES)
-        for p in points:
-            gl.glVertex3f(*p)
-        gl.glEnd()
+        annot.line(pos.x, pos.y, pos.x, pos.y, b.zlo, b.zhi, **args)
+        annot.line(pos.x, b.ylo, pos.x, b.yhi, pos.z, pos.z, **args)
+        annot.line(b.xlo, pos.y, b.xhi, pos.y, pos.z, pos.z, **args)
 
 
     def __drawLegend(self):
