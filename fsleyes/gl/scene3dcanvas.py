@@ -779,6 +779,7 @@ class Scene3DCanvas:
         """
 
         copts      = self.opts
+        annot      = self.getAnnotations()
         b          = self.__displayCtx.bounds
         w, h       = self.GetSize()
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
@@ -811,19 +812,17 @@ class Scene3DCanvas:
         linexform  = affine.concat(self.projectionMatrix, labelxform)
         labelverts = affine.transform(vertices * 1.2, labelxform)
         lineverts  = affine.transform(vertices,       linexform)
+        kwargs     = {
+            'colour'    : copts.cursorColour[:3],
+            'lineWidth' : 2,
+            'occlusion' : False,
+            'applyMvp'  : False
+        }
 
-        # Draw the legend lines
-        gl.glDisable(gl.GL_DEPTH_TEST)
-        gl.glColor3f(*copts.cursorColour[:3])
-        gl.glLineWidth(2)
-        gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*lineverts[0])
-        gl.glVertex3f(*lineverts[1])
-        gl.glVertex3f(*lineverts[2])
-        gl.glVertex3f(*lineverts[3])
-        gl.glVertex3f(*lineverts[4])
-        gl.glVertex3f(*lineverts[5])
-        gl.glEnd()
+        for i in [0, 2, 4]:
+            x1, y1, z1 = lineverts[i,     :]
+            x2, y2, z2 = lineverts[i + 1, :]
+            annot.line(x1, y1, x2, y2, z1, z2, **kwargs)
 
         canvas = np.array([w, h])
         view   = np.array([xlen, ylen])
@@ -841,71 +840,15 @@ class Scene3DCanvas:
     def __drawLight(self):
         """Draws a representation of the light source. """
 
-        lightPos  = self.lightPos
-        mvp       = self.mvpMatrix
-        bounds    = self.__displayCtx.bounds
-        centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
-                              bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
-                              bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
-        lightPos  = affine.transform(lightPos, mvp)
-        centre    = affine.transform(centre,   mvp)
+        lightPos = self.lightPos
+        annot    = self.getAnnotations()
+        bounds   = self.__displayCtx.bounds
+        centre   = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
+                             bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
+                             bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
 
-        # draw the light as a point
-        gl.glColor4f(1, 1, 0, 1)
-        gl.glPointSize(10)
-        gl.glBegin(gl.GL_POINTS)
-        gl.glVertex3f(*lightPos)
-        gl.glEnd()
+        lx, ly, lz = lightPos
+        cx, cy, cz = centre
 
-        # draw a line  from the light to the
-        # centre of the display bounding box
-        gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*lightPos)
-        gl.glVertex3f(*centre)
-        gl.glEnd()
-
-
-    def __drawBoundingBox(self):
-        """Draws a bounding box around all overlays. Used for debugging. """
-        b = self.__displayCtx.bounds
-        xlo, xhi = b.x
-        ylo, yhi = b.y
-        zlo, zhi = b.z
-        xlo += 0.1
-        xhi -= 0.1
-        vertices = np.array([
-            [xlo, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zlo],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zlo],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xlo, yhi, zlo],
-            [xhi, ylo, zlo],
-            [xhi, yhi, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xhi, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xhi, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xhi, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, yhi, zhi],
-        ])
-        vertices = affine.transform(vertices, self.mvpMatrix)
-
-        gl.glLineWidth(2)
-        gl.glColor3f(0.5, 0, 0)
-        gl.glBegin(gl.GL_LINES)
-        for v in vertices:
-            gl.glVertex3f(*v)
-        gl.glEnd()
+        annot.point(lx, ly, lz,             colour=(1, 1, 0), lineWidth=3)
+        annot.line( lx, ly, cx, cy, lz, cz, colour=(1, 1, 0))

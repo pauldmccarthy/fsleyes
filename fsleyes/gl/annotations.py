@@ -369,20 +369,33 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """If True, the :attr:`zmin`/:attr:`zmax` properties are enforced.
     Otherwise (the default) they are ignored, and the annotation is
     always drawn.
+
+    Only relevant when being drawn via :meth:`draw2D`.
     """
 
 
     zmin = props.Real()
-    """Minimum z value below which this annotation will not be drawn. """
+    """Minimum z value below which this annotation will not be drawn.
+    Only relevant when being drawn via :meth:`draw2D`.
+    """
 
 
     zmax = props.Real()
-    """Maximum z value below which this annotation will not be drawn. """
+    """Maximum z value below which this annotation will not be drawn.
+    Only relevant when being drawn via :meth:`draw2D`.
+    """
 
 
     occlusion = props.Boolean(default=False)
     """Only relevant when drawing via :meth:`draw3D`. If ``True``,
     depth testing is enabled.
+    """
+
+    applyMvp =  props.Boolean(default=True)
+    """If ``True``, it is assumed that the annotation coordinates are
+    specified in the display coordinate system, and therefore that they
+    should be transformed by the :meth:`.SliceCanvas.mvpMatrix` (or
+    :meth:`.Scene3DCanvas.mvpMatrix`). Not honoured by all annotation types.
     """
 
 
@@ -397,6 +410,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                  zmin=None,
                  zmax=None,
                  occlusion=None,
+                 applyMvp=None,
                  **kwargs):
         """Create an ``AnnotationObject``.
 
@@ -424,6 +438,8 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         :arg occlusion:     Whether to draw with depth testing.
 
+        :arg applyMvp:      Whether to apply the canvas MVP matrix.
+
         Any other arguments are ignored.
         """
         globject.GLSimpleObject.__init__(self, annot.canvas, False)
@@ -441,6 +457,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         if zmin          is not None: self.zmin          = zmin
         if zmax          is not None: self.zmax          = zmax
         if occlusion     is not None: self.occlusion     = occlusion
+        if applyMvp      is not None: self.applyMvp      = applyMvp
 
 
     def destroy(self):
@@ -544,6 +561,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         if vertices is None or len(vertices) == 0:
             return
 
+        if not self.applyMvp:
+            mvpmat = np.eye(4, dtype=np.float32)
+
         if xform is not None:
             mvpmat = affine.concat(mvpmat, xform)
 
@@ -598,7 +618,7 @@ class Point(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x, y, **kwargs):
+    def __init__(self, annot, x, y, z=None, **kwargs):
         """Create a ``Point`` annotation.
 
         The ``xy`` coordinate tuple should be in relation to the axes which
@@ -607,15 +627,16 @@ class Point(AnnotationObject):
         :arg annot: The :class:`Annotations` object that owns this ``Point``.
 
         :arg x:     X coordinates of the point
-
         :arg y:     Y coordinates of the point
-
+        :arg z:     Z coordinates, if this ``Point`` is being drawn via
+                    :meth:`draw3D`.
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
         AnnotationObject.__init__(self, annot, **kwargs)
         self.x = x
         self.y = y
+        self.z = z
 
 
     def vertices2D(self, zpos, axes):
@@ -630,6 +651,22 @@ class Point(AnnotationObject):
         verts[2, [xax, yax]] = [x, y - offset]
         verts[3, [xax, yax]] = [x, y + offset]
         verts[:, zax]        = zpos
+
+        return [(gl.GL_LINES, verts)]
+
+
+    def vertices3D(self):
+        """Returns vertices to draw this ``Point`` annotation. """
+
+        offset               = self.lineWidth * 0.5
+        x, y, z              = self.x, self.y, self.z
+        verts                = np.zeros((6, 3), dtype=np.float32)
+        verts[0, :] = [x - offset, y,          z]
+        verts[1, :] = [x + offset, y,          z]
+        verts[2, :] = [x,          y - offset, z]
+        verts[3, :] = [x,          y + offset, z]
+        verts[4, :] = [x,          y,          z - offset]
+        verts[5, :] = [x,          y,          z + offset]
 
         return [(gl.GL_LINES, verts)]
 
@@ -687,6 +724,7 @@ class Line(AnnotationObject):
         verts[1, [xax, yax]] = self.x2, self.y2
         verts[:, zax]        = zpos
         return [(gl.GL_LINES, verts)]
+
 
     def vertices3D(self):
         verts                = np.zeros((2, 3), dtype=np.float32)
