@@ -12,6 +12,9 @@ The :class:`Annotations` class is used by the :class:`.SliceCanvas`,
 :class:`.LightBoxCanvas`, and :class:`.Scene3DCanvas` classes, and users of
 those classes, to annotate the canvas.
 
+Not all annotation types currently support being drawn on a
+:class:`.Scene3DCanvas`.
+
 
 All annotations derive from the :class:`AnnotationObject` base class. The
 following annotation types are defined:
@@ -508,7 +511,7 @@ class Point(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x, y, *args, **kwargs):
+    def __init__(self, annot, x, y, **kwargs):
         """Create a ``Point`` annotation.
 
         The ``xy`` coordinate tuple should be in relation to the axes which
@@ -523,7 +526,7 @@ class Point(AnnotationObject):
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
         self.x = x
         self.y = y
 
@@ -565,7 +568,7 @@ class Line(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x1, y1, x2, y2, *args, **kwargs):
+    def __init__(self, annot, x1, y1, x2, y2, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
@@ -581,7 +584,7 @@ class Line(AnnotationObject):
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
@@ -744,7 +747,6 @@ class Rect(BorderMixin, AnnotationObject):
                  h,
                  filled=True,
                  border=True,
-                 *args,
                  **kwargs):
         """Create a :class:`Rect` annotation.
 
@@ -772,7 +774,7 @@ class Rect(BorderMixin, AnnotationObject):
         drawn. The ``.AnnotationObject.alpha`` value is ignored when drawing
         the border.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
 
         self.x      = x
         self.y      = y
@@ -875,7 +877,7 @@ class Ellipse(BorderMixin, AnnotationObject):
                  npoints=60,
                  filled=True,
                  border=True,
-                 *args, **kwargs):
+                 **kwargs):
         """Create an ``Ellipse`` annotation.
 
         :arg annot:   The :class:`Annotations` object that owns this
@@ -901,7 +903,7 @@ class Ellipse(BorderMixin, AnnotationObject):
         :meth:`AnnotationObject.__init__`.
         """
 
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
 
         self.x       = x
         self.y       = y
@@ -970,7 +972,6 @@ class VoxelSelection(AnnotationObject):
                  selection,
                  opts,
                  offsets=None,
-                 *args,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
 
@@ -1017,7 +1018,7 @@ class VoxelSelection(AnnotationObject):
         # Call base class init afterwards,
         # as the init function may need to
         # access the texture created above.
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
 
     def createShader(self):
         """Overrides :meth:`AnnotationObject.createShader`.
