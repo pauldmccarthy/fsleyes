@@ -175,9 +175,7 @@ class SliceCanvas:
 
         # The zAxisChanged method
         # will kick everything off
-        self._annotations = annotations.Annotations(self,
-                                                    self.opts.xax,
-                                                    self.opts.yax)
+        self._annotations = annotations.Annotations(self)
         self._zAxisChanged()
 
 
@@ -516,7 +514,6 @@ class SliceCanvas:
         opts = self.opts
 
         log.debug('{}'.format(opts.zax))
-        self._annotations.setAxes(opts.xax, opts.yax)
         self.resetDisplay()
 
 
@@ -1208,4 +1205,4 @@ class SliceCanvas:
         if copts.showCursor:
             self._drawCursor()
 
-        self._annotations.draw(zpos)
+        self._annotations.draw2D(zpos, axes)

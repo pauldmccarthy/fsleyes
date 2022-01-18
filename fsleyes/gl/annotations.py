@@ -5,17 +5,12 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`Annotations` class, which implements
-functionality to draw 2D OpenGL annotations on a :class:`.SliceCanvas`.
+functionality to draw annotations (lines, text, etc)
 
 
-The :class:`Annotations` class is used by the :class:`.SliceCanvas` and
-:class:`.LightBoxCanvas` classes, and users of those class, to annotate the
-canvas.
-
-
-.. note:: The ``Annotations`` class only works with the :class:`.SliceCanvas`
-          and :class:`.LightBoxCanvas` - there is no support for the
-          :class:`.Scene3DCanvas`.
+The :class:`Annotations` class is used by the :class:`.SliceCanvas`,
+:class:`.LightBoxCanvas`, and :class:`.Scene3DCanvas` classes, and users of
+those classes, to annotate the canvas.
 
 
 All annotations derive from the :class:`AnnotationObject` base class. The
@@ -56,8 +51,8 @@ log = logging.getLogger(__name__)
 
 
 class Annotations(props.HasProperties):
-    """An :class:`Annotations` object provides functionality to draw 2D
-    annotations on a :class:`.SliceCanvas`. Annotations may be enqueued via
+    """An :class:`Annotations` object provides functionality to draw
+    annotations on an OpenGL canvas. Annotations may be enqueued via
     any of the :meth:`line`, :meth:`rect`, :meth:`ellpse`, :meth:`point`,
     :meth:`selection` or :meth:`obj`, methods, and de-queued via the
     :meth:`dequeue` method.
@@ -101,9 +96,9 @@ class Annotations(props.HasProperties):
 
 
     After annotations have been enqueued in one of the above manners, a call
-    to :meth:`draw` will draw each annotation on the canvas, and clear the
-    transient queue. The default value for ``hold`` is ``False``, and ``fixed``
-    is ``True``,
+    to :meth:`draw2D` or :meth:`draw3D` will draw each annotation on the
+    canvas, and clear the transient queue. The default value for ``hold`` is
+    ``False``, and ``fixed`` is ``True``,
 
 
     Annotations can be queued by one of the helper methods on the
@@ -119,24 +114,15 @@ class Annotations(props.HasProperties):
     """
 
 
-    def __init__(self, canvas, xax, yax):
+    def __init__(self, canvas):
         """Creates an :class:`Annotations` object.
 
         :arg canvas: The :class:`.SliceCanvas` that owns this
                      ``Annotations`` object.
-
-        :arg xax:    Index of the display coordinate system axis that
-                     corresponds to the horizontal screen axis.
-
-        :arg yax:    Index of the display coordinate system axis that
-                     corresponds to the vertical screen axis.
         """
 
         self.__transient = []
         self.__fixed     = []
-        self.__xax       = xax
-        self.__yax       = yax
-        self.__zax       = 3 - xax - yax
         self.__canvas    = canvas
 
 
@@ -145,23 +131,6 @@ class Annotations(props.HasProperties):
         """Returns a ref to the canvas that owns this ``Annotations`` instance.
         """
         return self.__canvas
-
-
-    def setAxes(self, xax, yax):
-        """This method must be called if the display orientation changes.  See
-        :meth:`__init__`.
-        """
-
-        self.__xax = xax
-        self.__yax = yax
-        self.__zax = 3 - xax - yax
-
-
-    def getDisplayBounds(self):
-        """Returns a tuple containing the ``(xmin, xmax, ymin, ymax)`` display
-        bounds of the ``SliceCanvas`` that owns this ``Annotations`` object.
-        """
-        return self.__canvas.opts.displayBounds
 
 
     def line(self, *args, **kwargs):
@@ -203,7 +172,6 @@ class Annotations(props.HasProperties):
         hold  = kwargs.pop('hold',  False)
         fixed = kwargs.pop('fixed', True)
         obj   = Ellipse(self, *args, **kwargs)
-
         return self.obj(obj, hold, fixed)
 
 
@@ -280,13 +248,16 @@ class Annotations(props.HasProperties):
         self.annotations[:] = []
 
 
-    def draw(self, zpos):
+    def draw2D(self, zpos, axes):
         """Draws all enqueued annotations. Fixed annotations are drawn first,
         then persistent, then transient - i.e. transient annotations will
         be drawn on top of persistent, which will be drawn on to of fixed.
 
-        :arg zpos:     Position along the Z axis, above which all annotations
-                       should be drawn.
+        :arg zpos: Position along the Z axis, above which all annotations
+                   should be drawn.
+
+        :arg axes: Display coordinate system axis mapping to the screen
+                   coordinate system.
         """
 
         objs = (list(self.__fixed)     +
@@ -294,7 +265,6 @@ class Annotations(props.HasProperties):
                 list(self.__transient))
 
         drawTime = time.time()
-        axes     = (self.__xax, self.__yax, self.__zax)
 
         for obj in objs:
 
