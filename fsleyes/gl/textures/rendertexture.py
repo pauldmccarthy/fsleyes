@@ -20,13 +20,13 @@ import contextlib
 import numpy                             as np
 import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
-import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-import fsl.transform.affine as affine
-import fsleyes.gl           as fslgl
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.shaders   as shaders
-from . import                  texture2d
+import fsl.transform.affine   as affine
+import fsleyes.gl             as fslgl
+import fsleyes.gl.extensions  as glexts
+import fsleyes.gl.routines    as glroutines
+import fsleyes.gl.shaders     as shaders
+from . import                    texture2d
 
 
 log = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class RenderTexture(texture2d.Texture2D):
                                      dtype=np.uint8,
                                      **kwargs)
 
-        self.__frameBuffer      = glfbo.glGenFramebuffersEXT(1)
+        self.__frameBuffer      = glexts.glGenFramebuffers(1)
         self.__rttype           = rttype
         self.__renderBuffer     = None
         self.__depthTexture     = None
@@ -131,7 +131,7 @@ class RenderTexture(texture2d.Texture2D):
         # Use a single renderbuffer as
         # the depth+stencil attachment
         if rttype == 'cds':
-            self.__renderBuffer = glfbo.glGenRenderbuffersEXT(1)
+            self.__renderBuffer = glexts.glGenRenderbuffers(1)
 
         # Or use a texture as the depth
         # attachment (with no stencil attachment)
@@ -186,11 +186,11 @@ class RenderTexture(texture2d.Texture2D):
 
         log.debug('Deleting FBO%s [%s]', self.__frameBuffer, self.__rttype)
 
-        glfbo.glDeleteFramebuffersEXT(gltypes.GLuint(self.__frameBuffer))
+        glexts.glDeleteFramebuffers(gltypes.GLuint(self.__frameBuffer))
 
         if self.__renderBuffer is not None:
             rb = gltypes.GLuint(self.__renderBuffer)
-            glfbo.glDeleteRenderbuffersEXT(1, rb)
+            glexts.glDeleteRenderbuffers(1, rb)
 
         if self.__depthTexture is not None:
             self.__depthTexture.destroy()
@@ -408,20 +408,20 @@ class RenderTexture(texture2d.Texture2D):
                                'bound'.format(self.__frameBuffer))
 
         self.__oldFrameBuffer  = gl.glGetIntegerv(
-            glfbo.GL_FRAMEBUFFER_BINDING_EXT)
+            glexts.GL_FRAMEBUFFER_BINDING)
 
         if self.__renderBuffer is not None:
             self.__oldRenderBuffer = gl.glGetIntegerv(
-                glfbo.GL_RENDERBUFFER_BINDING_EXT)
+                glexts.GL_RENDERBUFFER_BINDING)
 
         log.debug('Setting FBO%s as render target', self.__frameBuffer)
 
-        glfbo.glBindFramebufferEXT(
-            glfbo.GL_FRAMEBUFFER_EXT, self.__frameBuffer)
+        glexts.glBindFramebuffer(
+            glexts.GL_FRAMEBUFFER, self.__frameBuffer)
 
         if self.__renderBuffer is not None:
-            glfbo.glBindRenderbufferEXT(
-                glfbo.GL_RENDERBUFFER_EXT, self.__renderBuffer)
+            glexts.glBindRenderbuffer(
+                glexts.GL_RENDERBUFFER, self.__renderBuffer)
 
 
     def unbindAsRenderTarget(self):
@@ -436,12 +436,12 @@ class RenderTexture(texture2d.Texture2D):
         log.debug('Restoring render target to FBO%s (from FBO%s)',
                   self.__oldFrameBuffer, self.__frameBuffer)
 
-        glfbo.glBindFramebufferEXT(
-            glfbo.GL_FRAMEBUFFER_EXT, self.__oldFrameBuffer)
+        glexts.glBindFramebuffer(
+            glexts.GL_FRAMEBUFFER, self.__oldFrameBuffer)
 
         if self.__renderBuffer is not None:
-            glfbo.glBindRenderbufferEXT(
-                glfbo.GL_RENDERBUFFER_EXT, self.__oldRenderBuffer)
+            glexts.glBindRenderbuffer(
+                glexts.GL_RENDERBUFFER, self.__oldRenderBuffer)
 
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
@@ -460,9 +460,9 @@ class RenderTexture(texture2d.Texture2D):
 
         # Bind the colour buffer
         with self.target():
-            glfbo.glFramebufferTexture2DEXT(
-                glfbo.GL_FRAMEBUFFER_EXT,
-                glfbo.GL_COLOR_ATTACHMENT0_EXT,
+            glexts.glFramebufferTexture2D(
+                glexts.GL_FRAMEBUFFER,
+                glexts.GL_COLOR_ATTACHMENT0,
                 gl   .GL_TEXTURE_2D,
                 self.handle,
                 0)
@@ -471,24 +471,24 @@ class RenderTexture(texture2d.Texture2D):
             if self.__rttype == 'cds':
 
                 # Configure the render buffer
-                glfbo.glRenderbufferStorageEXT(
-                    glfbo.GL_RENDERBUFFER_EXT,
+                glexts.glRenderbufferStorage(
+                    glexts.GL_RENDERBUFFER,
                     gl.GL_DEPTH24_STENCIL8,
                     width,
                     height)
 
                 # Bind the render buffer
-                glfbo.glFramebufferRenderbufferEXT(
-                    glfbo.GL_FRAMEBUFFER_EXT,
+                glexts.glFramebufferRenderbuffer(
+                    glexts.GL_FRAMEBUFFER,
                     gl.GL_DEPTH_STENCIL_ATTACHMENT,
-                    glfbo.GL_RENDERBUFFER_EXT,
+                    glexts.GL_RENDERBUFFER,
                     self.__renderBuffer)
 
             # Or a depth texture
             elif self.__rttype == 'cd':
-                glfbo.glFramebufferTexture2DEXT(
-                    glfbo.GL_FRAMEBUFFER_EXT,
-                    glfbo.GL_DEPTH_ATTACHMENT_EXT,
+                glexts.glFramebufferTexture2D(
+                    glexts.GL_FRAMEBUFFER,
+                    glexts.GL_DEPTH_ATTACHMENT,
                     gl   .GL_TEXTURE_2D,
                     self.__depthTexture.handle,
                     0)
@@ -496,11 +496,11 @@ class RenderTexture(texture2d.Texture2D):
             # Get the FBO status before unbinding it -
             # the Apple software renderer will return
             # FRAMEBUFFER_UNDEFINED otherwise.
-            status = glfbo.glCheckFramebufferStatusEXT(
-                glfbo.GL_FRAMEBUFFER_EXT)
+            status = glexts.glCheckFramebufferStatus(
+                glexts.GL_FRAMEBUFFER)
 
         # Complain if something is not right
-        if status != glfbo.GL_FRAMEBUFFER_COMPLETE_EXT:
+        if status != glexts.GL_FRAMEBUFFER_COMPLETE:
             raise RuntimeError('An error has occurred while configuring '
                                'the frame buffer [{}]'.format(status))
 
