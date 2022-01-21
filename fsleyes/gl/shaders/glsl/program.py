@@ -16,7 +16,7 @@ import jinja2                         as j2
 import numpy                          as np
 import OpenGL.GL                      as gl
 import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.instanced_arrays as arbia
+# import OpenGL.GL.ARB.instanced_arrays as arbia
 
 import fsl.utils.memoize as memoize
 from . import               parse
@@ -172,6 +172,8 @@ class GLSLShader(object):
         if indexed: self.indexBuffer = gl.glGenBuffers(1)
         else:       self.indexBuffer = None
 
+        self.vao = gl.glGenVertexArrays(1)
+
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
 
@@ -225,6 +227,7 @@ class GLSLShader(object):
             glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
+            gl.glBindVertexArray(        self.vao)
             gl.glEnableVertexAttribArray(aPos)
             gl.glVertexAttribPointer(    aPos,
                                          glSize,
@@ -255,6 +258,7 @@ class GLSLShader(object):
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
 
+        gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 
@@ -266,7 +270,7 @@ class GLSLShader(object):
     def destroy(self):
         """Deletes all GL resources managed by this ``GLSLShader``. """
         gl.glDeleteProgram(self.program)
-
+        gl.glDeleteVertexArrays(1, self.vao)
         for buf in self.buffers.values():
             gl.glDeleteBuffers(1, gltypes.GLuint(buf))
         self.program = None
