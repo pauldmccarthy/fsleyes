@@ -16,6 +16,7 @@ from . import glmesh_funcs        # noqa
 from . import glmask_funcs        # noqa
 from . import gllabel_funcs       # noqa
 
+# Overlay types not supported in GL14
 gltensor_funcs = None
 glsh_funcs     = None
 glmip_funcs    = None

@@ -366,10 +366,10 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import OpenGL.GL         as gl
-    import OpenGL.extensions as glexts
-    from . import               gl14
-    from . import               gl21
+    import OpenGL.GL as gl
+    from . import       gl14
+    from . import       gl21
+    from . import       gl32
 
     thismod = sys.modules[__name__]
 
@@ -387,7 +387,10 @@ def bootstrap(glVersion=None):
     # GL version
     glVersion = major + minor / 10.0
     glpkg     = None
-    if glVersion >= 2.1:
+    if glVersion >= 3.2:
+        verstr = '3.2'
+        glpkg  = gl32
+    elif glVersion >= 2.1:
         verstr = '2.1'
         glpkg  = gl21
     elif glVersion >= 1.4:
@@ -399,14 +402,14 @@ def bootstrap(glVersion=None):
     # The gl21 implementation depends on a
     # few extensions - if they're not present,
     # fall back to the gl14 implementation
-    if glpkg == gl21:
+    if verstr == '2.1':
 
         # List any GL21 extensions here
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_instanced_arrays',
                 'GL_ARB_draw_instanced']
 
-        if not all(map(glexts.hasExtension, exts)):
+        if not all(map(hasExtension, exts)):
             log.warning('One of these OpenGL extensions is '
                         'not available: [{}]. Falling back '
                         'to an older OpenGL implementation.'
@@ -417,14 +420,14 @@ def bootstrap(glVersion=None):
     # If using GL14, and the ARB_vertex_program
     # and ARB_fragment_program extensions are
     # not present, we're screwed.
-    if glpkg == gl14:
+    if verstr == '1.4':
 
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_vertex_program',
                 'GL_ARB_fragment_program',
                 'GL_ARB_texture_non_power_of_two']
 
-        if not all(map(glexts.hasExtension, exts)):
+        if not all(map(hasExtension, exts)):
             raise RuntimeError('One of these OpenGL extensions is '
                                'not available: [{}]. This software '
                                'cannot run on the available graphics '
