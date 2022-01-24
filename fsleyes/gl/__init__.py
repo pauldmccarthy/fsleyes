@@ -462,6 +462,9 @@ def bootstrap(glVersion=None):
     thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
 
+    # Initialise extensions module.
+    glexts.initialise()
+
     # If we're using a software based renderer,
     # reduce the default performance settings
     if glIsSoftwareRenderer():
