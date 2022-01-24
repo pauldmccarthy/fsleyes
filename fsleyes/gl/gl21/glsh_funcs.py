@@ -27,15 +27,14 @@ their radius.
 """
 
 
-import numpy                        as np
-import numpy.linalg                 as npla
+import numpy                 as np
+import numpy.linalg          as npla
 
-import OpenGL.GL                    as gl
+import OpenGL.GL             as gl
 
-import OpenGL.GL.ARB.draw_instanced as arbdi
-
-import fsl.transform.affine         as affine
-import fsleyes.gl.shaders           as shaders
+import fsl.transform.affine  as affine
+import fsleyes.gl.shaders    as shaders
+import fsleyes.gl.extensions as glexts
 
 
 def destroy(self):
@@ -219,7 +218,7 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
 
     shader.loadAtts()
 
-    arbdi.glDrawElementsInstancedARB(
+    glexts.glDrawElementsInstanced(
         gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
 
 

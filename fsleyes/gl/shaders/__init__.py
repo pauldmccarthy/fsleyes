@@ -57,7 +57,7 @@ def getShaderDir():
     on which OpenGL version is in use.
     """
 
-    if   fslgl.GL_COMPATIBILITY == '3.2': subdir = 'gl21'
+    if   fslgl.GL_COMPATIBILITY == '3.3': subdir = 'gl21'
     if   fslgl.GL_COMPATIBILITY == '2.1': subdir = 'gl21'
     elif fslgl.GL_COMPATIBILITY == '1.4': subdir = 'gl14'
 

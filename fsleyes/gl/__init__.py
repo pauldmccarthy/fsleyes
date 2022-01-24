@@ -226,7 +226,7 @@ OpenGL version.
 
 GL_COMPATIBILITY = None
 """Set in :func:`bootstrap`. String containing the target "major.minor"
-OpenGL compatibility version ("1.4" or "2.1").
+OpenGL compatibility version ("1.4", "2.1", or "3.3").
 """
 
 
@@ -290,11 +290,16 @@ def glIsSoftwareRenderer():
     return sw and (not fastsw)
 
 
-def hasExtension(ext):
+def hasExtension(ext, glver=None):
     """Wrapper around ``OpenGL.extensions.hasExtension``. Short-circuits
-    and always returns ``True`` if the OpenGL version in use is >= 3.2.
+    and always returns ``True`` if the OpenGL version in use is >= 3.3.
+
+    If ``glver`` is not provided, it is set to the value of
+    ``GL_COMPATIBILITY``.
     """
-    if float(GL_COMPATIBILITY) >= 3.2:
+    if glver is None:
+        glver = float(GL_COMPATIBILITY)
+    if glver >= 3.3:
         return True
     import OpenGL.extensions as glexts
     return glexts.hasExtension(ext)
@@ -366,10 +371,11 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import OpenGL.GL as gl
-    from . import       gl14
-    from . import       gl21
-    from . import       gl32
+    import OpenGL.GL             as gl
+    import fsleyes.gl.gl14       as gl14
+    import fsleyes.gl.gl21       as gl21
+    import fsleyes.gl.gl33       as gl33
+    import fsleyes.gl.extensions as glexts
 
     thismod = sys.modules[__name__]
 
@@ -387,9 +393,9 @@ def bootstrap(glVersion=None):
     # GL version
     glVersion = major + minor / 10.0
     glpkg     = None
-    if glVersion >= 3.2:
-        verstr = '3.2'
-        glpkg  = gl32
+    if glVersion >= 3.3:
+        verstr = '3.3'
+        glpkg  = gl33
     elif glVersion >= 2.1:
         verstr = '2.1'
         glpkg  = gl21
@@ -409,7 +415,7 @@ def bootstrap(glVersion=None):
                 'GL_ARB_instanced_arrays',
                 'GL_ARB_draw_instanced']
 
-        if not all(map(hasExtension, exts)):
+        if not all(hasExtension(e, 2.1) for e in exts):
             log.warning('One of these OpenGL extensions is '
                         'not available: [{}]. Falling back '
                         'to an older OpenGL implementation.'
@@ -427,7 +433,7 @@ def bootstrap(glVersion=None):
                 'GL_ARB_fragment_program',
                 'GL_ARB_texture_non_power_of_two']
 
-        if not all(map(hasExtension, exts)):
+        if not all(hasExtension(e, 1.4) for e in exts):
             raise RuntimeError('One of these OpenGL extensions is '
                                'not available: [{}]. This software '
                                'cannot run on the available graphics '

@@ -12,14 +12,14 @@ a GLSL shader program comprising a vertex shader and a fragment shader.
 import logging
 import contextlib
 
-import jinja2                         as j2
-import numpy                          as np
-import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-# import OpenGL.GL.ARB.instanced_arrays as arbia
+import jinja2                as j2
+import numpy                 as np
+import OpenGL.GL             as gl
+import OpenGL.raw.GL._types  as gltypes
 
-import fsl.utils.memoize as memoize
-from . import               parse
+import fsleyes.gl.extensions as glexts
+import fsl.utils.memoize     as memoize
+from . import                   parse
 
 
 log = logging.getLogger(__name__)
@@ -237,7 +237,7 @@ class GLSLShader(object):
                                          None)
 
             if aDivisor is not None:
-                arbia.glVertexAttribDivisorARB(aPos, aDivisor)
+                glexts.glVertexAttribDivisor(aPos, aDivisor)
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
@@ -253,7 +253,7 @@ class GLSLShader(object):
             divisor = self.vertAttDivisors.get(att)
 
             if divisor is not None:
-                arbia.glVertexAttribDivisorARB(pos, 0)
+                glexts.glVertexAttribDivisor(pos, 0)
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)

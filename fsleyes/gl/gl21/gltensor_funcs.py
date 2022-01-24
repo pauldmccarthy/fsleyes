@@ -27,13 +27,13 @@ are used to manage the fragment shader.
 """
 
 
-import numpy                        as np
-import numpy.linalg                 as npla
-import OpenGL.GL                    as gl
-import OpenGL.GL.ARB.draw_instanced as arbdi
+import numpy                 as np
+import numpy.linalg          as npla
+import OpenGL.GL             as gl
 
 import fsl.transform.affine  as affine
 import fsleyes.gl.routines   as glroutines
+import fsleyes.gl.extensions as glexts
 from . import                   glvector_funcs
 
 
@@ -194,7 +194,7 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
 
     shader.loadAtts()
 
-    arbdi.glDrawElementsInstancedARB(
+    glexts.glDrawElementsInstanced(
         gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
 
