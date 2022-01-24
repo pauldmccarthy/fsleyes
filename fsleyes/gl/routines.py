@@ -1331,11 +1331,8 @@ def unitSphere(res):
               - A ``numpy.uint32`` array of size ``(4 * (res - 1)**2)``
                 containing a list of indices into the vertex array,
                 defining a vertex ordering that can be used to draw
-                the ellipsoid using the OpenGL ``GL_QUAD`` primitive type.
-
-
-    .. todo:: Generate indices to use with ``GL_TRIANGLES`` instead of
-              ``GL_QUADS``.
+                the ellipsoid using the OpenGL ``GL_TRIANGLES`` primitive
+                type.
     """
 
     # All angles to be sampled
@@ -1361,89 +1358,32 @@ def unitSphere(res):
 
     # Generate a list of indices which join the
     # vertices so they can be used to draw the
-    # sphere as GL_QUADs.
+    # sphere as GL_TRIANGLES.
     #
-    # The vertex locations for each quad follow
-    # this pattern:
+    # The vertex locations for each triangle
+    # pair follows this pattern:
     #
     #  1. (u,         v)
-    #  2. (u + ustep, v)
+    #  2. (u,         v + vstep)
     #  3. (u + ustep, v + vstep)
-    #  4. (u,         v + vstep)
-    nquads   = (res - 1) ** 2
-    quadIdxs = np.array([0, res, res + 1, 1], dtype=np.uint32)
+    #  4. (u,         v)
+    #  5. (u + ustep, v + vstep)
+    #  6. (u + ustep, v)
 
-    indices  = np.tile(quadIdxs, nquads)
-    indices += np.arange(nquads,  dtype=np.uint32).repeat(4)
-    indices += np.arange(res - 1, dtype=np.uint32).repeat(4 * (res - 1))
+    # Generate all indices from this template,
+    # which defines indices for one pair of
+    # triangles
+    template = np.array([0, res, res + 1, 0, res + 1, 1], dtype=np.uint32)
+    npairs   = (res - 1) ** 2
+    indices  = np.tile(template, npairs)
+
+    # Add offsets to each template to index
+    # into the appropriate locations in the
+    # vertex array
+    indices += np.arange(npairs,  dtype=np.uint32).repeat(6)
+    indices += np.arange(res - 1, dtype=np.uint32).repeat(6 * (res - 1))
 
     return vertices, indices
-
-
-def fullUnitSphere(res):
-    """Generates a unit sphere in the same way as :func:`unitSphere`, but
-    returns all vertices, instead of the unique vertices and an index array.
-
-    :arg res: Resolution - the number of angles to sample.
-
-    :returns: A ``numpy.float32`` array of size ``(4 * (res - 1)**2, 3)``
-              containing the ``(x, y, z)`` vertices which can be used to draw
-              a unit sphere (using the ``GL_QUADS`` primitive type).
-    """
-
-    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
-    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
-
-    cosu = np.cos(u)
-    cosv = np.cos(v)
-    sinu = np.sin(u)
-    sinv = np.sin(v)
-
-    vertices = np.zeros(((res - 1) * (res - 1) * 4, 3), dtype=np.float32)
-
-    cucv   = np.outer(cosu[:-1], cosv[:-1]).flatten()
-    cusv   = np.outer(cosu[:-1], sinv[:-1]).flatten()
-    cu1cv  = np.outer(cosu[1:],  cosv[:-1]).flatten()
-    cu1sv  = np.outer(cosu[1:],  sinv[:-1]).flatten()
-    cu1cv1 = np.outer(cosu[1:],  cosv[1:]) .flatten()
-    cu1sv1 = np.outer(cosu[1:],  sinv[1:]) .flatten()
-    cucv1  = np.outer(cosu[:-1], cosv[1:]) .flatten()
-    cusv1  = np.outer(cosu[:-1], sinv[1:]) .flatten()
-
-    su     = np.repeat(sinu[:-1], res - 1)
-    s1u    = np.repeat(sinu[1:],  res - 1)
-
-    vertices.T[:,  ::4] = [cucv,   cusv,   su]
-    vertices.T[:, 1::4] = [cu1cv,  cu1sv,  s1u]
-    vertices.T[:, 2::4] = [cu1cv1, cu1sv1, s1u]
-    vertices.T[:, 3::4] = [cucv1,  cusv1,  su]
-
-    return vertices
-
-
-def unitCircle(res, triangles=False):
-    """Generates ``res`` vertices which form a 2D circle, centered at (0, 0),
-    and with radius 1.
-
-    Returns the vertices as a ``numpy.float32`` array of shape ``(res, 2)``
-
-    If the ``triangles`` argument is ``True``, the vertices are generated
-    with the assumption that they will be drawn as a ``GL_TRIANGLE_FAN``.
-    """
-
-    step = (2 * np.pi) / res
-
-    u = np.linspace(-np.pi, np.pi - step, res, dtype=np.float32)
-
-    cosu  = np.cos(u)
-    sinu  = np.sin(u)
-    verts = np.vstack((sinu, cosu)).T
-
-    if triangles:
-        origin = np.zeros((1, 3), dtyp=np.float32)
-        verts  = np.concatenate((origin, verts))
-
-    return verts
 
 
 def polygonIndices(nverts):

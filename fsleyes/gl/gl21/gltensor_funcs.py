@@ -195,7 +195,7 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     shader.loadAtts()
 
     glexts.glDrawElementsInstanced(
-        gl.GL_QUADS, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
+        gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
 
 
 def drawAll(self, axes, zposes, xforms):
