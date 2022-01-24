@@ -22,6 +22,14 @@ Added
   the indices for all non-spatial dimensions to be specified (!304).
 
 
+Fixed
+^^^^^
+
+
+* Fixed an issue with loading FIRST subcortical segmentation VTK meshes (!306).
+
+
+
 1.3.3 (Thursday 23rd December 2021)
 -----------------------------------
 
