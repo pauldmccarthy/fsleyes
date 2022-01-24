@@ -390,7 +390,7 @@ def main(args=None):
         # get swamped with update notifications.
         if namespace[0].updatecheck:
             import fsleyes.actions.updatecheck as updatecheck
-            wx.CallAfter(updatecheck.UpdateCheckAction(),
+            wx.CallAfter(updatecheck.UpdateCheckAction(overlayList, displayCtx),
                          showUpToDateMessage=False,
                          showErrorMessage=False,
                          ignorePoint=False)
