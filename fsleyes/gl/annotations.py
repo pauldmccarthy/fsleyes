@@ -661,7 +661,8 @@ class Point(AnnotationObject):
         """Returns vertices to draw this ``Point`` annotation. """
 
         xax, yax, zax        = axes
-        offset               = self.lineWidth * 0.5
+        lineWidth            = self.normalisedLineWidth
+        offset               = lineWidth * 2
         x, y                 = self.x, self.y
         verts                = np.zeros((4, 3), dtype=np.float32)
         verts[0, [xax, yax]] = [x - offset, y]
@@ -670,15 +671,18 @@ class Point(AnnotationObject):
         verts[3, [xax, yax]] = [x, y + offset]
         verts[:, zax]        = zpos
 
-        return [(gl.GL_LINES, verts)]
+        verts = glroutines.lineAsPolygon(verts, lineWidth, zax)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def vertices3D(self):
         """Returns vertices to draw this ``Point`` annotation. """
 
-        offset               = self.lineWidth * 0.5
-        x, y, z              = self.x, self.y, self.z
-        verts                = np.zeros((6, 3), dtype=np.float32)
+        lineWidth   = self.normalisedLineWidth
+        offset      = lineWidth * 2
+        x, y, z     = self.x, self.y, self.z
+        verts       = np.zeros((6, 3), dtype=np.float32)
         verts[0, :] = [x - offset, y,          z]
         verts[1, :] = [x + offset, y,          z]
         verts[2, :] = [x,          y - offset, z]
@@ -686,16 +690,28 @@ class Point(AnnotationObject):
         verts[4, :] = [x,          y,          z - offset]
         verts[5, :] = [x,          y,          z + offset]
 
-        return [(gl.GL_LINES, verts)]
+        # See note in Line.vertices3D
+        if self.applyMvp:
+            camera = affine.transform(
+                [0, -1, 0],
+                affine.invert(self.annot.canvas.viewRotation),
+                vector=True)
+        else:
+            camera = [0, 0, 1]
+
+        verts = glroutines.lineAsPolygon(verts, lineWidth, camera=camera)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def hit(self, x, y):
         """Returns ``True`` if ``(x, y)`` is within the bounds of this
         ``Point``, ``False`` otherwise.
         """
-        px, py = self.x, self.y
-        dist   = np.sqrt((x - px) ** 2 + (y - py) ** 2)
-        return dist <= (self.lineWidth * 0.5)
+        lineWidth = self.normalisedLineWidth
+        px, py    = self.x, self.y
+        dist      = np.sqrt((x - px) ** 2 + (y - py) ** 2)
+        return dist <= (lineWidth * 2)
 
 
     def move(self, x, y):
@@ -800,11 +816,7 @@ class Line(AnnotationObject):
         iy   = y1 + u * (y2 - y1)
         dist = np.sqrt((x3 - ix) ** 2 + (y3 - iy) ** 2)
 
-        # convert line width (in pixels) to display
-        # coords, assume that pixels are isotropic
-        thres = self.lineWidth * self.annot.canvas.pixelSize()[0]
-
-        return dist <= (thres * 2)
+        return dist <= self.normalisedLineWidth
 
 
     def move(self, x, y):
