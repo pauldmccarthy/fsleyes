@@ -1460,8 +1460,7 @@ def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
     camera   = np.asarray(camera)
     vertices = np.asarray(vertices)
 
-    rot = rotateAboutVector(np.pi / 2, camera)
-    rot = affine.compose([1, 1, 1], [0, 0, 0], rot)
+    rot = rotate(90, *camera)
 
     if mode == 'segments':
         nlines = int(vertices.shape[0] / 2)
@@ -1509,26 +1508,3 @@ def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
     vertices[5::6] = start + offset
 
     return vertices
-
-
-def rotateAboutVector(angle, vector):
-    """Generate a ``(3, 3)`` rotation matrix which encodes a rotation of
-    ``angle`` radians about ``vector``.
-    """
-    rot = np.zeros((3, 3), dtype=np.float32)
-
-    l, m, n = vector
-    cosa    = np.cos(angle)
-    sina    = np.sin(angle)
-
-    rot[0, 0] = l * l * (1 - cosa) +     cosa
-    rot[0, 1] = m * l * (1 - cosa) - n * sina
-    rot[0, 2] = n * l * (1 - cosa) + m * sina
-    rot[1, 0] = l * m * (1 - cosa) + n * sina
-    rot[1, 1] = m * m * (1 - cosa) +     cosa
-    rot[1, 2] = n * m * (1 - cosa) - l * sina
-    rot[2, 0] = l * n * (1 - cosa) - m * sina
-    rot[2, 1] = m * n * (1 - cosa) + l * sina
-    rot[2, 2] = n * n * (1 - cosa) +     cosa
-
-    return rot

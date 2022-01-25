@@ -94,18 +94,10 @@ def initialise():
     """
     _resolver.resolve()
 
+
 def register(*args, **kwargs):
+    """Wrapper around  :meth:`GLSymbolResolver.register`. """
     _resolver.register(*args, **kwargs)
-
-
-_glfboFunction = ft.partial(_resolver.register,
-                            minGLVersion=3.0,
-                            fallbackExtension=glfbo,
-                            extensionSuffix='EXT')
-_glfboConstant = ft.partial(_resolver.register,
-                            minGLVersion=3.0,
-                            fallbackExtension=glfbo,
-                            extensionSuffix='_EXT')
 
 
 register('glGenFramebuffers',         3.0, glfbo, 'EXT')
