@@ -61,8 +61,11 @@ class GLMesh(globject.GLObject):
 
 
     If ``outline is True or vertexData is not None``, the intersection of the
-    mesh triangles with the viewing plane is calculated. These lines are then
-    rendered as ``GL_LINES`` primitives.
+    mesh triangles with the viewing plane is calculated and drawn. If the
+    :attr:`.MeshOpts.outlineWidth` property is equal to ``1``, the cross
+    section is drawn as ``GL_LINES`` primitives. Otherwise the lines are
+    converted into polygons and drawn as ``GL_TRIANGLES`` (see
+    :func:`.routines.lineAsPolygon`).
 
 
     When a mesh outline is drawn on a canvas, the calculated line vertices,
@@ -551,7 +554,6 @@ class GLMesh(globject.GLObject):
 
         if opts.wireframe:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-            gl.glLineWidth(2)
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -624,12 +626,22 @@ class GLMesh(globject.GLObject):
         if mdata is None:
             mdata = vdata
 
-        gl.glLineWidth(opts.outlineWidth)
+        if opts.outlineWidth == 1:
+            glprim   = gl.GL_LINES
+        else:
+            # TODO use index array instead
+            # of duplicating vertex data
+            zax       = axes[2]
+            lineWidth = opts.outlineWidth * self.canvas.pixelSize()[0]
+            glprim    = gl.GL_TRIANGLES
+            vertices  = glroutines.lineAsPolygon(vertices, lineWidth, zax)
+            if vdata is not None: vdata = np.repeat(vdata, 3)
+            if mdata is not None: mdata = np.repeat(mdata, 3)
 
         # Coloured from vertex data
         fslgl.glmesh_funcs.draw(
             self,
-            gl.GL_LINES,
+            glprim,
             vertices,
             vdata=vdata,
             mdata=mdata,
@@ -652,7 +664,6 @@ class GLMesh(globject.GLObject):
             mdata = vdata
 
         if opts.outline:
-            gl.glLineWidth(opts.outlineWidth)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
