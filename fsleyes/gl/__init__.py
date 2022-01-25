@@ -1232,6 +1232,13 @@ class WXGLCanvasTarget:
         raise NotImplementedError()
 
 
+    def pixelSize(self):
+        """Returns the size (width, height) of one pixel in units proportional
+        to the the display coordinate system.
+        """
+        raise NotImplementedError()
+
+
     def _draw(self, *a):
         """This method should implement the OpenGL drawing logic - it must be
         implemented by subclasses.

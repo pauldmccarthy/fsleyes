@@ -268,6 +268,27 @@ class Scene3DCanvas:
         return self.__viewport
 
 
+    def pixelSize(self):
+        """Returns the (approximate) size (as a tuple containing
+        ``(width, height)`` of one pixel in the display coordinate system.
+        """
+
+        # The right thing to do would be to transform
+        # a vector by the inverse mvp matrix. But just
+        # using the initial X/Y bounds (before
+        # rotatoin/scaling), then applying the zoom/
+        # scaling factor should work.
+        w, h     = self.GetSize()
+        zoom     = self.viewScale[0, 0]
+        xlo, xhi = self.viewport[0]
+        ylo, yhi = self.viewport[1]
+
+        pw = (xhi - xlo) / zoom / w
+        ph = (yhi - ylo) / zoom / h
+
+        return pw, ph
+
+
     def canvasToWorld(self, xpos, ypos, near=True):
         """Transform the given x/y canvas coordinates into the display
         coordinate system. The calculated coordinates will be located on
