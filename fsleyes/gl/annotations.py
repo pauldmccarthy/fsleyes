@@ -746,8 +746,7 @@ class Line(AnnotationObject):
         points[:, yax] = [self.y1, self.y2]
         points[:, zax] = zpos
 
-        verts = glroutines.lineAsPolygon(points[0], points[1],
-                                         lineWidth, axis=zax)
+        verts = glroutines.lineAsPolygon(points, lineWidth, axis=zax)
 
         return [(gl.GL_TRIANGLES, verts)]
 
@@ -777,8 +776,7 @@ class Line(AnnotationObject):
         else:
             camera = [0, 0, 1]
 
-        verts = glroutines.lineAsPolygon(
-            verts[0], verts[1], lineWidth, camera=camera)
+        verts = glroutines.lineAsPolygon(verts, lineWidth, camera=camera)
 
         return [(gl.GL_TRIANGLES, verts)]
 
@@ -889,9 +887,6 @@ class BorderMixin:
         primitives              = [v[0] for v in vertices]
         vertices                = [v[1] for v in vertices]
         vertices, lens, offsets = glroutines.stackVertices(vertices)
-
-        if self.lineWidth is not None:
-            gl.glLineWidth(self.lineWidth)
 
         colour = list(self.colour[:3])
         alpha  = self.alpha / 100.0
@@ -1032,7 +1027,8 @@ class Rect(BorderMixin, AnnotationObject):
 
     def __border(self, zpos, xax, yax, zax, bl, br, tl, tr):
         """Generate the rectangle outline. """
-        verts = np.zeros((8, 3), dtype=np.float32)
+        lineWidth            = self.normalisedLineWidth
+        verts                = np.zeros((8, 3), dtype=np.float32)
         verts[0, [xax, yax]] = bl
         verts[1, [xax, yax]] = br
         verts[2, [xax, yax]] = tl
@@ -1042,7 +1038,10 @@ class Rect(BorderMixin, AnnotationObject):
         verts[6, [xax, yax]] = br
         verts[7, [xax, yax]] = tr
         verts[:,       zax]  = zpos
-        return gl.GL_LINES, verts
+
+        verts = glroutines.lineAsPolygon(verts, lineWidth, axis=zax)
+
+        return gl.GL_TRIANGLES, verts
 
 
 class Ellipse(BorderMixin, AnnotationObject):
@@ -1136,7 +1135,9 @@ class Ellipse(BorderMixin, AnnotationObject):
 
         # border
         if self.border:
-            allVertices.append((gl.GL_LINE_LOOP, verts[1:-1]))
+            borderVerts = glroutines.lineAsPolygon(
+                verts[1:], self.normalisedLineWidth, axis=zax, mode='strip')
+            allVertices.append((gl.GL_TRIANGLES, borderVerts))
         if self.filled:
             allVertices.append((gl.GL_TRIANGLE_FAN, verts))
 

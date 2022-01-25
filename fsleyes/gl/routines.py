@@ -1417,7 +1417,7 @@ def stackVertices(vertices):
     return vertices, lens, offsets
 
 
-def lineAsPolygon(start, end, width, axis=None, camera=None):
+def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
     """Returns a set of vertices which represent a line between ``start`` and
     ``end`` and with width ``width``, suitable for drawing with the
     ``GL_TRIANGLES`` primitive.
@@ -1434,26 +1434,43 @@ def lineAsPolygon(start, end, width, axis=None, camera=None):
     display coordinate system, then you must specify the direction that
     the "camera" is pointing towards, via the ``camera`` argument. This
 
-    :arg start:   ``(x, y, z)`` start coordinates
-    :arg end:     ``(x, y, z)`` end coordinates
-    :arg width:   Line width, in units proportional to the coordinate system
-                  that ``start`` and ``end`` are defined in
+    :arg vertices: A ``(N, 3)`` array containing the line coordinates
 
-    :arg axis:    Depth axis, if the line is being drawn on a plane orthogonal
-                  to the display coordinate system.
+    :arg width:    Line width, in units proportional to the coordinate system
+                   that ``start`` and ``end`` are defined in
 
-    :arg camera:  Camera direction vector, if the line is being drawn on an
-                  arbitrary plane. Ignored if ``axis`` is specified.
+    :arg axis:     Depth axis, if the line is being drawn on a plane orthogonal
+                   to the display coordinate system.
+
+    :arg camera:   Camera direction vector, if the line is being drawn on an
+                   arbitrary plane. Ignored if ``axis`` is specified.
+
+    :arg mode:     Either ``'segments'`` (the default), or ``'strip'``.
+                   If ``'segments'``, lines are formed from ``vertices[0]``
+                   and ``vertices[1]``, ``vertices[2]`` and ``vertices[3]``,
+                   etc. If ``'strip'``, lines are formed from  ``vertices[0]``
+                   and ``vertices[1]``, ``vertices[1]`` and ``vertices[2]]``,
+                   etc.
     """
 
     if axis is not None:
         camera       = np.zeros(3)
         camera[axis] = 1
 
-    camera = np.asarray(camera)
+    camera   = np.asarray(camera)
+    vertices = np.asarray(vertices)
 
     rot = rotateAboutVector(np.pi / 2, camera)
     rot = affine.compose([1, 1, 1], [0, 0, 0], rot)
+
+    if mode == 'segments':
+        nlines = int(vertices.shape[0] / 2)
+        start  = vertices[ ::2]
+        end    = vertices[1::2]
+    elif mode == 'strip':
+        nlines = vertices.shape[0] - 1
+        start  = vertices[ :-1]
+        end    = vertices[1:]
 
     # Project the line vertices onto the plane
     # defined by the camera vector, so that we
@@ -1464,20 +1481,32 @@ def lineAsPolygon(start, end, width, axis=None, camera=None):
     #
     # https://en.wikipedia.org/wiki/Vector_projection#Vector_projection
     # https://stackoverflow.com/a/23472188
-    start       = np.asarray(start, dtype=np.float32)
-    end         = np.asarray(end,   dtype=np.float32)
-    start       = start - np.dot(start, camera) * camera
-    end         = end   - np.dot(end,   camera) * camera
-    offset      = affine.transform((end - start), rot, vector=True)
-    offset      = affine.normalise(offset) * width / 2
+    scdot = (start[:, 0] * camera[0] +
+             start[:, 1] * camera[1] +
+             start[:, 2] * camera[2])
+    ecdot = (end[  :, 0] * camera[0] +
+             end[  :, 1] * camera[1] +
+             end[  :, 2] * camera[2])
+    scdot = np.repeat(scdot.reshape(-1, 1), 3, axis=1)
+    ecdot = np.repeat(ecdot.reshape(-1, 1), 3, axis=1)
+    start = start - scdot * camera
+    end   = end   - ecdot * camera
 
-    vertices    = np.zeros((6, 3), dtype=np.float32)
-    vertices[0] = start - offset
-    vertices[1] = end   - offset
-    vertices[2] = end   + offset
-    vertices[3] = start - offset
-    vertices[4] = end   + offset
-    vertices[5] = start + offset
+    # Now we can rotate the line by 90 degrees
+    # to calculate an offset of the requested
+    # width.
+    offset = affine.transform((end - start), rot, vector=True)
+    offset = affine.normalise(offset) * width / 2
+
+    # And define a rectangle (as two triangles)
+    # which represents the line.
+    vertices       = np.zeros((nlines * 6, 3), dtype=np.float32)
+    vertices[0::6] = start - offset
+    vertices[1::6] = end   - offset
+    vertices[2::6] = end   + offset
+    vertices[3::6] = start - offset
+    vertices[4::6] = end   + offset
+    vertices[5::6] = start + offset
 
     return vertices
 
