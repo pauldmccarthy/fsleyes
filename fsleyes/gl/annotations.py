@@ -354,7 +354,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     lineWidth = props.Int(default=1, minval=0.1, clamped=True)
-    """Line width, for annotations which are drawn with lines. """
+    """Line width in pixels (approx), for annotations which are drawn with
+    lines. See also the :meth:`normalisedLineWidth` method.
+    """
 
 
     colour = props.Colour(default='#a00000')
@@ -391,11 +393,14 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     depth testing is enabled.
     """
 
+
     applyMvp =  props.Boolean(default=True)
-    """If ``True``, it is assumed that the annotation coordinates are
-    specified in the display coordinate system, and therefore that they
+    """If ``True`` (the default), it is assumed that the annotation coordinates
+    are specified in the display coordinate system, and therefore that they
     should be transformed by the :meth:`.SliceCanvas.mvpMatrix` (or
-    :meth:`.Scene3DCanvas.mvpMatrix`). Not honoured by all annotation types.
+    :meth:`.Scene3DCanvas.mvpMatrix`). If ``False``, it is assumed that the
+    annotation coordinates are in normalised device coordinates.
+    Not honoured by all annotation types.
     """
 
 
@@ -531,6 +536,22 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         return (self.creation + self.expiry) < now
 
 
+    @property
+    def normalisedLineWidth(self):
+        """Returns the :attr:`lineWidth`, converted into units proportional to
+        either display coordinates (if :attr:`applyMvp` is ``True``), or
+        normalised device coordinates (if :attr:`applyMvp` is ``False``).
+        """
+
+        pw, ph = self.annot.canvas.pixelSize()
+        cw, ch = self.annot.canvas.GetSize()
+
+        if self.applyMvp:
+            return self.lineWidth * min((pw, ph))
+        else:
+            return self.lineWidth * max((1 / cw, 1 / ch))
+
+
     def vertices2D(self, zpos, axes):
         """Must be implemented by sub-classes which rely on the default
         :meth:`draw2D` implementation. Generates and returns verticws to
@@ -566,9 +587,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         if xform is not None:
             mvpmat = affine.concat(mvpmat, xform)
-
-        if self.lineWidth is not None:
-            gl.glLineWidth(self.lineWidth)
 
         # load all vertex types, and use offsets
         # to draw each vertex group separately
@@ -718,19 +736,51 @@ class Line(AnnotationObject):
 
 
     def vertices2D(self, zpos, axes):
-        xax, yax, zax        = axes
-        verts                = np.zeros((2, 3), dtype=np.float32)
-        verts[0, [xax, yax]] = self.x1, self.y1
-        verts[1, [xax, yax]] = self.x2, self.y2
-        verts[:, zax]        = zpos
-        return [(gl.GL_LINES, verts)]
+        """Returns a set of vertices for drawing this line on a 2D plane,
+        with the ``GL_TRIANGLES`` primitive.
+        """
+        xax, yax, zax  = axes
+        lineWidth      = self.normalisedLineWidth
+        points         = np.zeros((2, 3))
+        points[:, xax] = [self.x1, self.x2]
+        points[:, yax] = [self.y1, self.y2]
+        points[:, zax] = zpos
+
+        verts = glroutines.lineAsPolygon(points[0], points[1],
+                                         lineWidth, axis=zax)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def vertices3D(self):
-        verts                = np.zeros((2, 3), dtype=np.float32)
+        """Returns a set of vertices for drawing this line in a 3D space,
+        with the ``GL_TRIANGLES`` primitive.
+        """
+        verts       = np.zeros((2, 3), dtype=np.float32)
         verts[0, :] = self.x1, self.y1, self.z1
         verts[1, :] = self.x2, self.y2, self.z2
-        return [(gl.GL_LINES, verts)]
+
+        lineWidth = self.normalisedLineWidth
+
+        # To draw the line at the requested width,
+        # we have to specify the camera direction
+        # in the display coordinate system. The
+        # Scene3DCanvas initially points towards
+        # -y, so we can localise it by applying
+        # the inverse model-view matrix to that
+        # vector.
+        if self.applyMvp:
+            camera = affine.transform(
+                [0, -1, 0],
+                affine.invert(self.annot.canvas.viewRotation),
+                vector=True)
+        else:
+            camera = [0, 0, 1]
+
+        verts = glroutines.lineAsPolygon(
+            verts[0], verts[1], lineWidth, camera=camera)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def hit(self, x, y):

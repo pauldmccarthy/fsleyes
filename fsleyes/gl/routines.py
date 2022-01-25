@@ -1415,3 +1415,91 @@ def stackVertices(vertices):
     vertices = np.vstack(vertices)
 
     return vertices, lens, offsets
+
+
+def lineAsPolygon(start, end, width, axis=None, camera=None):
+    """Returns a set of vertices which represent a line between ``start`` and
+    ``end`` and with width ``width``, suitable for drawing with the
+    ``GL_TRIANGLES`` primitive.
+
+    One of the ``axis`` or ``camera`` arguments must be specified - they are
+    used to determine the plane on which the line is being drawn, and
+    therefore how to define the line vertices at the specified width.
+
+    If the line is being drawn on a plane that is perpendicular to one of
+    the display coordinate system axes (the depth axis), then the index
+    of that axis can simply be passed via the ``axis`` argument.
+
+    If the line is being drawn on a plane that is not orthogonal to the
+    display coordinate system, then you must specify the direction that
+    the "camera" is pointing towards, via the ``camera`` argument. This
+
+    :arg start:   ``(x, y, z)`` start coordinates
+    :arg end:     ``(x, y, z)`` end coordinates
+    :arg width:   Line width, in units proportional to the coordinate system
+                  that ``start`` and ``end`` are defined in
+
+    :arg axis:    Depth axis, if the line is being drawn on a plane orthogonal
+                  to the display coordinate system.
+
+    :arg camera:  Camera direction vector, if the line is being drawn on an
+                  arbitrary plane. Ignored if ``axis`` is specified.
+    """
+
+    if axis is not None:
+        camera       = np.zeros(3)
+        camera[axis] = 1
+
+    camera = np.asarray(camera)
+
+    rot = rotateAboutVector(np.pi / 2, camera)
+    rot = affine.compose([1, 1, 1], [0, 0, 0], rot)
+
+    # Project the line vertices onto the plane
+    # defined by the camera vector, so that we
+    # can define an offset perpendicular to the
+    # line on that plane (which is how we draw
+    # the line as a rectangle of the requested
+    # width).
+    #
+    # https://en.wikipedia.org/wiki/Vector_projection#Vector_projection
+    # https://stackoverflow.com/a/23472188
+    start       = np.asarray(start, dtype=np.float32)
+    end         = np.asarray(end,   dtype=np.float32)
+    start       = start - np.dot(start, camera) * camera
+    end         = end   - np.dot(end,   camera) * camera
+    offset      = affine.transform((end - start), rot, vector=True)
+    offset      = affine.normalise(offset) * width / 2
+
+    vertices    = np.zeros((6, 3), dtype=np.float32)
+    vertices[0] = start - offset
+    vertices[1] = end   - offset
+    vertices[2] = end   + offset
+    vertices[3] = start - offset
+    vertices[4] = end   + offset
+    vertices[5] = start + offset
+
+    return vertices
+
+
+def rotateAboutVector(angle, vector):
+    """Generate a ``(3, 3)`` rotation matrix which encodes a rotation of
+    ``angle`` radians about ``vector``.
+    """
+    rot = np.zeros((3, 3), dtype=np.float32)
+
+    l, m, n = vector
+    cosa    = np.cos(angle)
+    sina    = np.sin(angle)
+
+    rot[0, 0] = l * l * (1 - cosa) +     cosa
+    rot[0, 1] = m * l * (1 - cosa) - n * sina
+    rot[0, 2] = n * l * (1 - cosa) + m * sina
+    rot[1, 0] = l * m * (1 - cosa) + n * sina
+    rot[1, 1] = m * m * (1 - cosa) +     cosa
+    rot[1, 2] = n * m * (1 - cosa) - l * sina
+    rot[2, 0] = l * n * (1 - cosa) - m * sina
+    rot[2, 1] = m * n * (1 - cosa) + l * sina
+    rot[2, 2] = n * n * (1 - cosa) +     cosa
+
+    return rot
