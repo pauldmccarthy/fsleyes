@@ -89,20 +89,6 @@ def updateShaderState(self, **kwargs):
     fshader.unload()
 
 
-def preDraw(self):
-    """Must be called before :func:`draw`. Loads the appropriate shader
-    program.
-    """
-
-    flat = self.opts.vertexData is None
-
-    if flat: shader = self.flatShader
-    else:    shader = self.dataShader
-
-    self.activeShader = shader
-    shader.load()
-
-
 def draw(self,
          glType,
          vertices,
@@ -177,14 +163,3 @@ def draw(self,
                           indices.shape[0],
                           gl.GL_UNSIGNED_INT,
                           indices.ravel('C'))
-
-
-def postDraw(self):
-    """Must be called after :func:`draw`. Unloads shaders, and unbinds
-    textures.
-    """
-
-    shader = self.activeShader
-    shader.unloadAtts()
-    shader.unload()
-    self.activeShader = None

@@ -114,8 +114,6 @@ class GLMesh(globject.GLObject):
         - ``flatColour``:  Colour to use for fragments which are outside
                            of the clipping range.
 
-     - ``preDraw(GLMesh)``: Prepare for drawing (e.g. load shaders)
-
      - ``draw(GLMesh, glType, vertices, indices=None, normals=None, vdata=None)``:  # noqa
         Draws mesh using shaders.
 
@@ -161,6 +159,7 @@ class GLMesh(globject.GLObject):
 
         self.flatShader   = None
         self.dataShader   = None
+        self.xsectShader  = None
         self.activeShader = None
 
         # We use a render texture when
@@ -209,11 +208,13 @@ class GLMesh(globject.GLObject):
 
         globject.GLObject.destroy(self)
 
-        if self.flatShader is not None: self.flatShader.destroy()
-        if self.dataShader is not None: self.dataShader.destroy()
+        if self.flatShader  is not None: self.flatShader .destroy()
+        if self.dataShader  is not None: self.dataShader .destroy()
+        if self.xsectShader is not None: self.xsectShader.destroy()
 
         self.dataShader   = None
         self.flatShader   = None
+        self.xsectShader  = None
         self.activeShader = None
 
         self.lut            = None
@@ -446,27 +447,27 @@ class GLMesh(globject.GLObject):
         current viewport size.
         """
 
-        lo,  hi    = self.getDisplayBounds()
-        is2D       = np.any(np.isclose(lo, hi))
-        outline    = self.draw2DOutlineEnabled()
-        useTexture = not (self.threedee or outline)
-        useShader  = is2D or self.threedee or outline
+        outline = self.draw2DOutlineEnabled()
+        flat    = self.opts.vertexData is None
+        xsect   = flat and (not (self.threedee or outline))
 
-        # Currently 2D cross section rendering
-        # does not use a shader program.
-        if useShader:
-            fslgl.glmesh_funcs.preDraw(self)
+        if   xsect: shader = self.xsectShader
+        elif flat:  shader = self.flatShader
+        else:       shader = self.dataShader
 
-            if self.opts.vertexData is not None:
-                if self.opts.useLut:
-                    self.lutTexture.bindTexture(gl.GL_TEXTURE0)
-                else:
-                    self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-                    self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+        self.activeShader = shader
+        shader.load()
+
+        if not flat:
+            if self.opts.useLut:
+                self.lutTexture.bindTexture(gl.GL_TEXTURE0)
+            else:
+                self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
+                self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
         # An off-screen texture is used
         # when drawing 2D cross-sectins
-        if useTexture:
+        if xsect:
             size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
             width  = size[2]
             height = size[3]
@@ -579,15 +580,12 @@ class GLMesh(globject.GLObject):
 
 
     def postDraw(self):
-        """Overrides :meth:`.GLObject.postDraw`. May call the
-        :func:`.gl14.glmesh_funcs.postDraw` or
-        :func:`.gl21.glmesh_funcs.postDraw` function.
-        """
+        """Overrides :meth:`.GLObject.postDraw`. """
 
-        useShader = self.threedee or self.draw2DOutlineEnabled()
-
-        if useShader:
-            fslgl.glmesh_funcs.postDraw(self)
+        shader = self.activeShader
+        shader.unloadAtts()
+        shader.unload()
+        self.activeShader = None
 
         if self.opts.vertexData is not None:
             if self.opts.useLut:
