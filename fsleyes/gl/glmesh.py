@@ -632,7 +632,7 @@ class GLMesh(globject.GLObject):
             # TODO use index array instead
             # of duplicating vertex data
             zax       = axes[2]
-            lineWidth = opts.outlineWidth * self.canvas.pixelSize()[0]
+            lineWidth = opts.outlineWidth * self.canvas.pixelSize()[0] / 2
             glprim    = gl.GL_TRIANGLES
             vertices  = glroutines.lineAsPolygon(vertices, lineWidth, zax)
             if vdata is not None: vdata = np.repeat(vdata, 3)
