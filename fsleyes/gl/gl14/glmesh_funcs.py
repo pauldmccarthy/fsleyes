@@ -152,8 +152,6 @@ def draw(self,
     else:
         shader.setVertParam('mvpmat',   mvpmat)
 
-    shader.loadAtts()
-
     nvertices = vertices.shape[0]
 
     if indices is None:

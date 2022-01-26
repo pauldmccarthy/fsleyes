@@ -237,7 +237,6 @@ class GLMesh(globject.GLObject):
 
         name    = self.name
         display = self.display
-        canvas  = self.canvas
         opts    = self.opts
 
         def shader(*a):
@@ -457,6 +456,7 @@ class GLMesh(globject.GLObject):
 
         self.activeShader = shader
         shader.load()
+        shader.loadAtts()
 
         if not flat:
             if self.opts.useLut:

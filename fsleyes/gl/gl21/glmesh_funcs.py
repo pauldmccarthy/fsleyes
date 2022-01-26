@@ -162,8 +162,6 @@ def draw(self,
         shader.set('MV',        mvmat)
         shader.set('normalmat', normmat)
 
-    shader.loadAtts()
-
     if indices is None:
         gl.glDrawArrays(glType, 0, vertices.shape[0])
     else:
