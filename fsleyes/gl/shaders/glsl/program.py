@@ -38,7 +38,7 @@ corresponding GL types and sizes.
 """
 
 
-class GLSLShader(object):
+class GLSLShader:
     """The ``GLSLShader`` class encapsulates information and logic about
     a GLSL 1.20 shader program, comprising a vertex shader and a fragment
     shader. It provides methods to set shader attribute and uniform values,
@@ -95,7 +95,7 @@ class GLSLShader(object):
     """
 
 
-    def __init__(self, vertSrc, fragSrc, indexed=False, constants=None):
+    def __init__(self, vertSrc, fragSrc, indexed=None, constants=None):
         """Create a ``GLSLShader``.
 
         The source is passed through ``jinja2``, replacing any expressions on
@@ -105,11 +105,9 @@ class GLSLShader(object):
 
         :arg fragSrc:   String containing fragment shader source code.
 
-        :arg indexed:   If ``True``, it is assumed that the vertices processed
-                        by this shader program will be drawn using an index
-                        array.  A vertex buffer object is created to store
-                        vertex indices - this buffer is expected to be
-                        populated via the :meth:`setIndices` method.
+        :arg indexed:   Deprecated, no longer necessary. To render using
+                        ``glDrawElements``, pass the indices to the
+                        :meth:`setIndices` method.
 
         :arg constants: Key-value pairs to be used when passing the source
                         through ``jinja2``.
@@ -169,10 +167,12 @@ class GLSLShader(object):
         for att in self.vertAttributes:
             self.buffers[att] = gl.glGenBuffers(1)
 
-        if indexed: self.indexBuffer = gl.glGenBuffers(1)
-        else:       self.indexBuffer = None
-
-        self.vao = gl.glGenVertexArrays(1)
+        # Buffers for storing vertices and
+        # (optionally) vertex indices.
+        # Vertex index buffer is created
+        # if setIndices is called.
+        self.indexBuffer = None
+        self.vao         = gl.glGenVertexArrays(1)
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -208,8 +208,7 @@ class GLSLShader(object):
 
 
     def load(self):
-        """Loads this ``GLSLShader`` into the GL state.
-        """
+        """Loads this ``GLSLShader`` into the GL state. """
         gl.glUseProgram(self.program)
 
 
@@ -271,9 +270,15 @@ class GLSLShader(object):
         """Deletes all GL resources managed by this ``GLSLShader``. """
         gl.glDeleteProgram(self.program)
         gl.glDeleteVertexArrays(1, self.vao)
+        if self.indexBuffer is not None:
+            gl.glDeleteBuffers(1, self.indexBuffer)
         for buf in self.buffers.values():
             gl.glDeleteBuffers(1, gltypes.GLuint(buf))
-        self.program = None
+
+        self.program     = None
+        self.vao         = None
+        self.indexBuffer = None
+        self.buffers     = None
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
@@ -350,16 +355,14 @@ class GLSLShader(object):
 
 
     def setIndices(self, indices):
-        """If an index array is to be used by this ``GLSLShader`` (see the
-        ``indexed`` argument to :meth:`__init__`), the index array may be set
-        via this method.
+        """If an index array is to be used by this ``GLSLShader``, the index
+        array may be set via this method.
         """
 
         if self.indexBuffer is None:
-            raise RuntimeError('Shader program was not '
-                               'configured with index support')
+            self.indexBuffer = gl.glGenBuffers(1)
 
-        indices = np.array(indices, dtype=np.uint32)
+        indices = np.asarray(indices, dtype=np.uint32)
 
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER,
                         self.indexBuffer)
