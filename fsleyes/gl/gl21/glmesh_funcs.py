@@ -40,13 +40,19 @@ def compileShaders(self):
 
     else:
 
-        flatVertSrc = shaders.getVertexShader(  'glmesh_2d_flat')
-        flatFragSrc = shaders.getFragmentShader('glmesh_2d_flat')
-        dataVertSrc = shaders.getVertexShader(  'glmesh_2d_data')
-        dataFragSrc = shaders.getFragmentShader('glmesh_2d_data')
+        flatVertSrc    = shaders.getVertexShader(  'glmesh_2d_flat')
+        flatFragSrc    = shaders.getFragmentShader('glmesh_2d_flat')
+        dataVertSrc    = shaders.getVertexShader(  'glmesh_2d_data')
+        dataFragSrc    = shaders.getFragmentShader('glmesh_2d_data')
+        xsectcpVertSrc = shaders.getVertexShader(  'glmesh_2d_crosssection_clipplane')
+        xsectcpFragSrc = shaders.getFragmentShader('glmesh_2d_crosssection_clipplane')
+        xsectblVertSrc = shaders.getVertexShader(  'glmesh_2d_crosssection_blit')
+        xsectblFragSrc = shaders.getFragmentShader('glmesh_2d_crosssection_blit')
 
-        self.dataShader = shaders.GLSLShader(dataVertSrc, dataFragSrc)
-        self.flatShader = shaders.GLSLShader(flatVertSrc, flatFragSrc)
+        self.dataShader    = shaders.GLSLShader(dataVertSrc,    dataFragSrc)
+        self.flatShader    = shaders.GLSLShader(flatVertSrc,    flatFragSrc)
+        self.xsectcpShader = shaders.GLSLShader(xsectcpVertSrc, xsectcpFragSrc)
+        self.xsectblShader = shaders.GLSLShader(xsectblVertSrc, xsectblFragSrc)
 
 
 def updateShaderState(self, **kwargs):
@@ -54,9 +60,11 @@ def updateShaderState(self, **kwargs):
     configuration.
     """
 
-    dopts    = self.opts
-    dshader  = self.dataShader
-    fshader  = self.flatShader
+    dopts      = self.opts
+    dshader    = self.dataShader
+    fshader    = self.flatShader
+    xscpshader = self.xsectcpShader
+    xsblshader = self.xsectblShader
 
     dshader.load()
     dshader.set('cmap',           0)
@@ -91,10 +99,15 @@ def updateShaderState(self, **kwargs):
 
     dshader.unload()
 
+    with xscpshader.loaded():
+        xscpshader.setAtt('vertex', self.vertices)
+        xscpshader.setIndices(      self.indices)
+    with xsblshader.loaded():
+        xsblshader.set('colour', kwargs['flatColour'])
     with fshader.loaded():
-        fshader.set(   'colour', kwargs['flatColour'])
-        fshader.setAtt('vertex', self.vertices)
+        fshader.set('colour', kwargs['flatColour'])
         if self.threedee:
+            fshader.setAtt('vertex', self.vertices)
             fshader.setAtt('normal', self.normals)
             fshader.setIndices(self.indices)
 

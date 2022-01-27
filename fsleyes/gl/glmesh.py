@@ -35,47 +35,20 @@ class GLMesh(globject.GLObject):
 
     A ``GLMesh`` is rendered in one of two different ways, depending upon the
     value of the :attr:`.MeshOpts.outline` and :attr:`.MeshOpts.vertexData`
-    properties.
-
+    properties - either a filled cross-secetion is drawn, or an outline of the
+    cross-section is drawn.
 
     *Cross-sections*
 
     If ``outline is False and vertexData is None``, a filled cross-section of
-    the mesh is drawn. This is accomplished using a three-pass technique,
-    roughly following that described at
-    http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html:
-
-     1. The front face of the mesh is rendered to the stencil buffer.
-
-     2. The back face is rendered to the stencil buffer, and subtracted
-        from the front face.
-
-     3. This intersection (of the mesh with a plane at the slice Z location)
-        is then rendered to the canvas.
-
-
-    This cross-section is filled with the :attr:`.MeshOpts.colour` property.
+    the mesh is drawn - see the :meth:`drawCrossSection` method.
 
 
     *Outlines*
 
-
-    If ``outline is True or vertexData is not None``, the intersection of the
-    mesh triangles with the viewing plane is calculated and drawn. If the
-    :attr:`.MeshOpts.outlineWidth` property is equal to ``1``, the cross
-    section is drawn as ``GL_LINES`` primitives. Otherwise the lines are
-    converted into polygons and drawn as ``GL_TRIANGLES`` (see
-    :func:`.routines.lineAsPolygon`).
-
-
-    When a mesh outline is drawn on a canvas, the calculated line vertices,
-    and corresponding mesh faces (triangles) are cached via the
-    :meth:`.OverlayList.setData` method. This is so that other parts of
-    FSLeyes can access this information if necessary (e.g. the
-    :class:`.OrthoViewProfile` provides mesh-specific interaction). For a
-    canvas which is showing a plane orthogonal to display axis X, Y or Z, this
-    data will be given a key of ``'crosssection_0'``, ``'crosssection_1'``, or
-    ``'crosssection_2'`` respectively.
+    If ``outline is True or vertexData is not None``, an outline of the
+    intersection of the mesh triangles with the viewing plane is calculated
+    and drawn - see the :meth:`drawOutline` method.
 
 
     *Colouring*
@@ -157,10 +130,10 @@ class GLMesh(globject.GLObject):
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, canvas, threedee)
 
-        self.flatShader   = None
-        self.dataShader   = None
-        self.xsectShader  = None
-        self.activeShader = None
+        self.flatShader    = None
+        self.dataShader    = None
+        self.xsectcpShader = None
+        self.xsectblShader = None
 
         # We use a render texture when
         # rendering model cross sections.
@@ -208,14 +181,15 @@ class GLMesh(globject.GLObject):
 
         globject.GLObject.destroy(self)
 
-        if self.flatShader  is not None: self.flatShader .destroy()
-        if self.dataShader  is not None: self.dataShader .destroy()
-        if self.xsectShader is not None: self.xsectShader.destroy()
+        if self.flatShader    is not None: self.flatShader   .destroy()
+        if self.dataShader    is not None: self.dataShader   .destroy()
+        if self.xsectcpShader is not None: self.xsectcpShader.destroy()
+        if self.xsectblShader is not None: self.xsectblShader.destroy()
 
-        self.dataShader   = None
-        self.flatShader   = None
-        self.xsectShader  = None
-        self.activeShader = None
+        self.dataShader    = None
+        self.flatShader    = None
+        self.xsectcpShader = None
+        self.xsectblShader = None
 
         self.lut            = None
         self.renderTexture  = None
@@ -382,7 +356,9 @@ class GLMesh(globject.GLObject):
         # and then re-generate the triangle indices.
         # The original indices are saved above, as
         # they will be used by the getVertexData
-        # method to duplicate the vertex data.
+        # method to duplicate the vertex data (as
+        # we need to provide a data value for each
+        # vertex).
         if threedee and (vdata is not None) and interp == 'nearest':
             self.vertices = vertices[indices].astype(np.float32)
             self.indices  = np.arange(0, len(self.vertices), dtype=np.uint32)
@@ -402,12 +378,7 @@ class GLMesh(globject.GLObject):
         """Returns the face of the mesh triangles which which will be facing
         outwards, either ``GL_CCW`` or ``GL_CW``. This will differ depending
         on the mesh-to-display transformation matrix.
-
-        This method is only used in 3D rendering.
         """
-
-        if not self.threedee:
-            return gl.GL_CCW
 
         # Only looking at the mesh -> display
         # transform, thus we are assuming that
@@ -465,18 +436,6 @@ class GLMesh(globject.GLObject):
                 self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
                 self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
-        # An off-screen texture is used
-        # when drawing 2D cross-sectins
-        if xsect:
-            size   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-            width  = size[2]
-            height = size[3]
-
-            # We only need to resize the texture when
-            # the viewport size/quality changes.
-            if self.renderTexture.shape != (width, height):
-                self.renderTexture.shape = width, height
-
 
     def draw2D(self, zpos, axes, xform=None):
         """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
@@ -485,55 +444,35 @@ class GLMesh(globject.GLObject):
 
         overlay       = self.overlay
         lo,  hi       = self.getDisplayBounds()
-        canvas        = self.canvas
-        bbox          = canvas.viewport
         xax, yax, zax = axes
         outline       = self.draw2DOutlineEnabled()
 
-        # Mesh is 2D, and is
-        # perpendicular to
-        # the viewing plane
+        # Mesh is 2D, and is perpendicular to
+        # the viewing plane - don't draw it.
         if np.any(np.isclose([lo[xax], lo[yax]], [hi[xax], hi[yax]])):
             return
 
+        # Mesh is 2D, and is parallel
+        # to the viewing plane.
         is2D = np.isclose(lo[zax], hi[zax])
 
-        # 2D meshes are always drawn,
-        # regardless of the zpos
+        # Don't draw this mesh if it does not
+        # intersect the plane at zpos. 2D
+        # meshes are always drawn, regardless
+        # of the zpos.
         if not is2D and (zpos < lo[zax] or zpos > hi[zax]):
             return
 
-        # the calculateIntersection method caches
-        # cross section vertices - make sure they're
-        # cleared in case we are not doing an outline
-        # draw.
+        # The calculateIntersection method
+        # caches cross section vertices -
+        # make sure they're cleared in case
+        # we are not doing an outline draw.
         self.overlayList.setData(overlay, 'crosssection_{}'.format(zax), None)
 
-        if is2D:
-            self.draw2DMesh(xform, bbox)
-
-        elif outline:
-            self.drawOutline(zpos, axes, xform, bbox)
-
-        else:
-            lo, hi = self.calculateViewport(lo, hi, axes, bbox)
-            xmin   = lo[xax]
-            xmax   = hi[xax]
-            ymin   = lo[yax]
-            ymax   = hi[yax]
-            tex    = self.renderTexture
-
-            self.drawCrossSection(zpos, axes, lo, hi, tex)
-
-            if xform is None:
-                xform = affine.concat(canvas.projectionMatrix,
-                                      canvas.viewMatrix)
-            else:
-                xform = affine.concat(canvas.projectionMatrix,
-                                      canvas.viewMatrix,
-                                      xform)
-
-            tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
+        # Delegate to the appropriate sub-method
+        if   is2D:    self.draw2DMesh(xform)
+        elif outline: self.drawOutline(zpos, axes, xform)
+        else:         self.drawCrossSection(zpos, axes, xform)
 
 
     def draw3D(self, xform=None):
@@ -676,135 +615,150 @@ class GLMesh(globject.GLObject):
             xform=xform)
 
 
-    def drawCrossSection(self, zpos, axes, lo, hi, dest):
-        """Renders a filled cross-section of the mesh to an off-screen
-        :class:`.RenderTexture`. See:
+    def drawCrossSection(self, zpos, axes, xform=None):
+        """Called by :meth:`draw2D` when ``outline is False and vertexData is None``
+
+        Draws a filled cross-section of the mesh at the specified Z location.
+
+        This is accomplished using a four-pass technique, roughly following
+        that described at
 
         http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/advclip.html
 
-        :arg zpos: Position along the z axis
-        :arg axes: Tuple containing ``(x, y, z)`` axis indices.
-        :arg lo:   Tuple containing the low bounds on each axis.
-        :arg hi:   Tuple containing the high bounds on each axis.
-        :arg dest: The :class:`.RenderTexture` to render to.
+        1. The mesh back face stencil is drawn to an off-screen stencil buffer.
+
+        2. The mesh front face stencil is subtracted from the back face
+           stencil. The stencil buffer now contains a binary mask of the cross-
+           section.
+
+        3. An off-screen texture is filled with the :attr:`.MeshOpts.colour`,
+           masked by the stencil buffer.
+
+        4. The off-screen texture is drawn to the canvas.
+
+        :arg zpos:  Position along the z axis
+        :arg axes:  Tuple containing ``(x, y, z)`` axis indices.
+        :arg xform: Transformation matrix to apply to the vertices.
         """
 
-        opts     = self.opts
-        xax      = axes[0]
-        yax      = axes[1]
-        zax      = axes[2]
-        xmin     = lo[xax]
-        ymin     = lo[yax]
-        xmax     = hi[xax]
-        ymax     = hi[yax]
-        vertices = self.vertices.ravel('C')
-        indices  = self.indices
+        canvas        = self.canvas
+        xax, yax, zax = axes
+        bbox          = canvas.viewport
+        cpshader      = self.xsectcpShader
+        blshader      = self.xsectblShader
+        lo, hi        = self.getDisplayBounds()
+        lo, hi        = self.calculateViewport(lo, hi, axes, bbox)
+        xmin          = lo[xax]
+        xmax          = hi[xax]
+        ymin          = lo[yax]
+        ymax          = hi[yax]
+        tex           = self.renderTexture
 
-        dest.bindAsRenderTarget()
-        dest.setRenderViewport(xax, yax, lo, hi)
+        # Make sure the off-screen texture
+        # matches the display size
+        width, height = canvas.GetSize()
+        if tex.shape != (width, height):
+            tex.shape = width, height
 
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(dest.projectionMatrix.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(dest.viewMatrix.ravel('F'))
+        if xform is None: xform = canvas.mvpMatrix
+        else:             xform = affine.concat(canvas.mvpMatrix, xform)
 
         # Figure out the equation of a plane
-        # perpendicular to the Z axis, and
-        # located at the z position. This is
-        # used as a clipping plane to draw
-        # the mesh intersection.
-        clipPlaneVerts                = np.zeros((4, 3), dtype=np.float32)
-        clipPlaneVerts[0, [xax, yax]] = [xmin, ymin]
-        clipPlaneVerts[1, [xax, yax]] = [xmin, ymax]
-        clipPlaneVerts[2, [xax, yax]] = [xmax, ymax]
-        clipPlaneVerts[3, [xax, yax]] = [xmax, ymin]
-        clipPlaneVerts[:,  zax]       =  zpos
+        # perpendicular to the Z axis, and located
+        # at the z position. This is used as a
+        # clipping plane to draw the mesh
+        # intersection. The clip plane is defined in
+        # the display coordinate system, before MVP
+        # transformation.
+        clipPlane                = np.zeros((4, 3), dtype=np.float32)
+        clipPlane[0, [xax, yax]] = [xmin, ymin]
+        clipPlane[1, [xax, yax]] = [xmin, ymax]
+        clipPlane[2, [xax, yax]] = [xmax, ymax]
+        clipPlane[3, [xax, yax]] = [xmax, ymin]
+        clipPlane[:,  zax]       =  zpos
+        clipPlane = glroutines.planeEquation(clipPlane[0, :],
+                                             clipPlane[1, :],
+                                             clipPlane[2, :])
 
-        planeEq  = glroutines.planeEquation(clipPlaneVerts[0, :],
-                                            clipPlaneVerts[1, :],
-                                            clipPlaneVerts[2, :])
-
-        gl.glClearColor(0, 0, 0, 0)
-
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT |
-                   gl.GL_DEPTH_BUFFER_BIT |
-                   gl.GL_STENCIL_BUFFER_BIT)
-
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glEnable(gl.GL_CLIP_PLANE0)
-        gl.glEnable(gl.GL_CULL_FACE)
-        gl.glEnable(gl.GL_STENCIL_TEST)
-        gl.glFrontFace(gl.GL_CCW)
+        # http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/\
+        #     advclip.html
+        #
+        # We can calculate a cross-section of the mesh
+        # by subtracting a front-face stencil from a
+        # back-face stencil, clipped by the above
+        # clipping plane. We use the stencil buffer of
+        # the off-screen render texture, and perform
+        # these steps:
+        #
+        # 1. Draw back faces to the stencil buffer
+        # 2. Subtract front faces from the stencil buffer
+        # 3. Fill the off-screen texture with the fill colour,
+        #    masking it with the stencil buffer
+        # 4. Draw the off-screen texture to the display
+        gl.glFrontFace(self.frontFace())
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        with glroutines.enabled((gl.GL_CULL_FACE, gl.GL_STENCIL_TEST)), \
+             tex.target(xax, yax, lo, hi):
 
-        gl.glClipPlane(gl.GL_CLIP_PLANE0, planeEq)
-        gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE)
+            # Use a clip-plane shader for steps 1 and 2
+            with cpshader.loaded(), cpshader.loadedAtts():
 
-        # First and second passes - render front and
-        # back faces separately. In the stencil buffer,
-        # subtract the mask created by the second
-        # render from the mask created by the first -
-        # this gives us a mask which shows the
-        # intersection of the mesh with the clipping
-        # plane.
-        gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
-        direction = [gl.GL_INCR, gl.GL_DECR]
+                cpshader.set('MVP',       tex.mvpMatrix)
+                cpshader.set('clipPlane', clipPlane)
 
-        # If the mesh coordinate transformation
-        # has a negative determinant, it means
-        # the back faces will be facing the camera,
-        # so we need to render the back faces first.
-        if npla.det(opts.getTransform('mesh', 'display')) > 0:
-            faceOrder = [gl.GL_FRONT, gl.GL_BACK]
-        else:
-            faceOrder = [gl.GL_BACK,  gl.GL_FRONT]
+                gl.glClearColor(0, 0, 0, 0)
+                gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
 
-        for face, direction in zip(faceOrder, direction):
+                # We just want to populate the stencil
+                # buffer, so set the stencil test to
+                # always pass, and suppress draws to
+                # the rgba buffer.
+                gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE,
+                               gl.GL_FALSE, gl.GL_FALSE)
+                gl.glStencilFunc(gl.GL_ALWAYS, 0, 0)
 
-            gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
-            gl.glCullFace(face)
+                # first pass - draw back faces onto
+                # stencil buffer. Second pass -
+                # subtract front faces from back
+                # faces in the stencil buffer
+                faces = [gl.GL_FRONT, gl.GL_BACK]
+                dirs  = [gl.GL_INCR,  gl.GL_DECR]
+                for i, (face, direction) in enumerate(zip(faces, dirs)):
 
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-            gl.glDrawElements(gl.GL_TRIANGLES,
-                              len(indices),
-                              gl.GL_UNSIGNED_INT,
-                              indices)
+                    gl.glCullFace(face)
+                    gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
+                    gl.glDrawElements(gl.GL_TRIANGLES,
+                                      self.indices.shape[0],
+                                      gl.GL_UNSIGNED_INT,
+                                      None)  # TODO indices in gl14
 
-        # Third pass - render the intersection
-        # of the front and back faces from the
-        # stencil buffer to the render texture.
-        gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
+            # Now we have a mask of the cross-section
+            # in the stencil buffer - use a "blitting"
+            # shader to fill the off screen texture with
+            # the flat colour, but mask with the stencil
+            # buffer.
+            gl.glDisable(gl.GL_CULL_FACE)
+            gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
+            gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
-        gl.glDisable(gl.GL_CLIP_PLANE0)
-        gl.glDisable(gl.GL_CULL_FACE)
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+            with blshader.loaded(), blshader.loadedAtts():
+                verts = tex.generateVertices(zpos, xmin, xmax,
+                                             ymin, ymax, xax, yax)
+                blshader.setAtt('vertex', verts)
+                blshader.set(   'MVP',    tex.mvpMatrix)
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
-        gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
-
-        gl.glColor(*opts.getConstantColour())
-
-        # Disable alpha blending - we
-        # just want the colour copied
-        # into the texture as-is.
-        with glroutines.disabled(gl.GL_BLEND):
-            gl.glBegin(gl.GL_QUADS)
-            gl.glVertex3f(*clipPlaneVerts[0, :])
-            gl.glVertex3f(*clipPlaneVerts[1, :])
-            gl.glVertex3f(*clipPlaneVerts[2, :])
-            gl.glVertex3f(*clipPlaneVerts[3, :])
-            gl.glEnd()
-
-        gl.glDisable(gl.GL_STENCIL_TEST)
-
-        dest.unbindAsRenderTarget()
-        dest.restoreViewport()
+        # Finally, draw the off-screen texture to the display
+        tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
 
 
     def calculateViewport(self, lo, hi, axes, bbox=None):
-        """Called by :meth:`draw2D`. Calculates an appropriate viewport (the
-        horizontal/vertical minimums/maximums in display coordinates) given
-        the ``lo`` and ``hi`` ``GLMesh`` display bounds, and a display
-        ``bbox``.
+        """Called by :meth:`drawCrossSection`. Calculates an appropriate
+        viewport (the horizontal/vertical minimums/maximums in display
+        coordinates) given the ``lo`` and ``hi`` ``GLMesh`` display bounds,
+        and a display ``bbox``.
+
+        This is needed to preserve the aspect ratio of the mesh cross-section.
         """
 
         xax = axes[0]
@@ -1031,10 +985,10 @@ class GLMesh(globject.GLObject):
         """(Re)Compiles the vertex/fragment shader program(s), via a call
         to the GL-version specific ``compileShaders`` function.
         """
-        if self.flatShader is not None: self.flatShader.destroy()
-        if self.dataShader is not None: self.dataShader.destroy()
-
-        self.activeShader = None
+        if self.flatShader    is not None: self.flatShader   .destroy()
+        if self.dataShader    is not None: self.dataShader   .destroy()
+        if self.xsectcpShader is not None: self.xsectcpShader.destroy()
+        if self.xsectblShader is not None: self.xsectblShader.destroy()
 
         fslgl.glmesh_funcs.compileShaders(self)
 
