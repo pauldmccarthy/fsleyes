@@ -76,7 +76,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     """
 
 
-    outlineWidth = props.Real(minval=0.1, maxval=10, default=2, clamped=False)
+    outlineWidth = props.Real(minval=0.1, maxval=10, default=1, clamped=False)
     """If :attr:`outline` is ``True``, this property defines the width of the
     outline in pixels.
     """
