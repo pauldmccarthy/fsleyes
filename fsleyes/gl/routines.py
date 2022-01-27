@@ -1417,7 +1417,12 @@ def stackVertices(vertices):
     return vertices, lens, offsets
 
 
-def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
+def lineAsPolygon(vertices,
+                  width,
+                  axis=None,
+                  camera=None,
+                  mode='segments',
+                  indices=False):
     """Returns a set of vertices which represent a line between ``start`` and
     ``end`` and with width ``width``, suitable for drawing with the
     ``GL_TRIANGLES`` primitive.
@@ -1451,6 +1456,8 @@ def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
                    etc. If ``'strip'``, lines are formed from  ``vertices[0]``
                    and ``vertices[1]``, ``vertices[1]`` and ``vertices[2]]``,
                    etc.
+
+    :arg indices:  Defaults to ``False``. If ``True``
     """
 
     if axis is not None:
@@ -1493,18 +1500,44 @@ def lineAsPolygon(vertices, width, axis=None, camera=None, mode='segments'):
 
     # Now we can rotate the line by 90 degrees
     # to calculate an offset of the requested
-    # width.
+    # width, and create a rectangular region
+    # representing the line.
     offset = affine.transform((end - start), rot, vector=True)
     offset = affine.normalise(offset) * width / 2
 
-    # And define a rectangle (as two triangles)
-    # which represents the line.
-    vertices       = np.zeros((nlines * 6, 3), dtype=np.float32)
-    vertices[0::6] = start - offset
-    vertices[1::6] = end   - offset
-    vertices[2::6] = end   + offset
-    vertices[3::6] = start - offset
-    vertices[4::6] = end   + offset
-    vertices[5::6] = start + offset
+    # Each rectangle is drawn with two triangles.
+    #
+    # If indices are requested, we generate
+    # four vertices to describe each line,
+    # and indices such that each line is
+    # described by two triangles using those
+    # four vertices.
+    if indices:
+        nverts            = nlines * 4
+        ntris             = nlines * 2
+        vertices          = np.zeros((nverts, 3), dtype=np.float32)
+        indices           = np.zeros((ntris,  3), dtype=np.uint32)
+        vertices[0::4]    = start - offset
+        vertices[1::4]    = start + offset
+        vertices[2::4]    = end   - offset
+        vertices[3::4]    = end   + offset
+        indices[ 0::2, 0] = np.arange(0, nverts, 4, dtype=np.uint32)
+        indices[ 0::2, 1] = np.arange(2, nverts, 4, dtype=np.uint32)
+        indices[ 0::2, 2] = np.arange(3, nverts, 4, dtype=np.uint32)
+        indices[ 1::2, 0] = indices[ 0::2, 0]
+        indices[ 1::2, 1] = indices[ 0::2, 2]
+        indices[ 1::2, 2] = np.arange(1, nverts, 4, dtype=np.uint32)
+        return vertices, indices
 
-    return vertices
+    # If indices are not requested, we generate
+    # six vertices per line, which can be drawn
+    # as two separate triangles.
+    else:
+        vertices       = np.zeros((nlines * 6, 3), dtype=np.float32)
+        vertices[0::6] = start - offset
+        vertices[1::6] = end   - offset
+        vertices[2::6] = end   + offset
+        vertices[3::6] = start - offset
+        vertices[4::6] = end   + offset
+        vertices[5::6] = start + offset
+        return vertices
