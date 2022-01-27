@@ -142,7 +142,6 @@ def draw(self,
     """
 
     canvas = self.canvas
-    shader = self.activeShader
     mvmat  = canvas.viewMatrix
     mvpmat = canvas.mvpMatrix
 

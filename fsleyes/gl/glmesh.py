@@ -411,25 +411,11 @@ class GLMesh(globject.GLObject):
 
 
     def preDraw(self):
-        """Overrides :meth:`.GLObject.preDraw`. Performs some pre-drawing
-        configuration, which might involve loading shaders, and/or setting the
-        size of the backing :class:`.RenderTexture` instance based on the
-        current viewport size.
+        """Overrides :meth:`.GLObject.preDraw`. Binds colour map
+        textures, if the mesh is being coloured with data.
         """
 
-        outline = self.draw2DOutlineEnabled()
-        flat    = self.opts.vertexData is None
-        xsect   = flat and (not (self.threedee or outline))
-
-        if   xsect: shader = self.xsectShader
-        elif flat:  shader = self.flatShader
-        else:       shader = self.dataShader
-
-        self.activeShader = shader
-        shader.load()
-        shader.loadAtts()
-
-        if not flat:
+        if self.opts.vertexData is not None:
             if self.opts.useLut:
                 self.lutTexture.bindTexture(gl.GL_TEXTURE0)
             else:
@@ -520,12 +506,6 @@ class GLMesh(globject.GLObject):
 
     def postDraw(self):
         """Overrides :meth:`.GLObject.postDraw`. """
-
-        shader = self.activeShader
-        shader.unloadAtts()
-        shader.unload()
-        self.activeShader = None
-
         if self.opts.vertexData is not None:
             if self.opts.useLut:
                 self.lutTexture.unbindTexture()
@@ -534,58 +514,100 @@ class GLMesh(globject.GLObject):
                 self.negCmapTexture.unbindTexture()
 
 
-    def drawOutline(self, zpos, axes, xform=None, bbox=None):
+    def drawOutline(self, zpos, axes, xform=None):
         """Called by :meth:`draw2D` when ``MeshOpts.outline is True or
         MeshOpts.vertexData is not None``.  Calculates the intersection of the
-        mesh with the viewing plane, and renders it as a set of
-        ``GL_LINES``. If ``MeshOpts.vertexData is None``, the draw is
-        performed using immediate mode OpenGL.
+        mesh with the viewing plane as a set of line segments.
 
-        Otherwise, the :func:`.gl14.glmesh_funcs.draw` or
-        :func:`.gl21.glmesh_funcs.draw` function is used, which performs
-        shader-based rendering.
+        If the :attr:`.MeshOpts.outlineWidth` property is equal to ``1``, the
+         segments are drawn as ``GL_LINES`` primitives. Otherwise the lines are
+        converted into polygons and drawn as ``GL_TRIANGLES`` (see
+        :func:`.routines.lineAsPolygon`).
+
+        The :func:`.gl14.glmesh_funcs.draw` or
+        :func:`.gl21.glmesh_funcs.draw` function called to do the draw.
+
+        When a mesh outline is drawn on a canvas, the calculated line vertices,
+        and corresponding mesh faces (triangles) are cached via the
+        :meth:`.OverlayList.setData` method. This is so that other parts of
+        FSLeyes can access this information if necessary (e.g. the
+        :class:`.OrthoViewProfile` provides mesh-specific interaction). For a
+        canvas which is showing a plane orthogonal to display axis X, Y or Z,
+        this data will be given a key of ``'crosssection_0'``,
+        ``'crosssection_1'``, or ``'crosssection_2'`` respectively. This cache
+        is written by the :meth:`calculateIntersection` method.
         """
 
-        opts = self.opts
+        opts   = self.opts
+        canvas = self.canvas
+        bbox   = canvas.viewport
+        flat   = opts.vertexData is None
 
+        if flat: shader = self.flatShader
+        else:    shader = self.dataShader
+
+        # Calculate cross-section of mesh with z
+        # position as a set of line segments
         vertices, faces, dists, vertXform = self.calculateIntersection(
             zpos, axes, bbox)
 
-        if xform is None:
-            xform = np.eye(4)
-        if vertXform is not None:
-            xform = affine.concat(xform, vertXform)
+        if xform     is     None: xform = np.eye(4)
+        if vertXform is not None: xform = affine.concat(xform, vertXform)
 
-        vdata     = self.getVertexData('vertex',   faces, dists)
-        mdata     = self.getVertexData('modulate', faces, dists)
-        vertices  = vertices.reshape(-1, 3)
+        xform = affine.concat(canvas.mvpMatrix, xform)
+
+        # Retrieve vertex data associated with cros-
+        # section (will return None if no vertex
+        # data is selected)
+        vdata    = self.getVertexData('vertex',   faces, dists)
+        mdata    = self.getVertexData('modulate', faces, dists)
+        vertices = vertices.reshape(-1, 3)
+
+        # Convert line segments to triangles
+        # if drawing thick lines
+        if opts.outlineWidth == 1:
+            glprim  = gl.GL_LINES
+            indices = None
+        else:
+            zax               = axes[2]
+            lineWidth         = opts.outlineWidth * canvas.pixelSize()[0]
+            glprim            = gl.GL_TRIANGLES
+            vertices, indices = glroutines.lineAsPolygon(
+                vertices, lineWidth, zax, indices=True)
+
+            shader.setIndices(indices)
+
+            # Each line (two vertices) is replaced with
+            # two triangles (defined by four vertices).
+            # So we have to duplicate each vertex data
+            # value. The lineAsPolyuon function keeps
+            # the vertex order the same as the original
+            # line-based vertices.
+            if vdata is not None: vdata = np.repeat(vdata, 2)
+            if mdata is not None: vdata = np.repeat(vdata, 2)
 
         if mdata is None:
             mdata = vdata
 
-        if opts.outlineWidth == 1:
-            glprim   = gl.GL_LINES
-        else:
-            # TODO use index array instead
-            # of duplicating vertex data
-            zax       = axes[2]
-            lineWidth = opts.outlineWidth * self.canvas.pixelSize()[0] / 2
-            glprim    = gl.GL_TRIANGLES
-            vertices  = glroutines.lineAsPolygon(vertices, lineWidth, zax)
-            if vdata is not None: vdata = np.repeat(vdata, 3)
-            if mdata is not None: mdata = np.repeat(mdata, 3)
+        # Draw the outline
+        with shader.loaded(), shader.loadedAtts():
+            shader.set(   'MVP',    xform)
+            shader.setAtt('vertex', vertices)
 
-        # Coloured from vertex data
-        fslgl.glmesh_funcs.draw(
-            self,
-            glprim,
-            vertices,
-            vdata=vdata,
-            mdata=mdata,
-            xform=xform)
+            if not flat:
+                shader.setAtt('vertexData',   vdata)
+                shader.setAtt('modulateData', mdata)
+
+            if indices is None:
+                gl.glDrawArrays(glprim, 0, vertices.shape[0])
+            else:
+                gl.glDrawElements(glprim,
+                                  indices.size,
+                                  gl.GL_UNSIGNED_INT,
+                                  None)   # TODO gl14
 
 
-    def draw2DMesh(self, xform=None, bbox=None):
+    def draw2DMesh(self, xform=None):
         """Not to be confused with :meth:`draw2D`.  Called by :meth:`draw2D`
         for :class:`.Mesh` overlays which are actually 2D (with a flat
         third dimension).
