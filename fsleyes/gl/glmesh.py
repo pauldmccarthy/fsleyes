@@ -87,11 +87,6 @@ class GLMesh(globject.GLObject):
         - ``flatColour``:  Colour to use for fragments which are outside
                            of the clipping range.
 
-     - ``draw(GLMesh, glType, vertices, indices=None, normals=None, vdata=None)``:  # noqa
-        Draws mesh using shaders.
-
-     - ``postDraw(GLMesh)``: Clean up after drawing
-
 
     **3D rendering**
 
@@ -491,7 +486,7 @@ class GLMesh(globject.GLObject):
         if is2D or opts.wireframe: enable = (gl.GL_DEPTH_TEST)
         else:                      enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
 
-        with glroutines.enabled(enable), shader.loaded(), shader.loadedAtts():
+        with glroutines.enabled(enable), shader.loaded():
             shader.set('MVP',       mvpmat)
             shader.set('MV',        mvmat)
             shader.set('normalmat', normmat)
@@ -588,14 +583,14 @@ class GLMesh(globject.GLObject):
             mdata = vdata
 
         # Draw the outline
-        with shader.loaded(), shader.loadedAtts():
+        with shader.loaded():
             shader.set(   'MVP',    xform)
             shader.setAtt('vertex', vertices)
             shader.setIndices(indices)
             if not flat:
                 shader.setAtt('vertexData',   vdata)
                 shader.setAtt('modulateData', mdata)
-            shader.draw(glprim, vertices.shape[0])
+            shader.draw(glprim, 0, vertices.shape[0])
 
 
     def draw2DMesh(self, xform=None):
@@ -627,7 +622,7 @@ class GLMesh(globject.GLObject):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-        with shader.loaded(), shader.loadedAtts():
+        with shader.loaded():
             shader.set(       'MVP',    xform)
             shader.setAtt(    'vertex', vertices)
             shader.setIndices(indices)
@@ -723,7 +718,7 @@ class GLMesh(globject.GLObject):
              tex.target(xax, yax, lo, hi):
 
             # Use a clip-plane shader for steps 1 and 2
-            with cpshader.loaded(), cpshader.loadedAtts():
+            with cpshader.loaded():
 
                 cpshader.set('MVP',       tex.mvpMatrix)
                 cpshader.set('clipPlane', clipPlane)
@@ -759,12 +754,12 @@ class GLMesh(globject.GLObject):
             gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
             gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
-            with blshader.loaded(), blshader.loadedAtts():
+            with blshader.loaded():
                 verts = tex.generateVertices(zpos, xmin, xmax,
                                              ymin, ymax, xax, yax)
                 blshader.setAtt('vertex', verts)
                 blshader.set(   'MVP',    tex.mvpMatrix)
-                blshader.draw(gl.GL_TRIANGLES, 6)
+                blshader.draw(gl.GL_TRIANGLES, 0, 6)
 
         # Finally, draw the off-screen texture to the display
         tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)

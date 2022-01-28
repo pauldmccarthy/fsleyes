@@ -600,7 +600,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
             shader.setAtt('vertex', vertices)
             with shader.loadedAtts():
                 for prim, length, off in zip(primitives, lens, offsets):
-                    gl.glDrawArrays(prim, off, length)
+                    shader.draw(prim, off, length)
 
 
     def draw2D(self, zpos, axes, xform=None):
@@ -914,13 +914,13 @@ class BorderMixin:
                     length = lens      .pop(0)
                     if self.filled: shader.set('colour', colour + [1.0])
                     else:           shader.set('colour', colour + [alpha])
-                    gl.glDrawArrays(prim, off, length)
+                    shader.draw(prim, off, length)
                 if self.filled:
                     prim   = primitives.pop(0)
                     off    = offsets   .pop(0)
                     length = lens      .pop(0)
                     shader.set('colour', colour + [alpha])
-                    gl.glDrawArrays(prim, off, length)
+                    shader.draw(prim, off, length)
 
 
 class Rect(BorderMixin, AnnotationObject):
@@ -1287,15 +1287,12 @@ class VoxelSelection(AnnotationObject):
         vertices, texCoords = self.vertices2D(zpos, axes)
 
         with texture.bound(gl.GL_TEXTURE0), shader.loaded():
-
             shader.set(   'tex',      0)
             shader.set(   'MVP',      mvpmat)
             shader.set(   'colour',   colour)
             shader.setAtt('vertex',   vertices)
             shader.setAtt('texCoord', texCoords)
-
-            with shader.loadedAtts():
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+            shader.draw(gl.GL_TRIANGLES, 0, len(vertices))
 
 
 class TextAnnotation(AnnotationObject):

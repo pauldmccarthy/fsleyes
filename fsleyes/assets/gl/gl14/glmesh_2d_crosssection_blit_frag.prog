@@ -1,0 +1,4 @@
+!!ARBfp1.0
+PARAM colour = {{ param_colour }};
+MOV result.color, colour;
+END

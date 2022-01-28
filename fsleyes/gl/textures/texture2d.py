@@ -377,13 +377,13 @@ class Texture2D(texture.Texture):
 
         shader    = self.__shader()
         vertices  = np.array(vertices, dtype=np.float32)
+        nverts    = vertices.shape[0]
         texCoords = self.generateTextureCoords()
 
         with self.bound(gl.GL_TEXTURE0), shader.loaded():
             shader.setAtt('vertex',   vertices)
             shader.setAtt('texCoord', texCoords)
-            with shader.loadedAtts():
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+            shader.draw(gl.GL_TRIANGLES, 0, nverts)
 
 
     def drawOnBounds(self,

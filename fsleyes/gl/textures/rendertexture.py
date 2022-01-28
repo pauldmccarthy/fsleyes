@@ -532,13 +532,13 @@ class RenderTexture(texture2d.Texture2D):
             shader    = self.__shader
             depthTex  = self.__depthTexture
             texCoords = self.generateTextureCoords()
+            nverts    = vertices.shape[0]
             with shader.loaded():
                 shader.setAtt('vertex',   vertices)
                 shader.setAtt('texCoord', texCoords)
                 with self    .bound(gl.GL_TEXTURE0), \
-                     depthTex.bound(gl.GL_TEXTURE1), \
-                     shader.loadedAtts():
-                    gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+                     depthTex.bound(gl.GL_TEXTURE1):
+                    shader.draw(gl.GL_TRIANGLES, 0, nverts)
 
 
 class GLObjectRenderTexture(RenderTexture):
