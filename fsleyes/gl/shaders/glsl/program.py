@@ -55,12 +55,10 @@ class GLSLShader:
        unload
        loaded
        destroy
-       loadAtts
-       unloadAtts
-       loadedAtts
        set
        setAtt
        setIndices
+       draw
 
 
     Typical usage of a ``GLSLShader`` will look something like the
@@ -84,10 +82,8 @@ class GLSLShader:
             program.setAtt('vertex', vertices)
             program.setAtt('normal', normals)
 
-            # Load the attributes
-            with shader.loadedAtts():
-                # Draw the scene
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+            # Draw the scene
+            program.draw(gl.GL_TRIANGLES, len(vertices))
 
         # Delete the program when
         # we no longer need it
@@ -205,6 +201,9 @@ class GLSLShader:
     def loadedAtts(self):
         """Context manager which calls :meth:`loadAtts`, yields, then
         calls :meth:`unloadAtts`.
+
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
         """
         self.loadAtts()
         try:
@@ -222,6 +221,9 @@ class GLSLShader:
         """Binds all of the shader program ``attribute`` variables - you
         must set the data for each attribute via :meth:`setAtt` before
         calling this method.
+
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
         """
         gl.glBindVertexArray(self.vao)
         for att in self.vertAttributes:
@@ -252,6 +254,8 @@ class GLSLShader:
 
     def unloadAtts(self):
         """Disables all vertex attributes, and unbinds associated vertex buffers.
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
         """
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
@@ -403,10 +407,14 @@ class GLSLShader:
         ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
         is passed the given number of vertices.
         """
-        if self.indexBuffer is not None:
-            gl.glDrawElements(prim, self.nindices, gl.GL_UNSIGNED_INT, None)
-        else:
-            gl.glDrawArrays(prim, 0, nvertices)
+        with self.loadedAtts():
+            if self.indexBuffer is not None:
+                gl.glDrawElements(prim,
+                                  self.nindices,
+                                  gl.GL_UNSIGNED_INT,
+                                  None)
+            else:
+                gl.glDrawArrays(prim, 0, nvertices)
 
 
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):
