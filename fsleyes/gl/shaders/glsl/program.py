@@ -174,7 +174,7 @@ class GLSLShader:
         # The loadAtts/unloadAtts methods set this
         # flag so we can tell whether attribute/
         # index buffers have been configured
-        self.__attsLoaded = False
+        self.attsLoaded = False
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -225,6 +225,8 @@ class GLSLShader:
         This is called automatically by :meth:`draw`, so there is no need
         to explicitly call it.
         """
+        if self.attsLoaded:
+            return
         gl.glBindVertexArray(self.vao)
         for att in self.vertAttributes:
 
@@ -249,7 +251,7 @@ class GLSLShader:
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
 
-        self.__attsLoaded = True
+        self.attsLoaded = True
 
 
     def unloadAtts(self):
@@ -272,7 +274,7 @@ class GLSLShader:
         gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
-        self.__attsLoaded = False
+        self.attsLoaded = False
 
 
     def unload(self):
@@ -397,16 +399,17 @@ class GLSLShader:
         # Don't unbind if loadAtts is active.
         # This allows setIndices to be called
         # either before or after loadAtts.
-        if not self.__attsLoaded:
+        if not self.attsLoaded:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
 
 
-    def draw(self, prim, nvertices=None):
+    def draw(self, prim, *args):
         """Submits a GL draw call for the specified primitive type.
         If vertex indices have been provided via the :meth:`setIndices` method,
-        ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
-        is passed the given number of vertices.
+        ``glDrawElements`` is used, and all other arguments are ignored.
+        Otherwise, ``glDrawArrays`` is used, and is passed all other arguments.
         """
+
         with self.loadedAtts():
             if self.indexBuffer is not None:
                 gl.glDrawElements(prim,
@@ -414,7 +417,7 @@ class GLSLShader:
                                   gl.GL_UNSIGNED_INT,
                                   None)
             else:
-                gl.glDrawArrays(prim, 0, nvertices)
+                gl.glDrawArrays(prim, *args)
 
 
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):

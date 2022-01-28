@@ -184,7 +184,8 @@ class ARBPShader:
 
         # See the setAtt method for
         # information about this dict
-        self.attCache = {}
+        self.attCache   = {}
+        self.attsLoaded = False
 
         # The setIndices method caches an
         # index array which will then be
@@ -291,12 +292,15 @@ class ARBPShader:
         This is called automatically by :meth:`draw`, so there is no need
         to call it explicitly.
         """
+        if self.attsLoaded:
+            return
         for attr in self.attrs:
             texUnit     = self.__getAttrTexUnit(attr)
             value, size = self.attCache[attr]
             gl.glClientActiveTexture(texUnit)
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+        self.attsLoaded = True
 
 
     def unloadAtts(self):
@@ -308,6 +312,7 @@ class ARBPShader:
             texUnit = self.__getAttrTexUnit(attr)
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        self.attsLoaded = False
 
 
     @contextlib.contextmanager
@@ -429,11 +434,11 @@ class ARBPShader:
         self.indices = indices
 
 
-    def draw(self, prim, nvertices=None):
+    def draw(self, prim, *args):
         """Submits a GL draw call for the specified primitive type.
         If vertex indices have been provided via the :meth:`setIndices` method,
-        ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
-        is passed the given number of vertices.
+        ``glDrawElements`` is used, and all other arguments are ignored.
+        Otherwise, ``glDrawArrays`` is used, and is passed all other arguments.
         """
         with self.loadedAtts():
             if self.indices is not None:
@@ -441,7 +446,7 @@ class ARBPShader:
                 nindices = indices.size
                 gl.glDrawElements(prim, nindices, gl.GL_UNSIGNED_INT, indices)
             else:
-                gl.glDrawArrays(prim, 0, nvertices)
+                gl.glDrawArrays(prim, *args)
 
 
     def __normaliseParam(self, value):
