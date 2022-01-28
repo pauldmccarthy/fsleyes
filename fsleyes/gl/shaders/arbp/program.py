@@ -56,17 +56,15 @@ class ARBPShader:
        load
        unload
        loaded
-       loaded
-       loadAtts
-       unloadAtts
-       loadedAtts
        destroy
+       setConstant
        recompile
        setVertParam
        setFragParam
        set
        setAtt
-       setConstant
+       setIndices
+       draw
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -83,26 +81,23 @@ class ARBPShader:
 
         program = ARBPShader(vertSrc, fragSrc, textures)
 
-        # Load the program, and
-        # enable program attributes
-        # (texture coordinates)
+        # Load the program
         program.load()
-        progra.loadAtts()
 
         # Set some parameters
-        program.setVertParam('transform', np.eye(4))
-        program.setFragParam('clipping',  [0, 1, 0, 0])
+        program.set('transform', np.eye(4))
+        program.set('clipping',  [0, 1, 0, 0])
 
         # Create and set vertex attributes
         vertices, normals = createVertices()
 
-        program.setAtt('normals', normals)
+        program.setAtt('vertex', vertices)
+        program.setAtt('normal', normals)
 
         # Draw the scene
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+        program.draw(gl.GL_TRIANGLES, vertices.shape[0])
 
         # Clear the GL state
-        program.unloadAtts()
         program.unload()
 
         # Delete the program when
@@ -189,7 +184,7 @@ class ARBPShader:
 
         # See the setAtt method for
         # information about this dict
-        self.__attCache = {}
+        self.attCache = {}
 
         # The setIndices method caches an
         # index array which will then be
@@ -226,7 +221,6 @@ class ARBPShader:
 
         self.vertexProgram   = None
         self.fragmentProgram = None
-        self.indices         = None
 
 
     def recompile(self):
@@ -293,17 +287,23 @@ class ARBPShader:
 
 
     def loadAtts(self):
-        """Enables texture coordinates for all shader program attributes. """
+        """Enables texture coordinates for all shader program attributes.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
+        """
         for attr in self.attrs:
             texUnit     = self.__getAttrTexUnit(attr)
-            value, size = self.__attCache[attr]
+            value, size = self.attCache[attr]
             gl.glClientActiveTexture(texUnit)
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
 
 
     def unloadAtts(self):
-        """Disables texture coordinates on all texture units. """
+        """Disables texture coordinates on all texture units.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
+        """
         for attr in self.attrs:
             texUnit = self.__getAttrTexUnit(attr)
             gl.glClientActiveTexture(texUnit)
@@ -314,6 +314,8 @@ class ARBPShader:
     def loadedAtts(self):
         """Context manager which calls :meth:`loadAtts`, yields, then
         calls :meth:`unloadAtts`.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
         """
         self.loadAtts()
         try:
@@ -416,7 +418,7 @@ class ARBPShader:
         # loadAtts.  With GL14, we don't have vertex
         # buffers, so we have to pass all vertex data
         # on every single draw.
-        self.__attCache[name] = value.ravel('C'), size
+        self.attCache[name] = value.ravel('C'), size
 
 
     def setIndices(self, indices):
@@ -433,11 +435,13 @@ class ARBPShader:
         ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
         is passed the given number of vertices.
         """
-        if self.indices is not None:
-            indices = self.indices
-            gl.glDrawElements(prim, indices.size, gl.GL_UNSIGNED_INT, indices)
-        else:
-            gl.glDrawArrays(prim, 0, nvertices)
+        with self.loadedAtts():
+            if self.indices is not None:
+                indices  = self.indices
+                nindices = indices.size
+                gl.glDrawElements(prim, nindices, gl.GL_UNSIGNED_INT, indices)
+            else:
+                gl.glDrawArrays(prim, 0, nvertices)
 
 
     def __normaliseParam(self, value):
