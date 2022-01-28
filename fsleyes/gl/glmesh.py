@@ -66,26 +66,14 @@ class GLMesh(globject.GLObject):
          property is ``True``, the :attr:`.MeshOpts.lut` is used.
 
 
-    When ``MeshOpts.vertexData is not None``, the ``GLMesh`` class makes use
-    of the ``glmesh`` vertex and fragment shaders. These shaders are managed
-    by two OpenGL version-specific modules - :mod:`.gl14.glmesh_funcs`, and
-    :mod:`.gl21.glmesh_funcs`. These version specific modules must provide the
-    following functions:
-
+    Te ``GLMesh`` class makes use of the ``glmesh`` vertex and fragment
+    shaders. These shaders are managed by two OpenGL version-specific modules -
+    :mod:`.gl14.glmesh_funcs`, and :mod:`.gl21.glmesh_funcs`. These version
+    specific modules must provide the following functions:
 
      - ``compileShaders(GLMesh)``: Compiles vertex/fragment shaders.
-
      - ``updateShaderState(GLMesh, **kwargs)``: Updates vertex/fragment
-       shaders. Should expect the following keyword arguments:
-
-        - ``useNegCmap``: Boolean which is ``True`` if a negative colour map
-           should be used
-
-        - ``cmapXform``:   Transformation matrix which transforms from vertex
-                           data into colour map texture coordinates.
-
-        - ``flatColour``:  Colour to use for fragments which are outside
-                           of the clipping range.
+       shader settings.
 
 
     **3D rendering**
@@ -125,12 +113,16 @@ class GLMesh(globject.GLObject):
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, canvas, threedee)
 
+        # Separate shaders are use for flat
+        # colouring vs data colouring.
         self.flatShader    = None
         self.dataShader    = None
+        # Two shaders are used for 2D cross
+        # section drawing.
         self.xsectcpShader = None
         self.xsectblShader = None
 
-        # We use a render texture when
+        # We also use a render texture when
         # rendering model cross sections.
         # This texture is kept at display/
         # screen resolution
