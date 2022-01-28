@@ -171,8 +171,14 @@ class GLSLShader:
         # (optionally) vertex indices.
         # Vertex index buffer is created
         # if setIndices is called.
-        self.indexBuffer = None
         self.vao         = gl.glGenVertexArrays(1)
+        self.indexBuffer = None
+        self.nindices    = None
+
+        # The loadAtts/unloadAtts methods set this
+        # flag so we can tell whether attribute/
+        # index buffers have been configured
+        self.__attsLoaded = False
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -217,6 +223,7 @@ class GLSLShader:
         must set the data for each attribute via :meth:`setAtt` before
         calling this method.
         """
+        gl.glBindVertexArray(self.vao)
         for att in self.vertAttributes:
 
             aPos           = self.positions[          att]
@@ -226,7 +233,6 @@ class GLSLShader:
             glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
-            gl.glBindVertexArray(        self.vao)
             gl.glEnableVertexAttribArray(aPos)
             gl.glVertexAttribPointer(    aPos,
                                          glSize,
@@ -240,6 +246,8 @@ class GLSLShader:
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
+
+        self.__attsLoaded = True
 
 
     def unloadAtts(self):
@@ -259,6 +267,8 @@ class GLSLShader:
 
         gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
+
+        self.__attsLoaded = False
 
 
     def unload(self):
@@ -359,8 +369,17 @@ class GLSLShader:
         array may be set via this method.
         """
 
+        if indices is None:
+            if self.indexBuffer is not None:
+                gl.glDeleteBuffers(1, self.indexBuffer)
+            self.indexBuffer = None
+            self.nindices    = None
+            return
+
         if self.indexBuffer is None:
             self.indexBuffer = gl.glGenBuffers(1)
+
+        self.nindices = indices.size
 
         indices = np.asarray(indices, dtype=np.uint32)
 
@@ -370,7 +389,24 @@ class GLSLShader:
                         indices.nbytes,
                         indices,
                         gl.GL_STATIC_DRAW)
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        # Don't unbind if loadAtts is active.
+        # This allows setIndices to be called
+        # either before or after loadAtts.
+        if not self.__attsLoaded:
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+
+
+    def draw(self, prim, nvertices=None):
+        """Submits a GL draw call for the specified primitive type.
+        If vertex indices have been provided via the :meth:`setIndices` method,
+        ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
+        is passed the given number of vertices.
+        """
+        if self.indexBuffer is not None:
+            gl.glDrawElements(prim, self.nindices, gl.GL_UNSIGNED_INT, None)
+        else:
+            gl.glDrawArrays(prim, 0, nvertices)
 
 
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):

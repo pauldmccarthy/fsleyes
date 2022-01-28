@@ -466,42 +466,40 @@ class GLMesh(globject.GLObject):
         mesh.
         """
         opts      = self.opts
-        verts     = self.vertices
-        idxs      = self.indices
-        normals   = self.normals
+        canvas    = self.canvas
+        flat      = opts.vertexData is None
+        mvmat     = canvas.viewMatrix
+        mvpmat    = canvas.mvpMatrix
         blo, bhi  = self.getDisplayBounds()
-        vdata     = self.getVertexData('vertex')
-        mdata     = self.getVertexData('modulate')
 
-        if mdata is None:
-            mdata = vdata
+        if flat: shader = self.flatShader
+        else:    shader = self.dataShader
+
+        if xform is not None:
+            mvmat  = affine.concat(mvmat,  xform)
+            mvpmat = affine.concat(mvpmat, xform)
+
+        normmat  = affine.invert(mvmat[:3, :3]).T
+        lightPos = affine.transform(canvas.lightPos, mvmat)
 
         is2D = np.any(np.isclose(bhi, blo))
 
-        if opts.wireframe:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        else:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        if opts.wireframe: polymode = gl.GL_LINE
+        else:              polymode = gl.GL_FILL
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, polymode)
 
-        if is2D or opts.wireframe:
-            enable = (gl.GL_DEPTH_TEST)
-        else:
-            enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
+        if is2D or opts.wireframe: enable = (gl.GL_DEPTH_TEST)
+        else:                      enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
 
-        gl.glDisable(gl.GL_CULL_FACE)
-        with glroutines.enabled(enable):
+        with glroutines.enabled(enable), shader.loaded(), shader.loadedAtts():
+            shader.set('MVP',       mvpmat)
+            shader.set('MV',        mvmat)
+            shader.set('normalmat', normmat)
+            shader.set('lighting',  canvas.opts.light)
+            shader.set('lightPos',  lightPos)
             gl.glFrontFace(self.frontFace())
-            if not is2D:
-                gl.glCullFace(gl.GL_BACK)
-            fslgl.glmesh_funcs.draw(
-                self,
-                gl.GL_TRIANGLES,
-                verts,
-                normals=normals,
-                indices=idxs,
-                vdata=vdata,
-                mdata=mdata,
-                xform=xform)
+            gl.glCullFace(gl.GL_BACK)
+            shader.draw(gl.GL_TRIANGLES)
 
 
     def postDraw(self):
@@ -564,7 +562,8 @@ class GLMesh(globject.GLObject):
         vertices = vertices.reshape(-1, 3)
 
         # Convert line segments to triangles
-        # if drawing thick lines
+        # if drawing thick lines. If default
+        # line width, we can use GL_LINES
         if opts.outlineWidth == 1:
             glprim  = gl.GL_LINES
             indices = None
@@ -575,14 +574,13 @@ class GLMesh(globject.GLObject):
             vertices, indices = glroutines.lineAsPolygon(
                 vertices, lineWidth, zax, indices=True)
 
-            shader.setIndices(indices)
-
             # Each line (two vertices) is replaced with
             # two triangles (defined by four vertices).
             # So we have to duplicate each vertex data
             # value. The lineAsPolyuon function keeps
             # the vertex order the same as the original
-            # line-based vertices.
+            # line-based vertices, so we can np.repeat
+            # the data.
             if vdata is not None: vdata = np.repeat(vdata, 2)
             if mdata is not None: vdata = np.repeat(vdata, 2)
 
@@ -593,18 +591,11 @@ class GLMesh(globject.GLObject):
         with shader.loaded(), shader.loadedAtts():
             shader.set(   'MVP',    xform)
             shader.setAtt('vertex', vertices)
-
+            shader.setIndices(indices)
             if not flat:
                 shader.setAtt('vertexData',   vdata)
                 shader.setAtt('modulateData', mdata)
-
-            if indices is None:
-                gl.glDrawArrays(glprim, 0, vertices.shape[0])
-            else:
-                gl.glDrawElements(glprim,
-                                  indices.size,
-                                  gl.GL_UNSIGNED_INT,
-                                  None)   # TODO gl14
+            shader.draw(glprim, vertices.size)
 
 
     def draw2DMesh(self, xform=None):
@@ -614,27 +605,36 @@ class GLMesh(globject.GLObject):
         """
 
         opts      = self.opts
+        canvas    = self.canvas
         vdata     = opts.getVertexData('vertex')
         mdata     = opts.getVertexData('modulate')
+        flat      = opts.vertexData is None
         vertices  = self.vertices
-        faces     = self.indices
+        indices   = self.indices
+
+        if flat: shader = self.flatShader
+        else:    shader = self.dataShader
+
+        if xform is None: xform = canvas.mvpMatrix
+        else:             xform = affine.concat(canvas.mvpMatrix, xform)
 
         if mdata is None:
             mdata = vdata
 
+        # Outline mode for 2D meshes is
+        # not supported at the moment.
         if opts.outline:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-
-        fslgl.glmesh_funcs.draw(
-            self,
-            gl.GL_TRIANGLES,
-            vertices,
-            indices=faces,
-            vdata=vdata,
-            mdata=mdata,
-            xform=xform)
+        with shader.loaded(), shader.loadedAtts():
+            shader.set(       'MVP',    xform)
+            shader.setAtt(    'vertex', vertices)
+            shader.setIndices(indices)
+            if not flat:
+                shader.setAtt('vertexData',   vdata)
+                shader.setAtt('modulateData', mdata)
+            shader.draw(gl.GL_TRIANGLES)
 
 
     def drawCrossSection(self, zpos, axes, xform=None):
@@ -745,14 +745,10 @@ class GLMesh(globject.GLObject):
                 # faces in the stencil buffer
                 faces = [gl.GL_FRONT, gl.GL_BACK]
                 dirs  = [gl.GL_INCR,  gl.GL_DECR]
-                for i, (face, direction) in enumerate(zip(faces, dirs)):
-
+                for face, direction in zip(faces, dirs):
                     gl.glCullFace(face)
                     gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, direction)
-                    gl.glDrawElements(gl.GL_TRIANGLES,
-                                      self.indices.shape[0],
-                                      gl.GL_UNSIGNED_INT,
-                                      None)  # TODO indices in gl14
+                    cpshader.draw(gl.GL_TRIANGLES)
 
             # Now we have a mask of the cross-section
             # in the stencil buffer - use a "blitting"
@@ -768,7 +764,7 @@ class GLMesh(globject.GLObject):
                                              ymin, ymax, xax, yax)
                 blshader.setAtt('vertex', verts)
                 blshader.set(   'MVP',    tex.mvpMatrix)
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+                blshader.draw(gl.GL_TRIANGLES, 6)
 
         # Finally, draw the off-screen texture to the display
         tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)

@@ -99,17 +99,19 @@ def updateShaderState(self, **kwargs):
 
     dshader.unload()
 
-    with xscpshader.loaded():
-        xscpshader.setAtt('vertex', self.vertices)
-        xscpshader.setIndices(      self.indices)
-    with xsblshader.loaded():
-        xsblshader.set('colour', kwargs['flatColour'])
     with fshader.loaded():
         fshader.set('colour', kwargs['flatColour'])
         if self.threedee:
             fshader.setAtt('vertex', self.vertices)
             fshader.setAtt('normal', self.normals)
             fshader.setIndices(self.indices)
+
+    if not self.threedee:
+        with xscpshader.loaded():
+            xscpshader.setAtt('vertex', self.vertices)
+            xscpshader.setIndices(      self.indices)
+        with xsblshader.loaded():
+            xsblshader.set('colour', kwargs['flatColour'])
 
 
 def draw(self,
