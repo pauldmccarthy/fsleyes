@@ -7,16 +7,10 @@
 """This module provides functions which are used by the :class:`.GLMesh`
 class to render :class:`.Mesh` overlays in an OpenGL 2.1 compatible
 manner.
-
-A :class:`.GLSLShader` is used to manage the ``glmesh`` vertex/fragment
-shader programs.
 """
 
 
-import OpenGL.GL as gl
-
-import fsl.transform.affine as affine
-import fsleyes.gl.shaders   as shaders
+import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
@@ -109,74 +103,3 @@ def updateShaderState(self, **kwargs):
             xscpshader.setIndices(      self.indices)
         with xsblshader.loaded():
             xsblshader.set('colour', kwargs['flatColour'])
-
-
-def draw(self,
-         glType,
-         vertices,
-         indices=None,
-         normals=None,
-         vdata=None,
-         mdata=None,
-         xform=None):
-    """Called for 3D meshes, and when :attr:`.MeshOpts.vertexData` is not
-    ``None``. Loads and runs the shader program.
-
-    :arg glType:   The OpenGL primitive type.
-
-    :arg vertices: ``(n, 3)`` array containing the mesh vertices to draw.
-
-    :arg indices:  Indices into the ``vertices`` array. If not provided,
-                   ``glDrawArrays`` is used.
-
-    :arg normals:  Vertex normals.
-
-    :arg vdata:    ``(n, )`` array containing data for each vertex.
-
-    :arg mdata:    ``(n, )`` array containing alpha modulation data for
-                   each vertex.
-
-    :arg xform:    Transformation matrix to apply to the vertices, in
-                   addition to the canvas mvp matrix.
-    """
-
-    canvas = self.canvas
-    mvmat  = canvas.viewMatrix
-    mvpmat = canvas.mvpMatrix
-
-    if xform is not None:
-        mvmat  = affine.concat(mvmat,  xform)
-        mvpmat = affine.concat(mvpmat, xform)
-
-    # for 3D, shader attributes are
-    # configured in updateShaderState
-    if self.threedee:
-        vertices = None
-        normals  = None
-        vdata    = None
-        mdata    = None
-
-    shader.set('MVP', mvpmat)
-
-    if vertices is not None: shader.setAtt('vertex',       vertices)
-    if normals  is not None: shader.setAtt('normal',       normals)
-    if vdata    is not None: shader.setAtt('vertexData',   vdata)
-    if mdata    is not None: shader.setAtt('modulateData', mdata)
-
-    if self.threedee:
-
-        normmat  = affine.invert(mvmat[:3, :3]).T
-        lightPos = affine.transform(canvas.lightPos, mvmat)
-
-        shader.set('lighting',  canvas.opts.light)
-        shader.set('lightPos',  lightPos)
-        shader.set('MV',        mvmat)
-        shader.set('normalmat', normmat)
-
-    if indices is None:
-        gl.glDrawArrays(glType, 0, vertices.shape[0])
-    else:
-        nverts = indices.shape[0]
-        if self.threedee:
-            indices = None
-        gl.glDrawElements(glType, nverts, gl.GL_UNSIGNED_INT, indices)
