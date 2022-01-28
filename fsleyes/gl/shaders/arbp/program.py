@@ -295,21 +295,19 @@ class ARBPShader:
     def loadAtts(self):
         """Enables texture coordinates for all shader program attributes. """
         for attr in self.attrs:
-            texUnit = self.__getAttrTexUnit(attr)
-
+            texUnit     = self.__getAttrTexUnit(attr)
+            value, size = self.__attCache[attr]
             gl.glClientActiveTexture(texUnit)
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
 
 
     def unloadAtts(self):
         """Disables texture coordinates on all texture units. """
         for attr in self.attrs:
             texUnit = self.__getAttrTexUnit(attr)
-
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
-        self.__attCache = {}
 
 
     @contextlib.contextmanager
@@ -349,7 +347,7 @@ class ARBPShader:
         value = self.__normaliseParam(value)
         nrows = len(value) // 4
 
-        log.debug('Setting vertex parameter {} = {}'.format(name, value))
+        log.debug('Setting vertex parameter %s = %s', name, value)
 
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
@@ -371,7 +369,7 @@ class ARBPShader:
         value = self.__normaliseParam(value)
         nrows = len(value) // 4
 
-        log.debug('Setting fragment parameter {} = {}'.format(name, value))
+        log.debug('Setting fragment parameter %s = %s', name, value)
 
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
@@ -390,7 +388,7 @@ class ARBPShader:
         if name not in self.constants:
             raise ValueError('Unknown constant: {}'.format(name))
 
-        log.debug('Setting vertex constant {} = {}'.format(name, value))
+        log.debug('Setting vertex constant %s = %s', name, value)
 
         self.constantVals[name] = value
 
@@ -408,23 +406,17 @@ class ARBPShader:
             value = value.reshape(-1, 1)
 
         texUnit = self.__getAttrTexUnit(name)
-        size    = value.shape[1]
         value   = np.array(value, dtype=np.float32, copy=False)
+        size    = value.shape[1]
 
-        log.debug('Setting vertex attribute {} [{}] = [{} * {}]'.format(
-            name, texUnit, value.shape[0], size))
+        log.debug('Setting vertex attribute %s [%s] = [%s * %s]',
+                  name, texUnit, value.shape[0], size)
 
-        # We must save a ref to the value so
-        # that it doesn't get GC'd by python
-        # before actually being used by GL.
-        # This took me an entire day to
-        # figure out. The cache gets cleared
-        # on every call to unloadAtts.
-        value = value.ravel('C')
-        self.__attCache[name] = value
-
-        gl.glClientActiveTexture(texUnit)
-        gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+        # The array is passed to glTexCoordPointer in
+        # loadAtts.  With GL14, we don't have vertex
+        # buffers, so we have to pass all vertex data
+        # on every single draw.
+        self.__attCache[name] = value.ravel('C'), size
 
 
     def setIndices(self, indices):
@@ -468,9 +460,14 @@ class ARBPShader:
             if value.shape[0] < 4:
                 value = list(value) + [0] * (4 - len(value))
 
+        # matrix
+        elif value.shape[1] != 4:
+            padding = np.zeros((value.shape[0], 1))
+            value   = np.hstack((value, padding))
+
         value = np.array(value, dtype=np.float32, copy=False)
 
-        if value.size < 4 or value.size % 4 != 0:
+        if value.ndim > 2 or value.size < 4 or value.size % 4 != 0:
             raise ValueError('Invalid arbp parameter: {}'.format(value))
 
         return value.ravel('C')
