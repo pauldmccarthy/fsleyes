@@ -76,17 +76,34 @@ def updateShaderState(self, **kwargs):
                 kwargs['modOffset'],
                 0]
 
-    dshader.load()
-    dshader.setFragParam('settings',    settings)
-    dshader.setFragParam('clipping',    clipping)
-    dshader.setFragParam('modulate',    modulate)
-    dshader.setFragParam('flatColour',  kwargs['flatColour'])
-    dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
-    dshader.unload()
+    with dshader.loaded():
+        dshader.setFragParam('settings',   settings)
+        dshader.setFragParam('clipping',   clipping)
+        dshader.setFragParam('modulate',   modulate)
+        dshader.setFragParam('flatColour', kwargs['flatColour'])
+        dshader.setFragParam('cmapXform',  kwargs['cmapXform'])
 
-    fshader.load()
-    fshader.setFragParam('colour', kwargs['flatColour'])
-    fshader.unload()
+        if self.threedee:
+            dshader.setIndices(self.indices)
+            dshader.setAtt('vertex', self.vertices)
+            dshader.setAtt('normal', self.normals)
+            vdata = self.getVertexData('vertex')
+            mdata = self.getVertexData('modulate')
+
+            # if modulate data is not set,
+            # we use the vertex data
+            if mdata is None:
+                mdata = vdata
+
+            if vdata is not None: dshader.setAtt('vertexData',   vdata)
+            if mdata is not None: dshader.setAtt('modulateData', mdata)
+
+    with fshader.loaded():
+        fshader.setFragParam('colour', kwargs['flatColour'])
+        if self.threedee:
+            fshader.setAtt('vertex', self.vertices)
+            fshader.setAtt('normal', self.normals)
+            fshader.setIndices(self.indices)
 
 
 def draw(self,

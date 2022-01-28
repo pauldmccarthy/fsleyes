@@ -12,10 +12,12 @@
 #   {{ param_modulate }}
 #   {{ param_flatColour }}
 #   {{ param4_cmapXform }}
-#   {{ param_lighting }} - The xyz components contain the light position
-#                          in display coordinates. The w component contains
-#                          a 1 if lighting should be applied, or a -1 if
-#                          lighting should not be applied.
+#   {{ param_lightPos }} - The xyz components contain the light position
+#                          in display coordinates.
+#
+#   {{ param_lighting }} - The x component contains a 1 if lighting should
+#                          be applied, or a 0 if lighting should not be
+#                          applied.
 #
 # Input textures:
 #   - {{ texture_cmap }}
@@ -37,6 +39,7 @@ PARAM cmapXform[4] = {{ param4_cmapXform }};
 
 TEMP unlitColour;
 TEMP litColour;
+TEMP useLight;
 
 {{ arb_call('glmesh_data_common.prog',
             settings='{{ param_settings }}',
@@ -54,11 +57,12 @@ TEMP litColour;
 {{ arb_call('glmesh_3d_lighting.prog',
             vertex='{{ varying_vertex }}',
             normal='{{ varying_normal }}',
-            lightPos='{{ param_lighting }}',
+            lightPos='{{ param_lightPos }}',
             colour='unlitColour',
             out_colour='litColour')
 }}
 
-CMP result.color, {{ param_lighting }}.w, unlitColour, litColour;
+SUB useLight, {{ param_lighting }}, 0.5;
+CMP result.color, useLight.x, unlitColour, litColour;
 
 END

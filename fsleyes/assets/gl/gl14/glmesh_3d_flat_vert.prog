@@ -7,8 +7,8 @@
 #
 #    {{ param3_normalMatrix }} - Matrix to transform normal vectors into
 #                                display coordinates.
-#    {{ param4_mvmat }}        - Model view matrix.
-#    {{ param4_mvpmat }}       - Model view projection matrix.
+#    {{ param4_MV }}           - Model view matrix.
+#    {{ param4_MVP }}          - Model view projection matrix.
 #
 # Input attributes:
 #    {{ attr_normal }}         - Vertex normal vector
@@ -20,28 +20,28 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-PARAM normmat[3] = {{ param3_normmat }};
-PARAM mvmat[4]   = {{ param4_mvmat }};
-PARAM mvpmat[4]  = {{ param4_mvpmat }};
+PARAM normalmat[3] = {{ param3_normalmat }};
+PARAM MV[4]        = {{ param4_MV }};
+PARAM MVP[4]       = {{ param4_MVP }};
 
 TEMP normal;
 
 # Transform the vertex position into clip coordinates
-DP4 result.position.x, mvpmat[0], {{ attr_vertex }};
-DP4 result.position.y, mvpmat[1], {{ attr_vertex }};
-DP4 result.position.z, mvpmat[2], {{ attr_vertex }};
-DP4 result.position.w, mvpmat[3], {{ attr_vertex }};
+DP4 result.position.x, MVP[0], {{ attr_vertex }};
+DP4 result.position.y, MVP[1], {{ attr_vertex }};
+DP4 result.position.z, MVP[2], {{ attr_vertex }};
+DP4 result.position.w, MVP[3], {{ attr_vertex }};
 
 # Transform the vertex position into display coordinates
-DP4 {{ varying_vertex }}.x, mvmat[0], {{ attr_vertex }};
-DP4 {{ varying_vertex }}.y, mvmat[1], {{ attr_vertex }};
-DP4 {{ varying_vertex }}.z, mvmat[2], {{ attr_vertex }};
-DP4 {{ varying_vertex }}.w, mvmat[3], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.x, MV[0], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.y, MV[1], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.z, MV[2], {{ attr_vertex }};
+DP4 {{ varying_vertex }}.w, MV[3], {{ attr_vertex }};
 
 # Transform the normal vector
-DP3 normal.x, normmat[0], {{ attr_normal }};
-DP3 normal.y, normmat[1], {{ attr_normal }};
-DP3 normal.z, normmat[2], {{ attr_normal }};
+DP3 normal.x, normalmat[0], {{ attr_normal }};
+DP3 normal.y, normalmat[1], {{ attr_normal }};
+DP3 normal.z, normalmat[2], {{ attr_normal }};
 
 # Normalise to unit length
 DP3 normal.w, normal, normal;

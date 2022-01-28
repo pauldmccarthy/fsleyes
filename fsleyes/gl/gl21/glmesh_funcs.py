@@ -66,38 +66,35 @@ def updateShaderState(self, **kwargs):
     xscpshader = self.xsectcpShader
     xsblshader = self.xsectblShader
 
-    dshader.load()
-    dshader.set('cmap',           0)
-    dshader.set('negCmap',        1)
-    dshader.set('useNegCmap',     kwargs['useNegCmap'])
-    dshader.set('cmapXform',      kwargs['cmapXform'])
-    dshader.set('flatColour',     kwargs['flatColour'])
-    dshader.set('invertClip',     dopts.invertClipping)
-    dshader.set('discardClipped', dopts.discardClipped)
-    dshader.set('modulateAlpha',  dopts.modulateAlpha)
-    dshader.set('modScale',       kwargs['modScale'])
-    dshader.set('modOffset',      kwargs['modOffset'])
-    dshader.set('clipLow',        dopts.clippingRange.xlo)
-    dshader.set('clipHigh',       dopts.clippingRange.xhi)
+    with dshader.loaded():
+        dshader.set('cmap',           0)
+        dshader.set('negCmap',        1)
+        dshader.set('useNegCmap',     kwargs['useNegCmap'])
+        dshader.set('cmapXform',      kwargs['cmapXform'])
+        dshader.set('flatColour',     kwargs['flatColour'])
+        dshader.set('invertClip',     dopts.invertClipping)
+        dshader.set('discardClipped', dopts.discardClipped)
+        dshader.set('modulateAlpha',  dopts.modulateAlpha)
+        dshader.set('modScale',       kwargs['modScale'])
+        dshader.set('modOffset',      kwargs['modOffset'])
+        dshader.set('clipLow',        dopts.clippingRange.xlo)
+        dshader.set('clipHigh',       dopts.clippingRange.xhi)
 
-    if self.threedee:
-        dshader.setAtt('vertex', self.vertices)
-        dshader.setAtt('normal', self.normals)
+        if self.threedee:
+            dshader.setIndices(self.indices)
+            dshader.setAtt('vertex', self.vertices)
+            dshader.setAtt('normal', self.normals)
 
-        vdata = self.getVertexData('vertex')
-        mdata = self.getVertexData('modulate')
+            vdata = self.getVertexData('vertex')
+            mdata = self.getVertexData('modulate')
 
-        # if modulate data is not set,
-        # we use the vertex data
-        if mdata is None:
-            mdata = vdata
+            # if modulate data is not set,
+            # we use the vertex data
+            if mdata is None:
+                mdata = vdata
 
-        if vdata is not None: dshader.setAtt('vertexData',   vdata.ravel('C'))
-        if mdata is not None: dshader.setAtt('modulateData', mdata.ravel('C'))
-
-        dshader.setIndices(self.indices)
-
-    dshader.unload()
+            if vdata is not None: dshader.setAtt('vertexData',   vdata)
+            if mdata is not None: dshader.setAtt('modulateData', mdata)
 
     with fshader.loaded():
         fshader.set('colour', kwargs['flatColour'])
