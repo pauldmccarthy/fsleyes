@@ -595,7 +595,7 @@ class GLMesh(globject.GLObject):
             if not flat:
                 shader.setAtt('vertexData',   vdata)
                 shader.setAtt('modulateData', mdata)
-            shader.draw(glprim, vertices.size)
+            shader.draw(glprim, vertices.shape[0])
 
 
     def draw2DMesh(self, xform=None):

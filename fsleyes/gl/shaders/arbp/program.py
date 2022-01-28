@@ -191,6 +191,12 @@ class ARBPShader:
         # information about this dict
         self.__attCache = {}
 
+        # The setIndices method caches an
+        # index array which will then be
+        # passed to glDrawElements in the
+        # draw method
+        self.indices = None
+
         poses = self.__generatePositions(textureMap)
         vpPoses, fpPoses, texPoses, attrPoses = poses
 
@@ -220,6 +226,7 @@ class ARBPShader:
 
         self.vertexProgram   = None
         self.fragmentProgram = None
+        self.indices         = None
 
 
     def recompile(self):
@@ -393,8 +400,13 @@ class ARBPShader:
         attribute is mapped to a texture coordinate. It is assumed that
         the given value is a ``numpy`` array of shape ``(n, l)``, where
         ``n`` is the number of vertices being drawn, and ``l`` is the
-        number of components in each vertex attribute coordinate.
+        number of components in each vertex attribute coordinate. If
+        ``value`` is 1D, it is reshaped to ``(N, 1)``.
         """
+
+        if len(value.shape) == 1:
+            value = value.reshape(-1, 1)
+
         texUnit = self.__getAttrTexUnit(name)
         size    = value.shape[1]
         value   = np.array(value, dtype=np.float32, copy=False)
@@ -413,6 +425,27 @@ class ARBPShader:
 
         gl.glClientActiveTexture(texUnit)
         gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+
+
+    def setIndices(self, indices):
+        """Stores a set of vertex indices to be used in calls to :meth:`draw`.
+        """
+        if indices is not None:
+            indices = np.asarray(indices.ravel('C'), dtype=np.uint32)
+        self.indices = indices
+
+
+    def draw(self, prim, nvertices=None):
+        """Submits a GL draw call for the specified primitive type.
+        If vertex indices have been provided via the :meth:`setIndices` method,
+        ``glDrawElements`` is used. Otherwise, ``glDrawArrays`` is used, and
+        is passed the given number of vertices.
+        """
+        if self.indices is not None:
+            indices = self.indices
+            gl.glDrawElements(prim, indices.size, gl.GL_UNSIGNED_INT, indices)
+        else:
+            gl.glDrawArrays(prim, 0, nvertices)
 
 
     def __normaliseParam(self, value):
