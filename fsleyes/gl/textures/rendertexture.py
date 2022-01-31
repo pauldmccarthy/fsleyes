@@ -186,7 +186,7 @@ class RenderTexture(texture2d.Texture2D):
 
         log.debug('Deleting FBO%s [%s]', self.__frameBuffer, self.__rttype)
 
-        glexts.glDeleteFramebuffers(gltypes.GLuint(self.__frameBuffer))
+        glexts.glDeleteFramebuffers(1, gltypes.GLuint(self.__frameBuffer))
 
         if self.__renderBuffer is not None:
             rb = gltypes.GLuint(self.__renderBuffer)
