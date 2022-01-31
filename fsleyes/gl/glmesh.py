@@ -709,14 +709,14 @@ class GLMesh(globject.GLObject):
         with glroutines.enabled((gl.GL_CULL_FACE, gl.GL_STENCIL_TEST)), \
              tex.target(xax, yax, lo, hi):
 
+            glroutines.clear((0, 0, 0, 0))
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
+
             # Use a clip-plane shader for steps 1 and 2
             with cpshader.loaded():
 
                 cpshader.set('MVP',       tex.mvpMatrix)
                 cpshader.set('clipPlane', clipPlane)
-
-                gl.glClearColor(0, 0, 0, 0)
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
 
                 # We just want to populate the stencil
                 # buffer, so set the stencil test to
@@ -746,7 +746,9 @@ class GLMesh(globject.GLObject):
             gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
             gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 255)
 
-            with blshader.loaded():
+            # disable blending, otherwise we will end up blending
+            # with the output of the clip plane shader
+            with blshader.loaded(), glroutines.disabled((gl.GL_BLEND, )):
                 verts = tex.generateVertices(zpos, xmin, xmax,
                                              ymin, ymax, xax, yax)
                 blshader.setAtt('vertex', verts)
