@@ -291,6 +291,8 @@ class ARBPShader:
         """Enables texture coordinates for all shader program attributes.
         This is called automatically by :meth:`draw`, so there is no need
         to call it explicitly.
+
+        All attributes must be set before they are loaded.
         """
         if self.attsLoaded:
             return

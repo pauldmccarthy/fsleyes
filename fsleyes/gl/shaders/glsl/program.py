@@ -224,6 +224,8 @@ class GLSLShader:
 
         This is called automatically by :meth:`draw`, so there is no need
         to explicitly call it.
+
+        Attributes may be set before or after this method is called.
         """
         if self.attsLoaded:
             return
