@@ -97,68 +97,66 @@ def updateShaderState(self):
     colourXform = self.getAuxTextureXform('colour')
     modXform    = self.getAuxTextureXform('modulate')
 
-    shader.load()
+    with shader.loaded():
 
-    changed  = False
-    changed |= shader.set('xFlip',       xFlip)
-    changed |= shader.set('imageShape',  shape)
-    changed |= shader.set('lighting',    opts.lighting)
-    changed |= shader.set('lightPos',    lightPos)
-    changed |= shader.set('nVertices',   self.vertices.shape[0])
-    changed |= shader.set('sizeScaling', opts.size / 100.0)
-    changed |= shader.set('radTexture',  4)
+        changed  = False
+        changed |= shader.set('xFlip',       xFlip)
+        changed |= shader.set('imageShape',  shape)
+        changed |= shader.set('lighting',    opts.lighting)
+        changed |= shader.set('lightPos',    lightPos)
+        changed |= shader.set('nVertices',   self.vertices.shape[0])
+        changed |= shader.set('sizeScaling', opts.size / 100.0)
+        changed |= shader.set('radTexture',  4)
 
-    if self.useVolumeFragShader:
+        if self.useVolumeFragShader:
 
-        voxValXform     = self.colourTexture.voxValXform
-        invVoxValXform  = self.colourTexture.invVoxValXform
-        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
-        img2CmapXform   = affine.concat(
-            self.cmapTexture.getCoordinateTransform(),
-            voxValXform)
+            voxValXform     = self.colourTexture.voxValXform
+            invVoxValXform  = self.colourTexture.invVoxValXform
+            texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
+            img2CmapXform   = affine.concat(
+                self.cmapTexture.getCoordinateTransform(),
+                voxValXform)
 
-        changed |= shader.set('clipTexture',      1)
-        changed |= shader.set('imageTexture',     2)
-        changed |= shader.set('colourTexture',    3)
-        changed |= shader.set('negColourTexture', 3)
-        changed |= shader.set('img2CmapXform',    img2CmapXform)
-        changed |= shader.set('imageIsClip',      False)
-        changed |= shader.set('useNegCmap',       False)
-        changed |= shader.set('useSpline',        False)
-        changed |= shader.set('clipLow',          clipLow)
-        changed |= shader.set('clipHigh',         clipHigh)
-        changed |= shader.set('texZero',          texZero)
-        changed |= shader.set('invertClip',       False)
-        changed |= shader.set('colourCoordXform', colourXform)
-        changed |= shader.set('clipCoordXform',   clipXform)
+            changed |= shader.set('clipTexture',      1)
+            changed |= shader.set('imageTexture',     2)
+            changed |= shader.set('colourTexture',    3)
+            changed |= shader.set('negColourTexture', 3)
+            changed |= shader.set('img2CmapXform',    img2CmapXform)
+            changed |= shader.set('imageIsClip',      False)
+            changed |= shader.set('useNegCmap',       False)
+            changed |= shader.set('useSpline',        False)
+            changed |= shader.set('clipLow',          clipLow)
+            changed |= shader.set('clipHigh',         clipHigh)
+            changed |= shader.set('texZero',          texZero)
+            changed |= shader.set('invertClip',       False)
+            changed |= shader.set('colourCoordXform', colourXform)
+            changed |= shader.set('clipCoordXform',   clipXform)
 
-    else:
+        else:
 
-        cmapXform            = self.cmapTexture.getCoordinateTransform()
-        colours, colourXform = self.getVectorColours()
+            cmapXform            = self.cmapTexture.getCoordinateTransform()
+            colours, colourXform = self.getVectorColours()
 
-        changed |= shader.set('modulateTexture',  0)
-        changed |= shader.set('clipTexture',      1)
-        changed |= shader.set('cmapTexture',      3)
-        changed |= shader.set('clipLow',          clipLow)
-        changed |= shader.set('clipHigh',         clipHigh)
-        changed |= shader.set('modLow',           modLow)
-        changed |= shader.set('modHigh',          modHigh)
-        changed |= shader.set('modulateMode',     modMode)
-        changed |= shader.set('colourMode',       colourMode)
-        changed |= shader.set('xColour',          colours[0])
-        changed |= shader.set('yColour',          colours[1])
-        changed |= shader.set('zColour',          colours[2])
-        changed |= shader.set('colourXform',      colourXform)
-        changed |= shader.set('cmapXform',        cmapXform)
-        changed |= shader.set('clipCoordXform',   clipXform)
-        changed |= shader.set('modCoordXform',    modXform)
+            changed |= shader.set('modulateTexture',  0)
+            changed |= shader.set('clipTexture',      1)
+            changed |= shader.set('cmapTexture',      3)
+            changed |= shader.set('clipLow',          clipLow)
+            changed |= shader.set('clipHigh',         clipHigh)
+            changed |= shader.set('modLow',           modLow)
+            changed |= shader.set('modHigh',          modHigh)
+            changed |= shader.set('modulateMode',     modMode)
+            changed |= shader.set('colourMode',       colourMode)
+            changed |= shader.set('xColour',          colours[0])
+            changed |= shader.set('yColour',          colours[1])
+            changed |= shader.set('zColour',          colours[2])
+            changed |= shader.set('colourXform',      colourXform)
+            changed |= shader.set('cmapXform',        cmapXform)
+            changed |= shader.set('clipCoordXform',   clipXform)
+            changed |= shader.set('modCoordXform',    modXform)
 
-    shader.setAtt('vertex',   self.vertices)
-    shader.setAtt('vertexID', self.vertIdxs)
-    shader.setIndices(        self.indices)
-
-    shader.unload()
+        shader.setAtt('vertex',   self.vertices)
+        shader.setAtt('vertexID', self.vertIdxs)
+        shader.setIndices(        self.indices)
 
     return changed
 
@@ -216,10 +214,12 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     shader.set(   'radTexShape',     radTexShape)
     shader.set(   'radXform',        self.radTexture.voxValXform)
 
-    shader.loadAtts()
-
-    glexts.glDrawElementsInstanced(
-        gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
+    with shader.loadedAtts():
+        glexts.glDrawElementsInstanced(gl.GL_TRIANGLES,
+                                       self.nVertices,
+                                       gl.GL_UNSIGNED_INT,
+                                       None,
+                                       len(voxels))
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -232,7 +232,6 @@ def postDraw(self):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """
-    self.shader.unloadAtts()
     self.shader.unload()
     gl.glDisable(gl.GL_CULL_FACE)
     gl.glDisable(gl.GL_DEPTH_TEST)

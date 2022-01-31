@@ -67,19 +67,17 @@ def updateShaderState(self):
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
 
-    shader.load()
-
-    changed  = False
-    changed |= shader.set('imageTexture',  0)
-    changed |= shader.set('imageShape',    imageShape)
-    changed |= shader.set('texShape',      texShape)
-    changed |= shader.set('rcolour',       rc)
-    changed |= shader.set('gcolour',       gc)
-    changed |= shader.set('bcolour',       bc)
-    changed |= shader.set('colourXform',   colourXform)
-    changed |= shader.set('useSpline',     opts.interpolation == 'spline')
-    changed |= shader.set('hasAlpha',      hasAlpha)
-    shader.unload()
+    with shader.loaded():
+        changed  = False
+        changed |= shader.set('imageTexture',  0)
+        changed |= shader.set('imageShape',    imageShape)
+        changed |= shader.set('texShape',      texShape)
+        changed |= shader.set('rcolour',       rc)
+        changed |= shader.set('gcolour',       gc)
+        changed |= shader.set('bcolour',       bc)
+        changed |= shader.set('colourXform',   colourXform)
+        changed |= shader.set('useSpline',     opts.interpolation == 'spline')
+        changed |= shader.set('hasAlpha',      hasAlpha)
 
     return changed
 
@@ -88,17 +86,13 @@ def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl21.glvolume_funcs.draw2D` function.
     """
-    self.shader.load()
-    glvolume_funcs.draw2D(self, zpos, axes, xform)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, zpos, axes, xform)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all specified slices. Uses the
     :func:`.gl21.glvolume_funcs.drawAll` function.
     """
-    self.shader.load()
-    glvolume_funcs.drawAll(self, axes, zposes, xforms)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, axes, zposes, xforms)

@@ -59,10 +59,9 @@ def updateShaderState(self):
     if opts.invert: threshold += [ 1, 0]
     else:           threshold += [-1, 0]
 
-    shader.load()
-    shader.setFragParam('threshold', threshold)
-    shader.setFragParam('colour',    colour)
-    shader.unload()
+    with shader.loaded():
+        shader.setFragParam('threshold', threshold)
+        shader.setFragParam('colour',    colour)
 
     return True
 
@@ -72,19 +71,13 @@ def draw2D(self, zpos, axes, xform=None):
     :func:`.gl14.glvolume_funcs.draw2D` function.
     """
 
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.draw2D(self, zpos, axes, xform)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, zpos, axes, xform)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all specified slices. Uses the
     :func:`.gl14.glvolume_funcs.drawAll` function.
     """
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.drawAll(self, axes, zposes, xforms)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, axes, zposes, xforms)

@@ -75,10 +75,6 @@ def updateShaderState(self):
     shader = self.shader
     opts   = self.opts
 
-    shader.load()
-
-    changed = glvector_funcs.updateShaderState(self)
-
     # Texture -> value value offsets/scales
     # used by the vertex and fragment shaders
     v1ValXform  = self.v1Texture.voxValXform
@@ -104,30 +100,6 @@ def updateShaderState(self):
     lightPos  = np.array([-1, -1, 4], dtype=np.float32)
     lightPos /= np.sqrt(np.sum(lightPos ** 2))
 
-    # Textures used by the vertex shader
-    changed |= shader.set('v1Texture', 8)
-    changed |= shader.set('v2Texture', 9)
-    changed |= shader.set('v3Texture', 10)
-    changed |= shader.set('l1Texture', 11)
-    changed |= shader.set('l2Texture', 12)
-    changed |= shader.set('l3Texture', 13)
-
-    # Texture value -> actual
-    # value transformations
-    changed |= shader.set('v1ValXform', v1ValXform)
-    changed |= shader.set('v2ValXform', v2ValXform)
-    changed |= shader.set('v3ValXform', v3ValXform)
-    changed |= shader.set('l1ValXform', l1ValXform)
-    changed |= shader.set('l2ValXform', l2ValXform)
-    changed |= shader.set('l3ValXform', l3ValXform)
-
-    # Other settings
-    changed |= shader.set('xFlip',      xFlip)
-    changed |= shader.set('imageShape', imageShape)
-    changed |= shader.set('eigValNorm', eigValNorm)
-    changed |= shader.set('lighting',   opts.lighting)
-    changed |= shader.set('lightPos',   lightPos)
-
     # Vertices of a unit sphere. The vertex
     # shader will transform these vertices
     # into the tensor ellipsoid for each
@@ -136,9 +108,34 @@ def updateShaderState(self):
 
     self.nVertices = len(indices)
 
-    shader.setAtt('vertex', vertices)
-    shader.setIndices(indices)
-    shader.unload()
+    # Textures used by the vertex shader
+    with shader.loaded():
+        changed  = glvector_funcs.updateShaderState(self)
+        changed |= shader.set('v1Texture', 8)
+        changed |= shader.set('v2Texture', 9)
+        changed |= shader.set('v3Texture', 10)
+        changed |= shader.set('l1Texture', 11)
+        changed |= shader.set('l2Texture', 12)
+        changed |= shader.set('l3Texture', 13)
+
+        # Texture value -> actual
+        # value transformations
+        changed |= shader.set('v1ValXform', v1ValXform)
+        changed |= shader.set('v2ValXform', v2ValXform)
+        changed |= shader.set('v3ValXform', v3ValXform)
+        changed |= shader.set('l1ValXform', l1ValXform)
+        changed |= shader.set('l2ValXform', l2ValXform)
+        changed |= shader.set('l3ValXform', l3ValXform)
+
+        # Other settings
+        changed |= shader.set('xFlip',      xFlip)
+        changed |= shader.set('imageShape', imageShape)
+        changed |= shader.set('eigValNorm', eigValNorm)
+        changed |= shader.set('lighting',   opts.lighting)
+        changed |= shader.set('lightPos',   lightPos)
+
+        shader.setAtt('vertex', vertices)
+        shader.setIndices(indices)
 
     return changed
 
@@ -192,10 +189,12 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     shader.setAtt('voxel',           voxels, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
 
-    shader.loadAtts()
-
-    glexts.glDrawElementsInstanced(
-        gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, nVoxels)
+    with shader.loadedAtts():
+        glexts.glDrawElementsInstanced(gl.GL_TRIANGLES,
+                                       self.nVertices,
+                                       gl.GL_UNSIGNED_INT,
+                                       None,
+                                       nVoxels)
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -206,9 +205,6 @@ def drawAll(self, axes, zposes, xforms):
 
 def postDraw(self):
     """Unloads the shader program. """
-
-    self.shader.unloadAtts()
     self.shader.unload()
-
     gl.glDisable(gl.GL_CULL_FACE)
     gl.glDisable(gl.GL_DEPTH_TEST)

@@ -201,6 +201,7 @@ def draw2D(self, zpos, axes, xform=None):
                   data.
     """
 
+    shader                         = self.shader
     bbox                           = self.canvas.viewport
     mvpmat                         = self.canvas.mvpMatrix
     vertices, voxCoords, texCoords = self.generateVertices2D(
@@ -213,13 +214,12 @@ def draw2D(self, zpos, axes, xform=None):
 
     vertices = affine.transform(vertices, mvpmat)
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('vertex',   vertices)
+    shader.setAtt('voxCoord', voxCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    self.shader.loadAtts()
-
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    with shader.loadedAtts():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
 def draw3D(self, xform=None):
@@ -235,6 +235,7 @@ def draw3D(self, xform=None):
     ovl     = self.overlay
     opts    = self.opts
     canvas  = self.canvas
+    shader  = self.shader
     copts   = canvas.opts
     bbox    = canvas.viewport
     mvmat   = canvas.viewMatrix
@@ -267,21 +268,19 @@ def draw3D(self, xform=None):
     else:
         lightPos = [0, 0, 0]
 
-    self.shader.set(   'lighting',        copts.light)
-    self.shader.set(   'tex2ScreenXform', texform)
-    self.shader.set(   'rayStep',         rayStep)
-    self.shader.set(   'lightPos',        lightPos)
-    self.shader.set(   'mvmat',           mvmat)
-    self.shader.set(   'mvpmat',          mvpmat)
-    self.shader.setAtt('vertex',          vertices)
-    self.shader.setAtt('texCoord',        texCoords)
+    shader.set(   'lighting',        copts.light)
+    shader.set(   'tex2ScreenXform', texform)
+    shader.set(   'rayStep',         rayStep)
+    shader.set(   'lightPos',        lightPos)
+    shader.set(   'mvmat',           mvmat)
+    shader.set(   'mvpmat',          mvpmat)
+    shader.setAtt('vertex',          vertices)
+    shader.setAtt('texCoord',        texCoords)
 
-    self.shader.loadAtts()
-    with tex.target():
+    with shader.loadedAtts(), tex.target():
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
-    self.shader.unloadAtts()
-    self.shader.unload()
+    shader.unload()
     self.drawClipPlanes(xform=xform)
 
 
@@ -289,6 +288,7 @@ def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
+    shader    = self.shader
     mvpmat    = self.canvas.mvpMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     voxCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
@@ -302,18 +302,16 @@ def drawAll(self, axes, zposes, xforms):
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('vertex',   vertices)
+    shader.setAtt('voxCoord', voxCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    self.shader.loadAtts()
-
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
+    with shader.loadedAtts():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
 
 def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-    self.shader.unloadAtts()
     self.shader.unload()

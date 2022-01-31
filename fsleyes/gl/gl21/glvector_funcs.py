@@ -46,8 +46,9 @@ def compileShaders(self, vertShader, indexed=False):
 
 
 def updateShaderState(self, useSpline=False):
-    """Updates the state of the vector vertex fragment shader. The fragment
+    """Updates the state of the vector vertex and fragment shader. The fragment
     shader may be either the ``glvolume`` or the ``glvector`` shader.
+    The shader is assumed to be loaded.
     """
 
     changed           = False

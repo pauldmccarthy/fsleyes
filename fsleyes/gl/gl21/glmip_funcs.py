@@ -74,25 +74,21 @@ def updateShaderState(self):
     # along the diagonal of a cube
     window = np.sqrt(3) * opts.window / 100.0
 
-    shader.load()
-
-    changed = False
-
-    changed |= shader.set('imageTexture',     0)
-    changed |= shader.set('cmapTexture',      1)
-    changed |= shader.set('textureMin',       textureMin)
-    changed |= shader.set('textureMax',       textureMax)
-    changed |= shader.set('img2CmapXform',    img2CmapXform)
-    changed |= shader.set('imageShape',       imageShape)
-    changed |= shader.set('useSpline',        opts.interpolation == 'spline')
-    changed |= shader.set('clipLow',          clipLow)
-    changed |= shader.set('clipHigh',         clipHigh)
-    changed |= shader.set('invertClip',       opts.invertClipping)
-    changed |= shader.set('window',           window)
-    changed |= shader.set('useMinimum',       opts.minimum)
-    changed |= shader.set('useAbsolute',      opts.absolute)
-
-    shader.unload()
+    with shader.loaded():
+        changed = False
+        changed |= shader.set('imageTexture',     0)
+        changed |= shader.set('cmapTexture',      1)
+        changed |= shader.set('textureMin',       textureMin)
+        changed |= shader.set('textureMax',       textureMax)
+        changed |= shader.set('img2CmapXform',    img2CmapXform)
+        changed |= shader.set('imageShape',       imageShape)
+        changed |= shader.set('useSpline',        opts.interpolation == 'spline')
+        changed |= shader.set('clipLow',          clipLow)
+        changed |= shader.set('clipHigh',         clipHigh)
+        changed |= shader.set('invertClip',       opts.invertClipping)
+        changed |= shader.set('window',           window)
+        changed |= shader.set('useMinimum',       opts.minimum)
+        changed |= shader.set('useAbsolute',      opts.absolute)
 
     return changed
 
@@ -101,27 +97,24 @@ def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl21.glvolume_funcs.draw2D` function.
     """
-    self.shader.load()
 
+    shader        = self.shader
     viewmat       = self.canvas.viewMatrix
     cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
 
-    self.shader.set('cameraDir', cdir)
-    self.shader.set('rayStep',   rayStep)
-
-    glvolume_funcs.draw2D(self, zpos, axes, xform)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with shader.loaded():
+        shader.set('cameraDir', cdir)
+        shader.set('rayStep',   rayStep)
+        glvolume_funcs.draw2D(self, zpos, axes, xform)
 
 
 def drawAll(self, zposes, axes, xforms):
-    self.shader.load()
 
+    shader        = self.shader
     viewmat       = self.canvas.viewMatrix
     cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
 
-    self.shader.set('cameraDir', cdir)
-    self.shader.set('rayStep',   rayStep)
-    glvolume_funcs.drawAll(self, zposes, axes, xforms)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with shader.loaded():
+        shader.set('cameraDir', cdir)
+        shader.set('rayStep',   rayStep)
+        glvolume_funcs.drawAll(self, zposes, axes, xforms)

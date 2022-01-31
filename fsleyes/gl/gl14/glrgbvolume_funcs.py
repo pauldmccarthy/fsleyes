@@ -72,16 +72,13 @@ def updateShaderState(self):
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
 
-    shader.load()
-
-    changed  = False
-    changed |= shader.setFragParam('rcolour',     rc)
-    changed |= shader.setFragParam('gcolour',     gc)
-    changed |= shader.setFragParam('bcolour',     bc)
-    changed |= shader.setFragParam('colourXform', colourXform)
-    changed |= shader.setFragParam('hasAlpha',    hasAlpha)
-
-    shader.unload()
+    with shader.loaded():
+        changed  = False
+        changed |= shader.setFragParam('rcolour',     rc)
+        changed |= shader.setFragParam('gcolour',     gc)
+        changed |= shader.setFragParam('bcolour',     bc)
+        changed |= shader.setFragParam('colourXform', colourXform)
+        changed |= shader.setFragParam('hasAlpha',    hasAlpha)
 
     return changed
 
@@ -90,19 +87,14 @@ def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl14.glvolume_funcs.draw2D` function.
     """
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.draw2D(self, zpos, axes, xform)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, zpos, axes, xform)
+
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all specified slices. Uses the
     :func:`.gl14.glvolume_funcs.drawAll` function.
     """
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.drawAll(self, axes, zposes, xforms)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, axes, zposes, xforms)

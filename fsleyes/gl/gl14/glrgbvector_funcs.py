@@ -58,9 +58,8 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    self.shader.load()
-    glvector_funcs.updateShaderState(self)
-    self.shader.unload()
+    with self.shader.loaded():
+        glvector_funcs.updateShaderState(self)
 
     return True
 

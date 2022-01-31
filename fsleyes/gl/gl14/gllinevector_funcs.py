@@ -135,11 +135,8 @@ def updateShaderState(self):
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]
 
-    self.shader.load()
-
-    self.shader.setVertParam('invImageShape', invShape)
-
-    self.shader.unload()
+    with self.shader.loaded():
+        self.shader.setVertParam('invImageShape', invShape)
 
     return True
 
@@ -196,22 +193,21 @@ def drawAll(self, axes, zposes, xforms):
     gl.glLineWidth(opts.lineWidth)
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
-    with shader.loadedAtts():
-        for zpos, xform in zip(zposes, xforms):
+    for zpos, xform in zip(zposes, xforms):
 
-            vertices, voxCoords = self.lineVertices.getVertices2D(self,
-                                                                  zpos,
-                                                                  axes)
+        vertices, voxCoords = self.lineVertices.getVertices2D(self,
+                                                              zpos,
+                                                              axes)
 
-            if xform is None: xform = affine.concat(mvpmat, v2d)
-            else:             xform = affine.concat(mvpmat, xform, v2d)
+        if xform is None: xform = affine.concat(mvpmat, v2d)
+        else:             xform = affine.concat(mvpmat, xform, v2d)
 
-            shader.setVertParam('voxToDisplayMat', xform)
-            shader.setAtt('voxCoord', voxCoords)
+        shader.setVertParam('voxToDisplayMat', xform)
+        shader.setAtt('voxCoord', voxCoords)
 
-            with shader.loadedAtts():
-                gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-                gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
+        with shader.loadedAtts():
+            gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
+            gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
 
 
 

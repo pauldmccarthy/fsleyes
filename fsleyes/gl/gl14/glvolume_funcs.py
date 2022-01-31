@@ -162,7 +162,6 @@ def preDraw(self):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
     self.shader.load()
-    self.shader.loadAtts()
 
     if isinstance(self, glvolume.GLVolume):
         clipCoordXform = self.getAuxTextureXform('clip')
@@ -174,6 +173,7 @@ def preDraw(self):
 def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice of the image at the given Z location. """
 
+    shader                 = self.shader
     bbox                   = self.canvas.viewport
     projmat                = self.canvas.projectionMatrix
     viewmat                = self.canvas.viewMatrix
@@ -189,9 +189,9 @@ def draw2D(self, zpos, axes, xform=None):
     # Voxel coordinates are calculated
     # in the vertex program, so we
     # only pass texCoords and vertices
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+    with shader.loadedAtts(), glroutines.enabled((gl.GL_VERTEX_ARRAY)):
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
@@ -257,7 +257,8 @@ def draw3D(self, xform=None):
     # Disable blending - we want each
     # loop to replace the contents of
     # the texture, not blend into it!
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
+    with shader.loadedAtts(), \
+         glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND)):
 
         # The depth value for a fragment will
@@ -294,7 +295,6 @@ def draw3D(self, xform=None):
 
     gl.glDepthFunc(gl.GL_LESS)
 
-    shader.unloadAtts()
     shader.unload()
 
     self.renderTexture1 = src
@@ -309,6 +309,7 @@ def drawAll(self, axes, zposes, xforms):
     """
 
     nslices   = len(zposes)
+    shader    = self.shader
     projmat   = self.canvas.projectionMatrix
     viewmat   = self.canvas.viewMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
@@ -325,9 +326,9 @@ def drawAll(self, axes, zposes, xforms):
 
     vertices = vertices.ravel('C')
 
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+    with shader.loadedAtts(), glroutines.enabled((gl.GL_VERTEX_ARRAY)):
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
         gl.glDrawElements(gl.GL_TRIANGLES,
                           nslices * 6,
@@ -339,5 +340,4 @@ def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-    self.shader.unloadAtts()
     self.shader.unload()

@@ -99,11 +99,8 @@ def updateShaderState(self):
     """
 
     shader = self.shader
-    shader.load()
-
-    changed     = glvector_funcs.updateShaderState(self)
-    image       = self.vectorImage
-    opts        = self.opts
+    image  = self.vectorImage
+    opts   = self.opts
 
     # see comments in gl21/glvector_funcs.py
     if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:
@@ -130,14 +127,14 @@ def updateShaderState(self):
         fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
         lengthScale /= fac
 
-    changed |= shader.set('vectorTexture',   4)
-    changed |= shader.set('voxValXform',     vvxMat)
-    changed |= shader.set('imageDims',       imageDims)
-    changed |= shader.set('directed',        directed)
-    changed |= shader.set('lengthScale',     lengthScale)
-    changed |= shader.set('xFlip',           xFlip)
-
-    shader.unload()
+    with shader.loaded():
+        changed  = glvector_funcs.updateShaderState(self)
+        changed |= shader.set('vectorTexture',   4)
+        changed |= shader.set('voxValXform',     vvxMat)
+        changed |= shader.set('imageDims',       imageDims)
+        changed |= shader.set('directed',        directed)
+        changed |= shader.set('lengthScale',     lengthScale)
+        changed |= shader.set('xFlip',           xFlip)
 
     return changed
 
@@ -172,12 +169,10 @@ def draw2D(self, zpos, axes, xform=None):
     shader.set(   'voxToDisplayMat', xform)
     shader.setAtt('vertexID',        indices)
     shader.setAtt('voxel',           voxels)
-    shader.loadAtts()
 
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
-
-    shader.unloadAtts()
+    with shader.loadedAtts():
+        gl.glLineWidth(opts.lineWidth)
+        gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -189,19 +184,18 @@ def drawAll(self, axes, zposes, xforms):
     v2dMat = opts.getTransform('voxel', 'display')
 
     gl.glLineWidth(opts.lineWidth)
-    with shader.loadedAtts():
-        for zpos, xform in zip(zposes, xforms):
-            voxels  = self.generateVoxelCoordinates2D(zpos, axes)
-            voxels  = np.repeat(voxels, 2, 0)
-            indices = np.arange(voxels.shape[0], dtype=np.uint32)
+    for zpos, xform in zip(zposes, xforms):
+        voxels  = self.generateVoxelCoordinates2D(zpos, axes)
+        voxels  = np.repeat(voxels, 2, 0)
+        indices = np.arange(voxels.shape[0], dtype=np.uint32)
 
-            if xform is None: xform = affine.concat(mvpmat, v2dMat)
-            else:             xform = affine.concat(mvpmat, xform, v2dMat)
+        if xform is None: xform = affine.concat(mvpmat, v2dMat)
+        else:             xform = affine.concat(mvpmat, xform, v2dMat)
 
-            shader.set(   'voxToDisplayMat', xform)
-            shader.setAtt('vertexID',        indices)
-            shader.setAtt('voxel',           voxels)
-
+        shader.set(   'voxToDisplayMat', xform)
+        shader.setAtt('vertexID',        indices)
+        shader.setAtt('voxel',           voxels)
+        with shader.loadedAtts():
             gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
 
 
