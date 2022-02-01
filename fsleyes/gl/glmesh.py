@@ -569,7 +569,7 @@ class GLMesh(globject.GLObject):
             # line-based vertices, so we can np.repeat
             # the data.
             if vdata is not None: vdata = np.repeat(vdata, 2)
-            if mdata is not None: vdata = np.repeat(vdata, 2)
+            if mdata is not None: mdata = np.repeat(mdata, 2)
 
         if mdata is None:
             mdata = vdata

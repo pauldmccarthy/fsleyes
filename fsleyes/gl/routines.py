@@ -1469,6 +1469,12 @@ def lineAsPolygon(vertices,
 
     rot = rotate(90, *camera)
 
+    # Separate starting vertices from ending
+    # vertices.  Note that, when working with
+    # line segments, we cannot assume that the
+    # segments are ordered in any particular
+    # way, and therefore can't join up adjacent
+    # polygons nicely.
     if mode == 'segments':
         nlines = int(vertices.shape[0] / 2)
         start  = vertices[ ::2]
