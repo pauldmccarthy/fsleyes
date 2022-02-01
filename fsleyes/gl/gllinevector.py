@@ -15,9 +15,10 @@ when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 import logging
 
 import numpy                as np
-
 import fsl.data.dtifit      as dtifit
+import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
 import fsleyes.gl.glvector  as glvector
 
 
@@ -339,7 +340,9 @@ class GLLineVertices:
 
             # Scale the vector data by the minimum
             # voxel length, so it is a unit vector
-            # within real world space
+            # within real world space. We're assuming
+            # here that the vectors are defined in
+            # mm (e.g. the FSL coordinate system).
             vertices /= (image.pixdim[:3] / min(image.pixdim[:3]))
 
         # Scale the vectors by the length scaling factor
@@ -375,9 +378,11 @@ class GLLineVertices:
         called.
         """
 
-        image    = glvec.image
-        shape    = image.shape[:3]
-        xax, yax = axes[:2]
+        opts   = glvec.opts
+        image  = glvec.image
+        canvas = glvec.canvas
+        shape  = image.shape[:3]
+        zax    = axes[2]
 
         vertices  = self.vertices
         voxCoords = glvec.generateVoxelCoordinates2D(zpos, axes, bbox)
@@ -398,9 +403,27 @@ class GLLineVertices:
         vertices = vertices[coords[0], coords[1], coords[2], :, :]
         vertices = vertices.reshape(-1, 3)
 
+        # Convert line segments into rectangles so
+        # we can draw lines at arbitrary widths.
+        # We need to adjust the line width so that
+        # it is relative to the coord system the
+        # vectors are defined in, which we assume
+        # to be the FSL coordinate system.
+        xform             = opts.getTransform('display', 'pixdim')
+        lineWidth         = opts.lineWidth * canvas.pixelSize()[0]
+        lineWidth         = affine.transform([lineWidth] * 3, xform)[0]
+        vertices, indices = glroutines.lineAsPolygon(vertices,
+                                                     lineWidth,
+                                                     zax,
+                                                     indices=True)
+
         if not vertices.flags['C_CONTIGUOUS']:
             vertices = np.ascontiguousarray(vertices)
 
-        voxCoords = voxCoords.repeat(repeats=2, axis=0)
+        # We are drawing each line with four vertices
+        # (rectangle made of two triangles). So we
+        # need to repeat voxel coordinates for each
+        # vertex.
+        voxCoords = voxCoords.repeat(repeats=4, axis=0)
 
-        return vertices, voxCoords
+        return vertices, indices, voxCoords

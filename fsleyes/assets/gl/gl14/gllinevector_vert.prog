@@ -16,6 +16,7 @@
 #                       into modulation image texture coordinates.
 #
 # Input attributes:
+#    vertex    - Line vertices
 #    voxCoord  - Vector voxel coordinates
 #
 # Outputs:
@@ -41,8 +42,8 @@ PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
 PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
 
 # Offset the vertex position by its voxel coordinates
-MOV voxCoord, {{ attr_voxCoord }};
-ADD vertexPos, vertex.position, voxCoord;
+MOV voxCoord,  {{ attr_voxCoord }};
+ADD vertexPos, {{ attr_vertex   }}, voxCoord;
 MOV vertexPos.w, 1;
 
 # Transform the vertex position (which is in voxel

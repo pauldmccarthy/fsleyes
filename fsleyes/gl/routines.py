@@ -1438,11 +1438,12 @@ def lineAsPolygon(vertices,
     If the line is being drawn on a plane that is not orthogonal to the
     display coordinate system, then you must specify the direction that
     the "camera" is pointing towards, via the ``camera`` argument. This
+    needs to be specified in the same coordinate system as the vertices.
 
     :arg vertices: A ``(N, 3)`` array containing the line coordinates
 
     :arg width:    Line width, in units proportional to the coordinate system
-                   that ``start`` and ``end`` are defined in
+                   that ``vertices`` are defined in.
 
     :arg axis:     Depth axis, if the line is being drawn on a plane orthogonal
                    to the display coordinate system.
@@ -1457,7 +1458,20 @@ def lineAsPolygon(vertices,
                    and ``vertices[1]``, ``vertices[1]`` and ``vertices[2]]``,
                    etc.
 
-    :arg indices:  Defaults to ``False``. If ``True``
+    :arg indices:  Defaults to ``False``. If ``True``, four new vertices per
+                   line are returned, one per cornrer, and a set of indices
+                   defining the two triangles to be drawn. If ``False``, six
+                   new vertices per line are returned, defining the vertices
+                   of both triangles.
+
+    :returns:      If ``indices is False``, a ``(n, 3)`` array of vertices,
+                   containing six vertices per input line - each line can
+                   be drawn as a rectangle made up of two triangles.
+
+                   If ``indices is True``, a ``(n, 3)`` array of vertices,
+                   containing four vertices per input line, and a separate
+                   set of ``(m, 3)`` indices defining the triangles to be
+                   drawn.
     """
 
     if axis is not None:
