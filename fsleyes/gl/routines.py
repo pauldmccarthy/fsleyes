@@ -1507,22 +1507,22 @@ def lineAsPolygon(vertices,
     #
     # https://en.wikipedia.org/wiki/Vector_projection#Vector_projection
     # https://stackoverflow.com/a/23472188
-    scdot = (start[:, 0] * camera[0] +
-             start[:, 1] * camera[1] +
-             start[:, 2] * camera[2])
-    ecdot = (end[  :, 0] * camera[0] +
-             end[  :, 1] * camera[1] +
-             end[  :, 2] * camera[2])
-    scdot = np.repeat(scdot.reshape(-1, 1), 3, axis=1)
-    ecdot = np.repeat(ecdot.reshape(-1, 1), 3, axis=1)
-    start = start - scdot * camera
-    end   = end   - ecdot * camera
+    scdot     = (start[:, 0] * camera[0] +
+                 start[:, 1] * camera[1] +
+                 start[:, 2] * camera[2])
+    ecdot     = (end[  :, 0] * camera[0] +
+                 end[  :, 1] * camera[1] +
+                 end[  :, 2] * camera[2])
+    scdot     = np.repeat(scdot.reshape(-1, 1), 3, axis=1)
+    ecdot     = np.repeat(ecdot.reshape(-1, 1), 3, axis=1)
+    projstart = start - scdot * camera
+    projend   = end   - ecdot * camera
 
     # Now we can rotate the line by 90 degrees
     # to calculate an offset of the requested
     # width, and create a rectangular region
     # representing the line.
-    offset = affine.transform((end - start), rot, vector=True)
+    offset = affine.transform((projend - projstart), rot, vector=True)
     offset = affine.normalise(offset) * width / 2
 
     # Each rectangle is drawn with two triangles.
