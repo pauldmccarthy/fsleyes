@@ -17,9 +17,7 @@ import functools            as ft
 import numpy                as np
 import OpenGL.GL            as gl
 
-import fsl.data.image       as fslimage
 import fsl.utils.idle       as idle
-import fsl.transform.affine as affine
 import fsleyes.colourmaps   as fslcm
 from . import resources     as glresources
 from . import                  textures

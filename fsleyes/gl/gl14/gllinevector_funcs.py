@@ -147,16 +147,19 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, zpos, axes, xform=None, bbox=True):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
-    opts                         = self.opts
-    canvas                       = self.canvas
-    shader                       = self.shader
-    bbox                         = canvas.viewport
-    mvpmat                       = canvas.mvpMatrix
+    opts   = self.opts
+    canvas = self.canvas
+    shader = self.shader
+    mvpmat = canvas.mvpMatrix
+
+    if bbox: bbox = canvas.viewport
+    else:    bbox = None
+
     vertices, indices, voxCoords = self.lineVertices.getVertices2D(
         self, zpos, axes, bbox=bbox)
 
@@ -179,28 +182,8 @@ def draw2D(self, zpos, axes, xform=None):
 
 def drawAll(self, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
-
-    opts   = self.opts
-    canvas = self.canvas
-    shader = self.shader
-    mvpmat = canvas.mvpMatrix
-    v2d    = opts.getTransform('voxel', 'display')
-
-    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-
     for zpos, xform in zip(zposes, xforms):
-
-        vertices, indices, voxCoords = self.lineVertices.getVertices2D(
-            self, zpos, axes)
-
-        if xform is None: xform = affine.concat(mvpmat, v2d)
-        else:             xform = affine.concat(mvpmat, xform, v2d)
-
-        shader.set(   'voxToDisplayMat', xform)
-        shader.setAtt('voxCoord',        voxCoords)
-        shader.setAtt('vertex',          vertices)
-        shader.setIndices(indices)
-        shader.draw(gl.GL_TRIANGLES)
+        draw2D(self, zpos, axes, xform, bbox=False)
 
 
 def postDraw(self):

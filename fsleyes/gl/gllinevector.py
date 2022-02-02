@@ -49,6 +49,9 @@ class GLLineVector(glvector.GLVector):
     the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering
     functionality is implemented in the version-specific modules mentioned
     above.
+
+    In both cases, lines are drawn as rectangles (with each rectangle made up
+    of two triangles) , so that they can be drawn at arbitrary widths.
     """
 
 
@@ -373,6 +376,9 @@ class GLLineVertices:
         """Extracts and returns a slice of line vertices, and the associated
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
+
+        The line vertices are transformed into rectangular polygons, suitable
+        for being drawn with the ``GL_TRIANGLES`` primitive.
 
         This method assumes that the :meth:`refresh` method has already been
         called.
