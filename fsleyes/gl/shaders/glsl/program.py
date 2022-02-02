@@ -18,6 +18,7 @@ import OpenGL.GL             as gl
 import OpenGL.raw.GL._types  as gltypes
 
 import fsleyes.gl.extensions as glexts
+import fsleyes.gl            as fslgl
 import fsl.utils.memoize     as memoize
 from . import                   parse
 
@@ -165,9 +166,14 @@ class GLSLShader:
 
         # Buffers for storing vertices and
         # (optionally) vertex indices.
-        # Vertex index buffer is created
-        # if setIndices is called.
-        self.vao         = gl.glGenVertexArrays(1)
+        # A vertex array is required in
+        # GL >= 3.0, but not supported in
+        # older GL versions.
+        #
+        # A vertex index buffer is created
+        # on the first call to  setIndices.
+        if float(fslgl.GL_COMPATIBILITY) >= 3: self.vao = gl.glGenVertexArrays(1)
+        else:                                  self.vao = None
         self.indexBuffer = None
         self.nindices    = None
 
@@ -229,7 +235,8 @@ class GLSLShader:
         """
         if self.attsLoaded:
             return
-        gl.glBindVertexArray(self.vao)
+        if self.vao is not None:
+            gl.glBindVertexArray(self.vao)
         for att in self.vertAttributes:
 
             aPos           = self.positions[          att]
@@ -272,8 +279,8 @@ class GLSLShader:
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
-
-        gl.glBindVertexArray(0)
+        if self.vao is not None:
+            gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         self.attsLoaded = False
@@ -287,7 +294,8 @@ class GLSLShader:
     def destroy(self):
         """Deletes all GL resources managed by this ``GLSLShader``. """
         gl.glDeleteProgram(self.program)
-        gl.glDeleteVertexArrays(1, self.vao)
+        if self.vao is not None:
+            gl.glDeleteVertexArrays(1, self.vao)
         if self.indexBuffer is not None:
             gl.glDeleteBuffers(1, self.indexBuffer)
         for buf in self.buffers.values():
