@@ -60,8 +60,15 @@ def main(args=None, hook=None):
     # Initialise colour maps module
     fslcm.init()
 
+    # Parse arguments, and
+    # configure logging/debugging
+    namespace = parseArgs(args)
+    fsleyes.configLogging(namespace.verbose, namespace.noisy)
+
     # Create a GL context
-    fslgl.getGLContext(offscreen=True, createApp=True)
+    fslgl.getGLContext(offscreen=True,
+                       createApp=True,
+                       requestVersion=namespace.glversion)
 
     # Now that GL inititalisation is over,
     # make sure that the idle loop executes
@@ -73,10 +80,6 @@ def main(args=None, hook=None):
     with idle.idleLoop.synchronous(), \
          imagetexture.ImageTexture.enableThreading(False):
 
-        # Parse arguments, and
-        # configure logging/debugging
-        namespace = parseArgs(args)
-        fsleyes.configLogging(namespace.verbose, namespace.noisy)
 
         # Initialise the fsleyes.gl modules
         fslgl.bootstrap(namespace.glversion)
