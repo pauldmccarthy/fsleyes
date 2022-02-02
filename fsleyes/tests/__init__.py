@@ -278,8 +278,9 @@ def run_with_fsleyes(func, *args, **kwargs):
     state.dummy       = None
     state.panel       = None
 
-    glver  = os.environ.get('FSLEYES_TEST_GL', '2.1')
-    glver  = [int(v) for v in glver.split('.')]
+    glver  = os.environ.get('FSLEYES_TEST_GL', None)
+    if glver is not None:
+        glver = (int(v) for v in glver.split('.'))
 
     def init():
         fsleyes.initialise()
@@ -347,7 +348,8 @@ def run_with_fsleyes(func, *args, **kwargs):
         wx.CallLater(startingDelay,
                      fslgl.getGLContext,
                      ready=init,
-                     raiseErrors=True)
+                     raiseErrors=True,
+                     requestVersion=glver)
 
     with exitMainLoopOnError(state.app) as err:
         state.app.MainLoop()
@@ -389,14 +391,17 @@ def run_render_test(
     against the given benchmark.
     """
 
-    glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
-    glver = [int(v) for v in glver.split('.')]
+    glver = os.environ.get('FSLEYES_TEST_GL', None)
+    if glver is not None:
+        glver = (int(v) for v in glver.split('.'))
 
-    args = '-gl {} {}'.format(*glver) .split() + \
-           '-of {}'   .format(outfile).split() + \
+    args = '-of {}'   .format(outfile).split() + \
            '-sz {} {}'.format(*size)  .split() + \
            '-s  {}'   .format(scene)  .split() + \
            list(args)
+
+    if glver is not None:
+        args = '-gl {} {}'.format(*glver).split() + args
 
     idle.idleLoop.reset()
     idle.idleLoop.allowErrors = True
