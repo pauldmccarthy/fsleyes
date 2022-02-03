@@ -148,7 +148,7 @@ class GLLineVector(glvector.GLVector):
         d2p       = opts.getTransform('display', 'pixdim')
         lineWidth = opts.lineWidth * canvas.pixelSize()[0]
         lineWidth = affine.transform([lineWidth] * 3, d2p, vector=True)[0]
-        return lineWidth
+        return lineWidth / 2
 
 
     def getDataResolution(self, xax, yax):
