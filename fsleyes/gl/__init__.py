@@ -884,8 +884,8 @@ class GLContext:
         # Creating a GL context is a pain for various reasons.
         #
         #  1. wxPython only supports requesting core/
-        #     compatiblity profiles from 4.1 onwards.
-        #  2. In 4.1, the GLContext interface changed
+        #     compatiblity profiles from 4.1.1 onwards.
+        #  2. In 4.1.1, the GLContext interface changed
         #     so that we have to create and pass a
         #     GLContextAttrs object
         #  3. Step 2 works on macOS, but on linux only
@@ -898,31 +898,41 @@ class GLContext:
         # For older/non-GTK3 builds, we can't request a
         # particular profile, so we create a GLContext
         # with no arguments, and just hope.
+        candidates = []
+        wxver      = fwidgets.wxVersion()
 
-        coreAttrs = wxgl.GLContextAttrs()
-        coreAttrs.OGLVersion(3, 3)
-        coreAttrs.CoreProfile()
-        coreAttrs.EndList()
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            # Request 3.3 core profile unless caller
+            # has requested an older version.
+            if requestVersion is None or requestVersion >= (3, 3):
+                coreAttrs = wxgl.GLContextAttrs()
+                coreAttrs.OGLVersion(3, 3)
+                coreAttrs.CoreProfile()
+                coreAttrs.EndList()
+                candidates.append({'ctxAttrs' : coreAttrs})
+            # Request compat profile if we
+            # can't request a core profile.
+            compatAttrs = wxgl.GLContextAttrs()
+            compatAttrs.CompatibilityProfile()
+            compatAttrs.EndList()
+            candidates.append({'ctxAttrs' : compatAttrs})
 
-        compatAttrs = wxgl.GLContextAttrs()
-        compatAttrs.CompatibilityProfile()
-        compatAttrs.EndList()
-
-        # Don't request a core profile if
-        # a specific GL version < 3.3 has
-        # been requested.
-        candidates = [{'ctxAttrs' : compatAttrs}, {}]
-        if requestVersion is None or requestVersion >= (3, 3):
-            candidates.insert(0, {'ctxAttrs' : coreAttrs})
+        # Fall back for older wxPython where we
+        # can't use a GLContextAttrs object. In
+        # this case, we get what we're given.
+        candidates.append({})
 
         log.debug('Creating wx.GLContext')
 
-        for i, candidate in enumerate(candidates):
+        for  candidate in candidates:
             if other is not None:
                 ctx = wxgl.GLContext(target, other=other, **candidate)
             else:
                 ctx = wxgl.GLContext(self.__canvas, **candidate)
 
+            if not hasattr(ctx, 'IsOK'):
+                break
             if ctx.IsOK():
                 break
         else:
