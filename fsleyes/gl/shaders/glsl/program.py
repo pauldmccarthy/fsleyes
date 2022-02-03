@@ -177,10 +177,11 @@ class GLSLShader:
         self.indexBuffer = None
         self.nindices    = None
 
-        # The loadAtts/unloadAtts methods set this
-        # flag so we can tell whether attribute/
-        # index buffers have been configured
-        self.attsLoaded = False
+        # The loadAtts/unloadAtts methods add
+        # to this counter to allow re-entrance
+        # (so we don't try to load/unload more
+        # than once).
+        self.attsLoaded = 0
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -233,7 +234,8 @@ class GLSLShader:
 
         Attributes may be set before or after this method is called.
         """
-        if self.attsLoaded:
+        self.attsLoaded += 1
+        if self.attsLoaded > 1:
             return
         if self.vao is not None:
             gl.glBindVertexArray(self.vao)
@@ -260,14 +262,15 @@ class GLSLShader:
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
 
-        self.attsLoaded = True
-
 
     def unloadAtts(self):
         """Disables all vertex attributes, and unbinds associated vertex buffers.
         This is called automatically by :meth:`draw`, so there is no need
         to explicitly call it.
         """
+        self.attsLoaded -= 1
+        if self.attsLoaded > 0:
+            return
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
 
@@ -282,8 +285,6 @@ class GLSLShader:
         if self.vao is not None:
             gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
-
-        self.attsLoaded = False
 
 
     def unload(self):
