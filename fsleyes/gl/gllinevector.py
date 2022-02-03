@@ -136,6 +136,21 @@ class GLLineVector(glvector.GLVector):
         glvector.GLVector.destroy(self)
 
 
+    @property
+    def normalisedLineWidth(self):
+        """Returns the :attr:`.LineVectorOpts.lineWidth`, scaled to be
+        proportional to the same coordinate system that the vector values
+        are defined in (assumed to be scaled voxels, e.g. the FSL coordinate
+        system).
+        """
+        opts      = self.opts
+        canvas    = self.canvas
+        d2p       = opts.getTransform('display', 'pixdim')
+        lineWidth = opts.lineWidth * canvas.pixelSize()[0]
+        lineWidth = affine.transform([lineWidth] * 3, d2p, vector=True)[0]
+        return lineWidth
+
+
     def getDataResolution(self, xax, yax):
         """Overrides :meth:`.GLImageObject.getDataResolution`. Returns a pixel
         resolution suitable for rendering this ``GLLineVector``.
@@ -411,13 +426,7 @@ class GLLineVertices:
 
         # Convert line segments into rectangles so
         # we can draw lines at arbitrary widths.
-        # We need to adjust the line width so that
-        # it is relative to the coord system the
-        # vectors are defined in, which we assume
-        # to be the FSL coordinate system.
-        xform             = opts.getTransform('display', 'pixdim')
-        lineWidth         = opts.lineWidth * canvas.pixelSize()[0]
-        lineWidth         = affine.transform([lineWidth] * 3, xform)[0]
+        lineWidth         = glvec.normalisedLineWidth
         vertices, indices = glroutines.lineAsPolygon(vertices,
                                                      lineWidth,
                                                      zax,

@@ -153,11 +153,12 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
     the corresponding line vertex locations.
     """
 
-    opts   = self.opts
-    shader = self.shader
-    canvas = self.canvas
-    mvpmat = canvas.mvpMatrix
-    v2dMat = opts.getTransform('voxel', 'display')
+    opts      = self.opts
+    shader    = self.shader
+    canvas    = self.canvas
+    lineWidth = self.normalisedLineWidth
+    mvpmat    = canvas.mvpMatrix
+    v2dMat    = opts.getTransform('voxel', 'display')
 
     if bbox: bbox = canvas.viewport
     else:    bbox = None
@@ -198,14 +199,6 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
 
     if xform is None: xform = affine.concat(mvpmat, v2dMat)
     else:             xform = affine.concat(mvpmat, xform, v2dMat)
-
-    # Scale the line width so it is proportional
-    # to the same coordinate system that the
-    # vectors are defined in (assumed to be scaled
-    # voxels, e.g. the FSL coordinate system)
-    d2p       = opts.getTransform('display', 'pixdim')
-    lineWidth = opts.lineWidth * canvas.pixelSize()[0]
-    lineWidth = affine.transform([lineWidth] * 3, d2p)[0]
 
     shader.set(   'camera',          camera)
     shader.set(   'cameraRotation',  rotation)
