@@ -38,7 +38,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 """This module implements a simple GLSL parser, for extracting information
-about a GLSL program.
+about the input variables of a GLSL program. GLSL versions 1.20, 1.50, and
+3.30 are supported.
 
  .. note:: The code in this module is based on work by Nicolas P. Rougier
            (https://github.com/rougier/glsl-parser), which is released under
@@ -47,6 +48,10 @@ about a GLSL program.
 The main entry point to this module is the :func:`parseGLSL` function which,
 given the source code of a GLSL program, parses it and returns information
 about the program.
+
+Only information about globally declared input variables is parsed and
+returned. Interface blocks (section 4.3.7 of the GLSL 3.30 specification)
+are not supported.
 """
 
 
@@ -63,31 +68,6 @@ import fsl.utils.memoize as memoize
 log = logging.getLogger(__name__)
 
 
-KEYWORDS  = ('attribute const uniform varying break continue do for while '
-             'if else '
-             'in out inout '
-             'float int void bool true false '
-             'lowp mediump highp precision invariant  '
-             'discard return '
-             'mat2 mat3 mat4 '
-             'vec2 vec3 vec4 ivec2 ivec3 ivec4 bvec2 bvec3 bvec4 sampler2D '
-             'samplerCube '
-             'struct')
-RESERVED  = ('asm '
-             'class union enum typedef template this packed '
-             'goto switch default '
-             'inline noinline volatile public static extern external '
-             'interface flat long short double half fixed unsigned superp '
-             'input output '
-             'hvec2 hvec3 hvec4 dvec2 dvec3 dvec4 fvec2 fvec3 fvec4 sampler1D '
-             'sampler3D '
-             'sampler1DShadow sampler2DShadow '
-             'sampler2DRect sampler3DRect sampler2DRectShadow '
-             'sizeof cast '
-             'namespace using ')
-PRECISION = 'lowp mediump high'
-STORAGE   = 'const uniform attribute varying'
-
 
 # Tokens
 # ----------------------------------
@@ -103,19 +83,20 @@ END        = pp.Literal(";").suppress()
 INT        = pp.Word(pp.nums)
 FLOAT      = pp.Regex(r'[+-]?(((\d+\.\d*)|(\d*\.\d+))'
                       r'([eE][-+]?\d+)?)|(\d*[eE][+-]?\d+)')
-STORAGE    = pp.Regex('|'.join(STORAGE.split(' ')))
-PRECISION  = pp.Regex('|'.join(PRECISION.split(' ')))
-STRUCT     = pp.Literal("struct").suppress()
+STORAGE    = pp.Regex(r'\b(uniform|attribute|in)\b')
+PRECISION  = pp.Regex(r'\b(lowp|mediump|highp)\b')
 
 
 def getDeclarations(code):
-    """Get all declarations prefixed with a storage qualifier.
+    """Get all global input variable declarations prefixed with a storage
+    qualifier.
 
-    *Code example*
+    A dictionary is returned, containing:
+       - ``'uniform'``   - List of all declared ``uniform`` variables.
+       - ``'attribute'`` - List of all declared  input variables, declared with
+                           either ``attribute`` or ``in``.
 
-    ::
-        uniform lowp vec4 fg_color = vec4(1),
-                          bg_color = vec4(vec3(0),1);
+    Both lists contain``(name, type, size)`` tuples.
     """
 
     # Callable expression
@@ -148,31 +129,28 @@ def getDeclarations(code):
     DECLARATION.ignore(pp.cStyleComment)
 
     decs = {'uniform'   : [],
-            'varying'   : [],
             'attribute' : []}
 
-    for (tokens, start, end) in DECLARATION.scanString(code):
-        for token in tokens.variable:
-
-            if tokens.storage not in decs:
-                log.debug('Skipping declaration with unknown storage '
-                          'qualifier: {}'.format(tokens.storage))
-                continue
+    for (tokens, _, _) in DECLARATION.scanString(code):
+        for _ in tokens.variable:
 
             size = tokens.size.strip()
 
             if size == '':  size = 1
             else:           size = int(size)
 
-            decs[tokens.storage].append((tokens.name, tokens.type, size))
+            if tokens.storage == 'uniform': ttype = 'uniform'
+            else:                           ttype = 'attribute'
+
+            decs[ttype].append((tokens.name, tokens.type, size))
 
     return decs
 
 
 @memoize.memoizeMD5
 def parseGLSL(source):
-    """Parses the given GLSL source, and returns:
-      - The attribute declarations.
+    """Parses the given GLSL source, and returns a dictionary containing
+    all declared ``uniform`` and ``in`` / ``attribute`` variables.
     """
     decs = getDeclarations(source)
     return decs

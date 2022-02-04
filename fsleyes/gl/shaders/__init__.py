@@ -9,7 +9,7 @@ parsing, compiling, and managing OpenGL shader programs. Two types of shader
 program are supported:
 
 
- - GLSL 1.20 vertex and fragment shaders.
+ - GLSL 1.20/1.50/3.30 vertex and fragment shaders.
 
  - ``ARB_vertex_program`` and ``ARB_fragment_program`` shader programs.
 
@@ -33,12 +33,6 @@ shader source code:
 """
 
 
-# Import open from the io module, because it gives
-# us an interface compatible across python 2 and 3
-# (i.e. it allows us to specify the file encoding,
-# and thus allows shader files to contain non-ascii
-# characters).
-from io import                 open
 import os.path              as op
 
 import                         fsleyes
