@@ -116,7 +116,7 @@ class Filter:
         needRecompile = False
 
         if glver >= 2.1:
-            kwargs['texture'] = texture
+            kwargs['tex'] = texture
 
         for name, value in kwargs.items():
             if glver >= 2.1:

@@ -365,7 +365,7 @@ class Texture2D(texture.Texture):
             else:
                 shader = shaders.GLSLShader(vertSrc, fragSrc)
                 with shader.loaded():
-                    shader.set('texture', 0)
+                    shader.set('tex', 0)
             self.__defaultShader = shader
         return self.__defaultShader
 
