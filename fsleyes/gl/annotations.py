@@ -1212,8 +1212,6 @@ class VoxelSelection(AnnotationObject):
         self.__selection = selection
         self.__opts      = opts
         self.__offsets   = offsets
-        self.__shader    = self.__createShader()
-
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
         ndims = texdata.numTextureDims(selection.shape)
@@ -1226,6 +1224,8 @@ class VoxelSelection(AnnotationObject):
             ttype,
             texName,
             selection)
+
+        self.__shader = self.__createShader()
 
         # Call base class init afterwards,
         # as the init function may need to
