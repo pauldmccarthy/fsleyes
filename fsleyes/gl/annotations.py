@@ -1303,7 +1303,7 @@ class VoxelSelection(AnnotationObject):
     def draw2D(self, zpos, axes):
         """Draw a :class:`.VoxelSelection` annotation. """
 
-        shader              = self.shader
+        shader              = self.__shader
         canvas              = self.canvas
         texture             = self.texture
         mvpmat              = canvas.mvpMatrix

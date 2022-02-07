@@ -21,7 +21,7 @@ TEX texValue, {{ varying_texCoord }}, {{ texture_texture }}, 3D;
 # the texture value so that values of 0
 # become less than 0, so we can then use
 # them with the KIL statement.
-MUL texValue.x, texValue.a, -1.0;
+MUL texValue.x, texValue.r, -1.0;
 SGE texValue.x, texValue.x,  0.0;
 MUL texValue.x, texValue.x, -1.0;
 KIL texValue.x;

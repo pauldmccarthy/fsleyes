@@ -94,11 +94,7 @@ class SelectionTexture3D(texture3d.Texture3D, SelectionTextureBase):
         :arg selection: The :class:`.Selection` instance.
         """
 
-        texture3d.Texture3D .__init__(self,
-                                      name,
-                                      nvals=1,
-                                      textureFormat=gl.GL_ALPHA,
-                                      internalFormat=gl.GL_ALPHA8)
+        texture3d.Texture3D .__init__(self, name, nvals=1)
         SelectionTextureBase.__init__(self, selection)
 
 
@@ -127,11 +123,7 @@ class SelectionTexture2D(texture2d.Texture2D, SelectionTextureBase):
         :arg selection: The :class:`.Selection` instance.
         """
 
-        texture2d.Texture2D .__init__(self,
-                                      name,
-                                      nvals=1,
-                                      textureFormat=gl.GL_ALPHA,
-                                      internalFormat=gl.GL_ALPHA8)
+        texture2d.Texture2D .__init__(self, name, nvals=1)
         SelectionTextureBase.__init__(self, selection)
 
 

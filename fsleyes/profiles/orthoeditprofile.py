@@ -513,7 +513,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                   (self.__zcurAnnotation, zannot)]
 
         for annotObj, annotMgr in annots:
-            if annotObj is not None:
+            if annotObj is not None and annotMgr is not None:
                 annotMgr.dequeue(annotObj, hold=True)
                 annotObj.destroy()
 

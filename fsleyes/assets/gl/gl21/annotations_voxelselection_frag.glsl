@@ -17,9 +17,9 @@ void main(void) {
   float texValue;
 
   {% if textureIs2D %}
-  texValue = texture2D(tex, fragTexCoord.xy).a;
+  texValue = texture2D(tex, fragTexCoord.xy).r;
   {% else %}
-  texValue = texture3D(tex, fragTexCoord).a;
+  texValue = texture3D(tex, fragTexCoord).r;
   {% endif %}
 
   if (texValue != 0) {
