@@ -185,9 +185,13 @@ class OrthoCropProfile(orthoviewprofile.OrthoViewProfile):
         self.displayCtx .removeListener('displaySpace',    self.name)
         self            .removeListener('cropBox',         self.name)
 
-        self.__xcanvas.getAnnotations().dequeue(self.__xrect, hold=True)
-        self.__ycanvas.getAnnotations().dequeue(self.__yrect, hold=True)
-        self.__zcanvas.getAnnotations().dequeue(self.__zrect, hold=True)
+        xannot = self.__xcanvas.getAnnotations()
+        yannot = self.__ycanvas.getAnnotations()
+        zannot = self.__zcanvas.getAnnotations()
+
+        if xannot is not None: xannot.dequeue(self.__xrect, hold=True)
+        if yannot is not None: yannot.dequeue(self.__yrect, hold=True)
+        if zannot is not None: zannot.dequeue(self.__zrect, hold=True)
 
         orthoviewprofile.OrthoViewProfile.destroy(self)
 
