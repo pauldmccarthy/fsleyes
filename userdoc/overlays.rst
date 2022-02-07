@@ -283,7 +283,7 @@ The following settings are available for volume overlays:
 
   .. [*] Spline interpolation may not be available if you are using
          FSLeyes over a SSH/X11 connection, in a VNC session, on an
-         older computer, or at a reduced performance setting.
+         older computer.
 
 
 - **Colour map** The colour map defines how voxels are coloured on the
@@ -782,8 +782,7 @@ as spherical harmonic functions.
 
 
 .. [*] Diffusion SH overlays may not be available if you are using FSLeyes
-       over a SSH/X11 connection, in a VNC session, on an older computer, or
-       at a reduced performance setting.
+       over a SSH/X11 connection, in a VNC session, on an older computer.
 
 
 .. sidebar:: Fibre Orientation Distributions (FODs)

@@ -6,8 +6,10 @@
 
    fsleyes.gl.gl14
    fsleyes.gl.gl21
+   fsleyes.gl.gl33
    fsleyes.gl.annotations
    fsleyes.gl.colourbarcanvas
+   fsleyes.gl.extensions
    fsleyes.gl.glcomplex
    fsleyes.gl.glimageobject
    fsleyes.gl.gllabel
@@ -22,6 +24,7 @@
    fsleyes.gl.gltensor
    fsleyes.gl.glvector
    fsleyes.gl.glvolume
+   fsleyes.gl.highdpi
    fsleyes.gl.lightboxcanvas
    fsleyes.gl.offscreencolourbarcanvas
    fsleyes.gl.offscreenlightboxcanvas

@@ -413,10 +413,6 @@ settings panel:
 
  - The **Location cursor colour** can be changed.
 
- - The **Rendering performance** setting allows you to adjust how FSLeyes
-   draws overlays; if you are using an old or low-performance computer, you
-   may wish to choose a lower (faster) performance setting here.
-
  - If you are using a mac with a retina display, you can turn on the **Enable
    high-DPI rendering** option to take full advantage of your display's
    resolution.
