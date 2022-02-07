@@ -137,8 +137,12 @@ class DiagnosticReportAction(base.Action):
         import fsleyes.gl as fslgl
         import OpenGL.GL  as gl
 
-        texsize    = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
-        extensions = gl.glGetString( gl.GL_EXTENSIONS).decode('ascii')
+        texsize = str(gl.glGetInteger(gl.GL_MAX_TEXTURE_SIZE))
+
+        if float(fslgl.GL_COMPATIBILITY) <= 2.1:
+            extensions = gl.glGetString( gl.GL_EXTENSIONS).decode('ascii')
+        else:
+            extensions = 'n/a'
 
         report                  = OrderedDict()
         report['Version']       = fslgl.GL_VERSION
