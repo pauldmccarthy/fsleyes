@@ -183,15 +183,14 @@ def convert120to330(source, shaderType):
     newlines = []
 
     for line in lines:
+        newline = line
         for search, replace in replacements:
-            if search in line:
-                newlines.append(line.replace(search, replace))
+            if search in newline:
+                newline = newline.replace(search, replace)
 
-                # Add new lines immediately after the #version line
-                if shaderType in additions and '#version' in search:
-                    newlines.extend(additions[shaderType])
-                break
-        else:
-            newlines.append(line)
+        newlines.append(newline)
+        # Add new lines immediately after the #version line
+        if shaderType in additions and '#version' in newline:
+            newlines.extend(additions[shaderType])
 
     return '\n'.join(newlines)
