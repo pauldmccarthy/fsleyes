@@ -16,7 +16,8 @@
 
 /*
  * Transformation matrix which transforms voxel
- * coordinates into the display coordinate system.
+ * coordinates into the display coordinate system,
+ * incorporating the MVP transform.
  */
 uniform mat4 voxToDisplayMat;
 
@@ -75,9 +76,7 @@ void main(void) {
      * voxel coordinate system into
      * the display coordinate system.
      */
-    gl_Position = gl_ModelViewProjectionMatrix *
-                  voxToDisplayMat              *
-                  vec4(pos, 1);
+    gl_Position = voxToDisplayMat * vec4(pos, 1);
 
     /*
      * Send the voxel coordinates, vertex radius, and

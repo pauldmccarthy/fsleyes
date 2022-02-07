@@ -1,0 +1,12 @@
+!!ARBfp1.0
+#
+# Fragment program for calculating GLMesh 2D cross sections.
+# Kills the fragment if the distance to the clipping plane
+# is negative.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+KIL {{ varying_clipDistance }};
+MOV result.color, {1, 1, 1, 1};
+END

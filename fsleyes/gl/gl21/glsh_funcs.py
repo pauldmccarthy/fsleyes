@@ -27,15 +27,14 @@ their radius.
 """
 
 
-import numpy                        as np
-import numpy.linalg                 as npla
+import numpy                 as np
+import numpy.linalg          as npla
 
-import OpenGL.GL                    as gl
+import OpenGL.GL             as gl
 
-import OpenGL.GL.ARB.draw_instanced as arbdi
-
-import fsl.transform.affine         as affine
-import fsleyes.gl.shaders           as shaders
+import fsl.transform.affine  as affine
+import fsleyes.gl.shaders    as shaders
+import fsleyes.gl.extensions as glexts
 
 
 def destroy(self):
@@ -98,73 +97,71 @@ def updateShaderState(self):
     colourXform = self.getAuxTextureXform('colour')
     modXform    = self.getAuxTextureXform('modulate')
 
-    shader.load()
+    with shader.loaded():
 
-    changed  = False
-    changed |= shader.set('xFlip',       xFlip)
-    changed |= shader.set('imageShape',  shape)
-    changed |= shader.set('lighting',    opts.lighting)
-    changed |= shader.set('lightPos',    lightPos)
-    changed |= shader.set('nVertices',   self.vertices.shape[0])
-    changed |= shader.set('sizeScaling', opts.size / 100.0)
-    changed |= shader.set('radTexture',  4)
+        changed  = False
+        changed |= shader.set('xFlip',       xFlip)
+        changed |= shader.set('imageShape',  shape)
+        changed |= shader.set('lighting',    opts.lighting)
+        changed |= shader.set('lightPos',    lightPos)
+        changed |= shader.set('nVertices',   self.vertices.shape[0])
+        changed |= shader.set('sizeScaling', opts.size / 100.0)
+        changed |= shader.set('radTexture',  4)
 
-    if self.useVolumeFragShader:
+        if self.useVolumeFragShader:
 
-        voxValXform     = self.colourTexture.voxValXform
-        invVoxValXform  = self.colourTexture.invVoxValXform
-        texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
-        img2CmapXform   = affine.concat(
-            self.cmapTexture.getCoordinateTransform(),
-            voxValXform)
+            voxValXform     = self.colourTexture.voxValXform
+            invVoxValXform  = self.colourTexture.invVoxValXform
+            texZero         = 0.0 * invVoxValXform[0, 0] + invVoxValXform[0, 3]
+            img2CmapXform   = affine.concat(
+                self.cmapTexture.getCoordinateTransform(),
+                voxValXform)
 
-        changed |= shader.set('clipTexture',      1)
-        changed |= shader.set('imageTexture',     2)
-        changed |= shader.set('colourTexture',    3)
-        changed |= shader.set('negColourTexture', 3)
-        changed |= shader.set('img2CmapXform',    img2CmapXform)
-        changed |= shader.set('imageIsClip',      False)
-        changed |= shader.set('useNegCmap',       False)
-        changed |= shader.set('useSpline',        False)
-        changed |= shader.set('clipLow',          clipLow)
-        changed |= shader.set('clipHigh',         clipHigh)
-        changed |= shader.set('texZero',          texZero)
-        changed |= shader.set('invertClip',       False)
-        changed |= shader.set('colourCoordXform', colourXform)
-        changed |= shader.set('clipCoordXform',   clipXform)
+            changed |= shader.set('clipTexture',      1)
+            changed |= shader.set('imageTexture',     2)
+            changed |= shader.set('colourTexture',    3)
+            changed |= shader.set('negColourTexture', 3)
+            changed |= shader.set('img2CmapXform',    img2CmapXform)
+            changed |= shader.set('imageIsClip',      False)
+            changed |= shader.set('useNegCmap',       False)
+            changed |= shader.set('useSpline',        False)
+            changed |= shader.set('clipLow',          clipLow)
+            changed |= shader.set('clipHigh',         clipHigh)
+            changed |= shader.set('texZero',          texZero)
+            changed |= shader.set('invertClip',       False)
+            changed |= shader.set('colourCoordXform', colourXform)
+            changed |= shader.set('clipCoordXform',   clipXform)
 
-    else:
+        else:
 
-        cmapXform            = self.cmapTexture.getCoordinateTransform()
-        colours, colourXform = self.getVectorColours()
+            cmapXform            = self.cmapTexture.getCoordinateTransform()
+            colours, colourXform = self.getVectorColours()
 
-        changed |= shader.set('modulateTexture',  0)
-        changed |= shader.set('clipTexture',      1)
-        changed |= shader.set('cmapTexture',      3)
-        changed |= shader.set('clipLow',          clipLow)
-        changed |= shader.set('clipHigh',         clipHigh)
-        changed |= shader.set('modLow',           modLow)
-        changed |= shader.set('modHigh',          modHigh)
-        changed |= shader.set('modulateMode',     modMode)
-        changed |= shader.set('colourMode',       colourMode)
-        changed |= shader.set('xColour',          colours[0])
-        changed |= shader.set('yColour',          colours[1])
-        changed |= shader.set('zColour',          colours[2])
-        changed |= shader.set('colourXform',      colourXform)
-        changed |= shader.set('cmapXform',        cmapXform)
-        changed |= shader.set('clipCoordXform',   clipXform)
-        changed |= shader.set('modCoordXform',    modXform)
+            changed |= shader.set('modulateTexture',  0)
+            changed |= shader.set('clipTexture',      1)
+            changed |= shader.set('cmapTexture',      3)
+            changed |= shader.set('clipLow',          clipLow)
+            changed |= shader.set('clipHigh',         clipHigh)
+            changed |= shader.set('modLow',           modLow)
+            changed |= shader.set('modHigh',          modHigh)
+            changed |= shader.set('modulateMode',     modMode)
+            changed |= shader.set('colourMode',       colourMode)
+            changed |= shader.set('xColour',          colours[0])
+            changed |= shader.set('yColour',          colours[1])
+            changed |= shader.set('zColour',          colours[2])
+            changed |= shader.set('colourXform',      colourXform)
+            changed |= shader.set('cmapXform',        cmapXform)
+            changed |= shader.set('clipCoordXform',   clipXform)
+            changed |= shader.set('modCoordXform',    modXform)
 
-    shader.setAtt('vertex',   self.vertices)
-    shader.setAtt('vertexID', self.vertIdxs)
-    shader.setIndices(        self.indices)
-
-    shader.unload()
+        shader.setAtt('vertex',   self.vertices)
+        shader.setAtt('vertexID', self.vertIdxs)
+        shader.setIndices(        self.indices)
 
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Called by :meth:`.GLSH.preDraw`. Loads the shader program, and updates
     some shader attributes.
     """
@@ -174,8 +171,7 @@ def preDraw(self, xform=None, bbox=None):
 
     # Calculate a transformation matrix for
     # normal vectors - T(I(MV matrix))
-    # We transpose mvMat because OpenGL is column-major
-    mvMat        = gl.glGetFloatv(gl.GL_MODELVIEW_MATRIX)[:3, :3].T
+    mvMat        = self.canvas.viewMatrix[:3, :3]
     v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
 
     normalMatrix = affine.concat(mvMat, v2dMat)
@@ -189,15 +185,20 @@ def preDraw(self, xform=None, bbox=None):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     """Called by :meth:`.GLSH.draw2D`. Draws the scene. """
 
     opts   = self.opts
     shader = self.shader
-    v2dMat = opts.getTransform('voxel',   'display')
+    canvas = self.canvas
+    mvp    = canvas.mvpMatrix
+    v2dMat = opts.getTransform('voxel', 'display')
 
-    if xform is None: xform = v2dMat
-    else:             xform = affine.concat(v2dMat, xform)
+    if applyBbox: bbox = canvas.viewport
+    else:         bbox = None
+
+    if xform is None: xform = affine.concat(mvp, v2dMat)
+    else:             xform = affine.concat(mvp, xform, v2dMat)
 
     voxels              = self.generateVoxelCoordinates2D(zpos, axes, bbox)
     voxels, radTexShape = self.updateRadTexture(voxels)
@@ -213,22 +214,24 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
     shader.set(   'radTexShape',     radTexShape)
     shader.set(   'radXform',        self.radTexture.voxValXform)
 
-    shader.loadAtts()
-
-    arbdi.glDrawElementsInstancedARB(
-        gl.GL_TRIANGLES, self.nVertices, gl.GL_UNSIGNED_INT, None, len(voxels))
-
-
-def draw3D(self, xform=None, bbox=None):
-    pass
+    with shader.loadedAtts():
+        glexts.glDrawElementsInstanced(gl.GL_TRIANGLES,
+                                       self.nVertices,
+                                       gl.GL_UNSIGNED_INT,
+                                       None,
+                                       len(voxels))
 
 
-def postDraw(self, xform=None, bbox=None):
+def drawAll(self, axes, zposes, xforms):
+    """Draws all of the specified slices. """
+    for zpos, xform in zip(zposes, xforms):
+        draw2D(self, zpos, axes, xform, applyBbox=False)
+
+
+def postDraw(self):
     """Called by :meth:`.GLSH.draw`. Cleans up the shader program and GL
     state.
     """
-
-    self.shader.unloadAtts()
     self.shader.unload()
     gl.glDisable(gl.GL_CULL_FACE)
     gl.glDisable(gl.GL_DEPTH_TEST)

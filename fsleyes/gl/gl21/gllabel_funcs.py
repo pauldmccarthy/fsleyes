@@ -62,35 +62,24 @@ def updateShaderState(self):
     imageShape = np.array(self.image.shape[:3])
     vvx        = self.imageTexture.voxValXform
 
-    shader.load()
-
-    changed  = False
-    changed |= shader.set('numLabels',    opts.lut.max() + 1)
-    changed |= shader.set('imageShape',   imageShape)
-    changed |= shader.set('voxValXform',  vvx)
-    changed |= shader.set('imageTexture', 0)
-    changed |= shader.set('lutTexture',   1)
-
-    shader.unload()
+    with shader.loaded():
+        changed  = False
+        changed |= shader.set('numLabels',    opts.lut.max() + 1)
+        changed |= shader.set('imageShape',   imageShape)
+        changed |= shader.set('voxValXform',  vvx)
+        changed |= shader.set('imageTexture', 0)
+        changed |= shader.set('lutTexture',   1)
 
     return changed
 
 
 def draw2D(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
-    self.shader.load()
-    glvolume_funcs.draw2D(self, *args, **kwargs)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
 def drawAll(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`."""
-    self.shader.load()
-    glvolume_funcs.drawAll(self, *args, **kwargs)
-    self.shader.unloadAtts()
-    self.shader.unload()
-
-
-def draw3D(self, *args, **kwargs):
-    pass
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, *args, **kwargs)

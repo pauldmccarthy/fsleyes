@@ -135,67 +135,57 @@ def updateShaderState(self):
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]
 
-    self.shader.load()
-
-    self.shader.setVertParam('invImageShape', invShape)
-
-    self.shader.unload()
+    with self.shader.loaded():
+        self.shader.setVertParam('invImageShape', invShape)
 
     return True
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Initialises the GL state ready for drawing the :class:`.GLLineVector`.
     """
-    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None, bbox=True):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
-    opts                = self.opts
-    vertices, voxCoords = self.lineVertices.getVertices2D(self,
-                                                          zpos,
-                                                          axes,
-                                                          bbox=bbox)
+    opts   = self.opts
+    canvas = self.canvas
+    shader = self.shader
+    mvpmat = canvas.mvpMatrix
+
+    if bbox: bbox = canvas.viewport
+    else:    bbox = None
+
+    vertices, indices, voxCoords = self.lineVertices.getVertices2D(
+        self, zpos, axes, bbox=bbox)
 
     if vertices.size == 0:
         return
 
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.loadAtts()
-
     v2d = opts.getTransform('voxel', 'display')
 
-    if xform is None: xform = v2d
-    else:             xform = affine.concat(xform, v2d)
+    if xform is None: xform = affine.concat(mvpmat, v2d)
+    else:             xform = affine.concat(mvpmat, xform, v2d)
 
-    gl.glPushMatrix()
-    gl.glMultMatrixf(np.array(xform, dtype=np.float32).ravel('F'))
+    shader.set(   'voxToDisplayMat', xform)
+    shader.setAtt('voxCoord',        voxCoords)
+    shader.setAtt('vertex',          vertices)
+    shader.setIndices(indices)
 
-    gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, vertices.size // 3)
-
-    gl.glPopMatrix()
-
-
-def draw3D(self, xform=None, bbox=None):
-    pass
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+    shader.draw(gl.GL_TRIANGLES)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, axes, xform)
+        draw2D(self, zpos, axes, xform, bbox=False)
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Clears the GL state after drawing the :class:`.GLLineVector`. """
     self.shader.unload()
-    gl.glDisableClientState(gl.GL_VERTEX_ARRAY)

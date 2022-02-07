@@ -1,0 +1,15 @@
+!!ARBvp1.0
+#
+# Vertex program for rendering GLMesh instances in 2D.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+PARAM MVP[4] = {{ param4_MVP }};
+
+# Transform the vertex position into display coordinates
+DP4 result.position.x, MVP[0], {{ attr_vertex }};
+DP4 result.position.y, MVP[1], {{ attr_vertex }};
+DP4 result.position.z, MVP[2], {{ attr_vertex }};
+DP4 result.position.w, MVP[3], {{ attr_vertex }};
+END

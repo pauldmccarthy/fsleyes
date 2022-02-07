@@ -4,6 +4,9 @@
 #
 # Input parameters:
 #
+#    voxToDisplayMAt  - Matrix to transform from voxels into display
+#                       coordinates (incorporating the model-view-
+#                       projection transform).
 #    invImageShape    - (first three components) inverse of image shape
 #    clipCoordXform   - Matrix which transforms image texture coordinates
 #                       into clip image texture coordinates.
@@ -13,6 +16,7 @@
 #                       into modulation image texture coordinates.
 #
 # Input attributes:
+#    vertex    - Line vertices
 #    voxCoord  - Vector voxel coordinates
 #
 # Outputs:
@@ -31,24 +35,25 @@ TEMP colourTexCoord;
 TEMP clipTexCoord;
 TEMP modTexCoord;
 
+PARAM voxToDisplayMat[4]  = {{ param4_voxToDisplayMat  }};
 PARAM invImageShape       = {{ param_invImageShape     }};
 PARAM clipCoordXform[4]   = {{ param4_clipCoordXform   }};
 PARAM colourCoordXform[4] = {{ param4_colourCoordXform }};
 PARAM modCoordXform[4]    = {{ param4_modCoordXform    }};
 
 # Offset the vertex position by its voxel coordinates
-MOV voxCoord, {{ attr_voxCoord }};
-ADD vertexPos, vertex.position, voxCoord;
+MOV voxCoord,  {{ attr_voxCoord }};
+ADD vertexPos, {{ attr_vertex   }}, voxCoord;
 MOV vertexPos.w, 1;
 
 # Transform the vertex position (which is in voxel
 # coordinates) into display coordinates.  It is
 # assumed that a voxel->display transformation has
 # been encoded into the mvp matrix.
-DP4 result.position.x, state.matrix.mvp.row[0], vertexPos;
-DP4 result.position.y, state.matrix.mvp.row[1], vertexPos;
-DP4 result.position.z, state.matrix.mvp.row[2], vertexPos;
-DP4 result.position.w, state.matrix.mvp.row[3], vertexPos;
+DP4 result.position.x, voxToDisplayMat[0], vertexPos;
+DP4 result.position.y, voxToDisplayMat[1], vertexPos;
+DP4 result.position.z, voxToDisplayMat[2], vertexPos;
+DP4 result.position.w, voxToDisplayMat[3], vertexPos;
 
 # Transform the voxel coordinates
 # into vector texture coordinates

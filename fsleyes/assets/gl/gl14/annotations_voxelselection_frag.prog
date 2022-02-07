@@ -1,0 +1,31 @@
+!!ARBfp1.0
+#
+# Fragment shader used by RenderTexture instances which use
+# a depth texture.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+PARAM colour = {{ param_colour }};
+
+TEMP texValue;
+
+{% if textureIs2D %}
+TEX texValue, {{ varying_texCoord }}, {{ texture_texture }}, 2D;
+{% else %}
+TEX texValue, {{ varying_texCoord }}, {{ texture_texture }}, 3D;
+{% endif %}
+
+# We draw regions where the texture has
+# a non-zero value. Here we transform
+# the texture value so that values of 0
+# become less than 0, so we can then use
+# them with the KIL statement.
+MUL texValue.x, texValue.r, -1.0;
+SGE texValue.x, texValue.x,  0.0;
+MUL texValue.x, texValue.x, -1.0;
+KIL texValue.x;
+
+MOV result.color, colour;
+
+END

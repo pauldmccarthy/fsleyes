@@ -6,13 +6,6 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-TEMP colour;
-TEMP depth;
-
-TEX colour,  fragment.texcoord[0], texture[0], 2D;
-TEX depth.x, fragment.texcoord[0], texture[1], 2D;
-
-MOV result.color, colour;
-MOV result.depth, depth.x;
-
+TEX result.color, {{ varying_texCoord }}, {{ texture_colourTexture }}, 2D;
+TEX result.depth, {{ varying_texCoord }}, {{ texture_depthTexture }},  2D;
 END

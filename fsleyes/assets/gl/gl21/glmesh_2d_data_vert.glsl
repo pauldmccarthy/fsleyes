@@ -6,6 +6,8 @@
  */
 #version 120
 
+uniform   mat4  MVP;
+
 attribute vec3  vertex;
 attribute float vertexData;
 attribute float modulateData;
@@ -16,5 +18,5 @@ void main(void) {
 
   fragVertexData   = vertexData;
   fragModulateData = modulateData;
-  gl_Position      = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  gl_Position      = MVP * vec4(vertex, 1);
 }

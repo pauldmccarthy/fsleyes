@@ -1,5 +1,5 @@
 /*
- * OpenGL vertex shader used for rendering GLSH instances, 
+ * OpenGL vertex shader used for rendering GLSH instances,
  * where the FODs are coloured by direction or radius.
  *
  * Most logic is in glsh_vert_common.glsl.
@@ -12,13 +12,14 @@
 #pragma include glsh_vert_common.glsl
 
 /*
- * Transformation matrix which transforms voxel 
- * coordinates into the display coordinate system.
+ * Transformation matrix which transforms voxel
+ * coordinates into the display coordinate system,
+ * incorporating the MVP transform.
  */
 uniform mat4 voxToDisplayMat;
 
 /*
- * Matrices to transform from vector 
+ * Matrices to transform from vector
  * texture coordinates to colour/clip/
  * modulate image texture coordinates.
  */
@@ -50,13 +51,13 @@ varying vec3 fragClipTexCoord;
 varying vec3 fragModTexCoord;
 
 /*
- * Multiplicative colour factor passed through to the 
+ * Multiplicative colour factor passed through to the
  * fragment shader, used for lighting.
  */
 varying vec4 fragColourFactor;
 
 /*
- * Vertex location and radius, passed through to the 
+ * Vertex location and radius, passed through to the
  * fragment shader.
  */
 varying float fragRadius;
@@ -68,16 +69,14 @@ void main(void) {
     vec3  pos    = vertex;
     float radius = adjustPosition(pos);
     vec3  light  = calcLighting(radius);
-  
+
     /*
      * Transform the vertex from the
      * voxel coordinate system into
      * the display coordinate system.
      */
-    gl_Position = gl_ModelViewProjectionMatrix *
-                  voxToDisplayMat              *
-                  vec4(pos, 1);
-  
+    gl_Position = voxToDisplayMat * vec4(pos, 1);
+
     /*
      * Send the voxel coordinates, vertex radius, and
      * the colour scaling factor to the fragment shader.
@@ -85,7 +84,7 @@ void main(void) {
     fragVoxCoord     = floor(voxel + 0.5);
     fragVecTexCoord  = (voxel + 0.5) / imageShape;
     fragClipTexCoord = (clipCoordXform * vec4(fragVecTexCoord, 1)).xyz;
-    fragModTexCoord  = (modCoordXform  * vec4(fragVecTexCoord, 1)).xyz; 
+    fragModTexCoord  = (modCoordXform  * vec4(fragVecTexCoord, 1)).xyz;
     fragColourFactor = vec4(light, 1);
     fragRadius       = radius;
     fragVertex       = vertex * radius;

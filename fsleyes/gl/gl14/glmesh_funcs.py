@@ -7,19 +7,10 @@
 """This module provides functions which are used by the :class:`.GLMesh`
 class to render :class:`.Mesh` overlays in an OpenGL 1.4 compatible
 manner.
-
-An :class:`.ARBPShader` is used to manage the ``glmesh`` vertex/fragment
-programs.
 """
 
 
-import numpy     as np
-import OpenGL.GL as gl
-
-import fsl.transform.affine as affine
-
-import fsleyes.gl.shaders   as shaders
-import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.shaders as shaders
 
 
 def compileShaders(self):
@@ -32,8 +23,6 @@ def compileShaders(self):
         'negCmap' : 1
     }
 
-    shaderDir = shaders.getShaderDir()
-
     if self.threedee:
 
         flatVertSrc = shaders.getVertexShader(  'glmesh_3d_flat')
@@ -42,19 +31,26 @@ def compileShaders(self):
         dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
 
         self.flatShader = shaders.ARBPShader(flatVertSrc,
-                                             flatFragSrc,
-                                             shaderDir)
+                                             flatFragSrc)
         self.dataShader = shaders.ARBPShader(dataVertSrc,
                                              dataFragSrc,
-                                             shaderDir,
                                              textures)
 
     else:
 
-        vertSrc = shaders.getVertexShader(  'glmesh_2d_data')
-        fragSrc = shaders.getFragmentShader('glmesh_2d_data')
+        flatVertSrc    = shaders.getVertexShader(  'glmesh_2d_flat')
+        flatFragSrc    = shaders.getFragmentShader('glmesh_2d_flat')
+        dataVertSrc    = shaders.getVertexShader(  'glmesh_2d_data')
+        dataFragSrc    = shaders.getFragmentShader('glmesh_2d_data')
+        xsectcpVertSrc = shaders.getVertexShader(  'glmesh_2d_crosssection_clipplane')
+        xsectcpFragSrc = shaders.getFragmentShader('glmesh_2d_crosssection_clipplane')
+        xsectblVertSrc = shaders.getVertexShader(  'glmesh_2d_crosssection_blit')
+        xsectblFragSrc = shaders.getFragmentShader('glmesh_2d_crosssection_blit')
 
-        self.dataShader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
+        self.flatShader    = shaders.ARBPShader(flatVertSrc,    flatFragSrc)
+        self.dataShader    = shaders.ARBPShader(dataVertSrc,    dataFragSrc)
+        self.xsectcpShader = shaders.ARBPShader(xsectcpVertSrc, xsectcpFragSrc)
+        self.xsectblShader = shaders.ARBPShader(xsectblVertSrc, xsectblFragSrc)
 
 
 def updateShaderState(self, **kwargs):
@@ -62,9 +58,11 @@ def updateShaderState(self, **kwargs):
     current :class:`.MeshOpts` configuration. This involves setting the
     parameter values used by the shaders.
     """
-    dopts   = self.opts
-    dshader = self.dataShader
-    fshader = self.flatShader
+    dopts      = self.opts
+    dshader    = self.dataShader
+    fshader    = self.flatShader
+    xscpshader = self.xsectcpShader
+    xsblshader = self.xsectblShader
 
     settings = [-1 if     kwargs['useNegCmap'] else 1,
                 -1 if     dopts.invertClipping else 1,
@@ -77,107 +75,38 @@ def updateShaderState(self, **kwargs):
                 kwargs['modOffset'],
                 0]
 
-    dshader.load()
-    dshader.setFragParam('settings',    settings)
-    dshader.setFragParam('clipping',    clipping)
-    dshader.setFragParam('modulate',    modulate)
-    dshader.setFragParam('flatColour',  kwargs['flatColour'])
-    dshader.setFragParam('cmapXform',   kwargs['cmapXform'])
-    dshader.unload()
+    with dshader.loaded():
+        dshader.setFragParam('settings',   settings)
+        dshader.setFragParam('clipping',   clipping)
+        dshader.setFragParam('modulate',   modulate)
+        dshader.setFragParam('flatColour', kwargs['flatColour'])
+        dshader.setFragParam('cmapXform',  kwargs['cmapXform'])
 
-    if self.threedee:
-        fshader.load()
+        if self.threedee:
+            dshader.setIndices(self.indices)
+            dshader.setAtt('vertex', self.vertices)
+            dshader.setAtt('normal', self.normals)
+            vdata = self.getVertexData('vertex')
+            mdata = self.getVertexData('modulate')
+
+            # if modulate data is not set,
+            # we use the vertex data
+            if mdata is None:
+                mdata = vdata
+
+            if vdata is not None: dshader.setAtt('vertexData',   vdata)
+            if mdata is not None: dshader.setAtt('modulateData', mdata)
+
+    with fshader.loaded():
         fshader.setFragParam('colour', kwargs['flatColour'])
-        fshader.unload()
+        if self.threedee:
+            fshader.setAtt('vertex', self.vertices)
+            fshader.setAtt('normal', self.normals)
+            fshader.setIndices(self.indices)
 
-
-def preDraw(self):
-    """Must be called before :func:`draw`. Loads the appropriate shader
-    program.
-    """
-
-    flat = self.opts.vertexData is None
-
-    if flat: shader = self.flatShader
-    else:    shader = self.dataShader
-
-    self.activeShader = shader
-    shader.load()
-
-
-def draw(self,
-         glType,
-         vertices,
-         indices=None,
-         normals=None,
-         vdata=None,
-         mdata=None):
-    """Called for 3D meshes, and :attr:`.MeshOpts.vertexData` is not
-    ``None``. Loads and runs the shader program.
-
-    :arg glType:   The OpenGL primitive type.
-
-    :arg vertices: ``(n, 3)`` array containing the line vertices to draw.
-
-    :arg indices:  Indices into the ``vertices`` array. If not provided,
-                   ``glDrawArrays`` is used.
-
-    :arg normals:  Vertex normals.
-
-    :arg vdata:    ``(n, )`` array containing data for each vertex.
-
-    :arg mdata:    ``(n, )`` array containing alpha modulation data for
-                   each vertex.
-    """
-
-    canvas = self.canvas
-    copts  = canvas.opts
-    shader = self.activeShader
-
-    if normals is not None: shader.setAtt('normal',       normals)
-    if vdata   is not None: shader.setAtt('vertexData',   vdata.reshape(-1, 1))
-    if mdata   is not None: shader.setAtt('modulateData', mdata.reshape(-1, 1))
-
-    if normals is not None:
-
-        # NOTE You are assuming here that the canvas
-        #      view matrix is the GL model view matrix.
-        normalMatrix = self.canvas.viewMatrix[:3, :3]
-        normalMatrix = affine.invert(normalMatrix).T
-        normalMatrix = np.hstack((normalMatrix, np.zeros((3, 1))))
-        shader.setVertParam('normalMatrix', normalMatrix)
-
-    if self.threedee:
-        if not copts.light:
-            lighting = [0, 0, 0, -1]
-        else:
-            lighting = affine.transform(canvas.lightPos, canvas.viewMatrix)
-            lighting = list(lighting) + [1]
-        shader.setFragParam('lighting', lighting)
-
-    shader.loadAtts()
-
-    nvertices = vertices.shape[0]
-    vertices  = vertices.ravel('C')
-
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
-
-        if indices is None:
-            gl.glDrawArrays(glType, 0, nvertices)
-        else:
-            gl.glDrawElements(glType,
-                              indices.shape[0],
-                              gl.GL_UNSIGNED_INT,
-                              indices.ravel('C'))
-
-
-def postDraw(self):
-    """Must be called after :func:`draw`. Unloads shaders, and unbinds
-    textures.
-    """
-
-    shader = self.activeShader
-    shader.unloadAtts()
-    shader.unload()
-    self.activeShader = None
+    if not self.threedee:
+        with xscpshader.loaded():
+            xscpshader.setAtt('vertex', self.vertices)
+            xscpshader.setIndices(      self.indices)
+        with xsblshader.loaded():
+            xsblshader.set('colour', kwargs['flatColour'])

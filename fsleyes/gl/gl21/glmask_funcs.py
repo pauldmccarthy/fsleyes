@@ -55,37 +55,30 @@ def updateShaderState(self):
     imageShape = np.array(self.image.shape[:3])
     vvx        = self.imageTexture.voxValXform
 
-    shader.load()
-
-    changed  = False
-    changed |= shader.set('imageTexture',  0)
-    changed |= shader.set('voxValXform',   vvx)
-    changed |= shader.set('imageShape',    imageShape)
-    changed |= shader.set('useSpline',     opts.interpolation == 'spline')
-    changed |= shader.set('threshold',     self.getThreshold())
-    changed |= shader.set('invert',        opts.invert)
-    changed |= shader.set('colour',        self.getColour())
-
-    shader.unload()
+    with shader.loaded():
+        changed  = False
+        changed |= shader.set('imageTexture',  0)
+        changed |= shader.set('voxValXform',   vvx)
+        changed |= shader.set('imageShape',    imageShape)
+        changed |= shader.set('useSpline',     opts.interpolation == 'spline')
+        changed |= shader.set('threshold',     self.getThreshold())
+        changed |= shader.set('invert',        opts.invert)
+        changed |= shader.set('colour',        self.getColour())
 
     return changed
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl21.glvolume_funcs.draw2D` function.
     """
-    self.shader.load()
-    glvolume_funcs.draw2D(self, zpos, axes, xform, bbox)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, zpos, axes, xform)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all specified slices. Uses the
     :func:`.gl21.glvolume_funcs.drawAll` function.
     """
-    self.shader.load()
-    glvolume_funcs.drawAll(self, axes, zposes, xforms)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, axes, zposes, xforms)

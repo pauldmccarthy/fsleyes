@@ -5,6 +5,10 @@
  */
 #version 120
 
+uniform   mat4 MV;
+uniform   mat4 MVP;
+uniform   mat3 normalmat;
+
 attribute vec3  vertex;
 attribute vec3  normal;
 attribute float vertexData;
@@ -18,9 +22,9 @@ varying   float fragModulateData;
 
 void main(void) {
 
-  fragVertex       = (gl_ModelViewMatrix * vec4(vertex, 1)).xyz;
-  fragNormal       = normalize(gl_NormalMatrix * normal);
+  fragVertex       = (MV * vec4(vertex, 1)).xyz;
+  fragNormal       = normalize(normalmat * normal);
   fragVertexData   = vertexData;
   fragModulateData = modulateData;
-  gl_Position      = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  gl_Position      = MVP * vec4(vertex, 1);
 }

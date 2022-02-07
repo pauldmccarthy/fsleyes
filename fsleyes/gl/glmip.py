@@ -256,23 +256,27 @@ class GLMIP(glimageobject.GLImageObject):
         return self.imageTexture is not None and self.imageTexture.ready()
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Binds textures. """
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
         self.cmapTexture .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls :func:`.gl21.glmip_funcs.draw2D`. """
-        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform, bbox)
+        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform)
 
 
-    def draw3D(self, xform=None, bbox=None):
-        """Does nothing. """
-        pass
+    def drawAll(self, zposes, axes, xforms):
+        """Calls :func:`.gl21.glmip_funcs.draw2D`. """
+        fslgl.glmip_funcs.drawAll(self, zposes, axes, xforms)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
+        """Does nothing - not supported. """
+
+
+    def postDraw(self):
         """Unbinds textures. """
         self.imageTexture  .unbindTexture()
         self.cmapTexture   .unbindTexture()

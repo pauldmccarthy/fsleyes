@@ -1,0 +1,11 @@
+!!ARBfp1.0
+#
+# Fragment shader used by RenderTexture instances which use
+# a depth texture.
+#
+# Author: Paul McCarthy <pauldmccarthy@gmail.com>
+#
+
+PARAM colour = {{ param_colour }};
+MOV result.color, colour;
+END

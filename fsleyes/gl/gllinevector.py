@@ -15,9 +15,10 @@ when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 import logging
 
 import numpy                as np
-
 import fsl.data.dtifit      as dtifit
+import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
 import fsleyes.gl.glvector  as glvector
 
 
@@ -48,6 +49,9 @@ class GLLineVector(glvector.GLVector):
     the rendering environment (GL 1.4 vs GL 2.1), so most of the rendering
     functionality is implemented in the version-specific modules mentioned
     above.
+
+    In both cases, lines are drawn as rectangles (with each rectangle made up
+    of two triangles) , so that they can be drawn at arbitrary widths.
     """
 
 
@@ -132,6 +136,21 @@ class GLLineVector(glvector.GLVector):
         glvector.GLVector.destroy(self)
 
 
+    @property
+    def normalisedLineWidth(self):
+        """Returns the :attr:`.LineVectorOpts.lineWidth`, scaled to be
+        proportional to the same coordinate system that the vector values
+        are defined in (assumed to be scaled voxels, e.g. the FSL coordinate
+        system).
+        """
+        opts      = self.opts
+        canvas    = self.canvas
+        d2p       = opts.getTransform('display', 'pixdim')
+        lineWidth = opts.lineWidth * canvas.pixelSize()[0]
+        lineWidth = affine.transform([lineWidth] * 3, d2p, vector=True)[0]
+        return lineWidth / 2
+
+
     def getDataResolution(self, xax, yax):
         """Overrides :meth:`.GLImageObject.getDataResolution`. Returns a pixel
         resolution suitable for rendering this ``GLLineVector``.
@@ -158,13 +177,13 @@ class GLLineVector(glvector.GLVector):
         return fslgl.gllinevector_funcs.updateShaderState(self)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLVector.preDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``preDraw``
         function.
         """
-        glvector.GLVector.preDraw(self, xform, bbox)
-        fslgl.gllinevector_funcs.preDraw(self, xform, bbox)
+        glvector.GLVector.preDraw(self)
+        fslgl.gllinevector_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -175,10 +194,7 @@ class GLLineVector(glvector.GLVector):
 
 
     def draw3D(self, *args, **kwargs):
-        """Overrides :meth:`.GLObject.draw3D`. Calls the OpenGL
-        version-specific ``draw3D`` function.
-        """
-        fslgl.gllinevector_funcs.draw3D(self, *args, **kwargs)
+        """Does nothing. """
 
 
     def drawAll(self, *args, **kwargs):
@@ -188,13 +204,13 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Calls the base class
         implementation, and then calls the OpenGL version-specific ``postDraw``
         function.
         """
-        glvector.GLVector.postDraw(self, xform, bbox)
-        fslgl.gllinevector_funcs.postDraw(self, xform, bbox)
+        glvector.GLVector.postDraw(self)
+        fslgl.gllinevector_funcs.postDraw(self)
 
 
     def __unitLengthChanged(self, *a):
@@ -342,7 +358,9 @@ class GLLineVertices:
 
             # Scale the vector data by the minimum
             # voxel length, so it is a unit vector
-            # within real world space
+            # within real world space. We're assuming
+            # here that the vectors are defined in
+            # mm (e.g. the FSL coordinate system).
             vertices /= (image.pixdim[:3] / min(image.pixdim[:3]))
 
         # Scale the vectors by the length scaling factor
@@ -374,13 +392,18 @@ class GLLineVertices:
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
 
+        The line vertices are transformed into rectangular polygons, suitable
+        for being drawn with the ``GL_TRIANGLES`` primitive.
+
         This method assumes that the :meth:`refresh` method has already been
         called.
         """
 
-        image    = glvec.image
-        shape    = image.shape[:3]
-        xax, yax = axes[:2]
+        opts   = glvec.opts
+        image  = glvec.image
+        canvas = glvec.canvas
+        shape  = image.shape[:3]
+        zax    = axes[2]
 
         vertices  = self.vertices
         voxCoords = glvec.generateVoxelCoordinates2D(zpos, axes, bbox)
@@ -401,9 +424,21 @@ class GLLineVertices:
         vertices = vertices[coords[0], coords[1], coords[2], :, :]
         vertices = vertices.reshape(-1, 3)
 
+        # Convert line segments into rectangles so
+        # we can draw lines at arbitrary widths.
+        lineWidth         = glvec.normalisedLineWidth
+        vertices, indices = glroutines.lineAsPolygon(vertices,
+                                                     lineWidth,
+                                                     zax,
+                                                     indices=True)
+
         if not vertices.flags['C_CONTIGUOUS']:
             vertices = np.ascontiguousarray(vertices)
 
-        voxCoords = voxCoords.repeat(repeats=2, axis=0)
+        # We are drawing each line with four vertices
+        # (rectangle made of two triangles). So we
+        # need to repeat voxel coordinates for each
+        # vertex.
+        voxCoords = voxCoords.repeat(repeats=4, axis=0)
 
-        return vertices, voxCoords
+        return vertices, indices, voxCoords

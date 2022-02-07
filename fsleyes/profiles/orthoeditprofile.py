@@ -126,7 +126,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """
 
 
-    locationFollowsMouse = props.Boolean(deafult=True)
+    locationFollowsMouse = props.Boolean(default=True)
     """If ``True``, when the user is drawing/erasing/selectiong by clicking and
     dragging with the mouse, the :attr:`.DisplayContext.location` is updated to
     track the mouse.
@@ -386,12 +386,6 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__merge3D     = None
         self.__mergeRadius = None
 
-        # If the view panel performance is not
-        # set to maximum, set the initial
-        # locationFollowsMouse value to False
-        perf = viewPanel.sceneOpts.performance
-        self.locationFollowsMouse = perf == 3
-
         # These property values are cached
         # on a per-overlay basis. When an
         # overlay is re-selected, its values
@@ -519,7 +513,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                   (self.__zcurAnnotation, zannot)]
 
         for annotObj, annotMgr in annots:
-            if annotObj is not None:
+            if annotObj is not None and annotMgr is not None:
                 annotMgr.dequeue(annotObj, hold=True)
                 annotObj.destroy()
 

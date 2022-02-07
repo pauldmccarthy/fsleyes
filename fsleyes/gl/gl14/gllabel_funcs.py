@@ -50,10 +50,7 @@ def compileShaders(self):
         'lutTexture'   : 1,
     }
 
-    self.shader = shaders.ARBPShader(vertSrc,
-                                     fragSrc,
-                                     shaders.getShaderDir(),
-                                     textures)
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, textures)
 
 
 def updateShaderState(self):
@@ -64,37 +61,24 @@ def updateShaderState(self):
 
     opts = self.opts
 
-    self.shader.load()
-
     voxValXform  = self.imageTexture.voxValXform
     voxValXform  = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
     invNumLabels = 1.0 / (opts.lut.max() + 1)
 
-    self.shader.setFragParam('voxValXform',  voxValXform)
-    self.shader.setFragParam('invNumLabels', [invNumLabels, 0, 0, 0])
-
-    self.shader.unload()
+    with self.shader.loaded():
+        self.shader.setFragParam('voxValXform',  voxValXform)
+        self.shader.setFragParam('invNumLabels', [invNumLabels, 0, 0, 0])
 
     return True
 
 
 def draw2D(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`. """
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.draw2D(self, *args, **kwargs)
-    self.shader.unloadAtts()
-    self.shader.unload()
+    with self.shader.loaded():
+        glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
 def drawAll(self, *args, **kwargs):
     """Draws the label overlay in 2D. See :meth:`.GLObject.draw2D`. """
-    self.shader.load()
-    self.shader.loadAtts()
-    glvolume_funcs.drawAll(self, *args, **kwargs)
-    self.shader.unloadAtts()
-    self.shader.unload()
-
-
-def draw3D(self, *args, **kwargs):
-    pass
+    with self.shader.loaded():
+        glvolume_funcs.drawAll(self, *args, **kwargs)

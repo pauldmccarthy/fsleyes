@@ -21,6 +21,7 @@ import fsl.transform.affine as affine
 
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
+import fsleyes.gl.annotations            as annotations
 import fsleyes.gl.text                   as gltext
 import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
@@ -29,7 +30,7 @@ import fsleyes.displaycontext.canvasopts as canvasopts
 log = logging.getLogger(__name__)
 
 
-class Scene3DCanvas(object):
+class Scene3DCanvas:
     """The ``Scene3DCanvas`` is an OpenGL canvas used to draw overlays in a 3D
     view. Currently only ``volume`` and ``mesh`` overlay types are supported.
     """
@@ -40,6 +41,7 @@ class Scene3DCanvas(object):
         self.__opts           = canvasopts.Scene3DCanvasOpts()
         self.__overlayList    = overlayList
         self.__displayCtx     = displayCtx
+        self.__annotations    = annotations.Annotations(self)
         self.__viewMat        = np.eye(4)
         self.__projMat        = np.eye(4)
         self.__invViewProjMat = np.eye(4)
@@ -94,6 +96,9 @@ class Scene3DCanvas(object):
             for lbl in self.__legendLabels:
                 lbl.destroy()
 
+        self.__annotations.destroy()
+
+        self.__annotations  = None
         self.__opts         = None
         self.__displayCtx   = None
         self.__overlayList  = None
@@ -112,6 +117,20 @@ class Scene3DCanvas(object):
         """Returns a reference to the :class:`.Scene3DCanvasOpts` instance.
         """
         return self.__opts
+
+
+    @property
+    def displayCtx(self):
+        """Returns a reference to the :class:`.DisplayContext` for this canvas.
+        """
+        return self.__displayCtx
+
+
+    def getAnnotations(self):
+        """Return the :class:`.Annotations` object, for drawing annotations
+        on this ``Scene3DCanvas``.
+        """
+        return self.__annotations
 
 
     @property
@@ -220,12 +239,18 @@ class Scene3DCanvas(object):
         """Returns the projection matrix. This is an affine matrix which
         converts from normalised device coordinates (NDCs, coordinates between
         -1 and +1) into viewport coordinates. The initial viewport for a
-        :class:`Scene3DCanvas` is configured by the :func:`.routines.ortho`
+        :class:`Scene3DCanvas` is configured by the :func:`.routines.ortho3D`
         function.
 
         See :meth:`__setViewport`.
         """
         return self.__projMat
+
+
+    @property
+    def mvpMatrix(self):
+        """Returns the current model*view*projection matrix. """
+        return affine.concat(self.__projMat, self.__viewMat)
 
 
     @property
@@ -244,6 +269,27 @@ class Scene3DCanvas(object):
         viewport limits of the currently displayed scene.
         """
         return self.__viewport
+
+
+    def pixelSize(self):
+        """Returns the (approximate) size (as a tuple containing
+        ``(width, height)`` of one pixel in the display coordinate system.
+        """
+
+        # The right thing to do would be to transform
+        # a vector by the inverse mvp matrix. But just
+        # using the initial X/Y bounds (before
+        # rotatoin/scaling), then applying the zoom/
+        # scaling factor should work.
+        w, h     = self.GetSize()
+        zoom     = self.viewScale[0, 0]
+        xlo, xhi = self.viewport[0]
+        ylo, yhi = self.viewport[1]
+
+        pw = (xhi - xlo) / zoom / w
+        ph = (yhi - ylo) / zoom / h
+
+        return pw, ph
 
 
     def canvasToWorld(self, xpos, ypos, near=True):
@@ -588,14 +634,16 @@ class Scene3DCanvas(object):
         # where the horizontal axis maps to
         # (-xhalf, xhalf), and the vertical axis
         # maps to (-yhalf, yhalf). See
-        # gl.routines.ortho.
+        # gl.routines.ortho3D.
         offset     = np.array(opts.offset[:] + [0])
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
         offset[0]  = xlen * offset[0] / 2
         offset[1]  = ylen * offset[1] / 2
         offset     = affine.scaleOffsetXform(1, offset)
 
-        # And finally the camera.
+        # And finally the camera. Typically
+        # the Z axis is inferior-superior,
+        # so we want that to be pointing up.
         eye     = list(centre)
         eye[1] += 1
         up      = [0, 0, 1]
@@ -637,17 +685,12 @@ class Scene3DCanvas(object):
 
         # Generate the view and projection matrices
         self.__genViewMatrix(width, height)
-        projmat, viewport     = glroutines.ortho(blo, bhi, width, height, zoom)
+        projmat, viewport     = glroutines.ortho3D(blo, bhi,
+                                                   width, height, zoom)
         self.__projMat        = projmat
         self.__viewport       = viewport
         self.__invViewProjMat = affine.concat(self.__projMat, self.__viewMat)
         self.__invViewProjMat = affine.invert(self.__invViewProjMat)
-
-        gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.__projMat.ravel('F'))
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
 
         return True
 
@@ -661,11 +704,14 @@ class Scene3DCanvas(object):
         if not self._setGLContext():
             return
 
-        opts = self.opts
-        glroutines.clear(opts.bgColour)
+        opts          = self.opts
+        width, height = self.GetScaledSize()
 
         if not self.__setViewport():
             return
+
+        gl.glViewport(0, 0, width, height)
+        glroutines.clear(opts.bgColour)
 
         overlays, globjs = self.getGLObjects()
 
@@ -678,9 +724,25 @@ class Scene3DCanvas(object):
         # which are higher in the list will get
         # drawn above (closer to the screen)
         # than lower ones.
-        depthOffset = affine.scaleOffsetXform(1, [0, 0, 0.1])
-        depthOffset = np.array(depthOffset,    dtype=np.float32, copy=False)
-        xform       = np.array(self.__viewMat, dtype=np.float32, copy=False)
+        if opts.occlusion:
+
+            # The offset is set as a proportion
+            # of the length of the longest axis
+            # in the display bounding box.
+            bounds = self.displayCtx.bounds
+            lens   = [bounds.xlen, bounds.ylen, bounds.zlen]
+            offset = np.max(lens) * 0.01
+
+            # Define the offset vector in view space,
+            # then rotate it into model space (depth
+            # axis is second - see __genViewMatrix)
+            rot   = affine.invert(self.__viewRotate)
+            vec   = affine.transform([0, 1, 0], rot, vector=True)
+            vec   = affine.normalise(vec) * offset
+            xform = affine.scaleOffsetXform(1, vec)
+            xform = np.array(xform, dtype=np.float32, copy=False)
+        else:
+            xform = None
 
         for ovl, globj in zip(overlays, globjs):
 
@@ -691,20 +753,23 @@ class Scene3DCanvas(object):
             if not display.enabled:
                 continue
 
-            if opts.occlusion:
-                xform = affine.concat(depthOffset, xform)
-            elif isinstance(ovl, fslimage.Image):
+            # Clear depth on each overlay
+            # if occlusion is disabled
+            if (not opts.occlusion) and isinstance(ovl, fslimage.Image):
                 gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
-            log.debug('Drawing {} [{}]'.format(ovl, globj))
+            log.debug('Drawing %s [%s]', ovl, globj)
 
-            globj.preDraw( xform=xform)
-            globj.draw3D(  xform=xform)
-            globj.postDraw(xform=xform)
+            globj.preDraw()
+            globj.draw3D(xform=xform)
+            globj.postDraw()
+
+            # Accumulate the depth offset for each overlay
+            if opts.occlusion:
+                xform = affine.concat(xform, xform)
 
         if opts.showCursor:
-            with glroutines.enabled((gl.GL_DEPTH_TEST)):
-                self.__drawCursor()
+            self.__drawCursor()
 
         if opts.showLegend:
             self.__drawLegend()
@@ -712,45 +777,24 @@ class Scene3DCanvas(object):
         if opts.showLight:
             self.__drawLight()
 
-        # Testing click-to-near/far clipping plane transformation
-        if hasattr(self, 'points'):
-            colours = [(1, 0, 0, 1), (0, 0, 1, 1)]
-            gl.glPointSize(5)
-
-            gl.glBegin(gl.GL_LINES)
-            for i, p in enumerate(self.points):
-                gl.glColor4f(*colours[i % 2])
-                p = affine.transform(p, self.viewMatrix)
-                gl.glVertex3f(*p)
-            gl.glEnd()
+        self.getAnnotations().draw3D()
 
 
     def __drawCursor(self):
         """Draws three lines at the current :attr:`.DisplayContext.location`.
         """
 
-        opts = self.opts
-        b    = self.__displayCtx.bounds
-        pos  = opts.pos
+        opts  = self.opts
+        b     = self.__displayCtx.bounds
+        pos   = opts.pos
+        annot = self.getAnnotations()
+        args  = {'colour'    : opts.cursorColour[:3],
+                 'lineWidth' : 1,
+                 'occlusion' : True}
 
-        points = np.array([
-            [pos.x, pos.y, b.zlo],
-            [pos.x, pos.y, b.zhi],
-            [pos.x, b.ylo, pos.z],
-            [pos.x, b.yhi, pos.z],
-            [b.xlo, pos.y, pos.z],
-            [b.xhi, pos.y, pos.z],
-        ], dtype=np.float32)
-        points = affine.transform(points, self.__viewMat)
-        gl.glLineWidth(1)
-
-        r, g, b = opts.cursorColour[:3]
-
-        gl.glColor4f(r, g, b, 1)
-        gl.glBegin(gl.GL_LINES)
-        for p in points:
-            gl.glVertex3f(*p)
-        gl.glEnd()
+        annot.line(pos.x, pos.y, pos.x, pos.y, b.zlo, b.zhi, **args)
+        annot.line(pos.x, b.ylo, pos.x, b.yhi, pos.z, pos.z, **args)
+        annot.line(b.xlo, pos.y, b.xhi, pos.y, pos.z, pos.z, **args)
 
 
     def __drawLegend(self):
@@ -759,6 +803,7 @@ class Scene3DCanvas(object):
         """
 
         copts      = self.opts
+        annot      = self.getAnnotations()
         b          = self.__displayCtx.bounds
         w, h       = self.GetSize()
         xlen, ylen = glroutines.adjust(b.xlen, b.ylen, w, h)
@@ -786,23 +831,22 @@ class Scene3DCanvas(object):
         # to the legend vertices. Offset
         # anatomical labels off each
         # axis line by a small amount.
-        rotation   = affine.decompose(self.__viewMat)[2]
-        xform      = affine.compose(scale, offset, rotation)
-        labelPoses = affine.transform(vertices * 1.2, xform)
-        vertices   = affine.transform(vertices,       xform)
+        rotation   = affine.decompose(self.viewMatrix)[2]
+        labelxform = affine.compose(scale, offset, rotation)
+        linexform  = affine.concat(self.projectionMatrix, labelxform)
+        labelverts = affine.transform(vertices * 1.2, labelxform)
+        lineverts  = affine.transform(vertices,       linexform)
+        kwargs     = {
+            'colour'    : copts.cursorColour[:3],
+            'lineWidth' : 2,
+            'occlusion' : False,
+            'applyMvp'  : False
+        }
 
-        # Draw the legend lines
-        gl.glDisable(gl.GL_DEPTH_TEST)
-        gl.glColor3f(*copts.cursorColour[:3])
-        gl.glLineWidth(2)
-        gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*vertices[0])
-        gl.glVertex3f(*vertices[1])
-        gl.glVertex3f(*vertices[2])
-        gl.glVertex3f(*vertices[3])
-        gl.glVertex3f(*vertices[4])
-        gl.glVertex3f(*vertices[5])
-        gl.glEnd()
+        for i in [0, 2, 4]:
+            x1, y1, z1 = lineverts[i,     :]
+            x2, y2, z2 = lineverts[i + 1, :]
+            annot.line(x1, y1, x2, y2, z1, z2, **kwargs)
 
         canvas = np.array([w, h])
         view   = np.array([xlen, ylen])
@@ -812,81 +856,23 @@ class Scene3DCanvas(object):
 
             # Calculate pixel x/y
             # location for this label
-            xx, xy = canvas * (labelPoses[i, :2] + 0.5 * view) / view
-
+            xx, xy    = canvas * (labelverts[i, :2] + 0.5 * view) / view
             label.pos = (xx, xy)
-
             label.draw(w, h)
 
 
     def __drawLight(self):
         """Draws a representation of the light source. """
 
-        lightPos  = self.lightPos
-        bounds    = self.__displayCtx.bounds
-        centre    = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
-                              bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
-                              bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
-        lightPos  = affine.transform(lightPos, self.__viewMat)
-        centre    = affine.transform(centre,   self.__viewMat)
+        lightPos = self.lightPos
+        annot    = self.getAnnotations()
+        bounds   = self.__displayCtx.bounds
+        centre   = np.array([bounds.xlo + 0.5 * (bounds.xhi - bounds.xlo),
+                             bounds.ylo + 0.5 * (bounds.yhi - bounds.ylo),
+                             bounds.zlo + 0.5 * (bounds.zhi - bounds.zlo)])
 
-        # draw the light as a point
-        gl.glColor4f(1, 1, 0, 1)
-        gl.glPointSize(10)
-        gl.glBegin(gl.GL_POINTS)
-        gl.glVertex3f(*lightPos)
-        gl.glEnd()
+        lx, ly, lz = lightPos
+        cx, cy, cz = centre
 
-        # draw a line  from the light to the
-        # centre of the display bounding box
-        gl.glBegin(gl.GL_LINES)
-        gl.glVertex3f(*lightPos)
-        gl.glVertex3f(*centre)
-        gl.glEnd()
-
-
-    def __drawBoundingBox(self):
-        """Draws a bounding box around all overlays. Used for debugging. """
-        b = self.__displayCtx.bounds
-        xlo, xhi = b.x
-        ylo, yhi = b.y
-        zlo, zhi = b.z
-        xlo += 0.1
-        xhi -= 0.1
-        vertices = np.array([
-            [xlo, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zlo],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zlo],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xlo, yhi, zlo],
-            [xhi, ylo, zlo],
-            [xhi, yhi, zlo],
-            [xlo, ylo, zhi],
-            [xlo, yhi, zhi],
-            [xhi, ylo, zhi],
-            [xhi, yhi, zhi],
-
-            [xlo, ylo, zlo],
-            [xhi, ylo, zlo],
-            [xlo, ylo, zhi],
-            [xhi, ylo, zhi],
-            [xlo, yhi, zlo],
-            [xhi, yhi, zlo],
-            [xlo, yhi, zhi],
-            [xhi, yhi, zhi],
-        ])
-        vertices = affine.transform(vertices, self.__viewMat)
-
-
-        gl.glLineWidth(2)
-        gl.glColor3f(0.5, 0, 0)
-        gl.glBegin(gl.GL_LINES)
-        for v in vertices:
-            gl.glVertex3f(*v)
-        gl.glEnd()
+        annot.point(lx, ly, lz,             colour=(1, 1, 0), lineWidth=3)
+        annot.line( lx, ly, cx, cy, lz, cz, colour=(1, 1, 0))

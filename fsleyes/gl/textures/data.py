@@ -22,11 +22,11 @@ import inspect
 
 import numpy                       as np
 import OpenGL.GL                   as gl
-import OpenGL.extensions           as glexts
 import OpenGL.GL.ARB.texture_float as arbtf
 
 import fsl.utils.memoize           as memoize
 import fsl.transform.affine        as affine
+import fsleyes.gl                  as fslgl
 import fsleyes.gl.routines         as glroutines
 
 
@@ -48,8 +48,12 @@ GL_TYPE_NAMES = {
 
     gl.GL_LUMINANCE8          : 'GL_LUMINANCE8',
     gl.GL_LUMINANCE16         : 'GL_LUMINANCE16',
+
+    # These non-standard types are only
+    # used when OpenGL <= 2.1 is in use,
     arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
     arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
+
     gl.GL_R32F                : 'GL_R32F',
 
     gl.GL_ALPHA8              : 'GL_ALPHA8',
@@ -130,8 +134,8 @@ def canUseFloatTextures(nvals=1):
     # texture_rg extension just provides some
     # nicer/more modern data types, but is not
     # necessary.
-    floatSupported = glexts.hasExtension('GL_ARB_texture_float')
-    rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
+    floatSupported = fslgl.hasExtension('GL_ARB_texture_float')
+    rgSupported    = fslgl.hasExtension('GL_ARB_texture_rg')
 
     if not floatSupported:
         return False, None, None
@@ -180,8 +184,8 @@ def oneChannelFormat(dtype):
     # *instance*, and not a class.
     dtype = _makeInstance(dtype)
 
-    floatSupported = glexts.hasExtension('GL_ARB_texture_float')
-    rgSupported    = glexts.hasExtension('GL_ARB_texture_rg')
+    floatSupported = fslgl.hasExtension('GL_ARB_texture_float')
+    rgSupported    = fslgl.hasExtension('GL_ARB_texture_rg')
     nbits          = dtype.itemsize * 8
 
     if rgSupported:

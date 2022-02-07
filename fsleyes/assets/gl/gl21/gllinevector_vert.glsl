@@ -13,10 +13,19 @@ uniform sampler3D vectorTexture;
 
 /*
  * Transformations between voxel and
- * display coordinate systems.
+ * display coordinate systems, incorporating
+ * the model view projection transform.
  */
-uniform mat4 displayToVoxMat;
 uniform mat4 voxToDisplayMat;
+
+/*
+ * Camera direction vector, and a rotation matrix
+ * which rotates 90 degrees about that vector.
+ * Used to position vertices on the rectangle
+ * that is used to represent each line vector.
+ */
+uniform vec3 camera;
+uniform mat3 cameraRotation;
 
 /*
  * Matrices which transform from vector
@@ -62,6 +71,11 @@ uniform bool directed;
 uniform float lengthScale;
 
 /*
+ * Draw lines this thick.
+ */
+uniform float lineWidth;
+
+/*
  * The current vertex on the current line.
  */
 attribute vec3 voxel;
@@ -84,6 +98,8 @@ void main(void) {
 
   vec3 texCoord;
   vec3 vector;
+  vec3 vertex;
+  vec3 offset;
   vec3 voxCoord;
 
   /*
@@ -126,15 +142,35 @@ void main(void) {
     return;
   }
 
-  vector *= lengthScale;
+  /*
+   * Project the vector onto the viewing plane,
+   * so we can figure out an offset to position
+   * the rectangle corners (so the rectangle
+   * corners are 90 degrees).
+   */
+  vertex = vector * lengthScale;
+  vector = vector - (camera * dot(vector, camera));
+  offset = normalize(cameraRotation * vector) * lineWidth / 2;
 
   /*
-   * Vertices are coming in as line pairs - flip
-   * every second vertex about the origin
+   * Vertices are coming in as corners of
+   * the line rectangle, identified by the
+   * vertesxID.  Flip/offset vertices
+   * depending on which corner we are at.
    */
-  if (mod(vertexID, 2) == 1) {
-    if (directed) vector = vec3(0, 0, 0);
-    else          vector = -vector;
+  if (vertexID == 0) {
+    vertex = vertex - offset;
+  }
+  else if (vertexID == 1) {
+    vertex = vertex + offset;
+  }
+  else if (vertexID == 2) {
+    if (directed) vertex = -offset;
+    else          vertex = -vertex - offset;
+  }
+  else if (vertexID == 3) {
+    if (directed) vertex =  offset;
+    else          vertex = -vertex + offset;
   }
 
   /*
@@ -142,9 +178,7 @@ void main(void) {
    * the voxel coordinates by the vector values,
    * and transform back to display coordinates
    */
-  gl_Position = gl_ModelViewProjectionMatrix *
-                voxToDisplayMat              *
-                vec4(voxCoord + vector, 1);
+  gl_Position = voxToDisplayMat * vec4(voxCoord + vertex, 1);
 
   fragVoxCoord     = voxCoord;
   fragVecTexCoord  = texCoord;

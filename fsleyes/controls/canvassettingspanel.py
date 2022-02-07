@@ -121,11 +121,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('bgColour',     props.Widget('bgColour')),
             ('fgColour',     props.Widget('fgColour')),
             ('cursorColour', props.Widget('cursorColour')),
-            ('performance',
-             props.Widget('performance',
-                          spin=False,
-                          showLimits=False,
-                          labels=strings.choices['SceneOpts.performance'])),
             ('highDpi', props.Widget('highDpi')),
             ('showColourBar', props.Widget('showColourBar')),
             ('colourBarLabelSide',
@@ -212,7 +207,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             panelProps = scene3dOptsProps
 
             # We hide some options in 3D
-            sceneOptsProps .pop('performance')
             displayCtxProps.pop('displaySpace')
             displayCtxProps.pop('radioOrientation')
 

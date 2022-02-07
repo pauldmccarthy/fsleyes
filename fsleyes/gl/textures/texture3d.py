@@ -12,12 +12,12 @@
 import logging
 import platform
 
-import numpy          as np
-import OpenGL.GL      as gl
+import numpy     as np
+import OpenGL.GL as gl
 
-import fsl.data.utils as dutils
-
-from . import            texture
+import fsl.data.utils              as dutils
+import fsleyes.gl                  as fslgl
+import fsleyes.gl.textures.texture as texture
 
 
 log = logging.getLogger(__name__)
@@ -139,12 +139,11 @@ class Texture3D(texture.Texture):
             # the texture data if we don't generate
             # mipmaps. But generating mipmaps can be
             # very slow, so we only enable it on macOS
-            if platform.system() == 'Darwin': mipmap = gl.GL_TRUE
-            else:                             mipmap = gl.GL_FALSE
-
-            gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                               gl.GL_GENERATE_MIPMAP,
-                               mipmap)
+            if platform.system() == 'Darwin' and \
+               float(fslgl.GL_COMPATIBILITY) <= 2.1:
+                gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                   gl.GL_GENERATE_MIPMAP,
+                                   gl.GL_TRUE)
 
             # create the texture according to
             # the format determined by the

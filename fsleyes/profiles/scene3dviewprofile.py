@@ -275,20 +275,26 @@ class Scene3DViewProfile(profiles.Profile):
                                        tex.textureType,
                                        None)
 
-            # Get the mouse coords, and transform
+            # Get the mouse coords, convert them into
+            # texture indices (the texture may not have
+            # the same size as the canvas) and transform
             # them into normalised device coordinates
             # (NDCs, in the range [0, 1] - see
             # Volume3DOpts.calculateRayCastSettings),
-            x, y = mousePos
-            w, h = canvas.GetSize()
+            x, y   = mousePos
+            w, h   = canvas.GetSize()
+            tw, th = tex.shape
+            x      = x / w
+            y      = y / h
+            tx     = int(round(x * tw))
+            ty     = int(round(y * th))
 
-            # The depth texure is stored as uint32,
+            # The depth texure data is stored as uint32,
             # but represents floating point values in
-            # the range [0, 1].
-            buf = np.frombuffer(buf, dtype=tex.dtype).reshape(h, w)
-            z   = buf[y, x] / 4294967295.0
-            x   = x / w
-            y   = y / h
+            # the range [0, 1]. Also, the texture buffer
+            # axis ordering seems to be flipped.
+            buf = buf.reshape(th, tw)
+            z   = buf[ty, tx] / 4294967295.0
 
             # Transform NDCs into display coordinates
             xyz = affine.transform([x, y, z], screen2Display)

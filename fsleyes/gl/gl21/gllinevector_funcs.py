@@ -34,6 +34,7 @@ import OpenGL.GL           as gl
 
 import fsl.data.constants   as constants
 import fsl.transform.affine as affine
+import fsleyes.gl.routines  as glroutines
 from . import                  glvector_funcs
 
 
@@ -99,11 +100,8 @@ def updateShaderState(self):
     """
 
     shader = self.shader
-    shader.load()
-
-    changed     = glvector_funcs.updateShaderState(self)
-    image       = self.vectorImage
-    opts        = self.opts
+    image  = self.vectorImage
+    opts   = self.opts
 
     # see comments in gl21/glvector_funcs.py
     if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:
@@ -114,8 +112,6 @@ def updateShaderState(self):
     directed    = opts.directed
     lengthScale = opts.lengthScale / 100.0
     imageDims   = image.pixdim[:3]
-    d2vMat      = opts.getTransform('display', 'voxel')
-    v2dMat      = opts.getTransform('voxel',   'display')
     xFlip       = opts.orientFlip
 
     # If the unitLength option is on, the vector
@@ -132,67 +128,95 @@ def updateShaderState(self):
         fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
         lengthScale /= fac
 
-    changed |= shader.set('vectorTexture',   4)
-    changed |= shader.set('displayToVoxMat', d2vMat)
-    changed |= shader.set('voxToDisplayMat', v2dMat)
-    changed |= shader.set('voxValXform',     vvxMat)
-    changed |= shader.set('imageDims',       imageDims)
-    changed |= shader.set('directed',        directed)
-    changed |= shader.set('lengthScale',     lengthScale)
-    changed |= shader.set('xFlip',           xFlip)
-
-    shader.unload()
+    with shader.loaded():
+        changed  = glvector_funcs.updateShaderState(self)
+        changed |= shader.set('vectorTexture',   4)
+        changed |= shader.set('voxValXform',     vvxMat)
+        changed |= shader.set('imageDims',       imageDims)
+        changed |= shader.set('directed',        directed)
+        changed |= shader.set('lengthScale',     lengthScale)
+        changed |= shader.set('xFlip',           xFlip)
 
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Prepares the GL state for drawing. This amounts to loading the
     vertex/fragment shader programs.
     """
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None, bbox=True):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
     """
 
-    opts   = self.opts
-    shader = self.shader
-    v2dMat = opts.getTransform('voxel', 'display')
+    opts      = self.opts
+    shader    = self.shader
+    canvas    = self.canvas
+    lineWidth = self.normalisedLineWidth
+    mvpmat    = canvas.mvpMatrix
+    v2dMat    = opts.getTransform('voxel', 'display')
 
-    voxels  = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
-    voxels  = np.repeat(voxels, 2, 0)
-    indices = np.arange(voxels.shape[0], dtype=np.uint32)
+    if bbox: bbox = canvas.viewport
+    else:    bbox = None
 
-    if xform is None: xform = v2dMat
-    else:             xform = affine.concat(xform, v2dMat)
+    # Rotation matrix used to rotate lines
+    # 90 degrees w.r.t. camera angle, so
+    # the shader can position rectangle
+    # corners.
+    camera          = np.zeros(3)
+    camera[axes[2]] = 1
+    rotation        = glroutines.rotate(90, *camera)[:3, :3]
 
+    # The shader is given voxel coordinates, and
+    # generates polygon vertices within each voxel
+    # (lines are drawn as rectangles formed of
+    # two triangles). We do this by passing the
+    # shader each voxel four times (one for each
+    # corner).
+    voxels = self.generateVoxelCoordinates2D(zpos, axes, bbox=bbox)
+
+    # And we also pass it an index 0-3, so it
+    # knows which corner it is working on each time.
+    vertexIds = np.tile(np.arange(4, dtype=np.uint32), voxels.shape[0])
+
+    # We use an index array for small cost savings,
+    # so we only have to repeat voxel coordinates
+    # four times, instead of six. Given four
+    # vertices 0-3, we draw two triangles with
+    # pattern 0 2 3 0 3 1
+    indices        = np.arange(0, voxels.shape[0] * 4, 4, dtype=np.uint32)
+    indices        = indices.repeat(6)
+    indices[1::6] += 2
+    indices[2::6] += 3
+    # leave indices[3::6] referring to vertex 0
+    indices[4::6] += 3
+    indices[5::6] += 1
+    voxels         = np.repeat(voxels, 4, axis=0)
+
+    if xform is None: xform = affine.concat(mvpmat, v2dMat)
+    else:             xform = affine.concat(mvpmat, xform, v2dMat)
+
+    shader.set(   'camera',          camera)
+    shader.set(   'cameraRotation',  rotation)
     shader.set(   'voxToDisplayMat', xform)
-    shader.setAtt('vertexID',        indices)
+    shader.set(   'lineWidth',       lineWidth)
+    shader.setAtt('vertexID',        vertexIds)
     shader.setAtt('voxel',           voxels)
-    shader.loadAtts()
+    shader.setIndices(indices)
+    shader.draw(gl.GL_TRIANGLES)
 
-    gl.glLineWidth(opts.lineWidth)
-    gl.glDrawArrays(gl.GL_LINES, 0, voxels.size // 3)
-
-    shader.unloadAtts()
-
-
-def draw3D(self, xform=None, bbox=None):
-    """Draws the line vectors in 3D space. """
-    pass
 
 
 def drawAll(self, axes, zposes, xforms):
-    """Draws the line vectors at every slice specified by the Z locations. """
-
+    """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        self.draw2D(zpos, axes, xform)
+        draw2D(self, zpos, axes, xform, bbox=False)
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Clears the GL state after drawing. """
     self.shader.unload()

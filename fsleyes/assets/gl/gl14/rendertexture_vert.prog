@@ -6,11 +6,6 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
-DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
-DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
-DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
-
-MOV result.texcoord[0], vertex.texcoord[0];
-
+MOV    result.position,     {{ attr_vertex }};
+MOV {{ varying_texCoord }}, {{ attr_texCoord }};
 END

@@ -41,6 +41,13 @@ def clear(bgColour):
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 
+def textureUnit(number):
+    """Given a GL texture unit number (0, 1, 2, etc), returns the
+    GL identifier (GL_TEXTURE0,  GL_TEXTURE1, GL_TEXTURE2, etc).
+    """
+    return getattr(gl, 'GL_TEXTURE{}'.format(number))
+
+
 @contextlib.contextmanager
 def enabled(capabilities, enable=True):
     """This function can be used as a context manager to temporarily
@@ -125,23 +132,23 @@ def disabled(capabilities):
         yield
 
 
-def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
-    """Configures the OpenGL viewport for 2D othorgraphic display.
+def show2D(xax, yax, lo, hi, flipx=False, flipy=False):
+    """Generates a projection and model view matrix for 2D orthographic
+    display for the given axes and bounds.
 
-    :arg xax:    Index (into ``lo`` and ``hi``) of the axis which
-                 corresponds to the horizontal screen axis.
-    :arg yax:    Index (into ``lo`` and ``hi``) of the axis which
-                 corresponds to the vertical screen axis.
-    :arg width:  Canvas width in pixels.
-    :arg height: Canvas height in pixels.
-    :arg lo:     Tuple containing the mininum ``(x, y, z)`` display
-                 coordinates.
-    :arg hi:     Tuple containing the maxinum ``(x, y, z)`` display
-                 coordinates.
+    :arg xax:   Index (into ``lo`` and ``hi``) of the axis which
+                corresponds to the horizontal screen axis.
+    :arg yax:   Index (into ``lo`` and ``hi``) of the axis which
+                corresponds to the vertical screen axis.
+    :arg lo:    Tuple containing the mininum ``(x, y, z)`` display
+                coordinates.
+    :arg hi:    Tuple containing the maxinum ``(x, y, z)`` display
+                coordinates.
+    :arg flipx: If ``True``, the x axis is inverted.
 
-    :arg flipx:  If ``True``, the x axis is inverted.
+    :arg flipy: If ``True``, the y axis is inverted.
 
-    :arg flipy:  If ``True``, the y axis is inverted.
+    Returns a tuple containing the projection and modelview matrices.
     """
 
     zax = 3 - xax - yax
@@ -150,41 +157,35 @@ def show2D(xax, yax, width, height, lo, hi, flipx=False, flipy=False):
     ymin, ymax = lo[yax], hi[yax]
     zmin, zmax = lo[zax], hi[zax]
 
+    # Expand the Z range so we don't
+    # accidentally clip anything
+    zdist      = max(abs(zmin), abs(zmax))
+    zmin       = -zdist
+    zmax       =  zdist
+
     projmat = np.eye(4, dtype=np.float32)
 
     if flipx: projmat[0, 0] = -1
     if flipy: projmat[1, 1] = -1
 
-    gl.glViewport(0, 0, width, height)
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glLoadMatrixf(projmat)
-
-    zdist = max(abs(zmin), abs(zmax))
-
-    log.debug('Configuring orthographic viewport: '
-              'X: [{} - {}] Y: [{} - {}] Z: [{} - {}]'.format(
-                  xmin, xmax, ymin, ymax, -zdist, zdist))
-
-    gl.glOrtho(xmin, xmax, ymin, ymax, -zdist, zdist)
-
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glLoadIdentity()
+    omat    = ortho2D(xmin, xmax, ymin, ymax, zmin, zmax)
+    projmat = affine.concat(projmat, omat)
 
     # Rotate world space so the displayed slice
     # is visible and correctly oriented
-    # TODO There's got to be a more generic way
-    # to perform this rotation. This will break
-    # if I add functionality allowing the user
-    # to specifty the x/y axes on initialisation.
     if zax == 0:
-        gl.glRotatef(270, 1, 0, 0)
-        gl.glRotatef(270, 0, 0, 1)
+        viewmat = affine.concat(rotate(270, 1, 0, 0),
+                                rotate(270, 0, 0, 1))
     elif zax == 1:
-        gl.glRotatef(270, 1, 0, 0)
+        viewmat = rotate(270, 1, 0, 0)
+    else:
+        viewmat = np.eye(4, dtype=np.float32)
+
+    return projmat, viewmat
 
 
 def lookAt(eye, centre, up):
-    """Replacement for ``gluLookAt`. Creates a transformation matrix which
+    """Replacement for ``gluLookAt``. Creates a transformation matrix which
     transforms the display coordinate system such that a camera at position
     (0, 0, 0), and looking towards (0, 0, -1), will see a scene as if from
     position ``eye``, oriented ``up``, and looking towards ``centre``.
@@ -217,9 +218,47 @@ def lookAt(eye, centre, up):
     return proj
 
 
-def ortho(lo, hi, width, height, zoom):
-    """Generates an orthographic projection matrix. The display coordinate
-    system origin ``(0, 0, 0)`` is mapped to the centre of the clipping space.
+def rotate(degrees, x, y, z):
+    """Replacement for ``glRotatef``. Generates an affine matrix which
+    contains a rotation of degrees around the x,y,z vector.
+    """
+    rads = degrees * np.pi / 180
+    c    = np.cos(rads)
+    s    = np.sin(rads)
+    xf   = np.eye(4, dtype=np.float32)
+
+    xf[0, 0] = x * x * (1 - c) + c
+    xf[0, 1] = x * y * (1 - c) - z * s
+    xf[0, 2] = x * z * (1 - c) + y * s
+    xf[1, 0] = x * y * (1 - c) + z * s
+    xf[1, 1] = y * y * (1 - c) + c
+    xf[1, 2] = y * z * (1 - c) - x * s
+    xf[2, 0] = x * z * (1 - c) - y * s
+    xf[2, 1] = y * z * (1 - c) + x * s
+    xf[2, 2] = z * z * (1 - c) + c
+
+    return xf
+
+
+def ortho2D(xmin, xmax, ymin, ymax, zmin, zmax):
+    """Generates an orthographic projection matrix for 2D views, for the given
+    display bounds. Replacement for the ``glOrtho`` function.
+    """
+    omat       = np.eye(4, dtype=np.float32)
+    omat[0, 0] =  2 / (xmax - xmin)
+    omat[1, 1] =  2 / (ymax - ymin)
+    omat[2, 2] = -2 / (zmax - zmin)
+    omat[0, 3] = -(xmax  + xmin) / (xmax - xmin)
+    omat[1, 3] = -(ymax  + ymin) / (ymax - ymin)
+    omat[2, 3] = -(zmax  + zmin) / (zmax - zmin)
+
+    return omat
+
+
+def ortho3D(lo, hi, width, height, zoom):
+    """Generates an orthographic projection matrix for 3D views. The display
+    coordinate system origin ``(0, 0, 0)`` is mapped to the centre of the
+    clipping space.
 
       - The horizontal axis is scaled to::
           [-(hi[0] - lo[0]) / 2, (hi[0] - lo[0]) / 2]
@@ -1292,11 +1331,8 @@ def unitSphere(res):
               - A ``numpy.uint32`` array of size ``(4 * (res - 1)**2)``
                 containing a list of indices into the vertex array,
                 defining a vertex ordering that can be used to draw
-                the ellipsoid using the OpenGL ``GL_QUAD`` primitive type.
-
-
-    .. todo:: Generate indices to use with ``GL_TRIANGLES`` instead of
-              ``GL_QUADS``.
+                the ellipsoid using the OpenGL ``GL_TRIANGLES`` primitive
+                type.
     """
 
     # All angles to be sampled
@@ -1322,89 +1358,32 @@ def unitSphere(res):
 
     # Generate a list of indices which join the
     # vertices so they can be used to draw the
-    # sphere as GL_QUADs.
+    # sphere as GL_TRIANGLES.
     #
-    # The vertex locations for each quad follow
-    # this pattern:
+    # The vertex locations for each triangle
+    # pair follows this pattern:
     #
     #  1. (u,         v)
-    #  2. (u + ustep, v)
+    #  2. (u,         v + vstep)
     #  3. (u + ustep, v + vstep)
-    #  4. (u,         v + vstep)
-    nquads   = (res - 1) ** 2
-    quadIdxs = np.array([0, res, res + 1, 1], dtype=np.uint32)
+    #  4. (u,         v)
+    #  5. (u + ustep, v + vstep)
+    #  6. (u + ustep, v)
 
-    indices  = np.tile(quadIdxs, nquads)
-    indices += np.arange(nquads,  dtype=np.uint32).repeat(4)
-    indices += np.arange(res - 1, dtype=np.uint32).repeat(4 * (res - 1))
+    # Generate all indices from this template,
+    # which defines indices for one pair of
+    # triangles
+    template = np.array([0, res, res + 1, 0, res + 1, 1], dtype=np.uint32)
+    npairs   = (res - 1) ** 2
+    indices  = np.tile(template, npairs)
+
+    # Add offsets to each template to index
+    # into the appropriate locations in the
+    # vertex array
+    indices += np.arange(npairs,  dtype=np.uint32).repeat(6)
+    indices += np.arange(res - 1, dtype=np.uint32).repeat(6 * (res - 1))
 
     return vertices, indices
-
-
-def fullUnitSphere(res):
-    """Generates a unit sphere in the same way as :func:`unitSphere`, but
-    returns all vertices, instead of the unique vertices and an index array.
-
-    :arg res: Resolution - the number of angles to sample.
-
-    :returns: A ``numpy.float32`` array of size ``(4 * (res - 1)**2, 3)``
-              containing the ``(x, y, z)`` vertices which can be used to draw
-              a unit sphere (using the ``GL_QUADS`` primitive type).
-    """
-
-    u = np.linspace(-np.pi / 2, np.pi / 2, res, dtype=np.float32)
-    v = np.linspace(-np.pi,     np.pi,     res, dtype=np.float32)
-
-    cosu = np.cos(u)
-    cosv = np.cos(v)
-    sinu = np.sin(u)
-    sinv = np.sin(v)
-
-    vertices = np.zeros(((res - 1) * (res - 1) * 4, 3), dtype=np.float32)
-
-    cucv   = np.outer(cosu[:-1], cosv[:-1]).flatten()
-    cusv   = np.outer(cosu[:-1], sinv[:-1]).flatten()
-    cu1cv  = np.outer(cosu[1:],  cosv[:-1]).flatten()
-    cu1sv  = np.outer(cosu[1:],  sinv[:-1]).flatten()
-    cu1cv1 = np.outer(cosu[1:],  cosv[1:]) .flatten()
-    cu1sv1 = np.outer(cosu[1:],  sinv[1:]) .flatten()
-    cucv1  = np.outer(cosu[:-1], cosv[1:]) .flatten()
-    cusv1  = np.outer(cosu[:-1], sinv[1:]) .flatten()
-
-    su     = np.repeat(sinu[:-1], res - 1)
-    s1u    = np.repeat(sinu[1:],  res - 1)
-
-    vertices.T[:,  ::4] = [cucv,   cusv,   su]
-    vertices.T[:, 1::4] = [cu1cv,  cu1sv,  s1u]
-    vertices.T[:, 2::4] = [cu1cv1, cu1sv1, s1u]
-    vertices.T[:, 3::4] = [cucv1,  cusv1,  su]
-
-    return vertices
-
-
-def unitCircle(res, triangles=False):
-    """Generates ``res`` vertices which form a 2D circle, centered at (0, 0),
-    and with radius 1.
-
-    Returns the vertices as a ``numpy.float32`` array of shape ``(res, 2)``
-
-    If the ``triangles`` argument is ``True``, the vertices are generated
-    with the assumption that they will be drawn as a ``GL_TRIANGLE_FAN``.
-    """
-
-    step = (2 * np.pi) / res
-
-    u = np.linspace(-np.pi, np.pi - step, res, dtype=np.float32)
-
-    cosu  = np.cos(u)
-    sinu  = np.sin(u)
-    verts = np.vstack((sinu, cosu)).T
-
-    if triangles:
-        origin = np.zeros((1, 3), dtyp=np.float32)
-        verts  = np.concatenate((origin, verts))
-
-    return verts
 
 
 def polygonIndices(nverts):
@@ -1423,3 +1402,162 @@ def polygonIndices(nverts):
     indices[::3]  = 0
 
     return indices
+
+
+def stackVertices(vertices):
+    """Convenience function to concatenate several arrays of vertices into
+    a single array.
+    """
+    # load all vertex types, and use offsets
+    # to draw each vertex group separately
+    lens     = [len(v) for v in vertices]
+    offsets  = [0] + lens[:-1]
+    vertices = np.vstack(vertices)
+
+    return vertices, lens, offsets
+
+
+def lineAsPolygon(vertices,
+                  width,
+                  axis=None,
+                  camera=None,
+                  mode='segments',
+                  indices=False):
+    """Returns a set of vertices which represent a line between ``start`` and
+    ``end`` and with width ``width``, suitable for drawing with the
+    ``GL_TRIANGLES`` primitive.
+
+    One of the ``axis`` or ``camera`` arguments must be specified - they are
+    used to determine the plane on which the line is being drawn, and
+    therefore how to define the line vertices at the specified width.
+
+    If the line is being drawn on a plane that is perpendicular to one of
+    the display coordinate system axes (the depth axis), then the index
+    of that axis can simply be passed via the ``axis`` argument.
+
+    If the line is being drawn on a plane that is not orthogonal to the
+    display coordinate system, then you must specify the direction that
+    the "camera" is pointing towards, via the ``camera`` argument. This
+    needs to be specified in the same coordinate system as the vertices.
+
+    :arg vertices: A ``(N, 3)`` array containing the line coordinates
+
+    :arg width:    Line width, in units proportional to the coordinate system
+                   that ``vertices`` are defined in.
+
+    :arg axis:     Depth axis, if the line is being drawn on a plane orthogonal
+                   to the display coordinate system.
+
+    :arg camera:   Camera direction vector, if the line is being drawn on an
+                   arbitrary plane. Ignored if ``axis`` is specified.
+
+    :arg mode:     Either ``'segments'`` (the default), or ``'strip'``.
+                   If ``'segments'``, lines are formed from ``vertices[0]``
+                   and ``vertices[1]``, ``vertices[2]`` and ``vertices[3]``,
+                   etc. If ``'strip'``, lines are formed from  ``vertices[0]``
+                   and ``vertices[1]``, ``vertices[1]`` and ``vertices[2]]``,
+                   etc.
+
+    :arg indices:  Defaults to ``False``. If ``True``, four new vertices per
+                   line are returned, one per cornrer, and a set of indices
+                   defining the two triangles to be drawn. If ``False``, six
+                   new vertices per line are returned, defining the vertices
+                   of both triangles.
+
+    :returns:      If ``indices is False``, a ``(n, 3)`` array of vertices,
+                   containing six vertices per input line - each line can
+                   be drawn as a rectangle made up of two triangles.
+
+                   If ``indices is True``, a ``(n, 3)`` array of vertices,
+                   containing four vertices per input line, and a separate
+                   set of ``(m, 3)`` indices defining the triangles to be
+                   drawn.
+    """
+
+    if axis is not None:
+        camera       = np.zeros(3)
+        camera[axis] = 1
+
+    camera   = np.asarray(camera)
+    vertices = np.asarray(vertices)
+
+    rot = rotate(90, *camera)
+
+    # Separate starting vertices from ending
+    # vertices.  Note that, when working with
+    # line segments, we cannot assume that the
+    # segments are ordered in any particular
+    # way, and therefore can't join up adjacent
+    # polygons nicely.
+    if mode == 'segments':
+        nlines = int(vertices.shape[0] / 2)
+        start  = vertices[ ::2]
+        end    = vertices[1::2]
+    elif mode == 'strip':
+        nlines = vertices.shape[0] - 1
+        start  = vertices[ :-1]
+        end    = vertices[1:]
+
+    # Project the line vertices onto the plane
+    # defined by the camera vector, so that we
+    # can define an offset perpendicular to the
+    # line on that plane (which is how we draw
+    # the line as a rectangle of the requested
+    # width).
+    #
+    # https://en.wikipedia.org/wiki/Vector_projection#Vector_projection
+    # https://stackoverflow.com/a/23472188
+    scdot     = (start[:, 0] * camera[0] +
+                 start[:, 1] * camera[1] +
+                 start[:, 2] * camera[2])
+    ecdot     = (end[  :, 0] * camera[0] +
+                 end[  :, 1] * camera[1] +
+                 end[  :, 2] * camera[2])
+    scdot     = np.repeat(scdot.reshape(-1, 1), 3, axis=1)
+    ecdot     = np.repeat(ecdot.reshape(-1, 1), 3, axis=1)
+    projstart = start - scdot * camera
+    projend   = end   - ecdot * camera
+
+    # Now we can rotate the line by 90 degrees
+    # to calculate an offset of the requested
+    # width, and create a rectangular region
+    # representing the line.
+    offset = affine.transform((projend - projstart), rot, vector=True)
+    offset = affine.normalise(offset) * width / 2
+
+    # Each rectangle is drawn with two triangles.
+    #
+    # If indices are requested, we generate
+    # four vertices to describe each line,
+    # and indices such that each line is
+    # described by two triangles using those
+    # four vertices.
+    if indices:
+        nverts            = nlines * 4
+        ntris             = nlines * 2
+        vertices          = np.zeros((nverts, 3), dtype=np.float32)
+        indices           = np.zeros((ntris,  3), dtype=np.uint32)
+        vertices[0::4]    = start - offset
+        vertices[1::4]    = start + offset
+        vertices[2::4]    = end   - offset
+        vertices[3::4]    = end   + offset
+        indices[ 0::2, 0] = np.arange(0, nverts, 4, dtype=np.uint32)
+        indices[ 0::2, 1] = np.arange(2, nverts, 4, dtype=np.uint32)
+        indices[ 0::2, 2] = np.arange(3, nverts, 4, dtype=np.uint32)
+        indices[ 1::2, 0] = indices[ 0::2, 0]
+        indices[ 1::2, 1] = indices[ 0::2, 2]
+        indices[ 1::2, 2] = np.arange(1, nverts, 4, dtype=np.uint32)
+        return vertices, indices
+
+    # If indices are not requested, we generate
+    # six vertices per line, which can be drawn
+    # as two separate triangles.
+    else:
+        vertices       = np.zeros((nlines * 6, 3), dtype=np.float32)
+        vertices[0::6] = start - offset
+        vertices[1::6] = end   - offset
+        vertices[2::6] = end   + offset
+        vertices[3::6] = start - offset
+        vertices[4::6] = end   + offset
+        vertices[5::6] = start + offset
+        return vertices

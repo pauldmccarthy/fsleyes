@@ -80,11 +80,7 @@ def compileShaders(self):
         texes[    'startingTexture'] = 5
         texes[    'depthTexture']    = 6
 
-    self.shader = shaders.ARBPShader(vertSrc,
-                                     fragSrc,
-                                     shaders.getShaderDir(),
-                                     texes,
-                                     constants)
+    self.shader = shaders.ARBPShader(vertSrc, fragSrc, texes, constants)
 
 
 def updateShaderState(self):
@@ -162,11 +158,10 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Prepares to draw a slice from the given :class:`.GLVolume` instance. """
 
     self.shader.load()
-    self.shader.loadAtts()
 
     if isinstance(self, glvolume.GLVolume):
         clipCoordXform = self.getAuxTextureXform('clip')
@@ -175,27 +170,33 @@ def preDraw(self, xform=None, bbox=None):
         self.shader.setVertParam('modCoordXform',  modCoordXform)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws a 2D slice of the image at the given Z location. """
 
-    vertices, voxCoords, texCoords = self.generateVertices2D(
+    shader                 = self.shader
+    bbox                   = self.canvas.viewport
+    projmat                = self.canvas.projectionMatrix
+    viewmat                = self.canvas.viewMatrix
+    vertices, _, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
+    if xform is None: xform = affine.concat(projmat, viewmat)
+    else:             xform = affine.concat(projmat, viewmat, xform)
 
-    vertices = np.array(vertices, dtype=np.float32).ravel('C')
+    vertices = affine.transform(vertices, xform)
+    vertices = np.asarray(vertices, dtype=np.float32).ravel('C')
 
     # Voxel coordinates are calculated
-    # in the vertex program
-    self.shader.setAtt('texCoord', texCoords)
+    # in the vertex program, so we
+    # only pass texCoords and vertices
+    shader.setAtt('texCoord', texCoords)
 
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+    with shader.loadedAtts(), glroutines.enabled((gl.GL_VERTEX_ARRAY)):
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     """Draws the image in 3D on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -203,8 +204,6 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
     opts    = self.opts
     canvas  = self.canvas
@@ -212,21 +211,26 @@ def draw3D(self, xform=None, bbox=None):
     shader  = self.shader
     shape   = self.image.shape
     proj    = canvas.projectionMatrix
+    mvpmat  = canvas.mvpMatrix
+    mvmat   = canvas.viewMatrix
+    bbox    = canvas.viewport
     src     = self.renderTexture1
     dest    = self.renderTexture2
     w, h    = src.shape
 
-    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep, texform               = opts.calculateRayCastSettings(xform, proj)
+    if xform is not None:
+        mvpmat = affine.concat(mvpmat, xform)
+        mvmat  = affine.concat(mvmat,  xform)
+
+    vertices, _, texCoords = self.generateVertices3D(bbox)
+    rayStep, texform       = opts.calculateRayCastSettings(mvmat, proj)
 
     rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(shape))
     texform = affine.concat(
         texform, self.imageTexture.invTexCoordXform(shape))
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
-
+    vertices = affine.transform(vertices, mvpmat)
     vertices = np.array(vertices, dtype=np.float32).ravel('C')
 
     outerLoop  = opts.getNumOuterSteps()
@@ -253,7 +257,8 @@ def draw3D(self, xform=None, bbox=None):
     # Disable blending - we want each
     # loop to replace the contents of
     # the texture, not blend into it!
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
+    with shader.loadedAtts(), \
+         glroutines.enabled((gl.GL_VERTEX_ARRAY)), \
          glroutines.disabled((gl.GL_BLEND)):
 
         # The depth value for a fragment will
@@ -290,11 +295,12 @@ def draw3D(self, xform=None, bbox=None):
 
     gl.glDepthFunc(gl.GL_LESS)
 
-    shader.unloadAtts()
     shader.unload()
 
     self.renderTexture1 = src
     self.renderTexture2 = dest
+    self.drawClipPlanes(xform=xform)
+
 
 
 def drawAll(self, axes, zposes, xforms):
@@ -303,22 +309,26 @@ def drawAll(self, axes, zposes, xforms):
     """
 
     nslices   = len(zposes)
+    shader    = self.shader
+    projmat   = self.canvas.projectionMatrix
+    viewmat   = self.canvas.viewMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     indices   = np.arange(nslices * 6,     dtype=np.uint32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
-        v, vc, tc = self.generateVertices2D(zpos, axes)
+        xform    = affine.concat(projmat, viewmat, xform)
+        v, _, tc = self.generateVertices2D(zpos, axes)
 
         vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         texCoords[i * 6: i * 6 + 6, :] = tc
 
     vertices = vertices.ravel('C')
 
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    with glroutines.enabled((gl.GL_VERTEX_ARRAY)):
+    with shader.loadedAtts(), glroutines.enabled((gl.GL_VERTEX_ARRAY)):
         gl.glVertexPointer(3, gl.GL_FLOAT, 0, vertices)
         gl.glDrawElements(gl.GL_TRIANGLES,
                           nslices * 6,
@@ -326,12 +336,8 @@ def drawAll(self, axes, zposes, xforms):
                           indices)
 
 
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-    self.shader.unloadAtts()
     self.shader.unload()
-
-    if self.threedee:
-        self.drawClipPlanes(xform=xform)

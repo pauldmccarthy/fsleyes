@@ -7,6 +7,10 @@
  */
 #version 120
 
+/*
+ * Vertices are assumed to have already
+ * been transformed by the MVP matrix.
+ */
 attribute vec3 vertex;
 attribute vec3 voxCoord;
 attribute vec3 texCoord;
@@ -31,6 +35,5 @@ void main(void) {
   fragClipTexCoord = (clipCoordXform * vec4(texCoord, 1)).xyz;
   fragModTexCoord  = (modCoordXform  * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(1, 1, 1, 1);
-
-  gl_Position = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  gl_Position      = vec4(vertex, 1);
 }

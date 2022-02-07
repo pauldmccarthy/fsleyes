@@ -584,7 +584,8 @@ def initialise(splash, namespace, callback):
     try:
         # Force the creation of a wx.glcanvas.GLContext object,
         # and initialise OpenGL version-specific module loads.
-        fslgl.getGLContext(ready=realCallback)
+        fslgl.getGLContext(ready=realCallback,
+                           requestVersion=namespace.glversion)
 
     except Exception:
         log.error('Unable to initialise OpenGL!', exc_info=True)
@@ -825,13 +826,6 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
     frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
 
     status.update('Setting up scene...')
-
-    # Set the default SceneOpts.performance
-    # level so that all created SceneOpts
-    # instances will default to it
-    if namespace.performance is not None:
-        fsldisplay.SceneOpts.performance.setAttribute(
-            None, 'default', namespace.performance)
 
     # If a layout has been specified,
     # we load the layout

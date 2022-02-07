@@ -15,5 +15,5 @@ varying   vec2 fragTexCoord;
 void main(void) {
 
   fragTexCoord = texCoord;
-  gl_Position  = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  gl_Position  = vec4(vertex, 1);
 }

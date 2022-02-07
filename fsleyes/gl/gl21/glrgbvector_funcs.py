@@ -62,15 +62,13 @@ def updateShaderState(self):
     opts      = self.opts
     useSpline = opts.interpolation == 'spline'
 
-    self.shader.load()
-    changed = glvector_funcs.updateShaderState(self, useSpline=useSpline)
-    self.shader.unload()
+    with self.shader.loaded():
+        changed = glvector_funcs.updateShaderState(self, useSpline=useSpline)
 
     return changed
 
 
 preDraw  = glvolume_funcs.preDraw
 draw2D   = glvolume_funcs.draw2D
-draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

@@ -226,7 +226,7 @@ OpenGL version.
 
 GL_COMPATIBILITY = None
 """Set in :func:`bootstrap`. String containing the target "major.minor"
-OpenGL compatibility version ("1.4" or "2.1").
+OpenGL compatibility version ("1.4", "2.1", or "3.3").
 """
 
 
@@ -288,6 +288,21 @@ def glIsSoftwareRenderer():
     fastsw = any(('llvmpipe' in renderer, 'svga3d'   in renderer))
 
     return sw and (not fastsw)
+
+
+def hasExtension(ext, glver=None):
+    """Wrapper around ``OpenGL.extensions.hasExtension``. Short-circuits
+    and always returns ``True`` if the OpenGL version in use is >= 3.3.
+
+    If ``glver`` is not provided, it is set to the value of
+    ``GL_COMPATIBILITY``.
+    """
+    if glver is None:
+        glver = float(GL_COMPATIBILITY)
+    if glver >= 3.3:
+        return True
+    import OpenGL.extensions as glexts
+    return glexts.hasExtension(ext)
 
 
 def bootstrap(glVersion=None):
@@ -356,10 +371,11 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import OpenGL.GL         as gl
-    import OpenGL.extensions as glexts
-    from . import               gl14
-    from . import               gl21
+    import OpenGL.GL             as gl
+    import fsleyes.gl.gl14       as gl14
+    import fsleyes.gl.gl21       as gl21
+    import fsleyes.gl.gl33       as gl33
+    import fsleyes.gl.extensions as glexts
 
     thismod = sys.modules[__name__]
 
@@ -377,7 +393,10 @@ def bootstrap(glVersion=None):
     # GL version
     glVersion = major + minor / 10.0
     glpkg     = None
-    if glVersion >= 2.1:
+    if glVersion >= 3.3:
+        verstr = '3.3'
+        glpkg  = gl33
+    elif glVersion >= 2.1:
         verstr = '2.1'
         glpkg  = gl21
     elif glVersion >= 1.4:
@@ -389,14 +408,14 @@ def bootstrap(glVersion=None):
     # The gl21 implementation depends on a
     # few extensions - if they're not present,
     # fall back to the gl14 implementation
-    if glpkg == gl21:
+    if verstr == '2.1':
 
         # List any GL21 extensions here
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_instanced_arrays',
                 'GL_ARB_draw_instanced']
 
-        if not all(map(glexts.hasExtension, exts)):
+        if not all(hasExtension(e, 2.1) for e in exts):
             log.warning('One of these OpenGL extensions is '
                         'not available: [{}]. Falling back '
                         'to an older OpenGL implementation.'
@@ -407,14 +426,14 @@ def bootstrap(glVersion=None):
     # If using GL14, and the ARB_vertex_program
     # and ARB_fragment_program extensions are
     # not present, we're screwed.
-    if glpkg == gl14:
+    if verstr == '1.4':
 
         exts = ['GL_EXT_framebuffer_object',
                 'GL_ARB_vertex_program',
                 'GL_ARB_fragment_program',
                 'GL_ARB_texture_non_power_of_two']
 
-        if not all(map(glexts.hasExtension, exts)):
+        if not all(hasExtension(e, 1.4) for e in exts):
             raise RuntimeError('One of these OpenGL extensions is '
                                'not available: [{}]. This software '
                                'cannot run on the available graphics '
@@ -449,6 +468,9 @@ def bootstrap(glVersion=None):
     thismod.glmip_funcs        = glpkg.glmip_funcs
     thismod._bootstrapped      = True
 
+    # Initialise extensions module.
+    glexts.initialise()
+
     # If we're using a software based renderer,
     # reduce the default performance settings
     if glIsSoftwareRenderer():
@@ -457,7 +479,7 @@ def bootstrap(glVersion=None):
                   'lowering default performance settings.')
 
         import fsleyes.displaycontext as dc
-        dc.SceneOpts.performance.setAttribute(None, 'default', 1)
+        dc.SceneOpts.highDpi = False
 
 
 def getGLContext(**kwargs):
@@ -574,30 +596,36 @@ class GLContext:
                  offscreen=False,
                  other=None,
                  target=None,
+                 requestVersion=None,
                  createApp=False,
                  ready=None,
                  raiseErrors=False):
         """Create a ``GLContext``.
 
-        :arg offscreen:   On-screen or off-screen context?
+        :arg offscreen:      On-screen or off-screen context?
 
-        :arg other:       Another ``GLContext`` instance with which GL state
-                          should be shared.
+        :arg other:          Another ``GLContext`` instance with which GL state
+                             should be shared.
 
-        :arg target:      If ``other`` is not ``None``, this must be a
-                          reference to a ``WXGLCanvasTarget``, the rendering
-                          target for the new context.
+        :arg target:         If ``other`` is not ``None``, this must be a
+                             reference to a ``WXGLCanvasTarget``, the rendering
+                             target for the new context.
 
-        :arg createApp:   If ``True``, and if possible, this ``GLContext`` will
-                          create and run a ``wx.App`` so that it can create a
-                          ``wx.glcanvas.GLContext``.
+        :arg requestVersion: A tuple containing the desired (major, minor)
+                             OpenGL API version to use. If ``None``, the best
+                             possible API version will be used.a floating point
+                             number.
 
-        :arg ready:       Function which will be called when the context has
-                          been created and is ready to use.
+        :arg createApp:      If ``True``, and if possible, this ``GLContext``
+                             will create and run a ``wx.App`` so that it can
+                             create a ``wx.glcanvas.GLContext``.
 
-        :are raiseErrors: Defaults to ``False``. If ``True``, and if the
-                          ``ready`` function raises an error, that error is not
-                          caught.
+        :arg ready:          Function which will be called when the context has
+                             been created and is ready to use.
+
+        :are raiseErrors:    Defaults to ``False``. If ``True``, and if the
+                             ``ready`` function raises an error, that error is
+                             not caught.
         """
 
         def defaultReady():
@@ -613,6 +641,9 @@ class GLContext:
         self.__parent    = None
         self.__buffer    = None
         self.__app       = None
+
+        if requestVersion is not None:
+            requestVersion = tuple(requestVersion)
 
         osmesa     = os.environ.get('PYOPENGL_PLATFORM', None) == 'osmesa'
         canHaveGui = fwidgets.canHaveGui()
@@ -639,7 +670,9 @@ class GLContext:
         # need to create a GL canvas to create
         # another one.
         if other is not None:
-            self.__createWXGLContext(other=other.__context, target=target)
+            self.__createWXGLContext(other=other.__context,
+                                     target=target,
+                                     requestVersion=requestVersion)
             ready()
             return
 
@@ -665,7 +698,7 @@ class GLContext:
 
             app = self.__app
 
-            self.__createWXGLContext()
+            self.__createWXGLContext(requestVersion=requestVersion)
 
             # If we've created and started
             # our own loop, kill it
@@ -822,17 +855,25 @@ class GLContext:
         self.__canvas.Show(True)
 
 
-    def __createWXGLContext(self, other=None, target=None):
+    def __createWXGLContext(self,
+                            other=None,
+                            target=None,
+                            requestVersion=None):
         """Creates a ``wx.glcanvas.GLContext`` object, assigning it to
         an attribute called ``__context``. Assumes that a
         ``wx.glcanvas.GLCanvas`` has already been created.
 
-        :arg other:  Another `wx.glcanvas.GLContext`` instance with which
-                     the new context should share GL state.
+        :arg other:          Another `wx.glcanvas.GLContext`` instance with
+                             which the new context should share GL state.
 
-        :arg target: If ``other`` is not ``None``, this must be a
-                     ``wx.glcanvas.GLCanvas``, the rendering target for the
-                     new context.
+        :arg target:         If ``other`` is not ``None``, this must be a
+                             ``wx.glcanvas.GLCanvas``, the rendering target
+                             for the new context.
+
+        :arg requestVersion: A tuple containing the desired (major, minor)
+                             OpenGL API version to use. If ``None``, the best
+                             possible API version will be used.a floating point
+                             number.
 
         .. warning:: This method *must* be called via the ``wx.MainLoop``.
         """
@@ -840,42 +881,72 @@ class GLContext:
         import                wx
         import wx.glcanvas as wxgl
 
-        # Versions of wxwidgets 3.1 and newer (approximately
-        # corresponding to wxpython 4.1 and newer) allow
-        # us to select a GL compatibility profile (required,
-        # because we rely on GL 1.4/2.1).
+        # Creating a GL context is a pain for various reasons.
         #
-        # This only seems to work with wayland/EGL builds of
-        # wxPython. We assume that gtk3+wxpython>=4.1.1
-        # supports requesting a compatibility profile,
-        # but don't bother for gtk2+older wxpython
-        wxver  = fwidgets.wxVersion()
-        wxplat = fwidgets.wxPlatform()
-        if wxver is not None                               and \
-           fslversion.compareVersions(wxver, '4.1.1') >= 0 and \
-           wxplat in (fwidgets.WX_MAC_COCOA, fwidgets.WX_GTK3):
-            attrs = wxgl.GLContextAttrs()
-            attrs.CompatibilityProfile()
-            attrs.EndList()
-            kwargs = {'ctxAttrs' : attrs}
-        else:
-            kwargs = {}
+        #  1. wxPython only supports requesting core/
+        #     compatiblity profiles from 4.1.1 onwards.
+        #  2. In 4.1.1, the GLContext interface changed
+        #     so that we have to create and pass a
+        #     GLContextAttrs object
+        #  3. Step 2 works on macOS, but on linux only
+        #     seems to work with GTK3/wayland/EGL builds
+        #     of wxpython.
+        #  4. In order to find out whether we can use
+        #     OpenGL 3.3, we have to create a GLContext,
+        #     and check whether it isOK().
+        #
+        # For older/non-GTK3 builds, we can't request a
+        # particular profile, so we create a GLContext
+        # with no arguments, and just hope.
+        candidates = []
+        wxver      = fwidgets.wxVersion()
+
+        if wxver is not None and \
+           fslversion.compareVersions(wxver, '4.1.1') >= 0:
+            # Request 3.3 core profile unless caller
+            # has requested an older version.
+            if requestVersion is None or requestVersion >= (3, 3):
+                coreAttrs = wxgl.GLContextAttrs()
+                coreAttrs.OGLVersion(3, 3)
+                coreAttrs.CoreProfile()
+                coreAttrs.EndList()
+                candidates.append({'ctxAttrs' : coreAttrs})
+            # Request compat profile if we
+            # can't request a core profile.
+            compatAttrs = wxgl.GLContextAttrs()
+            compatAttrs.CompatibilityProfile()
+            compatAttrs.EndList()
+            candidates.append({'ctxAttrs' : compatAttrs})
+
+        # Fall back for older wxPython where we
+        # can't use a GLContextAttrs object. In
+        # this case, we get what we're given.
+        candidates.append({})
 
         log.debug('Creating wx.GLContext')
 
-        if other is not None:
-            self.__context = wxgl.GLContext(target, other=other, **kwargs)
+        for  candidate in candidates:
+            if other is not None:
+                ctx = wxgl.GLContext(target, other=other, **candidate)
+            else:
+                ctx = wxgl.GLContext(self.__canvas, **candidate)
 
+            if not hasattr(ctx, 'IsOK'):
+                break
+            if ctx.IsOK():
+                break
         else:
-            self.__context = wxgl.GLContext(self.__canvas, **kwargs)
+            raise RuntimeError('Cannot create GL context')
 
-            # We can't set the context target
-            # until the dummy canvas is
-            # physically shown on the screen.
-            while not self.__canvas.IsShownOnScreen():
-                wx.GetApp().Yield()
+        self.__context = ctx
 
-            self.__context.SetCurrent(self.__canvas)
+        # We can't set the context target
+        # until the dummy canvas is
+        # physically shown on the screen.
+        while not self.__canvas.IsShownOnScreen():
+            wx.GetApp().Yield()
+
+        self.__context.SetCurrent(self.__canvas)
 
 
     def __createOSMesaContext(self):
@@ -1206,6 +1277,13 @@ class WXGLCanvasTarget:
     def worldToCanvas(self, pos):
         """Convert a location in the display coordinate system into X/Y pixel
         coordinates. Must be provided by subclasses.
+        """
+        raise NotImplementedError()
+
+
+    def pixelSize(self):
+        """Returns the size (width, height) of one pixel in units proportional
+        to the the display coordinate system.
         """
         raise NotImplementedError()
 

@@ -29,6 +29,7 @@ This module also provides a few functions, most importantly
    createGLObject
 """
 
+import contextlib
 import logging
 
 import fsl.utils.notifier as notifier
@@ -265,6 +266,20 @@ class GLObject(notifier.Notifier):
         return self.__canvas
 
 
+    @contextlib.contextmanager
+    def renderTarget(self, target):
+        """Context manager to temporarily set the rendering target to another
+        target, e.g. a :class:`.RenderTexture`.  The given ``target`` will be
+        returned by :meth:`canvas` during the context.
+        """
+        canvas = self.__canvas
+        try:
+            self.__canvas = target
+            yield
+        finally:
+            self.__canvas = canvas
+
+
     @property
     def display(self):
         """The :class:`.Display` instance containing overlay display
@@ -385,22 +400,17 @@ class GLObject(notifier.Notifier):
         raise NotImplementedError()
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """This method is called at the start of a draw routine.
 
         It should perform any initialisation which is required before one or
         more calls to the :meth:`draw2D`/:meth:`draw3D` methods are made, such
         as binding and configuring textures.
-
-        See :meth:`draw2D` for details on the ``xform`` and ``bbox``
-        arguments.  They are only guaranteed to be passed to the ``preDraw``
-        method in scenarios where only a single call to ``draw2D``
-        or``draw3D`` is made between calls to ``preDraw`` and ``postDraw``.
         """
         raise NotImplementedError()
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 2D rendering. It should draw a view of this
         ``GLObject`` - a 2D slice at the given Z location, which specifies
@@ -415,27 +425,17 @@ class GLObject(notifier.Notifier):
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
-
-        :arg bbox:  If provided, defines the bounding box, in the display
-                    coordinate system, which is to be displayed. Can be used
-                    as a performance hint (i.e. to limit the number of things
-                    that are rendered).
         """
         raise NotImplementedError()
 
 
-    def draw3D(self, xform=None, bbox=None):
+    def draw3D(self, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 3D rendering. It should draw a 3D view of this
         ``GLObject``.
 
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
-
-        :arg bbox:  If provided, defines the bounding box, in the display
-                    coordinate system, which is to be displayed. Can be used
-                    as a performance hint (i.e. to limit the number of things
-                    that are rendered).
         """
         raise NotImplementedError()
 
@@ -460,15 +460,12 @@ class GLObject(notifier.Notifier):
             self.draw2D(zpos, axes, xform)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """This method is called after the :meth:`draw2D`/:meth:`draw3D`
         methods have been called one or more times.
 
         It should perform any necessary cleaning up, such as unbinding
         textures.
-
-        See the :meth:`draw2D` method for details on the ``xform`` and
-        ``bbox`` arguments.
         """
         raise NotImplementedError()
 
@@ -489,13 +486,14 @@ class GLSimpleObject(GLObject):
     .. note:: The :attr:`GLObject.overlay`, :attr:`GLObject.display`,
               :attr:`GLObject.opts`, :attr:`GLObject.canvas`,
               :attr:`GLObject.overlayList` and :attr:`GLObject.displayCtx`
-              properties of a ``GLSimpleObject`` are all set to ``None``.
+              properties of a ``GLSimpleObject`` will all potentially be
+              set to ``None``.
     """
 
 
-    def __init__(self, threedee):
+    def __init__(self, canvas, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, None, None, None, None, threedee)
+        GLObject.__init__(self, None, None, None, canvas, threedee)
         self.__destroyed = False
 
 
@@ -518,11 +516,9 @@ class GLSimpleObject(GLObject):
         return self.__destroyed
 
 
-    def preDraw(self, *args, **kwargs):
+    def preDraw(self):
         """Overrides :meth:`GLObject.preDraw`. Does nothing. """
-        pass
 
 
-    def postDraw(self, *args, **kwargs):
+    def postDraw(self):
         """Overrides :meth:`GLObject.postDraw`. Does nothing. """
-        pass

@@ -12,10 +12,12 @@ to loading and running simple filter shader programs, which require a
 
 import collections
 
-import OpenGL.GL          as gl
+import OpenGL.GL            as gl
 
-import fsleyes.gl         as fslgl
-import fsleyes.gl.shaders as shaders
+import fsl.transform.affine as affine
+import fsleyes.gl           as fslgl
+import fsleyes.gl.routines  as glroutines
+import fsleyes.gl.shaders   as shaders
 
 
 GL14_CONSTANTS = collections.defaultdict(dict, {
@@ -31,7 +33,8 @@ recompiled.
 """
 
 
-class Filter(object):
+
+class Filter:
     """A ``Filter`` object encapsulates a shader program which applies some
     sort of image filter to a :class:`.Texture2D`.
 
@@ -66,12 +69,13 @@ class Filter(object):
                          OpenGL 1.4.
         """
 
-        basename        = filterName
-        filterName      = 'filter_{}'.format(filterName)
-        vertSrc         = shaders.getVertexShader( 'filter')
-        fragSrc         = shaders.getFragmentShader(filterName)
-        self.__texture  = texture
-        self.__basename = basename
+        basename           = filterName
+        filterName         = 'filter_{}'.format(filterName)
+        vertSrc            = shaders.getVertexShader( 'filter')
+        fragSrc            = shaders.getFragmentShader(filterName)
+        self.__texture     = texture
+        self.__textureUnit = glroutines.textureUnit(texture)
+        self.__basename    = basename
 
         if float(fslgl.GL_COMPATIBILITY) >= 2.1:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
@@ -80,8 +84,7 @@ class Filter(object):
             self.__shader = shaders.ARBPShader(
                 vertSrc,
                 fragSrc,
-                shaders.getShaderDir(),
-                {'texture' : texture},
+                textureMap={'texture' : texture},
                 constants=constants)
 
 
@@ -113,7 +116,7 @@ class Filter(object):
         needRecompile = False
 
         if glver >= 2.1:
-            kwargs['texture'] = texture
+            kwargs['tex'] = texture
 
         for name, value in kwargs.items():
             if glver >= 2.1:
@@ -140,8 +143,7 @@ class Filter(object):
               ymax,
               xax,
               yax,
-              xform=None,
-              **kwargs):
+              xform=None):
         """Apply the filter to the given ``source`` texture, and render the
         results according to the given bounds.
 
@@ -163,25 +165,21 @@ class Filter(object):
         """
 
         shader    = self.__shader
-        vertices  = source.generateVertices(
-            zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
         texCoords = source.generateTextureCoords()
+        vertices  = source.generateVertices(
+            zpos, xmin, xmax, ymin, ymax, xax, yax)
 
-        shader.load()
-        shader.loadAtts()
-        shader.setAtt('texCoord', texCoords)
+        if xform is not None:
+            vertices = affine.transform(vertices, xform)
 
-        if float(fslgl.GL_COMPATIBILITY) >= 2.1:
-            shader.setAtt('vertex', vertices)
-            source.draw(**kwargs)
-        else:
-            source.draw(vertices=vertices, **kwargs)
-
-        shader.unloadAtts()
-        shader.unload()
+        with source.bound(self.__textureUnit), shader.loaded():
+            shader.setAtt('vertex',   vertices)
+            shader.setAtt('texCoord', texCoords)
+            with shader.loadedAtts():
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
 
 
-    def osApply(self, source, dest, clearDest=True, **kwargs):
+    def osApply(self, source, dest, clearDest=True):
         """Apply the filter to the given ``source`` texture, rendering
         the results to the given ``dest`` texture.
 
@@ -203,4 +201,5 @@ class Filter(object):
                 gl.glClear(gl.GL_COLOR_BUFFER_BIT |
                            gl.GL_DEPTH_BUFFER_BIT |
                            gl.GL_STENCIL_BUFFER_BIT)
-            self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, **kwargs)
+            xform = affine.concat(dest.projectionMatrix, dest.viewMatrix)
+            self.apply(source, 0.5, 0, 1, 0, 1, 0, 1, xform)

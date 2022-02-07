@@ -6,7 +6,7 @@
  */
 #version 120
 
-uniform sampler2D texture;
+uniform sampler2D tex;
 uniform sampler2D mask;
 
 varying vec2 texCoord;
@@ -19,6 +19,6 @@ void main(void) {
     discard;
   }
   else {
-    gl_FragColor = vec4(texture2D(texture, texCoord).rgb, 1);
+    gl_FragColor = vec4(texture2D(tex, texCoord).rgb, 1);
   }
 }

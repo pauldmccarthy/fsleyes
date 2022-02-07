@@ -5,17 +5,15 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`Annotations` class, which implements
-functionality to draw 2D OpenGL annotations on a :class:`.SliceCanvas`.
+functionality to draw annotations (lines, text, etc)
 
 
-The :class:`Annotations` class is used by the :class:`.SliceCanvas` and
-:class:`.LightBoxCanvas` classes, and users of those class, to annotate the
-canvas.
+The :class:`Annotations` class is used by the :class:`.SliceCanvas`,
+:class:`.LightBoxCanvas`, and :class:`.Scene3DCanvas` classes, and users of
+those classes, to annotate the canvas.
 
-
-.. note:: The ``Annotations`` class only works with the :class:`.SliceCanvas`
-          and :class:`.LightBoxCanvas` - there is no support for the
-          :class:`.Scene3DCanvas`.
+Not all annotation types currently support being drawn on a
+:class:`.Scene3DCanvas`.
 
 
 All annotations derive from the :class:`AnnotationObject` base class. The
@@ -42,7 +40,9 @@ import OpenGL.GL   as gl
 
 import fsl.transform.affine     as affine
 import fsleyes_props            as props
+import fsleyes.gl               as fslgl
 import fsleyes.gl.globject      as globject
+import fsleyes.gl.shaders       as shaders
 import fsleyes.gl.routines      as glroutines
 import fsleyes.gl.resources     as glresources
 import fsleyes.gl.textures      as textures
@@ -54,8 +54,8 @@ log = logging.getLogger(__name__)
 
 
 class Annotations(props.HasProperties):
-    """An :class:`Annotations` object provides functionality to draw 2D
-    annotations on a :class:`.SliceCanvas`. Annotations may be enqueued via
+    """An :class:`Annotations` object provides functionality to draw
+    annotations on an OpenGL canvas. Annotations may be enqueued via
     any of the :meth:`line`, :meth:`rect`, :meth:`ellpse`, :meth:`point`,
     :meth:`selection` or :meth:`obj`, methods, and de-queued via the
     :meth:`dequeue` method.
@@ -99,9 +99,9 @@ class Annotations(props.HasProperties):
 
 
     After annotations have been enqueued in one of the above manners, a call
-    to :meth:`draw` will draw each annotation on the canvas, and clear the
-    transient queue. The default value for ``hold`` is ``False``, and ``fixed``
-    is ``True``,
+    to :meth:`draw2D` or :meth:`draw3D` will draw each annotation on the
+    canvas, and clear the transient queue. The default value for ``hold`` is
+    ``False``, and ``fixed`` is ``True``,
 
 
     Annotations can be queued by one of the helper methods on the
@@ -117,25 +117,17 @@ class Annotations(props.HasProperties):
     """
 
 
-    def __init__(self, canvas, xax, yax):
+    def __init__(self, canvas):
         """Creates an :class:`Annotations` object.
 
         :arg canvas: The :class:`.SliceCanvas` that owns this
                      ``Annotations`` object.
-
-        :arg xax:    Index of the display coordinate system axis that
-                     corresponds to the horizontal screen axis.
-
-        :arg yax:    Index of the display coordinate system axis that
-                     corresponds to the vertical screen axis.
         """
 
         self.__transient = []
         self.__fixed     = []
-        self.__xax       = xax
-        self.__yax       = yax
-        self.__zax       = 3 - xax - yax
         self.__canvas    = canvas
+        self.__shader    = None
 
 
     @property
@@ -145,21 +137,34 @@ class Annotations(props.HasProperties):
         return self.__canvas
 
 
-    def setAxes(self, xax, yax):
-        """This method must be called if the display orientation changes.  See
-        :meth:`__init__`.
+    def destroy(self):
+        """Must be called when this :class:`.Annotations` object is no longer
+        needed.
+        """
+        self.clear()
+        if self.__shader is not None:
+            self.__shader.destroy()
+            self.__shader = None
+
+
+    @property
+    def defaultShader(self):
+        """Returns a shader program used by most :class:`AnnotationObject`
+        types.
         """
 
-        self.__xax = xax
-        self.__yax = yax
-        self.__zax = 3 - xax - yax
+        if self.__shader is not None:
+            return self.__shader
 
+        vertSrc = shaders.getVertexShader(  'annotations')
+        fragSrc = shaders.getFragmentShader('annotations')
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            shader = shaders.ARBPShader(vertSrc, fragSrc)
+        else:
+            shader = shaders.GLSLShader(vertSrc, fragSrc)
 
-    def getDisplayBounds(self):
-        """Returns a tuple containing the ``(xmin, xmax, ymin, ymax)`` display
-        bounds of the ``SliceCanvas`` that owns this ``Annotations`` object.
-        """
-        return self.__canvas.opts.displayBounds
+        self.__shader = shader
+        return shader
 
 
     def line(self, *args, **kwargs):
@@ -201,7 +206,6 @@ class Annotations(props.HasProperties):
         hold  = kwargs.pop('hold',  False)
         fixed = kwargs.pop('fixed', True)
         obj   = Ellipse(self, *args, **kwargs)
-
         return self.obj(obj, hold, fixed)
 
 
@@ -216,8 +220,8 @@ class Annotations(props.HasProperties):
 
 
     def text(self, *args, **kwargs):
-        """Queues a text annotation for drawing - see the :class:`Text`
-        class.
+        """Queues a text annotation for drawing - see the
+        :class:`TextAnnotation` class.
         """
         hold  = kwargs.pop('hold',  False)
         fixed = kwargs.pop('fixed', True)
@@ -278,29 +282,23 @@ class Annotations(props.HasProperties):
         self.annotations[:] = []
 
 
-    def draw(self, zpos, xform=None):
+    def draw2D(self, zpos, axes):
         """Draws all enqueued annotations. Fixed annotations are drawn first,
         then persistent, then transient - i.e. transient annotations will
         be drawn on top of persistent, which will be drawn on to of fixed.
 
-        :arg zpos:     Position along the Z axis, above which all annotations
-                       should be drawn.
+        :arg zpos: Position along the Z axis, above which all annotations
+                   should be drawn.
 
-        :arg xform:    Transformation matrix which should be applied to all
-                       objects.
+        :arg axes: Display coordinate system axis mapping to the screen
+                   coordinate system.
         """
 
         objs = (list(self.__fixed)     +
                 list(self.annotations) +
                 list(self.__transient))
 
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPushMatrix()
-            gl.glMultMatrixf(xform.ravel('F'))
-
         drawTime = time.time()
-        axes     = (self.__xax, self.__yax, self.__zax)
 
         for obj in objs:
 
@@ -310,36 +308,44 @@ class Annotations(props.HasProperties):
                 if obj.zmin is not None and zpos < obj.zmin: continue
                 if obj.zmax is not None and zpos > obj.zmax: continue
 
-            if obj.xform is not None:
-                gl.glMatrixMode(gl.GL_MODELVIEW)
-                gl.glPushMatrix()
-                gl.glMultMatrixf(obj.xform.ravel('F'))
+            try:
+                obj.draw2D(zpos, axes)
+            except Exception as e:
+                log.warning(e, exc_info=True)
 
-            if obj.colour is not None:
+        # Clear the transient queue after each draw
+        self.__transient = []
 
-                if len(obj.colour) == 3: colour = list(obj.colour) + [1.0]
-                else:                    colour = list(obj.colour)
 
-                colour[3] = obj.alpha / 100.0
+    def draw3D(self, xform=None):
+        """Draws all enqueued annotations. Fixed annotations are drawn first,
+        then persistent, then transient - i.e. transient annotations will
+        be drawn on top of persistent, which will be drawn on to of fixed.
 
-                gl.glColor4f(*colour)
+        :arg xform:
+        """
 
-            if obj.lineWidth is not None:
-                gl.glLineWidth(obj.lineWidth)
+        objs = (list(self.__fixed)     +
+                list(self.annotations) +
+                list(self.__transient))
+
+        drawTime = time.time()
+
+        for obj in objs:
+
+            if obj.expired(drawTime): continue
+            if not obj.enabled:       continue
+
+            if obj.occlusion:
+                features = [gl.GL_DEPTH_TEST]
+            else:
+                features = []
 
             try:
-                obj.preDraw()
-                obj.draw2D(zpos, axes)
-                obj.postDraw()
+                with glroutines.enabled(features):
+                    obj.draw3D(xform)
             except Exception as e:
-                log.warning('{}'.format(e), exc_info=True)
-
-            if obj.xform is not None:
-                gl.glPopMatrix()
-
-        if xform is not None:
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glPopMatrix()
+                log.warning(e, exc_info=True)
 
         # Clear the transient queue after each draw
         self.__transient = []
@@ -356,8 +362,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     ``enabled``   Whether the annotation should be drawn or not.
     ``lineWidth`` Annotation line width (if the annotation is made up of
                   lines)
-    ``xform``     Custom transformation matrix to apply to annotation
-                  vertices.
     ``expiry``    Time (in seconds) after which the annotation will expire and
                   not be drawn.
     ``zmin``      Minimum z value below which this annotation will not be
@@ -372,7 +376,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     You shouldn't touch the ``expiry`` or ``creation`` attributes though.
 
     Subclasses must, at the very least, override the
-    :meth:`globject.GLObject.draw2D` method.
+    :meth:`globject.GLObject.vertices2D` method.
     """
 
 
@@ -381,7 +385,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
 
     lineWidth = props.Int(default=1, minval=0.1, clamped=True)
-    """Line width, for annotations which are drawn with lines. """
+    """Line width in pixels (approx), for annotations which are drawn with
+    lines. See also the :meth:`normalisedLineWidth` method.
+    """
 
 
     colour = props.Colour(default='#a00000')
@@ -396,36 +402,56 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
     """If True, the :attr:`zmin`/:attr:`zmax` properties are enforced.
     Otherwise (the default) they are ignored, and the annotation is
     always drawn.
+
+    Only relevant when being drawn via :meth:`draw2D`.
     """
 
 
     zmin = props.Real()
-    """Minimum z value below which this annotation will not be drawn. """
+    """Minimum z value below which this annotation will not be drawn.
+    Only relevant when being drawn via :meth:`draw2D`.
+    """
 
 
     zmax = props.Real()
-    """Maximum z value below which this annotation will not be drawn. """
+    """Maximum z value below which this annotation will not be drawn.
+    Only relevant when being drawn via :meth:`draw2D`.
+    """
+
+
+    occlusion = props.Boolean(default=False)
+    """Only relevant when drawing via :meth:`draw3D`. If ``True``,
+    depth testing is enabled.
+    """
+
+
+    applyMvp =  props.Boolean(default=True)
+    """If ``True`` (the default), it is assumed that the annotation coordinates
+    are specified in the display coordinate system, and therefore that they
+    should be transformed by the :meth:`.SliceCanvas.mvpMatrix` (or
+    :meth:`.Scene3DCanvas.mvpMatrix`). If ``False``, it is assumed that the
+    annotation coordinates are in normalised device coordinates.
+    Not honoured by all annotation types.
+    """
 
 
     def __init__(self,
                  annot,
-                 xform=None,
                  colour=None,
                  alpha=None,
                  lineWidth=None,
-                 enabled=True,
+                 enabled=None,
                  expiry=None,
-                 honourZLimits=False,
+                 honourZLimits=None,
                  zmin=None,
                  zmax=None,
+                 occlusion=None,
+                 applyMvp=None,
                  **kwargs):
         """Create an ``AnnotationObject``.
 
         :arg annot:         The :class:`Annotations` object that created this
                             ``AnnotationObject``.
-
-        :arg xform:         Transformation matrix which will be applied to all
-                            vertex coordinates.
 
         :arg colour:        RGB/RGBA tuple specifying the annotation colour.
 
@@ -446,25 +472,34 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         :arg zmax:          Maximum z value above which this annotation should
                             not be drawn.
 
+        :arg occlusion:     Whether to draw with depth testing.
+
+        :arg applyMvp:      Whether to apply the canvas MVP matrix.
+
         Any other arguments are ignored.
         """
-        globject.GLSimpleObject.__init__(self, False)
+        globject.GLSimpleObject.__init__(self, annot.canvas, False)
 
         self.annot    = annot
-        self.xform    = xform
         self.creation = time.time()
         self.expiry   = expiry
 
         if colour        is not None: self.colour        = colour
         if alpha         is not None: self.alpha         = alpha
-        if enabled       is not None: self.enabled       = enabled
         if lineWidth     is not None: self.lineWidth     = lineWidth
+        if enabled       is not None: self.enabled       = enabled
         if honourZLimits is not None: self.honourZLimits = honourZLimits
         if zmin          is not None: self.zmin          = zmin
         if zmax          is not None: self.zmax          = zmax
+        if occlusion     is not None: self.occlusion     = occlusion
+        if applyMvp      is not None: self.applyMvp      = applyMvp
 
-        if self.xform is not None:
-            self.xform = np.array(self.xform, dtype=np.float32)
+
+    def destroy(self):
+        """Must be called when  this ``AnnotationObject`` is no longer needed.
+        The default implementation does nothing, but may be overridden by
+        sub-classes.
+        """
 
 
     def resetExpiry(self):
@@ -480,6 +515,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
 
+        Only relevant for annotations drawn on a :meth:`.SliceCanvas` of an
+        :class:`.OrthoPanel`.
+
         :arg x: X coordinate (in display coordinates).
         :arg y: Y coordinate (in display coordinates).
         """
@@ -491,6 +529,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         an offset relative to the current location. Must be implemented by
         sub-classes, but only those annotations which are drawn by the
         :class:`.OrthoAnnotateProfile`.
+
+        Only relevant for annotations drawn on a :meth:`.SliceCanvas` of an
+        :class:`.OrthoPanel`.
 
         :arg x: X coordinate (in display coordinates).
         :arg y: Y coordinate (in display coordinates).
@@ -510,12 +551,97 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         return (self.creation + self.expiry) < now
 
 
-    def preDraw(self, *args, **kwargs):
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+    @property
+    def normalisedLineWidth(self):
+        """Returns the :attr:`lineWidth`, converted into units proportional to
+        either display coordinates (if :attr:`applyMvp` is ``True``), or
+        normalised device coordinates (if :attr:`applyMvp` is ``False``).
+        """
+
+        pw, ph = self.annot.canvas.pixelSize()
+        cw, ch = self.annot.canvas.GetSize()
+
+        if self.applyMvp:
+            return self.lineWidth * min((pw, ph))
+        else:
+            return self.lineWidth * max((1 / cw, 1 / ch))
 
 
-    def postDraw(self, *args, **kwargs):
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+    def vertices2D(self, zpos, axes):
+        """Must be implemented by sub-classes which rely on the default
+        :meth:`draw2D` implementation. Generates and returns verticws to
+        display this annotation. The exact return type may differ depending
+        on the annotation type.
+        """
+        raise NotImplementedError()
+
+
+    def vertices3D(self):
+        """Must be implemented by sub-classes which rely on the default
+        :meth:`draw3D` implementation. Generates and returns verticws to
+        display this annotation. The exact return type may differ depending
+        on the annotation type.
+        """
+        raise NotImplementedError()
+
+
+    def __draw(self, vertices, xform=None):
+        """Used by the default :meth:`draw2D` and :meth:`draw3D`
+        implementations.
+        """
+        shader = self.annot.defaultShader
+        canvas = self.canvas
+        mvpmat = canvas.mvpMatrix
+        colour = list(self.colour[:3]) + [self.alpha / 100.0]
+
+        if vertices is None or len(vertices) == 0:
+            return
+
+        if not self.applyMvp:
+            mvpmat = np.eye(4, dtype=np.float32)
+
+        if xform is not None:
+            mvpmat = affine.concat(mvpmat, xform)
+
+        # load all vertex types, and use offsets
+        # to draw each vertex group separately
+        primitives              = [v[0] for v in vertices]
+        vertices                = [v[1] for v in vertices]
+        vertices, lens, offsets = glroutines.stackVertices(vertices)
+
+        with shader.loaded():
+            shader.set(   'MVP',    mvpmat)
+            shader.set(   'colour', colour)
+            shader.setAtt('vertex', vertices)
+            with shader.loadedAtts():
+                for prim, length, off in zip(primitives, lens, offsets):
+                    shader.draw(prim, off, length)
+
+
+    def draw2D(self, zpos, axes, xform=None):
+        """Draw this annotation on a 2D plane. This method implements a
+        default routine used by most annotation types - the annotation is
+        drawn using vertices returned by the overridden :meth:`vertices2D`
+        method.
+
+        This method may be overridden by sub-classes which require a different
+        routine.
+        """
+        vertices = self.vertices2D(zpos, axes)
+        self.__draw(vertices, xform)
+
+
+    def draw3D(self, xform=None):
+        """Draw this annotation in 3D. This method implements a
+        default routine used by most annotation types - the annotation is
+        drawn using vertices returned by the overridden :meth:`vertices3D`
+        method.
+
+        This method may be overridden by sub-classes which require a different
+        routine.
+        """
+        vertices = self.vertices3D()
+        self.__draw(vertices, xform)
 
 
 class Point(AnnotationObject):
@@ -525,7 +651,7 @@ class Point(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x, y, *args, **kwargs):
+    def __init__(self, annot, x, y, z=None, **kwargs):
         """Create a ``Point`` annotation.
 
         The ``xy`` coordinate tuple should be in relation to the axes which
@@ -534,43 +660,73 @@ class Point(AnnotationObject):
         :arg annot: The :class:`Annotations` object that owns this ``Point``.
 
         :arg x:     X coordinates of the point
-
         :arg y:     Y coordinates of the point
-
+        :arg z:     Z coordinates, if this ``Point`` is being drawn via
+                    :meth:`draw3D`.
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
         self.x = x
         self.y = y
+        self.z = z
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Point`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Returns vertices to draw this ``Point`` annotation. """
 
         xax, yax, zax        = axes
-        offset               = self.lineWidth * 0.5
+        lineWidth            = self.normalisedLineWidth
+        offset               = lineWidth * 2
         x, y                 = self.x, self.y
-        idxs                 = np.arange(4,     dtype=np.uint32)
         verts                = np.zeros((4, 3), dtype=np.float32)
         verts[0, [xax, yax]] = [x - offset, y]
         verts[1, [xax, yax]] = [x + offset, y]
         verts[2, [xax, yax]] = [x, y - offset]
         verts[3, [xax, yax]] = [x, y + offset]
         verts[:, zax]        = zpos
-        verts                = verts.ravel('C')
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        verts = glroutines.lineAsPolygon(verts, lineWidth, zax)
+
+        return [(gl.GL_TRIANGLES, verts)]
+
+
+    def vertices3D(self):
+        """Returns vertices to draw this ``Point`` annotation. """
+
+        lineWidth   = self.normalisedLineWidth
+        offset      = lineWidth * 2
+        x, y, z     = self.x, self.y, self.z
+        verts       = np.zeros((6, 3), dtype=np.float32)
+        verts[0, :] = [x - offset, y,          z]
+        verts[1, :] = [x + offset, y,          z]
+        verts[2, :] = [x,          y - offset, z]
+        verts[3, :] = [x,          y + offset, z]
+        verts[4, :] = [x,          y,          z - offset]
+        verts[5, :] = [x,          y,          z + offset]
+
+        # See note in Line.vertices3D
+        if self.applyMvp:
+            camera = affine.transform(
+                [0, -1, 0],
+                affine.invert(self.annot.canvas.viewRotation),
+                vector=True)
+        else:
+            camera = [0, 0, 1]
+
+        verts = glroutines.lineAsPolygon(verts, lineWidth, camera=camera)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def hit(self, x, y):
         """Returns ``True`` if ``(x, y)`` is within the bounds of this
         ``Point``, ``False`` otherwise.
         """
-        px, py = self.x, self.y
-        dist   = np.sqrt((x - px) ** 2 + (y - py) ** 2)
-        return dist <= (self.lineWidth * 0.5)
+        lineWidth = self.normalisedLineWidth
+        px, py    = self.x, self.y
+        dist      = np.sqrt((x - px) ** 2 + (y - py) ** 2)
+        return dist <= (lineWidth * 2)
 
 
     def move(self, x, y):
@@ -585,7 +741,7 @@ class Line(AnnotationObject):
     """
 
 
-    def __init__(self, annot, x1, y1, x2, y2, *args, **kwargs):
+    def __init__(self, annot, x1, y1, x2, y2, z1=None, z2=None, **kwargs):
         """Create a ``Line`` annotation.
 
         The ``xy1`` and ``xy2`` coordinate tuples should be in relation to the
@@ -601,27 +757,59 @@ class Line(AnnotationObject):
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.z1 = z1
+        self.z2 = z2
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Line`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Returns a set of vertices for drawing this line on a 2D plane,
+        with the ``GL_TRIANGLES`` primitive.
+        """
+        xax, yax, zax  = axes
+        lineWidth      = self.normalisedLineWidth
+        points         = np.zeros((2, 3))
+        points[:, xax] = [self.x1, self.x2]
+        points[:, yax] = [self.y1, self.y2]
+        points[:, zax] = zpos
 
-        xax, yax, zax = axes
+        verts = glroutines.lineAsPolygon(points, lineWidth, axis=zax)
 
-        idxs                 = np.arange(2,     dtype=np.uint32)
-        verts                = np.zeros((2, 3), dtype=np.float32)
-        verts[0, [xax, yax]] = self.x1, self.y1
-        verts[1, [xax, yax]] = self.x2, self.y2
-        verts[:, zax]        = zpos
-        verts                = verts.ravel('C')
+        return [(gl.GL_TRIANGLES, verts)]
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+
+    def vertices3D(self):
+        """Returns a set of vertices for drawing this line in a 3D space,
+        with the ``GL_TRIANGLES`` primitive.
+        """
+        verts       = np.zeros((2, 3), dtype=np.float32)
+        verts[0, :] = self.x1, self.y1, self.z1
+        verts[1, :] = self.x2, self.y2, self.z2
+
+        lineWidth = self.normalisedLineWidth
+
+        # To draw the line at the requested width,
+        # we have to specify the camera direction
+        # in the display coordinate system. The
+        # Scene3DCanvas initially points towards
+        # -y, so we can localise it by applying
+        # the inverse model-view matrix to that
+        # vector.
+        if self.applyMvp:
+            camera = affine.transform(
+                [0, -1, 0],
+                affine.invert(self.annot.canvas.viewRotation),
+                vector=True)
+        else:
+            camera = [0, 0, 1]
+
+        verts = glroutines.lineAsPolygon(verts, lineWidth, camera=camera)
+
+        return [(gl.GL_TRIANGLES, verts)]
 
 
     def hit(self, x, y):
@@ -643,11 +831,7 @@ class Line(AnnotationObject):
         iy   = y1 + u * (y2 - y1)
         dist = np.sqrt((x3 - ix) ** 2 + (y3 - iy) ** 2)
 
-        # convert line width (in pixels) to display
-        # coords, assume that pixels are isotropic
-        thres = self.lineWidth * self.annot.canvas.pixelSize()[0]
-
-        return dist <= (thres * 2)
+        return dist <= self.normalisedLineWidth
 
 
     def move(self, x, y):
@@ -665,10 +849,10 @@ class Arrow(Line):
     """
 
 
-    def draw2D(self, zpos, axes):
+    def vertices2D(self, zpos, axes):
         """Draw the arrow. """
 
-        Line.draw2D(self, zpos, axes)
+        lineverts = Line.vertices2D(self, zpos, axes)
 
         xax, yax, zax = axes
 
@@ -693,20 +877,20 @@ class Arrow(Line):
         p1  = xy2 - self.lineWidth * p1
         p2  = xy2 - self.lineWidth * p2
 
-        idxs  = np.arange(3, dtype=np.uint32)
         verts = np.zeros((3, 3), dtype=np.float32)
         verts[0, [xax, yax]] = xy2
         verts[1, [xax, yax]] = p1
         verts[2, [xax, yax]] = p2
         verts[:, zax]        = zpos
 
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        verts = [(gl.GL_TRIANGLES, verts)]
+
+        return lineverts + verts
 
 
-class Rect(AnnotationObject):
-    """The ``Rect`` class is an :class:`AnnotationObject` which represents a
-    2D rectangle.
+class BorderMixin:
+    """Mixin for ``AnnotationObject`` classes which display a shape which
+    can be filled or unfilled, and can have a border or no border.
     """
 
 
@@ -718,6 +902,48 @@ class Rect(AnnotationObject):
     """Whether to draw a border around the rectangle. """
 
 
+    def draw2D(self, zpos, axes):
+        shader   = self.annot.defaultShader
+        canvas   = self.canvas
+        mvpmat   = canvas.mvpMatrix
+        vertices = self.vertices2D(zpos, axes)
+
+        if vertices is None or len(vertices) == 0:
+            return
+
+        primitives              = [v[0] for v in vertices]
+        vertices                = [v[1] for v in vertices]
+        vertices, lens, offsets = glroutines.stackVertices(vertices)
+
+        colour = list(self.colour[:3])
+        alpha  = self.alpha / 100.0
+
+        with shader.loaded():
+            shader.set(   'MVP',    mvpmat)
+            shader.setAtt('vertex', vertices)
+
+            with shader.loadedAtts():
+                if self.border:
+                    prim   = primitives.pop(0)
+                    off    = offsets   .pop(0)
+                    length = lens      .pop(0)
+                    if self.filled: shader.set('colour', colour + [1.0])
+                    else:           shader.set('colour', colour + [alpha])
+                    shader.draw(prim, off, length)
+                if self.filled:
+                    prim   = primitives.pop(0)
+                    off    = offsets   .pop(0)
+                    length = lens      .pop(0)
+                    shader.set('colour', colour + [alpha])
+                    shader.draw(prim, off, length)
+
+
+class Rect(BorderMixin, AnnotationObject):
+    """The ``Rect`` class is an :class:`AnnotationObject` which represents a
+    2D rectangle.
+    """
+
+
     def __init__(self,
                  annot,
                  x,
@@ -726,7 +952,6 @@ class Rect(AnnotationObject):
                  h,
                  filled=True,
                  border=True,
-                 *args,
                  **kwargs):
         """Create a :class:`Rect` annotation.
 
@@ -754,7 +979,7 @@ class Rect(AnnotationObject):
         drawn. The ``.AnnotationObject.alpha`` value is ignored when drawing
         the border.
         """
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
 
         self.x      = x
         self.y      = y
@@ -787,8 +1012,8 @@ class Rect(AnnotationObject):
         self.y = self.y + y
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Rectangle`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Generates vertices to draw this ``Rectangle`` annotation. """
 
         if self.w == 0 or self.h == 0:
             return
@@ -803,72 +1028,53 @@ class Rect(AnnotationObject):
         tl = [x,     y + h]
         tr = [x + w, y + h]
 
+        verts = []
+
         if self.border:
-            self.__drawRect(zpos, xax, yax, zax, bl, br, tl, tr)
+            verts.append(self.__border(zpos, xax, yax, zax, bl, br, tl, tr))
 
         if self.filled:
-            self.__drawFill(zpos, xax, yax, zax, bl, br, tl, tr)
+            verts.append(self.__fill(zpos, xax, yax, zax, bl, br, tl, tr))
+
+        return verts
 
 
-    def __drawFill(self, zpos, xax, yax, zax, bl, br, tl, tr):
-        """Draw a filled version of the rectangle. """
+    def __fill(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Generate the rectangle fill. """
+        verts = np.zeros((6, 3), dtype=np.float32)
+        verts[0, [xax, yax]] = bl
+        verts[1, [xax, yax]] = br
+        verts[2, [xax, yax]] = tl
+        verts[3, [xax, yax]] = tl
+        verts[4, [xax, yax]] = br
+        verts[5, [xax, yax]] = tr
+        verts[:,       zax]  = zpos
+        return gl.GL_TRIANGLES, verts
 
-        if self.colour is not None: colour = list(self.colour[:3])
-        else:                       colour = [1, 1, 1]
 
-        colour = colour + [self.alpha / 100]
-
-        idxs  = np.array([0, 1, 2, 2, 1, 3], dtype=np.uint32)
-        verts = np.zeros((4, 3),             dtype=np.float32)
-
+    def __border(self, zpos, xax, yax, zax, bl, br, tl, tr):
+        """Generate the rectangle outline. """
+        lineWidth            = self.normalisedLineWidth
+        verts                = np.zeros((8, 3), dtype=np.float32)
         verts[0, [xax, yax]] = bl
         verts[1, [xax, yax]] = br
         verts[2, [xax, yax]] = tl
         verts[3, [xax, yax]] = tr
-        verts[:,  zax]       = zpos
-        verts                = verts.ravel('C')
+        verts[4, [xax, yax]] = bl
+        verts[5, [xax, yax]] = tl
+        verts[6, [xax, yax]] = br
+        verts[7, [xax, yax]] = tr
+        verts[:,       zax]  = zpos
 
-        # I'm assuming that glPolygonMode
-        # is already set to GL_FILL
-        gl.glColor4f(*colour)
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        verts = glroutines.lineAsPolygon(verts, lineWidth, axis=zax)
 
-
-    def __drawRect(self, zpos, xax, yax, zax, bl, br, tl, tr):
-        """Draw the rectangle outline. """
-
-        if self.colour is not None: colour = list(self.colour[:3]) + [1]
-        else:                       colour = [1, 1, 1, 1]
-
-        idxs  = np.array([0, 1, 2, 3, 0, 2, 1, 3], dtype=np.uint32)
-        verts = np.zeros((4, 3),                   dtype=np.float32)
-
-        verts[0, [xax, yax]] = bl
-        verts[1, [xax, yax]] = br
-        verts[2, [xax, yax]] = tl
-        verts[3, [xax, yax]] = tr
-        verts[:,  zax]       = zpos
-        verts                = verts.ravel('C')
-
-        gl.glColor4f(*colour)
-
-        gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-        gl.glDrawElements(gl.GL_LINES, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+        return gl.GL_TRIANGLES, verts
 
 
-class Ellipse(AnnotationObject):
+class Ellipse(BorderMixin, AnnotationObject):
     """The ``Ellipse`` class is an :class:`AnnotationObject` which represents a
     ellipse.
     """
-
-
-    filled = props.Boolean(default=True)
-    """Whether to fill the ellipse. """
-
-
-    border = props.Boolean(default=True)
-    """Whether to draw a border around the ellipse. """
 
 
     def __init__(self,
@@ -880,7 +1086,7 @@ class Ellipse(AnnotationObject):
                  npoints=60,
                  filled=True,
                  border=True,
-                 *args, **kwargs):
+                 **kwargs):
         """Create an ``Ellipse`` annotation.
 
         :arg annot:   The :class:`Annotations` object that owns this
@@ -906,7 +1112,7 @@ class Ellipse(AnnotationObject):
         :meth:`AnnotationObject.__init__`.
         """
 
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
+        AnnotationObject.__init__(self, annot, **kwargs)
 
         self.x       = x
         self.y       = y
@@ -934,23 +1140,16 @@ class Ellipse(AnnotationObject):
         self.y = self.y + y
 
 
-    def draw2D(self, zpos, axes):
-        """Draws this ``Ellipse`` annotation. """
+    def vertices2D(self, zpos, axes):
+        """Generate vertices for this ``Ellipse`` annotation. """
 
         if (self.w == 0) or (self.h == 0):
             return
-
-        if self.colour is not None: colour = list(self.colour[:3])
-        else:                       colour = [1, 1, 1]
-
-        r, g, b = colour
-        a       = self.alpha / 100
 
         xax, yax, zax = axes
         x, y          = self.x, self.y
         w, h          = self.w, self.h
 
-        idxs    = np.arange(self.npoints + 1, dtype=np.uint32)
         verts   = np.zeros((self.npoints + 1, 3), dtype=np.float32)
         samples = np.linspace(0, 2 * np.pi, self.npoints)
 
@@ -959,18 +1158,17 @@ class Ellipse(AnnotationObject):
         verts[1:, yax]       = h * np.cos(samples) + y
         verts[:,  zax]       = zpos
 
+        allVertices = []
+
         # border
         if self.border:
-            gl.glColor4f(r, g, b, 1)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts[1:-1])
-            gl.glDrawElements(
-                gl.GL_LINE_LOOP, len(idxs) - 2, gl.GL_UNSIGNED_INT, idxs[:-2])
-
+            borderVerts = glroutines.lineAsPolygon(
+                verts[1:], self.normalisedLineWidth, axis=zax, mode='strip')
+            allVertices.append((gl.GL_TRIANGLES, borderVerts))
         if self.filled:
-            gl.glColor4f(r, g, b, a)
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, verts)
-            gl.glDrawElements(
-                gl.GL_TRIANGLE_FAN, len(idxs), gl.GL_UNSIGNED_INT, idxs)
+            allVertices.append((gl.GL_TRIANGLE_FAN, verts))
+
+        return allVertices
 
 
 class VoxelSelection(AnnotationObject):
@@ -985,7 +1183,6 @@ class VoxelSelection(AnnotationObject):
                  selection,
                  opts,
                  offsets=None,
-                 *args,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
 
@@ -1009,15 +1206,12 @@ class VoxelSelection(AnnotationObject):
         :meth:`AnnotationObject.__init__` method.
         """
 
-        AnnotationObject.__init__(self, annot, *args, **kwargs)
-
         if offsets is None:
             offsets = [0, 0, 0]
 
         self.__selection = selection
         self.__opts      = opts
         self.__offsets   = offsets
-
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
         ndims = texdata.numTextureDims(selection.shape)
@@ -1031,12 +1225,40 @@ class VoxelSelection(AnnotationObject):
             texName,
             selection)
 
+        self.__shader = self.__createShader()
+
+        # Call base class init afterwards,
+        # as the init function may need to
+        # access the texture created above.
+        AnnotationObject.__init__(self, annot, **kwargs)
+
+
+    def __createShader(self):
+        """Called by :meth:`__init__`. Creates a shader program.
+        """
+        constants = {'textureIs2D' : self.texture.ndim == 2}
+        vertSrc   = shaders.getVertexShader(  'annotations_voxelselection')
+        fragSrc   = shaders.getFragmentShader('annotations_voxelselection')
+
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            return shaders.ARBPShader(vertSrc, fragSrc, constants=constants)
+        else:
+            return shaders.GLSLShader(vertSrc, fragSrc, constants=constants)
+
 
     def destroy(self):
         """Must be called when this ``VoxelSelection`` is no longer needed.
         Destroys the :class:`.SelectionTexture`.
         """
-        glresources.delete(self.__texture.name)
+        super().destroy()
+
+        if self.__texture is not None:
+            glresources.delete(self.__texture.name)
+
+        if self.__shader is not None:
+            self.__shader.destroy()
+
+        self.__shader  = None
         self.__texture = None
         self.__opts    = None
 
@@ -1049,40 +1271,52 @@ class VoxelSelection(AnnotationObject):
         return self.__texture
 
 
+    def vertices2D(self, zpos, axes):
+        """Returns vertices and texture coordinates to draw this
+        ``VoxelSelection``.
+        """
+
+        xax, yax, zax = axes
+        opts          = self.__opts
+        texture       = self.__texture
+        shape         = self.__selection.getSelection().shape
+        displayToVox  = opts.getTransform('display', 'voxel')
+        voxToDisplay  = opts.getTransform('voxel',   'display')
+        voxToTex      = opts.getTransform('voxel',   'texture')
+        voxToTex      = affine.concat(texture.texCoordXform(shape), voxToTex)
+        verts, voxs   = glroutines.slice2D(shape,
+                                           xax,
+                                           yax,
+                                           zpos,
+                                           voxToDisplay,
+                                           displayToVox)
+
+        # See note in GLImageObject.generateVoxelCoordinates2D
+        voxs  = opts.roundVoxels(voxs, daxes=[zax])
+        texs  = affine.transform(voxs, voxToTex)
+        verts = np.array(verts, dtype=np.float32)
+        texs  = np.array(texs,  dtype=np.float32)
+
+        return verts, texs
+
+
     def draw2D(self, zpos, axes):
-        """Draws this ``VoxelSelection``."""
+        """Draw a :class:`.VoxelSelection` annotation. """
 
-        xax, yax     = axes[:2]
-        opts         = self.__opts
-        texture      = self.__texture
-        shape        = self.__selection.getSelection().shape
-        displayToVox = opts.getTransform('display', 'voxel')
-        voxToDisplay = opts.getTransform('voxel',   'display')
-        voxToTex     = opts.getTransform('voxel',   'texture')
-        voxToTex     = affine.concat(texture.texCoordXform(shape), voxToTex)
-        verts, voxs  = glroutines.slice2D(shape,
-                                          xax,
-                                          yax,
-                                          zpos,
-                                          voxToDisplay,
-                                          displayToVox)
+        shader              = self.__shader
+        canvas              = self.canvas
+        texture             = self.texture
+        mvpmat              = canvas.mvpMatrix
+        colour              = list(self.colour[:3]) + [self.alpha / 100.0]
+        vertices, texCoords = self.vertices2D(zpos, axes)
 
-        texs  = affine.transform(voxs, voxToTex)[:, :texture.ndim]
-        verts = np.array(verts, dtype=np.float32).ravel('C')
-        texs  = np.array(texs,  dtype=np.float32).ravel('C')
-
-        texture.bindTexture(gl.GL_TEXTURE0)
-        gl.glClientActiveTexture(gl.GL_TEXTURE0)
-        gl.glTexEnvf(gl.GL_TEXTURE_ENV, gl.GL_TEXTURE_ENV_MODE, gl.GL_MODULATE)
-
-        with glroutines.enabled((texture.target,
-                                 gl.GL_TEXTURE_COORD_ARRAY,
-                                 gl.GL_VERTEX_ARRAY)):
-            gl.glVertexPointer(  3,            gl.GL_FLOAT, 0, verts)
-            gl.glTexCoordPointer(texture.ndim, gl.GL_FLOAT, 0, texs)
-            gl.glDrawArrays(     gl.GL_TRIANGLES, 0, 6)
-
-        texture.unbindTexture()
+        with texture.bound(gl.GL_TEXTURE0), shader.loaded():
+            shader.set(   'tex',      0)
+            shader.set(   'MVP',      mvpmat)
+            shader.set(   'colour',   colour)
+            shader.setAtt('vertex',   vertices)
+            shader.setAtt('texCoord', texCoords)
+            shader.draw(gl.GL_TRIANGLES, 0, len(vertices))
 
 
 class TextAnnotation(AnnotationObject):
@@ -1151,9 +1385,10 @@ class TextAnnotation(AnnotationObject):
     def destroy(self):
         """Must be called when this ``TextAnnotation`` is no longer needed.
         """
-        AnnotationObject.destroy(self)
-        self.__text.destroy()
-        self.__text = None
+        super().destroy()
+        if self.__text is not None:
+            self.__text.destroy()
+            self.__text = None
 
 
     def draw2D(self, zpos, axes):

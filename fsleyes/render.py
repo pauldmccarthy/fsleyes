@@ -60,8 +60,15 @@ def main(args=None, hook=None):
     # Initialise colour maps module
     fslcm.init()
 
+    # Parse arguments, and
+    # configure logging/debugging
+    namespace = parseArgs(args)
+    fsleyes.configLogging(namespace.verbose, namespace.noisy)
+
     # Create a GL context
-    fslgl.getGLContext(offscreen=True, createApp=True)
+    fslgl.getGLContext(offscreen=True,
+                       createApp=True,
+                       requestVersion=namespace.glversion)
 
     # Now that GL inititalisation is over,
     # make sure that the idle loop executes
@@ -73,10 +80,6 @@ def main(args=None, hook=None):
     with idle.idleLoop.synchronous(), \
          imagetexture.ImageTexture.enableThreading(False):
 
-        # Parse arguments, and
-        # configure logging/debugging
-        namespace = parseArgs(args)
-        fsleyes.configLogging(namespace.verbose, namespace.noisy)
 
         # Initialise the fsleyes.gl modules
         fslgl.bootstrap(namespace.glversion)
@@ -376,27 +379,7 @@ def render(namespace, overlayList, displayCtx, sceneOpts, hook=None):
     for c in canvases:
 
         c.opts.pos = displayCtx.location
-
-        # HACK If a SliceCanvas/LightBoxCanvas
-        # is rendering the sceen to an off-screen
-        # texture due to the low performance
-        # setting, its internal viewport will not
-        # be set until after all GLObjects have
-        # been rendered. But some GLObjects (e.g.
-        # GLLabel) need to know the current
-        # viewport.
-        #
-        # This is very much an edge case, as who
-        # would be using a low performance setting
-        # for off-screen rendering?
-
-        if namespace.scene in ('ortho', 'lightbox') and \
-           namespace.performance is not None        and \
-           int(namespace.performance) < 3:
-            c._setViewport()
-
         c.draw()
-
         canvasBmps.append(c.getBitmap())
 
     # destroy the canvases
@@ -464,7 +447,6 @@ def createLightBoxCanvas(namespace,
     opts.showCursor     = sceneOpts.showCursor
     opts.bgColour       = sceneOpts.bgColour
     opts.cursorColour   = sceneOpts.cursorColour
-    opts.renderMode     = sceneOpts.renderMode
     opts.zax            = sceneOpts.zax
     opts.sliceSpacing   = sceneOpts.sliceSpacing
     opts.nrows          = sceneOpts.nrows
@@ -564,7 +546,6 @@ def createOrthoCanvases(namespace,
         opts.cursorColour = sceneOpts.cursorColour
         opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
-        opts.renderMode   = sceneOpts.renderMode
         opts.invertX      = invertx
         opts.invertY      = inverty
 

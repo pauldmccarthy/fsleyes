@@ -100,7 +100,7 @@ class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
         """
 
         d2tmat  = self.getTransform('display', 'texture')
-        xform   = affine.concat(d2tmat, viewmat)
+        xform   = affine.concat(d2tmat, viewmat.T)
         cdir    = np.array([0, 0, 1])
         cdir    = affine.transform(cdir, xform, vector=True)
         cdir    = affine.normalise(cdir)

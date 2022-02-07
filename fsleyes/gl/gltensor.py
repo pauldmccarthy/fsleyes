@@ -235,7 +235,7 @@ class GLTensor(glvector.GLVector):
         return fslgl.gltensor_funcs.updateShaderState(self)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         """Overrides :meth:`.GLVector.preDraw`. Binds the eigenvalue and
         eigenvector textures, calls the :meth:`.GLVector.preDraw` method,
         and the :func:`.gl21.gltensor_funcs.preDraw` function.
@@ -248,8 +248,8 @@ class GLTensor(glvector.GLVector):
         self.l2Texture.bindTexture(gl.GL_TEXTURE12)
         self.l3Texture.bindTexture(gl.GL_TEXTURE13)
 
-        glvector.GLVector.preDraw(self, xform, bbox)
-        fslgl.gltensor_funcs.preDraw(self, xform, bbox)
+        glvector.GLVector.preDraw(self)
+        fslgl.gltensor_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -260,13 +260,17 @@ class GLTensor(glvector.GLVector):
 
 
     def draw3D(self, *args, **kwargs):
-        """Overrides :meth:`.GLVector.draw3D`. Calls the
-        :func:`.gl21.gltensor_funcs.draw3D` function.
+        """Does nothing"""
+
+
+    def drawAll(self, *args, **kwargs):
+        """Overrides :meth:`.GLVector.drawAll`. Calls the
+        :func:`.gl21.gltensor_funcs.drawAll` function.
         """
-        fslgl.gltensor_funcs.draw3D(self, *args, **kwargs)
+        fslgl.gltensor_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         """Overrides :meth:`.GLVector.postDraw`. Unbinds the eigenvalue and
         eigenvector textures, calls the :meth:`.GLVector.postDraw` method, and
         the :func:`.gl21.gltensor_funcs.postDraw` function.
@@ -279,8 +283,8 @@ class GLTensor(glvector.GLVector):
         self.l2Texture.unbindTexture()
         self.l3Texture.unbindTexture()
 
-        glvector.GLVector.postDraw(self, xform, bbox)
-        fslgl.gltensor_funcs.postDraw(self, xform, bbox)
+        glvector.GLVector.postDraw(self)
+        fslgl.gltensor_funcs.postDraw(self)
 
 
     def __tensorResolutionChanged(self, *a):

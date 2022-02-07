@@ -62,7 +62,7 @@ class GLVolume(glimageobject.GLImageObject):
     ``updateShaderState(GLVolume)``       Updates the shader program states
                                           when display parameters are changed.
 
-    ``preDraw(GLVolume, xform, bbox)``    Initialise the GL state, ready for
+    ``preDraw(GLVolume)``                 Initialise the GL state, ready for
                                           drawing.
 
     ``draw2D(GLVolume, zpos, xform)``     Draw a slice of the image at the
@@ -71,7 +71,7 @@ class GLVolume(glimageobject.GLImageObject):
                                           transformation on the vertex
                                           coordinates.
 
-    ``draw3D(GLVolume, xform, bbox)``     Draw the image in 3D. If ``xform``
+    ``draw3D(GLVolume, xform)``           Draw the image in 3D. If ``xform``
                                           is not ``None``, it must be applied
                                           as a transformation on the vertex
                                           coordinates.
@@ -80,7 +80,7 @@ class GLVolume(glimageobject.GLImageObject):
                                           specified ``zposes``, applying the
                                           corresponding ``xforms`` to each.
 
-    ``postDraw(GLVolume, xform, bbox)``   Clear the GL state after drawing.
+    ``postDraw(GLVolume)``                Clear the GL state after drawing.
     ===================================== =====================================
 
 
@@ -667,7 +667,7 @@ class GLVolume(glimageobject.GLImageObject):
                                   displayRange=(dmin, dmax))
 
 
-    def preDraw(self, *args, **kwargs):
+    def preDraw(self):
         """Binds the :class:`.ImageTexture` to ``GL_TEXTURE0`` and the
         :class:`.ColourMapTexture` to ``GL_TEXTURE1, and calls the
         version-dependent ``preDraw`` function.
@@ -680,7 +680,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipTexture     .bindTexture(gl.GL_TEXTURE3)
         self.modulateTexture .bindTexture(gl.GL_TEXTURE4)
 
-        fslgl.glvolume_funcs.preDraw(self, *args, **kwargs)
+        fslgl.glvolume_funcs.preDraw(self)
 
 
     def draw2D(self, *args, **kwargs):
@@ -693,7 +693,7 @@ class GLVolume(glimageobject.GLImageObject):
             fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
-    def draw3D(self, *args, **kwargs):
+    def draw3D(self, xform=None):
         """Calls the version dependent ``draw3D`` function. """
 
         opts = self.opts
@@ -705,14 +705,11 @@ class GLVolume(glimageobject.GLImageObject):
         # Initialise and resize
         # the offscreen textures
         for rt in [self.renderTexture1, self.renderTexture2]:
-            if rt.shape != (sw, sh):
-                rt.shape = sw, sh
-
+            rt.shape = sw, sh
             with rt.target():
-                gl.glClearColor(0, 0, 0, 0)
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+                glroutines.clear((0, 0, 0, 0))
 
-        if opts.resolution != 100:
+        if self.opts.resolution != 100:
             gl.glViewport(0, 0, sw, sh)
 
         # Do the render. Even though we're
@@ -728,7 +725,10 @@ class GLVolume(glimageobject.GLImageObject):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
-            fslgl.glvolume_funcs.draw3D(self, *args, **kwargs)
+            fslgl.glvolume_funcs.draw3D(self, xform)
+
+        if self.opts.resolution != 100:
+            gl.glViewport(0, 0, w, h)
 
         # Apply smoothing if needed. If smoothing
         # is enabled, the final render will be in
@@ -746,12 +746,6 @@ class GLVolume(glimageobject.GLImageObject):
                           [ 1, -1, 0],
                           [-1,  1, 0],
                           [ 1,  1, 0]], dtype=np.float32)
-
-        invproj = affine.invert(self.canvas.projectionMatrix)
-        verts   = affine.transform(verts, invproj)
-
-        if opts.resolution != 100:
-            gl.glViewport(0, 0, w, h)
 
         with glroutines.enabled(gl.GL_DEPTH_TEST):
 
@@ -777,11 +771,10 @@ class GLVolume(glimageobject.GLImageObject):
 
     def drawAll(self, *args, **kwargs):
         """Calls the version dependent ``drawAll`` function. """
-
         fslgl.glvolume_funcs.drawAll(self, *args, **kwargs)
 
 
-    def postDraw(self, *args, **kwargs):
+    def postDraw(self):
         """Unbinds the ``ImageTexture`` and ``ColourMapTexture``, and calls the
         version-dependent ``postDraw`` function.
         """
@@ -792,7 +785,7 @@ class GLVolume(glimageobject.GLImageObject):
         self.clipTexture     .unbindTexture()
         self.modulateTexture .unbindTexture()
 
-        fslgl.glvolume_funcs.postDraw(self, *args, **kwargs)
+        fslgl.glvolume_funcs.postDraw(self)
 
 
     def getAuxTextureXform(self, which):

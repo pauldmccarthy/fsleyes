@@ -14,6 +14,7 @@ from __future__ import division
 
 import re
 import logging
+import contextlib
 
 import numpy                          as np
 
@@ -29,7 +30,7 @@ from . import                            parse
 log = logging.getLogger(__name__)
 
 
-class ARBPShader(object):
+class ARBPShader:
     """The ``ARBPShader`` class encapsulates an OpenGL shader program
     written according to the ``ARB_vertex_program`` and
     ``ARB_fragment_program`` extensions. It parses and compiles vertex
@@ -54,12 +55,16 @@ class ARBPShader(object):
 
        load
        unload
+       loaded
        destroy
+       setConstant
        recompile
        setVertParam
        setFragParam
+       set
        setAtt
-       setConstant
+       setIndices
+       draw
 
     Typcical usage of an ``ARBPShader`` will look something like the
     following::
@@ -76,26 +81,23 @@ class ARBPShader(object):
 
         program = ARBPShader(vertSrc, fragSrc, textures)
 
-        # Load the program, and
-        # enable program attributes
-        # (texture coordinates)
+        # Load the program
         program.load()
-        progra.loadAtts()
 
         # Set some parameters
-        program.setVertParam('transform', np.eye(4))
-        program.setFragParam('clipping',  [0, 1, 0, 0])
+        program.set('transform', np.eye(4))
+        program.set('clipping',  [0, 1, 0, 0])
 
         # Create and set vertex attributes
         vertices, normals = createVertices()
 
-        program.setAtt('normals', normals)
+        program.setAtt('vertex', vertices)
+        program.setAtt('normal', normals)
 
         # Draw the scene
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
+        program.draw(gl.GL_TRIANGLES, vertices.shape[0])
 
         # Clear the GL state
-        program.unloadAtts()
         program.unload()
 
         # Delete the program when
@@ -116,10 +118,10 @@ class ARBPShader(object):
     def __init__(self,
                  vertSrc,
                  fragSrc,
-                 includePath,
                  textureMap=None,
                  constants=None,
-                 clean=True):
+                 clean=True,
+                 includePath=None):
         """Create an ``ARBPShader``.
 
         :arg vertSrc:     Vertex program source.
@@ -134,15 +136,20 @@ class ARBPShader(object):
                           programs. It is assumed that constant parameters are
                           shared by the vertex and fragment programs.
 
-        :arg includePath: Path to a directory which contains any additional
-                          files that may be included in the given source
-                          files.
-
         :arg clean:       If ``True`` (the default), the vertex and fragment
                           program source is 'cleaned' before compilation - all
                           comments, empty lines, and unncessary spaces are
                           removed before compilation.
+
+        :arg includePath: Path to a directory which contains any additional
+                          files that may be included in the given source
+                          files. Defaults to
+                          :func:`fsleyes.gl.shaders.getShaderDir`.
         """
+
+        if includePath is None:
+            from fsleyes.gl.shaders import getShaderDir
+            includePath = getShaderDir()
 
         decs = parse.parseARBP(vertSrc, fragSrc)
 
@@ -177,7 +184,14 @@ class ARBPShader(object):
 
         # See the setAtt method for
         # information about this dict
-        self.__attCache = {}
+        self.attCache   = {}
+        self.attsLoaded = False
+
+        # The setIndices method caches an
+        # index array which will then be
+        # passed to glDrawElements in the
+        # draw method
+        self.indices = None
 
         poses = self.__generatePositions(textureMap)
         vpPoses, fpPoses, texPoses, attrPoses = poses
@@ -254,14 +268,6 @@ class ARBPShader(object):
         arbfp.glBindProgramARB(arbfp.GL_FRAGMENT_PROGRAM_ARB,
                                self.fragmentProgram)
 
-    def loadAtts(self):
-        """Enables texture coordinates for all shader program attributes. """
-        for attr in self.attrs:
-            texUnit = self.__getAttrTexUnit(attr)
-
-            gl.glClientActiveTexture(texUnit)
-            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-
 
     def unload(self):
         """Unloads the shader program. """
@@ -269,15 +275,68 @@ class ARBPShader(object):
         gl.glDisable(arbvp.GL_VERTEX_PROGRAM_ARB)
 
 
+    @contextlib.contextmanager
+    def loaded(self):
+        """Context manager which calls :meth:`load`, yields, then
+        calls :meth:`unload`.
+        """
+        self.load()
+        try:
+            yield
+        finally:
+            self.unload()
+
+
+    def loadAtts(self):
+        """Enables texture coordinates for all shader program attributes.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
+
+        All attributes must be set before they are loaded.
+        """
+        if self.attsLoaded:
+            return
+        for attr in self.attrs:
+            texUnit     = self.__getAttrTexUnit(attr)
+            value, size = self.attCache[attr]
+            gl.glClientActiveTexture(texUnit)
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+        self.attsLoaded = True
+
+
     def unloadAtts(self):
-        """Disables texture coordinates on all texture units. """
+        """Disables texture coordinates on all texture units.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
+        """
         for attr in self.attrs:
             texUnit = self.__getAttrTexUnit(attr)
-
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        self.attsLoaded = False
 
-        self.__attCache = {}
+
+    @contextlib.contextmanager
+    def loadedAtts(self):
+        """Context manager which calls :meth:`loadAtts`, yields, then
+        calls :meth:`unloadAtts`.
+        This is called automatically by :meth:`draw`, so there is no need
+        to call it explicitly.
+        """
+        self.loadAtts()
+        try:
+            yield
+        finally:
+            self.unloadAtts()
+
+
+    def set(self, name, value):
+        """Set the value of the specified parameter on the vertex program
+        and/or the fragment program.
+        """
+        if name in self.vertParamPositions: self.setVertParam(name, value)
+        if name in self.fragParamPositions: self.setFragParam(name, value)
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
@@ -297,7 +356,7 @@ class ARBPShader(object):
         value = self.__normaliseParam(value)
         nrows = len(value) // 4
 
-        log.debug('Setting vertex parameter {} = {}'.format(name, value))
+        log.debug('Setting vertex parameter %s = %s', name, value)
 
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
@@ -319,7 +378,7 @@ class ARBPShader(object):
         value = self.__normaliseParam(value)
         nrows = len(value) // 4
 
-        log.debug('Setting fragment parameter {} = {}'.format(name, value))
+        log.debug('Setting fragment parameter %s = %s', name, value)
 
         for i in range(nrows):
             row = value[i * 4: i * 4 + 4]
@@ -338,7 +397,7 @@ class ARBPShader(object):
         if name not in self.constants:
             raise ValueError('Unknown constant: {}'.format(name))
 
-        log.debug('Setting vertex constant {} = {}'.format(name, value))
+        log.debug('Setting vertex constant %s = %s', name, value)
 
         self.constantVals[name] = value
 
@@ -348,26 +407,48 @@ class ARBPShader(object):
         attribute is mapped to a texture coordinate. It is assumed that
         the given value is a ``numpy`` array of shape ``(n, l)``, where
         ``n`` is the number of vertices being drawn, and ``l`` is the
-        number of components in each vertex attribute coordinate.
+        number of components in each vertex attribute coordinate. If
+        ``value`` is 1D, it is reshaped to ``(N, 1)``.
         """
+
+        if len(value.shape) == 1:
+            value = value.reshape(-1, 1)
+
         texUnit = self.__getAttrTexUnit(name)
-        size    = value.shape[1]
         value   = np.array(value, dtype=np.float32, copy=False)
+        size    = value.shape[1]
 
-        log.debug('Setting vertex attribute {} [{}] = [{} * {}]'.format(
-            name, texUnit, value.shape[0], size))
+        log.debug('Setting vertex attribute %s [%s] = [%s * %s]',
+                  name, texUnit, value.shape[0], size)
 
-        # We must save a ref to the value so
-        # that it doesn't get GC'd by python
-        # before actually being used by GL.
-        # This took me an entire day to
-        # figure out. The cache gets cleared
-        # on every call to unloadAtts.
-        value = value.ravel('C')
-        self.__attCache[name] = value
+        # The array is passed to glTexCoordPointer in
+        # loadAtts.  With GL14, we don't have vertex
+        # buffers, so we have to pass all vertex data
+        # on every single draw.
+        self.attCache[name] = value.ravel('C'), size
 
-        gl.glClientActiveTexture(texUnit)
-        gl.glTexCoordPointer(size, gl.GL_FLOAT, 0, value)
+
+    def setIndices(self, indices):
+        """Stores a set of vertex indices to be used in calls to :meth:`draw`.
+        """
+        if indices is not None:
+            indices = np.asarray(indices.ravel('C'), dtype=np.uint32)
+        self.indices = indices
+
+
+    def draw(self, prim, *args):
+        """Submits a GL draw call for the specified primitive type.
+        If vertex indices have been provided via the :meth:`setIndices` method,
+        ``glDrawElements`` is used, and all other arguments are ignored.
+        Otherwise, ``glDrawArrays`` is used, and is passed all other arguments.
+        """
+        with self.loadedAtts():
+            if self.indices is not None:
+                indices  = self.indices
+                nindices = indices.size
+                gl.glDrawElements(prim, nindices, gl.GL_UNSIGNED_INT, indices)
+            else:
+                gl.glDrawArrays(prim, *args)
 
 
     def __normaliseParam(self, value):
@@ -390,9 +471,14 @@ class ARBPShader(object):
             if value.shape[0] < 4:
                 value = list(value) + [0] * (4 - len(value))
 
+        # matrix
+        elif value.shape[1] != 4:
+            padding = np.zeros((value.shape[0], 1))
+            value   = np.hstack((value, padding))
+
         value = np.array(value, dtype=np.float32, copy=False)
 
-        if value.size < 4 or value.size % 4 != 0:
+        if value.ndim > 2 or value.size < 4 or value.size % 4 != 0:
             raise ValueError('Invalid arbp parameter: {}'.format(value))
 
         return value.ravel('C')

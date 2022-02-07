@@ -7,6 +7,9 @@
  */
 #version 120
 
+uniform mat4 mvpmat;
+uniform mat4 mvmat;
+
 attribute vec3 vertex;
 attribute vec3 texCoord;
 
@@ -16,6 +19,6 @@ varying vec3 fragTexCoord;
 void main(void) {
 
   fragTexCoord = texCoord;
-  fragVertex   = (gl_ModelViewMatrix * vec4(vertex, 1)).xyz;
-  gl_Position  = gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  fragVertex   = (mvmat  * vec4(vertex, 1)).xyz;
+  gl_Position  =  mvpmat * vec4(vertex, 1);
 }

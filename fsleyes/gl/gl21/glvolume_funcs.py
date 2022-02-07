@@ -71,7 +71,6 @@ def updateShaderState(self):
         return
 
     opts    = self.opts
-    copts   = self.canvas.opts
     display = self.display
     shader  = self.shader
 
@@ -175,7 +174,7 @@ def updateShaderState(self):
     return changed
 
 
-def preDraw(self, xform=None, bbox=None):
+def preDraw(self):
     """Sets up the GL state to draw a slice from the given :class:`.GLVolume`
     instance.
     """
@@ -188,7 +187,7 @@ def preDraw(self, xform=None, bbox=None):
         self.shader.set('modCoordXform',  modCoordXform)
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=None):
+def draw2D(self, zpos, axes, xform=None):
     """Draws the specified 2D slice from the specified image on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -200,26 +199,30 @@ def draw2D(self, zpos, axes, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
 
+    shader                         = self.shader
+    bbox                           = self.canvas.viewport
+    mvpmat                         = self.canvas.mvpMatrix
     vertices, voxCoords, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
+    # We apply the MVP matrix here rather than in
+    # the shader, as we're only drawing 6 vertices.
     if xform is not None:
-        vertices = affine.transform(vertices, xform)
+        mvpmat = affine.concat(mvpmat, xform)
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
+    vertices = affine.transform(vertices, mvpmat)
 
-    self.shader.loadAtts()
+    shader.setAtt('vertex',   vertices)
+    shader.setAtt('voxCoord', voxCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
+    with shader.loadedAtts():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def draw3D(self, xform=None, bbox=None):
+def draw3D(self, xform=None):
     """Draws the image in 3D on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
@@ -227,18 +230,29 @@ def draw3D(self, xform=None, bbox=None):
 
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
-
-    :arg bbox:    An optional bounding box.
     """
 
-    ovl                            = self.overlay
-    opts                           = self.opts
-    canvas                         = self.canvas
-    copts                          = canvas.opts
-    tex                            = self.renderTexture1
-    proj                           = self.canvas.projectionMatrix
-    vertices, voxCoords, texCoords = self.generateVertices3D(bbox)
-    rayStep , texform              = opts.calculateRayCastSettings(xform, proj)
+    ovl     = self.overlay
+    opts    = self.opts
+    canvas  = self.canvas
+    shader  = self.shader
+    copts   = canvas.opts
+    bbox    = canvas.viewport
+    mvmat   = canvas.viewMatrix
+    mvpmat  = canvas.mvpMatrix
+    projmat = canvas.projectionMatrix
+    tex     = self.renderTexture1
+
+    # The xform, if provided, is an occlusion
+    # depth offset (see Scene3DCanvas._draw).
+    # We have to apply it *after* the mv
+    # transform for occlusion work.
+    if xform is not None:
+        mvmat  = affine.concat(mvmat,  xform)
+        mvpmat = affine.concat(mvpmat, xform)
+
+    vertices, _, texCoords = self.generateVertices3D(bbox)
+    rayStep , texform      = opts.calculateRayCastSettings(mvmat, projmat)
 
     rayStep = affine.transformNormal(
         rayStep, self.imageTexture.texCoordXform(ovl.shape))
@@ -254,56 +268,50 @@ def draw3D(self, xform=None, bbox=None):
     else:
         lightPos = [0, 0, 0]
 
-    if xform is not None:
-        vertices = affine.transform(vertices, xform)
+    shader.set(   'lighting',        copts.light)
+    shader.set(   'tex2ScreenXform', texform)
+    shader.set(   'rayStep',         rayStep)
+    shader.set(   'lightPos',        lightPos)
+    shader.set(   'mvmat',           mvmat)
+    shader.set(   'mvpmat',          mvpmat)
+    shader.setAtt('vertex',          vertices)
+    shader.setAtt('texCoord',        texCoords)
 
-    self.shader.set(   'lighting',        copts.light)
-    self.shader.set(   'tex2ScreenXform', texform)
-    self.shader.set(   'rayStep',         rayStep)
-    self.shader.set(   'lightPos',        lightPos)
-    self.shader.setAtt('vertex',          vertices)
-    self.shader.setAtt('texCoord',        texCoords)
+    with shader.loadedAtts(), tex.target():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
 
-    self.shader.loadAtts()
-
-    tex.bindAsRenderTarget()
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
-    tex.unbindAsRenderTarget()
-
-    self.shader.unloadAtts()
-    self.shader.unload()
+    shader.unload()
+    self.drawClipPlanes(xform=xform)
 
 
 def drawAll(self, axes, zposes, xforms):
     """Draws all of the specified slices. """
 
     nslices   = len(zposes)
+    shader    = self.shader
+    mvpmat    = self.canvas.mvpMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     voxCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
 
     for i, (zpos, xform) in enumerate(zip(zposes, xforms)):
 
+        xform     = affine.concat(mvpmat, xform)
         v, vc, tc = self.generateVertices2D(zpos, axes)
         vertices[ i * 6: i * 6 + 6, :] = affine.transform(v, xform)
         voxCoords[i * 6: i * 6 + 6, :] = vc
         texCoords[i * 6: i * 6 + 6, :] = tc
 
-    self.shader.setAtt('vertex',   vertices)
-    self.shader.setAtt('voxCoord', voxCoords)
-    self.shader.setAtt('texCoord', texCoords)
+    shader.setAtt('vertex',   vertices)
+    shader.setAtt('voxCoord', voxCoords)
+    shader.setAtt('texCoord', texCoords)
 
-    self.shader.loadAtts()
+    with shader.loadedAtts():
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6 * nslices)
 
-
-def postDraw(self, xform=None, bbox=None):
+def postDraw(self):
     """Cleans up the GL state after drawing from the given :class:`.GLVolume`
     instance.
     """
-    self.shader.unloadAtts()
     self.shader.unload()
-
-    if self.threedee:
-        self.drawClipPlanes(xform=xform)

@@ -11,10 +11,11 @@ functionality to render an :class:`.Image` overlay as a label/atlas image.
 
 import OpenGL.GL                 as gl
 
+import fsl.utils.idle            as idle
+import fsl.transform.affine      as affine
 import fsleyes.gl                as fslgl
 import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.shaders.filter as glfilter
-import fsl.utils.idle            as idle
 from . import resources          as glresources
 from . import                       glimageobject
 from . import                       textures
@@ -70,7 +71,7 @@ class GLLabel(glimageobject.GLImageObject):
         self.imageTexture = None
         self.lutTexture   = textures.LookupTableTexture(
             '{}_lut'.format(self.name))
-        self.edgeFilter   = glfilter.Filter('edge', texture=2)
+        self.edgeFilter   = glfilter.Filter('edge', texture=0)
         self.renderTexture = textures.RenderTexture(
             self.name, interp=gl.GL_LINEAR, rttype='c')
 
@@ -248,9 +249,8 @@ class GLLabel(glimageobject.GLImageObject):
                 self.__lut.register(self.name, self.__colourPropChanged, topic)
 
 
-    def preDraw(self, xform=None, bbox=None):
-        """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`,
-        and calls the version-dependent ``preDraw`` function.
+    def preDraw(self):
+        """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
         """
 
         w, h = self.canvas.GetSize()
@@ -265,66 +265,83 @@ class GLLabel(glimageobject.GLImageObject):
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         """Calls the version-dependent ``draw2D`` function. """
 
         opts       = self.opts
         outline    = opts.outline
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
-        w, h       = self.canvas.GetSize()
-        lo, hi     = self.canvas.getViewport()
+        canvas     = self.canvas
+        w, h       = canvas.GetSize()
+        bbox       = canvas.viewport
+        projmat    = canvas.projectionMatrix
+        viewmat    = canvas.viewMatrix
+        lo         = [ax[0] for ax in bbox]
+        hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = lo[xax], hi[xax]
-        ymin, ymax = lo[yax], hi[yax]
+        xmin, xmax = bbox[xax]
+        ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
-        # draw the label to the offscreen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
-            fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform, bbox)
+        # draw the labels to the offscreen texture
+        with glroutines.disabled(gl.GL_BLEND), \
+             rtex.target(xax, yax, lo, hi),    \
+             self.renderTarget(rtex):
+            fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform)
 
-        # run it through the edge filter
+        # run the offscreen texture through the
+        # edge filter, drawing the result to
+        # the canvas
+        if xform is None: xform = affine.concat(projmat, viewmat)
+        else:             xform = affine.concat(projmat, viewmat, xform)
+
         self.edgeFilter.set(offsets=offsets, outline=outline)
-        self.edgeFilter.apply(
-            rtex, zpos, xmin, xmax, ymin, ymax, xax, yax,
-            textureUnit=gl.GL_TEXTURE2)
+        self.edgeFilter.apply(rtex, zpos, xmin, xmax,
+                              ymin, ymax, xax, yax, xform)
 
 
-    def draw3D(self, *args, **kwargs):
-        """Calls the version-dependent ``draw3D`` function. """
-        fslgl.gllabel_funcs.draw3D(self, *args, **kwargs)
+    def draw3D(self, xform=None):
+        """Not implemented."""
 
 
     def drawAll(self, axes, zposes, xforms):
         """Calls the version-dependent ``drawAll`` function. """
 
         opts       = self.opts
+        canvas     = self.canvas
         outline    = opts.outline
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
-        w, h       = self.canvas.GetSize()
-        lo, hi     = self.canvas.getViewport()
+        w, h       = canvas.GetSize()
+        bbox       = canvas.viewport
+        projmat    = canvas.projectionMatrix
+        viewmat    = canvas.viewMatrix
+        lo         = [ax[0] for ax in bbox]
+        hi         = [ax[1] for ax in bbox]
         xax        = axes[0]
         yax        = axes[1]
-        xmin, xmax = lo[xax], hi[xax]
-        ymin, ymax = lo[yax], hi[yax]
+        xmin, xmax = bbox[xax]
+        ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
         # draw all slices to the offscreen texture
-        with glroutines.disabled(gl.GL_BLEND), rtex.target(xax, yax, lo, hi):
+        with glroutines.disabled(gl.GL_BLEND), \
+             rtex.target(xax, yax, lo, hi),    \
+             self.renderTarget(rtex):
             fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
+
+        xform = affine.concat(projmat, viewmat)
 
         # run it through the edge filter
         self.edgeFilter.set(offsets=offsets, outline=outline)
-        self.edgeFilter.apply(
-            rtex, max(zposes), xmin, xmax, ymin, ymax, xax, yax,
-            textureUnit=gl.GL_TEXTURE2)
+        self.edgeFilter.apply(rtex, max(zposes), xmin, xmax,
+                              ymin, ymax, xax, yax, xform)
 
 
-    def postDraw(self, xform=None, bbox=None):
-        """Unbinds the ``ImageTexture`` and ``LookupTableTexture``, and calls
-        the version-dependent ``postDraw`` function.
+    def postDraw(self):
+        """Unbinds the ``ImageTexture`` and ``LookupTableTexture``.
         """
         self.imageTexture.unbindTexture()
         self.lutTexture  .unbindTexture()

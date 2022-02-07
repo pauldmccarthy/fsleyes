@@ -10,8 +10,7 @@ sub-classes intended to be used as targets for off-screen rendering.
 
 These classes are used by the :class:`.SliceCanvas` and
 :class:`.LightBoxCanvas` classes for off-screen rendering, and in various
-other situations throughout FSLeyes. See also the
-:class:`.RenderTextureStack`, which uses :class:`RenderTexture` instances.
+other situations throughout FSLeyes.
 """
 
 
@@ -21,12 +20,13 @@ import contextlib
 import numpy                             as np
 import OpenGL.GL                         as gl
 import OpenGL.raw.GL._types              as gltypes
-import OpenGL.GL.EXT.framebuffer_object  as glfbo
 
-import fsleyes.gl          as fslgl
-import fsleyes.gl.routines as glroutines
-import fsleyes.gl.shaders  as shaders
-from . import                 texture2d
+import fsl.transform.affine   as affine
+import fsleyes.gl             as fslgl
+import fsleyes.gl.extensions  as glexts
+import fsleyes.gl.routines    as glroutines
+import fsleyes.gl.shaders     as shaders
+from . import                    texture2d
 
 
 log = logging.getLogger(__name__)
@@ -117,20 +117,21 @@ class RenderTexture(texture2d.Texture2D):
                                      dtype=np.uint8,
                                      **kwargs)
 
-        self.__frameBuffer     = glfbo.glGenFramebuffersEXT(1)
-        self.__rttype          = rttype
-        self.__renderBuffer    = None
-        self.__depthTexture    = None
-        self.__oldSize         = None
-        self.__oldProjMat      = None
-        self.__oldMVMat        = None
-        self.__oldFrameBuffer  = None
-        self.__oldRenderBuffer = None
+        self.__frameBuffer      = glexts.glGenFramebuffers(1)
+        self.__rttype           = rttype
+        self.__renderBuffer     = None
+        self.__depthTexture     = None
+        self.__oldFrameBuffer   = None
+        self.__oldRenderBuffer  = None
+        self.__oldSize          = None
+        self.__projectionMatrix = None
+        self.__viewMatrix       = None
+        self.__viewport         = None
 
         # Use a single renderbuffer as
         # the depth+stencil attachment
         if rttype == 'cds':
-            self.__renderBuffer = glfbo.glGenRenderbuffersEXT(1)
+            self.__renderBuffer = glexts.glGenRenderbuffers(1)
 
         # Or use a texture as the depth
         # attachment (with no stencil attachment)
@@ -161,14 +162,14 @@ class RenderTexture(texture2d.Texture2D):
 
         vertSrc   = shaders.getVertexShader(  'rendertexture')
         fragSrc   = shaders.getFragmentShader('rendertexture')
-        shaderDir = shaders.getShaderDir()
 
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
-            self.__shader = shaders.ARBPShader(vertSrc, fragSrc, shaderDir)
-
+            self.__shader = shaders.ARBPShader(vertSrc,
+                                               fragSrc,
+                                               {'colourTexture' : 0,
+                                                'depthTexture'  : 1})
         else:
             self.__shader = shaders.GLSLShader(vertSrc, fragSrc)
-
             self.__shader.load()
             self.__shader.set('colourTexture', 0)
             self.__shader.set('depthTexture',  1)
@@ -185,11 +186,11 @@ class RenderTexture(texture2d.Texture2D):
 
         log.debug('Deleting FBO%s [%s]', self.__frameBuffer, self.__rttype)
 
-        glfbo.glDeleteFramebuffersEXT(gltypes.GLuint(self.__frameBuffer))
+        glexts.glDeleteFramebuffers(1, gltypes.GLuint(self.__frameBuffer))
 
         if self.__renderBuffer is not None:
             rb = gltypes.GLuint(self.__renderBuffer)
-            glfbo.glDeleteRenderbuffersEXT(1, rb)
+            glexts.glDeleteRenderbuffers(1, rb)
 
         if self.__depthTexture is not None:
             self.__depthTexture.destroy()
@@ -199,6 +200,40 @@ class RenderTexture(texture2d.Texture2D):
         self.__depthTexture    = None
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
+
+
+    @property
+    def projectionMatrix(self):
+        """Return the projection matrix to use when drawing to this
+        ``RenderTexture``. Only returns a value when this ``RenderTexture``
+        is bound - returns ``None``at all other times.
+        """
+        return self.__projectionMatrix
+
+
+    @property
+    def viewMatrix(self):
+        """Return the model-view matrix to use when drawing to this
+        ``RenderTexture``. Only returns a value when this ``RenderTexture``
+        is bound - returns ``None``at all other times.
+        """
+        return self.__viewMatrix
+
+
+    @property
+    def mvpMatrix(self):
+        """Returns the current model*view*projection matrix. """
+        return affine.concat(self.__projectionMatrix, self.__viewMatrix)
+
+
+    @property
+    def viewport(self):
+        """Return the display coordinate system bounding box for this
+        ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
+        Only returns a value when this ``RenderTexture`` is bound - returns
+        ``None``at all other times.
+        """
+        return self.__viewport
 
 
     @texture2d.Texture2D.data.setter
@@ -294,9 +329,7 @@ class RenderTexture(texture2d.Texture2D):
                   coordinates.
         """
 
-        if self.__oldSize    is not None or \
-           self.__oldProjMat is not None or \
-           self.__oldMVMat   is not None:
+        if self.__oldSize is not None:
             raise RuntimeError('RenderTexture RB{}/FBO{} has already '
                                'configured the viewport'.format(
                                    self.__renderBuffer,
@@ -305,13 +338,16 @@ class RenderTexture(texture2d.Texture2D):
         log.debug('Configuring viewport for RB%s/FBO%s',
                   self.__renderBuffer, self.__frameBuffer)
 
-        width, height = self.shape
+        self.__oldSize = gl.glGetIntegerv(gl.GL_VIEWPORT)
 
-        self.__oldSize    = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        self.__oldProjMat = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
-        self.__oldMVMat   = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
+        width, height  = self.shape
+        projmat, mvmat = glroutines.show2D(xax, yax, lo, hi)
 
-        glroutines.show2D(xax, yax, width, height, lo, hi)
+        gl.glViewport(0, 0, width, height)
+
+        self.__viewport         = list(zip(lo, hi))
+        self.__projectionMatrix = projmat
+        self.__viewMatrix       = mvmat
 
 
     def restoreViewport(self):
@@ -319,9 +355,7 @@ class RenderTexture(texture2d.Texture2D):
         to :meth:`setRenderViewport`.
         """
 
-        if self.__oldSize    is None or \
-           self.__oldProjMat is None or \
-           self.__oldMVMat   is None:
+        if self.__oldSize is None:
             raise RuntimeError('RenderTexture RB{}/FBO{} has not '
                                'configured the viewport'.format(
                                    self.__renderBuffer,
@@ -331,14 +365,10 @@ class RenderTexture(texture2d.Texture2D):
                   self.__renderBuffer, self.__frameBuffer)
 
         gl.glViewport(*self.__oldSize)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(self.__oldProjMat)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(self.__oldMVMat)
-
-        self.__oldSize    = None
-        self.__oldProjMat = None
-        self.__oldMVMat   = None
+        self.__oldSize          = None
+        self.__projectionMatrix = None
+        self.__viewMatrix       = None
+        self.__viewport         = None
 
 
     @contextlib.contextmanager
@@ -378,20 +408,20 @@ class RenderTexture(texture2d.Texture2D):
                                'bound'.format(self.__frameBuffer))
 
         self.__oldFrameBuffer  = gl.glGetIntegerv(
-            glfbo.GL_FRAMEBUFFER_BINDING_EXT)
+            glexts.GL_FRAMEBUFFER_BINDING)
 
         if self.__renderBuffer is not None:
             self.__oldRenderBuffer = gl.glGetIntegerv(
-                glfbo.GL_RENDERBUFFER_BINDING_EXT)
+                glexts.GL_RENDERBUFFER_BINDING)
 
         log.debug('Setting FBO%s as render target', self.__frameBuffer)
 
-        glfbo.glBindFramebufferEXT(
-            glfbo.GL_FRAMEBUFFER_EXT, self.__frameBuffer)
+        glexts.glBindFramebuffer(
+            glexts.GL_FRAMEBUFFER, self.__frameBuffer)
 
         if self.__renderBuffer is not None:
-            glfbo.glBindRenderbufferEXT(
-                glfbo.GL_RENDERBUFFER_EXT, self.__renderBuffer)
+            glexts.glBindRenderbuffer(
+                glexts.GL_RENDERBUFFER, self.__renderBuffer)
 
 
     def unbindAsRenderTarget(self):
@@ -406,12 +436,12 @@ class RenderTexture(texture2d.Texture2D):
         log.debug('Restoring render target to FBO%s (from FBO%s)',
                   self.__oldFrameBuffer, self.__frameBuffer)
 
-        glfbo.glBindFramebufferEXT(
-            glfbo.GL_FRAMEBUFFER_EXT, self.__oldFrameBuffer)
+        glexts.glBindFramebuffer(
+            glexts.GL_FRAMEBUFFER, self.__oldFrameBuffer)
 
         if self.__renderBuffer is not None:
-            glfbo.glBindRenderbufferEXT(
-                glfbo.GL_RENDERBUFFER_EXT, self.__oldRenderBuffer)
+            glexts.glBindRenderbuffer(
+                glexts.GL_RENDERBUFFER, self.__oldRenderBuffer)
 
         self.__oldFrameBuffer  = None
         self.__oldRenderBuffer = None
@@ -430,9 +460,9 @@ class RenderTexture(texture2d.Texture2D):
 
         # Bind the colour buffer
         with self.target():
-            glfbo.glFramebufferTexture2DEXT(
-                glfbo.GL_FRAMEBUFFER_EXT,
-                glfbo.GL_COLOR_ATTACHMENT0_EXT,
+            glexts.glFramebufferTexture2D(
+                glexts.GL_FRAMEBUFFER,
+                glexts.GL_COLOR_ATTACHMENT0,
                 gl   .GL_TEXTURE_2D,
                 self.handle,
                 0)
@@ -441,24 +471,24 @@ class RenderTexture(texture2d.Texture2D):
             if self.__rttype == 'cds':
 
                 # Configure the render buffer
-                glfbo.glRenderbufferStorageEXT(
-                    glfbo.GL_RENDERBUFFER_EXT,
+                glexts.glRenderbufferStorage(
+                    glexts.GL_RENDERBUFFER,
                     gl.GL_DEPTH24_STENCIL8,
                     width,
                     height)
 
                 # Bind the render buffer
-                glfbo.glFramebufferRenderbufferEXT(
-                    glfbo.GL_FRAMEBUFFER_EXT,
+                glexts.glFramebufferRenderbuffer(
+                    glexts.GL_FRAMEBUFFER,
                     gl.GL_DEPTH_STENCIL_ATTACHMENT,
-                    glfbo.GL_RENDERBUFFER_EXT,
+                    glexts.GL_RENDERBUFFER,
                     self.__renderBuffer)
 
             # Or a depth texture
             elif self.__rttype == 'cd':
-                glfbo.glFramebufferTexture2DEXT(
-                    glfbo.GL_FRAMEBUFFER_EXT,
-                    glfbo.GL_DEPTH_ATTACHMENT_EXT,
+                glexts.glFramebufferTexture2D(
+                    glexts.GL_FRAMEBUFFER,
+                    glexts.GL_DEPTH_ATTACHMENT,
                     gl   .GL_TEXTURE_2D,
                     self.__depthTexture.handle,
                     0)
@@ -466,25 +496,24 @@ class RenderTexture(texture2d.Texture2D):
             # Get the FBO status before unbinding it -
             # the Apple software renderer will return
             # FRAMEBUFFER_UNDEFINED otherwise.
-            status = glfbo.glCheckFramebufferStatusEXT(
-                glfbo.GL_FRAMEBUFFER_EXT)
+            status = glexts.glCheckFramebufferStatus(
+                glexts.GL_FRAMEBUFFER)
 
         # Complain if something is not right
-        if status != glfbo.GL_FRAMEBUFFER_COMPLETE_EXT:
+        if status != glexts.GL_FRAMEBUFFER_COMPLETE:
             raise RuntimeError('An error has occurred while configuring '
                                'the frame buffer [{}]'.format(status))
 
 
-    def draw(self, *args, **kwargs):
+    def draw(self, vertices, useDepth=False):
         """Overrides :meth:`.Texture2D.draw`. Calls that method, optionally
         using the information in the depth texture.
 
 
-        :arg useDepth: Must be passed as a keyword argument. Defaults to
-                       ``False``. If ``True``, and this ``RenderTexture``
-                       was configured to use a depth texture, the texture
-                       is rendered with depth information using a fragment
-                       program
+        :arg useDepth: Defaults to ``False``. If ``True``, and this
+                       ``RenderTexture`` was configured to use a depth
+                       texture, the texture is rendered with depth
+                       information using a fragment program.
 
 
         A ``RuntimeError`` will be raised if ``useDepth is True``, but this
@@ -492,21 +521,24 @@ class RenderTexture(texture2d.Texture2D):
         setting in :meth:`__init__`).
         """
 
-        useDepth = kwargs.pop('useDepth', False)
-
         if useDepth and self.__depthTexture is None:
             raise RuntimeError('useDepth is True but I don\'t '
                                'have a depth texture!')
 
-        if useDepth:
-            self.__depthTexture.bindTexture(gl.GL_TEXTURE1)
-            self.__shader.load()
-
-        texture2d.Texture2D.draw(self, *args, **kwargs)
-
-        if useDepth:
-            self.__shader.unload()
-            self.__depthTexture.unbindTexture()
+        # Draw using the default Texture2D shader
+        if not useDepth:
+            texture2d.Texture2D.draw(self, vertices)
+        else:
+            shader    = self.__shader
+            depthTex  = self.__depthTexture
+            texCoords = self.generateTextureCoords()
+            nverts    = vertices.shape[0]
+            with shader.loaded():
+                shader.setAtt('vertex',   vertices)
+                shader.setAtt('texCoord', texCoords)
+                with self    .bound(gl.GL_TEXTURE0), \
+                     depthTex.bound(gl.GL_TEXTURE1):
+                    shader.draw(gl.GL_TRIANGLES, 0, nverts)
 
 
 class GLObjectRenderTexture(RenderTexture):

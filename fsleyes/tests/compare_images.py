@@ -28,7 +28,7 @@ def compare_images(img1, img2, threshold):
     img1 = img1[:, :, :3]
     img2 = img2[:, :, :3]
 
-    # pad poth images
+    # pad both images
     if img1.shape != img2.shape:
 
         i1w, i1h = img1.shape[:2]

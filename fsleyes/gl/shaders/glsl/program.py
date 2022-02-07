@@ -10,15 +10,17 @@ a GLSL shader program comprising a vertex shader and a fragment shader.
 
 
 import logging
+import contextlib
 
-import jinja2                         as j2
-import numpy                          as np
-import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.instanced_arrays as arbia
+import jinja2                as j2
+import numpy                 as np
+import OpenGL.GL             as gl
+import OpenGL.raw.GL._types  as gltypes
 
-import fsl.utils.memoize as memoize
-from . import               parse
+import fsleyes.gl.extensions as glexts
+import fsleyes.gl            as fslgl
+import fsl.utils.memoize     as memoize
+from . import                   parse
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ corresponding GL types and sizes.
 """
 
 
-class GLSLShader(object):
+class GLSLShader:
     """The ``GLSLShader`` class encapsulates information and logic about
     a GLSL 1.20 shader program, comprising a vertex shader and a fragment
     shader. It provides methods to set shader attribute and uniform values,
@@ -52,12 +54,12 @@ class GLSLShader(object):
 
        load
        unload
+       loaded
        destroy
-       loadAtts
-       unloadAtts
        set
        setAtt
        setIndices
+       draw
 
 
     Typical usage of a ``GLSLShader`` will look something like the
@@ -69,28 +71,20 @@ class GLSLShader(object):
         program = GLSLShader(vertSrc, fragSrc)
 
         # Load the program
-        program.load()
+        with shader.loaded():
 
-        # Set some uniform values
-        program.set('lighting', True)
-        program.set('lightPos', [0, 0, -1])
+            # Set some uniform values
+            program.set('lighting', True)
+            program.set('lightPos', [0, 0, -1])
 
-        # Create and set vertex attributes
-        vertices, normals = createVertices()
+            # Create and set vertex attributes
+            vertices, normals = createVertices()
 
-        program.setAtt('vertex', vertices)
-        program.setAtt('normal', normals)
+            program.setAtt('vertex', vertices)
+            program.setAtt('normal', normals)
 
-        # Load the attributes
-        program.loadAtts()
-
-        # Draw the scene
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(vertices))
-
-        # Clear the GL state
-        program.unload()
-        program.unloadAtts()
-
+            # Draw the scene
+            program.draw(gl.GL_TRIANGLES, len(vertices))
 
         # Delete the program when
         # we no longer need it
@@ -98,7 +92,7 @@ class GLSLShader(object):
     """
 
 
-    def __init__(self, vertSrc, fragSrc, indexed=False, constants=None):
+    def __init__(self, vertSrc, fragSrc, indexed=None, constants=None):
         """Create a ``GLSLShader``.
 
         The source is passed through ``jinja2``, replacing any expressions on
@@ -108,11 +102,9 @@ class GLSLShader(object):
 
         :arg fragSrc:   String containing fragment shader source code.
 
-        :arg indexed:   If ``True``, it is assumed that the vertices processed
-                        by this shader program will be drawn using an index
-                        array.  A vertex buffer object is created to store
-                        vertex indices - this buffer is expected to be
-                        populated via the :meth:`setIndices` method.
+        :arg indexed:   Deprecated, no longer necessary. To render using
+                        ``glDrawElements``, pass the indices to the
+                        :meth:`setIndices` method.
 
         :arg constants: Key-value pairs to be used when passing the source
                         through ``jinja2``.
@@ -172,8 +164,24 @@ class GLSLShader(object):
         for att in self.vertAttributes:
             self.buffers[att] = gl.glGenBuffers(1)
 
-        if indexed: self.indexBuffer = gl.glGenBuffers(1)
-        else:       self.indexBuffer = None
+        # Buffers for storing vertices and
+        # (optionally) vertex indices.
+        # A vertex array is required in
+        # GL >= 3.0, but not supported in
+        # older GL versions.
+        #
+        # A vertex index buffer is created
+        # on the first call to  setIndices.
+        if float(fslgl.GL_COMPATIBILITY) >= 3: self.vao = gl.glGenVertexArrays(1)
+        else:                                  self.vao = None
+        self.indexBuffer = None
+        self.nindices    = None
+
+        # The loadAtts/unloadAtts methods add
+        # to this counter to allow re-entrance
+        # (so we don't try to load/unload more
+        # than once).
+        self.attsLoaded = 0
 
         log.debug('{}.init({})'.format(type(self).__name__, id(self)))
 
@@ -184,9 +192,35 @@ class GLSLShader(object):
             log.debug('{}.del({})'.format(type(self).__name__, id(self)))
 
 
-    def load(self):
-        """Loads this ``GLSLShader`` into the GL state.
+    @contextlib.contextmanager
+    def loaded(self):
+        """Context manager which calls :meth:`load`, yields, then
+        calls :meth:`unload`.
         """
+        self.load()
+        try:
+            yield
+        finally:
+            self.unload()
+
+
+    @contextlib.contextmanager
+    def loadedAtts(self):
+        """Context manager which calls :meth:`loadAtts`, yields, then
+        calls :meth:`unloadAtts`.
+
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
+        """
+        self.loadAtts()
+        try:
+            yield
+        finally:
+            self.unloadAtts()
+
+
+    def load(self):
+        """Loads this ``GLSLShader`` into the GL state. """
         gl.glUseProgram(self.program)
 
 
@@ -194,7 +228,17 @@ class GLSLShader(object):
         """Binds all of the shader program ``attribute`` variables - you
         must set the data for each attribute via :meth:`setAtt` before
         calling this method.
+
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
+
+        Attributes may be set before or after this method is called.
         """
+        self.attsLoaded += 1
+        if self.attsLoaded > 1:
+            return
+        if self.vao is not None:
+            gl.glBindVertexArray(self.vao)
         for att in self.vertAttributes:
 
             aPos           = self.positions[          att]
@@ -213,7 +257,7 @@ class GLSLShader(object):
                                          None)
 
             if aDivisor is not None:
-                arbia.glVertexAttribDivisorARB(aPos, aDivisor)
+                glexts.glVertexAttribDivisor(aPos, aDivisor)
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.indexBuffer)
@@ -221,7 +265,12 @@ class GLSLShader(object):
 
     def unloadAtts(self):
         """Disables all vertex attributes, and unbinds associated vertex buffers.
+        This is called automatically by :meth:`draw`, so there is no need
+        to explicitly call it.
         """
+        self.attsLoaded -= 1
+        if self.attsLoaded > 0:
+            return
         for att in self.vertAttributes:
             gl.glDisableVertexAttribArray(self.positions[att])
 
@@ -229,11 +278,12 @@ class GLSLShader(object):
             divisor = self.vertAttDivisors.get(att)
 
             if divisor is not None:
-                arbia.glVertexAttribDivisorARB(pos, 0)
+                glexts.glVertexAttribDivisor(pos, 0)
 
         if self.indexBuffer is not None:
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
-
+        if self.vao is not None:
+            gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 
@@ -245,10 +295,17 @@ class GLSLShader(object):
     def destroy(self):
         """Deletes all GL resources managed by this ``GLSLShader``. """
         gl.glDeleteProgram(self.program)
-
+        if self.vao is not None:
+            gl.glDeleteVertexArrays(1, self.vao)
+        if self.indexBuffer is not None:
+            gl.glDeleteBuffers(1, self.indexBuffer)
         for buf in self.buffers.values():
             gl.glDeleteBuffers(1, gltypes.GLuint(buf))
-        self.program = None
+
+        self.program     = None
+        self.vao         = None
+        self.indexBuffer = None
+        self.buffers     = None
 
 
     @memoize.Instanceify(memoize.skipUnchanged)
@@ -325,16 +382,23 @@ class GLSLShader(object):
 
 
     def setIndices(self, indices):
-        """If an index array is to be used by this ``GLSLShader`` (see the
-        ``indexed`` argument to :meth:`__init__`), the index array may be set
-        via this method.
+        """If an index array is to be used by this ``GLSLShader``, the index
+        array may be set via this method.
         """
 
-        if self.indexBuffer is None:
-            raise RuntimeError('Shader program was not '
-                               'configured with index support')
+        if indices is None:
+            if self.indexBuffer is not None:
+                gl.glDeleteBuffers(1, self.indexBuffer)
+            self.indexBuffer = None
+            self.nindices    = None
+            return
 
-        indices = np.array(indices, dtype=np.uint32)
+        if self.indexBuffer is None:
+            self.indexBuffer = gl.glGenBuffers(1)
+
+        self.nindices = indices.size
+
+        indices = np.asarray(indices, dtype=np.uint32)
 
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER,
                         self.indexBuffer)
@@ -342,7 +406,29 @@ class GLSLShader(object):
                         indices.nbytes,
                         indices,
                         gl.GL_STATIC_DRAW)
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        # Don't unbind if loadAtts is active.
+        # This allows setIndices to be called
+        # either before or after loadAtts.
+        if not self.attsLoaded:
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0)
+
+
+    def draw(self, prim, *args):
+        """Submits a GL draw call for the specified primitive type.
+        If vertex indices have been provided via the :meth:`setIndices` method,
+        ``glDrawElements`` is used, and all other arguments are ignored.
+        Otherwise, ``glDrawArrays`` is used, and is passed all other arguments.
+        """
+
+        with self.loadedAtts():
+            if self.indexBuffer is not None:
+                gl.glDrawElements(prim,
+                                  self.nindices,
+                                  gl.GL_UNSIGNED_INT,
+                                  None)
+            else:
+                gl.glDrawArrays(prim, *args)
 
 
     def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):

@@ -9,7 +9,7 @@
 
 
 /* Texture to be smoothed. */
-uniform sampler2D texture;
+uniform sampler2D tex;
 
 /* Distance between adjacent fragments, in texture coordinates. */
 uniform vec2 offsets;
@@ -59,7 +59,7 @@ void main(void) {
 
       off   = vec2(xi - midstep, yi - midstep);
       point = fragTexCoord + off * offsets;
-      val   = texture2D(texture, point);
+      val   = texture2D(tex, point);
 
       if (val.a == 0) {
         continue;

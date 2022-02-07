@@ -29,7 +29,7 @@ from . import data                  as texdata
 log = logging.getLogger(__name__)
 
 
-class TextureBase(object):
+class TextureBase:
     """Base mixin class used by the :class:`Texture` class.
 
     This class provides logic for texture lifecycle management
@@ -209,7 +209,7 @@ class TextureBase(object):
         self.__bound = max(0, self.__bound - 1)
 
 
-class TextureSettingsMixin(object):
+class TextureSettingsMixin:
     """Mixin class used by the :class:`Texture` class.
 
 

@@ -58,15 +58,13 @@ def updateShaderState(self):
     if not self.ready():
         return
 
-    self.shader.load()
-    glvector_funcs.updateShaderState(self)
-    self.shader.unload()
+    with self.shader.loaded():
+        glvector_funcs.updateShaderState(self)
 
     return True
 
 
 preDraw  = glvolume_funcs.preDraw
 draw2D   = glvolume_funcs.draw2D
-draw3D   = glvolume_funcs.draw3D
 drawAll  = glvolume_funcs.drawAll
 postDraw = glvolume_funcs.postDraw

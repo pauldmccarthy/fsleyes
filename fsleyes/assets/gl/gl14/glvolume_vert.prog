@@ -27,12 +27,9 @@ PARAM modCoordXform[ 4] = {{ param4_modCoordXform  }};
 
 TEMP texCoord;
 
-# Transform the vertex position
-# into display coordinates.
-DP4 result.position.x, state.matrix.mvp.row[0], vertex.position;
-DP4 result.position.y, state.matrix.mvp.row[1], vertex.position;
-DP4 result.position.z, state.matrix.mvp.row[2], vertex.position;
-DP4 result.position.w, state.matrix.mvp.row[3], vertex.position;
+# We assume that vertices have already
+# been transformed by the MVP matrix
+MOV result.position, vertex.position;
 
 # Get the texture coordinates, make
 # sure the 4th component is 1.
