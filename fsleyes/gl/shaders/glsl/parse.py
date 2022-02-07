@@ -55,9 +55,7 @@ are not supported.
 """
 
 
-from __future__ import print_function
-
-import sys
+import re
 import logging
 
 import pyparsing as pp
@@ -156,30 +154,44 @@ def parseGLSL(source):
     return decs
 
 
-def main():
-    """If this module is executed as a script, this function is called.
-    It expects a path to a ``glsl`` file as a single parameter. This file
-    is parsed, and information about it printed to standard output.
+def convert120to330(source, shaderType):
+    """Convert GLSL 1.20 shader source to GLSL 3.30 compatible source in
+    the quickest, hackiest, least robust way possible.
+
+    ``shaderType`` is one of ``'vert'``, ``'frag'``, or ``'geom'``.
     """
 
-    if len(sys.argv) != 2:
-        print('Usage: {}.py file.glsl'.format(__name__))
-        sys.exit(0)
+    replacements = {
+        'all' : [
+            ('#version 120', '#version 330'),
+            ('texture1D(',   'texture('),
+            ('texture2D(',   'texture('),
+            ('texture3D(',   'texture('),
+            ('gl_FragColor', 'FragColor'),
+            (r'attribute',   'in')],
+        'vert' : [('varying', 'out')],
+        'frag' : [('varying', 'in')],
+    }
 
-    infile = sys.argv[1]
+    replacements = replacements['all'] + replacements.get(shaderType, [])
 
-    print('File: {}'.format(infile))
+    additions = {
+        'frag' : ['out vec4 FragColor;']
+    }
 
-    with open(infile, 'rt') as f:
-        code = f.read()
+    lines    = source.split('\n')
+    newlines = []
 
-    decs = parseGLSL(code)
+    for line in lines:
+        for search, replace in replacements:
+            if search in line:
+                newlines.append(line.replace(search, replace))
 
-    for d, v in decs.items():
-        print('\n--{}--\n'.format(d.upper()))
-        for t, n, s in v:
-            print('{}: {} [{}]'.format(t, n, s))
+                # Add new lines immediately after the #version line
+                if shaderType in additions and '#version' in search:
+                    newlines.extend(additions[shaderType])
+                break
+        else:
+            newlines.append(line)
 
-
-if __name__ == '__main__':
-    main()
+    return '\n'.join(newlines)

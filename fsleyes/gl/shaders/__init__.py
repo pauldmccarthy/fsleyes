@@ -37,6 +37,7 @@ import os.path              as op
 
 import                         fsleyes
 import fsleyes.gl           as fslgl
+from   .glsl import parse   as glslparse
 from   .glsl import program as glslprogram
 from   .arbp import program as arbpprogram
 
@@ -51,11 +52,22 @@ def getShaderDir():
     on which OpenGL version is in use.
     """
 
-    if   fslgl.GL_COMPATIBILITY == '3.3': subdir = 'gl21'
+    if   fslgl.GL_COMPATIBILITY == '3.3': subdir = 'gl33'
     if   fslgl.GL_COMPATIBILITY == '2.1': subdir = 'gl21'
     elif fslgl.GL_COMPATIBILITY == '1.4': subdir = 'gl14'
 
     return op.join(fsleyes.assetDir, 'gl', subdir)
+
+
+def getFallbackShaderDir():
+    """Return a fall-back shader source directory, used if a version-specific
+    file does not exist. This is only used when ``GL_COMPATIBILITY`` is 3.3,
+    as most of the GL 2.1 source files are re-used.
+    """
+    if fslgl.GL_COMPATIBILITY != '3.3':
+        raise RuntimeError('No fallback shaders for GL version ' +
+                           fslgl.GL_COMPATIBILITY)
+    return op.join(fsleyes.assetDir, 'gl', 'gl21')
 
 
 def getShaderSuffix():
@@ -84,35 +96,55 @@ def _getShader(prefix, shaderType):
     shader type ('vert' or 'frag').
     """
     fname = _getFileName(prefix, shaderType)
+
+    # For gl33, we use shader files in the gl33 sub
+    # dir if they exist, or fall back to gl21 if not,
+    # running them through a converter to make them
+    # gl33 compatbile.
+    if not op.exists(fname):
+        shaderDir   = getFallbackShaderDir()
+        fname       = _getFileName(prefix, shaderType, shaderDir)
+
     with open(fname, 'rt', encoding='utf-8') as f:
         src = f.read()
 
-    return preprocess(src)
+    return preprocess(src, shaderType, shaderDir)
 
 
-def _getFileName(prefix, shaderType):
+def _getFileName(prefix, shaderType, shaderDir=None):
     """Returns the file name of the shader program for the given GL type
     and shader type.
     """
+
+    if shaderDir is None:
+        shaderDir = getShaderDir()
 
     suffix = getShaderSuffix()
 
     if shaderType not in ('vert', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
-    return op.join(getShaderDir(), '{}_{}.{}'.format(
-        prefix, shaderType, suffix))
+    return op.join(shaderDir, '{}_{}.{}'.format(prefix, shaderType, suffix))
 
 
-def preprocess(src):
+def preprocess(src, shaderType, shaderDir=None):
     """'Preprocess' the given shader source.
 
-    This amounts to searching for lines containing '#pragma include filename',
-    and replacing those lines with the contents of the specified files.
+    This amounts to:
+
+      - searching for lines containing '#pragma include filename',
+        and replacing those lines with the contents of the specified
+        files.
+
+      - If ``fsleyes.gl.GL_COMPATIBILITY == '3.3'``, and the shader source
+        is GLSL version 120 (from the ``'2.1'`` shader sources),
+        updating it to be compatible with GLSL 330.
     """
 
-    lines    = src.split('\n')
-    lines    = [l.strip() for l in lines]
+    if shaderDir is None:
+        shaderDir = getShaderDir()
+
+    lines = src.split('\n')
 
     pragmas = []
     for linei, line in enumerate(lines):
@@ -130,8 +162,13 @@ def preprocess(src):
         includes.append((linei, line[2]))
 
     for linei, fname in includes:
-        fname = op.join(getShaderDir(), fname)
+        fname = op.join(shaderDir, fname)
         with open(fname, 'rt', encoding='utf-8') as f:
             lines[linei] = f.read()
 
-    return '\n'.join(lines)
+    src = '\n'.join(lines)
+
+    if fslgl.GL_COMPATIBILITY == '3.3' and '#version 120' in src:
+        src = glslparse.convert120to330(src, shaderType)
+
+    return src
