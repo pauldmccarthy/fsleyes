@@ -71,17 +71,17 @@ class GLTractogram(globject.GLObject):
         fslgl.gltractogram_funcs.updateShaderState(self)
 
 
-    def preDraw(self, xform=None, bbox=None):
+    def preDraw(self):
         pass
 
 
-    def draw2D(self, zpos, axes, xform=None, bbox=None):
+    def draw2D(self, zpos, axes, xform=None):
         pass
 
 
-    def draw3D(self, xform=None, bbox=None):
-        fslgl.gltractogram_funcs.draw3D(self, xform, bbox)
+    def draw3D(self, xform=None):
+        fslgl.gltractogram_funcs.draw3D(self, xform)
 
 
-    def postDraw(self, xform=None, bbox=None):
+    def postDraw(self):
         pass

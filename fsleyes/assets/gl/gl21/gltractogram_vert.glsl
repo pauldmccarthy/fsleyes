@@ -3,6 +3,9 @@
  */
 #version 120
 
+/* Model view [projection] matrices */
+uniform mat4 MV;
+uniform mat4 MVP;
 
 /* Coordinates of current vertex */
 attribute vec3 vertex;
@@ -19,7 +22,7 @@ varying   vec3 fragOrient;
 void main(void) {
 
   fragOrient  =  abs(orient);
-  fragVertex  = (gl_ModelViewMatrix           * vec4(vertex, 1)).xyz;
-  gl_Position =  gl_ModelViewProjectionMatrix * vec4(vertex, 1);
+  fragVertex  = (MV  * vec4(vertex, 1)).xyz;
+  gl_Position =  MVP * vec4(vertex, 1);
 
 }
