@@ -95,7 +95,8 @@ def _getShader(prefix, shaderType):
     """Returns the shader source for the given GL type and the given
     shader type ('vert' or 'frag').
     """
-    fname = _getFileName(prefix, shaderType)
+    shaderDir = getShaderDir()
+    fname     = _getFileName(prefix, shaderType, shaderDir)
 
     # For gl33, we use shader files in the gl33 sub
     # dir if they exist, or fall back to gl21 if not,
@@ -111,13 +112,10 @@ def _getShader(prefix, shaderType):
     return preprocess(src, shaderType, shaderDir)
 
 
-def _getFileName(prefix, shaderType, shaderDir=None):
+def _getFileName(prefix, shaderType, shaderDir):
     """Returns the file name of the shader program for the given GL type
     and shader type.
     """
-
-    if shaderDir is None:
-        shaderDir = getShaderDir()
 
     suffix = getShaderSuffix()
 
