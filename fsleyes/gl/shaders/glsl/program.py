@@ -98,7 +98,6 @@ class GLSLShader:
                  vertSrc,
                  fragSrc,
                  geomSrc=None,
-                 indexed=None,
                  constants=None):
         """Create a ``GLSLShader``.
 
@@ -110,10 +109,6 @@ class GLSLShader:
         :arg fragSrc:   String containing fragment shader source code.
 
         :arg geomSrc:   String containing geometry shader source code.
-
-        :arg indexed:   Deprecated, no longer necessary. To render using
-                        ``glDrawElements``, pass the indices to the
-                        :meth:`setIndices` method.
 
         :arg constants: Key-value pairs to be used when passing the source
                         through ``jinja2``.

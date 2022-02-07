@@ -18,7 +18,7 @@ def compileShaders(self):
     vertSrc = shaders.getVertexShader(  'gltractogram')
     fragSrc = shaders.getFragmentShader('gltractogram')
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):

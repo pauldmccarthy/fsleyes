@@ -66,7 +66,7 @@ def compileShaders(self):
     vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):

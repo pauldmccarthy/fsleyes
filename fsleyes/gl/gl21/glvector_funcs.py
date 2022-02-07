@@ -19,7 +19,7 @@ import fsl.transform.affine as affine
 import fsleyes.gl.shaders   as shaders
 
 
-def compileShaders(self, vertShader, indexed=False):
+def compileShaders(self, vertShader):
     """Compiles the vertex/fragment shader programs (by creating a
     :class:`.GLSLShader` instance).
 
@@ -42,7 +42,7 @@ def compileShaders(self, vertShader, indexed=False):
     vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
 
-    return shaders.GLSLShader(vertSrc, fragSrc, indexed)
+    return shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self, useSpline=False):

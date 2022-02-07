@@ -59,7 +59,7 @@ def compileShaders(self):
     """Creates a :class:`.GLSLShader` for drawing this ``GLTensor``. This is
     done via a call to :func:`.gl21.glvector_funcs.compileShaders`.
     """
-    self.shader = glvector_funcs.compileShaders(self, 'gltensor', indexed=True)
+    self.shader = glvector_funcs.compileShaders(self, 'gltensor')
 
 
 def updateShaderState(self):
