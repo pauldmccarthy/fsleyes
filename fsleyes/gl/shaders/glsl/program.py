@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLSLShader` class, which encapsulates
-a GLSL shader program comprising a vertex shader and a fragment shader.
+a GLSL shader program comprising a vertex shader, a fragment shader, and
+optionally a geometry shader (for OpenGL >= 3.3).
 """
 
 
@@ -27,12 +28,12 @@ log = logging.getLogger(__name__)
 
 
 GLSL_ATTRIBUTE_TYPES = {
-    'bool'          : (gl.GL_BOOL,  1),
-    'int'           : (gl.GL_INT,   1),
-    'float'         : (gl.GL_FLOAT, 1),
-    'vec2'          : (gl.GL_FLOAT, 2),
-    'vec3'          : (gl.GL_FLOAT, 3),
-    'vec4'          : (gl.GL_FLOAT, 4)
+    'bool'  : (gl.GL_BOOL,  1),
+    'int'   : (gl.GL_INT,   1),
+    'float' : (gl.GL_FLOAT, 1),
+    'vec2'  : (gl.GL_FLOAT, 2),
+    'vec3'  : (gl.GL_FLOAT, 3),
+    'vec4'  : (gl.GL_FLOAT, 4)
 }
 """This dictionary contains mappings between GLSL data types, and their
 corresponding GL types and sizes.
@@ -40,13 +41,14 @@ corresponding GL types and sizes.
 
 
 class GLSLShader:
-    """The ``GLSLShader`` class encapsulates information and logic about
-    a GLSL 1.20 shader program, comprising a vertex shader and a fragment
-    shader. It provides methods to set shader attribute and uniform values,
-    to configure attributes, and to load/unload the program. Furthermore,
-    the ``GLSLShader`` makes sure that all uniform and attribute variables
-    are converted to the appropriate type. The following methods are available
-    on a ``GLSLShader``:
+    """The ``GLSLShader`` class encapsulates information and logic about a GLSL
+    shader program, comprising a vertex shader, a fragment shader, and
+    optionally a geometry shader (if OpenGL >= 3.3 is available). It provides
+    methods to set shader attribute and uniform values, to configure
+    attributes, and to load/unload the program. Furthermore, the
+    ``GLSLShader`` makes sure that all uniform and attribute variables are
+    converted to the appropriate type. The following methods are available on
+    a ``GLSLShader``:
 
 
     .. autosummary::
@@ -92,7 +94,12 @@ class GLSLShader:
     """
 
 
-    def __init__(self, vertSrc, fragSrc, indexed=None, constants=None):
+    def __init__(self,
+                 vertSrc,
+                 fragSrc,
+                 geomSrc=None,
+                 indexed=None,
+                 constants=None):
         """Create a ``GLSLShader``.
 
         The source is passed through ``jinja2``, replacing any expressions on
@@ -101,6 +108,8 @@ class GLSLShader:
         :arg vertSrc:   String containing vertex shader source code.
 
         :arg fragSrc:   String containing fragment shader source code.
+
+        :arg geomSrc:   String containing geometry shader source code.
 
         :arg indexed:   Deprecated, no longer necessary. To render using
                         ``glDrawElements``, pass the indices to the
@@ -113,9 +122,12 @@ class GLSLShader:
         if constants is None:
             constants = {}
 
-        vertSrc      = j2.Template(vertSrc).render(**constants)
-        fragSrc      = j2.Template(fragSrc).render(**constants)
-        self.program = self.__compile(vertSrc, fragSrc)
+        vertSrc = j2.Template(vertSrc).render(**constants)
+        fragSrc = j2.Template(fragSrc).render(**constants)
+        if geomSrc is not None:
+            geomSrc = j2.Template(geomSrc).render(**constants)
+
+        self.program = self.__compile(vertSrc, fragSrc, geomSrc)
 
         vertDecs  = parse.parseGLSL(vertSrc)
         fragDecs  = parse.parseGLSL(fragSrc)
@@ -462,10 +474,10 @@ class GLSLShader:
         return shaderVars
 
 
-    def __compile(self, vertShaderSrc, fragShaderSrc):
-        """Compiles and links the OpenGL GLSL vertex and fragment shader
-        programs, and returns a reference to the resulting program. Raises
-        an error if compilation/linking fails.
+    def __compile(self, vertShaderSrc, fragShaderSrc, geomShaderSrc=None):
+        """Compiles and links the OpenGL GLSL vertex, fragment, and optionally
+        geometry shader programs, and returns a reference to the resulting
+        program. Raises an error if compilation/linking fails.
 
         .. note:: I'm explicitly not using the PyOpenGL
                   :func:`OpenGL.GL.shaders.compileProgram` function, because
@@ -474,38 +486,29 @@ class GLSLShader:
                   validation.
         """
 
-        # vertex shader
-        vertShader = gl.glCreateShader(gl.GL_VERTEX_SHADER)
-        gl.glShaderSource(vertShader, vertShaderSrc)
-        gl.glCompileShader(vertShader)
-        vertResult = gl.glGetShaderiv(vertShader, gl.GL_COMPILE_STATUS)
-
-        if vertResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(vertShader)))
-
-        # fragment shader
-        fragShader = gl.glCreateShader(gl.GL_FRAGMENT_SHADER)
-        gl.glShaderSource(fragShader, fragShaderSrc)
-        gl.glCompileShader(fragShader)
-        fragResult = gl.glGetShaderiv(fragShader, gl.GL_COMPILE_STATUS)
-
-        if fragResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(fragShader)))
-
-        # link all of the shaders!
         program = gl.glCreateProgram()
-        gl.glAttachShader(program, vertShader)
-        gl.glAttachShader(program, fragShader)
+        srcs     = [(vertShaderSrc, gl.GL_VERTEX_SHADER),
+                    (fragShaderSrc, gl.GL_FRAGMENT_SHADER),
+                    (geomShaderSrc, gl.GL_GEOMETRY_SHADER)]
+
+        for src, srcType in srcs:
+            if src is None:
+                continue
+
+            shader = gl.glCreateShader(srcType)
+            gl.glShaderSource(shader, src)
+            gl.glCompileShader(shader)
+            result = gl.glGetShaderiv(shader, gl.GL_COMPILE_STATUS)
+            if result != gl.GL_TRUE:
+                raise RuntimeError(gl.glGetShaderInfoLog(shader))
+            gl.glAttachShader(program, shader)
+            gl.glDeleteShader(shader)
 
         gl.glLinkProgram(program)
-
-        gl.glDeleteShader(vertShader)
-        gl.glDeleteShader(fragShader)
-
         linkResult = gl.glGetProgramiv(program, gl.GL_LINK_STATUS)
 
         if linkResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetProgramInfoLog(program)))
+            raise RuntimeError(gl.glGetProgramInfoLog(program))
 
         return program
 
