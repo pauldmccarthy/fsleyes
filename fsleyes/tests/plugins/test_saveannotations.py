@@ -34,9 +34,7 @@ class MockAnnotations:
 
 def test_serialise_deserialise():
     annot = MockAnnotations()
-    with mock.patch('fsleyes.gl.annotations.AnnotationObject.createShader',
-                    return_value=None), \
-         mock.patch('fsleyes.gl.textures.Texture2D', mock.MagicMock()):
+    with mock.patch('fsleyes.gl.textures.Texture2D', mock.MagicMock()):
         objs = [
             annotations.Point(         annot, 1, 2,       zmin=0, zmax=10),
             annotations.Line(          annot, 1, 2, 3, 4, colour=(0, 1, 0)),
