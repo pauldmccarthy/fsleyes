@@ -96,6 +96,9 @@ class Scene3DCanvas:
             for lbl in self.__legendLabels:
                 lbl.destroy()
 
+        self.__annotations.destroy()
+
+        self.__annotations  = None
         self.__opts         = None
         self.__displayCtx   = None
         self.__overlayList  = None

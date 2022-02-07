@@ -215,10 +215,13 @@ class SliceCanvas:
                 globj.deregister(self.name)
                 globj.destroy()
 
-        self.opts               = None
-        self.overlayList        = None
-        self.displayCtx         = None
-        self._glObjects         = None
+        self._annotations.destroy()
+
+        self._annotations = None
+        self.opts         = None
+        self.overlayList  = None
+        self.displayCtx   = None
+        self._glObjects   = None
 
 
     @property

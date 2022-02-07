@@ -14,12 +14,11 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
-import fsl.transform.affine as affine
-import fsl.data.utils       as dutils
-import fsleyes.gl           as fslgl
-import fsleyes.gl.shaders   as shaders
-import fsleyes.gl.routines  as glroutines
-from . import                  texture
+import fsl.transform.affine        as affine
+import fsl.data.utils              as dutils
+import fsleyes.gl                  as fslgl
+import fsleyes.gl.shaders          as shaders
+import fsleyes.gl.textures.texture as texture
 
 
 log = logging.getLogger(__name__)

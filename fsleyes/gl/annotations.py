@@ -127,6 +127,7 @@ class Annotations(props.HasProperties):
         self.__transient = []
         self.__fixed     = []
         self.__canvas    = canvas
+        self.__shader    = None
 
 
     @property
@@ -134,6 +135,36 @@ class Annotations(props.HasProperties):
         """Returns a ref to the canvas that owns this ``Annotations`` instance.
         """
         return self.__canvas
+
+
+    def destroy(self):
+        """Must be called when this :class:`.Annotations` object is no longer
+        needed.
+        """
+        self.clear()
+        if self.__shader is not None:
+            self.__shader.destroy()
+            self.__shader = None
+
+
+    @property
+    def defaultShader(self):
+        """Returns a shader program used by most :class:`AnnotationObject`
+        types.
+        """
+
+        if self.__shader is not None:
+            return self.__shader
+
+        vertSrc = shaders.getVertexShader(  'annotations')
+        fragSrc = shaders.getFragmentShader('annotations')
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            shader = shaders.ARBPShader(vertSrc, fragSrc)
+        else:
+            shader = shaders.GLSLShader(vertSrc, fragSrc)
+
+        self.__shader = shader
+        return shader
 
 
     def line(self, *args, **kwargs):
@@ -452,7 +483,6 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         self.annot    = annot
         self.creation = time.time()
         self.expiry   = expiry
-        self.shader   = self.createShader()
 
         if colour        is not None: self.colour        = colour
         if alpha         is not None: self.alpha         = alpha
@@ -467,24 +497,9 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
     def destroy(self):
         """Must be called when  this ``AnnotationObject`` is no longer needed.
+        The default implementation does nothing, but may be overridden by
+        sub-classes.
         """
-        if self.shader is not None:
-            self.shader.destroy()
-            self.shader = None
-
-
-    def createShader(self):
-        """Compile and return the shader program to draw this
-        ``AnnotationObject``. Called by ``__init__``. Most types use a default
-        shader program, but this method may be overridden for annotation types
-        which require a different shader.
-        """
-        vertSrc     = shaders.getVertexShader(  'annotations')
-        fragSrc     = shaders.getFragmentShader('annotations')
-        if float(fslgl.GL_COMPATIBILITY) < 2.1:
-            return shaders.ARBPShader(vertSrc, fragSrc)
-        else:
-            return shaders.GLSLShader(vertSrc, fragSrc)
 
 
     def resetExpiry(self):
@@ -574,10 +589,10 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         """Used by the default :meth:`draw2D` and :meth:`draw3D`
         implementations.
         """
-        shader   = self.shader
-        canvas   = self.canvas
-        mvpmat   = canvas.mvpMatrix
-        colour   = list(self.colour[:3]) + [self.alpha / 100.0]
+        shader = self.annot.defaultShader
+        canvas = self.canvas
+        mvpmat = canvas.mvpMatrix
+        colour = list(self.colour[:3]) + [self.alpha / 100.0]
 
         if vertices is None or len(vertices) == 0:
             return
@@ -888,7 +903,7 @@ class BorderMixin:
 
 
     def draw2D(self, zpos, axes):
-        shader   = self.shader
+        shader   = self.annot.defaultShader
         canvas   = self.canvas
         mvpmat   = canvas.mvpMatrix
         vertices = self.vertices2D(zpos, axes)
@@ -1197,6 +1212,7 @@ class VoxelSelection(AnnotationObject):
         self.__selection = selection
         self.__opts      = opts
         self.__offsets   = offsets
+        self.__shader    = self.__createShader()
 
         texName = '{}_{}'.format(type(self).__name__, id(selection))
 
@@ -1216,12 +1232,13 @@ class VoxelSelection(AnnotationObject):
         # access the texture created above.
         AnnotationObject.__init__(self, annot, **kwargs)
 
-    def createShader(self):
-        """Overrides :meth:`AnnotationObject.createShader`.
+
+    def __createShader(self):
+        """Called by :meth:`__init__`. Creates a shader program.
         """
-        constants   = {'textureIs2D' : self.texture.ndim == 2}
-        vertSrc     = shaders.getVertexShader(  'annotations_voxelselection')
-        fragSrc     = shaders.getFragmentShader('annotations_voxelselection')
+        constants = {'textureIs2D' : self.texture.ndim == 2}
+        vertSrc   = shaders.getVertexShader(  'annotations_voxelselection')
+        fragSrc   = shaders.getFragmentShader('annotations_voxelselection')
 
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
             return shaders.ARBPShader(vertSrc, fragSrc, constants=constants)
@@ -1234,7 +1251,14 @@ class VoxelSelection(AnnotationObject):
         Destroys the :class:`.SelectionTexture`.
         """
         super().destroy()
-        glresources.delete(self.__texture.name)
+
+        if self.__texture is not None:
+            glresources.delete(self.__texture.name)
+
+        if self.__shader is not None:
+            self.__shader.destroy()
+
+        self.__shader  = None
         self.__texture = None
         self.__opts    = None
 
@@ -1362,8 +1386,9 @@ class TextAnnotation(AnnotationObject):
         """Must be called when this ``TextAnnotation`` is no longer needed.
         """
         super().destroy()
-        self.__text.destroy()
-        self.__text = None
+        if self.__text is not None:
+            self.__text.destroy()
+            self.__text = None
 
 
     def draw2D(self, zpos, axes):
