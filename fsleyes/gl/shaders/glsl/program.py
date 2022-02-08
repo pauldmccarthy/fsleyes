@@ -190,13 +190,13 @@ class GLSLShader:
         # than once).
         self.attsLoaded = 0
 
-        log.debug('{}.init({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init(%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
         """Prints a log message. """
         if log:
-            log.debug('{}.del({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del(%s)', type(self).__name__, id(self))
 
 
     @contextlib.contextmanager
@@ -346,8 +346,8 @@ class GLSLShader:
             raise RuntimeError('Unsupported shader program '
                                'type: {}'.format(vType))
 
-        log.debug('Setting shader variable: {}({})[{}] = {}'.format(
-            vType, size, name, value))
+        log.debug('Setting shader variable: %s(%s)[%s] = %s',
+            vType, size, name, value)
 
         setfunc(vPos, value, size)
 
@@ -374,8 +374,8 @@ class GLSLShader:
 
         value = castfunc(value)
 
-        log.debug('Setting shader attribute: {}({}): {}'.format(
-            aType, name, value.shape))
+        log.debug('Setting shader attribute: %s(%s): %s',
+            aType, name, value.shape)
 
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
         gl.glBufferData(gl.GL_ARRAY_BUFFER,
@@ -482,9 +482,9 @@ class GLSLShader:
         """
 
         program = gl.glCreateProgram()
-        srcs     = [(vertShaderSrc, gl.GL_VERTEX_SHADER),
-                    (fragShaderSrc, gl.GL_FRAGMENT_SHADER),
-                    (geomShaderSrc, gl.GL_GEOMETRY_SHADER)]
+        srcs    = [(vertShaderSrc, gl.GL_VERTEX_SHADER),
+                   (fragShaderSrc, gl.GL_FRAGMENT_SHADER),
+                   (geomShaderSrc, gl.GL_GEOMETRY_SHADER)]
 
         for src, srcType in srcs:
             if src is None:
