@@ -470,21 +470,19 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    thismod.GL_VERSION         = str(glVersion)
-    thismod.GL_COMPATIBILITY   = verstr
-    thismod.GL_RENDERER        = renderer
-    thismod.glvolume_funcs     = glpkg.glvolume_funcs
-    thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
-    thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
-    thismod.gllinevector_funcs = glpkg.gllinevector_funcs
-    thismod.glmask_funcs       = glpkg.glmask_funcs
-    thismod.glmesh_funcs       = glpkg.glmesh_funcs
-    thismod.gllabel_funcs      = glpkg.gllabel_funcs
-    thismod.gltensor_funcs     = glpkg.gltensor_funcs
-    thismod.glsh_funcs         = glpkg.glsh_funcs
-    thismod.glmip_funcs        = glpkg.glmip_funcs
-    thismod.gltractogram_funcs = glpkg.gltractogram_funcs
-    thismod._bootstrapped      = True
+    # Import GL version-specific sub-modules
+    globjects = ['glvolume', 'glrgbvolume', 'glrgbvector', 'gllinevector',
+                 'glmask', 'glmesh', 'gllabel', 'gltensor', 'glsh', 'glmip',
+                 'gltractogram']
+
+    for globj in globjects:
+        modname = '{}_funcs'.format(globj)
+        setattr(thismod, modname, getattr(glpkg, modname, None))
+
+    thismod.GL_VERSION       = str(glVersion)
+    thismod.GL_COMPATIBILITY = verstr
+    thismod.GL_RENDERER      = renderer
+    thismod._bootstrapped    = True
 
     # Initialise extensions module.
     glexts.initialise()
