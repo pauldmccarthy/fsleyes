@@ -117,58 +117,55 @@ class GLSLShader:
         if constants is None:
             constants = {}
 
-        vertSrc = j2.Template(vertSrc).render(**constants)
-        fragSrc = j2.Template(fragSrc).render(**constants)
-        if geomSrc is not None:
-            geomSrc = j2.Template(geomSrc).render(**constants)
+        srcs = []
+        for src in (vertSrc, fragSrc, geomSrc):
+            if src is not None:
+                srcs.append(j2.Template(src).render(**constants))
+        types      = {}
+        sizes      = {}
+        attributes = []
+        uniforms   = set()
 
-        self.program = self.__compile(vertSrc, fragSrc, geomSrc)
+        # Extract vertex and constant inputs
+        # required by the shader program -
+        # anything from the vertex shader
+        # declared as 'varying' or 'in', and
+        # anything from any of the shaders
+        # declared as 'uniform'.
+        for i, src in enumerate(srcs):
+            if src is None:
+                continue
+            decs = parse.parseGLSL(src)
 
-        vertDecs  = parse.parseGLSL(vertSrc)
-        fragDecs  = parse.parseGLSL(fragSrc)
-        vertUnifs = vertDecs['uniform']
-        vertAtts  = vertDecs['attribute']
-        fragUnifs = fragDecs['uniform']
+            # get attributes/vertex inputs from
+            # vertex shader. For the other shaders,
+            # we only care about uniforms.
+            if i == 0:
+                atts  = decs['attribute']
+                unifs = decs['uniform']
+            else:
+                atts  = []
+                unifs = decs['uniform']
 
-        if len(vertUnifs)  > 0: vuNames, vuTypes, vuSizes = zip(*vertUnifs)
-        else:                   vuNames, vuTypes, vuSizes = [], [], []
-        if len(vertAtts)  > 0:  vaNames, vaTypes, vaSizes = zip(*vertAtts)
-        else:                   vaNames, vaTypes, vaSizes = [], [], []
-        if len(fragUnifs) > 0:  fuNames, fuTypes, fuSizes = zip(*fragUnifs)
-        else:                   fuNames, fuTypes, fuSizes = [], [], []
+            attributes.extend(atts)
+            uniforms = uniforms.union(unifs)
+            for dname, dtype, dsize in (atts + unifs):
+                types[dname] = dtype
+                sizes[dname] = dsize
 
-        allTypes = {}
-        allSizes = {}
-
-        for n, t in zip(vuNames, vuTypes): allTypes[n] = t
-        for n, t in zip(vaNames, vaTypes): allTypes[n] = t
-        for n, t in zip(fuNames, fuTypes): allTypes[n] = t
-        for n, s in zip(vuNames, vuSizes): allSizes[n] = s
-        for n, s in zip(vaNames, vaSizes): allSizes[n] = s
-        for n, s in zip(fuNames, fuSizes): allSizes[n] = s
-
-        # Remove duplicate uniform definitions
-        # between the vertex/fragment shader -
-        # they only need to be set once.
-        vertUnifs = [vu for vu in vertUnifs if vu not in fragUnifs]
-
-        self.vertUniforms    = vuNames
-        self.vertAttributes  = vaNames
-        self.fragUniforms    = fuNames
-
-        self.vertAttDivisors = {}
-
-        self.types     = allTypes
-        self.sizes     = allSizes
-        self.positions = self.__getPositions(self.program,
-                                             self.vertAttributes,
-                                             self.vertUniforms,
-                                             self.fragUniforms)
+        self.program     = self.__compile(*srcs)
+        self.attDivisors = {}
+        self.types       = types
+        self.sizes       = sizes
+        self.attributes  = [a[0] for a in attributes]
+        self.uniforms    = [u[0] for u in uniforms]
+        self.positions   = self.__getPositions(self.program,
+                                               self.attributes,
+                                               self.uniforms)
 
         # Buffers for vertex attributes
         self.buffers = {}
-
-        for att in self.vertAttributes:
+        for att in self.attributes:
             self.buffers[att] = gl.glGenBuffers(1)
 
         # Buffers for storing vertices and
@@ -178,9 +175,12 @@ class GLSLShader:
         # older GL versions.
         #
         # A vertex index buffer is created
-        # on the first call to  setIndices.
-        if float(fslgl.GL_COMPATIBILITY) >= 3: self.vao = gl.glGenVertexArrays(1)
-        else:                                  self.vao = None
+        # on the first call to setIndices.
+        if float(fslgl.GL_COMPATIBILITY) >= 3:
+            self.vao = gl.glGenVertexArrays(1)
+        else:
+            self.vao = None
+
         self.indexBuffer = None
         self.nindices    = None
 
@@ -246,12 +246,12 @@ class GLSLShader:
             return
         if self.vao is not None:
             gl.glBindVertexArray(self.vao)
-        for att in self.vertAttributes:
+        for att in self.attributes:
 
-            aPos           = self.positions[          att]
-            aType          = self.types[              att]
-            aBuf           = self.buffers[            att]
-            aDivisor       = self.vertAttDivisors.get(att)
+            aPos           = self.positions[      att]
+            aType          = self.types[          att]
+            aBuf           = self.buffers[        att]
+            aDivisor       = self.attDivisors.get(att)
             glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
@@ -278,11 +278,11 @@ class GLSLShader:
         self.attsLoaded -= 1
         if self.attsLoaded > 0:
             return
-        for att in self.vertAttributes:
+        for att in self.attributes:
             gl.glDisableVertexAttribArray(self.positions[att])
 
-            pos     = self.positions[          att]
-            divisor = self.vertAttDivisors.get(att)
+            pos     = self.positions[      att]
+            divisor = self.attDivisors.get(att)
 
             if divisor is not None:
                 glexts.glVertexAttribDivisor(pos, 0)
@@ -385,7 +385,7 @@ class GLSLShader:
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         if divisor is not None:
-            self.vertAttDivisors[name] = divisor
+            self.attDivisors[name] = divisor
 
 
     def setIndices(self, indices):
@@ -438,15 +438,13 @@ class GLSLShader:
                 gl.glDrawArrays(prim, *args)
 
 
-    def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):
-        """Gets the position indices for all vertex shader attributes,
-        uniforms, and fragment shader uniforms for the given shader
-        programs.
+    def __getPositions(self, shaders, attributes, uniforms):
+        """Gets the position indices for all shader attributes (vertex inputs),
+        and uniforms (constant inputs) for the given shader programs.
 
-        :arg shaders:      Reference to the compiled shader program.
-        :arg vertAtts:     List of attributes required by the vertex shader.
-        :arg vertUniforms: List of uniforms required by the vertex shader.
-        :arg fragUniforms: List of uniforms required by the fragment shader.
+        :arg shaders:    Reference to the compiled shader program.
+        :arg attributes: List of attributes required by the shader.
+        :arg uniforms:   List of uniforms required by the shader.
 
         :returns:  A dictionary of ``{name : position}`` mappings.
         """
@@ -455,16 +453,11 @@ class GLSLShader:
 
         shaderVars = {}
 
-        for v in vertUniforms:
+        for v in uniforms:
             shaderVars[v] = gl.glGetUniformLocation(shaders, v)
 
-        for v in vertAtts:
+        for v in attributes:
             shaderVars[v] = gl.glGetAttribLocation(shaders, v)
-
-        for v in fragUniforms:
-            if v in shaderVars:
-                continue
-            shaderVars[v] = gl.glGetUniformLocation(shaders, v)
 
         return shaderVars
 

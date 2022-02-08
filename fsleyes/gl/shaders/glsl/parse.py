@@ -55,7 +55,6 @@ are not supported.
 """
 
 
-import re
 import logging
 
 import pyparsing as pp
