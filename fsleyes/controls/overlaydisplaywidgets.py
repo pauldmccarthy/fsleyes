@@ -954,9 +954,9 @@ def _ColourMapOpts_ColourMapWidget(
 
     loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
 
-    cmap       = getWidgetSpecs(target, threedee)['cmap']
-    negCmap    = getWidgetSpecs(target, threedee)['negativeCmap']
-    useNegCmap = getWidgetSpecs(target, threedee)['useNegativeCmap']
+    cmap       = getWidgetSpecs(target, displayCtx, threedee)['cmap']
+    negCmap    = getWidgetSpecs(target, displayCtx, threedee)['negativeCmap']
+    useNegCmap = getWidgetSpecs(target, displayCtx, threedee)['useNegativeCmap']
 
     cbpanel    = imagepanel.ImagePanel(parent)
     cbpanel.SetMinSize((-1, 30))
@@ -1022,8 +1022,8 @@ def _NiftiOpts_VolumeWidget(
     :attr:`.NiftiOpts.volume` and :attr:`.NiftiOpts.volumeDim` properties.
     """
 
-    volume    = getWidgetSpecs(target, threedee)['volume']
-    volumeDim = getWidgetSpecs(target, threedee)['volumeDim']
+    volume    = getWidgetSpecs(target, displayCtx, threedee)['volume']
+    volumeDim = getWidgetSpecs(target, displayCtx, threedee)['volumeDim']
 
     volume    = props.buildGUI(parent, target, volume)
     volumeDim = props.buildGUI(parent, target, volumeDim)
@@ -1056,8 +1056,8 @@ def _VolumeOpts_OverrideDataRangeWidget(
     """
 
     # Override data range widget
-    enable   = getWidgetSpecs(target, threedee)['enableOverrideDataRange']
-    ovrRange = getWidgetSpecs(target, threedee)['overrideDataRange']
+    enable   = getWidgetSpecs(target, displayCtx, threedee)['enableOverrideDataRange']
+    ovrRange = getWidgetSpecs(target, displayCtx, threedee)['overrideDataRange']
 
     enable   = props.buildGUI(parent, target, enable)
     ovrRange = props.buildGUI(parent, target, ovrRange)
@@ -1155,7 +1155,7 @@ def _MeshOpts_vertexDataWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, threedee)['vertexData']
+    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexData']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1187,7 +1187,7 @@ def _MeshOpts_vertexSetWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, threedee)['vertexSet']
+    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexSet']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1208,8 +1208,8 @@ def _MeshOpts_LutWidget(
     """
 
     # enable lut widget
-    lut    = getWidgetSpecs(target, threedee)['lut']
-    enable = getWidgetSpecs(target, threedee)['useLut']
+    lut    = getWidgetSpecs(target, displayCtx, threedee)['lut']
+    enable = getWidgetSpecs(target, displayCtx, threedee)['useLut']
 
     lut    = props.buildGUI(parent, target, lut)
     enable = props.buildGUI(parent, target, enable)
