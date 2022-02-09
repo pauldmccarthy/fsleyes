@@ -143,3 +143,13 @@ class Tractogram:
     def getStreamlineData(self, key):
         """Return the specified per-streamline data. """
         return self.__streamlineData[key]
+
+
+    def vertexDataSets(self):
+        """Returns a list of keys for all loaded vertex data sets. """
+        return list(self.__vertexData.keys())
+
+
+    def streamlineDataSets(self):
+        """Returns a list of keys for all loaded streamline data sets. """
+        return list(self.__streamlineData.keys())

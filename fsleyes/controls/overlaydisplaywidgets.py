@@ -1147,7 +1147,10 @@ def _MeshOpts_vertexDataWidget(
     data.
     """
 
-    loadAction = loadvdata.LoadVertexDataAction(overlayList, displayCtx)
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                'vertexData',
+                                                fslmesh.Mesh)
     loadButton = wx.Button(parent)
     loadButton.SetLabel(strings.labels[panel, 'loadVertexData'])
 
@@ -1179,7 +1182,8 @@ def _MeshOpts_vertexSetWidget(
 
     loadAction = loadvdata.LoadVertexDataAction(overlayList,
                                                 displayCtx,
-                                                vertices=True)
+                                                'vertices',
+                                                fslmesh.Mesh)
     loadButton = wx.Button(parent)
     loadButton.SetLabel(strings.labels[panel, 'loadVertices'])
 

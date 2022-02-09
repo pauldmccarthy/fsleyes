@@ -5,47 +5,54 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`LoadVertexDataAction`, which allows the
-user to load additional vertex data or vertex sets for a :class:`.Mesh`
-overlay. Two standalone functions, :func:`loadVertexData` and
-:func:`loadVertices` are also provided.
+user to load additional vertex data, streamline data, or vertex sets for a
+:class:`.Mesh` or :class:`.Tractogram` overlay. Three standalone functions,
+:func:`loadVertexData`, :func:`loadStreamlineData` and :func:`loadVertices`
+are also provided.
 """
 
 
 import os.path as op
 
 import fsl.data.mesh                as fslmesh
+import fsleyes.data.tractogram      as tractogram
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
-from . import                          base
+import fsleyes.actions.base         as base
 
 
 class LoadVertexDataAction(base.NeedOverlayAction):
     """The ``LoadVertexDataAction`` prompts the user to load a file containing
-    vertex data or a vertex set for a :class:`.Mesh` overlay.  See the
-    :attr:`.MeshOpts.vertexData` and :attr:`.MeshOpts.vertexSet` properties.
+    vertex or streamline data or a vertex set for a :class:`.Mesh` or
+    :class:`.Tractogram` overlay.  See the :attr:`.MeshOpts.vertexData`,
+    :attr:`.MeshOpts.vertexSet`, :attr:`.TractogramOpts.vertexData` and
+    :attr:`.TractogramOpts.streamlineData` properties.
     """
 
 
-    def __init__(self, overlayList, displayCtx, vertices=False):
+    def __init__(self, overlayList, displayCtx, loadWhat, ovlType):
         """Create a ``LoadVertexDataAction``.
 
         :arg overlayList: The :class:`.OverlayList`.
         :arg displayCtx:  The :class:`.DisplayContext`.
-        :arg vertices:    If ``True``, the user is prompted to load a file
-                          containing vertices for the mesh. Otherwise, the user
-                          is prompted to load a file containing vertex data.
+        :arg loadWhat:    One of ``'vertexData'``, ``'streamlineData'`` or
+                          ``'vertices'``, denoting the type of file that is to
+                          be loaded.
+        :arg ovlType:     Overlay type - one of :class:`.Mesh` or
+                          :class:`.Tractogram`.
         """
         base.NeedOverlayAction.__init__(
-            self, overlayList, displayCtx, self.__onRun, fslmesh.Mesh)
-        self.__vertices = vertices
+            self, overlayList, displayCtx, self.__onRun, ovlType)
+        self.__loadWhat = loadWhat
 
 
     def __onRun(self):
         """Called when this action is executed.  Calls either
         :meth:`__loadVertexData`, or :meth:`__loadVertices`.
         """
-        if self.__vertices: self.__loadVertices()
-        else:               self.__loadVertexData()
+        if   self.__loadWhat == 'vertices':       self.__loadVertices()
+        elif self.__loadWhat == 'vertexData':     self.__loadVertexData()
+        elif self.__loadWhat == 'streamlineData': self.__loadStreamlineData()
 
 
     def __loadVertices(self):
@@ -60,17 +67,28 @@ class LoadVertexDataAction(base.NeedOverlayAction):
 
     def __loadVertexData(self):
         """Prompts the user to load a vertex data file for the currently
-        selected :class:`.Mesh` overlay, then sets the
-        :attr:`.MeshOpts.vertexData` property accordingly. If the file was
-        successfully loaded, also adds the loaded file as an option on the
-        :attr:`.MeshOpts.vertexData` property.
+        selected :class:`.Mesh` or :class:`.Tractogram` overlay, then sets the
+        :attr:`.MeshOpts.vertexData` or :attr:`.TractogramOpts.vertexData`
+        property accordingly. If the file was successfully loaded, also adds
+        the loaded file as an option on the :attr:`.MeshOpts.vertexData` or
+        :attr:`.TractogramOpts.vertexData` property.
         """
         self.__loadit('loadVertexData', loadVertexData)
 
 
+    def __loadStreamlineData(self):
+        """Prompts the user to load a streamline data file for the currently
+        selected :class:`.Tractogram` overlay, then sets the
+        :attr:`.TractogramOpts.streamlineData` property accordingly. If the
+        file was successfully loaded, also adds the loaded file as an option
+        on the :attr:`.TractogramOpts.streamlineData` property.
+        """
+        self.__loadit('loadStreamlineData', loadStreamlineData)
+
+
     def __loadit(self, key, func):
-        """Shared by the :meth:`__loadVertices` and :meth:`__loadVertexData`
-        methods.
+        """Shared by the :meth:`__loadVertices`, :meth:`__loadVertexData`, and
+        :meth:`__loadStreamlineData`, methods.
         """
 
         import wx
@@ -100,17 +118,19 @@ class LoadVertexDataAction(base.NeedOverlayAction):
 def loadVertexData(overlay, displayCtx, filename, select=True):
     """Attempt to load the specified vertex data for the given overlay.
 
-    :arg overlay:    The overlay (assumed to be a :class:`.Mesh` instance)
+    :arg overlay:    The overlay (assumed to be a :class:`.Mesh` or
+                     :class:`.Tractogram` instance)
 
     :arg displayCtx: The :class:`.DisplayContext`
 
     :arg filename:   Path to the vertex data file that is to be loaded, or key
                      for vertex data that is already loaded (see the
-                     :class:`.Mesh` class).
+                     :class:`.Mesh` and :class:`.Tractogram` classes).
 
     :arg select:     If ``True`` (the default), the
-                     :attr:`.MeshOpts.vertexData` is set to the
-                     newly loaded file.
+                     :attr:`.MeshOpts.vertexData` or
+                     :attr:`.TractogramOpts.vertexData` is set to the newly
+                     loaded file.
 
     :returns:        The path that was actually used - it will have been
                      converted to an absolute path if necessary.
@@ -120,11 +140,12 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
     filename = op.abspath(filename)
 
     # The sole reason that this function exists is because
-    # MeshOpts.vertexData is a props.Choice property, which
-    # can only take one of a fixed set of values. So when
-    # we want to load some data from a file that is not in
-    # the possible values, we need to add the file as an
-    # option before selecting it. A bit silly.
+    # [Mesh|Tractogram]Opts.vertexData is a props.Choice
+    # property, which can only take one of a fixed set of
+    # values. So when we want to load some data from a
+    # file that is not in the possible values, we need to
+    # add the file as an option before selecting it. A bit
+    # silly.
     if filename not in overlay.vertexDataSets():
         # Force the overlay to load
         # the vertex data. This will
@@ -142,8 +163,43 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
     return filename
 
 
+def loadStreamlineData(overlay, displayCtx, filename, select=True):
+    """Attempt to load the specified streamline data for the given
+    :class:`.Tractogram` overlay.
+
+    :arg overlay:    The overlay (assumed to be a :class:`.Tractogram`
+                     instance)
+
+    :arg displayCtx: The :class:`.DisplayContext`
+
+    :arg filename:   Path to the streamline data file that is to be loaded, or
+                     key for streamline data that is already loaded (see the
+                     :class:`.Tractogram` class).
+
+    :arg select:     If ``True`` (the default), the
+                     :attr:`.TractogramOpts.streamlineData` is set to the
+                     newly loaded file.
+
+    :returns:        The path that was actually used - it will have been
+                     converted to an absolute path if necessary.
+    """
+
+    opts     = displayCtx.getOpts(overlay)
+    filename = op.abspath(filename)
+
+    # See comments in loadVertexData above
+    if filename not in overlay.streamlineDataSets():
+        overlay.loadStreamlineData(filename)
+        opts.addStreamlineDataOptions([filename])
+
+    if select:
+        opts.streamlineData = filename
+
+    return filename
+
+
 def loadVertices(overlay, displayCtx, filename, select=True):
-    """Attempt to load the specified vertexz file for the given overlay.
+    """Attempt to load the specified vertex file for the given overlay.
 
     :arg overlay:    The overlay (assumed to be a :class:`.Mesh` instance)
 
