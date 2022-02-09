@@ -26,11 +26,8 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
     """
 
-    refImage = props.Choice()
 
-    coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id'))
-
-    colourBy = props.Choice((None, 'orientation', 'pointData', 'streamlineData'))
+    colourBy = props.Choice(('orientation', 'vertexData', 'streamlineData'))
 
     pointData = props.Choice((None,))
 
@@ -44,6 +41,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     resolution <= 2, the streamlines are drawn as lines.
     """
 
+    lighting = props.Boolean(default=False)
+    """Only relevant when using OpenGL >= 3.3
+    """
+
 
     def __init__(self, *args, **kwargs):
         """
@@ -52,20 +53,15 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 
-        self.__updateBounds()
-
-
-    def getDataRange(self):
-        return 0, 1
-
-
-    def __updateBounds(self):
-
         lo, hi        = self.overlay.bounds
         xlo, ylo, zlo = lo
         xhi, yhi, zhi = hi
 
         self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
+
+
+    def getDataRange(self):
+        return 0, 1
 
 
     @property

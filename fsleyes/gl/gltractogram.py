@@ -31,10 +31,14 @@ class GLTractogram(globject.GLObject):
 
         self.shader = None
 
-        self.addListeners()
-        self.__refreshData()
         fslgl.gltractogram_funcs.compileShaders(self)
-        self.updateShaderState()
+        self.prepareData()
+        self.addListeners()
+
+        with self.shader.loaded():
+            self.updateShaderState()
+            self.shader.setAtt('vertex', self.vertices)
+            self.shader.setAtt('orient', self.orients)
 
 
     def destroy(self):
@@ -54,6 +58,17 @@ class GLTractogram(globject.GLObject):
         pass
 
 
+    def prepareData(self, *a):
+
+        ovl  = self.overlay
+        opts = self.opts
+
+        self.vertices = np.asarray(ovl.vertices, dtype=np.float32)
+        self.offsets  = np.asarray(ovl.offsets,  dtype=np.int32)
+        self.counts   = np.asarray(ovl.lengths,  dtype=np.int32)
+        self.orients  = opts.orientation
+
+
     def addListeners(self):
         """
         """
@@ -61,21 +76,25 @@ class GLTractogram(globject.GLObject):
         display = self.display
         name    = self.name
 
+        def refresh(*_):
+            self.notify()
+
         def shader(*_):
             self.updateShaderState()
             self.notify()
 
-        opts   .addListener('xColour',      name, shader, weak=False)
-        opts   .addListener('yColour',      name, shader, weak=False)
-        opts   .addListener('zColour',      name, shader, weak=False)
-        opts   .addListener('suppressX',    name, shader, weak=False)
-        opts   .addListener('suppressY',    name, shader, weak=False)
-        opts   .addListener('suppressZ',    name, shader, weak=False)
-        opts   .addListener('suppressMode', name, shader, weak=False)
-        opts   .addListener('resolution',   name, shader, weak=False)
-        display.addListener('brightness',   name, shader, weak=False)
-        display.addListener('contrast',     name, shader, weak=False)
-        display.addListener('alpha',        name, shader, weak=False)
+        opts   .addListener('xColour',      name, shader,  weak=False)
+        opts   .addListener('yColour',      name, shader,  weak=False)
+        opts   .addListener('zColour',      name, shader,  weak=False)
+        opts   .addListener('suppressX',    name, shader,  weak=False)
+        opts   .addListener('suppressY',    name, shader,  weak=False)
+        opts   .addListener('suppressZ',    name, shader,  weak=False)
+        opts   .addListener('suppressMode', name, shader,  weak=False)
+        opts   .addListener('resolution',   name, shader,  weak=False)
+        opts   .addListener('lineWidth',    name, refresh, weak=False)
+        display.addListener('brightness',   name, shader,  weak=False)
+        display.addListener('contrast',     name, shader,  weak=False)
+        display.addListener('alpha',        name, shader,  weak=False)
 
 
     def removeListeners(self):
@@ -92,6 +111,8 @@ class GLTractogram(globject.GLObject):
         opts   .removeListener('suppressY',    name)
         opts   .removeListener('suppressZ',    name)
         opts   .removeListener('suppressMode', name)
+        opts   .removeListener('resolution',   name)
+        opts   .removeListener('lineWidth',    name)
         display.removeListener('brightness',   name)
         display.removeListener('contrast',     name)
         display.removeListener('alpha',        name)
@@ -110,17 +131,6 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def __refreshData(self, *a):
-
-        ovl  = self.overlay
-        opts = self.opts
-
-        self.vertices = np.asarray(ovl.vertices, dtype=np.float32)
-        self.offsets  = np.asarray(ovl.offsets,  dtype=np.int32)
-        self.counts   = np.asarray(ovl.lengths,  dtype=np.int32)
-        self.orients  = opts.orientation
-
-
     def updateShaderState(self, *_):
 
         opts           = self.opts
@@ -130,8 +140,6 @@ class GLTractogram(globject.GLObject):
         offset         = xform[0, 3]
 
         with shader.loaded():
-            shader.setAtt('vertex', self.vertices)
-            shader.setAtt('orient', self.orients)
 
             shader.set('xColour',      colours[0])
             shader.set('yColour',      colours[1])

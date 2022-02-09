@@ -5,7 +5,7 @@
 #version 330
 
 layout (lines) in;
-layout (triangle_strip, max_vertices=16) out;
+layout (triangle_strip, max_vertices=40) out;
 
 /*
  * Line orientation vector. Passed
@@ -34,6 +34,12 @@ void main(void) {
   vec3 line  = normalize(end - start);
 
   /*
+   * clamp resolution at 10, to ensure that
+   * this shader will never exceed max_vertices.
+   */
+  int res = clamp(resolution, 1, 10);
+
+  /*
    * Find two vectors which define the
    * plane perpendicular to the line.
    * First one is from the cross product
@@ -56,21 +62,26 @@ void main(void) {
    * line ends, by rotating around the line
    * <resolution> times.
    */
-  for (float i = 0; i < resolution; i++) {
-    float angle = 6.283185307179586 * (i / (resolution - 1));
-    float cosa  = cos(angle);
-    float sina  = sin(angle);
+  if (res < 3) {
+    // line
+  }
+  else {
+    for (float i = 0; i < res; i++) {
+      float angle = 6.283185307179586 * (i / (resolution - 1));
+      float cosa  = cos(angle);
+      float sina  = sin(angle);
 
-    // Offset from the line at the current angle,
-    // on the plane perpendicular to the line.
-    vec3 offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth;
+      // Offset from the line at the current angle,
+      // on the plane perpendicular to the line.
+      vec3 offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth;
 
-    fragOrient  = geomOrient[0];
-    gl_Position = vec4(start + offset, 1);
-    EmitVertex();
-    fragOrient  = geomOrient[1];
-    gl_Position = vec4(end   + offset, 1);
-    EmitVertex();
+      fragOrient  = geomOrient[0];
+      gl_Position = vec4(start + offset, 1);
+      EmitVertex();
+      fragOrient  = geomOrient[1];
+      gl_Position = vec4(end   + offset, 1);
+      EmitVertex();
+    }
   }
   EndPrimitive();
 }

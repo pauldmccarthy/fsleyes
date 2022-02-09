@@ -456,11 +456,13 @@ def bootstrap(glVersion=None):
                                'cannot run on the available graphics '
                                'hardware.'.format(', '.join(exts)))
 
-        # Tensor/SH/MIP overlays are not available in GL14
+        # Tensor/SH/MIP/tractogram overlays
+        # are not available in GL14
         import fsleyes.displaycontext as dc
         dc.ALL_OVERLAY_TYPES            .remove('tensor')
         dc.ALL_OVERLAY_TYPES            .remove('sh')
         dc.ALL_OVERLAY_TYPES            .remove('mip')
+        dc.ALL_OVERLAY_TYPES            .remove('tractogram')
         dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('sh')
         dc.OVERLAY_TYPES['Image']       .remove('tensor')

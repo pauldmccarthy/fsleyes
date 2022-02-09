@@ -29,7 +29,7 @@ def draw3D(self, xform=None):
     mv      = canvas.viewMatrix
     ovl     = self.overlay
     opts    = self.opts
-    nstrms  = ovl.numStreamlines
+    nstrms  = ovl.nstreamlines
 
     offsets = self.offsets
     counts  = self.counts
