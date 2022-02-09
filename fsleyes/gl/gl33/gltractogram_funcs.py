@@ -5,7 +5,6 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
-import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.transform.affine as affine
@@ -17,8 +16,9 @@ def compileShaders(self):
 
     vertSrc = shaders.getVertexShader(  'gltractogram')
     fragSrc = shaders.getFragmentShader('gltractogram')
+    geomSrc = shaders.getGeometryShader('gltractogram')
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc, geomSrc)
 
 
 def draw3D(self, xform=None):
@@ -39,10 +39,14 @@ def draw3D(self, xform=None):
         mvp = affine.concat(mvp, xform)
         mv  = affine.concat(mv,  xform)
 
+    cw, ch    = canvas.GetSize()
+    lineWidth = opts.lineWidth * max((1 / cw, 1 / ch))
+
     with shader.loaded(), shader.loadedAtts():
-        shader.set('MV',  mv)
-        shader.set('MVP', mvp)
+        shader.set('MVP',        mvp)
+        shader.set('lineWidth',  lineWidth)
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         with glroutines.enabled(gl.GL_DEPTH_TEST):
-            gl.glLineWidth(opts.lineWidth)
             gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 #
-# gltractogram.py -
+# gltractogram.py - Logic for rendering GLTractogram instances.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains logic for rendering :class:`.GLTractogram` instances.
+"""
 
 
 import numpy     as np
@@ -27,23 +29,72 @@ class GLTractogram(globject.GLObject):
         if not threedee:
             pass
 
-        fslgl.gltractogram_funcs.compileShaders(self)
+        self.shader = None
 
+        self.addListeners()
         self.__refreshData()
+        fslgl.gltractogram_funcs.compileShaders(self)
+        self.updateShaderState()
 
 
     def destroy(self):
         """
         """
-        globject.GLObject.destroy(self)
+
         if not self.threedee:
             pass
+
+        self.removeListeners()
+        globject.GLObject.destroy(self)
 
 
     def destroyed(self):
         """
         """
         pass
+
+
+    def addListeners(self):
+        """
+        """
+        opts    = self.opts
+        display = self.display
+        name    = self.name
+
+        def shader(*_):
+            self.updateShaderState()
+            self.notify()
+
+        opts   .addListener('xColour',      name, shader, weak=False)
+        opts   .addListener('yColour',      name, shader, weak=False)
+        opts   .addListener('zColour',      name, shader, weak=False)
+        opts   .addListener('suppressX',    name, shader, weak=False)
+        opts   .addListener('suppressY',    name, shader, weak=False)
+        opts   .addListener('suppressZ',    name, shader, weak=False)
+        opts   .addListener('suppressMode', name, shader, weak=False)
+        opts   .addListener('resolution',   name, shader, weak=False)
+        display.addListener('brightness',   name, shader, weak=False)
+        display.addListener('contrast',     name, shader, weak=False)
+        display.addListener('alpha',        name, shader, weak=False)
+
+
+    def removeListeners(self):
+        """
+        """
+        opts    = self.opts
+        display = self.display
+        name    = self.name
+
+        opts   .removeListener('xColour',      name)
+        opts   .removeListener('yColour',      name)
+        opts   .removeListener('zColour',      name)
+        opts   .removeListener('suppressX',    name)
+        opts   .removeListener('suppressY',    name)
+        opts   .removeListener('suppressZ',    name)
+        opts   .removeListener('suppressMode', name)
+        display.removeListener('brightness',   name)
+        display.removeListener('contrast',     name)
+        display.removeListener('alpha',        name)
 
 
     def ready(self):
@@ -68,7 +119,28 @@ class GLTractogram(globject.GLObject):
         self.offsets  = np.asarray(ovl.offsets,  dtype=np.int32)
         self.counts   = np.asarray(ovl.lengths,  dtype=np.int32)
         self.orients  = opts.orientation
-        fslgl.gltractogram_funcs.updateShaderState(self)
+
+
+    def updateShaderState(self, *_):
+
+        opts           = self.opts
+        shader         = self.shader
+        colours, xform = opts.getVectorColours()
+        scale          = xform[0, 0]
+        offset         = xform[0, 3]
+
+        with shader.loaded():
+            shader.setAtt('vertex', self.vertices)
+            shader.setAtt('orient', self.orients)
+
+            shader.set('xColour',      colours[0])
+            shader.set('yColour',      colours[1])
+            shader.set('zColour',      colours[2])
+            shader.set('colourScale',  scale)
+            shader.set('colourOffset', offset)
+
+            # GL33 only
+            shader.set('resolution',   opts.resolution)
 
 
     def preDraw(self):
