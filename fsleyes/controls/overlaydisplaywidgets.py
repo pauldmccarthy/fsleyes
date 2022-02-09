@@ -340,6 +340,20 @@ def _initPropertyList_VolumeRGBOpts(threedee):
             'suppressMode']
 
 
+def _initPropertyList_TractogramOpts(threedee):
+    if not threedee:
+        return []
+    return ['xColour',
+            'yColour',
+            'zColour',
+            'suppressX',
+            'suppressY',
+            'suppressZ',
+            'suppressMode',
+            'lineWidth',
+            'resolution']
+
+
 def _initWidgetSpec_Display(displayCtx, threedee):
     return {
         'name'        : props.Widget('name'),
@@ -896,6 +910,23 @@ def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
         'suppressB'    : props.Widget('suppressB'),
         'suppressA'    : props.Widget('suppressA'),
         'suppressMode' : props.Widget('suppressMode'),
+    }
+
+
+def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
+    if not threedee:
+        return {}
+
+    return {
+        'xColour'      : props.Widget('xColour'),
+        'yColour'      : props.Widget('yColour'),
+        'zColour'      : props.Widget('zColour'),
+        'suppressX'    : props.Widget('suppressX'),
+        'suppressY'    : props.Widget('suppressY'),
+        'suppressZ'    : props.Widget('suppressZ'),
+        'suppressMode' : props.Widget('suppressMode'),
+        'lineWidth'    : props.Widget('lineWidth'),
+        'resolution'   : props.Widget('resolution')
     }
 
 

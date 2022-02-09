@@ -723,6 +723,7 @@ labels = TypeDict({
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     'OverlayDisplayPanel.MIPOpts'        : 'MIP settings',
+    'OverlayDisplayPanel.TractogramOpts' : 'Tractogram settings',
 
     'OverlayDisplayPanel.3d'             : '3D display settings',
 
@@ -1269,6 +1270,8 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
+    'TractogramOpts.lineWidth'    : 'Streamline width',
+    'TractogramOpts.resolution'   : 'Streamline resolution',
 })
 
 

@@ -38,8 +38,16 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     lineWidth = props.Int(min=1, max=10, default=1)
 
+    resolution = props.Int(min=1, max=10, default=5, clamped=True)
+    """Only relevant when using OpenGL >= 3.3. Streamlines are drawn as tubes -
+    this setting defines the resolution at which the tubes are drawn. IF
+    resolution <= 2, the streamlines are drawn as lines.
+    """
+
 
     def __init__(self, *args, **kwargs):
+        """
+        """
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)
