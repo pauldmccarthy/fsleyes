@@ -26,23 +26,32 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
     """
 
+    colourMode = props.Choice(('orientation', 'vertexData', 'streamlineData'))
+    """Whether to colour streamlines by their orientation (e.g. RGB colouring),
+    or whether to colour them by per-vertex or per-streamline data.
+    """
 
-    colourBy = props.Choice(('orientation', 'vertexData', 'streamlineData'))
 
-    pointData = props.Choice((None,))
+    vertexData = props.Choice((None,))
+    """Per-vertex data set with which to colour the streamlines, when
+    ``colourMode == 'vertexData'``.
+    """
+
 
     streamlineData = props.Choice((None,))
+    """Per-streamline data set with which to colour the streamlines, when
+    ``colourMode == 'streamlineData'``.
+    """
 
-    lineWidth = props.Int(min=1, max=10, default=1)
 
-    resolution = props.Int(min=1, max=10, default=5, clamped=True)
+    lineWidth = props.Int(minval=1, maxval=10, default=1)
+    """Width to draw the streamlines. """
+
+
+    resolution = props.Int(minval=1, maxval=10, default=5, clamped=True)
     """Only relevant when using OpenGL >= 3.3. Streamlines are drawn as tubes -
     this setting defines the resolution at which the tubes are drawn. IF
     resolution <= 2, the streamlines are drawn as lines.
-    """
-
-    lighting = props.Boolean(default=False)
-    """Only relevant when using OpenGL >= 3.3
     """
 
 
@@ -56,8 +65,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         lo, hi        = self.overlay.bounds
         xlo, ylo, zlo = lo
         xhi, yhi, zhi = hi
-
-        self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
+        self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
 
     def getDataRange(self):
@@ -85,3 +93,32 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         orients[ovl.offsets, :] = orients[ovl.offsets + 1, :]
 
         return orients
+
+
+
+    def addVertexDataOptions(self, paths):
+        """Adds the given sequence of paths as options to the
+        :attr:`vertexData` property. It is assumed that the paths refer
+        to valid vertex data files for the overlay associated with this
+        ``TractogramOpts`` instance.
+        """
+        self.__addDataSetOptions(self.getProp('vertexData'), paths)
+
+
+    def addStreamlineDataOptions(self, paths):
+        """Adds the given sequence of paths as options to the
+        :attr:`streamlineData` property. It is assumed that the paths refer
+        to valid streamline data files for the overlay associated with this
+        ``TractogramOpts`` instance.
+        """
+        self.__addDataSetOptions(self.getProp('streamlineData'), paths)
+
+
+    def __addDataSetOptions(self, prop, paths):
+        """Used by :meth:`addVertexDataOptions` and
+        :meth:`addStreamlineDataOptions`.
+        """
+        newPaths = paths
+        paths    = prop.getChoices(instance=self)
+        paths    = paths + [p for p in newPaths if p not in paths]
+        prop.setChoices(paths, instance=self)

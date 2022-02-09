@@ -28,6 +28,8 @@ import            functools
 import            wx
 
 import fsl.utils.idle                 as idle
+import fsl.data.mesh                  as fslmesh
+import fsleyes.data.tractogram        as tractogram
 import fsleyes_props                  as props
 import fsleyes_widgets                as fwidgets
 import fsleyes_widgets.imagepanel     as imagepanel
@@ -343,7 +345,10 @@ def _initPropertyList_VolumeRGBOpts(threedee):
 def _initPropertyList_TractogramOpts(threedee):
     if not threedee:
         return []
-    return ['xColour',
+    return ['colourMode',
+            'custom_vertexData',
+            'custom_streamlineData',
+            'xColour',
             'yColour',
             'zColour',
             'suppressX',
@@ -917,16 +922,33 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
     if not threedee:
         return {}
 
+    def pathName(data):
+        if data is None: return 'None'
+        else:            return op.basename(data)
+
+    orientOpts = dict(dependencies=['colourMode'],
+                      enabledWhen=lambda o, cm: cm == 'orientation')
+    sliderOpts = dict(spin=True, slider=True, showLimits=False)
+
     return {
-        'xColour'      : props.Widget('xColour'),
-        'yColour'      : props.Widget('yColour'),
-        'zColour'      : props.Widget('zColour'),
-        'suppressX'    : props.Widget('suppressX'),
-        'suppressY'    : props.Widget('suppressY'),
-        'suppressZ'    : props.Widget('suppressZ'),
-        'suppressMode' : props.Widget('suppressMode'),
-        'lineWidth'    : props.Widget('lineWidth'),
-        'resolution'   : props.Widget('resolution')
+        'colourMode' : props.Widget(
+            'colourMode',
+            labels=strings.choices['TractogramOpts.colourMode']),
+        'vertexData'            : props.Widget('vertexData',
+                                               labels=pathName),
+        'streamlineData'        : props.Widget('streamlineData',
+                                               labels=pathName),
+        'custom_vertexData'     : _TractogramOpts_vertexDataWidget,
+        'custom_streamlineData' : _TractogramOpts_streamlineDataWidget,
+        'xColour'               : props.Widget('xColour',      **orientOpts),
+        'yColour'               : props.Widget('yColour',      **orientOpts),
+        'zColour'               : props.Widget('zColour',      **orientOpts),
+        'suppressX'             : props.Widget('suppressX',    **orientOpts),
+        'suppressY'             : props.Widget('suppressY',    **orientOpts),
+        'suppressZ'             : props.Widget('suppressZ',    **orientOpts),
+        'suppressMode'          : props.Widget('suppressMode', **orientOpts),
+        'lineWidth'             : props.Widget('lineWidth',    **sliderOpts),
+        'resolution'            : props.Widget('resolution',   **sliderOpts),
     }
 
 
@@ -1224,3 +1246,69 @@ def _MeshOpts_LutWidget(
     sizer.Add(lut,    flag=wx.EXPAND, proportion=1)
 
     return sizer, [enable, lut]
+
+
+def _TractogramOpts_vertexDataWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains a widget for controlling the
+    :attr:`.TractogramOpts.vertexData` property, and also has a button
+    which opens a file dialog, allowing the user to select other
+    data.
+    """
+
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                'vertexData',
+                                                tractogram.Tractogram)
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadVertexData'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexData']
+    vdata = props.buildGUI(parent, target, vdata)
+
+    sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+
+    return sizer, [vdata]
+
+
+def _TractogramOpts_streamlineDataWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains a widget for controlling the
+    :attr:`.TractogramOpts.streamlineData` property, and also has a button
+    which opens a file dialog, allowing the user to select other
+    data.
+    """
+
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                'streamlineData',
+                                                tractogram.Tractogram)
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadStreamlineData'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sdata = getWidgetSpecs(target, displayCtx, threedee)['streamlineData']
+    sdata = props.buildGUI(parent, target, sdata)
+
+    sizer.Add(sdata,      flag=wx.EXPAND, proportion=1)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+
+    return sizer, [sdata]

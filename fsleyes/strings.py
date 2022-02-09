@@ -265,7 +265,10 @@ messages = TypeDict({
     'space to the image being edited!',
 
     'LoadVertexDataAction.loadVertexData' :
-    'Select a vertex data file for {}',
+    'Select a per-vertex data file for {}',
+
+    'LoadVertexDataAction.loadStreamlineData' :
+    'Select a per-streamline data file for {}',
 
     'LoadVertexDataAction.loadVertices' :
     'Select a vertex file for {}',
@@ -727,9 +730,10 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.3d'             : '3D display settings',
 
-    'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
-    'OverlayDisplayPanel.loadVertexData' : 'Load data',
-    'OverlayDisplayPanel.loadVertices'   : 'Load vertices',
+    'OverlayDisplayPanel.loadCmap'           : 'Load colour map',
+    'OverlayDisplayPanel.loadVertexData'     : 'Load vertex data',
+    'OverlayDisplayPanel.loadStreamlineData' : 'Load streamline data',
+    'OverlayDisplayPanel.loadVertices'       : 'Load vertices',
 
     'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
 
@@ -811,6 +815,12 @@ labels = TypeDict({
 
     'OverlayInfoPanel.MGHImage'                 : 'NIFTI Image (from MGH)',
     'OverlayInfoPanel.MGHImage.filename'        : 'MGH image file',
+
+    'OverlayInfoPanel.Tractogram'                : 'Trqctogram',
+    'OverlayInfoPanel.Tractogram.dataSource'     : 'Data source',
+    'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
+    'OverlayInfoPanel.Tractogram.numVertices'    : 'Total number of vertices',
+    'OverlayInfoPanel.Tractogram.size'           : 'Bounding box size',
 
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
@@ -1270,6 +1280,7 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
+    'TractogramOpts.colourMode'   : 'Colour streamlines by',
     'TractogramOpts.lineWidth'    : 'Streamline width',
     'TractogramOpts.resolution'   : 'Streamline resolution',
 })
@@ -1367,10 +1378,14 @@ choices = TypeDict({
     'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
                            'direction' : 'Colour by direction'},
 
-    'ComplexOpts.component' :{ 'real'  : 'Real',
-                               'imag'  : 'Imaginary',
-                               'mag'   : 'Magnitude',
-                               'phase' : 'Phase'},
+    'ComplexOpts.component' : { 'real'  : 'Real',
+                                'imag'  : 'Imaginary',
+                                'mag'   : 'Magnitude',
+                                'phase' : 'Phase'},
+
+    'TractogramOpts.colourMode' : {'orientation'     : 'Orientation',
+                                   'vertexData'      : 'Per-vertex data',
+                                   'streamlineData'  : 'Per-streamline data'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
