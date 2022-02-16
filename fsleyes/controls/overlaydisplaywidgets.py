@@ -345,18 +345,31 @@ def _initPropertyList_VolumeRGBOpts(threedee):
 def _initPropertyList_TractogramOpts(threedee):
     if not threedee:
         return []
-    return ['colourMode',
+    return ['lineWidth',
+            'resolution',
+            'colourMode',
             'custom_vertexData',
             'custom_streamlineData',
+            'custom_cmap',
+            'cmapResolution',
+            'gamma',
+            'logScale',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'linkLowRanges',
+            'linkHighRanges',
+            'modulateAlpha',
+            'displayRange',
+            'clippingRange',
+            'modulateRange',
             'xColour',
             'yColour',
             'zColour',
             'suppressX',
             'suppressY',
             'suppressZ',
-            'suppressMode',
-            'lineWidth',
-            'resolution']
+            'suppressMode']
 
 
 def _initWidgetSpec_Display(displayCtx, threedee):
@@ -926,6 +939,8 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         if data is None: return 'None'
         else:            return op.basename(data)
 
+    cmapOpts   = dict(dependencies=['colourMode'],
+                      enabledWhen=lambda o, cm: cm != 'orientation')
     orientOpts = dict(dependencies=['colourMode'],
                       enabledWhen=lambda o, cm: cm == 'orientation')
     sliderOpts = dict(spin=True, slider=True, showLimits=False)
@@ -949,6 +964,47 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'suppressMode'          : props.Widget('suppressMode', **orientOpts),
         'lineWidth'             : props.Widget('lineWidth',    **sliderOpts),
         'resolution'            : props.Widget('resolution',   **sliderOpts),
+
+        # We override the ColourMapOpts definitions
+        # for custom enabledWhen behaviour.
+        'useNegativeCmap'  : props.Widget('useNegativeCmap',  **cmapOpts),
+        'interpolateCmaps' : props.Widget('interpolateCmaps', **cmapOpts),
+        'invert'           : props.Widget('invert',           **cmapOpts),
+        'logScale'         : props.Widget('logScale',         **cmapOpts),
+        'invertClipping'   : props.Widget('invertClipping',   **cmapOpts),
+        'linkLowRanges'    : props.Widget('linkLowRanges',    **cmapOpts),
+        'linkHighRanges'   : props.Widget('linkHighRanges',   **cmapOpts),
+
+        'cmap' : props.Widget(
+            'cmap',
+            labels=fslcm.getColourMapLabel,
+            **cmapOpts),
+        'negativeCmap' : props.Widget(
+            'negativeCmap',
+            labels=fslcm.getColourMapLabel,
+            **cmapOpts),
+        'gamma' : props.Widget(
+            'gamma',
+            **sliderOpts,
+            **cmapOpts),
+        'cmapResolution' : props.Widget(
+            'cmapResolution',
+            **sliderOpts,
+            **cmapOpts),
+        'displayRange' : props.Widget(
+            'displayRange',
+            showLimits=False,
+            slider=True,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']],
+            **cmapOpts),
+        'clippingRange' : props.Widget(
+            'clippingRange',
+            showLimits=False,
+            slider=True,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']],
+            **cmapOpts),
     }
 
 

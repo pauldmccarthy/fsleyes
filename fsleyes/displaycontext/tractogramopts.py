@@ -67,9 +67,34 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         xhi, yhi, zhi = hi
         self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
+        self.addListener('colourMode',     self.name, self.__dataChanged)
+        self.addListener('vertexData',     self.name, self.__dataChanged)
+        self.addListener('streamlineData', self.name, self.__dataChanged)
+
+
+    def __dataChanged(self, *_):
+        self.updateDataRange()
+
 
     def getDataRange(self):
-        return 0, 1
+        """Overrides :meth:`.ColourMapOpts.getDataRange`. Returns the
+        current data range to use for colouring - this depends on the
+        current :attr:`colourMode`, and selected :attr:`vertexData` or
+        :attr:`streamlineData`.
+        """
+        if self.colourMode == 'vertexData' and \
+           self.vertexData is not None:
+            dmin = np.nanmin(self.vertexData)
+            dmax = np.nanmax(self.vertexData)
+        elif self.colourMode == 'streamlineData'and \
+             self.streamlineData is not None:
+            dmin = np.nanmin(self.streamlineData)
+            dmax = np.nanmax(self.streamlineData)
+        else:
+            dmin = 0
+            dmax = 1
+
+        return dmin, dmax
 
 
     @property
@@ -93,7 +118,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         orients[ovl.offsets, :] = orients[ovl.offsets + 1, :]
 
         return orients
-
 
 
     def addVertexDataOptions(self, paths):
