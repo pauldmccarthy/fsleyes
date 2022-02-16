@@ -51,7 +51,7 @@ def compileShaders(self):
 def destroy(self):
     allShaders = [self.lineOrientShader,
                   self.tubeOrientShader,
-                  self.lineDatShader,
+                  self.lineDataShader,
                   self.tubeDataShader]
     for shader in allShaders:
         if shader is not None:
@@ -119,10 +119,7 @@ def draw3D(self, xform=None):
         shader.set('lineWidth',  lineWidth)
 
         if geom == 'line':
-            camera = affine.transform(
-                [0, -1, 0],
-                affine.invert(self.canvas.viewRotation),
-                vector=True)
+            camera    = [0, 0, 1]
             cameraRot = glroutines.rotate(90, *camera)[:3, :3]
             shader.set('camera',         camera)
             shader.set('cameraRotation', cameraRot)

@@ -62,14 +62,18 @@ void main(void) {
    * line ends, by rotating around the line
    * <resolution> times.
    */
-  for (float i = 0; i < res; i++) {
-    float angle = 6.283185307179586 * (i / (resolution - 1));
-    float cosa  = cos(angle);
-    float sina  = sin(angle);
+  float angle;
+  float cosa;
+  float sina;
+  vec3 offset;
+  for (int i = 0; i < res; i++) {
+    angle = 6.283185307179586 * (float(i) / (resolution - 1));
+    cosa  = cos(angle);
+    sina  = sin(angle);
 
     // Offset from the line at the current angle,
     // on the plane perpendicular to the line.
-    vec3 offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth;
+    offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth / 2;
 
     fragOrient  = geomOrient[0];
     gl_Position = vec4(start + offset, 1);

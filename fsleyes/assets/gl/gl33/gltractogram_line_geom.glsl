@@ -38,8 +38,9 @@ void main(void) {
 
   vec3 start = gl_in[0].gl_Position.xyz;
   vec3 end   = gl_in[1].gl_Position.xyz;
-  vec3 line  = normalize(end - start);
   vec3 offset;
+  vec3 projstart;
+  vec3 projend;
 
   /*
    * Project the vector onto the viewing plane,
@@ -47,8 +48,10 @@ void main(void) {
    * the rectangle corners (so the rectangle
    * corners are 90 degrees).
    */
-  line   = line - (camera * dot(line, camera));
-  offset = normalize(cameraRotation * line) * lineWidth / 2;
+  projstart = start - camera * dot(start, camera);
+  projend   = end   - camera * dot(end,   camera);
+  offset    = projend - projstart;
+  offset    = normalize(cameraRotation * offset) * lineWidth / 2;
 
   fragOrient  = geomOrient[0];
   gl_Position = vec4(start - offset, 1); EmitVertex();
