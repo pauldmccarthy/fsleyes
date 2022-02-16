@@ -99,12 +99,16 @@ def draw3D(self, xform=None):
     counts    = self.counts
     nstrms    = len(offsets)
 
+    if opts.resolution <= 2: geom = 'line'
+    else:                    geom = 'tube'
+
     if opts.colourMode == 'orientation':
-        if opts.resolution <= 2: shader = self.lineOrientShader
-        else:                    shader = self.tubeOrientShader
+        if geom == 'line': shader = self.lineOrientShader
+        else:              shader = self.tubeOrientShader
     else:
-        if opts.resolution <= 2: shader = self.lineDataShader
-        else:                    shader = self.tubeDataShader
+        if geom == 'line': shader = self.lineDataShader
+        else:              shader = self.tubeDataShader
+
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
@@ -113,6 +117,15 @@ def draw3D(self, xform=None):
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
         shader.set('lineWidth',  lineWidth)
+
+        if geom == 'line':
+            camera = affine.transform(
+                [0, -1, 0],
+                affine.invert(self.canvas.viewRotation),
+                vector=True)
+            cameraRot = glroutines.rotate(90, *camera)[:3, :3]
+            shader.set('camera',         camera)
+            shader.set('cameraRotation', cameraRot)
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
