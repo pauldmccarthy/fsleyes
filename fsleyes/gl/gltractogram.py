@@ -29,16 +29,10 @@ class GLTractogram(globject.GLObject):
         if not threedee:
             pass
 
-        self.shader = None
-
-        fslgl.gltractogram_funcs.compileShaders(self)
         self.prepareData()
         self.addListeners()
 
-        with self.shader.loaded():
-            self.updateShaderState()
-            self.shader.setAtt('vertex', self.vertices)
-            self.shader.setAtt('orient', self.orients)
+        fslgl.gltractogram_funcs.compileShaders(self)
 
 
     def destroy(self):
@@ -49,13 +43,14 @@ class GLTractogram(globject.GLObject):
             pass
 
         self.removeListeners()
+        fslgl.gltractogram_funcs.destroy(self)
         globject.GLObject.destroy(self)
 
 
     def destroyed(self):
         """
         """
-        pass
+        # todo
 
 
     def prepareData(self, *a):
@@ -131,24 +126,18 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
+    @property
+    def normalisedLineWidth(self):
+        """
+        """
+        cw, ch    = self.canvas.GetSize()
+        lineWidth = self.opts.lineWidth * max((1 / cw, 1 / ch))
+        return lineWidth
+
+
     def updateShaderState(self, *_):
+        fslgl.gltractogram_funcs.updateShaderState(self)
 
-        opts           = self.opts
-        shader         = self.shader
-        colours, xform = opts.getVectorColours()
-        scale          = xform[0, 0]
-        offset         = xform[0, 3]
-
-        with shader.loaded():
-
-            shader.set('xColour',      colours[0])
-            shader.set('yColour',      colours[1])
-            shader.set('zColour',      colours[2])
-            shader.set('colourScale',  scale)
-            shader.set('colourOffset', offset)
-
-            # GL33 only
-            shader.set('resolution',   opts.resolution)
 
 
     def preDraw(self):

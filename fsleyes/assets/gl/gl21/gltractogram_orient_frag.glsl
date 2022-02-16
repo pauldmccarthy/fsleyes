@@ -1,5 +1,7 @@
 /*
- * Fragment shader for colouring GLTractogram instances.
+ * Fragment shader for colouring GLTractogram instances,
+ * where streamlines are coloured according to their
+ * orientation.
  */
 #version 120
 

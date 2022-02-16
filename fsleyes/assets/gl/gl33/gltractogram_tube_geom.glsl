@@ -37,7 +37,7 @@ void main(void) {
    * clamp resolution at 10, to ensure that
    * this shader will never exceed max_vertices.
    */
-  int res = clamp(resolution, 1, 10);
+  int res = clamp(resolution, 3, 10);
 
   /*
    * Find two vectors which define the
@@ -62,26 +62,21 @@ void main(void) {
    * line ends, by rotating around the line
    * <resolution> times.
    */
-  if (res < 3) {
-    // line
-  }
-  else {
-    for (float i = 0; i < res; i++) {
-      float angle = 6.283185307179586 * (i / (resolution - 1));
-      float cosa  = cos(angle);
-      float sina  = sin(angle);
+  for (float i = 0; i < res; i++) {
+    float angle = 6.283185307179586 * (i / (resolution - 1));
+    float cosa  = cos(angle);
+    float sina  = sin(angle);
 
-      // Offset from the line at the current angle,
-      // on the plane perpendicular to the line.
-      vec3 offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth;
+    // Offset from the line at the current angle,
+    // on the plane perpendicular to the line.
+    vec3 offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth;
 
-      fragOrient  = geomOrient[0];
-      gl_Position = vec4(start + offset, 1);
-      EmitVertex();
-      fragOrient  = geomOrient[1];
-      gl_Position = vec4(end   + offset, 1);
-      EmitVertex();
-    }
+    fragOrient  = geomOrient[0];
+    gl_Position = vec4(start + offset, 1);
+    EmitVertex();
+    fragOrient  = geomOrient[1];
+    gl_Position = vec4(end   + offset, 1);
+    EmitVertex();
   }
   EndPrimitive();
 }

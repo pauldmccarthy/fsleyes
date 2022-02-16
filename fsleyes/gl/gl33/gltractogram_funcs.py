@@ -14,33 +14,101 @@ import fsleyes.gl.shaders   as shaders
 
 def compileShaders(self):
 
-    vertSrc = shaders.getVertexShader(  'gltractogram')
-    fragSrc = shaders.getFragmentShader('gltractogram')
-    geomSrc = shaders.getGeometryShader('gltractogram')
+    vertSrc       = shaders.getVertexShader(  'gltractogram')
+    orientFragSrc = shaders.getFragmentShader('gltractogram_orient')
+    dataFragSrc   = shaders.getFragmentShader('gltractogram_data')
+    lineGeomSrc   = shaders.getGeometryShader('gltractogram_line')
+    tubeGeomSrc   = shaders.getGeometryShader('gltractogram_tube')
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc, geomSrc)
+    # four shaders - one for each combination of
+    # colouring by orientation vs colouring by data,
+    # and drawing as lines vs drawing as tubes.
+    self.lineOrientShader = shaders.GLSLShader(vertSrc,
+                                               orientFragSrc,
+                                               lineGeomSrc)
+    self.tubeOrientShader = shaders.GLSLShader(vertSrc,
+                                               orientFragSrc,
+                                               tubeGeomSrc)
+    self.lineDataShader   = shaders.GLSLShader(vertSrc,
+                                               dataFragSrc,
+                                               lineGeomSrc)
+    self.tubeDataShader   = shaders.GLSLShader(vertSrc,
+                                               dataFragSrc,
+                                               tubeGeomSrc)
+
+    allShaders = [self.lineOrientShader,
+                  self.tubeOrientShader,
+                  self.lineDataShader,
+                  self.tubeDataShader]
+
+    for shader in allShaders:
+        with shader.loaded():
+            shader.setAtt('vertex', self.vertices)
+            shader.setAtt('orient', self.orients)
+    updateShaderState(self)
+
+
+def destroy(self):
+    allShaders = [self.lineOrientShader,
+                  self.tubeOrientShader,
+                  self.lineDatShader,
+                  self.tubeDataShader]
+    for shader in allShaders:
+        if shader is not None:
+            shader.destroy()
+    self.lineOrientShader = None
+    self.tubeOrientShader = None
+    self.lineDatShader    = None
+    self.tubeDataShader   = None
+
+
+def updateShaderState(self):
+    opts           = self.opts
+    loshader       = self.lineOrientShader
+    toshader       = self.tubeOrientShader
+    ldshader       = self.lineDataShader
+    tdshader       = self.tubeDataShader
+    colours, xform = opts.getVectorColours()
+    scale          = xform[0, 0]
+    offset         = xform[0, 3]
+
+    for shader in (loshader, toshader):
+        with shader.loaded():
+            shader.set('xColour',      colours[0])
+            shader.set('yColour',      colours[1])
+            shader.set('zColour',      colours[2])
+            shader.set('colourScale',  scale)
+            shader.set('colourOffset', offset)
+            shader.set('resolution',   opts.resolution)
+
+    for shader in (ldshader, tdshader):
+        #todo
+        pass
 
 
 def draw3D(self, xform=None):
 
-    shader  = self.shader
-    canvas  = self.canvas
-    mvp     = canvas.mvpMatrix
-    mv      = canvas.viewMatrix
-    ovl     = self.overlay
-    opts    = self.opts
-    nstrms  = ovl.nstreamlines
+    canvas    = self.canvas
+    opts      = self.opts
+    mvp       = canvas.mvpMatrix
+    mv        = canvas.viewMatrix
+    ovl       = self.overlay
+    nstrms    = ovl.nstreamlines
+    lineWidth = self.normalisedLineWidth
+    offsets   = self.offsets
+    counts    = self.counts
+    nstrms    = len(offsets)
 
-    offsets = self.offsets
-    counts  = self.counts
-    nstrms  = len(offsets)
+    if opts.colourMode == 'orientation':
+        if opts.resolution <= 2: shader = self.lineOrientShader
+        else:                    shader = self.tubeOrientShader
+    else:
+        if opts.resolution <= 2: shader = self.lineDataShader
+        else:                    shader = self.tubeDataShader
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
         mv  = affine.concat(mv,  xform)
-
-    cw, ch    = canvas.GetSize()
-    lineWidth = opts.lineWidth * max((1 / cw, 1 / ch))
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
