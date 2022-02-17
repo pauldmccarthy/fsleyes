@@ -23,7 +23,7 @@ def compileShaders(self):
 
     vsrc       = shaders.getVertexShader(  'gltractogram')
     orientfsrc = shaders.getFragmentShader('gltractogram_orient')
-    datafsrc   = shaders.getFragmentShader('gltractogram_data')
+    datafsrc   = shaders.getFragmentShader('gltractogram_vertex_data')
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
 

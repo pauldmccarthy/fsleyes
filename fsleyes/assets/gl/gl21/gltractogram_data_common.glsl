@@ -1,12 +1,4 @@
-/*
- * Fragment shader for colouring GLTractogram instances,
- * where streamlines are coloured according to per-vertex
- * scalar data.
- */
-#version 120
-
-/* Positive/negative colour maps
- */
+/* Positive/negative colour maps */
 uniform sampler1D cmap;
 uniform sampler1D negCmap;
 uniform bool      useNegCmap;
@@ -25,10 +17,12 @@ uniform bool      modulateAlpha;
 uniform float     modScale;
 uniform float     modOffset;
 
-/* Vertex data value */
-varying float     fragData;
 
-
+/*
+ * Function shared by gltractogram_vertex_data_frag.glsl and
+ * gltractogram_image_data_frag.glsl, for generating a colour
+ * from a data value.
+ */
 vec4 generateColour(float data) {
   vec4  colour;
   float texCoord;
@@ -64,9 +58,4 @@ vec4 generateColour(float data) {
   }
 
   return colour;
-}
-
-
-void main(void) {
-  gl_FragColor = generateColour(fragData);
 }
