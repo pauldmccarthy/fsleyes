@@ -350,6 +350,7 @@ def _initPropertyList_TractogramOpts(threedee):
             'colourMode',
             'custom_vertexData',
             'custom_streamlineData',
+            'colourImage',
             'custom_cmap',
             'cmapResolution',
             'gamma',
@@ -939,6 +940,10 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         if data is None: return 'None'
         else:            return op.basename(data)
 
+    def imageName(img):
+        if img is None: return 'None'
+        else:           return displayCtx.getDisplay(img).name
+
     cmapOpts   = dict(dependencies=['colourMode'],
                       enabledWhen=lambda o, cm: cm != 'orientation')
     orientOpts = dict(dependencies=['colourMode'],
@@ -953,6 +958,8 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
                                                labels=pathName),
         'streamlineData'        : props.Widget('streamlineData',
                                                labels=pathName),
+        'colourImage'           : props.Widget('colourImage',
+                                               labels=imageName),
         'custom_vertexData'     : _TractogramOpts_vertexDataWidget,
         'custom_streamlineData' : _TractogramOpts_streamlineDataWidget,
         'xColour'               : props.Widget('xColour',      **orientOpts),

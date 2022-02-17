@@ -8,9 +8,11 @@
 display properties for :class:`.Tractogram` overlays.
 """
 
+
 import numpy as np
 
-import fsleyes_props                         as props
+import fsl.data.image                       as fslimage
+import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
 import fsleyes.displaycontext.colourmapopts as cmapopts
 import fsleyes.displaycontext.vectoropts    as vectoropts
@@ -21,9 +23,16 @@ class TractogramOpts(fsldisplay.DisplayOpts,
                      vectoropts.VectorOpts):
     """Display options for :class:`.Tractogram` overlays. """
 
-    colourMode = props.Choice(('orientation', 'vertexData', 'streamlineData'))
-    """Whether to colour streamlines by their orientation (e.g. RGB colouring),
-    or whether to colour them by per-vertex or per-streamline data.
+
+    colourMode = props.Choice(('orientation',
+                               'vertexData',
+                               'streamlineData',
+                               'imageData'))
+    """Whether to colour streamlines by:
+        - their orientation (e.g. RGB colouring)
+        - by per-vertex data (see :attr:`vertexData`)
+        - by per-streamline data (see :attr:`streamlineData`)
+        - by data from an image (see :attr:`colourImage`)
     """
 
 
@@ -39,6 +48,12 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
+    colourImage = props.Choice((None,))
+    """:class:`.Image` used to colour streamlines, when the :attr:`colourMode`
+    is set to ``'imageData'``.
+    """
+
+
     lineWidth = props.Int(minval=1, maxval=10, default=1)
     """Width to draw the streamlines. """
 
@@ -51,65 +66,101 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
 
     def __init__(self, *args, **kwargs):
-        """
-        """
+        """Create a ``TractogramOpts``. """
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 
+        olist         = self.overlayList
         lo, hi        = self.overlay.bounds
         xlo, ylo, zlo = lo
         xhi, yhi, zhi = hi
         self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
-        self.addListener('colourMode',     self.name, self.__dataChanged)
-        self.addListener('vertexData',     self.name, self.__dataChanged)
-        self.addListener('streamlineData', self.name, self.__dataChanged)
+        self .addListener('colourMode',     self.name, self.__dataChanged)
+        self .addListener('vertexData',     self.name, self.__dataChanged)
+        self .addListener('streamlineData', self.name, self.__dataChanged)
+        self .addListener('colourImage',    self.name, self.__dataChanged)
+        olist.addListener('overlays',       self.name, self.__overlaysChanged)
 
         self.addVertexDataOptions(    self.overlay.vertexDataSets())
         self.addStreamlineDataOptions(self.overlay.streamlineDataSets())
+        self.__overlaysChanged()
+        self.__dataChanged()
+
+
+    def destroy(self):
+        """Removes property listeners. """
+        self.overlayList.removeListener('overlays', self.name)
+        fsldisplay.DisplayOpts.destroy(self)
 
 
     def __dataChanged(self, *_):
+        """Called when :attr:`colourMode`, :attr:`vertexData`,
+        :attr:`streamlineData`, or :attr:`colourImage` changes.
+        Calls :meth:`.ColourMapOpts.updateDataRange`, to ensure that
+        the display range is up to date.
+        """
         self.updateDataRange()
+
+
+    def __overlaysChanged(self, *_):
+        """Called when the :class:`.OverlayList` changes. Updates the
+        :attr:`colourImage` property.
+        """
+        cimageProp = self.getProp('colourImage')
+        cimage     = self.colourImage
+        overlays   = self.displayCtx.getOrderedOverlays()
+        overlays   = [o for o in overlays if isinstance(o, fslimage.Image)]
+        options    = [None] + overlays
+
+        cimageProp.setChoices(options, instance=self)
+
+        if cimage in options: self.colourImage = cimage
+        else:                 self.colourImage = None
 
 
     def getDataRange(self):
         """Overrides :meth:`.ColourMapOpts.getDataRange`. Returns the
         current data range to use for colouring - this depends on the
-        current :attr:`colourMode`, and selected :attr:`vertexData` or
-        :attr:`streamlineData`.
+        current :attr:`colourMode`, and selected :attr:`vertexData`,
+        :attr:`streamlineData`, or :attr:`colourImage`.
         """
-        if self.colourMode == 'vertexData' and \
-           self.vertexData is not None:
-            vdata = self.overlay.getVertexData(self.vertexData)
-            dmin  = np.nanmin(vdata)
-            dmax  = np.nanmax(vdata)
-        elif self.colourMode == 'streamlineData'and \
-             self.streamlineData is not None:
-            sdata = self.overlay.getStreamlineData(self.streamlineData)
-            dmin  = np.nanmin(sdata)
-            dmax  = np.nanmax(sdata)
-        else:
-            dmin = 0
-            dmax = 1
 
-        return dmin, dmax
+        overlay = self.overlay
+        cmode   = self.colourMode
+        vdata   = self.vertexData
+        sdata   = self.streamlineData
+        cimage  = self.colourImage
+
+        if cmode == 'vertexData' and vdata is not None:
+            data = overlay.getVertexData(vdata)
+        elif cmode == 'streamlineData'and sdata is not None:
+            data = overlay.getStreamlineData(sdata)
+        elif cmode == 'imageData' and cimage is not None:
+            data = cimage.data
+        else:
+            data = None
+
+        if data is None: return 0, 1
+        else:            return np.nanmin(data), np.nanmax(data)
 
 
     @property
     def effectiveColourMode(self):
         """Returns ``'data'`` or ``'orient'``, indicataing whether the
         tractogram should be coloured by streamline orientation, or
-        streamline/vertex data.
+        streamline/vertex/image data.
         """
-        cmode = self.colourMode
-        sdata = self.streamlineData
-        vdata = self.vertexData
+        cmode  = self.colourMode
+        sdata  = self.streamlineData
+        vdata  = self.vertexData
+        cimage = self.colourImage
 
-        if   cmode == 'vertexData'     and vdata is not None: return 'data'
-        elif cmode == 'streamlineData' and sdata is not None: return 'data'
-        else:                                                 return 'orient'
+        if   cmode == 'vertexData'     and vdata  is not None: return 'data'
+        elif cmode == 'streamlineData' and sdata  is not None: return 'data'
+        elif cmode == 'imageData'      and cimage is not None: return 'data'
+        else:                                                  return 'orient'
 
 
     def addVertexDataOptions(self, paths):

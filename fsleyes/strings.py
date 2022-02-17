@@ -1280,9 +1280,12 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
-    'TractogramOpts.colourMode'   : 'Colour streamlines by',
-    'TractogramOpts.lineWidth'    : 'Streamline width',
-    'TractogramOpts.resolution'   : 'Streamline resolution',
+    'TractogramOpts.colourMode'     : 'Colour streamlines by',
+    'TractogramOpts.lineWidth'      : 'Streamline width',
+    'TractogramOpts.resolution'     : 'Streamline resolution',
+    'TractogramOpts.vertexData'     : 'Per-vertex data',
+    'TractogramOpts.streamlineData' : 'Per-streamline data',
+    'TractogramOpts.colourImage'    : 'Colour by image',
 })
 
 
@@ -1385,7 +1388,8 @@ choices = TypeDict({
 
     'TractogramOpts.colourMode' : {'orientation'     : 'Orientation',
                                    'vertexData'      : 'Per-vertex data',
-                                   'streamlineData'  : 'Per-streamline data'},
+                                   'streamlineData'  : 'Per-streamline data',
+                                   'imageData'       : 'Colour by image'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
