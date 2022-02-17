@@ -11,10 +11,13 @@ The ``Tractogram`` class is just a thin wrapper around a
 ``nibabel.streamlines.Tractogram`` object.
 """
 
-import os.path as op
+import functools as ft
+import os.path   as op
 
-import numpy               as np
-import nibabel.streamlines as nibstrm
+import numpy                as np
+import nibabel.streamlines  as nibstrm
+
+import fsl.transform.affine as affine
 
 
 ALLOWED_EXTENSIONS     = ['.tck', '.trk']
@@ -84,6 +87,29 @@ class Tractogram:
     def nvertices(self):
         """Returns the total number of vertices across all streamlines. """
         return len(self.vertices)
+
+
+    @property
+    @ft.lru_cache()
+    def orientation(self):
+        """Calculates and returns an orientation vector for every vertex of
+        every streamline in the tractogram.
+
+        The orientation assigned to a vertex is just the difference between
+        that vertex and the previous vertex in the streamline. The first
+        vertex in a streamline is given the same orientation as the second
+        (i.e. o0 = o1 = (v1 - v0)).
+        """
+
+        verts   = self.vertices
+        offsets = self.offsets
+        orients = np.zeros(verts.shape, dtype=np.float32)
+
+        diffs               = verts[1:, :] - verts[:-1, :]
+        orients[1:,      :] = affine.normalise(diffs)
+        orients[offsets, :] = orients[offsets + 1, :]
+
+        return orients
 
 
     def loadVertexData(self, infile, key=None):

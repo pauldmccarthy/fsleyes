@@ -23,8 +23,7 @@ from . import                  vectoropts
 class TractogramOpts(fsldisplay.DisplayOpts,
                      cmapopts.ColourMapOpts,
                      vectoropts.VectorOpts):
-    """
-    """
+    """Display options for :class:`.Tractogram` overlays. """
 
     colourMode = props.Choice(('orientation', 'vertexData', 'streamlineData'))
     """Whether to colour streamlines by their orientation (e.g. RGB colouring),
@@ -112,29 +111,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         if   cmode == 'vertexData'     and vdata is not None: return 'data'
         elif cmode == 'streamlineData' and sdata is not None: return 'data'
         else:                                                 return 'orient'
-
-
-    @property
-    @ft.lru_cache()
-    def orientation(self):
-        """Calculates and returns an orientation vector for every vertex of
-        every streamline in the tractogram.
-
-        The orientation assigned to a vertex is just the difference between
-        that vertex and the previous vertex in the streamline. The first
-        vertex in a streamline is given the same orientation as the second
-        (i.e. o0 = o1 = (v1 - v0)).
-        """
-
-        ovl     = self.overlay
-        verts   = ovl.vertices
-        orients = np.zeros(verts.shape, dtype=np.float32)
-
-        diffs                   = verts[1:, :] - verts[:-1, :]
-        orients[1:, :]          = affine.normalise(diffs)
-        orients[ovl.offsets, :] = orients[ovl.offsets + 1, :]
-
-        return orients
 
 
     def addVertexDataOptions(self, paths):

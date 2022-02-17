@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 #
-# gltractogram_funcs.py -
+# gltractogram_funcs.py - OpenGL 3.3 functions used by the GLTractogram class
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module contains functions used by the :class:`.GLTractogram` class
+when rendering in an OpenGL 3.3 compatible manner.
+"""
+
 
 import OpenGL.GL as gl
 
@@ -13,6 +17,9 @@ import fsleyes.gl.shaders   as shaders
 
 
 def compileShaders(self):
+    """Called by :meth:`.GLTractogram.compileShaders`.
+    Compiles shader programs.
+    """
 
     vsrc       = shaders.getVertexShader(  'gltractogram')
     orientfsrc = shaders.getFragmentShader('gltractogram_orient')
@@ -36,6 +43,7 @@ def compileShaders(self):
 
 
 def draw3D(self, xform=None):
+    """Called by :class:`.GLTractogram.draw3D`. """
 
     canvas    = self.canvas
     opts      = self.opts

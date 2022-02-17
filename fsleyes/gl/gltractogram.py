@@ -4,8 +4,12 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module contains logic for rendering :class:`.GLTractogram` instances.
+
+"""This module contains logic for rendering :class:`.Tractogram` overlays.
+``Tractogram`` rendering is only suppported in 3D, i.e. in the
+:class:`.Scene3DCanvas`.
 """
+
 
 import itertools as it
 
@@ -18,39 +22,40 @@ import fsleyes.gl.globject  as globject
 
 
 class GLTractogram(globject.GLObject):
-    """
+    """The GLTractogram contains logic for drawing :class:`.Tractogram`
+    overlays.
     """
 
     def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
-        """
-        """
+        """Create a :meth:`GLTractogram`. """
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, canvas, threedee)
 
         if not threedee:
             pass
 
+        # Shaders created in compileShaders
         self.cmapTexture    = textures.ColourMapTexture(self.name)
         self.negCmapTexture = textures.ColourMapTexture(self.name)
         self.shaders        = {'data' : [], 'orient' : []}
-
-        self.vertices = np.asarray(overlay.vertices, dtype=np.float32)
-        self.offsets  = np.asarray(overlay.offsets,  dtype=np.int32)
-        self.counts   = np.asarray(overlay.lengths,  dtype=np.int32)
 
         # Orientation is used for RGB colouring.
         # We have to apply abs so that GL doesn't
         # interpolate across -ve/+ve boundaries.
         # when passing from vertex shader through
         # to fragment shader.
-        self.orients = np.abs(self.opts.orientation)
+        self.vertices = np.asarray(overlay.vertices, dtype=np.float32)
+        self.offsets  = np.asarray(overlay.offsets,  dtype=np.int32)
+        self.counts   = np.asarray(overlay.lengths,  dtype=np.int32)
+        self.orients  = np.abs(overlay.orientation,  dtype=np.float32)
 
         self.addListeners()
         self.compileShaders()
 
 
     def addListeners(self):
-        """
+        """Called by :meth:`__init__`. Adds a bunch of property listeners
+        to the :class:`.Display` and :class:`.TractogramOpts` instances.
         """
         opts    = self.opts
         display = self.display
@@ -101,8 +106,7 @@ class GLTractogram(globject.GLObject):
 
 
     def removeListeners(self):
-        """
-        """
+        """Called by :meth:`destroy`. Removes all property listeners. """
         opts    = self.opts
         display = self.display
         name    = self.name
@@ -136,14 +140,14 @@ class GLTractogram(globject.GLObject):
 
 
     def destroy(self):
-        """
-        """
+        """Removes listeners and destroys textures and shader programs. """
 
         if not self.threedee:
             pass
 
         if self.cmapTexture is not None:
             self.cmapTexture.destroy()
+
         if self.negCmapTexture is not None:
             self.negCmapTexture.destroy()
 
@@ -156,18 +160,19 @@ class GLTractogram(globject.GLObject):
         self.shaders        = None
 
         self.removeListeners()
-        fslgl.gltractogram_funcs.destroy(self)
         globject.GLObject.destroy(self)
 
 
     def destroyed(self):
-        """
-        """
+        """Returns ``True`` if :meth:`destroy` has been called. """
         return self.shaders is None
 
 
     def compileShaders(self):
-        """
+        """Called by :meth:`__init__`. Calls
+        :func:`.gl21.gltractogram_funcs.compileShaders` or
+        :func:`.gl33.gltractogram_funcs.compileShaders`, passes vertex data to
+        the shader programs, and calls :meth:`updateShaderState`
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
@@ -183,7 +188,7 @@ class GLTractogram(globject.GLObject):
 
 
     def updateShaderState(self):
-        """
+        """Passes display properties as uniform values to the shader programs.
         """
         opts                = self.opts
         colours, xform      = opts.getVectorColours()
@@ -220,7 +225,9 @@ class GLTractogram(globject.GLObject):
 
 
     def updateVertexData(self):
-        """
+        """Called when :class:`.TractogramOpts.vertexData` or
+        :class:`.TractogramOpts.streamlineData` changes. Passes data to the
+        shader programs.
         """
 
         opts  = self.opts
@@ -308,6 +315,10 @@ class GLTractogram(globject.GLObject):
 
 
     def draw3D(self, xform=None):
+        """Binds textures if necessary, then calls
+        :func:`.gl21.gltractogram_funcs.draw3D` or
+        :func:`.gl33.gltractogram_funcs.draw3D`.
+        """
 
         needTextures = self.opts.effectiveColourMode == 'data'
 
