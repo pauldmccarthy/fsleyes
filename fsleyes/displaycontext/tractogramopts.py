@@ -8,16 +8,12 @@
 display properties for :class:`.Tractogram` overlays.
 """
 
-import functools            as ft
+import numpy as np
 
-import numpy                as np
-
-import fsl.transform.affine as affine
-import fsleyes_props        as props
-
-from . import display       as fsldisplay
-from . import colourmapopts as cmapopts
-from . import                  vectoropts
+import fsleyes_props                         as props
+import fsleyes.displaycontext.display       as fsldisplay
+import fsleyes.displaycontext.colourmapopts as cmapopts
+import fsleyes.displaycontext.vectoropts    as vectoropts
 
 
 class TractogramOpts(fsldisplay.DisplayOpts,
@@ -69,6 +65,9 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self.addListener('colourMode',     self.name, self.__dataChanged)
         self.addListener('vertexData',     self.name, self.__dataChanged)
         self.addListener('streamlineData', self.name, self.__dataChanged)
+
+        self.addVertexDataOptions(    self.overlay.vertexDataSets())
+        self.addStreamlineDataOptions(self.overlay.streamlineDataSets())
 
 
     def __dataChanged(self, *_):
@@ -135,6 +134,8 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         """Used by :meth:`addVertexDataOptions` and
         :meth:`addStreamlineDataOptions`.
         """
+        if len(paths) == 0:
+            return
         newPaths = paths
         paths    = prop.getChoices(instance=self)
         paths    = paths + [p for p in newPaths if p not in paths]

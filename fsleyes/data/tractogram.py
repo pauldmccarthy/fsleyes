@@ -40,8 +40,17 @@ class Tractogram:
         self.__streamlineData   = {}
         self.__streamlinePVData = {}
 
-        # TODO load vertex/streamline data from nib
-        # object (i.e. trk scalars/properties)
+        # Load any per-vertex / per-streamline data
+        # which is stored in the streamline file
+        tractogram = self.tractFile.tractogram
+        for skey in tractogram.data_per_streamline.keys():
+            sdata = tractogram.data_per_streamline[skey].get_data()
+            skey  = f'{skey} [{self.name}]'
+            self.addStreamlineData(skey, sdata.reshape(-1))
+        for vkey in tractogram.data_per_point.keys():
+            vdata = tractogram.data_per_point[vkey].get_data()
+            vkey  = f'{vkey} [{self.name}]'
+            self.addVertexData(vkey, vdata.reshape(-1))
 
 
     @property

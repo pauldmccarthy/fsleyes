@@ -234,15 +234,11 @@ class GLTractogram(globject.GLObject):
         ovl   = self.overlay
         cmode = opts.colourMode
 
-        if cmode == 'orientation':
-            return
-
-        if cmode == 'vertexData':
+        if cmode == 'vertexData' and opts.vertexData is not None:
             data = ovl.getVertexData(opts.vertexData)
-        elif cmode == 'streamlineData':
+        elif cmode == 'streamlineData' and opts.streamlineData is not None:
             data = ovl.getStreamlineDataPerVertex(opts.streamlineData)
-
-        if data is None:
+        else:
             return
 
         for shader in self.shaders['data']:
@@ -287,7 +283,7 @@ class GLTractogram(globject.GLObject):
         res      = opts.cmapResolution
         negCmap  = opts.negativeCmap
         gamma    = opts.realGamma(opts.gamma)
-        logScale = opts.realGamma(opts.gamma)
+        logScale = opts.logScale
         invert   = opts.invert
         dmin     = opts.displayRange[0]
         dmax     = opts.displayRange[1]
