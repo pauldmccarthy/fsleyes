@@ -84,17 +84,34 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         """
         if self.colourMode == 'vertexData' and \
            self.vertexData is not None:
-            dmin = np.nanmin(self.vertexData)
-            dmax = np.nanmax(self.vertexData)
+            vdata = self.overlay.getVertexData(self.vertexData)
+            dmin  = np.nanmin(vdata)
+            dmax  = np.nanmax(vdata)
         elif self.colourMode == 'streamlineData'and \
              self.streamlineData is not None:
-            dmin = np.nanmin(self.streamlineData)
-            dmax = np.nanmax(self.streamlineData)
+            sdata = self.overlay.getStreamlineData(self.streamlineData)
+            dmin  = np.nanmin(sdata)
+            dmax  = np.nanmax(sdata)
         else:
             dmin = 0
             dmax = 1
 
         return dmin, dmax
+
+
+    @property
+    def effectiveColourMode(self):
+        """Returns ``'data'`` or ``'orient'``, indicataing whether the
+        tractogram should be coloured by streamline orientation, or
+        streamline/vertex data.
+        """
+        cmode = self.colourMode
+        sdata = self.streamlineData
+        vdata = self.vertexData
+
+        if   cmode == 'vertexData'     and vdata is not None: return 'data'
+        elif cmode == 'streamlineData' and sdata is not None: return 'data'
+        else:                                                 return 'orient'
 
 
     @property

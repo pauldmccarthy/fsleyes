@@ -33,8 +33,9 @@ class Tractogram:
         # or with each streamline. These can be
         # loded from the tractogram file, or
         # loaded from separate files.
-        self.__vertexData     = {}
-        self.__streamlineData = {}
+        self.__vertexData       = {}
+        self.__streamlineData   = {}
+        self.__streamlinePVData = {}
 
         # TODO load vertex/streamline data from nib
         # object (i.e. trk scalars/properties)
@@ -143,6 +144,20 @@ class Tractogram:
     def getStreamlineData(self, key):
         """Return the specified per-streamline data. """
         return self.__streamlineData[key]
+
+
+    def getStreamlineDataPerVertex(self, key):
+        """Return the specified per-streamline data, with each value repeated
+        for every vertex.
+        """
+
+        vdata = self.__streamlinePVData.get(key, None)
+        if vdata is None:
+            sdata = self.getStreamlineData(key)
+            vdata = np.repeat(sdata, self.lengths)
+            self.__streamlinePVData[key] = vdata
+
+        return vdata
 
 
     def vertexDataSets(self):

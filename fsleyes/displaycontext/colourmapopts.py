@@ -381,7 +381,7 @@ class ColourMapOpts:
         range is always the same as the data range, this method does not
         need to be overridden.
 
-        Otherwise, if the modulate ange differs from the data range (see
+        Otherwise, if the modulate range differs from the data range (see
         e.g. the :attr:`.VolumeOpts.modulateImage` property), this method must
         return the modulate range as a ``(min, max)`` tuple.
 
@@ -390,6 +390,24 @@ class ColourMapOpts:
         base-class implementation.
         """
         return None
+
+
+    def modulateScaleOffset(self):
+        """Returns a scale and offset which can be used transforms a value
+        from the data range into a value between 0 and 1, according to the
+        current :attr:`modulateRange`.
+        """
+
+        modlo, modhi = self.modulateRange
+        mrange       = modhi - modlo
+        if mrange == 0:
+            scale  = 1
+            offset = 0
+        else:
+            scale  = 1 / mrange
+            offset = -modlo / mrange
+
+        return scale, offset
 
 
     @actions.action

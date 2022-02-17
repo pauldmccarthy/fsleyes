@@ -14,76 +14,25 @@ import fsleyes.gl.shaders   as shaders
 
 def compileShaders(self):
 
-    vertSrc       = shaders.getVertexShader(  'gltractogram')
-    orientFragSrc = shaders.getFragmentShader('gltractogram_orient')
-    dataFragSrc   = shaders.getFragmentShader('gltractogram_data')
-    lineGeomSrc   = shaders.getGeometryShader('gltractogram_line')
-    tubeGeomSrc   = shaders.getGeometryShader('gltractogram_tube')
+    vsrc       = shaders.getVertexShader(  'gltractogram')
+    orientfsrc = shaders.getFragmentShader('gltractogram_orient')
+    datafsrc   = shaders.getFragmentShader('gltractogram_data')
+    linegsrc   = shaders.getGeometryShader('gltractogram_line')
+    tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
+
+    oconst = {'dataType' : 'vec3'}
+    dconst = {'dataType' : 'float'}
 
     # four shaders - one for each combination of
     # colouring by orientation vs colouring by data,
     # and drawing as lines vs drawing as tubes.
-    self.lineOrientShader = shaders.GLSLShader(vertSrc,
-                                               orientFragSrc,
-                                               lineGeomSrc)
-    self.tubeOrientShader = shaders.GLSLShader(vertSrc,
-                                               orientFragSrc,
-                                               tubeGeomSrc)
-    self.lineDataShader   = shaders.GLSLShader(vertSrc,
-                                               dataFragSrc,
-                                               lineGeomSrc)
-    self.tubeDataShader   = shaders.GLSLShader(vertSrc,
-                                               dataFragSrc,
-                                               tubeGeomSrc)
+    lineOrientShader = shaders.GLSLShader(vsrc, orientfsrc, linegsrc, oconst)
+    tubeOrientShader = shaders.GLSLShader(vsrc, orientfsrc, tubegsrc, oconst)
+    lineDataShader   = shaders.GLSLShader(vsrc, datafsrc,   linegsrc, dconst)
+    tubeDataShader   = shaders.GLSLShader(vsrc, datafsrc,   tubegsrc, dconst)
 
-    allShaders = [self.lineOrientShader,
-                  self.tubeOrientShader,
-                  self.lineDataShader,
-                  self.tubeDataShader]
-
-    for shader in allShaders:
-        with shader.loaded():
-            shader.setAtt('vertex', self.vertices)
-            shader.setAtt('orient', self.orients)
-    updateShaderState(self)
-
-
-def destroy(self):
-    allShaders = [self.lineOrientShader,
-                  self.tubeOrientShader,
-                  self.lineDataShader,
-                  self.tubeDataShader]
-    for shader in allShaders:
-        if shader is not None:
-            shader.destroy()
-    self.lineOrientShader = None
-    self.tubeOrientShader = None
-    self.lineDatShader    = None
-    self.tubeDataShader   = None
-
-
-def updateShaderState(self):
-    opts           = self.opts
-    loshader       = self.lineOrientShader
-    toshader       = self.tubeOrientShader
-    ldshader       = self.lineDataShader
-    tdshader       = self.tubeDataShader
-    colours, xform = opts.getVectorColours()
-    scale          = xform[0, 0]
-    offset         = xform[0, 3]
-
-    for shader in (loshader, toshader):
-        with shader.loaded():
-            shader.set('xColour',      colours[0])
-            shader.set('yColour',      colours[1])
-            shader.set('zColour',      colours[2])
-            shader.set('colourScale',  scale)
-            shader.set('colourOffset', offset)
-            shader.set('resolution',   opts.resolution)
-
-    for shader in (ldshader, tdshader):
-        #todo
-        pass
+    self.shaders['orient'].extend([lineOrientShader, tubeOrientShader])
+    self.shaders['data']  .extend([lineDataShader,   tubeDataShader])
 
 
 def draw3D(self, xform=None):
@@ -102,13 +51,12 @@ def draw3D(self, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if opts.colourMode == 'orientation':
-        if geom == 'line': shader = self.lineOrientShader
-        else:              shader = self.tubeOrientShader
+    if opts.effectiveColourMode == 'orient':
+        if geom == 'line': shader = self.shaders['orient'][0]
+        else:              shader = self.shaders['orient'][1]
     else:
-        if geom == 'line': shader = self.lineDataShader
-        else:              shader = self.tubeDataShader
-
+        if geom == 'line': shader = self.shaders['data'][0]
+        else:              shader = self.shaders['data'][1]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)

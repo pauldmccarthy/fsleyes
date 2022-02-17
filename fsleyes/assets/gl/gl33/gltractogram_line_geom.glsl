@@ -8,11 +8,11 @@ layout (lines) in;
 layout (triangle_strip, max_vertices=4) out;
 
 /*
- * Line orientation vector. Passed
- * straight through to fragment shader.
+ * Vertex data - passed straight through to
+ * fragment shader.
  */
-in  vec3 geomOrient[];
-out vec3 fragOrient;
+in  {{ dataType }} geomData[];
+out {{ dataType }} fragData;
 
 /*
  * Line/cylinder width - must be defined
@@ -53,10 +53,10 @@ void main(void) {
   offset    = projend - projstart;
   offset    = normalize(cameraRotation * offset) * lineWidth / 2;
 
-  fragOrient  = geomOrient[0];
+  fragData    = geomData[0];
   gl_Position = vec4(start - offset, 1); EmitVertex();
   gl_Position = vec4(start + offset, 1); EmitVertex();
-  fragOrient  = geomOrient[1];
+  fragData    = geomData[1];
   gl_Position = vec4(end   - offset, 1); EmitVertex();
   gl_Position = vec4(end   + offset, 1); EmitVertex();
   EndPrimitive();

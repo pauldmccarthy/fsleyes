@@ -409,7 +409,6 @@ class GLObject(notifier.Notifier):
         more calls to the :meth:`draw2D`/:meth:`draw3D` methods are made, such
         as binding and configuring textures.
         """
-        raise NotImplementedError()
 
 
     def draw2D(self, zpos, axes, xform=None):
@@ -428,7 +427,6 @@ class GLObject(notifier.Notifier):
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
         """
-        raise NotImplementedError()
 
 
     def draw3D(self, xform=None):
@@ -439,7 +437,6 @@ class GLObject(notifier.Notifier):
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
         """
-        raise NotImplementedError()
 
 
     def drawAll(self, axes, zposes, xforms):
@@ -469,7 +466,6 @@ class GLObject(notifier.Notifier):
         It should perform any necessary cleaning up, such as unbinding
         textures.
         """
-        raise NotImplementedError()
 
 
 class GLSimpleObject(GLObject):

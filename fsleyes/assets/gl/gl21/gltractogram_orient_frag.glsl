@@ -13,13 +13,13 @@ uniform float colourOffset;
 
 
 /* Streamline orientation corresponding to this fragment. */
-varying vec3 fragOrient;
+varying vec3 fragData;
 
 void main(void) {
 
-  vec4 colour = fragOrient.x * xColour +
-                fragOrient.y * yColour +
-                fragOrient.z * zColour;
+  vec4 colour = fragData.x * xColour +
+                fragData.y * yColour +
+                fragData.z * zColour;
   colour.a    = (xColour.a +
                  yColour.a +
                  zColour.a) / 3;
