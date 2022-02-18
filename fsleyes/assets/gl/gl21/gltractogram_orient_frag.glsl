@@ -5,6 +5,11 @@
  */
 #version 120
 
+/*
+ * Colours used for X/Y/Z orientation, and
+ * scale/offset for applying global
+ * brightness/contrast
+ */
 uniform vec4  xColour;
 uniform vec4  yColour;
 uniform vec4  zColour;

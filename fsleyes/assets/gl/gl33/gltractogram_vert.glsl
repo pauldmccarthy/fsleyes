@@ -1,16 +1,17 @@
 /*
- * Vertex shader for rendering GLTractogram instances.
+ * Vertex shader for rendering GLTractogram instances when being
+ * coloured by orientation or by per-vertex data.
  */
 #version 330
 
 uniform mat4 MVP;
 
-/* Coordinates of current vertex. Passed through to geometry shader. */
+/* Vertex coordinates. */
 in vec3 vertex;
 
 /*
- * Vertex data value - the contents depends on how the tractogram
- * is being coloured (by orientation, or by scalar data). Passed
+ * Vertex data value - the type/contents depends on how the tractogram
+ * is being coloured (by orientation, or by per-vertex data). Passed
  * through to geometry shader.
  */
 in  {{ dataType }} data;

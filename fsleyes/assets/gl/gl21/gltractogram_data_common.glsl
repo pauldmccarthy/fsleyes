@@ -1,3 +1,9 @@
+/*
+ * Function used by gltractogram fragment shaders, for
+ * converting a data value into a RGBA colour according
+ * to TractogramOpts/ColourMapOpts settings
+ */
+
 /* Positive/negative colour maps */
 uniform sampler1D cmap;
 uniform sampler1D negCmap;
@@ -18,11 +24,6 @@ uniform float     modScale;
 uniform float     modOffset;
 
 
-/*
- * Function shared by gltractogram_vertex_data_frag.glsl and
- * gltractogram_image_data_frag.glsl, for generating a colour
- * from a data value.
- */
 vec4 generateColour(float data) {
   vec4  colour;
   float texCoord;

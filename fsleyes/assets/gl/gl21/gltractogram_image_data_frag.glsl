@@ -8,9 +8,11 @@
 
 
 /*
- * Vertex data value, and scale/offset to
- * transform from texture data range to
- * original data range.
+ * Image texture to get data from, scale/
+ * offset to transform from texture data
+ * range to original data range, and affine
+ * to transform from vertex coordinates to
+ * image texture coordinates.
  */
 uniform sampler3D imageTexture;
 uniform float     voxScale;

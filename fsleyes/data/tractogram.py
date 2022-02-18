@@ -25,6 +25,10 @@ EXTENSION_DESCRIPTIONS = ['MRtrix .tck file', 'TrackVis .trk file']
 
 
 class Tractogram:
+    """The ``Tractogram`` class is a thin wrapper around a
+    ``nibabel.streamlines.Tractogram`` object, with a few methods for managing
+    per-vertex and per-streamline data.
+    """
 
     def __init__(self, fname):
 
