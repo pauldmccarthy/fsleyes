@@ -29,9 +29,11 @@ This module also provides a few functions, most importantly
    createGLObject
 """
 
+
 import contextlib
 import logging
 
+import fsl.utils.idle     as idle
 import fsl.utils.notifier as notifier
 
 
@@ -329,6 +331,14 @@ class GLObject(notifier.Notifier):
         """
         raise NotImplementedError('The ready method must be '
                                   'implemented by GLObject subclasses')
+
+
+    def notifyWhen(self, condition):
+        """Wrapper around :meth:`.Notifier.notify` which schedule the
+        ``notify`` call to take place when ``condition() is True``.
+        """
+        name = f'{self.name}_notifyWhen'
+        idle.idleWhen(self.notify, condition, name=name, skipIfQueued=True)
 
 
     def getDisplayBounds(self):

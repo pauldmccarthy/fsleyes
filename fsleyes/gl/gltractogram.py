@@ -56,9 +56,9 @@ class GLTractogram(globject.GLObject):
         self.counts   = np.asarray(overlay.lengths,  dtype=np.int32)
         self.orients  = np.abs(overlay.orientation,  dtype=np.float32)
 
+        self.refreshImageTexture()
         self.addListeners()
         self.compileShaders()
-        self.refreshImageTexture()
 
 
     def addListeners(self):
@@ -87,7 +87,7 @@ class GLTractogram(globject.GLObject):
 
         def idata(*_):
             self.refreshImageTexture()
-            self.notify()
+            self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',       name, shader,  weak=False)
         opts   .addListener('colourMode',       name, vdata,   weak=False)
