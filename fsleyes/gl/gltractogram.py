@@ -58,6 +58,7 @@ class GLTractogram(globject.GLObject):
 
         self.addListeners()
         self.compileShaders()
+        self.refreshImageTexture()
 
 
     def addListeners(self):
@@ -240,6 +241,19 @@ class GLTractogram(globject.GLObject):
                 shader.set('modScale',      modScale)
                 shader.set('modOffset',     modOffset)
 
+        if opts.colourImage is not None:
+            copts     = self.displayCtx.getOpts(opts.colourImage)
+            w2tXform  = copts.getTransform('world', 'texture')
+            voxXform  = self.imageTexture.voxValXform
+            voxScale  = voxXform[0, 0]
+            voxOffset = voxXform[0, 3]
+            for shader in self.shaders['idata']:
+                with shader.loaded():
+                    shader.set('imageTexture',  2)
+                    shader.set('texCoordXform', w2tXform)
+                    shader.set('voxScale',      voxScale)
+                    shader.set('voxOffset',     voxOffset)
+
 
     def updateVertexData(self):
         """Called when :class:`.TractogramOpts.vertexData` or
@@ -267,7 +281,7 @@ class GLTractogram(globject.GLObject):
         """Overrides :meth:`.GLObject.ready`. Returns ``True`` if the
         :attr:`.TractogramOpts.colourImage` is ready (or unset).
         """
-        return self.imageTexture is None or self.imageTexture.ready()
+        return (self.imageTexture is None) or self.imageTexture.ready()
 
 
     def getDisplayBounds(self):
@@ -308,6 +322,7 @@ class GLTractogram(globject.GLObject):
             textures.createImageTexture,
             texName,
             cimage,
+            interp=gl.GL_LINEAR,
             notify=False)
         self.imageTexture.register(self.name, self.updateShaderState)
 

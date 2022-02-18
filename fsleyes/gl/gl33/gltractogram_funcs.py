@@ -32,9 +32,10 @@ def compileShaders(self):
     oconst = {'dataType' : 'vec3'}
     dconst = {'dataType' : 'float'}
 
-    # four shaders - one for each combination of
-    # colouring by orientation vs colouring by data,
-    # and drawing as lines vs drawing as tubes.
+    # six shaders - one for each combination of
+    # colouring by orientation vs colouring by data
+    # vs colouring by image, and drawing as lines
+    # vs drawing as tubes.
     lineOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, linegsrc, oconst)
     tubeOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst)
     lineVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst)

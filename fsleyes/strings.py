@@ -1285,7 +1285,7 @@ properties = TypeDict({
     'TractogramOpts.resolution'     : 'Streamline resolution',
     'TractogramOpts.vertexData'     : 'Per-vertex data',
     'TractogramOpts.streamlineData' : 'Per-streamline data',
-    'TractogramOpts.colourImage'    : 'Colour by image',
+    'TractogramOpts.colourImage'    : 'Image data',
 })
 
 

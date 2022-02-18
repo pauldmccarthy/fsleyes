@@ -148,7 +148,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     @property
     def effectiveColourMode(self):
-        """Returns a string indicataing how the tractogram should be coloured:
+        """Returns a string indicating how the tractogram should be coloured:
           - ``'orient'`` - colour by streamline orientation
           - ``'vdata'``  - colour by per vertex/streamline data
           - ``'idata'``  - colour by separate image
