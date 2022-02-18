@@ -22,8 +22,10 @@ def compileShaders(self):
     """
 
     vsrc       = shaders.getVertexShader(  'gltractogram')
+    ivsrc      = shaders.getVertexShader(  'gltractogram_image_data')
     orientfsrc = shaders.getFragmentShader('gltractogram_orient')
-    datafsrc   = shaders.getFragmentShader('gltractogram_vertex_data')
+    vdatafsrc  = shaders.getFragmentShader('gltractogram_vertex_data')
+    idatafsrc  = shaders.getFragmentShader('gltractogram_image_data')
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
 
@@ -33,13 +35,16 @@ def compileShaders(self):
     # four shaders - one for each combination of
     # colouring by orientation vs colouring by data,
     # and drawing as lines vs drawing as tubes.
-    lineOrientShader = shaders.GLSLShader(vsrc, orientfsrc, linegsrc, oconst)
-    tubeOrientShader = shaders.GLSLShader(vsrc, orientfsrc, tubegsrc, oconst)
-    lineDataShader   = shaders.GLSLShader(vsrc, datafsrc,   linegsrc, dconst)
-    tubeDataShader   = shaders.GLSLShader(vsrc, datafsrc,   tubegsrc, dconst)
+    lineOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, linegsrc, oconst)
+    tubeOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst)
+    lineVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst)
+    tubeVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  tubegsrc, dconst)
+    lineIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  linegsrc, oconst)
+    tubeIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  tubegsrc, oconst)
 
     self.shaders['orient'].extend([lineOrientShader, tubeOrientShader])
-    self.shaders['data']  .extend([lineDataShader,   tubeDataShader])
+    self.shaders['vdata'] .extend([lineVDataShader,  tubeVDataShader])
+    self.shaders['idata'] .extend([lineIDataShader,  tubeIDataShader])
 
 
 def draw3D(self, xform=None):
@@ -47,6 +52,7 @@ def draw3D(self, xform=None):
 
     canvas    = self.canvas
     opts      = self.opts
+    cmode     = opts.effectiveColourMode
     mvp       = canvas.mvpMatrix
     mv        = canvas.viewMatrix
     ovl       = self.overlay
@@ -59,12 +65,15 @@ def draw3D(self, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if opts.effectiveColourMode == 'orient':
+    if cmode == 'orient':
         if geom == 'line': shader = self.shaders['orient'][0]
         else:              shader = self.shaders['orient'][1]
-    else:
-        if geom == 'line': shader = self.shaders['data'][0]
-        else:              shader = self.shaders['data'][1]
+    elif cmode == 'vdata':
+        if geom == 'line': shader = self.shaders['vdata'][0]
+        else:              shader = self.shaders['vdata'][1]
+    elif cmode == 'idata':
+        if geom == 'line': shader = self.shaders['idata'][0]
+        else:              shader = self.shaders['idata'][1]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)

@@ -35,10 +35,15 @@ class GLTractogram(globject.GLObject):
         if not threedee:
             pass
 
-        # Shaders created in compileShaders
+        # Shaders are created in compileShaders.
+        # imageTexture created in refreshImageTexture
+        # Three separate shader types are used:
+        #  - 'orient' - coloured by streamline orientation
+        #  - 'vdata'  - coloured by per-vertex/streamline data
+        #  - 'idata'  - coloured by data from an Image
+        self.shaders        = {'orient' : [], 'vdata' : [], 'idata' : []}
         self.cmapTexture    = textures.ColourMapTexture(self.name)
         self.negCmapTexture = textures.ColourMapTexture(self.name)
-        self.shaders        = {'data' : [], 'orient' : []}
         self.imageTexture   = None
 
         # Orientation is used for RGB colouring.
@@ -192,7 +197,7 @@ class GLTractogram(globject.GLObject):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
                 shader.setAtt('data',   self.orients)
-        for shader in self.shaders['data']:
+        for shader in self.shaders['vdata'] + self.shaders['idata']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
 
@@ -220,7 +225,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
 
-        for shader in self.shaders['data']:
+        for shader in self.shaders['vdata'] + self.shaders['idata']:
             with shader.loaded():
                 shader.set('resolution',    opts.resolution)
                 shader.set('cmap',          0)
@@ -253,7 +258,7 @@ class GLTractogram(globject.GLObject):
         else:
             return
 
-        for shader in self.shaders['data']:
+        for shader in self.shaders['vdata']:
             with shader.loaded():
                 shader.setAtt('data', data)
 
@@ -355,12 +360,20 @@ class GLTractogram(globject.GLObject):
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
 
-        needTextures = self.opts.effectiveColourMode == 'data'
+        cmode = self.opts.effectiveColourMode
+        cmaps = cmode in ('idata', 'vdata')
+        image = cmode ==  'idata'
 
-        if needTextures:
+        if cmaps:
             self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
             self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+        if image:
+            self.imageTexture.bindTexture(gl.GL_TEXTURE2)
+
         fslgl.gltractogram_funcs.draw3D(self, xform)
-        if needTextures:
+
+        if cmaps:
             self.cmapTexture   .unbindTexture()
             self.negCmapTexture.unbindTexture()
+        if image:
+            self.imageTexture.unbindTexture()

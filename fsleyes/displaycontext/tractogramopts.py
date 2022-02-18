@@ -148,18 +148,19 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     @property
     def effectiveColourMode(self):
-        """Returns ``'data'`` or ``'orient'``, indicataing whether the
-        tractogram should be coloured by streamline orientation, or
-        streamline/vertex/image data.
+        """Returns a string indicataing how the tractogram should be coloured:
+          - ``'orient'`` - colour by streamline orientation
+          - ``'vdata'``  - colour by per vertex/streamline data
+          - ``'idata'``  - colour by separate image
         """
         cmode  = self.colourMode
         sdata  = self.streamlineData
         vdata  = self.vertexData
         cimage = self.colourImage
 
-        if   cmode == 'vertexData'     and vdata  is not None: return 'data'
-        elif cmode == 'streamlineData' and sdata  is not None: return 'data'
-        elif cmode == 'imageData'      and cimage is not None: return 'data'
+        if   cmode == 'vertexData'     and vdata  is not None: return 'vdata'
+        elif cmode == 'streamlineData' and sdata  is not None: return 'vdata'
+        elif cmode == 'imageData'      and cimage is not None: return 'idata'
         else:                                                  return 'orient'
 
 
