@@ -243,7 +243,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         display.removeListener('name',        self.name)
         display.removeListener('overlayType', self.name)
 
-        for propName in OverlayInfoPanel._optProps[overlay]:
+        for propName in OverlayInfoPanel._optProps.get(overlay, []):
             opts.removeListener(propName, self.name)
 
 

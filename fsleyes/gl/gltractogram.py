@@ -209,6 +209,7 @@ class GLTractogram(globject.GLObject):
         """Passes display properties as uniform values to the shader programs.
         """
         opts                = self.opts
+        display             = self.display
         colours, xform      = opts.getVectorColours()
         colourScale         = xform[0, 0]
         colourOffset        = xform[0, 3]
@@ -216,6 +217,20 @@ class GLTractogram(globject.GLObject):
         cmapScale           = cmapXform[0, 0]
         cmapOffset          = cmapXform[0, 3]
         modScale, modOffset = opts.modulateScaleOffset()
+
+        # We scale alpha exponentially as, for a
+        # typical tractogram with many streamlines,
+        # transparency only starts to take effect
+        # when display.alpha ~= 20. Also, when
+        # alpha < 100, we draw the tractogram twice
+        # - see the gltractogram_funcs.draw3D
+        # function for more details.
+        if display.alpha < 100:
+            alpha         = (display.alpha / 100) ** 2
+            colours[0][3] = alpha
+            colours[0][3] = alpha
+            colours[1][3] = alpha
+            colours[2][3] = alpha
 
         for shader in self.shaders['orient']:
             with shader.loaded():
@@ -349,6 +364,11 @@ class GLTractogram(globject.GLObject):
 
         if interp: interp = gl.GL_LINEAR
         else:      interp = gl.GL_NEAREST
+
+        # Scale alpha exponentially (see inline
+        # comments in updateShaderState)
+        if alpha < 1:
+            alpha = alpha ** 2
 
         self.cmapTexture.set(cmap=cmap,
                              invert=invert,
