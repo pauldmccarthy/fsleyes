@@ -57,8 +57,10 @@ class GLTractogram(globject.GLObject):
         self.orients  = np.abs(overlay.orientation,  dtype=np.float32)
 
         self.refreshImageTexture()
+        self.refreshCmapTextures()
         self.addListeners()
         self.compileShaders()
+        self.updateVertexData()
 
 
     def addListeners(self):

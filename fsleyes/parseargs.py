@@ -626,7 +626,26 @@ OPTIONS = td.TypeDict({
                           'suppressA',
                           'suppressMode'],
     'ComplexOpts'       : ['component'],
-    'TractogramOpts'    : [],
+    'TractogramOpts'    : ['vertexData',
+                           'streamlineData',
+                           'colourImage',
+                           'lineWidth',
+                           'resolution',
+                           'linkLowRanges',
+                           'linkHighRanges',
+                           'useNegativeCmap',
+                           'displayRange',
+                           'clippingRange',
+                           'modulateRange',
+                           'gamma',
+                           'logScale',
+                           'invertClipping',
+                           'cmap',
+                           'negativeCmap',
+                           'cmapResolution',
+                           'interpolateCmaps',
+                           'invert',
+                           'modulateAlpha'],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -950,6 +969,12 @@ ARGUMENTS = td.TypeDict({
     'VolumeRGBOpts.suppressMode'  : ('sm', 'suppressMode',  True),
 
     'ComplexOpts.component' : ('co', 'component', True),
+
+    'TractogramOpts.vertexData'     : ('vd', 'vertexData',     True),
+    'TractogramOpts.streamlineData' : ('sd', 'streamlineData', True),
+    'TractogramOpts.colourImage'    : ('ci', 'colourImage',    True),
+    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',      True),
+    'TractogramOpts.resolution'     : ('r',  'resolution',     True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1298,7 +1323,22 @@ HELP = td.TypeDict({
     'VolumeRGBOpts.suppressMode'  : 'Replace suppressed channels with '
                                     '\'white\' (default), \'black\', or '
                                     '\'transparent\'.',
-})
+
+    'TractogramOpts.vertexData' :
+    'File containing per-vertex scalar values for colouring, or '
+    'an index (starting from 0) specifying a per-vertex data set '
+    'contained in the tractogram file.',
+    'TractogramOpts.streamlineData' :
+    'File containing per-streamline scalar values for colouring, or '
+    'an index (starting from 0) specifying a per-streamline data set '
+    'contained in the tractogram file.',
+    'TractogramOpts.colourImage' :
+    'NIFTI image for colouring.',
+    'TractogramOpts.lineWidth' :
+    'Streamline width (pixels)',
+    'TractogramOpts.resolution' :
+    'Streamline resolution',
+ })
 """This dictionary defines the help text for all command line options."""
 
 
@@ -1397,62 +1437,69 @@ def getExtra(target, propName, default=None):
     }
 
     allSettings = {
-        (fsldisplay.Display,        'overlayType')   : overlayTypeSettings,
-        (fsldisplay.LabelOpts,      'lut')           : lutSettings,
-        (fsldisplay.MeshOpts,       'lut')           : lutSettings,
-        (fsldisplay.GiftiOpts,      'lut')           : lutSettings,
-        (fsldisplay.FreesurferOpts, 'lut')           : lutSettings,
-        (fsldisplay.ColourMapOpts,  'cmap')          : cmapSettings,
-        (fsldisplay.ColourMapOpts,  'negativeCmap')  : cmapSettings,
-        (fsldisplay.MeshOpts,       'cmap')          : cmapSettings,
-        (fsldisplay.GiftiOpts,      'negativeCmap')  : cmapSettings,
-        (fsldisplay.GiftiOpts,      'cmap')          : cmapSettings,
-        (fsldisplay.FreesurferOpts, 'negativeCmap')  : cmapSettings,
-        (fsldisplay.FreesurferOpts, 'cmap')          : cmapSettings,
-        (fsldisplay.MeshOpts,       'negativeCmap')  : cmapSettings,
-        (fsldisplay.VolumeOpts,     'cmap')          : cmapSettings,
-        (fsldisplay.VolumeOpts,     'clippingRange') : rangeSettings,
-        (fsldisplay.VolumeOpts,     'displayRange')  : rangeSettings,
-        (fsldisplay.VolumeOpts,     'modulateRange') : rangeSettings,
-        (fsldisplay.VolumeOpts,     'negativeCmap')  : cmapSettings,
-        (fsldisplay.LineVectorOpts, 'cmap')          : cmapSettings,
-        (fsldisplay.RGBVectorOpts,  'cmap')          : cmapSettings,
-        (fsldisplay.TensorOpts,     'cmap')          : cmapSettings,
-        (fsldisplay.SHOpts,         'cmap')          : cmapSettings,
-        (fsldisplay.SHOpts,         'shOrder')       : shOrderSettings,
-        (fsldisplay.SceneOpts,      'bgColour')      : colourSettings,
-        (fsldisplay.SceneOpts,      'fgColour')      : colourSettings,
-        (fsldisplay.SceneOpts,      'cursorColour')  : colourSettings,
-        (fsldisplay.MaskOpts,       'colour')        : colourSettings,
-        (fsldisplay.LineVectorOpts, 'xColour')       : colourSettings,
-        (fsldisplay.LineVectorOpts, 'yColour')       : colourSettings,
-        (fsldisplay.LineVectorOpts, 'zColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'xColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'yColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'zColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'xColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'yColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'zColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'xColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'yColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'zColour')       : colourSettings,
-        (fsldisplay.MeshOpts,       'colour')        : colourSettings,
-        (fsldisplay.GiftiOpts,      'colour')        : colourSettings,
-        (fsldisplay.FreesurferOpts, 'colour')        : colourSettings,
-        (fsldisplay.MeshOpts,       'vertexData')    : vertexDataSettings,
-        (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
-        (fsldisplay.FreesurferOpts, 'vertexData')    : vertexDataSettings,
-        (fsldisplay.MeshOpts,       'modulateData')  : vertexDataSettings,
-        (fsldisplay.GiftiOpts,      'modulateData')  : vertexDataSettings,
-        (fsldisplay.FreesurferOpts, 'modulateData')  : vertexDataSettings,
-        (fsldisplay.MeshOpts,       'vertexSet')     : vertexSetSettings,
-        (fsldisplay.GiftiOpts,      'vertexSet')     : vertexSetSettings,
-        (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
-        (fsldisplay.MIPOpts,        'cmap')          : cmapSettings,
-        (fsldisplay.MIPOpts,        'negativeCmap')  : cmapSettings,
-        (fsldisplay.VolumeRGBOpts,  'rColour')       : colourSettings,
-        (fsldisplay.VolumeRGBOpts,  'gColour')       : colourSettings,
-        (fsldisplay.VolumeRGBOpts,  'bColour')       : colourSettings,
+        (fsldisplay.Display,        'overlayType')    : overlayTypeSettings,
+        (fsldisplay.LabelOpts,      'lut')            : lutSettings,
+        (fsldisplay.MeshOpts,       'lut')            : lutSettings,
+        (fsldisplay.GiftiOpts,      'lut')            : lutSettings,
+        (fsldisplay.FreesurferOpts, 'lut')            : lutSettings,
+        (fsldisplay.ColourMapOpts,  'cmap')           : cmapSettings,
+        (fsldisplay.ColourMapOpts,  'negativeCmap')   : cmapSettings,
+        (fsldisplay.MeshOpts,       'cmap')           : cmapSettings,
+        (fsldisplay.GiftiOpts,      'negativeCmap')   : cmapSettings,
+        (fsldisplay.GiftiOpts,      'cmap')           : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'negativeCmap')   : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.MeshOpts,       'negativeCmap')   : cmapSettings,
+        (fsldisplay.VolumeOpts,     'cmap')           : cmapSettings,
+        (fsldisplay.VolumeOpts,     'clippingRange')  : rangeSettings,
+        (fsldisplay.VolumeOpts,     'displayRange')   : rangeSettings,
+        (fsldisplay.VolumeOpts,     'modulateRange')  : rangeSettings,
+        (fsldisplay.VolumeOpts,     'negativeCmap')   : cmapSettings,
+        (fsldisplay.LineVectorOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.RGBVectorOpts,  'cmap')           : cmapSettings,
+        (fsldisplay.TensorOpts,     'cmap')           : cmapSettings,
+        (fsldisplay.SHOpts,         'cmap')           : cmapSettings,
+        (fsldisplay.SHOpts,         'shOrder')        : shOrderSettings,
+        (fsldisplay.SceneOpts,      'bgColour')       : colourSettings,
+        (fsldisplay.SceneOpts,      'fgColour')       : colourSettings,
+        (fsldisplay.SceneOpts,      'cursorColour')   : colourSettings,
+        (fsldisplay.MaskOpts,       'colour')         : colourSettings,
+        (fsldisplay.LineVectorOpts, 'xColour')        : colourSettings,
+        (fsldisplay.LineVectorOpts, 'yColour')        : colourSettings,
+        (fsldisplay.LineVectorOpts, 'zColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'xColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'yColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'zColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'xColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'yColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'zColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'xColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'yColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'zColour')        : colourSettings,
+        (fsldisplay.MeshOpts,       'colour')         : colourSettings,
+        (fsldisplay.GiftiOpts,      'colour')         : colourSettings,
+        (fsldisplay.FreesurferOpts, 'colour')         : colourSettings,
+        (fsldisplay.MeshOpts,       'vertexData')     : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'vertexData')     : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'vertexData')     : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'modulateData')   : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'modulateData')   : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'modulateData')   : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'vertexSet')      : vertexSetSettings,
+        (fsldisplay.GiftiOpts,      'vertexSet')      : vertexSetSettings,
+        (fsldisplay.FreesurferOpts, 'vertexSet')      : vertexSetSettings,
+        (fsldisplay.MIPOpts,        'cmap')           : cmapSettings,
+        (fsldisplay.MIPOpts,        'negativeCmap')   : cmapSettings,
+        (fsldisplay.VolumeRGBOpts,  'rColour')        : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'gColour')        : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'bColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'xColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'yColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'zColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.TractogramOpts, 'negativeCmap')   : cmapSettings,
+        (fsldisplay.TractogramOpts, 'vertexData')     : vertexDataSettings,
+        (fsldisplay.TractogramOpts, 'streamlineData') : vertexDataSettings,
     }
 
     # Add (str, propname) versions
@@ -1470,13 +1517,14 @@ def getExtra(target, propName, default=None):
 # needs to be loaded as an overlay
 # need special treatment.
 FILE_OPTIONS = td.TypeDict({
-    'Main'       : ['displaySpace'],
-    'VolumeOpts' : ['clipImage',
-                    'modulateImage'],
-    'VectorOpts' : ['clipImage',
-                    'colourImage',
-                    'modulateImage'],
-    'MeshOpts'   : ['refImage'],
+    'Main'           : ['displaySpace'],
+    'VolumeOpts'     : ['clipImage',
+                        'modulateImage'],
+    'VectorOpts'     : ['clipImage',
+                        'colourImage',
+                        'modulateImage'],
+    'MeshOpts'       : ['refImage'],
+    'TractogramOpts' : ['colourImage'],
 })
 """This dictionary contains all arguments which accept file or path
 names. These arguments need special treatment - for these arguments, the user
@@ -2890,6 +2938,17 @@ def applyOverlayArgs(args,
                     setattr(optArgs, llr, None)
                     setattr(optArgs, lhr, None)
 
+                # When a vertex/streamline/image file is
+                # specified for a Tractogram overlay,
+                # we set the colour mode accordingly.
+                # For vertex/streamline data, we do this
+                # with an applySpecial function, but we
+                # can't for the colourImage option, as
+                # it is an overlay/file option.
+                elif fileOpt == 'colourImage' and \
+                   isinstance(opts, fsldisplay.TractogramOpts):
+                    opts.colourMode = 'imageData'
+
                 setattr(opts, fileOpt, image)
 
             # After handling the special cases
@@ -3694,3 +3753,48 @@ def _generateLookupTable(longArg, lut):
     # way - don't know what to do
     else:
         return []
+
+
+def _applySpecial_TractogramOpts_vertexData(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.TractogramOpts.vertexData` option. """
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+    # Pre-load all specified vertex data
+    # files, but only apply the last one,
+    vertexData = list(args.vertexData)
+    last       = len(args.vertexData) - 1
+    for i, vd in enumerate(vertexData):
+        # Vertex data can be a file
+        if op.exists(vd):
+            vertexData[i] = loadvertexdata.loadVertexData(
+                target.overlay, displayCtx, vd, select=(i == last))
+        # Or can be an index specifying a
+        # data set that is contained in the
+        # tractogram file itself
+        elif i == last:
+            vd = int(vd)
+            vd = target.overlay.vertexDataSets()[vd]
+            target.vertexData = vd
+    target.colourMode = 'vertexData'
+
+
+def _applySpecial_TractogramOpts_streamlineData(
+        args, overlayList, displayCtx, target):
+    """Applies the :attr:`.TractogramOpts.streamlineData` option. """
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+    # Pre-load all specified streamline data
+    # files, but only apply the last one,
+    strmData = list(args.streamlineData)
+    last     = len(args.streamlineData) - 1
+    for i, sd in enumerate(strmData):
+        if op.exists(sd):
+            strmData[i] = loadvertexdata.loadStreamlineData(
+                target.overlay, displayCtx, sd, select=(i == last))
+        # Or can be an index specifying a
+        # data set that is contained in the
+        # tractogram file itself
+        elif i == last:
+            sd = int(sd)
+            sd = target.overlay.streamlineDataSets()[sd]
+            target.streamlineData = sd
+    target.colourMode = 'streamlineData'
