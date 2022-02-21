@@ -69,12 +69,12 @@ void main(void) {
   fragNormal = vec3(0, 0, 0);
 
   fragData    = geomData[0];
-  fragVertex  = start - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
   fragVertex  = start + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+  fragVertex  = start - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
 
   fragData    = geomData[1];
-  fragVertex  = end - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
   fragVertex  = end + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+  fragVertex  = end - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
 
   EndPrimitive();
 

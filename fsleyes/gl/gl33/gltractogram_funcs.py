@@ -102,12 +102,7 @@ def draw3D(self, xform=None):
             shader.set('lighting', lighting)
             shader.set('lightPos', lightPos)
 
-        # If drawing as tubes, we don't
-        # need to draw back/inner faces
-        if geom == 'tube': cull = [gl.GL_CULL_FACE]
-        else:              cull = []
-
-        with glroutines.enabled(cull):
+        with glroutines.enabled(gl.GL_CULL_FACE):
             gl.glCullFace(gl.GL_BACK)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             # Alpha blending does not work with glMultiDrawArrays,
