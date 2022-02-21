@@ -280,7 +280,7 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     glver  = os.environ.get('FSLEYES_TEST_GL', None)
     if glver is not None:
-        glver = (int(v) for v in glver.split('.'))
+        glver = [int(v) for v in glver.split('.')]
 
     def init():
         fsleyes.initialise()
