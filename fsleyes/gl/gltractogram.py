@@ -240,6 +240,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourScale',  colourScale)
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
+                shader.set('lighting',     False)
 
         for shader in self.shaders['vdata'] + self.shaders['idata']:
             with shader.loaded():
@@ -255,6 +256,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('modulateAlpha', opts.modulateAlpha)
                 shader.set('modScale',      modScale)
                 shader.set('modOffset',     modOffset)
+                shader.set('lighting',      False)
 
         if opts.colourImage is not None:
             copts     = self.displayCtx.getOpts(opts.colourImage)

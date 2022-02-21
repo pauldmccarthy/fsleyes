@@ -5,6 +5,7 @@
 #version 120
 
 #pragma include gltractogram_data_common.glsl
+#pragma include phong_lighting.glsl
 
 
 /*
@@ -19,12 +20,29 @@ uniform float     voxScale;
 uniform float     voxOffset;
 uniform mat4      texCoordXform;
 
-/* Vertex coordinates */
+/* Light position, and whether to apply lighting. */
+uniform bool lighting;
+uniform vec3 lightPos;
+
+/* Vertex coordinates (in world space) */
 varying vec3 fragData;
+
+/*
+ * Vertex coordinates and normal (in NDC space),
+ * for calculating lighting.
+ */
+varying vec3 fragVertex;
+varying vec3 fragNormal;
 
 void main(void) {
   vec3 texCoord = (texCoordXform * vec4(fragData, 1)).xyz;
   float val     = texture3D(imageTexture, texCoord).x;
   val           = val * voxScale + voxOffset;
-  gl_FragColor  = generateColour(val);
+  vec4 colour   = generateColour(val);
+
+  if (lighting) {
+    colour.xyz = phong_lighting(fragVertex, fragNormal, lightPos, colour.xyz);
+  }
+
+  gl_FragColor = colour;
 }

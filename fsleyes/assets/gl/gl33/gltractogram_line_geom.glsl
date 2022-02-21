@@ -14,6 +14,13 @@ layout (triangle_strip, max_vertices=4) out;
 in  {{ dataType }} geomData[];
 out {{ dataType }} fragData;
 
+/* Vertex position and normal, passed
+ * through to fragment shader to
+ *  calculate lighting.
+ */
+out vec3 fragVertex;
+out vec3 fragNormal;
+
 /*
  * Line/cylinder width - must be defined
  * in terms of normalised device coordinates
@@ -53,12 +60,22 @@ void main(void) {
   offset    = projend - projstart;
   offset    = normalize(cameraRotation * offset) * lineWidth / 2;
 
+  // Lighting is not currently applied
+  // to line geometry, but we should
+  // be able to calculate the normal
+  // as being orthogonal to the
+  // rectangle representing the line.
+  // fragNormal = normalize(cross(start - offset, start - end));
+  fragNormal = vec3(0, 0, 0);
+
   fragData    = geomData[0];
-  gl_Position = vec4(start - offset, 1); EmitVertex();
-  gl_Position = vec4(start + offset, 1); EmitVertex();
+  fragVertex  = start - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+  fragVertex  = start + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+
   fragData    = geomData[1];
-  gl_Position = vec4(end   - offset, 1); EmitVertex();
-  gl_Position = vec4(end   + offset, 1); EmitVertex();
+  fragVertex  = end - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+  fragVertex  = end + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
+
   EndPrimitive();
 
 }

@@ -86,14 +86,21 @@ def draw3D(self, xform=None):
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
         shader.set('lineWidth',  lineWidth)
-        shader.set('lighting',   lighting)
-        shader.set('lightPos',   lightPos)
 
+        # Line geometry shader needs to know
+        # the camera direction so it can
+        # position line/rectangle vertices
         if geom == 'line':
             camera    = [0, 0, 1]
             cameraRot = glroutines.rotate(90, *camera)[:3, :3]
             shader.set('camera',         camera)
             shader.set('cameraRotation', cameraRot)
+
+        # Only use lighting on tube geometry,
+        # as it looks rubbish on lines
+        else:
+            shader.set('lighting', lighting)
+            shader.set('lightPos', lightPos)
 
         # If drawing as tubes, we don't
         # need to draw back/inner faces
@@ -114,7 +121,7 @@ def draw3D(self, xform=None):
             # To work around this and to get a tractogram that looks
             # ok from any angle, we draw the tractogram twice - first
             # without, and then with depth testing.
-            if display.alpha < 100:
+            if display.alpha < 100 or opts.modulateAlpha:
                 gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
             with glroutines.enabled(gl.GL_DEPTH_TEST):
                 gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
