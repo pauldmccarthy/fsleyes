@@ -54,11 +54,11 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    lineWidth = props.Int(minval=1, maxval=10, default=1)
+    lineWidth = props.Int(minval=1, maxval=10, default=2)
     """Width to draw the streamlines. """
 
 
-    resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
+    resolution = props.Int(minval=1, maxval=10, default=6, clamped=True)
     """Only relevant when using OpenGL >= 3.3. Streamlines are drawn as tubes -
     this setting defines the resolution at which the tubes are drawn. IF
     resolution <= 2, the streamlines are drawn as lines.

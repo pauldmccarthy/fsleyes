@@ -5,14 +5,22 @@
 #version 330
 
 layout (lines) in;
-layout (triangle_strip, max_vertices=40) out;
+layout (triangle_strip, max_vertices=22) out;
 
 /*
  * Vertex data, pssed straight
- *  through to fragment shader.
+ * through to fragment shader.
  */
 in  {{ dataType }} geomData[];
 out {{ dataType }} fragData;
+
+/*
+ * Vertex position and normal,
+ * passed to fragment shader
+ * to calculate lighting.
+ */
+out vec3 fragVertex;
+out vec3 fragNormal;
 
 /*
  * Line/cylinder width - must be defined
@@ -65,21 +73,27 @@ void main(void) {
   float angle;
   float cosa;
   float sina;
-  vec3 offset;
-  for (int i = 0; i < res; i++) {
-    angle = 6.283185307179586 * (float(i) / (resolution - 1));
+  vec3  offset;
+  vec3  scaledOffset;
+  for (int i = 0; i <= res; i++) {
+    angle = 6.283185307179586 * (float(i) / resolution);
     cosa  = cos(angle);
     sina  = sin(angle);
 
     // Offset from the line at the current angle,
     // on the plane perpendicular to the line.
-    offset = normalize(((normalx * cosa) + (normaly * sina))) * lineWidth / 2;
+    offset       = normalize(((normalx * cosa) + (normaly * sina)));
+    scaledOffset = offset * lineWidth / 2;
 
     fragData    = geomData[0];
-    gl_Position = vec4(start + offset, 1);
+    fragVertex  = start + scaledOffset;
+    fragNormal  = offset;
+    gl_Position = vec4(fragVertex, 1);
     EmitVertex();
     fragData    = geomData[1];
-    gl_Position = vec4(end   + offset, 1);
+    fragVertex  = end + scaledOffset;
+    fragNormal  = offset;
+    gl_Position = vec4(fragVertex, 1);
     EmitVertex();
   }
   EndPrimitive();

@@ -57,6 +57,8 @@ def draw3D(self, xform=None):
     cmode     = opts.effectiveColourMode
     mvp       = canvas.mvpMatrix
     mv        = canvas.viewMatrix
+    lighting  = canvas.opts.light
+    lightPos  = affine.transform(canvas.lightPos, mvp)
     ovl       = self.overlay
     nstrms    = ovl.nstreamlines
     lineWidth = self.normalisedLineWidth
@@ -84,6 +86,8 @@ def draw3D(self, xform=None):
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
         shader.set('lineWidth',  lineWidth)
+        shader.set('lighting',   lighting)
+        shader.set('lightPos',   lightPos)
 
         if geom == 'line':
             camera    = [0, 0, 1]
@@ -91,20 +95,26 @@ def draw3D(self, xform=None):
             shader.set('camera',         camera)
             shader.set('cameraRotation', cameraRot)
 
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        # If drawing as tubes, we don't
+        # need to draw back/inner faces
+        if geom == 'tube': cull = [gl.GL_CULL_FACE]
+        else:              cull = []
 
-        # Alpha blending does not work with glMultiDrawArrays,
-        # because the order in which streamlines are drawn is
-        # arbitrary, so streamlines which are drawn first will
-        # be blended with the background, and streamlines which
-        # are drawn later will be blended with those already
-        # drawn. But the former streamlines may be positioned
-        # in front of the latter ones :(
-        #
-        # To work around this and to get a tractogram that looks
-        # ok from any angle, we draw the tractogram twice - first
-        # without, and then with depth testing.
-        if display.alpha < 100:
-            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
-        with glroutines.enabled(gl.GL_DEPTH_TEST):
-            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+        with glroutines.enabled(cull):
+            gl.glCullFace(gl.GL_BACK)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            # Alpha blending does not work with glMultiDrawArrays,
+            # because the order in which streamlines are drawn is
+            # arbitrary, so streamlines which are drawn first will
+            # be blended with the background, and streamlines which
+            # are drawn later will be blended with those already
+            # drawn. But the former streamlines may be positioned
+            # in front of the latter ones :(
+            #
+            # To work around this and to get a tractogram that looks
+            # ok from any angle, we draw the tractogram twice - first
+            # without, and then with depth testing.
+            if display.alpha < 100:
+                gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+            with glroutines.enabled(gl.GL_DEPTH_TEST):
+                gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
