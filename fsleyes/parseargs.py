@@ -627,7 +627,6 @@ OPTIONS = td.TypeDict({
                           'suppressMode'],
     'ComplexOpts'       : ['component'],
     'TractogramOpts'    : ['vertexData',
-                           'streamlineData',
                            'colourImage',
                            'lineWidth',
                            'resolution',
@@ -971,7 +970,6 @@ ARGUMENTS = td.TypeDict({
     'ComplexOpts.component' : ('co', 'component', True),
 
     'TractogramOpts.vertexData'     : ('vd', 'vertexData',     True),
-    'TractogramOpts.streamlineData' : ('sd', 'streamlineData', True),
     'TractogramOpts.colourImage'    : ('ci', 'colourImage',    True),
     'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',      True),
     'TractogramOpts.resolution'     : ('r',  'resolution',     True),
@@ -1325,12 +1323,8 @@ HELP = td.TypeDict({
                                     '\'transparent\'.',
 
     'TractogramOpts.vertexData' :
-    'File containing per-vertex scalar values for colouring, or '
-    'an index (starting from 0) specifying a per-vertex data set '
-    'contained in the tractogram file.',
-    'TractogramOpts.streamlineData' :
-    'File containing per-streamline scalar values for colouring, or '
-    'an index (starting from 0) specifying a per-streamline data set '
+    'File containing per-vertex/streamline scalar values for colouring, or '
+    'an index (starting from 0) specifying a per-vertex/streamline data set '
     'contained in the tractogram file.',
     'TractogramOpts.colourImage' :
     'NIFTI image for colouring.',
@@ -1499,7 +1493,6 @@ def getExtra(target, propName, default=None):
         (fsldisplay.TractogramOpts, 'cmap')           : cmapSettings,
         (fsldisplay.TractogramOpts, 'negativeCmap')   : cmapSettings,
         (fsldisplay.TractogramOpts, 'vertexData')     : vertexDataSettings,
-        (fsldisplay.TractogramOpts, 'streamlineData') : vertexDataSettings,
     }
 
     # Add (str, propname) versions
@@ -3773,28 +3766,8 @@ def _applySpecial_TractogramOpts_vertexData(
         # tractogram file itself
         elif i == last:
             vd = int(vd)
-            vd = target.overlay.vertexDataSets()[vd]
+            vsets = target.overlay.vertexDataSets()
+            ssets = target.overlay.streamlineDataSets()
+            vd    = list(it.chain(vsets, ssets))[vd]
             target.vertexData = vd
     target.colourMode = 'vertexData'
-
-
-def _applySpecial_TractogramOpts_streamlineData(
-        args, overlayList, displayCtx, target):
-    """Applies the :attr:`.TractogramOpts.streamlineData` option. """
-    import fsleyes.actions.loadvertexdata as loadvertexdata
-    # Pre-load all specified streamline data
-    # files, but only apply the last one,
-    strmData = list(args.streamlineData)
-    last     = len(args.streamlineData) - 1
-    for i, sd in enumerate(strmData):
-        if op.exists(sd):
-            strmData[i] = loadvertexdata.loadStreamlineData(
-                target.overlay, displayCtx, sd, select=(i == last))
-        # Or can be an index specifying a
-        # data set that is contained in the
-        # tractogram file itself
-        elif i == last:
-            sd = int(sd)
-            sd = target.overlay.streamlineDataSets()[sd]
-            target.streamlineData = sd
-    target.colourMode = 'streamlineData'

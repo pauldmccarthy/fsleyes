@@ -43,9 +43,9 @@ def compileShaders(self):
     lineIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  linegsrc, oconst)
     tubeIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  tubegsrc, oconst)
 
-    self.shaders['orient'].extend([lineOrientShader, tubeOrientShader])
-    self.shaders['vdata'] .extend([lineVDataShader,  tubeVDataShader])
-    self.shaders['idata'] .extend([lineIDataShader,  tubeIDataShader])
+    self.shaders['orientation'].extend([lineOrientShader, tubeOrientShader])
+    self.shaders['vertexData'] .extend([lineVDataShader,  tubeVDataShader])
+    self.shaders['imageData']  .extend([lineIDataShader,  tubeIDataShader])
 
 
 def draw3D(self, xform=None):
@@ -69,15 +69,8 @@ def draw3D(self, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if cmode == 'orient':
-        if geom == 'line': shader = self.shaders['orient'][0]
-        else:              shader = self.shaders['orient'][1]
-    elif cmode == 'vdata':
-        if geom == 'line': shader = self.shaders['vdata'][0]
-        else:              shader = self.shaders['vdata'][1]
-    elif cmode == 'idata':
-        if geom == 'line': shader = self.shaders['idata'][0]
-        else:              shader = self.shaders['idata'][1]
+    if geom == 'line': shader = self.shaders[cmode][0]
+    else:              shader = self.shaders[cmode][1]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)

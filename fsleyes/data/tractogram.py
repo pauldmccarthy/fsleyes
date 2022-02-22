@@ -126,7 +126,10 @@ class Tractogram:
 
 
     def loadVertexData(self, infile, key=None):
-        """Load per-vertex data from a separate file. """
+        """Load per-vertex or per-streamline data from a separate file.
+        The data will be accessible via the :meth:`getVertexData` or
+        :meth:`getStreamlineData` methods, depending on its shape.
+        """
 
         infile = op.abspath(infile)
 
@@ -134,21 +137,12 @@ class Tractogram:
             key = infile
 
         # TODO mrtrix .tsf scalar format
-        vertexData = np.loadtxt(infile)
+        vertexData = np.loadtxt(infile).reshape(-1)
 
-        return self.addVertexData(key, vertexData)
-
-
-    def loadStreamlineData(self, infile, key=None):
-        """Load per-streamline data from a separate file. """
-        infile = op.abspath(infile)
-
-        if key is None:
-            key = infile
-
-        strmData = np.loadtxt(infile)
-
-        return self.addStreamlineData(key, strmData)
+        if len(vertexData) == self.nvertices:
+            return self.addVertexData(key, vertexData)
+        else:
+            return self.addStreamlineData(key, vertexData)
 
 
     def addVertexData(self, key, vdata):

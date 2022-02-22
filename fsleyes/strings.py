@@ -265,10 +265,7 @@ messages = TypeDict({
     'space to the image being edited!',
 
     'LoadVertexDataAction.loadVertexData' :
-    'Select a per-vertex data file for {}',
-
-    'LoadVertexDataAction.loadStreamlineData' :
-    'Select a per-streamline data file for {}',
+    'Select a per-vertex/streamline data file for {}',
 
     'LoadVertexDataAction.loadVertices' :
     'Select a vertex file for {}',
@@ -732,7 +729,6 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.loadCmap'           : 'Load colour map',
     'OverlayDisplayPanel.loadVertexData'     : 'Load vertex data',
-    'OverlayDisplayPanel.loadStreamlineData' : 'Load streamline data',
     'OverlayDisplayPanel.loadVertices'       : 'Load vertices',
 
     'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
@@ -1284,8 +1280,7 @@ properties = TypeDict({
     'TractogramOpts.clipBy'         : 'Clip streamlines by',
     'TractogramOpts.lineWidth'      : 'Streamline width',
     'TractogramOpts.resolution'     : 'Streamline resolution',
-    'TractogramOpts.vertexData'     : 'Per-vertex data',
-    'TractogramOpts.streamlineData' : 'Per-streamline data',
+    'TractogramOpts.vertexData'     : 'Per-vertex/streamline data',
     'TractogramOpts.colourImage'    : 'Image data',
 })
 
@@ -1389,11 +1384,9 @@ choices = TypeDict({
 
     'TractogramOpts.colourMode' : {'orientation'     : 'Orientation',
                                    'vertexData'      : 'Per-vertex data',
-                                   'streamlineData'  : 'Per-streamline data',
                                    'imageData'       : 'Colour by image'},
     'TractogramOpts.clipBy'     : {None              : 'No clipping',
                                    'vertexData'      : 'Per-vertex data',
-                                   'streamlineData'  : 'Per-streamline data',
                                    'imageData'       : 'Clip by image'},
 
     'Display.overlayType' : {

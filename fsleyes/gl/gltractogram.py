@@ -38,10 +38,12 @@ class GLTractogram(globject.GLObject):
         # Shaders are created in compileShaders.
         # imageTexture created in refreshImageTexture
         # Three separate shader types are used:
-        #  - 'orient' - coloured by streamline orientation
-        #  - 'vdata'  - coloured by per-vertex/streamline data
-        #  - 'idata'  - coloured by data from an Image
-        self.shaders        = {'orient' : [], 'vdata' : [], 'idata' : []}
+        #  - 'orientation' - coloured by streamline orientation
+        #  - 'vertexData'  - coloured by per-vertex/streamline data
+        #  - 'imageData'   - coloured by data from an Image
+        self.shaders        = {'orientation' : [],
+                               'vertexData'  : [],
+                               'imageData'   : []}
         self.cmapTexture    = textures.ColourMapTexture(self.name)
         self.negCmapTexture = textures.ColourMapTexture(self.name)
         self.imageTexture   = None
@@ -95,7 +97,6 @@ class GLTractogram(globject.GLObject):
         opts   .addListener('colourMode',       name, vdata,   weak=False)
         opts   .addListener('lineWidth',        name, refresh, weak=False)
         opts   .addListener('vertexData',       name, vdata,   weak=False)
-        opts   .addListener('streamlineData',   name, vdata,   weak=False)
         opts   .addListener('colourImage',      name, idata,   weak=False)
         opts   .addListener('xColour',          name, shader,  weak=False)
         opts   .addListener('yColour',          name, shader,  weak=False)
@@ -130,7 +131,6 @@ class GLTractogram(globject.GLObject):
         opts   .removeListener('lineWidth',        name)
         opts   .removeListener('colourMode',       name)
         opts   .removeListener('vertexData',       name)
-        opts   .removeListener('streamlineData',   name)
         opts   .removeListener('xColour',          name)
         opts   .removeListener('yColour',          name)
         opts   .removeListener('zColour',          name)
@@ -196,11 +196,11 @@ class GLTractogram(globject.GLObject):
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
-        for shader in self.shaders['orient']:
+        for shader in self.shaders['orientation']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
                 shader.setAtt('data',   self.orients)
-        for shader in self.shaders['vdata'] + self.shaders['idata']:
+        for shader in self.shaders['vertexData'] + self.shaders['imageData']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
 
@@ -234,7 +234,7 @@ class GLTractogram(globject.GLObject):
             colours[1][3] = alpha
             colours[2][3] = alpha
 
-        for shader in self.shaders['orient']:
+        for shader in self.shaders['orientation']:
             with shader.loaded():
                 shader.set('xColour',      colours[0])
                 shader.set('yColour',      colours[1])
@@ -244,7 +244,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('resolution',   opts.resolution)
                 shader.set('lighting',     False)
 
-        for shader in self.shaders['vdata'] + self.shaders['idata']:
+        for shader in self.shaders['vertexData'] + self.shaders['imageData']:
             with shader.loaded():
                 shader.set('resolution',    opts.resolution)
                 shader.set('cmap',          0)
@@ -266,7 +266,7 @@ class GLTractogram(globject.GLObject):
             voxXform  = self.imageTexture.voxValXform
             voxScale  = voxXform[0, 0]
             voxOffset = voxXform[0, 3]
-            for shader in self.shaders['idata']:
+            for shader in self.shaders['imageData']:
                 with shader.loaded():
                     shader.set('imageTexture',  2)
                     shader.set('texCoordXform', w2tXform)
@@ -282,16 +282,18 @@ class GLTractogram(globject.GLObject):
 
         opts  = self.opts
         ovl   = self.overlay
+        vdata = opts.vertexData
         cmode = opts.colourMode
 
-        if cmode == 'vertexData' and opts.vertexData is not None:
-            data = ovl.getVertexData(opts.vertexData)
-        elif cmode == 'streamlineData' and opts.streamlineData is not None:
-            data = ovl.getStreamlineDataPerVertex(opts.streamlineData)
+        if cmode == 'vertexData' and vdata is not None:
+            if vdata in ovl.vertexDataSets():
+                data = ovl.getVertexData(vdata)
+            else:
+                data = ovl.getStreamlineDataPerVertex(vdata)
         else:
             return
 
-        for shader in self.shaders['vdata']:
+        for shader in self.shaders['vertexData']:
             with shader.loaded():
                 shader.setAtt('data', data)
 
@@ -400,8 +402,8 @@ class GLTractogram(globject.GLObject):
         """
 
         cmode = self.opts.effectiveColourMode
-        cmaps = cmode in ('idata', 'vdata')
-        image = cmode ==  'idata'
+        cmaps = cmode in ('imageData', 'vertexData')
+        image = cmode ==  'imageData'
 
         if cmaps:
             self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)

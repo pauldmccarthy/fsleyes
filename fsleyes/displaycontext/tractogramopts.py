@@ -26,12 +26,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     colourMode = props.Choice(('orientation',
                                'vertexData',
-                               'streamlineData',
                                'imageData'))
     """Whether to colour streamlines by:
         - their orientation (e.g. RGB colouring)
-        - by per-vertex data (see :attr:`vertexData`)
-        - by per-streamline data (see :attr:`streamlineData`)
+        - by per-vertex or per-streamline data (see :attr:`vertexData`)
         - by data from an image (see :attr:`colourImage`)
     """
 
@@ -50,14 +48,8 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
 
     vertexData = props.Choice((None,))
-    """Per-vertex data set with which to colour the streamlines, when
-    ``colourMode == 'vertexData'``.
-    """
-
-
-    streamlineData = props.Choice((None,))
-    """Per-streamline data set with which to colour the streamlines, when
-    ``colourMode == 'streamlineData'``.
+    """Per-vertex and per-streamline data set with which to colour the
+    streamlines, when ``colourMode == 'vertexData'``.
     """
 
 
@@ -93,12 +85,11 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self .addListener('colourMode',     self.name, self.__dataChanged)
         self .addListener('clipBy',         self.name, self.__dataChanged)
         self .addListener('vertexData',     self.name, self.__dataChanged)
-        self .addListener('streamlineData', self.name, self.__dataChanged)
         self .addListener('colourImage',    self.name, self.__dataChanged)
         olist.addListener('overlays',       self.name, self.__overlaysChanged)
 
-        self.addVertexDataOptions(    self.overlay.vertexDataSets())
-        self.addStreamlineDataOptions(self.overlay.streamlineDataSets())
+        self.addVertexDataOptions(self.overlay.vertexDataSets())
+        self.addVertexDataOptions(self.overlay.streamlineDataSets())
         self.__overlaysChanged()
         self.__dataChanged()
 
@@ -142,13 +133,13 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         """
         overlay = self.overlay
         vdata   = self.vertexData
-        sdata   = self.streamlineData
         cimage  = self.colourImage
 
         if mode == 'vertexData' and vdata is not None:
-            return overlay.getVertexData(vdata)
-        elif mode == 'streamlineData'and sdata is not None:
-            return overlay.getStreamlineData(sdata)
+            if vdata in overlay.vertexDataSets():
+                return overlay.getVertexData(vdata)
+            else:
+                return overlay.getStreamlineData(vdata)
         elif mode == 'imageData' and cimage is not None:
             return cimage.data
         else:
@@ -180,19 +171,17 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     @property
     def effectiveColourMode(self):
         """Returns a string indicating how the tractogram should be coloured:
-          - ``'orient'`` - colour by streamline orientation
-          - ``'vdata'``  - colour by per vertex/streamline data
-          - ``'idata'``  - colour by separate image
+          - ``'orientation'`` - colour by streamline orientation
+          - ``'vertexData'``  - colour by per vertex/streamline data
+          - ``'imageData'``   - colour by separate image
         """
         cmode  = self.colourMode
-        sdata  = self.streamlineData
         vdata  = self.vertexData
         cimage = self.colourImage
 
-        if   cmode == 'vertexData'     and vdata  is not None: return 'vdata'
-        elif cmode == 'streamlineData' and sdata  is not None: return 'vdata'
-        elif cmode == 'imageData'      and cimage is not None: return 'idata'
-        else:                                                  return 'orient'
+        if   cmode == 'vertexData' and vdata  is not None: return cmode
+        elif cmode == 'imageData'  and cimage is not None: return cmode
+        else:                                              return 'orientation'
 
 
     @property
@@ -203,7 +192,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
           - ``'idata'``  - clip by separate image
         """
         cmode  = self.clipBy
-        sdata  = self.streamlineData
         vdata  = self.vertexData
         cimage = self.colourImage
 
@@ -219,24 +207,9 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         to valid vertex data files for the overlay associated with this
         ``TractogramOpts`` instance.
         """
-        self.__addDataSetOptions(self.getProp('vertexData'), paths)
-
-
-    def addStreamlineDataOptions(self, paths):
-        """Adds the given sequence of paths as options to the
-        :attr:`streamlineData` property. It is assumed that the paths refer
-        to valid streamline data files for the overlay associated with this
-        ``TractogramOpts`` instance.
-        """
-        self.__addDataSetOptions(self.getProp('streamlineData'), paths)
-
-
-    def __addDataSetOptions(self, prop, paths):
-        """Used by :meth:`addVertexDataOptions` and
-        :meth:`addStreamlineDataOptions`.
-        """
         if len(paths) == 0:
             return
+        prop     = self.getProp('vertexData')
         newPaths = paths
         paths    = prop.getChoices(instance=self)
         paths    = paths + [p for p in newPaths if p not in paths]
