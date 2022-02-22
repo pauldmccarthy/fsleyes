@@ -24,26 +24,17 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """Display options for :class:`.Tractogram` overlays. """
 
 
-    colourMode = props.Choice(('orientation',
-                               'vertexData',
-                               'imageData'))
+    colourMode = props.Choice(('orientation',))
     """Whether to colour streamlines by:
         - their orientation (e.g. RGB colouring)
-        - by per-vertex or per-streamline data (see :attr:`vertexData`)
-        - by data from an image (see :attr:`colourImage`)
+        - by per-vertex or per-streamline data
+        - by data from an image
+
+    Per-vertex data sets and NIFTI images are dynamically added as options
+    to this property.
     """
 
-
-    vertexData = props.Choice((None,))
-    """Per-vertex and per-streamline data set with which to colour the
-    streamlines, when ``colourMode == 'vertexData'``.
-    """
-
-
-    colourImage = props.Choice((None,))
-    """:class:`.Image` used to colour streamlines, when the :attr:`colourMode`
-    is set to ``'imageData'``.
-    """
+    # clipMode = props.Choice((None,))
 
 
     lineWidth = props.Int(minval=1, maxval=10, default=2)
@@ -69,15 +60,11 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         xhi, yhi, zhi = hi
         self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
-        self .addListener('colourMode',  self.name, self.__dataChanged)
-        self .addListener('vertexData',  self.name, self.__dataChanged)
-        self .addListener('colourImage', self.name, self.__dataChanged)
-        olist.addListener('overlays',    self.name, self.__overlaysChanged)
+        self .addListener('colourMode', self.name, self.__colourModeChanged)
+        olist.addListener('overlays',   self.name, self.updateColourMode)
 
-        self.addVertexDataOptions(self.overlay.vertexDataSets())
-        self.addVertexDataOptions(self.overlay.streamlineDataSets())
-        self.__overlaysChanged()
-        self.__dataChanged()
+        self.updateColourMode()
+        self.__colourModeChanged()
 
 
     def destroy(self):
@@ -86,7 +73,34 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         fsldisplay.DisplayOpts.destroy(self)
 
 
-    def __dataChanged(self, *_):
+    def updateColourMode(self, *_):
+        """Called when the :class:`.OverlayList` changes, and may be called
+        externally (see e.g. :func:`.loadvertexdata.loadVertexData`) .
+        Refreshes the options available on the  the :attr:`colourMode`
+        property - ``'orientation'``, all vertex data sets on the
+        :class:`.Tractogram` overlay, and all :class:`.Image` overlays
+        in the :class:`.OverlayList`.
+        """
+
+        overlay   = self.overlay
+        cmodeProp = self.getProp('colourMode')
+        cmode     = self.colourMode
+
+        vdata     = overlay.vertexDataSets()
+        overlays  = self.displayCtx.getOrderedOverlays()
+        overlays  = [o for o in overlays if isinstance(o, fslimage.Image)]
+
+        options   = ['orientation'] + overlays + vdata
+
+        cmodeProp.setChoices(options, instance=self)
+
+        # Preserve previous value, or
+        # default to orientation
+        if cmode in options: self.colourMode = cmode
+        else:                self.colourMode = 'orientation'
+
+
+    def __colourModeChanged(self, *_):
         """Called when :attr:`colourMode`, :attr:`vertexData`, or
         :attr:`colourImage` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
@@ -95,39 +109,19 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self.updateDataRange()
 
 
-    def __overlaysChanged(self, *_):
-        """Called when the :class:`.OverlayList` changes. Updates the
-        :attr:`colourImage` property.
-        """
-        cimageProp = self.getProp('colourImage')
-        cimage     = self.colourImage
-        overlays   = self.displayCtx.getOrderedOverlays()
-        overlays   = [o for o in overlays if isinstance(o, fslimage.Image)]
-        options    = [None] + overlays
-
-        cimageProp.setChoices(options, instance=self)
-
-        if cimage in options: self.colourImage = cimage
-        else:                 self.colourImage = None
-
-
     def __getData(self, mode):
         """Used by :meth:`getDataRange` and :meth:`getClippingRange`. Returns
         a numpy array containing data to be used for colouring/clipping.
 
-        :arg mode: Current value of :attr:`colourMode`.
+        :arg mode: Current value of :attr:`colourMode` or :attr:`clipMode`.
         """
         overlay = self.overlay
-        vdata   = self.vertexData
-        cimage  = self.colourImage
 
-        if mode == 'vertexData' and vdata is not None:
-            if vdata in overlay.vertexDataSets():
-                return overlay.getVertexData(vdata)
-            else:
-                return overlay.getStreamlineData(vdata)
-        elif mode == 'imageData' and cimage is not None:
-            return cimage.data
+        if isinstance(mode, fslimage.Image):
+            return mode.data
+        elif mode in overlay.vertexDataSets():
+            return overlay.getVertexData(mode)
+        # mode == 'orientation', or an invalid value
         else:
             return None
 
@@ -151,39 +145,11 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         to per-vertex data. Otherwise the clipping range will be equal to the
         display range.
         """
+        return None
+
+        # TODO
         if self.colourMode != 'orientation':
             return None
         data = self.__getData('vertexData')
         if data is None: return None
         else:            return np.nanmin(data), np.nanmax(data)
-
-
-    @property
-    def effectiveColourMode(self):
-        """Returns a string indicating how the tractogram should be coloured:
-          - ``'orientation'`` - colour by streamline orientation
-          - ``'vertexData'``  - colour by per vertex/streamline data
-          - ``'imageData'``   - colour by separate image
-        """
-        cmode  = self.colourMode
-        vdata  = self.vertexData
-        cimage = self.colourImage
-
-        if   cmode == 'vertexData' and vdata  is not None: return cmode
-        elif cmode == 'imageData'  and cimage is not None: return cmode
-        else:                                              return 'orientation'
-
-
-    def addVertexDataOptions(self, paths):
-        """Adds the given sequence of paths as options to the
-        :attr:`vertexData` property. It is assumed that the paths refer
-        to valid vertex data files for the overlay associated with this
-        ``TractogramOpts`` instance.
-        """
-        if len(paths) == 0:
-            return
-        prop     = self.getProp('vertexData')
-        newPaths = paths
-        paths    = prop.getChoices(instance=self)
-        paths    = paths + [p for p in newPaths if p not in paths]
-        prop.setChoices(paths, instance=self)

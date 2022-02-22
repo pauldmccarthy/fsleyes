@@ -145,12 +145,18 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
         # is unrecognised.
         overlay.loadVertexData(filename)
 
-        # Add the file as an
-        # option, then select it.
-        opts.addVertexDataOptions([filename])
+        # Add the file as an option to the
+        # MeshOpts/TractogramOpts instance
+        if isinstance(overlay, fslmesh.Mesh):
+            opts.addVertexDataOptions([filename])
+        else:
+            opts.updateColourMode()
 
     if select:
-        opts.vertexData = filename
+        if isinstance(overlay, fslmesh.Mesh):
+            opts.vertexData = filename
+        else:
+            opts.colourMode = filename
 
     return filename
 
