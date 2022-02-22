@@ -23,7 +23,7 @@ uniform vec3 lightPos;
 uniform bool lighting;
 
 /* Streamline orientation corresponding to this fragment. */
-varying vec3 fragData;
+varying vec3 fragData0;
 
 /*Vertex position and vertex normal, used for lighting. */
 varying vec3 fragNormal;
@@ -31,9 +31,9 @@ varying vec3 fragVertex;
 
 void main(void) {
 
-  vec4 colour = fragData.x * xColour +
-                fragData.y * yColour +
-                fragData.z * zColour;
+  vec4 colour = fragData0.x * xColour +
+                fragData0.y * yColour +
+                fragData0.z * zColour;
   colour.xyz  = colour.xyz * colourScale + colourOffset;
   colour.a    = (xColour.a +
                  yColour.a +

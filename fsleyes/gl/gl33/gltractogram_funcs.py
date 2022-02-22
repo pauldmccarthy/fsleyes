@@ -29,8 +29,10 @@ def compileShaders(self):
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
 
-    oconst = {'dataType' : 'vec3'}
-    dconst = {'dataType' : 'float'}
+    # The geometry shaders just pass
+    # through data of this type
+    oconst = {'passThru' : ['vec3']}
+    dconst = {'passThru' : ['float']}
 
     # six shaders - one for each combination of
     # colouring by orientation vs colouring by data

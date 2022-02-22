@@ -11,8 +11,10 @@ layout (triangle_strip, max_vertices=22) out;
  * Vertex data, pssed straight
  * through to fragment shader.
  */
-in  {{ dataType }} geomData[];
-out {{ dataType }} fragData;
+{% for dtype in passThru %}
+in  {{ dtype }} geomData{{ loop.index0 }}[];
+out {{ dtype }} fragData{{ loop.index0 }};
+{% endfor %}
 
 /*
  * Vertex position and normal,
@@ -85,12 +87,19 @@ void main(void) {
     offset       = normalize(((normalx * cosa) + (normaly * sina)));
     scaledOffset = offset * lineWidth / 2;
 
-    fragData    = geomData[0];
+    {% for _ in passThru %}
+    fragData{{ loop.index0 }} = geomData{{ loop.index0 }}[0];
+    {% endfor %}
+
     fragVertex  = start + scaledOffset;
     fragNormal  = offset;
     gl_Position = vec4(fragVertex, 1);
     EmitVertex();
-    fragData    = geomData[1];
+
+    {% for _ in passThru %}
+    fragData{{ loop.index0 }} = geomData{{ loop.index0 }}[1];
+    {% endfor %}
+
     fragVertex  = end + scaledOffset;
     fragNormal  = offset;
     gl_Position = vec4(fragVertex, 1);

@@ -25,7 +25,7 @@ uniform bool lighting;
 uniform vec3 lightPos;
 
 /* Vertex coordinates (in world space) */
-varying vec3 fragData;
+varying vec3 fragData0;
 
 /*
  * Vertex coordinates and normal (in NDC space),
@@ -35,7 +35,7 @@ varying vec3 fragVertex;
 varying vec3 fragNormal;
 
 void main(void) {
-  vec3 texCoord = (texCoordXform * vec4(fragData, 1)).xyz;
+  vec3 texCoord = (texCoordXform * vec4(fragData0, 1)).xyz;
   float val     = texture3D(imageTexture, texCoord).x;
   val           = val * voxScale + voxOffset;
   vec4 colour   = generateColour(val);

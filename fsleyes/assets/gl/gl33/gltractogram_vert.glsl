@@ -14,10 +14,14 @@ in vec3 vertex;
  * is being coloured (by orientation, or by per-vertex data). Passed
  * through to geometry shader.
  */
-in  {{ dataType }} data;
-out {{ dataType }} geomData;
+{% for dtype in passThru %}
+in  {{ dtype }} data{{     loop.index0 }};
+out {{ dtype }} geomData{{ loop.index0 }};
+{% endfor %}
 
 void main(void) {
-  geomData    = data;
+  {% for _ in passThru %}
+  geomData{{ loop.index0 }} = data{{ loop.index0 }};
+  {% endfor %}
   gl_Position = MVP * vec4(vertex, 1);
 }

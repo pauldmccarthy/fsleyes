@@ -14,7 +14,7 @@ uniform bool lighting;
 uniform vec3 lightPos;
 
 /* Vertex data value */
-varying float fragData;
+varying float fragData0;
 
 /*
  * Vertex coordinates and normal (in NDC space),
@@ -25,7 +25,7 @@ varying vec3 fragNormal;
 
 
 void main(void) {
-  vec4 colour = generateColour(fragData);
+  vec4 colour = generateColour(fragData0);
   if (lighting) {
     colour.xyz = phong_lighting(fragVertex, fragNormal, lightPos, colour.xyz);
   }

@@ -8,9 +8,14 @@ uniform mat4 MVP;
 
 /* Coordinates of current vertex. Passed through to geometry shader. */
 in  vec3 vertex;
-out vec3 geomData;
+
+{% for dtype in passThru %}
+out {{ dtype }} geomData{{ loop.index0 }};
+{% endfor %}
 
 void main(void) {
-  geomData    = vertex;
+  {% for _ in passThru %}
+  geomData{{ loop.index0 }} = vertex;
+  {% endfor %}
   gl_Position = MVP * vec4(vertex, 1);
 }
