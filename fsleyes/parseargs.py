@@ -1492,7 +1492,6 @@ def getExtra(target, propName, default=None):
         (fsldisplay.TractogramOpts, 'zColour')        : colourSettings,
         (fsldisplay.TractogramOpts, 'cmap')           : cmapSettings,
         (fsldisplay.TractogramOpts, 'negativeCmap')   : cmapSettings,
-        (fsldisplay.TractogramOpts, 'vertexData')     : vertexDataSettings,
     }
 
     # Add (str, propname) versions
@@ -2940,7 +2939,7 @@ def applyOverlayArgs(args,
                 # it is an overlay/file option.
                 elif fileOpt == 'colourImage' and \
                    isinstance(opts, fsldisplay.TractogramOpts):
-                    opts.colourMode = 'imageData'
+                    opts.colourMode = image
 
                 setattr(opts, fileOpt, image)
 
@@ -3748,9 +3747,37 @@ def _generateLookupTable(longArg, lut):
         return []
 
 
+def _configSpecial_TractogramOpts_colourImage(
+        Target, parser, shortArg, longArg, helpText):
+    """Configures the --colourImage option for :class:`.TractogramOpts`
+    instances. This option allows the :attr:`.TractogramOpts.colourMode`
+    option to be set to an :class:`.Image` instance.
+    """
+    parser.add_argument(shortArg, longArg, help=helpText)
+
+
+def _configSpecial_TractogramOpts_vertexData(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the --vertexDAta option for :class:`.TractogramOpts`
+    instances. This option allows the :attr:`.TractogramOpts.colourMode`
+    option to be set to a per-vertex/streamline data set.
+    """
+    parser.add_argument(shortArg, longArg, help=helpText)
+
+
+def _applySpecial_TractogramOpts_colourImage(
+        args, overlayList, displayCtx, target):
+    """Applies the ``--colourImage`` option for :class:`.TractogramOpts`
+    instances. This affects the :attr:`.TractogramOpts.colourMode` property.
+    """
+    # TODO  replace FILE_OPTIONS with applySpecial?
+
+
 def _applySpecial_TractogramOpts_vertexData(
         args, overlayList, displayCtx, target):
-    """Applies the :attr:`.TractogramOpts.vertexData` option. """
+    """Applies the ``--vertexData`` option for :class:`.TractogramOpts`
+    instances. This affects the :attr:`.TractogramOpts.colourMode` property.
+    """
     import fsleyes.actions.loadvertexdata as loadvertexdata
     # Pre-load all specified vertex data
     # files, but only apply the last one,
@@ -3760,14 +3787,11 @@ def _applySpecial_TractogramOpts_vertexData(
         # Vertex data can be a file
         if op.exists(vd):
             vertexData[i] = loadvertexdata.loadVertexData(
-                target.overlay, displayCtx, vd, select=(i == last))
+                target.overlay, displayCtx, vd, select=False)
         # Or can be an index specifying a
         # data set that is contained in the
         # tractogram file itself
         elif i == last:
             vd = int(vd)
-            vsets = target.overlay.vertexDataSets()
-            ssets = target.overlay.streamlineDataSets()
-            vd    = list(it.chain(vsets, ssets))[vd]
-            target.vertexData = vd
-    target.colourMode = 'vertexData'
+            vd = target.overlay.vertexDataSets()[vd]
+    target.colourMode = vd
