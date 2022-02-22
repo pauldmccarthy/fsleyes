@@ -83,8 +83,9 @@ class GLLabel(glimageobject.GLImageObject):
         self.refreshImageTexture()
 
         def init():
-            fslgl.gllabel_funcs.init(self)
-            self.notify()
+            if not self.destroyed:
+                fslgl.gllabel_funcs.init(self)
+                self.notify()
 
         idle.idleWhen(init, self.textureReady)
 
