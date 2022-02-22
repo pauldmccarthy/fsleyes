@@ -200,9 +200,13 @@ class GLTractogram(globject.GLObject):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
                 shader.setAtt('data0',  self.orients)
-        for shader in self.shaders['vertexData'] + self.shaders['imageData']:
+        for shader in self.shaders['vertexData']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
+        for shader in self.shaders['imageData']:
+            with shader.loaded():
+                shader.setAtt('vertex', self.vertices)
+                shader.setAtt('data0',  self.vertices)
 
         self.updateShaderState()
 

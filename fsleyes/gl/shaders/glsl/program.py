@@ -488,7 +488,8 @@ class GLSLShader:
             gl.glCompileShader(shader)
             result = gl.glGetShaderiv(shader, gl.GL_COMPILE_STATUS)
             if result != gl.GL_TRUE:
-                raise RuntimeError(gl.glGetShaderInfoLog(shader))
+                raise RuntimeError(
+                    '{}: {}'.format(srcType, gl.glGetShaderInfoLog(shader)))
             gl.glAttachShader(program, shader)
             gl.glDeleteShader(shader)
 

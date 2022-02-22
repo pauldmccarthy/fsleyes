@@ -22,7 +22,6 @@ def compileShaders(self):
     """
 
     vsrc       = shaders.getVertexShader(  'gltractogram')
-    ivsrc      = shaders.getVertexShader(  'gltractogram_image_data')
     orientfsrc = shaders.getFragmentShader('gltractogram_orient')
     vdatafsrc  = shaders.getFragmentShader('gltractogram_vertex_data')
     idatafsrc  = shaders.getFragmentShader('gltractogram_image_data')
@@ -31,8 +30,9 @@ def compileShaders(self):
 
     # The geometry shaders just pass
     # through data of this type
-    oconst = {'passThru' : ['vec3']}
+    oconst = {'passThru' : ['vec3', 'float']}
     dconst = {'passThru' : ['float']}
+    iconst = {'passThru' : ['vec3']}
 
     # six shaders - one for each combination of
     # colouring by orientation vs colouring by data
@@ -42,8 +42,8 @@ def compileShaders(self):
     tubeOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst)
     lineVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst)
     tubeVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  tubegsrc, dconst)
-    lineIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  linegsrc, oconst)
-    tubeIDataShader  = shaders.GLSLShader(ivsrc, idatafsrc,  tubegsrc, oconst)
+    lineIDataShader  = shaders.GLSLShader(vsrc,  idatafsrc,  linegsrc, iconst)
+    tubeIDataShader  = shaders.GLSLShader(vsrc,  idatafsrc,  tubegsrc, iconst)
 
     self.shaders['orientation'].extend([lineOrientShader, tubeOrientShader])
     self.shaders['vertexData'] .extend([lineVDataShader,  tubeVDataShader])
