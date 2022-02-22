@@ -22,7 +22,8 @@ import fsleyes.gl.shaders   as shaders
 def destroy(self):
     """Destroys the vertex/fragment shader programs created in :func:`init`.
     """
-    self.shader.destroy()
+    if self.shader is not None:
+        self.shader.destroy()
     self.shader = None
 
 

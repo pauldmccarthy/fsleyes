@@ -23,7 +23,8 @@ def init(self):
 
 def destroy(self):
     """Destroys the shader program. """
-    self.shader.destroy()
+    if self.shader is not None:
+        self.shader.destroy()
     self.shader = None
 
 
