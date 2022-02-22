@@ -94,7 +94,7 @@ class GLTractogram(globject.GLObject):
             self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',       name, shader,  weak=False)
-        opts   .addListener('colourMode',       name, vdata,   weak=False)
+        opts   .addListener('colourMode',       name, shader,  weak=False)
         opts   .addListener('lineWidth',        name, refresh, weak=False)
         opts   .addListener('vertexData',       name, vdata,   weak=False)
         opts   .addListener('colourImage',      name, idata,   weak=False)
@@ -247,6 +247,9 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
                 shader.set('lighting',     False)
+                shader.set('invertClip',   opts.invertClipping)
+                shader.set('clipLow',      opts.clippingRange.xlo)
+                shader.set('clipHigh',     opts.clippingRange.xhi)
 
         for shader in self.shaders['vertexData'] + self.shaders['imageData']:
             with shader.loaded():
@@ -287,19 +290,22 @@ class GLTractogram(globject.GLObject):
         opts  = self.opts
         ovl   = self.overlay
         vdata = opts.vertexData
-        cmode = opts.colourMode
 
-        if cmode == 'vertexData' and vdata is not None:
+        if vdata is not None:
             if vdata in ovl.vertexDataSets():
                 data = ovl.getVertexData(vdata)
             else:
                 data = ovl.getStreamlineDataPerVertex(vdata)
-        else:
-            return
 
-        for shader in self.shaders['vertexData']:
+            for shader in self.shaders['vertexData']:
+                with shader.loaded():
+                    shader.setAtt('data0', data)
+
+        for shader in self.shaders['orientation']:
             with shader.loaded():
-                shader.setAtt('data0', data)
+                shader.set('clipping', vdata is not None)
+                if vdata is not None:
+                    shader.setAtt('data1', data)
 
 
     def ready(self):

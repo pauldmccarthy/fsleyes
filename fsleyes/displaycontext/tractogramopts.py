@@ -34,19 +34,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    clipBy = props.Choice((None,
-                           'vertexData',
-                           'streamlineData',
-                           'imageData'))
-    """Use a data set to clip/threshold the streamlines.
-    When the colourMode is changed, this seting will automatically be
-    changed to the same value (``None`` for ``'orientation'``). But
-    it can then be set independently so, for example, you can colour
-    streamlines according to orientation, but clip them according to
-    per-vertex data.
-    """
-
-
     vertexData = props.Choice((None,))
     """Per-vertex and per-streamline data set with which to colour the
     streamlines, when ``colourMode == 'vertexData'``.
@@ -82,11 +69,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         xhi, yhi, zhi = hi
         self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
-        self .addListener('colourMode',     self.name, self.__dataChanged)
-        self .addListener('clipBy',         self.name, self.__dataChanged)
-        self .addListener('vertexData',     self.name, self.__dataChanged)
-        self .addListener('colourImage',    self.name, self.__dataChanged)
-        olist.addListener('overlays',       self.name, self.__overlaysChanged)
+        self .addListener('colourMode',  self.name, self.__dataChanged)
+        self .addListener('vertexData',  self.name, self.__dataChanged)
+        self .addListener('colourImage', self.name, self.__dataChanged)
+        olist.addListener('overlays',    self.name, self.__overlaysChanged)
 
         self.addVertexDataOptions(self.overlay.vertexDataSets())
         self.addVertexDataOptions(self.overlay.streamlineDataSets())
@@ -101,10 +87,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
 
     def __dataChanged(self, *_):
-        """Called when :attr:`colourMode`, :attr:`vertexData`,
-        :attr:`streamlineData`, or :attr:`colourImage` changes.
-        Calls :meth:`.ColourMapOpts.updateDataRange`, to ensure that
-        the display range is up to date.
+        """Called when :attr:`colourMode`, :attr:`vertexData`, or
+        :attr:`colourImage` changes.  Calls
+        :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
+        range is up to date.
         """
         self.updateDataRange()
 
@@ -129,7 +115,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         """Used by :meth:`getDataRange` and :meth:`getClippingRange`. Returns
         a numpy array containing data to be used for colouring/clipping.
 
-        :arg mode: Current value of :attr:`colourMode` or :attr:`clipBy`.
+        :arg mode: Current value of :attr:`colourMode`.
         """
         overlay = self.overlay
         vdata   = self.vertexData
@@ -149,8 +135,8 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     def getDataRange(self):
         """Overrides :meth:`.ColourMapOpts.getDataRange`. Returns the
         current data range to use for colouring - this depends on the
-        current :attr:`colourMode`, and selected :attr:`vertexData`,
-        :attr:`streamlineData`, or :attr:`colourImage`.
+        current :attr:`colourMode`, and selected :attr:`vertexData` or
+        :attr:`colourImage`.
         """
         data = self.__getData(self.colourMode)
         if data is None: return 0, 1
@@ -160,10 +146,14 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     def getClippingRange(self):
         """Overrides :meth:`.ColourMapOpts.getClippingRange`. Returns the
         current data range to use for clipping/thresholding - this depends on
-        the current :attr:`clipBy` value, and selected :attr:`vertexData`,
-        :attr:`streamlineData`, or :attr:`colourImage`.
+        the selected :attr:`colourMode` and :attr:`vertexData` - if
+        ``colourMode == 'orientation'``, the data may be clipped according
+        to per-vertex data. Otherwise the clipping range will be equal to the
+        display range.
         """
-        data = self.__getData(self.clipBy)
+        if self.colourMode != 'orientation':
+            return None
+        data = self.__getData('vertexData')
         if data is None: return None
         else:            return np.nanmin(data), np.nanmax(data)
 
@@ -182,23 +172,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         if   cmode == 'vertexData' and vdata  is not None: return cmode
         elif cmode == 'imageData'  and cimage is not None: return cmode
         else:                                              return 'orientation'
-
-
-    @property
-    def effectiveClipBy(self):
-        """Returns a string indicating how the tractogram should be clipped:
-          - ``None``     - No clipping
-          - ``'vdata'``  - clip by per vertex/streamline data
-          - ``'idata'``  - clip by separate image
-        """
-        cmode  = self.clipBy
-        vdata  = self.vertexData
-        cimage = self.colourImage
-
-        if   cmode == 'vertexData'     and vdata  is not None: return 'vdata'
-        elif cmode == 'streamlineData' and sdata  is not None: return 'vdata'
-        elif cmode == 'imageData'      and cimage is not None: return 'idata'
-        else:                                                  return None
 
 
     def addVertexDataOptions(self, paths):

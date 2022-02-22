@@ -22,14 +22,30 @@ uniform float colourOffset;
 uniform vec3 lightPos;
 uniform bool lighting;
 
+/* Clip according to fragData1 */
+uniform bool  clipping;
+uniform bool  invertClip;
+uniform float clipLow;
+uniform float clipHigh;
+
 /* Streamline orientation corresponding to this fragment. */
 varying vec3 fragData0;
+
+/* Per-vertex data value used for clipping */
+varying float fragData1;
 
 /*Vertex position and vertex normal, used for lighting. */
 varying vec3 fragNormal;
 varying vec3 fragVertex;
 
 void main(void) {
+
+  if (clipping) {
+    if ((!invertClip && (fragData1 <= clipLow || fragData1 >= clipHigh)) ||
+        ( invertClip && (fragData1 >= clipLow && fragData1 <= clipHigh))) {
+      discard;
+    }
+  }
 
   vec4 colour = fragData0.x * xColour +
                 fragData0.y * yColour +

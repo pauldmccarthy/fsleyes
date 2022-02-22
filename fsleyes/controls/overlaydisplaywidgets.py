@@ -348,7 +348,6 @@ def _initPropertyList_TractogramOpts(threedee):
     return ['lineWidth',
             'resolution',
             'colourMode',
-            'clipBy',
             'custom_vertexData',
             'colourImage',
             'custom_cmap',
@@ -954,9 +953,6 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'colourMode' : props.Widget(
             'colourMode',
             labels=strings.choices['TractogramOpts.colourMode']),
-        'clipBy' : props.Widget(
-            'clipBy',
-            labels=strings.choices['TractogramOpts.clipBy']),
         'vertexData'            : props.Widget('vertexData',
                                                labels=pathName),
         'colourImage'           : props.Widget('colourImage',
