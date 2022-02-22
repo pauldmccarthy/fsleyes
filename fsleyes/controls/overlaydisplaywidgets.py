@@ -938,7 +938,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         if data is None:
             return 'Orientation'
         elif isinstance(data, fslimage.Image):
-            return displayCtx.getDisplay(img).name
+            return displayCtx.getDisplay(data).name
         else:
             return op.basename(data)
 

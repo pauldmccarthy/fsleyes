@@ -100,6 +100,18 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                self.colourMode = 'orientation'
 
 
+    @property
+    def effectiveColourMode(self):
+        """Returns one of ``'orientation'``, ``'vertexData'``, or
+        ``'imageData'``, depending on the current :attr:`colourMode`.
+        """
+        ovl   = self.overlay
+        cmode = self.colourMode
+        if   isinstance(cmode, fslimage.Image): return 'imageData'
+        elif cmode in ovl.vertexDataSets():     return 'vertexData'
+        else:                                   return 'orientation'
+
+
     def __colourModeChanged(self, *_):
         """Called when :attr:`colourMode`, :attr:`vertexData`, or
         :attr:`colourImage` changes.  Calls

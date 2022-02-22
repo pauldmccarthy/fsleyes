@@ -16,6 +16,9 @@ import itertools as it
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsl.utils.idle       as idle
+import fsl.data.image       as fslimage
+
 import fsleyes.gl           as fslgl
 import fsleyes.gl.textures  as textures
 import fsleyes.gl.globject  as globject
@@ -58,11 +61,15 @@ class GLTractogram(globject.GLObject):
         self.counts   = np.asarray(overlay.lengths,  dtype=np.int32)
         self.orients  = np.abs(overlay.orientation,  dtype=np.float32)
 
-        self.refreshImageTexture()
         self.refreshCmapTextures()
         self.addListeners()
         self.compileShaders()
-        self.updateVertexData()
+        self.updateColourData()
+        # Call updateShaderState asynchronously,
+        # as it may depend on the image texture
+        # being ready, which is prepared off the
+        # main thread.
+        idle.idleWhen(self.updateShaderState, self.ready)
 
 
     def addListeners(self):
@@ -85,19 +92,13 @@ class GLTractogram(globject.GLObject):
             self.updateShaderState()
             self.notify()
 
-        def vdata(*_):
-            self.updateVertexData()
-            self.notify()
-
-        def idata(*_):
-            self.refreshImageTexture()
+        def data(*_):
+            self.updateColourData()
             self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',       name, shader,  weak=False)
-        opts   .addListener('colourMode',       name, shader,  weak=False)
+        opts   .addListener('colourMode',       name, data,    weak=False)
         opts   .addListener('lineWidth',        name, refresh, weak=False)
-        opts   .addListener('vertexData',       name, vdata,   weak=False)
-        opts   .addListener('colourImage',      name, idata,   weak=False)
         opts   .addListener('xColour',          name, shader,  weak=False)
         opts   .addListener('yColour',          name, shader,  weak=False)
         opts   .addListener('zColour',          name, shader,  weak=False)
@@ -130,7 +131,6 @@ class GLTractogram(globject.GLObject):
         opts   .removeListener('resolution',       name)
         opts   .removeListener('lineWidth',        name)
         opts   .removeListener('colourMode',       name)
-        opts   .removeListener('vertexData',       name)
         opts   .removeListener('xColour',          name)
         opts   .removeListener('yColour',          name)
         opts   .removeListener('zColour',          name)
@@ -208,8 +208,6 @@ class GLTractogram(globject.GLObject):
                 shader.setAtt('vertex', self.vertices)
                 shader.setAtt('data0',  self.vertices)
 
-        self.updateShaderState()
-
 
     def updateShaderState(self):
         """Passes display properties as uniform values to the shader programs.
@@ -247,6 +245,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
                 shader.set('lighting',     False)
+                shader.set('clipping',     False)
                 shader.set('invertClip',   opts.invertClipping)
                 shader.set('clipLow',      opts.clippingRange.xlo)
                 shader.set('clipHigh',     opts.clippingRange.xhi)
@@ -267,8 +266,9 @@ class GLTractogram(globject.GLObject):
                 shader.set('modOffset',     modOffset)
                 shader.set('lighting',      False)
 
-        if opts.colourImage is not None:
-            copts     = self.displayCtx.getOpts(opts.colourImage)
+        if opts.effectiveColourMode == 'imageData':
+            cimage    = opts.colourMode
+            copts     = self.displayCtx.getOpts(cimage)
             w2tXform  = copts.getTransform('world', 'texture')
             voxXform  = self.imageTexture.voxValXform
             voxScale  = voxXform[0, 0]
@@ -281,31 +281,27 @@ class GLTractogram(globject.GLObject):
                     shader.set('voxOffset',     voxOffset)
 
 
-    def updateVertexData(self):
-        """Called when :class:`.TractogramOpts.vertexData` or
-        :class:`.TractogramOpts.streamlineData` changes. Passes data to the
-        shader programs.
+    def updateColourData(self):
+        """Called when :class:`.TractogramOpts.colourMode` changes. Passes
+        data to the shader programs.
         """
 
         opts  = self.opts
         ovl   = self.overlay
-        vdata = opts.vertexData
+        cmode = opts.effectiveColourMode
 
-        if vdata is not None:
-            if vdata in ovl.vertexDataSets():
-                data = ovl.getVertexData(vdata)
-            else:
-                data = ovl.getStreamlineDataPerVertex(vdata)
+        if cmode == 'orientation':
+            return
+
+        if cmode == 'vertexData':
+            data = ovl.getVertexData(opts.colourMode)
 
             for shader in self.shaders['vertexData']:
                 with shader.loaded():
                     shader.setAtt('data0', data)
 
-        for shader in self.shaders['orientation']:
-            with shader.loaded():
-                shader.set('clipping', vdata is not None)
-                if vdata is not None:
-                    shader.setAtt('data1', data)
+        if cmode == 'imageData':
+            self.refreshImageTexture()
 
 
     def ready(self):
@@ -333,26 +329,26 @@ class GLTractogram(globject.GLObject):
 
 
     def refreshImageTexture(self):
-        """Called on changes to :attr:`.TractogramOpts.colourImage`.
+        """Called on changes to :attr:`.TractogramOpts.colourMode`.
         Refreshes the :class:`.ImageTexture` object as needed.
         """
 
-        opts   = self.opts
-        cimage = opts.colourImage
+        opts  = self.opts
+        image = opts.colourMode
 
-        if self.imageTexture is not None:
+        if self.imageTexture is not None and self.imageTexture.image != image:
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if cimage is None:
+        if not isinstance(image, fslimage.Image):
             return
 
-        texName = '{}_{}'.format(type(self).__name__, id(cimage))
+        texName = '{}_{}'.format(type(self).__name__, id(image))
         self.imageTexture = glresources.get(
             texName,
             textures.createImageTexture,
             texName,
-            cimage,
+            image,
             interp=gl.GL_LINEAR,
             notify=False)
         self.imageTexture.register(self.name, self.updateShaderState)
