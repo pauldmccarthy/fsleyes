@@ -1280,8 +1280,6 @@ properties = TypeDict({
     'TractogramOpts.clipBy'         : 'Clip streamlines by',
     'TractogramOpts.lineWidth'      : 'Streamline width',
     'TractogramOpts.resolution'     : 'Streamline resolution',
-    'TractogramOpts.vertexData'     : 'Per-vertex/streamline data',
-    'TractogramOpts.colourImage'    : 'Image data',
 })
 
 
@@ -1382,12 +1380,7 @@ choices = TypeDict({
                                 'mag'   : 'Magnitude',
                                 'phase' : 'Phase'},
 
-    'TractogramOpts.colourMode' : {'orientation'     : 'Orientation',
-                                   'vertexData'      : 'Per-vertex data',
-                                   'imageData'       : 'Colour by image'},
-    'TractogramOpts.clipBy'     : {None              : 'No clipping',
-                                   'vertexData'      : 'Per-vertex data',
-                                   'imageData'       : 'Clip by image'},
+    'TractogramOpts.colourMode' : {'orientation' : 'Orientation'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',

@@ -29,6 +29,7 @@ import            wx
 
 import fsl.utils.idle                 as idle
 import fsl.data.mesh                  as fslmesh
+import fsl.data.image                 as fslimage
 import fsleyes.data.tractogram        as tractogram
 import fsleyes_props                  as props
 import fsleyes_widgets                as fwidgets
@@ -347,9 +348,7 @@ def _initPropertyList_TractogramOpts(threedee):
         return []
     return ['lineWidth',
             'resolution',
-            'colourMode',
-            'custom_vertexData',
-            'colourImage',
+            'custom_colourMode',
             'custom_cmap',
             'cmapResolution',
             'gamma',
@@ -935,13 +934,13 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
     if not threedee:
         return {}
 
-    def pathName(data):
-        if data is None: return 'None'
-        else:            return op.basename(data)
-
-    def imageName(img):
-        if img is None: return 'None'
-        else:           return displayCtx.getDisplay(img).name
+    def cmodeName(data):
+        if data is None:
+            return 'Orientation'
+        elif isinstance(data, fslimage.Image):
+            return displayCtx.getDisplay(img).name
+        else:
+            return op.basename(data)
 
     cmapOpts   = dict(dependencies=['colourMode'],
                       enabledWhen=lambda o, cm: cm != 'orientation')
@@ -950,23 +949,17 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
     sliderOpts = dict(spin=True, slider=True, showLimits=False)
 
     return {
-        'colourMode' : props.Widget(
-            'colourMode',
-            labels=strings.choices['TractogramOpts.colourMode']),
-        'vertexData'            : props.Widget('vertexData',
-                                               labels=pathName),
-        'colourImage'           : props.Widget('colourImage',
-                                               labels=imageName),
-        'custom_vertexData'     : _TractogramOpts_vertexDataWidget,
-        'xColour'               : props.Widget('xColour',      **orientOpts),
-        'yColour'               : props.Widget('yColour',      **orientOpts),
-        'zColour'               : props.Widget('zColour',      **orientOpts),
-        'suppressX'             : props.Widget('suppressX',    **orientOpts),
-        'suppressY'             : props.Widget('suppressY',    **orientOpts),
-        'suppressZ'             : props.Widget('suppressZ',    **orientOpts),
-        'suppressMode'          : props.Widget('suppressMode', **orientOpts),
-        'lineWidth'             : props.Widget('lineWidth',    **sliderOpts),
-        'resolution'            : props.Widget('resolution',   **sliderOpts),
+        'colourMode'        : props.Widget('colourMode', labels=cmodeName),
+        'custom_colourMode' : _TractogramOpts_colourModeWidget,
+        'xColour'           : props.Widget('xColour',      **orientOpts),
+        'yColour'           : props.Widget('yColour',      **orientOpts),
+        'zColour'           : props.Widget('zColour',      **orientOpts),
+        'suppressX'         : props.Widget('suppressX',    **orientOpts),
+        'suppressY'         : props.Widget('suppressY',    **orientOpts),
+        'suppressZ'         : props.Widget('suppressZ',    **orientOpts),
+        'suppressMode'      : props.Widget('suppressMode', **orientOpts),
+        'lineWidth'         : props.Widget('lineWidth',    **sliderOpts),
+        'resolution'        : props.Widget('resolution',   **sliderOpts),
 
         # We override the ColourMapOpts definitions
         # for custom enabledWhen behaviour.
@@ -1307,7 +1300,7 @@ def _MeshOpts_LutWidget(
     return sizer, [enable, lut]
 
 
-def _TractogramOpts_vertexDataWidget(
+def _TractogramOpts_colourModeWidget(
         target,
         parent,
         panel,
@@ -1315,9 +1308,8 @@ def _TractogramOpts_vertexDataWidget(
         displayCtx,
         threedee):
     """Builds a panel which contains a widget for controlling the
-    :attr:`.TractogramOpts.vertexData` property, and also has a button
-    which opens a file dialog, allowing the user to select other
-    data.
+    :attr:`.TractogramOpts.colourMode` property, and also has a button
+    which opens a file dialog, allowing the user to load vertex data files.
     """
 
     loadAction = loadvdata.LoadVertexDataAction(overlayList,
@@ -1331,43 +1323,10 @@ def _TractogramOpts_vertexDataWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexData']
-    vdata = props.buildGUI(parent, target, vdata)
+    cmode = getWidgetSpecs(target, displayCtx, threedee)['colourMode']
+    cmode = props.buildGUI(parent, target, cmode)
 
-    sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
+    sizer.Add(cmode,      flag=wx.EXPAND, proportion=1)
     sizer.Add(loadButton, flag=wx.EXPAND)
 
-    return sizer, [vdata]
-
-
-def _TractogramOpts_streamlineDataWidget(
-        target,
-        parent,
-        panel,
-        overlayList,
-        displayCtx,
-        threedee):
-    """Builds a panel which contains a widget for controlling the
-    :attr:`.TractogramOpts.streamlineData` property, and also has a button
-    which opens a file dialog, allowing the user to select other
-    data.
-    """
-
-    loadAction = loadvdata.LoadVertexDataAction(overlayList,
-                                                displayCtx,
-                                                'streamlineData',
-                                                tractogram.Tractogram)
-    loadButton = wx.Button(parent)
-    loadButton.SetLabel(strings.labels[panel, 'loadStreamlineData'])
-
-    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
-
-    sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-    sdata = getWidgetSpecs(target, displayCtx, threedee)['streamlineData']
-    sdata = props.buildGUI(parent, target, sdata)
-
-    sizer.Add(sdata,      flag=wx.EXPAND, proportion=1)
-    sizer.Add(loadButton, flag=wx.EXPAND)
-
-    return sizer, [sdata]
+    return sizer, [cmode]
