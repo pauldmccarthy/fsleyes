@@ -1276,6 +1276,7 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
+    'TractogramOpts.clipMode'          : 'Clip streamlines by',
     'TractogramOpts.custom_colourMode' : 'Colour streamlines by',
     'TractogramOpts.colourMode'        : 'Colour streamlines by',
     'TractogramOpts.clipBy'            : 'Clip streamlines by',

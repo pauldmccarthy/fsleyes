@@ -150,7 +150,7 @@ def loadVertexData(overlay, displayCtx, filename, select=True):
         if isinstance(overlay, fslmesh.Mesh):
             opts.addVertexDataOptions([filename])
         else:
-            opts.updateColourMode()
+            opts.updateColourClipModes()
 
     if select:
         if isinstance(overlay, fslmesh.Mesh):

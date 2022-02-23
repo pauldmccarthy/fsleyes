@@ -349,6 +349,7 @@ def _initPropertyList_TractogramOpts(threedee):
     return ['lineWidth',
             'resolution',
             'custom_colourMode',
+            'clipMode',
             'custom_cmap',
             'cmapResolution',
             'gamma',
@@ -935,8 +936,10 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         return {}
 
     def cmodeName(data):
-        if data is None:
+        if data == 'orientation':
             return 'Orientation'
+        if data is None:
+            return 'None'
         elif isinstance(data, fslimage.Image):
             return displayCtx.getDisplay(data).name
         else:
@@ -950,6 +953,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
 
     return {
         'colourMode'        : props.Widget('colourMode', labels=cmodeName),
+        'clipMode'          : props.Widget('clipMode',   labels=cmodeName),
         'custom_colourMode' : _TractogramOpts_colourModeWidget,
         'xColour'           : props.Widget('xColour',      **orientOpts),
         'yColour'           : props.Widget('yColour',      **orientOpts),

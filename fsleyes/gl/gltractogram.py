@@ -51,6 +51,7 @@ class GLTractogram(globject.GLObject):
         self.negCmapTexture = textures.ColourMapTexture(self.name)
         self.imageTextures  = textures.AuxImageTextureManager(
             self, colour=None, clip=None)
+        self.imageTextures.registerAuxImage('clip',   self.opts.clipMode)
         self.imageTextures.registerAuxImage('colour', self.opts.colourMode)
 
         # Orientation is used for RGB colouring.
@@ -67,6 +68,8 @@ class GLTractogram(globject.GLObject):
         self.addListeners()
         self.compileShaders()
         self.updateColourData()
+        self.updateClipData()
+
         # Call updateShaderState asynchronously,
         # as it may depend on the image textures
         # being ready, which might be prepared
@@ -98,8 +101,13 @@ class GLTractogram(globject.GLObject):
             self.updateColourData()
             self.notifyWhen(self.ready)
 
+        def clip(*_):
+            self.updateClipData()
+            self.notifyWhen(self.ready)
+
         opts   .addListener('resolution',       name, shader,  weak=False)
         opts   .addListener('colourMode',       name, colour,  weak=False)
+        opts   .addListener('clipMode',         name, clip,    weak=False)
         opts   .addListener('lineWidth',        name, refresh, weak=False)
         opts   .addListener('xColour',          name, shader,  weak=False)
         opts   .addListener('yColour',          name, shader,  weak=False)
@@ -133,6 +141,7 @@ class GLTractogram(globject.GLObject):
         opts   .removeListener('resolution',       name)
         opts   .removeListener('lineWidth',        name)
         opts   .removeListener('colourMode',       name)
+        opts   .removeListener('clipMode',         name)
         opts   .removeListener('xColour',          name)
         opts   .removeListener('yColour',          name)
         opts   .removeListener('zColour',          name)
@@ -337,6 +346,18 @@ class GLTractogram(globject.GLObject):
 
         if cmode == 'imageData':
             self.refreshImageTexture('colour')
+
+
+    def updateClipData(self):
+        """Called when :class:`.TractogramOpts.clipMode` changes. Passes
+        data to the shader programs.
+        """
+
+        opts  = self.opts
+        ovl   = self.overlay
+        cmode = opts.effectiveClipMode
+
+        # todo
 
 
     def refreshImageTexture(self, which):
