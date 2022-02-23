@@ -202,15 +202,20 @@ class GLTractogram(globject.GLObject):
         globject.GLObject.destroy(self)
 
 
-    def iterShaders(self, *shaderTypes):
-        """Returns all shader programs of the specified types, or all shader
-        programs if no types are specified.
+    def iterShaders(self, colourModes=None, clipModes=None):
+        """Returns all shader programs for the specified colour/clipping
+        modes.
         """
-        if len(shaderTypes) == 0:
-            shaderTypes = self.shaders.keys()
-
-        shaders = [self.shaders[t] for t in shaderTypes]
-        shaders = it.chain(*(s.values() for s in shaders))
+        if isinstance(colourModes, str):
+            colourModes = [colourModes]
+        if isinstance(clipModes, str):
+            clipModes = [clipModes]
+        if colourModes is None or len(colourModes) == 0:
+            colourModes = ['orientation', 'vertexData', 'imageData']
+        if clipModes is None or len(clipModes) == 0:
+            clipModes = ['none', 'vertexData', 'imageData']
+        shaders = [self.shaders[m] for m in colourModes]
+        shaders = it.chain(*[[s[m] for m in clipModes] for s in shaders])
         return it.chain(*shaders)
 
 
@@ -246,11 +251,19 @@ class GLTractogram(globject.GLObject):
 
     @property
     def clipImageTexture(self):
+        """Return a reference to an :class:`.ImageTexture` which contains
+        data for clipping, when :attr:`.TractogramOpts.clipMode` is set
+        to an :class:`.Image`.
+        """
         return self.imageTextures.texture('clip')
 
 
     @property
     def colourImageTexture(self):
+        """Return a reference to an :class:`.ImageTexture` which contains
+        data for colouring, when :attr:`.TractogramOpts.colourMode` is set
+        to an :class:`.Image`.
+        """
         return self.imageTextures.texture('colour')
 
 
@@ -310,12 +323,15 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
                 shader.set('lighting',     False)
-                shader.set('clipping',     False)
+
+        for shader in self.iterShaders('orientation',
+                                       ['vertexData', 'imageData']):
+            with shader.loaded():
                 shader.set('invertClip',   opts.invertClipping)
                 shader.set('clipLow',      opts.clippingRange.xlo)
                 shader.set('clipHigh',     opts.clippingRange.xhi)
 
-        for shader in self.iterShaders('vertexData', 'imageData'):
+        for shader in self.iterShaders(['vertexData', 'imageData']):
             with shader.loaded():
                 shader.set('resolution',    opts.resolution)
                 shader.set('cmap',          0)
@@ -330,20 +346,6 @@ class GLTractogram(globject.GLObject):
                 shader.set('modScale',      modScale)
                 shader.set('modOffset',     modOffset)
                 shader.set('lighting',      False)
-
-        if opts.effectiveColourMode == 'imageData':
-            cimage    = opts.colourMode
-            copts     = self.displayCtx.getOpts(cimage)
-            w2tXform  = copts.getTransform('world', 'texture')
-            voxXform  = self.colourImageTexture.voxValXform
-            voxScale  = voxXform[0, 0]
-            voxOffset = voxXform[0, 3]
-            for shader in self.iterShaders('imageData'):
-                with shader.loaded():
-                    shader.set('imageTexture',  2)
-                    shader.set('texCoordXform', w2tXform)
-                    shader.set('voxScale',      voxScale)
-                    shader.set('voxOffset',     voxOffset)
 
 
     def updateColourData(self):
@@ -360,7 +362,6 @@ class GLTractogram(globject.GLObject):
 
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.colourMode)
-
             for shader in self.iterShaders('vertexData'):
                 with shader.loaded():
                     shader.setAtt('vertexData', data)
@@ -378,8 +379,18 @@ class GLTractogram(globject.GLObject):
         ovl   = self.overlay
         cmode = opts.effectiveClipMode
 
-        # todo
+        if cmode == 'none':
+            return
 
+        if cmode == 'vertexData':
+            data = ovl.getVertexData(opts.clipMode)
+            for shader in self.iterShaders(None, 'vertexData'):
+                with shader.loaded():
+                    shader.setAtt('clipVertexData', data)
+
+        elif cmode == 'imageData':
+            # todo
+            pass
 
     def refreshImageTexture(self, which):
         """Called on changes to :attr:`.TractogramOpts.colourMode`.
@@ -402,6 +413,24 @@ class GLTractogram(globject.GLObject):
         self.imageTextures.registerAuxImage(which, image)
         self.imageTextures.texture(which).register(
             self.name, self.updateShaderState)
+
+        def shader():
+            texture   = self.imageTextures.texture(which)
+            opts      = self.displayCtx.getOpts(image)
+            w2tXform  = opts.getTransform('world', 'texture')
+            voxXform  = texture.voxValXform
+            voxScale  = voxXform[0, 0]
+            voxOffset = voxXform[0, 3]
+
+            # Todo clipimage
+            for shader in self.iterShaders('imageData'):
+                with shader.loaded():
+                    shader.set('imageTexture',  2)
+                    shader.set('texCoordXform', w2tXform)
+                    shader.set('voxScale',      voxScale)
+                    shader.set('voxOffset',     voxOffset)
+        idle.idleWhen(shader, self.ready)
+
 
 
     def refreshCmapTextures(self):

@@ -96,14 +96,14 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     @property
     def effectiveClipMode(self):
-        """Returns one of ``None``, ``'vertexData'``, or
+        """Returns one of ``'none'``, ``'vertexData'``, or
         ``'imageData'``, depending on the current :attr:`clipMode`.
         """
         ovl   = self.overlay
         cmode = self.clipMode
         if   isinstance(cmode, fslimage.Image): return 'imageData'
         elif cmode in ovl.vertexDataSets():     return 'vertexData'
-        else:                                   return None
+        else:                                   return 'none'
 
 
     def getDataRange(self):

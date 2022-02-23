@@ -27,6 +27,13 @@ uniform vec3 lightPos;
 /* Vertex coordinates (in world space) */
 varying vec3 fragVertexWorld;
 
+{% if clipMode == 'vertexData' %}
+varying float fragClipVertexData;
+{% elif clipMode == 'imageData' %}
+// TODO different image texture
+{% endif %}
+
+
 /*
  * Vertex coordinates and normal (in NDC space),
  * for calculating lighting.
@@ -35,10 +42,21 @@ varying vec3 fragVertex;
 varying vec3 fragNormal;
 
 void main(void) {
+  float clipVal;
   vec3 texCoord = (texCoordXform * vec4(fragVertexWorld, 1)).xyz;
   float val     = texture3D(imageTexture, texCoord).x;
   val           = val * voxScale + voxOffset;
-  vec4 colour   = generateColour(val);
+
+  {% if clipMode == 'none' %}
+  clipVal = val;
+  {% elif clipMode == 'vertexData' %}
+  clipVal = fragClipVertexData;
+  {% elif clipMode == 'imageData' %}
+  // TODO
+  clipVal = val;
+  {% endif %}
+
+  vec4 colour = generateColour(val, clipVal);
 
   if (lighting) {
     colour.xyz = phong_lighting(fragVertex, fragNormal, lightPos, colour.xyz);

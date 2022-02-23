@@ -24,7 +24,7 @@ uniform float     modScale;
 uniform float     modOffset;
 
 
-vec4 generateColour(float data) {
+vec4 generateColour(float data, float clipData) {
   vec4  colour;
   float texCoord;
   float clipValue;
@@ -42,8 +42,8 @@ vec4 generateColour(float data) {
     data = -data;
   }
 
-  clip = (!invertClip && (data <= clipLow || data >= clipHigh)) ||
-         ( invertClip && (data >= clipLow && data <= clipHigh));
+  clip = (!invertClip && (clipData <= clipLow || clipData >= clipHigh)) ||
+         ( invertClip && (clipData >= clipLow && clipData <= clipHigh));
 
   if (clip) {
     discard;

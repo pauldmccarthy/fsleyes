@@ -22,11 +22,17 @@ uniform float colourOffset;
 uniform vec3 lightPos;
 uniform bool lighting;
 
-/* Clip according to fragData1 */
-uniform bool  clipping;
+/* Clip according to  */
+{% if clipMode != 'none' %}
 uniform bool  invertClip;
 uniform float clipLow;
 uniform float clipHigh;
+{% endif %}
+{% if clipMode == 'vertexData' %}
+varying float fragClipVertexData;
+{% elif clipMode == 'imageData' %}
+// TODO
+{% endif %}
 
 /* Streamline orientation corresponding to this fragment. */
 varying vec3 fragOrient;
@@ -36,6 +42,21 @@ varying vec3 fragNormal;
 varying vec3 fragVertex;
 
 void main(void) {
+
+  {% if clipMode != 'none' %}
+  float clipval;
+  {% if clipMode == 'vertexData' %}
+  clipval = fragClipVertexData;
+  {% elif clipMode == 'imageData' %}
+  // TODO
+  clipval = 0;
+  {% endif %}
+
+  if ((!invertClip && (clipval <= clipLow || clipval >= clipHigh)) ||
+      ( invertClip && (clipval >= clipLow && clipval <= clipHigh))) {
+    discard;
+  }
+  {% endif %}
 
   vec4 colour = fragOrient.x * xColour +
                 fragOrient.y * yColour +

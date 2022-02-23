@@ -23,14 +23,22 @@ out float geomVertexData;
 out vec3 geomVertex;
 {% endif %}
 
+{% if clipMode == 'vertexData' %}
+in  float clipVertexData;
+out float geomClipVertexData;
+{% endif %}
+
 
 void main(void) {
-  {% if colourMode == 'orientation' %}
-  geomOrient = orient;
-  {% elif colourMode == 'vertexData' %}
-  geomVertexData = vertexData;
-  {% elif colourMode == 'imageData' %}
-  geomVertex = vertex;
+
+  {% if   colourMode == 'orientation' %} geomOrient     = orient;
+  {% elif colourMode == 'vertexData' %}  geomVertexData = vertexData;
+  {% elif colourMode == 'imageData' %}   geomVertex     = vertex;
   {% endif %}
+
+  {% if clipMode == 'vertexData' %}
+  geomClipVertexData = clipVertexData;
+  {% endif %}
+
   gl_Position = MVP * vec4(vertex, 1);
 }

@@ -22,6 +22,11 @@ in  vec3 geomVertex[];
 out vec3 fragVertexWorld;
 {% endif %}
 
+{% if clipMode == 'vertexData' %}
+in  float geomClipVertexData[];
+out float fragClipVertexData;
+{% endif %}
+
 /* Vertex position and normal, passed
  * through to fragment shader to
  * calculate lighting.
@@ -83,6 +88,9 @@ void main(void) {
   {% elif colourMode == 'imageData' %}
   fragVertexWorld = geomVertex[0];
   {% endif %}
+  {% if clipMode == 'vertexData' %}
+  fragClipVertexData = geomClipVertexData[0];
+  {% endif %}
 
   fragVertex  = start + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
   fragVertex  = start - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
@@ -93,6 +101,9 @@ void main(void) {
   fragVertexData = geomVertexData[1];
   {% elif colourMode == 'imageData' %}
   fragVertexWorld = geomVertex[1];
+  {% endif %}
+  {% if clipMode == 'vertexData' %}
+  fragClipVertexData = geomClipVertexData[1];
   {% endif %}
 
   fragVertex  = end + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();

@@ -22,6 +22,11 @@ in  vec3 geomVertex[];
 out vec3 fragVertexWorld;
 {% endif %}
 
+{% if clipMode == 'vertexData' %}
+in  float geomClipVertexData[];
+out float fragClipVertexData;
+{% endif %}
+
 /*
  * Vertex position and normal,
  * passed to fragment shader
@@ -101,6 +106,10 @@ void main(void) {
     fragVertexWorld = geomVertex[0];
     {% endif %}
 
+    {% if clipMode == 'vertexData' %}
+    fragClipVertexData = geomClipVertexData[0];
+    {% endif %}
+
     fragVertex  = start + scaledOffset;
     fragNormal  = offset;
     gl_Position = vec4(fragVertex, 1);
@@ -112,6 +121,10 @@ void main(void) {
     fragVertexData = geomVertexData[1];
     {% elif colourMode == 'imageData' %}
     fragVertexWorld = geomVertex[1];
+    {% endif %}
+
+    {% if clipMode == 'vertexData' %}
+    fragClipVertexData = geomClipVertexData[1];
     {% endif %}
 
     fragVertex  = end + scaledOffset;

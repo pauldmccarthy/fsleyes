@@ -79,30 +79,30 @@ def compileShaders(self):
         self.shaders[colourMode][clipMode].extend((lshader, tshader))
 
 
-
 def draw3D(self, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 
-    canvas    = self.canvas
-    opts      = self.opts
-    display   = self.display
-    cmode     = opts.effectiveColourMode
-    mvp       = canvas.mvpMatrix
-    mv        = canvas.viewMatrix
-    lighting  = canvas.opts.light
-    lightPos  = affine.transform(canvas.lightPos, mvp)
-    ovl       = self.overlay
-    nstrms    = ovl.nstreamlines
-    lineWidth = self.normalisedLineWidth
-    offsets   = self.offsets
-    counts    = self.counts
-    nstrms    = len(offsets)
+    canvas     = self.canvas
+    opts       = self.opts
+    display    = self.display
+    colourMode = opts.effectiveColourMode
+    clipMode   = opts.effectiveClipMode
+    mvp        = canvas.mvpMatrix
+    mv         = canvas.viewMatrix
+    lighting   = canvas.opts.light
+    lightPos   = affine.transform(canvas.lightPos, mvp)
+    ovl        = self.overlay
+    nstrms     = ovl.nstreamlines
+    lineWidth  = self.normalisedLineWidth
+    offsets    = self.offsets
+    counts     = self.counts
+    nstrms     = len(offsets)
 
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders[cmode]['none'][0]
-    else:              shader = self.shaders[cmode]['none'][1]
+    if geom == 'line': shader = self.shaders[colourMode][clipMode][0]
+    else:              shader = self.shaders[colourMode][clipMode][1]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
