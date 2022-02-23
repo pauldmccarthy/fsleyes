@@ -138,7 +138,7 @@ class GLVectorBase(glimageobject.GLImageObject):
 
         self.cmapTexture = textures.ColourMapTexture('{}_cm'.format(name))
         self.shader      = None
-        self.auxmgr      = glimageobject.AuxImageTextureManager(
+        self.auxmgr      = textures.AuxImageTextureManager(
             self, colour=None, modulate=None, clip=None)
 
         self.registerAuxImage('colour',   opts.colourImage)
