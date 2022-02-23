@@ -49,7 +49,9 @@ class GLTractogram(globject.GLObject):
                                'imageData'   : []}
         self.cmapTexture    = textures.ColourMapTexture(self.name)
         self.negCmapTexture = textures.ColourMapTexture(self.name)
-        self.imageTexture   = None
+        self.imageTextures  = textures.AuxImageTextureManager(
+            self, colour=None, clip=None)
+        self.imageTextures.registerAuxImage('colour', self.opts.colourMode)
 
         # Orientation is used for RGB colouring.
         # We have to apply abs so that GL doesn't
@@ -66,9 +68,9 @@ class GLTractogram(globject.GLObject):
         self.compileShaders()
         self.updateColourData()
         # Call updateShaderState asynchronously,
-        # as it may depend on the image texture
-        # being ready, which is prepared off the
-        # main thread.
+        # as it may depend on the image textures
+        # being ready, which might be prepared
+        # off the main thread.
         idle.idleWhen(self.updateShaderState, self.ready)
 
 
@@ -92,12 +94,12 @@ class GLTractogram(globject.GLObject):
             self.updateShaderState()
             self.notify()
 
-        def data(*_):
+        def colour(*_):
             self.updateColourData()
             self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',       name, shader,  weak=False)
-        opts   .addListener('colourMode',       name, data,    weak=False)
+        opts   .addListener('colourMode',       name, colour,  weak=False)
         opts   .addListener('lineWidth',        name, refresh, weak=False)
         opts   .addListener('xColour',          name, shader,  weak=False)
         opts   .addListener('yColour',          name, shader,  weak=False)
@@ -166,8 +168,8 @@ class GLTractogram(globject.GLObject):
         if self.negCmapTexture is not None:
             self.negCmapTexture.destroy()
 
-        if self.imageTexture is not None:
-            self.imageTexture.destroy()
+        if self.imageTextures is not None:
+            self.imageTextures.destroy()
 
         if self.shaders is not None:
             for shader in it.chain(*self.shaders.values()):
@@ -175,7 +177,7 @@ class GLTractogram(globject.GLObject):
 
         self.cmapTexture    = None
         self.negCmapTexture = None
-        self.imageTexture   = None
+        self.imageTextures  = None
         self.shaders        = None
 
         self.removeListeners()
@@ -186,6 +188,40 @@ class GLTractogram(globject.GLObject):
     def destroyed(self):
         """Returns ``True`` if :meth:`destroy` has been called. """
         return self.shaders is None
+
+
+    def ready(self):
+        """Overrides :meth:`.GLObject.ready`. Returns ``True`` if the
+        :attr:`.TractogramOpts.colourImage` is ready (or unset).
+        """
+        return self.imageTextures.texturesReady()
+
+
+    def getDisplayBounds(self):
+        """Overrides :meth:`.GLObject.getDisplayBounds`. Returns a bounding
+        box which contains the mesh vertices.
+        """
+        return (self.opts.bounds.getLo(),
+                self.opts.bounds.getHi())
+
+
+    @property
+    def normalisedLineWidth(self):
+        """Returns :attr:`lineWidth`, scaled to normalised device coordinates.
+        """
+        cw, ch    = self.canvas.GetSize()
+        lineWidth = self.opts.lineWidth * max((1 / cw, 1 / ch))
+        return lineWidth
+
+
+    @property
+    def clipImageTexture(self):
+        return self.imageTextures.texture('clip')
+
+
+    @property
+    def colourImageTexture(self):
+        return self.imageTextures.texture('colour')
 
 
     def compileShaders(self):
@@ -269,7 +305,7 @@ class GLTractogram(globject.GLObject):
             cimage    = opts.colourMode
             copts     = self.displayCtx.getOpts(cimage)
             w2tXform  = copts.getTransform('world', 'texture')
-            voxXform  = self.imageTexture.voxValXform
+            voxXform  = self.colourImageTexture.voxValXform
             voxScale  = voxXform[0, 0]
             voxOffset = voxXform[0, 3]
             for shader in self.shaders['imageData']:
@@ -300,64 +336,30 @@ class GLTractogram(globject.GLObject):
                     shader.setAtt('vertexData', data)
 
         if cmode == 'imageData':
-            self.refreshImageTexture()
+            self.refreshImageTexture('colour')
 
 
-    def ready(self):
-        """Overrides :meth:`.GLObject.ready`. Returns ``True`` if the
-        :attr:`.TractogramOpts.colourImage` is ready (or unset).
-        """
-        return (self.imageTexture is None) or self.imageTexture.ready()
-
-
-    def getDisplayBounds(self):
-        """Overrides :meth:`.GLObject.getDisplayBounds`. Returns a bounding
-        box which contains the mesh vertices.
-        """
-        return (self.opts.bounds.getLo(),
-                self.opts.bounds.getHi())
-
-
-    @property
-    def normalisedLineWidth(self):
-        """Returns :attr:`lineWidth`, scaled to normalised device coordinates.
-        """
-        cw, ch    = self.canvas.GetSize()
-        lineWidth = self.opts.lineWidth * max((1 / cw, 1 / ch))
-        return lineWidth
-
-
-    def refreshImageTexture(self):
+    def refreshImageTexture(self, which):
         """Called on changes to :attr:`.TractogramOpts.colourMode`.
         Refreshes the :class:`.ImageTexture` object as needed.
         """
 
-        opts    = self.opts
-        image   = opts.colourMode
-        texName = '{}_{}'.format(type(self).__name__, id(image))
+        opts = self.opts
 
-        # Not currently colouring by image. If a texture
-        # already exists, we *don't* delete it now - only
-        # if/when a *different* image is selected.
+        if which == 'colour': image = opts.colourMode
+        else:                 image = opts.clipMode
+
+        # Not currently colouring by image.
         if not isinstance(image, fslimage.Image):
             return
 
-        # Already have a texture for this image
-        if self.imageTexture is not None and self.imageTexture.name == texName:
+        # image already registered
+        if image is self.imageTextures.image(which):
             return
 
-        if self.imageTexture is not None:
-            self.imageTexture.deregister(self.name)
-            glresources.delete(texName)
-
-        self.imageTexture = glresources.get(
-            texName,
-            textures.createImageTexture,
-            texName,
-            image,
-            interp=gl.GL_LINEAR,
-            notify=False)
-        self.imageTexture.register(self.name, self.updateShaderState)
+        self.imageTextures.registerAuxImage(which, image)
+        self.imageTextures.texture(which).register(
+            self.name, self.updateShaderState)
 
 
     def refreshCmapTextures(self):
@@ -421,7 +423,7 @@ class GLTractogram(globject.GLObject):
             self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
             self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
         if image:
-            self.imageTexture.bindTexture(gl.GL_TEXTURE2)
+            self.colourImageTexture.bindTexture(gl.GL_TEXTURE2)
 
         fslgl.gltractogram_funcs.draw3D(self, xform)
 
@@ -429,4 +431,4 @@ class GLTractogram(globject.GLObject):
             self.cmapTexture   .unbindTexture()
             self.negCmapTexture.unbindTexture()
         if image:
-            self.imageTexture.unbindTexture()
+            self.colourImageTexture.unbindTexture()

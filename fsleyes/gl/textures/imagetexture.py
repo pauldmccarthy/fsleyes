@@ -554,6 +554,10 @@ class AuxImageTextureManager:
         return self.__auxtextures[which]
 
 
+    def image(self, which):
+        return self.__auximages[which]
+
+
     def textureXform(self, which):
         """Generates and returns a transformation matrix which can be used to
         transform texture coordinates from the main overlay to the specified
@@ -600,12 +604,20 @@ class AuxImageTextureManager:
         method.
         """
 
-        if self.__auximages[which] is not None:
+        old = self.__auximages[which]
+
+        if not isinstance(image, fslimage.Image):
+            image = None
+
+        # Image already registered
+        if (image is not None) and (image is old):
+            return
+
+        if old is not None:
             self.deregisterAuxImage(which, False)
 
         if image is None:
             opts = None
-
         else:
             opts = self.displayCtx.getOpts(image)
 
