@@ -28,26 +28,33 @@ def compileShaders(self):
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
 
-    # The geometry shaders just pass
-    # through data of this type
-    oconst = {'passThru' : ['vec3', 'float']}
-    dconst = {'passThru' : ['float']}
-    iconst = {'passThru' : ['vec3']}
+    # We share shader sources across the shader
+    # types, and do things slightly differently
+    # depending on the shader type (via jinja2
+    # preprocessing)
+    oconst = {'shaderType' : 'orientation'}
+    dconst = {'shaderType' : 'vertexData'}
+    iconst = {'shaderType' : 'imageData'}
+
+    # Share the "in vec3 vertex"
+    # buffer across all shaders
+    kwa = {'resourceName' : f'GLTractogram_{id(self)}',
+           'shared'       : ['vertex']}
 
     # six shaders - one for each combination of
     # colouring by orientation vs colouring by data
     # vs colouring by image, and drawing as lines
     # vs drawing as tubes.
-    lineOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, linegsrc, oconst)
-    tubeOrientShader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst)
-    lineVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst)
-    tubeVDataShader  = shaders.GLSLShader(vsrc,  vdatafsrc,  tubegsrc, dconst)
-    lineIDataShader  = shaders.GLSLShader(vsrc,  idatafsrc,  linegsrc, iconst)
-    tubeIDataShader  = shaders.GLSLShader(vsrc,  idatafsrc,  tubegsrc, iconst)
+    loshader = shaders.GLSLShader(vsrc,  orientfsrc, linegsrc, oconst, **kwa)
+    toshader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst, **kwa)
+    lvshader = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst, **kwa)
+    tvshader = shaders.GLSLShader(vsrc,  vdatafsrc,  tubegsrc, dconst, **kwa)
+    lishader = shaders.GLSLShader(vsrc,  idatafsrc,  linegsrc, iconst, **kwa)
+    tishader = shaders.GLSLShader(vsrc,  idatafsrc,  tubegsrc, iconst, **kwa)
 
-    self.shaders['orientation'].extend([lineOrientShader, tubeOrientShader])
-    self.shaders['vertexData'] .extend([lineVDataShader,  tubeVDataShader])
-    self.shaders['imageData']  .extend([lineIDataShader,  tubeIDataShader])
+    self.shaders['orientation'].extend([loshader, toshader])
+    self.shaders['vertexData'] .extend([lvshader, tvshader])
+    self.shaders['imageData']  .extend([lishader, tishader])
 
 
 def draw3D(self, xform=None):

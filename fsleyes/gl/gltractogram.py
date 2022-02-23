@@ -199,14 +199,13 @@ class GLTractogram(globject.GLObject):
         for shader in self.shaders['orientation']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
-                shader.setAtt('data0',  self.orients)
+                shader.setAtt('orient', self.orients)
         for shader in self.shaders['vertexData']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
         for shader in self.shaders['imageData']:
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
-                shader.setAtt('data0',  self.vertices)
 
 
     def updateShaderState(self):
@@ -298,7 +297,7 @@ class GLTractogram(globject.GLObject):
 
             for shader in self.shaders['vertexData']:
                 with shader.loaded():
-                    shader.setAtt('data0', data)
+                    shader.setAtt('vertexData', data)
 
         if cmode == 'imageData':
             self.refreshImageTexture()
@@ -333,17 +332,24 @@ class GLTractogram(globject.GLObject):
         Refreshes the :class:`.ImageTexture` object as needed.
         """
 
-        opts  = self.opts
-        image = opts.colourMode
+        opts    = self.opts
+        image   = opts.colourMode
+        texName = '{}_{}'.format(type(self).__name__, id(image))
 
-        if self.imageTexture is not None and self.imageTexture.image != image:
-            self.imageTexture.deregister(self.name)
-            glresources.delete(self.imageTexture.name)
-
+        # Not currently colouring by image. If a texture
+        # already exists, we *don't* delete it now - only
+        # if/when a *different* image is selected.
         if not isinstance(image, fslimage.Image):
             return
 
-        texName = '{}_{}'.format(type(self).__name__, id(image))
+        # Already have a texture for this image
+        if self.imageTexture is not None and self.imageTexture.name == texName:
+            return
+
+        if self.imageTexture is not None:
+            self.imageTexture.deregister(self.name)
+            glresources.delete(texName)
+
         self.imageTexture = glresources.get(
             texName,
             textures.createImageTexture,

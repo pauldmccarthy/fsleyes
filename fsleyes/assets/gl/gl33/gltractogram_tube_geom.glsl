@@ -11,10 +11,16 @@ layout (triangle_strip, max_vertices=22) out;
  * Vertex data, pssed straight
  * through to fragment shader.
  */
-{% for dtype in passThru %}
-in  {{ dtype }} geomData{{ loop.index0 }}[];
-out {{ dtype }} fragData{{ loop.index0 }};
-{% endfor %}
+{% if shaderType == 'orientation' %}
+in  vec3 geomOrient[];
+out vec3 fragOrient;
+{% elif shaderType == 'vertexData' %}
+in  float geomVertexData[];
+out float fragVertexData;
+{% elif shaderType == 'imageData' %}
+in  vec3 geomVertex[];
+out vec3 fragVertexWorld;
+{% endif %}
 
 /*
  * Vertex position and normal,
@@ -87,18 +93,26 @@ void main(void) {
     offset       = normalize(((normalx * cosa) + (normaly * sina)));
     scaledOffset = offset * lineWidth / 2;
 
-    {% for _ in passThru %}
-    fragData{{ loop.index0 }} = geomData{{ loop.index0 }}[0];
-    {% endfor %}
+    {% if shaderType == 'orientation' %}
+    fragOrient = geomOrient[0];
+    {% elif shaderType == 'vertexData' %}
+    fragVertexData = geomVertexData[0];
+    {% elif shaderType == 'imageData' %}
+    fragVertexWorld = geomVertex[0];
+    {% endif %}
 
     fragVertex  = start + scaledOffset;
     fragNormal  = offset;
     gl_Position = vec4(fragVertex, 1);
     EmitVertex();
 
-    {% for _ in passThru %}
-    fragData{{ loop.index0 }} = geomData{{ loop.index0 }}[1];
-    {% endfor %}
+    {% if shaderType == 'orientation' %}
+    fragOrient = geomOrient[1];
+    {% elif shaderType == 'vertexData' %}
+    fragVertexData = geomVertexData[1];
+    {% elif shaderType == 'imageData' %}
+    fragVertexWorld = geomVertex[1];
+    {% endif %}
 
     fragVertex  = end + scaledOffset;
     fragNormal  = offset;

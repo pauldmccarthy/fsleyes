@@ -182,7 +182,6 @@ class GLSLShader:
         for att in self.attributes:
             if resourceName is not None and att in shared:
                 arname = f'{resourceName}_{att}'
-                print('SHARING IS CARING', arname)
                 self.buffers[att] = glresources.get(arname, gl.glGenBuffers, 1)
             else:
                 self.buffers[att] = gl.glGenBuffers(1)

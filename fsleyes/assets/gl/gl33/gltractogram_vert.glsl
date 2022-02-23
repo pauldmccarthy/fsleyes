@@ -1,6 +1,5 @@
 /*
- * Vertex shader for rendering GLTractogram instances when being
- * coloured by orientation or by per-vertex data.
+ * Vertex shader for rendering GLTractogram instances.
  */
 #version 330
 
@@ -11,17 +10,27 @@ in vec3 vertex;
 
 /*
  * Vertex data value - the type/contents depends on how the tractogram
- * is being coloured (by orientation, or by per-vertex data). Passed
- * through to geometry shader.
+ * is being coloured (by orientation, by per-vertex data, or by image data).
+ * Passed through to geometry shader.
  */
-{% for dtype in passThru %}
-in  {{ dtype }} data{{     loop.index0 }};
-out {{ dtype }} geomData{{ loop.index0 }};
-{% endfor %}
+{% if shaderType == 'orientation' %}
+in  vec3 orient;
+out vec3 geomOrient;
+{% elif shaderType == 'vertexData' %}
+in  float vertexData;
+out float geomVertexData;
+{% elif shaderType == 'imageData' %}
+out vec3 geomVertex;
+{% endif %}
+
 
 void main(void) {
-  {% for _ in passThru %}
-  geomData{{ loop.index0 }} = data{{ loop.index0 }};
-  {% endfor %}
+  {% if shaderType == 'orientation' %}
+  geomOrient = orient;
+  {% elif shaderType == 'vertexData' %}
+  geomVertexData = vertexData;
+  {% elif shaderType == 'imageData' %}
+  geomVertex = vertex;
+  {% endif %}
   gl_Position = MVP * vec4(vertex, 1);
 }
