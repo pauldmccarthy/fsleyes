@@ -40,13 +40,22 @@ class GLTractogram(globject.GLObject):
 
         # Shaders are created in compileShaders.
         # imageTexture created in refreshImageTexture
+        #
         # Three separate shader types are used:
         #  - 'orientation' - coloured by streamline orientation
         #  - 'vertexData'  - coloured by per-vertex/streamline data
         #  - 'imageData'   - coloured by data from an Image
-        self.shaders        = {'orientation' : [],
-                               'vertexData'  : [],
-                               'imageData'   : []}
+        #
+        # Separate shader programs are used depending
+        # on the TractogramOpts.clipMode -
+        #  - 'none'       - no clipping, or clipping by the same
+        #                   data used for colouring
+        #  - 'vertexData' - clipping by a separate vertex data set
+        #  - 'imageData'  - clipping by a separate image data set
+        self.shaders        = {
+            'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
+            'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
+            'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
         self.cmapTexture    = textures.ColourMapTexture(self.name)
         self.negCmapTexture = textures.ColourMapTexture(self.name)
         self.imageTextures  = textures.AuxImageTextureManager(
@@ -181,7 +190,7 @@ class GLTractogram(globject.GLObject):
             self.imageTextures.destroy()
 
         if self.shaders is not None:
-            for shader in it.chain(*self.shaders.values()):
+            for shader in self.iterShaders():
                 shader.destroy()
 
         self.cmapTexture    = None
@@ -191,6 +200,18 @@ class GLTractogram(globject.GLObject):
 
         self.removeListeners()
         globject.GLObject.destroy(self)
+
+
+    def iterShaders(self, *shaderTypes):
+        """Returns all shader programs of the specified types, or all shader
+        programs if no types are specified.
+        """
+        if len(shaderTypes) == 0:
+            shaderTypes = self.shaders.keys()
+
+        shaders = [self.shaders[t] for t in shaderTypes]
+        shaders = it.chain(*(s.values() for s in shaders))
+        return it.chain(*shaders)
 
 
     @property
@@ -241,14 +262,14 @@ class GLTractogram(globject.GLObject):
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
-        for shader in self.shaders['orientation']:
+        for shader in self.iterShaders('orientation'):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
                 shader.setAtt('orient', self.orients)
-        for shader in self.shaders['vertexData']:
+        for shader in self.iterShaders('vertexData'):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
-        for shader in self.shaders['imageData']:
+        for shader in self.iterShaders('imageData'):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices)
 
@@ -280,7 +301,7 @@ class GLTractogram(globject.GLObject):
             colours[1][3] = alpha
             colours[2][3] = alpha
 
-        for shader in self.shaders['orientation']:
+        for shader in self.iterShaders('orientation'):
             with shader.loaded():
                 shader.set('xColour',      colours[0])
                 shader.set('yColour',      colours[1])
@@ -294,7 +315,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('clipLow',      opts.clippingRange.xlo)
                 shader.set('clipHigh',     opts.clippingRange.xhi)
 
-        for shader in self.shaders['vertexData'] + self.shaders['imageData']:
+        for shader in self.iterShaders('vertexData', 'imageData'):
             with shader.loaded():
                 shader.set('resolution',    opts.resolution)
                 shader.set('cmap',          0)
@@ -317,7 +338,7 @@ class GLTractogram(globject.GLObject):
             voxXform  = self.colourImageTexture.voxValXform
             voxScale  = voxXform[0, 0]
             voxOffset = voxXform[0, 3]
-            for shader in self.shaders['imageData']:
+            for shader in self.iterShaders('imageData'):
                 with shader.loaded():
                     shader.set('imageTexture',  2)
                     shader.set('texCoordXform', w2tXform)
@@ -340,7 +361,7 @@ class GLTractogram(globject.GLObject):
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.colourMode)
 
-            for shader in self.shaders['vertexData']:
+            for shader in self.iterShaders('vertexData'):
                 with shader.loaded():
                     shader.setAtt('vertexData', data)
 

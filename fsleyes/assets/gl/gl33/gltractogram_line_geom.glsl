@@ -11,13 +11,13 @@ layout (triangle_strip, max_vertices=4) out;
  * Vertex data - passed straight through to
  * fragment shader.
  */
-{% if shaderType == 'orientation' %}
+{% if colourMode == 'orientation' %}
 in  vec3 geomOrient[];
 out vec3 fragOrient;
-{% elif shaderType == 'vertexData' %}
+{% elif colourMode == 'vertexData' %}
 in  float geomVertexData[];
 out float fragVertexData;
-{% elif shaderType == 'imageData' %}
+{% elif colourMode == 'imageData' %}
 in  vec3 geomVertex[];
 out vec3 fragVertexWorld;
 {% endif %}
@@ -76,22 +76,22 @@ void main(void) {
   // fragNormal = normalize(cross(start - offset, start - end));
   fragNormal = vec3(0, 0, 0);
 
-  {% if shaderType == 'orientation' %}
+  {% if colourMode == 'orientation' %}
   fragOrient = geomOrient[0];
-  {% elif shaderType == 'vertexData' %}
+  {% elif colourMode == 'vertexData' %}
   fragVertexData = geomVertexData[0];
-  {% elif shaderType == 'imageData' %}
+  {% elif colourMode == 'imageData' %}
   fragVertexWorld = geomVertex[0];
   {% endif %}
 
   fragVertex  = start + offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
   fragVertex  = start - offset; gl_Position = vec4(fragVertex, 1); EmitVertex();
 
-  {% if shaderType == 'orientation' %}
+  {% if colourMode == 'orientation' %}
   fragOrient = geomOrient[1];
-  {% elif shaderType == 'vertexData' %}
+  {% elif colourMode == 'vertexData' %}
   fragVertexData = geomVertexData[1];
-  {% elif shaderType == 'imageData' %}
+  {% elif colourMode == 'imageData' %}
   fragVertexWorld = geomVertex[1];
   {% endif %}
 

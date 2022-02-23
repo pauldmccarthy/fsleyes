@@ -13,23 +13,23 @@ in vec3 vertex;
  * is being coloured (by orientation, by per-vertex data, or by image data).
  * Passed through to geometry shader.
  */
-{% if shaderType == 'orientation' %}
+{% if colourMode == 'orientation' %}
 in  vec3 orient;
 out vec3 geomOrient;
-{% elif shaderType == 'vertexData' %}
+{% elif colourMode == 'vertexData' %}
 in  float vertexData;
 out float geomVertexData;
-{% elif shaderType == 'imageData' %}
+{% elif colourMode == 'imageData' %}
 out vec3 geomVertex;
 {% endif %}
 
 
 void main(void) {
-  {% if shaderType == 'orientation' %}
+  {% if colourMode == 'orientation' %}
   geomOrient = orient;
-  {% elif shaderType == 'vertexData' %}
+  {% elif colourMode == 'vertexData' %}
   geomVertexData = vertexData;
-  {% elif shaderType == 'imageData' %}
+  {% elif colourMode == 'imageData' %}
   geomVertex = vertex;
   {% endif %}
   gl_Position = MVP * vec4(vertex, 1);

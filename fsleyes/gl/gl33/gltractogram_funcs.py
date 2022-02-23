@@ -8,6 +8,7 @@
 when rendering in an OpenGL 3.3 compatible manner.
 """
 
+import itertools as it
 
 import OpenGL.GL as gl
 
@@ -21,6 +22,10 @@ def compileShaders(self):
     Compiles shader programs.
     """
 
+    # We share shader sources across the shader
+    # types, and do things slightly differently
+    # depending on the shader type (via jinja2
+    # preprocessing).
     vsrc       = shaders.getVertexShader(  'gltractogram')
     orientfsrc = shaders.getFragmentShader('gltractogram_orient')
     vdatafsrc  = shaders.getFragmentShader('gltractogram_vertex_data')
@@ -28,33 +33,51 @@ def compileShaders(self):
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
 
-    # We share shader sources across the shader
-    # types, and do things slightly differently
-    # depending on the shader type (via jinja2
-    # preprocessing)
-    oconst = {'shaderType' : 'orientation'}
-    dconst = {'shaderType' : 'vertexData'}
-    iconst = {'shaderType' : 'imageData'}
+    # We create separate shader programs for each
+    # combination of:
+    #  - Geometry (lines or tubes)
+    #  - Colouring (orientation, vertex data, image data)
+    #  - Clipping (vertex data, image data)
+
+    # So in total we create 18 shader programs - each
+    # of the following, for both lines and tubes.
+    #  - Colour by orientation, no clipping
+    #  - Colour by orientation, clip by vertex data
+    #  - Colour by orientation, clip by image data
+    #  - Colour by vertex data, clip by same vertex data
+    #  - Colour by vertex data, clip by different vertex data
+    #  - Colour by vertex data, clip by image data
+    #  - Colour by image data, clip by same image data
+    #  - Colour by image data, clip by different image data
+    #  - Colour by image data, clip by vertex data data
+
+    colourSources = {
+        'orientation' : orientfsrc,
+        'vertexData'  : vdatafsrc,
+        'imageData'   : idatafsrc,
+    }
+
+    colourModes = ['orientation', 'vertexData', 'imageData']
+    clipModes   = ['none',        'vertexData', 'imageData']
 
     # Share the "in vec3 vertex"
     # buffer across all shaders
     kwa = {'resourceName' : f'GLTractogram_{id(self)}',
            'shared'       : ['vertex']}
 
-    # six shaders - one for each combination of
-    # colouring by orientation vs colouring by data
-    # vs colouring by image, and drawing as lines
-    # vs drawing as tubes.
-    loshader = shaders.GLSLShader(vsrc,  orientfsrc, linegsrc, oconst, **kwa)
-    toshader = shaders.GLSLShader(vsrc,  orientfsrc, tubegsrc, oconst, **kwa)
-    lvshader = shaders.GLSLShader(vsrc,  vdatafsrc,  linegsrc, dconst, **kwa)
-    tvshader = shaders.GLSLShader(vsrc,  vdatafsrc,  tubegsrc, dconst, **kwa)
-    lishader = shaders.GLSLShader(vsrc,  idatafsrc,  linegsrc, iconst, **kwa)
-    tishader = shaders.GLSLShader(vsrc,  idatafsrc,  tubegsrc, iconst, **kwa)
+    for colourMode, clipMode in it.product(colourModes, clipModes):
 
-    self.shaders['orientation'].extend([loshader, toshader])
-    self.shaders['vertexData'] .extend([lvshader, tvshader])
-    self.shaders['imageData']  .extend([lishader, tishader])
+        fsrc   = colourSources[colourMode]
+        consts = {
+            'colourMode' : colourMode,
+            'clipMode'   : clipMode
+        }
+
+        lshader = shaders.GLSLShader(vsrc,  fsrc, linegsrc, consts, **kwa)
+        tshader = shaders.GLSLShader(vsrc,  fsrc, tubegsrc, consts, **kwa)
+
+        self.shaders[colourMode][clipMode].extend((lshader, tshader))
+
 
 
 def draw3D(self, xform=None):
@@ -78,8 +101,8 @@ def draw3D(self, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders[cmode][0]
-    else:              shader = self.shaders[cmode][1]
+    if geom == 'line': shader = self.shaders[cmode]['none'][0]
+    else:              shader = self.shaders[cmode]['none'][1]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
