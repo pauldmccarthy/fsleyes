@@ -19,6 +19,7 @@ import OpenGL.GL             as gl
 import OpenGL.raw.GL._types  as gltypes
 
 import fsleyes.gl.extensions as glexts
+import fsleyes.gl.resources  as glresources
 import fsleyes.gl            as fslgl
 import fsl.utils.memoize     as memoize
 from . import                   parse
@@ -98,21 +99,34 @@ class GLSLShader:
                  vertSrc,
                  fragSrc,
                  geomSrc=None,
-                 constants=None):
+                 constants=None,
+                 resourceName=None,
+                 shared=None):
         """Create a ``GLSLShader``.
 
         The source is passed through ``jinja2``, replacing any expressions on
         the basis of ``constants``.
 
-        :arg vertSrc:   String containing vertex shader source code.
+        :arg vertSrc:      String containing vertex shader source code.
 
-        :arg fragSrc:   String containing fragment shader source code.
+        :arg fragSrc:      String containing fragment shader source code.
 
-        :arg geomSrc:   String containing geometry shader source code.
+        :arg geomSrc:      String containing geometry shader source code.
 
-        :arg constants: Key-value pairs to be used when passing the source
-                        through ``jinja2``.
+        :arg constants:    Key-value pairs to be used when passing the source
+                           through ``jinja2``.
+
+        :arg resourceName: If provided, buffers for any ``shared`` attributes
+                           will be managed using the :mod:`.resources` module.
+
+        :arg shared:       Names of input/varying vertex attributes which are
+                           shared between multiple shaders - if a
+                           ``resourceName`` is provided, these attributes will
+                           be mamaged by the :mod:`.resources` module.
         """
+
+        if shared is None:
+            shared = []
 
         if constants is None:
             constants = {}
@@ -166,7 +180,12 @@ class GLSLShader:
         # Buffers for vertex attributes
         self.buffers = {}
         for att in self.attributes:
-            self.buffers[att] = gl.glGenBuffers(1)
+            if resourceName is not None and att in shared:
+                arname = f'{resourceName}_{att}'
+                print('SHARING IS CARING', arname)
+                self.buffers[att] = glresources.get(arname, gl.glGenBuffers, 1)
+            else:
+                self.buffers[att] = gl.glGenBuffers(1)
 
         # Buffers for storing vertices and
         # (optionally) vertex indices.
