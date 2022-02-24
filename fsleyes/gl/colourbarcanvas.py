@@ -165,7 +165,6 @@ class ColourBarCanvas(props.HasProperties):
         # viewport
         gl.glViewport(0, 0, width, height)
         glroutines.clear(self.__cbar.bgColour)
-        gl.glShadeModel(gl.GL_FLAT)
 
         xmin, xmax = 0, 1
         ymin, ymax = 0, 1
