@@ -24,13 +24,25 @@ uniform mat4      texCoordXform;
 uniform bool lighting;
 uniform vec3 lightPos;
 
-/* Vertex coordinates (in world space) */
+/* Vertex coordinates, before MVP transformation */
 varying vec3 fragVertexWorld;
 
 {% if clipMode == 'vertexData' %}
+/* Per-vertex clipping value */
 varying float fragClipVertexData;
+
 {% elif clipMode == 'imageData' %}
-// TODO different image texture
+/*
+ * Image texture containing clipping values,
+ * scale/offset to transform from texture
+ * value range to original value range, and
+ * affine to transform vertex coordinates
+ * into clip texture coordinates.
+ */
+uniform sampler3D clipTexture;
+uniform float     clipValScale;
+uniform float     clipValOffset;
+uniform mat4      clipTexCoordXform;
 {% endif %}
 
 
@@ -48,12 +60,18 @@ void main(void) {
   val           = val * voxScale + voxOffset;
 
   {% if clipMode == 'none' %}
+  /* Clip fragment according to the value used for colouring */
   clipVal = val;
+
   {% elif clipMode == 'vertexData' %}
+  /* Clip fragment according to the separate per-vertex value */
   clipVal = fragClipVertexData;
+
   {% elif clipMode == 'imageData' %}
-  // TODO
-  clipVal = val;
+  /* Clip fragment according to value from the separate clipping texture */
+  vec3 clipTexCoord = (clipTexCoordXform * vec4(fragVertexWorld, 1)).xyz;
+  clipVal           = texture3D(clipTexture, clipTexCoord).x;
+  clipVal           = clipVal * clipValScale + clipValOffset;
   {% endif %}
 
   vec4 colour = generateColour(val, clipVal);

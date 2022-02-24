@@ -389,12 +389,13 @@ class GLTractogram(globject.GLObject):
                     shader.setAtt('clipVertexData', data)
 
         elif cmode == 'imageData':
-            # todo
-            pass
+            self.refreshImageTexture('clip')
+
 
     def refreshImageTexture(self, which):
-        """Called on changes to :attr:`.TractogramOpts.colourMode`.
-        Refreshes the :class:`.ImageTexture` object as needed.
+        """Called on changes to :attr:`.TractogramOpts.colourMode` and
+        :attr:`.TractogramOpts.clipMode`. Refreshes the :class:`.ImageTexture`
+        objects as needed.
         """
 
         opts = self.opts
@@ -402,7 +403,7 @@ class GLTractogram(globject.GLObject):
         if which == 'colour': image = opts.colourMode
         else:                 image = opts.clipMode
 
-        # Not currently colouring by image.
+        # Not currently colouring/clipping by image.
         if not isinstance(image, fslimage.Image):
             return
 
@@ -422,15 +423,21 @@ class GLTractogram(globject.GLObject):
             voxScale  = voxXform[0, 0]
             voxOffset = voxXform[0, 3]
 
-            # Todo clipimage
-            for shader in self.iterShaders('imageData'):
-                with shader.loaded():
-                    shader.set('imageTexture',  2)
-                    shader.set('texCoordXform', w2tXform)
-                    shader.set('voxScale',      voxScale)
-                    shader.set('voxOffset',     voxOffset)
+            if which == 'colour':
+                for shader in self.iterShaders('imageData'):
+                    with shader.loaded():
+                        shader.set('imageTexture',  2)
+                        shader.set('texCoordXform', w2tXform)
+                        shader.set('voxScale',      voxScale)
+                        shader.set('voxOffset',     voxOffset)
+            elif which == 'clip':
+                for shader in self.iterShaders([], ['imageData']):
+                    with shader.loaded():
+                        shader.set('clipTexture',       3)
+                        shader.set('clipTexCoordXform', w2tXform)
+                        shader.set('clipValScale',      voxScale)
+                        shader.set('clipValOffset',     voxOffset)
         idle.idleWhen(shader, self.ready)
-
 
 
     def refreshCmapTextures(self):
@@ -486,20 +493,27 @@ class GLTractogram(globject.GLObject):
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
 
-        cmode = self.opts.effectiveColourMode
-        cmaps = cmode in ('imageData', 'vertexData')
-        image = cmode ==  'imageData'
+        colourMode = self.opts.effectiveColourMode
+        clipMode   = self.opts.effectiveClipMode
+
+        cmaps     = colourMode in ('imageData', 'vertexData')
+        colourTex = colourMode == 'imageData'
+        clipTex   = clipMode   == 'imageData'
 
         if cmaps:
             self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
             self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
-        if image:
+        if colourTex:
             self.colourImageTexture.bindTexture(gl.GL_TEXTURE2)
+        if clipTex:
+            self.clipImageTexture.bindTexture(gl.GL_TEXTURE3)
 
         fslgl.gltractogram_funcs.draw3D(self, xform)
 
         if cmaps:
             self.cmapTexture   .unbindTexture()
             self.negCmapTexture.unbindTexture()
-        if image:
+        if colourTex:
             self.colourImageTexture.unbindTexture()
+        if clipTex:
+            self.clipImageTexture.unbindTexture()

@@ -8,22 +8,36 @@ uniform mat4 MVP;
 /* Vertex coordinates. */
 in vec3 vertex;
 
-/*
- * Vertex data value - the type/contents depends on how the tractogram
- * is being coloured (by orientation, by per-vertex data, or by image data).
- * Passed through to geometry shader.
- */
 {% if colourMode == 'orientation' %}
+/*
+ * Per-vertex orientation, used for colouring,
+ * passed through to fragment shader.
+ */
 in  vec3 orient;
 out vec3 geomOrient;
+
 {% elif colourMode == 'vertexData' %}
+/*
+ * Per-vertex data value, used for colouring,
+ * passed through to fragment shader.
+ */
 in  float vertexData;
 out float geomVertexData;
-{% elif colourMode == 'imageData' %}
+{% endif %}
+
+{% if colourMode == 'imageData' or clipMode == 'imageData' %}
+/*
+ * Input vertex coordinates, passed
+ * through to fragment shader.
+ */
 out vec3 geomVertex;
 {% endif %}
 
 {% if clipMode == 'vertexData' %}
+/*
+ * Per-vertex data for clipping, passed
+ * through to fragment shader.
+ */
 in  float clipVertexData;
 out float geomClipVertexData;
 {% endif %}
@@ -31,9 +45,14 @@ out float geomClipVertexData;
 
 void main(void) {
 
-  {% if   colourMode == 'orientation' %} geomOrient     = orient;
-  {% elif colourMode == 'vertexData' %}  geomVertexData = vertexData;
-  {% elif colourMode == 'imageData' %}   geomVertex     = vertex;
+  {% if colourMode == 'orientation' %}
+  geomOrient = orient;
+  {% elif colourMode == 'vertexData' %}
+  geomVertexData = vertexData;
+  {% endif %}
+
+  {% if colourMode == 'imageData' or clipMode == 'imageData' %}
+  geomVertex = vertex;
   {% endif %}
 
   {% if clipMode == 'vertexData' %}

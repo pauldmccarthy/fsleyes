@@ -17,7 +17,9 @@ out vec3 fragOrient;
 {% elif colourMode == 'vertexData' %}
 in  float geomVertexData[];
 out float fragVertexData;
-{% elif colourMode == 'imageData' %}
+{% endif %}
+
+{% if colourMode == 'imageData' or clipMode == 'imageData' %}
 in  vec3 geomVertex[];
 out vec3 fragVertexWorld;
 {% endif %}
@@ -26,6 +28,7 @@ out vec3 fragVertexWorld;
 in  float geomClipVertexData[];
 out float fragClipVertexData;
 {% endif %}
+
 
 /*
  * Vertex position and normal,
@@ -102,7 +105,9 @@ void main(void) {
     fragOrient = geomOrient[0];
     {% elif colourMode == 'vertexData' %}
     fragVertexData = geomVertexData[0];
-    {% elif colourMode == 'imageData' %}
+    {% endif %}
+
+    {% if colourMode == 'imageData' or clipMode == 'imageData' %}
     fragVertexWorld = geomVertex[0];
     {% endif %}
 
@@ -119,7 +124,9 @@ void main(void) {
     fragOrient = geomOrient[1];
     {% elif colourMode == 'vertexData' %}
     fragVertexData = geomVertexData[1];
-    {% elif colourMode == 'imageData' %}
+    {% endif %}
+
+    {% if colourMode == 'imageData' or clipMode == 'imageData' %}
     fragVertexWorld = geomVertex[1];
     {% endif %}
 

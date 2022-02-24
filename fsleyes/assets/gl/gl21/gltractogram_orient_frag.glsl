@@ -18,20 +18,42 @@ uniform vec4  zColour;
 uniform float colourScale;
 uniform float colourOffset;
 
-/* Light position, and whether lighting affect should be applied. */
+/*
+ * Light position, and whether lighting
+ * affect should be applied.
+ */
 uniform vec3 lightPos;
 uniform bool lighting;
 
-/* Clip according to  */
 {% if clipMode != 'none' %}
+/*
+ * Low/high clipping range, and whether
+ * to clip outside or inside the range.
+ */
 uniform bool  invertClip;
 uniform float clipLow;
 uniform float clipHigh;
 {% endif %}
+
 {% if clipMode == 'vertexData' %}
+/* Per-vertex clipping value */
 varying float fragClipVertexData;
+
 {% elif clipMode == 'imageData' %}
-// TODO
+/*
+ * Image texture containing clipping values,
+ * scale/offset to transform from texture
+ * value range to original value range, and
+ * affine to transform vertex coordinates
+ * into clip texture coordinates.
+ */
+uniform sampler3D clipTexture;
+uniform float     clipValScale;
+uniform float     clipValOffset;
+uniform mat4      clipTexCoordXform;
+
+/* Vertex coordinates, before MVP transformation */
+varying vec3      fragVertexWorld;
 {% endif %}
 
 /* Streamline orientation corresponding to this fragment. */
@@ -44,16 +66,23 @@ varying vec3 fragVertex;
 void main(void) {
 
   {% if clipMode != 'none' %}
-  float clipval;
-  {% if clipMode == 'vertexData' %}
-  clipval = fragClipVertexData;
-  {% elif clipMode == 'imageData' %}
-  // TODO
-  clipval = 0;
+  float clipVal;
   {% endif %}
 
-  if ((!invertClip && (clipval <= clipLow || clipval >= clipHigh)) ||
-      ( invertClip && (clipval >= clipLow && clipval <= clipHigh))) {
+  {% if clipMode == 'vertexData' %}
+  /* Clip fragment acoording to per-vertex data */
+  clipVal = fragClipVertexData;
+
+  {% elif clipMode == 'imageData' %}
+  /* Clip fragment acoording to value taken from clip texture */
+  vec3 clipTexCoord = (clipTexCoordXform * vec4(fragVertexWorld, 1)).xyz;
+  clipVal           = texture3D(clipTexture, clipTexCoord).x;
+  clipVal           = clipVal * clipValScale + clipValOffset;
+  {% endif %}
+
+  {% if clipMode != 'none' %}
+  if ((!invertClip && (clipVal <= clipLow || clipVal >= clipHigh)) ||
+      ( invertClip && (clipVal >= clipLow && clipVal <= clipHigh))) {
     discard;
   }
   {% endif %}
