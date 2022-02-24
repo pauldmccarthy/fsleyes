@@ -33,7 +33,6 @@ def colourBarMinorAxisSize(fontSize):
     # that the colourbarbitmap module
     # uses 96 dpi, and a padding of 6
     # pixels).
-    fontSize = fontSize
     fontSize = 6 + 96 * fontSize / 72.
 
     # Fix the minor axis of the colour bar,

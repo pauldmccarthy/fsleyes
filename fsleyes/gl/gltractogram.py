@@ -22,7 +22,6 @@ import fsl.data.image       as fslimage
 import fsleyes.gl           as fslgl
 import fsleyes.gl.textures  as textures
 import fsleyes.gl.globject  as globject
-import fsleyes.gl.resources as glresources
 
 
 class GLTractogram(globject.GLObject):
@@ -83,7 +82,10 @@ class GLTractogram(globject.GLObject):
         # as it may depend on the image textures
         # being ready, which might be prepared
         # off the main thread.
-        idle.idleWhen(self.updateShaderState, self.ready)
+        if 'imageData' not in (self.opts.colourMode, self.opts.clipMode):
+            self.updateShaderState()
+        else:
+            idle.idleWhen(self.updateShaderState, self.ready)
 
 
     def addListeners(self):
@@ -411,10 +413,9 @@ class GLTractogram(globject.GLObject):
         if image is self.imageTextures.image(which):
             return
 
-        self.imageTextures.registerAuxImage(which, image)
-        self.imageTextures.texture(which).register(
-            self.name, self.updateShaderState)
-
+        # When the texture has been prepared,
+        # we need to tell the shader programs
+        # how to use it.
         def shader():
             texture   = self.imageTextures.texture(which)
             opts      = self.displayCtx.getOpts(image)
@@ -437,7 +438,10 @@ class GLTractogram(globject.GLObject):
                         shader.set('clipTexCoordXform', w2tXform)
                         shader.set('clipValScale',      voxScale)
                         shader.set('clipValOffset',     voxOffset)
-        idle.idleWhen(shader, self.ready)
+
+        self.imageTextures.registerAuxImage(which, image, callback=shader)
+        self.imageTextures.texture(which).register(
+            self.name, self.updateShaderState)
 
 
     def refreshCmapTextures(self):
