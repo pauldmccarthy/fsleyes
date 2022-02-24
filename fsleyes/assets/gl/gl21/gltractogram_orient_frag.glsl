@@ -5,7 +5,9 @@
  */
 #version 120
 
+{% if lighting %}
 #pragma include phong_lighting.glsl
+{% endif %}
 
 /*
  * Colours used for X/Y/Z orientation, and
@@ -18,12 +20,6 @@ uniform vec4  zColour;
 uniform float colourScale;
 uniform float colourOffset;
 
-/*
- * Light position, and whether lighting
- * affect should be applied.
- */
-uniform vec3 lightPos;
-uniform bool lighting;
 
 {% if clipMode != 'none' %}
 /*
@@ -59,9 +55,18 @@ varying vec3      fragVertexWorld;
 /* Streamline orientation corresponding to this fragment. */
 varying vec3 fragOrient;
 
+/*
+ * Light position, and whether lighting
+ * effect should be applied.
+ */
+{% if lighting %}
+uniform vec3 lightPos;
+uniform bool lighting;
 /*Vertex position and vertex normal, used for lighting. */
 varying vec3 fragNormal;
 varying vec3 fragVertex;
+{% endif %}
+
 
 void main(void) {
 
@@ -95,9 +100,11 @@ void main(void) {
                  yColour.a +
                  zColour.a) / 3;
 
+  {% if lighting %}
   if (lighting) {
     colour.xyz = phong_lighting(fragVertex, fragNormal, lightPos, colour.xyz);
   }
+  {% endif %}
 
   gl_FragColor = colour;
 }

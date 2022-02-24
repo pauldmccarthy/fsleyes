@@ -12,6 +12,7 @@ display properties for :class:`.Tractogram` overlays.
 import numpy as np
 
 import fsl.data.image                       as fslimage
+import fsleyes.gl                           as fslgl
 import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
 import fsleyes.displaycontext.colourmapopts as cmapopts
@@ -58,6 +59,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     def __init__(self, *args, **kwargs):
         """Create a ``TractogramOpts``. """
+
+        if float(fslgl.GL_COMPATIBILITY) < 3.3:
+            self.getProp('resolution').disable(self)
+
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)

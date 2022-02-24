@@ -6,12 +6,11 @@
 #version 120
 
 #pragma include gltractogram_data_common.glsl
+
+{% if lighting %}
 #pragma include phong_lighting.glsl
+{% endif %}
 
-
-/* Light position, and whether to apply lighting. */
-uniform bool lighting;
-uniform vec3 lightPos;
 
 /* Vertex data value for colouring */
 varying float fragVertexData;
@@ -37,12 +36,19 @@ uniform mat4      clipTexCoordXform;
 varying vec3      fragVertexWorld;
 {% endif %}
 
+
+{% if lighting %}
+/* Light position, and whether to apply lighting. */
+uniform bool lighting;
+uniform vec3 lightPos;
+
 /*
  * Vertex coordinates and normal (in NDC space),
  * for calculating lighting.
  */
 varying vec3 fragVertex;
 varying vec3 fragNormal;
+{% endif %}
 
 
 void main(void) {
@@ -64,8 +70,11 @@ void main(void) {
   {% endif %}
 
   vec4 colour = generateColour(fragVertexData, clipVal);
+
+  {% if lighting %}
   if (lighting) {
     colour.xyz = phong_lighting(fragVertex, fragNormal, lightPos, colour.xyz);
   }
+  {% endif %}
   gl_FragColor = colour;
 }

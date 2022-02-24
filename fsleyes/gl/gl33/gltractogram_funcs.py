@@ -70,7 +70,8 @@ def compileShaders(self):
         fsrc   = colourSources[colourMode]
         consts = {
             'colourMode' : colourMode,
-            'clipMode'   : clipMode
+            'clipMode'   : clipMode,
+            'lighting'   : True
         }
 
         lshader = shaders.GLSLShader(vsrc,  fsrc, linegsrc, consts, **kwa)
