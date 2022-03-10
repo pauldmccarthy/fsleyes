@@ -247,18 +247,32 @@ def _selectPyOpenGLPlatform():
     # If no display, osmesa on all platforms
     if not fwidgets.canHaveGui():
         os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
+        return
 
-    # GTK3 versions of wxpython 4.1.1 and newer
-    # default to using EGL for GL initialisation,
-    # but pyopengl defaults to glx.
-    elif fslplatform.os.lower() == 'linux':
-        wxver  = fwidgets.wxVersion()
-        wxplat = fwidgets.wxPlatform()
+    # We only need special handling on linux
+    if not fslplatform.os.lower() == 'linux':
+        return
 
-        if wxver is not None                               and \
-           fslversion.compareVersions(wxver, '4.1.1') >= 0 and \
-           wxplat == fwidgets.WX_GTK3:
-            os.environ['PYOPENGL_PLATFORM'] = 'egl'
+    wxver  = fwidgets.wxVersion()
+    wxplat = fwidgets.wxPlatform()
+
+    # Don't know what version of wxpython
+    # we have - don't do anything
+    if wxver is None:
+        return
+
+    # GTK3 versions of wxpython>=4.1.1 use EGL
+    # for GL initialisation. All older wxpython
+    # versions, and all GTK2 versions, use GLX.
+    #
+    # PyOpenGL>=3.1.6 will use EGL if it detects
+    # that it is running under Wayland.  But this
+    # breaks things if we have a GTK2 wxpython.
+    if wxplat == fwidgets.WX_GTK2:
+        os.environ['PYOPENGL_PLATFORM'] = 'x11'
+    elif fslversion.compareVersions(wxver, '4.1.1') >= 0:
+        os.environ['PYOPENGL_PLATFORM'] = 'egl'
+
 
 
 _selectPyOpenGLPlatform()
