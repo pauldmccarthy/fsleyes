@@ -36,7 +36,6 @@ def compileShaders(self):
                    'shared'       : ['vertex']}
 
     for colourMode, clipMode in it.product(colourModes, clipModes):
-        print('SHD', colourMode, clipMode)
 
         fsrc   = colourSources[colourMode]
         consts = {
@@ -53,12 +52,13 @@ def draw3D(self, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
     canvas     = self.canvas
     opts       = self.opts
+    ovl        = self.overlay
     display    = self.display
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
+    vertXform  = ovl.affine
     mvp        = canvas.mvpMatrix
     mv         = canvas.viewMatrix
-    ovl        = self.overlay
     nstrms     = ovl.nstreamlines
     lineWidth  = opts.lineWidth
     offsets    = self.offsets
@@ -67,9 +67,11 @@ def draw3D(self, xform=None):
 
     shader = self.shaders[colourMode][clipMode][0]
 
-    if xform is not None:
-        mvp = affine.concat(mvp, xform)
-        mv  = affine.concat(mv,  xform)
+    if xform is None: xform = vertXform
+    else:             xform = affine.concat(xform, vertXform)
+
+    mvp = affine.concat(mvp, xform)
+    mv  = affine.concat(mv,  xform)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP', mvp)

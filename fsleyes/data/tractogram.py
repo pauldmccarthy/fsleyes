@@ -18,6 +18,7 @@ import numpy                as np
 import nibabel.streamlines  as nibstrm
 
 import fsl.transform.affine as affine
+import fsl.data.constants   as constants
 
 
 ALLOWED_EXTENSIONS     = ['.tck', '.trk']
@@ -32,7 +33,7 @@ class Tractogram:
     Per-vertex/streamline data can be added via the :meth:`loadVertexData`
     and :meth:`addVertexData` methods. Per-streamline data is duplicated to
     be per-vertex, as this makes it much easier to use in the rendering
-{    logic in the :class:`.GLTractogram` class.
+    logic in the :class:`.GLTractogram` class.
     """
 
     def __init__(self, fname):
@@ -59,6 +60,15 @@ class Tractogram:
             data = tractogram.data_per_point[key].get_data()
             key  = f'{key} [{self.name}]'
             self.addVertexData(key, data.reshape(-1))
+
+
+    @property
+    def affine(self):
+        """Returns an affine transformation matrix which can be used to
+        transform the streamline vertices into an RAS / millimetre-based
+        coordinate system.
+        """
+        return self.tractFile.affine
 
 
     @property
@@ -107,8 +117,31 @@ class Tractogram:
 
 
     @property
-    @ft.lru_cache()
     def orientation(self):
+        """Returns codes indicating the orientation of the coordinate
+        system in which the streamline vertices are defined.
+
+        The codes that are returned are only valid if the :meth:`affine`
+        transformation is applied to the vertex coordinates.
+        """
+        # Currently always RAS - mrtrix coordinates are always RAS
+        # (and the affine is typically an identity transform), and
+        # trackvis files contain a coordinate-to-RAS affine (which
+        # is further adjusted by nibabel to encode a half-voxel shift);
+        #
+        #   - https://mrtrix.readthedocs.io/en/latest/getting_started/\
+        #       image_data.html?highlight=format#coordinate-system
+        #   - http://trackvis.org/docs/?subsect=fileformat
+        #   - https://nipy.org/nibabel/reference/\
+        #       nibabel.streamlines.html#trkfile
+        return [constants.ORIENT_L2R,
+                constants.ORIENT_P2A,
+                constants.ORIENT_I2S]
+
+
+    @property
+    @ft.lru_cache()
+    def vertexOrientations(self):
         """Calculates and returns an orientation vector for every vertex of
         every streamline in the tractogram.
 

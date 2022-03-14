@@ -67,10 +67,10 @@ class GLTractogram(globject.GLObject):
         # interpolate across -ve/+ve boundaries.
         # when passing from vertex shader through
         # to fragment shader.
-        self.vertices = np.asarray(overlay.vertices, dtype=np.float32)
-        self.offsets  = np.asarray(overlay.offsets,  dtype=np.int32)
-        self.counts   = np.asarray(overlay.lengths,  dtype=np.int32)
-        self.orients  = np.abs(overlay.orientation,  dtype=np.float32)
+        self.vertices = np.asarray(overlay.vertices,       dtype=np.float32)
+        self.offsets  = np.asarray(overlay.offsets,        dtype=np.int32)
+        self.counts   = np.asarray(overlay.lengths,        dtype=np.int32)
+        self.orients  = np.abs(overlay.vertexOrientations, dtype=np.float32)
 
         self.refreshCmapTextures()
         self.addListeners()

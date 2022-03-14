@@ -12,7 +12,9 @@ display properties for :class:`.Tractogram` overlays.
 import numpy as np
 
 import fsl.data.image                       as fslimage
+import fsl.data.constants                   as constants
 import fsleyes.gl                           as fslgl
+import fsleyes.strings                      as strings
 import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
 import fsleyes.displaycontext.colourmapopts as cmapopts
@@ -109,6 +111,23 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         if   isinstance(cmode, fslimage.Image): return 'imageData'
         elif cmode in ovl.vertexDataSets():     return 'vertexData'
         else:                                   return 'none'
+
+
+    def getLabels(self):
+        """Overrides :meth:`.DisplayOpts.getLabele`. Returns orientation
+        labels and codes for the coordinate system in which the streamline
+        vertices are defined.
+        """
+        xorient, yorient, zorient  = self.overlay.orientation
+        xlo = strings.anatomy['Nifti', 'lowshort',  xorient]
+        ylo = strings.anatomy['Nifti', 'lowshort',  yorient]
+        zlo = strings.anatomy['Nifti', 'lowshort',  zorient]
+        xhi = strings.anatomy['Nifti', 'highshort', xorient]
+        yhi = strings.anatomy['Nifti', 'highshort', yorient]
+        zhi = strings.anatomy['Nifti', 'highshort', zorient]
+
+        return ((xlo, ylo, zlo, xhi, yhi, zhi),
+                (xorient, yorient, zorient))
 
 
     def getDataRange(self):
