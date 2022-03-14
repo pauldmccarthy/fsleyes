@@ -73,12 +73,12 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         xhi, yhi, zhi = hi
         self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
 
-        self .addListener('colourMode', self.name, self.__colourClipModeChanged)
-        self .addListener('clipMode',   self.name, self.__colourClipModeChanged)
+        self .addListener('colourMode', self.name, self.__colourModeChanged)
+        self .addListener('clipMode',   self.name, self.__clipModeChanged)
         olist.addListener('overlays',   self.name, self.updateColourClipModes)
 
         self.updateColourClipModes()
-        self.__colourClipModeChanged()
+        self.updateDataRange()
 
 
     def destroy(self):
@@ -179,12 +179,20 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
-    def __colourClipModeChanged(self, *_):
-        """Called when :attr:`colourMode` or :attr:`clipMode` changes.  Calls
+    def __colourModeChanged(self, *_):
+        """Called when :attr:`colourMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
         """
-        self.updateDataRange()
+        self.updateDataRange(resetCR=False)
+
+
+    def __clipModeChanged(self, *_):
+        """Called when :attr:`clipMode` changes.  Calls
+        :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
+        and clipping ranges are up to date.
+        """
+        self.updateDataRange(resetDR=False)
 
 
     def __getData(self, mode):
