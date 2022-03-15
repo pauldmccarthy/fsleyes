@@ -107,7 +107,7 @@ def draw3D(self, xform=None):
     else:              shader = self.shaders[colourMode][clipMode][1]
 
     if xform is None: xform = vertXform
-    else:             xform = affine.concat(xform,  vertXform)
+    else:             xform = affine.concat(xform, vertXform)
 
     mvp = affine.concat(mvp, xform)
     mv  = affine.concat(mv,  xform)

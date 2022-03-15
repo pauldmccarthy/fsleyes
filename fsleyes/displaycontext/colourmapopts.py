@@ -465,8 +465,10 @@ class ColourMapOpts:
         # If the display and clipping ranges differ,
         # it probably makes sense to de-couple them
         if (crmin, crmax) != (drmin, drmax):
-            self.linkLowRanges  = False
-            self.linkHighRanges = False
+            if self.propertyIsEnabled('linkLowRanges'):
+                self.linkLowRanges  = False
+            if self.propertyIsEnabled('linkHighRanges'):
+                self.linkHighRanges = False
 
         # Clipping works on >= and <=, so we add
         # a small offset to the display range limits
