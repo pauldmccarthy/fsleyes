@@ -52,13 +52,20 @@ class Tractogram:
 
         # Load any per-vertex / per-streamline data
         # which is stored in the streamline file
+
+        # nibabel supports storage of multiple
+        # values per key per streamline/vertex,
+        # but we currently only support scalar
+        # values (i.e. one value per key per
+        # streamline/vertex), and discard all
+        # but the first value.
         tractogram = self.tractFile.tractogram
         for key in tractogram.data_per_streamline.keys():
-            data = tractogram.data_per_streamline[key].get_data()
-            self.addVertexData(key, data.reshape(-1))
+            data = tractogram.data_per_streamline[key]
+            self.addVertexData(key, data[:, 0].reshape(-1))
         for key in tractogram.data_per_point.keys():
             data = tractogram.data_per_point[key].get_data()
-            self.addVertexData(key, data.reshape(-1))
+            self.addVertexData(key, data[:, 0].reshape(-1))
 
 
     def __str__(self):
