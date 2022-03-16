@@ -545,8 +545,8 @@ OPTIONS = td.TypeDict({
                           'suppressA',
                           'suppressMode'],
     'ComplexOpts'       : ['component'],
-    'TractogramOpts'    : ['vertexData',
-                           'colourImage',
+    'TractogramOpts'    : ['colourBy',
+                           'clipBy',
                            'lineWidth',
                            'resolution',
                            'linkLowRanges',
@@ -888,10 +888,10 @@ ARGUMENTS = td.TypeDict({
 
     'ComplexOpts.component' : ('co', 'component', True),
 
-    'TractogramOpts.vertexData'     : ('vd', 'vertexData',     True),
-    'TractogramOpts.colourImage'    : ('ci', 'colourImage',    True),
-    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',      True),
-    'TractogramOpts.resolution'     : ('r',  'resolution',     True),
+    'TractogramOpts.colourBy'       : ('co', 'colourBy',   True),
+    'TractogramOpts.clipBy'         : ('cl', 'clipBy',     True),
+    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',  True),
+    'TractogramOpts.resolution'     : ('r',  'resolution', True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1241,12 +1241,14 @@ HELP = td.TypeDict({
                                     '\'white\' (default), \'black\', or '
                                     '\'transparent\'.',
 
-    'TractogramOpts.vertexData' :
-    'File containing per-vertex/streamline scalar values for colouring, or '
-    'an index (starting from 0) specifying a per-vertex/streamline data set '
-    'contained in the tractogram file.',
-    'TractogramOpts.colourImage' :
-    'NIFTI image for colouring.',
+    'TractogramOpts.colourBy' :
+    'NIFTI image, or file containing per-vertex/streamline scalar values '
+    'for colouring, or an index (starting from 0) specifying a per-vertex/'
+    'streamline data set contained in the tractogram file.',
+    'TractogramOpts.clipBy' :
+    'NIFTI image, or file containing per-vertex/streamline scalar values '
+    'for clipping, or an index (starting from 0) specifying a per-vertex/'
+    'streamline data set contained in the tractogram file.',
     'TractogramOpts.lineWidth' :
     'Streamline width (pixels)',
     'TractogramOpts.resolution' :
@@ -2987,15 +2989,15 @@ def _configSpecial_FileOption(target, parser, shortArg, longArg, helpText):
     parser.add_argument(shortArg, longArg, metavar='FILE', help=helpText)
 
 
-def _applySpecial_FileOption(args, overlayList, displayCtx, target, propName):
+def _applySpecial_FileOption(
+        value, overlayList, displayCtx, target, propName):
     """Used by various ``_applySpecial`` functions to configure arguments
     which expect to be passed an overlay file
     (e.g. :attr:`.VolumeOpts.clipImage`).
     """
 
     try:
-        val = getattr(args, propName)
-        img = _findOrLoad(overlayList, val, fslimage.Image, target.overlay)
+        img = _findOrLoad(overlayList, value, fslimage.Image, target.overlay)
         setattr(target, propName, img)
     except Exception as e:
         log.warning(f'{type(target).__name__}.{propName}: {str(e)}')
@@ -3277,7 +3279,7 @@ def _applySpecial_VectorOpts_clipImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'clipImage')
+        args.clipImage, overlayList, displayCtx, target, 'clipImage')
 
 
 def _generateSpecial_VectorOpts_clipImage(
@@ -3304,7 +3306,7 @@ def _applySpecial_VectorOpts_modulateImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'modulateImage')
+        args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
 
 
 def _generateSpecial_VectorOpts_modulateImage(
@@ -3331,7 +3333,7 @@ def _applySpecial_VectorOpts_colourImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'colourImage')
+        args.colourImage, overlayList, displayCtx, target, 'colourImage')
 
 
 def _generateSpecial_VectorOpts_colourImage(
@@ -3426,7 +3428,7 @@ def _applySpecial_MeshOpts_refImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'refImage')
+        args.refImage, overlayList, displayCtx, target, 'refImage')
 
 
 def _generateSpecial_MeshOpts_refImage(
@@ -3453,7 +3455,7 @@ def _applySpecial_VolumeOpts_clipImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'clipImage')
+        args.clipImage, overlayList, displayCtx, target, 'clipImage')
 
 
 def _generateSpecial_VolumeOpts_clipImage(
@@ -3480,7 +3482,7 @@ def _applySpecial_VolumeOpts_modulateImage(
     arguments.
     """
     return _applySpecial_FileOption(
-        args, overlayList, displayCtx, target, 'modulateImage')
+        args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
 
 
 def _generateSpecial_VolumeOpts_modulateImage(
@@ -3751,51 +3753,77 @@ def _generateLookupTable(longArg, lut):
         return []
 
 
-def _configSpecial_TractogramOpts_colourImage(
-        Target, parser, shortArg, longArg, helpText):
-    """Configures the --colourImage option for :class:`.TractogramOpts`
-    instances. This option allows the :attr:`.TractogramOpts.colourMode`
-    option to be set to an :class:`.Image` instance.
-    """
-    parser.add_argument(shortArg, longArg, help=helpText)
-
-
-def _configSpecial_TractogramOpts_vertexData(
+def _configSpecial_TractogramOpts_colourBy(
         target, parser, shortArg, longArg, helpText):
-    """Configures the --vertexDAta option for :class:`.TractogramOpts`
+    """Configures the --colourBy option for :class:`.TractogramOpts`
     instances. This option allows the :attr:`.TractogramOpts.colourMode`
-    option to be set to a per-vertex/streamline data set.
+    option to be set to some per-vertex/streamline data, or to an
+    :class:`.Image` instance.
     """
-    parser.add_argument(shortArg, longArg, help=helpText)
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
 
 
-def _applySpecial_TractogramOpts_colourImage(
+def _configSpecial_TractogramOpts_clipBy(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the --clipBy option for :class:`.TractogramOpts`
+    instances. This option allows the :attr:`.TractogramOpts.clipMode`
+    option to be set to some per-vertex/streamline data, or to an
+    :class:`.Image` instance.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_TractogramOpts_colourBy(
         args, overlayList, displayCtx, target):
-    """Applies the ``--colourImage`` option for :class:`.TractogramOpts`
-    instances. This affects the :attr:`.TractogramOpts.colourMode` property.
+    """Applies the ``--colourBy`` option, setting the
+    :attr:`.TractogramOpts.colourMode` property.
     """
-    # TODO  replace FILE_OPTIONS with applySpecial?
+    return _applySpecial_TractogramOpts_xBy(
+        args.colourBy, overlayList, displayCtx, target, 'colourMode')
 
 
-def _applySpecial_TractogramOpts_vertexData(
+def _applySpecial_TractogramOpts_clipBy(
         args, overlayList, displayCtx, target):
-    """Applies the ``--vertexData`` option for :class:`.TractogramOpts`
-    instances. This affects the :attr:`.TractogramOpts.colourMode` property.
+    """Applies the ``--clipBy`` option, setting the
+    :attr:`.TractogramOpts.clipMode` property.
     """
+    return _applySpecial_TractogramOpts_xBy(
+        args.clipBy, overlayList, displayCtx, target, 'clipMode')
+
+
+def _applySpecial_TractogramOpts_xBy(
+        val, overlayList, displayCtx, target, propName):
+    """Used by :func:`_applySpecial_TractogramOpts_xBy` and
+    :func:`_applySpecial_TractogramOpts_xBy`. Applies the ``--colourBy`` or
+    ``--clipBy`` option for :class:`.TractogramOpts`, which respectively
+    affect the :attr:`.TractogramOpts.colourMode` and
+    :attr:`.TractogramOpts.clipMode` properties.
+    """
+
     import fsleyes.actions.loadvertexdata as loadvertexdata
-    # Pre-load all specified vertex data
-    # files, but only apply the last one,
-    vertexData = list(args.vertexData)
-    last       = len(args.vertexData) - 1
-    for i, vd in enumerate(vertexData):
-        # Vertex data can be a file
-        if op.exists(vd):
-            vertexData[i] = loadvertexdata.loadVertexData(
-                target.overlay, displayCtx, vd, select=False)
-        # Or can be an index specifying a
-        # data set that is contained in the
-        # tractogram file itself
-        elif i == last:
-            vd = int(vd)
-            vd = target.overlay.vertexDataSets()[vd]
-    target.colourMode = vd
+
+    # The --colourBy/--clipBy options accept
+    # either NIFTI images, or other vertex/
+    # streamline data files.
+    try:
+        ival = fslimage.addExt(val)
+        if fslimage.looksLikeImage(ival):
+            return _applySpecial_FileOption(
+                val, overlayList, displayCtx, target, propName)
+    except Exception as e:
+        pass
+
+    # Vertex data can be a file
+    if op.exists(val):
+        val = loadvertexdata.loadVertexData(
+            target.overlay, displayCtx, val, select=False)
+
+    # Or can be an index specifying a
+    # data set that is contained in the
+    # tractogram file itself
+    else:
+        val = target.overlay.vertexDataSets()[val]
+
+    setattr(target, propName, val)
