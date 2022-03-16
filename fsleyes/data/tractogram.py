@@ -11,6 +11,7 @@ The ``Tractogram`` class is just a thin wrapper around a
 ``nibabel.streamlines.Tractogram`` object.
 """
 
+
 import functools as ft
 import os.path   as op
 
@@ -127,7 +128,7 @@ class Tractogram:
         # Currently always RAS - mrtrix coordinates are always RAS
         # (and the affine is typically an identity transform), and
         # trackvis files contain a coordinate-to-RAS affine (which
-        # is further adjusted by nibabel to encode a half-voxel shift);
+        # is further adjusted by nibabel to encode a half-voxel shift):
         #
         #   - https://mrtrix.readthedocs.io/en/latest/getting_started/\
         #       image_data.html?highlight=format#coordinate-system
@@ -172,7 +173,7 @@ class Tractogram:
         if key is None:
             key = infile
 
-        # TODO mrtrix .tsf scalar format
+        # TODO mrtrix .tsf scalar format?
         vertexData = np.loadtxt(infile).reshape(-1)
 
         return self.addVertexData(key, vertexData)

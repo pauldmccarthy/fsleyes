@@ -2994,13 +2994,18 @@ def _applySpecial_FileOption(
     """Used by various ``_applySpecial`` functions to configure arguments
     which expect to be passed an overlay file
     (e.g. :attr:`.VolumeOpts.clipImage`).
+
+    This function returns ``True`` if an image was successfully loaded,
+    ``False`` otherwise.
     """
 
     try:
         img = _findOrLoad(overlayList, value, fslimage.Image, target.overlay)
         setattr(target, propName, img)
+        return True
     except Exception as e:
         log.warning(f'{type(target).__name__}.{propName}: {str(e)}')
+        return False
 
 
 def _generateSpecial_FileOption(
@@ -3278,7 +3283,7 @@ def _applySpecial_VectorOpts_clipImage(
     """Sets the :attr:`.VectorOpts.clipImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.clipImage, overlayList, displayCtx, target, 'clipImage')
 
 
@@ -3305,7 +3310,7 @@ def _applySpecial_VectorOpts_modulateImage(
     """Sets the :attr:`.VectorOpts.modulateImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
 
 
@@ -3332,7 +3337,7 @@ def _applySpecial_VectorOpts_colourImage(
     """Sets the :attr:`.VectorOpts.colourImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.colourImage, overlayList, displayCtx, target, 'colourImage')
 
 
@@ -3427,7 +3432,7 @@ def _applySpecial_MeshOpts_refImage(
     """Sets the :attr:`.MeshOpts.refImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.refImage, overlayList, displayCtx, target, 'refImage')
 
 
@@ -3454,7 +3459,7 @@ def _applySpecial_VolumeOpts_clipImage(
     """Sets the :attr:`.VolumeOpts.clipImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.clipImage, overlayList, displayCtx, target, 'clipImage')
 
 
@@ -3481,7 +3486,7 @@ def _applySpecial_VolumeOpts_modulateImage(
     """Sets the :attr:`.VolumeOpts.modulateImage` option from command-line
     arguments.
     """
-    return _applySpecial_FileOption(
+    _applySpecial_FileOption(
         args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
 
 
@@ -3807,13 +3812,9 @@ def _applySpecial_TractogramOpts_xBy(
     # The --colourBy/--clipBy options accept
     # either NIFTI images, or other vertex/
     # streamline data files.
-    try:
-        ival = fslimage.addExt(val)
-        if fslimage.looksLikeImage(ival):
-            return _applySpecial_FileOption(
-                val, overlayList, displayCtx, target, propName)
-    except Exception as e:
-        pass
+    if _applySpecial_FileOption(
+            val, overlayList, displayCtx, target, propName):
+        return
 
     # Vertex data can be a file
     if op.exists(val):
@@ -3824,6 +3825,52 @@ def _applySpecial_TractogramOpts_xBy(
     # data set that is contained in the
     # tractogram file itself
     else:
-        val = target.overlay.vertexDataSets()[val]
+        val = target.overlay.vertexDataSets()[int(val)]
 
     setattr(target, propName, val)
+
+
+def _generateSpecial_TractogramOpts_colourBy(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.TractogramOpts.colourMode`
+    argument.
+    """
+    return _generateSpecial_TractogramOpts_xBy(
+        source.colourMode, source, longArg)
+
+
+def _generateSpecial_TractogramOpts_clipBy(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.TractogramOpts.clipMode`
+    argument.
+    """
+    return _generateSpecial_TractogramOpts_xBy(
+        source.clipMode, source, longArg)
+
+
+def _generateSpecial_TractogramOpts_xBy(value, source, longArg):
+    """Used by :func:`_generateSpecial_TractogramOpts_colourBy` and
+    :func:`_generateSpecial_TractogramOpts_clipBy`. Generates command-line
+    arguments for the :attr:`.TractogramOpts.colourMode` and
+    :attr:`.TractogramOpts.clipMode` properties.
+    """
+
+    # Unset/default
+    if value in ('orientation', None):
+        return []
+
+    # Clipping/colouring by an image
+    elif isinstance(value, fslimage.Image):
+        return [longArg, value.dataSource]
+
+    # Clipping/colouring by vertex from
+    # a file
+    elif op.exists(value):
+        return [longArg, value]
+
+    # Clipping/colouring by vertex data
+    # built into the tractogram file, and
+    # specified with a numeric index
+    else:
+        value = source.overlay.vertexDataSets().index(value)
+        return [longArg, str(value)]
