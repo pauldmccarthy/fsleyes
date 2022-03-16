@@ -281,77 +281,14 @@ import fsleyes_props                      as props
 import fsleyes_widgets.utils.typedict     as td
 import fsleyes_widgets.utils.status       as status
 
-import fsleyes.data          as dutils
-from . import displaycontext as fsldisplay
-from . import                   colourmaps
-from . import                   autodisplay
-import                          fsleyes
+import                           fsleyes
+import fsleyes.data           as dutils
+import fsleyes.displaycontext as fsldisplay
+import fsleyes.colourmaps     as colourmaps
+import fsleyes.autodisplay    as autodisplay
 
 
 log = logging.getLogger(__name__)
-
-
-def _get_option_tuples(self, option_string):
-    """By default, the ``argparse`` module uses a *prefix matching* strategy,
-    which allows the user to (unambiguously) specify only part of an argument.
-
-    While this may be a good idea for simple programs with a small number of
-    arguments, it is very disruptive to the way that I have designed this
-    module.
-
-    To disable this prefix matching functionality, this function is
-    monkey-patched into all ArgumentParser instances created in this module.
-
-
-    .. note:: This is unnecessary in python 3.5 and above, due to the addition
-              of the ``allow_abbrev`` option.
-
-
-    See http://stackoverflow.com/questions/33900846/\
-    disable-unique-prefix-matches-for-argparse-and-optparse
-    """
-    result = []
-
-    # option strings starting with two prefix characters are only
-    # split at the '='
-    chars = self.prefix_chars
-    if option_string[0] in chars and option_string[1] in chars:
-        if '=' in option_string:
-            option_prefix, explicit_arg = option_string.split('=', 1)
-        else:
-            option_prefix = option_string
-            explicit_arg = None
-        for option_string in self._option_string_actions:
-            if option_string == option_prefix:
-                action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
-                result.append(tup)
-
-    # single character options can be concatenated with their arguments
-    # but multiple character options always have to have their argument
-    # separate
-    elif option_string[0] in chars and option_string[1] not in chars:
-        option_prefix = option_string
-        explicit_arg = None
-        short_option_prefix = option_string[:2]
-        short_explicit_arg = option_string[2:]
-
-        for option_string in self._option_string_actions:
-            if option_string == short_option_prefix:
-                action = self._option_string_actions[option_string]
-                tup = action, option_string, short_explicit_arg
-                result.append(tup)
-            elif option_string == option_prefix:
-                action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
-                result.append(tup)
-
-    # shouldn't ever get here
-    else:
-        self.error(('unexpected option string: %s') % option_string)
-
-    # return the collected option tuples
-    return result
 
 
 class ArgumentError(Exception):
@@ -371,13 +308,10 @@ def ArgumentParser(*args, **kwargs):
     def ovlArgError(message):
         raise ArgumentError(message)
 
-    # 1. I don't want prefix matching.
-    #
-    # 2. I want to handle argument errors,
-    #    rather than having the parser
-    #    force the program to exit
-    ap._get_option_tuples = types.MethodType(_get_option_tuples, ap)
-    ap.error              = ovlArgError
+    # I want to handle argument errors,
+    # rather than having the parser
+    # force the program to exit
+    ap.error = ovlArgError
 
     return ap
 
@@ -1509,7 +1443,6 @@ def getExtra(target, propName, default=None):
 # needs to be loaded as an overlay
 # need special treatment.
 FILE_OPTIONS = td.TypeDict({
-    'Main'           : ['displaySpace'],
     'VolumeOpts'     : ['clipImage',
                         'modulateImage'],
     'VectorOpts'     : ['clipImage',
@@ -2100,7 +2033,9 @@ def parseArgs(mainParser,
     argv = copy
 
     # Compile a list of arguments which
-    # look like overlay file names
+    # look like overlay file names, and
+    # indices corresponding to starting/
+    # ending arguments for each overlay.
     ovlIdxs  = []
     ovlTypes = []
 
@@ -2142,7 +2077,7 @@ def parseArgs(mainParser,
         ovlIdxs .append(i)
         ovlTypes.append(dtype)
 
-    # TODO Why is this here?
+    # Index of end argument for last overlay
     ovlIdxs.append(len(argv))
 
     # Separate the program arguments

@@ -41,7 +41,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     clipMode = props.Choice((None,))
     """Whether to clip streamlines by:
         - per-vertex or per-streamline data
-        - pata from an image
+        - data from an image
 
     Per-vertex data sets and NIFTI images are dynamically added as options
     to this property.
