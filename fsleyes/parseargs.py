@@ -170,21 +170,6 @@ To make this new propery settable via the command line, you need to:
          })
 
 
-  4. If the property specifies a file/path name (e.g.
-     :attr:`.VolumeOpts.clipImage`), add an entry in the :attr:`FILE_OPTIONS`
-     dictionary. In the present example, this is not necessary, but if it were,
-     the ``FILE_OPTIONS`` entry might look like this::
-
-         FILE_OPTIONS = td.TypeDict({
-             # .
-             # .
-             # .
-             'MeshOpts' : ['refImage', 'rotation'],
-             # .
-             # .
-             # .
-         })
-
 
 -------------------------------------
 Adding special (non-property) options
@@ -1439,25 +1424,6 @@ def getExtra(target, propName, default=None):
     return allSettings.get((target, propName), None)
 
 
-# Options which expect a file that
-# needs to be loaded as an overlay
-# need special treatment.
-FILE_OPTIONS = td.TypeDict({
-    'VolumeOpts'     : ['clipImage',
-                        'modulateImage'],
-    'VectorOpts'     : ['clipImage',
-                        'colourImage',
-                        'modulateImage'],
-    'MeshOpts'       : ['refImage'],
-    'TractogramOpts' : ['colourImage'],
-})
-"""This dictionary contains all arguments which accept file or path
-names. These arguments need special treatment - for these arguments, the user
-may specify a file which refers to an overlay that may or may not have already
-been loaded, so we need to figure out what to do.
-"""
-
-
 # Transform functions for properties where the
 # value passed in on the command line needs to
 # be manipulated before the property value is
@@ -1488,20 +1454,6 @@ been loaded, so we need to figure out what to do.
 #
 # def xform(value, gen=None, overlay=None, target=None):
 #     ...
-
-# When generating CLI arguments, turn Image
-# instances into their file names. And a few
-# other special cases.
-def _imageTrans(i, **kwargs):
-
-    stri = str(i).lower()
-
-    if   i    is  None:    return None
-    elif stri == 'none':   return None
-
-    # Special cases for Main.displaySpace
-    elif stri == 'world':  return 'world'
-    else:                  return i.dataSource
 
 
 # The command line interface
@@ -1554,12 +1506,6 @@ into the corresponding property value. See the
 :func:`props.applyArguments` and :func:`props.generateArguments`
 functions.
 """
-
-# All of the file options need special treatment
-for target, fileOpts in FILE_OPTIONS.items():
-    for fileOpt in fileOpts:
-        key             = '{}.{}'.format(target, fileOpt)
-        TRANSFORMS[key] = _imageTrans
 
 
 EXAMPLES = """\
@@ -1856,7 +1802,6 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
         parsers[target] = parser
         propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
-        specialOptions  = []
 
         # These classes are sub-classes of NiftiOpts, and as
         # such they have a volume property. But that property
@@ -1866,30 +1811,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         if target in (LineVectorOpts, RGBVectorOpts, TensorOpts, SHOpts):
             propNames.remove('volume')
 
-        # The file options need
-        # to be configured manually.
-        fileOpts = FILE_OPTIONS.get(target, [])
-        for propName in fileOpts:
-            if propName in propNames:
-                specialOptions.append(propName)
-                propNames     .remove(propName)
-
         _configParser(target, parser, propNames, shortHelp=shortHelp)
-
-        # We need to process the special options
-        # manually, rather than using the props.cli
-        # module - see the handleOverlayArgs function.
-        for opt in specialOptions:
-            shortArg, longArg = ARGUMENTS[target, opt][:2]
-            helpText          = HELP.get((target, opt), 'no help')
-
-            shortArg =  '-{}'.format(shortArg)
-            longArg  = '--{}'.format(longArg)
-            parser.add_argument(
-                shortArg,
-                longArg,
-                metavar='FILE',
-                help=helpText)
 
     return dispParser, otParser, parsers
 
@@ -2823,67 +2745,11 @@ def applyOverlayArgs(args,
             # re-created
             opts = display.opts
 
-            # All options in the FILE_OPTIONS dictionary
-            # are Choice properties, where the valid
-            # choices are defined by the current
-            # contents of the overlay list. So when
-            # the user specifies one of these images,
-            # we need to do an explicit check to see
-            # if the specified image is valid.
-            fileOpts = FILE_OPTIONS.get(opts, [])
-
-            for fileOpt in fileOpts:
-                value = getattr(optArgs, fileOpt, None)
-                if value is None:
-                    continue
-
-                setattr(optArgs, fileOpt, None)
-
-                try:
-                    image = _findOrLoad(overlayList,
-                                        value,
-                                        fslimage.Image,
-                                        overlay)
-                except Exception as e:
-                    log.warning('{}: {}'.format(fileOpt, str(e)))
-                    continue
-
-                # If the user specified both clipImage
-                # arguments and linklow/high range
-                # arguments, an error will be raised
-                # when we try to set the link properties
-                # on the VolumeOpts instance (because
-                # they have been disabled). So we
-                # clear them from the argparse namespace
-                # to prevent this from occurring.
-                if fileOpt == 'clipImage' and \
-                   isinstance(opts, fsldisplay.VolumeOpts):
-
-                    llr = ARGUMENTS['ColourMapOpts.linkLowRanges'][ 1]
-                    lhr = ARGUMENTS['ColourMapOpts.linkHighRanges'][1]
-
-                    setattr(optArgs, llr, None)
-                    setattr(optArgs, lhr, None)
-
-                # When a vertex/streamline/image file is
-                # specified for a Tractogram overlay,
-                # we set the colour mode accordingly.
-                # For vertex/streamline data, we do this
-                # with an applySpecial function, but we
-                # can't for the colourImage option, as
-                # it is an overlay/file option.
-                elif fileOpt == 'colourImage' and \
-                   isinstance(opts, fsldisplay.TractogramOpts):
-                    opts.colourMode = image
-
-                setattr(opts, fileOpt, image)
-
-            # After handling the special cases
-            # above, we can apply the CLI
-            # options to the Opts instance. The
-            # overlay and gen flag is passed
-            # through to any transform functions
-            # (see the TRANSFORMS dict)
+            # We can now apply the CLI options to
+            # the Opts instance. The overlay and
+            # gen flag is passed through to any
+            # transform functions (see the
+            # TRANSFORMS dict)
             _applyArgs(optArgs,
                        overlayList,
                        displayCtx,
@@ -2924,11 +2790,17 @@ def wasSpecified(namespace, obj, propName):
 
 
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
-    """Searches for the given ``overlayFile`` in the ``overlayList``. If not
+    """Used in a few places to handle arguments which expect to be passed
+    a file name to be loaded as an overlay (e.g.
+    :class:`.VolumeOpts.clipImage`).
+
+    Searches for the given ``overlayFile`` in the ``overlayList``. If not
     present, it is created using the given ``overlayType`` constructor, and
-    inserted into the ``overlayList``. The new overlay is inserted into the
-    ``overlayList`` before the ``relatedTo`` overlay if provided, otherwise
-    appended to the end of the list.
+    inserted into the ``overlayList``.
+
+    The new overlay is inserted into the ``overlayList`` before the
+    ``relatedTo`` overlay if provided, otherwise appended to the end of the
+    list.
     """
 
     # Is there an overlay in the list with
@@ -3105,6 +2977,41 @@ def _getSpecialFunction(target, optName, prefix):
             return func
 
     return None
+
+
+def _configSpecial_FileOption(target, parser, shortArg, longArg, helpText):
+    """Used by various ``_configSpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+    """
+    parser.add_argument(shortArg, longArg, metavar='FILE', help=helpText)
+
+
+def _applySpecial_FileOption(args, overlayList, displayCtx, target, propName):
+    """Used by various ``_applySpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+    """
+
+    try:
+        val = getattr(args, propName)
+        img = _findOrLoad(overlayList, val, fslimage.Image, target.overlay)
+        setattr(target, propName, img)
+    except Exception as e:
+        log.warning(f'{type(target).__name__}.{propName}: {str(e)}')
+
+
+def _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, propName):
+    """Used by various ``_generateSpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+    """
+    val  = getattr(source, propName)
+    args = []
+    if val is not None:
+        args.extend([longArg, val.dataSource])
+    return args
 
 
 def _configSpecial_OrthoOpts_xcentre(
@@ -3355,6 +3262,87 @@ def _generateSpecial_VectorOpts_orientFlip(
     else:    return []
 
 
+def _configSpecial_VectorOpts_clipImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.clipImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_clipImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.clipImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'clipImage')
+
+
+def _generateSpecial_VectorOpts_clipImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.clipImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'clipImage')
+
+
+def _configSpecial_VectorOpts_modulateImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.modulateImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_modulateImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.modulateImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'modulateImage')
+
+
+def _generateSpecial_VectorOpts_modulateImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.modulateImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'modulateImage')
+
+
+def _configSpecial_VectorOpts_colourImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.colourImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_colourImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.colourImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'colourImage')
+
+
+def _generateSpecial_VectorOpts_colourImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.colourImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'colourImage')
+
+
 def _configSpecial_MeshOpts_flatShading(
         target, parser, shortArg, longArg, helpText):
     """Configures the deprecated MeshOpts.flatShading option. This has
@@ -3421,6 +3409,87 @@ def _applySpecial_MeshOpts_vertexSet(
     for i, vd in enumerate(args.vertexSet):
         loadvertexdata.loadVertices(
             target.overlay, displayCtx, vd, select=(i == last))
+
+
+def _configSpecial_MeshOpts_refImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.MeshOpts.refImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_MeshOpts_refImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.MeshOpts.refImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'refImage')
+
+
+def _generateSpecial_MeshOpts_refImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.MeshOpts.refImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'refImage')
+
+
+def _configSpecial_VolumeOpts_clipImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VolumeOpts.clipImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VolumeOpts_clipImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VolumeOpts.clipImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'clipImage')
+
+
+def _generateSpecial_VolumeOpts_clipImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the :attr:`.VolumeOpts.clipImage`
+    option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'clipImage')
+
+
+def _configSpecial_VolumeOpts_modulateImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VolumeOpts.modulateImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VolumeOpts_modulateImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VolumeOpts.modulateImage` option from command-line
+    arguments.
+    """
+    return _applySpecial_FileOption(
+        args, overlayList, displayCtx, target, 'modulateImage')
+
+
+def _generateSpecial_VolumeOpts_modulateImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VolumeOpts.modulateImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'modulateImage')
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(
