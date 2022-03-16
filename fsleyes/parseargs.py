@@ -1243,12 +1243,12 @@ HELP = td.TypeDict({
 
     'TractogramOpts.colourBy' :
     'NIFTI image, or file containing per-vertex/streamline scalar values '
-    'for colouring, or an index (starting from 0) specifying a per-vertex/'
-    'streamline data set contained in the tractogram file.',
+    'for colouring, or name of a a per-vertex/streamline data set contained '
+    'within the tractogram file.',
     'TractogramOpts.clipBy' :
     'NIFTI image, or file containing per-vertex/streamline scalar values '
-    'for clipping, or an index (starting from 0) specifying a per-vertex/'
-    'streamline data set contained in the tractogram file.',
+    'for clipping, or name of a a per-vertex/streamline data set contained '
+    'within the tractogram file.',
     'TractogramOpts.lineWidth' :
     'Streamline width (pixels)',
     'TractogramOpts.resolution' :
@@ -2990,7 +2990,7 @@ def _configSpecial_FileOption(target, parser, shortArg, longArg, helpText):
 
 
 def _applySpecial_FileOption(
-        value, overlayList, displayCtx, target, propName):
+        value, overlayList, displayCtx, target, propName, warn=True):
     """Used by various ``_applySpecial`` functions to configure arguments
     which expect to be passed an overlay file
     (e.g. :attr:`.VolumeOpts.clipImage`).
@@ -3004,7 +3004,9 @@ def _applySpecial_FileOption(
         setattr(target, propName, img)
         return True
     except Exception as e:
-        log.warning(f'{type(target).__name__}.{propName}: {str(e)}')
+        if warn:
+            log.warning(f'Unable to load {value} '
+                        f'({type(target).__name__}.{propName}): {str(e)}')
         return False
 
 
@@ -3809,23 +3811,27 @@ def _applySpecial_TractogramOpts_xBy(
 
     import fsleyes.actions.loadvertexdata as loadvertexdata
 
+    overlay = target.overlay
+
     # The --colourBy/--clipBy options accept
     # either NIFTI images, or other vertex/
     # streamline data files.
     if _applySpecial_FileOption(
-            val, overlayList, displayCtx, target, propName):
+            val, overlayList, displayCtx, target, propName, warn=False):
         return
 
     # Vertex data can be a file
     if op.exists(val):
         val = loadvertexdata.loadVertexData(
-            target.overlay, displayCtx, val, select=False)
+            overlay, displayCtx, val, select=False)
 
     # Or can be an index specifying a
     # data set that is contained in the
     # tractogram file itself
-    else:
-        val = target.overlay.vertexDataSets()[int(val)]
+    elif val not in overlay.vertexDataSets():
+        log.warning(f'{val} does not appear to be a '
+                    f'vertex data set for {overlay}')
+        return
 
     setattr(target, propName, val)
 
@@ -3864,13 +3870,7 @@ def _generateSpecial_TractogramOpts_xBy(value, source, longArg):
         return [longArg, value.dataSource]
 
     # Clipping/colouring by vertex from
-    # a file
-    elif op.exists(value):
-        return [longArg, value]
-
-    # Clipping/colouring by vertex data
-    # built into the tractogram file, and
-    # specified with a numeric index
+    # a file, or by vertex data
+    # built into the tractogram file
     else:
-        value = source.overlay.vertexDataSets().index(value)
-        return [longArg, str(value)]
+        return [longArg, value]

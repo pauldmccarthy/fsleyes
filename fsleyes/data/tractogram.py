@@ -55,12 +55,14 @@ class Tractogram:
         tractogram = self.tractFile.tractogram
         for key in tractogram.data_per_streamline.keys():
             data = tractogram.data_per_streamline[key].get_data()
-            key  = f'{key} [{self.name}]'
             self.addVertexData(key, data.reshape(-1))
         for key in tractogram.data_per_point.keys():
             data = tractogram.data_per_point[key].get_data()
-            key  = f'{key} [{self.name}]'
             self.addVertexData(key, data.reshape(-1))
+
+
+    def __str__(self):
+        return f'{type(self).__name__}(self.name)'
 
 
     @property
