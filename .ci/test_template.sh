@@ -77,7 +77,7 @@ if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 # Run the tests. First batch requires
 # a GUI, so we run via xvfb-run
 export FSLEYES_TEST_GL=2.1
-((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+((xvfb-run -a -s "-screen 0 1920x1200x24" pytest -s --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=$status
 sleep 5
