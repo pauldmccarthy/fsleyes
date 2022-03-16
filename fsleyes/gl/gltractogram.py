@@ -59,8 +59,6 @@ class GLTractogram(globject.GLObject):
         self.negCmapTexture = textures.ColourMapTexture(self.name)
         self.imageTextures  = textures.AuxImageTextureManager(
             self, colour=None, clip=None)
-        self.imageTextures.registerAuxImage('clip',   self.opts.clipMode)
-        self.imageTextures.registerAuxImage('colour', self.opts.colourMode)
 
         # Orientation is used for RGB colouring.
         # We have to apply abs so that GL doesn't
@@ -72,11 +70,13 @@ class GLTractogram(globject.GLObject):
         self.counts   = np.asarray(overlay.lengths,        dtype=np.int32)
         self.orients  = np.abs(overlay.vertexOrientations, dtype=np.float32)
 
+        self.refreshImageTexture('clip')
+        self.refreshImageTexture('colour')
         self.refreshCmapTextures()
         self.addListeners()
         self.compileShaders()
-        self.updateColourData()
-        self.updateClipData()
+        self.updateColourData(refresh=False)
+        self.updateClipData(refresh=False)
 
         # Call updateShaderState asynchronously,
         # as it may depend on the image textures
@@ -350,7 +350,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('lighting',      False)
 
 
-    def updateColourData(self):
+    def updateColourData(self, refresh=True):
         """Called when :class:`.TractogramOpts.colourMode` changes. Passes
         data to the shader programs.
         """
@@ -368,11 +368,11 @@ class GLTractogram(globject.GLObject):
                 with shader.loaded():
                     shader.setAtt('vertexData', data)
 
-        if cmode == 'imageData':
+        if refresh and cmode == 'imageData':
             self.refreshImageTexture('colour')
 
 
-    def updateClipData(self):
+    def updateClipData(self, refresh=True):
         """Called when :class:`.TractogramOpts.clipMode` changes. Passes
         data to the shader programs.
         """
@@ -390,7 +390,7 @@ class GLTractogram(globject.GLObject):
                 with shader.loaded():
                     shader.setAtt('clipVertexData', data)
 
-        elif cmode == 'imageData':
+        elif refresh and cmode == 'imageData':
             self.refreshImageTexture('clip')
 
 
