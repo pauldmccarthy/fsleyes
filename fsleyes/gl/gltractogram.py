@@ -301,6 +301,7 @@ class GLTractogram(globject.GLObject):
         cmapScale           = cmapXform[0, 0]
         cmapOffset          = cmapXform[0, 3]
         modScale, modOffset = opts.modulateScaleOffset()
+        sameData            = opts.clipMode in (None, opts.colourMode)
 
         # We scale alpha exponentially as, for a
         # typical tractogram with many streamlines,
@@ -341,6 +342,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('useNegCmap',    opts.useNegativeCmap)
                 shader.set('cmapScale',     cmapScale)
                 shader.set('cmapOffset',    cmapOffset)
+                shader.set('sameData',      sameData)
                 shader.set('invertClip',    opts.invertClipping)
                 shader.set('clipLow',       opts.clippingRange.xlo)
                 shader.set('clipHigh',      opts.clippingRange.xhi)

@@ -13,7 +13,11 @@ uniform bool      useNegCmap;
 uniform float     cmapScale;
 uniform float     cmapOffset;
 
-/* Clipping */
+/*
+ * Clipping. The sameData flag is set if the clipping data is the same
+ * as the colouring data.
+ */
+uniform bool      sameData;
 uniform bool      invertClip;
 uniform float     clipLow;
 uniform float     clipHigh;
@@ -38,9 +42,8 @@ vec4 generateColour(float data, float clipData) {
 
   negative = useNegCmap && data < 0;
 
-  if (negative) {
-    data = -data;
-  }
+  if (negative) { data     = -data; }
+  if (sameData) { clipData =  data; }
 
   clip = (!invertClip && (clipData <= clipLow || clipData >= clipHigh)) ||
          ( invertClip && (clipData >= clipLow && clipData <= clipHigh));
