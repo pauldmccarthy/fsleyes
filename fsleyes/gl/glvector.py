@@ -149,6 +149,11 @@ class GLVectorBase(glimageobject.GLImageObject):
         self.refreshColourMapTexture()
 
         def initWrapper():
+            # Sometimes (e.g. during testing),
+            # this GLObject might get destroyed
+            # before this function is called
+            if self.destroyed:
+                return
             if init is not None:
                 init()
             self.notify()
