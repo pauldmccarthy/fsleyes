@@ -418,8 +418,7 @@ class GLTractogram(globject.GLObject):
         # When the texture has been prepared,
         # we need to tell the shader programs
         # how to use it.
-        def shader():
-            texture   = self.imageTextures.texture(which)
+        def shader(texture):
             opts      = self.displayCtx.getOpts(image)
             w2tXform  = opts.getTransform('world', 'texture')
             voxXform  = texture.voxValXform

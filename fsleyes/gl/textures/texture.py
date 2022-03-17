@@ -751,7 +751,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         ``callback``       Optional function which will be called (via
                            :func:`.idle.idle`) when the texture has been
                            refreshed. Only called if ``refresh`` is
-                           ``True``, and a setting has changed.
+                           ``True``, and a setting has changed. Passed
+                           a reference to this Texture object.
         ``notify``         Passed through to the :meth:`refresh` method.
         ================== ==============================================
 
@@ -847,7 +848,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         :arg callback:     Optional function which will be called (via
                            :func:`.idle.idle`) when the texture has been
                            refreshed. Only called if ``refresh`` is
-                           ``True``, and a setting has changed.
+                           ``True``, and a setting has changed. Passed
+                           a reference to this Texture object.
 
         .. note:: The texture data may be generated on a separate thread, using
                   the :func:`.idle.run` function. This is controlled by the
@@ -900,7 +902,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             if notify:
                 self.notify()
             if callback is not None:
-                callback()
+                callback(self)
 
         # Wrap the above functions in a report
         # decorator in case an error occurs
