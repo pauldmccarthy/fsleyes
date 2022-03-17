@@ -288,7 +288,7 @@ def ArgumentParser(*args, **kwargs):
     creates, monkey-patches, and returns an ``ArgumentParser`` instance.
     """
 
-    ap = argparse.ArgumentParser(*args, **kwargs)
+    ap = argparse.ArgumentParser(*args, allow_abbrev=False, **kwargs)
 
     def ovlArgError(message):
         raise ArgumentError(message)
