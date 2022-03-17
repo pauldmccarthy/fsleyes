@@ -99,6 +99,13 @@ export FSLEYES_TEST_GL=1.4
 ((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
+sleep 5
+
+# GL33-specific tests
+export FSLEYES_TEST_GL=3.3
+((pytest --cov-report= --cov-append -m "gl33test" && echo "0" > status) || echo "1" > status) || true
+status=`cat status`
+failed=`echo "$status + $failed" | bc`
 
 python -m coverage report
 

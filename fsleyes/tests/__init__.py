@@ -51,9 +51,13 @@ from .compare_images import compare_images
 
 
 def haveGL21():
+    return haveGL(2.1)
+
+
+def haveGL(version):
     try:
-        return float(fslgl.GL_COMPATIBILITY) >= 2.1
-    except:
+        return float(fslgl.GL_COMPATIBILITY) >= version
+    except Exception as e:
         return False
 
 
