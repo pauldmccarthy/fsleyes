@@ -70,13 +70,13 @@ class GLTractogram(globject.GLObject):
         self.counts   = np.asarray(overlay.lengths,        dtype=np.int32)
         self.orients  = np.abs(overlay.vertexOrientations, dtype=np.float32)
 
+        self.compileShaders()
         self.refreshImageTexture('clip')
         self.refreshImageTexture('colour')
         self.refreshCmapTextures()
-        self.addListeners()
-        self.compileShaders()
         self.updateColourData(refresh=False)
         self.updateClipData(refresh=False)
+        self.addListeners()
 
         # Call updateShaderState asynchronously,
         # as it may depend on the image textures
