@@ -27,6 +27,7 @@ def pytest_configure():
                 time.sleep(np.random.randint(1, 10))
 
     # Use run_with_fsleyes to initialise an OpenGL context
-    def nothing(*args, **kwargs):
-        pass
-    run_with_fsleyes(nothing)
+    if 'LOCAL_TEST_FSLEYES' in os.environ:
+        def nothing(*args, **kwargs):
+            pass
+        run_with_fsleyes(nothing)
