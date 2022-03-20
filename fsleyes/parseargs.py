@@ -276,6 +276,71 @@ import fsleyes.autodisplay    as autodisplay
 log = logging.getLogger(__name__)
 
 
+def _get_option_tuples(self, option_string):
+    """By default, the ``argparse`` module uses a *prefix matching* strategy,
+    which allows the user to (unambiguously) specify only part of an argument.
+
+    While this may be a good idea for simple programs with a small number of
+    arguments, it is very disruptive to the way that I have designed this
+    module.
+
+    To disable this prefix matching functionality, this function is
+    monkey-patched into all ArgumentParser instances created in this module.
+
+    This functionality can be disabled by setting the ``allow_abbrev``
+    option to the ``ArgumentParser`` to ``False``, but use of
+    ``allow_abbrev=False`` breaks support for concatenating
+    single-prefix arguments with their values, e.g. (``-sortho`` for
+    ``--scene ortho``). So we use this work-around instead.
+
+    See http://stackoverflow.com/questions/33900846/\
+    disable-unique-prefix-matches-for-argparse-and-optparse
+
+    """
+    result = []
+
+    # option strings starting with two prefix characters are only
+    # split at the '='
+    chars = self.prefix_chars
+    if option_string[0] in chars and option_string[1] in chars:
+        if '=' in option_string:
+            option_prefix, explicit_arg = option_string.split('=', 1)
+        else:
+            option_prefix = option_string
+            explicit_arg = None
+        for option_string in self._option_string_actions:
+            if option_string == option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, explicit_arg
+                result.append(tup)
+
+    # single character options can be concatenated with their arguments
+    # but multiple character options always have to have their argument
+    # separate
+    elif option_string[0] in chars and option_string[1] not in chars:
+        option_prefix = option_string
+        explicit_arg = None
+        short_option_prefix = option_string[:2]
+        short_explicit_arg = option_string[2:]
+
+        for option_string in self._option_string_actions:
+            if option_string == short_option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, short_explicit_arg
+                result.append(tup)
+            elif option_string == option_prefix:
+                action = self._option_string_actions[option_string]
+                tup = action, option_string, explicit_arg
+                result.append(tup)
+
+    # shouldn't ever get here
+    else:
+        self.error(('unexpected option string: %s') % option_string)
+
+    # return the collected option tuples
+    return result
+
+
 class ArgumentError(Exception):
     """Custom ``Exception`` class raised by ``ArgumentParser`` instances
     created and used in this module.
@@ -288,15 +353,18 @@ def ArgumentParser(*args, **kwargs):
     creates, monkey-patches, and returns an ``ArgumentParser`` instance.
     """
 
-    ap = argparse.ArgumentParser(*args, allow_abbrev=False, **kwargs)
+    ap = argparse.ArgumentParser(*args, **kwargs)
 
     def ovlArgError(message):
         raise ArgumentError(message)
 
-    # I want to handle argument errors,
-    # rather than having the parser
-    # force the program to exit
-    ap.error = ovlArgError
+    # 1. I don't want prefix matching.
+    #
+    # 2. I want to handle argument errors,
+    #    rather than having the parser
+    #    force the program to exit
+    ap._get_option_tuples = types.MethodType(_get_option_tuples, ap)
+    ap.error              = ovlArgError
 
     return ap
 
