@@ -104,6 +104,7 @@ sleep 5
 # GL33-specific tests - only a
 # couple of these at the moment
 # (overlays/test_overlay_tractogram.py)
+export MESA_GL_VERSION_OVERRIDE=3.3
 export FSLEYES_TEST_GL=3.3
 ((pytest --cov-report= --cov-append -m "gl33test" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
