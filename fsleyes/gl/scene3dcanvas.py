@@ -23,7 +23,9 @@ import fsleyes.data.tractogram           as fsltractogram
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
 import fsleyes.gl.annotations            as annotations
+import fsleyes.gl.shaders                as shaders
 import fsleyes.gl.text                   as gltext
+import fsleyes.gl.textures               as textures
 import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
 
@@ -49,6 +51,10 @@ class Scene3DCanvas:
         self.__viewport       = None
         self.__resetLightPos  = True
         self.__glObjects      = {}
+        self.__globjTextures  = {}
+        self.__shader         = None
+
+        self.__compileShader()
 
         # gl.text.Text objects containing anatomical
         # orientation labels ordered
@@ -85,8 +91,26 @@ class Scene3DCanvas:
         opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
 
 
+    def __compileShader(self):
+        """
+        """
+        if self.__shader is not None:
+            self.__shader.destroy()
+            self.__shader = None
+
+        vertSrc = shaders.getVertexShader(  'Scene3DCanvas')
+        fragSrc = shaders.getFragmentShader('Scene3DCanvas')
+        env     = {'numOverlays' : len(self.__overlayList)}
+
+        self.__shader = shaders.GLSLShader(vertSrc, fragSrc, env)
+
+
     def destroy(self):
         """Must be called when this Scene3DCanvas is no longer used. """
+
+        if self.__destroyed:
+            return
+
         self.__overlayList.removeListener('overlays', self.__name)
         self.__displayCtx .removeListener('bounds',   self.__name)
 
@@ -98,8 +122,10 @@ class Scene3DCanvas:
                 lbl.destroy()
 
         self.__annotations.destroy()
+        self.__shader.destroy()
 
         self.__annotations  = None
+        self.__shader       = None
         self.__opts         = None
         self.__displayCtx   = None
         self.__overlayList  = None
@@ -529,11 +555,14 @@ class Scene3DCanvas:
         except fsldisplay.InvalidOverlayError:
             pass
 
-        globj = self.__glObjects.pop(overlay, None)
+        globj = self.__glObjects    .pop(overlay, None)
+        tex   = self.__globjTextures.pop(overlay, None)
 
         if globj is not None:
             globj.deregister(self.__name)
             globj.destroy()
+        if tex is not None:
+            tex.destroy()
 
 
     def __genGLObject(self, overlay):
@@ -573,7 +602,9 @@ class Scene3DCanvas:
 
             if globj is not None:
                 globj.register(self.__name, self.Refresh)
-                self.__glObjects[overlay] = globj
+                tex = textures.RenderTexture(globj.name)
+                self.__globjTextures[overlay] = tex
+                self.__glObjects[overlay]     = globj
 
         idle.idle(create)
         return True
@@ -585,11 +616,14 @@ class Scene3DCanvas:
         """
 
         overlay = display.overlay
-        globj   = self.__glObjects.pop(overlay, None)
+        globj   = self.__glObjects    .pop(overlay, None)
+        tex     = self.__globjTextures.pop(overlay, None)
 
         if globj is not None:
             globj.deregister(self.__name)
             globj.destroy()
+        if tex is not None:
+            tex.destroy()
 
         self.__genGLObject(overlay)
         self.Refresh()
@@ -713,63 +747,35 @@ class Scene3DCanvas:
         if not self.__setViewport():
             return
 
-        gl.glViewport(0, 0, width, height)
-        glroutines.clear(opts.bgColour)
-
         overlays, globjs = self.getGLObjects()
+        rtexs            = []
 
         if len(overlays) == 0:
             return
 
-        # If occlusion is on, we offset the
-        # depth of each overlay so that, where
-        # a depth collision occurs, overlays
-        # which are higher in the list will get
-        # drawn above (closer to the screen)
-        # than lower ones.
-        if opts.occlusion:
-
-            # The offset is set as a proportion
-            # of the length of the longest axis
-            # in the display bounding box.
-            bounds = self.displayCtx.bounds
-            lens   = [bounds.xlen, bounds.ylen, bounds.zlen]
-            offset = np.max(lens) * 0.01
-
-            # Define the offset vector in view space,
-            # then rotate it into model space (depth
-            # axis is second - see __genViewMatrix)
-            rot   = affine.invert(self.__viewRotate)
-            vec   = affine.transform([0, 1, 0], rot, vector=True)
-            vec   = affine.normalise(vec) * offset
-            xform = affine.scaleOffsetXform(1, vec)
-            xform = np.array(xform, dtype=np.float32, copy=False)
-        else:
-            xform = None
-
         for ovl, globj in zip(overlays, globjs):
 
+            rtex    = self.__globjTextures.get(overlay, None)
             display = self.__displayCtx.getDisplay(ovl)
 
-            if not globj.ready():
-                continue
-            if not display.enabled:
-                continue
+            if not globj.ready():   continue
+            if not display.enabled: continue
+            if rtex is None:        continue
 
-            # Clear depth on each overlay
-            # if occlusion is disabled
-            if (not opts.occlusion) and isinstance(ovl, fslimage.Image):
-                gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
+            rtexs.append(rtex)
 
             log.debug('Drawing %s [%s]', ovl, globj)
 
-            globj.preDraw()
-            globj.draw3D(xform=xform)
-            globj.postDraw()
+            with rtex.target():
+                rtex.shape = width, height
+                gl.glViewport(0, 0, width, height)
+                glroutines.clear(opts.bgColour)
+                globj.preDraw()
+                globj.draw3D()
+                globj.postDraw()
 
-            # Accumulate the depth offset for each overlay
-            if opts.occlusion:
-                xform = affine.concat(xform, xform)
+        # draw all rtextures to screen
+        gl.glViewport(0, 0, width, height)
 
         if opts.showCursor:
             self.__drawCursor()

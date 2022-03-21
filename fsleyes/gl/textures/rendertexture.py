@@ -87,8 +87,8 @@ class RenderTexture(texture2d.Texture2D):
 
 
     def __init__(self, name, rttype='cds', **kwargs):
-        """Create a ``RenderTexture``. All keyword arguments are passed through to the
-        :meth:`.Texture2D.__init__` method.
+        """Create a ``RenderTexture``. All keyword arguments are passed through
+        to the :meth:`.Texture2D.__init__` method.
 
         :arg name:   Unique name for this texture
 
