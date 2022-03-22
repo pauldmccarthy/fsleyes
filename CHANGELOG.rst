@@ -28,6 +28,13 @@ Added
   the indices for all non-spatial dimensions to be specified (!304).
 
 
+Changed
+^^^^^^^
+
+
+* Improvements to overlay blending in the 3D view (!309).
+
+
 Fixed
 ^^^^^
 
@@ -35,6 +42,14 @@ Fixed
 * Fixed an issue with loading FIRST subcortical segmentation VTK meshes (!306).
 * Fixed an issue with the ``--updatecheck`` commmand line argument (!306).
 
+
+Removed
+^^^^^^^
+
+
+* The ``--occlusion`` command-line option has been rendered obsolete by the
+  improved 3D overlay blending, and so has been removed (along with the
+  corresponding option in the 3D view settings panel).
 
 
 1.3.3 (Thursday 23rd December 2021)
