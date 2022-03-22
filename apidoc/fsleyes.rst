@@ -10,6 +10,7 @@
    fsleyes.cliserver
    fsleyes.colourmaps
    fsleyes.controls
+   fsleyes.data
    fsleyes.displaycontext
    fsleyes.editor
    fsleyes.filtermain

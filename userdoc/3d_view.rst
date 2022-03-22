@@ -13,8 +13,8 @@
 3D view
 =======
 
-You can use FSLeyes to view your images and meshes in 3D using the *Views*
-|right_arrow| *3D view* menu item.
+You can use FSLeyes to view your images, meshes, and tractograms in 3D using
+the *Views* |right_arrow| *3D view* menu item.
 
 
 .. image:: images/3d_view_volume_example.png

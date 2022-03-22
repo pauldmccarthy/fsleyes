@@ -26,6 +26,11 @@ capable of loading the following types of data:
    <http://www.grahamwideman.com/gw/brain/fs/surfacefileformats.htm>`_ surface
    files (``lh.orig``, ``lh.pial``, ``lh.white``, etc).
 
+ - `TrackVis <http://trackvis.org/>`_ ``.trk`` streamline tractography files.
+
+ - `MRtrix3 <https://www.mrtrix.org/>`_ ``.tck`` streamline tractography
+   files.
+
  - `FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis directories
    (``.feat``).
 

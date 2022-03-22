@@ -64,7 +64,7 @@ def needsToggling():
     Under GTK, high DPI support is not possible with wxPython < 4.0.7, as
     ``wx.Window.GetContentScaleFactor`` always returns 1. Under GTK and
     from wxPython 4.0.7 onwards, GL canvases are scaled automatically. This
-    function therefore returns ``False``in both of these cases.
+    function therefore returns ``False`` in both of these cases.
 
     Under macOS and wxpython < 4.1.0, high DPI must be explicitly requested
     for GL canvases via a Cocoa API call. This can be done via the

@@ -206,7 +206,7 @@ class RenderTexture(texture2d.Texture2D):
     def projectionMatrix(self):
         """Return the projection matrix to use when drawing to this
         ``RenderTexture``. Only returns a value when this ``RenderTexture``
-        is bound - returns ``None``at all other times.
+        is bound - returns ``None`` at all other times.
         """
         return self.__projectionMatrix
 
@@ -215,7 +215,7 @@ class RenderTexture(texture2d.Texture2D):
     def viewMatrix(self):
         """Return the model-view matrix to use when drawing to this
         ``RenderTexture``. Only returns a value when this ``RenderTexture``
-        is bound - returns ``None``at all other times.
+        is bound - returns ``None`` at all other times.
         """
         return self.__viewMatrix
 
@@ -231,7 +231,7 @@ class RenderTexture(texture2d.Texture2D):
         """Return the display coordinate system bounding box for this
         ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
         Only returns a value when this ``RenderTexture`` is bound - returns
-        ``None``at all other times.
+        ``None`` at all other times.
         """
         return self.__viewport
 

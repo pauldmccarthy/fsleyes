@@ -512,7 +512,7 @@ class GLMesh(globject.GLObject):
         mesh with the viewing plane as a set of line segments.
 
         If the :attr:`.MeshOpts.outlineWidth` property is equal to ``1``, the
-         segments are drawn as ``GL_LINES`` primitives. Otherwise the lines are
+        segments are drawn as ``GL_LINES`` primitives. Otherwise the lines are
         converted into polygons and drawn as ``GL_TRIANGLES`` (see
         :func:`.routines.lineAsPolygon`).
 

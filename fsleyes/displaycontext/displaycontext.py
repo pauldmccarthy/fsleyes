@@ -56,8 +56,6 @@ class DisplayContext(props.SyncableHasProperties):
         getDisplay
         getOpts
         getReferenceImage
-        displayToWorld
-        worldToDisplay
         displaySpaceIsRadiological
         selectOverlay
         getSelectedOverlay
