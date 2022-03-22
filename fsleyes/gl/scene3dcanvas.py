@@ -819,7 +819,7 @@ class Scene3DCanvas:
                 rtex             .bindTexture(int(gl.GL_TEXTURE0) + i * 2)
                 rtex.depthTexture.bindTexture(int(gl.GL_TEXTURE0) + i * 2 + 1)
 
-            with shader.loaded():
+            with shader.loaded(), glroutines.enabled(gl.GL_DEPTH_TEST):
                 shader.set(   'bgColour', opts.bgColour)
                 shader.setAtt('vertex',   vertices)
                 shader.setAtt('texCoord', texCoords)
