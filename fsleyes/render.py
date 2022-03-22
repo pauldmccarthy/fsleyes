@@ -592,7 +592,6 @@ def create3DCanvas(namespace,
     opts.bgColour        = sceneOpts.bgColour
     opts.showLegend      = sceneOpts.showLegend
     opts.legendColour    = sceneOpts.fgColour
-    opts.occlusion       = sceneOpts.occlusion
     opts.light           = sceneOpts.light
     opts.zoom            = sceneOpts.zoom
     opts.offset          = sceneOpts.offset

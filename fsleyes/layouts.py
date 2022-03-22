@@ -697,7 +697,6 @@ VIEWPANEL_PROPS = {
                              'showColourBar',
                              'colourBarLocation',
                              'colourBarLabelSide',
-                             'occlusion',
                              'light',
                              'lightPos',
                              'offset',

@@ -111,7 +111,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('showLegend',    sceneOpts)
         opts.bindProps('legendColour',  sceneOpts, 'fgColour')
         opts.bindProps('labelSize',     sceneOpts)
-        opts.bindProps('occlusion',     sceneOpts)
         opts.bindProps('light',         sceneOpts)
         opts.bindProps('lightPos',      sceneOpts)
         opts.bindProps('lightDistance', sceneOpts)

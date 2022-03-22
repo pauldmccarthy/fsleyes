@@ -229,12 +229,6 @@ class Scene3DCanvasOpts(props.HasProperties):
     """Font size used for the legend labels. """
 
 
-    occlusion = props.Boolean(default=True)
-    """If ``True``, objects closer to the camera will occlude objects
-    further away. Toggles ``gl.DEPTH_TEST``.
-    """
-
-
     light = props.Boolean(default=True)
     """If ``True``, a lighting effect is applied to compatible overlays
     in the scene.

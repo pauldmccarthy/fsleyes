@@ -1052,7 +1052,6 @@ properties = TypeDict({
     'Scene3DOpts.showLight'     : 'Show light source',
     'Scene3DOpts.lightPos'      : 'Light position',
     'Scene3DOpts.lightDistance' : 'Light distance',
-    'Scene3DOpts.occlusion'     : 'Volume occlusion',
 
     'PlotCanvas.legend'     : 'Show legend',
     'PlotCanvas.ticks'      : 'Show ticks',
