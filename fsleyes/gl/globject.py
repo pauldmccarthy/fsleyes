@@ -29,9 +29,11 @@ This module also provides a few functions, most importantly
    createGLObject
 """
 
+
 import contextlib
 import logging
 
+import fsl.utils.idle     as idle
 import fsl.utils.notifier as notifier
 
 
@@ -54,6 +56,7 @@ def getGLObjectType(overlayType):
     from . import gltensor
     from . import glsh
     from . import glmip
+    from . import gltractogram
 
     typeMap = {
         'volume'     : glvolume    .GLVolume,
@@ -66,7 +69,8 @@ def getGLObjectType(overlayType):
         'sh'         : glsh        .GLSH,
         'mip'        : glmip       .GLMIP,
         'rgb'        : glrgbvolume .GLRGBVolume,
-        'complex'    : glcomplex   .GLComplex
+        'complex'    : glcomplex   .GLComplex,
+        'tractogram' : gltractogram.GLTractogram
     }
 
     return typeMap.get(overlayType, None)
@@ -329,6 +333,14 @@ class GLObject(notifier.Notifier):
                                   'implemented by GLObject subclasses')
 
 
+    def notifyWhen(self, condition):
+        """Wrapper around :meth:`.Notifier.notify` which schedule the
+        ``notify`` call to take place when ``condition() is True``.
+        """
+        name = f'{self.name}_notifyWhen'
+        idle.idleWhen(self.notify, condition, name=name, skipIfQueued=True)
+
+
     def getDisplayBounds(self):
         """This method must calculate and return a bounding box, in the
         display coordinate system, which contains the entire ``GLObject``.
@@ -407,7 +419,6 @@ class GLObject(notifier.Notifier):
         more calls to the :meth:`draw2D`/:meth:`draw3D` methods are made, such
         as binding and configuring textures.
         """
-        raise NotImplementedError()
 
 
     def draw2D(self, zpos, axes, xform=None):
@@ -426,7 +437,6 @@ class GLObject(notifier.Notifier):
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
         """
-        raise NotImplementedError()
 
 
     def draw3D(self, xform=None):
@@ -437,7 +447,6 @@ class GLObject(notifier.Notifier):
         :arg xform: If provided, it must be applied to the model view
                     transformation before drawing.
         """
-        raise NotImplementedError()
 
 
     def drawAll(self, axes, zposes, xforms):
@@ -467,7 +476,6 @@ class GLObject(notifier.Notifier):
         It should perform any necessary cleaning up, such as unbinding
         textures.
         """
-        raise NotImplementedError()
 
 
 class GLSimpleObject(GLObject):

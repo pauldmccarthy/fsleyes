@@ -28,6 +28,9 @@ import            functools
 import            wx
 
 import fsl.utils.idle                 as idle
+import fsl.data.mesh                  as fslmesh
+import fsl.data.image                 as fslimage
+import fsleyes.data.tractogram        as tractogram
 import fsleyes_props                  as props
 import fsleyes_widgets                as fwidgets
 import fsleyes_widgets.imagepanel     as imagepanel
@@ -199,7 +202,7 @@ def _initPropertyList_MaskOpts(threedee):
             'outlineWidth']
 
 
-def _initPropertyList_VectorOpts(threedee):
+def _initPropertyList_NiftiVectorOpts(threedee):
     return ['colourImage',
             'modulateImage',
             'clipImage',
@@ -337,6 +340,35 @@ def _initPropertyList_VolumeRGBOpts(threedee):
             'suppressG',
             'suppressB',
             'suppressA',
+            'suppressMode']
+
+
+def _initPropertyList_TractogramOpts(threedee):
+    if not threedee:
+        return []
+    return ['lineWidth',
+            'resolution',
+            'custom_colourMode',
+            'clipMode',
+            'custom_cmap',
+            'cmapResolution',
+            'gamma',
+            'logScale',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'linkLowRanges',
+            'linkHighRanges',
+            'modulateAlpha',
+            'displayRange',
+            'clippingRange',
+            'modulateRange',
+            'xColour',
+            'yColour',
+            'zColour',
+            'suppressX',
+            'suppressY',
+            'suppressZ',
             'suppressMode']
 
 
@@ -529,7 +561,7 @@ def _initWidgetSpec_LabelOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_VectorOpts(displayCtx, threedee):
+def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
     def imageName(img):
         if img is None: return 'None'
         else:           return displayCtx.getDisplay(img).name
@@ -899,6 +931,83 @@ def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
     }
 
 
+def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
+    if not threedee:
+        return {}
+
+    def cmodeName(data):
+        if data == 'orientation':
+            return 'Orientation'
+        if data is None:
+            return 'None'
+        elif isinstance(data, fslimage.Image):
+            return displayCtx.getDisplay(data).name
+        else:
+            return op.basename(data)
+
+    cmapOpts   = dict(dependencies=['colourMode'],
+                      enabledWhen=lambda o, cm: cm != 'orientation')
+    orientOpts = dict(dependencies=['colourMode'],
+                      enabledWhen=lambda o, cm: cm == 'orientation')
+    sliderOpts = dict(spin=True, slider=True, showLimits=False)
+
+    return {
+        'colourMode'        : props.Widget('colourMode', labels=cmodeName),
+        'clipMode'          : props.Widget('clipMode',   labels=cmodeName),
+        'custom_colourMode' : _TractogramOpts_colourModeWidget,
+        'xColour'           : props.Widget('xColour',      **orientOpts),
+        'yColour'           : props.Widget('yColour',      **orientOpts),
+        'zColour'           : props.Widget('zColour',      **orientOpts),
+        'suppressX'         : props.Widget('suppressX',    **orientOpts),
+        'suppressY'         : props.Widget('suppressY',    **orientOpts),
+        'suppressZ'         : props.Widget('suppressZ',    **orientOpts),
+        'suppressMode'      : props.Widget('suppressMode', **orientOpts),
+        'lineWidth'         : props.Widget('lineWidth',    **sliderOpts),
+        'resolution'        : props.Widget('resolution',   **sliderOpts),
+
+        # We override the ColourMapOpts definitions
+        # for custom enabledWhen behaviour.
+        'useNegativeCmap'  : props.Widget('useNegativeCmap',  **cmapOpts),
+        'interpolateCmaps' : props.Widget('interpolateCmaps', **cmapOpts),
+        'invert'           : props.Widget('invert',           **cmapOpts),
+        'logScale'         : props.Widget('logScale',         **cmapOpts),
+        'invertClipping'   : props.Widget('invertClipping',   **cmapOpts),
+        'linkLowRanges'    : props.Widget('linkLowRanges',    **cmapOpts),
+        'linkHighRanges'   : props.Widget('linkHighRanges',   **cmapOpts),
+
+        'cmap' : props.Widget(
+            'cmap',
+            labels=fslcm.getColourMapLabel,
+            **cmapOpts),
+        'negativeCmap' : props.Widget(
+            'negativeCmap',
+            labels=fslcm.getColourMapLabel,
+            **cmapOpts),
+        'gamma' : props.Widget(
+            'gamma',
+            **sliderOpts,
+            **cmapOpts),
+        'cmapResolution' : props.Widget(
+            'cmapResolution',
+            **sliderOpts,
+            **cmapOpts),
+        'displayRange' : props.Widget(
+            'displayRange',
+            showLimits=False,
+            slider=True,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']],
+            **cmapOpts),
+        'clippingRange' : props.Widget(
+            'clippingRange',
+            showLimits=False,
+            slider=True,
+            labels=[strings.choices['ColourMapOpts.displayRange.min'],
+                    strings.choices['ColourMapOpts.displayRange.max']],
+            **cmapOpts),
+    }
+
+
 def _ColourMapOpts_ColourMapWidget(
         target,
         parent,
@@ -923,9 +1032,9 @@ def _ColourMapOpts_ColourMapWidget(
 
     loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
 
-    cmap       = getWidgetSpecs(target, threedee)['cmap']
-    negCmap    = getWidgetSpecs(target, threedee)['negativeCmap']
-    useNegCmap = getWidgetSpecs(target, threedee)['useNegativeCmap']
+    cmap       = getWidgetSpecs(target, displayCtx, threedee)['cmap']
+    negCmap    = getWidgetSpecs(target, displayCtx, threedee)['negativeCmap']
+    useNegCmap = getWidgetSpecs(target, displayCtx, threedee)['useNegativeCmap']
 
     cbpanel    = imagepanel.ImagePanel(parent)
     cbpanel.SetMinSize((-1, 30))
@@ -991,8 +1100,8 @@ def _NiftiOpts_VolumeWidget(
     :attr:`.NiftiOpts.volume` and :attr:`.NiftiOpts.volumeDim` properties.
     """
 
-    volume    = getWidgetSpecs(target, threedee)['volume']
-    volumeDim = getWidgetSpecs(target, threedee)['volumeDim']
+    volume    = getWidgetSpecs(target, displayCtx, threedee)['volume']
+    volumeDim = getWidgetSpecs(target, displayCtx, threedee)['volumeDim']
 
     volume    = props.buildGUI(parent, target, volume)
     volumeDim = props.buildGUI(parent, target, volumeDim)
@@ -1025,8 +1134,8 @@ def _VolumeOpts_OverrideDataRangeWidget(
     """
 
     # Override data range widget
-    enable   = getWidgetSpecs(target, threedee)['enableOverrideDataRange']
-    ovrRange = getWidgetSpecs(target, threedee)['overrideDataRange']
+    enable   = getWidgetSpecs(target, displayCtx, threedee)['enableOverrideDataRange']
+    ovrRange = getWidgetSpecs(target, displayCtx, threedee)['overrideDataRange']
 
     enable   = props.buildGUI(parent, target, enable)
     ovrRange = props.buildGUI(parent, target, ovrRange)
@@ -1116,7 +1225,10 @@ def _MeshOpts_vertexDataWidget(
     data.
     """
 
-    loadAction = loadvdata.LoadVertexDataAction(overlayList, displayCtx)
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                'vertexData',
+                                                fslmesh.Mesh)
     loadButton = wx.Button(parent)
     loadButton.SetLabel(strings.labels[panel, 'loadVertexData'])
 
@@ -1124,7 +1236,7 @@ def _MeshOpts_vertexDataWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, threedee)['vertexData']
+    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexData']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1148,7 +1260,8 @@ def _MeshOpts_vertexSetWidget(
 
     loadAction = loadvdata.LoadVertexDataAction(overlayList,
                                                 displayCtx,
-                                                vertices=True)
+                                                'vertices',
+                                                fslmesh.Mesh)
     loadButton = wx.Button(parent)
     loadButton.SetLabel(strings.labels[panel, 'loadVertices'])
 
@@ -1156,7 +1269,7 @@ def _MeshOpts_vertexSetWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, threedee)['vertexSet']
+    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexSet']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1177,8 +1290,8 @@ def _MeshOpts_LutWidget(
     """
 
     # enable lut widget
-    lut    = getWidgetSpecs(target, threedee)['lut']
-    enable = getWidgetSpecs(target, threedee)['useLut']
+    lut    = getWidgetSpecs(target, displayCtx, threedee)['lut']
+    enable = getWidgetSpecs(target, displayCtx, threedee)['useLut']
 
     lut    = props.buildGUI(parent, target, lut)
     enable = props.buildGUI(parent, target, enable)
@@ -1189,3 +1302,35 @@ def _MeshOpts_LutWidget(
     sizer.Add(lut,    flag=wx.EXPAND, proportion=1)
 
     return sizer, [enable, lut]
+
+
+def _TractogramOpts_colourModeWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains a widget for controlling the
+    :attr:`.TractogramOpts.colourMode` property, and also has a button
+    which opens a file dialog, allowing the user to load vertex data files.
+    """
+
+    loadAction = loadvdata.LoadVertexDataAction(overlayList,
+                                                displayCtx,
+                                                'vertexData',
+                                                tractogram.Tractogram)
+    loadButton = wx.Button(parent)
+    loadButton.SetLabel(strings.labels[panel, 'loadVertexData'])
+
+    loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    cmode = getWidgetSpecs(target, displayCtx, threedee)['colourMode']
+    cmode = props.buildGUI(parent, target, cmode)
+
+    sizer.Add(cmode,      flag=wx.EXPAND, proportion=1)
+    sizer.Add(loadButton, flag=wx.EXPAND)
+
+    return sizer, [cmode]

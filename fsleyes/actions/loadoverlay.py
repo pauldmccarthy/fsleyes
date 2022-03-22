@@ -35,10 +35,10 @@ import numpy   as np
 import fsl.utils.idle               as idle
 import fsl.utils.notifier           as notifier
 import fsl.utils.settings           as fslsettings
-import fsl.data.utils               as dutils
 import fsleyes_widgets.utils.status as status
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.strings              as strings
+import fsleyes.data                 as dutils
 from . import                          base
 
 
@@ -95,12 +95,13 @@ def makeWildcard(allowedExts=None, descs=None):
     the the displayed file types to supported overlay file types.
     """
 
-    import fsl.data.image      as fslimage
-    import fsl.data.mghimage   as fslmgh
-    import fsl.data.vtk        as fslvtk
-    import fsl.data.gifti      as fslgifti
-    import fsl.data.freesurfer as fslfs
-    import fsl.data.bitmap     as fslbmp
+    import fsl.data.image          as fslimage
+    import fsl.data.mghimage       as fslmgh
+    import fsl.data.vtk            as fslvtk
+    import fsl.data.gifti          as fslgifti
+    import fsl.data.freesurfer     as fslfs
+    import fsl.data.bitmap         as fslbmp
+    import fsleyes.data.tractogram as tractogram
 
     # Hack - the wx wildcard logic doesn't support
     # files with multiple extensions (e.g. .nii.gz).
@@ -108,20 +109,22 @@ def makeWildcard(allowedExts=None, descs=None):
     # here.
     fsfiles = [op.splitext(f)[1] for f in fslfs.CORE_GEOMETRY_FILES]
     if allowedExts is None:
-        allowedExts  = (fslimage.ALLOWED_EXTENSIONS  +
-                        fslvtk  .ALLOWED_EXTENSIONS  +
-                        fslmgh  .ALLOWED_EXTENSIONS  +
-                        fslgifti.ALLOWED_EXTENSIONS  +
-                        fslbmp  .BITMAP_EXTENSIONS   +
-                        fsfiles                      +
+        allowedExts  = (fslimage   .ALLOWED_EXTENSIONS +
+                        fslvtk     .ALLOWED_EXTENSIONS +
+                        fslmgh     .ALLOWED_EXTENSIONS +
+                        fslgifti   .ALLOWED_EXTENSIONS +
+                        tractogram .ALLOWED_EXTENSIONS +
+                        fslbmp     .BITMAP_EXTENSIONS  +
+                        fsfiles                        +
                         ['.gz'])
     if descs is None:
-        descs        = (fslimage.EXTENSION_DESCRIPTIONS     +
-                        fslvtk  .EXTENSION_DESCRIPTIONS     +
-                        fslmgh  .EXTENSION_DESCRIPTIONS     +
-                        fslgifti.EXTENSION_DESCRIPTIONS     +
-                        fslbmp  .BITMAP_DESCRIPTIONS        +
-                        fslfs   .CORE_GEOMETRY_DESCRIPTIONS +
+        descs        = (fslimage   .EXTENSION_DESCRIPTIONS     +
+                        fslvtk     .EXTENSION_DESCRIPTIONS     +
+                        fslmgh     .EXTENSION_DESCRIPTIONS     +
+                        fslgifti   .EXTENSION_DESCRIPTIONS     +
+                        tractogram .EXTENSION_DESCRIPTIONS     +
+                        fslbmp     .BITMAP_DESCRIPTIONS        +
+                        fslfs      .CORE_GEOMETRY_DESCRIPTIONS +
                         ['Compressed images'])
 
     exts  = ['*{}'.format(ext) for ext in allowedExts]

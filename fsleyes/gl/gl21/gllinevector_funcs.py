@@ -77,12 +77,14 @@ def init(self):
 def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
-    self.opts.removeListener('orientFlip',  self.name)
-    self.opts.removeListener('directed',    self.name)
-    self.opts.removeListener('lengthScale', self.name)
-    self.opts.removeListener('transform',   self.name)
+    if self.opts is not None:
+        self.opts.removeListener('orientFlip',  self.name)
+        self.opts.removeListener('directed',    self.name)
+        self.opts.removeListener('lengthScale', self.name)
+        self.opts.removeListener('transform',   self.name)
 
-    self.shader.destroy()
+    if self.shader is not None:
+        self.shader.destroy()
 
 
 def compileShaders(self):

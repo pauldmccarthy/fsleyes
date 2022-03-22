@@ -1015,18 +1015,7 @@ class GLMesh(globject.GLObject):
         else:
             cmapXform = self.cmapTexture.getCoordinateTransform()
 
-        # calculate a scale+offset which transforms
-        # modulate alpha value from the data range
-        # into an alpha value, according to the
-        # modulateRange
-        modlo, modhi = dopts.modulateRange
-        modRange     = modhi - modlo
-        if modRange == 0:
-            modScale  = 1
-            modOffset = 0
-        else:
-            modScale  = 1 / modRange
-            modOffset = -modlo / modRange
+        modScale, modOffset = dopts.modulateScaleOffset()
 
         fslgl.glmesh_funcs.updateShaderState(
             self,

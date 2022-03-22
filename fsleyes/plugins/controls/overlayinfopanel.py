@@ -243,7 +243,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         display.removeListener('name',        self.name)
         display.removeListener('overlayType', self.name)
 
-        for propName in OverlayInfoPanel._optProps[overlay]:
+        for propName in OverlayInfoPanel._optProps.get(overlay, []):
             opts.removeListener(propName, self.name)
 
 
@@ -766,7 +766,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
 
         :arg overlay: A :class:`.MGHImage` instance.
         :arg display: The :class:`.Display` instance assocated with the
-                      ``DicomImage``.
+                      ``MGHImage``.
         """
 
         info     = self.__getImageInfo(overlay, display)
@@ -776,6 +776,36 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
             info.addInfo(strings.labels[self, overlay, 'filename'], filename)
 
         return info
+
+
+    def __getTractogramInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.Tractogram` overlay.
+
+        :arg overlay: A :class:`.Tractogram` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``Tractogram``.
+        """
+
+        bounds  = overlay.bounds
+        lens    = bounds[1] - bounds[0]
+        lens    = 'X={:0.0f} mm Y={:0.0f} mm Z={:0.0f} mm'.format(*lens)
+        entries = [
+            ('dataSource',     overlay.dataSource),
+            ('numVertices',    overlay.nvertices),
+            ('numStreamlines', overlay.nstreamlines),
+            ('size',           lens)
+        ]
+
+        info = OverlayInfo('{} - {}'.format(
+            display.name,
+            strings.labels[self, overlay]))
+
+        for name, value in entries:
+            info.addInfo(strings.labels[self, overlay, name], value)
+
+        return info
+
 
 
     def __formatArray(self, array):

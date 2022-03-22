@@ -224,7 +224,7 @@ class GLVolume(glimageobject.GLImageObject):
 
         # aux texture manager takes care
         # of clip+modulate textures
-        self.auxmgr = glimageobject.AuxImageTextureManager(
+        self.auxmgr = textures.AuxImageTextureManager(
             self, clip=None, modulate=None)
         self.auxmgr.registerAuxImage('clip',     self.opts.clipImage)
         self.auxmgr.registerAuxImage('modulate', self.opts.modulateImage)

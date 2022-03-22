@@ -51,9 +51,13 @@ from .compare_images import compare_images
 
 
 def haveGL21():
+    return haveGL(2.1)
+
+
+def haveGL(version):
     try:
-        return float(fslgl.GL_COMPATIBILITY) >= 2.1
-    except:
+        return float(fslgl.GL_COMPATIBILITY) >= version
+    except Exception as e:
         return False
 
 
@@ -280,7 +284,7 @@ def run_with_fsleyes(func, *args, **kwargs):
 
     glver  = os.environ.get('FSLEYES_TEST_GL', None)
     if glver is not None:
-        glver = (int(v) for v in glver.split('.'))
+        glver = [int(v) for v in glver.split('.')]
 
     def init():
         fsleyes.initialise()

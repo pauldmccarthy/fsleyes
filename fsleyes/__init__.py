@@ -293,6 +293,10 @@ def _hacksAndWorkarounds():
     except ValueError:
         os.environ['LC_ALL'] = 'C.UTF-8'
 
+    # Patches to third party libs
+    import fsleyes.patches as patches
+    patches.apply()
+
 
 def configLogging(verbose=0, noisy=None):
     """Configures *FSLeyes* ``logging``.

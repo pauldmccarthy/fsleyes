@@ -18,6 +18,9 @@ Added
 ^^^^^
 
 
+* FSLeyes is now able to visualise TrackVis ``.trk`` and Mrtrix3 ``.tck``
+  tractogram files, containing tractography streamlines  These
+  tractogram files are currently only supported in the 3D view (!307).
 * New ``--index`` command-line option for ``volume`` overlays, allowing
   the indices for all non-spatial dimensions to be specified (!304).
 

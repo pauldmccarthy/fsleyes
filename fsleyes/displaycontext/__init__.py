@@ -78,7 +78,6 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.volumeopts.ComplexOpts
    ~fsleyes.displaycontext.volume3dopts.Volume3DOpts
    ~fsleyes.displaycontext.maskopts.MaskOpts
-   ~fsleyes.displaycontext.vectoropts.VectorOpts
    ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
    ~fsleyes.displaycontext.vectoropts.LineVectorOpts
    ~fsleyes.displaycontext.meshopts.MeshOpts
@@ -88,6 +87,7 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
    ~fsleyes.displaycontext.tensoropts.TensorOpts
    ~fsleyes.displaycontext.shopts.SHOpts
    ~fsleyes.displaycontext.mipopts.MIPOpts
+   ~fsleyes.displaycontext.tractogramopts.TractogramOpts
 
 
 --------------
@@ -165,6 +165,7 @@ from .volumeopts     import VolumeRGBOpts
 from .volume3dopts   import Volume3DOpts
 from .maskopts       import MaskOpts
 from .vectoropts     import VectorOpts
+from .vectoropts     import NiftiVectorOpts
 from .vectoropts     import RGBVectorOpts
 from .vectoropts     import LineVectorOpts
 from .meshopts       import MeshOpts
@@ -174,6 +175,7 @@ from .labelopts      import LabelOpts
 from .tensoropts     import TensorOpts
 from .shopts         import SHOpts
 from .mipopts        import MIPOpts
+from .tractogramopts import TractogramOpts
 
 from .displaycontext import InvalidOverlayError
 
@@ -186,6 +188,7 @@ OVERLAY_TYPES = td.TypeDict({
                         'complex'],
     'Mesh'           : ['mesh'],
     'DTIFitTensor'   : ['tensor', 'rgbvector', 'linevector'],
+    'Tractogram'     : ['tractogram']
 })
 """This dictionary provides a mapping between all overlay classes,
 and the possible values that the :attr:`Display.overlayType` property
@@ -204,20 +207,21 @@ dictionary for more details.
 
 
 DISPLAY_OPTS_MAP = td.TypeDict({
-    'Nifti.volume'        : VolumeOpts,
-    'Nifti.rgbvector'     : RGBVectorOpts,
-    'Nifti.linevector'    : LineVectorOpts,
-    'Nifti.mask'          : MaskOpts,
-    'Nifti.label'         : LabelOpts,
-    'Nifti.tensor'        : TensorOpts,
-    'Nifti.sh'            : SHOpts,
-    'Nifti.mip'           : MIPOpts,
-    'Nifti.rgb'           : VolumeRGBOpts,
-    'Nifti.complex'       : ComplexOpts,
-    'Mesh.mesh'           : MeshOpts,
-    'VTKMesh.mesh'        : MeshOpts,
-    'GiftiMesh.mesh'      : GiftiOpts,
-    'FreesurferMesh.mesh' : FreesurferOpts,
+    'Nifti.volume'          : VolumeOpts,
+    'Nifti.rgbvector'       : RGBVectorOpts,
+    'Nifti.linevector'      : LineVectorOpts,
+    'Nifti.mask'            : MaskOpts,
+    'Nifti.label'           : LabelOpts,
+    'Nifti.tensor'          : TensorOpts,
+    'Nifti.sh'              : SHOpts,
+    'Nifti.mip'             : MIPOpts,
+    'Nifti.rgb'             : VolumeRGBOpts,
+    'Nifti.complex'         : ComplexOpts,
+    'Mesh.mesh'             : MeshOpts,
+    'VTKMesh.mesh'          : MeshOpts,
+    'GiftiMesh.mesh'        : GiftiOpts,
+    'FreesurferMesh.mesh'   : FreesurferOpts,
+    'Tractogram.tractogram' : TractogramOpts,
 })
 """This dictionary provides a mapping between each (overlay type,
 :attr:`.Display.overlayType`) pair, and the :class:`DisplayOpts` subclass

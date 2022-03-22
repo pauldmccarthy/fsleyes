@@ -106,8 +106,9 @@ class GLMask(glimageobject.GLImageObject):
         self.refreshImageTexture()
 
         def init():
-            fslgl.glmask_funcs.init(self)
-            self.notify()
+            if not self.destroyed:
+                fslgl.glmask_funcs.init(self)
+                self.notify()
 
         idle.idleWhen(init, self.textureReady)
 

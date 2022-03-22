@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`GLSLShader` class, which encapsulates
-a GLSL shader program comprising a vertex shader and a fragment shader.
+a GLSL shader program comprising a vertex shader, a fragment shader, and
+optionally a geometry shader (for OpenGL >= 3.3).
 """
 
 
@@ -18,6 +19,7 @@ import OpenGL.GL             as gl
 import OpenGL.raw.GL._types  as gltypes
 
 import fsleyes.gl.extensions as glexts
+import fsleyes.gl.resources  as glresources
 import fsleyes.gl            as fslgl
 import fsl.utils.memoize     as memoize
 from . import                   parse
@@ -27,12 +29,12 @@ log = logging.getLogger(__name__)
 
 
 GLSL_ATTRIBUTE_TYPES = {
-    'bool'          : (gl.GL_BOOL,  1),
-    'int'           : (gl.GL_INT,   1),
-    'float'         : (gl.GL_FLOAT, 1),
-    'vec2'          : (gl.GL_FLOAT, 2),
-    'vec3'          : (gl.GL_FLOAT, 3),
-    'vec4'          : (gl.GL_FLOAT, 4)
+    'bool'  : (gl.GL_BOOL,  1),
+    'int'   : (gl.GL_INT,   1),
+    'float' : (gl.GL_FLOAT, 1),
+    'vec2'  : (gl.GL_FLOAT, 2),
+    'vec3'  : (gl.GL_FLOAT, 3),
+    'vec4'  : (gl.GL_FLOAT, 4)
 }
 """This dictionary contains mappings between GLSL data types, and their
 corresponding GL types and sizes.
@@ -40,13 +42,14 @@ corresponding GL types and sizes.
 
 
 class GLSLShader:
-    """The ``GLSLShader`` class encapsulates information and logic about
-    a GLSL 1.20 shader program, comprising a vertex shader and a fragment
-    shader. It provides methods to set shader attribute and uniform values,
-    to configure attributes, and to load/unload the program. Furthermore,
-    the ``GLSLShader`` makes sure that all uniform and attribute variables
-    are converted to the appropriate type. The following methods are available
-    on a ``GLSLShader``:
+    """The ``GLSLShader`` class encapsulates information and logic about a GLSL
+    shader program, comprising a vertex shader, a fragment shader, and
+    optionally a geometry shader (if OpenGL >= 3.3 is available). It provides
+    methods to set shader attribute and uniform values, to configure
+    attributes, and to load/unload the program. Furthermore, the
+    ``GLSLShader`` makes sure that all uniform and attribute variables are
+    converted to the appropriate type. The following methods are available on
+    a ``GLSLShader``:
 
 
     .. autosummary::
@@ -92,77 +95,96 @@ class GLSLShader:
     """
 
 
-    def __init__(self, vertSrc, fragSrc, indexed=None, constants=None):
+    def __init__(self,
+                 vertSrc,
+                 fragSrc,
+                 geomSrc=None,
+                 constants=None,
+                 resourceName=None,
+                 shared=None):
         """Create a ``GLSLShader``.
 
         The source is passed through ``jinja2``, replacing any expressions on
         the basis of ``constants``.
 
-        :arg vertSrc:   String containing vertex shader source code.
+        :arg vertSrc:      String containing vertex shader source code.
 
-        :arg fragSrc:   String containing fragment shader source code.
+        :arg fragSrc:      String containing fragment shader source code.
 
-        :arg indexed:   Deprecated, no longer necessary. To render using
-                        ``glDrawElements``, pass the indices to the
-                        :meth:`setIndices` method.
+        :arg geomSrc:      String containing geometry shader source code.
 
-        :arg constants: Key-value pairs to be used when passing the source
-                        through ``jinja2``.
+        :arg constants:    Key-value pairs to be used when passing the source
+                           through ``jinja2``.
+
+        :arg resourceName: If provided, buffers for any ``shared`` attributes
+                           will be managed using the :mod:`.resources` module.
+
+        :arg shared:       Names of input/varying vertex attributes which are
+                           shared between multiple shaders - if a
+                           ``resourceName`` is provided, these attributes will
+                           be mamaged by the :mod:`.resources` module.
         """
+
+        if shared is None:
+            shared = []
 
         if constants is None:
             constants = {}
 
-        vertSrc      = j2.Template(vertSrc).render(**constants)
-        fragSrc      = j2.Template(fragSrc).render(**constants)
-        self.program = self.__compile(vertSrc, fragSrc)
+        srcs = []
+        for src in (vertSrc, fragSrc, geomSrc):
+            if src is not None:
+                srcs.append(j2.Template(src).render(**constants))
+        types      = {}
+        sizes      = {}
+        attributes = []
+        uniforms   = set()
 
-        vertDecs  = parse.parseGLSL(vertSrc)
-        fragDecs  = parse.parseGLSL(fragSrc)
-        vertUnifs = vertDecs['uniform']
-        vertAtts  = vertDecs['attribute']
-        fragUnifs = fragDecs['uniform']
+        # Extract vertex and constant inputs
+        # required by the shader program -
+        # anything from the vertex shader
+        # declared as 'varying' or 'in', and
+        # anything from any of the shaders
+        # declared as 'uniform'.
+        for i, src in enumerate(srcs):
+            if src is None:
+                continue
+            decs = parse.parseGLSL(src)
 
-        if len(vertUnifs)  > 0: vuNames, vuTypes, vuSizes = zip(*vertUnifs)
-        else:                   vuNames, vuTypes, vuSizes = [], [], []
-        if len(vertAtts)  > 0:  vaNames, vaTypes, vaSizes = zip(*vertAtts)
-        else:                   vaNames, vaTypes, vaSizes = [], [], []
-        if len(fragUnifs) > 0:  fuNames, fuTypes, fuSizes = zip(*fragUnifs)
-        else:                   fuNames, fuTypes, fuSizes = [], [], []
+            # get attributes/vertex inputs from
+            # vertex shader. For the other shaders,
+            # we only care about uniforms.
+            if i == 0:
+                atts  = decs['attribute']
+                unifs = decs['uniform']
+            else:
+                atts  = []
+                unifs = decs['uniform']
 
-        allTypes = {}
-        allSizes = {}
+            attributes.extend(atts)
+            uniforms = uniforms.union(unifs)
+            for dname, dtype, dsize in (atts + unifs):
+                types[dname] = dtype
+                sizes[dname] = dsize
 
-        for n, t in zip(vuNames, vuTypes): allTypes[n] = t
-        for n, t in zip(vaNames, vaTypes): allTypes[n] = t
-        for n, t in zip(fuNames, fuTypes): allTypes[n] = t
-        for n, s in zip(vuNames, vuSizes): allSizes[n] = s
-        for n, s in zip(vaNames, vaSizes): allSizes[n] = s
-        for n, s in zip(fuNames, fuSizes): allSizes[n] = s
-
-        # Remove duplicate uniform definitions
-        # between the vertex/fragment shader -
-        # they only need to be set once.
-        vertUnifs = [vu for vu in vertUnifs if vu not in fragUnifs]
-
-        self.vertUniforms    = vuNames
-        self.vertAttributes  = vaNames
-        self.fragUniforms    = fuNames
-
-        self.vertAttDivisors = {}
-
-        self.types     = allTypes
-        self.sizes     = allSizes
-        self.positions = self.__getPositions(self.program,
-                                             self.vertAttributes,
-                                             self.vertUniforms,
-                                             self.fragUniforms)
+        self.program     = self.__compile(*srcs)
+        self.attDivisors = {}
+        self.types       = types
+        self.sizes       = sizes
+        self.attributes  = [a[0] for a in attributes]
+        self.uniforms    = [u[0] for u in uniforms]
+        self.positions   = self.__getPositions(self.program,
+                                               self.attributes,
+                                               self.uniforms)
 
         # Buffers for vertex attributes
         self.buffers = {}
-
-        for att in self.vertAttributes:
-            self.buffers[att] = gl.glGenBuffers(1)
+        for att in self.attributes:
+            if resourceName is not None and att in shared:
+                arname = f'{resourceName}_{att}'
+                self.buffers[att] = glresources.get(arname, gl.glGenBuffers, 1)
+            else:
+                self.buffers[att] = gl.glGenBuffers(1)
 
         # Buffers for storing vertices and
         # (optionally) vertex indices.
@@ -171,9 +193,12 @@ class GLSLShader:
         # older GL versions.
         #
         # A vertex index buffer is created
-        # on the first call to  setIndices.
-        if float(fslgl.GL_COMPATIBILITY) >= 3: self.vao = gl.glGenVertexArrays(1)
-        else:                                  self.vao = None
+        # on the first call to setIndices.
+        if float(fslgl.GL_COMPATIBILITY) >= 3:
+            self.vao = gl.glGenVertexArrays(1)
+        else:
+            self.vao = None
+
         self.indexBuffer = None
         self.nindices    = None
 
@@ -183,13 +208,13 @@ class GLSLShader:
         # than once).
         self.attsLoaded = 0
 
-        log.debug('{}.init({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init(%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
         """Prints a log message. """
         if log:
-            log.debug('{}.del({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del(%s)', type(self).__name__, id(self))
 
 
     @contextlib.contextmanager
@@ -239,12 +264,12 @@ class GLSLShader:
             return
         if self.vao is not None:
             gl.glBindVertexArray(self.vao)
-        for att in self.vertAttributes:
+        for att in self.attributes:
 
-            aPos           = self.positions[          att]
-            aType          = self.types[              att]
-            aBuf           = self.buffers[            att]
-            aDivisor       = self.vertAttDivisors.get(att)
+            aPos           = self.positions[      att]
+            aType          = self.types[          att]
+            aBuf           = self.buffers[        att]
+            aDivisor       = self.attDivisors.get(att)
             glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
@@ -271,11 +296,11 @@ class GLSLShader:
         self.attsLoaded -= 1
         if self.attsLoaded > 0:
             return
-        for att in self.vertAttributes:
+        for att in self.attributes:
             gl.glDisableVertexAttribArray(self.positions[att])
 
-            pos     = self.positions[          att]
-            divisor = self.vertAttDivisors.get(att)
+            pos     = self.positions[      att]
+            divisor = self.attDivisors.get(att)
 
             if divisor is not None:
                 glexts.glVertexAttribDivisor(pos, 0)
@@ -339,8 +364,8 @@ class GLSLShader:
             raise RuntimeError('Unsupported shader program '
                                'type: {}'.format(vType))
 
-        log.debug('Setting shader variable: {}({})[{}] = {}'.format(
-            vType, size, name, value))
+        log.debug('Setting shader variable: %s(%s)[%s] = %s',
+            vType, size, name, value)
 
         setfunc(vPos, value, size)
 
@@ -367,8 +392,8 @@ class GLSLShader:
 
         value = castfunc(value)
 
-        log.debug('Setting shader attribute: {}({}): {}'.format(
-            aType, name, value.shape))
+        log.debug('Setting shader attribute: %s(%s): %s',
+            aType, name, value.shape)
 
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
         gl.glBufferData(gl.GL_ARRAY_BUFFER,
@@ -378,7 +403,7 @@ class GLSLShader:
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         if divisor is not None:
-            self.vertAttDivisors[name] = divisor
+            self.attDivisors[name] = divisor
 
 
     def setIndices(self, indices):
@@ -431,15 +456,13 @@ class GLSLShader:
                 gl.glDrawArrays(prim, *args)
 
 
-    def __getPositions(self, shaders, vertAtts, vertUniforms, fragUniforms):
-        """Gets the position indices for all vertex shader attributes,
-        uniforms, and fragment shader uniforms for the given shader
-        programs.
+    def __getPositions(self, shaders, attributes, uniforms):
+        """Gets the position indices for all shader attributes (vertex inputs),
+        and uniforms (constant inputs) for the given shader programs.
 
-        :arg shaders:      Reference to the compiled shader program.
-        :arg vertAtts:     List of attributes required by the vertex shader.
-        :arg vertUniforms: List of uniforms required by the vertex shader.
-        :arg fragUniforms: List of uniforms required by the fragment shader.
+        :arg shaders:    Reference to the compiled shader program.
+        :arg attributes: List of attributes required by the shader.
+        :arg uniforms:   List of uniforms required by the shader.
 
         :returns:  A dictionary of ``{name : position}`` mappings.
         """
@@ -448,24 +471,19 @@ class GLSLShader:
 
         shaderVars = {}
 
-        for v in vertUniforms:
+        for v in uniforms:
             shaderVars[v] = gl.glGetUniformLocation(shaders, v)
 
-        for v in vertAtts:
+        for v in attributes:
             shaderVars[v] = gl.glGetAttribLocation(shaders, v)
-
-        for v in fragUniforms:
-            if v in shaderVars:
-                continue
-            shaderVars[v] = gl.glGetUniformLocation(shaders, v)
 
         return shaderVars
 
 
-    def __compile(self, vertShaderSrc, fragShaderSrc):
-        """Compiles and links the OpenGL GLSL vertex and fragment shader
-        programs, and returns a reference to the resulting program. Raises
-        an error if compilation/linking fails.
+    def __compile(self, vertShaderSrc, fragShaderSrc, geomShaderSrc=None):
+        """Compiles and links the OpenGL GLSL vertex, fragment, and optionally
+        geometry shader programs, and returns a reference to the resulting
+        program. Raises an error if compilation/linking fails.
 
         .. note:: I'm explicitly not using the PyOpenGL
                   :func:`OpenGL.GL.shaders.compileProgram` function, because
@@ -474,38 +492,30 @@ class GLSLShader:
                   validation.
         """
 
-        # vertex shader
-        vertShader = gl.glCreateShader(gl.GL_VERTEX_SHADER)
-        gl.glShaderSource(vertShader, vertShaderSrc)
-        gl.glCompileShader(vertShader)
-        vertResult = gl.glGetShaderiv(vertShader, gl.GL_COMPILE_STATUS)
-
-        if vertResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(vertShader)))
-
-        # fragment shader
-        fragShader = gl.glCreateShader(gl.GL_FRAGMENT_SHADER)
-        gl.glShaderSource(fragShader, fragShaderSrc)
-        gl.glCompileShader(fragShader)
-        fragResult = gl.glGetShaderiv(fragShader, gl.GL_COMPILE_STATUS)
-
-        if fragResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetShaderInfoLog(fragShader)))
-
-        # link all of the shaders!
         program = gl.glCreateProgram()
-        gl.glAttachShader(program, vertShader)
-        gl.glAttachShader(program, fragShader)
+        srcs    = [(vertShaderSrc, gl.GL_VERTEX_SHADER),
+                   (fragShaderSrc, gl.GL_FRAGMENT_SHADER),
+                   (geomShaderSrc, gl.GL_GEOMETRY_SHADER)]
+
+        for src, srcType in srcs:
+            if src is None:
+                continue
+
+            shader = gl.glCreateShader(srcType)
+            gl.glShaderSource(shader, src)
+            gl.glCompileShader(shader)
+            result = gl.glGetShaderiv(shader, gl.GL_COMPILE_STATUS)
+            if result != gl.GL_TRUE:
+                raise RuntimeError(
+                    '{}: {}'.format(srcType, gl.glGetShaderInfoLog(shader)))
+            gl.glAttachShader(program, shader)
+            gl.glDeleteShader(shader)
 
         gl.glLinkProgram(program)
-
-        gl.glDeleteShader(vertShader)
-        gl.glDeleteShader(fragShader)
-
         linkResult = gl.glGetProgramiv(program, gl.GL_LINK_STATUS)
 
         if linkResult != gl.GL_TRUE:
-            raise RuntimeError('{}'.format(gl.glGetProgramInfoLog(program)))
+            raise RuntimeError(gl.glGetProgramInfoLog(program))
 
         return program
 

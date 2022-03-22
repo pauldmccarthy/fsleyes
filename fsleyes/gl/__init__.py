@@ -136,6 +136,7 @@ be displayed as:
    ~fsleyes.gl.glmip.GLMIP
    ~fsleyes.gl.gltensor.GLTensor
    ~fsleyes.gl.glsh.GLSH
+   ~fsleyes.gl.gltractogram.GLTractogram
 
 
 These objects are created and destroyed automatically by the canvas classes
@@ -377,6 +378,8 @@ def bootstrap(glVersion=None):
 
     ``glmip_funcs``        The version-specific module containing functions for
                            rendering :class:`.GLMIP` instances.
+    ``gltractogram_funcs`` The version-specific module containing functions for
+                           rendering :class:`.GLTractogram` instances.
     ====================== ====================================================
 
 
@@ -453,11 +456,13 @@ def bootstrap(glVersion=None):
                                'cannot run on the available graphics '
                                'hardware.'.format(', '.join(exts)))
 
-        # Tensor/SH/MIP overlays are not available in GL14
+        # Tensor/SH/MIP/tractogram overlays
+        # are not available in GL14
         import fsleyes.displaycontext as dc
         dc.ALL_OVERLAY_TYPES            .remove('tensor')
         dc.ALL_OVERLAY_TYPES            .remove('sh')
         dc.ALL_OVERLAY_TYPES            .remove('mip')
+        dc.ALL_OVERLAY_TYPES            .remove('tractogram')
         dc.OVERLAY_TYPES['DTIFitTensor'].remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('sh')
         dc.OVERLAY_TYPES['Image']       .remove('tensor')
@@ -467,20 +472,19 @@ def bootstrap(glVersion=None):
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
-    thismod.GL_VERSION         = str(glVersion)
-    thismod.GL_COMPATIBILITY   = verstr
-    thismod.GL_RENDERER        = renderer
-    thismod.glvolume_funcs     = glpkg.glvolume_funcs
-    thismod.glrgbvolume_funcs  = glpkg.glrgbvolume_funcs
-    thismod.glrgbvector_funcs  = glpkg.glrgbvector_funcs
-    thismod.gllinevector_funcs = glpkg.gllinevector_funcs
-    thismod.glmask_funcs       = glpkg.glmask_funcs
-    thismod.glmesh_funcs       = glpkg.glmesh_funcs
-    thismod.gllabel_funcs      = glpkg.gllabel_funcs
-    thismod.gltensor_funcs     = glpkg.gltensor_funcs
-    thismod.glsh_funcs         = glpkg.glsh_funcs
-    thismod.glmip_funcs        = glpkg.glmip_funcs
-    thismod._bootstrapped      = True
+    # Import GL version-specific sub-modules
+    globjects = ['glvolume', 'glrgbvolume', 'glrgbvector', 'gllinevector',
+                 'glmask', 'glmesh', 'gllabel', 'gltensor', 'glsh', 'glmip',
+                 'gltractogram']
+
+    for globj in globjects:
+        modname = '{}_funcs'.format(globj)
+        setattr(thismod, modname, getattr(glpkg, modname, None))
+
+    thismod.GL_VERSION       = str(glVersion)
+    thismod.GL_COMPATIBILITY = verstr
+    thismod.GL_RENDERER      = renderer
+    thismod._bootstrapped    = True
 
     # Initialise extensions module.
     glexts.initialise()

@@ -16,12 +16,15 @@ import collections.abc as abc
 
 import numpy as np
 
-import fsl.transform.affine  as affine
-import fsl.data.imagewrapper as imagewrapper
-import fsleyes_widgets       as fwidgets
-from . import data           as texdata
-from . import                   texture2d
-from . import                   texture3d
+import fsl.transform.affine             as affine
+import fsl.data.imagewrapper            as imagewrapper
+import fsl.data.image                   as fslimage
+import fsleyes_widgets                  as fwidgets
+import fsleyes.displaycontext.niftiopts as niftiopts
+import fsleyes.gl.resources             as glresources
+import fsleyes.gl.textures.data         as texdata
+import fsleyes.gl.textures.texture2d    as texture2d
+import fsleyes.gl.textures.texture3d    as texture3d
 
 
 log = logging.getLogger(__name__)
@@ -459,3 +462,270 @@ class ImageTexture2D(ImageTextureBase, texture2d.Texture2D):
                   ``ImageTexture`` is to be refreshed , ``False`` otherwise.
         """
         return texture2d.Texture2D.set(self, **self.prepareSetArgs(**kwargs))
+
+
+class AuxImageTextureManager:
+    """Utility class used by some :class:`GLImageObject` instances.
+
+    The ``AuxImageTextureManager`` is used to manage "auxillary"
+    :class:`.ImageTexture` instances which are used when rendering a
+    ``GLObject``. For example, :class:`.GLVolume` instances may need to
+    use an ``ImageTexture`` to store the data for the
+    :attr:`.VolumeOpts.clipImage` setting.
+    """
+
+
+    def __init__(self, globj, **auximages):
+        """Create an ``AuxImageTextureManager``.
+
+        Note that an initial value *must* be given for each auxillary texture
+        type.
+
+        :arg globj:     The :class:`GLObject` which requires the
+                        auxillary image textures.
+
+        :arg auximages: ``auxtype=initial_value`` for each auxillary image
+                        texture type. The initial value must be one of:
+
+                         - an :class:`.Image`
+                         - ``None``
+                         - A tuple containing an ``Image``, and a dict
+                           containing settings to initialise the
+                           ``ImageTexture`` (passed as ``kwargs`` to
+                           ``ImageTexture.__init__``).
+        """
+
+        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__globj       = globj
+        self.__opts        = globj.opts
+        self.__displayCtx  = globj.displayCtx
+        self.__auxtypes    = tuple(auximages.keys())
+        self.__auxopts     = {t : None for t in self.__auxtypes}
+        self.__auximages   = {t : None for t in self.__auxtypes}
+        self.__auxtextures = {t : None for t in self.__auxtypes}
+
+        for which, image in auximages.items():
+            if isinstance(image, tuple):
+                image, settings = image
+            else:
+                settings = {}
+            self.registerAuxImage(which, image, **settings)
+
+
+    def destroy(self):
+        """Must be calld when this ``AuxImageTextureManager`` is no longer
+        needed. Clears references and destroys texture objects.
+        """
+        self.__globj      = None
+        self.__displayCtx = None
+        self.__opts       = None
+
+        for t in self.__auxtypes:
+            self.deregisterAuxImage(t, False)
+            self.__destroyAuxTexture(t)
+
+
+    @property
+    def name(self):
+        return self.__name
+
+
+    @property
+    def globj(self):
+        return self.__globj
+
+
+    @property
+    def overlay(self):
+        return self.globj.overlay
+
+
+    @property
+    def opts(self):
+        return self.__opts
+
+
+    @property
+    def displayCtx(self):
+        return self.__displayCtx
+
+
+    def texture(self, which):
+        return self.__auxtextures[which]
+
+
+    def image(self, which):
+        return self.__auximages[which]
+
+
+    def textureXform(self, which):
+        """Generates and returns a transformation matrix which can be used to
+        transform texture coordinates from the main overlay to the specified
+        auxillary image. If the main overlay is not an :class:`.Image`, the
+        transformation matrix will transform from display coordinates to
+        auxillary image texture coordinates.
+        """
+        opts     = self.opts
+        auximage = self.__auximages[which]
+        auxopts  = self.__auxopts[  which]
+
+        if auximage is None:
+            return np.eye(4)
+        elif isinstance(opts, niftiopts.NiftiOpts):
+            return affine.concat(
+                auxopts.getTransform('display', 'texture'),
+                opts   .getTransform('texture', 'display'))
+        else:
+            return auxopts.getTransform('display', 'texture')
+
+
+    def texturesReady(self):
+        """Returns ``True`` if all auxillary textures are in a usable
+        state, ``False`` otherwise.
+        """
+        for tex in self.__auxtextures.values():
+            if (tex is None) or (not tex.ready()):
+                return False
+        return True
+
+
+    def registerAuxImage(self, which, image, **kwargs):
+        """Register an auxillary image.
+
+        Creates an :class:`.ImageTexture` to store the image data.
+        Registers a listener with the :attr:`.NiftiOpts.volume` property of
+        the image, so the texture can be updated when the image volume
+        changes.
+
+        :arg which: Name of the auxillary image
+        :arg image: :class:`.Image` object
+
+        All other arguments are passed through to the :meth:`refreshAuxTexture`
+        method.
+        """
+
+        old = self.__auximages[which]
+
+        if not isinstance(image, fslimage.Image):
+            image = None
+
+        # Image already registered
+        if (image is not None) and (image is old):
+            return
+
+        if old is not None:
+            self.deregisterAuxImage(which, False)
+
+        if image is None:
+            opts = None
+        else:
+            opts = self.displayCtx.getOpts(image)
+
+            def volumeChange(*a):
+                tex = self.texture(which)
+                tex.set(volume=opts.index()[3:])
+
+            opts.addListener('volume',
+                             '{}_{}'.format(self.name, which),
+                             volumeChange,
+                             weak=False)
+
+        self.__auximages[which] = image
+        self.__auxopts[  which] = opts
+        self.refreshAuxTexture(which, **kwargs)
+
+
+    def deregisterAuxImage(self, which, refreshTexture=True):
+        """De-register an auxillary image.  Deregisters the
+        :attr:`.NiftiOpts.volume` listener that was registered in
+        :meth:`registerAuxImage`, and destroys the associated
+        :class:`.ImageTexture`.
+
+        :arg which:          Name of the auxillary image
+
+        :arg refreshTexture: Defaults to ``True``. Call
+                             :meth:`refreshAuxTexture` to destroy the
+                             associated ``ImageTexture``.
+        """
+
+        image = self.__auximages[which]
+        opts  = self.__auxopts[  which]
+
+        if image is None:
+            return
+
+        opts.removeListener('volume', '{}_{}'.format(self.name, which))
+
+        self.__auximages[which] = None
+        self.__auxopts[  which] = None
+
+        if refreshTexture:
+            self.refreshAuxTexture(which)
+
+
+    def __destroyAuxTexture(self, which):
+        """Destroys the :class:`.ImageTexture` for type ``which``. """
+        tex = self.__auxtextures[which]
+        if tex is not None:
+            glresources.delete(tex.name)
+        self.__auxtextures[which] = None
+
+
+    def refreshAuxTexture(self, which, **kwargs):
+        """Create/re-create an auxillary :class:`.ImageTexture`.
+
+        The previous ``ImageTexture`` (if one exists) is destroyed.  If no
+        :class:`.Image` of type ``which`` is currently registered, a small
+        dummy ``Image`` and ``ImageTexture`` is created.
+
+        :arg which: Name of the auxillary image
+
+        All other arguments are passed through to the
+        :class:`.ImageTexture.__init__` method.
+        """
+
+        self.__destroyAuxTexture(which)
+
+        image = self.__auximages[  which]
+        opts  = self.__auxopts[    which]
+        tex   = self.__auxtextures[which]
+
+        if image is None:
+            textureData    = np.zeros((3, 3, 3), dtype=np.uint8)
+            textureData[:] = 255
+            image          = fslimage.Image(textureData)
+            norm           = None
+        else:
+            norm = image.dataRange
+
+        # by default we use a name which
+        # is not coupled to the aux opts
+        # instance, as the texture may be
+        # sharable.
+        texName = '{}_{}_{}_{}'.format(
+            type(self).__name__, id(self.overlay), id(image), which)
+
+        # check to see whether the aux
+        # opts object is unsynced from
+        # its parent - if so, we have to
+        # create a dedicated texture
+        if opts is not None:
+            unsynced = (opts.getParent() is None or
+                        not opts.isSyncedToParent('volume'))
+            if unsynced:
+                texName = '{}_unsync_{}'.format(texName, id(opts))
+
+        if opts is not None: volume = opts.index()[3:]
+        else:                volume = 0
+
+        tex = glresources.get(
+            texName,
+            ImageTexture,
+            texName,
+            image,
+            normaliseRange=norm,
+            volume=volume,
+            notify=False,
+            **kwargs)
+
+        self.__auxtextures[which] = tex

@@ -184,7 +184,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                     determinant, the X axis is flipped.
 
     ``torig``       The mesh coordinates are defined in the Freesurfer
-                    "Torig" / "vox2ras-tkr" coordnie system.
+                    "Torig" / "vox2ras-tkr" coordinate system.
     =============== =========================================================
 
     The default value is ``pixdim-flip``, as this is the coordinate system

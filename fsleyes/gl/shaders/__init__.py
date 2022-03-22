@@ -5,12 +5,12 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """The ``shaders`` package contains classes and functions for finding,
-parsing, compiling, and managing OpenGL shader programs. Two types of shader
-program are supported:
+parsing, compiling, and managing OpenGL shader programs. The following
+types of shader program are supported:
 
 
- - GLSL 1.20/1.50/3.30 vertex and fragment shaders.
-
+ - GLSL 1.20 vertex and fragment shaders.
+ - GLSL 3.30 vertex, geometry, and fragment shaders.
  - ``ARB_vertex_program`` and ``ARB_fragment_program`` shader programs.
 
 
@@ -29,6 +29,7 @@ shader source code:
      getShaderDir
      getShaderSuffix
      getVertexShader
+     getGeometryShader
      getFragmentShader
 """
 
@@ -86,6 +87,13 @@ def getVertexShader(prefix):
     return _getShader(prefix, 'vert')
 
 
+def getGeometryShader(prefix):
+    """Returns the geometry shader source for the given GL type (e.g.
+    'glvolume').
+    """
+    return _getShader(prefix, 'geom')
+
+
 def getFragmentShader(prefix):
     """Returns the fragment shader source for the given GL type."""
     return _getShader(prefix, 'frag')
@@ -93,7 +101,7 @@ def getFragmentShader(prefix):
 
 def _getShader(prefix, shaderType):
     """Returns the shader source for the given GL type and the given
-    shader type ('vert' or 'frag').
+    shader type (``'vert'``, ``'geom'``, or ``'frag'``).
     """
     shaderDir = getShaderDir()
     fname     = _getFileName(prefix, shaderType, shaderDir)
@@ -119,7 +127,7 @@ def _getFileName(prefix, shaderType, shaderDir):
 
     suffix = getShaderSuffix()
 
-    if shaderType not in ('vert', 'frag'):
+    if shaderType not in ('vert', 'geom', 'frag'):
         raise RuntimeError('Invalid shader type: {}'.format(shaderType))
 
     return op.join(shaderDir, '{}_{}.{}'.format(prefix, shaderType, suffix))

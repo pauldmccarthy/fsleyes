@@ -25,12 +25,8 @@ def compileShaders(self):
         dataVertSrc = shaders.getVertexShader(  'glmesh_3d_data')
         dataFragSrc = shaders.getFragmentShader('glmesh_3d_data')
 
-        self.flatShader = shaders.GLSLShader(flatVertSrc,
-                                             flatFragSrc,
-                                             indexed=True)
-        self.dataShader = shaders.GLSLShader(dataVertSrc,
-                                             dataFragSrc,
-                                             indexed=True)
+        self.flatShader = shaders.GLSLShader(flatVertSrc, flatFragSrc)
+        self.dataShader = shaders.GLSLShader(dataVertSrc, dataFragSrc)
 
     else:
 

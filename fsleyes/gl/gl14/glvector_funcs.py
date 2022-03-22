@@ -22,7 +22,8 @@ import fsleyes.gl.shaders   as shaders
 def destroy(self):
     """Destroys the vertex/fragment shader programs created in :func:`init`.
     """
-    self.shader.destroy()
+    if self.shader is not None:
+        self.shader.destroy()
     self.shader = None
 
 
@@ -116,7 +117,7 @@ def updateShaderState(self):
 
     else:
 
-        colours, colourXform = self.getVectorColours()
+        colours, colourXform = opts.getVectorColours()
 
         # See comments in gl21/glvector_funcs.py
         if self.vectorImage.niftiDataType == constants.NIFTI_DT_RGB24:

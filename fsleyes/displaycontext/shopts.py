@@ -49,7 +49,7 @@ maximum SH order that was used in generating the coefficients.
 """
 
 
-class SHOpts(vectoropts.VectorOpts):
+class SHOpts(vectoropts.NiftiVectorOpts):
     """The ``SHOpts`` is used for rendering :class:`.Image` instances which
     contain fibre orientation distributions (FODs) in the form of spherical
     harmonic (SH) coefficients. A ``SHOpts`` instance will be used for
@@ -127,7 +127,7 @@ class SHOpts(vectoropts.VectorOpts):
 
     def __init__(self, *args, **kwargs):
 
-        vectoropts.VectorOpts.__init__(self, *args, **kwargs)
+        vectoropts.NiftiVectorOpts.__init__(self, *args, **kwargs)
 
         ncoefs           = self.overlay.shape[3]
         shType, maxOrder = SH_COEFFICIENT_TYPE.get(ncoefs)

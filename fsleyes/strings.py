@@ -265,7 +265,7 @@ messages = TypeDict({
     'space to the image being edited!',
 
     'LoadVertexDataAction.loadVertexData' :
-    'Select a vertex data file for {}',
+    'Select a per-vertex/streamline data file for {}',
 
     'LoadVertexDataAction.loadVertices' :
     'Select a vertex file for {}',
@@ -723,12 +723,13 @@ labels = TypeDict({
     'OverlayDisplayPanel.TensorOpts'     : 'Diffusion tensor settings',
     'OverlayDisplayPanel.SHOpts'         : 'Diffusion SH settings',
     'OverlayDisplayPanel.MIPOpts'        : 'MIP settings',
+    'OverlayDisplayPanel.TractogramOpts' : 'Tractogram settings',
 
     'OverlayDisplayPanel.3d'             : '3D display settings',
 
-    'OverlayDisplayPanel.loadCmap'       : 'Load colour map',
-    'OverlayDisplayPanel.loadVertexData' : 'Load data',
-    'OverlayDisplayPanel.loadVertices'   : 'Load vertices',
+    'OverlayDisplayPanel.loadCmap'           : 'Load colour map',
+    'OverlayDisplayPanel.loadVertexData'     : 'Load vertex data',
+    'OverlayDisplayPanel.loadVertices'       : 'Load vertices',
 
     'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
 
@@ -810,6 +811,12 @@ labels = TypeDict({
 
     'OverlayInfoPanel.MGHImage'                 : 'NIFTI Image (from MGH)',
     'OverlayInfoPanel.MGHImage.filename'        : 'MGH image file',
+
+    'OverlayInfoPanel.Tractogram'                : 'Trqctogram',
+    'OverlayInfoPanel.Tractogram.dataSource'     : 'Data source',
+    'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
+    'OverlayInfoPanel.Tractogram.numVertices'    : 'Total number of vertices',
+    'OverlayInfoPanel.Tractogram.size'           : 'Bounding box size',
 
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
@@ -1269,6 +1276,12 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
+    'TractogramOpts.clipMode'          : 'Clip streamlines by',
+    'TractogramOpts.custom_colourMode' : 'Colour streamlines by',
+    'TractogramOpts.colourMode'        : 'Colour streamlines by',
+    'TractogramOpts.clipBy'            : 'Clip streamlines by',
+    'TractogramOpts.lineWidth'         : 'Streamline width',
+    'TractogramOpts.resolution'        : 'Streamline resolution',
 })
 
 
@@ -1364,10 +1377,12 @@ choices = TypeDict({
     'SHOpts.colourMode' : {'radius'    : 'Colour by radius',
                            'direction' : 'Colour by direction'},
 
-    'ComplexOpts.component' :{ 'real'  : 'Real',
-                               'imag'  : 'Imaginary',
-                               'mag'   : 'Magnitude',
-                               'phase' : 'Phase'},
+    'ComplexOpts.component' : { 'real'  : 'Real',
+                                'imag'  : 'Imaginary',
+                                'mag'   : 'Magnitude',
+                                'phase' : 'Phase'},
+
+    'TractogramOpts.colourMode' : {'orientation' : 'Orientation'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
@@ -1381,6 +1396,7 @@ choices = TypeDict({
         'mesh'           : '3D mesh',
         'tensor'         : 'Diffusion tensor',
         'sh'             : 'Diffusion SH',
+        'tractogram'     : 'Streamline tractogram'
     },
 
     'HistogramPanel.histType' : {'probability' : 'Probability',

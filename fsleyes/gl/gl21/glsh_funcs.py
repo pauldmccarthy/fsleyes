@@ -66,7 +66,7 @@ def compileShaders(self):
     vertSrc = shaders.getVertexShader(  vertShader)
     fragSrc = shaders.getFragmentShader(fragShader)
 
-    self.shader = shaders.GLSLShader(vertSrc, fragSrc, indexed=True)
+    self.shader = shaders.GLSLShader(vertSrc, fragSrc)
 
 
 def updateShaderState(self):
@@ -135,7 +135,7 @@ def updateShaderState(self):
         else:
 
             cmapXform            = self.cmapTexture.getCoordinateTransform()
-            colours, colourXform = self.getVectorColours()
+            colours, colourXform = opts.getVectorColours()
 
             changed |= shader.set('modulateTexture',  0)
             changed |= shader.set('clipTexture',      1)

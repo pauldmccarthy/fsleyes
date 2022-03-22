@@ -62,13 +62,13 @@ cli_tests = """
 # interpolating between 0 and 1 in uint8 textures.
 # Understandable, really.
 {{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask          -in linear
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o       -in linear
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5 -in linear
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask          -in spline
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o       -in spline
-{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -ow 5 -in spline
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -w 5
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask         -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o      -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -w 5 -in linear
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask         -in spline
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o      -in spline
+{{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -w 5 -in spline
 """
 
 

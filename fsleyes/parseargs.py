@@ -170,21 +170,6 @@ To make this new propery settable via the command line, you need to:
          })
 
 
-  4. If the property specifies a file/path name (e.g.
-     :attr:`.VolumeOpts.clipImage`), add an entry in the :attr:`FILE_OPTIONS`
-     dictionary. In the present example, this is not necessary, but if it were,
-     the ``FILE_OPTIONS`` entry might look like this::
-
-         FILE_OPTIONS = td.TypeDict({
-             # .
-             # .
-             # .
-             'MeshOpts' : ['refImage', 'rotation'],
-             # .
-             # .
-             # .
-         })
-
 
 -------------------------------------
 Adding special (non-property) options
@@ -272,7 +257,6 @@ import numpy            as np
 
 import fsl.data.image                     as fslimage
 import fsl.data.bitmap                    as fslbmp
-import fsl.data.utils                     as dutils
 import fsl.utils.idle                     as idle
 import fsl.utils.deprecated               as deprecated
 import fsl.transform.affine               as affine
@@ -282,10 +266,11 @@ import fsleyes_props                      as props
 import fsleyes_widgets.utils.typedict     as td
 import fsleyes_widgets.utils.status       as status
 
-from . import displaycontext as fsldisplay
-from . import                   colourmaps
-from . import                   autodisplay
-import                          fsleyes
+import                           fsleyes
+import fsleyes.data           as dutils
+import fsleyes.displaycontext as fsldisplay
+import fsleyes.colourmaps     as colourmaps
+import fsleyes.autodisplay    as autodisplay
 
 
 log = logging.getLogger(__name__)
@@ -302,13 +287,15 @@ def _get_option_tuples(self, option_string):
     To disable this prefix matching functionality, this function is
     monkey-patched into all ArgumentParser instances created in this module.
 
-
-    .. note:: This is unnecessary in python 3.5 and above, due to the addition
-              of the ``allow_abbrev`` option.
-
+    This functionality can be disabled by setting the ``allow_abbrev``
+    option to the ``ArgumentParser`` to ``False``, but use of
+    ``allow_abbrev=False`` breaks support for concatenating
+    single-prefix arguments with their values, e.g. (``-sortho`` for
+    ``--scene ortho``). So we use this work-around instead.
 
     See http://stackoverflow.com/questions/33900846/\
     disable-unique-prefix-matches-for-argparse-and-optparse
+
     """
     result = []
 
@@ -483,14 +470,14 @@ OPTIONS = td.TypeDict({
     # being reset. So we need to apply
     # useNegativeCmap first, and then displayRange
     # second.
-    'Display'        : ['name',
-                        'enabled',
-                        'overlayType',
-                        'alpha',
-                        'brightness',
-                        'contrast'],
-    'NiftiOpts'      : ['volume',
-                        'index'],
+    'Display'         : ['name',
+                         'enabled',
+                         'overlayType',
+                         'alpha',
+                         'brightness',
+                         'contrast'],
+    'NiftiOpts'       : ['volume',
+                         'index'],
 
     # n.b. I could list the ColourMapOpts
     # properties separately here, and
@@ -501,131 +488,150 @@ OPTIONS = td.TypeDict({
     # overrideDataRange properties, so am
     # listing them separately until I can
     # be bothered to test.
-    'VolumeOpts'     : ['linkLowRanges',
-                        'linkHighRanges',
-                        'overrideDataRange',
-                        'clipImage',
-                        'modulateImage',
-                        'useNegativeCmap',
-                        'displayRange',
-                        'clippingRange',
-                        'modulateRange',
-                        'gamma',
-                        'logScale',
-                        'channel',
-                        'invertClipping',
-                        'cmap',
-                        'negativeCmap',
-                        'cmapResolution',
-                        'interpolation',
-                        'interpolateCmaps',
-                        'invert',
-                        'modulateAlpha'],
-    'Volume3DOpts'   : ['numSteps',
-                        'blendFactor',
-                        'blendByIntensity',
-                        'smoothing',
-                        'resolution',
-                        'numInnerSteps',
-                        'clipMode',
-                        'clipPlane'],
-    'MaskOpts'       : ['colour',
-                        'invert',
-                        'threshold',
-                        'outline',
-                        'outlineWidth',
-                        'interpolation'],
-    'VectorOpts'     : ['xColour',
-                        'yColour',
-                        'zColour',
-                        'suppressX',
-                        'suppressY',
-                        'suppressZ',
-                        'suppressMode',
-                        'cmap',
-                        'colourImage',
-                        'modulateImage',
-                        'modulateRange',
-                        'modulateMode',
-                        'clipImage',
-                        'clippingRange'],
-    'LineVectorOpts' : ['orientFlip',
-                        'lineWidth',
-                        'directed',
-                        'unitLength',
-                        'lengthScale'],
-    'RGBVectorOpts'  : ['interpolation',
-                        'unitLength'],
-    'MeshOpts'       : ['vertexData',
-                        'vertexDataIndex',
-                        'vertexSet',
-                        'modulateData',
-                        'colour',
-                        'outline',
-                        'outlineWidth',
-                        'refImage',
-                        'coordSpace',
-                        'useLut',
-                        'lut',
-                        'linkLowRanges',
-                        'linkHighRanges',
-                        'useNegativeCmap',
-                        'displayRange',
-                        'clippingRange',
-                        'modulateRange',
-                        'gamma',
-                        'discardClipped',
-                        'invertClipping',
-                        'cmap',
-                        'negativeCmap',
-                        'cmapResolution',
-                        'flatShading',
-                        'interpolation',
-                        'interpolateCmaps',
-                        'invert',
-                        'modulateAlpha',
-                        'wireframe'],
-    'GiftiOpts'      : [],
-    'FreesurferOpts' : [],
-    'TensorOpts'     : ['lighting',
-                        'orientFlip',
-                        'tensorResolution',
-                        'tensorScale'],
-    'LabelOpts'      : ['lut',
-                        'outline',
-                        'outlineWidth'],
-    'SHOpts'         : ['orientFlip',
-                        'shResolution',
-                        'shOrder',
-                        'size',
-                        'normalise',
-                        'lighting',
-                        'radiusThreshold',
-                        'colourMode'],
-    'MIPOpts'        : ['linkLowRanges',
-                        'linkHighRanges',
-                        'displayRange',
-                        'clippingRange',
-                        'gamma',
-                        'invertClipping',
-                        'cmap',
-                        'cmapResolution',
-                        'interpolation',
-                        'interpolateCmaps',
-                        'invert',
-                        'window',
-                        'minimum',
-                        'absolute'],
-    'VolumeRGBOpts'   : ['interpolation',
-                         'rColour',
-                         'gColour',
-                         'bColour',
-                         'suppressR',
-                         'suppressG',
-                         'suppressB',
-                         'suppressA',
+    'VolumeOpts'      : ['linkLowRanges',
+                         'linkHighRanges',
+                         'overrideDataRange',
+                         'clipImage',
+                         'modulateImage',
+                         'useNegativeCmap',
+                         'displayRange',
+                         'clippingRange',
+                         'modulateRange',
+                         'gamma',
+                         'logScale',
+                         'channel',
+                         'invertClipping',
+                         'cmap',
+                         'negativeCmap',
+                         'cmapResolution',
+                         'interpolation',
+                         'interpolateCmaps',
+                         'invert',
+                         'modulateAlpha'],
+    'Volume3DOpts'    : ['numSteps',
+                         'blendFactor',
+                         'blendByIntensity',
+                         'smoothing',
+                         'resolution',
+                         'numInnerSteps',
+                         'clipMode',
+                         'clipPlane'],
+    'MaskOpts'        : ['colour',
+                         'invert',
+                         'threshold',
+                         'outline',
+                         'outlineWidth',
+                         'interpolation'],
+    'VectorOpts'      : ['xColour',
+                         'yColour',
+                         'zColour',
+                         'suppressX',
+                         'suppressY',
+                         'suppressZ',
                          'suppressMode'],
-    'ComplexOpts'      : ['component'],
+    'NiftiVectorOpts' : ['cmap',
+                         'colourImage',
+                         'modulateImage',
+                         'modulateRange',
+                         'modulateMode',
+                         'clipImage',
+                         'clippingRange'],
+    'LineVectorOpts'  : ['orientFlip',
+                         'lineWidth',
+                         'directed',
+                         'unitLength',
+                         'lengthScale'],
+    'RGBVectorOpts'   : ['interpolation',
+                         'unitLength'],
+    'MeshOpts'        : ['vertexData',
+                         'vertexDataIndex',
+                         'vertexSet',
+                         'modulateData',
+                         'colour',
+                         'outline',
+                         'outlineWidth',
+                         'refImage',
+                         'coordSpace',
+                         'useLut',
+                         'lut',
+                         'linkLowRanges',
+                         'linkHighRanges',
+                         'useNegativeCmap',
+                         'displayRange',
+                         'clippingRange',
+                         'modulateRange',
+                         'gamma',
+                         'discardClipped',
+                         'invertClipping',
+                         'cmap',
+                         'negativeCmap',
+                         'cmapResolution',
+                         'flatShading',
+                         'interpolation',
+                         'interpolateCmaps',
+                         'invert',
+                         'modulateAlpha',
+                         'wireframe'],
+    'GiftiOpts'       : [],
+    'FreesurferOpts'  : [],
+    'TensorOpts'      : ['lighting',
+                         'orientFlip',
+                         'tensorResolution',
+                         'tensorScale'],
+    'LabelOpts'       : ['lut',
+                         'outline',
+                         'outlineWidth'],
+    'SHOpts'          : ['orientFlip',
+                         'shResolution',
+                         'shOrder',
+                         'size',
+                         'normalise',
+                         'lighting',
+                         'radiusThreshold',
+                         'colourMode'],
+    'MIPOpts'         : ['linkLowRanges',
+                         'linkHighRanges',
+                         'displayRange',
+                         'clippingRange',
+                         'gamma',
+                         'invertClipping',
+                         'cmap',
+                         'cmapResolution',
+                         'interpolation',
+                         'interpolateCmaps',
+                         'invert',
+                         'window',
+                         'minimum',
+                         'absolute'],
+    'VolumeRGBOpts'    : ['interpolation',
+                          'rColour',
+                          'gColour',
+                          'bColour',
+                          'suppressR',
+                          'suppressG',
+                          'suppressB',
+                          'suppressA',
+                          'suppressMode'],
+    'ComplexOpts'       : ['component'],
+    'TractogramOpts'    : ['colourBy',
+                           'clipBy',
+                           'lineWidth',
+                           'resolution',
+                           'linkLowRanges',
+                           'linkHighRanges',
+                           'useNegativeCmap',
+                           'displayRange',
+                           'clippingRange',
+                           'modulateRange',
+                           'gamma',
+                           'logScale',
+                           'invertClipping',
+                           'cmap',
+                           'negativeCmap',
+                           'cmapResolution',
+                           'interpolateCmaps',
+                           'invert',
+                           'modulateAlpha'],
 })
 """This dictionary defines all of the options which are exposed on the command
 line.
@@ -657,6 +663,7 @@ GROUPNAMES = td.TypeDict({
     'TensorOpts'     : 'Tensor options',
     'SHOpts'         : 'SH options',
     'MIPOpts'        : 'MIP options',
+    'TractogramOpts' : 'Tractogram options',
 })
 """Command line arguments are grouped according to the class to which
 they are applied (see the :data:`ARGUMENTS` dictionary). This dictionary
@@ -696,6 +703,7 @@ GROUPDESCS = td.TypeDict({
     'TensorOpts'     : 'These options are applied to \'tensor\' overlays.',
     'SHOpts'         : 'These options are applied to \'sh\' overlays.',
     'MIPOpts'        : 'These options are applied to \'mip\' overlays.',
+    'TractogramOpts' : 'These options are applied to \'tractogram\' overlays.',
 })
 """This dictionary contains descriptions for each argument group. """
 
@@ -947,6 +955,11 @@ ARGUMENTS = td.TypeDict({
     'VolumeRGBOpts.suppressMode'  : ('sm', 'suppressMode',  True),
 
     'ComplexOpts.component' : ('co', 'component', True),
+
+    'TractogramOpts.colourBy'       : ('co', 'colourBy',   True),
+    'TractogramOpts.clipBy'         : ('cl', 'clipBy',     True),
+    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',  True),
+    'TractogramOpts.resolution'     : ('r',  'resolution', True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1295,7 +1308,20 @@ HELP = td.TypeDict({
     'VolumeRGBOpts.suppressMode'  : 'Replace suppressed channels with '
                                     '\'white\' (default), \'black\', or '
                                     '\'transparent\'.',
-})
+
+    'TractogramOpts.colourBy' :
+    'NIFTI image, or file containing per-vertex/streamline scalar values '
+    'for colouring, or name of a a per-vertex/streamline data set contained '
+    'within the tractogram file.',
+    'TractogramOpts.clipBy' :
+    'NIFTI image, or file containing per-vertex/streamline scalar values '
+    'for clipping, or name of a a per-vertex/streamline data set contained '
+    'within the tractogram file.',
+    'TractogramOpts.lineWidth' :
+    'Streamline width (pixels)',
+    'TractogramOpts.resolution' :
+    'Streamline resolution',
+ })
 """This dictionary defines the help text for all command line options."""
 
 
@@ -1394,62 +1420,67 @@ def getExtra(target, propName, default=None):
     }
 
     allSettings = {
-        (fsldisplay.Display,        'overlayType')   : overlayTypeSettings,
-        (fsldisplay.LabelOpts,      'lut')           : lutSettings,
-        (fsldisplay.MeshOpts,       'lut')           : lutSettings,
-        (fsldisplay.GiftiOpts,      'lut')           : lutSettings,
-        (fsldisplay.FreesurferOpts, 'lut')           : lutSettings,
-        (fsldisplay.ColourMapOpts,  'cmap')          : cmapSettings,
-        (fsldisplay.ColourMapOpts,  'negativeCmap')  : cmapSettings,
-        (fsldisplay.MeshOpts,       'cmap')          : cmapSettings,
-        (fsldisplay.GiftiOpts,      'negativeCmap')  : cmapSettings,
-        (fsldisplay.GiftiOpts,      'cmap')          : cmapSettings,
-        (fsldisplay.FreesurferOpts, 'negativeCmap')  : cmapSettings,
-        (fsldisplay.FreesurferOpts, 'cmap')          : cmapSettings,
-        (fsldisplay.MeshOpts,       'negativeCmap')  : cmapSettings,
-        (fsldisplay.VolumeOpts,     'cmap')          : cmapSettings,
-        (fsldisplay.VolumeOpts,     'clippingRange') : rangeSettings,
-        (fsldisplay.VolumeOpts,     'displayRange')  : rangeSettings,
-        (fsldisplay.VolumeOpts,     'modulateRange') : rangeSettings,
-        (fsldisplay.VolumeOpts,     'negativeCmap')  : cmapSettings,
-        (fsldisplay.LineVectorOpts, 'cmap')          : cmapSettings,
-        (fsldisplay.RGBVectorOpts,  'cmap')          : cmapSettings,
-        (fsldisplay.TensorOpts,     'cmap')          : cmapSettings,
-        (fsldisplay.SHOpts,         'cmap')          : cmapSettings,
-        (fsldisplay.SHOpts,         'shOrder')       : shOrderSettings,
-        (fsldisplay.SceneOpts,      'bgColour')      : colourSettings,
-        (fsldisplay.SceneOpts,      'fgColour')      : colourSettings,
-        (fsldisplay.SceneOpts,      'cursorColour')  : colourSettings,
-        (fsldisplay.MaskOpts,       'colour')        : colourSettings,
-        (fsldisplay.LineVectorOpts, 'xColour')       : colourSettings,
-        (fsldisplay.LineVectorOpts, 'yColour')       : colourSettings,
-        (fsldisplay.LineVectorOpts, 'zColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'xColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'yColour')       : colourSettings,
-        (fsldisplay.RGBVectorOpts,  'zColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'xColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'yColour')       : colourSettings,
-        (fsldisplay.TensorOpts,     'zColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'xColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'yColour')       : colourSettings,
-        (fsldisplay.SHOpts,         'zColour')       : colourSettings,
-        (fsldisplay.MeshOpts,       'colour')        : colourSettings,
-        (fsldisplay.GiftiOpts,      'colour')        : colourSettings,
-        (fsldisplay.FreesurferOpts, 'colour')        : colourSettings,
-        (fsldisplay.MeshOpts,       'vertexData')    : vertexDataSettings,
-        (fsldisplay.GiftiOpts,      'vertexData')    : vertexDataSettings,
-        (fsldisplay.FreesurferOpts, 'vertexData')    : vertexDataSettings,
-        (fsldisplay.MeshOpts,       'modulateData')  : vertexDataSettings,
-        (fsldisplay.GiftiOpts,      'modulateData')  : vertexDataSettings,
-        (fsldisplay.FreesurferOpts, 'modulateData')  : vertexDataSettings,
-        (fsldisplay.MeshOpts,       'vertexSet')     : vertexSetSettings,
-        (fsldisplay.GiftiOpts,      'vertexSet')     : vertexSetSettings,
-        (fsldisplay.FreesurferOpts, 'vertexSet')     : vertexSetSettings,
-        (fsldisplay.MIPOpts,        'cmap')          : cmapSettings,
-        (fsldisplay.MIPOpts,        'negativeCmap')  : cmapSettings,
-        (fsldisplay.VolumeRGBOpts,  'rColour')       : colourSettings,
-        (fsldisplay.VolumeRGBOpts,  'gColour')       : colourSettings,
-        (fsldisplay.VolumeRGBOpts,  'bColour')       : colourSettings,
+        (fsldisplay.Display,        'overlayType')    : overlayTypeSettings,
+        (fsldisplay.LabelOpts,      'lut')            : lutSettings,
+        (fsldisplay.MeshOpts,       'lut')            : lutSettings,
+        (fsldisplay.GiftiOpts,      'lut')            : lutSettings,
+        (fsldisplay.FreesurferOpts, 'lut')            : lutSettings,
+        (fsldisplay.ColourMapOpts,  'cmap')           : cmapSettings,
+        (fsldisplay.ColourMapOpts,  'negativeCmap')   : cmapSettings,
+        (fsldisplay.MeshOpts,       'cmap')           : cmapSettings,
+        (fsldisplay.GiftiOpts,      'negativeCmap')   : cmapSettings,
+        (fsldisplay.GiftiOpts,      'cmap')           : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'negativeCmap')   : cmapSettings,
+        (fsldisplay.FreesurferOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.MeshOpts,       'negativeCmap')   : cmapSettings,
+        (fsldisplay.VolumeOpts,     'cmap')           : cmapSettings,
+        (fsldisplay.VolumeOpts,     'clippingRange')  : rangeSettings,
+        (fsldisplay.VolumeOpts,     'displayRange')   : rangeSettings,
+        (fsldisplay.VolumeOpts,     'modulateRange')  : rangeSettings,
+        (fsldisplay.VolumeOpts,     'negativeCmap')   : cmapSettings,
+        (fsldisplay.LineVectorOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.RGBVectorOpts,  'cmap')           : cmapSettings,
+        (fsldisplay.TensorOpts,     'cmap')           : cmapSettings,
+        (fsldisplay.SHOpts,         'cmap')           : cmapSettings,
+        (fsldisplay.SHOpts,         'shOrder')        : shOrderSettings,
+        (fsldisplay.SceneOpts,      'bgColour')       : colourSettings,
+        (fsldisplay.SceneOpts,      'fgColour')       : colourSettings,
+        (fsldisplay.SceneOpts,      'cursorColour')   : colourSettings,
+        (fsldisplay.MaskOpts,       'colour')         : colourSettings,
+        (fsldisplay.LineVectorOpts, 'xColour')        : colourSettings,
+        (fsldisplay.LineVectorOpts, 'yColour')        : colourSettings,
+        (fsldisplay.LineVectorOpts, 'zColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'xColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'yColour')        : colourSettings,
+        (fsldisplay.RGBVectorOpts,  'zColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'xColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'yColour')        : colourSettings,
+        (fsldisplay.TensorOpts,     'zColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'xColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'yColour')        : colourSettings,
+        (fsldisplay.SHOpts,         'zColour')        : colourSettings,
+        (fsldisplay.MeshOpts,       'colour')         : colourSettings,
+        (fsldisplay.GiftiOpts,      'colour')         : colourSettings,
+        (fsldisplay.FreesurferOpts, 'colour')         : colourSettings,
+        (fsldisplay.MeshOpts,       'vertexData')     : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'vertexData')     : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'vertexData')     : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'modulateData')   : vertexDataSettings,
+        (fsldisplay.GiftiOpts,      'modulateData')   : vertexDataSettings,
+        (fsldisplay.FreesurferOpts, 'modulateData')   : vertexDataSettings,
+        (fsldisplay.MeshOpts,       'vertexSet')      : vertexSetSettings,
+        (fsldisplay.GiftiOpts,      'vertexSet')      : vertexSetSettings,
+        (fsldisplay.FreesurferOpts, 'vertexSet')      : vertexSetSettings,
+        (fsldisplay.MIPOpts,        'cmap')           : cmapSettings,
+        (fsldisplay.MIPOpts,        'negativeCmap')   : cmapSettings,
+        (fsldisplay.VolumeRGBOpts,  'rColour')        : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'gColour')        : colourSettings,
+        (fsldisplay.VolumeRGBOpts,  'bColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'xColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'yColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'zColour')        : colourSettings,
+        (fsldisplay.TractogramOpts, 'cmap')           : cmapSettings,
+        (fsldisplay.TractogramOpts, 'negativeCmap')   : cmapSettings,
     }
 
     # Add (str, propname) versions
@@ -1461,25 +1492,6 @@ def getExtra(target, propName, default=None):
     allSettings.update(strSettings)
 
     return allSettings.get((target, propName), None)
-
-
-# Options which expect a file that
-# needs to be loaded as an overlay
-# need special treatment.
-FILE_OPTIONS = td.TypeDict({
-    'Main'       : ['displaySpace'],
-    'VolumeOpts' : ['clipImage',
-                    'modulateImage'],
-    'VectorOpts' : ['clipImage',
-                    'colourImage',
-                    'modulateImage'],
-    'MeshOpts'   : ['refImage'],
-})
-"""This dictionary contains all arguments which accept file or path
-names. These arguments need special treatment - for these arguments, the user
-may specify a file which refers to an overlay that may or may not have already
-been loaded, so we need to figure out what to do.
-"""
 
 
 # Transform functions for properties where the
@@ -1512,20 +1524,6 @@ been loaded, so we need to figure out what to do.
 #
 # def xform(value, gen=None, overlay=None, target=None):
 #     ...
-
-# When generating CLI arguments, turn Image
-# instances into their file names. And a few
-# other special cases.
-def _imageTrans(i, **kwargs):
-
-    stri = str(i).lower()
-
-    if   i    is  None:    return None
-    elif stri == 'none':   return None
-
-    # Special cases for Main.displaySpace
-    elif stri == 'world':  return 'world'
-    else:                  return i.dataSource
 
 
 # The command line interface
@@ -1578,12 +1576,6 @@ into the corresponding property value. See the
 :func:`props.applyArguments` and :func:`props.generateArguments`
 functions.
 """
-
-# All of the file options need special treatment
-for target, fileOpts in FILE_OPTIONS.items():
-    for fileOpt in fileOpts:
-        key             = '{}.{}'.format(target, fileOpt)
-        TRANSFORMS[key] = _imageTrans
 
 
 EXAMPLES = """\
@@ -1838,6 +1830,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     LabelOpts      = fsldisplay.LabelOpts
     SHOpts         = fsldisplay.SHOpts
     MIPOpts        = fsldisplay.MIPOpts
+    TractogramOpts = fsldisplay.TractogramOpts
 
     # A parser is created and returned
     # for each one of these types.
@@ -1845,7 +1838,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
                    MaskOpts, LabelOpts, MeshOpts, GiftiOpts,
                    FreesurferOpts, LineVectorOpts,
                    RGBVectorOpts, TensorOpts, SHOpts,
-                   MIPOpts]
+                   MIPOpts, TractogramOpts]
 
     # Dictionary containing the Display parser,
     # and parsers for each overlay type. We use
@@ -1879,7 +1872,6 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
 
         parsers[target] = parser
         propNames       = list(it.chain(*OPTIONS.get(target, allhits=True)))
-        specialOptions  = []
 
         # These classes are sub-classes of NiftiOpts, and as
         # such they have a volume property. But that property
@@ -1889,30 +1881,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         if target in (LineVectorOpts, RGBVectorOpts, TensorOpts, SHOpts):
             propNames.remove('volume')
 
-        # The file options need
-        # to be configured manually.
-        fileOpts = FILE_OPTIONS.get(target, [])
-        for propName in fileOpts:
-            if propName in propNames:
-                specialOptions.append(propName)
-                propNames     .remove(propName)
-
         _configParser(target, parser, propNames, shortHelp=shortHelp)
-
-        # We need to process the special options
-        # manually, rather than using the props.cli
-        # module - see the handleOverlayArgs function.
-        for opt in specialOptions:
-            shortArg, longArg = ARGUMENTS[target, opt][:2]
-            helpText          = HELP.get((target, opt), 'no help')
-
-            shortArg =  '-{}'.format(shortArg)
-            longArg  = '--{}'.format(longArg)
-            parser.add_argument(
-                shortArg,
-                longArg,
-                metavar='FILE',
-                help=helpText)
 
     return dispParser, otParser, parsers
 
@@ -2056,7 +2025,9 @@ def parseArgs(mainParser,
     argv = copy
 
     # Compile a list of arguments which
-    # look like overlay file names
+    # look like overlay file names, and
+    # indices corresponding to starting/
+    # ending arguments for each overlay.
     ovlIdxs  = []
     ovlTypes = []
 
@@ -2098,7 +2069,7 @@ def parseArgs(mainParser,
         ovlIdxs .append(i)
         ovlTypes.append(dtype)
 
-    # TODO Why is this here?
+    # Index of end argument for last overlay
     ovlIdxs.append(len(argv))
 
     # Separate the program arguments
@@ -2428,13 +2399,24 @@ def _printFullHelp(mainParser):
         if groupDesc is not None:
             helpText += '  ' + groupDesc + '\n'
 
+        # Trim the help pre-amble (see inline
+        # comments in _printShortHelp for more
+        # details on this)
         ovlHelp = parser.format_help()
+        skipTo  = ['optional arguments:',
+                   'options:']
+        for candidate in skipTo:
+            try:
+                optStart = ovlHelp.index(candidate)
+                skipTo   = candidate
+                break
+            except Exception:
+                pass
+        else:
+            raise ValueError('Cannot parse sub-parser help output: ' + ovlHelp)
 
-        skipTo    = 'optional arguments:'
-        optStart  = ovlHelp.index(skipTo)
         optStart += len(skipTo) + 1
         ovlHelp   = ovlHelp[optStart:]
-
         helpText += '\n' + ovlHelp
 
     print(helpText)
@@ -2833,56 +2815,11 @@ def applyOverlayArgs(args,
             # re-created
             opts = display.opts
 
-            # All options in the FILE_OPTIONS dictionary
-            # are Choice properties, where the valid
-            # choices are defined by the current
-            # contents of the overlay list. So when
-            # the user specifies one of these images,
-            # we need to do an explicit check to see
-            # if the specified image is valid.
-            fileOpts = FILE_OPTIONS.get(opts, [])
-
-            for fileOpt in fileOpts:
-                value = getattr(optArgs, fileOpt, None)
-                if value is None:
-                    continue
-
-                setattr(optArgs, fileOpt, None)
-
-                try:
-                    image = _findOrLoad(overlayList,
-                                        value,
-                                        fslimage.Image,
-                                        overlay)
-                except Exception as e:
-                    log.warning('{}: {}'.format(fileOpt, str(e)))
-                    continue
-
-                # If the user specified both clipImage
-                # arguments and linklow/high range
-                # arguments, an error will be raised
-                # when we try to set the link properties
-                # on the VolumeOpts instance (because
-                # they have been disabled). So we
-                # clear them from the argparse namespace
-                # to prevent this from occurring.
-                if fileOpt == 'clipImage' and \
-                   isinstance(opts, fsldisplay.VolumeOpts):
-
-                    llr = ARGUMENTS['ColourMapOpts.linkLowRanges'][ 1]
-                    lhr = ARGUMENTS['ColourMapOpts.linkHighRanges'][1]
-
-                    setattr(optArgs, llr, None)
-                    setattr(optArgs, lhr, None)
-
-                setattr(opts, fileOpt, image)
-
-            # After handling the special cases
-            # above, we can apply the CLI
-            # options to the Opts instance. The
-            # overlay and gen flag is passed
-            # through to any transform functions
-            # (see the TRANSFORMS dict)
+            # We can now apply the CLI options to
+            # the Opts instance. The overlay and
+            # gen flag is passed through to any
+            # transform functions (see the
+            # TRANSFORMS dict)
             _applyArgs(optArgs,
                        overlayList,
                        displayCtx,
@@ -2923,11 +2860,17 @@ def wasSpecified(namespace, obj, propName):
 
 
 def _findOrLoad(overlayList, overlayFile, overlayType, relatedTo=None):
-    """Searches for the given ``overlayFile`` in the ``overlayList``. If not
+    """Used in a few places to handle arguments which expect to be passed
+    a file name to be loaded as an overlay (e.g.
+    :class:`.VolumeOpts.clipImage`).
+
+    Searches for the given ``overlayFile`` in the ``overlayList``. If not
     present, it is created using the given ``overlayType`` constructor, and
-    inserted into the ``overlayList``. The new overlay is inserted into the
-    ``overlayList`` before the ``relatedTo`` overlay if provided, otherwise
-    appended to the end of the list.
+    inserted into the ``overlayList``.
+
+    The new overlay is inserted into the ``overlayList`` before the
+    ``relatedTo`` overlay if provided, otherwise appended to the end of the
+    list.
     """
 
     # Is there an overlay in the list with
@@ -3104,6 +3047,48 @@ def _getSpecialFunction(target, optName, prefix):
             return func
 
     return None
+
+
+def _configSpecial_FileOption(target, parser, shortArg, longArg, helpText):
+    """Used by various ``_configSpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+    """
+    parser.add_argument(shortArg, longArg, metavar='FILE', help=helpText)
+
+
+def _applySpecial_FileOption(
+        value, overlayList, displayCtx, target, propName, warn=True):
+    """Used by various ``_applySpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+
+    This function returns ``True`` if an image was successfully loaded,
+    ``False`` otherwise.
+    """
+
+    try:
+        img = _findOrLoad(overlayList, value, fslimage.Image, target.overlay)
+        setattr(target, propName, img)
+        return True
+    except Exception as e:
+        if warn:
+            log.warning(f'Unable to load {value} '
+                        f'({type(target).__name__}.{propName}): {str(e)}')
+        return False
+
+
+def _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, propName):
+    """Used by various ``_generateSpecial`` functions to configure arguments
+    which expect to be passed an overlay file
+    (e.g. :attr:`.VolumeOpts.clipImage`).
+    """
+    val  = getattr(source, propName)
+    args = []
+    if val is not None:
+        args.extend([longArg, val.dataSource])
+    return args
 
 
 def _configSpecial_OrthoOpts_xcentre(
@@ -3354,6 +3339,87 @@ def _generateSpecial_VectorOpts_orientFlip(
     else:    return []
 
 
+def _configSpecial_VectorOpts_clipImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.clipImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_clipImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.clipImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.clipImage, overlayList, displayCtx, target, 'clipImage')
+
+
+def _generateSpecial_VectorOpts_clipImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.clipImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'clipImage')
+
+
+def _configSpecial_VectorOpts_modulateImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.modulateImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_modulateImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.modulateImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
+
+
+def _generateSpecial_VectorOpts_modulateImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.modulateImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'modulateImage')
+
+
+def _configSpecial_VectorOpts_colourImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VectorOpts.colourImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VectorOpts_colourImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VectorOpts.colourImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.colourImage, overlayList, displayCtx, target, 'colourImage')
+
+
+def _generateSpecial_VectorOpts_colourImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VectorOpts.colourImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'colourImage')
+
+
 def _configSpecial_MeshOpts_flatShading(
         target, parser, shortArg, longArg, helpText):
     """Configures the deprecated MeshOpts.flatShading option. This has
@@ -3420,6 +3486,87 @@ def _applySpecial_MeshOpts_vertexSet(
     for i, vd in enumerate(args.vertexSet):
         loadvertexdata.loadVertices(
             target.overlay, displayCtx, vd, select=(i == last))
+
+
+def _configSpecial_MeshOpts_refImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.MeshOpts.refImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_MeshOpts_refImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.MeshOpts.refImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.refImage, overlayList, displayCtx, target, 'refImage')
+
+
+def _generateSpecial_MeshOpts_refImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.MeshOpts.refImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'refImage')
+
+
+def _configSpecial_VolumeOpts_clipImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VolumeOpts.clipImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VolumeOpts_clipImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VolumeOpts.clipImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.clipImage, overlayList, displayCtx, target, 'clipImage')
+
+
+def _generateSpecial_VolumeOpts_clipImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the :attr:`.VolumeOpts.clipImage`
+    option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'clipImage')
+
+
+def _configSpecial_VolumeOpts_modulateImage(
+        target, parser, shortArg, longArg, helpText):
+    """Configures an ``ArgumentParser`` to handle the
+    :attr:`.VolumeOpts.modulateImage` option.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_VolumeOpts_modulateImage(
+        args, overlayList, displayCtx, target):
+    """Sets the :attr:`.VolumeOpts.modulateImage` option from command-line
+    arguments.
+    """
+    _applySpecial_FileOption(
+        args.modulateImage, overlayList, displayCtx, target, 'modulateImage')
+
+
+def _generateSpecial_VolumeOpts_modulateImage(
+        overlayList, displayCtx, source, longArg):
+    """Generates command-line arguments from the
+    :attr:`.VolumeOpts.modulateImage` option.
+    """
+    return _generateSpecial_FileOption(
+        overlayList, displayCtx, source, longArg, 'modulateImage')
 
 
 def _applySpecial_VolumeOpts_overrideDataRange(
@@ -3679,3 +3826,119 @@ def _generateLookupTable(longArg, lut):
     # way - don't know what to do
     else:
         return []
+
+
+def _configSpecial_TractogramOpts_colourBy(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the --colourBy option for :class:`.TractogramOpts`
+    instances. This option allows the :attr:`.TractogramOpts.colourMode`
+    option to be set to some per-vertex/streamline data, or to an
+    :class:`.Image` instance.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _configSpecial_TractogramOpts_clipBy(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the --clipBy option for :class:`.TractogramOpts`
+    instances. This option allows the :attr:`.TractogramOpts.clipMode`
+    option to be set to some per-vertex/streamline data, or to an
+    :class:`.Image` instance.
+    """
+    return _configSpecial_FileOption(
+        target, parser, shortArg, longArg, helpText)
+
+
+def _applySpecial_TractogramOpts_colourBy(
+        args, overlayList, displayCtx, target):
+    """Applies the ``--colourBy`` option, setting the
+    :attr:`.TractogramOpts.colourMode` property.
+    """
+    return _applySpecial_TractogramOpts_xBy(
+        args.colourBy, overlayList, displayCtx, target, 'colourMode')
+
+
+def _applySpecial_TractogramOpts_clipBy(
+        args, overlayList, displayCtx, target):
+    """Applies the ``--clipBy`` option, setting the
+    :attr:`.TractogramOpts.clipMode` property.
+    """
+    return _applySpecial_TractogramOpts_xBy(
+        args.clipBy, overlayList, displayCtx, target, 'clipMode')
+
+
+def _applySpecial_TractogramOpts_xBy(
+        val, overlayList, displayCtx, target, propName):
+    """Used by :func:`_applySpecial_TractogramOpts_xBy` and
+    :func:`_applySpecial_TractogramOpts_xBy`. Applies the ``--colourBy`` or
+    ``--clipBy`` option for :class:`.TractogramOpts`, which respectively
+    affect the :attr:`.TractogramOpts.colourMode` and
+    :attr:`.TractogramOpts.clipMode` properties.
+    """
+
+    import fsleyes.actions.loadvertexdata as loadvertexdata
+
+    overlay = target.overlay
+
+    # The --colourBy/--clipBy options accept
+    # either NIFTI images, or other vertex/
+    # streamline data files.
+    if _applySpecial_FileOption(
+            val, overlayList, displayCtx, target, propName, warn=False):
+        return
+
+    # Vertex data can be a file
+    if op.exists(val):
+        val = loadvertexdata.loadVertexData(
+            overlay, displayCtx, val, select=False)
+
+    # Or can be an index specifying a
+    # data set that is contained in the
+    # tractogram file itself
+    elif val not in overlay.vertexDataSets():
+        log.warning(f'{val} does not appear to be a '
+                    f'vertex data set for {overlay}')
+        return
+
+    setattr(target, propName, val)
+
+
+def _generateSpecial_TractogramOpts_colourBy(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.TractogramOpts.colourMode`
+    argument.
+    """
+    return _generateSpecial_TractogramOpts_xBy(
+        source.colourMode, source, longArg)
+
+
+def _generateSpecial_TractogramOpts_clipBy(
+        overlayList, displayCtx, source, longArg):
+    """Generates arguments for the :attr:`.TractogramOpts.clipMode`
+    argument.
+    """
+    return _generateSpecial_TractogramOpts_xBy(
+        source.clipMode, source, longArg)
+
+
+def _generateSpecial_TractogramOpts_xBy(value, source, longArg):
+    """Used by :func:`_generateSpecial_TractogramOpts_colourBy` and
+    :func:`_generateSpecial_TractogramOpts_clipBy`. Generates command-line
+    arguments for the :attr:`.TractogramOpts.colourMode` and
+    :attr:`.TractogramOpts.clipMode` properties.
+    """
+
+    # Unset/default
+    if value in ('orientation', None):
+        return []
+
+    # Clipping/colouring by an image
+    elif isinstance(value, fslimage.Image):
+        return [longArg, value.dataSource]
+
+    # Clipping/colouring by vertex from
+    # a file, or by vertex data
+    # built into the tractogram file
+    else:
+        return [longArg, value]

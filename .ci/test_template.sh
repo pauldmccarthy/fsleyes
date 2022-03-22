@@ -76,7 +76,6 @@ if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 
 # Run the tests. First batch requires
 # a GUI, so we run via xvfb-run
-export FSLEYES_TEST_GL=2.1
 ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=$status
@@ -89,14 +88,25 @@ status=`cat status`
 failed=`echo "$status + $failed" | bc`
 sleep 5
 
+# test overlay types for different GL profiles
+export FSLEYES_TEST_GL=1.4
 ((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 sleep 5
 
-# test overlay types for GL14 as well
-export FSLEYES_TEST_GL=1.4
+export FSLEYES_TEST_GL=2.1
 ((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+status=`cat status`
+failed=`echo "$status + $failed" | bc`
+sleep 5
+
+# GL33-specific tests - only a
+# couple of these at the moment
+# (overlays/test_overlay_tractogram.py)
+export MESA_GL_VERSION_OVERRIDE=3.3
+export FSLEYES_TEST_GL=3.3
+((pytest --cov-report= --cov-append -m "gl33test" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
