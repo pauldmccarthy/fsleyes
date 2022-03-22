@@ -96,6 +96,10 @@ class DepthTexture(texture.Texture):
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_COMPARE_MODE,
+                               gl.GL_NONE)
+
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_MAG_FILTER,
                                gl.GL_NEAREST)
             gl.glTexParameteri(gl.GL_TEXTURE_2D,

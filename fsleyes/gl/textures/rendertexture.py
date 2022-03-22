@@ -381,9 +381,11 @@ class RenderTexture(texture2d.Texture2D):
         via :meth:`setRenderViewport` and :meth:`restoreViewport`.
         """
 
-        setViewport = len(args) > 0 or len(kwargs) > 0
+        setViewport  = len(args) > 0 or len(kwargs) > 0
+        alreadyBound = self.__oldFrameBuffer is not None
 
-        self.bindAsRenderTarget()
+        if not alreadyBound:
+            self.bindAsRenderTarget()
 
         if setViewport:
             self.setRenderViewport(*args, **kwargs)
@@ -392,7 +394,8 @@ class RenderTexture(texture2d.Texture2D):
         finally:
             if setViewport:
                 self.restoreViewport()
-            self.unbindAsRenderTarget()
+            if not alreadyBound:
+                self.unbindAsRenderTarget()
 
 
     def bindAsRenderTarget(self):
