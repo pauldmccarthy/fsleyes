@@ -480,7 +480,9 @@ class GLMesh(globject.GLObject):
 
         if opts.wireframe: polymode = gl.GL_LINE
         else:              polymode = gl.GL_FILL
+
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, polymode)
+        gl.glLineWidth(1)
 
         if is2D or opts.wireframe: enable = (gl.GL_DEPTH_TEST)
         else:                      enable = (gl.GL_DEPTH_TEST, gl.GL_CULL_FACE)
@@ -494,6 +496,10 @@ class GLMesh(globject.GLObject):
             gl.glFrontFace(self.frontFace())
             gl.glCullFace(gl.GL_BACK)
             shader.draw(gl.GL_TRIANGLES)
+
+        # restore polygon mode to default (in
+        # case we were drawing a wireframe)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
     def postDraw(self):
