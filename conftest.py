@@ -14,12 +14,12 @@ import fsleyes.render as render
 from fsl.data.image import Image
 from fsl.utils.tempdir import tempdir
 
-# When doing multiple test runs in parallel
-# on the same machine, we sometimes get
-# docker/xvfb-related conflicts.
-
 def pytest_configure():
 
+
+    # When doing multiple test runs in parallel
+    # on the same machine, we sometimes get
+    # docker/xvfb-related conflicts.
     if 'DISPLAY' in os.environ:
         for i in range(5):
             try:
