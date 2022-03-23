@@ -123,6 +123,34 @@ class DepthTexture(texture.Texture):
                             None)
 
 
+    def getBitmap(self):
+        """Returns the data stored in this ``DepthTexture`` as a ``numpy.uint8``
+        array of shape ``(height, width, 3)``.
+
+        The depth values are inverted and normalised, and duplicated across
+        the three RGB channels.
+        """
+
+        intFmt        = self.baseFormat
+        extFmt        = self.textureType
+        ndtype        = self.dtype
+        width, height = self.shape
+
+        with self.bound():
+            data = gl.glGetTexImage(gl.GL_TEXTURE_2D, 0, intFmt, extFmt, None)
+
+        data = np.frombuffer(data, dtype=ndtype).astype(np.float32)
+        data = (data.max() - data)
+        data = (data - data.min()) / (data.max() - data.min())
+        data = (data * 255).astype(np.uint8)
+
+        data = data.reshape((height, width, 1))
+        data = np.dstack((data, data, data))
+        data = np.flipud(data)
+
+        return data
+
+
 class Texture2D(texture.Texture):
     """The ``Texture2D`` class represents a 2D texture. A ``Texture2D``
     instance can be used in one of two ways:
