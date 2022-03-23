@@ -446,6 +446,7 @@ def run_cli_tests(
     tests     = [t.strip()              for t in tests]
     allpassed = True
 
+    faildir =  op.join(os.getcwd(),          'failures')
     datadir  = op.join(op.dirname(__file__), 'testdata')
     benchdir = op.join(op.dirname(__file__), 'testdata', 'cli_tests')
 
@@ -483,8 +484,9 @@ def run_cli_tests(
                 traceback.print_exc()
 
                 if op.exists(testfile):
-                    print('Copying {} to {}'.format(testfile, datadir))
-                    shutil.copy(testfile, datadir)
+                    print('Copying {} to {}'.format(testfile, faildir))
+                    os.makedirs(faildir, exist_ok=True)
+                    shutil.copy(testfile, faildir)
 
     assert allpassed
 

@@ -25,22 +25,14 @@ cli_tests = """
 
 -dl -cb -ls 20 3d.nii.gz
 
--dl                       3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot  45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot  45   45  0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot -45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot   0  45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot   0 -45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot   0   0  45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl      -rot   0   0 -45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc                  3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot  45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot  45   45  0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot -45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot   0  45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot   0 -45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot   0   0  45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
--dl -noc -rot   0   0 -45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl                  3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot  45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot  45   45  0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot -45   0   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot   0  45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot   0 -45   0 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot   0   0  45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
+-dl -rot   0   0 -45 3d.nii.gz  3d.nii.gz -cr 6300 8000 -cm red-yellow
 
                   gifti/white.surf.gii -mc 1 0 0
 -dl               gifti/white.surf.gii -mc 1 0 0
