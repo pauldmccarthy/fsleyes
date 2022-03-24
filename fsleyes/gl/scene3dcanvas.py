@@ -807,6 +807,13 @@ class Scene3DCanvas:
                 # (specifically w.r.t. tractograms, i.e.
                 # transparent streamlines drawn on top of each
                 # other) works correctly.
+                #
+                # I don't understand alpha blending well enough,
+                # but these are some good resources:
+                #   - http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
+                #   - http://www.adriancourreges.com/blog/2017/05/09/beware-of-transparent-pixels/
+                #   - https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+                #   - https://limnu.com/webgl-blending-youre-probably-wrong/
                 glroutines.clear((0, 0, 0, 0))
                 gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA,
                                        gl.GL_ONE_MINUS_SRC_ALPHA,
