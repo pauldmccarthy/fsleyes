@@ -50,7 +50,7 @@ cli_tests = """
 
 # Colour bar for other overlay types
 -cb gifti/white.surf.gii -vd gifti/data3d.txt -cm hot
--cb tractogram/streamlines.trk -co vdata -cm hsv
+-cb tractogram/spirals.trk -co vdata -cm hsv
 
 # default display/clipping range as percentiles
 -idr 50 100 3d.nii.gz
