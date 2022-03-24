@@ -32,7 +32,8 @@ Changed
 ^^^^^^^
 
 
-* Improvements to overlay blending in the 3D view (!309).
+* Improvements to overlay blending, and default volume quality settings, in
+  the 3D view (!309).
 
 
 Fixed
