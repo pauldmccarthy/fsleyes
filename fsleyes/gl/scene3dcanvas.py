@@ -796,7 +796,23 @@ class Scene3DCanvas:
             with rtex.target():
                 rtex.shape = width, height
                 gl.glViewport(0, 0, width, height)
+
+                # We draw each overlay to a separate offscreen
+                # texture, then blend them together (along
+                # with the canvas background colour) below.
+                # We need to adjust the blend equation so
+                # that the clear colour here does not affect
+                # the colours from the overlay render, and that
+                # alpha blending within the overlay render
+                # (specifically w.r.t. tractograms, i.e.
+                # transparent streamlines drawn on top of each
+                # other) works correctly.
                 glroutines.clear((0, 0, 0, 0))
+                gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA,
+                                       gl.GL_ONE_MINUS_SRC_ALPHA,
+                                       gl.GL_ONE,
+                                       gl.GL_ONE_MINUS_SRC_ALPHA)
+
                 globj.preDraw()
                 globj.draw3D()
                 globj.postDraw()
