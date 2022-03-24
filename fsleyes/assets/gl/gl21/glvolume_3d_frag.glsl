@@ -390,7 +390,7 @@ void main(void) {
         continue;
       }
 
-      if (nsamples == 1) {
+      if (nsamples == 0) {
         firstDepth = (tex2ScreenXform * vec4((texCoord + dither), 1.0)).z;
       }
 
@@ -432,7 +432,7 @@ void main(void) {
          * we simply set the fragment depth to the
          * position of the first sample on the ray.
          */
-        if (nsamples == 1) {
+        if (nsamples == 0) {
           depth = firstDepth;
         }
       }

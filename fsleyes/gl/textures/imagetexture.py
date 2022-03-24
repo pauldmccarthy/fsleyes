@@ -397,7 +397,6 @@ class ImageTexture(ImageTextureBase, texture3d.Texture3D):
         nvals              = kwargs.get('nvals', 1)
         kwargs['nvals']    = nvals
         kwargs['scales']   = image.pixdim[:3]
-        kwargs['border']   = [0, 0, 0, 0]
         kwargs['threaded'] = kwargs.get('threaded',
                                         ImageTexture.threadedDefault)
 
