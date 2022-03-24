@@ -933,7 +933,7 @@ FSLeyes can display 3D triangle mesh data loaded from:
     <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FIRST>`_ sub-cortical segmentation
     tool, to represent sub-cortical structures.
 
-.. [*] Future versions of FSLeyes will hopefuolly include more comprehensive
+.. [*] Future versions of FSLeyes will hopefully include more comprehensive
        GIFTI support, and support for more VTK data formats.
 
 
@@ -980,3 +980,15 @@ display settings:
 - **Lookup table** If you have selected some categorical vertex data, you may
   use this setting to colour the mesh according to a lookup table instead of a
   colour map.
+
+
+.. _overlays_tractogram:
+
+Tractogram
+^^^^^^^^^^
+
+
+FSLeyes can display TrackVis ``.trk`` and MRtrix3 ``.tck`` streamline
+tractography *tractogram* data sets. Tractograms can currently only be
+displayed in the :ref:`3D view <3d_view>` - options controlling tractogram
+visualisation are covered :ref:`here <3d_view_tractogram>`.
