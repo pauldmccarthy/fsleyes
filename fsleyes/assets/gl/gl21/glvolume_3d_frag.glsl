@@ -184,6 +184,10 @@ bool is_clipped(vec3 texCoord,
   int clipIdx;
   int activeClipPlanes = 0;
 
+  if (!textest(texCoord)) {
+    return true;
+  }
+
   if (numClipPlanes == 0) {
     return false;
   }
