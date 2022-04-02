@@ -42,7 +42,10 @@ import                    collections
 import collections.abc as abc
 import itertools       as it
 
+from typing import Tuple
+
 import numpy           as np
+import nibabel         as nib
 
 import fsl.data.image        as fslimage
 import fsl.utils.notifier    as notifier
@@ -121,7 +124,7 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
     """
 
 
-    def __init__(self, threaded=False):
+    def __init__(self, threaded : bool = False):
         """Create an ``ImageWrapper``. The image must be specified by a
         subsequent call to :meth:`setImage`.
 
@@ -135,9 +138,8 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
 
         # Information about image dimensionality
         # is initialised in the setImage method.
-        self.__numRealDims    = None
-        self.__numPadDims     = None
-        self.__canonicalShape = None
+        self.__numRealDims = None
+        self.__numPadDims  = None
 
         # The internal state is stored in these
         # attributes - they're initialised in the
@@ -160,7 +162,9 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
             self.__taskThread.start()
 
 
-    def setImage(self, image, dataRange=None):
+    def setImage(self,
+                 image     : nib.Nifti1Image,
+                 dataRange : Tuple[float, float] = None):
         """Set the image being wrapped by this ``ImageWrapper``.
 
         :arg image:     A ``nibabel.Nifti1Image`` or ``nibabel.Nifti2Image``.
@@ -187,19 +191,10 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
         # 'padding' dimensions too.
         self.__numPadDims = len(image.shape) - self.__numRealDims
 
-        # Too many shapes! Figure out
-        # what shape we should present
-        # the data as (e.g. at least 3
-        # dimensions). This is used in
-        # __getitem__ to force the
-        # result to have the correct
-        # dimensionality.
-        self.__canonicalShape = fslimage.canonicalShape(image.shape)
-
         self.reset(dataRange)
 
 
-    def copy(self, image):
+    def copy(self, image : nib.Nifti1Image):
         """Return a new ``ImageWrapper`` configued in the same manner as
         this ``ImageWrapper``, for managing the new ``image``.
 
@@ -485,7 +480,7 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
         if self.__taskThread is None:
             self.__expandCoverage(slices)
         else:
-            name = '{}_read_{}'.format(id(self), slices)
+            name = f'{id(self)}_read_{slices}'
             if not self.__taskThread.isQueued(name):
                 self.__taskThread.enqueue(
                     self.__expandCoverage, slices, taskName=name)
@@ -557,7 +552,7 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
         if self.__taskThread is None:
             self.__expandCoverage(slices)
         else:
-            name = '{}_write_{}'.format(id(self), slices)
+            name = f'{id(self)}_write_{slices}'
             if not self.__taskThread.isQueued(name):
                 self.__taskThread.enqueue(
                     self.__expandCoverage, slices, taskName=name)
@@ -572,49 +567,18 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
 
         log.debug('Getting image data: %s', sliceobj)
 
-        shape              = self.__canonicalShape
-        realShape          = self.__image.shape
-        sliceobj           = fslimage.canonicalSliceObj(   sliceobj, shape)
-        fancy              = fslimage.isValidFancySliceObj(sliceobj, shape)
-        expNdims, expShape = fslimage.expectedShape(       sliceobj, shape)
-
-        # TODO Cache 3D images for large 4D volumes,
-        #      so you don't have to hit the disk?
-
-        # Make the slice object compatible with the
-        # actual image shape, and retrieve the data.
-        sliceobj = fslimage.canonicalSliceObj(sliceobj, realShape)
+        shape    = self.__image.shape
+        sliceobj = fslimage.canonicalSliceObj(sliceobj, shape)
         data     = self.__getData(sliceobj)
 
         # Update data range for the
         # data that we just read in
         if not self.__covered:
 
-            slices = sliceObjToSliceTuple(sliceobj, realShape)
+            slices = sliceObjToSliceTuple(sliceobj, shape)
 
             if not sliceCovered(slices, self.__coverage):
                 self.__updateDataRangeOnRead(slices, data)
-
-        # Make sure that the result has the
-        # shape that the caller is expecting.
-        if fancy: data = data.reshape((data.size, ))
-        else:     data = data.reshape(expShape)
-
-        # If expNdims == 0, we should
-        # return a scalar. If expNdims
-        # == 0, but data.size != 1,
-        # something is wrong somewhere
-        # (and is not being handled
-        # here).
-        if expNdims == 0 and data.size == 1:
-
-            # Funny behaviour with numpy scalar arrays.
-            # data[()] returns a numpy scalar (which is
-            # what we want). But data.item() returns a
-            # python scalar. And if the data is a
-            # ndarray with 0 dims, data[0] will raise
-            # an error!
-            data = data[()]
 
         return data
 
@@ -622,46 +586,15 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
     def __setitem__(self, sliceobj, values):
         """Writes the given ``values`` to the image at the given ``sliceobj``.
 
-
         :arg sliceobj: Something which can be used to slice the array.
         :arg values:   Data to write to the image.
-
 
         .. note:: Modifying image data will cause the entire image to be
                   loaded into memory.
         """
 
-        realShape = self.__image.shape
-        sliceobj  = fslimage.canonicalSliceObj(   sliceobj, realShape)
-        slices    = sliceObjToSliceTuple(sliceobj, realShape)
-
-        # If the image shape does not match its
-        # 'display' shape (either less three
-        # dims, or  has trailing dims of length
-        # 1), we might need to re-shape the
-        # values to prevent numpy from raising
-        # an error in the assignment below.
-        if realShape != self.__canonicalShape:
-
-            expNdims, expShape = fslimage.expectedShape(sliceobj, realShape)
-
-            # If we are slicing a scalar, the
-            # assigned value has to be scalar.
-            if expNdims == 0 and isinstance(values, abc.Sequence):
-
-                if len(values) > 1:
-                    raise IndexError('Invalid assignment: [{}] = {}'.format(
-                        sliceobj, len(values)))
-
-                values = np.array(values).flatten()[0]
-
-            # Make sure that the values
-            # have a compatible shape.
-            else:
-
-                values = np.array(values)
-                if values.shape != expShape:
-                    values = values.reshape(expShape)
+        shape  = self.__image.shape
+        slices = sliceObjToSliceTuple(sliceobj, shape)
 
         # The image data has to be in memory
         # for the data to be changed.
@@ -673,7 +606,7 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
 
 
 def sliceObjToSliceTuple(sliceobj, shape):
-    """Turns an array slice object into a tuple of (low, high) index
+    """Turns a sequence of slice objects into a tuple of (low, high) index
     pairs, one pair for each dimension in the given shape
 
     :arg sliceobj: Something which can be used to slice an array of shape
