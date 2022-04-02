@@ -53,57 +53,32 @@ import fsl.utils.idle        as idle
 log = logging.getLogger(__name__)
 
 
-class ImageWrapper(notifier.Notifier):
+class ImageWrapper(fslimage.DataManager, notifier.Notifier):
     """The ``ImageWrapper`` class is a convenience class which manages data
     access to ``nibabel`` NIFTI images. The ``ImageWrapper`` class can be
-    used to:
-
-
-      - Control whether the image is loaded into memory, or kept on disk
-
-      - Incrementally update the known image data range, as more image
-        data is read in.
-
-
-    *In memory or on disk?*
-
-    The image data will be kept on disk, and accessed through the
-    ``nibabel.Nifti1Image.dataobj`` (or ``nibabel.Nifti2Image.dataobj``) array
-    proxy, if:
-
-     - The ``loadData`` parameter to :meth:`__init__` is ``False``.
-     - The :meth:`loadData` method never gets called.
-     - The image data is not modified (via :meth:`__setitem__`.
-
-    If any of these conditions do not hold, the image data will be loaded into
-    memory and accessed directly.
-
-
-    *Image dimensionality*
-
-
-    The ``ImageWrapper`` abstracts away trailing image dimensions of length 1.
-    This means that if the header for a NIFTI image specifies that the image
-    has four dimensions, but the fourth dimension is of length 1, you do not
-    need to worry about indexing that fourth dimension. However, all NIFTI
-    images will be presented as having at least three dimensions, so if your
-    image header specifies a third dimension of length 1, you will still
-    need provide an index of 0 for that dimensions, for all data accesses.
+    used to incrementally update the known image data range, as more image
+    data is read in.
 
 
     *Data access*
 
 
-    The ``ImageWrapper`` can be indexed in one of two ways:
-
-       - With basic ``numpy``-like multi-dimensional array slicing (with step
-         sizes of 1)
-
-       - With boolean array indexing, where the boolean/mask array has the
-         same shape as the image data.
+    The ``ImageWrapper`` can be indexed with basic ``numpy``-like multi-
+    dimensional array slicing (with step sizes of 1)
 
     See https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html for
     more details on numpy indexing.
+
+
+    *In memory or on disk?*
+
+    The image data will be kept on disk, and accessed through the
+    ``nibabel.Nifti1Image.dataobj`` array proxy, unless the image data is
+    modified via :meth:`__setitem__`. If the image data is modified, it
+    is loaded into memory.
+
+    If any of these conditions do not hold, the image data will be loaded into
+    memory and accessed directly.
 
 
     *Data range*
@@ -138,8 +113,6 @@ class ImageWrapper(notifier.Notifier):
     .. autosummary::
        :nosignatures:
 
-       isValidFancySliceObj
-       canonicalSliceObj
        sliceObjToSliceTuple
        sliceTupleToSliceObj
        sliceCovered
@@ -148,36 +121,54 @@ class ImageWrapper(notifier.Notifier):
     """
 
 
-    def __init__(self,
-                 image,
-                 name=None,
-                 loadData=False,
-                 dataRange=None,
-                 threaded=False):
-        """Create an ``ImageWrapper``.
-
-        :arg image:     A ``nibabel.Nifti1Image`` or ``nibabel.Nifti2Image``.
-
-        :arg name:      A name for this ``ImageWrapper``, solely used for
-                        debug log messages.
-
-        :arg loadData:  If ``True``, the image data is loaded into memory.
-                        Otherwise it is kept on disk (and data access is
-                        performed through the ``nibabel.Nifti1Image.dataobj``
-                        array proxy).
-
-        :arg dataRange: A tuple containing the initial ``(min, max)``  data
-                        range to use. See the :meth:`reset` method for
-                        important information about this parameter.
+    def __init__(self, threaded=False):
+        """Create an ``ImageWrapper``. The image must be specified by a
+        subsequent call to :meth:`setImage`.
 
         :arg threaded:  If ``True``, the data range is updated on a
                         :class:`.TaskThread`. Otherwise (the default), the
                         data range is updated directly on reads/writes.
         """
 
-        self.__image      = image
-        self.__name       = name
+        self.__image      = None
         self.__taskThread = None
+
+        # Information about image dimensionality
+        # is initialised in the setImage method.
+        self.__numRealDims    = None
+        self.__numPadDims     = None
+        self.__canonicalShape = None
+
+        # The internal state is stored in these
+        # attributes - they're initialised in the
+        # reset method.
+        self.__range     = None
+        self.__coverage  = None
+        self.__volRanges = None
+        self.__covered   = False
+
+        # The data is kept on disk and accessed
+        # through nibimg.dataobj , unless/untill
+        # a request to modify the data is made
+        # through __setitem__, at which point it
+        # is loaded into memory.
+        self.__data = None
+
+        if threaded:
+            self.__taskThread        = idle.TaskThread()
+            self.__taskThread.daemon = True
+            self.__taskThread.start()
+
+
+    def setImage(self, image, dataRange=None):
+        """Set the image being wrapped by this ``ImageWrapper``.
+
+        :arg image:     A ``nibabel.Nifti1Image`` or ``nibabel.Nifti2Image``.
+        :arg dataRange: A tuple containing the initial ``(min, max)``  data
+                        range to use. See the :meth:`reset` method for
+                        important information about this parameter.
+        """
+        self.__image = image
 
         # Save the number of 'real' dimensions,
         # that is the number of dimensions minus
@@ -205,27 +196,18 @@ class ImageWrapper(notifier.Notifier):
         # dimensionality.
         self.__canonicalShape = fslimage.canonicalShape(image.shape)
 
-        # The internal state is stored
-        # in these attributes - they're
-        # initialised in the reset method.
-        self.__range     = None
-        self.__coverage  = None
-        self.__volRanges = None
-        self.__covered   = False
-
         self.reset(dataRange)
 
-        # We keep an internal ref to
-        # the data numpy array if/when
-        # it is loaded in memory
-        self.__data = None
-        if loadData or image.in_memory:
-            self.loadData()
 
-        if threaded:
-            self.__taskThread = idle.TaskThread()
-            self.__taskThread.daemon = True
-            self.__taskThread.start()
+    def copy(self, image):
+        """Return a new ``ImageWrapper`` configued in the same manner as
+        this ``ImageWrapper``, for managing the new ``image``.
+
+        :arg image:     A ``nibabel.Nifti1Image`` or ``nibabel.Nifti2Image``.
+        """
+        new = ImageWrapper(self.__taskThread is not None)
+        new.setImage(image, self.__range)
+        return new
 
 
     def __del__(self):
@@ -311,9 +293,8 @@ class ImageWrapper(notifier.Notifier):
         dtype = self.__image.get_data_dtype()
         if np.issubdtype(dtype, np.integer) or len(dtype) > 0:
             dtype = np.float32
-        self.__volRanges = np.zeros((nvols, 2),
-                                    dtype=dtype)
 
+        self.__volRanges    = np.zeros((nvols, 2), dtype=dtype)
         self.__coverage[ :] = np.nan
         self.__volRanges[:] = np.nan
 
@@ -349,15 +330,6 @@ class ImageWrapper(notifier.Notifier):
         return self.__covered
 
 
-    @property
-    def shape(self):
-        """Returns the shape that the image data is presented as. This is
-        the same as the underlying image shape, but with trailing dimensions
-        of length 1 removed, and at least three dimensions.
-        """
-        return self.__canonicalShape
-
-
     def coverage(self, vol):
         """Returns the current image data coverage for the specified volume
         (for a 4D image, slice for a 3D image, or vector for a 2D images).
@@ -373,25 +345,6 @@ class ImageWrapper(notifier.Notifier):
                   will contain ``np.nan`` values.
         """
         return np.array(self.__coverage[..., vol])
-
-
-    def loadData(self):
-        """Forces all of the image data to be loaded into memory.
-
-        .. note:: This method will be called by :meth:`__init__` if its
-                  ``loadData`` parameter is ``True``. It will also be called
-                  on all write operations (see :meth:`__setitem__`).
-        """
-        if self.__data is None:
-            self.__data = np.asanyarray(self.__image.dataobj)
-
-
-    @property
-    def dataIsLoaded(self):
-        """Return true if the image data has been loaded into memory, ``False``
-        otherwise.
-        """
-        return self.__data is not None
 
 
     def __getData(self, sliceobj, isTuple=False):
@@ -442,12 +395,11 @@ class ImageWrapper(notifier.Notifier):
         _, expansions = calcExpansion(slices, self.__coverage)
         expansions    = collapseExpansions(expansions, self.__numRealDims - 1)
 
-        log.debug('Updating image %s data range [slice: %s] '
+        log.debug('Updating image data range [slice: %s] '
                   '(current range: [%s, %s]; '
                   'number of expansions: %s; '
                   'current coverage: %s; '
                   'volume ranges: %s)',
-                  self.__name,
                   slices,
                   self.__range[0],
                   self.__range[1],
@@ -505,8 +457,7 @@ class ImageWrapper(notifier.Notifier):
 
         if any((oldmin is None, oldmax is None)) or \
            not np.all(np.isclose([oldmin, oldmax], [newmin, newmax])):
-            log.debug('Image %s range changed: [%s, %s] -> [%s, %s]',
-                      self.__name,
+            log.debug('Image range changed: [%s, %s] -> [%s, %s]',
                       oldmin,
                       oldmax,
                       newmin,
@@ -589,10 +540,9 @@ class ImageWrapper(notifier.Notifier):
             slices = np.array(slices.T, dtype=np.uint32)
             slices = tuple(it.chain(map(tuple, slices), [(lowVol, highVol)]))
 
-            log.debug('Image %s data written - clearing known data '
+            log.debug('Image data written - clearing known data '
                       'range on volumes %s - %s (write slice: %s; '
                       'coverage: %s; volRanges: %s)',
-                      self.__name,
                       lowVol,
                       highVol,
                       slices,
@@ -682,8 +632,8 @@ class ImageWrapper(notifier.Notifier):
         """
 
         realShape = self.__image.shape
-        sliceobj  = fslimage.canonicalSliceObj(sliceobj, realShape)
-        slices    = sliceObjToSliceTuple(      sliceobj, realShape)
+        sliceobj  = fslimage.canonicalSliceObj(   sliceobj, realShape)
+        slices    = sliceObjToSliceTuple(sliceobj, realShape)
 
         # If the image shape does not match its
         # 'display' shape (either less three
@@ -714,10 +664,9 @@ class ImageWrapper(notifier.Notifier):
                     values = values.reshape(expShape)
 
         # The image data has to be in memory
-        # for the data to be changed. If it's
-        # already in memory, this call won't
-        # have any effect.
-        self.loadData()
+        # for the data to be changed.
+        if self.__data is None:
+            self.__data = np.asanyarray(self.__image.dataobj)
 
         self.__data[sliceobj] = values
         self.__updateDataRangeOnWrite(slices, values)
