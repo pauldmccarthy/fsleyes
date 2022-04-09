@@ -295,16 +295,14 @@ def loadImage(dtype, path, inmem=False):
     :arg dtype: Overlay type (``Image``, or a sub-class of ``Image``).
     :arg path:  Path to the overlay file.
     :arg inmem: If ``True``, ``Image`` overlays are loaded into memory.
-
     :returns:   A sequence of :class:`.Image` instances that were loaded.
     """
 
-    import fsl.data.image as fslimage
+    import fsl.data.image            as fslimage
+    import fsleyes.data.imagewrapper as imagewrapper
 
-    # We're going to load the file
-    # twice - first to get its
-    # dimensions/data type, and
-    # then for real.
+    # We're going to load the file twice - first to
+    # get its dimensions/data type, and then for real.
     #
     # TODO It is annoying that you have to create a 'dtype'
     #      instance twice, as e.g. the MelodicImage does a
@@ -314,61 +312,38 @@ def loadImage(dtype, path, inmem=False):
     #      (e.g. ./filtered_func.ica/ turned into
     #      ./filtered_func.ica/melodic_IC) so that you can
     #      just create a fsl.data.Image, or a nib.Nifti1Image.
-    image = dtype(path,
-                  loadData=False,
-                  calcRange=False,
-                  threaded=False)
-
-    nbytes = np.prod(image.shape) * image.dtype.itemsize
+    image  = dtype(path)
+    shape  = image.shape
+    nbytes = np.prod(shape) * image.niftiDataTypeSize / 8
     image  = None
 
-    return [_loadImage(dtype, path, nbytes, inmem)]
+    # If the file is a large 4D image, we will use an
+    # ImageWrapper to manage acccess to the data. The
+    # ImageWrapper will incrementally update the
+    # known data range of an image as more data is
+    # read from disk.
+    useWrapper = fslsettings.read('fsleyes.overlay.usewrapper', 536870912)
+    useWrapper = all((not inmem,
+                      len(shape) > 3,
+                      nbytes >= useWrapper))
+    if useWrapper: wrapper = imagewrapper.ImageWrapper(threaded=True)
+    else:          wrapper = None
 
+    image = dtype(path, loadMeta=True, dataMgr=wrapper)
 
-def _loadImage(dtype, path, nbytes, inmem):
-    """Loads an image with a non-complex data type.
+    # Force-load the full image data array
+    # into memory. See the Image.data method.
+    if inmem:
+        image.data
 
-    :arg dtype:  Overlay type - :class:`.Image`, or a sub-class of ``Image``.
-    :arg path:   Path to the image file
-    :arg nbytes: Number of bytes that the image data takes up.
-    :arg inmem:  If ``True``, the file is loaded into memory.
-    """
+    # If using an image wrapper, read a
+    # sample of data to force the wrapper
+    # to initialise its known data range
+    if wrapper is not None:
+        wrapper.setImage(image.nibImage)
+        wrapper[..., 0]
 
-    # If the file is compressed (gzipped),
-    # tell the image to use a separate
-    # thread for data range calculation.
-    #
-    # The "idxthres" is so-named because
-    # it previously controlled whether
-    # gzipped images where kept on disk,
-    # and accessed via indexed_gzip. This
-    # is now determined automatically for
-    # us by nibabel.
-    rangethres = fslsettings.read('fsleyes.overlay.rangethres', 419430400)
-    idxthres   = fslsettings.read('fsleyes.overlay.idxthres',   1073741824)
-    threaded   = nbytes > idxthres
-    image      = dtype(path,
-                       loadData=inmem,
-                       calcRange=False,
-                       threaded=threaded,
-                       loadMeta=True)
-
-    # If the image is bigger than the
-    # index threshold, keep it on disk.
-    if inmem or (not threaded):
-        log.debug('Loading {} into memory'.format(path))
-        image.loadData()
-    else:
-        log.debug('Keeping {} on disk'.format(path))
-
-    # If the image size is less than the range
-    # threshold, calculate the full data range
-    # now. Otherwise calculate the data range
-    # from a sample. This is handled by the
-    # Image.calcRange method.
-    image.calcRange(rangethres)
-
-    return image
+    return [image]
 
 
 def interactiveLoadOverlays(fromDir=None, dirdlg=False, **kwargs):

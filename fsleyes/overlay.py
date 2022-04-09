@@ -40,8 +40,8 @@ One further requirement is imposed on overlay types which derive from the
 :class:`.Image` class:
 
  -  The ``__init__`` method for sub-classes of the ``Image`` class must
-    accept the ``loadData``, ``calcRange``, ``indexed`` , and ``threaded``
-    parameters, and pass them through to the base class ``__init__`` method.
+    accept the ``loadMeta`` and ``dataMgr`` parameters, and pass them
+    through to the base class ``__init__`` method.
 
 
 Currently (``fsleyes`` version |version|) the only overlay types in existence
