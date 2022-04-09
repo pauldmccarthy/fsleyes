@@ -94,6 +94,6 @@ def calculateTransform(overlay,
     refImg = overlayList.find(refFile)
 
     if refImg is None:
-        refImg = fslimage.Image(refFile, loadData=False)
+        refImg = fslimage.Image(refFile)
 
     return flirt.sformToFlirtMatrix(overlay, refImg, srcXform)
