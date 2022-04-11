@@ -4,12 +4,15 @@
 import os
 import time
 import random
+import shlex
 
 import pytest
 
 import numpy as np
 
-from fsleyes.tests import run_with_fsleyes
+import fsleyes.render as render
+from fsl.data.image import Image
+from fsl.utils.tempdir import tempdir
 
 # When doing multiple test runs in parallel
 # on the same machine, we sometimes get
@@ -29,12 +32,11 @@ def pytest_configure():
                     raise
                 time.sleep(np.random.randint(1, 10))
 
-    # Use run_with_fsleyes to initialise an OpenGL context
+    # Use render to initialise an OpenGL context
     if 'LOCAL_TEST_FSLEYES' in os.environ:
-        def nothing(*args, **kwargs):
-            pass
-        run_with_fsleyes(nothing)
-
+        with tempdir():
+            Image(np.random.random((10, 10, 10))).save('image.nii.gz')
+            render.main(shlex.split('-of out.png image'))
 
 
 def pytest_addoption(parser):
