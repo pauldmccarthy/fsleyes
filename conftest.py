@@ -32,7 +32,11 @@ def pytest_configure():
                     raise
                 time.sleep(np.random.randint(1, 10))
 
-    # Use render to initialise an OpenGL context
+    # Use render to initialise an OpenGL context.  Some tests
+    # are skipped depending on the available GL version
+    # (e.g. "@pytest.mark.skipif('not haveGL(3.3)')").  This
+    # env var can be set to ensure that GL is initialised, so
+    # that the haveGL expression is correctly evaluated.
     if 'LOCAL_TEST_FSLEYES' in os.environ:
         with tempdir():
             Image(np.random.random((10, 10, 10))).save('image.nii.gz')
