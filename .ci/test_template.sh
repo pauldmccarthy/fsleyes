@@ -110,6 +110,13 @@ export FSLEYES_TEST_GL=3.3
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
+# Long tests are only run on release branches
+if [[ $CI_COMMIT_REF_NAME == v* ]]; then
+  ((pytest --cov-report= --cov-append -m "longtest" && echo "0" > status) || echo "1" > status) || true
+  status=`cat status`
+  failed=`echo "$status + $failed" | bc`
+fi
+
 python -m coverage report
 
 exit $failed
