@@ -341,7 +341,8 @@ def loadImage(dtype, path, inmem=False):
     # to initialise its known data range
     if wrapper is not None:
         wrapper.setImage(image.nibImage)
-        wrapper[..., 0]
+        with wrapper.unthreaded():
+            wrapper[..., 0]
 
     return [image]
 

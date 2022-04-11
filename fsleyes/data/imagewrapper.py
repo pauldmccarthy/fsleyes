@@ -5,7 +5,9 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`ImageWrapper` class, which can be used
-to manage data access to ``nibabel`` NIFTI images.
+to manage data access to ``nibabel`` NIFTI images. The ``ImageWrapper`` class
+is intended to be used with large 4D compresed NIFTI images, where loading
+data from disk is expensive.
 
 
 Terminology
@@ -41,6 +43,7 @@ import                    logging
 import                    collections
 import collections.abc as abc
 import itertools       as it
+import contextlib      as ctxlib
 
 from typing import Tuple
 
@@ -223,6 +226,17 @@ class ImageWrapper(fslimage.DataManager, notifier.Notifier):
         ``False``.
         """
         return self.__taskThread
+
+
+    @ctxlib.contextmanager
+    def unthreaded(self):
+        """Context manager which temporarily disables threading. """
+        try:
+            tt                = self.__taskThread
+            self.__taskThread = None
+            yield
+        finally:
+            self.__taskThread = tt
 
 
     def reset(self, dataRange=None):
