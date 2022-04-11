@@ -253,7 +253,9 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # the image data range - listen to it
         # for data range changes.
         if overlay.dataManager is not None:
-            overlay.dataManager.register(self.name, self.__dataRangeChanged)
+            overlay.dataManager.register(self.name,
+                                         self.__dataRangeChanged,
+                                         runOnIdle=True)
 
         # We need to listen for changes to clipImage
         # and to [enable]overrideDataRange, as they
