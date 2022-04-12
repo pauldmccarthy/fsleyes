@@ -86,7 +86,7 @@ def binarise(infile, low, high, scale=1):
 
     return outfile
 
-@pytest.mark.skipif('not haveGL21()')
+
 def test_overlay_mask():
     extras = {
         'binarise' : binarise,
