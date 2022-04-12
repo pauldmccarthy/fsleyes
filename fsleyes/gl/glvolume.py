@@ -382,6 +382,8 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .addListener('invert',           name, self._invertChanged)
         opts    .addListener('modulateAlpha',    name,
                              self._modulateAlphaChanged)
+        opts    .addListener('invertModulateAlpha', name,
+                             self._modulateAlphaChanged)
         opts    .addListener('volume',           name, self._volumeChanged)
         opts    .addListener('channel',          name, self._channelChanged)
         opts    .addListener('interpolation',    name,
@@ -470,6 +472,7 @@ class GLVolume(glimageobject.GLImageObject):
         opts    .removeListener('cmapResolution',          name)
         opts    .removeListener('invert',                  name)
         opts    .removeListener('modulateAlpha',           name)
+        opts    .removeListener('invertModulateAlpha',     name)
         opts    .removeListener('volume',                  name)
         opts    .removeListener('channel',                 name)
         opts    .removeListener('interpolation',           name)
@@ -821,14 +824,9 @@ class GLVolume(glimageobject.GLImageObject):
         else:
             modXform = self.modulateTexture.voxValXform
 
-        modlo, modhi = opts.modulateRange
-        modrange     = modhi - modlo
-        if modrange == 0:
-            modXform = np.eye(4)
-        else:
-            modXform = affine.concat(
-                affine.scaleOffsetXform(1 / modrange, -modlo / modrange),
-                modXform)
+        modXform = affine.concat(
+            opts.modulateScaleOffset(xform=True),
+            modXform)
 
         return modXform
 
@@ -952,7 +950,8 @@ class GLVolume(glimageobject.GLImageObject):
 
 
     def _modulateAlphaChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.modulateAlpha` property changes.
+        """Called when the :attr:`.VolumeOpts.modulateAlpha` or
+        :attr:`.VolumeOpts.invertModulateAlpha` properties change.
         Calls :meth:`updateShaderState`.
         """
         self.updateShaderState()
