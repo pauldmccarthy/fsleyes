@@ -218,10 +218,10 @@ test:3.9:
   <<: *test_template
 
 
-# test:3.10:
-#   stage: test
-#   image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
-#   <<: *test_template
+test:3.10:
+  stage: test
+  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+  <<: *test_template
 
 
 test:build-pypi-dist:

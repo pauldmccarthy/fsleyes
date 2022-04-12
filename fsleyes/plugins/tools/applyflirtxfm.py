@@ -107,7 +107,7 @@ def calculateTransform(overlay, overlayList, displayCtx, matFile, refFile):
     refImg = overlayList.find(refFile)
 
     if refImg is None:
-        refImg = fslimage.Image(refFile, loadData=False)
+        refImg = fslimage.Image(refFile)
 
     flirtMat = np.loadtxt(matFile)
 

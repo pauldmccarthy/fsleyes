@@ -219,7 +219,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         vol3dopts.Volume3DOpts .__init__(self)
 
         # Both parent and child VolumeOpts instances
-        # listen for Image dataRange changes. The data
+        # listen for Image data changes so that
+        # they know the min/max data range. The data
         # range for large images may be calculated
         # asynchronously on a separate thread, meaning
         # that data range updates may occur at random
@@ -244,8 +245,17 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # range in addition to all children.
         overlay.register(self.name,
                          self.__dataRangeChanged,
-                         'dataRange',
+                         'data',
                          runOnIdle=True)
+
+        # Large 4D images may use an ImageWrapper
+        # to manage data access, and calculate
+        # the image data range - listen to it
+        # for data range changes.
+        if overlay.dataManager is not None:
+            overlay.dataManager.register(self.name,
+                                         self.__dataRangeChanged,
+                                         runOnIdle=True)
 
         # We need to listen for changes to clipImage
         # and to [enable]overrideDataRange, as they
@@ -282,7 +292,9 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         overlay     = self.overlay
         overlayList = self.overlayList
 
-        overlay.deregister(self.name, 'dataRange')
+        overlay.deregister(self.name, 'data')
+        if overlay.dataManager is not None:
+            overlay.dataManager.deregister(self.name)
 
         if self.__registered:
 

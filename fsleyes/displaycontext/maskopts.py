@@ -88,7 +88,7 @@ class MaskOpts(niftiopts.NiftiOpts):
 
         overlay.register(self.name,
                          self.__dataRangeChanged,
-                         topic='dataRange',
+                         topic='data',
                          runOnIdle=True)
 
         # The master MaskOpts instance makes
@@ -111,7 +111,7 @@ class MaskOpts(niftiopts.NiftiOpts):
         :meth:`.NitfiOpts.destroy`.
         """
 
-        self.overlay.deregister(self.name, topic='dataRange')
+        self.overlay.deregister(self.name, topic='data')
 
         if self.__registered:
             self.display.removeListener('alpha',  self.name)

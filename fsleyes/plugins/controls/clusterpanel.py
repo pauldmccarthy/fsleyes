@@ -294,7 +294,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
             if ol.dataSource == zstats.dataSource:
                 return
 
-        log.debug('Adding Z-statistic {} to overlay list'.format(zstats.name))
+        log.debug('Adding Z-statistic %s to overlay list', zstats.name)
         self.overlayList.append(zstats, overlayType='volume')
 
         zthres = featImage.thresholds()['z']
@@ -324,7 +324,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
             if ol.dataSource == mask.dataSource:
                 return
 
-        log.debug('Adding cluster mask {} to overlay list'.format(mask.name))
+        log.debug('Adding cluster mask %s to overlay list', mask.name)
         self.overlayList.append(mask, overlayType='label')
 
 
@@ -549,8 +549,8 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         # No FEAT analysis, or not an Image,
         # can't do anything with that
         if featDir is None or not isinstance(overlay, fslimage.Nifti):
-            log.debug('Overlay {} is not part of a feat '
-                      'analysis, or is not Nifti'.format(overlay))
+            log.debug('Overlay %s is not part of a feat '
+                      'analysis, or is not Nifti', overlay)
             self.__disable(strings.messages[self, 'notFEAT'])
             return
 
@@ -568,7 +568,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
                (prevFeatImage is not None and
                     featDir == prevFeatImage.getFEATDir()):
 
-                log.debug('Overlay {} is already selected.'.format(overlay))
+                log.debug('Overlay %s is already selected.', overlay)
 
                 # Make sure the overlay -> FEATImage
                 # mapping is present, and (re-)cache
@@ -608,14 +608,12 @@ class ClusterPanel(ctrlpanel.ControlPanel):
             # As a last resort, if the FEATImage is not
             # in the overlay list, we'll create one.
             if featImage is None:
-                featImage = featimage.FEATImage(featDir,
-                                                loadData=False,
-                                                calcRange=False)
+                featImage = featimage.FEATImage(featDir)
 
             self.__featImages[overlay] = featImage
 
         log.debug('Identified FEAT analysis associated with overlay '
-                  '{}: {}'.format(overlay, featImage.getFEATDir()))
+                  '%s: %s', overlay, featImage.getFEATDir())
 
         # Get the contrast and cluster
         # information for the FEAT analysis.
@@ -630,8 +628,8 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         # Error parsing the cluster data
         except Exception as e:
-            log.warning('Error parsing cluster data for '
-                        '{}: {}'.format(featImage.name, str(e)), exc_info=True)
+            log.warning('Error parsing cluster data for %s: %s',
+                        featImage.name, e, exc_info=True)
             self.__disable(strings.messages[self, 'badData'])
             return
 
