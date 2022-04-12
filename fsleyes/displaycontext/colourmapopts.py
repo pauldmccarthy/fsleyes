@@ -11,9 +11,10 @@
 
 import logging
 
-import fsleyes_props      as props
-import fsleyes.actions    as actions
-import fsleyes.colourmaps as fslcm
+import fsl.transform.affine as affine
+import fsleyes_props        as props
+import fsleyes.actions      as actions
+import fsleyes.colourmaps   as fslcm
 
 
 log = logging.getLogger(__name__)
@@ -191,6 +192,14 @@ class ColourMapOpts:
     Regions with a value near to the low :attr:`modulateRange` will have an
     alpha near 0, and regions with a value near to the high
     :attr:`modulateRange` will have an alpha near 1.
+    """
+
+
+    invertModulateAlpha = props.Boolean(default=False)
+    """If ``True``, the effect of :attr:`modulateAlpha` is inverted. Regions
+    with a value near to the low :attr:`modulateRange` will have an alpha
+    near 1, and regions with a value near to the high :attr:`modulateRange`
+    will have an alpha near 0.
     """
 
 
@@ -392,10 +401,14 @@ class ColourMapOpts:
         return None
 
 
-    def modulateScaleOffset(self):
+    def modulateScaleOffset(self, xform=False):
         """Returns a scale and offset which can be used transforms a value
         from the data range into a value between 0 and 1, according to the
-        current :attr:`modulateRange`.
+        current :attr:`modulateRange` and :attr:`invertModulateAlpha`
+        settings.
+
+        If ``xform is True``, a 4x4 affine containing the scale and offset
+        values is returned.
         """
 
         modlo, modhi = self.modulateRange
@@ -407,7 +420,12 @@ class ColourMapOpts:
             scale  = 1 / mrange
             offset = -modlo / mrange
 
-        return scale, offset
+        if self.invertModulateAlpha:
+            scale    = -scale
+            offset  += 1
+
+        if xform: return affine.scaleOffsetXform(scale, offset)
+        else:     return scale, offset
 
 
     @actions.action
