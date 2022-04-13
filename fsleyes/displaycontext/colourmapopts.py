@@ -416,13 +416,12 @@ class ColourMapOpts:
         if mrange == 0:
             scale  = 1
             offset = 0
-        else:
-            scale  = 1 / mrange
+        elif not self.invertModulateAlpha:
+            scale  = 1      / mrange
             offset = -modlo / mrange
-
-        if self.invertModulateAlpha:
-            scale    = -scale
-            offset  += 1
+        else:
+            scale  = -1    / mrange
+            offset = modhi / mrange
 
         if xform: return affine.scaleOffsetXform(scale, offset)
         else:     return scale, offset
