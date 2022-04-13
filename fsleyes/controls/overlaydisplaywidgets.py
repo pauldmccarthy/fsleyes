@@ -161,9 +161,8 @@ def _initPropertyList_VolumeOpts(threedee):
              'interpolateCmaps',
              'invert',
              'invertClipping',
-             'linkLowRanges',
-             'linkHighRanges',
-             'modulateAlpha',
+             'custom_linkRanges',
+             'custom_modulateAlpha',
              'clipImage',
              'modulateImage',
              'displayRange',
@@ -172,7 +171,7 @@ def _initPropertyList_VolumeOpts(threedee):
              'custom_overrideDataRange']
 
     if threedee:
-        plist.remove('modulateAlpha')
+        plist.remove('custom_modulateAlpha')
         plist.remove('clipImage')
         plist.remove('modulateImage')
         plist.remove('modulateRange')
@@ -257,9 +256,8 @@ def _initPropertyList_MeshOpts(threedee):
              'invert',
              'invertClipping',
              'discardClipped',
-             'linkLowRanges',
-             'linkHighRanges',
-             'modulateAlpha',
+             'custom_linkRanges',
+             'custom_modulateAlpha',
              'modulateData',
              'displayRange',
              'clippingRange',
@@ -321,8 +319,7 @@ def _initPropertyList_MIPOpts(threedee):
             'interpolateCmaps',
             'invert',
             'invertClipping',
-            'linkLowRanges',
-            'linkHighRanges',
+            'custom_linkRanges',
             'displayRange',
             'clippingRange',
             'window',
@@ -357,9 +354,8 @@ def _initPropertyList_TractogramOpts(threedee):
             'interpolateCmaps',
             'invert',
             'invertClipping',
-            'linkLowRanges',
-            'linkHighRanges',
-            'modulateAlpha',
+            'custom_linkRanges',
+            'custom_modulateAlpha',
             'displayRange',
             'clippingRange',
             'modulateRange',
@@ -402,14 +398,17 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
             slider=True,
             spin=True,
             showLimits=False),
-        'interpolateCmaps' : props.Widget('interpolateCmaps'),
-        'invert'           : props.Widget('invert'),
-        'invertClipping'   : props.Widget('invertClipping'),
-        'linkLowRanges'    : props.Widget('linkLowRanges'),
-        'linkHighRanges'   : props.Widget('linkHighRanges'),
-        'modulateAlpha'    : props.Widget('modulateAlpha'),
-        'logScale'         : props.Widget('logScale'),
-        'gamma'            : props.Widget(
+        'interpolateCmaps'     : props.Widget('interpolateCmaps'),
+        'invert'               : props.Widget('invert'),
+        'invertClipping'       : props.Widget('invertClipping'),
+        'linkLowRanges'        : props.Widget('linkLowRanges'),
+        'linkHighRanges'       : props.Widget('linkHighRanges'),
+        'custom_linkRanges'    : _ColourMapOpts_linkRangesWidget,
+        'logScale'             : props.Widget('logScale'),
+        'custom_modulateAlpha' : _ColourMapOpts_modulateAlphaWidget,
+        'modulateAlpha'        : props.Widget('modulateAlpha'),
+        'invertModulateAlpha'  : props.Widget('invertModulateAlpha'),
+        'gamma'                : props.Widget(
             'gamma',
             showLimits=False,
             slider=True,
@@ -1087,6 +1086,60 @@ def _ColourMapOpts_ColourMapWidget(
     sizer.Add(useNegCmap, (2, 1), (1, 1), flag=wx.EXPAND)
 
     return sizer, [cmap, negCmap, useNegCmap]
+
+
+def _ColourMapOpts_modulateAlphaWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains widgets for the
+    :attr:`.ColourMapOpts.modulateAlpha` and
+    :attr:`.ColourMapOpts.invertModulateAlpha` properties.
+    """
+    mod = getWidgetSpecs(target, displayCtx, threedee)['modulateAlpha']
+    inv = getWidgetSpecs(target, displayCtx, threedee)['invertModulateAlpha']
+
+    mod = props.buildGUI(parent, target, mod)
+    inv = props.buildGUI(parent, target, inv)
+
+    inv.SetLabel('Invert')
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(mod, flag=wx.EXPAND, proportion=1)
+    sizer.Add(inv, flag=wx.EXPAND, proportion=1)
+
+    return sizer, [mod, inv]
+
+
+def _ColourMapOpts_linkRangesWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel which contains widgets for the
+    :attr:`.ColourMapOpts.linkLowRanges` and
+    :attr:`.ColourMapOpts.linkHighRanges` properties.
+    """
+    lo = getWidgetSpecs(target, displayCtx, threedee)['linkLowRanges']
+    hi = getWidgetSpecs(target, displayCtx, threedee)['linkHighRanges']
+
+    lo = props.buildGUI(parent, target, lo)
+    hi = props.buildGUI(parent, target, hi)
+
+    lo.SetLabel('Low')
+    hi.SetLabel('High')
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    sizer.Add(lo, flag=wx.EXPAND, proportion=1)
+    sizer.Add(hi, flag=wx.EXPAND, proportion=1)
+
+    return sizer, [lo, hi]
 
 
 def _NiftiOpts_VolumeWidget(
