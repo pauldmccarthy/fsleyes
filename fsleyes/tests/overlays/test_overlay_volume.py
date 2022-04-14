@@ -133,6 +133,15 @@ cli_tests = """
 -bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 
+-bg 1 1 1 3d.nii.gz                    -ma -ima               -cm red-yellow
+-bg 1 1 1 3d.nii.gz                    -ma -ima -mr 1993 5000 -cm red-yellow
+-bg 1 1 1 3d.nii.gz                    -ma -ima -mr 5000 7641 -cm red-yellow
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -ima               -cm red-yellow -nc blue-lightblue -un
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -ima -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un
+
+-bg 1 1 1 3d.nii.gz                    -ma -ima               -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+-bg 1 1 1 3d.nii.gz                    -ma -ima -mr 1993 5000 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
+
 # logarithmic scaling
 {{logdata()}}
 {{logdata()}} -ls
