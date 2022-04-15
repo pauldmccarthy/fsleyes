@@ -69,6 +69,14 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                 'FileTreePanel']
 
 
+    @staticmethod
+    def displayType():
+        """Returns ``'3D'``, describing the type of display that the
+        :class:`.Scene3DPanel` provides.
+        """
+        return '3D'
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``Scene3dPanel``.
 
