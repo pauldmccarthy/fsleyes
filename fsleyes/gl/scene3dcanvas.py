@@ -72,6 +72,12 @@ class Scene3DCanvas:
         # blend is hard-coded, so we maintain a
         # a set of them, one for each possible
         # number of overlays.
+        #
+        # n.b. It should be possible to do this
+        # this for GL14, but would require a
+        # sorting algorithm to be implemented
+        # in ARB assembly, so has been left as
+        # a possible future task.
         self.__shaders = {}
         self.__compileShaders()
 

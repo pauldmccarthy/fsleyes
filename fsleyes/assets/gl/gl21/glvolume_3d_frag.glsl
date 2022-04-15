@@ -370,7 +370,7 @@ void main(void) {
      * Keep going until we
      * have enough colour
      */
-    while (finalColour.a < 0.95) {
+    while (finalColour.a < 0.999) {
 
       /* Shift the ray along */
       texCoord += rayStep;
