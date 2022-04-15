@@ -16,7 +16,7 @@ import fsleyes_widgets      as fwidgets
 import fsleyes.gl           as fslgl
 
 
-class Volume3DOpts(object):
+class Volume3DOpts:
     """The ``Volume3DOpts`` class is a mix-in for use with :class:`.DisplayOpts`
     classes. It defines display properties used for ray-cast based rendering
     of :class:`.Image` overlays.

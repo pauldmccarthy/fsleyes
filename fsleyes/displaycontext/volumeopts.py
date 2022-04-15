@@ -157,6 +157,11 @@ class VolumeOpts(cmapopts.ColourMapOpts,
                                      displayCtx,
                                      **kwargs)
 
+        # Default to spline interpolation
+        # if we are displaying in 3D
+        if displayCtx.displayType == '3D':
+            self.interpolation = 'spline'
+
         # Some things only happen
         # on the parent instance
         self.__registered = self.getParent() is None

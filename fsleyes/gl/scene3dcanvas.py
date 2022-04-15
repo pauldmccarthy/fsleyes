@@ -619,12 +619,7 @@ class Scene3DCanvas:
                 self.__glObjects.pop(overlay)
                 return
 
-            log.debug('Creating GLObject for {}'.format(overlay))
-
-            # Default to spline interp
-            # for volume overlays
-            if display.overlayType == 'volume':
-                display.opts.interpolation = 'spline'
+            log.debug('Creating GLObject for %s', overlay)
 
             globj = globject.createGLObject(overlay,
                                             self.__overlayList,
