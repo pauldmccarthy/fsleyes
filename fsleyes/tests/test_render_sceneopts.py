@@ -64,7 +64,6 @@ cli_tests = """
 """
 
 
-# TODO either mock, or make sure FSL standards exist in CI
 fsl_cli_tests = """
 -idr 50 100 -std
 -idr 50 100 -stdb
