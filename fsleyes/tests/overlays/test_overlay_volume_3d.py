@@ -74,7 +74,9 @@ cli_tests_2d =  """
 
 # spline interpolation is only available on GL21
 cli_splinterp_test = """
+# spline should be default
 -dl               3d
+-dl               3d -in spline
 -dl -rot 30 30 30 3d
 -dl -rot 30 30 30 3d -cp 50 90 45
 """
@@ -89,6 +91,7 @@ cli_lighting_tests = """
 -lp -60 -90 0          3d -ns 400
 -lp   0 -90 0  -ld 0.6 3d -ns 400
 -lp   0 -90 0          3d -ns 400 -in linear
+-lp   0 -90 0          3d -ns 400 -in none
 """
 
 
@@ -112,7 +115,7 @@ def test_overlay_volume_3d_2d():
     extras = {
         'roi' : roi
     }
-    run_cli_tests('test_overlay_volume_3d',
+    run_cli_tests('test_overlay_volume_3d_2d',
                   cli_tests_2d,
                   extras=extras,
                   scene='3d',
