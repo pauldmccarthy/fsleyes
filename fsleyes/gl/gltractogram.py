@@ -6,8 +6,6 @@
 #
 
 """This module contains logic for rendering :class:`.Tractogram` overlays.
-``Tractogram`` rendering is only suppported in 3D, i.e. in the
-:class:`.Scene3DCanvas`.
 """
 
 
@@ -33,9 +31,6 @@ class GLTractogram(globject.GLObject):
         """Create a :meth:`GLTractogram`. """
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, canvas, threedee)
-
-        if not threedee:
-            pass
 
         # Shaders are created in compileShaders.
         # imageTexture created in refreshImageTexture
@@ -180,9 +175,6 @@ class GLTractogram(globject.GLObject):
 
     def destroy(self):
         """Removes listeners and destroys textures and shader programs. """
-
-        if not self.threedee:
-            pass
 
         if self.cmapTexture is not None:
             self.cmapTexture.destroy()
@@ -494,10 +486,9 @@ class GLTractogram(globject.GLObject):
                                 displayRange=(dmin, dmax))
 
 
-    def draw3D(self, xform=None):
-        """Binds textures if necessary, then calls
-        :func:`.gl21.gltractogram_funcs.draw3D` or
-        :func:`.gl33.gltractogram_funcs.draw3D`.
+    def preDraw(self):
+        """Called before :meth:`draw2D`/:meth:`draw3D`. Binds textures as
+        needed.
         """
 
         colourMode = self.opts.effectiveColourMode
@@ -515,7 +506,43 @@ class GLTractogram(globject.GLObject):
         if clipTex:
             self.clipImageTexture.bindTexture(gl.GL_TEXTURE3)
 
+
+    def draw2D(self, zpos, axes, xform=None):
+        """
+        """
+
+        canvas     = self.canvas
+        opts       = self.opts
+        mvp        = canvas.mvpMatrix
+        zax        = axes[2]
+        colourMode = opts.effectiveColourMode
+        clipMode   = opts.effectiveClipMode
+        shader     = self.shaders[colourMode][clipMode][0]
+
+        with shader.loaded(), shader.loadedAtts():
+            shader.set('MVP', mvp)
+            gl.glPointSize(3)
+            gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vertices))
+
+
+    def draw3D(self, xform=None):
+        """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
+        :func:`.gl33.gltractogram_funcs.draw3D`.
+        """
         fslgl.gltractogram_funcs.draw3D(self, xform)
+
+
+    def postDraw(self):
+        """Called after :meth:`draw2D`/:meth:`draw3D`. Unbinds textures as
+        needed.
+        """
+
+        colourMode = self.opts.effectiveColourMode
+        clipMode   = self.opts.effectiveClipMode
+
+        cmaps     = colourMode in ('imageData', 'vertexData')
+        colourTex = colourMode == 'imageData'
+        clipTex   = clipMode   == 'imageData'
 
         if cmaps:
             self.cmapTexture   .unbindTexture()
