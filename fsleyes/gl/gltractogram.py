@@ -512,6 +512,9 @@ class GLTractogram(globject.GLObject):
         """
         """
 
+        if xform is None:
+            xform = np.eye(4)
+
         canvas     = self.canvas
         opts       = self.opts
         zax        = axes[2]
@@ -540,7 +543,7 @@ class GLTractogram(globject.GLObject):
 
         viewmat   = canvas.viewMatrix
         strm2disp = opts.displayTransform
-        mvp       = affine.concat(projmat, viewmat, strm2disp)
+        mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
         with shader.loaded(), shader.loadedAtts():
             shader.set('MVP', mvp)

@@ -9,10 +9,11 @@ display properties for :class:`.Tractogram` overlays.
 """
 
 
-import numpy as np
+import numpy   as np
+import nibabel as nib
 
 import fsl.data.image                       as fslimage
-import fsl.data.constants                   as constants
+import fsl.transform.affine                 as affine
 import fsleyes.gl                           as fslgl
 import fsleyes.strings                      as strings
 import fsleyes_props                        as props
@@ -214,10 +215,19 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
 
     def sliceWidth(self, zax):
-        """Returns a width akong the specified world coordinate system axis,
-        to be used for drawing a 2D slice through the tractogram on the axis
-        plane.
+        """Returns a width along the specified **display** coordinate system
+        axis, to be used for drawing a 2D slice through the tractogram on the
+        axis plane.
         """
+
+        # The z axis is specified in terms of
+        # the display coordinate system -
+        # identify the corresponding axis in the
+        # tractogram/world coordinate system.
+        codes = [[0, 0], [1, 1], [2, 2]]
+        xform = affine.invert(self.displayTransform)
+        zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+
         los, his = self.overlay.bounds
         zlen     = his[zax] - los[zax]
         return zlen / 200
