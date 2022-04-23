@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 #
-# gltractogram_funcs.py -
+# gltractogram_funcs.py - GL21 functions for drawing tractogram overlays.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module comtains functions for drawing tractogram overlays witg OpenGL
+2.1. These functions are used by :class:`.GLTractogram` instances.
+"""
 
 import itertools as it
 import OpenGL.GL as gl
+import numpy     as np
 
-import fsl.transform.affine as affine
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.shaders   as shaders
+import fsl.transform.affine  as affine
+import fsleyes.gl.routines   as glroutines
+import fsleyes.gl.extensions as glexts
+import fsleyes.gl.shaders    as shaders
 
 
 def compileShaders(self):
@@ -41,11 +46,42 @@ def compileShaders(self):
         consts = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : False
+            'lighting'   : False,
+            'twod'       : not self.threedee,
         }
-        shader = shaders.GLSLShader(vsrc,  fsrc, constants=consts, **kwa)
+        shader = shaders.GLSLShader(vsrc, fsrc, constants=consts, **kwa)
 
         self.shaders[colourMode][clipMode].append(shader)
+
+
+def draw2D(self, axes, mvp):
+    """Called by :class:`.GLTractogram.draw2D`. """
+
+    opts       = self.opts
+    colourMode = opts.effectiveColourMode
+    clipMode   = opts.effectiveClipMode
+    res        = opts.resolution
+    shader     = self.shaders[colourMode][clipMode][0]
+
+    if res >= 3:
+        vertices = glroutines.unitCircle(res, axes)
+        prim     = gl.GL_TRIANGLE_FAN
+
+    else:
+        vertices = np.zeros((1, 3))
+        prim     = gl.GL_POINTS
+        gl.glPointSize(5)
+
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+    with shader.loaded(), shader.loadedAtts():
+        shader.set(   'MVP',          mvp)
+        shader.setAtt('circleVertex', vertices)
+
+        glexts.glDrawArraysInstanced(prim,
+                                     0,
+                                     len(vertices),
+                                     len(self.vertices))
 
 
 def draw3D(self, xform=None):

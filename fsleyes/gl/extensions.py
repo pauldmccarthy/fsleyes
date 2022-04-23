@@ -120,3 +120,4 @@ register('GL_DEPTH_ATTACHMENT',       3.0, glfbo, '_EXT')
 
 register('glVertexAttribDivisor',   3.3, arbia, 'ARB')
 register('glDrawElementsInstanced', 3.1, arbdi, 'ARB')
+register('glDrawArraysInstanced',   3.1, arbdi, 'ARB')

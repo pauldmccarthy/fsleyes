@@ -80,6 +80,10 @@ def compileShaders(self):
         self.shaders[colourMode][clipMode].extend((lshader, tshader))
 
 
+def draw2D(self, mvp):
+    """Called by :class:`.GLTractogram.draw2D`. """
+
+
 def draw3D(self, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 

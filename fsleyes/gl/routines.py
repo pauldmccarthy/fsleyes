@@ -1314,6 +1314,25 @@ def planeEquation2(origin, normal):
     return eqn
 
 
+def unitCircle(res, axes):
+    """Returns vertices for a 2D circle on a plane defined by ``axes``.
+    The circle has origin (0, 0, 0), and radius 1, and can be drawn with
+    ``gl.GL_TRIANGLE_FAN``.
+
+    :arg axes: Indices denoting the ``(x, y, z)`` axes.
+    :returns:  A numpy ``.float32`` array containing the vertices of a
+               unit circle.
+    """
+    xax, yax = axes[:2]
+    verts    = np.zeros((res + 1, 3), dtype=np.float32)
+    samples  = np.linspace(0, 2 * np.pi, res)
+
+    verts[1:, xax] = np.sin(samples)
+    verts[1:, yax] = np.cos(samples)
+
+    return verts
+
+
 def unitSphere(res):
     """Generates a unit sphere, as described in the *Sphere Generation*
     article, on Paul Bourke's excellent website:

@@ -63,9 +63,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     def __init__(self, *args, **kwargs):
         """Create a ``TractogramOpts``. """
 
-        if float(fslgl.GL_COMPATIBILITY) < 3.3:
-            self.getProp('resolution').disable(self)
-
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)

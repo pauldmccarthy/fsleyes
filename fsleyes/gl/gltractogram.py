@@ -264,6 +264,17 @@ class GLTractogram(globject.GLObject):
         return self.imageTextures.texture('colour')
 
 
+    def shaderAttributeArgs(self):
+        """Returns keyword arguments to pass to :meth:`.GLSLShader.setAtt`
+        for all per-vertex attributes. The GL21 2D rendering logic uses
+        instanced rendering, so a divisor must be set for all vertex
+        attributes.
+        """
+        if fslgl.GL_COMPATIBILITY != '2.1': return {}
+        if self.threedee:                   return {}
+        else:                               return {'divisor' : 1}
+
+
     def compileShaders(self):
         """Called by :meth:`__init__`. Calls
         :func:`.gl21.gltractogram_funcs.compileShaders` or
@@ -272,16 +283,18 @@ class GLTractogram(globject.GLObject):
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
+        kwargs = self.shaderAttributeArgs()
+
         for shader in self.iterShaders('orientation'):
             with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
-                shader.setAtt('orient', self.orients)
+                shader.setAtt('vertex', self.vertices, **kwargs)
+                shader.setAtt('orient', self.orients,  **kwargs)
         for shader in self.iterShaders('vertexData'):
             with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
+                shader.setAtt('vertex', self.vertices, **kwargs)
         for shader in self.iterShaders('imageData'):
             with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
+                shader.setAtt('vertex', self.vertices, **kwargs)
 
 
     def updateShaderState(self):
@@ -352,9 +365,10 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts  = self.opts
-        ovl   = self.overlay
-        cmode = opts.effectiveColourMode
+        opts   = self.opts
+        ovl    = self.overlay
+        cmode  = opts.effectiveColourMode
+        kwargs = self.shaderAttributeArgs()
 
         if cmode == 'orientation':
             return
@@ -363,7 +377,7 @@ class GLTractogram(globject.GLObject):
             data = ovl.getVertexData(opts.colourMode)
             for shader in self.iterShaders('vertexData'):
                 with shader.loaded():
-                    shader.setAtt('vertexData', data)
+                    shader.setAtt('vertexData', data, **kwargs)
 
         if refresh and cmode == 'imageData':
             self.refreshImageTexture('colour')
@@ -374,9 +388,10 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts  = self.opts
-        ovl   = self.overlay
-        cmode = opts.effectiveClipMode
+        opts   = self.opts
+        ovl    = self.overlay
+        cmode  = opts.effectiveClipMode
+        kwargs = self.shaderAttributeArgs()
 
         if cmode == 'none':
             return
@@ -385,7 +400,7 @@ class GLTractogram(globject.GLObject):
             data = ovl.getVertexData(opts.clipMode)
             for shader in self.iterShaders(None, 'vertexData'):
                 with shader.loaded():
-                    shader.setAtt('clipVertexData', data)
+                    shader.setAtt('clipVertexData', data, **kwargs)
 
         elif refresh and cmode == 'imageData':
             self.refreshImageTexture('clip')
@@ -509,18 +524,17 @@ class GLTractogram(globject.GLObject):
 
 
     def draw2D(self, zpos, axes, xform=None):
-        """
+        """Draws a 2D slice through the tractogram. Calls
+        :func:`.gl21.gltractogram_funcs.draw2D` or
+        :func:`.gl33.gltractogram_funcs.draw2D`.
         """
 
         if xform is None:
             xform = np.eye(4)
 
-        canvas     = self.canvas
-        opts       = self.opts
-        zax        = axes[2]
-        colourMode = opts.effectiveColourMode
-        clipMode   = opts.effectiveClipMode
-        shader     = self.shaders[colourMode][clipMode][0]
+        canvas = self.canvas
+        opts   = self.opts
+        zax    = axes[2]
 
         # We draw a 2D slice through the tractogram by
         # manipulating the projection matrix so that z
@@ -545,10 +559,8 @@ class GLTractogram(globject.GLObject):
         strm2disp = opts.displayTransform
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
-        with shader.loaded(), shader.loadedAtts():
-            shader.set('MVP', mvp)
-            gl.glPointSize(3)
-            gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vertices))
+        fslgl.gltractogram_funcs.draw2D(self, axes, mvp)
+
 
 
     def draw3D(self, xform=None):
