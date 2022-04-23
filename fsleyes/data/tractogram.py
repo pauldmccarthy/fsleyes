@@ -43,6 +43,11 @@ class Tractogram:
         self.name       = op.basename(fname)
         self.tractFile  = nibstrm.load(fname)
 
+        # Bounding box is calculsted on first
+        # call to bounds(), then cached for
+        # subsequent calls.
+        self.__bounds = None
+
         # Data sets associated with each
         # vertex, or with each streamline.
         # Per-streamline data sets are
@@ -86,8 +91,10 @@ class Tractogram:
         """Returns the bounding box of all streamlines as a tuple of
         ``((xlo, ylo, zlo),  (xhi, yhi, zhi))`` values.
         """
-        data = self.tractFile.streamlines.get_data()
-        return (data.min(axis=0), data.max(axis=0))
+        if self.__bounds is None:
+            data = self.tractFile.streamlines.get_data()
+            self.__bounds = (data.min(axis=0), data.max(axis=0))
+        return self.__bounds
 
 
     @property

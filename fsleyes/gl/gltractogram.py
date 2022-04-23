@@ -15,6 +15,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
 import fsl.data.image       as fslimage
 
 import fsleyes.gl           as fslgl
@@ -513,11 +514,33 @@ class GLTractogram(globject.GLObject):
 
         canvas     = self.canvas
         opts       = self.opts
-        mvp        = canvas.mvpMatrix
         zax        = axes[2]
         colourMode = opts.effectiveColourMode
         clipMode   = opts.effectiveClipMode
         shader     = self.shaders[colourMode][clipMode][0]
+
+        # We draw a 2D slice through the tractogram by
+        # manipulating the projection matrix so that z
+        # coordinates within the slice are mapped to
+        # the range (-1, +1). Vertices with z outside
+        # of that range will be clipped by GL.
+        projmat       = np.array(canvas.projectionMatrix)
+        step          = opts.sliceWidth(zax)
+        zlo           = zpos - step
+        zhi           = zpos + step
+        projmat[2, 2] = 2 / (zhi - zlo)
+        projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
+
+        # The routines.show2D function encodes a
+        # -ve scale on the yaxis in the view
+        # matrix.  We need to accommodate it
+        # here.
+        if zax == 1:
+            projmat[2, 2] *= -1
+
+        viewmat   = canvas.viewMatrix
+        strm2disp = opts.displayTransform
+        mvp       = affine.concat(projmat, viewmat, strm2disp)
 
         with shader.loaded(), shader.loadedAtts():
             shader.set('MVP', mvp)

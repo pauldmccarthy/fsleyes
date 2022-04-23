@@ -198,6 +198,31 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
+    @property
+    def displayTransform(self):
+        """Return an affine transformation which will transform streamline
+        vertex coordinates into the current display coordinate system.
+        """
+        ref = self.displayCtx.displaySpace
+
+        if not isinstance(ref, fslimage.Image):
+            return np.eye(4)
+
+        opts = self.displayCtx.getOpts(ref)
+
+        return opts.getTransform('world', 'display')
+
+
+    def sliceWidth(self, zax):
+        """Returns a width akong the specified world coordinate system axis,
+        to be used for drawing a 2D slice through the tractogram on the axis
+        plane.
+        """
+        los, his = self.overlay.bounds
+        zlen     = his[zax] - los[zax]
+        return zlen / 200
+
+
     def __colourModeChanged(self, *_):
         """Called when :attr:`colourMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
