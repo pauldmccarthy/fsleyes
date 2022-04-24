@@ -62,6 +62,7 @@ class GLSLShader:
        set
        setAtt
        setIndices
+       ready
        draw
 
 
@@ -177,6 +178,10 @@ class GLSLShader:
                                                self.attributes,
                                                self.uniforms)
 
+        # Flags indicating whether each uniform/attribute
+        # has been given a value via set/setAtt
+        self.hasValue = {a : False for a in self.attributes + self.uniforms}
+
         # Buffers for vertex attributes
         self.buffers = {}
         for att in self.attributes:
@@ -215,6 +220,20 @@ class GLSLShader:
         """Prints a log message. """
         if log:
             log.debug('%s.del(%s)', type(self).__name__, id(self))
+
+
+    def ready(self):
+        """Checks whether every unifirm and attribute has been given a value.
+        Returns a tuple containing:
+          - ``True`` if every uniform/attribute has been set, ``False``
+            otherwise.
+          - A list of the names of all unset uniforms/attributes.
+        """
+        unset = []
+        for n, v in self.hasValue.items():
+            if not v:
+                unset.append(n)
+        return len(unset) == 0, unset
 
 
     @contextlib.contextmanager
@@ -368,6 +387,7 @@ class GLSLShader:
             vType, size, name, value)
 
         setfunc(vPos, value, size)
+        self.hasValue[name] = True
 
 
     def setAtt(self, name, value, divisor=None):
@@ -404,6 +424,8 @@ class GLSLShader:
 
         if divisor is not None:
             self.attDivisors[name] = divisor
+
+        self.hasValue[name] = True
 
 
     def setIndices(self, indices):
