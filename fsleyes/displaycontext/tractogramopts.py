@@ -50,18 +50,21 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
 
     lineWidth = props.Int(minval=1, maxval=10, default=2)
-    """Width to draw the streamlines. """
+    """Width to draw the streamlines. When drawing in 3D, this controls the
+    line width / tube diameter. When drawing in 2D, this controls the point
+    diameter.
+    """
 
 
     resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
-    """Only relevant when using OpenGL >= 3.3. Streamlines are drawn as tubes -
-    this setting defines the resolution at which the tubes are drawn. IF
-    resolution <= 2, the streamlines are drawn as lines.
+    """When drawing in 3D as tubes, or in 2D as circles, this setting defines
+    the resolution at which the tubes/circles are drawn. If resolution <= 2,
+    the streamlines are drawn as lines/points.
     """
 
 
     def __init__(self, *args, **kwargs):
-        """Create a ``TractogramOpts``. """
+        """Create a ``TractogramOpts`` instance. """
 
         fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)

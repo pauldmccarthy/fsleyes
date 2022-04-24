@@ -32,15 +32,17 @@ def compileShaders(self):
     idatafsrc  = shaders.getFragmentShader('gltractogram_image_data')
     linegsrc   = shaders.getGeometryShader('gltractogram_line')
     tubegsrc   = shaders.getGeometryShader('gltractogram_tube')
+    pointgsrc  = shaders.getGeometryShader('gltractogram_point')
 
     # We create separate shader programs for each
     # combination of:
-    #  - Geometry (lines or tubes)
+    #  - Geometry (3D: lines or tubes, 2D: points)
     #  - Colouring (orientation, vertex data, image data)
     #  - Clipping (vertex data, image data)
 
-    # So in total we create 18 shader programs - each
-    # of the following, for both lines and tubes.
+    # So for 3D rendering we create a total of 18 shader programs,
+    # for each of the following, for both lines and tubes. For 2D
+    # rendering we create a total of 9 shader programs.
     #  - Colour by orientation, no clipping
     #  - Colour by orientation, clip by vertex data
     #  - Colour by orientation, clip by image data
@@ -65,23 +67,40 @@ def compileShaders(self):
     kwa = {'resourceName' : f'GLTractogram_{id(self)}',
            'shared'       : ['vertex']}
 
+    if self.threedee: geomsrcs = [linegsrc, tubegsrc]
+    else:             geomsrcs = [pointgsrc]
+
     for colourMode, clipMode in it.product(colourModes, clipModes):
 
-        fsrc   = colourSources[colourMode]
-        consts = {
+        fsrc  = colourSources[colourMode]
+        const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
             'lighting'   : True
         }
 
-        lshader = shaders.GLSLShader(vsrc,  fsrc, linegsrc, consts, **kwa)
-        tshader = shaders.GLSLShader(vsrc,  fsrc, tubegsrc, consts, **kwa)
+        progs = []
+        for gsrc in geomsrcs:
+            progs.append(shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa))
 
-        self.shaders[colourMode][clipMode].extend((lshader, tshader))
+        self.shaders[colourMode][clipMode].extend(progs)
 
 
-def draw2D(self, mvp):
+def draw2D(self, axes, mvp):
     """Called by :class:`.GLTractogram.draw2D`. """
+    opts           = self.opts
+    colourMode     = opts.effectiveColourMode
+    clipMode       = opts.effectiveClipMode
+    shader         = self.shaders[colourMode][clipMode][0]
+    xscale, yscale = self.normalisedLineWidths
+
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+    with shader.loaded(), shader.loadedAtts():
+        shader.set('MVP',    mvp)
+        shader.set('xscale', xscale)
+        shader.set('yscale', yscale)
+        gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vertices))
 
 
 def draw3D(self, xform=None):

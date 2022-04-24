@@ -4,7 +4,7 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module comtains functions for drawing tractogram overlays witg OpenGL
+"""This module comtains functions for drawing tractogram overlays with OpenGL
 2.1. These functions are used by :class:`.GLTractogram` instances.
 """
 
@@ -63,8 +63,8 @@ def draw2D(self, axes, mvp):
     res        = opts.resolution
     shader     = self.shaders[colourMode][clipMode][0]
 
-    if res >= 4:
-        vertices        = glroutines.unitCircle(res)
+    if res >= 3:
+        vertices        = glroutines.unitCircle(res + 1)
         xscale, yscale  = self.normalisedLineWidths
         vertices[:, 0] *= xscale
         vertices[:, 1] *= yscale
