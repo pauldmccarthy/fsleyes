@@ -12,7 +12,8 @@ attribute vec3 vertex;
 /*
  * Current vertex coordinate on circle
  * used to draw the current streamline
- * point.
+ * point, defined in normalised device
+ * coordinates.
  */
 attribute vec3 circleVertex;
 {% endif %}
@@ -72,9 +73,8 @@ void main(void) {
   fragClipVertexData = clipVertexData;
   {% endif %}
 
-
   {% if twod %}
-  gl_Position = MVP * vec4(vertex + circleVertex, 1);
+  gl_Position = MVP * vec4(vertex, 1) + vec4(circleVertex, 0);
   {% else %}
   gl_Position = MVP * vec4(vertex, 1);
   {% endif %}

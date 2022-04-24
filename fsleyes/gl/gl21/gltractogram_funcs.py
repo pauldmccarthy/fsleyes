@@ -64,13 +64,16 @@ def draw2D(self, axes, mvp):
     shader     = self.shaders[colourMode][clipMode][0]
 
     if res >= 4:
-        vertices = glroutines.unitCircle(res, axes)
-        prim     = gl.GL_TRIANGLE_FAN
+        vertices        = glroutines.unitCircle(res)
+        xscale, yscale  = self.normalisedLineWidths
+        vertices[:, 0] *= xscale
+        vertices[:, 1] *= yscale
+        prim            = gl.GL_TRIANGLE_FAN
 
     else:
         vertices = np.zeros((1, 3))
         prim     = gl.GL_POINTS
-        gl.glPointSize(5)
+        gl.glPointSize(opts.lineWidth)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 

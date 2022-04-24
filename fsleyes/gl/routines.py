@@ -1314,20 +1314,23 @@ def planeEquation2(origin, normal):
     return eqn
 
 
-def unitCircle(res, axes):
+def unitCircle(res, axes=None):
     """Returns vertices for a 2D circle on a plane defined by ``axes``.
     The circle has origin (0, 0, 0), and radius 1, and can be drawn with
     ``gl.GL_TRIANGLE_FAN``.
 
     :arg res:  Number of angles to use. Must be at least 4. A total of
                ``res=1`` vertices will be generated.
-    :arg axes: Indices denoting the ``(x, y, z)`` axes.
+    :arg axes: Indices denoting the ``(x, y, z)`` axes. If not provided,
+               set to ``(0, 1, 2)``.
     :returns:  A numpy ``.float32`` array containing the vertices of a
                unit circle.
     """
 
     if res < 4:
         raise ValueError('res must be >= 4')
+    if axes is None:
+        axes = [0, 1, 2]
 
     xax, yax = axes[:2]
     verts    = np.zeros((res + 1, 3), dtype=np.float32)

@@ -247,6 +247,17 @@ class GLTractogram(globject.GLObject):
 
 
     @property
+    def normalisedLineWidths(self):
+        """Returns :attr:`lineWidth`, scaled separately for the x and y axes,
+        to normalised device coordinates.
+        """
+        cw, ch    = self.canvas.GetSize()
+        xwidth    = self.opts.lineWidth / cw
+        ywidth    = self.opts.lineWidth / ch
+        return xwidth, ywidth
+
+
+    @property
     def clipImageTexture(self):
         """Return a reference to an :class:`.ImageTexture` which contains
         data for clipping, when :attr:`.TractogramOpts.clipMode` is set
@@ -560,7 +571,6 @@ class GLTractogram(globject.GLObject):
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
         fslgl.gltractogram_funcs.draw2D(self, axes, mvp)
-
 
 
     def draw3D(self, xform=None):
