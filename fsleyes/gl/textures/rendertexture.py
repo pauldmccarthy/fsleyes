@@ -87,8 +87,8 @@ class RenderTexture(texture2d.Texture2D):
 
 
     def __init__(self, name, rttype='cds', **kwargs):
-        """Create a ``RenderTexture``. All keyword arguments are passed through to the
-        :meth:`.Texture2D.__init__` method.
+        """Create a ``RenderTexture``. All keyword arguments are passed through
+        to the :meth:`.Texture2D.__init__` method.
 
         :arg name:   Unique name for this texture
 
@@ -206,7 +206,7 @@ class RenderTexture(texture2d.Texture2D):
     def projectionMatrix(self):
         """Return the projection matrix to use when drawing to this
         ``RenderTexture``. Only returns a value when this ``RenderTexture``
-        is bound - returns ``None``at all other times.
+        is bound - returns ``None`` at all other times.
         """
         return self.__projectionMatrix
 
@@ -215,7 +215,7 @@ class RenderTexture(texture2d.Texture2D):
     def viewMatrix(self):
         """Return the model-view matrix to use when drawing to this
         ``RenderTexture``. Only returns a value when this ``RenderTexture``
-        is bound - returns ``None``at all other times.
+        is bound - returns ``None`` at all other times.
         """
         return self.__viewMatrix
 
@@ -231,7 +231,7 @@ class RenderTexture(texture2d.Texture2D):
         """Return the display coordinate system bounding box for this
         ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
         Only returns a value when this ``RenderTexture`` is bound - returns
-        ``None``at all other times.
+        ``None`` at all other times.
         """
         return self.__viewport
 
@@ -381,9 +381,11 @@ class RenderTexture(texture2d.Texture2D):
         via :meth:`setRenderViewport` and :meth:`restoreViewport`.
         """
 
-        setViewport = len(args) > 0 or len(kwargs) > 0
+        setViewport  = len(args) > 0 or len(kwargs) > 0
+        alreadyBound = self.__oldFrameBuffer is not None
 
-        self.bindAsRenderTarget()
+        if not alreadyBound:
+            self.bindAsRenderTarget()
 
         if setViewport:
             self.setRenderViewport(*args, **kwargs)
@@ -392,7 +394,8 @@ class RenderTexture(texture2d.Texture2D):
         finally:
             if setViewport:
                 self.restoreViewport()
-            self.unbindAsRenderTarget()
+            if not alreadyBound:
+                self.unbindAsRenderTarget()
 
 
     def bindAsRenderTarget(self):

@@ -13,6 +13,7 @@
    fsleyes.gl.gl21.glrgbvolume_funcs
    fsleyes.gl.gl21.glsh_funcs
    fsleyes.gl.gl21.gltensor_funcs
+   fsleyes.gl.gl21.gltractogram_funcs
    fsleyes.gl.gl21.glvector_funcs
    fsleyes.gl.gl21.glvolume_funcs
 

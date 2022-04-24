@@ -181,6 +181,13 @@ def makeDisplayContext(namespace):
     as described by the arguments in the given ``namespace`` object.
     """
 
+    # Set a display type hint. When running FSLeyes
+    # on-screen, this is retrieved automatically
+    # from the ViewPanel.displayType method, but we
+    # do it manually here for off-screen rendering.
+    if namespace.scene == '3d': displayType = '3D'
+    else:                       displayType = None
+
     # Create an overlay list and display context.
     # The DisplayContext, Display and DisplayOpts
     # classes are designed to be created in a
@@ -190,7 +197,8 @@ def makeDisplayContext(namespace):
     overlayList      = fsloverlay.OverlayList()
     masterDisplayCtx = displaycontext.DisplayContext(overlayList)
     childDisplayCtx  = displaycontext.DisplayContext(overlayList,
-                                                     parent=masterDisplayCtx)
+                                                     parent=masterDisplayCtx,
+                                                     displayType=displayType)
 
     # We have to artificially create a ref to the
     # master display context, otherwise it may get
@@ -592,7 +600,6 @@ def create3DCanvas(namespace,
     opts.bgColour        = sceneOpts.bgColour
     opts.showLegend      = sceneOpts.showLegend
     opts.legendColour    = sceneOpts.fgColour
-    opts.occlusion       = sceneOpts.occlusion
     opts.light           = sceneOpts.light
     opts.zoom            = sceneOpts.zoom
     opts.offset          = sceneOpts.offset

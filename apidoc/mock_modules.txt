@@ -97,6 +97,7 @@ numpy
 numpy.fft
 numpy.linalg
 nibabel
+nibabel.streamlines
 pyparsing
 PIL
 scipy

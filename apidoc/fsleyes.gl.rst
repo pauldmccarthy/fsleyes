@@ -22,6 +22,7 @@
    fsleyes.gl.glrgbvolume
    fsleyes.gl.glsh
    fsleyes.gl.gltensor
+   fsleyes.gl.gltractogram
    fsleyes.gl.glvector
    fsleyes.gl.glvolume
    fsleyes.gl.highdpi

@@ -69,6 +69,14 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
                 'FileTreePanel']
 
 
+    @staticmethod
+    def displayType():
+        """Returns ``'3D'``, describing the type of display that the
+        :class:`.Scene3DPanel` provides.
+        """
+        return '3D'
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``Scene3dPanel``.
 
@@ -111,7 +119,6 @@ class Scene3DPanel(canvaspanel.CanvasPanel):
         opts.bindProps('showLegend',    sceneOpts)
         opts.bindProps('legendColour',  sceneOpts, 'fgColour')
         opts.bindProps('labelSize',     sceneOpts)
-        opts.bindProps('occlusion',     sceneOpts)
         opts.bindProps('light',         sceneOpts)
         opts.bindProps('lightPos',      sceneOpts)
         opts.bindProps('lightDistance', sceneOpts)

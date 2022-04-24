@@ -184,6 +184,10 @@ bool is_clipped(vec3 texCoord,
   int clipIdx;
   int activeClipPlanes = 0;
 
+  if (!textest(texCoord)) {
+    return true;
+  }
+
   if (numClipPlanes == 0) {
     return false;
   }
@@ -344,8 +348,8 @@ void main(void) {
     vec3  texCoord    = fragTexCoord;
     vec4  colour      = vec4(0);
     vec4  finalColour = vec4(0);
-    float depth       = 0;
-    float firstDepth  = 0;
+    float depth       = 1;
+    float firstDepth  = 1;
     int   nsamples    = 0;
     float voxValue;
     int   clipIdx;
@@ -366,7 +370,7 @@ void main(void) {
      * Keep going until we
      * have enough colour
      */
-    while (finalColour.a < 0.95) {
+    while (finalColour.a < 0.999) {
 
       /* Shift the ray along */
       texCoord += rayStep;
@@ -390,8 +394,8 @@ void main(void) {
         continue;
       }
 
-      if (nsamples == 1) {
-        firstDepth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
+      if (nsamples == 0) {
+        firstDepth = (tex2ScreenXform * vec4((texCoord + dither), 1.0)).z;
       }
 
       if (lighting) {
@@ -419,8 +423,8 @@ void main(void) {
          * current display range). The 0.1 threshold is
          * completely arbitrary, but seems to work well.
          */
-        if (depth == 0 && (voxValue - texZero) >= 0.1) {
-          depth = (tex2ScreenXform * vec4(texCoord, 1.0)).z;
+        if (depth == 1 && (voxValue - texZero) >= 0.1) {
+          depth = (tex2ScreenXform * vec4((texCoord + dither), 1.0)).z;
         }
       }
       /* Or just weight by blend factor */
@@ -432,7 +436,7 @@ void main(void) {
          * we simply set the fragment depth to the
          * position of the first sample on the ray.
          */
-        if (nsamples == 1) {
+        if (nsamples == 0) {
           depth = firstDepth;
         }
       }
@@ -442,7 +446,7 @@ void main(void) {
     }
 
     if (nsamples > 0) {
-      if (depth == 0) {
+      if (depth == 1) {
         depth = firstDepth;
       }
       finalColour.a *= alpha;

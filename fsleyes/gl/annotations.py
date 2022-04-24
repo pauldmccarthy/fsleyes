@@ -658,11 +658,11 @@ class Point(AnnotationObject):
         map to the horizontal/vertical screen axes on the target canvas.
 
         :arg annot: The :class:`Annotations` object that owns this ``Point``.
-
         :arg x:     X coordinates of the point
         :arg y:     Y coordinates of the point
         :arg z:     Z coordinates, if this ``Point`` is being drawn via
                     :meth:`draw3D`.
+
         All other arguments are passed through to
         :meth:`AnnotationObject.__init__`.
         """

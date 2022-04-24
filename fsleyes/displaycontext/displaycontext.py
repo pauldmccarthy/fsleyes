@@ -56,8 +56,6 @@ class DisplayContext(props.SyncableHasProperties):
         getDisplay
         getOpts
         getReferenceImage
-        displayToWorld
-        worldToDisplay
         displaySpaceIsRadiological
         selectOverlay
         getSelectedOverlay
@@ -245,7 +243,12 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    def __init__(self, overlayList, parent=None, defaultDs='ref', **kwargs):
+    def __init__(self,
+                 overlayList,
+                 parent=None,
+                 defaultDs='ref',
+                 displayType=None,
+                 **kwargs):
         """Create a ``DisplayContext``.
 
         :arg overlayList: An :class:`.OverlayList` instance.
@@ -260,6 +263,12 @@ class DisplayContext(props.SyncableHasProperties):
                           the :attr:`displaySpace` will be set to the first
                           :class:`.Nifti` overlay. Otherwise (``'world'``),
                           the display space will be set to ``'world'``.
+
+        :arg displayType: String describing how this DisplayContext is going
+                          to be used. This is not used internally, but may be
+                          interrogated by :class:`.Display` and
+                          :class:`.DisplayOpts` instances. Can be accessed
+                          through the :meth:`.displayType` property.
 
         All other arguments are passed through to the ``SyncableHasProperties``
         constructor, in addition to the following:
@@ -292,6 +301,7 @@ class DisplayContext(props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(self, **kwargs)
 
         self.__overlayList = overlayList
+        self.__displayType = displayType
         self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
         self.__child       = parent is not None
 
@@ -416,6 +426,13 @@ class DisplayContext(props.SyncableHasProperties):
         destroyed, ``False`` otherwise.
         """
         return self.__overlayList is None
+
+
+    @property
+    def displayType(self):
+        """Returns the ``displayType`` that was passed to :meth:`__init__`.
+        """
+        return self.__displayType
 
 
     def getDisplay(self, overlay, **kwargs):

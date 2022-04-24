@@ -16,7 +16,7 @@ import fsleyes_widgets      as fwidgets
 import fsleyes.gl           as fslgl
 
 
-class Volume3DOpts(object):
+class Volume3DOpts:
     """The ``Volume3DOpts`` class is a mix-in for use with :class:`.DisplayOpts`
     classes. It defines display properties used for ray-cast based rendering
     of :class:`.Image` overlays.
@@ -40,7 +40,7 @@ class Volume3DOpts(object):
     """
 
 
-    numSteps = props.Int(minval=25, maxval=500, default=100, clamped=False)
+    numSteps = props.Int(minval=25, maxval=500, default=150, clamped=False)
     """Specifies the maximum number of samples to acquire in the rendering of
     each pixel of the 3D scene. This corresponds to the number of iterations
     of the ray-casting loop.
@@ -175,7 +175,7 @@ class Volume3DOpts(object):
 
         outer = self.getNumOuterSteps()
 
-        return int(outer * self.numInnerSteps)
+        return min(self.numSteps, int(outer * self.numInnerSteps))
 
 
     def getNumOuterSteps(self):

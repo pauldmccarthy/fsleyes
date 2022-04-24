@@ -6,6 +6,14 @@
 #
 """This module provides the :class:`.Scene3DCanvas` class, which is used by
 FSLeyes for its 3D view.
+
+On each refresh the ``Scene3DCanvas`` draws each
+overlay to an offscreen 2D texture.
+For OpenGL 2.1 and newer, all of these textures are then blended together
+according to their depth using a custom shader program.
+
+For OpenGL 1.4, the textures are then just drawn directly to the screen
+according to the current overlay order.
 """
 
 
@@ -20,10 +28,13 @@ import fsl.utils.idle       as idle
 import fsl.transform.affine as affine
 
 import fsleyes.data.tractogram           as fsltractogram
+import fsleyes.gl                        as fslgl
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.globject               as globject
 import fsleyes.gl.annotations            as annotations
+import fsleyes.gl.shaders                as shaders
 import fsleyes.gl.text                   as gltext
+import fsleyes.gl.textures               as textures
 import fsleyes.displaycontext            as fsldisplay
 import fsleyes.displaycontext.canvasopts as canvasopts
 
@@ -33,7 +44,8 @@ log = logging.getLogger(__name__)
 
 class Scene3DCanvas:
     """The ``Scene3DCanvas`` is an OpenGL canvas used to draw overlays in a 3D
-    view. Currently only ``volume`` and ``mesh`` overlay types are supported.
+    view. Currently only ``volume``, ``mesh``, and ``tractogram`` overlay
+    types are supported.
     """
 
     def __init__(self, overlayList, displayCtx):
@@ -48,7 +60,26 @@ class Scene3DCanvas:
         self.__invViewProjMat = np.eye(4)
         self.__viewport       = None
         self.__resetLightPos  = True
+
+        # Dictionary of GLObjects and off-screen
+        # RenderTextures for every overlay
         self.__glObjects      = {}
+        self.__globjTextures  = {}
+
+        # Shader program used to blend overlays,
+        # only used for OpenGL >= 2.1. The number
+        # of overlays that the shader program can
+        # blend is hard-coded, so we maintain a
+        # a set of them, one for each possible
+        # number of overlays.
+        #
+        # n.b. It should be possible to do this
+        # this for GL14, but would require a
+        # sorting algorithm to be implemented
+        # in ARB assembly, so has been left as
+        # a possible future task.
+        self.__shaders = {}
+        self.__compileShaders()
 
         # gl.text.Text objects containing anatomical
         # orientation labels ordered
@@ -74,7 +105,6 @@ class Scene3DCanvas:
                          self.__refreshLegendLabels)
         opts.addListener('labelSize',     self.__name,
                          self.__refreshLegendLabels)
-        opts.addListener('occlusion',     self.__name, self.Refresh)
         opts.addListener('zoom',          self.__name, self.Refresh)
         opts.addListener('offset',        self.__name, self.Refresh)
         opts.addListener('rotation',      self.__name, self.Refresh)
@@ -85,8 +115,48 @@ class Scene3DCanvas:
         opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
 
 
+    def __compileShaders(self):
+        """(Re-)compiles the shader programs which are used to blend overlays
+        together. The shader programs are only used for OpenGL 2.1 and newer.
+
+        This method is called every time the overlay list changes as the
+        number of overlays is hard-coded into the shader programs.
+        """
+
+        if float(fslgl.GL_COMPATIBILITY) < 2.1:
+            return
+
+        noverlays = len(self.__overlayList)
+        if noverlays == 0:
+            return
+
+        vertSrc = shaders.getVertexShader(  'scene3dcanvas')
+        fragSrc = shaders.getFragmentShader('scene3dcanvas')
+
+        # We maintain separate shader prorgams
+        # for any possible number of overlays
+        # (as not all loaded overlays may be
+        # displayed)
+        for n in range(1, noverlays + 1):
+            if n in self.__shaders:
+                continue
+
+            env    = {'noverlays' : n}
+            shader = shaders.GLSLShader(vertSrc, fragSrc, constants=env)
+            self.__shaders[n] = shader
+
+            with shader.loaded():
+                for i in range(n):
+                    shader.set(f'rgba_{i}',  i * 2)
+                    shader.set(f'depth_{i}', i * 2 + 1)
+
+
     def destroy(self):
         """Must be called when this Scene3DCanvas is no longer used. """
+
+        if self.destroyed:
+            return
+
         self.__overlayList.removeListener('overlays', self.__name)
         self.__displayCtx .removeListener('bounds',   self.__name)
 
@@ -99,7 +169,11 @@ class Scene3DCanvas:
 
         self.__annotations.destroy()
 
+        for shader in self.__shaders.values():
+            shader.destroy()
+
         self.__annotations  = None
+        self.__shaders      = None
         self.__opts         = None
         self.__displayCtx   = None
         self.__overlayList  = None
@@ -348,45 +422,23 @@ class Scene3DCanvas:
          - A list of overlays to be drawn
          - A list of corresponding :class:`GLObject` instances
 
-        The lists are in the order that they should be drawn.
-
         This method also creates ``GLObject`` instances for any overlays
         in the :class:`.OverlayList` that do not have one.
         """
 
+        # Sort the overlays so that volumes come last.
+        # This will normally makes no difference (when
+        # using OpenGL >= 2.1), but is important in
+        # OpenGL 1.4 fallback mode to get somewhat
+        # sensible blending.
         overlays = self.__displayCtx.getOrderedOverlays()
-
-        surfs = [o for o in overlays if isinstance(o, fslmesh.Mesh)]
-        vols  = [o for o in overlays if isinstance(o, fslimage.Image)]
-        other = [o for o in overlays if o not in surfs and o not in vols]
+        vols     = [o for o in overlays if isinstance(o, fslimage.Image)]
+        others   = [o for o in overlays if o not in vols]
 
         overlays = []
         globjs   = []
 
-        # If occlusion is on, we draw all surfaces first,
-        # so they are on the scene regardless of volume
-        # opacity.
-        #
-        # If occlusion is off, we draw all volumes
-        # (without depth testing) first, and draw all
-        # surfaces (with depth testing) afterwards.
-        # In this way, the surfaces will be occluded
-        # by the last drawn volume. I figure that this
-        # is better than being occluded by *all* volumes,
-        # regardless of depth or camera orientation.
-        #
-        # The one downside to this is that if a
-        # transparent volume is in front of a surface,
-        # the surface won't be shown.
-        #
-        # The only way to overcome this would be to
-        # sort by depth on every render which, given
-        # the possibility of volume clipping planes,
-        # is a bit too complicated for my liking.
-        if self.opts.occlusion: ovlOrder = surfs + vols + other
-        else:                   ovlOrder = vols + surfs + other
-
-        for ovl in ovlOrder:
+        for ovl in others + vols:
             globj = self.getGLObject(ovl)
 
             # If there is no GLObject for this
@@ -431,6 +483,7 @@ class Scene3DCanvas:
             if ovl not in self.__glObjects:
                 self.__registerOverlay(ovl)
 
+        self.__compileShaders()
         self.__refreshLegendLabels(refresh=False)
 
 
@@ -529,11 +582,14 @@ class Scene3DCanvas:
         except fsldisplay.InvalidOverlayError:
             pass
 
-        globj = self.__glObjects.pop(overlay, None)
+        globj = self.__glObjects    .pop(overlay, None)
+        tex   = self.__globjTextures.pop(overlay, None)
 
         if globj is not None:
             globj.deregister(self.__name)
             globj.destroy()
+        if tex is not None:
+            tex.destroy()
 
 
     def __genGLObject(self, overlay):
@@ -563,7 +619,7 @@ class Scene3DCanvas:
                 self.__glObjects.pop(overlay)
                 return
 
-            log.debug('Creating GLObject for {}'.format(overlay))
+            log.debug('Creating GLObject for %s', overlay)
 
             globj = globject.createGLObject(overlay,
                                             self.__overlayList,
@@ -573,7 +629,9 @@ class Scene3DCanvas:
 
             if globj is not None:
                 globj.register(self.__name, self.Refresh)
-                self.__glObjects[overlay] = globj
+                tex = textures.RenderTexture(globj.name, 'cd')
+                self.__globjTextures[overlay] = tex
+                self.__glObjects[    overlay] = globj
 
         idle.idle(create)
         return True
@@ -585,11 +643,14 @@ class Scene3DCanvas:
         """
 
         overlay = display.overlay
-        globj   = self.__glObjects.pop(overlay, None)
+        globj   = self.__glObjects    .pop(overlay, None)
+        tex     = self.__globjTextures.pop(overlay, None)
 
         if globj is not None:
             globj.deregister(self.__name)
             globj.destroy()
+        if tex is not None:
+            tex.destroy()
 
         self.__genGLObject(overlay)
         self.Refresh()
@@ -713,63 +774,98 @@ class Scene3DCanvas:
         if not self.__setViewport():
             return
 
-        gl.glViewport(0, 0, width, height)
-        glroutines.clear(opts.bgColour)
-
         overlays, globjs = self.getGLObjects()
+        rtexs            = []
 
         if len(overlays) == 0:
             return
 
-        # If occlusion is on, we offset the
-        # depth of each overlay so that, where
-        # a depth collision occurs, overlays
-        # which are higher in the list will get
-        # drawn above (closer to the screen)
-        # than lower ones.
-        if opts.occlusion:
-
-            # The offset is set as a proportion
-            # of the length of the longest axis
-            # in the display bounding box.
-            bounds = self.displayCtx.bounds
-            lens   = [bounds.xlen, bounds.ylen, bounds.zlen]
-            offset = np.max(lens) * 0.01
-
-            # Define the offset vector in view space,
-            # then rotate it into model space (depth
-            # axis is second - see __genViewMatrix)
-            rot   = affine.invert(self.__viewRotate)
-            vec   = affine.transform([0, 1, 0], rot, vector=True)
-            vec   = affine.normalise(vec) * offset
-            xform = affine.scaleOffsetXform(1, vec)
-            xform = np.array(xform, dtype=np.float32, copy=False)
-        else:
-            xform = None
-
+        # Draw each overlay to an
+        # off-screen render texture.
         for ovl, globj in zip(overlays, globjs):
 
+            rtex    = self.__globjTextures.get(ovl, None)
             display = self.__displayCtx.getDisplay(ovl)
 
-            if not globj.ready():
-                continue
-            if not display.enabled:
-                continue
-
-            # Clear depth on each overlay
-            # if occlusion is disabled
-            if (not opts.occlusion) and isinstance(ovl, fslimage.Image):
-                gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
+            if not globj.ready():   continue
+            if not display.enabled: continue
+            if rtex is None:        continue
 
             log.debug('Drawing %s [%s]', ovl, globj)
 
-            globj.preDraw()
-            globj.draw3D(xform=xform)
-            globj.postDraw()
+            rtexs.append(rtex)
+            with rtex.target():
+                rtex.shape = width, height
+                gl.glViewport(0, 0, width, height)
 
-            # Accumulate the depth offset for each overlay
-            if opts.occlusion:
-                xform = affine.concat(xform, xform)
+                # We draw each overlay to a separate offscreen
+                # texture, then blend them together (along
+                # with the canvas background colour) below.
+                # We need to adjust the blend equation so
+                # that the clear colour here does not affect
+                # the colours from the overlay render, and that
+                # alpha blending within the overlay render
+                # (specifically w.r.t. tractograms, i.e.
+                # transparent streamlines drawn on top of each
+                # other) works correctly.
+                #
+                # I don't understand alpha blending well enough,
+                # but these are some good resources:
+                #   - http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
+                #   - http://www.adriancourreges.com/blog/2017/05/09/beware-of-transparent-pixels/
+                #   - https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+                #   - https://limnu.com/webgl-blending-youre-probably-wrong/
+                glroutines.clear((0, 0, 0, 0))
+                gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA,
+                                       gl.GL_ONE_MINUS_SRC_ALPHA,
+                                       gl.GL_ONE,
+                                       gl.GL_ONE_MINUS_SRC_ALPHA)
+
+                globj.preDraw()
+                globj.draw3D()
+                globj.postDraw()
+
+        # draw those off-screen
+        # textures to screen
+        gl.glViewport(0, 0, width, height)
+        glroutines.clear(opts.bgColour)
+
+        texCoords = textures.Texture2D.generateTextureCoords()
+        vertices  = np.array([[-1, -1, 0],
+                              [-1,  1, 0],
+                              [ 1, -1, 0],
+                              [ 1, -1, 0],
+                              [-1,  1, 0],
+                              [ 1,  1, 0]], dtype=np.float32)
+
+        # Use a shader program to sort overlays
+        # by depth at every pixel, so they are
+        # drawn from farthest to nearest.
+        shader = self.__shaders.get(len(rtexs), None)
+        if shader is not None:
+
+            for i, rtex in enumerate(rtexs):
+                rtex             .bindTexture(int(gl.GL_TEXTURE0) + i * 2)
+                rtex.depthTexture.bindTexture(int(gl.GL_TEXTURE0) + i * 2 + 1)
+
+            with shader.loaded(), glroutines.enabled(gl.GL_DEPTH_TEST):
+                shader.set(   'bgColour', opts.bgColour)
+                shader.setAtt('vertex',   vertices)
+                shader.setAtt('texCoord', texCoords)
+                shader.draw(gl.GL_TRIANGLES, 0, 6)
+
+            for i, rtex in enumerate(rtexs):
+                rtex             .unbindTexture()
+                rtex.depthTexture.unbindTexture()
+
+        # GL14 fallback - just draw the textures
+        # directly to screen according to overlay
+        # order (see getGLObjects - volumes are
+        # always drawn last).
+        else:
+            with glroutines.enabled(gl.GL_DEPTH_TEST):
+                for rtex in rtexs:
+                    rtex.draw(vertices, useDepth=True)
 
         if opts.showCursor:
             self.__drawCursor()

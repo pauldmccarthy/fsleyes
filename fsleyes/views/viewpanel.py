@@ -139,6 +139,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return None
 
 
+    @staticmethod
+    def displayType():
+        """May be overridden by sub-classes. May return a string which
+        describes the type of display/view that this ``ViewPanel`` provides.
+        This might be used as a hint by :class:`.Display` /
+        :class:`.DisplayOpts` instances to tailor their overlay display
+        settings to different view/display types.
+        """
+        return None
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``ViewPanel``.
 

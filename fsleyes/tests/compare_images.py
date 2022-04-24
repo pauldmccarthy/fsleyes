@@ -13,6 +13,33 @@ import scipy.ndimage as ndi
 
 import matplotlib.image as mplimg
 
+def match_shapes(img1, img2):
+    # pad both images
+    if img1.shape == img2.shape:
+        return img1, img2
+
+    nchannels = img1.shape[2]
+    i1w, i1h  = img1.shape[:2]
+    i2w, i2h  = img2.shape[:2]
+
+    maxw = max(i1w, i2w)
+    maxh = max(i1h, i2h)
+
+    newimg1 = np.zeros((maxw, maxh, nchannels), dtype=np.uint8)
+    newimg2 = np.zeros((maxw, maxh, nchannels), dtype=np.uint8)
+
+    i1woff = int(round((maxw - i1w) / 2.0))
+    i1hoff = int(round((maxh - i1h) / 2.0))
+    i2woff = int(round((maxw - i2w) / 2.0))
+    i2hoff = int(round((maxh - i2h) / 2.0))
+
+    newimg1[i1woff:i1woff + i1w,
+            i1hoff:i1hoff + i1h, :] = img1
+    newimg2[i2woff:i2woff + i2w,
+            i2hoff:i2hoff + i2h, :] = img2
+
+    return newimg1, newimg2
+
 
 def compare_images(img1, img2, threshold):
     """Compares two images using the euclidean distance in RGB space
@@ -28,30 +55,7 @@ def compare_images(img1, img2, threshold):
     img1 = img1[:, :, :3]
     img2 = img2[:, :, :3]
 
-    # pad both images
-    if img1.shape != img2.shape:
-
-        i1w, i1h = img1.shape[:2]
-        i2w, i2h = img2.shape[:2]
-
-        maxw = max(i1w, i2w)
-        maxh = max(i1h, i2h)
-
-        newimg1 = np.zeros((maxw, maxh, 3), dtype=np.uint8)
-        newimg2 = np.zeros((maxw, maxh, 3), dtype=np.uint8)
-
-        i1woff = int(round((maxw - i1w) / 2.0))
-        i1hoff = int(round((maxh - i1h) / 2.0))
-        i2woff = int(round((maxw - i2w) / 2.0))
-        i2hoff = int(round((maxh - i2h) / 2.0))
-
-        newimg1[i1woff:i1woff + i1w,
-                i1hoff:i1hoff + i1h, :] = img1
-        newimg2[i2woff:i2woff + i2w,
-                i2hoff:i2hoff + i2h, :] = img2
-
-        img1 = newimg1
-        img2 = newimg2
+    img1, img2 = match_shapes(img1, img2)
 
     img1 = ndi.gaussian_filter(img1, sigma=(2, 2, 0), order=0)
     img2 = ndi.gaussian_filter(img2, sigma=(2, 2, 0), order=0)

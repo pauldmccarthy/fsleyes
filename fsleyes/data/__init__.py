@@ -31,9 +31,10 @@ def guessType(path):
 
     :arg path: Path to a file to be loaded
     :returns:  Tuple containing:
-                - A data type which can be used to load the file, or ``None``
-                  if the file is not recognised.
-                - The file path, possibly modified (e.g. made absolute).
+
+               - A data type which can be used to load the file, or ``None``
+                 if the file is not recognised.
+               - The file path, possibly modified (e.g. made absolute).
     """
 
     import fsleyes.data.tractogram as tractogram

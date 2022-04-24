@@ -96,6 +96,10 @@ class DepthTexture(texture.Texture):
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
+                               gl.GL_TEXTURE_COMPARE_MODE,
+                               gl.GL_NONE)
+
+            gl.glTexParameteri(gl.GL_TEXTURE_2D,
                                gl.GL_TEXTURE_MAG_FILTER,
                                gl.GL_NEAREST)
             gl.glTexParameteri(gl.GL_TEXTURE_2D,
@@ -117,6 +121,34 @@ class DepthTexture(texture.Texture):
                             baseFmt,
                             ttype,
                             None)
+
+
+    def getBitmap(self):
+        """Returns the data stored in this ``DepthTexture`` as a ``numpy.uint8``
+        array of shape ``(height, width, 3)``.
+
+        The depth values are inverted and normalised, and duplicated across
+        the three RGB channels.
+        """
+
+        intFmt        = self.baseFormat
+        extFmt        = self.textureType
+        ndtype        = self.dtype
+        width, height = self.shape
+
+        with self.bound():
+            data = gl.glGetTexImage(gl.GL_TEXTURE_2D, 0, intFmt, extFmt, None)
+
+        data = np.frombuffer(data, dtype=ndtype).astype(np.float32)
+        data = (data.max() - data)
+        data = (data - data.min()) / (data.max() - data.min())
+        data = (data * 255).astype(np.uint8)
+
+        data = data.reshape((height, width, 1))
+        data = np.dstack((data, data, data))
+        data = np.flipud(data)
+
+        return data
 
 
 class Texture2D(texture.Texture):

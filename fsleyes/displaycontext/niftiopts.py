@@ -37,7 +37,7 @@ in one of several ways:
                                 order, the X (left-right) axis is
                                 inverted. The origin is fixed at the centre of
                                 voxel ``(0, 0, 0)`` (or ``(X-1, 0, 0)`` for
-                                 inverted images).
+                                inverted images).
 
  **world**                      (a.k.a. ``affine``) The image data voxel
                                 coordinates are transformed by the

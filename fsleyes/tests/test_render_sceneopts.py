@@ -50,6 +50,7 @@ cli_tests = """
 
 # Colour bar for other overlay types
 -cb gifti/white.surf.gii -vd gifti/data3d.txt -cm hot
+-cb tractogram/spirals.trk -co vdata -cm hsv
 
 # default display/clipping range as percentiles
 -idr 50 100 3d.nii.gz
@@ -63,7 +64,6 @@ cli_tests = """
 """
 
 
-# TODO either mock, or make sure FSL standards exist in CI
 fsl_cli_tests = """
 -idr 50 100 -std
 -idr 50 100 -stdb
@@ -79,28 +79,28 @@ extras = {
 
 
 def test_render_sceneopts_ortho():
+    tests = [t for t in cli_tests.split('\n') if 'tractogram' not in t]
+    tests = '\n'.join(tests)
     run_cli_tests('test_render_sceneopts_ortho',
-                  cli_tests,
+                  tests,
                   extras=extras,
                   scene='ortho',
                   threshold=15)
 
 
 def test_render_sceneopts_lightbox():
+    tests = [t for t in cli_tests.split('\n') if 'tractogram' not in t]
+    tests = '\n'.join(tests)
     run_cli_tests('test_render_sceneopts_lightbox',
-                  cli_tests,
+                  tests,
                   extras=extras,
                   scene='lightbox')
 
 
 def test_render_sceneopts_3d():
-    tests = []
-    for t in cli_tests.split('\n'):
-        if 'nii' in t:
-            tests.append('-dl {}'.format(t))
-        else:
-            tests.append(t)
-    tests = '\n'.join(tests)
+    tests = [t.strip() for t in cli_tests.split('\n')]
+    tests = [t for t in tests if (t != '') and (t[0] != '#')]
+    tests = '\n'.join(['-dl {}'.format(t) for t in tests])
 
     run_cli_tests('test_render_sceneopts_3d',
                   tests,

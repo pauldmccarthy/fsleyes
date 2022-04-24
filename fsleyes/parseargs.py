@@ -455,7 +455,6 @@ OPTIONS = td.TypeDict({
                        'highlightSlice'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
-                       'occlusion',
                        'light',
                        'lightPos',
                        'lightDistance',
@@ -826,7 +825,6 @@ ARGUMENTS = td.TypeDict({
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
     'Scene3DOpts.showLegend'     : ('he',  'hideLegend',     False),
-    'Scene3DOpts.occlusion'      : ('noc', 'noOcclusion',    False),
     'Scene3DOpts.light'          : ('dl',  'disableLight',   False),
     'Scene3DOpts.lightPos'       : ('lp',  'lightPos',       True),
     'Scene3DOpts.lightDistance'  : ('ld',  'lightDistance',  True),
@@ -1099,7 +1097,6 @@ HELP = td.TypeDict({
 
     'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
     'Scene3DOpts.showLegend'    : 'Hide the orientation legend',
-    'Scene3DOpts.occlusion'     : 'Disable volume occlusion',
     'Scene3DOpts.light'         : 'Disable light effect',
     'Scene3DOpts.lightPos'      :
     'Light position, as XYZ rotations in degrees (-180 - 180)',
@@ -1557,7 +1554,6 @@ TRANSFORMS = td.TypeDict({
     'OrthoOpts.showZCanvas'         : _boolTrans,
     'OrthoOpts.showLabels'          : _boolTrans,
     'Scene3DOpts.showLegend'        : _boolTrans,
-    'Scene3DOpts.occlusion'         : _boolTrans,
     'Scene3DOpts.light'             : _boolTrans,
     'Display.enabled'               : _boolTrans,
     'ColourMapOpts.linkLowRanges'   : _boolTrans,
