@@ -63,7 +63,7 @@ def draw2D(self, axes, mvp):
     res        = opts.resolution
     shader     = self.shaders[colourMode][clipMode][0]
 
-    if res >= 3:
+    if res >= 4:
         vertices = glroutines.unitCircle(res, axes)
         prim     = gl.GL_TRIANGLE_FAN
 

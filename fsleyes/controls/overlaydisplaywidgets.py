@@ -341,8 +341,6 @@ def _initPropertyList_VolumeRGBOpts(threedee):
 
 
 def _initPropertyList_TractogramOpts(threedee):
-    if not threedee:
-        return []
     return ['lineWidth',
             'resolution',
             'custom_colourMode',
@@ -931,9 +929,6 @@ def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
 
 
 def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
-    if not threedee:
-        return {}
-
     def cmodeName(data):
         if data == 'orientation':
             return 'Orientation'
