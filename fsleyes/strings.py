@@ -1277,12 +1277,11 @@ properties = TypeDict({
     'VolumeRGBOpts.suppressA'     : 'Suppress A',
     'VolumeRGBOpts.suppressMode'  : 'Suppress mode',
 
-    'TractogramOpts.clipMode'          : 'Clip streamlines by',
-    'TractogramOpts.custom_colourMode' : 'Colour streamlines by',
-    'TractogramOpts.colourMode'        : 'Colour streamlines by',
-    'TractogramOpts.clipBy'            : 'Clip streamlines by',
-    'TractogramOpts.lineWidth'         : 'Streamline width',
-    'TractogramOpts.resolution'        : 'Streamline resolution',
+    'TractogramOpts.clipMode'          : 'Clip by',
+    'TractogramOpts.custom_colourMode' : 'Colour by',
+    'TractogramOpts.colourMode'        : 'Colour by',
+    'TractogramOpts.lineWidth'         : 'Width',
+    'TractogramOpts.resolution'        : 'Resolution',
 })
 
 
