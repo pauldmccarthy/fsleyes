@@ -235,7 +235,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
         """
-        self.updateDataRange(resetCR=False)
+        self.updateDataRange(resetCR=(self.clipMode is None))
 
 
     def __clipModeChanged(self, *_):

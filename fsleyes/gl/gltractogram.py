@@ -439,31 +439,55 @@ class GLTractogram(globject.GLObject):
         # When the texture has been prepared,
         # we need to tell the shader programs
         # how to use it.
-        def shader(texture):
-            opts      = self.displayCtx.getOpts(image)
-            w2tXform  = opts.getTransform('world', 'texture')
-            voxXform  = texture.voxValXform
-            voxScale  = voxXform[0, 0]
-            voxOffset = voxXform[0, 3]
+        if which == 'colour': callback = self.colourImageTextureChanged
+        else:                 callback = self.clipImageTextureChanged
 
-            if which == 'colour':
-                for shader in self.iterShaders('imageData'):
-                    with shader.loaded():
-                        shader.set('imageTexture',  2)
-                        shader.set('texCoordXform', w2tXform)
-                        shader.set('voxScale',      voxScale)
-                        shader.set('voxOffset',     voxOffset)
-            elif which == 'clip':
-                for shader in self.iterShaders([], ['imageData']):
-                    with shader.loaded():
-                        shader.set('clipTexture',       3)
-                        shader.set('clipTexCoordXform', w2tXform)
-                        shader.set('clipValScale',      voxScale)
-                        shader.set('clipValOffset',     voxOffset)
+        self.imageTextures.registerAuxImage(
+            which, image, callback=callback, notify=True)
+        self.imageTextures.texture(which).register(self.name, callback)
 
-        self.imageTextures.registerAuxImage(which, image, callback=shader)
-        self.imageTextures.texture(which).register(
-            self.name, self.updateShaderState)
+
+    def colourImageTextureChanged(self, *_):
+        """Calls :meth:`imageTextureChanged`. """
+        self.imageTextureChanged('colour')
+
+
+    def clipImageTextureChanged(self, *_):
+        """Calls :meth:`imageTextureChanged`. """
+        self.imageTextureChanged('clip')
+
+
+    def imageTextureChanged(self, which):
+        """Called when :attr:`.TractogramOpts.colourMode` or
+        :attr:`.TractogramOpts.clipMode` is set to an image, and the
+        underlying :class:`.ImageTexture` changes. Sets some shader uniforms
+        accordingly.
+        """
+
+        if which == 'colour': image = self.opts.colourMode
+        else:                 image = self.opts.clipMode
+
+        texture   = self.imageTextures.texture(which)
+        opts      = self.displayCtx.getOpts(image)
+        w2tXform  = opts.getTransform('world', 'texture')
+        voxXform  = texture.voxValXform
+        voxScale  = voxXform[0, 0]
+        voxOffset = voxXform[0, 3]
+
+        if which == 'colour':
+            for shader in self.iterShaders('imageData'):
+                with shader.loaded():
+                    shader.set('imageTexture',  2)
+                    shader.set('texCoordXform', w2tXform)
+                    shader.set('voxScale',      voxScale)
+                    shader.set('voxOffset',     voxOffset)
+        elif which == 'clip':
+            for shader in self.iterShaders([], ['imageData']):
+                with shader.loaded():
+                    shader.set('clipTexture',       3)
+                    shader.set('clipTexCoordXform', w2tXform)
+                    shader.set('clipValScale',      voxScale)
+                    shader.set('clipValOffset',     voxOffset)
 
 
     def refreshCmapTextures(self):

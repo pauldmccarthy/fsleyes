@@ -717,6 +717,8 @@ class AuxImageTextureManager:
         if opts is not None: volume = opts.index()[3:]
         else:                volume = 0
 
+        kwargs['notify'] = kwargs.get('notify', False)
+
         tex = glresources.get(
             texName,
             ImageTexture,
@@ -724,7 +726,6 @@ class AuxImageTextureManager:
             image,
             normaliseRange=norm,
             volume=volume,
-            notify=False,
             **kwargs)
 
         self.__auxtextures[which] = tex
