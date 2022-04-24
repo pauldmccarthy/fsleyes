@@ -49,6 +49,8 @@ def compileShaders(self):
     if self.shader is not None:
         self.shader.destroy()
 
+    opts = self.opts
+
     if self.threedee: frag = 'glvolume_3d'
     else:             frag = 'glvolume'
 
@@ -69,12 +71,13 @@ def compileShaders(self):
 
     if self.threedee:
 
-        if   self.opts.clipMode == 'intersection': clipMode = 1
-        elif self.opts.clipMode == 'union':        clipMode = 2
-        elif self.opts.clipMode == 'complement':   clipMode = 3
-        else:                                      clipMode = 0
+        if   opts.clipMode == 'intersection': clipMode = 1
+        elif opts.clipMode == 'union':        clipMode = 2
+        elif opts.clipMode == 'complement':   clipMode = 3
+        else:                                 clipMode = 0
 
-        constants['numSteps']        = self.opts.numInnerSteps
+        numSteps = min((opts.numInnerSteps, opts.getNumSteps()))
+        constants['numSteps']        = numSteps
         constants['clipMode']        = clipMode
         constants['numClipPlanes']   = self.opts.numClipPlanes
         texes[    'startingTexture'] = 5

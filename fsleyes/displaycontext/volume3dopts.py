@@ -175,7 +175,7 @@ class Volume3DOpts:
 
         outer = self.getNumOuterSteps()
 
-        return int(outer * self.numInnerSteps)
+        return min(self.numSteps, int(outer * self.numInnerSteps))
 
 
     def getNumOuterSteps(self):
