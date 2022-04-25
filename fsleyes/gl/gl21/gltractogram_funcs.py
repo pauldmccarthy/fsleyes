@@ -66,8 +66,7 @@ def draw2D(self, axes, mvp):
     # each vertex is drawn as a circle,
     # using instanced rendering.
     vertices         = glroutines.unitCircle(res)
-    lineWidth        = self.normalisedLineWidth
-    scales           = affine.transform([lineWidth] * 3, mvp, vector=True)
+    scales           = self.normalisedLineWidth(mvp)
     vertices[:, :2] *= scales[:2]
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -110,6 +109,9 @@ def draw3D(self, xform=None):
         shader.set('MVP', mvp)
         # See comments in gl33.gltractogram_funcs.draw3D
         with glroutines.enabled(gl.GL_CULL_FACE):
+            # we don't implement line width in gl21 - we
+            # would need to use instanced rendering to
+            # draw each line segment as a rectangle.
             gl.glLineWidth(lineWidth)
             gl.glCullFace(gl.GL_BACK)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

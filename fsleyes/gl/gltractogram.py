@@ -237,13 +237,39 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    @property
-    def normalisedLineWidth(self):
+    def normalisedLineWidth(self, mvp):
         """Returns :attr:`lineWidth`, scaled so that it is with respect to
-        to world coordinate system.
+        normalised device coordinates. Streamline lines/tubes (in 3D) and
+        vertices (in 2D) are drawn such that the width/radius is fixed w.r.t.
+        the world coordinate system - i.e. for a given ``lineWidth``,
+        lines/tubes/circles will be small when zoomed out, and big when
+        zoomed in.
+
+        :arg mvp: Current MVP matrix
         """
-        # Line width is fixed at 0.1 in world units.
-        return self.opts.lineWidth / 10
+        # Line width is fixed at 0.1 in world
+        # units. Below we convert it so it is
+        # in terms of NDCs.
+        lineWidth =  self.opts.lineWidth / 10
+
+        if self.threedee:
+            # We don't apply the scene3d rotation, because
+            # the projection matrix adds an uneven scaling
+            # to the depth axis (see routines.ortho3D),
+            # which will affect scaling when rotated to be
+            # in line with that axis.  I may revisit this in
+            # the future, as the ortho3D function is a bit
+            # nuts in how it handles depth (caused my my
+            # lack of understanding of near/far clipping).
+            canvas    = self.canvas
+            scaling   = affine.concat(canvas.projectionMatrix,
+                                      canvas.viewScale)
+            lineWidth = lineWidth * scaling[0, 0]
+        else:
+            # return separate scales for each axis
+            lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
+
+        return lineWidth
 
 
     @property

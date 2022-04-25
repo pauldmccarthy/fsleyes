@@ -92,8 +92,7 @@ def draw2D(self, axes, mvp):
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
     shader     = self.shaders[colourMode][clipMode][0]
-    lineWidth  = self.normalisedLineWidth
-    scales     = affine.transform([lineWidth] * 3, mvp, vector=True)
+    scales     = self.normalisedLineWidth(mvp)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -119,7 +118,7 @@ def draw3D(self, xform=None):
     lighting   = canvas.opts.light
     lightPos   = affine.transform(canvas.lightPos, mvp)
     nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth
+    lineWidth  = self.normalisedLineWidth(mvp)
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
