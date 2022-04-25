@@ -724,8 +724,10 @@ class AuxImageTextureManager:
             ImageTexture,
             texName,
             image,
-            normaliseRange=norm,
-            volume=volume,
-            **kwargs)
+            initialise=False)
 
+        # obtain a ref to the texture before it
+        # initialises itself, in case a callback
+        # function needs access to the texture
         self.__auxtextures[which] = tex
+        tex.set(normaliseRange=norm, volume=volume, **kwargs)
