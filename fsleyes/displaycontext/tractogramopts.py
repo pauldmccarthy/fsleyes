@@ -49,7 +49,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    lineWidth = props.Int(minval=1, maxval=10, default=2)
+    lineWidth = props.Real(minval=1, maxval=10, default=2)
     """Width to draw the streamlines. When drawing in 3D, this controls the
     line width / tube diameter. When drawing in 2D, this controls the point
     diameter.
@@ -58,8 +58,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
     resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
     """When drawing in 3D as tubes, or in 2D as circles, this setting defines
-    the resolution at which the tubes/circles are drawn. If resolution <= 2,
-    the streamlines are drawn as lines/points.
+    the resolution at which the tubes/circles are drawn. In 3D, if
+    resolution <= 2, the streamlines are drawn as lines. In 2D, the
+    resolution is clamped to a minimum of 3, with the effect that streamline
+    vertices are drawn as triangles.
     """
 
 

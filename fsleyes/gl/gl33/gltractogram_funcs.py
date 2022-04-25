@@ -88,18 +88,19 @@ def compileShaders(self):
 
 def draw2D(self, axes, mvp):
     """Called by :class:`.GLTractogram.draw2D`. """
-    opts           = self.opts
-    colourMode     = opts.effectiveColourMode
-    clipMode       = opts.effectiveClipMode
-    shader         = self.shaders[colourMode][clipMode][0]
-    xscale, yscale = self.normalisedLineWidths
+    opts       = self.opts
+    colourMode = opts.effectiveColourMode
+    clipMode   = opts.effectiveClipMode
+    shader     = self.shaders[colourMode][clipMode][0]
+    lineWidth  = self.normalisedLineWidth
+    scales     = affine.transform([lineWidth] * 3, mvp, vector=True)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',    mvp)
-        shader.set('xscale', xscale)
-        shader.set('yscale', yscale)
+        shader.set('xscale', scales[0])
+        shader.set('yscale', scales[1])
         gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vertices))
 
 

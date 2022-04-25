@@ -60,28 +60,22 @@ def draw2D(self, axes, mvp):
     opts       = self.opts
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    res        = opts.resolution
+    res        = max((opts.resolution, 3))
     shader     = self.shaders[colourMode][clipMode][0]
 
-    if res >= 3:
-        vertices        = glroutines.unitCircle(res + 1)
-        xscale, yscale  = self.normalisedLineWidths
-        vertices[:, 0] *= xscale
-        vertices[:, 1] *= yscale
-        prim            = gl.GL_TRIANGLE_FAN
-
-    else:
-        vertices = np.zeros((1, 3))
-        prim     = gl.GL_POINTS
-        gl.glPointSize(opts.lineWidth)
+    # each vertex is drawn as a circle,
+    # using instanced rendering.
+    vertices         = glroutines.unitCircle(res)
+    lineWidth        = self.normalisedLineWidth
+    scales           = affine.transform([lineWidth] * 3, mvp, vector=True)
+    vertices[:, :2] *= scales[:2]
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set(   'MVP',          mvp)
         shader.setAtt('circleVertex', vertices)
-
-        glexts.glDrawArraysInstanced(prim,
+        glexts.glDrawArraysInstanced(gl.GL_TRIANGLE_FAN,
                                      0,
                                      len(vertices),
                                      len(self.vertices))

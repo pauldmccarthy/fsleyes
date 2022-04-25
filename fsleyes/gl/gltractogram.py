@@ -239,22 +239,11 @@ class GLTractogram(globject.GLObject):
 
     @property
     def normalisedLineWidth(self):
-        """Returns :attr:`lineWidth`, scaled to normalised device coordinates.
+        """Returns :attr:`lineWidth`, scaled so that it is with respect to
+        to world coordinate system.
         """
-        cw, ch    = self.canvas.GetSize()
-        lineWidth = self.opts.lineWidth * max((1 / cw, 1 / ch))
-        return lineWidth
-
-
-    @property
-    def normalisedLineWidths(self):
-        """Returns :attr:`lineWidth`, scaled separately for the x and y axes,
-        to normalised device coordinates.
-        """
-        cw, ch    = self.canvas.GetSize()
-        xwidth    = self.opts.lineWidth / cw
-        ywidth    = self.opts.lineWidth / ch
-        return xwidth, ywidth
+        # Line width is fixed at 0.1 in world units.
+        return self.opts.lineWidth / 10
 
 
     @property

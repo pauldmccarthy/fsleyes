@@ -1319,22 +1319,22 @@ def unitCircle(res, axes=None):
     The circle has origin (0, 0, 0), and radius 1, and can be drawn with
     ``gl.GL_TRIANGLE_FAN``.
 
-    :arg res:  Number of angles to use. Must be at least 4. A total of
-               ``res=1`` vertices will be generated.
+    :arg res:  Angular resolutionb Must be at least 3, which will result in
+               a triangle. A total of ``res+2`` vertices will be generated.
     :arg axes: Indices denoting the ``(x, y, z)`` axes. If not provided,
                set to ``(0, 1, 2)``.
-    :returns:  A numpy ``.float32`` array containing the vertices of a
+    :returns:  A ``numpy.float32`` array containing the vertices of a
                unit circle.
     """
 
-    if res < 4:
-        raise ValueError('res must be >= 4')
+    if res < 3:
+        raise ValueError('res must be >= 3')
     if axes is None:
         axes = [0, 1, 2]
 
     xax, yax = axes[:2]
-    verts    = np.zeros((res + 1, 3), dtype=np.float32)
-    samples  = np.linspace(0, 2 * np.pi, res)
+    verts    = np.zeros((res + 2, 3), dtype=np.float32)
+    samples  = np.linspace(0, 2 * np.pi, res + 1)
 
     verts[1:, xax] = np.sin(samples)
     verts[1:, yax] = np.cos(samples)
