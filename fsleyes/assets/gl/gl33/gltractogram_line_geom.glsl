@@ -37,11 +37,12 @@ out vec3 fragVertex;
 out vec3 fragNormal;
 
 /*
- * Line/cylinder width - must be defined
- * in terms of normalised device coordinates
+ * Line width scaling factors along x/y
+ * axesa - must be defined in terms of
+ * normalised device coordinates
  * (i.e. after MVP has been applied).
  */
-uniform float lineWidth;
+uniform vec2 lineWidth;
 
 /* Not used */
 uniform int resolution;
@@ -73,7 +74,7 @@ void main(void) {
   projstart = start - camera * dot(start, camera);
   projend   = end   - camera * dot(end,   camera);
   offset    = projend - projstart;
-  offset    = normalize(cameraRotation * offset) * lineWidth / 2;
+  offset    = normalize(cameraRotation * offset) * vec3(lineWidth, 0) / 2;
 
   // Lighting is not currently applied
   // to line geometry, but we should

@@ -38,12 +38,14 @@ out float fragClipVertexData;
 out vec3 fragVertex;
 out vec3 fragNormal;
 
+
 /*
- * Line/cylinder width - must be defined
- * in terms of normalised device coordinates
+ * Tube width scaling factors along x/y
+ * axesa - must be defined in terms of
+ * normalised device coordinates
  * (i.e. after MVP has been applied).
  */
-uniform float lineWidth;
+uniform vec2 lineWidth;
 
 /*
  * Cylinder resolution - it will be drawn
@@ -99,7 +101,7 @@ void main(void) {
     // Offset from the line at the current angle,
     // on the plane perpendicular to the line.
     offset       = normalize(((normalx * cosa) + (normaly * sina)));
-    scaledOffset = offset * lineWidth / 2;
+    scaledOffset = offset * vec3(lineWidth, 0) / 2;
 
     {% if colourMode == 'orientation' %}
     fragOrient = geomOrient[0];

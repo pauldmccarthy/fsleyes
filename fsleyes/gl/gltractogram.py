@@ -264,7 +264,9 @@ class GLTractogram(globject.GLObject):
             canvas    = self.canvas
             scaling   = affine.concat(canvas.projectionMatrix,
                                       canvas.viewScale)
-            lineWidth = lineWidth * scaling[0, 0]
+            lineWidth = [lineWidth * scaling[0, 0],
+                         lineWidth * scaling[1, 1]]
+
         else:
             # return separate scales for each axis
             lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
