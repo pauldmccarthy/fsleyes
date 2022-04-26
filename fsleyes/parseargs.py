@@ -2623,16 +2623,16 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             displayCtx.displaySpace = displaySpace
 
         # voxel/world location - wloc takes precedence
-        if (not args.worldLoc)  and \
-           args.voxelLoc        and \
-           len(overlayList) > 0 and \
+        if (args.worldLoc is None)     and \
+           (args.voxelLoc is not None) and \
+           len(overlayList) > 0        and \
            isinstance(overlayList[0], fslimage.Nifti):
 
             opts = displayCtx.getOpts(overlayList[0])
             loc  = opts.transformCoords(args.voxelLoc, 'voxel', 'world')
             args.worldLoc = loc
 
-        if args.worldLoc and len(overlayList) > 0:
+        if (args.worldLoc is not None) and (len(overlayList) > 0):
             displayCtx.worldLocation.xyz = args.worldLoc
 
         # Now, apply arguments to the SceneOpts instance
