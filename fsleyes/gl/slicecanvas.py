@@ -605,7 +605,6 @@ class SliceCanvas:
             globj = globject.createGLObject(overlay,
                                             self.overlayList,
                                             self.displayCtx,
-                                            self,
                                             False)
 
             if globj is not None:
@@ -1202,7 +1201,7 @@ class SliceCanvas:
                       copts.zax, display.name)
 
             globj.preDraw()
-            globj.draw2D(zpos, axes)
+            globj.draw2D(self, zpos, axes)
             globj.postDraw()
 
         if copts.showCursor:

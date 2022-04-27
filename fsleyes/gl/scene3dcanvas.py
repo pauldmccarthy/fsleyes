@@ -624,7 +624,6 @@ class Scene3DCanvas:
             globj = globject.createGLObject(overlay,
                                             self.__overlayList,
                                             self.__displayCtx,
-                                            self,
                                             True)
 
             if globj is not None:
@@ -822,7 +821,7 @@ class Scene3DCanvas:
                                        gl.GL_ONE_MINUS_SRC_ALPHA)
 
                 globj.preDraw()
-                globj.draw3D()
+                globj.draw3D(self)
                 globj.postDraw()
 
         # draw those off-screen

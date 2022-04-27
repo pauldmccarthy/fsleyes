@@ -76,7 +76,7 @@ def getGLObjectType(overlayType):
     return typeMap.get(overlayType, None)
 
 
-def createGLObject(overlay, overlayList, displayCtx, canvas, threedee=False):
+def createGLObject(overlay, overlayList, displayCtx, threedee=False):
     """Create :class:`GLObject` instance for the given overlay, as specified
     by the :attr:`.Display.overlayType` property.
 
@@ -85,8 +85,6 @@ def createGLObject(overlay, overlayList, displayCtx, canvas, threedee=False):
     :arg overlayList: The :class:`.OverlayList`
 
     :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-
-    :arg canvas:      The canvas which will be displaying this ``GLObject``.
 
     :arg threedee:    If ``True``, the ``GLObject`` will be configured for
                       3D rendering. Otherwise it will be configured for 2D
@@ -97,7 +95,7 @@ def createGLObject(overlay, overlayList, displayCtx, canvas, threedee=False):
     ctr     = getGLObjectType(display.overlayType)
 
     if ctr is not None:
-        return ctr(overlay, overlayList, displayCtx, canvas, threedee)
+        return ctr(overlay, overlayList, displayCtx, threedee)
     else:
         return None
 
@@ -125,11 +123,6 @@ class GLObject(notifier.Notifier):
 
       - ``displayCtx``: The :class:`.DisplayContext` managing the scene
                         that this ``GLObject`` is a part of.
-
-      - ``canvas``:     The canvas which is displaying this ``GLObject``.
-                        Could be a :class:`.SliceCanvas`, a
-                        :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
-                        or some future not-yet-created canvas.
 
       - ``threedee``:   A boolean flag indicating whether this ``GLObject``
                         is configured for 2D or 3D rendering.
@@ -207,7 +200,7 @@ class GLObject(notifier.Notifier):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, threedee):
         """Create a :class:`GLObject`.  The constructor adds one attribute
         to this instance, ``name``, which is simply a unique name for this
         instance.
@@ -222,8 +215,6 @@ class GLObject(notifier.Notifier):
 
         :arg displayCtx:  The ``DisplayContext`` managing the scene
 
-        :arg canvas:      The canvas that is displaying this ``GLObject``.
-
         :arg threedee:    Whether this ``GLObject`` is to be used for 2D or 3D
                           rendering.
         """
@@ -233,7 +224,6 @@ class GLObject(notifier.Notifier):
         self.__overlay     = overlay
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        self.__canvas      = canvas
         self.__display     = None
         self.__opts        = None
 
@@ -262,26 +252,6 @@ class GLObject(notifier.Notifier):
     def overlay(self):
         """The overlay being drawn by this ``GLObject``."""
         return self.__overlay
-
-
-    @property
-    def canvas(self):
-        """The canvas which is drawing this ``GLObject``."""
-        return self.__canvas
-
-
-    @contextlib.contextmanager
-    def renderTarget(self, target):
-        """Context manager to temporarily set the rendering target to another
-        target, e.g. a :class:`.RenderTexture`.  The given ``target`` will be
-        returned by :meth:`canvas` during the context.
-        """
-        canvas = self.__canvas
-        try:
-            self.__canvas = target
-            yield
-        finally:
-            self.__canvas = canvas
 
 
     @property
@@ -421,35 +391,45 @@ class GLObject(notifier.Notifier):
         """
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 2D rendering. It should draw a view of this
         ``GLObject`` - a 2D slice at the given Z location, which specifies
         the position along the screen depth axis.
 
-        :arg zpos:  Position along Z axis to draw.
+        :arg canvas: The canvas which is displaying this ``GLObject``.
+                     Could be a :class:`.SliceCanvas`, a
+                     :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
+                     or some future not-yet-created canvas.
 
-        :arg axes:  Tuple containing the ``(x, y, z)`` axes in the
-                    display coordinate system The ``x`` and ``y`` axes
-                    correspond to the horizontal and vertical display axes
-                    respectively, and the ``z`` to the depth.
+        :arg zpos:   Position along Z axis to draw.
 
-        :arg xform: If provided, it must be applied to the model view
-                    transformation before drawing.
+        :arg axes:   Tuple containing the ``(x, y, z)`` axes in the
+                     display coordinate system The ``x`` and ``y`` axes
+                     correspond to the horizontal and vertical display axes
+                     respectively, and the ``z`` to the depth.
+
+        :arg xform:  If provided, it must be applied to the model view
+                     transformation before drawing.
         """
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, canvas, xform=None):
         """This method is called on ``GLObject`` instances which are
         configured for 3D rendering. It should draw a 3D view of this
         ``GLObject``.
 
-        :arg xform: If provided, it must be applied to the model view
-                    transformation before drawing.
+        :arg canvas: The canvas which is displaying this ``GLObject``.
+                     Could be a :class:`.SliceCanvas`, a
+                     :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
+                     or some future not-yet-created canvas.
+
+        :arg xform:  If provided, it must be applied to the model view
+                     transformation before drawing.
         """
 
 
-    def drawAll(self, axes, zposes, xforms):
+    def drawAll(self, canvas, axes, zposes, xforms):
         """This is a convenience method for 2D lightboxD canvases, where
         multple 2D slices at different depths are drawn alongside each other.
 
@@ -466,7 +446,7 @@ class GLObject(notifier.Notifier):
         by combining the draws.
         """
         for (zpos, xform) in zip(zposes, xforms):
-            self.draw2D(zpos, axes, xform)
+            self.draw2D(canvas, zpos, axes, xform)
 
 
     def postDraw(self):
@@ -499,9 +479,9 @@ class GLSimpleObject(GLObject):
     """
 
 
-    def __init__(self, canvas, threedee):
+    def __init__(self, threedee):
         """Create a ``GLSimpleObject``. """
-        GLObject.__init__(self, None, None, None, canvas, threedee)
+        GLObject.__init__(self, None, None, None, threedee)
         self.__destroyed = False
 
 

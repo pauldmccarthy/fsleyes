@@ -806,7 +806,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             xforms = self.__prepareSliceTransforms(globj, xforms)
 
             globj.preDraw()
-            globj.drawAll(axes, zposes, xforms)
+            globj.drawAll(self, axes, zposes, xforms)
             globj.postDraw()
 
         if len(self.overlayList) > 0:
