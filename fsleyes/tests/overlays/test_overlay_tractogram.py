@@ -6,6 +6,8 @@
 #
 
 from unittest import mock
+import random
+import numpy as np
 
 import pytest
 
@@ -77,6 +79,14 @@ cli_tests = """
 {prefix} {zoom40}  3d -d tractogram/spirals.trk -lw {linewidth} -co 3d -cm hot
 {prefix} {zoom40}  3d -d tractogram/spirals.trk -lw {linewidth} -cl 3d -cr 5000 8000
 {prefix} {zoom40}  3d -d tractogram/spirals.trk -lw {linewidth} -co 3d -cl vdata -cm hot -dr 4000 8000 -cr -0.75 0.75
+
+# sub-sampling
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 75
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 50
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 25
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 75 -co vdata -cm hot
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 50 -co vdata -cm hot
+{prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 25 -co vdata -cm hot
 """
 
 
@@ -89,6 +99,14 @@ cli_tube_tests = """
 -s3d -z 40  -dl tractogram/spirals.trk -lw 20 -r 10
 """
 
+# hack to ensure the RNG is in the same
+# state for every command (the --subsample
+# option is non-deterministic in nature)
+def reseed(f):
+    np.random.seed(124)
+    random   .seed(124)
+    return f
+extras  = {'reseed' : reseed}
 
 @pytest.mark.skipif('not haveGL(2.1)')
 def test_overlay_tractogram_2d_gl21():
@@ -97,7 +115,9 @@ def test_overlay_tractogram_2d_gl21():
                 **zoomsortho}
     tests   = cli_tests_linewidth + cli_tests
     tests   = tests.format(**fmtargs)
-    run_cli_tests('test_overlay_tractogram_2d_gl21', tests)
+    run_cli_tests('test_overlay_tractogram_2d_gl21',
+                  tests,
+                  extras=extras)
 
 
 @pytest.mark.skipif('not haveGL(3.3)')
@@ -109,7 +129,9 @@ def test_overlay_tractogram_2d_gl33():
                 **zoomsortho}
     tests   = cli_tests_linewidth + cli_tests
     tests   = tests.format(**fmtargs)
-    run_cli_tests('test_overlay_tractogram_2d_gl33', tests)
+    run_cli_tests('test_overlay_tractogram_2d_gl33',
+                  tests,
+                  extras=extras)
 
 
 @pytest.mark.skipif('not haveGL(2.1)')
@@ -118,7 +140,9 @@ def test_overlay_tractogram_3d_gl21():
                 'linewidth' : '10',
                 **zooms3d}
     tests   = cli_tests.format(**fmtargs)
-    run_cli_tests('test_overlay_tractogram_3d_gl21', tests)
+    run_cli_tests('test_overlay_tractogram_3d_gl21',
+                  tests,
+                  extras=extras)
 
 
 @pytest.mark.skipif('not haveGL(3.3)')
@@ -130,7 +154,9 @@ def test_overlay_tractogram_3d_gl33():
                 **zooms3d}
     tests   = cli_tests_linewidth + cli_tests
     tests   = tests.format(**fmtargs)
-    run_cli_tests('test_overlay_tractogram_3d_gl33', tests)
+    run_cli_tests('test_overlay_tractogram_3d_gl33',
+                  tests,
+                  extras=extras)
 
 
 @pytest.mark.skipif('not haveGL(3.3)')
