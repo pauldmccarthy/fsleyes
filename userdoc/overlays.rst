@@ -1030,6 +1030,12 @@ resolutions, points are drawn as triangles or squares, whereas at higher
 resolutions they are drawn as circles.
 
 
+The **Sub-sample** option allows you to reduce the number of streamlines drawn
+to improve performance - a random selection of streamlines will be drawn. This
+option is automatically scaled down for large tractograms, but can be manually
+increased if desired.
+
+
 The **Colour by** option allows you to control how a tractogram is coloured.
 Streamlines can be coloured in one of three ways - the default setting is to
 colour them according to their XYZ orientation.  The colours that correspond
