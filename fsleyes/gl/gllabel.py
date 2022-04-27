@@ -46,13 +46,12 @@ class GLLabel(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLLabel``.
 
         :arg image:       The :class:`.Image` instance.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-        :arg canvas:      The canvas doing the drawing.
         :arg threedee:    2D or 3D rendering
         """
 
@@ -60,7 +59,6 @@ class GLLabel(glimageobject.GLImageObject):
                                              image,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         # The shader attribute will be created
@@ -253,27 +251,17 @@ class GLLabel(glimageobject.GLImageObject):
     def preDraw(self):
         """Binds the :class:`.ImageTexture` and :class:`.LookupTableTexture`.
         """
-
-        w, h = self.canvas.GetSize()
-        rtex = self.renderTexture
-
-        rtex.shape = w, h
-        with rtex.target():
-            gl.glClearColor(0, 0, 0, 0)
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
         self.lutTexture  .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """Calls the version-dependent ``draw2D`` function. """
 
         opts       = self.opts
         outline    = opts.outline
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
-        canvas     = self.canvas
         w, h       = canvas.GetSize()
         bbox       = canvas.viewport
         projmat    = canvas.projectionMatrix
@@ -286,11 +274,14 @@ class GLLabel(glimageobject.GLImageObject):
         ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
+        rtex.shape = w, h
+
         # draw the labels to the offscreen texture
         with glroutines.disabled(gl.GL_BLEND), \
-             rtex.target(xax, yax, lo, hi),    \
-             self.renderTarget(rtex):
-            fslgl.gllabel_funcs.draw2D(self, zpos, axes, xform)
+             rtex.target(xax, yax, lo, hi):
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            fslgl.gllabel_funcs.draw2D(self, rtex, zpos, axes, xform)
 
         # run the offscreen texture through the
         # edge filter, drawing the result to
@@ -303,15 +294,14 @@ class GLLabel(glimageobject.GLImageObject):
                               ymin, ymax, xax, yax, xform)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, canvas, xform=None):
         """Not implemented."""
 
 
-    def drawAll(self, axes, zposes, xforms):
+    def drawAll(self, canvas, axes, zposes, xforms):
         """Calls the version-dependent ``drawAll`` function. """
 
         opts       = self.opts
-        canvas     = self.canvas
         outline    = opts.outline
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
@@ -327,11 +317,14 @@ class GLLabel(glimageobject.GLImageObject):
         ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
+        rtex.shape = w, h
+
         # draw all slices to the offscreen texture
         with glroutines.disabled(gl.GL_BLEND), \
-             rtex.target(xax, yax, lo, hi),    \
-             self.renderTarget(rtex):
-            fslgl.gllabel_funcs.drawAll(self, axes, zposes, xforms)
+             rtex.target(xax, yax, lo, hi):
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            fslgl.gllabel_funcs.drawAll(self, rtex, axes, zposes, xforms)
 
         xform = affine.concat(projmat, viewmat)
 

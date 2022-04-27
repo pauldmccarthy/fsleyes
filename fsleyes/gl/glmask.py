@@ -78,20 +78,18 @@ class GLMask(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLMask``.
 
         :arg image:       The :class:`.Image` instance.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-        :arg canvas:      The canvas doing the drawing.
         :arg threedee:    2D or 3D rendering
         """
         glimageobject.GLImageObject.__init__(self,
                                              image,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         # The shader attribute will be created
@@ -278,22 +276,12 @@ class GLMask(glimageobject.GLImageObject):
 
 
     def preDraw(self):
-        """Binds the :class:`.ImageTexture` and calls the version-dependent
-        ``preDraw`` function.
-        """
-
-        w, h = self.canvas.GetSize()
-        rtex = self.renderTexture
-
-        rtex.shape = w, h
-        with rtex.target():
-            gl.glClearColor(0, 0, 0, 0)
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        """Binds the :class:`.ImageTexture`. """
 
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """Calls the version-dependent ``draw2D`` function, then applies
         the edge filter if necessary.
         """
@@ -301,10 +289,9 @@ class GLMask(glimageobject.GLImageObject):
         opts = self.opts
 
         if not opts.outline:
-            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
+            fslgl.glmask_funcs.draw2D(self, canvas, zpos, axes, xform)
             return
 
-        canvas     = self.canvas
         owidth     = float(opts.outlineWidth)
         rtex       = self.renderTexture
         w, h       = canvas.GetSize()
@@ -319,11 +306,14 @@ class GLMask(glimageobject.GLImageObject):
         ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
+        rtex.shape = w, h
+
         # Draw the mask to the off-screen texture
         with glroutines.disabled(gl.GL_BLEND), \
-             rtex.target(xax, yax, lo, hi),    \
-             self.renderTarget(rtex):
-            fslgl.glmask_funcs.draw2D(self, zpos, axes, xform)
+             rtex.target(xax, yax, lo, hi):
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            fslgl.glmask_funcs.draw2D(self, rtex, zpos, axes, xform)
 
         if xform is None: xform = affine.concat(projmat, viewmat)
         else:             xform = affine.concat(projmat, viewmat, xform)
@@ -335,18 +325,16 @@ class GLMask(glimageobject.GLImageObject):
                               ymin, ymax, xax, yax, xform)
 
 
-    def drawAll(self, axes, zposes, xforms):
+    def drawAll(self, canvas, axes, zposes, xforms):
         """Calls the version-dependent ``drawAll`` function, then applies
         the edge filter if necessary.
         """
 
-
         opts   = self.opts
         rtex   = self.renderTexture
-        canvas = self.canvas
 
         if not opts.outline:
-            fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
+            fslgl.glmask_funcs.drawAll(self, canvas, axes, zposes, xforms)
             return
 
         # Is taking max(z) hacky? It seems to work ok.
@@ -364,11 +352,14 @@ class GLMask(glimageobject.GLImageObject):
         ymin, ymax = bbox[yax]
         offsets    = [owidth / w, owidth / h]
 
+        rtex.shape = w, h
+
         # Draw all slices to the off-screen texture
         with glroutines.disabled(gl.GL_BLEND), \
-             rtex.target(xax, yax, lo, hi),    \
-             self.renderTarget(rtex):
-            fslgl.glmask_funcs.drawAll(self, axes, zposes, xforms)
+             rtex.target(xax, yax, lo, hi):
+            gl.glClearColor(0, 0, 0, 0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            fslgl.glmask_funcs.drawAll(self, rtex, axes, zposes, xforms)
 
         xform = affine.concat(projmat, viewmat)
 

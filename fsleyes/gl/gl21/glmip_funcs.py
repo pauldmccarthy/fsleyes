@@ -94,28 +94,28 @@ def updateShaderState(self):
     return changed
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, canvas, zpos, axes, xform=None):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl21.glvolume_funcs.draw2D` function.
     """
 
     shader        = self.shader
-    viewmat       = self.canvas.viewMatrix
+    viewmat       = canvas.viewMatrix
     cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
 
     with shader.loaded():
         shader.set('cameraDir', cdir)
         shader.set('rayStep',   rayStep)
-        glvolume_funcs.draw2D(self, zpos, axes, xform)
+        glvolume_funcs.draw2D(self, canvas, zpos, axes, xform)
 
 
-def drawAll(self, zposes, axes, xforms):
+def drawAll(self, canvas, zposes, axes, xforms):
 
     shader        = self.shader
-    viewmat       = self.canvas.viewMatrix
+    viewmat       = canvas.viewMatrix
     cdir, rayStep = self.opts.calculateRayCastSettings(viewmat)
 
     with shader.loaded():
         shader.set('cameraDir', cdir)
         shader.set('rayStep',   rayStep)
-        glvolume_funcs.drawAll(self, zposes, axes, xforms)
+        glvolume_funcs.drawAll(self, canvas, zposes, axes, xforms)

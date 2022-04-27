@@ -69,17 +69,17 @@ def updateShaderState(self):
     return changed
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, *args, **kwargs):
     """Draws a 2D slice at the given ``zpos``. Uses the
     :func:`.gl21.glvolume_funcs.draw2D` function.
     """
     with self.shader.loaded():
-        glvolume_funcs.draw2D(self, zpos, axes, xform)
+        glvolume_funcs.draw2D(self, *args, **kwargs)
 
 
-def drawAll(self, axes, zposes, xforms):
+def drawAll(self, *args, **kwargs):
     """Draws all specified slices. Uses the
     :func:`.gl21.glvolume_funcs.drawAll` function.
     """
     with self.shader.loaded():
-        glvolume_funcs.drawAll(self, axes, zposes, xforms)
+        glvolume_funcs.drawAll(self, *args, **kwargs)

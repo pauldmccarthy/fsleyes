@@ -36,7 +36,7 @@ class GLMIP(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLMIP``.
 
         :arg image:       An :class:`.Image` object.
@@ -46,8 +46,6 @@ class GLMIP(glimageobject.GLImageObject):
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
 
-        :arg canvas:      The canvas doing the drawing.
-
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
@@ -55,7 +53,6 @@ class GLMIP(glimageobject.GLImageObject):
                                              image,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         self.shader         = None
@@ -262,17 +259,17 @@ class GLMIP(glimageobject.GLImageObject):
         self.cmapTexture .bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, *args, **kwargs):
         """Calls :func:`.gl21.glmip_funcs.draw2D`. """
-        fslgl.glmip_funcs.draw2D(self, zpos, axes, xform)
+        fslgl.glmip_funcs.draw2D(self, *args, **kwargs)
 
 
-    def drawAll(self, zposes, axes, xforms):
+    def drawAll(self, *args, **kwargs):
         """Calls :func:`.gl21.glmip_funcs.draw2D`. """
-        fslgl.glmip_funcs.drawAll(self, zposes, axes, xforms)
+        fslgl.glmip_funcs.drawAll(self, *args, **kwargs)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, *args, **kwargs):
         """Does nothing - not supported. """
 
 
