@@ -428,6 +428,24 @@ properties = TypeDict({
                                 'disabled when you choose to colour the FODs '
                                 'by another image (e.g. a FA map).',
 
+    'TractogramOpts.colourMode' :
+    'Tractograms can be coloured according to their orientation, according to '
+    'data taken fraom a NIfTI image, or according to per-vertex/streamline '
+    'values loaded from a file, or contained within the tractogram file.',
+    'TractogramOpts.clipMode' :
+    'Tractograms can be clipped according to data taken from a NIfTI image, '
+    'or according to  per-vertex/streamline values loaded from a file, or '
+    'contained within the tractogram file.',
+    'TractogramOpts.lineWidth' :
+    'Controls the thickness of streamline lines/tubes (when viewing in 3D), '
+    'or the diameter of streamline vertex points (when viewing in 2D).',
+    'TractogramOpts.resolution' :
+    'Controls the quality when drawing streamline tubes (in 3D) or vertex '
+    'points (in 2D).',
+    'TractogramOpts.subsample' :
+    'Draw a randomly selected subset of streamlines. This setting is useful '
+    'when viewing very large tractograms.',
+
     # MIPOpts
     'MIPOpts.window'  :
     'Length of the window, as a proportion of the image length, along which '

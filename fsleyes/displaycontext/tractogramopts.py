@@ -9,10 +9,11 @@ display properties for :class:`.Tractogram` overlays.
 """
 
 
-import numpy as np
+import numpy   as np
+import nibabel as nib
 
 import fsl.data.image                       as fslimage
-import fsl.data.constants                   as constants
+import fsl.transform.affine                 as affine
 import fsleyes.gl                           as fslgl
 import fsleyes.strings                      as strings
 import fsleyes_props                        as props
@@ -48,24 +49,37 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    lineWidth = props.Int(minval=1, maxval=10, default=2)
-    """Width to draw the streamlines. """
-
-
-    resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
-    """Only relevant when using OpenGL >= 3.3. Streamlines are drawn as tubes -
-    this setting defines the resolution at which the tubes are drawn. IF
-    resolution <= 2, the streamlines are drawn as lines.
+    lineWidth = props.Real(minval=1, maxval=10, default=2)
+    """Width to draw the streamlines. When drawing in 3D, this controls the
+    line width / tube diameter. When drawing in 2D, this controls the point
+    diameter.
     """
 
 
-    def __init__(self, *args, **kwargs):
-        """Create a ``TractogramOpts``. """
+    resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
+    """When drawing in 3D as tubes, or in 2D as circles, this setting defines
+    the resolution at which the tubes/circles are drawn. In 3D, if
+    resolution <= 2, the streamlines are drawn as lines. In 2D, the
+    resolution is clamped to a minimum of 3, with the effect that streamline
+    vertices are drawn as triangles.
+    """
 
-        if float(fslgl.GL_COMPATIBILITY) < 3.3:
-            self.getProp('resolution').disable(self)
 
-        fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
+    subsample = props.Percentage(default=100)
+    """Draw a random sub-sample of all streamlines. This is useful when drawing
+    very large tractograms.
+    """
+
+
+    def __init__(self, overlay, *args, **kwargs):
+        """Create a ``TractogramOpts`` instance. """
+
+        # Default to drawing a random sub-sample
+        # of streamlines for large tractograms
+        if overlay.nstreamlines > 150000:
+            self.subsample = 15000000 / overlay.nstreamlines
+
+        fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 
@@ -198,12 +212,46 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
+    @property
+    def displayTransform(self):
+        """Return an affine transformation which will transform streamline
+        vertex coordinates into the current display coordinate system.
+        """
+        ref = self.displayCtx.displaySpace
+
+        if not isinstance(ref, fslimage.Image):
+            return np.eye(4)
+
+        opts = self.displayCtx.getOpts(ref)
+
+        return opts.getTransform('world', 'display')
+
+
+    def sliceWidth(self, zax):
+        """Returns a width along the specified **display** coordinate system
+        axis, to be used for drawing a 2D slice through the tractogram on the
+        axis plane.
+        """
+
+        # The z axis is specified in terms of
+        # the display coordinate system -
+        # identify the corresponding axis in the
+        # tractogram/world coordinate system.
+        codes = [[0, 0], [1, 1], [2, 2]]
+        xform = affine.invert(self.displayTransform)
+        zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+
+        los, his = self.overlay.bounds
+        zlen     = his[zax] - los[zax]
+        return zlen / 200
+
+
     def __colourModeChanged(self, *_):
         """Called when :attr:`colourMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
         """
-        self.updateDataRange(resetCR=False)
+        self.updateDataRange(resetCR=(self.clipMode is None))
 
 
     def __clipModeChanged(self, *_):

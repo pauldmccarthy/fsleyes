@@ -107,7 +107,7 @@ sleep 5
 export MESA_GL_VERSION_OVERRIDE=3.3
 export FSLEYES_TEST_GL=3.3
 export LOCAL_TEST_FSLEYES=1
-((pytest --cov-report= --cov-append -m "gl33test" && echo "0" > status) || echo "1" > status) || true
+((pytest --cov-report= --cov-append -m "overlayclitest and gl33test" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 

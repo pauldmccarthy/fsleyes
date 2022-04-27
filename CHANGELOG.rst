@@ -19,8 +19,7 @@ Added
 
 
 * FSLeyes is now able to visualise TrackVis ``.trk`` and Mrtrix3 ``.tck``
-  tractogram files, containing tractography streamlines  These
-  tractogram files are currently only supported in the 3D view (!307).
+  tractogram files, containing tractography streamlines (!307, !312).
 * New *Invert modulata alpha* display setting (available via the
   ``--inverModulateAlpha`` command-line option), which can be used to
   make regions with high intensity more transparent (!311).

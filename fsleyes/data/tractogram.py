@@ -43,6 +43,11 @@ class Tractogram:
         self.name       = op.basename(fname)
         self.tractFile  = nibstrm.load(fname)
 
+        # Bounding box is calculsted on first
+        # call to bounds(), then cached for
+        # subsequent calls.
+        self.__bounds = None
+
         # Data sets associated with each
         # vertex, or with each streamline.
         # Per-streamline data sets are
@@ -86,8 +91,10 @@ class Tractogram:
         """Returns the bounding box of all streamlines as a tuple of
         ``((xlo, ylo, zlo),  (xhi, yhi, zhi))`` values.
         """
-        data = self.tractFile.streamlines.get_data()
-        return (data.min(axis=0), data.max(axis=0))
+        if self.__bounds is None:
+            data = self.tractFile.streamlines.get_data()
+            self.__bounds = (data.min(axis=0), data.max(axis=0))
+        return self.__bounds
 
 
     @property
@@ -170,6 +177,34 @@ class Tractogram:
         orients[offsets, :] = orients[offsets + 1, :]
 
         return orients
+
+
+    def subset(self, indices):
+        """Extract a sub-set of streamlines using the given ``indices`` into
+        the :meth:`offsets` / :meth:`lengths` arrays. The provided ``indices``
+        must be sorted.
+
+        :returns: A tuple of numpy arrays:
+                    - New streamline vertices
+                    - Offsets
+                    - Lengths
+                    - Indices into the full :meth:`vertices` array.
+        """
+
+        offsets = self.offsets[indices]
+        lengths = self.lengths[indices]
+
+        vertIdxs = np.zeros(np.sum(lengths), dtype=np.uint32)
+        i        = 0
+        for o, l in zip(offsets, lengths):
+            vertIdxs[i:i + l] = np.arange(o, o + l, dtype=np.uint32)
+            i                += l
+
+        vertices       = self.vertices[vertIdxs]
+        newOffsets     = np.zeros(len(offsets), dtype=np.int32)
+        newOffsets[1:] = np.cumsum(lengths)[:-1]
+
+        return vertices, newOffsets, lengths, vertIdxs
 
 
     def loadVertexData(self, infile, key=None):

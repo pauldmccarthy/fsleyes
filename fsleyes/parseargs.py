@@ -618,6 +618,7 @@ OPTIONS = td.TypeDict({
                            'clipBy',
                            'lineWidth',
                            'resolution',
+                           'subsample',
                            'linkLowRanges',
                            'linkHighRanges',
                            'useNegativeCmap',
@@ -962,6 +963,7 @@ ARGUMENTS = td.TypeDict({
     'TractogramOpts.clipBy'         : ('cl', 'clipBy',     True),
     'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',  True),
     'TractogramOpts.resolution'     : ('r',  'resolution', True),
+    'TractogramOpts.subsample'      : ('s',  'subsample',  True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1319,9 +1321,11 @@ HELP = td.TypeDict({
     'for clipping, or name of a a per-vertex/streamline data set contained '
     'within the tractogram file.',
     'TractogramOpts.lineWidth' :
-    'Streamline width (pixels)',
+    'Streamline width/diameter',
     'TractogramOpts.resolution' :
-    'Streamline resolution',
+    'Streamline resolution/quality',
+    'TractogramOpts.subsample' :
+    'Draw a randomly selected subsample of streamlines.',
  })
 """This dictionary defines the help text for all command line options."""
 
@@ -2622,18 +2626,18 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
         if displaySpace is not None:
             displayCtx.displaySpace = displaySpace
 
-        # voxel/world location
-        if (args.worldLoc or args.voxelLoc) and \
-           len(overlayList) > 0             and \
+        # voxel/world location - wloc takes precedence
+        if (args.worldLoc is None)     and \
+           (args.voxelLoc is not None) and \
+           len(overlayList) > 0        and \
            isinstance(overlayList[0], fslimage.Nifti):
 
-            if args.worldLoc:
-                loc = args.worldLoc
-            elif args.voxelLoc:
-                opts = displayCtx.getOpts(overlayList[0])
-                loc  = opts.transformCoords(args.voxelLoc, 'voxel', 'world')
+            opts = displayCtx.getOpts(overlayList[0])
+            loc  = opts.transformCoords(args.voxelLoc, 'voxel', 'world')
+            args.worldLoc = loc
 
-            displayCtx.worldLocation.xyz = loc
+        if (args.worldLoc is not None) and (len(overlayList) > 0):
+            displayCtx.worldLocation.xyz = args.worldLoc
 
         # Now, apply arguments to the SceneOpts instance
         _applyArgs(args, overlayList, displayCtx, sceneOpts)

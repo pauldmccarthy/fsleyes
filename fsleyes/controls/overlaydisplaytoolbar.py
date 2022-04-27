@@ -15,6 +15,7 @@ import os.path as op
 
 import wx
 
+import fsl.data.image                 as fslimage
 import fsleyes_props                  as props
 import fsleyes_widgets                as fwidgets
 import fsleyes_widgets.utils.typedict as td
@@ -66,6 +67,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
        _OverlayDisplayToolBar__makeTensorOptsTools
        _OverlayDisplayToolBar__makeSHOptsTools
        _OverlayDisplayToolBar__makeMIPOptsTools
+       _OverlayDisplayToolBar__makeTractogramOptsTools
     """
 
 
@@ -615,6 +617,49 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         return tools, nav
 
 
+    def __makeTractogramOptsTools(self, opts):
+        """Creates and returns a collection of controls for editing properties
+        of a :class:`.TractogramOpts` instance.
+        """
+
+        widthSpec  = self.__widgetSpecs[opts, 'lineWidth']
+        resSpec    = self.__widgetSpecs[opts, 'resolution']
+        colourSpec = self.__widgetSpecs[opts, 'colourMode']
+        cmapSpec   = self.__widgetSpecs[opts, 'cmap']
+
+        sliderPanel = wx.Panel(self)
+        colourPanel = wx.Panel(self)
+
+        widthWidget  = props.buildGUI(sliderPanel, opts, widthSpec)
+        resWidget    = props.buildGUI(sliderPanel, opts, resSpec)
+        colourWidget = props.buildGUI(colourPanel, opts, colourSpec)
+        cmapWidget   = props.buildGUI(colourPanel, opts, cmapSpec)
+
+        widthLabel  = wx.StaticText(sliderPanel)
+        resLabel    = wx.StaticText(sliderPanel)
+
+        widthLabel.SetLabel(strings.properties[opts, 'lineWidth'])
+        resLabel  .SetLabel(strings.properties[opts, 'resolution'])
+
+        sliderSizer = wx.FlexGridSizer(2, 2, 0, 0)
+        sliderPanel.SetSizer(sliderSizer)
+        sliderSizer.AddGrowableCol(1)
+        sliderSizer.Add(widthLabel)
+        sliderSizer.Add(widthWidget)
+        sliderSizer.Add(resLabel)
+        sliderSizer.Add(resWidget)
+
+        colourSizer = wx.BoxSizer(wx.VERTICAL)
+        colourPanel.SetSizer(colourSizer)
+        colourSizer.Add(colourWidget, flag=wx.EXPAND, proportion=1)
+        colourSizer.Add(cmapWidget,   flag=wx.EXPAND, proportion=1)
+
+        tools = [sliderPanel, colourPanel]
+        nav   = [widthWidget, resWidget, colourWidget, cmapWidget]
+
+        return tools, nav
+
+
     def __generateWidgetSpecs(self):
         """Called by :meth:`__init__`. Creates specifications for the toolbar
         widgets for all overlay types.
@@ -631,6 +676,17 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         def _pathLabel(p):
             if p is None: return 'None'
             else:         return op.basename(p)
+
+        # TractogramOpts.colourMode
+        def _colourModeLabel(data):
+            if data == 'orientation':
+                return 'Orientation'
+            if data is None:
+                return 'None'
+            elif isinstance(data, fslimage.Image):
+                return self.displayCtx.getDisplay(data).name
+            else:
+                return op.basename(data)
 
         self.__widgetSpecs = td.TypeDict({
 
@@ -814,6 +870,27 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
                 'cmap',
                 labels=fslcm.getColourMapLabel,
                 tooltip=_TOOLTIPS['VolumeOpts.cmap']),
+
+            'TractogramOpts.lineWidth' : props.Widget(
+                'lineWidth',
+                showLimits=False,
+                slider=True,
+                spin=False,
+                tooltip=_TOOLTIPS['TractogramOpts.lineWidth']),
+            'TractogramOpts.resolution' : props.Widget(
+                'resolution',
+                showLimits=False,
+                slider=True,
+                spin=False,
+                tooltip=_TOOLTIPS['TractogramOpts.resolution']),
+            'TractogramOpts.colourMode' : props.Widget(
+                'colourMode',
+                labels=_colourModeLabel,
+                tooltip=_TOOLTIPS['TractogramOpts.colourMode']),
+            'TractogramOpts.cmap' : props.Widget(
+                'cmap',
+                labels=fslcm.getColourMapLabel,
+                tooltip=_TOOLTIPS['VolumeOpts.cmap']),
         })
 
 
@@ -869,6 +946,13 @@ _TOOLTIPS = td.TypeDict({
     'SHOpts.size'            : fsltooltips.properties['SHOpts.size'],
     'SHOpts.radiusThreshold' : fsltooltips.properties['SHOpts.'
                                                       'radiusThreshold'],
+
+    'TractogramOpts.lineWidth' :
+    fsltooltips.properties['TractogramOpts.lineWidth'],
+    'TractogramOpts.resolution' :
+    fsltooltips.properties['TractogramOpts.resolution'],
+    'TractogramOpts.colourMode' :
+    fsltooltips.properties['TractogramOpts.colourMode'],
 })
 """This dictionary contains tooltips for :class:`.Display` and
 :class:`.DisplayOpts` properties. It is used by the

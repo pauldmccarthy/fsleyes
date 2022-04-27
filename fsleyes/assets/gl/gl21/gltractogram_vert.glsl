@@ -5,8 +5,18 @@
 
 uniform mat4 MVP;
 
-/* Vertex coordinates. */
+/* Streamline vertex coordinates. */
 attribute vec3 vertex;
+
+{% if twod %}
+/*
+ * Current vertex coordinate on circle
+ * used to draw the current streamline
+ * point, defined in normalised device
+ * coordinates.
+ */
+attribute vec3 circleVertex;
+{% endif %}
 
 /* Unused */
 uniform int  resolution;
@@ -63,5 +73,9 @@ void main(void) {
   fragClipVertexData = clipVertexData;
   {% endif %}
 
+  {% if twod %}
+  gl_Position = MVP * vec4(vertex, 1) + vec4(circleVertex, 0);
+  {% else %}
   gl_Position = MVP * vec4(vertex, 1);
+  {% endif %}
 }

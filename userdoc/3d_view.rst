@@ -23,6 +23,13 @@ the *Views* |right_arrow| *3D view* menu item.
    :align: center
 
 
+In the 3D view, the order of overlays in the :ref:`overlay list
+<ortho_lightbox_views_overlay_list>` does not have any effect on the display -
+instead, all compatible overlays that you have loaded will be drawn and
+blended into a single scene, based on their locations in the :ref:`world
+coordinate system <display_space_world_space>`.
+
+
 .. note:: 3D visualisation functionality and quality will vary, depending on
           how you are running FSLeyes, For example, if you are running
           FSLeyes over a remote SSH/X11 session, quality will be lower, and
@@ -59,6 +66,8 @@ streamline tractograms.  As with the :ref:`ortho and lightbox views
 on the |gear_icon| button.
 
 
+.. _3d_view_volume:
+
 Volume overlays
 ^^^^^^^^^^^^^^^
 
@@ -88,18 +97,18 @@ The following settings can be used to control the ray-casting:
 
 - **Blend by intensity** By default, areas of the image with lower voxel
   intensities will be made more transparent. This setting allows that
-  behaviour to be disabled.
+  behaviour to be disabled. When you disable this option, you can use
+  the **Clipping range** sliders to hide background/low-intensity voxels.
 
 - **Number of samples** This setting controls how many samples are taken
   through the volume. A higher number of samples will result in a better
   quality rendering.
 
 - **Quality** This setting controls the resolution of the final rendering.
-  Setting it to 100% will render the result at the display
-  resolution. Reducing this setting will improve the rendering speed - a
-  useful strategy is to reduce the quality, experiment with the other display
-  settings until you are happy, and then increase the quality for the final
-  rendering.
+  Setting it to 100% will render the result at the display resolution.
+  Reducing this setting will improve the rendering speed - a useful strategy
+  is to reduce the quality, experiment with the other display settings until
+  you are happy, and then increase the quality for the final rendering.
 
 
 Volume clipping
@@ -140,6 +149,8 @@ settings allow you to control each clipping plane:
   rotation of the plane with respect to a horizontal plane.
 
 
+.. _3d_view_mesh:
+
 Mesh overlays
 ^^^^^^^^^^^^^
 
@@ -151,15 +162,16 @@ Mesh overlays
 
 The 3D display settings for mesh overlays are much the same as the :ref:`2D
 display settings <overlays_mesh>`. You can choose different variants of the
-same mesh via the **Surface definition** setting, and you can display data on
-the surface via the **Vertex data** setting.
+same mesh (e.g. wm, pial, midthickness) via the **Surface definition**
+setting, and you can display data on the surface via the **Vertex data**
+setting.
 
 
 The default behaviour, when you are colouring a mesh with some vertex data, is
 for the colours to be interpolated (smoothed) across the mesh
 surface. However, if you are viewing discrete data (e.g. anatomical labels),
-and/or wish to display the mesh with flat, unsmoothed colours, you change the
-**Interpolation** option to **Nearest**.
+and/or wish to display the mesh with flat, unsmoothed colours, you may change
+the **Interpolation** option to **Nearest**.
 
 
 .. _3d_view_tractogram:
@@ -168,62 +180,33 @@ Tractogram overlays
 ^^^^^^^^^^^^^^^^^^^
 
 
-.. image:: images/3d_view_tractogram_blended.png
-   :width: 30%
-   :align: left
+All of the options for displaying :ref:`tractograms <overlays_tractogram>` are
+available in the 3D view.  In a 3D view, each streamline is drawn as a line or
+cylinder.
 
 
-FSLeyes can display `TrackVis <http://trackvis.org/>`_ ``.trk`` and `MRtrix3
-<https://www.mrtrix.org/>`_ ``.tck`` streamline tractography (*tractogram*)
-data sets.
+.. container:: image-strip
+
+  .. image:: images/3d_view_tractogram_blended.png
+     :width: 25%
+
+  .. image:: images/3d_view_tractogram_orientation.png
+     :width: 25%
+
+  .. image:: images/3d_view_tractogram_density.png
+     :width: 25%
 
 
-The overlay display settings dialog (the |gear_icon| button) has several
-options allowing you to control how tractograms are displayed.
+|
 
 
-The **Streamline width** option controls the thickness of each streamline.
-The **Streamline resolution** option allows you to control whether streamlines
-are drawn as lines (lower resolution), or as tubes (higher resolution) - when
-you increase the streamline resolution, a lighting effect will be applied to
-the streamlines. Lighting can be disabled in the view settings dialog (the
-|spanner_icon| button).
+In the 3D view, the **Width** option controls the thickness of each
+streamline.  The **Resolution** option allows you to control whether
+streamlines are drawn as lines (lower resolution), or as cylinders (higher
+resolution) - when you increase the streamline resolution, a lighting effect
+will be applied to the streamlines. Lighting can be disabled in the view
+settings dialog (the |spanner_icon| button).
 
 
-The **Colour streamlines by** option allows you to control how a tractogram
-is coloured.  Streamlines can be coloured in one of three ways - the default
-setting is to colour them according to their XYZ orientation.  The colours
-that correspond to each of the XYZ directions can be changed, in the same
-manner as for :ref:`vector images <overlays_vector>`.
-
-
-.. image:: images/3d_view_tractogram_orientation.png
-   :width: 30%
-   :align: right
-
-
-Streamlines can also be coloured by per-vertex/per-streamline data sets,
-either stored in the tractogram file itself, or loaded from a separate data
-file (click on the **Load vertex data** button can to load data from a
-separate file). Finally, streamlines can be coloured by the values in a
-separate NIfTI image.
-
-
-When colouring streamlines according to a data set or image, the :ref:`usual
-options <overlays_volume>` are available to control colouring, including
-choosing a **Colour map**, controlling the **Display range**, and modulating
-transparency by the data.
-
-
-.. image:: images/3d_view_tractogram_density.png
-   :width: 30%
-   :align: left
-
-
-The **Clip streamlines by** option can be set independently of the **Colour
-streamlines by** option, and can be used to clip/hide streamlines according to
-the data set, and **Clipping range** that you specify.
-
-
-Finally, it is worth playing with the **Opacity** setting, as some nice
-visualisation effects can be achieved.
+It is worth playing with the **Opacity** setting, as some nice visualisation
+effects can be achieved.

@@ -6,8 +6,6 @@
 #
 
 """This module contains logic for rendering :class:`.Tractogram` overlays.
-``Tractogram`` rendering is only suppported in 3D, i.e. in the
-:class:`.Scene3DCanvas`.
 """
 
 
@@ -17,6 +15,7 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsl.utils.idle       as idle
+import fsl.transform.affine as affine
 import fsl.data.image       as fslimage
 
 import fsleyes.gl           as fslgl
@@ -33,9 +32,6 @@ class GLTractogram(globject.GLObject):
         """Create a :meth:`GLTractogram`. """
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, canvas, threedee)
-
-        if not threedee:
-            pass
 
         # Shaders are created in compileShaders.
         # imageTexture created in refreshImageTexture
@@ -60,17 +56,8 @@ class GLTractogram(globject.GLObject):
         self.imageTextures  = textures.AuxImageTextureManager(
             self, colour=None, clip=None)
 
-        # Orientation is used for RGB colouring.
-        # We have to apply abs so that GL doesn't
-        # interpolate across -ve/+ve boundaries.
-        # when passing from vertex shader through
-        # to fragment shader.
-        self.vertices = np.asarray(overlay.vertices,       dtype=np.float32)
-        self.offsets  = np.asarray(overlay.offsets,        dtype=np.int32)
-        self.counts   = np.asarray(overlay.lengths,        dtype=np.int32)
-        self.orients  = np.abs(overlay.vertexOrientations, dtype=np.float32)
-
         self.compileShaders()
+        self.updateStreamlineData()
         self.refreshImageTexture('clip')
         self.refreshImageTexture('colour')
         self.refreshCmapTextures()
@@ -99,6 +86,10 @@ class GLTractogram(globject.GLObject):
         def refresh(*_):
             self.notify()
 
+        def data(*_):
+            self.updateStreamlineData()
+            self.notify()
+
         def shader(*_):
             self.updateShaderState()
             self.notify()
@@ -117,6 +108,7 @@ class GLTractogram(globject.GLObject):
             self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',          name, shader,  weak=False)
+        opts   .addListener('subsample',           name, data,    weak=False)
         opts   .addListener('colourMode',          name, colour,  weak=False)
         opts   .addListener('clipMode',            name, clip,    weak=False)
         opts   .addListener('lineWidth',           name, refresh, weak=False)
@@ -151,6 +143,7 @@ class GLTractogram(globject.GLObject):
         name    = self.name
 
         opts   .removeListener('resolution',          name)
+        opts   .removeListener('subsample',           name)
         opts   .removeListener('lineWidth',           name)
         opts   .removeListener('colourMode',          name)
         opts   .removeListener('clipMode',            name)
@@ -180,9 +173,6 @@ class GLTractogram(globject.GLObject):
 
     def destroy(self):
         """Removes listeners and destroys textures and shader programs. """
-
-        if not self.threedee:
-            pass
 
         if self.cmapTexture is not None:
             self.cmapTexture.destroy()
@@ -244,12 +234,40 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    @property
-    def normalisedLineWidth(self):
-        """Returns :attr:`lineWidth`, scaled to normalised device coordinates.
+    def normalisedLineWidth(self, mvp):
+        """Returns :attr:`lineWidth`, scaled so that it is with respect to
+        normalised device coordinates. Streamline lines/tubes (in 3D) and
+        vertices (in 2D) are drawn such that the width/radius is fixed w.r.t.
+        the world coordinate system - i.e. for a given ``lineWidth``,
+        lines/tubes/circles will be small when zoomed out, and big when
+        zoomed in.
+
+        :arg mvp: Current MVP matrix
         """
-        cw, ch    = self.canvas.GetSize()
-        lineWidth = self.opts.lineWidth * max((1 / cw, 1 / ch))
+        # Line width is fixed at 0.1 in world
+        # units. Below we convert it so it is
+        # in terms of NDCs.
+        lineWidth =  self.opts.lineWidth / 10
+
+        if self.threedee:
+            # We don't apply the scene3d rotation, because
+            # the projection matrix adds an uneven scaling
+            # to the depth axis (see routines.ortho3D),
+            # which will affect scaling when rotated to be
+            # in line with that axis.  I may revisit this in
+            # the future, as the ortho3D function is a bit
+            # nuts in how it handles depth (caused my my
+            # lack of understanding of near/far clipping).
+            canvas    = self.canvas
+            scaling   = affine.concat(canvas.projectionMatrix,
+                                      canvas.viewScale)
+            lineWidth = [lineWidth * scaling[0, 0],
+                         lineWidth * scaling[1, 1]]
+
+        else:
+            # return separate scales for each axis
+            lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
+
         return lineWidth
 
 
@@ -271,6 +289,17 @@ class GLTractogram(globject.GLObject):
         return self.imageTextures.texture('colour')
 
 
+    def shaderAttributeArgs(self):
+        """Returns keyword arguments to pass to :meth:`.GLSLShader.setAtt`
+        for all per-vertex attributes. The GL21 2D rendering logic uses
+        instanced rendering, so a divisor must be set for all vertex
+        attributes.
+        """
+        if fslgl.GL_COMPATIBILITY != '2.1': return {}
+        if self.threedee:                   return {}
+        else:                               return {'divisor' : 1}
+
+
     def compileShaders(self):
         """Called by :meth:`__init__`. Calls
         :func:`.gl21.gltractogram_funcs.compileShaders` or
@@ -279,16 +308,74 @@ class GLTractogram(globject.GLObject):
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
+
+    def updateStreamlineData(self):
+        """Prepares streamline data and passes it to GL. This method is called
+        on creation, and whenever the :attr:`.TractogramOpts.subsample` setting
+        changes.
+
+        For 2D views (ortho/lightbox), the tractogram is drawn as ``GL_POINT``
+        points using glDrawArrays (or equivalent). For 3D views, streamlines
+        are drawn as ``GL_LINE_STRIP`` lines using offsets/counts into the
+        vertex array.
+        """
+
+        ovl         = self.overlay
+        opts        = self.opts
+        subsamp     = opts.subsample
+        nverts      = ovl.nvertices
+        nstrms      = ovl.nstreamlines
+        kwargs      = self.shaderAttributeArgs()
+        threedee    = self.threedee
+        indices     = None
+
+        # randomly select a subset of streamlines
+        # (3D) or vertices (2D).
+        if subsamp < 100:
+            if threedee: lim = nstrms
+            else:        lim = nverts
+            n       = int(lim * subsamp / 100)
+            indices = np.random.choice(lim, n)
+            indices = np.sort(indices)
+
+            if threedee:
+                vertices, offsets, counts, indices = ovl.subset(indices)
+                orients = ovl.vertexOrientations[indices]
+            else:
+                offsets, counts = [0], [0]
+                vertices        = ovl.vertices[          indices]
+                orients         = ovl.vertexOrientations[indices]
+        else:
+            vertices = ovl.vertices
+            orients  = ovl.vertexOrientations
+            offsets  = ovl.offsets
+            counts   = ovl.lengths
+
+        # Orientation is used for RGB colouring.
+        # We have to apply abs so that GL doesn't
+        # interpolate across -ve/+ve boundaries.
+        # when passing from vertex shader through
+        # to fragment shader.
+        self.vertices =        np.asarray(vertices, dtype=np.float32)
+        self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
+        self.offsets  =        np.asarray(offsets,  dtype=np.int32)
+        self.counts   =        np.asarray(counts,   dtype=np.int32)
+        self.indices  = indices
+
+        # upload vertices/orients/indices to GL.
+        # For 3D, offsets/counts are passed on
+        # each draw
         for shader in self.iterShaders('orientation'):
             with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
-                shader.setAtt('orient', self.orients)
-        for shader in self.iterShaders('vertexData'):
+                shader.setAtt('vertex', self.vertices, **kwargs)
+                shader.setAtt('orient', self.orients,  **kwargs)
+        for shader in self.iterShaders(('vertexData', 'imageData')):
             with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
-        for shader in self.iterShaders('imageData'):
-            with shader.loaded():
-                shader.setAtt('vertex', self.vertices)
+                shader.setAtt('vertex', self.vertices, **kwargs)
+        if opts.effectiveColourMode == 'vertexData':
+            self.updateColourData()
+        if opts.effectiveClipMode == 'vertexData':
+            self.updateClipData()
 
 
     def updateShaderState(self):
@@ -359,18 +446,22 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts  = self.opts
-        ovl   = self.overlay
-        cmode = opts.effectiveColourMode
+        opts    = self.opts
+        ovl     = self.overlay
+        indices = self.indices
+        cmode   = opts.effectiveColourMode
+        kwargs  = self.shaderAttributeArgs()
 
         if cmode == 'orientation':
             return
 
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.colourMode)
+            if indices is not None:
+                data = data[indices]
             for shader in self.iterShaders('vertexData'):
                 with shader.loaded():
-                    shader.setAtt('vertexData', data)
+                    shader.setAtt('vertexData', data, **kwargs)
 
         if refresh and cmode == 'imageData':
             self.refreshImageTexture('colour')
@@ -381,18 +472,22 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts  = self.opts
-        ovl   = self.overlay
-        cmode = opts.effectiveClipMode
+        opts    = self.opts
+        ovl     = self.overlay
+        indices = self.indices
+        cmode   = opts.effectiveClipMode
+        kwargs  = self.shaderAttributeArgs()
 
         if cmode == 'none':
             return
 
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.clipMode)
+            if indices is not None:
+                data = data[indices]
             for shader in self.iterShaders(None, 'vertexData'):
                 with shader.loaded():
-                    shader.setAtt('clipVertexData', data)
+                    shader.setAtt('clipVertexData', data, **kwargs)
 
         elif refresh and cmode == 'imageData':
             self.refreshImageTexture('clip')
@@ -420,31 +515,55 @@ class GLTractogram(globject.GLObject):
         # When the texture has been prepared,
         # we need to tell the shader programs
         # how to use it.
-        def shader(texture):
-            opts      = self.displayCtx.getOpts(image)
-            w2tXform  = opts.getTransform('world', 'texture')
-            voxXform  = texture.voxValXform
-            voxScale  = voxXform[0, 0]
-            voxOffset = voxXform[0, 3]
+        if which == 'colour': callback = self.colourImageTextureChanged
+        else:                 callback = self.clipImageTextureChanged
 
-            if which == 'colour':
-                for shader in self.iterShaders('imageData'):
-                    with shader.loaded():
-                        shader.set('imageTexture',  2)
-                        shader.set('texCoordXform', w2tXform)
-                        shader.set('voxScale',      voxScale)
-                        shader.set('voxOffset',     voxOffset)
-            elif which == 'clip':
-                for shader in self.iterShaders([], ['imageData']):
-                    with shader.loaded():
-                        shader.set('clipTexture',       3)
-                        shader.set('clipTexCoordXform', w2tXform)
-                        shader.set('clipValScale',      voxScale)
-                        shader.set('clipValOffset',     voxOffset)
+        self.imageTextures.registerAuxImage(
+            which, image, callback=callback, notify=True)
+        self.imageTextures.texture(which).register(self.name, callback)
 
-        self.imageTextures.registerAuxImage(which, image, callback=shader)
-        self.imageTextures.texture(which).register(
-            self.name, self.updateShaderState)
+
+    def colourImageTextureChanged(self, *_):
+        """Calls :meth:`imageTextureChanged`. """
+        self.imageTextureChanged('colour')
+
+
+    def clipImageTextureChanged(self, *_):
+        """Calls :meth:`imageTextureChanged`. """
+        self.imageTextureChanged('clip')
+
+
+    def imageTextureChanged(self, which):
+        """Called when :attr:`.TractogramOpts.colourMode` or
+        :attr:`.TractogramOpts.clipMode` is set to an image, and the
+        underlying :class:`.ImageTexture` changes. Sets some shader uniforms
+        accordingly.
+        """
+
+        if which == 'colour': image = self.opts.colourMode
+        else:                 image = self.opts.clipMode
+
+        texture   = self.imageTextures.texture(which)
+        opts      = self.displayCtx.getOpts(image)
+        w2tXform  = opts.getTransform('world', 'texture')
+        voxXform  = texture.voxValXform
+        voxScale  = voxXform[0, 0]
+        voxOffset = voxXform[0, 3]
+
+        if which == 'colour':
+            for shader in self.iterShaders('imageData'):
+                with shader.loaded():
+                    shader.set('imageTexture',  2)
+                    shader.set('texCoordXform', w2tXform)
+                    shader.set('voxScale',      voxScale)
+                    shader.set('voxOffset',     voxOffset)
+        elif which == 'clip':
+            for shader in self.iterShaders([], ['imageData']):
+                with shader.loaded():
+                    shader.set('clipTexture',       3)
+                    shader.set('clipTexCoordXform', w2tXform)
+                    shader.set('clipValScale',      voxScale)
+                    shader.set('clipValOffset',     voxOffset)
 
 
     def refreshCmapTextures(self):
@@ -494,10 +613,9 @@ class GLTractogram(globject.GLObject):
                                 displayRange=(dmin, dmax))
 
 
-    def draw3D(self, xform=None):
-        """Binds textures if necessary, then calls
-        :func:`.gl21.gltractogram_funcs.draw3D` or
-        :func:`.gl33.gltractogram_funcs.draw3D`.
+    def preDraw(self):
+        """Called before :meth:`draw2D`/:meth:`draw3D`. Binds textures as
+        needed.
         """
 
         colourMode = self.opts.effectiveColourMode
@@ -515,7 +633,64 @@ class GLTractogram(globject.GLObject):
         if clipTex:
             self.clipImageTexture.bindTexture(gl.GL_TEXTURE3)
 
+
+    def draw2D(self, zpos, axes, xform=None):
+        """Draws a 2D slice through the tractogram. Calls
+        :func:`.gl21.gltractogram_funcs.draw2D` or
+        :func:`.gl33.gltractogram_funcs.draw2D`.
+        """
+
+        if xform is None:
+            xform = np.eye(4)
+
+        canvas = self.canvas
+        opts   = self.opts
+        zax    = axes[2]
+
+        # We draw a 2D slice through the tractogram by
+        # manipulating the projection matrix so that z
+        # coordinates within the slice are mapped to
+        # the range (-1, +1). Vertices with z outside
+        # of that range will be clipped by GL.
+        projmat       = np.array(canvas.projectionMatrix)
+        step          = opts.sliceWidth(zax)
+        zlo           = zpos - step
+        zhi           = zpos + step
+        projmat[2, 2] = 2 / (zhi - zlo)
+        projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
+
+        # The routines.show2D function encodes a
+        # -ve scale on the yaxis in the view
+        # matrix.  We need to accommodate it
+        # here.
+        if zax == 1:
+            projmat[2, 2] *= -1
+
+        viewmat   = canvas.viewMatrix
+        strm2disp = opts.displayTransform
+        mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
+
+        fslgl.gltractogram_funcs.draw2D(self, axes, mvp)
+
+
+    def draw3D(self, xform=None):
+        """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
+        :func:`.gl33.gltractogram_funcs.draw3D`.
+        """
         fslgl.gltractogram_funcs.draw3D(self, xform)
+
+
+    def postDraw(self):
+        """Called after :meth:`draw2D`/:meth:`draw3D`. Unbinds textures as
+        needed.
+        """
+
+        colourMode = self.opts.effectiveColourMode
+        clipMode   = self.opts.effectiveClipMode
+
+        cmaps     = colourMode in ('imageData', 'vertexData')
+        colourTex = colourMode == 'imageData'
+        clipTex   = clipMode   == 'imageData'
 
         if cmaps:
             self.cmapTexture   .unbindTexture()

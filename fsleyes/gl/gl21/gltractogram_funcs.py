@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 #
-# gltractogram_funcs.py -
+# gltractogram_funcs.py - GL21 functions for drawing tractogram overlays.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module comtains functions for drawing tractogram overlays with OpenGL
+2.1. These functions are used by :class:`.GLTractogram` instances.
+"""
 
 import itertools as it
 import OpenGL.GL as gl
+import numpy     as np
 
-import fsl.transform.affine as affine
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.shaders   as shaders
+import fsl.transform.affine  as affine
+import fsleyes.gl.routines   as glroutines
+import fsleyes.gl.extensions as glexts
+import fsleyes.gl.shaders    as shaders
 
 
 def compileShaders(self):
@@ -41,11 +46,38 @@ def compileShaders(self):
         consts = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : False
+            'lighting'   : False,
+            'twod'       : not self.threedee,
         }
-        shader = shaders.GLSLShader(vsrc,  fsrc, constants=consts, **kwa)
+        shader = shaders.GLSLShader(vsrc, fsrc, constants=consts, **kwa)
 
         self.shaders[colourMode][clipMode].append(shader)
+
+
+def draw2D(self, axes, mvp):
+    """Called by :class:`.GLTractogram.draw2D`. """
+
+    opts       = self.opts
+    colourMode = opts.effectiveColourMode
+    clipMode   = opts.effectiveClipMode
+    res        = max((opts.resolution, 3))
+    shader     = self.shaders[colourMode][clipMode][0]
+
+    # each vertex is drawn as a circle,
+    # using instanced rendering.
+    vertices         = glroutines.unitCircle(res)
+    scales           = self.normalisedLineWidth(mvp)
+    vertices[:, :2] *= scales[:2]
+
+    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+    with shader.loaded(), shader.loadedAtts():
+        shader.set(   'MVP',          mvp)
+        shader.setAtt('circleVertex', vertices)
+        glexts.glDrawArraysInstanced(gl.GL_TRIANGLE_FAN,
+                                     0,
+                                     len(vertices),
+                                     len(self.vertices))
 
 
 def draw3D(self, xform=None):
@@ -59,13 +91,11 @@ def draw3D(self, xform=None):
     vertXform  = ovl.affine
     mvp        = canvas.mvpMatrix
     mv         = canvas.viewMatrix
-    nstrms     = ovl.nstreamlines
     lineWidth  = opts.lineWidth
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
-
-    shader = self.shaders[colourMode][clipMode][0]
+    shader     = self.shaders[colourMode][clipMode][0]
 
     if xform is None: xform = vertXform
     else:             xform = affine.concat(xform, vertXform)
@@ -77,6 +107,9 @@ def draw3D(self, xform=None):
         shader.set('MVP', mvp)
         # See comments in gl33.gltractogram_funcs.draw3D
         with glroutines.enabled(gl.GL_CULL_FACE):
+            # we don't implement line width in gl21 - we
+            # would need to use instanced rendering to
+            # draw each line segment as a rectangle.
             gl.glLineWidth(lineWidth)
             gl.glCullFace(gl.GL_BACK)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

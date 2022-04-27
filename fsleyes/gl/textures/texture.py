@@ -505,6 +505,7 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
                  settings=None,
                  textureFormat=None,
                  internalFormat=None,
+                 initialise=True,
                  **kwargs):
         """Create a ``Texture``.
 
@@ -531,8 +532,13 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         :arg internalFormat: Internal texture format to use - if not specified,
                              this is automatically determined.
 
+        :arg initialise:     If ``True`` (the default), an initial call to
+                             :meth:`set` is made. Setting this to ``False``
+                             allows for two-stage initialisation, if needed
+                             (e.g. to obtain a reference to the ``Texture``).
+
         All other arguments are passed through to the initial call to
-        :meth:`set`.
+        :meth:`set` (unless ``initialise is False``).
 
         .. note:: All subclasses must accept a ``name`` as the first parameter
                   to their ``__init__`` method, and must pass said ``name``
@@ -596,7 +602,8 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
             self.__taskThread = None
             self.__taskName   = None
 
-        self.set(**kwargs)
+        if initialise:
+            self.set(**kwargs)
 
 
     def destroy(self):
