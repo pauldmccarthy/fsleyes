@@ -242,7 +242,7 @@ Volume
 This is the default (and most conventional) display type for NIFTI
 images. Voxel intensities are coloured according to a colour map. The display
 range used to colour voxels can be adjusted, and voxels can be *clipped*
-(hidden) with an independent clipping range.
+(hidden) with an independent clipping range [*]_.
 
 
 .. container:: image-strip
@@ -258,6 +258,10 @@ range used to colour voxels can be adjusted, and voxels can be *clipped*
 
 
 |
+
+
+  .. [*] See :ref:`here <3d_view_volume>` for details on viewing volumes in
+         the 3D view.
 
 
 The following settings are available for volume overlays:
@@ -838,8 +842,8 @@ on diffusion SH overlays:
   magnitude of their radii.
 
 
-.. [*] The FOD lighting model in FSLeyes |version| is broken, as I have not
-       yet figured out a way to make a better lighting model work in a
+.. [*] The FOD lighting model in FSLeyes |version| is quite poor, as I have
+       not yet figured out a way to make a better lighting model work in a
        computationally efficient manner.
 
 
@@ -887,7 +891,8 @@ Mesh
 ^^^^
 
 
-FSLeyes is able to display 2D cross sections of 3D triangle meshes.
+FSLeyes is able to display 2D cross sections of 3D triangle meshes (see
+:ref:`here <3d_view_mesh>` for details on viewing volumes in the 3D view).
 
 
 .. container:: image-strip
@@ -988,7 +993,63 @@ Tractogram
 ^^^^^^^^^^
 
 
-FSLeyes can display TrackVis ``.trk`` and MRtrix3 ``.tck`` streamline
-tractography *tractogram* data sets. Tractograms can currently only be
-displayed in the :ref:`3D view <3d_view>` - options controlling tractogram
-visualisation are covered :ref:`here <3d_view_tractogram>`.
+FSLeyes can display `TrackVis <http://trackvis.org/>`_ ``.trk`` and `MRtrix3
+<https://www.mrtrix.org/>`_ ``.tck`` streamline tractography (*tractogram*)
+data sets. In the ortho and lightbox views, a 2D cross-section of the
+streamline vertices at the current location is displayed. Tractograms can also
+be visualised in 3D - see :ref:`here <3d_view_tractogram>` for more details.
+
+
+.. container:: image-strip
+
+  .. image:: images/overlays_tractogram1.png
+     :width: 25%
+
+  .. image:: images/overlays_tractogram2.png
+     :width: 25%
+
+  .. image:: images/overlays_tractogram3.png
+     :width: 25%
+
+
+|
+
+    *Data for some of the examples above was sourced fromn the B.A.T.M.A.N. -
+    Basic And Advanced Tractography with MRtrix for All Neurophiles data set,
+    created by Marlene Tahedl and released under a CC-By Attribution 4.0
+    International license (DOI 10.17605/OSF.IO/FKYHT).*
+
+
+The overlay display settings dialog (the |gear_icon| button) has several
+options allowing you to control how tractograms are displayed.
+
+
+The **Width** option controls the diameter of each streamline point.  The
+**Resolution** option allows you to control the quality - at lower
+resolutions, points are drawn as triangles or squares, whereas at higher
+resolutions they are drawn as circles.
+
+
+The **Colour by** option allows you to control how a tractogram is coloured.
+Streamlines can be coloured in one of three ways - the default setting is to
+colour them according to their XYZ orientation.  The colours that correspond
+to each of the XYZ directions can be changed, in the same manner as for
+:ref:`vector images <overlays_vector>`.
+
+
+Streamlines can also be coloured by per-vertex/per-streamline data sets,
+either stored in the tractogram file itself, or loaded from a separate data
+file (click on the **Load vertex data** button to load data from a separate
+file). Finally, streamlines can be coloured by the values in a separate NIfTI
+image.
+
+
+When colouring streamlines according to a data set or image, the :ref:`usual
+options <overlays_volume>` are available to control colouring, including
+choosing a **Colour map**, controlling the **Display range**, and modulating
+transparency by the data.
+
+
+The **Clip by** option can be set independently of the **Colour by** option,
+and can be used to clip/hide streamlines according to the data set, and
+**Clipping range** that you specify.
