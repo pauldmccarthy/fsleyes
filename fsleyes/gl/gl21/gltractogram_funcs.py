@@ -62,7 +62,6 @@ def draw2D(self, axes, mvp):
     clipMode   = opts.effectiveClipMode
     res        = max((opts.resolution, 3))
     shader     = self.shaders[colourMode][clipMode][0]
-    indices    = self.indices
 
     # each vertex is drawn as a circle,
     # using instanced rendering.
@@ -75,17 +74,10 @@ def draw2D(self, axes, mvp):
     with shader.loaded(), shader.loadedAtts():
         shader.set(   'MVP',          mvp)
         shader.setAtt('circleVertex', vertices)
-        if indices is None:
-            glexts.glDrawArraysInstanced(gl.GL_TRIANGLE_FAN,
-                                         0,
-                                         len(vertices),
-                                         len(self.vertices))
-        else:
-            glexts.glDrawElementsInstanced(gl.GL_TRIANGLE_FAN,
-                                           len(vertices),
-                                           gl.GL_UNSIGNED_INT,
-                                           None,
-                                           len(self.indices))
+        glexts.glDrawArraysInstanced(gl.GL_TRIANGLE_FAN,
+                                     0,
+                                     len(vertices),
+                                     len(self.vertices))
 
 
 def draw3D(self, xform=None):

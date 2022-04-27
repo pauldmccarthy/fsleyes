@@ -179,6 +179,34 @@ class Tractogram:
         return orients
 
 
+    def subset(self, indices):
+        """Extract a sub-set of streamlines using the given ``indices`` into
+        the :meth:`offsets` / :meth:`lengths` arrays. The provided ``indices``
+        must be sorted.
+
+        :returns: A tuple of numpy arrays:
+                    - New streamline vertices
+                    - Offsets
+                    - Lengths
+                    - Indices into the full :meth:`vertices` array.
+        """
+
+        offsets = self.offsets[indices]
+        lengths = self.lengths[indices]
+
+        vertIdxs = np.zeros(np.sum(lengths), dtype=np.uint32)
+        i        = 0
+        for o, l in zip(offsets, lengths):
+            vertIdxs[i:i + l] = np.arange(o, o + l, dtype=np.uint32)
+            i                += l
+
+        vertices       = self.vertices[vertIdxs]
+        newOffsets     = np.zeros(len(offsets), dtype=np.int32)
+        newOffsets[1:] = np.cumsum(lengths)[:-1]
+
+        return vertices, newOffsets, lengths, vertIdxs
+
+
     def loadVertexData(self, infile, key=None):
         """Load per-vertex or per-streamline data from a separate file.  The
         data will be accessible via the :meth:`getVertexData` method.

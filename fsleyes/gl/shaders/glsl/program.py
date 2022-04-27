@@ -223,7 +223,7 @@ class GLSLShader:
 
 
     def ready(self):
-        """Checks whether every unifirm and attribute has been given a value.
+        """Checks whether every uniform and attribute has been given a value.
         Returns a tuple containing:
           - ``True`` if every uniform/attribute has been set, ``False``
             otherwise.

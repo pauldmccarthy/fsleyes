@@ -320,15 +320,14 @@ class GLTractogram(globject.GLObject):
         vertex array.
         """
 
-        ovl      = self.overlay
-        opts     = self.opts
-        subsamp  = opts.subsample
-        nverts   = ovl.nvertices
-        nstrms   = ovl.nstreamlines
-        kwargs   = self.shaderAttributeArgs()
-        threedee = self.threedee
-        useidxs  = (not threedee) and (subsamp < 100)
-        indices  = None
+        ovl         = self.overlay
+        opts        = self.opts
+        subsamp     = opts.subsample
+        nverts      = ovl.nvertices
+        nstrms      = ovl.nstreamlines
+        kwargs      = self.shaderAttributeArgs()
+        threedee    = self.threedee
+        indices     = None
 
         # randomly select a subset of streamlines
         # (3D) or vertices (2D).
@@ -336,51 +335,32 @@ class GLTractogram(globject.GLObject):
             if threedee: lim = nstrms
             else:        lim = nverts
             n       = int(lim * subsamp / 100)
-            indices = np.random.randint(0, lim, n, dtype=np.uint32)
+            indices = np.random.choice(lim, n)
+            indices = np.sort(indices)
 
-        # slice vertices based on a sub-set of
-        # streamlines (sub-set of offsets/counts)
-        # TODO make not shit
-        def genidxs(offs, lens):
-            idxs = np.zeros(lens.sum(), dtype=np.uint32)
-            i    = 0
-            for o, l in zip(offs, lens):
-                idxs[i:i + l] = np.arange(o, o+l, dtype=np.uint32)
-                i += l
-            return idxs
-
-        vertices  = ovl.vertices
-        offsets   = ovl.offsets
-        counts    = ovl.lengths
-        orients   = ovl.vertexOrientations
-
-        # select a sub-set of streamlines/
-        # vertices if sub-sampling
-        if subsamp < 100:
             if threedee:
-                offsets  = offsets[indices]
-                counts   = counts[ indices]
-                vidxs    = genidxs(offsets, counts)
-                vertices = vertices[vidxs]
-                orients  = orients[ vidxs]
+                vertices, offsets, counts, indices = ovl.subset(indices)
+                orients = ovl.vertexOrientations[indices]
             else:
-                vertices = vertices[indices]
-                orients  = orients[ indices]
+                offsets, counts = [0], [0]
+                vertices        = ovl.vertices[          indices]
+                orients         = ovl.vertexOrientations[indices]
+        else:
+            vertices = ovl.vertices
+            orients  = ovl.vertexOrientations
+            offsets  = ovl.offsets
+            counts   = ovl.lengths
 
         # Orientation is used for RGB colouring.
         # We have to apply abs so that GL doesn't
         # interpolate across -ve/+ve boundaries.
         # when passing from vertex shader through
         # to fragment shader.
-        if threedee:
-            self.offsets  =        np.asarray(offsets,  dtype=np.int32)
-            self.counts   =        np.asarray(counts,   dtype=np.int32)
-            self.vertices =        np.asarray(vertices, dtype=np.float32)
-            self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
-        else:
-            self.vertices =        np.asarray(vertices, dtype=np.float32)
-            self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
-            self.indices  = None
+        self.vertices =        np.asarray(vertices, dtype=np.float32)
+        self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
+        self.offsets  =        np.asarray(offsets,  dtype=np.int32)
+        self.counts   =        np.asarray(counts,   dtype=np.int32)
+        self.indices  = indices
 
         # upload vertices/orients/indices to GL.
         # For 3D, offsets/counts are passed on
@@ -389,13 +369,13 @@ class GLTractogram(globject.GLObject):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices, **kwargs)
                 shader.setAtt('orient', self.orients,  **kwargs)
-                if useidxs:
-                    shader.setIndices(self.indices)
         for shader in self.iterShaders(('vertexData', 'imageData')):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices, **kwargs)
-                if useidxs:
-                    shader.setIndices(self.indices)
+        if opts.effectiveColourMode == 'vertexData':
+            self.updateColourData()
+        if opts.effectiveClipMode == 'vertexData':
+            self.updateClipData()
 
 
     def updateShaderState(self):
@@ -466,16 +446,19 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts   = self.opts
-        ovl    = self.overlay
-        cmode  = opts.effectiveColourMode
-        kwargs = self.shaderAttributeArgs()
+        opts    = self.opts
+        ovl     = self.overlay
+        indices = self.indices
+        cmode   = opts.effectiveColourMode
+        kwargs  = self.shaderAttributeArgs()
 
         if cmode == 'orientation':
             return
 
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.colourMode)
+            if indices is not None:
+                data = data[indices]
             for shader in self.iterShaders('vertexData'):
                 with shader.loaded():
                     shader.setAtt('vertexData', data, **kwargs)
@@ -489,16 +472,19 @@ class GLTractogram(globject.GLObject):
         data to the shader programs.
         """
 
-        opts   = self.opts
-        ovl    = self.overlay
-        cmode  = opts.effectiveClipMode
-        kwargs = self.shaderAttributeArgs()
+        opts    = self.opts
+        ovl     = self.overlay
+        indices = self.indices
+        cmode   = opts.effectiveClipMode
+        kwargs  = self.shaderAttributeArgs()
 
         if cmode == 'none':
             return
 
         if cmode == 'vertexData':
             data = ovl.getVertexData(opts.clipMode)
+            if indices is not None:
+                data = data[indices]
             for shader in self.iterShaders(None, 'vertexData'):
                 with shader.loaded():
                     shader.setAtt('clipVertexData', data, **kwargs)
