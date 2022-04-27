@@ -1282,6 +1282,7 @@ properties = TypeDict({
     'TractogramOpts.colourMode'        : 'Colour by',
     'TractogramOpts.lineWidth'         : 'Width',
     'TractogramOpts.resolution'        : 'Resolution',
+    'TractogramOpts.subsample'         : 'Sub-sample',
 })
 
 

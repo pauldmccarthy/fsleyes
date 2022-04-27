@@ -65,10 +65,21 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    def __init__(self, *args, **kwargs):
+    subsample = props.Percentage(default=100)
+    """Draw a random sub-sample of all streamlines. This is useful when drawing
+    very large tractograms.
+    """
+
+
+    def __init__(self, overlay, *args, **kwargs):
         """Create a ``TractogramOpts`` instance. """
 
-        fsldisplay.DisplayOpts  .__init__(self, *args, **kwargs)
+        # Default to drawing a random sub-sample
+        # of streamlines for large tractograms
+        if overlay.nstreamlines > 150000:
+            self.subsample = 15000000 / overlay.nstreamlines
+
+        fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 

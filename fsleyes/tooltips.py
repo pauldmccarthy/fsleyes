@@ -442,6 +442,9 @@ properties = TypeDict({
     'TractogramOpts.resolution' :
     'Controls the quality when drawing streamline tubes (in 3D) or vertex '
     'points (in 2D).',
+    'TractogramOpts.subsample' :
+    'Draw a randomly selected subset of streamlines. This setting is useful '
+    'when viewing very large tractograms.',
 
     # MIPOpts
     'MIPOpts.window'  :

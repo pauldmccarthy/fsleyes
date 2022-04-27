@@ -343,6 +343,7 @@ def _initPropertyList_VolumeRGBOpts(threedee):
 def _initPropertyList_TractogramOpts(threedee):
     return ['lineWidth',
             'resolution',
+            'subsample',
             'custom_colourMode',
             'clipMode',
             'custom_cmap',
@@ -958,6 +959,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'suppressMode'      : props.Widget('suppressMode', **orientOpts),
         'lineWidth'         : props.Widget('lineWidth',    **sliderOpts),
         'resolution'        : props.Widget('resolution',   **sliderOpts),
+        'subsample'         : props.Widget('subsample',    **sliderOpts),
 
         # We override the ColourMapOpts definitions
         # for custom enabledWhen behaviour.
