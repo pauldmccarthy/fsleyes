@@ -52,7 +52,7 @@ class GLImageObject(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, threedee):
         """Create a ``GLImageObject``.
 
         :arg image:       A :class:`.Nifti` object.
@@ -62,13 +62,11 @@ class GLImageObject(globject.GLObject):
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
 
-        :arg canvas:      The canvas doing the drawing.
-
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
         globject.GLObject.__init__(
-            self, overlay, overlayList, displayCtx, canvas, threedee)
+            self, overlay, overlayList, displayCtx, threedee)
 
         self.__name = 'GLImageObject_{}'.format(self.name)
 
@@ -175,7 +173,7 @@ class GLImageObject(globject.GLObject):
         return res
 
 
-    def frontFace(self):
+    def frontFace(self, canvas):
         """Convenience method for 2D rendering.
 
         Image slices are generally drawn onto a 2D plane which is parallel to
@@ -199,7 +197,7 @@ class GLImageObject(globject.GLObject):
 
         numInverts = 0
 
-        copts = self.canvas.opts
+        copts = canvas.opts
 
         if copts.invertX: numInverts += 1
         if copts.invertY: numInverts += 1

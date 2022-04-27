@@ -309,7 +309,7 @@ class Annotations(props.HasProperties):
                 if obj.zmax is not None and zpos > obj.zmax: continue
 
             try:
-                obj.draw2D(zpos, axes)
+                obj.draw2D(self.canvas, zpos, axes)
             except Exception as e:
                 log.warning(e, exc_info=True)
 
@@ -343,7 +343,7 @@ class Annotations(props.HasProperties):
 
             try:
                 with glroutines.enabled(features):
-                    obj.draw3D(xform)
+                    obj.draw3D(self.canvas, xform)
             except Exception as e:
                 log.warning(e, exc_info=True)
 
@@ -478,7 +478,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
 
         Any other arguments are ignored.
         """
-        globject.GLSimpleObject.__init__(self, annot.canvas, False)
+        globject.GLSimpleObject.__init__(self, False)
 
         self.annot    = annot
         self.creation = time.time()
@@ -585,12 +585,11 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         raise NotImplementedError()
 
 
-    def __draw(self, vertices, xform=None):
+    def __draw(self, canvas, vertices, xform=None):
         """Used by the default :meth:`draw2D` and :meth:`draw3D`
         implementations.
         """
         shader = self.annot.defaultShader
-        canvas = self.canvas
         mvpmat = canvas.mvpMatrix
         colour = list(self.colour[:3]) + [self.alpha / 100.0]
 
@@ -618,7 +617,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
                     shader.draw(prim, off, length)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """Draw this annotation on a 2D plane. This method implements a
         default routine used by most annotation types - the annotation is
         drawn using vertices returned by the overridden :meth:`vertices2D`
@@ -628,10 +627,10 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         routine.
         """
         vertices = self.vertices2D(zpos, axes)
-        self.__draw(vertices, xform)
+        self.__draw(canvas, vertices, xform)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, canvas, xform=None):
         """Draw this annotation in 3D. This method implements a
         default routine used by most annotation types - the annotation is
         drawn using vertices returned by the overridden :meth:`vertices3D`
@@ -641,7 +640,7 @@ class AnnotationObject(globject.GLSimpleObject, props.HasProperties):
         routine.
         """
         vertices = self.vertices3D()
-        self.__draw(vertices, xform)
+        self.__draw(canvas, vertices, xform)
 
 
 class Point(AnnotationObject):
@@ -902,9 +901,8 @@ class BorderMixin:
     """Whether to draw a border around the rectangle. """
 
 
-    def draw2D(self, zpos, axes):
+    def draw2D(self, canvas, zpos, axes):
         shader   = self.annot.defaultShader
-        canvas   = self.canvas
         mvpmat   = canvas.mvpMatrix
         vertices = self.vertices2D(zpos, axes)
 
@@ -1300,11 +1298,10 @@ class VoxelSelection(AnnotationObject):
         return verts, texs
 
 
-    def draw2D(self, zpos, axes):
+    def draw2D(self, canvas, zpos, axes):
         """Draw a :class:`.VoxelSelection` annotation. """
 
         shader              = self.__shader
-        canvas              = self.canvas
         texture             = self.texture
         mvpmat              = canvas.mvpMatrix
         colour              = list(self.colour[:3]) + [self.alpha / 100.0]
@@ -1391,14 +1388,13 @@ class TextAnnotation(AnnotationObject):
             self.__text = None
 
 
-    def draw2D(self, zpos, axes):
+    def draw2D(self, canvas, zpos, axes):
         """Draw this ``TextAnnotation``. """
 
         if self.colour is not None: colour = self.colour[:3]
         else:                       colour = [1, 1, 1]
 
         text             = self.__text
-        canvas           = self.annot.canvas
         opts             = canvas.opts
         text.text        = self.text
         text.off         = self.off

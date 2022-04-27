@@ -173,13 +173,13 @@ def preDraw(self):
         self.shader.setVertParam('modCoordXform',  modCoordXform)
 
 
-def draw2D(self, zpos, axes, xform=None):
+def draw2D(self, canvas, zpos, axes, xform=None):
     """Draws a 2D slice of the image at the given Z location. """
 
     shader                 = self.shader
-    bbox                   = self.canvas.viewport
-    projmat                = self.canvas.projectionMatrix
-    viewmat                = self.canvas.viewMatrix
+    bbox                   = canvas.viewport
+    projmat                = canvas.projectionMatrix
+    viewmat                = canvas.viewMatrix
     vertices, _, texCoords = self.generateVertices2D(
         zpos, axes, bbox=bbox)
 
@@ -199,17 +199,18 @@ def draw2D(self, zpos, axes, xform=None):
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
 
-def draw3D(self, xform=None):
+def draw3D(self, canvas, xform=None):
     """Draws the image in 3D on the canvas.
 
     :arg self:    The :class:`.GLVolume` object which is managing the image
                   to be drawn.
 
+    :arg canvas:  The canvas being drawn on
+
     :arg xform:   A 4*4 transformation matrix to be applied to the vertex
                   data.
     """
     opts    = self.opts
-    canvas  = self.canvas
     display = self.display
     shader  = self.shader
     shape   = self.image.shape
@@ -306,15 +307,15 @@ def draw3D(self, xform=None):
 
 
 
-def drawAll(self, axes, zposes, xforms):
+def drawAll(self, canvas, axes, zposes, xforms):
     """Draws mutltiple slices of the given image at the given Z position,
     applying the corresponding transformation to each of the slices.
     """
 
     nslices   = len(zposes)
     shader    = self.shader
-    projmat   = self.canvas.projectionMatrix
-    viewmat   = self.canvas.viewMatrix
+    projmat   = canvas.projectionMatrix
+    viewmat   = canvas.viewMatrix
     vertices  = np.zeros((nslices * 6, 3), dtype=np.float32)
     texCoords = np.zeros((nslices * 6, 3), dtype=np.float32)
     indices   = np.arange(nslices * 6,     dtype=np.uint32)
