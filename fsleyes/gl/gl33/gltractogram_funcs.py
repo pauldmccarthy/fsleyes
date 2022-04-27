@@ -100,7 +100,7 @@ def draw2D(self, axes, mvp):
         shader.set('MVP',    mvp)
         shader.set('xscale', scales[0])
         shader.set('yscale', scales[1])
-        gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vertices))
+        shader.draw(gl.GL_POINTS, 0,  len(self.vertices))
 
 
 def draw3D(self, xform=None):

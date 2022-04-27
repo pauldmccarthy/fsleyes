@@ -56,17 +56,8 @@ class GLTractogram(globject.GLObject):
         self.imageTextures  = textures.AuxImageTextureManager(
             self, colour=None, clip=None)
 
-        # Orientation is used for RGB colouring.
-        # We have to apply abs so that GL doesn't
-        # interpolate across -ve/+ve boundaries.
-        # when passing from vertex shader through
-        # to fragment shader.
-        self.vertices = np.asarray(overlay.vertices,       dtype=np.float32)
-        self.offsets  = np.asarray(overlay.offsets,        dtype=np.int32)
-        self.counts   = np.asarray(overlay.lengths,        dtype=np.int32)
-        self.orients  = np.abs(overlay.vertexOrientations, dtype=np.float32)
-
         self.compileShaders()
+        self.updateStreamlineData()
         self.refreshImageTexture('clip')
         self.refreshImageTexture('colour')
         self.refreshCmapTextures()
@@ -95,6 +86,10 @@ class GLTractogram(globject.GLObject):
         def refresh(*_):
             self.notify()
 
+        def data(*_):
+            self.updateStreamlineData()
+            self.notify()
+
         def shader(*_):
             self.updateShaderState()
             self.notify()
@@ -113,6 +108,7 @@ class GLTractogram(globject.GLObject):
             self.notifyWhen(self.ready)
 
         opts   .addListener('resolution',          name, shader,  weak=False)
+        opts   .addListener('subsample',           name, data,    weak=False)
         opts   .addListener('colourMode',          name, colour,  weak=False)
         opts   .addListener('clipMode',            name, clip,    weak=False)
         opts   .addListener('lineWidth',           name, refresh, weak=False)
@@ -147,6 +143,7 @@ class GLTractogram(globject.GLObject):
         name    = self.name
 
         opts   .removeListener('resolution',          name)
+        opts   .removeListener('subsample',           name)
         opts   .removeListener('lineWidth',           name)
         opts   .removeListener('colourMode',          name)
         opts   .removeListener('clipMode',            name)
@@ -311,18 +308,94 @@ class GLTractogram(globject.GLObject):
         """
         fslgl.gltractogram_funcs.compileShaders(self)
 
-        kwargs = self.shaderAttributeArgs()
 
+    def updateStreamlineData(self):
+        """Prepares streamline data and passes it to GL. This method is called
+        on creation, and whenever the :attr:`.TractogramOpts.subsample` setting
+        changes.
+
+        For 2D views (ortho/lightbox), the tractogram is drawn as ``GL_POINT``
+        points using glDrawArrays (or equivalent). For 3D views, streamlines
+        are drawn as ``GL_LINE_STRIP`` lines using offsets/counts into the
+        vertex array.
+        """
+
+        ovl      = self.overlay
+        opts     = self.opts
+        subsamp  = opts.subsample
+        nverts   = ovl.nvertices
+        nstrms   = ovl.nstreamlines
+        kwargs   = self.shaderAttributeArgs()
+        threedee = self.threedee
+        useidxs  = (not threedee) and (subsamp < 100)
+        indices  = None
+
+        # randomly select a subset of streamlines
+        # (3D) or vertices (2D).
+        if subsamp < 100:
+            if threedee: lim = nstrms
+            else:        lim = nverts
+            n       = int(lim * subsamp / 100)
+            indices = np.random.randint(0, lim, n, dtype=np.uint32)
+
+        # slice vertices based on a sub-set of
+        # streamlines (sub-set of offsets/counts)
+        # TODO make not shit
+        def genidxs(offs, lens):
+            idxs = np.zeros(lens.sum(), dtype=np.uint32)
+            i    = 0
+            for o, l in zip(offs, lens):
+                idxs[i:i + l] = np.arange(o, o+l, dtype=np.uint32)
+                i += l
+            return idxs
+
+        vertices  = ovl.vertices
+        offsets   = ovl.offsets
+        counts    = ovl.lengths
+        orients   = ovl.vertexOrientations
+
+        # select a sub-set of streamlines/
+        # vertices if sub-sampling
+        if subsamp < 100:
+            if threedee:
+                offsets  = offsets[indices]
+                counts   = counts[ indices]
+                vidxs    = genidxs(offsets, counts)
+                vertices = vertices[vidxs]
+                orients  = orients[ vidxs]
+            else:
+                vertices = vertices[indices]
+                orients  = orients[ indices]
+
+        # Orientation is used for RGB colouring.
+        # We have to apply abs so that GL doesn't
+        # interpolate across -ve/+ve boundaries.
+        # when passing from vertex shader through
+        # to fragment shader.
+        if threedee:
+            self.offsets  =        np.asarray(offsets,  dtype=np.int32)
+            self.counts   =        np.asarray(counts,   dtype=np.int32)
+            self.vertices =        np.asarray(vertices, dtype=np.float32)
+            self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
+        else:
+            self.vertices =        np.asarray(vertices, dtype=np.float32)
+            self.orients  = np.abs(np.asarray(orients,  dtype=np.float32))
+            self.indices  = None
+
+        # upload vertices/orients/indices to GL.
+        # For 3D, offsets/counts are passed on
+        # each draw
         for shader in self.iterShaders('orientation'):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices, **kwargs)
                 shader.setAtt('orient', self.orients,  **kwargs)
-        for shader in self.iterShaders('vertexData'):
+                if useidxs:
+                    shader.setIndices(self.indices)
+        for shader in self.iterShaders(('vertexData', 'imageData')):
             with shader.loaded():
                 shader.setAtt('vertex', self.vertices, **kwargs)
-        for shader in self.iterShaders('imageData'):
-            with shader.loaded():
-                shader.setAtt('vertex', self.vertices, **kwargs)
+                if useidxs:
+                    shader.setIndices(self.indices)
 
 
     def updateShaderState(self):
