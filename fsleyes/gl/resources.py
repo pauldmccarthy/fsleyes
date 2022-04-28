@@ -97,13 +97,13 @@ def get(key, createFunc=None, *args, **kwargs):
     r = _resources.get(key, None)
 
     if r is None and createFunc is None:
-        raise KeyError('Resource {} does not exist'.format(str(key)))
+        raise KeyError(f'Resource {key} does not exist')
 
     if r is not None:
         r.refcount += 1
 
-        log.debug('Resource {} reference count '
-                  'increased to {}'.format(str(key), r.refcount))
+        log.debug('Resource %s reference  count '
+                  'increased to %s', str(key), r.refcount)
 
         return r.resource
 
@@ -126,7 +126,7 @@ def set(key, resource, overwrite=False):
     """
 
     if (not overwrite) and (key in _resources):
-        raise KeyError('Resource {} already exists'.format(str(key)))
+        raise KeyError(f'Resource {key} already exists')
 
     if not overwrite:
         log.debug('Adding resource {}'.format(str(key)))
@@ -135,11 +135,11 @@ def set(key, resource, overwrite=False):
         r.refcount     += 1
         _resources[key] = r
 
-        log.debug('Resource {} reference count '
-                  'increased to {}'.format(str(key), r.refcount))
+        log.debug('Resource %s reference count '
+                  'increased to %s', str(key), r.refcount)
 
     else:
-        log.debug('Updating resource {}'.format(str(key)))
+        log.debug('Updating resource %s', str(key))
 
         _resources[key].resource = resource
 
@@ -157,18 +157,18 @@ def delete(key):
     r           = _resources[key]
     r.refcount -= 1
 
-    log.debug('Resource {} reference count '
-              'decreased to {}'.format(str(key), r.refcount))
+    log.debug('Resource %s reference count '
+              'decreased to %s', str(key), r.refcount)
 
     if r.refcount <= 0:
 
-        log.debug('Destroying resource {}'.format(str(key)))
+        log.debug('Destroying resource %s', str(key))
 
         _resources.pop(key)
         r.resource.destroy()
 
 
-class _Resource(object):
+class _Resource:
     """Internal type which is used to encapsulate a resource, and the
     number of active references to that resources. The following attributes
     are available on a ``_Resource``:
