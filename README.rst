@@ -53,6 +53,13 @@ Being an OpenGL application, FSLeyes can only be used on computers with
 graphics hardware (or a software GL renderer) that supports one of the
 following versions:
 
+- OpenGL 3.3
+
+- OpenGL 2.1, with the following extensions:
+
+  - ``EXT_framebuffer_object``
+  - ``ARB_instanced_arrays``
+  - ``ARB_draw_instanced``
 
 - OpenGL 1.4, with the following extensions:
 
@@ -60,12 +67,6 @@ following versions:
   - ``ARB_fragment_program``
   - ``EXT_framebuffer_object``
   - ``GL_ARB_texture_non_power_of_two``
-
-- OpenGL 2.1, with the following extensions:
-
-  - ``EXT_framebuffer_object``
-  - ``ARB_instanced_arrays``
-  - ``ARB_draw_instanced``
 
 
 Documentation
