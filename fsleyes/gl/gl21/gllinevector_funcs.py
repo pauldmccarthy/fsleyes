@@ -149,7 +149,7 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=True):
+def draw2D(self, canvas, zpos, axes, xform=None, bbox=True):
     """Draws the line vectors at a plane at the specified Z location.
     Voxel coordinates are passed to the vertex shader, which calculates
     the corresponding line vertex locations.
@@ -157,8 +157,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
 
     opts      = self.opts
     shader    = self.shader
-    canvas    = self.canvas
-    lineWidth = self.normalisedLineWidth
+    lineWidth = self.normalisedLineWidth(canvas)
     mvpmat    = canvas.mvpMatrix
     v2dMat    = opts.getTransform('voxel', 'display')
 
@@ -213,10 +212,10 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
 
 
 
-def drawAll(self, axes, zposes, xforms):
+def drawAll(self, canvas, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, axes, xform, bbox=False)
+        draw2D(self, canvas, zpos, axes, xform, bbox=False)
 
 
 def postDraw(self):

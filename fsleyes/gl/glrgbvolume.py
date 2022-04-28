@@ -29,20 +29,18 @@ class GLRGBVolume(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLRGBVolume``.
 
         :arg image:       The :class:`.Image` instance.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-        :arg canvas:      The canvas doing the drawing.
         :arg threedee:    2D or 3D rendering
         """
         glimageobject.GLImageObject.__init__(self,
                                              image,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         self.shader       = None
@@ -239,21 +237,21 @@ class GLRGBVolume(glimageobject.GLImageObject):
         self.imageTexture.bindTexture(gl.GL_TEXTURE0)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, *args, **kawrgs):
         """Calls :func:`.glrgbvolume_funcs.draw2D`. """
         with glroutines.enabled((gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glCullFace(gl.GL_BACK)
-            gl.glFrontFace(self.frontFace())
-            fslgl.glrgbvolume_funcs.draw2D(self, zpos, axes, xform)
+            gl.glFrontFace(self.frontFace(canvas))
+            fslgl.glrgbvolume_funcs.draw2D(self, canvas, *args, **kawrgs)
 
 
-    def drawAll(self, axes, zposes, xforms):
+    def drawAll(self, *args, **kawrgs):
         """Calls :func:`.glrgbvolume_funcs.drawAll`. """
-        fslgl.glrgbvolume_funcs.drawAll(self, axes, zposes, xforms)
+        fslgl.glrgbvolume_funcs.drawAll(self, *args, **kawrgs)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, *args, **kawrgs):
         """Does nothing. """
 
 
