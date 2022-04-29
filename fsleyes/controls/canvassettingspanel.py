@@ -164,12 +164,15 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('layout',
              props.Widget('layout',
                           labels=strings.choices['OrthoOpts.layout'])),
-            ('zoom',        props.Widget('zoom', showLimits=False)),
-            ('showLabels',  props.Widget('showLabels')),
-            ('cursorGap',   props.Widget('cursorGap')),
-            ('showXCanvas', props.Widget('showXCanvas')),
-            ('showYCanvas', props.Widget('showYCanvas')),
-            ('showZCanvas', props.Widget('showZCanvas'))))
+            ('zoom',         props.Widget('zoom', showLimits=False)),
+            ('showLabels',   props.Widget('showLabels')),
+            ('showLocation',
+             props.Widget('showLocation',
+                          labels=strings.choices['OrthoOpts.showLocation'])),
+            ('cursorGap',    props.Widget('cursorGap')),
+            ('showXCanvas',  props.Widget('showXCanvas')),
+            ('showYCanvas',  props.Widget('showYCanvas')),
+            ('showZCanvas',  props.Widget('showZCanvas'))))
 
         lightBoxOptsProps = collections.OrderedDict((
             ('zax',

@@ -56,6 +56,12 @@ class OrthoOpts(sceneopts.SceneOpts):
     """
 
 
+    showLocation = props.Choice(('no', 'X', 'Y', 'Z'))
+    """If not ``'no'`` labels showing the current location, in voxel and
+    world coordinatees, will be shown on the selected canvas.
+    """
+
+
     layout = props.Choice(('horizontal', 'vertical', 'grid'))
     """How should we lay out each of the three canvases?"""
 

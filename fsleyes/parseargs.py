@@ -433,6 +433,7 @@ OPTIONS = td.TypeDict({
                        'zzoom',
                        'cursorGap',
                        'showLabels',
+                       'showLocation',
                        'layout',
                        'showXCanvas',
                        'showYCanvas',
@@ -806,6 +807,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.showYCanvas'       : ('yh', 'hidey',              False),
     'OrthoOpts.showZCanvas'       : ('zh', 'hidez',              False),
     'OrthoOpts.showLabels'        : ('hl', 'hideLabels',         False),
+    'OrthoOpts.showLocation'      : ('sl', 'showLocation',       True),
     'OrthoOpts.xcentre'           : ('xc', 'xcentre',            True),
     'OrthoOpts.ycentre'           : ('yc', 'ycentre',            True),
     'OrthoOpts.zcentre'           : ('zc', 'zcentre',            True),
@@ -1062,15 +1064,16 @@ HELP = td.TypeDict({
     'SceneOpts.labelSize'          : 'Orientation/colour bar label font size '
                                      '(4-96, default: 12)',
 
-    'OrthoOpts.xzoom'       : 'X canvas zoom (100-5000, default: 100)',
-    'OrthoOpts.yzoom'       : 'Y canvas zoom (100-5000, default: 100)',
-    'OrthoOpts.zzoom'       : 'Z canvas zoom (100-5000, default: 100)',
-    'OrthoOpts.cursorGap'   : 'Show a gap at the cursor centre',
-    'OrthoOpts.layout'      : 'Canvas layout',
-    'OrthoOpts.showXCanvas' : 'Hide the X canvas',
-    'OrthoOpts.showYCanvas' : 'Hide the Y canvas',
-    'OrthoOpts.showZCanvas' : 'Hide the Z canvas',
-    'OrthoOpts.showLabels'  : 'Hide orientation labels',
+    'OrthoOpts.xzoom'        : 'X canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.yzoom'        : 'Y canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.zzoom'        : 'Z canvas zoom (100-5000, default: 100)',
+    'OrthoOpts.cursorGap'    : 'Show a gap at the cursor centre',
+    'OrthoOpts.layout'       : 'Canvas layout',
+    'OrthoOpts.showXCanvas'  : 'Hide the X canvas',
+    'OrthoOpts.showYCanvas'  : 'Hide the Y canvas',
+    'OrthoOpts.showZCanvas'  : 'Hide the Z canvas',
+    'OrthoOpts.showLabels'   : 'Hide orientation labels',
+    'OrthoOpts.showLocation' : 'Show cursor location coordinates',
     'OrthoOpts.invertXHorixontal' :
     'Invert the X canvas along the horizontal axis',
     'OrthoOpts.invertXVertical' :
@@ -1311,6 +1314,9 @@ HELP = td.TypeDict({
     'VolumeRGBOpts.suppressMode'  : 'Replace suppressed channels with '
                                     '\'white\' (default), \'black\', or '
                                     '\'transparent\'.',
+
+    'ComplexOpts.component' :
+    'Component to display - real (default), imaginary, magnitude, or phase.',
 
     'TractogramOpts.colourBy' :
     'NIFTI image, or file containing per-vertex/streamline scalar values '
