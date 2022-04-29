@@ -25,6 +25,9 @@ Added
   make regions with high intensity more transparent (!311).
 * New ``--index`` command-line option for ``volume`` overlays, allowing
   the indices for all non-spatial dimensions to be specified (!304).
+* New option to display the coordinates for the current location on the
+  canvases of an ortho view (available on the command-line via
+  ``--showLocation``) (!314).
 
 
 Changed
