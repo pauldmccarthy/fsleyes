@@ -145,18 +145,7 @@ def preDraw(self):
     does some shader state configuration.
     """
 
-    shader = self.shader
-    shader.load()
-
-    # Calculate a transformation matrix for
-    # normal vectors - T(I(MV matrix))
-    mvMat        = self.canvas.viewMatrix[:3, :3]
-    v2dMat       = self.opts.getTransform('voxel', 'display')[:3, :3]
-
-    normalMatrix = affine.concat(mvMat, v2dMat)
-    normalMatrix = npla.inv(normalMatrix).T
-
-    shader.set('normalMatrix', normalMatrix)
+    self.shader.load()
 
     gl.glEnable(gl.GL_CULL_FACE)
     gl.glEnable(gl.GL_DEPTH_TEST)
@@ -164,16 +153,21 @@ def preDraw(self):
     gl.glCullFace(gl.GL_BACK)
 
 
-def draw2D(self, zpos, axes, xform=None, applyBbox=True):
+def draw2D(self, canvas, zpos, axes, xform=None, applyBbox=True):
     """Generates voxel coordinates for each tensor to be drawn, does some
     final shader state configuration, and draws the tensors.
     """
 
     opts   = self.opts
     shader = self.shader
-    canvas = self.canvas
     mvp    = canvas.mvpMatrix
     v2dMat = opts.getTransform('voxel', 'display')
+
+    # Calculate a transformation matrix for
+    # normal vectors - T(I(MV matrix))
+    mvMat        = canvas.viewMatrix[:3, :3]
+    normalMatrix = affine.concat(mvMat, v2dMat[:3, :3])
+    normalMatrix = npla.inv(normalMatrix).T
 
     if applyBbox: bbox = canvas.viewport
     else:         bbox = None
@@ -188,6 +182,7 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
     # voxel coordinates for every sphere drawn
     shader.setAtt('voxel',           voxels, divisor=1)
     shader.set(   'voxToDisplayMat', xform)
+    shader.set(   'normalMatrix',    normalMatrix)
 
     with shader.loadedAtts():
         glexts.glDrawElementsInstanced(gl.GL_TRIANGLES,
@@ -197,10 +192,10 @@ def draw2D(self, zpos, axes, xform=None, applyBbox=True):
                                        nVoxels)
 
 
-def drawAll(self, axes, zposes, xforms):
+def drawAll(self, canvas, axes, zposes, xforms):
     """Draws all of the specified slices. """
     for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, axes, xform, applyBbox=False)
+        draw2D(self, canvas, zpos, axes, xform, applyBbox=False)
 
 
 def postDraw(self):

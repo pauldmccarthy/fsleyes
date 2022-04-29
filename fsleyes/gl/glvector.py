@@ -89,7 +89,6 @@ class GLVectorBase(glimageobject.GLImageObject):
                  overlay,
                  overlayList,
                  displayCtx,
-                 canvas,
                  threedee,
                  init=None,
                  preinit=None):
@@ -112,8 +111,6 @@ class GLVectorBase(glimageobject.GLImageObject):
         :arg displayCtx:  A :class:`.DisplayContext` object which describes
                           how the overlay is to be displayed.
 
-        :arg canvas:      The canvas doing the drawing.
-
         :arg threedee:    2D or 3D rendering.
 
         :arg init:        An optional function to be called when all of the
@@ -130,7 +127,6 @@ class GLVectorBase(glimageobject.GLImageObject):
                                              overlay,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         name = self.name

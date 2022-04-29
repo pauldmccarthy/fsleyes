@@ -63,14 +63,13 @@ class GLRGBVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLRGBVector``.
 
         :arg image:       An :class:`.Image` or :class:`.DTIFitTensor`
                           instance.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-        :arg canvas:      The canvas doing the drawing.
         :arg threedee:    2D or 3D rendering
         """
 
@@ -115,7 +114,6 @@ class GLRGBVector(glvector.GLVector):
                                    image,
                                    overlayList,
                                    displayCtx,
-                                   canvas,
                                    threedee,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
@@ -129,7 +127,6 @@ class GLRGBVector(glvector.GLVector):
         self.opts.addListener('unitLength',
                               self.name,
                               self.__unitLengthChanged)
-
 
 
     def destroy(self):
@@ -214,15 +211,15 @@ class GLRGBVector(glvector.GLVector):
         fslgl.glrgbvector_funcs.preDraw(self)
 
 
-    def draw2D(self, *args, **kwargs):
+    def draw2D(self, canvas, *args, **kwargs):
         """Overrides :meth:`.GLVector.draw2D`. Calls the OpenGL
         version-specific ``draw2D`` function.
         """
         with glroutines.enabled((gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glCullFace(gl.GL_BACK)
-            gl.glFrontFace(self.frontFace())
-            fslgl.glrgbvector_funcs.draw2D(self, *args, **kwargs)
+            gl.glFrontFace(self.frontFace(canvas))
+            fslgl.glrgbvector_funcs.draw2D(self, canvas, *args, **kwargs)
 
 
     def draw3D(self, *args, **kwargs):

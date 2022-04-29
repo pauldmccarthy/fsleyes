@@ -147,13 +147,12 @@ def preDraw(self):
     self.shader.load()
 
 
-def draw2D(self, zpos, axes, xform=None, bbox=True):
+def draw2D(self, canvas, zpos, axes, xform=None, bbox=True):
     """Draws the line vertices corresponding to a 2D plane located
     at the specified Z location.
     """
 
     opts   = self.opts
-    canvas = self.canvas
     shader = self.shader
     mvpmat = canvas.mvpMatrix
 
@@ -161,7 +160,7 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
     else:    bbox = None
 
     vertices, indices, voxCoords = self.lineVertices.getVertices2D(
-        self, zpos, axes, bbox=bbox)
+        self, canvas, zpos, axes, bbox=bbox)
 
     if vertices.size == 0:
         return
@@ -180,10 +179,10 @@ def draw2D(self, zpos, axes, xform=None, bbox=True):
     shader.draw(gl.GL_TRIANGLES)
 
 
-def drawAll(self, axes, zposes, xforms):
+def drawAll(self, canvas, axes, zposes, xforms):
     """Draws line vertices corresponding to each Z location. """
     for zpos, xform in zip(zposes, xforms):
-        draw2D(self, zpos, axes, xform, bbox=False)
+        draw2D(self, canvas, zpos, axes, xform, bbox=False)
 
 
 def postDraw(self):

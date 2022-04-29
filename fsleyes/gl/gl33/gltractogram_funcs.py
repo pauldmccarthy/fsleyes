@@ -86,13 +86,13 @@ def compileShaders(self):
         self.shaders[colourMode][clipMode].extend(progs)
 
 
-def draw2D(self, axes, mvp):
+def draw2D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.draw2D`. """
     opts       = self.opts
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
     shader     = self.shaders[colourMode][clipMode][0]
-    scales     = self.normalisedLineWidth(mvp)
+    scales     = self.normalisedLineWidth(canvas, mvp)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -103,10 +103,9 @@ def draw2D(self, axes, mvp):
         shader.draw(gl.GL_POINTS, 0,  len(self.vertices))
 
 
-def draw3D(self, xform=None):
+def draw3D(self, canvas, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 
-    canvas     = self.canvas
     opts       = self.opts
     ovl        = self.overlay
     display    = self.display
@@ -118,7 +117,7 @@ def draw3D(self, xform=None):
     lighting   = canvas.opts.light
     lightPos   = affine.transform(canvas.lightPos, mvp)
     nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth(mvp)
+    lineWidth  = self.normalisedLineWidth(canvas, mvp)
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)

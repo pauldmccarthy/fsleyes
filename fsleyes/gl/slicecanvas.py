@@ -24,6 +24,7 @@ import fsleyes_props                      as props
 import fsleyes.strings                    as strings
 import fsleyes.displaycontext.canvasopts  as canvasopts
 import fsleyes.gl.routines                as glroutines
+import fsleyes.gl.resources               as glresources
 import fsleyes.gl.globject                as globject
 import fsleyes.gl.annotations             as annotations
 
@@ -64,6 +65,10 @@ class SliceCanvas:
     whenever the :attr:`.Display.overlayType` for an existing overlay
     changes, the ``SliceCanvas`` destroys the old ``GLObject`` associated with
     the overlay, and creates a new one.
+
+
+    ``GLObject`` instances may be shared amongst multiple ``SliceCanvas``
+    instances - this is achieved with the :mod:`.resources` module.
 
 
     The ``SliceCanvas`` also uses an :class:`.Annotations` instance, for
@@ -213,7 +218,7 @@ class SliceCanvas:
             # be False - see genGLObject.
             if globj:
                 globj.deregister(self.name)
-                globj.destroy()
+                glresources.delete(self.globjectId(overlay))
 
         self._annotations.destroy()
 
@@ -455,6 +460,16 @@ class SliceCanvas:
         return self._annotations
 
 
+    def globjectId(self, overlay):
+        """Returns a key that can be used to uniquely identify a
+        :class:`.GLObject` for the given overlay. ``GLObject`` instances may be
+        shared between different ``SliceCanvas`` instances (specifically, the
+        three canvases of an :class:`.OrthoPanel`) using the :mod:`.resources`
+        module, using this key.
+        """
+        return ('GLObject', id(self.displayCtx), overlay)
+
+
     def getGLObject(self, overlay):
         """Returns the :class:`.GLObject` associated with the given
         ``overlay``, or ``None`` if there isn't one.
@@ -543,10 +558,11 @@ class SliceCanvas:
 
         # Tell the previous GLObject (if
         # any) to clean up after itself
+
         globj = self._glObjects.pop(overlay, None)
         if globj:
             globj.deregister(self.name)
-            globj.destroy()
+            glresources.delete(self.globjectId(overlay))
 
         self.__genGLObject(overlay, refresh)
 
@@ -602,11 +618,12 @@ class SliceCanvas:
                 self._glObjects.pop(overlay)
                 return
 
-            globj = globject.createGLObject(overlay,
-                                            self.overlayList,
-                                            self.displayCtx,
-                                            self,
-                                            False)
+            globj = glresources.get(self.globjectId(overlay),
+                                    globject.createGLObject,
+                                    overlay,
+                                    self.overlayList,
+                                    self.displayCtx,
+                                    False)
 
             if globj is not None:
                 globj.register(self.name, self.__onGLObjectUpdate)
@@ -664,7 +681,7 @@ class SliceCanvas:
             if ovl not in self.overlayList:
                 self._glObjects.pop(ovl)
                 if globj:
-                    globj.destroy()
+                    glresources.delete(self.globjectId(ovl))
 
         # Create a GL object for any new overlays,
         # and attach a listener to their display
@@ -714,7 +731,8 @@ class SliceCanvas:
             # GLObject, we presume that it hasn't been created
             # yet, so we'll tell genGLObject to create one for
             # it.
-            if   globj is None: self.__genGLObject(ovl)
+            if globj is None:
+                self.__genGLObject(ovl)
 
             # If there is a value for this overlay in
             # the globjects dictionary, but it evaluates
@@ -1202,7 +1220,7 @@ class SliceCanvas:
                       copts.zax, display.name)
 
             globj.preDraw()
-            globj.draw2D(zpos, axes)
+            globj.draw2D(self, zpos, axes)
             globj.postDraw()
 
         if copts.showCursor:

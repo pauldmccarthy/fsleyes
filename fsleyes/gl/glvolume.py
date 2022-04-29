@@ -186,7 +186,7 @@ class GLVolume(glimageobject.GLImageObject):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLVolume`` object.
 
         :arg image:       An :class:`.Image` object.
@@ -196,8 +196,6 @@ class GLVolume(glimageobject.GLImageObject):
         :arg displayCtx:  The :class:`.DisplayContext` object managing the
                           scene.
 
-        :arg canvas:      The canvas doing the drawing.
-
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
@@ -205,7 +203,6 @@ class GLVolume(glimageobject.GLImageObject):
                                              image,
                                              overlayList,
                                              displayCtx,
-                                             canvas,
                                              threedee)
 
         # Create an image texture, clip texture, and a colour map texture
@@ -686,21 +683,21 @@ class GLVolume(glimageobject.GLImageObject):
         fslgl.glvolume_funcs.preDraw(self)
 
 
-    def draw2D(self, *args, **kwargs):
+    def draw2D(self, canvas, *args, **kwargs):
         """Calls the version dependent ``draw2D`` function. """
 
         with glroutines.enabled((gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glCullFace(gl.GL_BACK)
-            gl.glFrontFace(self.frontFace())
-            fslgl.glvolume_funcs.draw2D(self, *args, **kwargs)
+            gl.glFrontFace(self.frontFace(canvas))
+            fslgl.glvolume_funcs.draw2D(self, canvas, *args, **kwargs)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, canvas, xform=None):
         """Calls the version dependent ``draw3D`` function. """
 
         opts = self.opts
-        w, h = self.canvas.GetScaledSize()
+        w, h = canvas.GetScaledSize()
         res  = self.opts.resolution / 100.0
         sw   = int(np.ceil(w * res))
         sh   = int(np.ceil(h * res))
@@ -728,7 +725,7 @@ class GLVolume(glimageobject.GLImageObject):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
-            fslgl.glvolume_funcs.draw3D(self, xform)
+            fslgl.glvolume_funcs.draw3D(self, canvas, xform)
 
         if self.opts.resolution != 100:
             gl.glViewport(0, 0, w, h)

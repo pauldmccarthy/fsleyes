@@ -55,14 +55,13 @@ class GLLineVector(glvector.GLVector):
     """
 
 
-    def __init__(self, image, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, image, overlayList, displayCtx, threedee):
         """Create a ``GLLineVector`` instance.
 
         :arg image:       An :class:`.Image` or :class:`.DTIFitTensor`
                           instance.
         :arg overlayList: The :class:`.OverlayList`
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
-        :arg canvas:      The canvas doing the drawing.
         :arg threedee:    2D or 3D rendering.
         """
 
@@ -111,7 +110,6 @@ class GLLineVector(glvector.GLVector):
                                    image,
                                    overlayList,
                                    displayCtx,
-                                   canvas,
                                    threedee,
                                    prefilter=prefilter,
                                    prefilterRange=prefilterRange,
@@ -136,15 +134,13 @@ class GLLineVector(glvector.GLVector):
         glvector.GLVector.destroy(self)
 
 
-    @property
-    def normalisedLineWidth(self):
+    def normalisedLineWidth(self, canvas):
         """Returns the :attr:`.LineVectorOpts.lineWidth`, scaled to be
         proportional to the same coordinate system that the vector values
         are defined in (assumed to be scaled voxels, e.g. the FSL coordinate
         system).
         """
         opts      = self.opts
-        canvas    = self.canvas
         d2p       = opts.getTransform('display', 'pixdim')
         lineWidth = opts.lineWidth * canvas.pixelSize()[0]
         lineWidth = affine.transform([lineWidth] * 3, d2p, vector=True)[0]
@@ -387,7 +383,7 @@ class GLLineVertices:
         self.__hash   = self.calculateHash(glvec)
 
 
-    def getVertices2D(self, glvec, zpos, axes, bbox=None):
+    def getVertices2D(self, glvec, canvas, zpos, axes, bbox=None):
         """Extracts and returns a slice of line vertices, and the associated
         voxel coordinates, which are in a plane located at the given Z
         position (in display coordinates).
@@ -401,7 +397,6 @@ class GLLineVertices:
 
         opts   = glvec.opts
         image  = glvec.image
-        canvas = glvec.canvas
         shape  = image.shape[:3]
         zax    = axes[2]
 
@@ -426,7 +421,7 @@ class GLLineVertices:
 
         # Convert line segments into rectangles so
         # we can draw lines at arbitrary widths.
-        lineWidth         = glvec.normalisedLineWidth
+        lineWidth         = glvec.normalisedLineWidth(canvas)
         vertices, indices = glroutines.lineAsPolygon(vertices,
                                                      lineWidth,
                                                      zax,

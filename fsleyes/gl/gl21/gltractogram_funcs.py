@@ -54,7 +54,7 @@ def compileShaders(self):
         self.shaders[colourMode][clipMode].append(shader)
 
 
-def draw2D(self, axes, mvp):
+def draw2D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.draw2D`. """
 
     opts       = self.opts
@@ -66,7 +66,7 @@ def draw2D(self, axes, mvp):
     # each vertex is drawn as a circle,
     # using instanced rendering.
     vertices         = glroutines.unitCircle(res)
-    scales           = self.normalisedLineWidth(mvp)
+    scales           = self.normalisedLineWidth(canvas, mvp)
     vertices[:, :2] *= scales[:2]
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -80,9 +80,8 @@ def draw2D(self, axes, mvp):
                                      len(self.vertices))
 
 
-def draw3D(self, xform=None):
+def draw3D(self, canvas, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
-    canvas     = self.canvas
     opts       = self.opts
     ovl        = self.overlay
     display    = self.display

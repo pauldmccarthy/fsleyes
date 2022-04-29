@@ -100,7 +100,7 @@ class GLMesh(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, threedee):
         """Create a ``GLMesh``.
 
         :arg overlay:     A :class:`.Mesh` overlay.
@@ -111,7 +111,7 @@ class GLMesh(globject.GLObject):
         """
 
         globject.GLObject.__init__(
-            self, overlay, overlayList, displayCtx, canvas, threedee)
+            self, overlay, overlayList, displayCtx, threedee)
 
         # Separate shaders are use for flat
         # colouring vs data colouring.
@@ -417,7 +417,7 @@ class GLMesh(globject.GLObject):
                 self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """Overrids :meth:`.GLObject.draw2D`. Draws a 2D slice of the
         :class:`.Mesh`, at the specified Z location.
         """
@@ -450,17 +450,16 @@ class GLMesh(globject.GLObject):
         self.overlayList.setData(overlay, 'crosssection_{}'.format(zax), None)
 
         # Delegate to the appropriate sub-method
-        if   is2D:    self.draw2DMesh(xform)
-        elif outline: self.drawOutline(zpos, axes, xform)
-        else:         self.drawCrossSection(zpos, axes, xform)
+        if   is2D:    self.draw2DMesh(canvas, xform)
+        elif outline: self.drawOutline(canvas, zpos, axes, xform)
+        else:         self.drawCrossSection(canvas, zpos, axes, xform)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, canvas, xform=None):
         """Overrides :meth:`.GLObject.draw3D`. Draws a 3D rendering of the
         mesh.
         """
         opts      = self.opts
-        canvas    = self.canvas
         flat      = opts.vertexData is None
         mvmat     = canvas.viewMatrix
         mvpmat    = canvas.mvpMatrix
@@ -512,7 +511,7 @@ class GLMesh(globject.GLObject):
                 self.negCmapTexture.unbindTexture()
 
 
-    def drawOutline(self, zpos, axes, xform=None):
+    def drawOutline(self, canvas, zpos, axes, xform=None):
         """Called by :meth:`draw2D` when ``MeshOpts.outline is True or
         MeshOpts.vertexData is not None``.  Calculates the intersection of the
         mesh with the viewing plane as a set of line segments.
@@ -537,7 +536,6 @@ class GLMesh(globject.GLObject):
         """
 
         opts   = self.opts
-        canvas = self.canvas
         bbox   = canvas.viewport
         flat   = opts.vertexData is None
 
@@ -598,14 +596,13 @@ class GLMesh(globject.GLObject):
             shader.draw(glprim, 0, vertices.shape[0])
 
 
-    def draw2DMesh(self, xform=None):
+    def draw2DMesh(self, canvas, xform=None):
         """Not to be confused with :meth:`draw2D`.  Called by :meth:`draw2D`
         for :class:`.Mesh` overlays which are actually 2D (with a flat
         third dimension).
         """
 
         opts      = self.opts
-        canvas    = self.canvas
         vdata     = opts.getVertexData('vertex')
         mdata     = opts.getVertexData('modulate')
         flat      = opts.vertexData is None
@@ -637,7 +634,7 @@ class GLMesh(globject.GLObject):
             shader.draw(gl.GL_TRIANGLES)
 
 
-    def drawCrossSection(self, zpos, axes, xform=None):
+    def drawCrossSection(self, canvas, zpos, axes, xform=None):
         """Called by :meth:`draw2D` when ``outline is False and vertexData is None``
 
         Draws a filled cross-section of the mesh at the specified Z location.
@@ -663,7 +660,6 @@ class GLMesh(globject.GLObject):
         :arg xform: Transformation matrix to apply to the vertices.
         """
 
-        canvas        = self.canvas
         xax, yax, zax = axes
         bbox          = canvas.viewport
         cpshader      = self.xsectcpShader

@@ -28,10 +28,10 @@ class GLTractogram(globject.GLObject):
     overlays.
     """
 
-    def __init__(self, overlay, overlayList, displayCtx, canvas, threedee):
+    def __init__(self, overlay, overlayList, displayCtx, threedee):
         """Create a :meth:`GLTractogram`. """
         globject.GLObject.__init__(
-            self, overlay, overlayList, displayCtx, canvas, threedee)
+            self, overlay, overlayList, displayCtx, threedee)
 
         # Shaders are created in compileShaders.
         # imageTexture created in refreshImageTexture
@@ -234,7 +234,7 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def normalisedLineWidth(self, mvp):
+    def normalisedLineWidth(self, canvas, mvp):
         """Returns :attr:`lineWidth`, scaled so that it is with respect to
         normalised device coordinates. Streamline lines/tubes (in 3D) and
         vertices (in 2D) are drawn such that the width/radius is fixed w.r.t.
@@ -242,7 +242,8 @@ class GLTractogram(globject.GLObject):
         lines/tubes/circles will be small when zoomed out, and big when
         zoomed in.
 
-        :arg mvp: Current MVP matrix
+        :arg canvas: Canvas being drawn on
+        :arg mvp:    Current MVP matrix
         """
         # Line width is fixed at 0.1 in world
         # units. Below we convert it so it is
@@ -258,7 +259,6 @@ class GLTractogram(globject.GLObject):
             # the future, as the ortho3D function is a bit
             # nuts in how it handles depth (caused my my
             # lack of understanding of near/far clipping).
-            canvas    = self.canvas
             scaling   = affine.concat(canvas.projectionMatrix,
                                       canvas.viewScale)
             lineWidth = [lineWidth * scaling[0, 0],
@@ -634,7 +634,7 @@ class GLTractogram(globject.GLObject):
             self.clipImageTexture.bindTexture(gl.GL_TEXTURE3)
 
 
-    def draw2D(self, zpos, axes, xform=None):
+    def draw2D(self, canvas, zpos, axes, xform=None):
         """Draws a 2D slice through the tractogram. Calls
         :func:`.gl21.gltractogram_funcs.draw2D` or
         :func:`.gl33.gltractogram_funcs.draw2D`.
@@ -643,9 +643,8 @@ class GLTractogram(globject.GLObject):
         if xform is None:
             xform = np.eye(4)
 
-        canvas = self.canvas
-        opts   = self.opts
-        zax    = axes[2]
+        opts = self.opts
+        zax  = axes[2]
 
         # We draw a 2D slice through the tractogram by
         # manipulating the projection matrix so that z
@@ -670,14 +669,14 @@ class GLTractogram(globject.GLObject):
         strm2disp = opts.displayTransform
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
-        fslgl.gltractogram_funcs.draw2D(self, axes, mvp)
+        fslgl.gltractogram_funcs.draw2D(self, canvas, mvp)
 
 
-    def draw3D(self, xform=None):
+    def draw3D(self, *args, **kwargs):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
-        fslgl.gltractogram_funcs.draw3D(self, xform)
+        fslgl.gltractogram_funcs.draw3D(self, *args, **kwargs)
 
 
     def postDraw(self):
