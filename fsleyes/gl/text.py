@@ -223,6 +223,7 @@ class Text:
                                  fontSize=self.fontSize,
                                  fgColour=self.colour,
                                  bgColour=self.bgColour,
+                                 halign=self.halign,
                                  alpha=self.alpha)
         bmp = np.flipud(bmp).transpose([2, 1, 0])
         self.__bitmap = bmp

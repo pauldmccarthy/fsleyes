@@ -316,9 +316,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         def refresh(*a):
             self.Refresh()
 
-        sceneOpts.addListener('labelSize',   name, refresh, weak=False)
-        sceneOpts.addListener('fgColour',    name, refresh, weak=False)
-        sceneOpts.addListener('showLabels',  name, refresh, weak=False)
+        sceneOpts.addListener('labelSize',    name, refresh, weak=False)
+        sceneOpts.addListener('fgColour',     name, refresh, weak=False)
+        sceneOpts.addListener('showLabels',   name, refresh, weak=False)
+        sceneOpts.addListener('showLocation', name, refresh, weak=False)
 
         # The lastFocusedCanvas method allows
         # a ref to the most recently focused
