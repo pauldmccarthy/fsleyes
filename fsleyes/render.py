@@ -453,6 +453,7 @@ def createLightBoxCanvas(namespace,
 
     opts                = canvas.opts
     opts.showCursor     = sceneOpts.showCursor
+    opts.cursorWidth    = sceneOpts.cursorWidth
     opts.bgColour       = sceneOpts.bgColour
     opts.cursorColour   = sceneOpts.cursorColour
     opts.zax            = sceneOpts.zax
@@ -552,6 +553,7 @@ def createOrthoCanvases(namespace,
         opts              = c.opts
         opts.showCursor   = sceneOpts.showCursor
         opts.cursorColour = sceneOpts.cursorColour
+        opts.cursorWidth  = sceneOpts.cursorWidth
         opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
         opts.invertX      = invertx
