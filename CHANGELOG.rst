@@ -28,6 +28,8 @@ Added
 * New option to display the coordinates for the current location on the
   canvases of an ortho view (available on the command-line via
   ``--showLocation``) (!314).
+* New option to control the location cursor width on ortho/lightbox views
+  (available on the command-line via ``--cursorWidth``) (!314).
 
 
 Changed
