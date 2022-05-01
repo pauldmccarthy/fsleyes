@@ -71,7 +71,7 @@ class SliceCanvasOpts(props.HasProperties):
     voxel).
     """
 
-    cursorWidth = props.Real(minval=0.1, default=1, maxval=10)
+    cursorWidth = props.Real(minval=1, default=1, maxval=10)
     """Width in pixels (approx) of the location cursor. """
 
 

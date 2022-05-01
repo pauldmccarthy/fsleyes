@@ -118,6 +118,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
 
         sceneOptsProps = collections.OrderedDict((
             ('showCursor',   props.Widget('showCursor')),
+            ('cursorWidth',  props.Widget('cursorWidth', spin=False)),
             ('bgColour',     props.Widget('bgColour')),
             ('fgColour',     props.Widget('fgColour')),
             ('cursorColour', props.Widget('cursorColour')),

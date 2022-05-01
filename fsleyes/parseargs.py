@@ -418,6 +418,7 @@ OPTIONS = td.TypeDict({
     # names of properties on them.
 
     'SceneOpts'     : ['showCursor',
+                       'cursorWidth',
                        'bgColour',
                        'fgColour',
                        'cursorColour',
@@ -794,6 +795,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.colourBarLabelSide' : ('cbs', 'colourBarLabelSide', True),
     'SceneOpts.colourBarSize'      : ('cbi', 'colourBarSize',      True),
     'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
+    'SceneOpts.cursorWidth'        : ('cw',  'cursorWidth',        True),
     'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
     'SceneOpts.movieSyncRefresh'   : ('ms',  'movieSync',          False),
     'SceneOpts.labelSize'          : ('ls',  'labelSize',          True),
@@ -1048,6 +1050,7 @@ HELP = td.TypeDict({
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
+    'SceneOpts.cursorWidth'        : 'Location cursor thickness',
     'SceneOpts.bgColour'           : 'Canvas background colour (0-1)',
     'SceneOpts.fgColour'           : 'Canvas foreground colour (0-1)',
     'SceneOpts.cursorColour'       : 'Cursor location colour (0-1)',

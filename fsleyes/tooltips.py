@@ -465,6 +465,7 @@ properties = TypeDict({
     # SceneOpts
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
                                      'the current location.',
+    'SceneOpts.cursorWidth'        : 'Width/thickness of the location cursor.',
     'SceneOpts.cursorGap'          : 'Show a gap at the cursor centre.',
     'SceneOpts.cursorColour'       : 'Colour of the location cursor.',
     'SceneOpts.bgColour'           : 'Canvas background colour.',
