@@ -78,6 +78,10 @@ mesh_ref mesh_l_thal.vtk -mc 0 1 0 -r mesh_ref -a 50
 -sl Y        3d
 -sl Z        3d
 -sl Z        mesh_l_thal.vtk -mc 1 0 0
+
+# cursor width
+-cw 5  3d
+-cw 10 3d
 """
 
 
