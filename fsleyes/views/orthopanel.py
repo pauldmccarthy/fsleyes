@@ -258,6 +258,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yopts.bindProps('cursorGap',    sceneOpts)
         zopts.bindProps('cursorGap',    sceneOpts)
 
+        xopts.bindProps('cursorWidth',  sceneOpts)
+        yopts.bindProps('cursorWidth',  sceneOpts)
+        zopts.bindProps('cursorWidth',  sceneOpts)
+
         xopts.bindProps('bgColour',     sceneOpts)
         yopts.bindProps('bgColour',     sceneOpts)
         zopts.bindProps('bgColour',     sceneOpts)

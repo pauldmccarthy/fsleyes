@@ -740,8 +740,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         annot = self.getAnnotations()
 
         kwargs = {
-            'colour' : opts.cursorColour,
-            'width'  : 1
+            'colour'     : opts.cursorColour,
+            'lineWidth'  : opts.cursorWidth
         }
 
         annot.line(*xverts[0], *xverts[1], **kwargs)

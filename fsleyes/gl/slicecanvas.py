@@ -156,6 +156,7 @@ class SliceCanvas:
         opts.addListener('displayBounds', self.name, self.Refresh)
         opts.addListener('bgColour',      self.name, self.Refresh)
         opts.addListener('cursorColour',  self.name, self.Refresh)
+        opts.addListener('cursorWidth',   self.name, self.Refresh)
         opts.addListener('showCursor',    self.name, self.Refresh)
         opts.addListener('cursorGap',     self.name, self.Refresh)
         opts.addListener('invertX',       self.name, self.Refresh)
@@ -1160,8 +1161,8 @@ class SliceCanvas:
             lines.append((x,     yhigh, x,    ymax))
 
         kwargs = {
-            'colour' : copts.cursorColour,
-            'width'  : 1
+            'colour'     : copts.cursorColour,
+            'lineWidth'  : copts.cursorWidth
         }
 
         for line in lines:

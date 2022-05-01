@@ -104,6 +104,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.bindProps('bgColour',        sceneOpts)
         lbopts.bindProps('cursorColour',    sceneOpts)
         lbopts.bindProps('showCursor',      sceneOpts)
+        lbopts.bindProps('cursorWidth',     sceneOpts)
         lbopts.bindProps('showGridLines',   sceneOpts)
         lbopts.bindProps('highlightSlice',  sceneOpts)
         lbopts.bindProps('highDpi',         sceneOpts)
