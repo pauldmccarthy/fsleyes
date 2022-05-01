@@ -112,7 +112,7 @@ FILETREE_PREFIX = '[filetree] '
 """
 
 
-class FileGroup(object):
+class FileGroup:
     """A ``FileGroup`` represents a single row in the file tree panel list.  It
     encapsulates a set of values for all varying variables, and a set of files
     and their associated fixed variable values. These are all accessible as
@@ -192,7 +192,7 @@ class FileGroup(object):
                 self.files    == other.files)
 
 
-class FileTreeManager(object):
+class FileTreeManager:
     """The ``FileTreeManager`` class handles the generation and arranging
     of varying and fixed variables, and file types, according to a
     specification of *varying* and *fixed* variables.
@@ -634,7 +634,7 @@ def filterFileGroups(filegroups, fixedcols):
     return filegroups, fixedcols
 
 
-class OverlayManager(object):
+class OverlayManager:
     """The ``OverlayManager`` is used by the :class:`FileTreeManager`. It
     manages the mechanics of displaying overlays associated with the file tree.
 
@@ -934,7 +934,7 @@ group.
 """
 
 
-class ToReplace(object):
+class ToReplace:
     """Placeholder type used by the :func:`getProperties` function when a
     property value is in the :attr:`REPLACE` dictionary, and needs to be
     explicitly handled by the :class:`OverlayManager`.
