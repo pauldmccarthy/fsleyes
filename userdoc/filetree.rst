@@ -234,5 +234,5 @@ image, and the cortical ``surface`` files. We also have four variables - the
 (``hemi``).
 
 
-See the ``fsl.utils.filetree`` module in the |fslpy_doc| documentation for
-more details on defining your own file trees.
+See the ``file_tree`` library for more details on defining your own file
+trees: https://open.win.ox.ac.uk/pages/ndcn0236/file-tree/
