@@ -41,6 +41,7 @@ Fixed
 
 * Fixed an issue with loading FIRST subcortical segmentation VTK meshes (!306).
 * Fixed an issue with the ``--updatecheck`` commmand line argument (!306).
+* Fixed some bugs in the *File tree panel* (!315).
 
 
 Removed

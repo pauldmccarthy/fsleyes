@@ -156,7 +156,6 @@ class FileTreePanel(ctrlpanel.ControlPanel):
         treefiles   = [tf for tf in filetree.list_all_trees() if filter(tf)]
         treefiles   = list(sorted(treefiles))
         treefiles  += FileTreePanel.customTrees
-        treefiles   = [op.abspath( tf) for tf in treefiles]
         treelabels  = [op.basename(tf) for tf in treefiles]
 
         for f, l in zip(treefiles, treelabels):

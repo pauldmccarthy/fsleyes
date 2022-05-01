@@ -91,7 +91,7 @@ class FileTreeQuery:
         """Returns a list containing the names of variables present in files
         of the given ``template`` type.
         """
-        return list(self.__matcharrays[template].coords.keys())
+        return list(self.__matcharrays[template].dims)
 
 
     def variables(self, template=None):
@@ -110,11 +110,10 @@ class FileTreeQuery:
         variables = collections.defaultdict(set)
 
         for template in templates:
-            coords = self.__matcharrays[template].coords
-
-            for axis in coords.keys():
-                varvalues       = variables[axis]
-                variables[axis] = varvalues.union(set(coords[axis].data))
+            matches = self.__matcharrays[template]
+            for axis in matches.dims:
+                axisvals        = set(matches.coords[axis].data)
+                variables[axis] = variables[axis].union(axisvals)
 
         # Variable values will usually be strings,
         # but can sometimes be None, so we convert
