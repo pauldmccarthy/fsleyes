@@ -123,22 +123,24 @@ class OrthoLabels:
         # OrthoPanel).
         labelArgs = {
             'name'      : name,
-            'callback'  : self.__refreshLabels,
+            'callback'  : self.refreshLabels,
             'immediate' : True
         }
+        anatomyArgs              = dict(labelArgs)
+        anatomyArgs['callback']  = self.refreshAnatomy
         locationArgs             = dict(labelArgs)
-        locationArgs['callback'] = self.__refreshLocation
+        locationArgs['callback'] = self.refreshLocation
 
         for c in canvases:
-            c.opts.addListener('invertX', **labelArgs)
-            c.opts.addListener('invertY', **labelArgs)
+            c.opts.addListener('invertX', **anatomyArgs)
+            c.opts.addListener('invertY', **anatomyArgs)
 
         orthoOpts  .addListener('showLabels',       **labelArgs)
         orthoOpts  .addListener('labelSize',        **labelArgs)
         orthoOpts  .addListener('fgColour',         **labelArgs)
         displayCtx .addListener('selectedOverlay',  **labelArgs)
         displayCtx .addListener('displaySpace',     **labelArgs)
-        displayCtx .addListener('radioOrientation', **labelArgs)
+        displayCtx .addListener('radioOrientation', **anatomyArgs)
         orthoOpts  .addListener('showLocation',     **locationArgs)
         displayCtx .addListener('location',         **locationArgs)
         overlayList.addListener('overlays', name, self.__overlayListChanged)
@@ -193,8 +195,8 @@ class OrthoLabels:
         """Forces the orientation and location annotations to be refreshed.
         All arguments are ignored.
         """
-        self.__refreshLabels()
-        self.__refreshLocation()
+        self.refreshAnatomy()
+        self.refreshLocation()
 
 
     def __overlayListChanged(self, *a):
@@ -211,7 +213,7 @@ class OrthoLabels:
             # overlay bounds change
             opts.addListener('bounds',
                              self.__name,
-                             self.__refreshLabels,
+                             self.refreshLabels,
                              overwrite=True)
 
         # When the list becomes empty, or
@@ -221,17 +223,18 @@ class OrthoLabels:
         # will thus not get called. So we call
         # it here.
         if len(self.__overlayList) in (0, 1):
-            self.__refreshLabels()
-            self.__refreshLocation()
+            self.refreshLabels()
 
 
-    def __refreshLocation(self, *a):
-        """
-        """
+    def refreshLocation(self, *a):
+        """Refreshs the label displaying the current cursor location. """
         displayCtx = self.__displayCtx
         sopts      = self.__orthoOpts
         annots     = self.__annots
         overlay    = displayCtx.getSelectedOverlay()
+        ref        = displayCtx.getReferenceImage(overlay)
+        opts       = None
+        wx, wy, wz = displayCtx.worldLocation
 
         if overlay is None:
             return
@@ -243,23 +246,25 @@ class OrthoLabels:
         if sopts.showLocation == 'no':
             return
 
-        opts = displayCtx.getOpts(overlay)
-
         if   sopts.showLocation == 'X': locLbl = annots[0]['location']
         elif sopts.showLocation == 'Y': locLbl = annots[1]['location']
         elif sopts.showLocation == 'Z': locLbl = annots[2]['location']
 
-        wx, wy, wz      = displayCtx.worldLocation
-        loc             = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}'
-        if isinstance(overlay, fslimage.Nifti):
+
+        if ref is None:
+            locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}'
+        else:
+            opts       = displayCtx.getOpts(ref)
             vx, vy, vz = opts.getVoxel()
-            loc        = f'{loc}\n{vx} {vy} {vz}'
+            locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}' + \
+                         f'\n[voxel {vx} {vy} {vz}]'
+
         locLbl.fontSize = sopts.labelSize
         locLbl.colour   = sopts.fgColour
-        locLbl.text     = loc
+        locLbl.text     = locstr
 
 
-    def __refreshLabels(self, *a):
+    def refreshAnatomy(self, *a):
         """Updates the attributes of the :class:`.Text` anatomical orientation
         annotations on each :class:`.SliceCanvas`.
         """
