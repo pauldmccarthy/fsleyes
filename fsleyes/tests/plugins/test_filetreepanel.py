@@ -44,3 +44,18 @@ def _test_filetreepanel(ortho, overlayList, displayCtx):
             'session' : '*',
             'hemi' : '*',
             'surf' : '*'}
+
+        # toggle on the T1w, check that
+        # file list is correctly generated
+        ftpanel.fileTypePanel.GetWidgets()[0].SetValue(True)
+        ftpanel.fileTypePanel.onToggle(None)
+        realYield()
+        grid   = ftpanel.fileListPanel.GridContents()
+        expect = [['session', 'subject', 'Notes', 'T1w'],
+                  ['1', '01', '', 'x'],
+                  ['1', '02', '', 'x'],
+                  ['1', '03', '', 'x'],
+                  ['2', '01', '', 'x'],
+                  ['2', '02', '', 'x'],
+                  ['2', '03', '', 'x']]
+        assert grid == expect

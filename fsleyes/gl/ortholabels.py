@@ -5,29 +5,41 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`OrthoLabels` class, which manages
-anatomical orientation labels for an :class:`.OrthoPanel`.
+anatomical and location labels for an :class:`.OrthoPanel`.
 
 This logic is independent from the :class:`.OrthoPanel` so it can be used in
 off-screen rendering (see :mod:`.render`).
 """
 
 
+import fsl.data.image     as fslimage
 import fsl.data.constants as constants
 
 
 class OrthoLabels:
-    """The ``OrthoLabels`` class manages anatomical orientation labels which
-    are displayed on a set of three :class:`.SliceCanvas` instances, one for
-    each plane in the display coordinate system, typically within an
-    :class:`.OrthoPanel`.
+    """The ``OrthoLabels`` class manages anatomical orientation and location
+    labels which are displayed on a set of three :class:`.SliceCanvas`
+    instances, one for each plane in the display coordinate system, typically
+    within an :class:`.OrthoPanel`.
+
 
     The ``OrthoLabels`` class uses :class:`.annotations.Text` annotations,
-    showing the user the anatomical orientation of the display on each
-    canvas. These labels are only shown if the currently selected overlay (as
-    dicated by the :attr:`.DisplayContext.selectedOverlay` property) is a
-    :class:`.Image` instance, **or** the
-    :meth:`.DisplayOpts.referenceImage` property for the currently selected
-    overlay returns an :class:`.Image` instance.
+    showing the user:
+      - the anatomical orientation of the display on each canvas.
+      - the current location on a selected csanvas.
+
+    Anatomical labels can be toggled on and off via the
+    :attr:`.OrthoOpts.showLabels` property, and location via the
+    :attr:`.OrthoOpts.showLocation` priperty.
+
+    Anatomical labels are only shown if the currently selected overlay (as
+    dictated by the :attr:`.DisplayContext.selectedOverlay` property) is a
+    :class:`.Image` instance, **or** the :meth:`.DisplayOpts.referenceImage`
+    property for the currently selected overlay returns an :class:`.Image`
+    instance.
+
+    If the currently selected overlay is an :class:`.Image`, both voxel and
+    world coordinates are shown. Otherwise only world coordinates are shown.
     """
 
 
@@ -53,14 +65,14 @@ class OrthoLabels:
         # labels is a list of dicts, one
         # for each canvas, containing Text
         # annotations to show anatomical
-        # orientation
+        # orientation and location
         annots = [{} for c in canvases]
 
         self.__canvases = canvases
         self.__annots   = annots
 
         # Create the Text annotations
-        for side in ('left', 'right', 'top', 'bottom'):
+        for side in ('left', 'right', 'top', 'bottom', 'location'):
             for canvas, cannots in zip(canvases, annots):
                 annot         = canvas.getAnnotations()
                 cannots[side] = annot.text('', 0, 0, hold=True)
@@ -68,31 +80,36 @@ class OrthoLabels:
         # Initialise the display properties
         # of each Text annotation
         for cannots in annots:
-            cannots['left']  .halign = 'left'
-            cannots['right'] .halign = 'right'
-            cannots['top']   .halign = 'centre'
-            cannots['bottom'].halign = 'centre'
+            cannots['left']    .halign = 'left'
+            cannots['right']   .halign = 'right'
+            cannots['top']     .halign = 'centre'
+            cannots['bottom']  .halign = 'centre'
+            cannots['location'].halign = 'left'
 
-            cannots['left']  .valign = 'centre'
-            cannots['right'] .valign = 'centre'
-            cannots['top']   .valign = 'top'
-            cannots['bottom'].valign = 'bottom'
+            cannots['left']    .valign = 'centre'
+            cannots['right']   .valign = 'centre'
+            cannots['top']     .valign = 'top'
+            cannots['bottom']  .valign = 'bottom'
+            cannots['location'].valign = 'top'
 
-            cannots['left']  .x = 0.0
-            cannots['left']  .y = 0.5
-            cannots['right'] .x = 1.0
-            cannots['right'] .y = 0.5
-            cannots['bottom'].x = 0.5
-            cannots['bottom'].y = 0.0
-            cannots['top']   .x = 0.5
-            cannots['top']   .y = 1.0
+            cannots['left']    .x = 0.0
+            cannots['left']    .y = 0.5
+            cannots['right']   .x = 1.0
+            cannots['right']   .y = 0.5
+            cannots['bottom'].  x = 0.5
+            cannots['bottom']  .y = 0.0
+            cannots['top']     .x = 0.5
+            cannots['top']     .y = 1.0
+            cannots['location'].x = 0.0
+            cannots['location'].y = 1.0
 
             # Keep cannots 5 pixels away
             # from the canvas edges
-            cannots['left']  .off = ( 5,  0)
-            cannots['right'] .off = (-5,  0)
-            cannots['top']   .off = ( 0, -5)
-            cannots['bottom'].off = ( 0,  5)
+            cannots['left']    .off = ( 5,  0)
+            cannots['right']   .off = (-5,  0)
+            cannots['top']     .off = ( 0, -5)
+            cannots['bottom']  .off = ( 0,  5)
+            cannots['location'].off = ( 5, -5)
 
         # Add listeners to properties
         # that need to trigger a label
@@ -104,22 +121,28 @@ class OrthoLabels:
         # a panel refresh occurs (where
         # the latter is managed by the
         # OrthoPanel).
-        refreshArgs = {
+        labelArgs = {
             'name'      : name,
-            'callback'  : self.__refreshLabels,
+            'callback'  : self.refreshLabels,
             'immediate' : True
         }
+        anatomyArgs              = dict(labelArgs)
+        anatomyArgs['callback']  = self.refreshAnatomy
+        locationArgs             = dict(labelArgs)
+        locationArgs['callback'] = self.refreshLocation
 
         for c in canvases:
-            c.opts.addListener('invertX', **refreshArgs)
-            c.opts.addListener('invertY', **refreshArgs)
+            c.opts.addListener('invertX', **anatomyArgs)
+            c.opts.addListener('invertY', **anatomyArgs)
 
-        orthoOpts  .addListener('showLabels',       **refreshArgs)
-        orthoOpts  .addListener('labelSize',        **refreshArgs)
-        orthoOpts  .addListener('fgColour',         **refreshArgs)
-        displayCtx .addListener('selectedOverlay',  **refreshArgs)
-        displayCtx .addListener('displaySpace',     **refreshArgs)
-        displayCtx .addListener('radioOrientation', **refreshArgs)
+        orthoOpts  .addListener('showLabels',       **labelArgs)
+        orthoOpts  .addListener('labelSize',        **labelArgs)
+        orthoOpts  .addListener('fgColour',         **labelArgs)
+        displayCtx .addListener('selectedOverlay',  **labelArgs)
+        displayCtx .addListener('displaySpace',     **labelArgs)
+        displayCtx .addListener('radioOrientation', **anatomyArgs)
+        orthoOpts  .addListener('showLocation',     **locationArgs)
+        displayCtx .addListener('location',         **locationArgs)
         overlayList.addListener('overlays', name, self.__overlayListChanged)
 
 
@@ -142,11 +165,13 @@ class OrthoLabels:
         self.__annots      = None
 
         orthoOpts  .removeListener('showLabels',       name)
+        orthoOpts  .removeListener('showLocation',     name)
         orthoOpts  .removeListener('labelSize',        name)
         orthoOpts  .removeListener('fgColour',         name)
         displayCtx .removeListener('selectedOverlay',  name)
         displayCtx .removeListener('displaySpace',     name)
         displayCtx .removeListener('radioOrientation', name)
+        displayCtx .removeListener('location',         name)
         overlayList.removeListener('overlays',         name)
 
         for c in canvases:
@@ -166,9 +191,12 @@ class OrthoLabels:
                 text.destroy()
 
 
-    def refreshLabels(self):
-        """Forces the label annotations to be refreshed."""
-        self.__refreshLabels()
+    def refreshLabels(self, *a):
+        """Forces the orientation and location annotations to be refreshed.
+        All arguments are ignored.
+        """
+        self.refreshAnatomy()
+        self.refreshLocation()
 
 
     def __overlayListChanged(self, *a):
@@ -185,7 +213,7 @@ class OrthoLabels:
             # overlay bounds change
             opts.addListener('bounds',
                              self.__name,
-                             self.__refreshLabels,
+                             self.refreshLabels,
                              overwrite=True)
 
         # When the list becomes empty, or
@@ -195,26 +223,66 @@ class OrthoLabels:
         # will thus not get called. So we call
         # it here.
         if len(self.__overlayList) in (0, 1):
-            self.__refreshLabels()
+            self.refreshLabels()
 
 
-    def __refreshLabels(self, *a):
+    def refreshLocation(self, *a):
+        """Refreshs the label displaying the current cursor location. """
+        displayCtx = self.__displayCtx
+        sopts      = self.__orthoOpts
+        annots     = self.__annots
+        overlay    = displayCtx.getSelectedOverlay()
+        ref        = displayCtx.getReferenceImage(overlay)
+        opts       = None
+        wx, wy, wz = displayCtx.worldLocation
+
+        if overlay is None:
+            return
+
+        for cannots, canvas in zip(annots, 'XYZ'):
+            showLoc = sopts.showLocation == canvas
+            cannots['location'].enabled = showLoc
+
+        if sopts.showLocation == 'no':
+            return
+
+        if   sopts.showLocation == 'X': locLbl = annots[0]['location']
+        elif sopts.showLocation == 'Y': locLbl = annots[1]['location']
+        elif sopts.showLocation == 'Z': locLbl = annots[2]['location']
+
+
+        if ref is None:
+            locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}'
+        else:
+            opts       = displayCtx.getOpts(ref)
+            vx, vy, vz = opts.getVoxel()
+            locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}' + \
+                         f'\n[voxel {vx} {vy} {vz}]'
+
+        locLbl.fontSize = sopts.labelSize
+        locLbl.colour   = sopts.fgColour
+        locLbl.text     = locstr
+
+
+    def refreshAnatomy(self, *a):
         """Updates the attributes of the :class:`.Text` anatomical orientation
         annotations on each :class:`.SliceCanvas`.
         """
 
         displayCtx = self.__displayCtx
         sopts      = self.__orthoOpts
+        canvases   = self.__canvases
+        annots     = self.__annots
         overlay    = displayCtx.getSelectedOverlay()
+        showLabels = sopts.showLabels and (overlay is not None)
 
-        canvases = self.__canvases
-        annots   = self.__annots
+        for cannots, canvas in zip(annots, 'XYZ'):
+            cannots['left']    .enabled = showLabels
+            cannots['right']   .enabled = showLabels
+            cannots['top']     .enabled = showLabels
+            cannots['bottom']  .enabled = showLabels
 
-        for cannots in annots:
-            for text in cannots.values():
-                text.enabled = sopts.showLabels and (overlay is not None)
-
-        if not sopts.showLabels or overlay is None:
+        if not showLabels:
             return
 
         opts = displayCtx.getOpts(overlay)
@@ -224,9 +292,8 @@ class OrthoLabels:
         labels, orients              = opts.getLabels()
         xlo, ylo, zlo, xhi, yhi, zhi = labels
         vertOrient                   = len(xlo) > 1
-
-        fontSize = sopts.labelSize
-        fgColour = tuple(sopts.fgColour)
+        fontSize                     = sopts.labelSize
+        fgColour                     = tuple(sopts.fgColour)
 
         # If any axis orientation is unknown, make
         # the foreground colour red, to highlight

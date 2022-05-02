@@ -465,6 +465,7 @@ properties = TypeDict({
     # SceneOpts
     'SceneOpts.showCursor'         : 'Show/hide the cursor which highlights '
                                      'the current location.',
+    'SceneOpts.cursorWidth'        : 'Width/thickness of the location cursor.',
     'SceneOpts.cursorGap'          : 'Show a gap at the cursor centre.',
     'SceneOpts.cursorColour'       : 'Colour of the location cursor.',
     'SceneOpts.bgColour'           : 'Canvas background colour.',
@@ -501,6 +502,8 @@ properties = TypeDict({
     'OrthoOpts.showLabels'  : 'If the currently selected overlay is a NIFTI '
                               'image, show / hide anatomical orientation '
                               'labels.',
+    'OrthoOpts.showLocation' :
+    'Show the cursor coordinates on one of the three canvases.',
     'OrthoOpts.layout'      : 'How to lay out each of the three canvases.',
     'OrthoOpts.zoom'        : 'Zoom level for all three canvases.',
 

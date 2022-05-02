@@ -65,6 +65,10 @@ cli_tests = """
 -nr 10 -nc  5  3d.nii.gz
 -nr  5 -nc 10  3d.nii.gz
 -nr 10 -nc 10  3d.nii.gz
+
+# cursor width
+-cw 5  3d
+-cw 10 3d
 """
 
 

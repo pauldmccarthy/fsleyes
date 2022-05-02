@@ -1019,6 +1019,7 @@ properties = TypeDict({
     'CanvasPanel.profile'            : 'Mode',
 
     'SceneOpts.showCursor'         : 'Show location cursor',
+    'SceneOpts.cursorWidth'        : 'Location cursor width',
     'SceneOpts.cursorGap'          : 'Show gap at cursor centre',
     'SceneOpts.bgColour'           : 'Background colour',
     'SceneOpts.fgColour'           : 'Foreground colour',
@@ -1037,10 +1038,11 @@ properties = TypeDict({
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.zrange'         : 'Z range',
 
-    'OrthoOpts.showXCanvas' : 'Show X canvas',
-    'OrthoOpts.showYCanvas' : 'Show Y canvas',
-    'OrthoOpts.showZCanvas' : 'Show Z canvas',
-    'OrthoOpts.showLabels'  : 'Show labels',
+    'OrthoOpts.showXCanvas'  : 'Show X canvas',
+    'OrthoOpts.showYCanvas'  : 'Show Y canvas',
+    'OrthoOpts.showZCanvas'  : 'Show Z canvas',
+    'OrthoOpts.showLabels'   : 'Show labels',
+    'OrthoOpts.showLocation' : 'Show location',
 
     'OrthoOpts.layout'      : 'Layout',
     'OrthoOpts.xzoom'       : 'X zoom',
@@ -1306,6 +1308,12 @@ choices = TypeDict({
     'OrthoOpts.layout' : {'horizontal' : 'Horizontal',
                           'vertical'   : 'Vertical',
                           'grid'       : 'Grid'},
+
+    'OrthoOpts.showLocation' : {'no' : 'No',
+                                'X'  : 'On X canvas',
+                                'Y'  : 'On Y canvas',
+                                'Z'  : 'On Z canvas'},
+
 
     'OrthoEditProfile.mode' : {'nav'    : 'Navigate',
                                'sel'    : 'Draw/select',

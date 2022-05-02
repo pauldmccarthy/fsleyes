@@ -439,7 +439,7 @@ class FileTypePanel(elb.EditableListBox):
             toggle = wx.CheckBox(self)
             toggle.SetMinSize(toggle.GetBestSize())
             self.Append(ftype, extraWidget=toggle)
-            toggle.Bind(wx.EVT_CHECKBOX, self.__onToggle)
+            toggle.Bind(wx.EVT_CHECKBOX, self.onToggle)
 
 
     def GetFileTypes(self):
@@ -456,7 +456,7 @@ class FileTypePanel(elb.EditableListBox):
         return active
 
 
-    def __onToggle(self, ev):
+    def onToggle(self, ev):
         """Called when a file type is toggled. Calls the
         :meth:`FileTreePanel.Update` method.
         """

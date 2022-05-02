@@ -71,6 +71,17 @@ mesh_ref mesh_l_thal.vtk -mc 0 1 0 -r mesh_ref -a 50
 -ixh -ixv -iyh -iyv -izh -izv 3d.nii.gz
 
 -a annotations.txt 3d
+
+# show location
+-sl X -ls 24 3d
+-sl X        3d
+-sl Y        3d
+-sl Z        3d
+-sl Z        mesh_l_thal.vtk -mc 1 0 0
+
+# cursor width
+-cw 5  3d
+-cw 10 3d
 """
 
 
