@@ -2,35 +2,37 @@
 
 set -e
 
-apt-get install -y bc
+# offscreen tests on macos. We use mesalib,
+# as it is not possible to use opengl hw
+# accelerated GL on headless macOS
+if [[ "$MACOS_OVERLAY_TEST" == "1" ]]; then
+  export FSLDIR=~/fsl/fsl-6.0.5/
+  ~/miniconda3/bin/conda create -y -c conda-forge -p ./test.env python=3.8 mesalib
+  source ~/miniconda3/bin/activate ./test.env
+  pip install --upgrade pip
+else
 
-# Temporary: this should be done
-# in docker image definitions
-apt install -y locales
-locale-gen en_US.UTF-8
-locale-gen en_GB.UTF-8
-update-locale
-export LANG=en_GB.UTF-8
+  apt-get install -y bc
 
-# If running on a fork repository, we merge in the
-# upstream/master branch. This is done so that merge
-# requests from fork to the parent repository will
-# have unit tests run on the merged code, something
-# which gitlab CE does not currently do for us.
-if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT" ]]; then
-  git fetch upstream;
-  git merge --no-commit --no-ff upstream/master;
-fi;
+  # Temporary: this should be done
+  # in docker image definitions
+  apt install -y locales
+  locale-gen en_US.UTF-8
+  locale-gen en_GB.UTF-8
+  update-locale
+  export LANG=en_GB.UTF-8
 
-# We need the FSL atlases for the atlas
-# tests, and need $FSLDIR to be defined
-export FSLDIR=/fsl/
-mkdir -p $FSLDIR/data/
-rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
-rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
+  # We need the FSL atlases for the atlas
+  # tests, and need $FSLDIR to be defined
+  export FSLDIR=/fsl/
+  mkdir -p $FSLDIR/data/
+  rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
+  rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
 
-source /test.venv/bin/activate
-pip install --upgrade pip
+  source /test.venv/bin/activate
+  pip install --upgrade pip
+fi
+
 
 PIPARGS="--retries 10 --timeout 30"
 
@@ -68,18 +70,21 @@ tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . 
 # print environment
 pip freeze
 
-# style stage
-if [ "$TEST_STYLE"x != "x" ]; then pip install $PIPARGS pylint flake8; fi;
-if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || true; fi;
-if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
-if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
+if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 
-# Run the tests. First batch requires
-# a GUI, so we run via xvfb-run
-((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
-status=`cat status`
-failed=$status
-sleep 5
+  # style stage
+  if [ "$TEST_STYLE"x != "x" ]; then pip install $PIPARGS pylint flake8; fi;
+  if [ "$TEST_STYLE"x != "x" ]; then flake8                           fsleyes || true; fi;
+  if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
+  if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
+
+  # Run the tests. First batch requires
+  # a GUI, so we run via xvfb-run
+  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+  status=`cat status`
+  failed=$status
+  sleep 5
+fi
 
 # Remaining tests are all off-screen,
 # so we can use osmesa
