@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.4.1 (Tuesday 3rd May 2022)
+----------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with 2D tractogram display on macOS (!318).
+
+
 1.4.0 (Monday 2nd May 2022)
 ---------------------------
 
