@@ -177,10 +177,7 @@ build-docker-image-fsleyes-py310-wxpy4-gtk3:
 # Test stage
 ############
 
-
-.test: &test_template
-  <<: *setup_ssh
-
+.test_rules: &test_rules
   rules:
     # Releases are just tags on a release
     # branch, so we don't need to test them.
@@ -193,12 +190,28 @@ build-docker-image-fsleyes-py310-wxpy4-gtk3:
     - if:   '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
 
+.test: &test_template
+  <<: *setup_ssh
+  <<: *test_rules
+
   tags:
     - docker
 
   script:
     - bash ./.ci/test_template.sh
 
+
+# offscreen tests only on macos
+test:macos:
+  <<: *test_rules
+  stage: test
+  tags:
+    - macOS
+    - shell
+  variables:
+    MACOS_OVERLAY_TEST: 1
+  script:
+    - bash ./.ci/test_template.sh
 
 test:3.7:
   stage: test
