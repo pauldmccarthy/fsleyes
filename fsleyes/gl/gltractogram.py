@@ -414,7 +414,6 @@ class GLTractogram(globject.GLObject):
                 shader.set('colourScale',  colourScale)
                 shader.set('colourOffset', colourOffset)
                 shader.set('resolution',   opts.resolution)
-                shader.set('lighting',     False)
 
         for shader in self.iterShaders('orientation',
                                        ['vertexData', 'imageData']):
@@ -438,7 +437,6 @@ class GLTractogram(globject.GLObject):
                 shader.set('modulateAlpha', opts.modulateAlpha)
                 shader.set('modScale',      modScale)
                 shader.set('modOffset',     modOffset)
-                shader.set('lighting',      False)
 
 
     def updateColourData(self, refresh=True):

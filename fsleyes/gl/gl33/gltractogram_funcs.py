@@ -76,7 +76,7 @@ def compileShaders(self):
         const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : True
+            'lighting'   : self.threedee
         }
 
         progs = []
