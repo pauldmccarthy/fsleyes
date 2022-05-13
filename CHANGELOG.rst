@@ -10,6 +10,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.4.2 (Friday 13th May 2022)
+----------------------------
+
+
+Fixed
+^^^^^
+
+
+* Make sure atlas images (selected through the atlas panel) are loaded into
+  RAM. This used to be the case, but default behaviour was changed recently in
+  the ``fsl.data.image`` and ``fsl.data.atlases`` modules (!322).
+
+
 
 1.4.1 (Tuesday 3rd May 2022)
 ----------------------------
