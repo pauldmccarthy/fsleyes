@@ -343,6 +343,7 @@ class AtlasPanel(ctrlpanel.ControlPanel):
                     return
 
                 atlas = atlases.loadAtlas(atlasID, summary, resolution=res)
+                atlas.data
 
                 # The atlas panel may be destroyed
                 # before the atlas is loaded.
