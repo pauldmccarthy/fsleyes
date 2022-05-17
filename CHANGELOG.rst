@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.4.3 (Tuesdsay 17th May 2022)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Changed GL initialisation logic so that it is compatible with newer GTK2/GLX
+  versions of wxPython (!324).
+
+
 1.4.2 (Friday 13th May 2022)
 ----------------------------
 
