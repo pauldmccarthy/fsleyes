@@ -275,7 +275,6 @@ def _selectPyOpenGLPlatform():
         os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 
-
 _selectPyOpenGLPlatform()
 
 
@@ -918,8 +917,10 @@ class GLContext:
         # with no arguments, and just hope.
         candidates = []
         wxver      = fwidgets.wxVersion()
+        wxplat     = fwidgets.wxPlatform()
 
-        if wxver is not None and \
+        if wxplat in (fwidgets.WX_GTK3, fwidgets.WX_MAC_COCOA) and \
+           wxver is not None                                   and \
            fslversion.compareVersions(wxver, '4.1.1') >= 0:
             # Request 3.3 core profile unless caller
             # has requested an older version.
