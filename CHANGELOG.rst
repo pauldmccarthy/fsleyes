@@ -10,8 +10,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.4.3 (Tuesdsay 17th May 2022)
-------------------------------
+
+1.4.4 (Tuesday 17th May 2022)
+-----------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with removing items from the annotation panel (!327).
+* Fixed an issue with toggling ortho view canvases in VNC/SSH sessions (!327).
+
+
+1.4.3 (Tuesday 17th May 2022)
+-----------------------------
 
 
 Fixed
