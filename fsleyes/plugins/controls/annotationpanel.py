@@ -337,7 +337,10 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         obj.annot.canvas.Refresh()
 
         if self.__annotList.GetCount() > 0:
-            self.__annotListItemSelected(idx - 1)
+            self.__annotList.SetSelection(max((0, idx - 1)))
+            idx = self.__annotList.GetSelection()
+            obj = self.__annotList.GetItemData(idx)
+            self.__annotListItemSelected(obj=obj)
 
 
     def __onMoveUp(self, ev):
