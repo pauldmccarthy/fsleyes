@@ -7,7 +7,7 @@ set -e
 # accelerated GL on headless macOS
 if [[ "$MACOS_OVERLAY_TEST" == "1" ]]; then
   export FSLDIR=~/fsl/fsl-6.0.5/
-  ~/miniconda3/bin/conda create -y -c conda-forge -p ./test.env python=3.8 mesalib wget
+  ~/miniconda3/bin/conda create -y -c conda-forge -p ./test.env python=3.8 mesalib wget libiconv
   source ~/miniconda3/bin/activate ./test.env
   pip install --upgrade pip
 else
