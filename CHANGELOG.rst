@@ -11,6 +11,18 @@ chronological order.
 
 
 
+
+1.4.5 (Tuesday 17th May 2022)
+-----------------------------
+
+
+Fixed
+^^^^^
+
+
+* Added support for the ``NIFTI_TEMPLATE_XFORM_OTHER`` code (!329).
+
+
 1.4.4 (Tuesday 17th May 2022)
 -----------------------------
 
