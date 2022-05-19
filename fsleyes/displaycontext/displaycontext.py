@@ -429,6 +429,12 @@ class DisplayContext(props.SyncableHasProperties):
 
 
     @property
+    def overlayList(self):
+        """Return the :class:`.OverlayList`. """
+        return self.__overlayList
+
+
+    @property
     def displayType(self):
         """Returns the ``displayType`` that was passed to :meth:`__init__`.
         """
