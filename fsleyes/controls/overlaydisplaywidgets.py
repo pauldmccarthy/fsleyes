@@ -438,8 +438,10 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
 def _initWidgetSpec_VolumeOpts(displayCtx, threedee):
 
     def imageName(img):
-        if img is None: return 'None'
-        else:           return displayCtx.getDisplay(img).name
+        if img is None or img not in displayCtx.overlayList:
+            return 'None'
+        else:
+            return displayCtx.getDisplay(img).name
 
     return {
         'custom_volume'            : _NiftiOpts_VolumeWidget,
