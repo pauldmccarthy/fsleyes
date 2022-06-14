@@ -567,11 +567,6 @@ def initialise(splash, namespace, callback):
 
     fslsettings.write('loadSaveOverlayDir', curDir)
 
-    # Initialise silly things
-    if namespace.bumMode:
-        import fsleyes.icons as icons
-        icons.BUM_MODE = True
-
     # Set notebook server port
     fslsettings.write('fsleyes.notebook.port', namespace.notebookPort)
 
