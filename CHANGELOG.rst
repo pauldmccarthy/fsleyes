@@ -10,10 +10,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.4.6 (Tuesday 14th June 2022)
+------------------------------
 
 
-1.4.5 (Tuesday 17th May 2022)
------------------------------
+Fixed
+^^^^^
+
+
+* Fixed an issue with mesh outlines not appearing in the orthographic view
+  (!331).
+
+
+1.4.5 (Friday 20th May 2022)
+----------------------------
 
 
 Fixed
