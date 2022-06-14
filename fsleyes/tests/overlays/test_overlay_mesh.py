@@ -7,6 +7,8 @@
 
 import os.path as op
 
+import numpy as np
+
 import pytest
 import fsl.data.image       as fslimage
 import fsl.transform.affine as affine
@@ -84,6 +86,10 @@ mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma 
 # 2D meshes
 mesh_2d_x.vtk -mc 1 0 0 mesh_2d_y.vtk -mc 0 1 0 mesh_2d_z.vtk -mc 0 0 1
 mesh_2d_x.vtk -cm blue-lightblue -vd mesh_2d_data.txt mesh_2d_y.vtk -cm red-yellow -vd mesh_2d_data.txt  mesh_2d_z.vtk -cm green -vd mesh_2d_data.txt
+
+
+# fsl/fsleyes/fsleyes!331
+{{transpose('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0 0 1 -r mesh_ref_transpose -o -w 2
 """
 
 
@@ -103,11 +109,29 @@ def oblique(infile):
     return outfile
 
 
+def transpose(infile):
+    basename = fslimage.removeExt(op.basename(infile))
+    outfile  = '{}_transpose.nii.gz'.format(basename)
+    img      = fslimage.Image(infile)
+    xform    = img.getAffine('voxel', 'world')
+
+    # swap the second and third axes
+    xform = np.array([[-1,  0, 0, 0],
+                      [ 0,  0, 1, 0],
+                      [ 0, -1, 0, 0],
+                      [ 0 , 0, 0, 1]])
+    img      = fslimage.Image(img.data, xform=xform)
+
+    img.save(outfile)
+    return outfile
+
+
 def test_overlay_mesh():
     extras = {
         'fliporient' : fliporient,
         'oblique'    : oblique,
         'invert'     : invert,
+        'transpose'  : transpose,
     }
     run_cli_tests('test_overlay_mesh',
                   cli_tests,
