@@ -1449,6 +1449,7 @@ def lineAsPolygon(vertices,
                   width,
                   axis=None,
                   camera=None,
+                  xform=None,
                   mode='segments',
                   indices=False):
     """Returns a set of vertices which represent a line between ``start`` and
@@ -1479,6 +1480,11 @@ def lineAsPolygon(vertices,
     :arg camera:   Camera direction vector, if the line is being drawn on an
                    arbitrary plane. Ignored if ``axis`` is specified.
 
+    :arg xform:    Matrix to transform from the display coordinate system into
+                   the coordinate system that the vertices are defined in, if
+                   it differs (specifically required if there are any rotations
+                   in the transformation).
+
     :arg mode:     Either ``'segments'`` (the default), or ``'strip'``.
                    If ``'segments'``, lines are formed from ``vertices[0]``
                    and ``vertices[1]``, ``vertices[2]`` and ``vertices[3]``,
@@ -1508,6 +1514,11 @@ def lineAsPolygon(vertices,
 
     camera   = np.asarray(camera)
     vertices = np.asarray(vertices)
+
+    # Rotate the camera vector into
+    # the vertex coordinate system
+    if xform is not None:
+        camera = affine.transform(camera, xform, vector=True)
 
     rot = rotate(90, *camera)
 
