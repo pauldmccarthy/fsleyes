@@ -295,7 +295,6 @@ def _get_option_tuples(self, option_string):
 
     See http://stackoverflow.com/questions/33900846/\
     disable-unique-prefix-matches-for-argparse-and-optparse
-
     """
     result = []
 
@@ -405,12 +404,15 @@ OPTIONS = td.TypeDict({
                        'standard1mm_brain',
                        'initialDisplayRange',
                        'bigmem',
-                       'bumMode',
                        'fontSize',
                        'notebook',
                        'notebookFile',
                        'notebookPort',
                        'annotations'],
+
+    # Hidden/advanced/silly options
+    'Extras'        : ['nolink',
+                       'bumMode'],
 
     # From here on, all of the keys are
     # the names of HasProperties classes,
@@ -650,6 +652,7 @@ properties on that class.
 # Headings for each of the option groups
 GROUPNAMES = td.TypeDict({
     'Main'           : 'Main options',
+    'Extras'         : 'Hidden options',
     'SceneOpts'      : 'Scene options',
     'OrthoOpts'      : 'Ortho display options',
     'LightBoxOpts'   : 'LightBox display options',
@@ -780,12 +783,14 @@ ARGUMENTS = td.TypeDict({
     'Main.standard1mm_brain'   : ('std1mmb', 'standard1mm_brain',   False),
     'Main.initialDisplayRange' : ('idr',     'initialDisplayRange', True),
     'Main.bigmem'              : ('b',       'bigmem',              False),
-    'Main.bumMode'             : ('bums',    'bumMode',             False),
     'Main.fontSize'            : ('fs',      'fontSize',            True),
     'Main.notebook'            : ('nb',      'notebook',            False),
     'Main.notebookFile'        : ('nbf',     'notebookFile',        True),
     'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
     'Main.annotations'         : ('a',       'annotations',         True),
+
+    'Extras.nolink'  : ('nl',   'nolink',  False),
+    'Extras.bumMode' : ('bums', 'bumMode', False),
 
     'SceneOpts.showColourBar'      : ('cb',  'showColourBar',      False),
     'SceneOpts.bgColour'           : ('bg',  'bgColour',           True),
@@ -1038,7 +1043,6 @@ HELP = td.TypeDict({
 
     'Main.bigmem'           : 'Load all images into memory, '
                               'regardless of size.',
-    'Main.bumMode'          : 'Make the coronal icon look like a bum',
     'Main.fontSize'         : 'Application font size',
     'Main.notebook'         : 'Start the Jupyter notebook server',
     'Main.notebookFile'     : 'Start the Jupyter notebook server and open '
@@ -1047,6 +1051,11 @@ HELP = td.TypeDict({
     'Main.annotations'      :
     'Load annotations from file (only applied to ortho views)',
 
+    # Set the default value for the ColourMapOpts.
+    # linkLowRanges option to False
+    'Extras.nolink'   : argparse.SUPPRESS,
+    # Make the coronal icon look like a bum
+    'Extras.bumMode' : argparse.SUPPRESS,
 
     'SceneOpts.showCursor'         : 'Do not display the green cursor '
                                      'highlighting the current location',
@@ -1633,6 +1642,7 @@ def _setupMainParser(mainParser):
                                                GROUPDESCS.get('Scene3DOpts'))
 
     _configMainParser(mainParser)
+    _configExtraOptions(mainParser)
     _configParser(fsldisplay.SceneOpts,    sceneGroup)
     _configParser(fsldisplay.OrthoOpts,    orthoGroup)
     _configParser(fsldisplay.LightBoxOpts, lbGroup)
@@ -1777,9 +1787,6 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['bigmem'],
                             action='store_true',
                             help=mainHelp['bigmem'])
-    mainParser.add_argument(*mainArgs['bumMode'],
-                            action='store_true',
-                            help=mainHelp['bumMode'])
     mainParser.add_argument(*mainArgs['fontSize'],
                             type=int,
                             help=mainHelp['fontSize'])
@@ -1796,6 +1803,23 @@ def _configMainParser(mainParser):
     mainParser.add_argument(*mainArgs['annotations'],
                             type=str,
                             help=mainHelp['annotations'])
+
+
+def _configExtraOptions(parser):
+    """Adds ``Extras`` options to the arguemnt parser. """
+
+    args  = {name: ARGUMENTS['Extras', name][:2] for name in OPTIONS['Extras']}
+    helps = {name: HELP[     'Extras', name]     for name in OPTIONS['Extras']}
+
+    for name, (shortArg, longArg) in list(args.items()):
+        args[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
+
+    parser.add_argument(*args['bumMode'],
+                        action='store_true',
+                        help=helps['bumMode'])
+    parser.add_argument(*args['nolink'],
+                        action='store_true',
+                        help=helps['nolink'])
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):
@@ -2013,6 +2037,7 @@ def parseArgs(mainParser,
     mainExpectsArgs = set(argOpts)
     ovlExpectsArgs  = set()
     mainGroups      = ['Main',
+                       'Extras',
                        'SceneOpts',
                        'OrthoOpts',
                        'LightBoxOpts',
@@ -2379,12 +2404,6 @@ def _printFullHelp(mainParser):
     # in the short help.
     mainParser.epilog = None
 
-    # Hide silly options
-    silly = ['--bumMode']
-    for action in mainParser._actions:
-        if any([o in silly for o in action.option_strings]):
-            action.help = argparse.SUPPRESS
-
     # Create a bunch of parsers for handling
     # overlay display options
     dispParser, _, optParsers = _setupOverlayParsers(forHelp=True)
@@ -2562,6 +2581,16 @@ def applyMainArgs(args, overlayList, displayCtx):
         displayCtx.radioOrientation = not args.neuroOrientation
 
     displayCtx.autoDisplay = args.autoDisplay
+
+    # Apply extra/silly arguments
+    if args.bumMode:
+        import fsleyes.icons as icons
+        icons.BUM_MODE = True
+    # Set the default linkLowRanges value to False
+    if args.nolink:
+        import fsleyes.displaycontext.colourmapopts as cmapopts
+        cmapopts.ColourMapOpts.linkLowRanges.setAttribute(
+            None, 'default', False)
 
 
 def applySceneArgs(args, overlayList, displayCtx, sceneOpts):

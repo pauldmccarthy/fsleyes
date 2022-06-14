@@ -566,11 +566,17 @@ class GLMesh(globject.GLObject):
             glprim  = gl.GL_LINES
             indices = None
         else:
+
+            # vertices are in mesh coordinate system,
+            # but zax is in display coordinate system,
+            # so we need to give the lineAsPolygon
+            # function the display->mesh transform.
             zax               = axes[2]
+            d2m               = opts.getTransform('display', 'mesh')
             lineWidth         = opts.outlineWidth * canvas.pixelSize()[0]
             glprim            = gl.GL_TRIANGLES
             vertices, indices = glroutines.lineAsPolygon(
-                vertices, lineWidth, zax, indices=True)
+                vertices, lineWidth, zax, indices=True, xform=d2m)
 
             # Each line (two vertices) is replaced with
             # two triangles (defined by four vertices).
