@@ -215,6 +215,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             panelProps = scene3dOptsProps
 
             # We hide some options in 3D
+            sceneOptsProps .pop('performance')
             displayCtxProps.pop('displaySpace')
             displayCtxProps.pop('radioOrientation')
 
