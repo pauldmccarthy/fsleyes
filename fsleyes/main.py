@@ -822,6 +822,13 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
 
     status.update('Setting up scene...')
 
+    # Set the default SceneOpts.performance
+    # level so that all created SceneOpts
+    # instances will default to it
+    if namespace.performance is not None:
+        fsldisplay.SceneOpts.performance.setAttribute(
+            None, 'default', namespace.performance)
+
     # If a layout has been specified,
     # we load the layout
     if namespace.scene is not None:

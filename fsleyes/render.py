@@ -159,6 +159,9 @@ def parseArgs(argv):
                  '-sz', '--size',
                  '-c',  '--crop'],
         shortHelpExtra=['--outfile', '--size', '--crop'])
+    # ignore any performance setting
+    # specified by the user.
+    namespace.performance = 2
 
     if namespace.outfile is None:
         log.error('outfile is required')
@@ -456,6 +459,7 @@ def createLightBoxCanvas(namespace,
     opts.cursorWidth    = sceneOpts.cursorWidth
     opts.bgColour       = sceneOpts.bgColour
     opts.cursorColour   = sceneOpts.cursorColour
+    opts.renderMode     = sceneOpts.renderMode
     opts.zax            = sceneOpts.zax
     opts.sliceSpacing   = sceneOpts.sliceSpacing
     opts.nrows          = sceneOpts.nrows
@@ -556,6 +560,7 @@ def createOrthoCanvases(namespace,
         opts.cursorWidth  = sceneOpts.cursorWidth
         opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
+        opts.renderMode   = sceneOpts.renderMode
         opts.invertX      = invertx
         opts.invertY      = inverty
 

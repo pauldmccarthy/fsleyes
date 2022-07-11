@@ -199,6 +199,11 @@ class GLImageObject(globject.GLObject):
 
         copts = canvas.opts
 
+        # No flips if rendering
+        # to an offscreen texture
+        if copts.renderMode != 'onscreen':
+            return front
+
         if copts.invertX: numInverts += 1
         if copts.invertY: numInverts += 1
 

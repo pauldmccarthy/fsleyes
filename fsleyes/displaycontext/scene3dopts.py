@@ -52,3 +52,12 @@ class Scene3DOpts(sceneopts.SceneOpts):
         self.fgColour = (0,   1,   0)
 
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
+
+
+    def _onPerformanceChange(self, *a):
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
+        value of the :attr:`highDpi` property according to the performance
+        setting.
+        """
+
+        self.highDpi = self.performance == 2 and self.highDpi

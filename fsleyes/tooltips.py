@@ -484,6 +484,12 @@ properties = TypeDict({
     'SceneOpts.colourBarSize'      : 'Size of the major axis of the colour '
                                      'bar, as a proportion of the available '
                                      'space.',
+    'SceneOpts.performance'        : 'Rendering performance - 1 gives the '
+                                     'fastest, but at the cost of lower '
+                                     'display quality, and some display '
+                                     'limitations. 2 gives the best '
+                                     'display quality, but may be too slow on '
+                                     'some older systems.',
     'SceneOpts.highDpi' :
     'If you are using a high-DPI (e.g. retina) display, FSLeyes will attempt '
     'to display the scene at the high-DPI resolution. This will have an '
