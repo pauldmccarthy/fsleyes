@@ -1308,6 +1308,7 @@ class SliceCanvas:
         log.debug('Combining off-screen render textures, and '
                   'rendering to canvas (size %s)', self.GetSize())
 
+        xform = self.mvpMatrix
         copts = self.opts
         zpos  = copts.pos[copts.zax]
 
@@ -1328,7 +1329,7 @@ class SliceCanvas:
             log.debug('Drawing overlay %s texture to %0.3f-%0.3f, '
                       '%0.3f-%0.3f', overlay, xmin, xmax, ymin, ymax)
 
-            rt.drawOnBounds(zpos, xmin, xmax, ymin, ymax, copts.xax, copts.yax)
+            rt.drawOnBounds(zpos, xmin, xmax, ymin, ymax, copts.xax, copts.yax, xform)
 
 
     def _draw(self, *a):
@@ -1414,7 +1415,7 @@ class SliceCanvas:
 
                     glroutines.clear((0, 0, 0, 0))
                     globj.preDraw()
-                    globj.draw2D(self, zpos, axes)
+                    globj.draw2D(rt, zpos, axes)
                     globj.postDraw()
 
         # For off-screen rendering, all of the globjects
@@ -1422,9 +1423,8 @@ class SliceCanvas:
         # those off-screen textures are all rendered on
         # to the screen canvas.
         if copts.renderMode == 'offscreen':
-            self._setViewport()
-            glroutines.clear(copts.bgColour)
-            self._drawOffscreenTextures()
+            with glroutines.enabled(gl.GL_BLEND):
+                self._drawOffscreenTextures()
 
         if copts.showCursor:
             self._drawCursor()
