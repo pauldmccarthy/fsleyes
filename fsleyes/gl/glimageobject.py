@@ -12,6 +12,7 @@ data from :class:`.Nifti` overlays.
 
 import numpy     as np
 import OpenGL.GL as gl
+import nibabel   as nib
 
 import fsl.data.image                      as fslimage
 import fsl.transform.affine                as affine
@@ -144,12 +145,10 @@ class GLImageObject(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def getDataResolution(self, xax, yax):
+    def getDataResolution(self, xax, yax, width, height):
         """Returns a suitable screen resolution for rendering this
         ``GLImageObject`` in 2D.
         """
-
-        import nibabel as nib
 
         image = self.image
         opts  = self.opts

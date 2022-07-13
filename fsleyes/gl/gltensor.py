@@ -206,12 +206,13 @@ class GLTensor(glvector.GLVector):
         opts.removeListener('tensorScale',      name)
 
 
-    def getDataResolution(self, xax, yax):
+    def getDataResolution(self, xax, yax, width, height):
         """Overrides :meth:`.GLVector.getDataResolution`. Returns a pixel
         resolution suitable for off-screen rendering of this ``GLTensor``.
         """
 
-        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
+        res       = list(glvector.GLVector.getDataResolution(
+            self, xax, yax, width, height))
         res[xax] *= 20
         res[yax] *= 20
 

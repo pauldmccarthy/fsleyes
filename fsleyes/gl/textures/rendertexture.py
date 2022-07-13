@@ -553,11 +553,6 @@ class GLObjectRenderTexture(RenderTexture):
     :class:`.RenderTexture` is that a ``GLObjectRenderTexture`` will
     automatically adjust its size to suit the resolution of the
     :class:`.GLObject` - see the :meth:`.GLObject.getDataResolution` method.
-
-
-    In order to accomplish this, the :meth:`setAxes` method must be called
-    whenever the display orientation changes, so that the render texture
-    size can be re-calculated.
     """
 
     def __init__(self, name, globj, xax, yax, maxResolution=2048):
@@ -603,17 +598,6 @@ class GLObjectRenderTexture(RenderTexture):
         RenderTexture.destroy(self)
 
 
-    def setAxes(self, xax, yax):
-        """This method must be called when the display orientation of the
-        :class:`GLObject` changes. It updates the size of this
-        ``GLObjectRenderTexture`` so that the resolution and aspect ratio
-        of the ``GLOBject`` are maintained.
-        """
-        self.__xax = xax
-        self.__yax = yax
-        self.__updateShape()
-
-
     @RenderTexture.shape.setter
     def shape(self, shape):
         """Overrides the :meth:`.Texture.shape` setter. Raises a
@@ -630,31 +614,28 @@ class GLObjectRenderTexture(RenderTexture):
         on the resolution returned by the :meth:`.GLObject.getDataResolution`
         method. If that method returns ``None``, a default resolution is used.
         """
-        globj  = self.__globj
-        maxRes = self.__maxResolution
 
-        resolution = globj.getDataResolution(self.__xax, self.__yax)
+        globj      = self.__globj
+        maxRes     = self.__maxResolution
+        xax        = self.__xax
+        yax        = self.__yax
+        size       = gl.glGetIntegerv(gl.GL_VIEWPORT)
+        width      = size[2]
+        height     = size[3]
+        resolution = globj.getDataResolution(xax, yax, width, height)
 
-        # Default resolution is based on the canvas size
-        if resolution is None:
+        log.debug('Using data resolution for GLObject %s: %s',
+                  type(globj).__name__, resolution)
 
-            size                   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-            width                  = size[2]
-            height                 = size[3]
-            resolution             = [100] * 3
-            resolution[self.__xax] = width
-            resolution[self.__yax] = height
-
-            log.debug('Using default resolution for GLObject %s: %s',
-                      type(globj).__name__, resolution)
-
-        width  = resolution[self.__xax]
-        height = resolution[self.__yax]
+        width  = resolution[xax]
+        height = resolution[yax]
 
         if any((width <= 0, height <= 0)):
             raise ValueError('Invalid GLObject resolution: {}'.format(
                 (width, height)))
 
+        # adjust resolution to preserve
+        # viewport aspect ratio
         if width > maxRes or height > maxRes:
             ratio = min(width, height) / float(max(width, height))
 
