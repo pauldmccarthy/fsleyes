@@ -126,7 +126,14 @@ class RenderTexture(texture2d.Texture2D):
         self.__oldSize          = None
         self.__projectionMatrix = None
         self.__viewMatrix       = None
-        self.__viewport         = None
+
+        # These fields are only set when
+        # this RenderTexture is set as a
+        # rendering target (e.g. via the
+        # target() method).
+        self.__viewport = None
+        self.__xax      = None
+        self.__yax      = None
 
         # Use a single renderbuffer as
         # the depth+stencil attachment
@@ -230,10 +237,36 @@ class RenderTexture(texture2d.Texture2D):
     def viewport(self):
         """Return the display coordinate system bounding box for this
         ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
+
         Only returns a value when this ``RenderTexture`` is bound - returns
         ``None`` at all other times.
         """
         return self.__viewport
+
+
+    def pixelSize(self):
+        """Returns the current (x, y) size of one logical pixel in display
+        coordinates.
+
+        Only returns a valid value  when this ``RenderTexture`` is bound -
+        returns ``None``at all other times.
+        """
+        if self.__xax is None or self.__yax is None:
+            return None
+        w, h     = self.GetSize()
+        xlo, xhi = self.viewport[self.__xax]
+        ylo, yhi = self.viewport[self.__yax]
+        xlen     = xhi - xlo
+        ylen     = yhi - ylo
+        return (xlen / w, ylen / h)
+
+
+    def GetSize(self):
+        """Returns ``self.shape``. Needed to mimic the :class:`.SliceCanvas`
+        class, when a :class:`.GLObject` is being drawn off-screen to a
+        ``GLObjectRenderTexture``.
+        """
+        return self.shape
 
 
     @texture2d.Texture2D.data.setter
@@ -345,6 +378,8 @@ class RenderTexture(texture2d.Texture2D):
 
         gl.glViewport(0, 0, width, height)
 
+        self.__xax              = xax
+        self.__yax              = yax
         self.__viewport         = list(zip(lo, hi))
         self.__projectionMatrix = projmat
         self.__viewMatrix       = mvmat
@@ -369,6 +404,8 @@ class RenderTexture(texture2d.Texture2D):
         self.__projectionMatrix = None
         self.__viewMatrix       = None
         self.__viewport         = None
+        self.__xax              = None
+        self.__yax              = None
 
 
     @contextlib.contextmanager
