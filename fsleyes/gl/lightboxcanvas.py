@@ -7,6 +7,14 @@
 """This module provides the :class:`LightBoxCanvas` class, which is a
 :class:`.SliceCanvas` that displays multiple 2D slices along a single axis
 from a collection of 3D overlays.
+
+Performance of a ``LightBoxCanvas`` instance may be controlled through the
+:attr:`.SliceCanvasOpts.renderMode` property, in the same way as for the
+:class:`.SliceCanvas`. However, the ``LightBoxCanvas`` handles the
+``offscreen`` render mode differently to the ``SliceCanvas. Where the
+``SliceCanvas`` uses a separate :class:`.GLObjectRenderTexture` for every
+overlay in the :class:`.OverlayList`, the ``LightBoxCanvas`` uses a single
+:class:`.RenderTexture` to render all overlays off-screen.
 """
 
 import sys
@@ -21,6 +29,7 @@ import fsl.transform.affine              as affine
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
 import fsleyes.gl.routines               as glroutines
+import fsleyes.gl.textures               as textures
 
 
 log = logging.getLogger(__name__)
@@ -286,6 +295,24 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return min(overlay.pixdim[:3])
 
 
+    def _renderModeChanged(self, *a):
+        """Overrides :meth:`.SliceCanvas._renderModeChange`. Destroys/
+        re-creates the off-screen :class:`.RenderTexture` as needed.
+        """
+
+        if self.opts.renderMode == 'onscreen':
+            if self._offscreenRenderTexture is not None:
+                self._offscreenRenderTexture.destroy()
+                self._offscreenRenderTexture = None
+        else:
+            self._offscreenRenderTexture = textures.RenderTexture(
+                f'{type(self).__name__}_{id(self)}',
+                interp=gl.GL_LINEAR)
+            self._offscreenRenderTexture.shape = 768, 768
+
+        self.Refresh()
+
+
     def _zAxisChanged(self, *a):
         """Overrides :meth:`.SliceCanvas._zAxisChanged`. Calls that
         method, and then resets the :attr:`sliceSpacing` and :attr:`zrange`
@@ -326,6 +353,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             log.debug('Lightbox properties changed: [{}]'.format(props))
 
         self.Refresh()
+
+
+    def _updateRenderTextures(self):
+        """Overrides :meth:`.SliceCanvas._updateRenderTextures`. Does nothing.
+        """
 
 
     def _calcNumSlices(self, *a):
@@ -779,6 +811,23 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.projectionMatrix is None:
             return
 
+        # set up off-screen texture as rendering target
+        if opts.renderMode == 'offscreen':
+            log.debug('Rendering to off-screen texture')
+
+            rt = self._offscreenRenderTexture
+
+            lo = [None] * 3
+            hi = [None] * 3
+
+            lo[opts.xax], hi[opts.xax] = opts.displayBounds.x
+            lo[opts.yax], hi[opts.yax] = opts.displayBounds.y
+            lo[opts.zax], hi[opts.zax] = opts.zrange
+
+            rt.bindAsRenderTarget()
+            rt.setRenderViewport(opts.xax, opts.yax, lo, hi)
+            glroutines.clear((0, 0, 0, 0))
+
         startSlice = opts.ncols * opts.topRow
         endSlice   = startSlice + opts.nrows * opts.ncols
 
@@ -794,12 +843,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if not display.enabled:
                 continue
 
-            log.debug('Drawing {} slices ({} - {}) for '
-                      'overlay {} directly to canvas'.format(
-                          endSlice - startSlice,
-                          startSlice,
-                          endSlice,
-                          overlay))
+            log.debug('Drawing %s slices (%s - %s) for overlay %s',
+                      endSlice - startSlice,
+                      startSlice,
+                      endSlice,
+                      overlay)
 
             zposes = self._sliceLocs[ overlay][startSlice:endSlice]
             xforms = self._transforms[overlay][startSlice:endSlice]
@@ -808,6 +856,21 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             globj.preDraw()
             globj.drawAll(self, axes, zposes, xforms)
             globj.postDraw()
+
+        # draw off-screen texture to screen
+        if opts.renderMode == 'offscreen':
+            rt.unbindAsRenderTarget()
+            rt.restoreViewport()
+            glroutines.clear(opts.bgColour)
+            rt.drawOnBounds(
+                0,
+                opts.displayBounds.xlo,
+                opts.displayBounds.xhi,
+                opts.displayBounds.ylo,
+                opts.displayBounds.yHi,
+                opts.xax,
+                opts.yax,
+                self.mvpMatrix)
 
         if len(self.overlayList) > 0:
             if opts.showCursor:     self._drawCursor()

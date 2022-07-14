@@ -89,9 +89,10 @@ class SliceCanvas:
     ``onscreen``  ``GLObject`` instances are rendered directly to the canvas.
 
     ``offscreen`` ``GLObject`` instances are rendered off-screen to a fixed
-                  size 2D texture (a :class:`.RenderTexture`). This texture
-                  is then rendered to the canvas. One :class:`.RenderTexture`
-                  is used for every overlay in the :class:`.OverlayList`.
+                  size 2D texture (a :class:`.GLObjectRenderTexture`). This
+                  texture is then rendered to the canvas. One
+                  :class:`.GLObjectRenderTexture` is used for every overlay
+                  in the :class:`.OverlayList`.
     ============= ============================================================
 
 
@@ -1393,9 +1394,9 @@ class SliceCanvas:
             # Off-screen rendering - each overlay is
             # rendered to an off-screen texture.
             # Set up the texture as the rendering
-            # target, and draw to it
-            # These textures are then drawn  to the
-            # canvas below, via _drawOffscreenTextures.
+            # target, and draw to it. These textures
+            # are then drawn to the canvas below,
+            # via _drawOffscreenTextures.
             elif copts.renderMode == 'offscreen':
 
                 rt = self._offscreenTextures.get(overlay, None)
