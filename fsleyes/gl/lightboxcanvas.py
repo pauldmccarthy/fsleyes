@@ -812,10 +812,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return
 
         # set up off-screen texture as rendering target
-        if opts.renderMode == 'offscreen':
+        if opts.renderMode == 'onscreen':
+            renderTarget = self
+        else:
             log.debug('Rendering to off-screen texture')
 
-            rt = self._offscreenRenderTexture
+            renderTarget = self._offscreenRenderTexture
 
             lo = [None] * 3
             hi = [None] * 3
@@ -824,8 +826,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             lo[opts.yax], hi[opts.yax] = opts.displayBounds.y
             lo[opts.zax], hi[opts.zax] = opts.zrange
 
-            rt.bindAsRenderTarget()
-            rt.setRenderViewport(opts.xax, opts.yax, lo, hi)
+            renderTarget.bindAsRenderTarget()
+            renderTarget.setRenderViewport(opts.xax, opts.yax, lo, hi)
             glroutines.clear((0, 0, 0, 0))
 
         startSlice = opts.ncols * opts.topRow
@@ -854,15 +856,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             xforms = self.__prepareSliceTransforms(globj, xforms)
 
             globj.preDraw()
-            globj.drawAll(self, axes, zposes, xforms)
+            globj.drawAll(renderTarget, axes, zposes, xforms)
             globj.postDraw()
 
         # draw off-screen texture to screen
         if opts.renderMode == 'offscreen':
-            rt.unbindAsRenderTarget()
-            rt.restoreViewport()
+            renderTarget.unbindAsRenderTarget()
+            renderTarget.restoreViewport()
             glroutines.clear(opts.bgColour)
-            rt.drawOnBounds(
+            renderTarget.drawOnBounds(
                 0,
                 opts.displayBounds.xlo,
                 opts.displayBounds.xhi,
