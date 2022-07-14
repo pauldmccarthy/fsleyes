@@ -690,9 +690,6 @@ class GLMesh(globject.GLObject):
         # matches the display size
         tex.shape = canvas.GetSize()
 
-        if xform is None: xform = canvas.mvpMatrix
-        else:             xform = affine.concat(canvas.mvpMatrix, xform)
-
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and located
         # at the z position. This is used as a
@@ -733,10 +730,13 @@ class GLMesh(globject.GLObject):
             glroutines.clear((0, 0, 0, 0))
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
 
+            if xform is None: mvp = tex.mvpMatrix
+            else:             mvp = affine.concat(tex.mvpMatrix, xform)
+
             # Use a clip-plane shader for steps 1 and 2
             with cpshader.loaded():
 
-                cpshader.set('MVP',       tex.mvpMatrix)
+                cpshader.set('MVP',       mvp)
                 cpshader.set('clipPlane', clipPlane)
 
                 # We just want to populate the stencil
@@ -772,12 +772,13 @@ class GLMesh(globject.GLObject):
             with blshader.loaded(), glroutines.disabled((gl.GL_BLEND, )):
                 verts = tex.generateVertices(zpos, xmin, xmax,
                                              ymin, ymax, xax, yax)
+
                 blshader.setAtt('vertex', verts)
-                blshader.set(   'MVP',    tex.mvpMatrix)
+                blshader.set(   'MVP',    mvp)
                 blshader.draw(gl.GL_TRIANGLES, 0, 6)
 
         # Finally, draw the off-screen texture to the display
-        tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
+        tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, canvas.mvpMatrix)
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):
