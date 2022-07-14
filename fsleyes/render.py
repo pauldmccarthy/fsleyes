@@ -159,9 +159,6 @@ def parseArgs(argv):
                  '-sz', '--size',
                  '-c',  '--crop'],
         shortHelpExtra=['--outfile', '--size', '--crop'])
-    # ignore any performance setting
-    # specified by the user.
-    namespace.performance = 2
 
     if namespace.outfile is None:
         log.error('outfile is required')

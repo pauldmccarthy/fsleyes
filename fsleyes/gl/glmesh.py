@@ -293,6 +293,14 @@ class GLMesh(globject.GLObject):
         display.removeListener('alpha',               name)
 
 
+    def getDataResolution(self, *args, **kwargs):
+        """Overrides :meth:`.GLObject.getDataResolution`. Returns the default
+        resolution calculated by that method, scaled down slightly.
+        """
+        res = super().getDataResolution(*args, **kwargs)
+        return [int(round(r * 0.7)) for r in res]
+
+
     def registerLut(self):
         """Registers property listeners with the currently registered
         :class:`.LookupTable` (the :attr:`.MeshOpts.lut` property).
