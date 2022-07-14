@@ -677,18 +677,30 @@ class GLMesh(globject.GLObject):
         xax, yax, zax = axes
         cpshader      = self.xsectcpShader
         blshader      = self.xsectblShader
-        bbox          = canvas.viewport
-        lo            = [b[0] for b in bbox]
-        hi            = [b[1] for b in bbox]
-        xmin          = lo[xax]
-        xmax          = hi[xax]
-        ymin          = lo[yax]
-        ymax          = hi[yax]
         tex           = self.renderTexture
 
         # Make sure the off-screen texture
-        # matches the display size
+        # matches the display size. We draw
+        # the cross section to the texture
+        # with the same resolution+viewport
+        # as it would be drawn to the canvas
         tex.shape = canvas.GetSize()
+
+        # canvas bounding box
+        bbox  = canvas.viewport
+        clo   = [b[0] for b in bbox]
+        chi   = [b[1] for b in bbox]
+        cxmin = clo[xax]
+        cxmax = chi[xax]
+        cymin = clo[yax]
+        cymax = chi[yax]
+
+        # mesh bounding box
+        mlo, mhi = self.getDisplayBounds()
+        mxmin    = mlo[xax]
+        mxmax    = mhi[xax]
+        mymin    = mlo[yax]
+        mymax    = mhi[yax]
 
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and located
@@ -698,10 +710,10 @@ class GLMesh(globject.GLObject):
         # the display coordinate system, before MVP
         # transformation.
         clipPlane                = np.zeros((4, 3), dtype=np.float32)
-        clipPlane[0, [xax, yax]] = [xmin, ymin]
-        clipPlane[1, [xax, yax]] = [xmin, ymax]
-        clipPlane[2, [xax, yax]] = [xmax, ymax]
-        clipPlane[3, [xax, yax]] = [xmax, ymin]
+        clipPlane[0, [xax, yax]] = [mxmin, mymin]
+        clipPlane[1, [xax, yax]] = [mxmin, mymax]
+        clipPlane[2, [xax, yax]] = [mxmax, mymax]
+        clipPlane[3, [xax, yax]] = [mxmax, mymin]
         clipPlane[:,  zax]       =  zpos
         clipPlane = glroutines.planeEquation(clipPlane[0, :],
                                              clipPlane[1, :],
@@ -725,11 +737,14 @@ class GLMesh(globject.GLObject):
         gl.glFrontFace(self.frontFace())
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         with glroutines.enabled((gl.GL_CULL_FACE, gl.GL_STENCIL_TEST)), \
-             tex.target(xax, yax, lo, hi):
+             tex.target(xax, yax, clo, chi):
 
             glroutines.clear((0, 0, 0, 0))
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
 
+            # A separate xform may be specified,
+            # by the lightbox canvas, to position
+            # individual slices
             if xform is None: mvp = tex.mvpMatrix
             else:             mvp = affine.concat(tex.mvpMatrix, xform)
 
@@ -770,15 +785,16 @@ class GLMesh(globject.GLObject):
             # disable blending, otherwise we will end up blending
             # with the output of the clip plane shader
             with blshader.loaded(), glroutines.disabled((gl.GL_BLEND, )):
-                verts = tex.generateVertices(zpos, xmin, xmax,
-                                             ymin, ymax, xax, yax)
+                verts = tex.generateVertices(zpos, mxmin, mxmax,
+                                             mymin, mymax, xax, yax)
 
                 blshader.setAtt('vertex', verts)
                 blshader.set(   'MVP',    mvp)
                 blshader.draw(gl.GL_TRIANGLES, 0, 6)
 
         # Finally, draw the off-screen texture to the display
-        tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, canvas.mvpMatrix)
+        tex.drawOnBounds(zpos, cxmin, cxmax, cymin, cymax, xax, yax,
+                         canvas.mvpMatrix)
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):
