@@ -343,22 +343,32 @@ class GLObject(notifier.Notifier):
         ``GLObject`` to screen.
 
         This method should be implemented by sub-classes. If not implemented,
-        a default resolution is used. The returned resolution *might* be used
-        to render this ``GLObject``, but typically only in a low performance
-        environment where off-screen rendering to a
-        :class:`.GLObjectRenderTexture` is used - see the
+        a default resolution is used - this is based on the provided canvas
+        width/height, adjusted to preserve the overlay aspect ratio.
+
+        The returned resolution *might* be used to render this ``GLObject``,
+        but typically only in a low performance environment where off-screen
+        rendering to a :class:`.GLObjectRenderTexture` is used - see the
         :class:`.SliceCanvas` documentation for more details.
 
         :arg xax:    Axis to be used as the horizontal screen axis.
         :arg yax:    Axis to be used as the vertical screen axis.
-        :arg width:  Viewport width in pixels
-        :arg height: Viewport height in pixels
+        :arg width:  Available canvas/viewport width in pixels
+        :arg height: Available canvas/viewport height in pixels
         """
-        """
-        """
+        dimlens = self.getBoundsLengths()
+        xlen    = dimlens[xax]
+        ylen    = dimlens[yax]
+        dratio  = xlen  / ylen
+        cratio  = width / height
+
+        if   dratio > cratio: height = int(round(width  / dratio))
+        else:                 width  = int(round(height * dratio))
+
         resolution      = [100] * 3
         resolution[xax] = width
         resolution[yax] = height
+
         return resolution
 
 

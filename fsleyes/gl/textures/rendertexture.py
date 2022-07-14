@@ -590,9 +590,18 @@ class GLObjectRenderTexture(RenderTexture):
     :class:`.RenderTexture` is that a ``GLObjectRenderTexture`` will
     automatically adjust its size to suit the resolution of the
     :class:`.GLObject` - see the :meth:`.GLObject.getDataResolution` method.
+
+
+    ``GLObjectTexture`` objects are used by the :class:`.SliceCanvas` when
+    it is configured to use a low-performance rendering mode.
+
+
+    The :meth:`updateShape` method must be called once, and may be called
+    repeatedly to force a ``GLObjectRenderTexture`` to re-calculate its
+    shape.
     """
 
-    def __init__(self, name, globj, xax, yax, maxResolution=2048):
+    def __init__(self, name, globj, xax, yax, maxResolution=1024):
         """Create a ``GLObjectRenderTexture``.
 
         :arg name:          A unique name for this ``GLObjectRenderTexture``.
@@ -618,22 +627,6 @@ class GLObjectRenderTexture(RenderTexture):
 
         RenderTexture.__init__(self, name)
 
-        name = '{}_{}'.format(self.name, id(self))
-        globj.register(name, self.__updateShape)
-
-        self.__updateShape()
-
-
-    def destroy(self):
-        """Must be called when this ``GLObjectRenderTexture`` is no longer
-        needed. Removes the update listener from the :class:`.GLObject`, and
-        calls :meth:`.RenderTexture.destroy`.
-        """
-
-        name = '{}_{}'.format(self.name, id(self))
-        self.__globj.deregister(name)
-        RenderTexture.destroy(self)
-
 
     @RenderTexture.shape.setter
     def shape(self, shape):
@@ -646,22 +639,22 @@ class GLObjectRenderTexture(RenderTexture):
                 type(self).__name__))
 
 
-    def __updateShape(self, *a):
+    def updateShape(self, width, height):
         """Updates the size of this ``GLObjectRenderTexture``, basing it
         on the resolution returned by the :meth:`.GLObject.getDataResolution`
-        method. If that method returns ``None``, a default resolution is used.
+        method.
+
+        :arg width:  Available canvas/viewport width
+        :arg height: Available canvas/viewport height
         """
 
         globj      = self.__globj
-        maxRes     = self.__maxResolution
         xax        = self.__xax
         yax        = self.__yax
-        size       = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        width      = size[2]
-        height     = size[3]
+        maxRes     = min((self.__maxResolution, max(width, height)))
         resolution = globj.getDataResolution(xax, yax, width, height)
 
-        log.debug('Using data resolution for GLObject %s: %s',
+        log.debug('Data resolution for GLObject %s: %s',
                   type(globj).__name__, resolution)
 
         width  = resolution[xax]
@@ -671,8 +664,8 @@ class GLObjectRenderTexture(RenderTexture):
             raise ValueError('Invalid GLObject resolution: {}'.format(
                 (width, height)))
 
-        # adjust resolution to preserve
-        # viewport aspect ratio
+        # Limit width/height to maxRes, adjusting
+        # them to preserve aspect ratio
         if width > maxRes or height > maxRes:
             ratio = min(width, height) / float(max(width, height))
 

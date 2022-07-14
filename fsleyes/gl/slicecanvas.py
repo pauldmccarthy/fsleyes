@@ -1391,10 +1391,11 @@ class SliceCanvas:
                 globj.postDraw()
 
             # Off-screen rendering - each overlay is
-            # rendered to an off-screen texture -
-            # these textures are combined below.
+            # rendered to an off-screen texture.
             # Set up the texture as the rendering
             # target, and draw to it
+            # These textures are then drawn  to the
+            # canvas below, via _drawOffscreenTextures.
             elif copts.renderMode == 'offscreen':
 
                 rt = self._offscreenTextures.get(overlay, None)
@@ -1406,6 +1407,9 @@ class SliceCanvas:
                 if rt is None:
                     log.debug('Render texture missing for overlay %s', overlay)
                     continue
+
+                # make sure the rendertexture shape is up to date
+                rt.updateShape(width, height)
 
                 log.debug('Drawing %s slice for overlay %s to off-'
                           'screen texture', copts.zax, overlay.name)
