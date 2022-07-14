@@ -675,11 +675,11 @@ class GLMesh(globject.GLObject):
         """
 
         xax, yax, zax = axes
-        bbox          = canvas.viewport
         cpshader      = self.xsectcpShader
         blshader      = self.xsectblShader
-        lo, hi        = self.getDisplayBounds()
-        lo, hi        = self.calculateViewport(lo, hi, axes, bbox)
+        bbox          = canvas.viewport
+        lo            = [b[0] for b in bbox]
+        hi            = [b[1] for b in bbox]
         xmin          = lo[xax]
         xmax          = hi[xax]
         ymin          = lo[yax]
@@ -688,9 +688,7 @@ class GLMesh(globject.GLObject):
 
         # Make sure the off-screen texture
         # matches the display size
-        width, height = canvas.GetSize()
-        if tex.shape != (width, height):
-            tex.shape = width, height
+        tex.shape = canvas.GetSize()
 
         if xform is None: xform = canvas.mvpMatrix
         else:             xform = affine.concat(canvas.mvpMatrix, xform)
@@ -780,53 +778,6 @@ class GLMesh(globject.GLObject):
 
         # Finally, draw the off-screen texture to the display
         tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-
-
-    def calculateViewport(self, lo, hi, axes, bbox=None):
-        """Called by :meth:`drawCrossSection`. Calculates an appropriate
-        viewport (the horizontal/vertical minimums/maximums in display
-        coordinates) given the ``lo`` and ``hi`` ``GLMesh`` display bounds,
-        and a display ``bbox``.
-
-        This is needed to preserve the aspect ratio of the mesh cross-section.
-        """
-
-        xax = axes[0]
-        yax = axes[1]
-
-        if bbox is not None and (lo[xax] < bbox[xax][0] or
-                                 hi[xax] < bbox[xax][1] or
-                                 lo[yax] > bbox[yax][0] or
-                                 hi[yax] > bbox[yax][1]):
-
-            xlen  = float(hi[xax] - lo[xax])
-            ylen  = float(hi[yax] - lo[yax])
-            ratio = xlen / ylen
-
-            bblo = [ax[0] for ax in bbox]
-            bbhi = [ax[1] for ax in bbox]
-
-            lo   = [max(l, bbl) for l, bbl in zip(lo, bblo)]
-            hi   = [min(h, bbh) for h, bbh in zip(hi, bbhi)]
-
-            dxlen  = float(hi[xax] - lo[xax])
-            dylen  = float(hi[yax] - lo[yax])
-
-            dratio = dxlen / dylen
-
-            if dratio > ratio:
-
-                ndxlen   = xlen * (dylen / ylen)
-                lo[xax] += 0.5 * (ndxlen - dxlen)
-                hi[xax] -= 0.5 * (ndxlen - dxlen)
-
-            elif dratio < ratio:
-
-                ndylen   = ylen * (dxlen / xlen)
-                lo[yax] += 0.5 * (ndylen - dylen)
-                hi[yax] -= 0.5 * (ndylen - dylen)
-
-        return lo, hi
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):
