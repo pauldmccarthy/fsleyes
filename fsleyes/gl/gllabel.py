@@ -272,7 +272,20 @@ class GLLabel(glimageobject.GLImageObject):
         yax        = axes[1]
         xmin, xmax = bbox[xax]
         ymin, ymax = bbox[yax]
-        offsets    = [owidth / w, owidth / h]
+
+        # If rendering to an off-screen texture, it is
+        # likely that that texture has the same resolution
+        # as the image. In this case, we need to scale
+        # down the outline width (which is specified in
+        # terms of display pixels), as otherwise the outline
+        # width will effectively be interpreted as voxels,
+        # which results in massive outlines. Dividing by
+        # 10 (the maximum value the outlineWidth can take)
+        # limits the outline size to max 1 voxel.
+        if isinstance(canvas, textures.RenderTexture):
+            owidth /= 10
+
+        offsets = [owidth / w, owidth / h]
 
         rtex.shape = w, h
 
