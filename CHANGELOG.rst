@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.5.0 (Under development)
+-------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Restored low-performance settings for the ortho and lightbox views.  Only
+  two settings are available - *Best looking* and *Fastest* (!333).
+
+
 1.4.6 (Tuesday 14th June 2022)
 ------------------------------
 
