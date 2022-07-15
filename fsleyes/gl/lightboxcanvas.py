@@ -23,6 +23,7 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsleyes_props                     as props
 import fsl.data.image                    as fslimage
 import fsl.transform.affine              as affine
 
@@ -473,6 +474,22 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts.zrange.setLimits(0, *newZRange)
         opts.setAttribute('zrange',       'minDistance', newZGap)
         opts.setAttribute('sliceSpacing', 'minval',      newZGap)
+
+        # If the current zlo/zhi are equal
+        # we'll assume that the spacing/
+        # zrange need to be initialised.
+        if np.isclose(*opts.zrange):
+            # use ignoreInvalid, as this method may be
+            # called before listeners have been added
+            # (via SliceCanvas.__init__ - see __init__)
+            with props.skip(opts, 'zrange', self.name,
+                            ignoreInvalid=True), \
+                 props.skip(opts, 'sliceSpacing', self.name,
+                            ignoreInvalid=True):
+                ovl               = self.displayCtx.getSelectedOverlay()
+                opts.zrange       = self.displayCtx.bounds.getRange(opts.zax)
+                opts.sliceSpacing = self.calcSliceSpacing(ovl)
+            self._slicePropsChanged()
 
 
     def _overlayBoundsChanged(self, *a):

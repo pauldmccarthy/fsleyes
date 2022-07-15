@@ -124,7 +124,8 @@ def parseArgs(argv):
 
     mainParser.add_argument('-of',
                             '--outfile',
-                            help='Output image file name')
+                            help='Output image file name (default: out.png)',
+                            default='out.png')
     mainParser.add_argument('-c',
                             '--crop',
                             type=int,

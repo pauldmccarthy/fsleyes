@@ -282,16 +282,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                  self.name,
                                  self.__transformChanged)
 
-        # If the current zlo/zhi are equal
-        # we'll assume that the spacing/
-        # zrange need to be initialised.
-        lbCanvas = self.__lbCanvas
-        opts     = self.sceneOpts
-
-        if np.isclose(*opts.zrange):
-            opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
-            opts.zrange       = self.displayCtx.bounds.getRange(opts.zax)
-
 
     def __transformChanged(self, *a):
         """Called when the :attr:`.NiftiOpts.transform` property for the
