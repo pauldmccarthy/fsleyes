@@ -282,14 +282,13 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                                  self.name,
                                  self.__transformChanged)
 
-        # If the current zrange is [0, 0]
+        # If the current zlo/zhi are equal
         # we'll assume that the spacing/
         # zrange need to be initialised.
         lbCanvas = self.__lbCanvas
         opts     = self.sceneOpts
 
-        if opts.zrange == [0.0, 0.0]:
-
+        if np.isclose(*opts.zrange):
             opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
             opts.zrange       = self.displayCtx.bounds.getRange(opts.zax)
 
