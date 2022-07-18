@@ -635,7 +635,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return xforms
 
         invXforms = []
-        lo, hi    = globj.getDisplayBounds()
+        lo        = self.displayCtx.bounds[ ::2]
+        hi        = self.displayCtx.bounds[1::2]
         xmin      = lo[opts.xax]
         xmax      = hi[opts.xax]
         ymin      = lo[opts.yax]
