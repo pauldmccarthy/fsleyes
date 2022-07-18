@@ -376,20 +376,23 @@ class GLMesh(globject.GLObject):
             self.normals = np.array(normals, dtype=np.float32)
 
 
-    def frontFace(self):
+    def frontFace(self, xform=None):
         """Returns the face of the mesh triangles which which will be facing
         outwards, either ``GL_CCW`` or ``GL_CW``. This will differ depending
         on the mesh-to-display transformation matrix.
+
+        :arg xform: Additional transformation which will be applied to the
+                    mesh vertices, and which should be taken into account
+                    (e.g. the mvp matrix for the :class:`.SliceCanvas` and
+                    :class:`.LightBoxCanvas` may have x flips).
         """
 
-        # Only looking at the mesh -> display
-        # transform, thus we are assuming that
-        # the MVP matrix does not have any
-        # negative scales.
-        xform = self.opts.getTransform('mesh', 'display')
+        m2d = self.opts.getTransform('mesh', 'display')
+        if xform is not None:
+            m2d = affine.concat(xform, m2d)
 
-        if npla.det(xform) > 0: return gl.GL_CCW
-        else:                   return gl.GL_CW
+        if  npla.det(m2d) > 0: return gl.GL_CW
+        else:                  return gl.GL_CCW
 
 
     def getDisplayBounds(self):
@@ -500,7 +503,7 @@ class GLMesh(globject.GLObject):
             shader.set('normalmat', normmat)
             shader.set('lighting',  canvas.opts.light)
             shader.set('lightPos',  lightPos)
-            gl.glFrontFace(self.frontFace())
+            gl.glFrontFace(self.frontFace(mvpmat))
             gl.glCullFace(gl.GL_BACK)
             shader.draw(gl.GL_TRIANGLES)
 
@@ -690,10 +693,6 @@ class GLMesh(globject.GLObject):
         bbox  = canvas.viewport
         clo   = [b[0] for b in bbox]
         chi   = [b[1] for b in bbox]
-        cxmin = clo[xax]
-        cxmax = chi[xax]
-        cymin = clo[yax]
-        cymax = chi[yax]
 
         # mesh bounding box
         mlo, mhi = self.getDisplayBounds()
@@ -719,6 +718,16 @@ class GLMesh(globject.GLObject):
                                              clipPlane[1, :],
                                              clipPlane[2, :])
 
+        # A separate xform may be specified,
+        # by the lightbox canvas, to position
+        # individual slices. Note that we are
+        # drawing to an off-screen texture below,
+        # and not to the canvas, but they will
+        # have identical mvps, so we can use
+        # the canvas mvp here.
+        if xform is None: mvp = canvas.mvpMatrix
+        else:             mvp = affine.concat(canvas.mvpMatrix, xform)
+
         # http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/\
         #     advclip.html
         #
@@ -734,19 +743,19 @@ class GLMesh(globject.GLObject):
         # 3. Fill the off-screen texture with the fill colour,
         #    masking it with the stencil buffer
         # 4. Draw the off-screen texture to the display
-        gl.glFrontFace(self.frontFace())
+
+        # We have to make sure the triangle front face is
+        # set correctly, so that the front/back-face
+        # culling will work below (the other option would
+        # be to swap around the face order depending on
+        # the determinant of the vertex->display affine).
+        gl.glFrontFace(self.frontFace(mvp))
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         with glroutines.enabled((gl.GL_CULL_FACE, gl.GL_STENCIL_TEST)), \
              tex.target(xax, yax, clo, chi):
 
             glroutines.clear((0, 0, 0, 0))
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
-
-            # A separate xform may be specified,
-            # by the lightbox canvas, to position
-            # individual slices
-            if xform is None: mvp = tex.mvpMatrix
-            else:             mvp = affine.concat(tex.mvpMatrix, xform)
 
             # Use a clip-plane shader for steps 1 and 2
             with cpshader.loaded():
@@ -785,16 +794,12 @@ class GLMesh(globject.GLObject):
             # disable blending, otherwise we will end up blending
             # with the output of the clip plane shader
             with blshader.loaded(), glroutines.disabled((gl.GL_BLEND, )):
-                verts = tex.generateVertices(zpos, mxmin, mxmax,
-                                             mymin, mymax, xax, yax)
-
+                verts = tex.generateVertices(0, -1, 1, -1, 1, 0, 1)
                 blshader.setAtt('vertex', verts)
-                blshader.set(   'MVP',    mvp)
                 blshader.draw(gl.GL_TRIANGLES, 0, 6)
 
         # Finally, draw the off-screen texture to the display
-        tex.drawOnBounds(zpos, cxmin, cxmax, cymin, cymax, xax, yax,
-                         canvas.mvpMatrix)
+        tex.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):

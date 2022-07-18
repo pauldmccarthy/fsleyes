@@ -1330,7 +1330,8 @@ class SliceCanvas:
             log.debug('Drawing overlay %s texture to %0.3f-%0.3f, '
                       '%0.3f-%0.3f', overlay, xmin, xmax, ymin, ymax)
 
-            rt.drawOnBounds(zpos, xmin, xmax, ymin, ymax, copts.xax, copts.yax, xform)
+            rt.drawOnBounds(zpos, xmin, xmax, ymin, ymax,
+                            copts.xax, copts.yax, xform)
 
 
     def _draw(self, *a):

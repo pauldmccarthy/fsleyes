@@ -1,12 +1,12 @@
 /*
  * Vertex shader used by the GLMesh for drawing 2D cross sections.
- * Simply applies the MVP to the vertex coordinates.
+ * Simply passes the vertex coordinates through - they are assumed
+ * to be in clip space.
  */
 #version 120
 
-uniform   mat4 MVP;
 attribute vec3 vertex;
 
 void main(void) {
-  gl_Position  = MVP * vec4(vertex, 1);
+  gl_Position  = vec4(vertex, 1);
 }
