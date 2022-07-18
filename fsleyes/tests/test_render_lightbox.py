@@ -7,7 +7,8 @@
 
 import pytest
 
-from fsleyes.tests import run_cli_tests
+from fsleyes.tests import run_cli_tests, roi
+
 
 
 pytestmark = pytest.mark.clitest
@@ -69,11 +70,16 @@ cli_tests = """
 # cursor width
 -cw 5  3d
 -cw 10 3d
+
+# fsl/fsleyes/fsleyes!333
+    3d -cm blue-lightblue {{roi('3d', (0, 6, 0, 14, 0, 14))}}
+-no 3d -cm blue-lightblue {{roi('3d', (0, 6, 0, 14, 0, 14))}}
 """
 
 
 def test_render_lightbox():
     extras = {
+        'roi' : roi
     }
     run_cli_tests('test_render_lightbox', cli_tests, extras=extras,
                   scene='lightbox')
