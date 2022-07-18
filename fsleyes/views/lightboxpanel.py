@@ -266,6 +266,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         selectedOverlay = self.displayCtx.getSelectedOverlay()
 
+        self.__radioOrientationChanged()
+
         for overlay in self.overlayList:
 
             refImage = self.displayCtx.getReferenceImage(overlay)
