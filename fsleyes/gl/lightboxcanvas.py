@@ -807,6 +807,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         width, height = self.GetScaledSize()
         opts          = self.opts
+        dctx          = self.displayCtx
         axes          = (opts.xax, opts.yax, opts.zax)
 
         if width == 0 or height == 0:
@@ -842,7 +843,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             lo[opts.xax], hi[opts.xax] = opts.displayBounds.x
             lo[opts.yax], hi[opts.yax] = opts.displayBounds.y
-            lo[opts.zax], hi[opts.zax] = opts.zrange
+            lo[opts.zax]               = dctx.bounds.getLo(opts.zax)
+            hi[opts.zax]               = dctx.bounds.getHi(opts.zax)
 
             renderTarget.bindAsRenderTarget()
             renderTarget.setRenderViewport(opts.xax, opts.yax, lo, hi)
