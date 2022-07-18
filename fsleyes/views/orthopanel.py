@@ -686,6 +686,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         haveOverlays = len(self.overlayList) > 0
         selOverlay   = self.displayCtx.getSelectedOverlay()
 
+        self.__radioOrientationChanged()
+
         if selOverlay is not None:
 
             display    = self.displayCtx.getDisplay(selOverlay)
