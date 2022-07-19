@@ -503,7 +503,7 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
             overlay.name = overlayName
 
-            with props.suppress(self.overlayList, 'overlays', self.name):
+            with props.skip(self.overlayList, 'overlays', self.name):
                 self.overlayList.append(overlay, **initprops)
 
             self.__overlayPanel.setOverlayState(
