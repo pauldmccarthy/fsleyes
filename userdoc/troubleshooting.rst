@@ -97,6 +97,29 @@ future, you will be able to do this from within FSLeyes, but as of version
 ``fsledithd``.
 
 
+FSLeyes is slow!
+----------------
+
+Performance of FSLeyes can be poor when it is used on remote systems
+(e.g. over X11/SSH, or VNC).  You may be able to improve the situation by
+enabling the low-performance setting. You can find this setting in the view
+settings panel (the |spanner_icon| button), or you can start FSLeyes in
+low-performance mode from the command-line with the ``-p`` option, e.g.::
+
+  # low-performance mode -> 1
+  fsleyes -p 1 image.nii.gz
+
+  # high-performance mode -> 2
+  fsleyes -p 2 image.nii.gz
+
+
+Note that this setting will only have an effect on the orthographic and
+lightbox views. However, the 3D view has some additional settings which can be
+tweaked to improve performance, specifically the **Quality** and **Number of
+samples** settings. Refer to the page on the :ref:`3D view <3d_view_volume>`
+for details.
+
+
 My image is tilted/oblique! How do I make it oriented/rectangular?
 ------------------------------------------------------------------
 
