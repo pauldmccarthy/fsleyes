@@ -351,7 +351,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             props = '; '.join(['{}={}'.format(k, v) for k, v in props])
 
-            log.debug('Lightbox properties changed: [{}]'.format(props))
+            log.debug('Lightbox properties changed: [%s]', props)
 
         self.Refresh()
 
@@ -549,8 +549,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Save the real canvas bounds
         self._realBounds = (xmin, xmax, ymin, ymax)
 
-        log.debug('Required lightbox bounds: X: ({}, {}) Y: ({}, {})'.format(
-            xmin, xmax, ymin, ymax))
+        log.debug('Required lightbox bounds: X: (%s, %s) Y: (%s, %s)',
+            xmin, xmax, ymin, ymax)
 
         slicecanvas.SliceCanvas._updateDisplayBounds(
             self, (xmin, xmax, ymin, ymax))
