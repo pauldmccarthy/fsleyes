@@ -127,18 +127,15 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
-        self.displayCtx .addListener('selectedOverlay',
-                                     self.name,
-                                     self.__selectedOverlayChanged)
         self.displayCtx .addListener('displaySpace',
                                      self.name,
                                      self.__radioOrientationChanged)
         self.displayCtx .addListener('radioOrientation',
                                      self.name,
                                      self.__radioOrientationChanged)
-        self.overlayList.addListener('overlays',
+        self.overlayList .addListener('overlays',
                                      self.name,
-                                     self.__selectedOverlayChanged)
+                                     self.__radioOrientationChanged)
 
         # When any lightbox properties change,
         # make sure the scrollbar is updated
@@ -168,7 +165,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__onLightBoxChange()
         self.__onZoom()
 
-        self.__selectedOverlayChanged()
         self.centrePanelLayout()
         self.initProfile(lightboxviewprofile.LightBoxViewProfile)
 
@@ -180,10 +176,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self.displayCtx .removeListener('selectedOverlay',  self.name)
         self.displayCtx .removeListener('displaySpace',     self.name)
         self.displayCtx .removeListener('radioOrientation', self.name)
-        self.overlayList.removeListener('overlays',         self.name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -249,70 +243,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         flip    = flip and lbopts.zax in (1, 2)
 
         lbopts.invertX = flip
-
-
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-
-        If the currently selected overlay is a :class:`.Nifti` instance, or
-        has an associated reference image (see
-        :meth:`.DisplayOpts.referenceImage`), a listener is registered on
-        the reference image :attr:`.NiftiOpts.transform` property, so that the
-        :meth:`__transformChanged` method will be called when it changes.
-        """
-
-        if len(self.overlayList) == 0:
-            return
-
-        selectedOverlay = self.displayCtx.getSelectedOverlay()
-
-        self.__radioOrientationChanged()
-
-        for overlay in self.overlayList:
-
-            refImage = self.displayCtx.getReferenceImage(overlay)
-
-            if refImage is None:
-                continue
-
-            opts = self.displayCtx.getOpts(refImage)
-
-            opts.removeListener('transform', self.name)
-
-            if overlay == selectedOverlay:
-                opts.addListener('transform',
-                                 self.name,
-                                 self.__transformChanged)
-
-
-    def __transformChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.transform` property for the
-        reference image of the currently selected overlay changes.
-
-        Updates the :attr:`.LightBoxOpts.sliceSpacing` and
-        :attr:`.LightBoxOpts.zrange` properties to values sensible to the
-        new overlay display space.
-        """
-
-        sceneOpts = self.sceneOpts
-        overlay   = self.displayCtx.getReferenceImage(
-            self.displayCtx.getSelectedOverlay())
-
-        if overlay is None:
-            return
-
-        opts     = self.displayCtx.getOpts(overlay)
-        loBounds = opts.bounds.getLo()
-        hiBounds = opts.bounds.getHi()
-
-        # Reset the spacing/zrange. Not
-        # sure if this is the best idea,
-        # but it's here for the time being.
-        sceneOpts.sliceSpacing = self.__lbCanvas.calcSliceSpacing(overlay)
-        sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
-                                  hiBounds[sceneOpts.zax])
-
-        self.__onResize()
 
 
     def __onZoom(self, *a):

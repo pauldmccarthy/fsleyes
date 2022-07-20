@@ -521,14 +521,11 @@ properties = TypeDict({
 
     'LightBoxOpts.zoom'           : 'Zoom level - this controls how many '
                                     'slices to display.',
-    'LightBoxOpts.sliceSpacing'   : 'The spacing between adjacent slices. '
-                                    'The units and range of this setting '
-                                    'depend upon the currently selected '
-                                    'overlay.',
+    'LightBoxOpts.sliceSpacing'   : 'The spacing between adjacent slices, '
+                                    'specified as a percentage.',
     'LightBoxOpts.zrange'         : 'The start/end points of the displayed '
-                                    'range of slices. The units and range '
-                                    'of this setting depend upon the '
-                                    'currently selected overlay.',
+                                    'range of slices, specified as '
+                                    'percentages.',
     'LightBoxOpts.zax'            : 'Slices along this axis will be '
                                     'displayed.',
     'LightBoxOpts.showGridLines'  : 'If checked, lines will be shown between '

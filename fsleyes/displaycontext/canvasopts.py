@@ -168,11 +168,11 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
 
     sliceSpacing = props.Real(clamped=True,
-                              minval=0.1,
-                              maxval=30.0,
-                              default=1.0)
-    """This property controls the spacing between slices in the display
-    coordinate system.
+                              minval=0.001,
+                              maxval=0.5,
+                              default=0.01)
+    """This property controls the spacing between slices. It is defined
+    as a percentage (0-1) of the Z axis length.
     """
 
 
@@ -194,9 +194,10 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
-    zrange = props.Bounds(ndims=1)
-    """This property controls the range, in display coordinates, of the slices
-    to be displayed.
+    zrange = props.Bounds(ndims=1, minval=0, maxval=1)
+    """This property controls the range of the slices to be displayed.
+    The low/high limits are specified as percentages (0-1) of the Z axis
+    length.
     """
 
 
