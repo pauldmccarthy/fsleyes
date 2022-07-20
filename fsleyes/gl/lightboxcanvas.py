@@ -94,6 +94,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # and the total number of rows to be displayed
         self._nslices   = 0
         self._totalRows = 0
+        self._zposes    = []
+        self._xforms    = []
 
         # The final display bounds calculated by
         # SliceCanvas._updateDisplayBounds is not
@@ -344,7 +346,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """
 
         self._calcNumSlices()
-        self._genSliceLocations()
+        self._calculateSlices()
         self._zPosChanged()
         self._updateDisplayBounds()
 
@@ -372,10 +374,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         the total number of rows.
         """
 
-        opts = self.opts
-        xlen = self.displayCtx.bounds.getLen(opts.xax)
-        ylen = self.displayCtx.bounds.getLen(opts.yax)
-        zlen = opts.zrange.xlen
+        opts          = self.opts
+        xlen          = self.displayCtx.bounds.getLen(opts.xax)
+        ylen          = self.displayCtx.bounds.getLen(opts.yax)
+        zlen          = opts.zrange.xlen
         width, height = self.GetSize()
 
         if xlen   == 0 or \
@@ -449,7 +451,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         slicecanvas.SliceCanvas._overlayBoundsChanged(self, preserveZoom=False)
         self._calcNumSlices()
-        self._genSliceLocations()
+        self._calculateSlices()
 
 
     def _updateDisplayBounds(self, *args, **kwargs):
@@ -496,131 +498,59 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._realBounds = (xmin, xmax, ymin, ymax)
 
         log.debug('Required lightbox bounds: X: (%s, %s) Y: (%s, %s)',
-            xmin, xmax, ymin, ymax)
+                  xmin, xmax, ymin, ymax)
 
         slicecanvas.SliceCanvas._updateDisplayBounds(
             self, (xmin, xmax, ymin, ymax))
 
 
-    def _genSliceLocations(self):
-        """Called when any of the slice display properties change.
-
-        For every overlay in the overlay list, generates a list of
-        transformation matrices, and a list of slice indices. The latter
-        specifies the slice indices from the overlay to be displayed, and the
-        former specifies the transformation matrix to be used to position the
-        slice on the canvas.
+    def _calculateSlices(self):
+        """Calculates Z positions and affine transformations for each slice.
+        The transformations are used to position each slice at a row/column
+        on the canvas.
         """
 
-        self._sliceLocs  = {}
-        self._transforms = {}
+        opts    = self.opts
+        bounds  = self.displayCtx.bounds
+        nrows   = self._totalRows
+        ncols   = opts.ncols
+        xlen    = bounds.getLen(opts.xax)
+        ylen    = bounds.getLen(opts.yax)
+        zlen    = bounds.getLen(opts.zax)
+        zmin    = bounds.getLo( opts.zax)
+        spacing = zlen * opts.sliceSpacing
+        zlo     = zmin + opts.zrange.xlo * zlen
+        zhi     = zmin + opts.zrange.xhi * zlen
 
-        if len(self.overlayList) == 0:
+        self._zposes = []
+        self._xforms = []
+
+        if len(self.overlayList) == 0 or np.isclose(zlen, 0):
             return
 
         # calculate the locations, in display coordinates,
-        # of all slices to be displayed on the canvas
-        opts      = self.opts
-        bounds    = self.displayCtx.bounds
-        zmin      = bounds.getLo( opts.zax)
-        zlen      = bounds.getLen(opts.zax)
-        spacing   = zlen * opts.sliceSpacing
-        zlo       = zmin + opts.zrange.xlo * zlen
-        zhi       = zmin + opts.zrange.xhi * zlen
-        sliceLocs = np.arange(zlo + spacing * 0.5, zhi, spacing)
+        # of all slices to be displayed on the canvas, and
+        # calculate the X/Y transformation for each slice
+        # to position it on the canvas
+        self._zposes = np.arange(zlo + spacing * 0.5, zhi, spacing)
 
-        # calculate the transformation for each
-        # slice in each overlay, and the index of
-        # each slice to be displayed
-        for i, overlay in enumerate(self.overlayList):
+        for sliceno in range(len(self._zposes)):
 
-            iSliceLocs  = []
-            iTransforms = []
+            row                = int(np.floor(sliceno / ncols))
+            col                = int(np.floor(sliceno % ncols))
+            xform              = np.eye(4, dtype=np.float32)
+            xform[opts.xax, 3] = xlen * col
+            xform[opts.yax, 3] = ylen * (nrows - row - 1)
+            xform[opts.zax, 3] = 0
 
-            for zi, zpos in enumerate(sliceLocs):
+            # apply opts.invertX/Y if necessary
+            flipaxes = []
+            if opts.invertX: flipaxes.append(opts.xax)
+            if opts.invertY: flipaxes.append(opts.yax)
+            if len(flipaxes) > 0:
+                xform = glroutines.flip(xform, flipaxes, bounds.lo, bounds.hi)
 
-                xform = self._calculateSliceTransform(overlay, zi)
-
-                iTransforms.append(xform)
-                iSliceLocs .append(zpos)
-
-            self._transforms[overlay] = iTransforms
-            self._sliceLocs[ overlay] = iSliceLocs
-
-
-    def _calculateSliceTransform(self, overlay, sliceno):
-        """Calculates a transformation matrix for the given slice number in
-        the given overlay.
-
-        Each slice is displayed on the same canvas, but is translated to a
-        specific row/column.  So translation matrix is created, to position
-        the slice in the correct location on the canvas.
-        """
-
-        opts  = self.opts
-        nrows = self._totalRows
-        ncols = opts.ncols
-
-        row = int(np.floor(sliceno / ncols))
-        col = int(np.floor(sliceno % ncols))
-
-        xlen = self.displayCtx.bounds.getLen(opts.xax)
-        ylen = self.displayCtx.bounds.getLen(opts.yax)
-
-        translate              = np.identity(4, dtype=np.float32)
-        translate[opts.xax, 3] = xlen * col
-        translate[opts.yax, 3] = ylen * (nrows - row - 1)
-        translate[opts.zax, 3] = 0
-
-        return translate
-
-
-    def __prepareSliceTransforms(self, globj, xforms):
-        """Applies the :attr:`.SliceCanvas.invertX` and
-        :attr:`.SliceCanvas.invertY` properties to the given transformation
-        matrices, if necessary. Returns the transformations.
-        """
-
-        opts = self.opts
-
-        if not opts.invertX or opts.invertY:
-            return xforms
-
-        invXforms = []
-        lo        = self.displayCtx.bounds[ ::2]
-        hi        = self.displayCtx.bounds[1::2]
-        xmin      = lo[opts.xax]
-        xmax      = hi[opts.xax]
-        ymin      = lo[opts.yax]
-        ymax      = hi[opts.yax]
-        xlen      = xmax - xmin
-        ylen      = ymax - ymin
-
-        # We have to translate each slice transformation
-        # to the origin, perform the flip there, then
-        # transform it back to its original location.
-        for xform in xforms:
-
-            invert     = np.eye(4)
-            toOrigin   = np.eye(4)
-            fromOrigin = np.eye(4)
-
-            xoff = xlen / 2.0 + xform[opts.xax, 3] + xmin
-            yoff = ylen / 2.0 + xform[opts.yax, 3] + ymin
-
-            if opts.invertX:
-                invert[    opts.xax, opts.xax] = -1
-                toOrigin[  opts.xax, 3]        = -xoff
-                fromOrigin[opts.xax, 3]        =  xoff
-            if opts.invertY:
-                invert[    opts.yax, opts.yax] = -1
-                toOrigin[  opts.yax, 3]        = -yoff
-                fromOrigin[opts.yax, 3]        =  yoff
-
-            xform = affine.concat(fromOrigin, invert, toOrigin, xform)
-            invXforms.append(xform)
-
-        return invXforms
+            self._xforms.append(xform)
 
 
     def _drawGridLines(self):
@@ -811,11 +741,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             renderTarget.setRenderViewport(opts.xax, opts.yax, lo, hi)
             glroutines.clear((0, 0, 0, 0))
 
-        startSlice = opts.ncols * opts.topRow
-        endSlice   = startSlice + opts.nrows * opts.ncols
-
-        if endSlice > self._nslices:
-            endSlice = self._nslices
+        zposes = self._zposes
+        xforms = self._xforms
 
         # Draw all the slices for all the overlays.
         for overlay, globj in zip(overlays, globjs):
@@ -826,16 +753,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if not display.enabled:
                 continue
 
-            log.debug('Drawing %s slices (%s - %s) for overlay %s',
-                      endSlice - startSlice,
-                      startSlice,
-                      endSlice,
-                      overlay)
-
-            zposes = self._sliceLocs[ overlay][startSlice:endSlice]
-            xforms = self._transforms[overlay][startSlice:endSlice]
-            xforms = self.__prepareSliceTransforms(globj, xforms)
-
+            log.debug('Drawing %s slices for overlay %s', len(zposes), overlay)
             globj.preDraw()
             globj.drawAll(renderTarget, axes, zposes, xforms)
             globj.postDraw()
