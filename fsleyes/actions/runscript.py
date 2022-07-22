@@ -400,14 +400,19 @@ def fsleyesShellHelpText(_globals, _locals):
         'LOAD' : 'Load the output from a FSL wrapper function',
     }
 
-    localVars  = list(_locals.keys())
-    localDescs = [_locals[k].__doc__
-                  if k not in overrideDocs
-                  else overrideDocs[k]
-                  for k in localVars]
+    localVars  = []
+    localDescs = []
 
-    descWidth   = 60
-    varWidth    = max([len(v) for v in localVars])
+    for name, obj in _locals.items():
+        doc = overrideDocs.get(name, obj.__doc__)
+        if doc is None:
+            doc = 'n/a'
+
+        localVars .append(name)
+        localDescs.append(doc)
+
+    descWidth  = 60
+    varWidth   = max([len(v) for v in localVars])
 
     localDescs = [d[:descWidth + 30]   for d in localDescs]
     localDescs = [d.replace('\n', ' ') for d in localDescs]
