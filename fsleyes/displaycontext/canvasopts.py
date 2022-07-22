@@ -169,7 +169,7 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     sliceSpacing = props.Real(clamped=True,
                               minval=0.001,
-                              maxval=0.5,
+                              maxval=0.3,
                               default=0.01)
     """This property controls the spacing between slices. It is defined
     as a percentage (0-1) of the Z axis length.

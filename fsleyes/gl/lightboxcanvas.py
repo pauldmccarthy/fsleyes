@@ -267,7 +267,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     def calcSliceSpacing(self, overlay):
-        """Calculates and returns a Z-axis slice spacing value suitable
+        """Calculates and returns a minimum Z-axis slice spacing value suitable
         for the given overlay.
         """
         copts      = self.opts
@@ -305,8 +305,25 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             return 1 / max(overlay.shape[:3])
 
 
+    def _overlayListChanged(self):
+        """Overrides :meth:`.SliceCanvas._overlayListChanged`. Sets
+        some limits on some of the :class:`.LightBoxCanvasOpts` properties
+        as needed.
+        """
+        slicecanvas.SliceCanvas._overlayListChanged(self)
+
+        if len(self.overlayList) == 0:
+            return
+
+        spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
+        spacing  = min(spacings)
+
+        self.opts.setAttribute('sliceSpacing', 'minval',      spacing)
+        self.opts.setAttribute('zrange',       'minDistance', spacing)
+
+
     def _renderModeChanged(self, *a):
-        """Overrides :meth:`.SliceCanvas._renderModeChange`. Destroys/
+        """Overrides :meth:`.SliceCanvas._renderModeChanged`. Destroys/
         re-creates the off-screen :class:`.RenderTexture` as needed.
         """
 
@@ -465,11 +482,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.destroyed:
             return
 
-        opts = self.opts
-        xmin = self.displayCtx.bounds.getLo( opts.xax)
-        ymin = self.displayCtx.bounds.getLo( opts.yax)
-        xlen = self.displayCtx.bounds.getLen(opts.xax)
-        ylen = self.displayCtx.bounds.getLen(opts.yax)
+        opts   = self.opts
+        bounds = self.displayCtx.bounds
+        xmin   = bounds.getLo( opts.xax)
+        ymin   = bounds.getLo( opts.yax)
+        xlen   = bounds.getLen(opts.xax)
+        ylen   = bounds.getLen(opts.yax)
 
         # Calculate the vertical offset required to
         # ensure that the current 'topRow' is the first
@@ -691,7 +709,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
-
 
         if self.destroyed:
             return
