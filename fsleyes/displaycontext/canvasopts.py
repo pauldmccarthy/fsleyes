@@ -178,19 +178,7 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     ncols = props.Int(clamped=True, minval=1, maxval=100, default=5)
     """This property controls the number of slices to be displayed on a
-    single row.
-    """
-
-
-    nrows = props.Int(clamped=True, minval=1, maxval=100, default=4)
-    """This property controls the number of rows to be displayed on the
-    canvas.
-    """
-
-
-    topRow = props.Int(clamped=True, minval=0, maxval=20, default=0)
-    """This property controls the (0-indexed) row to be displayed at the top
-    of the canvas, thus providing the ability to scroll through the slices.
+    single row. The number of rows is automatically calculated.
     """
 
 
@@ -218,6 +206,34 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     See the :class:`.LightBoxCanvas` for more details.
     """
+
+
+    @property
+    def maxrows(self):
+        """Returns the total number of rows that would cover the full Z axis
+        range. Used by the :class:`.LightBoxPanel` to implement scrolling.
+        """
+        nslices = self.sliceSpacing / 1
+        return int(np.ceil(nslices / self.ncols))
+
+
+    @property
+    def nslices(self):
+        """Returns the total number of slices currently being displayed.  This
+        is automatically calculated from the current :attr:`zrange` and
+        :attr:`sliceSpacing` settings.
+        """
+        return int(np.ceil(self.zrange.xlen / self.sliceSpacing))
+
+
+    @property
+    def nrows(self):
+        """Returns the number of rows currently being drawn. This is
+        automatically calculated from the current :attr:`ncols` and
+        :attr:`zrange` properties - it will be at most
+        the value of :meth:`maxrows`.
+        """
+        return int(np.ceil(self.nslices / self.ncols))
 
 
 class Scene3DCanvasOpts(props.HasProperties):

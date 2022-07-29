@@ -116,9 +116,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bindProps('nrows',        lbopts)
         sceneOpts.bindProps('ncols',        lbopts)
-        sceneOpts.bindProps('topRow',       lbopts)
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
 
@@ -142,10 +140,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.addListener(
             'ncols',        self.name, self.__ncolsChanged)
         sceneOpts.addListener(
-            'nrows',        self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'topRow',       self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
             'sliceSpacing', self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
             'zrange',       self.name, self.__onLightBoxChange)
@@ -157,8 +151,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # When the scrollbar is moved,
         # update the canvas display
         self.__scrollbar.Bind(wx.EVT_SCROLL, self.__onScroll)
-
-        self.Bind(wx.EVT_SIZE, self.__onResize)
 
         sceneOpts.zoom = 750
 
@@ -256,45 +248,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         opts.ncols = int(1 + np.round(normZoom * 29))
 
 
-    def __onResize(self, ev=None):
-        """Called when the panel is resized. Automatically adjusts the number
-        of rows to the maximum displayable number (given that the number of
-        columns is fixed).
-        """
-
-        if ev is not None:
-            ev.Skip()
-
-        if self.destroyed:
-            return
-
-        # Lay this panel out, so the
-        # canvas panel size is up to date
-        self.Layout()
-
-        lbcanvas          = self.__lbCanvas
-        lbopts            = lbcanvas.opts
-        width,   height   = lbcanvas        .GetClientSize().Get()
-        sbWidth, sbHeight = self.__scrollbar.GetClientSize().Get()
-
-        width = width - sbWidth
-
-        xlen = self.displayCtx.bounds.getLen(lbopts.xax)
-        ylen = self.displayCtx.bounds.getLen(lbopts.yax)
-
-        sliceWidth  = width / float(lbopts.ncols)
-        sliceHeight = fsllayout.calcPixHeight(xlen, ylen, sliceWidth)
-
-        if sliceHeight > 0:
-            lbopts.nrows = int(height / sliceHeight)
-
-
     def __ncolsChanged(self, *a):
         """Called when the :attr:`.LightBoxOpts.ncols` property changes.
         Calculates the number of rows to display, and updates the
         scrollbar.
         """
-        self.__onResize()
         self.__onLightBoxChange()
 
 
@@ -303,11 +261,13 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the scrollbar to reflect the change.
         """
+        # TODO
+        return
         canvas = self.__lbCanvas
         opts   = canvas.opts
         self.__scrollbar.SetScrollbar(opts.topRow,
                                       opts.nrows,
-                                      canvas.getTotalRows(),
+                                      canvas.maxrows,
                                       opts.nrows,
                                       True)
 
@@ -317,4 +277,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the top row displayed on the :class:`.LightBoxCanvas`.
         """
+        # TODO
+        return
         self.__lbCanvas.opts.topRow = self.__scrollbar.GetThumbPosition()
