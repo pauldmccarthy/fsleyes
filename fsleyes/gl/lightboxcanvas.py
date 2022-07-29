@@ -193,6 +193,26 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         return xpos, ypos
 
 
+    @property
+    def lightboxPosition(self):
+        """Returns the slice, row, and column index of the current display
+        location (from the :attr:`.SliceCanvas.pos` attribute).
+        """
+
+        opts    = self.opts
+        bounds  = self.displayCtx.bounds
+        ncols   = opts.ncols
+        zmin    = bounds.getLo( opts.zax)
+        zlen    = bounds.getLen(opts.zax)
+        zpos    = opts.pos[opts.zax]
+        sliceno = (zpos - zmin) / zlen - opts.zrange.xlo
+        sliceno = int(np.floor(sliceno / opts.sliceSpacing))
+        row     = int(np.floor(sliceno / ncols))
+        col     = int(np.floor(sliceno % ncols))
+
+        return sliceno, row, col
+
+
     def canvasToWorld(self, xpos, ypos):
         """Overrides :meth:.SliceCanvas.canvasToWorld`.
 
@@ -431,13 +451,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         bounds = self.displayCtx.bounds
         ncols  = opts.ncols
         nrows  = opts.nrows
-        zpos   = opts.pos[opts.zax]
         xmin   = bounds.getLo( opts.xax)
         ymin   = bounds.getLo( opts.yax)
-        zmin   = bounds.getLo( opts.zax)
         xlen   = bounds.getLen(opts.xax)
         ylen   = bounds.getLen(opts.yax)
-        zlen   = bounds.getLen(opts.zax)
 
         xmax = xmin + xlen * ncols
         ymax = ymin + ylen * nrows
@@ -508,37 +525,36 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def _drawGridLines(self):
         """Draws grid lines between all the displayed slices."""
 
-        opts = self.opts
-
-        if self._totalRows == 0 or opts.ncols == 0:
+        if len(self._zposes) == 0:
             return
+
+        opts  = self.opts
+        nrows = opts.nrows
+        ncols = opts.ncols
 
         xlen = self.displayCtx.bounds.getLen(opts.xax)
         ylen = self.displayCtx.bounds.getLen(opts.yax)
         xmin = self.displayCtx.bounds.getLo( opts.xax)
         ymin = self.displayCtx.bounds.getLo( opts.yax)
 
-        rowLines = np.zeros(((self._totalRows - 1) * 2, 2), dtype=np.float32)
-        colLines = np.zeros(((opts.ncols      - 1) * 2, 2), dtype=np.float32)
-
-        topRow = self._totalRows - opts.topRow
-        btmRow = topRow          - self._totalRows
+        rowLines = np.zeros(((nrows - 1) * 2, 2), dtype=np.float32)
+        colLines = np.zeros(((ncols - 1) * 2, 2), dtype=np.float32)
 
         rowLines[:, 1] = np.arange(
-            ymin + (btmRow + 1) * ylen,
-            ymin +  topRow      * ylen, ylen).repeat(2)
+            ymin + ylen,
+            ymin + ylen * nrows, ylen).repeat(2)
 
         rowLines[:, 0] = np.tile(
-            np.array([xmin, xmin + opts.ncols * xlen]),
-            self._totalRows - 1)
+            np.array([xmin, xmin + ncols * xlen]),
+            nrows - 1)
 
         colLines[:, 0] = np.arange(
             xmin + xlen,
-            xmin + xlen * opts.ncols, xlen).repeat(2)
+            xmin + xlen * ncols, xlen).repeat(2)
 
-        colLines[:, 1] = np.tile(np.array([
-            ymin + btmRow * ylen,
-            ymin + topRow * ylen]), opts.ncols - 1)
+        colLines[:, 1] = np.tile(
+            np.array([ymin, ymin + ylen * nrows]),
+            ncols - 1)
 
         colour = (0.3, 0.9, 1.0, 0.8)
 
@@ -555,29 +571,24 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         location.
         """
 
-        opts    = self.opts
-        bounds  = self.displayCtx.bounds
-        zpos    = opts.pos[opts.zax]
-        xlen    = bounds.getLen(opts.xax)
-        ylen    = bounds.getLen(opts.yax)
-        zlen    = bounds.getLen(opts.zax)
-        xmin    = bounds.getLo( opts.xax)
-        ymin    = bounds.getLo( opts.yax)
-        zmin    = bounds.getLo( opts.zax)
+        if len(self._zposes) == 0:
+            return
 
-        zpos    = (zpos - zmin) / zlen
-        sliceno = int(np.floor((zpos + opts.zrange.xlo) / opts.sliceSpacing))
-        row     = int(np.floor(sliceno / opts.ncols))
-        col     = int(np.floor(sliceno % opts.ncols))
+        opts              = self.opts
+        bounds            = self.displayCtx.bounds
+        xlen              = bounds.getLen(opts.xax)
+        ylen              = bounds.getLen(opts.yax)
+        xmin              = bounds.getLo( opts.xax)
+        ymin              = bounds.getLo( opts.yax)
+        sliceno, row, col = self.lightboxPosition
 
-        # don't draw the cursor if it is on a
-        # non-existent or non-displayed slice
-        if sliceno >  self._nslices:            return
-        if row     <  opts.topRow:              return
-        if row     >= opts.topRow + opts.nrows: return
+        # don't draw the cursor if it
+        # is on a non-existent slice
+        if not (0 <= sliceno < opts.nslices):
+            return
 
         # in GL space, the top row is actually the bottom row
-        row = self._totalRows - row - 1
+        row = opts.nrows - row - 1
 
         self.getAnnotations().rect(xmin + xlen * col,
                                    ymin + ylen * row,
@@ -593,29 +604,19 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :attr:`.SliceCanvas.pos` property).
         """
 
-        opts    = self.opts
-        bounds  = self.displayCtx.bounds
-        nslices = len(self._zposes)
-        ncols   = opts.ncols
-        nrows   = opts.nrows
-        xlen    = bounds.getLen(opts.xax)
-        ylen    = bounds.getLen(opts.yax)
-        xmin    = bounds.getLo( opts.xax)
-        ymin    = bounds.getLo( opts.yax)
-        zmin    = bounds.getLo( opts.zax)
-        zlen    = bounds.getLen(opts.zax)
-        zpos    = opts.pos[opts.zax]
-        zpos    = (zpos - zmin) / zlen
-        sliceno = int(np.floor((zpos + opts.zrange.xlo) / opts.sliceSpacing))
+        opts              = self.opts
+        bounds            = self.displayCtx.bounds
+        nrows             = opts.nrows
+        xlen              = bounds.getLen(opts.xax)
+        ylen              = bounds.getLen(opts.yax)
+        xmin              = bounds.getLo( opts.xax)
+        ymin              = bounds.getLo( opts.yax)
+        sliceno, row, col = self.lightboxPosition
 
-        row     = int(np.floor(sliceno / ncols))
-        col     = int(np.floor(sliceno % ncols))
-
-        # don't draw the cursor if it is on a
-        # non-existent or non-displayed slice
-        if sliceno >  nslices: return
-        if row     <  0:       return
-        if row     >= nrows:   return
+        # don't draw the cursor if it
+        # is on a non-existent slice
+        if not (0 <= sliceno < opts.nslices):
+            return
 
         # in GL space, the top row is actually the bottom row
         row = nrows - row - 1
@@ -633,8 +634,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         yverts[0, 0] = xmin + (col)     * xlen
         yverts[1, 0] = xmin + (col + 1) * xlen
 
-        annot = self.getAnnotations()
-
+        annot  = self.getAnnotations()
         kwargs = {
             'colour'     : opts.cursorColour,
             'lineWidth'  : opts.cursorWidth
