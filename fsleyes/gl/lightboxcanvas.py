@@ -95,16 +95,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._zposes = []
         self._xforms = []
 
-        # The final display bounds calculated by
-        # SliceCanvas._updateDisplayBounds is not
-        # necessarily the same as the actual bounds,
-        # as they are  adjusted to preserve  the
-        # image aspect ratio. But the real bounds
-        # are of use in the _zPosChanged method, so
-        # we save them here as an attribute -
-        # see _updateDisplayBounds.
-        self._realBounds = None
-
         # This will point to a RenderTexture if
         # the offscreen render mode is enabled
         self._offscreenRenderTexture = None
@@ -123,17 +113,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts.addListener('showGridLines',  self.name, self.Refresh)
         opts.addListener('highlightSlice', self.name, self.Refresh)
 
-        # Add a listener to the position so when it
-        # changes we can adjust the zrange to ensure
-        # the slice corresponding to the current z
-        # position is visible. SliceCanvas.__init__
-        # has already registered a listener, on pos,
-        # with self.name - so we use a different
-        # name here
-        opts.addListener('pos',
-                         f'{self.name}_zPosChanged',
-                         self._zPosChanged)
-
 
     def destroy(self):
         """Overrides :meth:`.SliceCanvas.destroy`. Must be called when this
@@ -147,7 +126,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts = self.opts
         name = self.name
 
-        opts.removeListener('pos',            f'{name}_zPosChanged')
         opts.removeListener('sliceSpacing',   name)
         opts.removeListener('ncols',          name)
         opts.removeListener('zrange',         name)
@@ -332,6 +310,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         self.opts.setAttribute('sliceSpacing', 'minval',      spacing)
         self.opts.setAttribute('zrange',       'minDistance', spacing)
+        self._slicePropsChanged()
 
 
     def _renderModeChanged(self, *a):
@@ -353,9 +332,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     def _zAxisChanged(self, *a):
-        """Overrides :meth:`.SliceCanvas._zAxisChanged`. Calls that
-        method, and then resets the :attr:`sliceSpacing` and :attr:`zrange`
-        properties to sensible values.
+        """Overrides :meth:`.SliceCanvas._zAxisChanged`. Calls that method, and
+        then re-generates lightbox slices.
         """
         slicecanvas.SliceCanvas._zAxisChanged(self, *a)
         self._slicePropsChanged()
@@ -367,7 +345,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """
 
         self._calculateSlices()
-        self._zPosChanged()
         self._updateDisplayBounds()
 
         if log.getEffectiveLevel() == logging.DEBUG:
@@ -386,43 +363,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def _updateRenderTextures(self):
         """Overrides :meth:`.SliceCanvas._updateRenderTextures`. Does nothing.
         """
-
-
-    def _zPosChanged(self, *a):
-        """Called when the :attr:`.SliceCanvas.pos` ``z`` value changes.
-
-        Makes sure that the corresponding slice is visible.
-        """
-
-        if len(self.overlayList) == 0:
-            return
-
-        # figure out where we are in the canvas world
-        opts             = self.opts
-        zax              = opts.zax
-        bounds           = self.displayCtx.bounds
-        canvasX, canvasY = self.worldToCanvas(opts.pos.xyz)
-
-        # Get the actual canvas bounds
-        xlo, xhi, ylo, yhi = self._realBounds
-
-        # already in bounds
-        if canvasX >= xlo and \
-           canvasX <= xhi and \
-           canvasY >= ylo and \
-           canvasY <= yhi:
-            return
-
-        # figure out what row we're on
-        zmin    = bounds.getLo( zax)
-        zlen    = bounds.getLen(zax)
-        zpos    = opts.pos[zax]
-        sliceno = (zpos - zmin) / zlen - opts.zrange.xlo
-        sliceno = int(np.floor(sliceno / opts.sliceSpacing))
-        row     = int(np.floor(sliceno / opts.ncols))
-
-        # and make sure that row is visible
-        opts.topRow = row
 
 
     def _overlayBoundsChanged(self, *a):
@@ -458,10 +398,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         xmax = xmin + xlen * ncols
         ymax = ymin + ylen * nrows
-
-        # Save the real canvas bounds (before
-        # aspect ratio adjustment)
-        self._realBounds = (xmin, xmax, ymin, ymax)
 
         log.debug('Required lightbox bounds: X: (%s, %s) Y: (%s, %s)',
                   xmin, xmax, ymin, ymax)
