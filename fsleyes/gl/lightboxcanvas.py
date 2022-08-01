@@ -88,12 +88,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                          :attr:`.SliceCanvas.zax` property.
         """
 
-        # These attributes store the Z position
-        # for each slice, and affines encoding
-        # vertical/horizontal offsets, which
-        # position each slice on the canvas.
-        self._zposes = []
-        self._xforms = []
+        # These attributes store the Z bounds,
+        # position for each slice, and affines
+        # encoding vertical/horizontal offsets,
+        # which position each slice on the canvas.
+        self._zbounds = [0, 0, 0]
+        self._zposes  = []
+        self._xforms  = []
 
         # This will point to a RenderTexture if
         # the offscreen render mode is enabled
@@ -299,17 +300,41 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """Overrides :meth:`.SliceCanvas._overlayListChanged`. Sets
         some limits on some of the :class:`.LightBoxCanvasOpts` properties
         as needed.
+
+        Specifically, the values of the ``LightBoxCanvasOpts.zrange`` and
+        ``LightBoxCanvasOpts.sliceSpacing`` properties may be adjusted -  they
+        are specified as proportions of the :attr:`.DisplayContext.bounds`,
+        which means that they may have a different effect when the bounds
+        change.
         """
         slicecanvas.SliceCanvas._overlayListChanged(self)
 
         if len(self.overlayList) == 0:
             return
 
+        opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
         spacing  = min(spacings)
 
-        self.opts.setAttribute('sliceSpacing', 'minval',      spacing)
-        self.opts.setAttribute('zrange',       'minDistance', spacing)
+        # Adjust zrange and slice spacing so
+        # that their effect is preserved if
+        # the display bounds have changed
+        zlo, zhi, sp = self._zbounds
+        preserve     = not ((zlo == 0) and (zhi == 0))
+        bounds       = self.displayCtx.bounds
+        zmin         = bounds.getLo( opts.zax)
+        zlen         = bounds.getLen(opts.zax)
+        zlo          = (zlo - zmin) / zlen
+        zhi          = (zhi - zmin) / zlen
+        sp           = sp / zlen
+
+        with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
+            opts.setAttribute('sliceSpacing', 'minval',      spacing)
+            opts.setAttribute('zrange',       'minDistance', spacing)
+            if preserve:
+                opts.zrange.x     = zlo, zhi
+                opts.sliceSpacing = sp
+
         self._slicePropsChanged()
 
 
@@ -427,8 +452,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zlo     = zmin + opts.zrange.xlo * zlen
         zhi     = zmin + opts.zrange.xhi * zlen
 
-        self._zposes = []
-        self._xforms = []
+        self._zbounds = [zlo, zhi, spacing]
+        self._zposes  = []
+        self._xforms  = []
 
         if len(self.overlayList) == 0 or np.isclose(zlen, 0):
             return
