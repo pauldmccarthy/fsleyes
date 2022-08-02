@@ -7,14 +7,6 @@
 """This module provides the :class:`LightBoxCanvas` class, which is a
 :class:`.SliceCanvas` that displays multiple 2D slices along a single axis
 from a collection of 3D overlays.
-
-Performance of a ``LightBoxCanvas`` instance may be controlled through the
-:attr:`.SliceCanvasOpts.renderMode` property, in the same way as for the
-:class:`.SliceCanvas`. However, the ``LightBoxCanvas`` handles the
-``offscreen`` render mode differently to the ``SliceCanvas. Where the
-``SliceCanvas`` uses a separate :class:`.GLObjectRenderTexture` for every
-overlay in the :class:`.OverlayList`, the ``LightBoxCanvas`` uses a single
-:class:`.RenderTexture` to render all overlays off-screen.
 """
 
 import sys
@@ -41,7 +33,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     multiple slices from a collection of 3D overlays. The slices are laid
     out on the same canvas along rows and columns, with the slice at the
     minimum Z position translated to the top left of the canvas, and the
-    slice with the maximum Z value translated to the bottom right.
+    slice with the maximum Z value translated to the bottom right. A
+    suitable number of rows and columns are automatically calculated.
 
 
     .. note:: The :class:`LightBoxCanvas` class is not intended to be
@@ -60,6 +53,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     settings, and the current scene displayed on a ``LightBoxCanvas``
     instance, can be changed through the properties of the
     ``LightBoxCanvasOpts`` instance, available via the :attr:`opts` attribute.
+
+
+    Performance of a ``LightBoxCanvas`` instance may be controlled through the
+    :attr:`.SliceCanvasOpts.renderMode` property, in the same way as for the
+    :class:`.SliceCanvas`. However, the ``LightBoxCanvas`` handles the
+    ``offscreen`` render mode differently to the ``SliceCanvas. Where the
+    ``SliceCanvas`` uses a separate :class:`.GLObjectRenderTexture` for every
+    overlay in the :class:`.OverlayList`, the ``LightBoxCanvas`` uses a single
+    :class:`.RenderTexture` to render all overlays off-screen.
 
 
     The ``LightBoxCanvas`` class defines the following convenience methods (in
@@ -88,16 +90,16 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                          :attr:`.SliceCanvas.zax` property.
         """
 
-        # These attributes store the Z bounds,
-        # position for each slice, and affines
-        # encoding vertical/horizontal offsets,
-        # which position each slice on the canvas.
-        self._zbounds = [0, 0, 0]
-        self._zposes  = []
-        self._xforms  = []
-
-        self.__nrows = 0
-        self.__ncols = 0
+        # These attributes store the number of
+        # rows/columns, Z bounds, position for
+        # each slice, and affines encoding
+        # vertical/horizontal offsets, which
+        # position each slice on the canvas.
+        self.__zbounds = [0, 0, 0]
+        self.__zposes  = []
+        self.__xforms  = []
+        self.__nrows   = 0
+        self.__ncols   = 0
 
         # This will point to a RenderTexture if
         # the offscreen render mode is enabled
@@ -366,7 +368,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Adjust zrange and slice spacing so
         # that their effect is preserved if
         # the display bounds have changed
-        zlo, zhi, sp = self._zbounds
+        zlo, zhi, sp = self.__zbounds
         preserve     = not ((zlo == 0) and (zhi == 0))
         bounds       = self.displayCtx.bounds
         zmin         = bounds.getLo( opts.zax)
@@ -375,8 +377,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zhi          = (zhi - zmin) / zlen
         sp           = sp / zlen
 
-        with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
+        with props.skip(opts, ('sliceSpacing', 'zrange', 'zoom'), self.name):
             opts.setAttribute('sliceSpacing', 'minval',      spacing)
+            opts.setAttribute('zoom',         'minval',      spacing)
             opts.setAttribute('zrange',       'minDistance', spacing)
             if preserve:
                 opts.zrange.x     = zlo, zhi
@@ -476,9 +479,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         self.__nrows  = 0
         self.__ncols  = 0
-        self._zbounds = [0, 0, 0]
-        self._zposes  = []
-        self._xforms  = []
+        self.__zbounds = [0, 0, 0]
+        self.__zposes  = []
+        self.__xforms  = []
 
         w, h         = self.GetSize()
         bounds       = self.displayCtx.bounds
@@ -502,14 +505,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # of all slices to be displayed on the canvas, and
         # calculate the X/Y transformation for each slice
         # to position it on the canvas
-        self._zposes  = np.linspace(zlo, zlo + (nslices - 1) * spacing,
+        self.__zposes  = np.linspace(zlo, zlo + (nslices - 1) * spacing,
                                     nslices)
-        self._xforms  = []
-        self._zbounds = [zlo, zhi, spacing]
+        self.__xforms  = []
+        self.__zbounds = [zlo, zhi, spacing]
         self.__nrows  = nrows
         self.__ncols  = ncols
 
-        for sliceno in range(len(self._zposes)):
+        for sliceno in range(len(self.__zposes)):
 
             row                = int(np.floor(sliceno / ncols))
             col                = int(np.floor(sliceno % ncols))
@@ -525,13 +528,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if len(flipaxes) > 0:
                 xform = glroutines.flip(xform, flipaxes, bounds.lo, bounds.hi)
 
-            self._xforms.append(xform)
+            self.__xforms.append(xform)
 
 
     def _drawGridLines(self):
         """Draws grid lines between all the displayed slices."""
 
-        if len(self._zposes) == 0:
+        if len(self.__zposes) == 0:
             return
 
         opts  = self.opts
@@ -577,7 +580,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         location.
         """
 
-        if len(self._zposes) == 0:
+        if len(self.__zposes) == 0:
             return
 
         opts              = self.opts
@@ -701,8 +704,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             renderTarget.setRenderViewport(opts.xax, opts.yax, lo, hi)
             glroutines.clear((0, 0, 0, 0))
 
-        zposes = self._zposes
-        xforms = self._xforms
+        zposes = self.__zposes
+        xforms = self.__xforms
 
         # Draw all the slices for all the overlays.
         for overlay, globj in zip(overlays, globjs):

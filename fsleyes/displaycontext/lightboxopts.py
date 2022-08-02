@@ -32,7 +32,6 @@ class LightBoxOpts(sceneopts.SceneOpts):
 
     sliceSpacing   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
     zax            = copy.copy(canvasopts.LightBoxCanvasOpts.zax)
-    ncols          = copy.copy(canvasopts.LightBoxCanvasOpts.ncols)
     zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
@@ -53,11 +52,13 @@ class LightBoxOpts(sceneopts.SceneOpts):
         :class:`OrthoPanel`.
         """
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
-        self.zax = 2
         self.setAttribute('zax',  'default', 2)
-        self.setAttribute('zoom', 'minval',  10)
-        self.setAttribute('zoom', 'maxval',  1000)
+        self.setAttribute('zoom', 'default', 0)
+        self.setAttribute('zoom', 'minval',  0)
+        self.setAttribute('zoom', 'maxval',  1)
         self.setAttribute('zoom', 'clamped', True)
+        self.zax  = 2
+        self.zoom = 0
 
 
     def _onPerformanceChange(self, *a):

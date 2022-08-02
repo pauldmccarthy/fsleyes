@@ -15,6 +15,7 @@ import wx
 
 import numpy as np
 
+import fsleyes_props                        as props
 import fsleyes_widgets.utils.layout         as fsllayout
 
 import fsleyes.actions                      as actions
@@ -149,10 +150,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # update the canvas display
         self.__scrollbar.Bind(wx.EVT_SCROLL, self.__onScroll)
 
-        sceneOpts.zoom = 750
-
         self.__onLightBoxChange()
-        self.__onZoom()
 
         self.centrePanelLayout()
         self.initProfile(lightboxviewprofile.LightBoxViewProfile)
@@ -201,6 +199,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         return self.__lbCanvas
 
 
+    @property
+    def canvas(self):
+        """Returns a reference to the :class:`.LightBoxCanvas` instance. """
+        return self.__lbCanvas
+
+
     def centrePanelLayout(self):
         """Overrides :meth:`.CanvasPanel.centrePanelLayout`. Adds the
         scrollbar to the centre panel.
@@ -236,13 +240,47 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
     def __onZoom(self, *a):
         """Called when the :attr:`.SceneOpts.zoom` property changes. Updates
-        the number of slice columns shown.
+        the :attr:`.LightBoxCanvasOpts.zrange`.
         """
-        opts       = self.sceneOpts
-        minval     = opts.getAttribute('zoom', 'minval')
-        maxval     = opts.getAttribute('zoom', 'maxval')
-        normZoom   = 1.0 - (opts.zoom - minval) / float(maxval)
-        opts.ncols = int(1 + np.round(normZoom * 29))
+
+        if len(self.overlayList) == 0:
+            return
+
+        canvas         = self.canvas
+        opts           = self.sceneOpts
+        copts          = canvas.opts
+        bounds         = self.displayCtx.bounds
+        minzoom        = opts.getAttribute('zoom', 'minval')
+        maxzoom        = opts.getAttribute('zoom', 'maxval')
+
+        # normalize zoom to range [sliceSpacing, 1], where:
+        #
+        #  - sliceSpacing == zoomed in, one slice displayed
+        #  - 1            == zoomed out, all slices displayed
+        newzlen = 1 - (opts.zoom - minzoom) / maxzoom
+        newzlen = np.clip(newzlen, copts.sliceSpacing, 1)
+
+        # calculate current z position,
+        # normalised to range 0-1
+        zlo    = bounds.getLo( copts.zax)
+        zlen   = bounds.getLen(copts.zax)
+        zpos   = (copts.pos[copts.zax] - zlo) / zlen
+
+        # calculate new z range, centred
+        # around current z position
+        newzlo = zpos   - newzlen / 2
+        newzhi = newzlo + newzlen
+
+        # But adjust the range to [0, 1]
+        if newzlo < 0:
+            newzhi -= newzlo
+            newzlo  = 0
+        elif newzhi > 1:
+            newzlo -= (newzhi - 1)
+            newzhi  = 1
+
+        with props.skip(opts, ('zrange'), self.name):
+            opts.zrange = newzlo, newzhi
 
 
     def __onLightBoxChange(self, *a):
