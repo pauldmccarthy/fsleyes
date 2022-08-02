@@ -116,7 +116,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bindProps('ncols',        lbopts)
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
 
@@ -137,8 +136,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         # When any lightbox properties change,
         # make sure the scrollbar is updated
-        sceneOpts.addListener(
-            'ncols',        self.name, self.__ncolsChanged)
         sceneOpts.addListener(
             'sliceSpacing', self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
@@ -246,14 +243,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         maxval     = opts.getAttribute('zoom', 'maxval')
         normZoom   = 1.0 - (opts.zoom - minval) / float(maxval)
         opts.ncols = int(1 + np.round(normZoom * 29))
-
-
-    def __ncolsChanged(self, *a):
-        """Called when the :attr:`.LightBoxOpts.ncols` property changes.
-        Calculates the number of rows to display, and updates the
-        scrollbar.
-        """
-        self.__onLightBoxChange()
 
 
     def __onLightBoxChange(self, *a):

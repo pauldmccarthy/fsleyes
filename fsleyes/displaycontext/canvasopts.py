@@ -176,12 +176,6 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
-    ncols = props.Int(clamped=True, minval=1, maxval=100, default=5)
-    """This property controls the number of slices to be displayed on a
-    single row. The number of rows is automatically calculated.
-    """
-
-
     zrange = props.Bounds(ndims=1, minval=0, maxval=1)
     """This property controls the range of the slices to be displayed.
     The low/high limits are specified as percentages (0-1) of the Z axis
@@ -223,17 +217,10 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         is automatically calculated from the current :attr:`zrange` and
         :attr:`sliceSpacing` settings.
         """
-        return int(np.ceil(self.zrange.xlen / self.sliceSpacing))
+        nslices = self.zrange.xlen / self.sliceSpacing
 
-
-    @property
-    def nrows(self):
-        """Returns the number of rows currently being drawn. This is
-        automatically calculated from the current :attr:`ncols` and
-        :attr:`zrange` properties - it will be at most
-        the value of :meth:`maxrows`.
-        """
-        return int(np.ceil(self.nslices / self.ncols))
+        # round to avoid floating point imprecision
+        return int(np.ceil(np.round(nslices, 5)))
 
 
 class Scene3DCanvasOpts(props.HasProperties):

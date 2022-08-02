@@ -57,6 +57,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
         self.setAttribute('zax',  'default', 2)
         self.setAttribute('zoom', 'minval',  10)
         self.setAttribute('zoom', 'maxval',  1000)
+        self.setAttribute('zoom', 'clamped', True)
 
 
     def _onPerformanceChange(self, *a):

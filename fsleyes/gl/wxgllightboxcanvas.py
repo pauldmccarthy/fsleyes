@@ -51,6 +51,7 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
         # When the canvas is resized, we have to update
         # the display bounds to preserve the aspect ratio
         def onResize(ev):
+            self._calculateSlices()
             self._updateDisplayBounds()
             ev.Skip()
         self.Bind(wx.EVT_SIZE, onResize)
