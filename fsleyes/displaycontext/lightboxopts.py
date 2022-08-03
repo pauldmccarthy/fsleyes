@@ -43,24 +43,6 @@ class LightBoxOpts(sceneopts.SceneOpts):
                                alternates=[[1, '1'], []])
 
 
-    def __init__(self, *args, **kwargs):
-        """Create a ``LightBoxOpts`` instance. All arguments are passed
-        through to the :class:`.SceneOpts` constructor.
-
-        The :attr:`.SceneOpts.zoom` attribute is modified, as
-        :class:`LightBoxPanel` uses it slightly differently to the
-        :class:`OrthoPanel`.
-        """
-        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
-        self.setAttribute('zax',  'default', 2)
-        self.setAttribute('zoom', 'default', 0)
-        self.setAttribute('zoom', 'minval',  0)
-        self.setAttribute('zoom', 'maxval',  1)
-        self.setAttribute('zoom', 'clamped', True)
-        self.zax  = 2
-        self.zoom = 0
-
-
     def _onPerformanceChange(self, *a):
         """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
         value of the :attr:`renderMode` and :attr:`highDpi` properties

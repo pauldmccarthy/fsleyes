@@ -113,8 +113,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
-        opts.addListener('sliceSpacing',   self.name, self._slicePropsChanged)
-        opts.addListener('zrange',         self.name, self._slicePropsChanged)
+        opts.addListener('sliceSpacing',   self.name, self._slicePropsChanged,
+                         immediate=True)
+        opts.addListener('zrange',         self.name, self._slicePropsChanged,
+                         immediate=True)
         opts.addListener('showGridLines',  self.name, self.Refresh)
         opts.addListener('highlightSlice', self.name, self.Refresh)
 
@@ -143,7 +145,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     @property
-    def lightboxPosition(self):
+    def gridPosition(self):
         """Returns the slice, row, and column index of the current display
         location (from the :attr:`.SliceCanvas.pos` attribute).
         """
@@ -153,6 +155,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ncols   = self.ncols
         zmin    = bounds.getLo( opts.zax)
         zlen    = bounds.getLen(opts.zax)
+
+        if np.any(np.isclose(zlen, ncols)):
+            return 0, 0, 0
+
         zpos    = opts.pos[opts.zax]
         sliceno = (zpos - zmin) / zlen - opts.zrange.xlo
         sliceno = int(np.floor(sliceno / opts.sliceSpacing))
@@ -172,6 +178,47 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def ncols(self):
         """Return the number of columns currently being displayed. """
         return self.__ncols
+
+
+    @property
+    def nslices(self):
+        """Return the number of slices currently being displayed, equal
+        to nrows * ncols. Note the distinction between this and
+        :meth:`.LightBoxCanvasOpts.nslices`.
+        """
+        return self.nrows * self.ncols
+
+
+    @property
+    def maxrows(self):
+        """Returns the total number of rows that would cover the full Z axis
+        range. Used by the :class:`.LightBoxPanel` to implement scrolling.
+        """
+        if self.ncols == 0 or self.nrows == 0:
+            return 0
+        return int(np.ceil(self.opts.maxslices / self.ncols))
+
+
+    @property
+    def toprow(self):
+        """Return the currently displayed top row, as an index relative to
+        :meth:`maxrows`. Used by the :class:`.LightBoxPanel` to implement
+        scrolling.
+        """
+        if self.ncols == 0 or self.nrows == 0:
+            return 0
+        return int(np.floor(self.opts.startslice / self.ncols))
+
+
+    def resetDisplay(self):
+        """Overrides :meth:`.SliceCanvas.resetDisplay`.
+
+        Resets the :attr:`zoom` to 100%, and sets the canvas display
+        bounds to the overaly bounding box (from the
+        :attr:`.DisplayContext.bounds`)
+        """
+        self.opts.zoom = 0
+        self._regenGrid()
 
 
     def worldToCanvas(self, pos):
@@ -221,7 +268,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         bounds  = self.displayCtx.bounds
         ncols   = self.ncols
         nrows   = self.nrows
-        nslices = opts.nslices
 
         screenPos = slicecanvas.SliceCanvas.canvasToWorld(
             self, xpos, ypos, invertX=False, invertY=False)
@@ -249,9 +295,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if screenx <  xmin or \
            screenx >  xmax or \
            screeny <  ymin or \
-           screeny >  ymax or \
-           sliceno <  0    or \
-           sliceno >= nslices:
+           screeny >  ymax:
             return None
 
         xpos = screenx  -          col      * xlen
@@ -320,9 +364,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         w, h    = self.GetSize()
         bounds  = self.displayCtx.bounds
         opts    = self.opts
-        nslices = opts.nslices
         xlen    = bounds.getLen(opts.xax)
         ylen    = bounds.getLen(opts.yax)
+
+        # round to avoid floating point imprecision
+        nslices = opts.zrange.xlen / opts.sliceSpacing
+        nslices = int(np.ceil(np.round(nslices, 5)))
 
         if np.any(np.isclose([w, h, nslices, xlen, ylen], 0)):
             return 0, 0
@@ -334,12 +381,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         nrows = np.ceil(nslices / ncols) .astype(int)
 
         # width/height of one slice
-        colw  = w / ncols
-        colh  = colw / (xlen / ylen)
+        slcw = w / ncols
+        slch = slcw / (xlen / ylen)
 
-        # find smallest amount of wasted area
-        empty = colw * colh * (nrows * ncols - nslices)
-        diff  = np.abs(w * h - colw * colh * nrows * ncols - empty)
+        # choose nrows/ncols with smallest
+        # amount of wasted canvas area
+        diff  = np.abs(w * h - slcw * slch * nrows * ncols)
         idx   = np.argmin(diff)
 
         return nrows[idx], ncols[idx]
@@ -377,15 +424,16 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zhi          = (zhi - zmin) / zlen
         sp           = sp / zlen
 
-        with props.skip(opts, ('sliceSpacing', 'zrange', 'zoom'), self.name):
-            opts.setAttribute('sliceSpacing', 'minval',      spacing)
-            opts.setAttribute('zoom',         'minval',      spacing)
-            opts.setAttribute('zrange',       'minDistance', spacing)
+        with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
+            opts.setAttribute('sliceSpacing', 'minval', spacing)
             if preserve:
                 opts.zrange.x     = zlo, zhi
                 opts.sliceSpacing = sp
+            else:
+                opts.zrange.x     = 0, 1
+                opts.sliceSpacing = spacing
 
-        self._slicePropsChanged()
+        self._regenGrid()
 
 
     def _renderModeChanged(self, *a):
@@ -411,16 +459,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         then re-generates lightbox slices.
         """
         slicecanvas.SliceCanvas._zAxisChanged(self, *a)
-        self._calculateSlices()
-        self._updateDisplayBounds()
+        self._regenGrid()
 
 
     def _slicePropsChanged(self, *a):
         """Called when any of the slice properties change. Regenerates slice
         locations and display bounds, and refreshes the canvas.
         """
-        self._calculateSlices()
-        self._updateDisplayBounds()
+        self._regenGrid()
 
 
     def _updateRenderTextures(self):
@@ -434,8 +480,80 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         Called when the :attr:`.DisplayContext.bounds` change. Re-generates slice
         locations.
         """
+        self._regenGrid()
+
+
+    def _regenGrid(self):
         self._calculateSlices()
         self._updateDisplayBounds()
+        self.Refresh()
+
+
+    def _calculateSlices(self):
+        """Calculates Z positions and affine transformations for each slice.
+        The transformations are used to position each slice at a row/column
+        on the canvas.
+        """
+
+        self.__nrows   = 0
+        self.__ncols   = 0
+        self.__zbounds = [0, 0, 0]
+        self.__zposes  = []
+        self.__xforms  = []
+
+        w, h         = self.GetSize()
+        bounds       = self.displayCtx.bounds
+        opts         = self.opts
+        nrows, ncols = self.calcGridSize()
+        nslices      = nrows * ncols
+        xlen         = bounds.getLen(opts.xax)
+        ylen         = bounds.getLen(opts.yax)
+        zlen         = bounds.getLen(opts.zax)
+        zmin         = bounds.getLo( opts.zax)
+
+        if np.any(np.isclose([w, h, nslices,
+                              xlen, ylen, zlen,
+                              len(self.overlayList)], 0)):
+            return
+
+        # calculate the locations, in display coordinates,
+        # of all slices to be displayed on the canvas, and
+        # calculate the X/Y transformation for each slice
+        # to position it on the canvas
+        start = opts.startslice
+        end   = start + nslices
+        self.__zposes = zmin + opts.slices[start:end] * zlen
+        self.__xforms = []
+        self.__nrows  = nrows
+        self.__ncols  = ncols
+
+        # record start/end slice locations and
+        # spacing in absolute/display coordinates
+        # rather than relative proportions, as
+        # the _overlayListChanged method may need
+        # to restore them.
+        spacing        = zlen * opts.sliceSpacing
+        zlo            = zmin + opts.zrange.xlo * zlen
+        zhi            = zmin + opts.zrange.xhi * zlen
+        self.__zbounds = [zlo, zhi, spacing]
+
+        for sliceno in range(len(self.__zposes)):
+
+            row                = int(np.floor(sliceno / ncols))
+            col                = int(np.floor(sliceno % ncols))
+            xform              = np.eye(4, dtype=np.float32)
+            xform[opts.xax, 3] = xlen * col
+            xform[opts.yax, 3] = ylen * (nrows - row - 1)
+            xform[opts.zax, 3] = 0
+
+            # apply opts.invertX/Y if necessary
+            flipaxes = []
+            if opts.invertX: flipaxes.append(opts.xax)
+            if opts.invertY: flipaxes.append(opts.yax)
+            if len(flipaxes) > 0:
+                xform = glroutines.flip(xform, flipaxes, bounds.lo, bounds.hi)
+
+            self.__xforms.append(xform)
 
 
     def _updateDisplayBounds(self, *args, **kwargs):
@@ -469,66 +587,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             width, height, xmin, xmax, ymin, ymax)
 
         opts.displayBounds[:] = (xmin, xmax, ymin, ymax)
-
-
-    def _calculateSlices(self):
-        """Calculates Z positions and affine transformations for each slice.
-        The transformations are used to position each slice at a row/column
-        on the canvas.
-        """
-
-        self.__nrows  = 0
-        self.__ncols  = 0
-        self.__zbounds = [0, 0, 0]
-        self.__zposes  = []
-        self.__xforms  = []
-
-        w, h         = self.GetSize()
-        bounds       = self.displayCtx.bounds
-        opts         = self.opts
-        nslices      = opts.nslices
-        nrows, ncols = self.calcGridSize()
-        xlen         = bounds.getLen(opts.xax)
-        ylen         = bounds.getLen(opts.yax)
-        zlen         = bounds.getLen(opts.zax)
-        zmin         = bounds.getLo( opts.zax)
-        spacing      = zlen * opts.sliceSpacing
-        zlo          = zmin + opts.zrange.xlo * zlen
-        zhi          = zmin + opts.zrange.xhi * zlen
-
-        if np.any(np.isclose([w, h, nslices,
-                              xlen, ylen, zlen,
-                              len(self.overlayList)], 0)):
-            return
-
-        # calculate the locations, in display coordinates,
-        # of all slices to be displayed on the canvas, and
-        # calculate the X/Y transformation for each slice
-        # to position it on the canvas
-        self.__zposes  = np.linspace(zlo, zlo + (nslices - 1) * spacing,
-                                    nslices)
-        self.__xforms  = []
-        self.__zbounds = [zlo, zhi, spacing]
-        self.__nrows  = nrows
-        self.__ncols  = ncols
-
-        for sliceno in range(len(self.__zposes)):
-
-            row                = int(np.floor(sliceno / ncols))
-            col                = int(np.floor(sliceno % ncols))
-            xform              = np.eye(4, dtype=np.float32)
-            xform[opts.xax, 3] = xlen * col
-            xform[opts.yax, 3] = ylen * (nrows - row - 1)
-            xform[opts.zax, 3] = 0
-
-            # apply opts.invertX/Y if necessary
-            flipaxes = []
-            if opts.invertX: flipaxes.append(opts.xax)
-            if opts.invertY: flipaxes.append(opts.yax)
-            if len(flipaxes) > 0:
-                xform = glroutines.flip(xform, flipaxes, bounds.lo, bounds.hi)
-
-            self.__xforms.append(xform)
 
 
     def _drawGridLines(self):
@@ -589,11 +647,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ylen              = bounds.getLen(opts.yax)
         xmin              = bounds.getLo( opts.xax)
         ymin              = bounds.getLo( opts.yax)
-        sliceno, row, col = self.lightboxPosition
+        sliceno, row, col = self.gridPosition
 
         # don't draw the cursor if it
         # is on a non-existent slice
-        if not (0 <= sliceno < opts.nslices):
+        if not (0 <= sliceno < self.nslices):
             return
 
         # in GL space, the top row is actually the bottom row
@@ -620,11 +678,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ylen              = bounds.getLen(opts.yax)
         xmin              = bounds.getLo( opts.xax)
         ymin              = bounds.getLo( opts.yax)
-        sliceno, row, col = self.lightboxPosition
+        sliceno, row, col = self.gridPosition
 
         # don't draw the cursor if it
         # is on a non-existent slice
-        if not (0 <= sliceno < opts.nslices):
+        if not (0 <= sliceno < self.nslices):
             return
 
         # in GL space, the top row is actually the bottom row

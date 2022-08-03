@@ -148,8 +148,8 @@ class LightBoxViewProfile(profiles.Profile):
         property.
         """
 
-        if   wheel > 0: wheel =  50
-        elif wheel < 0: wheel = -50
+        if   wheel > 0: wheel =  0.05
+        elif wheel < 0: wheel = -0.05
         else:           return False
 
         opts = self.viewPanel.sceneOpts

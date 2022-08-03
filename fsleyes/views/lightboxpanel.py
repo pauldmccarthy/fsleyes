@@ -119,6 +119,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # LBOpts instance.
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
+        sceneOpts.bindProps('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.contentPanel.SetSizer(self.__canvasSizer)
@@ -143,8 +144,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             'zrange',       self.name, self.__onLightBoxChange)
         sceneOpts.addListener(
             'zax',          self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zoom',         self.name, self.__onZoom)
 
         # When the scrollbar is moved,
         # update the canvas display
@@ -238,72 +237,41 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.invertX = flip
 
 
-    def __onZoom(self, *a):
-        """Called when the :attr:`.SceneOpts.zoom` property changes. Updates
-        the :attr:`.LightBoxCanvasOpts.zrange`.
-        """
-
-        if len(self.overlayList) == 0:
-            return
-
-        canvas         = self.canvas
-        opts           = self.sceneOpts
-        copts          = canvas.opts
-        bounds         = self.displayCtx.bounds
-        minzoom        = opts.getAttribute('zoom', 'minval')
-        maxzoom        = opts.getAttribute('zoom', 'maxval')
-
-        # normalize zoom to range [sliceSpacing, 1], where:
-        #
-        #  - sliceSpacing == zoomed in, one slice displayed
-        #  - 1            == zoomed out, all slices displayed
-        newzlen = 1 - (opts.zoom - minzoom) / maxzoom
-        newzlen = np.clip(newzlen, copts.sliceSpacing, 1)
-
-        # calculate current z position,
-        # normalised to range 0-1
-        zlo    = bounds.getLo( copts.zax)
-        zlen   = bounds.getLen(copts.zax)
-        zpos   = (copts.pos[copts.zax] - zlo) / zlen
-
-        # calculate new z range, centred
-        # around current z position
-        newzlo = zpos   - newzlen / 2
-        newzhi = newzlo + newzlen
-
-        # But adjust the range to [0, 1]
-        if newzlo < 0:
-            newzhi -= newzlo
-            newzlo  = 0
-        elif newzhi > 1:
-            newzlo -= (newzhi - 1)
-            newzhi  = 1
-
-        with props.skip(opts, ('zrange'), self.name):
-            opts.zrange = newzlo, newzhi
-
-
     def __onLightBoxChange(self, *a):
         """Called when any :class:`.LightBoxOpts` property changes.
 
-        Updates the scrollbar to reflect the change.
+        Updates the scrollbar to reflect the current number of slices being
+        displayed.
         """
-        # TODO
-        return
-        canvas = self.__lbCanvas
-        opts   = canvas.opts
-        self.__scrollbar.SetScrollbar(opts.topRow,
-                                      opts.nrows,
-                                      canvas.maxrows,
-                                      opts.nrows,
-                                      True)
+        canvas  = self.canvas
+        copts   = canvas.opts
+        start   = copts.startslice
+        end     = copts.maxslices
+        nslices = canvas.nslices
+        self.__scrollbar.SetScrollbar(start, nslices, end, nslices, True)
 
 
     def __onScroll(self, *a):
         """Called when the scrollbar is moved.
 
-        Updates the top row displayed on the :class:`.LightBoxCanvas`.
+        Updates the Z range displayed on the :class:`.LightBoxCanvas`.
         """
-        # TODO
-        return
-        self.__lbCanvas.opts.topRow = self.__scrollbar.GetThumbPosition()
+        canvas   = self.canvas
+        opts     = self.sceneOpts
+        copts    = canvas.opts
+        sliceno  = self.__scrollbar.GetThumbPosition()
+        zpos     = copts.slices[sliceno]
+        zlen     = copts.zrange.xlen
+
+        # Expand the z range if the it does not
+        # take up the full grid size (i.e. the
+        # last row contains fewer slices than
+        # can be displayed),
+        nslices  = copts.nslices
+        gridsize = canvas.nrows * canvas.ncols
+        if nslices < gridsize:
+            diff = gridsize - nslices
+            zlen = zlen + diff * copts.sliceSpacing
+
+        with props.skip(opts, 'zrange', self.name):
+            copts.zrange = zpos, zpos + zlen
