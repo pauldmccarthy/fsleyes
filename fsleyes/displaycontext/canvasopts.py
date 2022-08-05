@@ -175,7 +175,7 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     sliceSpacing = props.Real(clamped=True,
                               minval=0.001,
-                              maxval=0.3,
+                              maxval=0.25,
                               default=0.01)
     """This property controls the spacing between slices. It is defined
     as a percentage (0-1) of the Z axis length.
@@ -289,17 +289,15 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         on :attr:`zoom` and :attr:`zrange`.
         """
         spacing = self.sliceSpacing
-        self.setatt('zoom',   'minval',      spacing)
         self.setatt('zrange', 'minDistance', spacing)
 
         if not self.lockZrange:
             return
 
-        spacing = self.sliceSpacing
-        minsp   = self.getatt('spacing', 'minval')
-        maxsp   = self.getatt('spacing', 'maxval')
+        minsp   = self.getatt('sliceSpacing', 'minval')
+        maxsp   = self.getatt('sliceSpacing', 'maxval')
 
-        with props.skip():
+        with props.skip(self, 'zoom', self.name):
             self.zoom = (spacing - minsp) / (maxsp - minsp)
 
 

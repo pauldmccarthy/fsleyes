@@ -33,6 +33,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     sliceSpacing   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
     zax            = copy.copy(canvasopts.LightBoxCanvasOpts.zax)
     zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
+    lockZrange     = copy.copy(canvasopts.LightBoxCanvasOpts.lockZrange)
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
 

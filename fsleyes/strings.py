@@ -1038,6 +1038,7 @@ properties = TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.zrange'         : 'Z range',
+    'LightBoxOpts.lockZrange'     : 'Lock Z range',
 
     'OrthoOpts.showXCanvas'  : 'Show X canvas',
     'OrthoOpts.showYCanvas'  : 'Show Y canvas',

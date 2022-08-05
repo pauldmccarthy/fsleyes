@@ -13,16 +13,12 @@ import logging
 
 import wx
 
-import numpy as np
-
 import fsleyes_props                        as props
-import fsleyes_widgets.utils.layout         as fsllayout
 
-import fsleyes.actions                      as actions
 import fsleyes.gl.wxgllightboxcanvas        as lightboxcanvas
 import fsleyes.profiles.lightboxviewprofile as lightboxviewprofile
 import fsleyes.displaycontext.lightboxopts  as lightboxopts
-from . import                                  canvaspanel
+import fsleyes.views.canvaspanel            as canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -119,6 +115,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # LBOpts instance.
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
+        sceneOpts.bindProps('lockZrange',   lbopts)
         sceneOpts.bindProps('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -248,6 +245,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         start   = copts.startslice
         end     = copts.maxslices
         nslices = canvas.nslices
+        if canvas.nslices == 0:
+            start   = 0
+            end     = 1
+            nslices = 1
         self.__scrollbar.SetScrollbar(start, nslices, end, nslices, True)
 
 

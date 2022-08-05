@@ -9,7 +9,6 @@
 from a collection of 3D overlays.
 """
 
-import sys
 import logging
 
 import numpy     as np
@@ -17,7 +16,6 @@ import OpenGL.GL as gl
 
 import fsleyes_props                     as props
 import fsl.data.image                    as fslimage
-import fsl.transform.affine              as affine
 
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
@@ -113,12 +111,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
-        opts.addListener('sliceSpacing',   self.name, self._slicePropsChanged,
-                         immediate=True)
-        opts.addListener('zrange',         self.name, self._slicePropsChanged,
-                         immediate=True)
-        opts.addListener('showGridLines',  self.name, self.Refresh)
-        opts.addListener('highlightSlice', self.name, self.Refresh)
+        opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
+        opts.ilisten('zrange',         self.name, self._slicePropsChanged)
+        opts. listen('showGridLines',  self.name, self.Refresh)
+        opts. listen('highlightSlice', self.name, self.Refresh)
 
 
     def destroy(self):
@@ -425,7 +421,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         sp           = sp / zlen
 
         with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
-            opts.setAttribute('sliceSpacing', 'minval', spacing)
+            opts.setatt('sliceSpacing', 'minval', spacing)
             if preserve:
                 opts.zrange.x     = zlo, zhi
                 opts.sliceSpacing = sp

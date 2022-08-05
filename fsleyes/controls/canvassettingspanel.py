@@ -187,6 +187,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
              props.Widget('zoom', showLimits=False, spin=False)),
             ('sliceSpacing',   props.Widget('sliceSpacing', showLimits=False)),
             ('zrange',         props.Widget('zrange',       showLimits=False)),
+            ('lockZrange',     props.Widget('lockZrange')),
             ('highlightSlice', props.Widget('highlightSlice')),
             ('showGridLines',  props.Widget('showGridLines'))))
 

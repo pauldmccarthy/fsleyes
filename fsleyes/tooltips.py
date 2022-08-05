@@ -519,19 +519,22 @@ properties = TypeDict({
     'Scene3DToolBar.showCursorAndLegend' :
     'Show/hide the location cursor and anatomical legend',
 
-    'LightBoxOpts.zoom'           : 'Zoom level - this controls how many '
-                                    'slices to display.',
-    'LightBoxOpts.sliceSpacing'   : 'The spacing between adjacent slices, '
-                                    'specified as a percentage.',
-    'LightBoxOpts.zrange'         : 'The start/end points of the displayed '
-                                    'range of slices, specified as '
-                                    'percentages.',
-    'LightBoxOpts.zax'            : 'Slices along this axis will be '
-                                    'displayed.',
-    'LightBoxOpts.showGridLines'  : 'If checked, lines will be shown between '
-                                    'each slice.',
-    'LightBoxOpts.highlightSlice' : 'If checked, a box will be drawn around '
-                                    'the currently selected slice.',
+    'LightBoxOpts.zoom' :
+    'Zoom level - this controls how many slices to display.',
+    'LightBoxOpts.sliceSpacing' :
+    'The spacing between adjacent slices, specified as a percentage.',
+    'LightBoxOpts.zrange' :
+    'The start/end points of the displayed range of slices, specified as '
+    'percentages.',
+    'LightBoxOpts.lockZrange' :
+    'Keep the Z range fixed, so that the full range is shown on the canvas. '
+    'Zooming in and out will change the slice spacing instead.',
+    'LightBoxOpts.zax' :
+    'Slices along this axis will be displayed.',
+    'LightBoxOpts.showGridLines' :
+    'If checked, lines will be shown between each slice.',
+    'LightBoxOpts.highlightSlice' :
+    'If checked, a box will be drawn around the currently selected slice.',
 
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '
