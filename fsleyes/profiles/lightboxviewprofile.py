@@ -109,12 +109,10 @@ class LightBoxViewProfile(profiles.Profile):
         elif wheel < 0: wheel =  1
         else:           return False
 
-        opts = self.__canvas.opts
-
         # See comment in OrthoViewProfile._zoomModeMouseWheel
         # about timeout
         def update():
-            opts.topRow += wheel
+            self.viewPanel.scrollpos += wheel
 
         idle.idle(update, timeout=0.1)
 

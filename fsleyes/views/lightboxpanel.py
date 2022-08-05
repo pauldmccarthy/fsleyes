@@ -256,12 +256,33 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         Updates the Z range displayed on the :class:`.LightBoxCanvas`.
         """
-        canvas   = self.canvas
-        opts     = self.sceneOpts
-        copts    = canvas.opts
-        sliceno  = self.__scrollbar.GetThumbPosition()
-        zpos     = copts.slices[sliceno]
-        zlen     = copts.zrange.xlen
+        self.scrollpos = self.__scrollbar.GetThumbPosition()
+
+
+    @property
+    def scrollpos(self):
+        """Returns the current scroll position - the index of the first
+        displayed slice on the canvas.
+        """
+        return self.__scrollbar.GetThumbPosition()
+
+
+    @scrollpos.setter
+    def scrollpos(self, sliceno):
+        """Set the current scroll position - the index of the first
+        displayed slice on the canvas. Called when the scroll bar is
+        moved, and from the :class:`.LightBoxViewProfile`.
+        """
+
+        canvas = self.canvas
+        opts   = self.sceneOpts
+        copts  = canvas.opts
+        zlen   = copts.zrange.xlen
+
+        if sliceno < 0 or sliceno >= copts.maxslices:
+            return
+
+        self.__scrollbar.SetThumbPosition(sliceno)
 
         # Expand the z range if the it does not
         # take up the full grid size (i.e. the
@@ -269,6 +290,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # can be displayed),
         nslices  = copts.nslices
         gridsize = canvas.nrows * canvas.ncols
+        zpos     = copts.slices[sliceno]
+
         if nslices < gridsize:
             diff = gridsize - nslices
             zlen = zlen + diff * copts.sliceSpacing
