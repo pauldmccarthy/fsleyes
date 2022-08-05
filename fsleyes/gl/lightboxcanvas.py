@@ -380,10 +380,19 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         slcw = w / ncols
         slch = slcw / (xlen / ylen)
 
-        # choose nrows/ncols with smallest
-        # amount of wasted canvas area
-        diff  = np.abs(w * h - slcw * slch * nrows * ncols)
-        idx   = np.argmin(diff)
+        # choose nrows/ncols which takes
+        # up full horizontal space (if possible)
+        mask = (slch * nrows) <= h
+        if sum(mask) > 0:
+            nrows = nrows[mask]
+            ncols = ncols[mask]
+            slcw  = slcw[ mask]
+            slch  = slch[ mask]
+
+        # and which has smallest amount
+        # of wasted canvas area
+        waste = np.abs(w * h - slcw * slch * nrows * ncols)
+        idx   = np.argmin(waste)
 
         return nrows[idx], ncols[idx]
 
