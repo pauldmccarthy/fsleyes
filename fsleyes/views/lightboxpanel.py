@@ -97,7 +97,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts = self.__lbCanvas.opts
 
         lbopts.bindProps('pos', displayCtx, 'location')
-        lbopts.bindProps('zax',             sceneOpts)
         lbopts.bindProps('bgColour',        sceneOpts)
         lbopts.bindProps('cursorColour',    sceneOpts)
         lbopts.bindProps('showCursor',      sceneOpts)
@@ -113,6 +112,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
+        sceneOpts.bindProps('zax',          lbopts)
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
         sceneOpts.bindProps('lockZrange',   lbopts)

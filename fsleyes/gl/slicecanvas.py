@@ -138,7 +138,7 @@ class SliceCanvas:
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=0, opts=None):
+    def __init__(self, overlayList, displayCtx, zax=None, opts=None):
         """Create a ``SliceCanvas``.
 
         :arg overlayList: An :class:`.OverlayList` object containing a
@@ -185,7 +185,8 @@ class SliceCanvas:
 
         # The zax property is the image axis which
         # maps to the 'depth' axis of this canvas.
-        opts.zax = zax
+        if zax is not None:
+            opts.zax = zax
 
         # when any of the properties of this
         # canvas change, we need to redraw

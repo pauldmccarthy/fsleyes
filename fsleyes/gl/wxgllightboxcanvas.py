@@ -34,7 +34,7 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
 
     __metaclass__ = sip.wrappertype
 
-    def __init__(self, parent, overlayList, displayCtx, zax=0):
+    def __init__(self, parent, overlayList, displayCtx, zax=None):
         """Create a ``WXGLLightBoxCanvas``. See
         :meth:`.LightBoxCanvas.__init__` for details on the arguments.
         """

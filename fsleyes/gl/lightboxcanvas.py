@@ -74,7 +74,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=0):
+    def __init__(self, overlayList, displayCtx, zax=None):
         """Create a ``LightBoxCanvas`` object.
 
         :arg overlayList: An :class:`.OverlayList` object which contains a
