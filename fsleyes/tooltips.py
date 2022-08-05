@@ -526,9 +526,6 @@ properties = TypeDict({
     'LightBoxOpts.zrange' :
     'The start/end points of the displayed range of slices, specified as '
     'percentages.',
-    'LightBoxOpts.lockZrange' :
-    'Keep the Z range fixed, so that the full range is shown on the canvas. '
-    'Zooming in and out will change the slice spacing instead.',
     'LightBoxOpts.zax' :
     'Slices along this axis will be displayed.',
     'LightBoxOpts.showGridLines' :

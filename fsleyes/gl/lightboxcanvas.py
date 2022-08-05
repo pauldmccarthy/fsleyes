@@ -417,26 +417,30 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
         spacing  = min(spacings)
 
-        # Adjust zrange and slice spacing so
-        # that their effect is preserved if
-        # the display bounds have changed
         zlo, zhi, sp = self.__zbounds
         preserve     = not ((zlo == 0) and (zhi == 0))
         bounds       = self.displayCtx.bounds
         zmin         = bounds.getLo( opts.zax)
         zlen         = bounds.getLen(opts.zax)
-        zlo          = (zlo - zmin) / zlen
-        zhi          = (zhi - zmin) / zlen
-        sp           = sp / zlen
+        zpos         = opts.pos[opts.zax]
+
+        # Adjust zrange and slice spacing so
+        # that their effect is preserved if
+        # the display bounds have changed
+        if preserve:
+            zlo = (zlo - zmin) / zlen
+            zhi = (zhi - zmin) / zlen
+            sp  = sp / zlen
+        else:
+            zpos = (zpos - zmin) / zlen
+            zlo  = zpos - 0.1
+            zhi  = zpos + 0.1
+            sp   = spacing
 
         with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
             opts.setatt('sliceSpacing', 'minval', spacing)
-            if preserve:
-                opts.zrange.x     = zlo, zhi
-                opts.sliceSpacing = sp
-            else:
-                opts.zrange.x     = 0, 1
-                opts.sliceSpacing = spacing
+            opts.zrange.x     = zlo, zhi
+            opts.sliceSpacing = sp
 
         self._regenGrid()
 

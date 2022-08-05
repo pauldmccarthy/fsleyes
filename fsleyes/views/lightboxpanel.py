@@ -115,7 +115,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.bindProps('zax',          lbopts)
         sceneOpts.bindProps('sliceSpacing', lbopts)
         sceneOpts.bindProps('zrange',       lbopts)
-        sceneOpts.bindProps('lockZrange',   lbopts)
         sceneOpts.bindProps('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
