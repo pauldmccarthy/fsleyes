@@ -451,10 +451,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     def _zAxisChanged(self, *a):
-        """Overrides :meth:`.SliceCanvas._zAxisChanged`. Calls that method, and
-        then re-generates lightbox slices.
+        """Overrides :meth:`.SliceCanvas._zAxisChanged`.  Called when the
+        :attr:`.SliceCanvasOpts.zax` changes. Re-generates lightbox
+        slices.
         """
-        slicecanvas.SliceCanvas._zAxisChanged(self, *a)
         self._regenGrid()
 
 
