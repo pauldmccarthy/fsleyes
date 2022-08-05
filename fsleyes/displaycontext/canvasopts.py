@@ -179,6 +179,9 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
                               default=0.01)
     """This property controls the spacing between slices. It is defined
     as a percentage (0-1) of the Z axis length.
+
+    When :attr:`lockZrange` is ``True``, this property is automatically
+    synced with the :attr:`.SliceCanvasOpts.zoom` setting.
     """
 
 
@@ -187,10 +190,19 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     The low/high limits are specified as percentages (0-1) of the Z axis
     length.
 
-    This property is automatically synchronised with the
-    :attr:`SliceCanvasOpts.zoom` property, where a ``zoom`` of 0 maps
-    to a ``zrange`` of 1 (fully zoomed out) and a ``zoom`` of 1 maps to
-    a ``zrange`` of 0 (fully zoomed in).
+
+    When :attr:`lockZrange` is ``False``, this property is
+    automatically synchronised with the :attr:`SliceCanvasOpts.zoom`
+    property, where a ``zoom`` of 0 maps to a ``zrange`` of 1 (fully
+    zoomed out) and a ``zoom`` of 1 maps to a ``zrange`` of 0 (fully
+    zoomed in).
+    """
+
+
+    lockZrange = props.Boolean(default=False)
+    """Toggle whether the :attr:`.SliceCanvasOpts.zoom` setting is synced
+    to the :attr:`zrange` property (``False``, default), or to the
+    :attr:`sliceSpacing` property (``True``).
     """
 
 
@@ -215,29 +227,37 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     def __init__(self):
         super().__init__()
-
-        self.setAttribute('zax',  'default', 2)
-        self.setAttribute('zoom', 'default', 0)
-        self.setAttribute('zoom', 'minval',  0)
-        self.setAttribute('zoom', 'maxval',  1)
-        self.setAttribute('zoom', 'clamped', True)
+        self.setatt('zax',  'default', 2)
+        self.setatt('zoom', 'default', 0)
+        self.setatt('zoom', 'minval',  0)
+        self.setatt('zoom', 'maxval',  1)
+        self.setatt('zoom', 'clamped', True)
 
         self.zax    = 2
         self.zoom   = 0
         self.zrange = 0, 1
 
-        # zoom and zrange are automatically kept in sync
         name = self.name
-        self.listen('zoom',         name, self.__zoomChanged,   immediate=True)
-        self.listen('zrange',       name, self.__zrangeChanged, immediate=True)
-        self.listen('sliceSpacing', name, self.__sliceSpacingChanged,
-                    immediate=True)
+        self.ilisten('zoom',         name, self.__zoomChanged)
+        self.ilisten('lockZrange',   name, self.__zoomChanged)
+        self.ilisten('zrange',       name, self.__zrangeChanged)
+        self.ilisten('sliceSpacing', name, self.__sliceSpacingChanged)
 
 
     def __zoomChanged(self):
         """Called when :attr:`SliceCanvasOpts.zoom` changes. Propagates the
-        changte to the :attr:`zrange`.
+        change to the :attr:`zrange` and/or :attr:`sliceSpacing`.
         """
+
+        # zoom 0 -> slice spacing at minimum
+        # zoom 1 -> slice spacing at maximum
+        if self.lockZrange:
+            minsp   = self.getatt('sliceSpacing', 'minval')
+            maxsp   = self.getatt('sliceSpacing', 'maxval')
+            spacing = minsp + self.zoom * (maxsp - minsp)
+            with props.skip(self, 'sliceSpacing', self.name):
+                self.sliceSpacing = spacing
+            return
 
         # Map zoom to z range [sliceSpacing, 1], where:
         #
@@ -269,16 +289,27 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         on :attr:`zoom` and :attr:`zrange`.
         """
         spacing = self.sliceSpacing
-        self.setAttribute('zoom',   'minval',      spacing)
-        self.setAttribute('zrange', 'minDistance', spacing)
+        self.setatt('zoom',   'minval',      spacing)
+        self.setatt('zrange', 'minDistance', spacing)
+
+        if not self.lockZrange:
+            return
+
+        spacing = self.sliceSpacing
+        minsp   = self.getatt('spacing', 'minval')
+        maxsp   = self.getatt('spacing', 'maxval')
+
+        with props.skip():
+            self.zoom = (spacing - minsp) / (maxsp - minsp)
 
 
     def __zrangeChanged(self):
         """Called when :attr:`zrange` changes. Propagates the change to the
-        :attr:`SliceCanvasOpts.zoom`.
+        :attr:`SliceCanvasOpts.zoom` (unlesss :attr:`lockZrange` is ``True``).
         """
-        with props.skip(self, 'zoom', self.name):
-            self.zoom = 1 - self.zrange.xlen
+        if not self.lockZrange:
+            with props.skip(self, 'zoom', self.name):
+                self.zoom = 1 - self.zrange.xlen
 
 
     @property
