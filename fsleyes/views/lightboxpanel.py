@@ -11,7 +11,8 @@
 
 import logging
 
-import wx
+import          wx
+import numpy as np
 
 import fsleyes_props                        as props
 
@@ -94,6 +95,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             overlayList,
             displayCtx)
 
+        name   = self.name
         lbopts = self.__lbCanvas.opts
 
         lbopts.bindProps('pos', displayCtx, 'location')
@@ -122,25 +124,19 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
-        self.displayCtx .addListener('displaySpace',
-                                     self.name,
-                                     self.__radioOrientationChanged)
-        self.displayCtx .addListener('radioOrientation',
-                                     self.name,
-                                     self.__radioOrientationChanged)
-        self.overlayList .addListener('overlays',
-                                     self.name,
-                                     self.__radioOrientationChanged)
+        displayCtx .listen('displaySpace', name,
+                           self.__radioOrientationChanged)
+        displayCtx .listen('radioOrientation', name,
+                           self.__radioOrientationChanged)
+        overlayList.listen('overlays', name,
+                           self.__radioOrientationChanged)
 
         # When any lightbox properties change,
         # make sure the scrollbar is updated
-        sceneOpts.addListener(
-            'sliceSpacing', self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zrange',       self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zax',          self.name, self.__onLightBoxChange)
-
+        sceneOpts.listen( 'sliceSpacing', name, self.__onLightBoxChange)
+        sceneOpts.listen( 'zrange',       name, self.__onLightBoxChange)
+        sceneOpts.listen( 'zax',          name, self.__onLightBoxChange)
+        self.Bind(wx.EVT_SIZE,                  self.__onLightBoxChange)
         # When the scrollbar is moved,
         # update the canvas display
         self.__scrollbar.Bind(wx.EVT_SCROLL, self.__onScroll)
@@ -158,8 +154,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self.displayCtx .removeListener('displaySpace',     self.name)
-        self.displayCtx .removeListener('radioOrientation', self.name)
+        self.displayCtx .remove('displaySpace',     self.name)
+        self.displayCtx .remove('radioOrientation', self.name)
+        self.overlayList.remove('overlays',         self.name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -241,14 +238,18 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         """
         canvas  = self.canvas
         copts   = canvas.opts
-        start   = copts.startslice
-        end     = copts.maxslices
+        nrows   = canvas.nrows
         nslices = canvas.nslices
-        if canvas.nslices == 0:
+
+        if nrows == 0 or nslices >= copts.maxslices:
             start   = 0
             end     = 1
             nslices = 1
-        self.__scrollbar.SetScrollbar(start, nslices, end, nslices, True)
+        else:
+            start = canvas.toprow
+            end   = canvas.maxrows
+
+        self.__scrollbar.SetScrollbar(start, nrows, end, nrows, True)
 
 
     def __onScroll(self, *a):
@@ -262,29 +263,29 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     @property
     def scrollpos(self):
         """Returns the current scroll position - the index of the first
-        displayed slice on the canvas.
+        displayed row on the canvas.
         """
         return self.__scrollbar.GetThumbPosition()
 
 
     @scrollpos.setter
-    def scrollpos(self, sliceno):
+    def scrollpos(self, row):
         """Set the current scroll position - the index of the first
-        displayed slice on the canvas. Called when the scroll bar is
+        displayed row on the canvas. Called when the scroll bar is
         moved, and from the :class:`.LightBoxViewProfile`.
         """
 
-        canvas = self.canvas
-        opts   = self.sceneOpts
-        copts  = canvas.opts
-        zlen   = copts.zrange.xlen
+        canvas  = self.canvas
+        opts    = self.sceneOpts
+        copts   = canvas.opts
+        zlen    = copts.zrange.xlen
+        row     = np.clip(row, 0, canvas.maxrows)
+        sliceno = np.clip(row * canvas.ncols, 0, copts.maxslices - 1)
 
-        if sliceno < 0 or sliceno >= copts.maxslices:
-            return
+        self.__scrollbar.SetThumbPosition(row)
+        self.__scrollbar.Refresh()
 
-        self.__scrollbar.SetThumbPosition(sliceno)
-
-        # Expand the z range if the it does not
+        # Expand the z range if it does not
         # take up the full grid size (i.e. the
         # last row contains fewer slices than
         # can be displayed),
@@ -296,5 +297,14 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             diff = gridsize - nslices
             zlen = zlen + diff * copts.sliceSpacing
 
+        newzlo, newzhi = zpos, zpos + zlen
+
+        if newzlo < 0:
+            newzhi -= newzlo
+            newzlo  = 0
+        elif newzhi > 1:
+            newzlo -= (newzhi - 1)
+            newzhi  = 1
+
         with props.skip(opts, 'zrange', self.name):
-            copts.zrange = zpos, zpos + zlen
+            copts.zrange = newzlo, newzhi
