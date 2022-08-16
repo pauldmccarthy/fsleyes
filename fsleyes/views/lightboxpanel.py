@@ -41,6 +41,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     settings. The canvas is accessed through the :meth:`getCanvas` and
     :meth:`getGLCanvases` methods, and the ``LightBoxOpts`` instanace can
     be retrieved via the :meth:`.CanvasPanel.sceneOpts` property.
+
+    The ``LightBoxPanel`` adds scrolling capability to the ``LightBoxCanvas``
+    - a scroll bar is displayed which can be used to scroll through the
+    slices.  This is achieved by adjusting the
+    :attr:`.LightBoxCanvasOpts.zrange` property.
     """
 
 
@@ -98,15 +103,15 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         name   = self.name
         lbopts = self.__lbCanvas.opts
 
-        lbopts.bindProps('pos', displayCtx, 'location')
-        lbopts.bindProps('bgColour',        sceneOpts)
-        lbopts.bindProps('cursorColour',    sceneOpts)
-        lbopts.bindProps('showCursor',      sceneOpts)
-        lbopts.bindProps('cursorWidth',     sceneOpts)
-        lbopts.bindProps('showGridLines',   sceneOpts)
-        lbopts.bindProps('highlightSlice',  sceneOpts)
-        lbopts.bindProps('renderMode',      sceneOpts)
-        lbopts.bindProps('highDpi',         sceneOpts)
+        lbopts.bind('pos', displayCtx, 'location')
+        lbopts.bind('bgColour',        sceneOpts)
+        lbopts.bind('cursorColour',    sceneOpts)
+        lbopts.bind('showCursor',      sceneOpts)
+        lbopts.bind('cursorWidth',     sceneOpts)
+        lbopts.bind('showGridLines',   sceneOpts)
+        lbopts.bind('highlightSlice',  sceneOpts)
+        lbopts.bind('renderMode',      sceneOpts)
+        lbopts.bind('highDpi',         sceneOpts)
 
         # Bind these properties the other way around,
         # so that the sensible values calcualted by
@@ -114,10 +119,10 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bindProps('zax',          lbopts)
-        sceneOpts.bindProps('sliceSpacing', lbopts)
-        sceneOpts.bindProps('zrange',       lbopts)
-        sceneOpts.bindProps('zoom',         lbopts)
+        sceneOpts.bind('zax',          lbopts)
+        sceneOpts.bind('sliceSpacing', lbopts)
+        sceneOpts.bind('zrange',       lbopts)
+        sceneOpts.bind('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.contentPanel.SetSizer(self.__canvasSizer)

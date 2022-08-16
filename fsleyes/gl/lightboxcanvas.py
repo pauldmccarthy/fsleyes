@@ -32,8 +32,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     out on the same canvas along rows and columns, with the slice at the
     minimum Z position translated to the top left of the canvas, and the
     slice with the maximum Z value translated to the bottom right. A
-    suitable number of rows and columns are automatically calculated.
-
+    suitable number of rows and columns are automatically calculated
+    whenever the canvas size is changed, or any
+    :class:`.LightBoxCanvasOpts` properties change.
 
     .. note:: The :class:`LightBoxCanvas` class is not intended to be
               instantiated directly - use one of these subclasses, depending
@@ -225,16 +226,22 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ``LightBoxCanvas``.
         """
 
-        opts              = self.opts
-        xpos              = pos[opts.xax]
-        ypos              = pos[opts.yax]
-        nrows             = self.nrows
-        bounds            = self.displayCtx.bounds
-        xlen              = bounds.getLen(opts.xax)
-        ylen              = bounds.getLen(opts.yax)
-        xmin              = bounds.getLo( opts.xax)
-        ymin              = bounds.getLo( opts.yax)
-        sliceno, row, col = self.gridPosition(pos)
+        opts        = self.opts
+        xpos        = pos[opts.xax]
+        ypos        = pos[opts.yax]
+        nrows       = self.nrows
+        bounds      = self.displayCtx.bounds
+        xlen        = bounds.getLen(opts.xax)
+        ylen        = bounds.getLen(opts.yax)
+        xmin        = bounds.getLo( opts.xax)
+        ymin        = bounds.getLo( opts.yax)
+        _, row, col = self.gridPosition(pos)
+
+        if row < 0           or \
+           col < 0           or \
+           row >= self.nrows or \
+           col >= self.ncols:
+            return None
 
         if opts.invertX: xpos = xmin + xlen - (xpos - xmin)
         if opts.invertY: ypos = ymin + ylen - (ypos - ymin)
@@ -284,7 +291,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if screenx <  xmin or \
            screenx >  xmax or \
            screeny <  ymin or \
-           screeny >  ymax:
+           screeny >  ymax or \
+           sliceno >= len(self.__zposes):
             return None
 
         xpos = screenx -          col      * xlen
@@ -482,6 +490,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
 
     def _regenGrid(self):
+        """Called by various property/event listeners. Re-generates slices and
+        triggers a canvas refresh.
+        """
         self._calculateSlices()
         self._updateDisplayBounds()
         self.Refresh()

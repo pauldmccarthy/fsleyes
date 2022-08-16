@@ -34,7 +34,8 @@ class SliceCanvasOpts(props.HasProperties):
 
 
     pos = props.Point(ndims=3)
-    """The currently displayed position.
+    """The currently displayed position. This is in the display coordinate
+    system, but transposed in terms of the :attr:`zax`.
 
     The ``pos.x`` and ``pos.y`` positions denote the position of a *cursor*,
     which is highlighted with crosshairs (see the :attr:`showCursor`
@@ -186,6 +187,9 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """This property controls the range of the slices to be displayed.
     The low/high limits are specified as percentages (0-1) of the Z axis
     length.
+
+    This property is automatically synchronised with the
+    :attr:`.SliceCanvasOpts.zoom` property.
     """
 
 
