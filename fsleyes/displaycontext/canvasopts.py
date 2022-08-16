@@ -193,6 +193,20 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
+    ncols = props.Int(default=0, minval=0, clamped=True)
+    """Number of columns to display. The default value (0) will cause
+    the number of columns to be automatically calculated.
+    """
+
+
+    nrows = props.Int(default=0, minval=0, clamped=True)
+    """Number of rows to display. The default value (0) will cause
+    the number of rows to be automatically calculated. If both ``nrows``
+    and :attr:`ncols` are set, ``nrows`` may be adjusted to honour
+    the current :attr:`ncols`, :attr:`zrange` and :attr:`sliceSpacing`.
+    """
+
+
     showGridLines = props.Boolean(default=False)
     """If ``True``, grid lines are drawn between the displayed slices. """
 

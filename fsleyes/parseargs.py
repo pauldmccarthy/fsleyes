@@ -1109,8 +1109,12 @@ HELP = td.TypeDict({
     'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
-    'LightBoxOpts.ncols'          : 'Number of columns',
-    'LightBoxOpts.nrows'          : 'Number of rows',
+    'LightBoxOpts.ncols'          :
+    'Number of columns. Only used for off-screen rendering.',
+    'LightBoxOpts.nrows'          :
+    'Number of rows. Only used for off-screen rendering. If both --ncols and '
+    '--nrows are specified, nrows may be adjusted to honour the --zrange and '
+    '--sliceSpacing settings.',
     'LightBoxOpts.zrange'         : 'Slice range',
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',

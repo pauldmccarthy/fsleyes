@@ -114,6 +114,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
+        opts.ilisten('nrows',          self.name, self._slicePropsChanged)
+        opts.ilisten('ncols',          self.name, self._slicePropsChanged)
         opts. listen('showGridLines',  self.name, self.Refresh)
         opts. listen('highlightSlice', self.name, self.Refresh)
 
@@ -132,6 +134,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.remove('sliceSpacing',   name)
         opts.remove('zrange',         name)
+        opts.remove('nrows',          name)
+        opts.remove('ncols',          name)
         opts.remove('showGridLines',  name)
         opts.remove('highlightSlice', name)
 
@@ -366,9 +370,20 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if np.any(np.isclose([w, h, nslices, xlen, ylen], 0)):
             return 0, 0
 
-        # Calculate a grid size (nrows, ncols)
-        # which minimises wasted canvas space
-        # ncol/nrow candidates
+        # Honour ncols/nrows (in that order
+        # order of precedence) if they are set.
+        if opts.ncols != 0:
+            ncols  = opts.ncols
+            nrows  = np.ceil(nslices / ncols).astype(int)
+            return nrows, ncols
+        elif opts.nrows != 0:
+            nrows = opts.nrows
+            ncols  = np.ceil(nslices / nrows).astype(int)
+            return nrows, ncols
+
+        # Otherwise automatically calculate
+        # a grid size (nrows, ncols) which
+        # minimises wasted canvas space.
         ncols = np.arange(1, nslices + 1).astype(int)
         nrows = np.ceil(nslices / ncols) .astype(int)
 

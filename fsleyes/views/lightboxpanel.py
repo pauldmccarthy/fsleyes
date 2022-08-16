@@ -122,6 +122,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.bind('zax',          lbopts)
         sceneOpts.bind('sliceSpacing', lbopts)
         sceneOpts.bind('zrange',       lbopts)
+        sceneOpts.bind('nrows',        lbopts)
+        sceneOpts.bind('ncols',        lbopts)
         sceneOpts.bind('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -141,6 +143,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         sceneOpts.listen( 'sliceSpacing', name, self.__onLightBoxChange)
         sceneOpts.listen( 'zrange',       name, self.__onLightBoxChange)
         sceneOpts.listen( 'zax',          name, self.__onLightBoxChange)
+        sceneOpts.listen( 'nrows',        name, self.__onLightBoxChange)
+        sceneOpts.listen( 'ncols',        name, self.__onLightBoxChange)
         self.Bind(wx.EVT_SIZE,                  self.__onLightBoxChange)
         # When the scrollbar is moved,
         # update the canvas display
