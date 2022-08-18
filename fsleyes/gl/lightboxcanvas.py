@@ -116,6 +116,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
         opts.ilisten('ncols',          self.name, self._slicePropsChanged)
+        opts.ilisten('invertX',        self.name, self._slicePropsChanged,
+                     overwrite=True)
+        opts.ilisten('invertY',        self.name, self._slicePropsChanged,
+                     overwrite=True)
         opts. listen('showGridLines',  self.name, self.Refresh)
         opts. listen('highlightSlice', self.name, self.Refresh)
 
@@ -337,19 +341,15 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Otherwise return a spacing
         # appropriate for the current
         # display space
+        #
+        # display coordinate system
+        # is orthogonal to image data
+        # grid
         if dopts.transform in  ('id', 'pixdim', 'pixdim-flip'):
             return 1 / overlay.shape[copts.zax]
-        if dopts.transform == 'affine':
-            return 0.02
 
-        # This overlay is being displayed with a
-        # custrom transformation matrix  - check
-        # to see what display space we're in
-        displaySpace = displayCtx.displaySpace
-
-        if isinstance(displaySpace, fslimage.Nifti) and \
-           overlay is not displaySpace:
-            return self.calcSliceSpacing(displaySpace)
+        # image may be rotated w.r.t.
+        # display coordinate system
         else:
             return 1 / max(overlay.shape[:3])
 
@@ -427,7 +427,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
         spacing  = min(spacings)
-
         bounds   = self.displayCtx.bounds
         zmin     = bounds.getLo( opts.zax)
         zlen     = bounds.getLen(opts.zax)
