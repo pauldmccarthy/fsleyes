@@ -91,23 +91,24 @@ mesh_2d_x.vtk -cm blue-lightblue -vd mesh_2d_data.txt mesh_2d_y.vtk -cm red-yell
 -ds world {{transpose('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0 0 1 -r mesh_ref_transpose -o -w 10
 
 # fsl/fsleyes/fsleyes#333
--slightbox -wl -13 19 32 --zrange -0.5 31.5 -nc 1 -nr 1 mesh_ref.nii.gz mesh_l_thal.vtk -mc 1 0 0
-                   mesh_l_thal.vtk    -mc 1 0 0
-               -no mesh_l_thal.vtk    -mc 1 0 0
--slightbox         mesh_l_thal.vtk    -mc 1 0 0
--slightbox     -no mesh_l_thal.vtk    -mc 1 0 0
-                   mesh_l_thal.vtk -o -mc 1 0 0
-               -no mesh_l_thal.vtk -o -mc 1 0 0
--slightbox         mesh_l_thal.vtk -o -mc 1 0 0
--slightbox     -no mesh_l_thal.vtk -o -mc 1 0 0
--p1                mesh_l_thal.vtk    -mc 1 0 0
--p1            -no mesh_l_thal.vtk    -mc 1 0 0
--p1 -slightbox     mesh_l_thal.vtk    -mc 1 0 0
--p1 -slightbox -no mesh_l_thal.vtk    -mc 1 0 0
--p1                mesh_l_thal.vtk -o -mc 1 0 0
--p1            -no mesh_l_thal.vtk -o -mc 1 0 0
--p1 -slightbox     mesh_l_thal.vtk -o -mc 1 0 0
--p1 -slightbox -no mesh_l_thal.vtk -o -mc 1 0 0
+-slightbox -zr 0.64 0.66   mesh_ref.nii.gz mesh_l_thal.vtk -mc 1 0 0
+-slightbox -zr 0 0.3       mesh_ref.nii.gz mesh_l_thal.vtk -mc 1 0 0
+                           mesh_l_thal.vtk    -mc 1 0 0
+                       -no mesh_l_thal.vtk    -mc 1 0 0
+-slightbox -zr 0 1         mesh_l_thal.vtk    -mc 1 0 0
+-slightbox -zr 0 1     -no mesh_l_thal.vtk    -mc 1 0 0
+                           mesh_l_thal.vtk -o -mc 1 0 0
+                       -no mesh_l_thal.vtk -o -mc 1 0 0
+-slightbox -zr 0 1         mesh_l_thal.vtk -o -mc 1 0 0
+-slightbox -zr 0 1     -no mesh_l_thal.vtk -o -mc 1 0 0
+-p1                        mesh_l_thal.vtk    -mc 1 0 0
+-p1                    -no mesh_l_thal.vtk    -mc 1 0 0
+-p1 -slightbox -zr 0 1     mesh_l_thal.vtk    -mc 1 0 0
+-p1 -slightbox -zr 0 1 -no mesh_l_thal.vtk    -mc 1 0 0
+-p1                        mesh_l_thal.vtk -o -mc 1 0 0
+-p1                    -no mesh_l_thal.vtk -o -mc 1 0 0
+-p1 -slightbox -zr 0 1     mesh_l_thal.vtk -o -mc 1 0 0
+-p1 -slightbox -zr 0 1 -no mesh_l_thal.vtk -o -mc 1 0 0
 """
 
 

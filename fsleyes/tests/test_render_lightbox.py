@@ -101,6 +101,11 @@ cli_tests = """
 # the display coordinate system
 -zr 0 1     3d -cm blue-lightblue {{roi('3d', (0, 6, 0, 14, 0, 14))}}
 -zr 0 1 -no 3d -cm blue-lightblue {{roi('3d', (0, 6, 0, 14, 0, 14))}}
+
+-zx 1 -zr 0 1 -no 3d
+-zx 1 -zr 0 1     3d
+-zx 2 -zr 0 1 -no 3d
+-zx 2 -zr 0 1     3d
 """
 
 
