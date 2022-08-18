@@ -1964,7 +1964,7 @@ def parseArgs(mainParser,
     if argOpts is None: argOpts = []
     else:               argOpts = list(argOpts)
 
-    log.debug('Parsing arguments for {}: {}'.format(name, argv))
+    log.debug('Parsing arguments for %s: %s', name, argv)
 
     # I hate argparse. By default, it does not support
     # the command line interface that I want to provide,
@@ -2039,8 +2039,8 @@ def parseArgs(mainParser,
             appendTo.add( '-{}'.format(shortForm))
             appendTo.add('--{}'.format(longForm))
 
-    log.debug('Identifying overlay paths (ignoring: {})'.format(
-        list(mainExpectsArgs) + list(ovlExpectsArgs)))
+    log.debug('Identifying overlay paths (ignoring: %s)',
+        list(mainExpectsArgs) + list(ovlExpectsArgs))
 
     # Expand any fsleyes:// arguments
     copy = []
@@ -2103,8 +2103,8 @@ def parseArgs(mainParser,
     progArgv = argv[:ovlIdxs[0]]
     ovlArgv  = argv[ ovlIdxs[0]:]
 
-    log.debug('Main arguments:    {}'.format(progArgv))
-    log.debug('Overlay arguments: {}'.format(ovlArgv))
+    log.debug('Main arguments:    %s', progArgv)
+    log.debug('Overlay arguments: %s', ovlArgv)
 
     # Parse the application options with the mainParser
     try:
@@ -2472,9 +2472,9 @@ def _applyArgs(args,
         if xform is not None:
             xforms[name] = xform
 
-    log.debug('Applying arguments to {}: {}'.format(
+    log.debug('Applying arguments to %s: %s',
         type(target).__name__,
-        propNames))
+        propNames)
 
     for name in list(propNames):
         applied = False
@@ -2964,8 +2964,8 @@ def _configSpecialOption(target,
             'Could not find configuration function for special '
             'argument {}.{}'.format(target.__name__, optName))
 
-    log.debug('Configuring special argument {}.{}'
-              .format(target.__name__, optName))
+    log.debug('Configuring special argument %s.%s',
+              target.__name__, optName)
 
     shortArg = '-{}' .format(shortArg)
     longArg  = '--{}'.format(longArg)
@@ -3003,8 +3003,8 @@ def _applySpecialOption(args,
     if getattr(args, longArg) is None:
         return
 
-    log.debug('Applying special argument {} to {}'
-              .format(optName, cls.__name__))
+    log.debug('Applying special argument %s to %s',
+              optName, cls.__name__)
 
     return applyFunc(args, overlayList, displayCtx, target)
 
@@ -3030,8 +3030,8 @@ def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
             'Could not find generate function for special '
             'argument {} to {}'.format(optName, cls.__name__))
 
-    log.debug('Generate special argument {} to {}'
-              .format(optName, cls.__name__))
+    log.debug('Generate special argument %s to %s',
+              optName, cls.__name__)
 
     return genFunc(overlayList, displayCtx, source, longArg)
 
