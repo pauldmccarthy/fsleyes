@@ -459,9 +459,6 @@ def createLightBoxCanvas(namespace,
         width=width,
         height=height)
 
-    if sceneOpts.zrange == (0, 0):
-        sceneOpts.zrange = displayCtx.bounds.getRange(sceneOpts.zax)
-
     opts                = canvas.opts
     opts.showCursor     = sceneOpts.showCursor
     opts.cursorWidth    = sceneOpts.cursorWidth

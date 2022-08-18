@@ -381,6 +381,10 @@ class FSLeyesHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 # Names of all of the property which are
 # customisable via command line arguments.
+# The orders defined here are the orders in
+# which the properties are applied, which
+# may be important, so don't change the
+# order unless you know what you are doing.
 OPTIONS = td.TypeDict({
 
     'Main'          : ['help',
@@ -2473,16 +2477,29 @@ def _applyArgs(args,
             xforms[name] = xform
 
     log.debug('Applying arguments to %s: %s',
-        type(target).__name__,
-        propNames)
+        type(target).__name__, propNames)
 
     for name in list(propNames):
-        applied = False
-        if _isSpecialApplyOption(target, name):
+        applied   = False
+        specified = getattr(args, longArgs[name])
 
+        # If not provided, and a _appylDefault_<target>_<propname>
+        # function is defined, call it to generate a default
+        # value
+        if not specified:
+            applyDefault = _getSpecialFunction(target, name, '_applyDefault')
+            if applyDefault is not None:
+                applyDefault(args, overlayList, displayCtx, target)
+                applied = True
+
+        # Otherwise, if a _applySpecial_<target>_<propname>
+        # function is defined, call it to apply the argument
+        if not applied and _isSpecialApplyOption(target, name):
             applied = not _applySpecialOption(
                 args, overlayList, displayCtx, target, name, longArgs[name])
 
+        # Otherwise use fsleyes_props to apply
+        # the argument to the target object
         if not applied and target.propertyIsEnabled(name):
             props.applyArguments(target,
                                  args,
@@ -3222,6 +3239,31 @@ def _generateSpecialOrthoOptsCentre(displayCtx, xax, yax, canvas):
     y    = -1 + 2 * (y - ylo) / ylen
 
     return ['{: 0.5f}'.format(x), '{: 0.5f}'.format(y)]
+
+
+def _applyDefault_LightBoxOpts_zrange(args, overlayList, displayCtx, target):
+    """Calculates a default value for the :attr:`.LightBoxOpts.zrange` property
+    when it is not specified on the command line.
+    """
+    # Centre the z range around the current
+    # display location. Here, we assume/
+    # require that:
+    #
+    #   - voxelLoc/worldLoc has been parsed,
+    #     and DisplayContext.location has
+    #     been configured (as these are
+    #     applied before SceneOpts arguments
+    #     in _applySceneArgs)
+    #
+    #   - LightBoxOpts.zax has already been
+    #     configured (as it comes before
+    #     zrange in the ARGUMENTS list)
+    zax           = target.zax
+    zpos          = displayCtx.location[zax]
+    zmin          = displayCtx.bounds.getLo( zax)
+    zlen          = displayCtx.bounds.getLen(zax)
+    zpos          = (zpos - zmin) / zlen
+    target.zrange = zpos - 0.1, zpos + 0.1
 
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
