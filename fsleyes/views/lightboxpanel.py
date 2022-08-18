@@ -165,7 +165,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         self.displayCtx .remove('displaySpace',     self.name)
         self.displayCtx .remove('radioOrientation', self.name)
-        self.overlayList.remove('overlays',         self.name)
+        self.overlayList.removeListener('overlays', self.name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
