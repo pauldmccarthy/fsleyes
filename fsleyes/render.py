@@ -149,6 +149,15 @@ def parseArgs(argv):
         ('ortho'), lightbox ('lightbox'), or 3D ('3d') views.
         """)
 
+    exclude = {'Main'      : ['skipfslcheck',
+                              'updatecheck',
+                              'fontSize',
+                              'notebook',
+                              'notebookFile',
+                              'notebookPort'],
+               'SceneOpts' : ['movieSyncRefresh',
+                              'highDpi']}
+
     namespace = parseargs.parseArgs(
         mainParser,
         argv,
@@ -159,7 +168,8 @@ def parseArgs(argv):
         argOpts=['-of', '--outfile',
                  '-sz', '--size',
                  '-c',  '--crop'],
-        shortHelpExtra=['--outfile', '--size', '--crop'])
+        shortHelpExtra=['--outfile', '--size', '--crop'],
+        exclude=exclude)
 
     if namespace.outfile is None:
         log.error('outfile is required')

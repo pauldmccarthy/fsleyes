@@ -1090,7 +1090,7 @@ HELP = td.TypeDict({
     'OrthoOpts.showZCanvas'  : 'Hide the Z canvas',
     'OrthoOpts.showLabels'   : 'Hide orientation labels',
     'OrthoOpts.showLocation' : 'Show cursor location coordinates',
-    'OrthoOpts.invertXHorixontal' :
+    'OrthoOpts.invertXHorizontal' :
     'Invert the X canvas along the horizontal axis',
     'OrthoOpts.invertXVertical' :
     'Invert the X canvas along the vertical axis',
@@ -1619,12 +1619,13 @@ Examples:
 """
 
 
-def _setupMainParser(mainParser):
+def _setupMainParser(mainParser, exclude):
     """Sets up an argument parser which handles options related
     to the scene. This function configures the following argument
     groups:
 
-      - *Main*:         Top level optoins
+      - *Main*:         Top level options
+      - *Extras*:       Miscellaneous options
       - *SceneOpts*:    Common scene options
       - *OrthoOpts*:    Options related to setting up a orthographic display
       - *LightBoxOpts*: Options related to setting up a lightbox display
@@ -1640,30 +1641,38 @@ def _setupMainParser(mainParser):
     mainParser._optionals.title       = GROUPNAMES[    'Main']
     mainParser._optionals.description = GROUPDESCS.get('Main')
 
-    sceneGroup = mainParser.add_argument_group(GROUPNAMES[    'SceneOpts'],
-                                               GROUPDESCS.get('SceneOpts'))
-    orthoGroup = mainParser.add_argument_group(GROUPNAMES[    'OrthoOpts'],
-                                               GROUPDESCS.get('OrthoOpts'))
-    lbGroup    = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
-                                               GROUPDESCS.get('LightBoxOpts'))
-    s3dGroup   = mainParser.add_argument_group(GROUPNAMES[    'Scene3DOpts'],
-                                               GROUPDESCS.get('Scene3DOpts'))
+    sgrp   = mainParser.add_argument_group(GROUPNAMES[    'SceneOpts'],
+                                           GROUPDESCS.get('SceneOpts'))
+    ogrp   = mainParser.add_argument_group(GROUPNAMES[    'OrthoOpts'],
+                                           GROUPDESCS.get('OrthoOpts'))
+    lbgrp  = mainParser.add_argument_group(GROUPNAMES[    'LightBoxOpts'],
+                                           GROUPDESCS.get('LightBoxOpts'))
+    s3dgrp = mainParser.add_argument_group(GROUPNAMES[    'Scene3DOpts'],
+                                           GROUPDESCS.get('Scene3DOpts'))
 
-    _configMainParser(mainParser)
-    _configExtraOptions(mainParser)
-    _configParser(fsldisplay.SceneOpts,    sceneGroup)
-    _configParser(fsldisplay.OrthoOpts,    orthoGroup)
-    _configParser(fsldisplay.LightBoxOpts, lbGroup)
-    _configParser(fsldisplay.Scene3DOpts,  s3dGroup)
+    _configMainParser(mainParser,                  exclude.get('Main'))
+    _configExtraOptions(mainParser,                exclude.get('Extras'))
+    _configParser(fsldisplay.SceneOpts,    sgrp,   exclude.get('SceneOpts'))
+    _configParser(fsldisplay.OrthoOpts,    ogrp,   exclude.get('OrthoOpts'))
+    _configParser(fsldisplay.LightBoxOpts, lbgrp,  exclude.get('LightBoxOpts'))
+    _configParser(fsldisplay.Scene3DOpts,  s3dgrp, exclude.get('Scene3DOpts'))
 
 
-def _configParser(target, parser, propNames=None, shortHelp=False):
+def _configParser(target,
+                  parser,
+                  exclude=None,
+                  propNames=None,
+                  shortHelp=False):
     """Configures the given parser so it will parse arguments for the
     given target.
     """
 
     if propNames is None:
         propNames = list(OPTIONS[target])
+
+    if exclude is not None:
+        for arg in exclude:
+            propNames.remove(arg)
 
     shortArgs = {}
     longArgs  = {}
@@ -1704,7 +1713,7 @@ def _configParser(target, parser, propNames=None, shortHelp=False):
             target, parser, s, shortArgs[s], longArgs[s], helpTexts[s])
 
 
-def _configMainParser(mainParser):
+def _configMainParser(mainParser, exclude=None):
     """Adds options to the given parser which allow the user to specify
     *main* FSLeyes options.
     """
@@ -1714,106 +1723,61 @@ def _configMainParser(mainParser):
     for name, (shortArg, longArg) in list(mainArgs.items()):
         mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
 
-    mainParser.add_argument(*mainArgs['help'],
-                            action='store_true',
-                            help=mainHelp['help'])
-    mainParser.add_argument(*mainArgs['fullhelp'],
-                            action='store_true',
-                            help=mainHelp['fullhelp'])
-    mainParser.add_argument(*mainArgs['version'],
-                            action='store_true',
-                            help=mainHelp['version'])
-    mainParser.add_argument(*mainArgs['skipfslcheck'],
-                            action='store_true',
-                            help=mainHelp['skipfslcheck'])
-    mainParser.add_argument(*mainArgs['updatecheck'],
-                            action='store_true',
-                            help=mainHelp['updatecheck'])
+    kwargs = {
+        'help'                : {'action'  : 'store_true'},
+        'fullhelp'            : {'action'  : 'store_true'},
+        'version'             : {'action'  : 'store_true'},
+        'skipfslcheck'        : {'action'  : 'store_true'},
+        'updatecheck'         : {'action'  : 'store_true'},
+        'verbose'             : {'action'  : 'count'},
+        'noisy'               : {'metavar' : 'MODULE',
+                                 'action'  : 'append'},
+        'glversion'           : {'metavar' : ('MAJOR', 'MINOR'),
+                                 'type'    : int,
+                                 'nargs'   : 2},
+        'scene'               : {},
+        'voxelLoc'            : {'metavar' : ('X', 'Y', 'Z'),
+                                 'type'    : int,
+                                 'nargs'   : 3},
+        'worldLoc'            : {'metavar' : ('X', 'Y', 'Z'),
+                                 'type'    : float,
+                                 'nargs'   : 3},
+        'autoDisplay'         : {'action'  : 'store_true'},
+        'selectedOverlay'     : {'metavar' : 'INDEX',
+                                 'type'    : int},
+        'neuroOrientation'    : {'action'  : 'store_true'},
+        'displaySpace'        : {'type'    : str},
+        'standard'            : {'action'  : 'store_true'},
+        'standard_brain'      : {'action'  : 'store_true'},
+        'standard1mm'         : {'action'  : 'store_true'},
+        'standard1mm_brain'   : {'action'  : 'store_true'},
+        'initialDisplayRange' : {'metavar' : ('LO', 'HI'),
+                                 'type'    : int,
+                                 'nargs'   : 2},
+        'bigmem'              : {'action'  : 'store_true'},
+        'fontSize'            : {'type'    : int},
+        'notebook'            : {'action'  : 'store_true'},
+        'notebookFile'        : {'type'    : str},
+        'notebookPort'        : {'type'    : int,
+                                 'default' : 8888},
+        'annotations'         : {'type'    : str},
+    }
 
-    # disableLogging disables logging (duh),
-    # so we don't bother exposing logging-
-    # related arguments
-    if not fsleyes.disableLogging:
-        mainParser.add_argument(*mainArgs['verbose'],
-                                action='count',
-                                help=mainHelp['verbose'])
-        mainParser.add_argument(*mainArgs['noisy'],
-                                metavar='MODULE',
-                                action='append',
-                                help=mainHelp['noisy'])
+    if fsleyes.disableLogging:
+        mainArgs.pop('verbose')
+        mainArgs.pop('noisy')
 
-    mainParser.add_argument(*mainArgs['glversion'],
-                            metavar=('MAJOR', 'MINOR'),
-                            type=int,
-                            nargs=2,
-                            help=mainHelp['glversion'])
-    mainParser.add_argument(*mainArgs['scene'],
-                            help=mainHelp['scene'])
-    mainParser.add_argument(*mainArgs['voxelLoc'],
-                            metavar=('X', 'Y', 'Z'),
-                            type=int,
-                            nargs=3,
-                            help=mainHelp['voxelLoc'])
-    mainParser.add_argument(*mainArgs['worldLoc'],
-                            metavar=('X', 'Y', 'Z'),
-                            type=float,
-                            nargs=3,
-                            help=mainHelp['worldLoc'])
-    mainParser.add_argument(*mainArgs['selectedOverlay'],
-                            metavar='INDEX',
-                            type=int,
-                            help=mainHelp['selectedOverlay'])
-    mainParser.add_argument(*mainArgs['autoDisplay'],
-                            action='store_true',
-                            help=mainHelp['autoDisplay'])
-    mainParser.add_argument(*mainArgs['displaySpace'],
-                            type=str,
-                            help=mainHelp['displaySpace'])
-    mainParser.add_argument(*mainArgs['neuroOrientation'],
-                            action='store_true',
-                            help=mainHelp['neuroOrientation'])
+    if exclude is not None:
+        for arg in exclude:
+            mainArgs.pop(arg)
 
-    mainParser.add_argument(*mainArgs['standard'],
-                            action='store_true',
-                            help=mainHelp['standard'])
-    mainParser.add_argument(*mainArgs['standard_brain'],
-                            action='store_true',
-                            help=mainHelp['standard_brain'])
-    mainParser.add_argument(*mainArgs['standard1mm'],
-                            action='store_true',
-                            help=mainHelp['standard1mm'])
-    mainParser.add_argument(*mainArgs['standard1mm_brain'],
-                            action='store_true',
-                            help=mainHelp['standard1mm_brain'])
-
-    mainParser.add_argument(*mainArgs['initialDisplayRange'],
-                            metavar=('LO', 'HI'),
-                            type=int,
-                            nargs=2,
-                            help=mainHelp['initialDisplayRange'])
-
-    mainParser.add_argument(*mainArgs['bigmem'],
-                            action='store_true',
-                            help=mainHelp['bigmem'])
-    mainParser.add_argument(*mainArgs['fontSize'],
-                            type=int,
-                            help=mainHelp['fontSize'])
-    mainParser.add_argument(*mainArgs['notebook'],
-                            action='store_true',
-                            help=mainHelp['notebook'])
-    mainParser.add_argument(*mainArgs['notebookFile'],
-                            type=str,
-                            help=mainHelp['notebookFile'])
-    mainParser.add_argument(*mainArgs['notebookPort'],
-                            type=int,
-                            help=mainHelp['notebookPort'],
-                            default=8888)
-    mainParser.add_argument(*mainArgs['annotations'],
-                            type=str,
-                            help=mainHelp['annotations'])
+    for arg in mainArgs.keys():
+        mainParser.add_argument(*mainArgs[arg],
+                                help=mainHelp[arg],
+                                **kwargs[arg])
 
 
-def _configExtraOptions(parser):
+def _configExtraOptions(parser, exclude=None):
     """Adds ``Extras`` options to the arguemnt parser. """
 
     args  = {name: ARGUMENTS['Extras', name][:2] for name in OPTIONS['Extras']}
@@ -1822,12 +1786,16 @@ def _configExtraOptions(parser):
     for name, (shortArg, longArg) in list(args.items()):
         args[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
 
-    parser.add_argument(*args['bumMode'],
-                        action='store_true',
-                        help=helps['bumMode'])
-    parser.add_argument(*args['nolink'],
-                        action='store_true',
-                        help=helps['nolink'])
+    if exclude is not None:
+        for arg in exclude:
+            args.pop(arg)
+
+    # all extra options are currently boolean
+    # toggles (action = store_true)
+    for arg in args.keys():
+        parser.add_argument(*args[arg],
+                            action='store_true',
+                            help=helps[arg])
 
 
 def _setupOverlayParsers(forHelp=False, shortHelp=False):
@@ -1900,8 +1868,10 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
     if not forHelp:
         dispProps.remove('overlayType')
 
-    _configParser(Display, dispParser, dispProps,       shortHelp=shortHelp)
-    _configParser(Display, otParser,   ['overlayType'], shortHelp=shortHelp)
+    _configParser(
+        Display, dispParser, None, dispProps,       shortHelp=shortHelp)
+    _configParser(
+        Display, otParser,   None, ['overlayType'], shortHelp=shortHelp)
 
     # Create and configure
     # each of the parsers
@@ -1926,7 +1896,7 @@ def _setupOverlayParsers(forHelp=False, shortHelp=False):
         if target in (LineVectorOpts, RGBVectorOpts, TensorOpts, SHOpts):
             propNames.remove('volume')
 
-        _configParser(target, parser, propNames, shortHelp=shortHelp)
+        _configParser(target, parser, None, propNames, shortHelp=shortHelp)
 
     return dispParser, otParser, parsers
 
@@ -1938,7 +1908,8 @@ def parseArgs(mainParser,
               desc=None,
               usageProlog=None,
               argOpts=None,
-              shortHelpExtra=None):
+              shortHelpExtra=None,
+              exclude=None):
     """Parses the given command line arguments, returning an
     :class:`argparse.Namespace` object containing all the arguments.
 
@@ -1979,7 +1950,16 @@ def parseArgs(mainParser,
                          arguments to the ``mainParser``, the long forms of
                          those arguemnts may be passed here as a list to
                          have them included in the short help text.
+
+    :arg exclude:        Dictionary containing arguments that should not be
+                         added to the argument parser. Should be of the form
+                         ``{identifier : [arguments]}``, where ``identifier``
+                         is one of ``Main``, ``Extras``, ``SceneOpts``,
+                         ``OrthoOpts``, ``LightBoxOpts``, or ``Scene3DOpts``.
     """
+
+    if exclude is None:
+        exclude = {}
 
     if argOpts is None: argOpts = []
     else:               argOpts = list(argOpts)
@@ -2011,7 +1991,7 @@ def parseArgs(mainParser,
     mainParser.prog        = name
     mainParser.description = desc
 
-    _setupMainParser(mainParser)
+    _setupMainParser(mainParser, exclude)
 
     # Figure out where the overlay files
     # are in the argument list, accounting

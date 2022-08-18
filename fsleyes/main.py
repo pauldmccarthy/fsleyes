@@ -14,15 +14,10 @@ within an existing application.
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 
 
-.. note:: Even though ``fsleyes`` (this module) and :mod:`fsleyes.render` (the
-          off-screen renderer) are intended to be separate applications, the
-          current version of PyInstaller (3.x) does not support bundling of
-          multiple executables
-          (https://github.com/pyinstaller/pyinstaller/issues/1527).
-
-          So at this point in time, :mod:`.fsleyes.render` can be invoked via
-          ``fsleyes.main`` by passing ``'render'`` as the first argument,
-          e.g.::
+.. note:: ``fsleyes`` (this module) and :mod:`fsleyes.render` (the off-screen
+          renderer) are intended to be separate applications, but
+          :mod:`.fsleyes.render` can also be invoked via ``fsleyes.main`` by
+          passing ``'render'`` as the first argument, e.g.::
 
               python -m fsleyes.main render ...
 """
@@ -654,6 +649,8 @@ def parseArgs(argv):
         up the scene.
         """.format(layouts=', '.join(allLayouts)))
 
+    exclude = {'LightBoxOpts' : ['nrows', 'ncols']}
+
     # Options for configuring the scene are
     # managed by the parseargs module
     return parseargs.parseArgs(parser,
@@ -661,7 +658,8 @@ def parseArgs(argv):
                                name,
                                prolog=prolog,
                                desc=description,
-                               argOpts=['-r', '--runscript'])
+                               argOpts=['-r', '--runscript'],
+                               exclude=exclude)
 
 
 def makeDisplayContext(namespace, splash):
