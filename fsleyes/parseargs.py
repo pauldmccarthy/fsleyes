@@ -2128,6 +2128,12 @@ def parseArgs(mainParser,
         _printVersion(name)
         raise SystemExit(0)
 
+    # Set empty/placeholder values for excluded arguments
+    for group in exclude:
+        for arg in exclude[group]:
+            longName = ARGUMENTS[group, arg][1]
+            setattr(namespace, longName, None)
+
     # Now, we'll create additiona parsers to handle
     # the Display and DisplayOpts options for each
     # overlay . Below we're going to manually step
