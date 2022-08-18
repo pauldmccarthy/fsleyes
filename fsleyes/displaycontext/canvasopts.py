@@ -183,13 +183,30 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
-    zrange = props.Bounds(ndims=1, minval=0, maxval=1)
+    zrange = props.Bounds(ndims=1, minval=0, maxval=1, default=(0.4, 0.6))
     """This property controls the range of the slices to be displayed.
     The low/high limits are specified as percentages (0-1) of the Z axis
     length.
 
     This property is automatically synchronised with the
     :attr:`.SliceCanvasOpts.zoom` property.
+    """
+
+
+    zax = props.Choice((2, 0, 1),
+                       alternates=[['z', 'Z'], ['x', 'X'], ['y', 'Y']],
+                       allowStr=True)
+    """Equivalent to :attr:`.SliceCanvasOpts.zax`, but with a different
+    default.
+    """
+
+
+    zoom = props.Percentage(minval=0,
+                            maxval=1,
+                            default=0,
+                            clamped=True)
+    """The :attr:`.DisplayContext.bounds` are divided by this zoom
+    factor to produce the canvas display bounds.
     """
 
 
@@ -228,16 +245,6 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     def __init__(self):
         super().__init__()
-        self.setatt('zax',  'default', 2)
-        self.setatt('zoom', 'default', 0)
-        self.setatt('zoom', 'minval',  0)
-        self.setatt('zoom', 'maxval',  1)
-        self.setatt('zoom', 'clamped', True)
-
-        self.zax    = 2
-        self.zoom   = 0
-        self.zrange = 0, 1
-
         name = self.name
         self.ilisten('zoom',         name, self.__zoomChanged)
         self.ilisten('zrange',       name, self.__zrangeChanged)
