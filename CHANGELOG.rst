@@ -14,10 +14,20 @@ chronological order.
 -------------------------
 
 
+Added
+^^^^^
+
+
+* ``ViewPanel`` plugin classes can now implement the
+  :meth:`~.ViewPanel.defaultLocation` static method to specify an initial
+  location and size within the FSLeyes frame (!334).
+
+
 Changed
 ^^^^^^^
 
 
+* Redesigned the lightbox view to simplify behaviour and interaction (!334).
 * Restored low-performance settings for the ortho and lightbox views.  Only
   two settings are available - *Best looking* and *Fastest* (!333).
 
