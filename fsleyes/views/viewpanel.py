@@ -18,7 +18,6 @@ import wx.lib.agw.aui                as aui
 import wx.lib.agw.aui.framemanager   as auifm
 
 import fsl.utils.notifier            as notifier
-import fsleyes_widgets               as fwidgets
 
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
@@ -135,6 +134,20 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """May be overridden by sub-classes. Should return a list of names of
         FSLeyes :class:`.ControlPanel` types which form the default layout for
         this view.
+        """
+        return None
+
+
+    @staticmethod
+    def defaultLocation():
+        """May be overridden by sub-classes. Should return a sequence
+        containing:
+
+          - the preferred location of the view panel in the
+            :class:`.FSLeyesFrame` - one of ``wx.TOP``, ``wx.BOTTOM``,
+             ``wx.LEFT``, or ``wx.RIGHT``.
+          - A number between 0 and 1 indicating the preferred size of the
+            view panel, as a proportion of the total frame size.
         """
         return None
 
