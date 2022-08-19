@@ -37,7 +37,7 @@ def add_prefix(prefix):
 @pytest.mark.parametrize('neuro', [False, True])
 def test_performance(performance, neuro, scene):
     prefix = f'-p {performance} -s {scene} '
-    if neuro:
-        prefix += '-no '
+    if scene == 'lightbox': prefix += '-zr 0 1 '
+    if neuro:               prefix += '-no '
     tests = add_prefix(prefix)
     run_cli_tests('test_performance', tests, extras=extras)
