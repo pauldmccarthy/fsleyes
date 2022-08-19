@@ -2466,6 +2466,13 @@ def _applyArgs(args,
     if propNames is None:
         propNames = list(it.chain(*OPTIONS.get(target, allhits=True)))
 
+    # See equivalent hack in _setupOverlayParsers
+    if isinstance(target, (fsldisplay.LineVectorOpts,
+                           fsldisplay.RGBVectorOpts,
+                           fsldisplay.TensorOpts,
+                           fsldisplay.SHOpts)):
+        propNames.remove('volume')
+
     longArgs  = {name : ARGUMENTS[target, name][1] for name in propNames}
     xforms    = {}
 
