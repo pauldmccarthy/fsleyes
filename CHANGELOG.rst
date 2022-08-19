@@ -37,6 +37,8 @@ Fixed
 
 
 * Fixed several issues related to mesh rendering in the lightbox view (!333).
+* Fixed an issue with the location cursor (and other annotations) not being
+  displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (!334).
 
 
 
