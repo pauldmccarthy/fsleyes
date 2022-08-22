@@ -30,3 +30,4 @@ from .selectiontexture   import SelectionTexture2D      # noqa
 from .selectiontexture   import SelectionTexture3D      # noqa
 from .rendertexture      import RenderTexture           # noqa
 from .rendertexture      import GLObjectRenderTexture   # noqa
+from .rendertexturestack import RenderTextureStack     # noqa
