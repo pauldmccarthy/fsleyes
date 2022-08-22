@@ -69,6 +69,7 @@ This module also provides a few convenience classes and functions:
 
    ProxyImage
    findFEATImage
+   findMeshReferenceImage
 """
 
 
@@ -77,7 +78,6 @@ import            logging
 import            weakref
 import            collections
 
-import fsl.data.utils as dutils
 import fsl.data.image as fslimage
 import fsleyes_props  as props
 
