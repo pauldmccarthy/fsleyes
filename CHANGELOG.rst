@@ -21,6 +21,8 @@ Added
 * ``ViewPanel`` plugin classes can now implement the
   :meth:`~.ViewPanel.defaultLocation` static method to specify an initial
   location and size within the FSLeyes frame (!334).
+* New built-in ``defaultlb`` and ``default3d`` layouts, which respectively open
+  a lightbox or 3D view with standard toolbars and control panels.
 
 
 Changed
@@ -30,6 +32,9 @@ Changed
 * Redesigned the lightbox view to simplify behaviour and interaction (!334).
 * Restored low-performance settings for the ortho and lightbox views.  Only
   two settings are available - *Best looking* and *Fastest* (!333).
+* The time series, power spectra and histogram panels now default to
+  displaying data series from all compatible overlays, instead of just the
+  currently selected overlay (!334).
 
 
 Fixed
