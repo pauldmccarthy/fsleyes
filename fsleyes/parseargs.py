@@ -3265,12 +3265,14 @@ def _applyDefault_LightBoxOpts_zrange(args, overlayList, displayCtx, target):
     #   - LightBoxOpts.zax has already been
     #     configured (as it comes before
     #     zrange in the ARGUMENTS list)
-    zax           = target.zax
-    zpos          = displayCtx.location[zax]
-    zmin          = displayCtx.bounds.getLo( zax)
-    zlen          = displayCtx.bounds.getLen(zax)
-    zpos          = (zpos - zmin) / zlen
-    target.zrange = zpos - 0.1, zpos + 0.1
+    zax  = target.zax
+    zpos = displayCtx.location[zax]
+    zmin = displayCtx.bounds.getLo( zax)
+    zlen = displayCtx.bounds.getLen(zax)
+
+    if not np.isclose(zlen, 0):
+        zpos          = (zpos - zmin) / zlen
+        target.zrange = zpos - 0.1, zpos + 0.1
 
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
