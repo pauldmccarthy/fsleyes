@@ -12,6 +12,8 @@ by :class:`.LightBoxPanel` instances for managing their display settings.
 import logging
 import copy
 
+import fsleyes_props as props
+
 from . import sceneopts
 from . import canvasopts
 
@@ -37,6 +39,12 @@ class LightBoxOpts(sceneopts.SceneOpts):
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
 
+    # SliceCanvas has (prerender, offscreen, onscreen)
+    # performance settings, but LightBoxCanvas only has
+    # (offscreen, onscreen) settings.
+    performance = props.Choice((2, 3), default=3, allowStr=True,
+                               alternates=[[1, '1'], []])
+
 
     def __init__(self, *args, **kwargs):
         """Create a ``LightBoxOpts`` instance. All arguments are passed
@@ -59,10 +67,10 @@ class LightBoxOpts(sceneopts.SceneOpts):
         according to the performance setting.
         """
 
-        if   self.performance == 2: self.renderMode = 'onscreen'
-        elif self.performance == 1: self.renderMode = 'offscreen'
+        if   self.performance == 3: self.renderMode = 'onscreen'
+        elif self.performance == 2: self.renderMode = 'offscreen'
 
-        self.highDpi = self.performance == 2 and self.highDpi
+        self.highDpi = self.performance == 3 and self.highDpi
 
         log.debug('Performance settings changed: '
-                  'renderMode={}'.format(self.renderMode))
+                  'renderMode=%s', self.renderMode)

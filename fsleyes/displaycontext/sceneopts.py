@@ -85,7 +85,7 @@ class SceneOpts(props.HasProperties):
     #       performance because, for example, the
     #       OrthoEditProfile does numerical comparisons
     #       to it.
-    performance = props.Choice((1, 2), default=2, allowStr=True)
+    performance = props.Choice((1, 2, 3), default=3, allowStr=True)
     """User controllable performance setting.
 
     This property is linked to the :attr:`renderMode` property. Setting this
@@ -111,7 +111,7 @@ class SceneOpts(props.HasProperties):
         """
 
         self.__panel = panel
-        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name  = f'{type(self).__name__}_{id(self)}'
 
         self.movieSyncRefresh = self.defaultMovieSyncRefresh
 
@@ -133,7 +133,7 @@ class SceneOpts(props.HasProperties):
         """
         renderer        = fslgl.GL_RENDERER.lower()
         unsyncRenderers = ['gallium', 'mesa dri intel(r)']
-        unsync          = any([r in renderer for r in unsyncRenderers])
+        unsync          = any(r in renderer for r in unsyncRenderers)
 
         return not unsync
 

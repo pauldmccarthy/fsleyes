@@ -390,7 +390,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # set to maximum, set the initial
         # locationFollowsMouse value to False
         perf = viewPanel.sceneOpts.performance
-        self.locationFollowsMouse = perf == 2
+        self.locationFollowsMouse = perf == 3
 
         # These property values are cached
         # on a per-overlay basis. When an

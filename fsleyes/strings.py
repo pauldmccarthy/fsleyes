@@ -1303,7 +1303,8 @@ choices = TypeDict({
                                       'bottom-right' : 'Bottom / Right'},
 
     'SceneOpts.performance' : {1 : 'Fastest',
-                               2 : 'Best looking'},
+                               2 : 'Faster',
+                               3 : 'Best looking'},
 
     'CanvasOpts.zax' : {0 : 'X axis',
                         1 : 'Y axis',

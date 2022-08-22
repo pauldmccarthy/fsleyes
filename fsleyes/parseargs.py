@@ -1070,7 +1070,7 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.colourBarSize'      : 'Colour bar size (%%)',
     'SceneOpts.performance'        : 'Rendering performance '
-                                     '(1=fastest, 2=best looking)',
+                                     '(1=fastest, 2=faster, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
                                      'display, render at the full display '
                                      'resolution. This setting is only '

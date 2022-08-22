@@ -112,7 +112,7 @@ class OrthoOpts(sceneopts.SceneOpts):
         """
         sceneopts.SceneOpts.__init__(self, *args, **kwargs)
 
-        name = '{}_{}'.format(type(self).__name__, id(self))
+        name = f'{type(self).__name__}_{id(self)}'
 
         self.addListener('zoom', name, self.__onZoom)
 
@@ -134,10 +134,11 @@ class OrthoOpts(sceneopts.SceneOpts):
         according to the performance setting.
         """
 
-        if   self.performance == 2: self.renderMode = 'onscreen'
-        elif self.performance == 1: self.renderMode = 'offscreen'
+        if   self.performance == 3: self.renderMode = 'onscreen'
+        elif self.performance == 2: self.renderMode = 'offscreen'
+        elif self.performance == 1: self.renderMode = 'prerender'
 
-        self.highDpi = self.performance == 2 and self.highDpi
+        self.highDpi = self.performance == 3 and self.highDpi
 
         log.debug('Performance settings changed: '
-                  'renderMode={}'.format(self.renderMode))
+                  'renderMode=%s', self.renderMode)

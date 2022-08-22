@@ -60,4 +60,4 @@ class Scene3DOpts(sceneopts.SceneOpts):
         setting.
         """
 
-        self.highDpi = self.performance == 2 and self.highDpi
+        self.highDpi = self.performance == 3 and self.highDpi
