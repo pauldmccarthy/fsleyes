@@ -142,7 +142,9 @@ class RenderTextureStack:
         self.__yax = yax
         self.__zax = zax
 
-        res = self.__globj.getDataResolution(xax, yax)
+        width  = self.__defaultWidth
+        height = self.__defaultHeight
+        res    = self.__globj.getDataResolution(xax, yax, width, height)
 
         if res is not None: numTextures = res[zax]
         else:               numTextures = self.__defaultNumTextures
@@ -263,14 +265,13 @@ class RenderTextureStack:
             return
 
         lo, hi = globj.getDisplayBounds()
-        res    = globj.getDataResolution(xax, yax)
+        width  = self.__defaultWidth
+        height = self.__defaultHeight
+        res    = globj.getDataResolution(xax, yax, width, height)
 
         if res is not None:
             width  = res[xax]
             height = res[yax]
-        else:
-            width  = self.__defaultWidth
-            height = self.__defaultHeight
 
         if width  > self.__maxWidth:  width  = self.__maxWidth
         if height > self.__maxHeight: height = self.__maxHeight
@@ -280,29 +281,12 @@ class RenderTextureStack:
 
         tex.shape = width, height
 
-        oldSize       = gl.glGetIntegerv(gl.GL_VIEWPORT)
-        oldProjMat    = gl.glGetFloatv(  gl.GL_PROJECTION_MATRIX)
-        oldMVMat      = gl.glGetFloatv(  gl.GL_MODELVIEW_MATRIX)
-
-        with tex.target():
-            projmat, mvmat = glroutines.show2D(xax, yax, lo, hi)
-            gl.glViewport(0, 0, width, height)
-            gl.glMatrixMode(gl.GL_PROJECTION)
-            gl.glLoadMatrixf(projmat)
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-            gl.glLoadMatrixf(mvmat)
+        with tex.target(xax, yax, lo, hi):
             glroutines.clear((0, 0, 0, 0))
-
             with glroutines.disabled(gl.GL_BLEND):
                 globj.preDraw()
-                globj.draw2D(zpos, axes)
+                globj.draw2D(tex, zpos, axes)
                 globj.postDraw()
-
-        gl.glViewport(*oldSize)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadMatrixf(oldProjMat)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadMatrixf(oldMVMat)
 
         self.__textureDirty[idx] = False
 
