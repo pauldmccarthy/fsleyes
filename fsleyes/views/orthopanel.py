@@ -278,10 +278,6 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yopts.bindProps('renderMode',   sceneOpts)
         zopts.bindProps('renderMode',   sceneOpts)
 
-        xopts.bindProps('highDpi',      sceneOpts)
-        yopts.bindProps('highDpi',      sceneOpts)
-        zopts.bindProps('highDpi',      sceneOpts)
-
         xopts.bindProps('invertX', sceneOpts, 'invertXHorizontal')
         xopts.bindProps('invertY', sceneOpts, 'invertXVertical')
         yopts.bindProps('invertX', sceneOpts, 'invertYHorizontal')
