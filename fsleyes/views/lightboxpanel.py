@@ -287,7 +287,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         canvas  = self.canvas
         opts    = self.sceneOpts
         copts   = canvas.opts
-        zlen    = copts.zrange.xlen
+        zlen    = copts.normzlen
         row     = np.clip(row, 0, canvas.maxrows)
         sliceno = np.clip(row * canvas.ncols, 0, copts.maxslices - 1)
 
@@ -295,19 +295,23 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         self.__scrollbar.Refresh()
 
         # Expand the z range if it does not
-        # take up the full grid size (i.e. the
-        # last row contains fewer slices than
-        # can be displayed),
+        # take up the full grid size (i.e.
+        # the last row contains fewer
+        # slices than can be displayed),
         nslices  = copts.nslices
-        gridsize = canvas.nrows * canvas.ncols
-        zpos     = copts.slices[sliceno]
-
+        gridsize = canvas.nslices
         if nslices < gridsize:
             diff = gridsize - nslices
             zlen = zlen + diff * copts.sliceSpacing
 
+        # Calculate the z position corresponding
+        # to the new row, then calculate the new
+        # z range from this slice position.
+        zpos           = copts.slices[sliceno]
         newzlo, newzhi = zpos, zpos + zlen
 
+        # Limit the zrange to [0, 1], keeping
+        # the z length constant
         if newzlo < 0:
             newzhi -= newzlo
             newzlo  = 0

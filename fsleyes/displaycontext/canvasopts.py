@@ -170,7 +170,24 @@ class SliceCanvasOpts(props.HasProperties):
 
 class LightBoxCanvasOpts(SliceCanvasOpts):
     """The ``LightBoxCanvasOpts`` class defines the display settings
-    available on :class:`.LightBoxCanvas` instances.
+    available on :class:`.LightBoxCanvas` instances. This class also
+    provides a set of utility methods for managing and calculating slice
+    positions.
+
+    The Z axis of the display coordinate system (controlled by the
+    :attr:`zax` property) is divided up into slices, which are defined
+    in a "slice coordinate system" having range 0 to 1, according to the
+    :attr:`zrange` and :attr:`sliceSpacing` properties::
+
+                     zlo                                     zhi
+                      0                                       1
+        slice centre  |   *       *       *       *       *   |
+        slice index   |   0   |   1   |   2   |   3   |   4   |
+                      |-------|
+                       spacing
+
+    where ``*`` denotes the slice centres - these correspond to the
+    Z positions returned by the :meth:`slices` property.
     """
 
 
@@ -190,6 +207,12 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     This property is automatically synchronised with the
     :attr:`.SliceCanvasOpts.zoom` property.
+
+    The :meth:`normzrange` and :meth:`normzlen` properties should usually be
+    used in preference to the raw ``zrange`` values - this is because the Z
+    range of slices that end up being displayed may not precisely match the
+    ``zrange`` values, as each slice is internally modelled so as to have a Z
+    width of ``sliceSpacing``.
     """
 
 
@@ -298,6 +321,26 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
 
     @property
+    def normzrange(self):
+        """Returns :attr:`zrange`, adjusted to respect the
+        :attr:`sliceSpacing`.
+        """
+        start    = self.startslice
+        end      = start + self.nslices
+        ssp      = self.sliceSpacing
+        return start * ssp, end * ssp
+
+
+    @property
+    def normzlen(self):
+        """Returns the length of :attr:`zrange`, adjusted to respect the
+        :attr:`sliceSpacing`.
+        """
+        zlo, zhi = self.normzrange
+        return zhi - zlo
+
+
+    @property
     def nslices(self):
         """Returns the total number of slices that should currently be displayed,
         i.e. that fit within the current :attr:`zrange`. This is automatically
@@ -309,8 +352,8 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         canvas (i.e. nrows * ncols).
         """
         # round to avoid floating point imprecision
-        nslices = self.zrange.xlen / self.sliceSpacing
-        return int(np.ceil(np.round(nslices, 5)))
+        nslices = np.round(self.zrange.xlen / self.sliceSpacing, 5)
+        return int(np.ceil(nslices))
 
 
     @property
@@ -335,11 +378,11 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     @property
     def startslice(self):
-        """Returns the index of the first slice to be displayed.
-        """
-        zlo          = self.zrange.xlo
+        """Returns the index of the first slice to be displayed. """
         sliceSpacing = self.sliceSpacing
-        return int(np.floor(zlo / sliceSpacing))
+        zlo          = self.zrange.xlo
+        startslice   = np.round(zlo / sliceSpacing, 5)
+        return int(np.floor(startslice))
 
 
 class Scene3DCanvasOpts(props.HasProperties):

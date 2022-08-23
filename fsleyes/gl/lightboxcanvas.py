@@ -166,9 +166,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if np.any(np.isclose(zlen, ncols)):
             return 0, 0, 0
 
+        # Convert Z position into
+        # slice/row/column indices
+        zlo     = opts.normzrange[0]
         zpos    = pos[opts.zax]
-        sliceno = (zpos - zmin) / zlen - opts.zrange.xlo
-        sliceno = int(np.round(sliceno / opts.sliceSpacing))
+        sliceno = (zpos - zmin) / zlen - zlo
+        sliceno = int(np.floor(sliceno / opts.sliceSpacing))
         row     = int(np.floor(sliceno / ncols))
         col     = int(np.floor(sliceno % ncols))
 
@@ -424,35 +427,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if len(self.overlayList) == 0:
             return
 
-        opts     = self.opts
-        spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
-        spacing  = min(spacings)
-        bounds   = self.displayCtx.bounds
-        zmin     = bounds.getLo( opts.zax)
-        zlen     = bounds.getLen(opts.zax)
-        zpos     = opts.pos[opts.zax]
-
-        # Adjust zrange and slice spacing so
-        # that their effect is preserved if
-        # the display bounds have changed
-        zlo, zhi, sp = self.__zbounds
-        preserve     = not ((zlo == 0) and (zhi == 0))
-
-        if preserve:
-            zlo = (zlo - zmin) / zlen
-            zhi = (zhi - zmin) / zlen
-            sp  = sp / zlen
-        else:
-            zpos = (zpos - zmin) / zlen
-            zlo  = zpos - 0.1
-            zhi  = zpos + 0.1
-            sp   = spacing
-
-        with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
-            opts.setatt('sliceSpacing', 'minval', spacing)
-            opts.zrange.x     = zlo, zhi
-            opts.sliceSpacing = sp
-
+        self._adjustSliceProps(True, True)
         self._regenGrid()
 
 
@@ -479,6 +454,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :attr:`.SliceCanvasOpts.zax` changes. Re-generates lightbox
         slices.
         """
+        self._adjustSliceProps(False, True)
         self._regenGrid()
 
 
@@ -497,10 +473,61 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     def _overlayBoundsChanged(self, *a):
         """Overrides :meth:`.SliceCanvas._overlayBoundsChanged`.
 
-        Called when the :attr:`.DisplayContext.bounds` change. Re-generates slice
-        locations.
+        Called when the :attr:`.DisplayContext.bounds` change. Re-generates
+        slice locations.
         """
         self._regenGrid()
+
+
+    def _adjustSliceProps(self, adjustZrange, adjustSpacing):
+        """Called when the selected overlay changes, or the Z axis changes.
+        Makes adjustments to the :attr:`.LightBoxCanvasOpts.zrange` and
+        :attr:`.LightBoxCanvasOpts.sliceSpacing` properties to keep them
+        consistent with respect to the currently selected overlay and
+        display bounds.
+
+        The ``zrange`` and ``sliceSpacing`` properties are defined in terms of
+        the "slice coordinate system", having range 0 to 1. This means that
+        their interpretation will be different depending on the properties of
+        the Z axis in the display coordinate system. When the selected overlay
+        changes, we don't want the displayed slices to change - this method
+        adjusts the ``zrange`` and ``sliceSpacing`` values so that they will
+        result in the same slices being displayed.
+
+        This method is also called when the Z axis is changed. In this case,
+        the ``sliceSpacing`` may have a different effect, e.g. for images with
+        different FOVs / voxel resolutions along different axes. Therefore,
+        the ``sliceSpacing`` property is also adjusted to remain consistent.
+        """
+        opts     = self.opts
+        spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
+        spacing  = min(spacings)
+        bounds   = self.displayCtx.bounds
+        zmin     = bounds.getLo( opts.zax)
+        zlen     = bounds.getLen(opts.zax)
+        zpos     = opts.pos[opts.zax]
+
+        # Adjust zrange and slice spacing so
+        # that their effect is preserved if
+        # the display bounds have changed
+        zlo, zhi, sp = self.__zbounds
+        preserve     = not ((zlo == 0) and (zhi == 0))
+
+        if preserve:
+            zlo = (zlo - zmin) / zlen
+            zhi = (zhi - zmin) / zlen
+            sp  = sp / zlen
+        else:
+            zpos = (zpos - zmin) / zlen
+            zlo  = zpos - 0.1
+            zhi  = zpos + 0.1
+            sp   = spacing
+
+        with props.skip(opts, ('sliceSpacing', 'zrange'), self.name):
+            opts.setatt('sliceSpacing', 'minval', spacing)
+
+            if adjustZrange:  opts.zrange.x     = zlo, zhi
+            if adjustSpacing: opts.sliceSpacing = sp
 
 
     def _regenGrid(self):
@@ -556,8 +583,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # the _overlayListChanged method may need
         # to restore them.
         spacing        = zlen * opts.sliceSpacing
-        zlo            = zmin + opts.zrange.xlo * zlen
-        zhi            = zmin + opts.zrange.xhi * zlen
+        zlo, zhi       = opts.normzrange
+        zlo            = zmin + zlo * zlen
+        zhi            = zmin + zhi * zlen
         self.__zbounds = [zlo, zhi, spacing]
 
         for sliceno in range(len(self.__zposes)):
