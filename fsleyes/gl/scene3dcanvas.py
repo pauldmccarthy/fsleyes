@@ -112,7 +112,6 @@ class Scene3DCanvas:
         opts.addListener('light',         self.__name, self.Refresh)
         opts.addListener('lightPos',      self.__name, self.Refresh)
         opts.addListener('lightDistance', self.__name, self.Refresh)
-        opts.addListener('highDpi',       self.__name, self.__highDpiChanged)
 
 
     def __compileShaders(self):
@@ -525,13 +524,6 @@ class Scene3DCanvas:
 
         if refresh:
             self.Refresh()
-
-
-    def __highDpiChanged(self, *a):
-        """Called when the :attr:`.Scene3DCanvasOpts.highDpi` property
-        changes. Calls the :meth:`.GLCanvasTarget.EnableHighDPI` method.
-        """
-        self.EnableHighDPI(self.opts.highDpi)
 
 
     def __displayBoundsChanged(self, *a):

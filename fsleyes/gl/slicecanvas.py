@@ -202,7 +202,6 @@ class SliceCanvas:
         opts.addListener('invertY',       self.name, self.Refresh)
         opts.addListener('zoom',          self.name, self._zoomChanged)
         opts.addListener('renderMode',    self.name, self._renderModeChanged)
-        opts.addListener('highDpi',       self.name, self._highDpiChange)
 
         # When the overlay list changes, refresh the
         # display, and update the display bounds
@@ -245,7 +244,6 @@ class SliceCanvas:
         opts.removeListener('invertY',         self.name)
         opts.removeListener('zoom',            self.name)
         opts.removeListener('renderMode',      self.name)
-        opts.removeListener('highDpi',         self.name)
 
         self.overlayList.removeListener('overlays',           self.name)
         self.displayCtx .removeListener('bounds',             self.name)
@@ -733,13 +731,6 @@ class SliceCanvas:
         """
         if self.opts.renderMode == 'prerender':
             self._renderModeChange(self)
-
-
-    def _highDpiChange(self, *a):
-        """Called when the :attr:`.SliceCanvasOpts.highDpi` property
-        changes. Calls the :meth:`.GLCanvasTarget.EnableHighDPI` method.
-        """
-        self.EnableHighDPI(self.opts.highDpi)
 
 
     def _zAxisChanged(self, *a):

@@ -1027,7 +1027,6 @@ properties = TypeDict({
     'SceneOpts.showColourBar'      : 'Show colour bar',
     'SceneOpts.performance'        : 'Rendering performance',
     'SceneOpts.zoom'               : 'Zoom',
-    'SceneOpts.highDpi'            : 'Enable high-DPI rendering',
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label side',
     'SceneOpts.colourBarSize'      : 'Colour bar size',

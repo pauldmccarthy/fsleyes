@@ -194,7 +194,6 @@ import fsl.utils.idle                     as idle
 import fsl.version                        as fslversion
 from   fsl.utils.platform import platform as fslplatform
 import fsleyes_widgets                    as fwidgets
-import fsleyes.gl.highdpi                 as highdpi
 
 
 log = logging.getLogger(__name__)
@@ -1083,12 +1082,6 @@ class OffScreenCanvasTarget:
         pass
 
 
-    def EnableHighDPI(self):
-        """Does nothing. This canvas is for static (i.e. unchanging) rendering.
-        """
-        pass
-
-
     def draw(self):
         """Calls the :meth:`_draw` method, which must be provided by
         subclasses.
@@ -1137,14 +1130,6 @@ class WXGLCanvasTarget:
     And must also ensure that the :meth:`destroy` method is called when
     the class is being destroyed.
     """
-
-
-    @staticmethod
-    def canToggleHighDPI():
-        """Return ``True`` if high-DPI scaling can be toggled, ``False``
-        otherwise.
-        """
-        return highdpi.needsToggling()
 
 
     @staticmethod
@@ -1227,11 +1212,6 @@ class WXGLCanvasTarget:
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
         self.__context           = context
-
-        if highdpi.needsToggling():
-            self.__dpiscale = 1.0
-        else:
-            self.__dpiscale = self.GetContentScaleFactor()
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
@@ -1411,31 +1391,9 @@ class WXGLCanvasTarget:
         return self.GetClientSize().Get()
 
 
-    def GetContentScaleFactor(self):
-        """Overrides ``wx.Window.GetContentScaleFactor``.
-
-        Calls the base class implementation, except where wxpython 3.0.2.0 is
-        being used, as the method does not exist in that version. In this
-        case, 1.0 is returned.
-        """
-        try:
-            return float(super().GetContentScaleFactor())
-        except AttributeError:
-            return 1.0
-
-
     def GetScale(self):
         """Returns the current DPI scaling factor. """
-
-        scale = self.GetContentScaleFactor()
-
-        # Reset scaling factor in case the canvas
-        # window has moved between displays with
-        # different scaling factors
-        if scale == 1 and self.__dpiscale != 1:
-            self.EnableHighDPI(False)
-
-        return self.__dpiscale
+        return self.GetContentScaleFactor()
 
 
     def GetScaledSize(self):
@@ -1484,34 +1442,6 @@ class WXGLCanvasTarget:
         if not self.__freezeSwapBuffers:
             if self._setGLContext():
                 super(WXGLCanvasTarget, self).SwapBuffers()
-
-
-    def EnableHighDPI(self, enable=True):
-        """Attempts to enable/disable high-resolution rendering.
-        """
-
-        # We don't necessarily need to
-        # enable high-DPI support
-        if not highdpi.needsToggling():
-            return
-
-        if not self._setGLContext():
-            return
-
-        self.__dpiscale = 1.0
-
-        # If the display can't scale,
-        # (scale == 1) there's no point
-        # in enabling it.
-        scale  = self.GetContentScaleFactor()
-        enable = enable and scale > 1
-
-        # on macOS, we have to set
-        # scaling on the GL canvas
-        highdpi.toggle(self, enable)
-
-        if enable: self.__dpiscale = scale
-        else:      self.__dpiscale = 1.0
 
 
     def getBitmap(self):
