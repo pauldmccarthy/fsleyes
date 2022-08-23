@@ -10,8 +10,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.5.0 (Tuesday 30th August 2022)
---------------------------------
+1.5.0 (Wednesday 31st August 2022)
+----------------------------------
 
 
 Added
@@ -48,6 +48,14 @@ Fixed
 * Fixed an issue with the location cursor (and other annotations) not being
   displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (!334).
 * Fixed a memory leak triggered by the file tree panel (!334).
+
+
+Removed
+^^^^^^^
+
+
+* Removed the ``--highDpi`` command-line and interface option - as of wxPython
+  4.1.0, high DPI scaling should be taken care of automatically (!338).
 
 
 1.4.6 (Tuesday 14th June 2022)
