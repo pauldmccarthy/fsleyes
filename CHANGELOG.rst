@@ -23,6 +23,10 @@ Added
   location and size within the FSLeyes frame (!334).
 * New built-in ``defaultlb`` and ``default3d`` layouts, which respectively open
   a lightbox or 3D view with standard toolbars and control panels.
+* New ``--noBrowser`` / ``-nbb`` command-line option, which starts a Jupyter
+  kernel without opening the Notebooks home page; this can be used when you
+  wish to attach a terminal IPython instance to FSLeyes, instead of a Jupyter
+  notebook (!334).
 
 
 Changed
