@@ -412,6 +412,7 @@ OPTIONS = td.TypeDict({
                        'notebook',
                        'notebookFile',
                        'notebookPort',
+                       'noBrowser',
                        'annotations'],
 
     # Hidden/advanced/silly options
@@ -792,6 +793,7 @@ ARGUMENTS = td.TypeDict({
     'Main.notebook'            : ('nb',      'notebook',            False),
     'Main.notebookFile'        : ('nbf',     'notebookFile',        True),
     'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
+    'Main.noBrowser'           : ('nbb',     'noBrowser',           False),
     'Main.annotations'         : ('a',       'annotations',         True),
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
@@ -1047,19 +1049,26 @@ HELP = td.TypeDict({
     '(low, high) percentiles of the image data range (calculated on '
     'all non-zero voxels).',
 
-    'Main.bigmem'           : 'Load all images into memory, '
-                              'regardless of size.',
-    'Main.fontSize'         : 'Application font size',
-    'Main.notebook'         : 'Start the Jupyter notebook server',
-    'Main.notebookFile'     : 'Start the Jupyter notebook server and open '
-                              'the specified notebook file.',
-    'Main.notebookPort'     : 'Jupyter notebook server port',
-    'Main.annotations'      :
+    'Main.bigmem' :
+    'Load all images into memory, regardless of size.',
+    'Main.fontSize' :
+    'Application font size',
+    'Main.annotations' :
     'Load annotations from file (only applied to ortho views)',
+
+    'Main.notebook' :
+    'Start the Jupyter notebook server',
+    'Main.notebookFile' :
+    'Start the Jupyter notebook server and open the specified notebook file.',
+    'Main.notebookPort' :
+    'Jupyter notebook server port',
+    'Main.noBrowser' :
+    'Start the jupyter notebook server, but do not open the Jupyter notebook '
+    'home page in a web browser.',
 
     # Set the default value for the ColourMapOpts.
     # linkLowRanges option to False
-    'Extras.nolink'   : argparse.SUPPRESS,
+    'Extras.nolink'  : argparse.SUPPRESS,
     # Make the coronal icon look like a bum
     'Extras.bumMode' : argparse.SUPPRESS,
 
@@ -1764,6 +1773,7 @@ def _configMainParser(mainParser, exclude=None):
         'notebookFile'        : {'type'    : str},
         'notebookPort'        : {'type'    : int,
                                  'default' : 8888},
+        'noBrowser'           : {'action'  : 'store_true'},
         'annotations'         : {'type'    : str},
     }
 

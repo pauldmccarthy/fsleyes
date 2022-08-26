@@ -391,12 +391,22 @@ def main(args=None):
                          ignorePoint=False)
 
         # start notebook server
+        if namespace[0].noBrowser:
+            namespace[0].notebook = True
         if namespace[0].notebookFile is not None:
             namespace[0].notebook     = True
             namespace[0].notebookFile = op.abspath(namespace[0].notebookFile)
         if namespace[0].notebook:
             from fsleyes.actions.notebook import NotebookAction
-            frame.menuActions[NotebookAction](namespace[0].notebookFile)
+            nbfile  =     namespace[0].notebookFile
+            browser = not namespace[0].noBrowser
+            nbact   = frame.menuActions[NotebookAction]
+
+            nbact(nbfile, browser)
+
+            if not browser:
+                print('Connect to the FSLeyes Jupyter '
+                      f'kernel with {nbact.kernel.connfile}')
 
         # start CLI server
         if namespace[0].cliserver:

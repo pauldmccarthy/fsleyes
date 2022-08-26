@@ -8,6 +8,7 @@ c.NotebookApp.notebook_dir              = '{{ fsleyes_nbserver_dir }}'
 c.NotebookApp.extra_static_paths        = ['{{ fsleyes_nbserver_static_dir }}']
 c.NotebookApp.answer_yes                = True
 c.NotebookApp.extra_nbextensions_path   = ['{{ fsleyes_nbextension_dir }}']
+c.NotebookApp.open_browser              = {{ fsleyes_nbserver_open_browser }}
 c.NotebookApp.kernel_manager_class      = 'fsleyes_kernelmanager.FSLeyesNotebookKernelManager'
 
 # inject our kernel connection

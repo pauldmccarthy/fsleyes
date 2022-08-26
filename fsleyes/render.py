@@ -154,7 +154,8 @@ def parseArgs(argv):
                               'fontSize',
                               'notebook',
                               'notebookFile',
-                              'notebookPort'],
+                              'notebookPort',
+                              'noBrowser'],
                'SceneOpts' : ['movieSyncRefresh',
                               'highDpi']}
 
