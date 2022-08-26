@@ -86,6 +86,31 @@ item.
    :align: center
 
 
+You can also start the Jupyter notebook server from the command-line with the
+``--notebook`` or ``-nb`` option::
+
+    fsleyes --notebook
+    fsleyes  -nb
+
+
+When the Jupyter notebook server is started, the Jupyter notebook home page
+will be opened in your web browser. Another option, instead of interacting
+with FSLeyes through a Jupyter notebook, is to attach an IPython terminal to
+FSLeyes; this can be done as follows::
+
+1. Start FSLeyes with the ``--noBrowser`` or ``-nbb`` option::
+
+       fsleyes -nbb
+
+2. The path to the Jupyter kernel connection file will be printed, e.g.::
+
+       Connect to the FSLeyes Jupyter kernel with /tmp/fsleyes-kernel-32225.jsoniex96y76.json
+
+3.  Start an IPython session, connected to the FSLeyes Jupyter kernel::
+
+       jupyter console --existing /tmp/fsleyes-kernel-32225.jsoniex96y76.json
+
+
 FSLeyes also has an integrated Python shell which offers the same programming
 interface. This can be accessed via the *Views* |right_arrow| *Python shell*
 menu item
