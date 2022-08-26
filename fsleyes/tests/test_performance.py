@@ -32,7 +32,7 @@ def add_prefix(prefix):
     return '\n'.join(tests)
 
 
-@pytest.mark.parametrize('performance', [1, 2])
+@pytest.mark.parametrize('performance', [1, 2, 3])
 @pytest.mark.parametrize('scene', ['ortho', 'lightbox'])
 @pytest.mark.parametrize('neuro', [False, True])
 def test_performance(performance, neuro, scene):
