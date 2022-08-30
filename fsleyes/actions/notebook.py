@@ -107,7 +107,19 @@ class NotebookAction(base.Action):
         self.__server = None
 
 
-    def __openNotebooks(self, nbfile=None):
+    @property
+    def kernel(self):
+        """Return a reference to the :class:`BackgroundIPythonKernel`. """
+        return self.__kernel
+
+
+    @property
+    def server(self):
+        """Return a reference to the :class:`NotebookServer`. """
+        return self.__server
+
+
+    def __openNotebooks(self, nbfile=None, openBrowser=True):
         """Called when this ``NotebookAction`` is invoked. Starts the
         server and kernel if necessary.
 
@@ -120,7 +132,8 @@ class NotebookAction(base.Action):
         if self.__kernel is not None and \
            self.__server is not None and \
            self.__kernel.is_alive()  and \
-           self.__server.is_alive():
+           self.__server.is_alive()  and \
+           openBrowser:
             webbrowser.open(self.__server.url)
             return
 
@@ -147,7 +160,9 @@ class NotebookAction(base.Action):
                 if self.__kernel is None:
                     self.__kernel = self.__startKernel(progdlg)
                 if self.__server is None:
-                    self.__server = self.__startServer(progdlg, nbfile)
+                    self.__server = self.__startServer(progdlg,
+                                                       nbfile,
+                                                       openBrowser)
 
         finally:
             if progdlg is not None:
@@ -188,7 +203,7 @@ class NotebookAction(base.Action):
         return kernel
 
 
-    def __startServer(self, progdlg, nbfile=None):
+    def __startServer(self, progdlg, nbfile, openBrowser):
         """Attempts to create and start a :class:`NotebookServer`.
 
         :returns: the server if it was started.
@@ -197,7 +212,7 @@ class NotebookAction(base.Action):
         """
 
         progdlg.UpdateMessage(strings.messages[self, 'init.server'])
-        server = NotebookServer(self.__kernel.connfile, nbfile)
+        server = NotebookServer(self.__kernel.connfile, nbfile, openBrowser)
         server.start()
 
         elapsed = 0
@@ -511,12 +526,15 @@ class NotebookServer(threading.Thread):
     """
 
 
-    def __init__(self, connfile, nbfile=None):
+    def __init__(self, connfile, nbfile=None, openBrowser=True):
         """Create a ``NotebookServer`` thread.
 
-        :arg connfile: Connection file of the IPython kernel to connect to.
-        :arg nbfile:   Path to a notebook file which should be opened on
-                       startup.
+        :arg connfile:    Connection file of the IPython kernel to connect to.
+        :arg nbfile:      Path to a notebook file which should be opened on
+                          startup.
+        :arg openBrowser: If ``True`` (the default) the Jupyter notebook home
+                          page is opened in a web browser. This corresponds to
+                          the ``c.NotebookApp.open_browser`` setting.
         """
 
         threading.Thread.__init__(self)
@@ -526,6 +544,7 @@ class NotebookServer(threading.Thread):
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
+        self.__browser     = openBrowser
         self.__token       = binascii.hexlify(os.urandom(24)).decode('ascii')
 
 
@@ -679,12 +698,13 @@ class NotebookServer(threading.Thread):
         # Environment for generating a jupyter
         # notebook server configuration file
         cfgenv = {
-            'fsleyes_nbserver_port'       : defaultPort,
-            'fsleyes_nbserver_token'      : self.__token,
-            'fsleyes_nbserver_dir'        : os.getcwd(),
-            'fsleyes_nbserver_static_dir' : cfgdir,
-            'fsleyes_nbextension_dir'     : nbextdir,
-            'fsleyes_kernel_connfile'     : self.__connfile,
+            'fsleyes_nbserver_port'         : defaultPort,
+            'fsleyes_nbserver_token'        : self.__token,
+            'fsleyes_nbserver_dir'          : os.getcwd(),
+            'fsleyes_nbserver_static_dir'   : cfgdir,
+            'fsleyes_nbextension_dir'       : nbextdir,
+            'fsleyes_kernel_connfile'       : self.__connfile,
+            'fsleyes_nbserver_open_browser' : self.__browser
         }
 
         with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:

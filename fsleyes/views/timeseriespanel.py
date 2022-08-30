@@ -151,25 +151,12 @@ class TimeSeriesPanel(plotpanel.OverlayPlotPanel):
         :arg frame:       The :class:`.FSLeyesFrame` instance.
         """
 
-        # If the currently selected image is from
-        # a FEAT analysis, and the corresponding
-        # filtered_func_data is loaded, enable the
-        # initial state of the time course for
-        # that filtered_func_data
-        featImage = fsloverlay.findFEATImage(
-            overlayList,
-            displayCtx.getSelectedOverlay())
-
-        if featImage is None: initialState = None
-        else:                 initialState = {featImage : True}
-
         plotpanel.OverlayPlotPanel.__init__(
             self,
             parent,
             overlayList,
             displayCtx,
-            frame,
-            initialState=initialState)
+            frame)
 
         self.addListener('plotMode',  self.name, self.draw)
         self.addListener('usePixdim', self.name, self.draw)

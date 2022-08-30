@@ -14,15 +14,10 @@ within an existing application.
 See the :mod:`fsleyes` package documentation for more details on ``fsleyes``.
 
 
-.. note:: Even though ``fsleyes`` (this module) and :mod:`fsleyes.render` (the
-          off-screen renderer) are intended to be separate applications, the
-          current version of PyInstaller (3.x) does not support bundling of
-          multiple executables
-          (https://github.com/pyinstaller/pyinstaller/issues/1527).
-
-          So at this point in time, :mod:`.fsleyes.render` can be invoked via
-          ``fsleyes.main`` by passing ``'render'`` as the first argument,
-          e.g.::
+.. note:: ``fsleyes`` (this module) and :mod:`fsleyes.render` (the off-screen
+          renderer) are intended to be separate applications, but
+          :mod:`.fsleyes.render` can also be invoked via ``fsleyes.main`` by
+          passing ``'render'`` as the first argument, e.g.::
 
               python -m fsleyes.main render ...
 """
@@ -396,12 +391,22 @@ def main(args=None):
                          ignorePoint=False)
 
         # start notebook server
+        if namespace[0].noBrowser:
+            namespace[0].notebook = True
         if namespace[0].notebookFile is not None:
             namespace[0].notebook     = True
             namespace[0].notebookFile = op.abspath(namespace[0].notebookFile)
         if namespace[0].notebook:
             from fsleyes.actions.notebook import NotebookAction
-            frame.menuActions[NotebookAction](namespace[0].notebookFile)
+            nbfile  =     namespace[0].notebookFile
+            browser = not namespace[0].noBrowser
+            nbact   = frame.menuActions[NotebookAction]
+
+            nbact(nbfile, browser)
+
+            if not browser:
+                print('Connect to the FSLeyes Jupyter '
+                      f'kernel with {nbact.kernel.connfile}')
 
         # start CLI server
         if namespace[0].cliserver:
@@ -654,6 +659,8 @@ def parseArgs(argv):
         up the scene.
         """.format(layouts=', '.join(allLayouts)))
 
+    exclude = {'LightBoxOpts' : ['nrows', 'ncols']}
+
     # Options for configuring the scene are
     # managed by the parseargs module
     return parseargs.parseArgs(parser,
@@ -661,7 +668,8 @@ def parseArgs(argv):
                                name,
                                prolog=prolog,
                                desc=description,
-                               argOpts=['-r', '--runscript'])
+                               argOpts=['-r', '--runscript'],
+                               exclude=exclude)
 
 
 def makeDisplayContext(namespace, splash):

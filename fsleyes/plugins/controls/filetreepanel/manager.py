@@ -664,7 +664,7 @@ class OverlayManager:
         # Loaded overlays are cached to
         # reduce swap time if they are
         # re-shown.
-        self.__cache = cache.Cache(maxsize=50, lru=True)
+        self.__cache = cache.Cache(maxsize=10, lru=True)
 
         # The current list of file
         # groups - set in update

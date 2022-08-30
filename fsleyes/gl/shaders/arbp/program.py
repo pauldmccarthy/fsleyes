@@ -296,6 +296,11 @@ class ARBPShader:
         """
         if self.attsLoaded:
             return
+
+        # In some scenarios, GL_VERTEX_ARRAY
+        # must be enabled even if it is not
+        # used (e.g. on macOS).
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         for attr in self.attrs:
             texUnit     = self.__getAttrTexUnit(attr)
             value, size = self.attCache[attr]
@@ -314,6 +319,7 @@ class ARBPShader:
             texUnit = self.__getAttrTexUnit(attr)
             gl.glClientActiveTexture(texUnit)
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         self.attsLoaded = False
 
 

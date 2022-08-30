@@ -149,6 +149,16 @@ def parseArgs(argv):
         ('ortho'), lightbox ('lightbox'), or 3D ('3d') views.
         """)
 
+    exclude = {'Main'      : ['skipfslcheck',
+                              'updatecheck',
+                              'fontSize',
+                              'notebook',
+                              'notebookFile',
+                              'notebookPort',
+                              'noBrowser'],
+               'SceneOpts' : ['movieSyncRefresh',
+                              'highDpi']}
+
     namespace = parseargs.parseArgs(
         mainParser,
         argv,
@@ -159,7 +169,8 @@ def parseArgs(argv):
         argOpts=['-of', '--outfile',
                  '-sz', '--size',
                  '-c',  '--crop'],
-        shortHelpExtra=['--outfile', '--size', '--crop'])
+        shortHelpExtra=['--outfile', '--size', '--crop'],
+        exclude=exclude)
 
     if namespace.outfile is None:
         log.error('outfile is required')
@@ -448,9 +459,6 @@ def createLightBoxCanvas(namespace,
         zax=sceneOpts.zax,
         width=width,
         height=height)
-
-    if sceneOpts.zrange == (0, 0):
-        sceneOpts.zrange = displayCtx.bounds.getRange(sceneOpts.zax)
 
     opts                = canvas.opts
     opts.showCursor     = sceneOpts.showCursor

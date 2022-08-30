@@ -11,17 +11,15 @@
 
 import logging
 
-import wx
-
+import          wx
 import numpy as np
 
-import fsleyes_widgets.utils.layout         as fsllayout
+import fsleyes_props                        as props
 
-import fsleyes.actions                      as actions
 import fsleyes.gl.wxgllightboxcanvas        as lightboxcanvas
 import fsleyes.profiles.lightboxviewprofile as lightboxviewprofile
 import fsleyes.displaycontext.lightboxopts  as lightboxopts
-from . import                                  canvaspanel
+import fsleyes.views.canvaspanel            as canvaspanel
 
 
 log = logging.getLogger(__name__)
@@ -43,6 +41,11 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
     settings. The canvas is accessed through the :meth:`getCanvas` and
     :meth:`getGLCanvases` methods, and the ``LightBoxOpts`` instanace can
     be retrieved via the :meth:`.CanvasPanel.sceneOpts` property.
+
+    The ``LightBoxPanel`` adds scrolling capability to the ``LightBoxCanvas``
+    - a scroll bar is displayed which can be used to scroll through the
+    slices.  This is achieved by adjusting the
+    :attr:`.LightBoxCanvasOpts.zrange` property.
     """
 
 
@@ -97,18 +100,18 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
             overlayList,
             displayCtx)
 
+        name   = self.name
         lbopts = self.__lbCanvas.opts
 
-        lbopts.bindProps('pos', displayCtx, 'location')
-        lbopts.bindProps('zax',             sceneOpts)
-        lbopts.bindProps('bgColour',        sceneOpts)
-        lbopts.bindProps('cursorColour',    sceneOpts)
-        lbopts.bindProps('showCursor',      sceneOpts)
-        lbopts.bindProps('cursorWidth',     sceneOpts)
-        lbopts.bindProps('showGridLines',   sceneOpts)
-        lbopts.bindProps('highlightSlice',  sceneOpts)
-        lbopts.bindProps('renderMode',      sceneOpts)
-        lbopts.bindProps('highDpi',         sceneOpts)
+        lbopts.bind('pos', displayCtx, 'location')
+        lbopts.bind('bgColour',        sceneOpts)
+        lbopts.bind('cursorColour',    sceneOpts)
+        lbopts.bind('showCursor',      sceneOpts)
+        lbopts.bind('cursorWidth',     sceneOpts)
+        lbopts.bind('showGridLines',   sceneOpts)
+        lbopts.bind('highlightSlice',  sceneOpts)
+        lbopts.bind('renderMode',      sceneOpts)
+        lbopts.bind('highDpi',         sceneOpts)
 
         # Bind these properties the other way around,
         # so that the sensible values calcualted by
@@ -116,59 +119,39 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bindProps('nrows',        lbopts)
-        sceneOpts.bindProps('ncols',        lbopts)
-        sceneOpts.bindProps('topRow',       lbopts)
-        sceneOpts.bindProps('sliceSpacing', lbopts)
-        sceneOpts.bindProps('zrange',       lbopts)
+        sceneOpts.bind('zax',          lbopts)
+        sceneOpts.bind('sliceSpacing', lbopts)
+        sceneOpts.bind('zrange',       lbopts)
+        sceneOpts.bind('nrows',        lbopts)
+        sceneOpts.bind('ncols',        lbopts)
+        sceneOpts.bind('zoom',         lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.contentPanel.SetSizer(self.__canvasSizer)
 
         self.__canvasSizer.Add(self.__lbCanvas, flag=wx.EXPAND, proportion=1)
 
-        self.displayCtx .addListener('selectedOverlay',
-                                     self.name,
-                                     self.__selectedOverlayChanged)
-        self.displayCtx .addListener('displaySpace',
-                                     self.name,
-                                     self.__radioOrientationChanged)
-        self.displayCtx .addListener('radioOrientation',
-                                     self.name,
-                                     self.__radioOrientationChanged)
-        self.overlayList.addListener('overlays',
-                                     self.name,
-                                     self.__selectedOverlayChanged)
+        displayCtx .listen('displaySpace', name,
+                           self.__radioOrientationChanged)
+        displayCtx .listen('radioOrientation', name,
+                           self.__radioOrientationChanged)
+        overlayList.listen('overlays', name,
+                           self.__radioOrientationChanged)
 
         # When any lightbox properties change,
         # make sure the scrollbar is updated
-        sceneOpts.addListener(
-            'ncols',        self.name, self.__ncolsChanged)
-        sceneOpts.addListener(
-            'nrows',        self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'topRow',       self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'sliceSpacing', self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zrange',       self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zax',          self.name, self.__onLightBoxChange)
-        sceneOpts.addListener(
-            'zoom',         self.name, self.__onZoom)
-
+        sceneOpts.listen( 'sliceSpacing', name, self.__onLightBoxChange)
+        sceneOpts.listen( 'zrange',       name, self.__onLightBoxChange)
+        sceneOpts.listen( 'zax',          name, self.__onLightBoxChange)
+        sceneOpts.listen( 'nrows',        name, self.__onLightBoxChange)
+        sceneOpts.listen( 'ncols',        name, self.__onLightBoxChange)
+        self.Bind(wx.EVT_SIZE,                  self.__onLightBoxChange)
         # When the scrollbar is moved,
         # update the canvas display
         self.__scrollbar.Bind(wx.EVT_SCROLL, self.__onScroll)
 
-        self.Bind(wx.EVT_SIZE, self.__onResize)
-
-        sceneOpts.zoom = 750
-
         self.__onLightBoxChange()
-        self.__onZoom()
 
-        self.__selectedOverlayChanged()
         self.centrePanelLayout()
         self.initProfile(lightboxviewprofile.LightBoxViewProfile)
 
@@ -180,10 +163,9 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         and calls :meth:`.CanvasPanel.destroy`.
         """
 
-        self.displayCtx .removeListener('selectedOverlay',  self.name)
-        self.displayCtx .removeListener('displaySpace',     self.name)
-        self.displayCtx .removeListener('radioOrientation', self.name)
-        self.overlayList.removeListener('overlays',         self.name)
+        self.displayCtx .remove('displaySpace',     self.name)
+        self.displayCtx .remove('radioOrientation', self.name)
+        self.overlayList.removeListener('overlays', self.name)
 
         canvaspanel.CanvasPanel.destroy(self)
 
@@ -214,6 +196,12 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
 
     def getCanvas(self):
+        """Returns a reference to the :class:`.LightBoxCanvas` instance. """
+        return self.__lbCanvas
+
+
+    @property
+    def canvas(self):
         """Returns a reference to the :class:`.LightBoxCanvas` instance. """
         return self.__lbCanvas
 
@@ -251,140 +239,85 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.invertX = flip
 
 
-    def __selectedOverlayChanged(self, *a):
-        """Called when the :attr:`.DisplayContext.selectedOverlay` changes.
-
-        If the currently selected overlay is a :class:`.Nifti` instance, or
-        has an associated reference image (see
-        :meth:`.DisplayOpts.referenceImage`), a listener is registered on
-        the reference image :attr:`.NiftiOpts.transform` property, so that the
-        :meth:`__transformChanged` method will be called when it changes.
-        """
-
-        if len(self.overlayList) == 0:
-            return
-
-        selectedOverlay = self.displayCtx.getSelectedOverlay()
-
-        self.__radioOrientationChanged()
-
-        for overlay in self.overlayList:
-
-            refImage = self.displayCtx.getReferenceImage(overlay)
-
-            if refImage is None:
-                continue
-
-            opts = self.displayCtx.getOpts(refImage)
-
-            opts.removeListener('transform', self.name)
-
-            if overlay == selectedOverlay:
-                opts.addListener('transform',
-                                 self.name,
-                                 self.__transformChanged)
-
-
-    def __transformChanged(self, *a):
-        """Called when the :attr:`.NiftiOpts.transform` property for the
-        reference image of the currently selected overlay changes.
-
-        Updates the :attr:`.LightBoxOpts.sliceSpacing` and
-        :attr:`.LightBoxOpts.zrange` properties to values sensible to the
-        new overlay display space.
-        """
-
-        sceneOpts = self.sceneOpts
-        overlay   = self.displayCtx.getReferenceImage(
-            self.displayCtx.getSelectedOverlay())
-
-        if overlay is None:
-            return
-
-        opts     = self.displayCtx.getOpts(overlay)
-        loBounds = opts.bounds.getLo()
-        hiBounds = opts.bounds.getHi()
-
-        # Reset the spacing/zrange. Not
-        # sure if this is the best idea,
-        # but it's here for the time being.
-        sceneOpts.sliceSpacing = self.__lbCanvas.calcSliceSpacing(overlay)
-        sceneOpts.zrange.x     = (loBounds[sceneOpts.zax],
-                                  hiBounds[sceneOpts.zax])
-
-        self.__onResize()
-
-
-    def __onZoom(self, *a):
-        """Called when the :attr:`.SceneOpts.zoom` property changes. Updates
-        the number of slice columns shown.
-        """
-        opts       = self.sceneOpts
-        minval     = opts.getAttribute('zoom', 'minval')
-        maxval     = opts.getAttribute('zoom', 'maxval')
-        normZoom   = 1.0 - (opts.zoom - minval) / float(maxval)
-        opts.ncols = int(1 + np.round(normZoom * 29))
-
-
-    def __onResize(self, ev=None):
-        """Called when the panel is resized. Automatically adjusts the number
-        of rows to the maximum displayable number (given that the number of
-        columns is fixed).
-        """
-
-        if ev is not None:
-            ev.Skip()
-
-        if self.destroyed:
-            return
-
-        # Lay this panel out, so the
-        # canvas panel size is up to date
-        self.Layout()
-
-        lbcanvas          = self.__lbCanvas
-        lbopts            = lbcanvas.opts
-        width,   height   = lbcanvas        .GetClientSize().Get()
-        sbWidth, sbHeight = self.__scrollbar.GetClientSize().Get()
-
-        width = width - sbWidth
-
-        xlen = self.displayCtx.bounds.getLen(lbopts.xax)
-        ylen = self.displayCtx.bounds.getLen(lbopts.yax)
-
-        sliceWidth  = width / float(lbopts.ncols)
-        sliceHeight = fsllayout.calcPixHeight(xlen, ylen, sliceWidth)
-
-        if sliceHeight > 0:
-            lbopts.nrows = int(height / sliceHeight)
-
-
-    def __ncolsChanged(self, *a):
-        """Called when the :attr:`.LightBoxOpts.ncols` property changes.
-        Calculates the number of rows to display, and updates the
-        scrollbar.
-        """
-        self.__onResize()
-        self.__onLightBoxChange()
-
-
     def __onLightBoxChange(self, *a):
         """Called when any :class:`.LightBoxOpts` property changes.
 
-        Updates the scrollbar to reflect the change.
+        Updates the scrollbar to reflect the current number of slices being
+        displayed.
         """
-        canvas = self.__lbCanvas
-        opts   = canvas.opts
-        self.__scrollbar.SetScrollbar(opts.topRow,
-                                      opts.nrows,
-                                      canvas.getTotalRows(),
-                                      opts.nrows,
-                                      True)
+        canvas  = self.canvas
+        copts   = canvas.opts
+        nrows   = canvas.nrows
+        nslices = canvas.nslices
+
+        if nrows == 0 or nslices >= copts.maxslices:
+            start   = 0
+            end     = 1
+            nslices = 1
+        else:
+            start = canvas.toprow
+            end   = canvas.maxrows
+
+        self.__scrollbar.SetScrollbar(start, nrows, end, nrows, True)
 
 
     def __onScroll(self, *a):
         """Called when the scrollbar is moved.
 
-        Updates the top row displayed on the :class:`.LightBoxCanvas`.
+        Updates the Z range displayed on the :class:`.LightBoxCanvas`.
         """
-        self.__lbCanvas.opts.topRow = self.__scrollbar.GetThumbPosition()
+        self.scrollpos = self.__scrollbar.GetThumbPosition()
+
+
+    @property
+    def scrollpos(self):
+        """Returns the current scroll position - the index of the first
+        displayed row on the canvas.
+        """
+        return self.__scrollbar.GetThumbPosition()
+
+
+    @scrollpos.setter
+    def scrollpos(self, row):
+        """Set the current scroll position - the index of the first
+        displayed row on the canvas. Called when the scroll bar is
+        moved, and from the :class:`.LightBoxViewProfile`.
+        """
+
+        canvas  = self.canvas
+        opts    = self.sceneOpts
+        copts   = canvas.opts
+        zlen    = copts.normzlen
+        row     = np.clip(row, 0, canvas.maxrows)
+        sliceno = np.clip(row * canvas.ncols, 0, copts.maxslices - 1)
+
+        self.__scrollbar.SetThumbPosition(row)
+        self.__scrollbar.Refresh()
+
+        # Expand the z range if it does not
+        # take up the full grid size (i.e.
+        # the last row contains fewer
+        # slices than can be displayed),
+        nslices  = copts.nslices
+        gridsize = canvas.nslices
+        if nslices < gridsize:
+            diff = gridsize - nslices
+            zlen = zlen + diff * copts.sliceSpacing
+
+        # Calculate the z position corresponding
+        # to the new row, then calculate the new
+        # z range from this slice position.
+        zpos           = copts.slices[sliceno]
+        newzlo, newzhi = zpos, zpos + zlen
+
+        # Limit the zrange to [0, 1], keeping
+        # the z length constant
+        if newzlo < 0:
+            newzhi -= newzlo
+            newzlo  = 0
+        elif newzhi > 1:
+            newzlo -= (newzhi - 1)
+            newzhi  = 1
+
+        with props.skip(opts, 'zrange', self.name):
+            copts.zrange = newzlo, newzhi

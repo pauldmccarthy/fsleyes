@@ -57,10 +57,6 @@ cli_tests = """
 
 -vl  3   3  3  3d.nii.gz -cr 4000 5000
 -wl 10 -26 16  3d.nii.gz -cr 4000 5000
-
-# high-DPI (should have no effect in docker container)
--hd     3d.nii.gz
--hd -cb 3d.nii.gz
 """
 
 

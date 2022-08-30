@@ -574,7 +574,7 @@ class ListItemWidget(wx.Panel):
         idx     = self.__listBox.IndexOf(self.__overlay)
         enabled = self.__visibility.GetValue()
 
-        with props.suppress(self.__display, 'enabled', self.__name):
+        with props.skip(self.__display, 'enabled', self.__name):
             self.__display.enabled = enabled
 
         if enabled: fgColour = self.enabledFG

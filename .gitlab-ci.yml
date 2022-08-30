@@ -95,11 +95,6 @@ variables:
 ####################################
 
 
-.only_upstream: &only_upstream
-  only:
-    - branches@fsl/fsleyes/fsleyes
-
-
 .only_master: &only_master
   only:
     - master@fsl/fsleyes/fsleyes
@@ -190,6 +185,22 @@ build-docker-image-fsleyes-py310-wxpy4-gtk3:
     - if:   '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
 
+# some test jobs are only run on the upstream repo
+.test_rules_upstream: &test_rules_upstream
+  rules:
+    # Releases are just tags on a release
+    # branch, so we don't need to test them.
+    - if:   '$CI_COMMIT_TAG != null'
+      when: never
+    # Don't test if  "[skip-tests]"
+    # is in the commit message
+    - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
+      when: never
+    - if:   '$CI_PROJECT_PATH != $UPSTREAM_PROJECT'
+      when: never
+    - if:   '$CI_PIPELINE_SOURCE == "push"'
+      when: on_success
+
 .test: &test_template
   <<: *setup_ssh
   <<: *test_rules
@@ -213,16 +224,12 @@ test:macos:
   script:
     - bash ./.ci/test_template.sh
 
-test:3.7:
-  stage: test
-  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
-  <<: *test_template
-
 
 test:3.8:
   stage: test
   image: pauldmccarthy/fsleyes-py38-wxpy4-gtk3
   <<: *test_template
+  <<: *test_rules_upstream
 
 
 test:3.9:
@@ -235,11 +242,12 @@ test:3.10:
   stage: test
   image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
   <<: *test_template
+  <<: *test_rules_upstream
 
 
 test:build-pypi-dist:
   stage: test
-  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
   <<: *except_releases
 
   tags:
@@ -257,7 +265,7 @@ test:build-pypi-dist:
 
 style:
   stage: style
-  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
   <<: *test_template
   variables:
     TEST_STYLE: "true"
@@ -275,7 +283,7 @@ pages:
     - docker
 
   stage: doc
-  image: python:3.7
+  image: python:3.9
 
   script:
     - bash ./.ci/build_userdoc.sh
@@ -295,7 +303,7 @@ build-pypi-dist:
   <<: *only_releases
 
   stage: build
-  image: pauldmccarthy/fsleyes-py37-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
 
   tags:
     - docker
@@ -325,7 +333,7 @@ deploy-pypi:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.7
+  image: python:3.9
 
   tags:
     - docker
@@ -342,7 +350,7 @@ deploy-zenodo:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.7
+  image: python:3.9
 
   tags:
     - docker

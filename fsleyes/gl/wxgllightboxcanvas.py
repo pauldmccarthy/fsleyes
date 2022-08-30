@@ -34,7 +34,7 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
 
     __metaclass__ = sip.wrappertype
 
-    def __init__(self, parent, overlayList, displayCtx, zax=0):
+    def __init__(self, parent, overlayList, displayCtx, zax=None):
         """Create a ``WXGLLightBoxCanvas``. See
         :meth:`.LightBoxCanvas.__init__` for details on the arguments.
         """
@@ -51,7 +51,7 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
         # When the canvas is resized, we have to update
         # the display bounds to preserve the aspect ratio
         def onResize(ev):
-            self._updateDisplayBounds()
+            self._regenGrid()
             ev.Skip()
         self.Bind(wx.EVT_SIZE, onResize)
 

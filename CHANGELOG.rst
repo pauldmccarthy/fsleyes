@@ -10,16 +10,34 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.5.0 (Under development)
--------------------------
+1.5.0 (Tuesday 30th August 2022)
+--------------------------------
+
+
+Added
+^^^^^
+
+
+* ``ViewPanel`` plugin classes can now implement the
+  :meth:`~.ViewPanel.defaultLocation` static method to specify an initial
+  location and size within the FSLeyes frame (!334).
+* New built-in ``defaultlb`` and ``default3d`` layouts, which respectively open
+  a lightbox or 3D view with standard toolbars and control panels.
+* New ``--noBrowser`` / ``-nbb`` command-line option, which starts a Jupyter
+  kernel without opening the Notebooks home page; this can be used when you
+  wish to attach a terminal IPython instance to FSLeyes, instead of a Jupyter
+  notebook (!334).
 
 
 Changed
 ^^^^^^^
 
 
-* Restored low-performance settings for the ortho and lightbox views.  Only
-  two settings are available - *Best looking* and *Fastest* (!333).
+* Redesigned the lightbox view to simplify behaviour and interaction (!334).
+* Restored low-performance settings for the ortho and lightbox views (!333).
+* The time series, power spectra and histogram panels now default to
+  displaying data series from all compatible overlays, instead of just the
+  currently selected overlay (!334).
 
 
 Fixed
@@ -27,7 +45,9 @@ Fixed
 
 
 * Fixed several issues related to mesh rendering in the lightbox view (!333).
-
+* Fixed an issue with the location cursor (and other annotations) not being
+  displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (!334).
+* Fixed a memory leak triggered by the file tree panel (!334).
 
 
 1.4.6 (Tuesday 14th June 2022)

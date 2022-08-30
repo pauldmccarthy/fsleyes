@@ -34,7 +34,8 @@ class SliceCanvasOpts(props.HasProperties):
 
 
     pos = props.Point(ndims=3)
-    """The currently displayed position.
+    """The currently displayed position. This is in the display coordinate
+    system, but transposed in terms of the :attr:`zax`.
 
     The ``pos.x`` and ``pos.y`` positions denote the position of a *cursor*,
     which is highlighted with crosshairs (see the :attr:`showCursor`
@@ -134,15 +135,10 @@ class SliceCanvasOpts(props.HasProperties):
         self.__zaxChanged()
 
 
-    def __zaxChanged(self, *a):
-        """Calle when the :attr:`zax` property changes. Derives the
-        ``xax`` and ``yax`` values.
-        """
-
-        dims = list(range(3))
-        dims.pop(self.zax)
-        self.__xax = dims[0]
-        self.__yax = dims[1]
+    @property
+    def name(self):
+        """Returns a unique name for this ``SliceCanvasOpts`` instance. """
+        return self.__name
 
 
     @property
@@ -161,42 +157,93 @@ class SliceCanvasOpts(props.HasProperties):
         return self.__yax
 
 
+    def __zaxChanged(self, *a):
+        """Calle when the :attr:`zax` property changes. Derives the
+        ``xax`` and ``yax`` values.
+        """
+
+        dims = list(range(3))
+        dims.pop(self.zax)
+        self.__xax = dims[0]
+        self.__yax = dims[1]
+
+
 class LightBoxCanvasOpts(SliceCanvasOpts):
     """The ``LightBoxCanvasOpts`` class defines the display settings
-    available on :class:`.LightBoxCanvas` instances.
+    available on :class:`.LightBoxCanvas` instances. This class also
+    provides a set of utility methods for managing and calculating slice
+    positions.
+
+    The Z axis of the display coordinate system (controlled by the
+    :attr:`zax` property) is divided up into slices, which are defined
+    in a "slice coordinate system" having range 0 to 1, according to the
+    :attr:`zrange` and :attr:`sliceSpacing` properties::
+
+                     zlo                                     zhi
+                      0                                       1
+        slice centre  |   *       *       *       *       *   |
+        slice index   |   0   |   1   |   2   |   3   |   4   |
+                      |-------|
+                       spacing
+
+    where ``*`` denotes the slice centres - these correspond to the
+    Z positions returned by the :meth:`slices` property.
     """
 
 
     sliceSpacing = props.Real(clamped=True,
-                              minval=0.1,
-                              maxval=30.0,
-                              default=1.0)
-    """This property controls the spacing between slices in the display
-    coordinate system.
+                              minval=0.001,
+                              maxval=0.25,
+                              default=0.01)
+    """This property controls the spacing between slices. It is defined
+    as a percentage (0-1) of the Z axis length.
     """
 
 
-    ncols = props.Int(clamped=True, minval=1, maxval=100, default=5)
-    """This property controls the number of slices to be displayed on a
-    single row.
+    zrange = props.Bounds(ndims=1, minval=0, maxval=1, default=(0.4, 0.6))
+    """This property controls the range of the slices to be displayed.
+    The low/high limits are specified as percentages (0-1) of the Z axis
+    length.
+
+    This property is automatically synchronised with the
+    :attr:`.SliceCanvasOpts.zoom` property.
+
+    The :meth:`normzrange` and :meth:`normzlen` properties should usually be
+    used in preference to the raw ``zrange`` values - this is because the Z
+    range of slices that end up being displayed may not precisely match the
+    ``zrange`` values, as each slice is internally modelled so as to have a Z
+    width of ``sliceSpacing``.
     """
 
 
-    nrows = props.Int(clamped=True, minval=1, maxval=100, default=4)
-    """This property controls the number of rows to be displayed on the
-    canvas.
+    zax = props.Choice((2, 0, 1),
+                       alternates=[['z', 'Z'], ['x', 'X'], ['y', 'Y']],
+                       allowStr=True)
+    """Equivalent to :attr:`.SliceCanvasOpts.zax`, but with a different
+    default.
     """
 
 
-    topRow = props.Int(clamped=True, minval=0, maxval=20, default=0)
-    """This property controls the (0-indexed) row to be displayed at the top
-    of the canvas, thus providing the ability to scroll through the slices.
+    zoom = props.Percentage(minval=0,
+                            maxval=1,
+                            default=0,
+                            clamped=True)
+    """The :attr:`.DisplayContext.bounds` are divided by this zoom
+    factor to produce the canvas display bounds.
     """
 
 
-    zrange = props.Bounds(ndims=1)
-    """This property controls the range, in display coordinates, of the slices
-    to be displayed.
+    ncols = props.Int(default=0, minval=0, clamped=True)
+    """Number of columns to display. The default value (0) will cause
+    the number of columns to be automatically calculated.
+    """
+
+
+    nrows = props.Int(default=0, minval=0, clamped=True)
+    """Number of rows to display. The default value (0) will cause
+    the number of rows to be automatically calculated. If both ``nrows``
+    and :attr:`ncols` are set, ``nrows`` may be adjusted to honour
+    the current :attr:`ncols`, :attr:`zrange` and :attr:`sliceSpacing`.
     """
 
 
@@ -217,6 +264,125 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     See the :class:`.LightBoxCanvas` for more details.
     """
+
+
+    def __init__(self):
+        super().__init__()
+        name = self.name
+        self.ilisten('zoom',         name, self.__zoomChanged)
+        self.ilisten('zrange',       name, self.__zrangeChanged)
+        self.ilisten('sliceSpacing', name, self.__sliceSpacingChanged)
+
+
+    def __zoomChanged(self):
+        """Called when :attr:`SliceCanvasOpts.zoom` changes. Propagates the
+        change to the :attr:`zrange`.
+        """
+
+        # Map zoom to z range [sliceSpacing, 1], where:
+        #
+        #  - sliceSpacing == zoomed in, one slice displayed
+        #  - 1            == zoomed out, all slices displayed
+        newzlen = max(1 - self.zoom, self.sliceSpacing)
+        zlo     = self.zrange.xlo
+        zlen    = self.zrange.xlen
+
+        # Preserving the z range centre
+        zcentre = zlo     + zlen    / 2
+        newzlo  = zcentre - newzlen / 2
+        newzhi  = zcentre + newzlen / 2
+
+        # But restricting the range to [0, 1]
+        if newzlo < 0:
+            newzhi -= newzlo
+            newzlo  = 0
+        elif newzhi > 1:
+            newzlo -= (newzhi - 1)
+            newzhi  = 1
+
+        with props.skip(self, 'zrange', self.name):
+            self.zrange = newzlo, newzhi
+
+
+    def __sliceSpacingChanged(self):
+        """Called when :attr:`sliceSpacing` changes. Sets some constraints
+        on :attr:`zrange`.
+        """
+        spacing = self.sliceSpacing
+        self.setatt('zrange', 'minDistance', spacing)
+
+
+    def __zrangeChanged(self):
+        """Called when :attr:`zrange` changes. Propagates the change to the
+        :attr:`SliceCanvasOpts.zoom`.
+        """
+        with props.skip(self, 'zoom', self.name):
+            self.zoom = 1 - self.zrange.xlen
+
+
+    @property
+    def normzrange(self):
+        """Returns :attr:`zrange`, adjusted to respect the
+        :attr:`sliceSpacing`.
+        """
+        start    = self.startslice
+        end      = start + self.nslices
+        ssp      = self.sliceSpacing
+        return start * ssp, end * ssp
+
+
+    @property
+    def normzlen(self):
+        """Returns the length of :attr:`zrange`, adjusted to respect the
+        :attr:`sliceSpacing`.
+        """
+        zlo, zhi = self.normzrange
+        return zhi - zlo
+
+
+    @property
+    def nslices(self):
+        """Returns the total number of slices that should currently be displayed,
+        i.e. that fit within the current :attr:`zrange`. This is automatically
+        calculated from the current :attr:`zrange` and :attr:`sliceSpacing`
+        settings.
+
+        Note that this may be different to the :meth:`.LightBoxCanvas.nslices`,
+        which returns the total number of slices that can be displayed on the
+        canvas (i.e. nrows * ncols).
+        """
+        # round to avoid floating point imprecision
+        nslices = np.round(self.zrange.xlen / self.sliceSpacing, 5)
+        return int(np.ceil(nslices))
+
+
+    @property
+    def maxslices(self):
+        """Returns the maximum number of slices that would be displayed when
+        the z range is set to [0, 1]. This is calculated from the current
+        :attr:`sliceSpacing`.
+        """
+        nslices = 1 / self.sliceSpacing
+        return int(np.round(nslices))
+
+
+    @property
+    def slices(self):
+        """Returns the locations of all slices as values between 0 and 1. Use
+        the :meth:`startslice` to identify the index of the starting slice to
+        be displayed. The locations correspond to slice centres.
+        """
+        sliceSpacing = self.sliceSpacing
+        return np.arange(sliceSpacing / 2, 1, sliceSpacing)
+
+
+    @property
+    def startslice(self):
+        """Returns the index of the first slice to be displayed. """
+        sliceSpacing = self.sliceSpacing
+        zlo          = self.zrange.xlo
+        startslice   = np.round(zlo / sliceSpacing, 5)
+        return int(np.floor(startslice))
 
 
 class Scene3DCanvasOpts(props.HasProperties):

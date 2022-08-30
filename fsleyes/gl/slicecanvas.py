@@ -138,7 +138,7 @@ class SliceCanvas:
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=0, opts=None):
+    def __init__(self, overlayList, displayCtx, zax=None, opts=None):
         """Create a ``SliceCanvas``.
 
         :arg overlayList: An :class:`.OverlayList` object containing a
@@ -185,7 +185,8 @@ class SliceCanvas:
 
         # The zax property is the image axis which
         # maps to the 'depth' axis of this canvas.
-        opts.zax = zax
+        if zax is not None:
+            opts.zax = zax
 
         # when any of the properties of this
         # canvas change, we need to redraw
@@ -221,10 +222,10 @@ class SliceCanvas:
                                      self.name,
                                      self._syncOverlayDisplayChanged)
 
-        # The zAxisChanged method
+        # The resetDisplay method
         # will kick everything off
         self._annotations = annotations.Annotations(self)
-        self._zAxisChanged()
+        self.resetDisplay()
 
 
     def destroy(self):
@@ -742,14 +743,10 @@ class SliceCanvas:
 
 
     def _zAxisChanged(self, *a):
-        """Called when the :attr:`zax` property is changed. Notifies
-        the :class:`.Annotations` instance, and calls :meth:`resetDisplay`.
+        """Called when the :attr:`zax` property is changed. Triggers
+        a refresh.
         """
-
-        opts = self.opts
-
-        log.debug(opts.zax)
-        self.resetDisplay()
+        self.Refresh()
 
         # If pre-rendering is enabled, the
         # render textures need to be updated, as
@@ -1039,7 +1036,9 @@ class SliceCanvas:
         """Called when the :attr:`.DisplayContext.displaySpace` changes. Resets
         the display bounds and zoom.
         """
-        self.resetDisplay()
+        with props.suppress(self.opts, 'displayBounds'):
+            self._updateDisplayBounds()
+        self.Refresh()
 
 
     def _zoomChanged(self, *a):

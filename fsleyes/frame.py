@@ -554,21 +554,40 @@ class FSLeyesFrame(wx.Frame):
         # give it a sensible initial size.
         if panelId > 1:
             width, height = self.GetClientSize().Get()
+            defaultLoc    = panelCls.defaultLocation()
 
-            # PlotPanels are initially
-            # placed along the bottom
-            if isinstance(panel, plotpanel.PlotPanel):
-                paneInfo.Bottom().BestSize(width, height // 3)
+            # If the class implements ViewPanel.defaultLocation,
+            # use it
+            if defaultLoc is not None:
+                loc, prop = defaultLoc
+                if   loc in (wx.TOP, wx.BOTTOM): height = int(height * prop)
+                elif loc in (wx.LEFT, wx.RIGHT): width  = int(width  * prop)
+
+            # Otherwise use the following defaults...
+            # PlotPanels are initially placed along
+            # the bottom
+            elif isinstance(panel, plotpanel.PlotPanel):
+                loc    = wx.BOTTOM
+                height = height // 3
 
             # As are ShellPanels, albeit
             # a bit smaller
             elif isinstance(panel, shellpanel.ShellPanel):
-                paneInfo.Bottom().BestSize(width, height // 5)
+                loc    = wx.BOTTOM
+                height = height // 5
 
             # Other panels (e.g. CanvasPanels)
             # are placed on the right
             else:
-                paneInfo.Right().BestSize(width // 2, height)
+                loc   = wx.RIGHT
+                width = width // 2
+
+            if   loc == wx.TOP:    paneInfo.Top()
+            elif loc == wx.BOTTOM: paneInfo.Bottom()
+            elif loc == wx.LEFT:   paneInfo.Left()
+            elif loc == wx.RIGHT:  paneInfo.Right()
+            paneInfo.BestSize(width, height)
+
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC

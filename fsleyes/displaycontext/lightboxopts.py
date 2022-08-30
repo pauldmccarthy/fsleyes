@@ -32,10 +32,9 @@ class LightBoxOpts(sceneopts.SceneOpts):
 
     sliceSpacing   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
     zax            = copy.copy(canvasopts.LightBoxCanvasOpts.zax)
-    ncols          = copy.copy(canvasopts.LightBoxCanvasOpts.ncols)
-    nrows          = copy.copy(canvasopts.LightBoxCanvasOpts.nrows)
-    topRow         = copy.copy(canvasopts.LightBoxCanvasOpts.topRow)
     zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
+    nrows          = copy.copy(canvasopts.LightBoxCanvasOpts.nrows)
+    ncols          = copy.copy(canvasopts.LightBoxCanvasOpts.ncols)
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
 
@@ -44,21 +43,6 @@ class LightBoxOpts(sceneopts.SceneOpts):
     # (offscreen, onscreen) settings.
     performance = props.Choice((2, 3), default=3, allowStr=True,
                                alternates=[[1, '1'], []])
-
-
-    def __init__(self, *args, **kwargs):
-        """Create a ``LightBoxOpts`` instance. All arguments are passed
-        through to the :class:`.SceneOpts` constructor.
-
-        The :attr:`.SceneOpts.zoom` attribute is modified, as
-        :class:`LightBoxPanel` uses it slightly differently to the
-        :class:`OrthoPanel`.
-        """
-        sceneopts.SceneOpts.__init__(self, *args, **kwargs)
-        self.zax = 2
-        self.setAttribute('zax',  'default', 2)
-        self.setAttribute('zoom', 'minval',  10)
-        self.setAttribute('zoom', 'maxval',  1000)
 
 
     def _onPerformanceChange(self, *a):

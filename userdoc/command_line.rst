@@ -329,19 +329,27 @@ Use the ``-ad`` flag (``--autoDisplay``) to automatically set up colour maps::
 Lightbox view
 ^^^^^^^^^^^^^
 
-Set Z axis, number of rows, and number of columns::
 
-  fsleyes -slightbox -zx Z -nr 10 -nc 10 -std1mm
+Set Z axis (``-zx Z``) and slice spacing (``-ss 0.1``). The slice spacing must
+be specified as a proportion of the full length of the Z axis, between 0 and
+1::
 
-Set slice spacing (mm)::
+  fsleyes -slightbox -zx Z -ss 0.1 -std1mm
 
-  fsleyes -slightbox -zx Z -ss 10 -std1mm
+Set slice range (``-zr 0 0.5``). This is also specified as proportions between
+0 and 1, along the Z axis::
 
-Set slice range (mm, starting from 0)::
+  fsleyes -slightbox -zx Z -ss 0.1 -zr 0    0.5  -std1mm
+  fsleyes -slightbox -zx Z -ss 0.1 -zr 0.5  1    -std1mm
+  fsleyes -slightbox -zx Z -ss 0.1 -zr 0.25 0.75 -std1mm
 
-  fsleyes -slightbox -zx Z -ss 5 -zr  0  91 -std1mm
-  fsleyes -slightbox -zx Z -ss 5 -zr 91 182 -std1mm
-  fsleyes -slightbox -zx Z -ss 5 -zr 45 136 -std1mm
+Set the number of rows (``-nr 10``) and number of columns (``-nc 10``), and
+the slice range. FSLeyes will always display the number of requested columns,
+but may adjust the number of rows to ensure that all slices within the slice
+range are displayed::
+
+  fsleyes -slightbox -zx Z -nr 10 -nc 10 -zr 0.3 0.7 -std1mm
+
 
 
 .. _command_line_offscreen_rendering:
@@ -380,8 +388,8 @@ You can access command line help in the same manner as :ref:`described above
 
 
 Using the off-screen renderer is nearly identical to using the :ref:`standard
-FSLeyes command line interface <command_line_overview>`, but you must also
-specify an output file::
+FSLeyes command line interface <command_line_overview>`, but you may also
+specify an output file (this will default to ``out.png`` if not specified)::
 
   fsleyes render [options] --outfile outfile file [displayOpts] ...
   fsleyes render [options]  -of      outfile file [displayOpts] ...

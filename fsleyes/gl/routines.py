@@ -240,6 +240,40 @@ def rotate(degrees, x, y, z):
     return xf
 
 
+def flip(xform, axes, lo, hi):
+    """Applies a flip to the specified axes of the given affine
+    transfomration.
+
+    :arg xform: Affine transformationm matrix (4x4 numpy array)
+    :arg axes:  List of axes to apply a flip to
+    :arg lo:    Sequence of three low display bounds for each axis
+    :arg hi:    Sequence of three high display bounds for each axis
+    :return"    Adjusted affine transformation
+    """
+
+    # We have to translate the slice
+    # to the origin, perform the flip
+    # there, then transform it back to
+    # its original location.
+    invert     = np.eye(4)
+    toOrigin   = np.eye(4)
+    fromOrigin = np.eye(4)
+
+    for ax in axes:
+        amin = lo[ax]
+        amax = hi[ax]
+        alen = amax - amin
+        off  = alen / 2.0 + xform[ax, 3] + amin
+
+        invert[    ax, ax] = -1
+        toOrigin[  ax, 3]  = -off
+        fromOrigin[ax, 3]  =  off
+
+    xform = affine.concat(fromOrigin, invert, toOrigin, xform)
+
+    return xform
+
+
 def ortho2D(xmin, xmax, ymin, ymax, zmin, zmax):
     """Generates an orthographic projection matrix for 2D views, for the given
     display bounds. Replacement for the ``glOrtho`` function.
