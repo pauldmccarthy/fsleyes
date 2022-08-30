@@ -10,8 +10,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.5.0 (Under development)
--------------------------
+1.5.0 (Tuesday 30th August 2022)
+--------------------------------
 
 
 Added
@@ -34,8 +34,7 @@ Changed
 
 
 * Redesigned the lightbox view to simplify behaviour and interaction (!334).
-* Restored low-performance settings for the ortho and lightbox views.  Only
-  two settings are available - *Best looking* and *Fastest* (!333).
+* Restored low-performance settings for the ortho and lightbox views (!333).
 * The time series, power spectra and histogram panels now default to
   displaying data series from all compatible overlays, instead of just the
   currently selected overlay (!334).
@@ -48,7 +47,7 @@ Fixed
 * Fixed several issues related to mesh rendering in the lightbox view (!333).
 * Fixed an issue with the location cursor (and other annotations) not being
   displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (!334).
-* Fixed a memory leak triggered by the file tree panel (!333).
+* Fixed a memory leak triggered by the file tree panel (!334).
 
 
 1.4.6 (Tuesday 14th June 2022)
