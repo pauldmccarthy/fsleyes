@@ -73,16 +73,32 @@ This module also provides a few convenience classes and functions:
 """
 
 
-import os.path as op
-import            logging
-import            weakref
-import            collections
+import os.path   as op
+import functools as ft
+import              gc
+import              logging
+import              weakref
 
 import fsl.data.image as fslimage
+import fsl.utils.idle as idle
 import fsleyes_props  as props
 
 
 log = logging.getLogger(__name__)
+
+
+def rungc(func):
+    """Decorator which triggers garbage collection.  Used by the
+    :class:`OverlayList` on various methods. Schedules the Python garbage
+    collector to be executed on the idle loop.
+    """
+
+    @ft.wraps(func)
+    def decorator(*args, **kwargs):
+        result = func(*args, **kwargs)
+        idle.idle(gc.collect, name='overlaylist_gc', skipIfQueued=True)
+        return result
+    return decorator
 
 
 class OverlayList(props.HasProperties):
@@ -138,7 +154,7 @@ class OverlayList(props.HasProperties):
         #      },
         #      ...
         #    }
-        self.__initProps = collections.defaultdict(dict)
+        self.__initProps = weakref.WeakKeyDictionary()
 
         # This dictionary may be used throughout FSLeyes,
         # via the getData/setData methods, to store
@@ -167,7 +183,7 @@ class OverlayList(props.HasProperties):
         This method requires that there is no overlap between the property
         names used in :class:`.Display` and :class:`.DisplayOpts` classes.
         """
-        return self.__initProps[overlay]
+        return self.__initProps.get(overlay, {})
 
 
     def getData(self, overlay, key, *args):
@@ -251,18 +267,16 @@ class OverlayList(props.HasProperties):
     def __contains__(self, item):
         return self.overlays.__contains__(item)
 
+    @rungc
     def __setitem__(self, key, val):
         return self.overlays.__setitem__(key, val)
 
+    @rungc
     def __delitem__(self, key):
 
         if   isinstance(key, slice): pass
         elif isinstance(key, int):   key = slice(key, key + 1, None)
         else:                        raise IndexError('Invalid key type')
-
-        ovls = self[key]
-        for ovl in ovls:
-            self.__initProps.pop(ovl, None)
 
         return self.overlays.__delitem__(key)
 
@@ -306,25 +320,28 @@ class OverlayList(props.HasProperties):
 
             for propName, overlayProps in initProps.items():
                 for overlay, val in overlayProps.items():
-                    self.__initProps[overlay][propName] = val
+                    oprops           = self.__initProps.get(overlay, {})
+                    oprops[propName] = val
+                    self.__initProps[overlay] = oprops
 
         return result
 
     def insertAll(self, index, items):
         return self.overlays.insertAll(index, items)
 
+    @rungc
     def pop(self, index=-1):
         ovl = self.overlays.pop(index)
-        self.__initProps.pop(ovl, None)
         return ovl
 
     def move(self, from_, to):
         return self.overlays.move(from_, to)
 
+    @rungc
     def remove(self, item):
         self.overlays.remove(item)
-        self.__initProps.pop(item, None)
 
+    @rungc
     def clear(self):
         del self[:]
 

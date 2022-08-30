@@ -840,7 +840,7 @@ class FileListPanel(wx.Panel):
 
             thawTime = time.time()
             files    = [f for f in group.files if f is not None]
-            allin    = all([overlayList.find(f) is not None for f in files])
+            allin    = all(overlayList.find(f) is not None for f in files)
 
             return allin or ((thawTime - freezeTime) >= 5)
 
