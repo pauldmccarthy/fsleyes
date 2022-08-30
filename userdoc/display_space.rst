@@ -140,7 +140,7 @@ information).
 
 .. [*] If your reference image is stored in the same manner as the MNI152
        standard space image (e.g. if you have run the `fslreorient2std` tool
-       on it), the three axes of the display coordinate system will correpond
+       on it), the three axes of the display coordinate system will correspond
        to the sagittal, coronal, and axial axes, respectively.
 
 

@@ -113,7 +113,8 @@ def genCommandLineArgs(overlayList, displayCtx, canvas=None):
         argv += parseargs.generateSceneArgs(
             overlayList,
             displayCtx,
-            sceneOpts)
+            sceneOpts,
+            exclude=['performance'])
 
     # Add display options for each overlay
     for overlay in displayCtx.getOrderedOverlays():

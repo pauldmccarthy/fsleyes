@@ -386,6 +386,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         self.__merge3D     = None
         self.__mergeRadius = None
 
+        # If the view panel performance is not
+        # set to maximum, set the initial
+        # locationFollowsMouse value to False
+        perf = viewPanel.sceneOpts.performance
+        self.locationFollowsMouse = perf == 3
+
         # These property values are cached
         # on a per-overlay basis. When an
         # overlay is re-selected, its values

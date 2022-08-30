@@ -155,12 +155,13 @@ class GLSH(glvector.GLVectorBase):
             and glvector.GLVectorBase.ready(self)
 
 
-    def getDataResolution(self, xax, yax):
+    def getDataResolution(self, xax, yax, width, height):
         """Overrides :meth:`.GLVector.getDataResolution`. Returns a pixel
         resolution suitable for off-screen rendering of this ``GLSH``.
         """
 
-        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
+        res       = list(glvector.GLVector.getDataResolution(
+            self, xax, yax, width, height))
         res[xax] *= 20
         res[yax] *= 20
 

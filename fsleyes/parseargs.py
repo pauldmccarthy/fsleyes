@@ -429,6 +429,7 @@ OPTIONS = td.TypeDict({
                        'colourBarLabelSide',
                        'colourBarSize',
                        'labelSize',
+                       'performance',
                        'movieSyncRefresh',
                        'highDpi'],
     'OrthoOpts'     : ['xzoom',
@@ -801,6 +802,7 @@ ARGUMENTS = td.TypeDict({
     'SceneOpts.colourBarSize'      : ('cbi', 'colourBarSize',      True),
     'SceneOpts.showCursor'         : ('hc',  'hideCursor',         False),
     'SceneOpts.cursorWidth'        : ('cw',  'cursorWidth',        True),
+    'SceneOpts.performance'        : ('p',   'performance',        True),
     'SceneOpts.highDpi'            : ('hd',  'highDpi',            False),
     'SceneOpts.movieSyncRefresh'   : ('ms',  'movieSync',          False),
     'SceneOpts.labelSize'          : ('ls',  'labelSize',          True),
@@ -1067,6 +1069,8 @@ HELP = td.TypeDict({
     'SceneOpts.colourBarLocation'  : 'Colour bar location',
     'SceneOpts.colourBarLabelSide' : 'Colour bar label orientation',
     'SceneOpts.colourBarSize'      : 'Colour bar size (%%)',
+    'SceneOpts.performance'        : 'Rendering performance '
+                                     '(1=fastest, 2=faster, 3=best looking)',
     'SceneOpts.highDpi'            : 'If using a high-DPI (e.g. retina) '
                                      'display, render at the full display '
                                      'resolution. This setting is only '

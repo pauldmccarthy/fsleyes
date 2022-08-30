@@ -147,12 +147,13 @@ class GLLineVector(glvector.GLVector):
         return lineWidth / 2
 
 
-    def getDataResolution(self, xax, yax):
+    def getDataResolution(self, xax, yax, width, height):
         """Overrides :meth:`.GLImageObject.getDataResolution`. Returns a pixel
         resolution suitable for rendering this ``GLLineVector``.
         """
 
-        res       = list(glvector.GLVector.getDataResolution(self, xax, yax))
+        res       = list(glvector.GLVector.getDataResolution(
+            self, xax, yax, width, height))
         res[xax] *= 20
         res[yax] *= 20
 

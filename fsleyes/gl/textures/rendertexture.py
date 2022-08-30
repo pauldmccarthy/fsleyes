@@ -10,7 +10,8 @@ sub-classes intended to be used as targets for off-screen rendering.
 
 These classes are used by the :class:`.SliceCanvas` and
 :class:`.LightBoxCanvas` classes for off-screen rendering, and in various
-other situations throughout FSLeyes.
+other situations throughout FSLeyes. See also the
+:class:`.RenderTextureStack`, which uses :class:`RenderTexture` instances.
 """
 
 
@@ -126,7 +127,14 @@ class RenderTexture(texture2d.Texture2D):
         self.__oldSize          = None
         self.__projectionMatrix = None
         self.__viewMatrix       = None
-        self.__viewport         = None
+
+        # These fields are only set when
+        # this RenderTexture is set as a
+        # rendering target (e.g. via the
+        # target() method).
+        self.__viewport = None
+        self.__xax      = None
+        self.__yax      = None
 
         # Use a single renderbuffer as
         # the depth+stencil attachment
@@ -230,10 +238,36 @@ class RenderTexture(texture2d.Texture2D):
     def viewport(self):
         """Return the display coordinate system bounding box for this
         ``RenderTexture`` as a sequence of three ``(low, high)`` tuples.
+
         Only returns a value when this ``RenderTexture`` is bound - returns
         ``None`` at all other times.
         """
         return self.__viewport
+
+
+    def pixelSize(self):
+        """Returns the current (x, y) size of one logical pixel in display
+        coordinates.
+
+        Only returns a valid value  when this ``RenderTexture`` is bound -
+        returns ``None``at all other times.
+        """
+        if self.__xax is None or self.__yax is None:
+            return None
+        w, h     = self.GetSize()
+        xlo, xhi = self.viewport[self.__xax]
+        ylo, yhi = self.viewport[self.__yax]
+        xlen     = xhi - xlo
+        ylen     = yhi - ylo
+        return (xlen / w, ylen / h)
+
+
+    def GetSize(self):
+        """Returns ``self.shape``. Needed to mimic the :class:`.SliceCanvas`
+        class, when a :class:`.GLObject` is being drawn off-screen to a
+        ``GLObjectRenderTexture``.
+        """
+        return self.shape
 
 
     @texture2d.Texture2D.data.setter
@@ -345,6 +379,8 @@ class RenderTexture(texture2d.Texture2D):
 
         gl.glViewport(0, 0, width, height)
 
+        self.__xax              = xax
+        self.__yax              = yax
         self.__viewport         = list(zip(lo, hi))
         self.__projectionMatrix = projmat
         self.__viewMatrix       = mvmat
@@ -369,6 +405,8 @@ class RenderTexture(texture2d.Texture2D):
         self.__projectionMatrix = None
         self.__viewMatrix       = None
         self.__viewport         = None
+        self.__xax              = None
+        self.__yax              = None
 
 
     @contextlib.contextmanager
@@ -555,12 +593,16 @@ class GLObjectRenderTexture(RenderTexture):
     :class:`.GLObject` - see the :meth:`.GLObject.getDataResolution` method.
 
 
-    In order to accomplish this, the :meth:`setAxes` method must be called
-    whenever the display orientation changes, so that the render texture
-    size can be re-calculated.
+    ``GLObjectTexture`` objects are used by the :class:`.SliceCanvas` when
+    it is configured to use a low-performance rendering mode.
+
+
+    The :meth:`updateShape` method must be called once, and may be called
+    repeatedly to force a ``GLObjectRenderTexture`` to re-calculate its
+    shape.
     """
 
-    def __init__(self, name, globj, xax, yax, maxResolution=2048):
+    def __init__(self, name, globj, xax, yax, maxResolution=1024):
         """Create a ``GLObjectRenderTexture``.
 
         :arg name:          A unique name for this ``GLObjectRenderTexture``.
@@ -586,33 +628,6 @@ class GLObjectRenderTexture(RenderTexture):
 
         RenderTexture.__init__(self, name)
 
-        name = '{}_{}'.format(self.name, id(self))
-        globj.register(name, self.__updateShape)
-
-        self.__updateShape()
-
-
-    def destroy(self):
-        """Must be called when this ``GLObjectRenderTexture`` is no longer
-        needed. Removes the update listener from the :class:`.GLObject`, and
-        calls :meth:`.RenderTexture.destroy`.
-        """
-
-        name = '{}_{}'.format(self.name, id(self))
-        self.__globj.deregister(name)
-        RenderTexture.destroy(self)
-
-
-    def setAxes(self, xax, yax):
-        """This method must be called when the display orientation of the
-        :class:`GLObject` changes. It updates the size of this
-        ``GLObjectRenderTexture`` so that the resolution and aspect ratio
-        of the ``GLOBject`` are maintained.
-        """
-        self.__xax = xax
-        self.__yax = yax
-        self.__updateShape()
-
 
     @RenderTexture.shape.setter
     def shape(self, shape):
@@ -625,36 +640,33 @@ class GLObjectRenderTexture(RenderTexture):
                 type(self).__name__))
 
 
-    def __updateShape(self, *a):
+    def updateShape(self, width, height):
         """Updates the size of this ``GLObjectRenderTexture``, basing it
         on the resolution returned by the :meth:`.GLObject.getDataResolution`
-        method. If that method returns ``None``, a default resolution is used.
+        method.
+
+        :arg width:  Available canvas/viewport width
+        :arg height: Available canvas/viewport height
         """
-        globj  = self.__globj
-        maxRes = self.__maxResolution
 
-        resolution = globj.getDataResolution(self.__xax, self.__yax)
+        globj      = self.__globj
+        xax        = self.__xax
+        yax        = self.__yax
+        maxRes     = min((self.__maxResolution, max(width, height)))
+        resolution = globj.getDataResolution(xax, yax, width, height)
 
-        # Default resolution is based on the canvas size
-        if resolution is None:
+        log.debug('Data resolution for GLObject %s: %s',
+                  type(globj).__name__, resolution)
 
-            size                   = gl.glGetIntegerv(gl.GL_VIEWPORT)
-            width                  = size[2]
-            height                 = size[3]
-            resolution             = [100] * 3
-            resolution[self.__xax] = width
-            resolution[self.__yax] = height
-
-            log.debug('Using default resolution for GLObject %s: %s',
-                      type(globj).__name__, resolution)
-
-        width  = resolution[self.__xax]
-        height = resolution[self.__yax]
+        width  = resolution[xax]
+        height = resolution[yax]
 
         if any((width <= 0, height <= 0)):
             raise ValueError('Invalid GLObject resolution: {}'.format(
                 (width, height)))
 
+        # Limit width/height to maxRes, adjusting
+        # them to preserve aspect ratio
         if width > maxRes or height > maxRes:
             ratio = min(width, height) / float(max(width, height))
 

@@ -102,7 +102,9 @@ def createGLObject(overlay, overlayList, displayCtx, threedee=False):
 
 class GLObject(notifier.Notifier):
     """The :class:`GLObject` class is a base class for all OpenGL objects
-    displayed in *FSLeyes*.
+    displayed in *FSLeyes*. ``GLObject`` instances are created and drawn by
+    :class:`.SliceCanvas`, :class:`.LightBoxCanvas`, and
+    :class:`.Scene3DCanvas` canvases.
 
 
     **Instance attributes**
@@ -334,25 +336,40 @@ class GLObject(notifier.Notifier):
         return tuple([hi - lo for lo, hi in zip(los, his)])
 
 
-    def getDataResolution(self, xax, yax):
+    def getDataResolution(self, xax, yax, width, height):
         """This method must calculate and return a sequence of three values,
         which defines a suitable pixel resolution, along the display coordinate
         system ``(x, y, z)`` axes, for rendering a 2D slice of this
         ``GLObject`` to screen.
 
-
         This method should be implemented by sub-classes. If not implemented,
-        a default resolution is used. The returned resolution *might* be used
-        to render this ``GLObject``, but typically only in a low performance
-        environment where off-screen rendering to a
-        :class:`.GLObjectRenderTexture` is used - see the
+        a default resolution is used - this is based on the provided canvas
+        width/height, adjusted to preserve the overlay aspect ratio.
+
+        The returned resolution *might* be used to render this ``GLObject``,
+        but typically only in a low performance environment where off-screen
+        rendering to a :class:`.GLObjectRenderTexture` is used - see the
         :class:`.SliceCanvas` documentation for more details.
 
-
-        :arg xax: Axis to be used as the horizontal screen axis.
-        :arg yax: Axis to be used as the vertical screen axis.
+        :arg xax:    Axis to be used as the horizontal screen axis.
+        :arg yax:    Axis to be used as the vertical screen axis.
+        :arg width:  Available canvas/viewport width in pixels
+        :arg height: Available canvas/viewport height in pixels
         """
-        return None
+        dimlens = self.getBoundsLengths()
+        xlen    = dimlens[xax]
+        ylen    = dimlens[yax]
+        dratio  = xlen  / ylen
+        cratio  = width / height
+
+        if   dratio > cratio: height = int(round(width  / dratio))
+        else:                 width  = int(round(height * dratio))
+
+        resolution      = [100] * 3
+        resolution[xax] = width
+        resolution[yax] = height
+
+        return resolution
 
 
     def destroy(self):
@@ -400,7 +417,8 @@ class GLObject(notifier.Notifier):
         :arg canvas: The canvas which is displaying this ``GLObject``.
                      Could be a :class:`.SliceCanvas`, a
                      :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
-                     or some future not-yet-created canvas.
+                     a :class:`.GLObjectRenderTexture`, or some future
+                     not-yet-created canvas.
 
         :arg zpos:   Position along Z axis to draw.
 
@@ -422,7 +440,8 @@ class GLObject(notifier.Notifier):
         :arg canvas: The canvas which is displaying this ``GLObject``.
                      Could be a :class:`.SliceCanvas`, a
                      :class:`.LightBoxCanvas`, a :class:`.Scene3DCanvas`,
-                     or some future not-yet-created canvas.
+                     a :class:`.GLObjectRenderTexture`, or some future
+                     not-yet-created canvas.
 
         :arg xform:  If provided, it must be applied to the model view
                      transformation before drawing.
@@ -430,7 +449,7 @@ class GLObject(notifier.Notifier):
 
 
     def drawAll(self, canvas, axes, zposes, xforms):
-        """This is a convenience method for 2D lightboxD canvases, where
+        """This is a convenience method for 2D lightbox canvases, where
         multple 2D slices at different depths are drawn alongside each other.
 
         This method should do the same as multiple calls to the :meth:`draw2D`

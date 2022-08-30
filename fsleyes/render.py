@@ -124,7 +124,8 @@ def parseArgs(argv):
 
     mainParser.add_argument('-of',
                             '--outfile',
-                            help='Output image file name')
+                            help='Output image file name (default: out.png)',
+                            default='out.png')
     mainParser.add_argument('-c',
                             '--crop',
                             type=int,
@@ -456,6 +457,7 @@ def createLightBoxCanvas(namespace,
     opts.cursorWidth    = sceneOpts.cursorWidth
     opts.bgColour       = sceneOpts.bgColour
     opts.cursorColour   = sceneOpts.cursorColour
+    opts.renderMode     = sceneOpts.renderMode
     opts.zax            = sceneOpts.zax
     opts.sliceSpacing   = sceneOpts.sliceSpacing
     opts.nrows          = sceneOpts.nrows
@@ -556,6 +558,7 @@ def createOrthoCanvases(namespace,
         opts.cursorWidth  = sceneOpts.cursorWidth
         opts.cursorGap    = sceneOpts.cursorGap
         opts.bgColour     = sceneOpts.bgColour
+        opts.renderMode   = sceneOpts.renderMode
         opts.invertX      = invertx
         opts.invertY      = inverty
 

@@ -26,6 +26,7 @@ import fsleyes.displaycontext.canvasopts  as canvasopts
 import fsleyes.gl.routines                as glroutines
 import fsleyes.gl.resources               as glresources
 import fsleyes.gl.globject                as globject
+import fsleyes.gl.textures                as textures
 import fsleyes.gl.annotations             as annotations
 
 
@@ -74,6 +75,33 @@ class SliceCanvas:
     The ``SliceCanvas`` also uses an :class:`.Annotations` instance, for
     drawing simple annotations on top of the overlays.  This ``Annotations``
     instance can be accessed with the :meth:`getAnnotations` method.
+
+
+    **Performance optimisations**
+
+
+    The :attr:`.SliceCanvasOpts.renderMode` property controls the way in which
+    the ``SliceCanvas`` renders :class:`.GLObject` instances. It has the
+    following settings:
+
+
+    ============= ============================================================
+    ``onscreen``  ``GLObject`` instances are rendered directly to the canvas.
+
+    ``offscreen`` ``GLObject`` instances are rendered off-screen to a fixed
+                  size 2D texture (a :class:`.GLObjectRenderTexture`). This
+                  texture is then rendered to the canvas. One
+                  :class:`.GLObjectRenderTexture` is used for every overlay
+                  in the :class:`.OverlayList`.
+
+    ``prerender`` A stack of 2D slices for every ``GLObject`` instance is
+                  pre-generated off-screen, and cached, using a
+                  :class:`.RenderTextureStack`. When the ``SliceCanvas`` needs
+                  to display a particular Z location, it retrieves the
+                  appropriate slice from the stack, and renders it to the
+                  canvas. One :class:`.RenderTextureStack` is used for every
+                  overlay in the :class:`.OverlayList`.
+    ============= ============================================================
 
 
     **Attributes and methods**
@@ -145,6 +173,16 @@ class SliceCanvas:
         self.__projectionMatrix = None
         self.__viewMatrix       = None
 
+        # If render mode is offscren or prerender, these
+        # dictionaries will contain a RenderTexture or
+        # RenderTextureStack instance for each overlay in
+        # the overlay list. These dictionaries are
+        # respectively of the form:
+        #     { overlay : RenderTexture             }
+        #     { overlay : (RenderTextureStack, name }
+        self._offscreenTextures = {}
+        self._prerenderTextures = {}
+
         # The zax property is the image axis which
         # maps to the 'depth' axis of this canvas.
         opts.zax = zax
@@ -162,6 +200,7 @@ class SliceCanvas:
         opts.addListener('invertX',       self.name, self.Refresh)
         opts.addListener('invertY',       self.name, self.Refresh)
         opts.addListener('zoom',          self.name, self._zoomChanged)
+        opts.addListener('renderMode',    self.name, self._renderModeChanged)
         opts.addListener('highDpi',       self.name, self._highDpiChange)
 
         # When the overlay list changes, refresh the
@@ -178,6 +217,9 @@ class SliceCanvas:
         self.displayCtx .addListener('displaySpace',
                                      self.name,
                                      self._displaySpaceChanged)
+        self.displayCtx .addListener('syncOverlayDisplay',
+                                     self.name,
+                                     self._syncOverlayDisplayChanged)
 
         # The zAxisChanged method
         # will kick everything off
@@ -201,12 +243,14 @@ class SliceCanvas:
         opts.removeListener('invertX',         self.name)
         opts.removeListener('invertY',         self.name)
         opts.removeListener('zoom',            self.name)
+        opts.removeListener('renderMode',      self.name)
         opts.removeListener('highDpi',         self.name)
 
-        self.overlayList.removeListener('overlays',     self.name)
-        self.displayCtx .removeListener('bounds',       self.name)
-        self.displayCtx .removeListener('displaySpace', self.name)
-        self.displayCtx .removeListener('overlayOrder', self.name)
+        self.overlayList.removeListener('overlays',           self.name)
+        self.displayCtx .removeListener('bounds',             self.name)
+        self.displayCtx .removeListener('displaySpace',       self.name)
+        self.displayCtx .removeListener('overlayOrder',       self.name)
+        self.displayCtx .removeListener('syncOverlayDisplay', self.name)
 
         for overlay in self.overlayList:
             disp  = self.displayCtx.getDisplay(overlay)
@@ -221,13 +265,23 @@ class SliceCanvas:
                 globj.deregister(self.name)
                 glresources.delete(self.globjectId(overlay))
 
+            # off-screen textures (if renderMode == 'offscreen')
+            ot = self._offscreenTextures.get(overlay, None)
+            # pre-render textures (if renderMode == 'prerender')
+            rt, rtName = self._prerenderTextures.get(overlay, (None, None))
+
+            if ot is not None: ot.destroy()
+            if rt is not None: glresources.delete(rtName)
+
         self._annotations.destroy()
 
-        self._annotations = None
-        self.opts         = None
-        self.overlayList  = None
-        self.displayCtx   = None
-        self._glObjects   = None
+        self._annotations       = None
+        self.opts               = None
+        self.overlayList        = None
+        self.displayCtx         = None
+        self._glObjects         = None
+        self._offscreenTextures = None
+        self._prerenderTextures = None
 
 
     @property
@@ -518,6 +572,168 @@ class SliceCanvas:
         self._overlayListChanged()
 
 
+    def _updateRenderTextures(self):
+        """Called when the :attr:`renderMode` changes, when the overlay
+        list changes, or when the  GLObject representation of an overlay
+        changes.
+
+        If the :attr:`renderMode` property is ``onscreen``, this method does
+        nothing.
+
+        Otherwise, creates/destroys :class:`.RenderTexture` or
+        :class:`.RenderTextureStack` instances for newly added/removed
+        overlays.
+        """
+
+        rmode = self.opts.renderMode
+
+        if rmode == 'onscreen':
+            return
+
+        # If any overlays have been removed from the overlay
+        # list, destroy the associated render texture/stack
+        if rmode == 'offscreen':
+            for ovl, texture in list(self._offscreenTextures.items()):
+                if ovl not in self.overlayList:
+                    self._offscreenTextures.pop(ovl)
+                    texture.destroy()
+        elif rmode == 'prerender':
+            for ovl, (texture, name) in list(self._prerenderTextures.items()):
+                if ovl not in self.overlayList:
+                    self._prerenderTextures.pop(ovl)
+                    glresources.delete(name)
+
+        # If any overlays have been added to the list,
+        # create a new render textures for them
+        for overlay in self.overlayList:
+
+            if rmode == 'offscreen' and overlay in self._offscreenTextures:
+                continue
+            if rmode == 'prerender' and overlay in self._prerenderTextures:
+                continue
+
+            globj   = self._glObjects.get(overlay, None)
+            display = self.displayCtx.getDisplay(overlay)
+
+            if not globj:
+                continue
+
+            # For offscreen render mode, GLObjects are
+            # first rendered to an offscreen texture,
+            # and then that texture is rendered to the
+            # screen. The off-screen texture is managed
+            # by a RenderTexture object.
+            if rmode == 'offscreen':
+                opts = self.opts
+                name = f'{display.name}_{opts.xax}_{opts.yax}'
+                rt   = textures.GLObjectRenderTexture(
+                    name,
+                    globj,
+                    opts.xax,
+                    opts.yax)
+
+                self._offscreenTextures[overlay] = rt
+
+            # For prerender mode, slices of the
+            # GLObjects are pre-rendered on a
+            # stack of off-screen textures, which
+            # is managed by a RenderTextureStack
+            # object.
+            elif rmode == 'prerender':
+                rt, name = self._getPreRenderTexture(globj, overlay)
+                self._prerenderTextures[overlay] = rt, name
+
+        self.Refresh()
+
+
+    def _getPreRenderTexture(self, globj, overlay):
+        """Called by :meth:`_updateRenderTextures`. Creates/retrieves a
+        :class:`.RenderTextureStack` for the given :class:`.GLObject`. A tuple
+        containing the ``RenderTextureStack``, and its name, as passed to the
+        :mod:`.resources` module, is returned.
+
+        :arg globj:   The :class:`.GLObject` instance.
+        :arg overlay: The overlay object.
+        """
+
+        display = self.displayCtx.getDisplay(overlay)
+        copts   = self.opts
+        dopts   = display.opts
+        name    = f'{id(overlay)}_RenderTextureStack_zax{copts.zax}'
+
+        # If all display/opts properties
+        # are synchronised to the parent,
+        # then we use a texture stack that
+        # might be shared across multiple
+        # views.
+        #
+        # But if any display/opts properties
+        # are not synchronised, we'll use our
+        # own texture stack.
+        if not (display.getParent()         and
+                display.allSyncedToParent() and
+                dopts  .getParent()         and
+                dopts  .allSyncedToParent()):
+            name = f'{id(self.displayCtx)}_{name}'
+
+        if glresources.exists(name):
+            rt = glresources.get(name)
+
+        else:
+            rt = textures.RenderTextureStack(globj)
+            rt.setAxes(copts.xax, copts.yax)
+            glresources.set(name, rt)
+
+        return rt, name
+
+
+    def _renderModeChanged(self, *a):
+        """Called when the :attr:`renderMode` property changes.
+        Creates/destroys off-screen :class:`.RenderTexture` instances
+        as needed.
+        """
+
+        renderMode = self.opts.renderMode
+
+        log.debug('Render mode changed: %s', renderMode)
+
+        # destroy any existing render textures
+        for ovl, texture in list(self._offscreenTextures.items()):
+            self._offscreenTextures.pop(ovl)
+            texture.destroy()
+        for ovl, (texture, name) in list(self._prerenderTextures.items()):
+            self._prerenderTextures.pop(ovl)
+            glresources.delete(name)
+
+        # Onscreen rendering - each GLObject
+        # is rendered directly to the canvas
+        # displayed on the screen, so render
+        # textures are not needed.
+        if renderMode == 'onscreen':
+            self.Refresh()
+
+        # Off-screen or prerender rendering - update
+        # the render textures for every GLObject
+        else:
+            self._updateRenderTextures()
+
+
+    def _syncOverlayDisplayChanged(self, *a):
+        """Called when the :attr:`.DisplayContext.syncOverlayDisplay`
+        property changes. If the current :attr:`renderMode` is ``prerender``,
+        the :class:`.RenderTextureStack` instances for each overlay are
+        re-created.
+
+        This is done because, if all display properties for an overlay are
+        synchronised, then a single ``RenderTextureStack`` can be shared
+        across multiple displays. However, if any display properties are not
+        synchronised, then a separate ``RenderTextureStack`` is needed for
+        the :class:`.DisplayContext` used by this ``SliceCanvas``.
+        """
+        if self.opts.renderMode == 'prerender':
+            self._renderModeChange(self)
+
+
     def _highDpiChange(self, *a):
         """Called when the :attr:`.SliceCanvasOpts.highDpi` property
         changes. Calls the :meth:`.GLCanvasTarget.EnableHighDPI` method.
@@ -532,8 +748,15 @@ class SliceCanvas:
 
         opts = self.opts
 
-        log.debug('{}'.format(opts.zax))
+        log.debug(opts.zax)
         self.resetDisplay()
+
+        # If pre-rendering is enabled, the
+        # render textures need to be updated, as
+        # they are configured in terms of the
+        # display axes. Easiest way to do this
+        # is to destroy and re-create them
+        self._renderModeChanged()
 
 
     def __overlayTypeChanged(self, value, valid, display, name):
@@ -543,9 +766,8 @@ class SliceCanvas:
         method).
         """
 
-        log.debug('GLObject representation for {} '
-                  'changed to {}'.format(display.name,
-                                         display.overlayType))
+        log.debug('GLObject representation for %s changed '
+                  'to %s', display.name, display.overlayType)
 
         self.__regenGLObject(display.overlay)
         self.Refresh()
@@ -555,15 +777,27 @@ class SliceCanvas:
         """Destroys any existing :class:`.GLObject` associated with the given
         ``overlay``, and creates a new one (via the :meth:`__genGLObject`
         method).
+
+        If ``refresh`` is ``True`` (the default), and the
+        :attr:`.SliceCanvasOpts.renderMode` is ``offscreen``, any render
+        texture associated with the overlay is destroyed.
         """
 
         # Tell the previous GLObject (if
         # any) to clean up after itself
-
         globj = self._glObjects.pop(overlay, None)
         if globj:
             globj.deregister(self.name)
             glresources.delete(self.globjectId(overlay))
+
+            if refresh and self.opts.renderMode == 'offscreen':
+                tex = self._offscreenTextures.pop(overlay, None)
+                if tex is not None:
+                    tex.destroy()
+            if refresh and self.opts.renderMode == 'prerender':
+                tex, name = self._prerenderTextures.pop(overlay, (None, None))
+                if tex is not None:
+                    glresources.delete(name)
 
         self.__genGLObject(overlay, refresh)
 
@@ -571,6 +805,10 @@ class SliceCanvas:
     def __genGLObject(self, overlay, refresh=True):
         """Creates a :class:`.GLObject` instance for the given ``overlay``.
         Does nothing if a ``GLObject`` already exists for the given overlay.
+
+        If ``refresh`` is ``True`` (the default), and the
+        :attr:`.SliceCanvasOpts.renderMode` is ``offscreen`` or ``prerender``,
+        any off-screen textures for the overlay are created.
 
         If ``refresh`` is ``True`` (the default), the :meth:`Refresh` method
         is called after the ``GLObject`` has been created.
@@ -642,6 +880,7 @@ class SliceCanvas:
                                 overwrite=True)
 
             if refresh:
+                self._updateRenderTextures()
                 self.Refresh()
 
         create = status.reportErrorDecorator(
@@ -661,6 +900,18 @@ class SliceCanvas:
         # being destroyed (e.g. during testing)
         if self.destroyed:
             return
+
+        # If we are in prerender mode, we
+        # need to tell the RenderTextureStack
+        # for this GLObject to update itself.
+        if self.opts.renderMode == 'prerender':
+
+            overlay  = globj.overlay
+            rt, name = self._prerenderTextures.get(overlay, (None, None))
+
+            if rt is not None:
+                rt.onGLObjectUpdate()
+
         self.Refresh()
 
 
@@ -689,13 +940,8 @@ class SliceCanvas:
         # properties so we know when to refresh
         # the canvas.
         for overlay in self.overlayList:
-
-            # A GLObject already exists
-            # for this overlay
-            if overlay in self._glObjects:
-                continue
-
-            self.__regenGLObject(overlay, refresh=False)
+            if overlay not in self._glObjects:
+                self.__genGLObject(overlay, refresh=False)
 
         # All the GLObjects are created using
         # idle.idle, so we call refresh in the
@@ -709,6 +955,7 @@ class SliceCanvas:
             if not self or self.destroyed:
                 return
 
+            self._updateRenderTextures()
             self.Refresh()
 
         idle.idle(refresh)
@@ -1170,6 +1417,42 @@ class SliceCanvas:
             self._annotations.line(*line, **kwargs)
 
 
+    def _drawOffscreenTextures(self):
+        """Draws all of the off-screen :class:`.GLObjectRenderTexture` instances to
+        the canvas.
+
+        This method is called by :meth:`_draw` if :attr:`renderMode` is
+        set to ``offscreen``.
+        """
+
+        log.debug('Combining off-screen render textures, and '
+                  'rendering to canvas (size %s)', self.GetSize())
+
+        xform = self.mvpMatrix
+        copts = self.opts
+        zpos  = copts.pos[copts.zax]
+
+        for overlay in self.displayCtx.getOrderedOverlays():
+
+            rt      = self._offscreenTextures.get(overlay, None)
+            display = self.displayCtx.getDisplay(overlay)
+            dopts   = display.opts
+            lo      = dopts.bounds.getLo()
+            hi      = dopts.bounds.getHi()
+
+            if rt is None or not display.enabled:
+                continue
+
+            xmin, xmax = lo[copts.xax], hi[copts.xax]
+            ymin, ymax = lo[copts.yax], hi[copts.yax]
+
+            log.debug('Drawing overlay %s texture to %0.3f-%0.3f, '
+                      '%0.3f-%0.3f', overlay, xmin, xmax, ymin, ymax)
+
+            rt.drawOnBounds(zpos, xmin, xmax, ymin, ymax,
+                            copts.xax, copts.yax, xform)
+
+
     def _draw(self, *a):
         """Draws the current scene to the canvas. """
 
@@ -1214,15 +1497,71 @@ class SliceCanvas:
         for overlay, globj in zip(overlays, globjs):
 
             display = self.displayCtx.getDisplay(overlay)
+            dopts   = display.opts
             if not display.enabled:
                 continue
 
-            log.debug('Drawing %u slice for overlay %s',
-                      copts.zax, display.name)
+            # On-screen rendering - the globject is
+            # rendered directly to the screen canvas
+            if copts.renderMode == 'onscreen':
+                log.debug('Drawing %s slice for overlay %s directly '
+                          'to canvas', copts.zax, display.name)
 
-            globj.preDraw()
-            globj.draw2D(self, zpos, axes)
-            globj.postDraw()
+                globj.preDraw()
+                globj.draw2D(self, zpos, axes)
+                globj.postDraw()
+
+            # Off-screen rendering - each overlay is
+            # rendered to an off-screen texture.
+            # Set up the texture as the rendering
+            # target, and draw to it. These textures
+            # are then drawn to the canvas below,
+            # via _drawOffscreenTextures.
+            elif copts.renderMode == 'offscreen':
+
+                rt = self._offscreenTextures.get(overlay, None)
+                lo = dopts.bounds.getLo()
+                hi = dopts.bounds.getHi()
+
+                # Assume that all is well - the texture
+                # just has not yet been created
+                if rt is None:
+                    log.debug('Render texture missing for overlay %s', overlay)
+                    continue
+
+                # make sure the rendertexture shape is up to date
+                rt.updateShape(width, height)
+
+                log.debug('Drawing %s slice for overlay %s to off-'
+                          'screen texture', copts.zax, overlay.name)
+
+                with rt.target(copts.xax, copts.yax, lo, hi),  \
+                     glroutines.disabled(gl.GL_BLEND):
+
+                    glroutines.clear((0, 0, 0, 0))
+                    globj.preDraw()
+                    globj.draw2D(rt, zpos, axes)
+                    globj.postDraw()
+
+            elif copts.renderMode == 'prerender':
+                rt, _ = self._prerenderTextures.get(overlay, (None, None))
+
+                if rt is None:
+                    continue
+
+                log.debug('Drawing %s slice for overlay %s '
+                          'from pre-rendered texture',
+                          copts.zax, display.name)
+
+                rt.draw(zpos, self.mvpMatrix)
+
+        # For off-screen rendering, all of the globjects
+        # were rendered to off-screen textures - here,
+        # those off-screen textures are all rendered on
+        # to the screen canvas.
+        if copts.renderMode == 'offscreen':
+            with glroutines.enabled(gl.GL_BLEND):
+                self._drawOffscreenTextures()
 
         if copts.showCursor:
             self._drawCursor()

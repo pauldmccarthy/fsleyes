@@ -274,6 +274,10 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         yopts.bindProps('zoom',         sceneOpts, 'yzoom')
         zopts.bindProps('zoom',         sceneOpts, 'zzoom')
 
+        xopts.bindProps('renderMode',   sceneOpts)
+        yopts.bindProps('renderMode',   sceneOpts)
+        zopts.bindProps('renderMode',   sceneOpts)
+
         xopts.bindProps('highDpi',      sceneOpts)
         yopts.bindProps('highDpi',      sceneOpts)
         zopts.bindProps('highDpi',      sceneOpts)
@@ -681,6 +685,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         # Disable actions that need an overlay
         haveOverlays = len(self.overlayList) > 0
         selOverlay   = self.displayCtx.getSelectedOverlay()
+
+        self.__radioOrientationChanged()
 
         if selOverlay is not None:
 

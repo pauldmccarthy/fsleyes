@@ -293,6 +293,14 @@ class GLMesh(globject.GLObject):
         display.removeListener('alpha',               name)
 
 
+    def getDataResolution(self, *args, **kwargs):
+        """Overrides :meth:`.GLObject.getDataResolution`. Returns the default
+        resolution calculated by that method, scaled down slightly.
+        """
+        res = super().getDataResolution(*args, **kwargs)
+        return [int(round(r * 0.7)) for r in res]
+
+
     def registerLut(self):
         """Registers property listeners with the currently registered
         :class:`.LookupTable` (the :attr:`.MeshOpts.lut` property).
@@ -368,20 +376,23 @@ class GLMesh(globject.GLObject):
             self.normals = np.array(normals, dtype=np.float32)
 
 
-    def frontFace(self):
+    def frontFace(self, xform=None):
         """Returns the face of the mesh triangles which which will be facing
         outwards, either ``GL_CCW`` or ``GL_CW``. This will differ depending
         on the mesh-to-display transformation matrix.
+
+        :arg xform: Additional transformation which will be applied to the
+                    mesh vertices, and which should be taken into account
+                    (e.g. the mvp matrix for the :class:`.SliceCanvas` and
+                    :class:`.LightBoxCanvas` may have x flips).
         """
 
-        # Only looking at the mesh -> display
-        # transform, thus we are assuming that
-        # the MVP matrix does not have any
-        # negative scales.
-        xform = self.opts.getTransform('mesh', 'display')
+        m2d = self.opts.getTransform('mesh', 'display')
+        if xform is not None:
+            m2d = affine.concat(xform, m2d)
 
-        if npla.det(xform) > 0: return gl.GL_CCW
-        else:                   return gl.GL_CW
+        if  npla.det(m2d) > 0: return gl.GL_CW
+        else:                  return gl.GL_CCW
 
 
     def getDisplayBounds(self):
@@ -492,7 +503,7 @@ class GLMesh(globject.GLObject):
             shader.set('normalmat', normmat)
             shader.set('lighting',  canvas.opts.light)
             shader.set('lightPos',  lightPos)
-            gl.glFrontFace(self.frontFace())
+            gl.glFrontFace(self.frontFace(mvpmat))
             gl.glCullFace(gl.GL_BACK)
             shader.draw(gl.GL_TRIANGLES)
 
@@ -667,25 +678,28 @@ class GLMesh(globject.GLObject):
         """
 
         xax, yax, zax = axes
-        bbox          = canvas.viewport
         cpshader      = self.xsectcpShader
         blshader      = self.xsectblShader
-        lo, hi        = self.getDisplayBounds()
-        lo, hi        = self.calculateViewport(lo, hi, axes, bbox)
-        xmin          = lo[xax]
-        xmax          = hi[xax]
-        ymin          = lo[yax]
-        ymax          = hi[yax]
         tex           = self.renderTexture
 
         # Make sure the off-screen texture
-        # matches the display size
-        width, height = canvas.GetSize()
-        if tex.shape != (width, height):
-            tex.shape = width, height
+        # matches the display size. We draw
+        # the cross section to the texture
+        # with the same resolution+viewport
+        # as it would be drawn to the canvas
+        tex.shape = canvas.GetSize()
 
-        if xform is None: xform = canvas.mvpMatrix
-        else:             xform = affine.concat(canvas.mvpMatrix, xform)
+        # canvas bounding box
+        bbox  = canvas.viewport
+        clo   = [b[0] for b in bbox]
+        chi   = [b[1] for b in bbox]
+
+        # mesh bounding box
+        mlo, mhi = self.getDisplayBounds()
+        mxmin    = mlo[xax]
+        mxmax    = mhi[xax]
+        mymin    = mlo[yax]
+        mymax    = mhi[yax]
 
         # Figure out the equation of a plane
         # perpendicular to the Z axis, and located
@@ -695,14 +709,24 @@ class GLMesh(globject.GLObject):
         # the display coordinate system, before MVP
         # transformation.
         clipPlane                = np.zeros((4, 3), dtype=np.float32)
-        clipPlane[0, [xax, yax]] = [xmin, ymin]
-        clipPlane[1, [xax, yax]] = [xmin, ymax]
-        clipPlane[2, [xax, yax]] = [xmax, ymax]
-        clipPlane[3, [xax, yax]] = [xmax, ymin]
+        clipPlane[0, [xax, yax]] = [mxmin, mymin]
+        clipPlane[1, [xax, yax]] = [mxmin, mymax]
+        clipPlane[2, [xax, yax]] = [mxmax, mymax]
+        clipPlane[3, [xax, yax]] = [mxmax, mymin]
         clipPlane[:,  zax]       =  zpos
         clipPlane = glroutines.planeEquation(clipPlane[0, :],
                                              clipPlane[1, :],
                                              clipPlane[2, :])
+
+        # A separate xform may be specified,
+        # by the lightbox canvas, to position
+        # individual slices. Note that we are
+        # drawing to an off-screen texture below,
+        # and not to the canvas, but they will
+        # have identical mvps, so we can use
+        # the canvas mvp here.
+        if xform is None: mvp = canvas.mvpMatrix
+        else:             mvp = affine.concat(canvas.mvpMatrix, xform)
 
         # http://glbook.gamedev.net/GLBOOK/glbook.gamedev.net/moglgp/\
         #     advclip.html
@@ -719,10 +743,16 @@ class GLMesh(globject.GLObject):
         # 3. Fill the off-screen texture with the fill colour,
         #    masking it with the stencil buffer
         # 4. Draw the off-screen texture to the display
-        gl.glFrontFace(self.frontFace())
+
+        # We have to make sure the triangle front face is
+        # set correctly, so that the front/back-face
+        # culling will work below (the other option would
+        # be to swap around the face order depending on
+        # the determinant of the vertex->display affine).
+        gl.glFrontFace(self.frontFace(mvp))
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         with glroutines.enabled((gl.GL_CULL_FACE, gl.GL_STENCIL_TEST)), \
-             tex.target(xax, yax, lo, hi):
+             tex.target(xax, yax, clo, chi):
 
             glroutines.clear((0, 0, 0, 0))
             gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_STENCIL_BUFFER_BIT)
@@ -730,7 +760,7 @@ class GLMesh(globject.GLObject):
             # Use a clip-plane shader for steps 1 and 2
             with cpshader.loaded():
 
-                cpshader.set('MVP',       tex.mvpMatrix)
+                cpshader.set('MVP',       mvp)
                 cpshader.set('clipPlane', clipPlane)
 
                 # We just want to populate the stencil
@@ -764,61 +794,12 @@ class GLMesh(globject.GLObject):
             # disable blending, otherwise we will end up blending
             # with the output of the clip plane shader
             with blshader.loaded(), glroutines.disabled((gl.GL_BLEND, )):
-                verts = tex.generateVertices(zpos, xmin, xmax,
-                                             ymin, ymax, xax, yax)
+                verts = tex.generateVertices(0, -1, 1, -1, 1, 0, 1)
                 blshader.setAtt('vertex', verts)
-                blshader.set(   'MVP',    tex.mvpMatrix)
                 blshader.draw(gl.GL_TRIANGLES, 0, 6)
 
         # Finally, draw the off-screen texture to the display
-        tex.drawOnBounds(zpos, xmin, xmax, ymin, ymax, xax, yax, xform)
-
-
-    def calculateViewport(self, lo, hi, axes, bbox=None):
-        """Called by :meth:`drawCrossSection`. Calculates an appropriate
-        viewport (the horizontal/vertical minimums/maximums in display
-        coordinates) given the ``lo`` and ``hi`` ``GLMesh`` display bounds,
-        and a display ``bbox``.
-
-        This is needed to preserve the aspect ratio of the mesh cross-section.
-        """
-
-        xax = axes[0]
-        yax = axes[1]
-
-        if bbox is not None and (lo[xax] < bbox[xax][0] or
-                                 hi[xax] < bbox[xax][1] or
-                                 lo[yax] > bbox[yax][0] or
-                                 hi[yax] > bbox[yax][1]):
-
-            xlen  = float(hi[xax] - lo[xax])
-            ylen  = float(hi[yax] - lo[yax])
-            ratio = xlen / ylen
-
-            bblo = [ax[0] for ax in bbox]
-            bbhi = [ax[1] for ax in bbox]
-
-            lo   = [max(l, bbl) for l, bbl in zip(lo, bblo)]
-            hi   = [min(h, bbh) for h, bbh in zip(hi, bbhi)]
-
-            dxlen  = float(hi[xax] - lo[xax])
-            dylen  = float(hi[yax] - lo[yax])
-
-            dratio = dxlen / dylen
-
-            if dratio > ratio:
-
-                ndxlen   = xlen * (dylen / ylen)
-                lo[xax] += 0.5 * (ndxlen - dxlen)
-                hi[xax] -= 0.5 * (ndxlen - dxlen)
-
-            elif dratio < ratio:
-
-                ndylen   = ylen * (dxlen / xlen)
-                lo[yax] += 0.5 * (ndylen - dylen)
-                hi[yax] -= 0.5 * (ndylen - dylen)
-
-        return lo, hi
+        tex.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
 
     def calculateIntersection(self, zpos, axes, bbox=None):

@@ -108,6 +108,15 @@ class SliceCanvasOpts(props.HasProperties):
     """Canvas background colour."""
 
 
+    renderMode = props.Choice(('onscreen', 'offscreen', 'prerender'))
+    """How the :class:`.GLObject` instances are rendered to the canvas.
+
+    This setting is coupled to the :attr:`.SceneOpts.performance` setting.
+
+    See the :class:`.SliceCanvas` for more details.
+    """
+
+
     highDpi = props.Boolean(default=False)
     """If FSLeyes is being displayed on a high-DPI screen, try to display
     the scene at full resolution.
@@ -117,7 +126,7 @@ class SliceCanvasOpts(props.HasProperties):
     def __init__(self):
         """Create a ``SliceCanvasOpts`` instance. """
 
-        self.__name = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name = f'{type(self).__name__}_{id(self)}'
         self.__xax  = 0
         self.__yax  = 0
 
@@ -198,6 +207,15 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     highlightSlice = props.Boolean(default=False)
     """If ``True``, a box will be drawn around the slice containing the current
     location.
+    """
+
+
+    renderMode = props.Choice(('onscreen', 'offscreen'))
+    """How the :class:`.GLObject` instances are rendered to the canvas.
+
+    This setting is coupled to the :attr:`.LightBoxOpts.performance` setting.
+
+    See the :class:`.LightBoxCanvas` for more details.
     """
 
 

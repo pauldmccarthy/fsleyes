@@ -37,6 +37,7 @@ class SceneOpts(props.HasProperties):
     zoom            = copy.copy(canvasopts.SliceCanvasOpts.zoom)
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
+    renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
     highDpi         = copy.copy(canvasopts.SliceCanvasOpts.highDpi)
 
 
@@ -79,6 +80,22 @@ class SceneOpts(props.HasProperties):
     """
 
 
+    # NOTE: If you change the maximum performance value,
+    #       make sure you update all references to
+    #       performance because, for example, the
+    #       OrthoEditProfile does numerical comparisons
+    #       to it.
+    performance = props.Choice((1, 2, 3), default=3, allowStr=True)
+    """User controllable performance setting.
+
+    This property is linked to the :attr:`renderMode` property. Setting this
+    property to a low value will result in faster rendering time, at the cost
+    of increased memory usage and poorer rendering quality.
+
+    See the :meth:`__onPerformanceChange` method.
+    """
+
+
     movieSyncRefresh = props.Boolean(default=True)
     """Whether, when in movie mode, to synchronise the refresh for GL
     canvases. This is not possible in some platforms/environments. See
@@ -87,13 +104,20 @@ class SceneOpts(props.HasProperties):
 
 
     def __init__(self, panel):
-        """Create a ``SceneOpts`` instance. """
+        """Create a ``SceneOpts`` instance.
+
+        This method simply links the :attr:`performance` property to the
+        :attr:`renderMode` property.
+        """
 
         self.__panel = panel
-        self.__name  = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name  = f'{type(self).__name__}_{id(self)}'
 
         self.movieSyncRefresh = self.defaultMovieSyncRefresh
-        self.addListener('bgColour', self.__name, self.__onBgColourChange)
+
+        self.addListener('performance', self.__name, self._onPerformanceChange)
+        self.addListener('bgColour',    self.__name, self.__onBgColourChange)
+        self._onPerformanceChange()
 
 
     @property
@@ -109,7 +133,7 @@ class SceneOpts(props.HasProperties):
         """
         renderer        = fslgl.GL_RENDERER.lower()
         unsyncRenderers = ['gallium', 'mesa dri intel(r)']
-        unsync          = any([r in renderer for r in unsyncRenderers])
+        unsync          = any(r in renderer for r in unsyncRenderers)
 
         return not unsync
 
@@ -120,6 +144,17 @@ class SceneOpts(props.HasProperties):
         ``SceneOpts`` instance.
         """
         return self.__panel
+
+
+    def _onPerformanceChange(self, *a):
+        """Called when the :attr:`performance` property changes.
+
+        This method must be overridden by sub-classes to change the values of
+        the :attr:`renderMode` property according to the new performance
+        setting.
+        """
+        raise NotImplementedError('The _onPerformanceChange method must'
+                                  'be implemented by sub-classes')
 
 
     def __onBgColourChange(self, *a):

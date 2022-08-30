@@ -107,6 +107,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.bindProps('cursorWidth',     sceneOpts)
         lbopts.bindProps('showGridLines',   sceneOpts)
         lbopts.bindProps('highlightSlice',  sceneOpts)
+        lbopts.bindProps('renderMode',      sceneOpts)
         lbopts.bindProps('highDpi',         sceneOpts)
 
         # Bind these properties the other way around,
@@ -265,6 +266,8 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
 
         selectedOverlay = self.displayCtx.getSelectedOverlay()
 
+        self.__radioOrientationChanged()
+
         for overlay in self.overlayList:
 
             refImage = self.displayCtx.getReferenceImage(overlay)
@@ -280,17 +283,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                 opts.addListener('transform',
                                  self.name,
                                  self.__transformChanged)
-
-        # If the current zrange is [0, 0]
-        # we'll assume that the spacing/
-        # zrange need to be initialised.
-        lbCanvas = self.__lbCanvas
-        opts     = self.sceneOpts
-
-        if opts.zrange == [0.0, 0.0]:
-
-            opts.sliceSpacing = lbCanvas.calcSliceSpacing(selectedOverlay)
-            opts.zrange       = self.displayCtx.bounds.getRange(opts.zax)
 
 
     def __transformChanged(self, *a):
