@@ -118,7 +118,7 @@ def test_render_lightbox_1():
         'roi' : roi,
     }
     run_cli_tests('test_render_lightbox_1', cli_tests,
-                  extras=extras, scene='lightbox', threshold=1)
+                  extras=extras, scene='lightbox', threshold=5)
 
 
 @pytest.mark.parametrize('zax', '012')
