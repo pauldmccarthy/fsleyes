@@ -129,16 +129,13 @@ class OrthoOpts(sceneopts.SceneOpts):
 
 
     def _onPerformanceChange(self, *a):
-        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the
-        value of the :attr:`renderMode` and :attr:`highDpi` properties
-        according to the performance setting.
+        """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the value
+        of the :attr:`renderMode` property according to the performance setting.
         """
 
         if   self.performance == 3: self.renderMode = 'onscreen'
         elif self.performance == 2: self.renderMode = 'offscreen'
         elif self.performance == 1: self.renderMode = 'prerender'
-
-        self.highDpi = self.performance == 3 and self.highDpi
 
         log.debug('Performance settings changed: '
                   'renderMode=%s', self.renderMode)

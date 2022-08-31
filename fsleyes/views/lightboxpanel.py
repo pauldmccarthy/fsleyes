@@ -111,7 +111,6 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.bind('showGridLines',   sceneOpts)
         lbopts.bind('highlightSlice',  sceneOpts)
         lbopts.bind('renderMode',      sceneOpts)
-        lbopts.bind('highDpi',         sceneOpts)
 
         # Bind these properties the other way around,
         # so that the sensible values calcualted by

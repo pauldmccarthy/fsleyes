@@ -38,7 +38,6 @@ class SceneOpts(props.HasProperties):
     bgColour        = copy.copy(canvasopts.SliceCanvasOpts.bgColour)
     cursorColour    = copy.copy(canvasopts.SliceCanvasOpts.cursorColour)
     renderMode      = copy.copy(canvasopts.SliceCanvasOpts.renderMode)
-    highDpi         = copy.copy(canvasopts.SliceCanvasOpts.highDpi)
 
 
     fgColour = props.Colour(default=(1, 1, 1))

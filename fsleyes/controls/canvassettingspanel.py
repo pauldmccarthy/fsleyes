@@ -127,7 +127,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                           spin=False,
                           showLimits=False,
                           labels=strings.choices['SceneOpts.performance'])),
-            ('highDpi', props.Widget('highDpi')),
             ('showColourBar', props.Widget('showColourBar')),
             ('colourBarLabelSide',
              props.Widget('colourBarLabelSide',
@@ -148,11 +147,6 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('labelSize', props.Widget('labelSize',
                                        spin=True,
                                        showLimits=False))))
-
-        # The highDpi setting is
-        # not always relevant
-        if not fslgl.WXGLCanvasTarget.canToggleHighDPI():
-            sceneOptsProps.pop('highDpi')
 
         def _displaySpaceOptionName(opt):
 
