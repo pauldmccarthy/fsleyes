@@ -34,10 +34,6 @@ class ColourBarCanvas(props.HasProperties):
     """Contains logic to render a colour bar as an OpenGL texture. """
 
 
-    highDpi = props.Boolean(default=False)
-    """Scale colour bar canvas for high-resolution screens. """
-
-
     barSize = props.Percentage(default=100)
     """Size of the colour bar along its major axis, as a proportion of
     the available space.
@@ -55,7 +51,6 @@ class ColourBarCanvas(props.HasProperties):
         self.__cbar.register(self.__name, self.updateColourBarTexture)
 
         self.addListener('barSize', self.__name, self.updateColourBarTexture)
-        self.addListener('highDpi', self.__name, self.__highDpiChanged)
 
 
     @property
@@ -88,14 +83,6 @@ class ColourBarCanvas(props.HasProperties):
         self.__genColourBarTexture()
 
 
-    def __highDpiChanged(self, *a):
-        """Called when the :attr:`highDpi` property changes. Calls the
-        :meth:`.GLCanvasTarget.EnableHighDPI` method.
-        """
-        self.EnableHighDPI(self.highDpi)
-        self.updateColourBarTexture()
-
-
     def destroy(self):
         """Should be called when this ``ColourBarCanvas`` is no longer needed.
         Destroys the :class:`.Texture2D` and :class:`.ColourBar` instances
@@ -108,7 +95,6 @@ class ColourBarCanvas(props.HasProperties):
             self.__tex.destroy()
 
         self.removeListener('barSize', self.__name)
-        self.removeListener('highDpi', self.__name)
 
         self.__tex  = None
         self.__cbar = None
