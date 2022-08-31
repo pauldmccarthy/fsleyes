@@ -156,8 +156,7 @@ def parseArgs(argv):
                               'notebookFile',
                               'notebookPort',
                               'noBrowser'],
-               'SceneOpts' : ['movieSyncRefresh',
-                              'highDpi']}
+               'SceneOpts' : ['movieSyncRefresh']}
 
     namespace = parseargs.parseArgs(
         mainParser,
