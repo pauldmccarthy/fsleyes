@@ -1297,10 +1297,6 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
 
-        # The close is going ahead. Set Skip so the
-        # default close handler gets executed.
-        ev.Skip()
-
         # Disable the idle loop, so that the cleanup
         # operations below have immediate effect
         with idle.idleLoop.synchronous():
@@ -1349,6 +1345,8 @@ class FSLeyesFrame(wx.Frame):
             if self.__closeHandlers is not None:
                 for h in self.__closeHandlers:
                     h()
+
+            self.Destroy()
 
 
     def __restoreState(self, restore):
