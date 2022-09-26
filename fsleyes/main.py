@@ -593,16 +593,10 @@ def initialise(splash, namespace, callback):
         sys.exit(1)
 
 
-def shutdown(ev=None):
+def shutdown():
     """Called when FSLeyes exits normally (i.e. the user closes the window).
     Does some final clean-up before exiting.
-
-    This function is used as a wxpython event handler, so it accepts an ``ev``
-    arguments, but ignores its value.
     """
-
-    if ev is not None:
-        ev.Skip()
 
     import fsl.utils.settings as fslsettings
     import fsleyes.gl         as fslgl

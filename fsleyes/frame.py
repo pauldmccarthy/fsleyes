@@ -174,11 +174,12 @@ class FSLeyesFrame(wx.Frame):
         font.SetWeight(wx.FONTWEIGHT_NORMAL)
         self.SetFont(font)
 
-        self.__overlayList = overlayList
-        self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
-        self.__mainPanel   = wx.Panel(self)
-        self.__statusBar   = wx.StaticText(self)
+        self.__overlayList   = overlayList
+        self.__displayCtx    = displayCtx
+        self.__name          = '{}_{}'.format(type(self).__name__, id(self))
+        self.__mainPanel     = wx.Panel(self)
+        self.__statusBar     = wx.StaticText(self)
+        self.__closeHandlers = closeHandlers
 
         # Even though the FSLeyesFrame does not allow
         # panels to be floated, I am specifying the
@@ -212,7 +213,7 @@ class FSLeyesFrame(wx.Frame):
         #
         # This problem does not occur with the aero/
         # whidbey guides.
-        self.__auiManager  = aui.AuiManager(
+        self.__auiManager = aui.AuiManager(
             self.__mainPanel,
             agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
                       aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
@@ -316,15 +317,6 @@ class FSLeyesFrame(wx.Frame):
         self.__askUnsaved = True
 
         self.__auiManager.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onViewPanelClose)
-
-        # Event handlers are called in order of
-        # last bound first, first bound last.
-        # Our __onClose handler may veto the
-        # close (if the user cancels it), so
-        # we have to bind our handler last.
-        if closeHandlers is not None:
-            for h in closeHandlers:
-                self.Bind(wx.EVT_CLOSE, h)
 
         self.Bind(wx.EVT_CLOSE, self.__onClose)
 
@@ -1305,51 +1297,58 @@ class FSLeyesFrame(wx.Frame):
                 fslsettings.delete('fsleyes.frame.position')
                 fslsettings.delete('fsleyes.frame.layout')
 
-        # The close is going ahead. We assume that this
-        # EVT_CLOSE handler is the first that is called,
-        # and can thus control whether any the event
-        # gets propagated to other handlers.
+        # The close is going ahead. Set Skip so the
+        # default close handler gets executed.
         ev.Skip()
 
-        # It's nice to explicitly clean
-        # up our FSLeyesPanels, otherwise
-        # they'll probably complain
-        for vp in self.__viewPanels:
-            self.__onViewPanelClose(panel=vp, displaySync=False)
+        # Disable the idle loop, so that the cleanup
+        # operations below have immediate effect
+        with idle.idleLoop.synchronous():
 
-        self.__auiManager.UnInit()
-        self.__auiManager._frame = None
-        self.__auiManager        = None
+            self.overlayList.clear()
 
-        # (not created) self.__overlayMenuActions
+            # It's nice to explicitly clean
+            # up our FSLeyesPanels, otherwise
+            # they'll probably complain
+            for vp in list(self.__viewPanels):
+                self.__auiManager.DetachPane(vp)
+                self.__onViewPanelClose(panel=vp, displaySync=False)
 
-        # Cleanly destroy all
-        # menu action objects
-        allactions = []
-        allactions.extend([a for a, _ in self.__viewMenuActions])
-        allactions.extend([a for a, _ in self.__layoutMenuActions])
-        allactions.extend([a for a, _ in self.__overlayMenuActions])
-        allactions.extend([a for a, _ in self.__toolsMenuActions])
-        allactions.extend(self.__menuActions.values())
-        for vpactions in self.__viewPanelMenuActions.values():
-            allactions.extend([a for a, _ in vpactions])
+            self.__auiManager.UnInit()
+            self.__auiManager._frame = None
+            self.__auiManager        = None
 
-        for action in allactions:
-            # actions associated with some object
-            # (e.g. a ViewPanel) will have already
-            # been destroyed by them
-            if not action.destroyed:
-                action.destroy()
+            # Cleanly destroy all
+            # menu action objects
+            allactions = []
+            allactions.extend([a for a, _ in self.__viewMenuActions])
+            allactions.extend([a for a, _ in self.__layoutMenuActions])
+            allactions.extend([a for a, _ in self.__overlayMenuActions])
+            allactions.extend([a for a, _ in self.__toolsMenuActions])
+            allactions.extend(self.__menuActions.values())
+            for vpactions in self.__viewPanelMenuActions.values():
+                allactions.extend([a for a, _ in vpactions])
 
-        self.__layoutMenuActions    = None
-        self.__viewPanelMenuActions = None
-        self.__toolsMenuActions     = None
-        self.__menuActions          = None
+            for action in allactions:
+                # actions associated with some object
+                # (e.g. a ViewPanel) will have already
+                # been destroyed by them
+                if not action.destroyed:
+                    action.destroy()
 
-        # Deregister loadoverlay listener
-        # (registered in __init__)
-        import fsleyes.actions.loadoverlay as loadoverlay
-        loadoverlay.recentPathManager.deregister(self.__name)
+            self.__layoutMenuActions    = None
+            self.__viewPanelMenuActions = None
+            self.__toolsMenuActions     = None
+            self.__menuActions          = None
+
+            # Deregister loadoverlay listener
+            # (registered in __init__)
+            import fsleyes.actions.loadoverlay as loadoverlay
+            loadoverlay.recentPathManager.deregister(self.__name)
+
+            if self.__closeHandlers is not None:
+                for h in self.__closeHandlers:
+                    h()
 
 
     def __restoreState(self, restore):
