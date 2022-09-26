@@ -10,6 +10,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+
+1.6.0 (Under development)
+-------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed some issues related to shutting down FSLeyes cleanly, which could
+  occasionally result in segmentation faults (!340).
+
+
+
 1.5.0 (Wednesday 31st August 2022)
 ----------------------------------
 

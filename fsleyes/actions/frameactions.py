@@ -13,6 +13,8 @@ monkey-patched into the :class:`.FSLeyesFrame` class.
 import            os
 import os.path as op
 
+import            wx
+
 import                      fsleyes
 import fsleyes.actions   as actions
 import fsleyes.strings   as strings
@@ -167,7 +169,7 @@ def setFSLDIR(self, *args, **kwargs):
 
 def closeFSLeyes(self, *args, **kwargs):
     """Closes FSLeyes. """
-    self.Close()
+    wx.CallAfter(self.Close)
 
 
 FSLeyesFrame.addOrthoPanel           = actions.action(addOrthoPanel)

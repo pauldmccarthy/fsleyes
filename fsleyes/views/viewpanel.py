@@ -728,6 +728,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                        is added, it should be passed here.
         """
 
+        if self.destroyed:
+            return
+
         newPanel = kwargs.pop('newPanel', None)
 
         # This method makes sure that size hints
