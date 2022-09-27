@@ -104,15 +104,12 @@ def draw3D(self, canvas, xform=None):
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP', mvp)
-        # See comments in gl33.gltractogram_funcs.draw3D
-        with glroutines.enabled(gl.GL_CULL_FACE):
-            # we don't implement line width in gl21 - we
-            # would need to use instanced rendering to
-            # draw each line segment as a rectangle.
-            gl.glLineWidth(lineWidth)
-            gl.glCullFace(gl.GL_BACK)
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-            if display.alpha < 100 or opts.modulateAlpha:
-                gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
-            with glroutines.enabled(gl.GL_DEPTH_TEST):
-                gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+        # we don't implement proper line width in
+        # gl21 - we would need to use instanced
+        # rendering to draw each line segment as a
+        # rectangle (see gl33.gltractogram_funcs.draw3D)
+        gl.glLineWidth(lineWidth)
+        if display.alpha < 100 or opts.modulateAlpha:
+            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+        with glroutines.enabled(gl.GL_DEPTH_TEST):
+            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
