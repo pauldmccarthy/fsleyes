@@ -22,6 +22,8 @@ Fixed
 
 * Fixed some issues related to shutting down FSLeyes cleanly, which could
   occasionally result in segmentation faults (!340).
+* Fixed an issue with tractogram overlays not being drawn in some
+  circumstances (!341).
 
 
 
