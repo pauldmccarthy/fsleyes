@@ -154,6 +154,7 @@ def draw3D(self, canvas, xform=None):
             shader.set('lightPos', lightPos)
 
         with glroutines.enabled(gl.GL_CULL_FACE):
+            gl.glFrontFace(gl.GL_CCW)
             gl.glCullFace(gl.GL_BACK)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             # Alpha blending does not work with glMultiDrawArrays,
