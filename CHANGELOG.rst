@@ -10,10 +10,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-
-
 1.6.0 (Under development)
 -------------------------
+
+
+Added
+^^^^^
+
+
+* Added an *outline* button to the overlay display toolbar for mask overlays
+  (!342).
 
 
 Fixed
