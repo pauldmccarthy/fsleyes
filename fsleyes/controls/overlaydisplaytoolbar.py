@@ -393,13 +393,15 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         """Creates and returns a collection of controls for editing properties
         of the given :class:`.MaskOpts` instance.
         """
-        thresSpec  = self.__widgetSpecs[opts, 'threshold']
-        colourSpec = self.__widgetSpecs[opts, 'colour']
+        thresSpec   = self.__widgetSpecs[opts, 'threshold']
+        colourSpec  = self.__widgetSpecs[opts, 'colour']
+        outlineSpec = self.__widgetSpecs[opts, 'outline']
 
-        thresWidget  = props.buildGUI(self, opts, thresSpec)
-        colourWidget = props.buildGUI(self, opts, colourSpec)
+        thresWidget   = props.buildGUI(self, opts, thresSpec)
+        colourWidget  = props.buildGUI(self, opts, colourSpec)
+        outlineWidget = props.buildGUI(self, opts, outlineSpec)
 
-        tools = [thresWidget, colourWidget]
+        tools = [thresWidget, colourWidget, outlineWidget]
 
         return tools, tools
 
@@ -760,6 +762,12 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
                 'colour',
                 size=(24, 24),
                 tooltip=_TOOLTIPS['MaskOpts.colour']),
+            'MaskOpts.outline'      : props.Widget(
+                'outline',
+                tooltip=_TOOLTIPS['MaskOpts.outline'],
+                icon=[icons.findImageFile('outline24'),
+                      icons.findImageFile('filled24')],
+                toggle=True),
 
             'LabelOpts.lut'     : props.Widget(
                 'lut',
@@ -914,6 +922,7 @@ _TOOLTIPS = td.TypeDict({
     'ComplexOpts.component' : fsltooltips.properties['ComplexOpts.component'],
 
     'MaskOpts.threshold' : fsltooltips.properties['MaskOpts.threshold'],
+    'MaskOpts.outline'   : fsltooltips.properties['MaskOpts.outline'],
     'MaskOpts.colour'    : fsltooltips.properties['MaskOpts.colour'],
 
     'LabelOpts.lut'          : fsltooltips.properties['LabelOpts.lut'],
