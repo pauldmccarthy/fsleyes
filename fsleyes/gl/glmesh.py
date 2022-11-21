@@ -926,7 +926,7 @@ class GLMesh(globject.GLObject):
             else:
                 vdata = vdata[faces[:, 0]].repeat(2)
 
-        return np.asarray(vdata, np.float32)
+        return np.ascontiguousarray(vdata, np.float32)
 
 
     def refreshCmapTextures(self, *a, **kwa):
