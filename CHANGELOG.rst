@@ -30,6 +30,7 @@ Fixed
   occasionally result in segmentation faults (!340).
 * Fixed an issue with tractogram overlays not being drawn in some
   circumstances (!341).
+* Fixed an issue with loading mesh vertex data (!343).
 
 
 
