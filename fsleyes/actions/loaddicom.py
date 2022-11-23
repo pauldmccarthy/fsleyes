@@ -16,6 +16,7 @@ A few standalone functions are also defined in this module:
 """
 
 
+import functools    as ft
 import                 os
 import os.path      as op
 from   datetime import datetime
@@ -30,6 +31,10 @@ import fsl.data.dicom                 as fsldcm
 import fsleyes.strings                as strings
 import fsleyes.autodisplay            as autodisplay
 from . import                            base
+
+
+# Don't scan DICOM directories more than once
+scanDir = ft.lru_cache(fsldcm.scanDir)
 
 
 class LoadDicomAction(base.Action):
@@ -132,7 +137,7 @@ def loadDicom(dcmdir=None, parent=None, callback=None):
 
     def scan():
         try:
-            series.extend(fsldcm.scanDir(dcmdir))
+            series.extend(scanDir(dcmdir))
             if len(series) == 0:
                 raise Exception('Could not find any DICOM '
                                 'data series in {}'.format(dcmdir))
