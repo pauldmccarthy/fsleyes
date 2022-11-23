@@ -124,6 +124,14 @@ class Volume3DOpts:
     """
 
 
+    enableInterpolation = True
+    """Global setting (shared by all ``Volume3DOpts`` instances).  Controls
+    whether enable interpolation for all new ``Volume3DOpts`` instances. This
+    flag is checked at creation time (in :meth:`.VolumeOpts.__init__`), so
+    must be set before any ``VolumeOpts`` instances are created.
+    """
+
+
     def __init__(self):
         """Create a :class:`Volume3DOpts` instance.
         """
