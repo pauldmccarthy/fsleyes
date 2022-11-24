@@ -249,7 +249,6 @@ import                     sys
 import                     types
 import                     urllib
 import                     logging
-import                     warnings
 import                     textwrap
 import                     argparse
 import                     collections
@@ -413,7 +412,8 @@ OPTIONS = td.TypeDict({
                        'notebookFile',
                        'notebookPort',
                        'noBrowser',
-                       'annotations'],
+                       'annotations',
+                       'no3DInterp'],
 
     # Hidden/advanced/silly options
     'Extras'        : ['nolink',
@@ -794,6 +794,8 @@ ARGUMENTS = td.TypeDict({
     'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
     'Main.noBrowser'           : ('nbb',     'noBrowser',           False),
     'Main.annotations'         : ('a',       'annotations',         True),
+    'Main.no3DInterp'          : ('ni',      'no3DInterp',          False),
+
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
     'Extras.bumMode' : ('bums', 'bumMode', False),
@@ -1053,6 +1055,9 @@ HELP = td.TypeDict({
     'Application font size',
     'Main.annotations' :
     'Load annotations from file (only applied to ortho views)',
+    'Main.no3DInterp' :
+    'Do not automatically enable interpolation for volume overlays '
+    'when opening a 3D view',
 
     'Main.notebook' :
     'Start the Jupyter notebook server',
@@ -1769,6 +1774,7 @@ def _configMainParser(mainParser, exclude=None):
                                  'default' : 8888},
         'noBrowser'           : {'action'  : 'store_true'},
         'annotations'         : {'type'    : str},
+        'no3DInterp'          : {'action'  : 'store_true'},
     }
 
     if fsleyes.disableLogging:
@@ -2593,8 +2599,11 @@ def applyMainArgs(args, overlayList, displayCtx):
     :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
 
-    from fsleyes.displaycontext.volumeopts import VolumeOpts
+    from fsleyes.displaycontext.volumeopts   import VolumeOpts
+    from fsleyes.displaycontext.volume3dopts import Volume3DOpts
     VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
+
+    Volume3DOpts.enableInterpolation = not args.no3DInterp
 
     if args.bigmem is not None:
         displayCtx.loadInMemory = args.bigmem

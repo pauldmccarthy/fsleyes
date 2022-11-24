@@ -159,7 +159,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
         # Default to spline interpolation
         # if we are displaying in 3D
-        if displayCtx.displayType == '3D':
+        if displayCtx.displayType == '3D' and \
+           vol3dopts.Volume3DOpts.enableInterpolation:
             self.interpolation = 'spline'
 
         # Some things only happen

@@ -20,6 +20,8 @@ Added
 
 * Added an *outline* button to the overlay display toolbar for mask overlays
   (!342).
+* New ``--no3DInterp`` / ``-ni`` option, which prevents interpolation from
+  being enabled for volume overlays when a 3D view is opened (!344).
 
 
 Fixed
