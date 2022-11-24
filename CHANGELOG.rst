@@ -24,6 +24,14 @@ Added
   being enabled for volume overlays when a 3D view is opened (!344).
 
 
+Changed
+^^^^^^^
+
+
+* DICOM directories are now only scanned once, instead of each time they are
+  opened via the *Add from DICOM* menu option (!345).
+
+
 Fixed
 ^^^^^
 
