@@ -27,6 +27,7 @@ import functools as ft
 import os.path   as op
 import              os
 import              sys
+import              shlex
 import              signal
 import              logging
 import              textwrap
@@ -618,9 +619,19 @@ def parseArgs(argv):
     :arg argv: command line arguments for ``fsleyes``.
     """
 
-    import fsleyes.parseargs as parseargs
-    import fsleyes.layouts   as layouts
-    import fsleyes.version   as version
+    import fsl.utils.settings as fslsettings
+    import fsleyes.parseargs  as parseargs
+    import fsleyes.layouts    as layouts
+    import fsleyes.version    as version
+
+    # Apply user-defaults, stored in <fsleyes-config-dir>/default_arguments.txt
+    userArgs = fslsettings.readFile('default_arguments.txt')
+    if userArgs is not None:
+        userArgs = [line.strip() for line in userArgs.split('\n')]
+        userArgs = [line         for line in userArgs if line != '']
+        userArgs = [line         for line in userArgs if not line[0] == '#']
+        userArgs = shlex.split(' '.join(userArgs))
+        argv     = userArgs + argv
 
     parser = parseargs.ArgumentParser(
         add_help=False,
