@@ -42,6 +42,18 @@ deletes this directory, which causes FSLeyes to forget all settings (and
 user-added colour maps and lookup tables).
 
 
+.. _customising_default_arguments:
+
+Default command-line arguments
+==============================
+
+If there are some FSLeyes command-line options which you would always like to
+have applied, you can store them in a file called ``default_arguments.txt``,
+located within the FSLeyes settings directory.  More information on this file
+can be found :ref:`here <command_line_default_arguments>`.
+
+
+
 .. _customising_colour_maps:
 
 Colour maps
