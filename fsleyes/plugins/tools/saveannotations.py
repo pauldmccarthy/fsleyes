@@ -97,6 +97,7 @@ import os
 import shlex
 import logging
 import pathlib
+import collections
 
 from typing import Dict, List, Union
 
@@ -235,9 +236,13 @@ def saveAnnotations(ortho    : orthopanel.OrthoPanel,
     """Saves annotations on the canvases of the :class:`.OrthoPanel` to the
     specified ``filename``.
     """
-    annots = {'X' : ortho.getXCanvas().getAnnotations().annotations,
-              'Y' : ortho.getYCanvas().getAnnotations().annotations,
-              'Z' : ortho.getZCanvas().getAnnotations().annotations}
+    annots   = {}
+    canvases = {'X' : ortho.getXCanvas(),
+                'Y' : ortho.getYCanvas(),
+                'Z' : ortho.getZCanvas()}
+    for label, canvas in canvases.items():
+        if canvas is not None:
+            annots[label] = canvas.getAnnotations().annotations
 
     with open(filename, 'wt') as f:
         f.write(serialiseAnnotations(annots))
@@ -252,9 +257,13 @@ def loadAnnotations(ortho    : orthopanel.OrthoPanel,
     with open(filename, 'rt') as f:
         s = f.read().strip()
 
-    annots  = {'X' : ortho.getXCanvas().getAnnotations(),
-               'Y' : ortho.getYCanvas().getAnnotations(),
-               'Z' : ortho.getZCanvas().getAnnotations()}
+    annots   = {}
+    canvases = {'X' : ortho.getXCanvas(),
+                'Y' : ortho.getYCanvas(),
+                'Z' : ortho.getZCanvas()}
+    for label, canvas in canvases.items():
+        if canvas is not None:
+            annots[label] = canvas.getAnnotations()
 
     allObjs = deserialiseAnnotations(s, annots)
 
@@ -331,7 +340,7 @@ def deserialiseAnnotations(
     :returns:    Dictionary of ``{canvas : [AnnotationObject]}`` mappings.
     """
 
-    objs = {'X' : [], 'Y' : [], 'Z' : []}
+    objs = collections.defaultdict(list)
 
     for line in s.split('\n'):
         try:
@@ -382,8 +391,10 @@ def deserialiseAnnotation(
     kvpairs = dict([kv.split('=') for kv in shlex.split(kvpairs)])
 
     if canvas not in 'XYZ':
-        raise ValueError('Canvas is not one of X, Y, '
-                         'or Z ({})'.format(canvas))
+        raise ValueError(f'Canvas is not one of X, Y, or Z ({canvas})')
+    if canvas not in annots:
+        raise ValueError('Skipping annotation for non-existent '
+                         f'canvas ({canvas}): {s}')
 
     for k, v in kvpairs.items():
         kvpairs[k] = parsers.get(k, float)(v)

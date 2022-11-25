@@ -72,6 +72,11 @@ mesh_ref mesh_l_thal.vtk -mc 0 1 0 -r mesh_ref -a 50
 
 -a annotations.txt 3d
 
+# github.com/pauldmccarthy/fsleyes/issues/104
+-a annotations.txt -xh 3d
+-a annotations.txt -yh 3d
+-a annotations.txt -zh 3d
+
 # show location
 -sl X -ls 24 3d
 -sl X        3d

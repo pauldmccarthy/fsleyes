@@ -867,15 +867,19 @@ class MockOrthoPanel:
     for three :class:`SliceCanvas` instances.
     """
     def __init__(self, canvases):
-        self.canvases = canvases
+        self.canvases = {}
+        for canvas in canvases:
+            zax = 'XYZ'[canvas.opts.zax]
+            self.canvases[zax] = canvas
+
     def getGLCanvases(self):
-        return self.canvases
+        return list(self.canvases.values())
     def getXCanvas(self):
-        return self.canvases[0]
+        return self.canvases.get('X', None)
     def getYCanvas(self):
-        return self.canvases[1]
+        return self.canvases.get('Y', None)
     def getZCanvas(self):
-        return self.canvases[2]
+        return self.canvases.get('Z', None)
 
 
 if __name__ == '__main__':
