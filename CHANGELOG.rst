@@ -22,6 +22,8 @@ Added
   (!342).
 * New ``--no3DInterp`` / ``-ni`` option, which prevents interpolation from
   being enabled for volume overlays when a 3D view is opened (!344).
+* FSLeyes will now read "default" command-line arguments from a file called
+  ``default_arguments.txt``, stored in the FSLeyes settings directory (!347).
 
 
 Changed
@@ -41,7 +43,7 @@ Fixed
 * Fixed an issue with tractogram overlays not being drawn in some
   circumstances (!341).
 * Fixed an issue with loading mesh vertex data (!343).
-
+* Fixed an issue with loading annotations when using ``fsleyes render`` (!346).
 
 
 1.5.0 (Wednesday 31st August 2022)
