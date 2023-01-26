@@ -20,7 +20,7 @@ apt-get install -y dpkg-dev \
                    libxtst-dev
 
 source /test.venv/bin/activate
-pip install requests numpy six Pillow
+pip install requests numpy six Pillow sip
 
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build > /dev/null
@@ -71,6 +71,14 @@ sed -ie "s/'-std=c++11'/''/g" build.py
 # do manually, so we need to patch
 # setup.py
 sed -ie "s/'install' *: wx_install/'install' : orig_install/g" setup.py
+
+
+# wxpython 4.2.0 has an unnecessary
+# "from attrdict import AttrDict"
+# statement (only used on windows).
+# And attrdict is not compatible
+# with py311, so best to just remove it.
+sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
 
 # do the build
 python ./build.py dox etg --nodoc sip build --release --gtk3
