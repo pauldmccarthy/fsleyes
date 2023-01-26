@@ -131,5 +131,5 @@ notebook add a call to `setState`, passing in that string, e.g.:
 
 See the FSLeyes and `fslpy` API documentation:
 
- - https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/apidoc/latest/
- - https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/fslpy/latest/
+ - https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/
+ - https://open.win.ox.ac.uk/pages/fsl/fslpy/
