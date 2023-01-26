@@ -20,7 +20,6 @@ apt-get install -y dpkg-dev \
                    libxtst-dev
 
 source /test.venv/bin/activate
-pip install requests numpy six Pillow sip
 
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build > /dev/null
@@ -29,6 +28,9 @@ git clone https://github.com/wxWidgets/Phoenix.git
 pushd Phoenix > /dev/null
 git checkout $WXPYTHON_VERSION
 git submodule update --init --recursive
+
+pip install -r requirements/devel.txt
+pip install -r requirements/install.txt
 
 # patch the wxwidgets build opts
 configopts="            '--disable-webviewwebkit',
