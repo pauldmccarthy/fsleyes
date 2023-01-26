@@ -27,7 +27,7 @@ pushd $VIRTUAL_ENV/wx-build > /dev/null
 
 git config --global url.git://github.com/.insteadOf git@github.com/
 git config --global url.git://github.com/.insteadOf https://github.com/
-git clone git://github.com/wxWidgets/Phoenix.git
+git clone git://github.com:wxWidgets/Phoenix.git
 pushd Phoenix > /dev/null
 git checkout $WXPYTHON_VERSION
 git submodule update --init --recursive
