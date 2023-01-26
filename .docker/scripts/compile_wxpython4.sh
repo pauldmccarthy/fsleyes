@@ -20,17 +20,17 @@ apt-get install -y dpkg-dev \
                    libxtst-dev
 
 source /test.venv/bin/activate
-pip install requests numpy six Pillow
 
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build > /dev/null
 
-git config --global url.git://github.com/.insteadOf git@github.com/
-git config --global url.git://github.com/.insteadOf https://github.com/
-git clone git://github.com:wxWidgets/Phoenix.git
+git clone https://github.com/wxWidgets/Phoenix.git
 pushd Phoenix > /dev/null
 git checkout $WXPYTHON_VERSION
 git submodule update --init --recursive
+
+pip install -r requirements/devel.txt
+pip install -r requirements/install.txt
 
 # patch the wxwidgets build opts
 configopts="            '--disable-webviewwebkit',
@@ -73,6 +73,14 @@ sed -ie "s/'-std=c++11'/''/g" build.py
 # do manually, so we need to patch
 # setup.py
 sed -ie "s/'install' *: wx_install/'install' : orig_install/g" setup.py
+
+
+# wxpython 4.2.0 has an unnecessary
+# "from attrdict import AttrDict"
+# statement (only used on windows).
+# And attrdict is not compatible
+# with py311, so best to just remove it.
+sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
 
 # do the build
 python ./build.py dox etg --nodoc sip build --release --gtk3
