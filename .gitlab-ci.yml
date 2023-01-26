@@ -167,6 +167,11 @@ build-docker-image-fsleyes-py310-wxpy4-gtk3:
   variables:
     BUILDDIR: .docker/fsleyes-py310-wxpy4-gtk3
 
+build-docker-image-fsleyes-py311-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py311-wxpy4-gtk3
+
 
 ############
 # Test stage
