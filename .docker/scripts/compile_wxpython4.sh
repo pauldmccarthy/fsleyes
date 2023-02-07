@@ -19,7 +19,10 @@ apt-get install -y dpkg-dev \
                    libwebkit2gtk-4.0-dev \
                    libxtst-dev
 
-source /test.venv/bin/activate
+$PY_VENV /wxpy-build.env
+source /wxpy-build.venv/bin/activate
+
+pip install --upgrade pip setuptools wheel
 
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build > /dev/null
@@ -84,6 +87,10 @@ sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
 
 # do the build
 python ./build.py dox etg --nodoc sip build --release --gtk3
+
+source deactivate
+rm -rf /wxpy-build.env
+source /test.env/bin/activate
 
 python setup.py install --skip-build
 
