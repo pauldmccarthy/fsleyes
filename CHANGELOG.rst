@@ -24,6 +24,8 @@ Added
   being enabled for volume overlays when a 3D view is opened (!344).
 * FSLeyes will now read "default" command-line arguments from a file called
   ``default_arguments.txt``, stored in the FSLeyes settings directory (!347).
+* New ``--numSlices`` command-line option for use with lightbox views, which
+  is an inverted alias for the ``--sliceSpacing`` option (!350).
 
 
 Changed
@@ -32,6 +34,9 @@ Changed
 
 * DICOM directories are now only scanned once, instead of each time they are
   opened via the *Add from DICOM* menu option (!345).
+* The ``--useNegativeCmap``/``-un`` option is now automatically enabled when
+  ``--negativeCmap``/``-nc`` is specified (!350).
+
 
 
 Fixed
