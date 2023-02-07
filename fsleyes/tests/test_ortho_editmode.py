@@ -133,36 +133,36 @@ def test_select_and_fill_z():
 
 
 def test_select_and_fill_2d_x():
-    img = Image(np.random.randint(1, 65536, (60, 60, 1)))
+    img = Image(np.random.randint(1, 65536, (60, 60, 1))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=2)
     run_with_orthopanel(tfs)
 
 
 def test_select_and_fill_2d_y():
-    img = Image(np.random.randint(1, 65536, (60, 1, 60)))
+    img = Image(np.random.randint(1, 65536, (60, 1, 60))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=1)
     run_with_orthopanel(tfs)
 
 
 def test_select_and_fill_2d_z():
-    img = Image(np.random.randint(1, 65536, (1, 60, 60)))
+    img = Image(np.random.randint(1, 65536, (1, 60, 60))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
 
 def test_select_and_fill_4d_x():
-    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=0)
     run_with_orthopanel(tfs)
 
 def test_select_and_fill_4d_y():
-    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=1, vol=3)
     run_with_orthopanel(tfs)
 
 
 def test_select_and_fill_4d_z():
-    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10)))
+    img = Image(np.random.randint(1, 65536, (40, 40, 40, 10))).astype(np.int32)
     tfs = ft.partial(_test_select_and_fill, img=img, canvas=2, vol=8)
     run_with_orthopanel(tfs)
 
@@ -231,7 +231,7 @@ def test_newMask():
     run_with_orthopanel(_test_newMask)
 
 def _test_newMask(ortho, overlayList, displayCtx):
-    img = Image(np.random.randint(1, 65536, (20, 20, 20)))
+    img = Image(np.random.randint(1, 65536, (20, 20, 20))).astype(np.int32)
     overlayList[:] = [img]
     idle.block(2.5)
     ortho.profileManager.activateProfile(OrthoEditProfile)
@@ -251,7 +251,7 @@ def test_newMask_with_selection():
     run_with_orthopanel(_test_newMask_with_selection)
 
 def _test_newMask_with_selection(ortho, overlayList, displayCtx):
-    img = Image(np.random.randint(1, 65536, (20, 20, 20)))
+    img = Image(np.random.randint(1, 65536, (20, 20, 20))).astype(np.int32)
     overlayList[:] = [img]
     idle.block(2.5)
     ortho.profileManager.activateProfile(OrthoEditProfile)
@@ -277,8 +277,8 @@ def _test_newMask_with_selection(ortho, overlayList, displayCtx):
 
 
 def _setup_selectionAction_test(ortho, overlayList, displayCtx):
-    img1 = Image(np.random.randint(1, 65536, (20, 20, 20)))
-    img2 = Image(np.random.randint(1, 65536, (20, 20, 20)))
+    img1 = Image(np.random.randint(1, 65536, (20, 20, 20)).astype(np.int32))
+    img2 = Image(np.random.randint(1, 65536, (20, 20, 20)).astype(np.int32))
     overlayList[:] = [img1, img2]
     displayCtx.selectOverlay(img1)
     idle.block(2)

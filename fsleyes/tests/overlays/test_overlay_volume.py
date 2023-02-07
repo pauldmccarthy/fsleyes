@@ -153,7 +153,7 @@ def gen_indices(infile):
     outfile  = '{}_indices.nii.gz'.format(basename)
     img      = fslimage.Image(infile, loadData=False)
     shape    = img.shape
-    data     = np.arange(np.prod(shape)).reshape(shape)
+    data     = np.arange(np.prod(shape)).reshape(shape).astype(np.int32)
 
     fslimage.Image(data, header=img.header).save(outfile)
 
@@ -206,7 +206,8 @@ def test_overlay_volume_swapdim():
 
 def silly_range():
 
-    data = np.arange(1000, dtype=np.float32).reshape((10, 10, 10))
+    data = np.arange(1000, dtype=np.float32)\
+             .reshape((10, 10, 10)).astype(np.int32)
 
     data[4, 4, 4:6] *= -10e10
     data[5, 5, 4:6] *=  10e10

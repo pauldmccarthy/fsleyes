@@ -24,7 +24,9 @@ from fsleyes.tests import run_with_orthopanel, realYield
 def test_copyImage_3d():
     run_with_orthopanel(_test_copyImage_3d)
 def _test_copyImage_3d(panel, overlayList, displayCtx):
-    img3d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)), name='img3d')
+    img3d = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32),
+        name='img3d')
 
     overlayList.append(img3d)
 
@@ -109,7 +111,9 @@ def test_copyImage_4d():
     run_with_orthopanel(_test_copyImage_4d)
 def _test_copyImage_4d(panel, overlayList, displayCtx):
 
-    img4d = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 20)), name='img4d')
+    img4d = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20, 20)).astype(np.int32),
+        name='img4d')
 
     overlayList.append(img4d)
 
@@ -286,8 +290,10 @@ def test_CopyOverlayAction():
     run_with_orthopanel(_test_CopyOverlayAction)
 def _test_CopyOverlayAction(panel, overlayList, displayCtx):
 
-    img3d   = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-    img4d   = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 20)))
+    img3d   = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
+    img4d   = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20, 20)).astype(np.int32))
     complex = make_complex()
     rgb     = make_rgb()
     overlayList.extend((img3d, img4d, complex, rgb))
@@ -391,8 +397,10 @@ def test_copyDisplayProperties():
     run_with_orthopanel(_test_copyDisplayProperties)
 def _test_copyDisplayProperties(panel, overlayList, displayCtx):
     displayCtx = panel.displayCtx
-    img1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-    img2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+    img1 = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
+    img2 = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
 
     overlayList.extend((img1, img2))
 

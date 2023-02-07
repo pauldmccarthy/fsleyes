@@ -34,7 +34,7 @@ def _test_applyCommandLine_overlayOnly(panel, overlayList, displayCtx):
     panel.sceneOpts.layout = 'horizontal'
 
     with tempdir():
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         img.save('image.nii.gz')
 
         applycommandline.applyCommandLineArgs(
@@ -61,7 +61,7 @@ def _test_applyCommandLine_sceneOnly(panel, overlayList, displayCtx):
     panel.sceneOpts.layout = 'horizontal'
 
     with tempdir():
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         img.save('image.nii.gz')
 
         applycommandline.applyCommandLineArgs(
@@ -87,7 +87,7 @@ def _test_applyCommandLine(panel, overlayList, displayCtx):
     panel.sceneOpts.layout = 'horizontal'
 
     with tempdir():
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         img.save('image.nii.gz')
 
         applycommandline.applyCommandLineArgs(
@@ -120,7 +120,7 @@ def _test_applyCommandLine_baseDir(panel, overlayList, displayCtx):
         basedir = op.join(*'sub/dir/to/test/base/dir/'.split('/'))
         os.makedirs(basedir)
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         img.save(op.join(basedir, 'image.nii.gz'))
 
         applycommandline.applyCommandLineArgs(
@@ -171,7 +171,7 @@ def _test_ApplyCommandLineAction(panel, overlayList, displayCtx):
                                                       displayCtx,
                                                       panel)
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         img.save('image.nii.gz')
 
         TextEditDialog.ShowModal_return = wx.ID_CANCEL

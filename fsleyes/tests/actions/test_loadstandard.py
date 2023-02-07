@@ -38,7 +38,8 @@ def _test_LoadStandardAction(panel, overlayList, displayCtx):
         fsldir = os.environ['FSLDIR']
         stddir = op.join(fsldir, 'data', 'standard')
         fname  = op.join(stddir, 'image.nii.gz')
-        img    = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img    = fslimage.Image(
+            np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         frame  = panel.frame
 
         os.makedirs(stddir)

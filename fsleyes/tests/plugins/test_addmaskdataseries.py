@@ -48,7 +48,7 @@ def _test_AddMaskDataSeriesAction(panel, overlayList, displayCtx):
 
     img  = fslimage.Image(op.join(datadir, '4d'))
     mask = fslimage.Image(
-        np.random.randint(0, 10, img.shape[:3]),
+        np.random.randint(0, 10, img.shape[:3]).astype(np.int32),
         xform=img.voxToWorldMat)
     overlayList.append(img)
     overlayList.append(mask)
