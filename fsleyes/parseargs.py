@@ -497,12 +497,14 @@ OPTIONS = td.TypeDict({
     # overrideDataRange properties, so am
     # listing them separately until I can
     # be bothered to test.
+    'ColourMapOpts'   : ['cmap',
+                         'negativeCmap',
+                         'useNegativeCmap'],
     'VolumeOpts'      : ['linkLowRanges',
                          'linkHighRanges',
                          'overrideDataRange',
                          'clipImage',
                          'modulateImage',
-                         'useNegativeCmap',
                          'displayRange',
                          'clippingRange',
                          'modulateRange',
@@ -510,8 +512,6 @@ OPTIONS = td.TypeDict({
                          'logScale',
                          'channel',
                          'invertClipping',
-                         'cmap',
-                         'negativeCmap',
                          'cmapResolution',
                          'interpolation',
                          'interpolateCmaps',
@@ -566,15 +566,12 @@ OPTIONS = td.TypeDict({
                          'lut',
                          'linkLowRanges',
                          'linkHighRanges',
-                         'useNegativeCmap',
                          'displayRange',
                          'clippingRange',
                          'modulateRange',
                          'gamma',
                          'discardClipped',
                          'invertClipping',
-                         'cmap',
-                         'negativeCmap',
                          'cmapResolution',
                          'flatShading',
                          'interpolation',
@@ -606,7 +603,6 @@ OPTIONS = td.TypeDict({
                          'clippingRange',
                          'gamma',
                          'invertClipping',
-                         'cmap',
                          'cmapResolution',
                          'interpolation',
                          'interpolateCmaps',
@@ -631,15 +627,12 @@ OPTIONS = td.TypeDict({
                            'subsample',
                            'linkLowRanges',
                            'linkHighRanges',
-                           'useNegativeCmap',
                            'displayRange',
                            'clippingRange',
                            'modulateRange',
                            'gamma',
                            'logScale',
                            'invertClipping',
-                           'cmap',
-                           'negativeCmap',
                            'cmapResolution',
                            'interpolateCmaps',
                            'invert',
@@ -3353,6 +3346,15 @@ def _generateSpecial_NiftiOpts_index(
 
     return [longArg, ','.join(indices)]
 
+
+def _applySpecial_VolumeOpts_negativeCmap(
+        args, overlayList, displayCtx, target):
+    """Applies the ``VolumeOpts.negativeCmap`` option. Automatically
+    enables the ``VolumeOpts.useNegativeCmap`` option.
+    """
+
+    target.negativeCmap    = args.negativeCmap
+    target.useNegativeCmap = True
 
 def _configSpecial_Volume3DOpts_clipPlane(
         target, parser, shortArg, longArg, helpText):
