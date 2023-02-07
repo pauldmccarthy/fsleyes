@@ -206,8 +206,7 @@ def test_overlay_volume_swapdim():
 
 def silly_range():
 
-    data = np.arange(1000, dtype=np.float32)\
-             .reshape((10, 10, 10)).astype(np.int32)
+    data = np.arange(1000, dtype=np.float32).reshape((10, 10, 10))
 
     data[4, 4, 4:6] *= -10e10
     data[5, 5, 4:6] *=  10e10
