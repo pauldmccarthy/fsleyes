@@ -455,9 +455,10 @@ OPTIONS = td.TypeDict({
                        'invertYHorizontal',
                        'invertZVertical',
                        'invertZHorizontal'],
-    'LightBoxOpts'  : ['zax',
+    'LightBoxOpts'  : ['zrange',
+                       'zax',
                        'sliceSpacing',
-                       'zrange',
+                       'numSlices',
                        'ncols',
                        'nrows',
                        'showGridLines',
@@ -834,6 +835,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.invertZVertical'   : ('izv', 'invertZVertical',   False),
 
     'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing',   True),
+    'LightBoxOpts.numSlices'      : ('ns', 'numSlices',      True),
     'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
     'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
@@ -1121,6 +1123,8 @@ HELP = td.TypeDict({
     'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
+    'LightBoxOpts.numSlices'      : 'Number of slices. Ignored if '
+                                    '--sliceSpacing is specified.',
     'LightBoxOpts.ncols'          :
     'Number of columns. Only used for off-screen rendering.',
     'LightBoxOpts.nrows'          :
@@ -3286,6 +3290,25 @@ def _applyDefault_LightBoxOpts_zrange(args, overlayList, displayCtx, target):
     if not np.isclose(zlen, 0):
         zpos          = (zpos - zmin) / zlen
         target.zrange = zpos - 0.1, zpos + 0.1
+
+
+def _configSpecial_LightBoxOpts_numSlices(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``numSlices`` option for the ``LightBoxOpts`` class. """
+    parser.add_argument(
+        shortArg, longArg, metavar=('N'), type=int, help=helpText)
+
+def _applySpecial_LightBoxOpts_numSlices(args, overlayList, displayCtx, target):
+    """Applies the ``LightBoxOpts.numSlices`` option. """
+
+    if args.sliceSpacing is not None:
+        return
+
+    # We assume here that zrange has already
+    # been parsed (which we can ensure by
+    # listing zrange before numSlices in the
+    # OPTIONS dict)
+    target.sliceSpacing = target.zrange.xlen / args.numSlices
 
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
