@@ -497,14 +497,14 @@ OPTIONS = td.TypeDict({
     # overrideDataRange properties, so am
     # listing them separately until I can
     # be bothered to test.
-    'ColourMapOpts'   : ['cmap',
-                         'negativeCmap',
-                         'useNegativeCmap'],
     'VolumeOpts'      : ['linkLowRanges',
                          'linkHighRanges',
                          'overrideDataRange',
                          'clipImage',
                          'modulateImage',
+                         'cmap',
+                         'negativeCmap',
+                         'useNegativeCmap',
                          'displayRange',
                          'clippingRange',
                          'modulateRange',
@@ -566,12 +566,15 @@ OPTIONS = td.TypeDict({
                          'lut',
                          'linkLowRanges',
                          'linkHighRanges',
+                         'useNegativeCmap',
                          'displayRange',
                          'clippingRange',
                          'modulateRange',
                          'gamma',
                          'discardClipped',
                          'invertClipping',
+                         'cmap',
+                         'negativeCmap',
                          'cmapResolution',
                          'flatShading',
                          'interpolation',
@@ -603,6 +606,7 @@ OPTIONS = td.TypeDict({
                          'clippingRange',
                          'gamma',
                          'invertClipping',
+                         'cmap',
                          'cmapResolution',
                          'interpolation',
                          'interpolateCmaps',
@@ -627,12 +631,15 @@ OPTIONS = td.TypeDict({
                            'subsample',
                            'linkLowRanges',
                            'linkHighRanges',
+                           'useNegativeCmap',
                            'displayRange',
                            'clippingRange',
                            'modulateRange',
                            'gamma',
                            'logScale',
                            'invertClipping',
+                           'cmap',
+                           'negativeCmap',
                            'cmapResolution',
                            'interpolateCmaps',
                            'invert',
@@ -1171,11 +1178,11 @@ HELP = td.TypeDict({
     'percentile.',
     'ColourMapOpts.invertClipping'    : 'Invert clipping',
     'ColourMapOpts.cmap'              : 'Colour map',
-    'ColourMapOpts.negativeCmap'      : 'Colour map for negative values '
-                                        '(only used if the negative '
-                                        'colour map is enabled)',
+    'ColourMapOpts.negativeCmap'      : 'Colour map for negative values',
     'ColourMapOpts.cmapResolution'    : 'Colour map resolution',
-    'ColourMapOpts.useNegativeCmap'   : 'Use negative colour map',
+    'ColourMapOpts.useNegativeCmap'   :
+    'Use negative colour map (automatically enabled if --negativeCmap is '
+    'specified)',
     'ColourMapOpts.interpolateCmaps'  : 'Interpolate between colours '
                                         'in colour maps',
     'ColourMapOpts.invert'            : 'Invert colour map',
@@ -3347,14 +3354,34 @@ def _generateSpecial_NiftiOpts_index(
     return [longArg, ','.join(indices)]
 
 
-def _applySpecial_VolumeOpts_negativeCmap(
-        args, overlayList, displayCtx, target):
-    """Applies the ``VolumeOpts.negativeCmap`` option. Automatically
-    enables the ``VolumeOpts.useNegativeCmap`` option.
-    """
+def _applySpecialNegativeCmap(args, overlayList, displayCtx, target):
+    """Used by the functions below. """
 
     target.negativeCmap    = args.negativeCmap
     target.useNegativeCmap = True
+
+
+def _applySpecial_VolumeOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``VolumeOpts.negativeCmap`` option. Automatically
+    enables the ``VolumeOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
+
+def _applySpecial_MeshOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``MeshOpts.negativeCmap`` option. Automatically
+    enables the ``MeshOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
+
+def _applySpecial_TractogramOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``TractogramOpts.negativeCmap`` option. Automatically
+    enables the ``TractogramOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
+
 
 def _configSpecial_Volume3DOpts_clipPlane(
         target, parser, shortArg, longArg, helpText):
