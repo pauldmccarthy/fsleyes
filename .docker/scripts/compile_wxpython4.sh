@@ -20,7 +20,7 @@ apt-get install -y dpkg-dev \
                    libxtst-dev
 
 $PY_VENV /wxpy-build.env
-source /wxpy-build.venv/bin/activate
+source /wxpy-build.env/bin/activate
 
 pip install --upgrade pip setuptools wheel
 
