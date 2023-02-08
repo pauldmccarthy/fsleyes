@@ -71,7 +71,8 @@ def _test_resample(panel, overlayList, displayCtx):
     with mock.patch('fsleyes.plugins.tools.resample.ResampleDialog',
                     ResampleDialog):
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(
+            np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         overlayList.append(img)
         ResampleDialog.ShowModal_return = wx.ID_CANCEL
         act()
@@ -91,7 +92,8 @@ def _test_resample(panel, overlayList, displayCtx):
         assert tuple(resampled.pixdim) == (2, 2, 2)
         assert resampled.dtype         == np.int32
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20, 15)))
+        img = fslimage.Image(
+            np.random.randint(1, 255, (20, 20, 20, 15)).astype(np.int32))
         overlayList.clear()
         overlayList.append(img)
         act()
@@ -111,8 +113,10 @@ def _test_resample(panel, overlayList, displayCtx):
         assert tuple(resampled.pixdim) == (2, 2, 2)
         assert resampled.dtype         == np.int32
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
-        ref = fslimage.Image(np.random.randint(1, 255, (40, 40, 40)))
+        img = fslimage.Image(
+            np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
+        ref = fslimage.Image(
+            np.random.randint(1, 255, (40, 40, 40)).astype(np.int32))
         overlayList.clear()
         overlayList[:] = [img, ref]
         ResampleDialog.GetReference_return = ref
@@ -120,7 +124,8 @@ def _test_resample(panel, overlayList, displayCtx):
         resampled = overlayList[-1]
         assert resampled.sameSpace(ref)
 
-        img = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)))
+        img = fslimage.Image(
+            np.random.randint(1, 255, (20, 20, 20)).astype(np.int32))
         overlayList[:] = [img]
         ResampleDialog.GetReference_return = None
         ResampleDialog.GetOrigin_return = 'corner'
@@ -204,10 +209,12 @@ def _test_ResampleDialog(frame, overlayList, displayCtx):
     dlg.Destroy()
 
     # set options
-    i1 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
-                        name='i1')
-    i2 = fslimage.Image(np.random.randint(1, 255, (20, 20, 20)),
-                        name='i2')
+    i1 = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32),
+        name='i1')
+    i2 = fslimage.Image(
+        np.random.randint(1, 255, (20, 20, 20)).astype(np.int32),
+        name='i2')
     dlg = resample.ResampleDialog(frame,
                                   'title',
                                   (10, 10, 10, 10),

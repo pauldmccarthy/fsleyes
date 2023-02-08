@@ -25,8 +25,10 @@ def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
 
     displayCtx = panel.displayCtx
     pcorr = correlate.PearsonCorrelateAction(overlayList, displayCtx, panel)
-    img3d = Image(np.random.randint(0, 1000, (10, 10, 10)))
-    img4d = Image(np.random.randint(0, 1000, (10, 10, 10, 50)))
+    img3d = Image(
+        np.random.randint(0, 1000, (10, 10, 10)).astype(np.int32))
+    img4d = Image(
+        np.random.randint(0, 1000, (10, 10, 10, 50)).astype(np.int32))
     overlayList.extend((img3d, img4d))
     realYield()
     opts = displayCtx.getOpts(img3d)
@@ -48,6 +50,6 @@ def _test_PearsonCorrelateAction(panel, overlayList, displayCtx):
 
 
 def test_pearsonCorrelation():
-    data   = np.random.randint(0, 1000, (10, 10, 10, 50))
+    data   = np.random.randint(0, 1000, (10, 10, 10, 50)).astype(np.int32)
     result = correlate.pearsonCorrelation((0, 0, 0), data)
     assert result.shape == data.shape[:3]

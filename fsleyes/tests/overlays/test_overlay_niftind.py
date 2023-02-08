@@ -61,7 +61,7 @@ cli_tests = """
 
 def ndimage(*dims):
     fname = 'ndimage_' + '_'.join(map(str, dims)) + '.nii.gz'
-    data  = np.arange(np.prod(dims)).reshape(dims, order='F')
+    data  = np.arange(np.prod(dims)).reshape(dims, order='F').astype(np.int32)
     image = nib.Nifti1Image(data, np.eye(4))
     image.to_filename(fname)
     return fname

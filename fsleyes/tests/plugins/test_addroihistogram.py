@@ -42,10 +42,10 @@ def _test_AddROIHistogramAction(panel, overlayList, displayCtx):
 
     img  = fslimage.Image(op.join(datadir, '3d'))
     mask = fslimage.Image(
-        np.random.randint(0, 10, img.shape[:3]),
+        np.random.randint(0, 10, img.shape[:3]).astype(np.int32),
         xform=img.voxToWorldMat)
     other = fslimage.Image(
-        np.random.randint(0, 10, [5, 26, 46]),
+        np.random.randint(0, 10, [5, 26, 46]).astype(np.int32),
         xform=img.voxToWorldMat)
     overlayList.append(img)
     overlayList.append(mask)

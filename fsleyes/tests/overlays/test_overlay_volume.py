@@ -50,7 +50,7 @@ cli_tests = """
 3d.nii.gz -cm {{gen_cmap(custom_cmap)}} -inc
 
 {{zero_centre('3d.nii.gz')}} -cm hot
-{{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be ignored (TODO I should change this)
+{{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be auto-applied
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr -1000 2000
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  0    2000
@@ -153,7 +153,7 @@ def gen_indices(infile):
     outfile  = '{}_indices.nii.gz'.format(basename)
     img      = fslimage.Image(infile, loadData=False)
     shape    = img.shape
-    data     = np.arange(np.prod(shape)).reshape(shape)
+    data     = np.arange(np.prod(shape)).reshape(shape).astype(np.int32)
 
     fslimage.Image(data, header=img.header).save(outfile)
 

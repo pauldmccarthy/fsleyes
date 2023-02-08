@@ -102,7 +102,7 @@ def _do_crop(ortho, overlayList, displayCtx, img, roi):
 
 def _test_crop_interaction(ortho, overlayList, displayCtx):
 
-    data = np.random.randint(1, 65536, (30, 30, 30))
+    data = np.random.randint(1, 65536, (30, 30, 30)).astype(np.int32)
     img  = Image(data)
     overlayList[:] = [img]
     displayCtx.displaySpace = img

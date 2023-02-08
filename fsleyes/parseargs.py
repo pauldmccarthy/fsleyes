@@ -455,9 +455,10 @@ OPTIONS = td.TypeDict({
                        'invertYHorizontal',
                        'invertZVertical',
                        'invertZHorizontal'],
-    'LightBoxOpts'  : ['zax',
+    'LightBoxOpts'  : ['zrange',
+                       'zax',
                        'sliceSpacing',
-                       'zrange',
+                       'numSlices',
                        'ncols',
                        'nrows',
                        'showGridLines',
@@ -501,6 +502,8 @@ OPTIONS = td.TypeDict({
                          'overrideDataRange',
                          'clipImage',
                          'modulateImage',
+                         'cmap',
+                         'negativeCmap',
                          'useNegativeCmap',
                          'displayRange',
                          'clippingRange',
@@ -509,8 +512,6 @@ OPTIONS = td.TypeDict({
                          'logScale',
                          'channel',
                          'invertClipping',
-                         'cmap',
-                         'negativeCmap',
                          'cmapResolution',
                          'interpolation',
                          'interpolateCmaps',
@@ -834,6 +835,7 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.invertZVertical'   : ('izv', 'invertZVertical',   False),
 
     'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing',   True),
+    'LightBoxOpts.numSlices'      : ('ns', 'numSlices',      True),
     'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
     'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
@@ -1121,6 +1123,8 @@ HELP = td.TypeDict({
     'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
+    'LightBoxOpts.numSlices'      : 'Number of slices. Ignored if '
+                                    '--sliceSpacing is specified.',
     'LightBoxOpts.ncols'          :
     'Number of columns. Only used for off-screen rendering.',
     'LightBoxOpts.nrows'          :
@@ -1174,11 +1178,11 @@ HELP = td.TypeDict({
     'percentile.',
     'ColourMapOpts.invertClipping'    : 'Invert clipping',
     'ColourMapOpts.cmap'              : 'Colour map',
-    'ColourMapOpts.negativeCmap'      : 'Colour map for negative values '
-                                        '(only used if the negative '
-                                        'colour map is enabled)',
+    'ColourMapOpts.negativeCmap'      : 'Colour map for negative values',
     'ColourMapOpts.cmapResolution'    : 'Colour map resolution',
-    'ColourMapOpts.useNegativeCmap'   : 'Use negative colour map',
+    'ColourMapOpts.useNegativeCmap'   :
+    'Use negative colour map (automatically enabled if --negativeCmap is '
+    'specified)',
     'ColourMapOpts.interpolateCmaps'  : 'Interpolate between colours '
                                         'in colour maps',
     'ColourMapOpts.invert'            : 'Invert colour map',
@@ -3288,6 +3292,25 @@ def _applyDefault_LightBoxOpts_zrange(args, overlayList, displayCtx, target):
         target.zrange = zpos - 0.1, zpos + 0.1
 
 
+def _configSpecial_LightBoxOpts_numSlices(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``numSlices`` option for the ``LightBoxOpts`` class. """
+    parser.add_argument(
+        shortArg, longArg, metavar=('N'), type=int, help=helpText)
+
+def _applySpecial_LightBoxOpts_numSlices(args, overlayList, displayCtx, target):
+    """Applies the ``LightBoxOpts.numSlices`` option. """
+
+    if args.sliceSpacing is not None:
+        return
+
+    # We assume here that zrange has already
+    # been parsed (which we can ensure by
+    # listing zrange before numSlices in the
+    # OPTIONS dict)
+    target.sliceSpacing = target.zrange.xlen / args.numSlices
+
+
 def _applySpecial_SceneOpts_movieSyncRefresh(
         args, overlayList, displayCtx, target):
     """Applies the ``SceneOpts.movieSyncRefresh`` option. """
@@ -3329,6 +3352,35 @@ def _generateSpecial_NiftiOpts_index(
     indices = [str(i) for i in source.index()[4:]]
 
     return [longArg, ','.join(indices)]
+
+
+def _applySpecialNegativeCmap(args, overlayList, displayCtx, target):
+    """Used by the functions below. """
+
+    target.negativeCmap    = args.negativeCmap
+    target.useNegativeCmap = True
+
+
+def _applySpecial_VolumeOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``VolumeOpts.negativeCmap`` option. Automatically
+    enables the ``VolumeOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
+
+def _applySpecial_MeshOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``MeshOpts.negativeCmap`` option. Automatically
+    enables the ``MeshOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
+
+def _applySpecial_TractogramOpts_negativeCmap(*args, **kwargs):
+    """Applies the ``TractogramOpts.negativeCmap`` option. Automatically
+    enables the ``TractogramOpts.useNegativeCmap`` option.
+    """
+    _applySpecialNegativeCmap(*args, **kwargs)
+
 
 
 def _configSpecial_Volume3DOpts_clipPlane(
