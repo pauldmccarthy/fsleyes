@@ -88,7 +88,7 @@ sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
 # do the build
 python ./build.py dox etg --nodoc sip build --release --gtk3
 
-source deactivate
+deactivate
 rm -rf /wxpy-build.env
 source /test.env/bin/activate
 
