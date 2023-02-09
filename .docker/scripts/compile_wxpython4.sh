@@ -90,7 +90,7 @@ python ./build.py dox etg --nodoc sip build --release --gtk3
 
 deactivate
 rm -rf /wxpy-build.env
-source /test.env/bin/activate
+source /test.venv/bin/activate
 
 python setup.py install --skip-build
 
