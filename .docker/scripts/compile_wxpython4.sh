@@ -89,7 +89,6 @@ sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
 python ./build.py dox etg --nodoc sip build --release --gtk3
 
 deactivate
-rm -rf /wxpy-build.env
 source /test.venv/bin/activate
 
 python setup.py install --skip-build
@@ -99,3 +98,5 @@ chmod -R a+rx $VIRTUAL_ENV/lib/
 
 popd > /dev/null
 popd > /dev/null
+
+rm -rf /wxpy-build.env
