@@ -9,20 +9,21 @@ RGB(A) :class:`.Image` overlays.
 """
 
 
-import numpy                as np
-import OpenGL.GL            as gl
+import numpy                    as np
+import OpenGL.GL                as gl
 
-import fsl.utils.idle       as idle
-import fsl.transform.affine as affine
+import fsl.utils.idle           as idle
+import fsl.transform.affine     as affine
 
-import fsleyes.gl           as fslgl
-import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.textures  as textures
-import fsleyes.gl.resources as glresources
-from . import                  glimageobject
+import fsleyes.gl               as fslgl
+import fsleyes.gl.routines      as glroutines
+import fsleyes.gl.textures      as textures
+import fsleyes.gl.resources     as glresources
+import fsleyes.gl.glimageobject as glimageobject
+import fsleyes.gl.globject      as globject
 
 
-class GLRGBVolume(glimageobject.GLImageObject):
+class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
     """The ``GLRGBVolume`` class is used to render RGB(A) :class:`.Image`
     overlays. The RGB(A) value at each voxel is directly used as the colour
     for that voxel.
@@ -37,11 +38,12 @@ class GLRGBVolume(glimageobject.GLImageObject):
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
         :arg threedee:    2D or 3D rendering
         """
-        glimageobject.GLImageObject.__init__(self,
-                                             image,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   image,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         self.shader       = None
         self.imageTexture = None

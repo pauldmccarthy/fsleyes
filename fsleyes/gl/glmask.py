@@ -20,13 +20,14 @@ import fsleyes.gl.textures       as textures
 import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.resources      as glresources
 import fsleyes.gl.shaders.filter as glfilter
-from . import                       glimageobject
+import fsleyes.gl.glimageobject  as glimageobject
+import fsleyes.gl.globject       as globject
 
 
 log = logging.getLogger(__name__)
 
 
-class GLMask(glimageobject.GLImageObject):
+class GLMask(glimageobject.GLImageObject, globject.GLObject):
     """The ``GLMask`` class encapsulates logic to render an :class:`.Image`
     instance as a binary mask in OpenGL.
 
@@ -86,11 +87,12 @@ class GLMask(glimageobject.GLImageObject):
         :arg displayCtx:  The :class:`.DisplayContext` managing the scene.
         :arg threedee:    2D or 3D rendering
         """
-        glimageobject.GLImageObject.__init__(self,
-                                             image,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   image,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         # The shader attribute will be created
         # by the glmask_funcs module

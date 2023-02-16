@@ -16,12 +16,13 @@ import fsl.transform.affine      as affine
 import fsleyes.gl                as fslgl
 import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.shaders.filter as glfilter
-from . import resources          as glresources
-from . import                       glimageobject
-from . import                       textures
+import fsleyes.gl.resources      as glresources
+import fsleyes.gl.glimageobject  as glimageobject
+import fsleyes.gl.globject       as globject
+import fsleyes.gl.textures       as textures
 
 
-class GLLabel(glimageobject.GLImageObject):
+class GLLabel(glimageobject.GLImageObject, globject.GLObject):
     """The ``GLLabel`` class is a :class:`.GLImageObject` which encapsulates
     the logic required to render an :class:`.Image` overlay as a label image.
     Within the image, each contiguous region with the same label value is
@@ -55,11 +56,12 @@ class GLLabel(glimageobject.GLImageObject):
         :arg threedee:    2D or 3D rendering
         """
 
-        glimageobject.GLImageObject.__init__(self,
-                                             image,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   image,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         # The shader attribute will be created
         # by the gllabel_funcs module, and the
