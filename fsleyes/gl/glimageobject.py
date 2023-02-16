@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLImageObject` class, a sub-class of
-:class:`.GLObject`, and the base class for all OpenGL objects which display
-data from :class:`.Nifti` overlays.
+"""This module provides the :class:`GLImageObject` class, a mixin class to
+be used with :class:`.GLObject`, which  is used by all OpenGL objects which
+display data from :class:`.Nifti` overlays.
 """
 
 
@@ -26,10 +26,17 @@ import fsleyes.gl.resources                as glresources
 import fsleyes.gl.routines                 as glroutines
 
 
-class GLImageObject(globject.GLObject):
-    """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti` instances. It contains some convenience methods for
-    drawing volumetric image data.
+class GLImageObject:
+    """The ``GLImageObject`` class is a :class:`.GLObject` mixin class for all
+    GL representations of :class:`.Nifti` instances. It contains some
+    convenience methods for drawing volumetric image data.
+
+    The GLImageObject re-defines some ``GLObject`` methods, and so must be
+    specified **before** ``GLObject`` in the list of base classes, i.e.::
+
+        class MyGLObject(GLImageObject, GLObject):
+            ...
+
 
     Some useful methods for 2D rendering::
 
@@ -52,21 +59,15 @@ class GLImageObject(globject.GLObject):
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, threedee):
-        """Create a ``GLImageObject``.
+    def __init__(self):
+        """Create a ``GLImageObject``. This method must be called **after**
+        :meth:`.GLObject.__init__`, i.e.::
 
-        :arg image:       A :class:`.Nifti` object.
-
-        :arg overlayList: The :class`.OverlayList`.
-
-        :arg displayCtx:  The :class:`.DisplayContext` object managing the
-                          scene.
-
-        :arg threedee:    Set up for 2D or 3D rendering.
+            class MyGLObject(GLImageObject, GLObject):
+                def __init__(self, *args, **kwargs):
+                    GLObject     .__init__(self, *args, **kwargs)
+                    GLImageObject.__init__(self)
         """
-
-        globject.GLObject.__init__(
-            self, overlay, overlayList, displayCtx, threedee)
 
         self.__name = f'GLImageObject_{self.name}'
 
