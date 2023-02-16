@@ -46,7 +46,6 @@ class GLImageObject(globject.GLObject):
          :nosignatures:
 
          generateVertices3D
-         generateVoxelCoordinates3D
          get3DClipPlane
          clipPlaneVertices
          drawClipPlanes
@@ -69,7 +68,7 @@ class GLImageObject(globject.GLObject):
         globject.GLObject.__init__(
             self, overlay, overlayList, displayCtx, threedee)
 
-        self.__name = 'GLImageObject_{}'.format(self.name)
+        self.__name = f'GLImageObject_{self.name}'
 
         name = self.__name
         opts = self.opts
@@ -322,7 +321,7 @@ class GLImageObject(globject.GLObject):
         """
 
         if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
+            raise ValueError(f'Unknown value for space ("{space}")')
 
         image         = self.image
         opts          = self.opts
@@ -355,35 +354,6 @@ class GLImageObject(globject.GLObject):
             voxels = opts.roundVoxels(voxels,
                                       daxes=[zax],
                                       roundOther=False)
-
-        return voxels
-
-
-    def generateVoxelCoordinates3D(self, bbox, space='voxel'):
-        """
-
-
-        See the :func:`.pointGrid3D` function.
-
-        note: Not implemented properly yet.
-        """
-
-        if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
-
-        # TODO
-
-        image      = self.image
-        opts       = self.opts
-        v2dMat     = opts.getTransform('voxel',   'display')
-        d2vMat     = opts.getTransform('display', 'voxel')
-
-        voxels = glroutines.pointGrid3D(image.shape[:3])
-
-        if space == 'voxel':
-            pass
-            # voxels = affine.transform(voxels, d2vMat)
-            # voxels = opts.roundVoxels(voxels)
 
         return voxels
 
