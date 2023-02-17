@@ -20,15 +20,16 @@ import fsl.transform.affine      as affine
 import fsleyes.gl                as fslgl
 import fsleyes.gl.routines       as glroutines
 import fsleyes.gl.shaders.filter as glfilter
-from . import                       textures
-from . import                       glimageobject
-from . import resources          as glresources
+import fsleyes.gl.textures       as textures
+import fsleyes.gl.globject       as globject
+import fsleyes.gl.glimageobject  as glimageobject
+import fsleyes.gl.resources      as glresources
 
 
 log = logging.getLogger(__name__)
 
 
-class GLVolume(glimageobject.GLImageObject):
+class GLVolume(glimageobject.GLImageObject, globject.GLObject):
     """The ``GLVolume`` class is a :class:`.GLImageObject` which encapsulates
     the data and logic required to render  :class:`.Image` overlays in 2D and
     3D.
@@ -199,11 +200,12 @@ class GLVolume(glimageobject.GLImageObject):
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
-        glimageobject.GLImageObject.__init__(self,
-                                             image,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   image,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         # Create an image texture, clip texture, and a colour map texture
         #

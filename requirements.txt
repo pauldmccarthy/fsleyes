@@ -1,4 +1,4 @@
-jinja2>=2.*
+jinja2>=2
 pillow>=3.2.0
 pyopengl>=3.1.0
 fsleyes-props>=1.8

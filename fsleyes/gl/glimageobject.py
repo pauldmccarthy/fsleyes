@@ -4,9 +4,9 @@
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
-"""This module provides the :class:`GLImageObject` class, a sub-class of
-:class:`.GLObject`, and the base class for all OpenGL objects which display
-data from :class:`.Nifti` overlays.
+"""This module provides the :class:`GLImageObject` class, a mixin class to
+be used with :class:`.GLObject`, which  is used by all OpenGL objects which
+display data from :class:`.Nifti` overlays.
 """
 
 
@@ -26,10 +26,17 @@ import fsleyes.gl.resources                as glresources
 import fsleyes.gl.routines                 as glroutines
 
 
-class GLImageObject(globject.GLObject):
-    """The ``GLImageObject`` class is the base class for all GL representations
-    of :class:`.Nifti` instances. It contains some convenience methods for
-    drawing volumetric image data.
+class GLImageObject:
+    """The ``GLImageObject`` class is a :class:`.GLObject` mixin class for all
+    GL representations of :class:`.Nifti` instances. It contains some
+    convenience methods for drawing volumetric image data.
+
+    The GLImageObject re-defines some ``GLObject`` methods, and so must be
+    specified **before** ``GLObject`` in the list of base classes, i.e.::
+
+        class MyGLObject(GLImageObject, GLObject):
+            ...
+
 
     Some useful methods for 2D rendering::
 
@@ -46,30 +53,23 @@ class GLImageObject(globject.GLObject):
          :nosignatures:
 
          generateVertices3D
-         generateVoxelCoordinates3D
          get3DClipPlane
          clipPlaneVertices
          drawClipPlanes
     """
 
 
-    def __init__(self, overlay, overlayList, displayCtx, threedee):
-        """Create a ``GLImageObject``.
+    def __init__(self):
+        """Create a ``GLImageObject``. This method must be called **after**
+        :meth:`.GLObject.__init__`, i.e.::
 
-        :arg image:       A :class:`.Nifti` object.
-
-        :arg overlayList: The :class`.OverlayList`.
-
-        :arg displayCtx:  The :class:`.DisplayContext` object managing the
-                          scene.
-
-        :arg threedee:    Set up for 2D or 3D rendering.
+            class MyGLObject(GLImageObject, GLObject):
+                def __init__(self, *args, **kwargs):
+                    GLObject     .__init__(self, *args, **kwargs)
+                    GLImageObject.__init__(self)
         """
 
-        globject.GLObject.__init__(
-            self, overlay, overlayList, displayCtx, threedee)
-
-        self.__name = 'GLImageObject_{}'.format(self.name)
+        self.__name = f'GLImageObject_{self.name}'
 
         name = self.__name
         opts = self.opts
@@ -322,7 +322,7 @@ class GLImageObject(globject.GLObject):
         """
 
         if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
+            raise ValueError(f'Unknown value for space ("{space}")')
 
         image         = self.image
         opts          = self.opts
@@ -355,35 +355,6 @@ class GLImageObject(globject.GLObject):
             voxels = opts.roundVoxels(voxels,
                                       daxes=[zax],
                                       roundOther=False)
-
-        return voxels
-
-
-    def generateVoxelCoordinates3D(self, bbox, space='voxel'):
-        """
-
-
-        See the :func:`.pointGrid3D` function.
-
-        note: Not implemented properly yet.
-        """
-
-        if space not in ('voxel', 'display'):
-            raise ValueError('Unknown value for space ("{}")'.format(space))
-
-        # TODO
-
-        image      = self.image
-        opts       = self.opts
-        v2dMat     = opts.getTransform('voxel',   'display')
-        d2vMat     = opts.getTransform('display', 'voxel')
-
-        voxels = glroutines.pointGrid3D(image.shape[:3])
-
-        if space == 'voxel':
-            pass
-            # voxels = affine.transform(voxels, d2vMat)
-            # voxels = opts.roundVoxels(voxels)
 
         return voxels
 

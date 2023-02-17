@@ -12,19 +12,20 @@ shape ``X*Y*Z*3``, or of type ``NIFTI_TYPE_RGB24``.
 """
 
 
-import functools            as ft
+import functools                as ft
 
-import numpy                as np
-import OpenGL.GL            as gl
+import numpy                    as np
+import OpenGL.GL                as gl
 
-import fsl.utils.idle       as idle
-import fsleyes.colourmaps   as fslcm
-from . import resources     as glresources
-from . import                  textures
-from . import                  glimageobject
+import fsl.utils.idle           as idle
+import fsleyes.colourmaps       as fslcm
+import fsleyes.gl.resources     as glresources
+import fsleyes.gl.textures      as textures
+import fsleyes.gl.glimageobject as glimageobject
+import fsleyes.gl.globject      as globject
 
 
-class GLVectorBase(glimageobject.GLImageObject):
+class GLVectorBase(glimageobject.GLImageObject, globject.GLObject):
     """The :class:`GLVectorBase` class encapsulates the logic for rendering
     :class:`.Nifti` overlay types which represent directional data (and which
     are described by a :class:`.VectorOpts` instance).  The ``GLVectorBase``
@@ -123,11 +124,12 @@ class GLVectorBase(glimageobject.GLImageObject):
                           :class:`GLVector`.
         """
 
-        glimageobject.GLImageObject.__init__(self,
-                                             overlay,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   overlay,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         name = self.name
         opts = self.opts

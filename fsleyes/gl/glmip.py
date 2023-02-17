@@ -9,17 +9,18 @@ maximum-intensity-projections of an :class:`.Image` overlay onto a 2D canvas.
 """
 
 
-import OpenGL.GL                 as gl
+import OpenGL.GL                as gl
 
-import fsl.utils.idle            as idle
+import fsl.utils.idle           as idle
 
-import fsleyes.gl                as fslgl
-import fsleyes.gl.textures       as textures
-import fsleyes.gl.resources      as glresources
-from . import                       glimageobject
+import fsleyes.gl               as fslgl
+import fsleyes.gl.textures      as textures
+import fsleyes.gl.resources     as glresources
+import fsleyes.gl.glimageobject as glimageobject
+import fsleyes.gl.globject      as globject
 
 
-class GLMIP(glimageobject.GLImageObject):
+class GLMIP(glimageobject.GLImageObject, globject.GLObject):
     """The ``GLMIP`` class is a :class:`.GLImageObject` which can be used to
     render maximum-intensity-projections of an :class:`.Image` overlay onto a
     2D canvas.
@@ -49,11 +50,12 @@ class GLMIP(glimageobject.GLImageObject):
         :arg threedee:    Set up for 2D or 3D rendering.
         """
 
-        glimageobject.GLImageObject.__init__(self,
-                                             image,
-                                             overlayList,
-                                             displayCtx,
-                                             threedee)
+        globject.GLObject.__init__(self,
+                                   image,
+                                   overlayList,
+                                   displayCtx,
+                                   threedee)
+        glimageobject.GLImageObject.__init__(self)
 
         self.shader         = None
         self.imageTexture   = None
