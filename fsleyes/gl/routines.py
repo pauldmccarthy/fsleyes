@@ -248,7 +248,7 @@ def flip(xform, axes, lo, hi):
     :arg axes:  List of axes to apply a flip to
     :arg lo:    Sequence of three low display bounds for each axis
     :arg hi:    Sequence of three high display bounds for each axis
-    :return"    Adjusted affine transformation
+    :return:    Adjusted affine transformation
     """
 
     # We have to translate the slice

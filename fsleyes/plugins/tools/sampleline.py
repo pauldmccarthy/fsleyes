@@ -45,9 +45,10 @@ def sampleAlongLine(data, start, end, resolution, order):
     :arg resolution: Number of points to sample
     :arg order:      Interpolation  (see ``scipy.ndimage.map_coordinates``)
     :returns:        Tuple containing:
-                     - 1D Numpy array containing the sampled values
-                     - ``(3, N)`` numpy array containing the coordinates for
-                       each sample
+
+                      - 1D Numpy array containing the sampled values
+                      - ``(3, N)`` numpy array containing the coordinates for
+                        each sample
     """
 
     start  = list(start)

@@ -25,7 +25,6 @@
    fsleyes.gl.gltractogram
    fsleyes.gl.glvector
    fsleyes.gl.glvolume
-   fsleyes.gl.highdpi
    fsleyes.gl.lightboxcanvas
    fsleyes.gl.offscreencolourbarcanvas
    fsleyes.gl.offscreenlightboxcanvas

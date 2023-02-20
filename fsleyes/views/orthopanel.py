@@ -105,8 +105,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
                                :class:`.OrthoAnnotatePanel`.
     ========================== ==============================================
 
-    See the :class:`.ViewPanel`, and the :mod:`.profiles` package for more
-    information on interaction profiles.
+    See the :class:`.ViewPanel`, and the :mod:`fsleyes.profiles` package for
+    more information on interaction profiles.
 
 
     **Actions and control panels**

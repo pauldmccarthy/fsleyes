@@ -102,7 +102,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
        current mouse location.
 
      - The *selection* annotation. This is a :class:`.VoxelSelection`
-       annotation which displays the :class:`.Selection`.
+       annotation which displays the :class:`~.selection.Selection`.
 
 
     **The display space**
@@ -167,9 +167,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     drawMode = props.Boolean(default=True)
-    """If ``True``, when in ``sel`` or ``desel`` mode, clicks and click+
-    drags cause the image to be immediately modified. Otherwise, editing
-    is a two stage process (as described in the :class:`.Editor` class
+    """If ``True``, when in ``sel`` or ``desel`` mode, clicks and click+drags
+    cause the image to be immediately modified. Otherwise, editing is a two
+    stage process (as described in the :class:`~.editor.editor.Editor` class
     documentation).
 
     This setting is enabled by default, because it causes FSLeyes to behave
@@ -183,7 +183,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     """In ``selint`` mode, the maximum distance, in intensity, that a voxel
     can be from the seed location, in order for it to be selected.
     Passed as the ``precision`` argument to the
-    :meth:`.Selection.selectByValue` method.
+    :meth:`~.selection.Selection.selectByValue` method.
     """
 
 
@@ -197,7 +197,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     localFill = props.Boolean(default=False)
     """In ``selint`` mode, if this property is ``True``, voxels can only be
     selected if they are adjacent to an already selected voxel. Passed as the
-    ``local`` argument to the :meth:`.Selection.selectByValue` method.
+    ``local`` argument to the :meth:`~.selection.Selection.selectByValue`
+    method.
     """
 
 
@@ -212,7 +213,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         minval=0.01, maxval=200, default=0.0, clamped=False)
     """In ``selint`` mode, if :attr:`limitToRadius` is true, this property
     specifies the search sphere radius. Passed as the ``searchRadius``
-    argument to the :meth:`.Selection.selectByValue` method.
+    argument to the :meth:`~.selection.Selection.selectByValue` method.
     """
 
 
@@ -462,8 +463,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def destroy(self):
-        """Removes some property listeners, destroys the :class:`.Editor`
-        instances, and calls :meth:`.OrthoViewProfile.destroy`.
+        """Removes some property listeners, destroys the
+        :class:`~.editor.editor.Editor` instances, and calls
+        :meth:`.OrthoViewProfile.destroy`.
         """
 
         self.displayCtx .removeListener('selectedOverlay', self.name)
@@ -539,8 +541,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def editor(self, overlay):
-        """Return the :class:`.Editor` associated with the given overlay.
-        Raises a :exc:`KeyError` if there is no editor fo the overlay.
+        """Return the :class:`~.editor.editor.Editor` associated with the given
+        overlay. Raises a :exc:`KeyError` if there is no editor fo the overlay.
         """
         return self.__editors[overlay]
 
@@ -572,7 +574,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     @actions.action
     def clearSelection(self):
-        """Clears the current selection. See :meth:`.Editor.clearSelection`.
+        """Clears the current selection. See
+        :meth:`~.editor.editor.Editor.clearSelection`.
         """
 
         if self.__currentOverlay is None:
@@ -588,7 +591,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     @actions.action
     def fillSelection(self):
         """Fills the current selection with the :attr:`fillValue`. See
-        :meth:`.Editor.fillSelection`.
+        :meth:`~.editor.editor.Editor.fillSelection`.
         """
         if self.__currentOverlay is None:
             return
@@ -612,7 +615,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     @actions.action
     def invertSelection(self):
-        """Inverts the current selection. See :meth:`.Editor.invertSelection`.
+        """Inverts the current selection. See
+        :meth:`~.editor.editor.Editor.invertSelection`.
         """
         if self.__currentOverlay is None:
             return
@@ -630,7 +634,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     @actions.action
     def eraseSelection(self):
         """Fills the current selection with zero. See
-        :meth:`.Editor.fillSelection`.
+        :meth:`~.editor.editor.Editor.fillSelection`.
         """
         if self.__currentOverlay is None:
             return
@@ -795,7 +799,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     @actions.action
     def undo(self):
         """Un-does the most recent change to the selection or to the
-        :class:`.Image` data. See :meth:`.Editor.undo`.
+        :class:`.Image` data. See :meth:`~.editor.editor.Editor.undo`.
         """
 
         if self.__currentOverlay is None:
@@ -826,7 +830,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     @actions.action
     def redo(self):
         """Re-does the most recent undone change to the selection or to the
-        :class:`.Image` data. See :meth:`.Editor.redo`.
+        :class:`.Image` data. See :meth:`~.editor.editor.Editor.redo`.
         """
 
         if self.__currentOverlay is None:
@@ -975,8 +979,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def __getTargetImageEditor(self, srcEditor):
         """If the :attr:`targetImage` is set to an image other than the
-        currently selected one, this method returns an :class:`.Editor`
-        for the target image.
+        currently selected one, this method returns an
+        :class:`~.editor.editor.Editor` for the target image.
         """
 
         if self.targetImage is None:
@@ -994,7 +998,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def __targetImageChanged(self, *a):
         """Called every time the :attr:`targetImage` is changed. Makes sure
-        that an :class:`.Editor` instance for the selected target image exists.
+        that an :class:`~.editor.editor.Editor` instance for the selected
+        target image exists.
         """
 
         image = self.targetImage
@@ -1012,8 +1017,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def __setPropertyLimits(self):
-        """Called by the :meth:`__selectedOverlayChanged` method.
-        """
+        """Called by the :meth:`__selectedOverlayChanged` method. """
 
         overlay = self.__currentOverlay
         if overlay is None:
@@ -1439,7 +1443,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                          from_=None):
         """Called by ``sel`` mode mouse handlers. Adds/removes a block
         of voxels, centred at the specified voxel, to/from the current
-        :class:`.Selection`.
+        :class:`~.selection.Selection`.
 
         :arg canvas:  The source :class:`.SliceCanvas`.
 
@@ -1448,12 +1452,13 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         :arg add:     If ``True`` a block is added to the selection,
                       otherwise it is removed.
 
-        :arg combine: Tell the :class:`.Selection` object to combine this
-                      change with the most recent one.
+        :arg combine: Tell the :class:`~.selection.Selection` object to
+                      combine this change with the most recent one.
 
-        :arg from_:   If provided, use the :meth:`.Selection.selectLine`
-                      or :meth:`.Selection.deselectLine` methods - should
-                      be another voxel coordinate.
+        :arg from_:   If provided, use the
+                      :meth:`~.selection.Selection.selectLine` or
+                      :meth:`~.selection.Selection.deselectLine` methods -
+                      should be another voxel coordinate.
         """
 
         opts = canvas.opts
@@ -1492,9 +1497,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def __recordSelectionMerger(self, mode, offset, size):
         """This method is called whenever a change is made to the
-        :class:`.Selection` object. It stores some information which is used
-        to improve subsequent selection performance when in ``selint`` mode,
-        and when :attr:`limitToRadius` is ``True``.
+        :class:`~.selection.Selection` object. It stores some information
+        which is used to improve subsequent selection performance when in
+        ``selint`` mode, and when :attr:`limitToRadius` is ``True``.
 
 
         Basically, if the current selection is limited by radius, and a new,
@@ -1612,8 +1617,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                               mode='sel'):
         """Handles mouse down events in ``sel`` mode.
 
-        Starts an :class:`.Editor` change group, and adds to the current
-        :class:`Selection`.
+        Starts an :class:`~.editor.editor.Editor` change group, and adds to the
+        current  :class:`~.selection.Selection`.
 
         This method is also used by :meth:`_deselModeLeftMouseDown`, which
         may set the ``add`` parameter to ``False``.
@@ -1689,8 +1694,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             self, ev, canvas, mousePos, canvasPos, fillValue=None):
         """Handles mouse up events in ``sel`` mode.
 
-        Ends the :class:`.Editor` change group that was started in the
-        :meth:`_selModeLeftMouseDown` method.
+        Ends the :class:`~.editor.editor.Editor` change group that was started
+        in the :meth:`_selModeLeftMouseDown` method.
 
         This method is also used by :meth:`_deselModeLeftMouseUp`, which
         sets ``fillValue`` to :attr:`eraseValue`.
@@ -1853,7 +1858,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         Called by the :meth:`_selintModeLeftMouseDown`,
         :meth:`_selintModeLeftMouseDrag`,
         :meth:`_selintModeLeftMouseWheel`, and :meth:`__selintPropertyChanged`
-        methods.  See :meth:`.Selection.selectByValue`.
+        methods.  See :meth:`~.selection.Selection.selectByValue`.
         """
 
         overlay = self.__currentOverlay
@@ -1968,8 +1973,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
     def _selintModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``selint`` mode.
 
-        Starts an :class:`.Editor` change group, then clears the current
-        selection, and selects voxels by intensity (see
+        Starts an :class:`~.editor.editor.Editor` change group, then clears
+        the current selection, and selects voxels by intensity (see
         :meth:`__selintSelect`).
         """
 
@@ -2006,9 +2011,9 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
 
     def _selintModeLeftMouseUp(self, ev, canvas, mousePos, canvasPos):
-        """Handles mouse up events in ``selint`` mode. Ends the :class:`.Editor`
-        change group that was started in the :meth:`_selintModeLeftMouseDown`
-        method.
+        """Handles mouse up events in ``selint`` mode. Ends the
+        :class:`~.editor.editor.Editor` change group that was started in the
+        :meth:`_selintModeLeftMouseDown` method.
         """
         if self.__currentOverlay is None:
             return False
@@ -2042,7 +2047,7 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
     def _fillModeLeftMouseDown(self, ev, canvas, mousePos, canvasPos):
         """Handles mouse down events in ``fill`` mode. Calls
-        :meth:`.Selection.invertRegion` at the current location.
+        :meth:`~.selection.Selection.invertRegion` at the current location.
         """
 
         if self.__currentOverlay is None:

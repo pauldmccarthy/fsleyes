@@ -96,7 +96,7 @@ You can also start the Jupyter notebook server from the command-line with the
 When the Jupyter notebook server is started, the Jupyter notebook home page
 will be opened in your web browser. Another option, instead of interacting
 with FSLeyes through a Jupyter notebook, is to attach an IPython terminal to
-FSLeyes; this can be done as follows::
+FSLeyes; this can be done as follows:
 
 1. Start FSLeyes with the ``--noBrowser`` or ``-nbb`` option::
 

@@ -32,10 +32,10 @@ This module handles the mechanics of generating lists of variables and files
 according to the user's settings.
 
 
-In this module, and in the :mod:`.filetreepanel` module, variables which take
-on a different value for each row are referred to as *varying*, and variables
-for which all possible values are displaed on one row are referred to as
-*fixed*.
+In this module, and in the :mod:`~.filetreepanel.filetreepanel` module,
+variables which take on a different value for each row are referred to as
+*varying*, and variables for which all possible values are displaed on one row
+are referred to as *fixed*.
 
 
 Example

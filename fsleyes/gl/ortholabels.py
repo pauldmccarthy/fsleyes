@@ -25,8 +25,9 @@ class OrthoLabels:
 
     The ``OrthoLabels`` class uses :class:`.annotations.Text` annotations,
     showing the user:
-      - the anatomical orientation of the display on each canvas.
-      - the current location on a selected csanvas.
+
+     - the anatomical orientation of the display on each canvas.
+     - the current location on a selected csanvas.
 
     Anatomical labels can be toggled on and off via the
     :attr:`.OrthoOpts.showLabels` property, and location via the

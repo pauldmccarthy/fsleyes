@@ -294,9 +294,9 @@ class SliceCanvas:
     def canvasToWorld(self, xpos, ypos, invertX=None, invertY=None):
         """Given pixel x/y coordinates on this canvas, translates them
         into xyz display coordinates.
-
-        :arg invertX: If ``None``, taken from :attr:`.invertX`.
-        :arg invertY: If ``None``, taken from :attr:`.invertY`.
+s
+        :arg invertX: If ``None``, taken from :attr:`.SliceCanvasOpts.invertX`.
+        :arg invertY: If ``None``, taken from :attr:`.SliceCanvasOpts.invertY`.
         """
 
         opts = self.opts

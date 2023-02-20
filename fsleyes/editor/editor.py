@@ -171,7 +171,8 @@ class Editor(actions.ActionProvider):
         :meth:`__init__`), the selection state before being cleared is saved
         in the change history.
 
-        All arguments are passed through to :meth:`.Selection.clearSelection`.
+        All arguments are passed through to
+        :meth:`.selection.Selection.clearSelection`.
         """
         self.__selection.clearSelection(*args, **kwargs)
 

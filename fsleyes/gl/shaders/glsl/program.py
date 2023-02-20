@@ -225,9 +225,10 @@ class GLSLShader:
     def ready(self):
         """Checks whether every uniform and attribute has been given a value.
         Returns a tuple containing:
-          - ``True`` if every uniform/attribute has been set, ``False``
-            otherwise.
-          - A list of the names of all unset uniforms/attributes.
+
+         - ``True`` if every uniform/attribute has been set, ``False``
+           otherwise.
+         - A list of the names of all unset uniforms/attributes.
         """
         unset = []
         for n, v in self.hasValue.items():

@@ -68,14 +68,19 @@ types.  All coordinates and lengths are relative to the display coordinate
 system:
 
  * ``Point``
+
   * ``x`` X coordinate
   * ``y`` Y coordinate
+
  * ``Line`` and ``Arrow``
+
   * ``x1`` X coordinate of first point
   * ``y1`` Y coordinate of first point
   * ``x2`` X coordinate of second point
   * ``y2`` Y coordinate of second point
+
  * ``Rect`` and ``Ellipse``
+
   * ``filled`` ``True`` or ``False``, whether the rectangle/ellipse is
     filled
   * ``border`` ``True`` or ``False``, whether the rectangle/ellipse is
@@ -84,7 +89,9 @@ system:
   * ``y`` Y coordinate of one corner of the rectangle, or the ellipse centre
   * ``w`` Rectangle width, relative to ``x``, or horizontal radius of elliipse
   * ``h`` Rectangle height, relative to ``y``, or vertical radius of elliipse
+
  * ``TextAnnotation``
+
   * ``text`` Displayed text, quoted with ``shlex.quote``
   * ``fontSize`` Font size in points (relative to the canvas scaling that
     was in place at the time that the text was created)

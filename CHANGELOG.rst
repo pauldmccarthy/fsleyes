@@ -10,8 +10,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.6.0 (Under development)
--------------------------
+1.6.0 (Tuesday 20th February 2023)
+----------------------------------
 
 
 Added
@@ -34,8 +34,8 @@ Changed
 
 * DICOM directories are now only scanned once, instead of each time they are
   opened via the *Add from DICOM* menu option (!345).
-* The ``--useNegativeCmap``/``-un`` option is now automatically enabled when
-  ``--negativeCmap``/``-nc`` is specified (!350).
+* The ``--useNegativeCmap`` / ``-un`` option is now automatically enabled when
+  ``--negativeCmap`` / ``-nc`` is specified (!350).
 
 
 

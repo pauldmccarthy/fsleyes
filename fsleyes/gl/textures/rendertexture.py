@@ -250,7 +250,7 @@ class RenderTexture(texture2d.Texture2D):
         coordinates.
 
         Only returns a valid value  when this ``RenderTexture`` is bound -
-        returns ``None``at all other times.
+        returns ``None`` at all other times.
         """
         if self.__xax is None or self.__yax is None:
             return None
