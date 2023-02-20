@@ -281,7 +281,7 @@ def _find(mapid, dirname):
         if op.exists(path):
             return path
 
-    raise ValueError('Cannot find {} in {}'.format(mapid, dirname))
+    raise ValueError(f'Cannot find {mapid} in {dirname}')
 
 
 def scanBuiltInCmaps():
@@ -452,11 +452,11 @@ def init(force=False):
     for mapType, builtinDir, userDir, builtinIDs, userIDs, register in zip(
             mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
 
-        builtinFiles = ['{}.{}'.format(m, mapType) for m in builtinIDs]
-        builtinFiles = [_find(m, builtinDir)       for m in builtinFiles]
-        userFiles    = ['{}.{}'.format(m, mapType) for m in userIDs]
-        userFiles    = [op.join(userDir, m)        for m in userFiles]
-        userFiles    = [fslsettings.filePath(m)    for m in userFiles]
+        builtinFiles = [f'{m}.{mapType}'        for m in builtinIDs]
+        builtinFiles = [_find(m, builtinDir)    for m in builtinFiles]
+        userFiles    = [f'{m}.{mapType}'        for m in userIDs]
+        userFiles    = [op.join(userDir, m)     for m in userFiles]
+        userFiles    = [fslsettings.filePath(m) for m in userFiles]
 
         allIDs   = builtinIDs   + userIDs
         allFiles = builtinFiles + userFiles
@@ -512,9 +512,8 @@ def init(force=False):
                 register[mapID].mapObj.saved = True
 
             except Exception as e:
-                log.warn('Error processing custom {} '
-                         'file {}: {}'.format(mapType, mapFile, str(e)),
-                         exc_info=True)
+                log.warn(f'Error processing custom {mapType} '
+                         f'file {mapFile}: {e}', exc_info=True)
 
 
 def registerColourMap(cmapFile,
@@ -549,7 +548,7 @@ def registerColourMap(cmapFile,
     """
 
     if key is not None and not isValidMapKey(key):
-        raise ValueError('{} is not a valid colour map identifier'.format(key))
+        raise ValueError(f'{key} is not a valid colour map identifier')
 
     if key is None:
         key = op.splitext(op.basename(cmapFile))[0]
@@ -576,7 +575,7 @@ def registerColourMap(cmapFile,
     _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
 
     log.debug('Patching DisplayOpts instances and class '
-              'to support new colour map {}'.format(key))
+              'to support new colour map %s', key)
 
     # A list of all DisplayOpts colour map properties.
     # n.b. We can't simply list the ColourMapOpts class
@@ -660,7 +659,7 @@ def registerLookupTable(lut,
             name = key
 
         log.debug('Loading and registering custom '
-                  'lookup table: {}'.format(lutFile))
+                  'lookup table: %s', lutFile)
 
         lut = LookupTable(key, name, lutFile)
 
@@ -678,7 +677,7 @@ def registerLookupTable(lut,
     _luts[key] = _Map(key, name, lut, lutFile, False)
 
     log.debug('Patching LabelOpts classes to support '
-              'new LookupTable {}'.format(key))
+              'new LookupTable %s', key)
 
     # See similar situation in the registerColourMap
     # function above. All DisplayOpts classes which
@@ -837,9 +836,9 @@ def installColourMap(key):
     #      this.
     data = cmap.mapObj.colors
 
-    destFile = op.join('colourmaps', '{}.cmap'.format(key))
+    destFile = op.join('colourmaps', f'{key}.cmap')
 
-    log.debug('Installing colour map {} to {}'.format(key, destFile))
+    log.debug('Installing colour map %s to %s', key, destFile)
 
     # Numpy under python 3 will break if
     # we give it a file opened with mode='wt'.
@@ -862,11 +861,11 @@ def installLookupTable(key):
 
     # keyerror if not registered
     lut      = _luts[key]
-    destFile = op.join('luts', '{}.lut'.format(key))
+    destFile = op.join('luts', f'{key}.lut')
     destFile = fslsettings.filePath(destFile)
     destDir  = op.dirname(destFile)
 
-    log.debug('Installing lookup table {} to {}'.format(key, destFile))
+    log.debug('Installing lookup table %s to %s', key, destFile)
 
     if not op.exists(destDir):
         os.makedirs(destDir)
@@ -928,7 +927,7 @@ def fileType(fname):
         except ValueError:
             pass
 
-    raise ValueError('Cannot determine type of {}'.format(fname))
+    raise ValueError(f'Cannot determine type of {fname}')
 
 
 def loadColourMapFile(fname, aslut=False):
@@ -981,7 +980,7 @@ def loadLookupTableFile(fname):
     # Accept cmap file, auto-generate labels/names
     if fileType(fname) in ('vest', 'cmap'):
         lut   = loadColourMapFile(fname, aslut=True)
-        names = ['{}'.format(int(l)) for l in lut[:, 0]]
+        names = [str(int(l)) for l in lut[:, 0]]
         return lut, names
 
     # Otherwise assume a FSLeyes lut file
@@ -1013,7 +1012,7 @@ def loadLookupTableFile(fname):
         names = []
         for i, line in enumerate(f):
             tkns = line.split(None, 4)
-            if len(tkns) < 5: name = '{}'.format(int(lut[i, 0]))
+            if len(tkns) < 5: name = str(int(lut[i, 0]))
             else:             name = tkns[4].strip()
             names.append(name)
 
@@ -1399,10 +1398,8 @@ class LutLabel(props.HasProperties):
 
     def __str__(self):
         """Returns a string representation of this ``LutLabel``."""
-        return '{}: {} / {} ({})'.format(self.value,
-                                         self.internalName,
-                                         self.colour,
-                                         self.enabled)
+        return f'{self.value}: {self.internalName} / ' \
+               f'{self.colour} ({self.enabled})'
 
 
     def __repr__(self):
@@ -1463,12 +1460,12 @@ class LookupTable(notifier.Notifier):
         """
 
         if not isValidMapKey(key):
-            raise ValueError('{} is not a valid lut identifier'.format(key))
+            raise ValueError(f'{key} is not a valid lut identifier')
 
         self.key      = key
         self.name     = name
         self.__labels = []
-        self.__name   = 'LookupTable({})_{}'.format(self.name, id(self))
+        self.__name   = f'LookupTable({self.name})_{id(self)}'
 
         # The LUT is loaded now, but parsed
         # lazily on first access
@@ -1609,13 +1606,11 @@ class LookupTable(notifier.Notifier):
         """
         if not isinstance(value, (int, np.integer)) or \
            value < 0 or value > 65535:
-            raise ValueError('Lookup table values must be '
-                             '16 bit unsigned integers ({}: {}).'.format(
-                                 type(value), value))
+            raise ValueError('Lookup table values must be 16 bit unsigned '
+                             f'integers ({type(value)}: {value}).')
 
         if self.get(value) is not None:
-            raise ValueError('Value {} is already in '
-                             'lookup table'.format(value))
+            raise ValueError(f'Value {value} is already in lookup table')
 
         label = LutLabel(value, name, colour, enabled)
         label.addGlobalListener(self.__name, self.__labelChanged)
@@ -1659,7 +1654,7 @@ class LookupTable(notifier.Notifier):
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))
 
-                f.write('{}\n'.format(line))
+                f.write(f'{line}\n')
 
         self.saved = True
 
