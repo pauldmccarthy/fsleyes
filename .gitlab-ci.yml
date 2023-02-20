@@ -250,6 +250,13 @@ test:3.10:
   <<: *test_rules_upstream
 
 
+test:3.11:
+  stage: test
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
+  <<: *test_template
+  <<: *test_rules_upstream
+
+
 test:build-pypi-dist:
   stage: test
   image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
