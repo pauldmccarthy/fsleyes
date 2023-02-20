@@ -34,8 +34,8 @@ Changed
 
 * DICOM directories are now only scanned once, instead of each time they are
   opened via the *Add from DICOM* menu option (!345).
-* The ``--useNegativeCmap``/``-un`` option is now automatically enabled when
-  ``--negativeCmap``/``-nc`` is specified (!350).
+* The ``--useNegativeCmap`` / ``-un`` option is now automatically enabled when
+  ``--negativeCmap`` / ``-nc`` is specified (!350).
 
 
 

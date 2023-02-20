@@ -240,7 +240,7 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
 
 
     def draw2D(self, canvas, *args, **kawrgs):
-        """Calls :func:`.glrgbvolume_funcs.draw2D`. """
+        """Calls ``glrgbvolume_funcs.draw2D``. """
         with glroutines.enabled((gl.GL_CULL_FACE)):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glCullFace(gl.GL_BACK)
@@ -249,7 +249,7 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
 
 
     def drawAll(self, *args, **kawrgs):
-        """Calls :func:`.glrgbvolume_funcs.drawAll`. """
+        """Calls ``glrgbvolume_funcs.drawAll``. """
         fslgl.glrgbvolume_funcs.drawAll(self, *args, **kawrgs)
 
 

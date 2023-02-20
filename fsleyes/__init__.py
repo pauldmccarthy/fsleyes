@@ -36,9 +36,10 @@ Amongst other things, *FSLeyes* provides the following features:
   - Histogram plotting (:mod:`.histogrampanel`)
   - Power spectrum plotting (:mod:`.powerspectrumpanel`)
   - Jupyter notebook integration (:mod:`.notebook`)
-  - FSL atlas explorer (:mod:`.atlaspanel`)
+  - FSL atlas explorer (:mod:`~.atlaspanel.atlaspanel`)
   - FEAT cluster results explorer (:mod:`.clusterpanel`)
-  - Melodic component classification (:mod:`.melodicclassificationpanel`)
+  - Melodic component classification
+    (:mod:`~.melodicclassificationpanel.melodicclassificationpanel`)
   - NIFTI image editing (:mod:`.editor`)
   - A comprehensive command line interface (:mod:`.parseargs`)
 

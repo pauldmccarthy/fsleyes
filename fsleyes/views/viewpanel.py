@@ -44,8 +44,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     A ``ViewPanel`` class uses a ``wx.lib.agw.aui.AuiManager`` to lay out its
     children. A ``ViewPanel`` has one central panel, which contains the
     primary view; and may have one or more secondary panels, which contain
-    *controls* - see the :mod:`.controls` package. The centre panel can be set
-    via the :meth:`centrePanel` property, and secondary panels can be
+    *controls* - see the :mod:`fsleyes.controls` package. The centre panel can
+    be set via the :meth:`centrePanel` property, and secondary panels can be
     added/removed to/from with the :meth:`togglePanel` method. The current
     state of a secondary panel (i.e. whether one is open or not) can be
     queried with the :meth:`isPanelOpen` method, and existing secondary panels
@@ -67,7 +67,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     when the control panel is toggled via the :meth:`togglePanel` method.
 
     The currently active interaction profile can be accessed with the
-    :meth:`currentProfile` method. See the :mod:`.profiles` package for
+    :meth:`currentProfile` method. See the :mod:`fsleyes.profiles` package for
     more information on interaction profiles.
 
 
@@ -143,11 +143,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """May be overridden by sub-classes. Should return a sequence
         containing:
 
-          - the preferred location of the view panel in the
-            :class:`.FSLeyesFrame` - one of ``wx.TOP``, ``wx.BOTTOM``,
-             ``wx.LEFT``, or ``wx.RIGHT``.
-          - A number between 0 and 1 indicating the preferred size of the
-            view panel, as a proportion of the total frame size.
+         - the preferred location of the view panel in the
+           :class:`.FSLeyesFrame` - one of ``wx.TOP``, ``wx.BOTTOM``,
+           ``wx.LEFT``, or ``wx.RIGHT``.
+         - A number between 0 and 1 indicating the preferred size of the
+           view panel, as a proportion of the total frame size.
         """
         return None
 

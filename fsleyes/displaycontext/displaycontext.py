@@ -268,16 +268,15 @@ class DisplayContext(props.SyncableHasProperties):
                           to be used. This is not used internally, but may be
                           interrogated by :class:`.Display` and
                           :class:`.DisplayOpts` instances. Can be accessed
-                          through the :meth:`.displayType` property.
+                          through the :meth:`displayType` property.
 
         All other arguments are passed through to the ``SyncableHasProperties``
         constructor, in addition to the following:
 
-          - The ``syncOverlayDisplay``,, ``syncOverlayVolume``, ``location``,
-            and ``bounds`` properties are added to the ``nobind`` argument
-
-          - The ``overlayGroups``, ``autoDisplay`` and ``loadInMemory``
-            properties are added to the ``nounbind`` argument.
+         - The ``syncOverlayDisplay``,, ``syncOverlayVolume``, ``location``,
+           and ``bounds`` properties are added to the ``nobind`` argument
+         - The ``overlayGroups``, ``autoDisplay`` and ``loadInMemory``
+           properties are added to the ``nounbind`` argument.
         """
 
         kwargs = dict(kwargs)
