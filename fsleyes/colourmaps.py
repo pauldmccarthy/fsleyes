@@ -222,7 +222,6 @@ import              colorsys
 
 import numpy             as np
 import matplotlib        as mpl
-import matplotlib.cm     as mplcm
 import matplotlib.colors as colors
 
 import fsl.version            as fslversion
@@ -557,20 +556,29 @@ def registerColourMap(cmapFile,
     if name        is None: name        = key
     if overlayList is None: overlayList = []
 
+    # We cannot override built-in mpl colourmaps.
+    # If a FSLeyes colourmap clashes with a built-in,
+    # we:
+    #  - register it internally with the original key
+    #  - register it under a different key with mpl
+    #  - set the "name" of the ListedColormap instance
+    #    to the original key
+    #
+    # The fsleyes_props.ColourMap property type allows
+    # us to choose colour maps either by the registered
+    # key, or by the ListedColormap.name, which has the
+    # effect that the FSLeyes colour map will effectively
+    # override the built-in mpl colour map.
+    if key in mpl.colormaps: mplkey = f'fsleyes_{key}'
+    else:                    mplkey = key
+
     data = loadColourMapFile(cmapFile)
-    cmap = colors.ListedColormap(data, key)
+    cmap = colors.ListedColormap(data, name=key)
 
     log.debug('Loading and registering custom '
-              'colour map: {}'.format(cmapFile))
+              'colour map: %s', cmapFile)
 
-    # matplotlib 3.3.4 and newer will raise an error
-    # when trying to register a colour map with the
-    # same name as a built-in, unless override_builtin
-    # (also added in that version) is set to True.
-    if fslversion.compareVersions(mpl.__version__, '3.3.4') > 0:
-        mplcm.register_cmap(key, cmap, override_builtin=True)
-    else:
-        mplcm.register_cmap(key, cmap)
+    mpl.colormaps.register(cmap, name=mplkey, force=True)
 
     _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
 
