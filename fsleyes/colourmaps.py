@@ -607,13 +607,13 @@ def registerColourMap(cmapFile,
         for cls, propName in cmapProps:
             if isinstance(opts, cls):
                 prop = opts.getProp(propName)
-                prop.addColourMap(key, opts)
+                prop.addColourMap(mplkey, opts)
 
     # and for all future overlays
     for cls, propName in cmapProps:
 
         prop = cls.getProp(propName)
-        prop.addColourMap(key)
+        prop.addColourMap(mplkey)
 
     return key
 
