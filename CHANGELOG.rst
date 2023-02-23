@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.6.1 (Thursday 23rd February 2023)
+-----------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Internal changes to avoid having to overwrite built-in ``matplotlib``
+  colour maps (!360).
+
+
 1.6.0 (Tuesday 20th February 2023)
 ----------------------------------
 

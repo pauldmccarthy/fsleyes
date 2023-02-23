@@ -240,7 +240,7 @@ class ColourMapTexture(texture.Texture):
         # in using a resolution greater than the
         # number of colours in the cmap.
         if isinstance(cmap, colors.ListedColormap):
-            res = min(res, cmap.colors.shape[0])
+            res = min(res, len(cmap.colors))
 
         # If cmap is a function, assume that it
         # accepts one or more scalar values
