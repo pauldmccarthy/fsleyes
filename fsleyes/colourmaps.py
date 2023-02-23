@@ -73,6 +73,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMapLabel
    getColourMapFile
    getColourMapKey
+   getColourMapMplKey
    loadColourMapFile
    registerColourMap
    installColourMap
@@ -580,7 +581,7 @@ def registerColourMap(cmapFile,
 
     mpl.colormaps.register(cmap, name=mplkey, force=True)
 
-    _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
+    _cmaps[key] = _Map(key, name, cmap, cmapFile, False, mplkey)
 
     log.debug('Patching DisplayOpts instances and class '
               'to support new colour map %s', key)
@@ -733,6 +734,14 @@ def getColourMaps():
 def getColourMap(key):
     """Returns the colour map instance of the specified key."""
     return _caseInsensitiveLookup(_cmaps, key).mapObj
+
+
+def getColourMapMplKey(key):
+    """Returns the key under which the specified colour map is registered
+    with ``matplotlib.colormaps``. This may not be the same as the ``key``
+    under which the colour map is registered with this module.
+    """
+    return _caseInsensitiveLookup(_cmaps, key).mplkey
 
 
 def getColourMapLabel(key):
@@ -1268,7 +1277,7 @@ class _Map:
     """
 
 
-    def __init__(self, key, name, mapObj, mapFile, installed):
+    def __init__(self, key, name, mapObj, mapFile, installed, mplkey=None):
         """Create a ``_Map``.
 
         :arg key:         The identifier name of the colour map/lookup table,
@@ -1279,7 +1288,7 @@ class _Map:
         :arg name:        The display name of the colour map/lookup table.
 
         :arg mapObj:      The colourmap/lut object, either a
-                          :class:`matplotlib.colors..Colormap`, or a
+                          ``matplotlib.colors.Colormap``, or a
                           :class:`LookupTable` instance.
 
         :arg mapFile:     The file from which this map was loaded,
@@ -1291,8 +1300,15 @@ class _Map:
                           colourmap or is installed in the
                           ``fsleyes/colourmaps/`` or ``fsleyes/luts/``
                           directory, ``False`` otherwise.
+
+        :arg mplkey:      Key under which the map is registered with
+                          ``matplotlib``, if different from ``key``. Only
+                          used for colour maps, not lookup tables.
         """
+        if mplkey is None:
+            mplkey = key
         self.key       = key
+        self.mplkey    = mplkey
         self.name      = name
         self.mapObj    = mapObj
         self.mapFile   = mapFile
