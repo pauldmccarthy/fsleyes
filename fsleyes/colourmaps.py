@@ -73,6 +73,7 @@ The following functions are available for managing and accessing colour maps:
    getColourMapLabel
    getColourMapFile
    getColourMapKey
+   getColourMapMplKey
    loadColourMapFile
    registerColourMap
    installColourMap
@@ -222,7 +223,6 @@ import              colorsys
 
 import numpy             as np
 import matplotlib        as mpl
-import matplotlib.cm     as mplcm
 import matplotlib.colors as colors
 
 import fsl.version            as fslversion
@@ -281,7 +281,7 @@ def _find(mapid, dirname):
         if op.exists(path):
             return path
 
-    raise ValueError('Cannot find {} in {}'.format(mapid, dirname))
+    raise ValueError(f'Cannot find {mapid} in {dirname}')
 
 
 def scanBuiltInCmaps():
@@ -452,11 +452,11 @@ def init(force=False):
     for mapType, builtinDir, userDir, builtinIDs, userIDs, register in zip(
             mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
 
-        builtinFiles = ['{}.{}'.format(m, mapType) for m in builtinIDs]
-        builtinFiles = [_find(m, builtinDir)       for m in builtinFiles]
-        userFiles    = ['{}.{}'.format(m, mapType) for m in userIDs]
-        userFiles    = [op.join(userDir, m)        for m in userFiles]
-        userFiles    = [fslsettings.filePath(m)    for m in userFiles]
+        builtinFiles = [f'{m}.{mapType}'        for m in builtinIDs]
+        builtinFiles = [_find(m, builtinDir)    for m in builtinFiles]
+        userFiles    = [f'{m}.{mapType}'        for m in userIDs]
+        userFiles    = [op.join(userDir, m)     for m in userFiles]
+        userFiles    = [fslsettings.filePath(m) for m in userFiles]
 
         allIDs   = builtinIDs   + userIDs
         allFiles = builtinFiles + userFiles
@@ -512,9 +512,8 @@ def init(force=False):
                 register[mapID].mapObj.saved = True
 
             except Exception as e:
-                log.warn('Error processing custom {} '
-                         'file {}: {}'.format(mapType, mapFile, str(e)),
-                         exc_info=True)
+                log.warn(f'Error processing custom {mapType} '
+                         f'file {mapFile}: {e}', exc_info=True)
 
 
 def registerColourMap(cmapFile,
@@ -549,7 +548,7 @@ def registerColourMap(cmapFile,
     """
 
     if key is not None and not isValidMapKey(key):
-        raise ValueError('{} is not a valid colour map identifier'.format(key))
+        raise ValueError(f'{key} is not a valid colour map identifier')
 
     if key is None:
         key = op.splitext(op.basename(cmapFile))[0]
@@ -558,25 +557,34 @@ def registerColourMap(cmapFile,
     if name        is None: name        = key
     if overlayList is None: overlayList = []
 
+    # We cannot override built-in mpl colourmaps.
+    # If a FSLeyes colourmap clashes with a built-in,
+    # we:
+    #  - register it internally with the original key
+    #  - register it under a different key with mpl
+    #  - set the "name" of the ListedColormap instance
+    #    to the original key
+    #
+    # The fsleyes_props.ColourMap property type allows
+    # us to choose colour maps either by the registered
+    # key, or by the ListedColormap.name, which has the
+    # effect that the FSLeyes colour map will effectively
+    # override the built-in mpl colour map.
+    if key in mpl.colormaps: mplkey = f'fsleyes_{key}'
+    else:                    mplkey = key
+
     data = loadColourMapFile(cmapFile)
-    cmap = colors.ListedColormap(data, key)
+    cmap = colors.ListedColormap(data, name=key)
 
     log.debug('Loading and registering custom '
-              'colour map: {}'.format(cmapFile))
+              'colour map: %s', cmapFile)
 
-    # matplotlib 3.3.4 and newer will raise an error
-    # when trying to register a colour map with the
-    # same name as a built-in, unless override_builtin
-    # (also added in that version) is set to True.
-    if fslversion.compareVersions(mpl.__version__, '3.3.4') > 0:
-        mplcm.register_cmap(key, cmap, override_builtin=True)
-    else:
-        mplcm.register_cmap(key, cmap)
+    mpl.colormaps.register(cmap, name=mplkey, force=True)
 
-    _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
+    _cmaps[key] = _Map(key, name, cmap, cmapFile, False, mplkey)
 
     log.debug('Patching DisplayOpts instances and class '
-              'to support new colour map {}'.format(key))
+              'to support new colour map %s', key)
 
     # A list of all DisplayOpts colour map properties.
     # n.b. We can't simply list the ColourMapOpts class
@@ -600,13 +608,13 @@ def registerColourMap(cmapFile,
         for cls, propName in cmapProps:
             if isinstance(opts, cls):
                 prop = opts.getProp(propName)
-                prop.addColourMap(key, opts)
+                prop.addColourMap(mplkey, opts)
 
     # and for all future overlays
     for cls, propName in cmapProps:
 
         prop = cls.getProp(propName)
-        prop.addColourMap(key)
+        prop.addColourMap(mplkey)
 
     return key
 
@@ -660,7 +668,7 @@ def registerLookupTable(lut,
             name = key
 
         log.debug('Loading and registering custom '
-                  'lookup table: {}'.format(lutFile))
+                  'lookup table: %s', lutFile)
 
         lut = LookupTable(key, name, lutFile)
 
@@ -678,7 +686,7 @@ def registerLookupTable(lut,
     _luts[key] = _Map(key, name, lut, lutFile, False)
 
     log.debug('Patching LabelOpts classes to support '
-              'new LookupTable {}'.format(key))
+              'new LookupTable %s', key)
 
     # See similar situation in the registerColourMap
     # function above. All DisplayOpts classes which
@@ -726,6 +734,14 @@ def getColourMaps():
 def getColourMap(key):
     """Returns the colour map instance of the specified key."""
     return _caseInsensitiveLookup(_cmaps, key).mapObj
+
+
+def getColourMapMplKey(key):
+    """Returns the key under which the specified colour map is registered
+    with ``matplotlib.colormaps``. This may not be the same as the ``key``
+    under which the colour map is registered with this module.
+    """
+    return _caseInsensitiveLookup(_cmaps, key).mplkey
 
 
 def getColourMapLabel(key):
@@ -837,9 +853,9 @@ def installColourMap(key):
     #      this.
     data = cmap.mapObj.colors
 
-    destFile = op.join('colourmaps', '{}.cmap'.format(key))
+    destFile = op.join('colourmaps', f'{key}.cmap')
 
-    log.debug('Installing colour map {} to {}'.format(key, destFile))
+    log.debug('Installing colour map %s to %s', key, destFile)
 
     # Numpy under python 3 will break if
     # we give it a file opened with mode='wt'.
@@ -862,11 +878,11 @@ def installLookupTable(key):
 
     # keyerror if not registered
     lut      = _luts[key]
-    destFile = op.join('luts', '{}.lut'.format(key))
+    destFile = op.join('luts', f'{key}.lut')
     destFile = fslsettings.filePath(destFile)
     destDir  = op.dirname(destFile)
 
-    log.debug('Installing lookup table {} to {}'.format(key, destFile))
+    log.debug('Installing lookup table %s to %s', key, destFile)
 
     if not op.exists(destDir):
         os.makedirs(destDir)
@@ -928,7 +944,7 @@ def fileType(fname):
         except ValueError:
             pass
 
-    raise ValueError('Cannot determine type of {}'.format(fname))
+    raise ValueError(f'Cannot determine type of {fname}')
 
 
 def loadColourMapFile(fname, aslut=False):
@@ -981,7 +997,7 @@ def loadLookupTableFile(fname):
     # Accept cmap file, auto-generate labels/names
     if fileType(fname) in ('vest', 'cmap'):
         lut   = loadColourMapFile(fname, aslut=True)
-        names = ['{}'.format(int(l)) for l in lut[:, 0]]
+        names = [str(int(l)) for l in lut[:, 0]]
         return lut, names
 
     # Otherwise assume a FSLeyes lut file
@@ -1013,7 +1029,7 @@ def loadLookupTableFile(fname):
         names = []
         for i, line in enumerate(f):
             tkns = line.split(None, 4)
-            if len(tkns) < 5: name = '{}'.format(int(lut[i, 0]))
+            if len(tkns) < 5: name = str(int(lut[i, 0]))
             else:             name = tkns[4].strip()
             names.append(name)
 
@@ -1261,7 +1277,7 @@ class _Map:
     """
 
 
-    def __init__(self, key, name, mapObj, mapFile, installed):
+    def __init__(self, key, name, mapObj, mapFile, installed, mplkey=None):
         """Create a ``_Map``.
 
         :arg key:         The identifier name of the colour map/lookup table,
@@ -1272,7 +1288,7 @@ class _Map:
         :arg name:        The display name of the colour map/lookup table.
 
         :arg mapObj:      The colourmap/lut object, either a
-                          :class:`matplotlib.colors..Colormap`, or a
+                          ``matplotlib.colors.Colormap``, or a
                           :class:`LookupTable` instance.
 
         :arg mapFile:     The file from which this map was loaded,
@@ -1284,8 +1300,15 @@ class _Map:
                           colourmap or is installed in the
                           ``fsleyes/colourmaps/`` or ``fsleyes/luts/``
                           directory, ``False`` otherwise.
+
+        :arg mplkey:      Key under which the map is registered with
+                          ``matplotlib``, if different from ``key``. Only
+                          used for colour maps, not lookup tables.
         """
+        if mplkey is None:
+            mplkey = key
         self.key       = key
+        self.mplkey    = mplkey
         self.name      = name
         self.mapObj    = mapObj
         self.mapFile   = mapFile
@@ -1399,10 +1422,8 @@ class LutLabel(props.HasProperties):
 
     def __str__(self):
         """Returns a string representation of this ``LutLabel``."""
-        return '{}: {} / {} ({})'.format(self.value,
-                                         self.internalName,
-                                         self.colour,
-                                         self.enabled)
+        return f'{self.value}: {self.internalName} / ' \
+               f'{self.colour} ({self.enabled})'
 
 
     def __repr__(self):
@@ -1463,12 +1484,12 @@ class LookupTable(notifier.Notifier):
         """
 
         if not isValidMapKey(key):
-            raise ValueError('{} is not a valid lut identifier'.format(key))
+            raise ValueError(f'{key} is not a valid lut identifier')
 
         self.key      = key
         self.name     = name
         self.__labels = []
-        self.__name   = 'LookupTable({})_{}'.format(self.name, id(self))
+        self.__name   = f'LookupTable({self.name})_{id(self)}'
 
         # The LUT is loaded now, but parsed
         # lazily on first access
@@ -1609,13 +1630,11 @@ class LookupTable(notifier.Notifier):
         """
         if not isinstance(value, (int, np.integer)) or \
            value < 0 or value > 65535:
-            raise ValueError('Lookup table values must be '
-                             '16 bit unsigned integers ({}: {}).'.format(
-                                 type(value), value))
+            raise ValueError('Lookup table values must be 16 bit unsigned '
+                             f'integers ({type(value)}: {value}).')
 
         if self.get(value) is not None:
-            raise ValueError('Value {} is already in '
-                             'lookup table'.format(value))
+            raise ValueError(f'Value {value} is already in lookup table')
 
         label = LutLabel(value, name, colour, enabled)
         label.addGlobalListener(self.__name, self.__labelChanged)
@@ -1659,7 +1678,7 @@ class LookupTable(notifier.Notifier):
                 tkns   = [value, colour[0], colour[1], colour[2], name]
                 line   = ' '.join(map(str, tkns))
 
-                f.write('{}\n'.format(line))
+                f.write(f'{line}\n')
 
         self.saved = True
 

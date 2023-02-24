@@ -95,16 +95,13 @@ Built-in colour maps
 --------------------
 
 
-FSLeyes comes with a set of built-in colour maps. Under macOS, the built-in
-colour map files (as :ref:`RGB files <customising_rgb_colour_map_files>`) can
-be found at::
+FSLeyes comes with a set of built-in colour maps - these files (formatted as
+:ref:`RGB files <customising_rgb_colour_map_files>`) can be found at::
 
-  FSLeyes.app/Contents/Resources/assets/colourmaps/
+  <env-dir>/lib/python3.<pyver>/site-packages/fsleyes/assets/colourmaps/
 
-And under Linux, they are located in::
-
-  FSLeyes/share/FSLeyes/assets/colourmaps/
-
+where ``<env-dir>`` is the location of the Python environment into which
+FSLeyes is installed, and ``<pyver>`` is the Python version.
 
 You can customise the display names and order of the built-in colour
 maps. Inside the ``colourmaps/`` directory you will find a file called
