@@ -17,6 +17,6 @@ def apply():
     name    = mod.__name__
     submods = pkgutil.iter_modules(path, f'{name}.')
 
-    for subpath, subname, _ in  submods:
+    for _, subname, _ in  submods:
         log.debug('Applying patch: %s', subname)
         importlib.import_module(subname)
