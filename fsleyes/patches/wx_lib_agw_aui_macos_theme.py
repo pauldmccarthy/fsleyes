@@ -87,8 +87,8 @@ def tabart_AuiDefaultTabArt___init__(self):
 
 
 if getattr(aui_utilities, 'CARBON', None) is not None:
-    aui_utilites.CARBON              = False
-    aui_utilites.GetBaseColour       = aui_utilities_GetBaseColour
+    aui_utilities.CARBON             = False
+    aui_utilities.GetBaseColour      = aui_utilities_GetBaseColour
     dockart.AuiDefaultDockArt.Init   = dockart_AuiDefaultDockArt_Init
     tabart.CARBON                    = False
     tabart.AuiDefaultTabArt.__init__ = tabart_AuiDefaultTabArt___init__
