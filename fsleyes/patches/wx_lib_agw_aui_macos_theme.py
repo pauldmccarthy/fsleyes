@@ -86,8 +86,9 @@ def tabart_AuiDefaultTabArt___init__(self):
     self._focusPen.SetCap(wx.CAP_BUTT)
 
 
-aui_utilites.CARBON              = False
-aui_utilites.GetBaseColour       = aui_utilities_GetBaseColour
-dockart.AuiDefaultDockArt.Init   = dockart_AuiDefaultDockArt_Init
-tabart.CARBON                    = False
-tabart.AuiDefaultTabArt.__init__ = tabart_AuiDefaultTabArt___init__
+if getattr(aui_utilities, 'CARBON', None) is not None:
+    aui_utilites.CARBON              = False
+    aui_utilites.GetBaseColour       = aui_utilities_GetBaseColour
+    dockart.AuiDefaultDockArt.Init   = dockart_AuiDefaultDockArt_Init
+    tabart.CARBON                    = False
+    tabart.AuiDefaultTabArt.__init__ = tabart_AuiDefaultTabArt___init__
