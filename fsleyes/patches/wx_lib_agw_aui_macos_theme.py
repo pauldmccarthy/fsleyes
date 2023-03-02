@@ -10,8 +10,10 @@
 
 import wx
 import wx.lib.agw.aui.aui_utilities as aui_utilities
+import wx.lib.agw.aui.aui_constants as aui_constants
 import wx.lib.agw.aui.dockart       as dockart
 import wx.lib.agw.aui.tabart        as tabart
+import wx.lib.agw.aui.auibar        as auibar
 
 
 def aui_utilities_GetBaseColour():
@@ -29,21 +31,19 @@ def aui_utilities_GetBaseColour():
 
 
 def dockart_AuiDefaultDockArt_Init(self):
-    def Init(self):
-        """ Initializes the dock art. """
 
-        self.SetDefaultColours()
+    self.SetDefaultColours()
 
-        isMac = wx.Platform == "__WXMAC__"
+    isMac = wx.Platform == "__WXMAC__"
 
-        if isMac:
-            self._active_caption_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
-        else:
-            self._active_caption_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVECAPTION)
+    if isMac:
+        self._active_caption_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+    else:
+        self._active_caption_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVECAPTION)
 
-        self._active_caption_gradient_colour = LightContrastColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
-        self._active_caption_text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
-        self._inactive_caption_text_colour =  wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+    self._active_caption_gradient_colour = aui_utilities.LightContrastColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
+    self._active_caption_text_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+    self._inactive_caption_text_colour =  wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
 
 
 def tabart_AuiDefaultTabArt___init__(self):
@@ -63,23 +63,23 @@ def tabart_AuiDefaultTabArt___init__(self):
 
     if wx.Platform == "__WXMAC__":
         bmp_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DDKSHADOW)
-        self._active_close_bmp = DrawMACCloseButton(bmp_colour)
-        self._disabled_close_bmp = DrawMACCloseButton(disabled_colour)
+        self._active_close_bmp = aui_utilities.DrawMACCloseButton(bmp_colour)
+        self._disabled_close_bmp = aui_utilities.DrawMACCloseButton(disabled_colour)
     else:
-        self._active_close_bmp = BitmapFromBits(nb_close_bits, 16, 16, active_colour)
-        self._disabled_close_bmp = BitmapFromBits(nb_close_bits, 16, 16, disabled_colour)
+        self._active_close_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_close_bits, 16, 16, active_colour)
+        self._disabled_close_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_close_bits, 16, 16, disabled_colour)
 
     self._hover_close_bmp = self._active_close_bmp
     self._pressed_close_bmp = self._active_close_bmp
 
-    self._active_left_bmp = BitmapFromBits(nb_left_bits, 16, 16, active_colour)
-    self._disabled_left_bmp = BitmapFromBits(nb_left_bits, 16, 16, disabled_colour)
+    self._active_left_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_left_bits, 16, 16, active_colour)
+    self._disabled_left_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_left_bits, 16, 16, disabled_colour)
 
-    self._active_right_bmp = BitmapFromBits(nb_right_bits, 16, 16, active_colour)
-    self._disabled_right_bmp = BitmapFromBits(nb_right_bits, 16, 16, disabled_colour)
+    self._active_right_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_right_bits, 16, 16, active_colour)
+    self._disabled_right_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_right_bits, 16, 16, disabled_colour)
 
-    self._active_windowlist_bmp = BitmapFromBits(nb_list_bits, 16, 16, active_colour)
-    self._disabled_windowlist_bmp = BitmapFromBits(nb_list_bits, 16, 16, disabled_colour)
+    self._active_windowlist_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_list_bits, 16, 16, active_colour)
+    self._disabled_windowlist_bmp = aui_utilities.BitmapFromBits(aui_constants.nb_list_bits, 16, 16, disabled_colour)
 
     self._focusPen = wx.Pen(active_colour, 1, wx.PENSTYLE_USER_DASH)
     self._focusPen.SetDashes([1, 1])
@@ -89,6 +89,9 @@ def tabart_AuiDefaultTabArt___init__(self):
 if getattr(aui_utilities, 'CARBON', None) is not None:
     aui_utilities.CARBON             = False
     aui_utilities.GetBaseColour      = aui_utilities_GetBaseColour
+    auibar.GetBaseColour             = aui_utilities_GetBaseColour
+    dockart.GetBaseColour            = aui_utilities_GetBaseColour
     dockart.AuiDefaultDockArt.Init   = dockart_AuiDefaultDockArt_Init
     tabart.CARBON                    = False
+    tabart.GetBaseColour             = aui_utilities_GetBaseColour
     tabart.AuiDefaultTabArt.__init__ = tabart_AuiDefaultTabArt___init__
