@@ -21,8 +21,13 @@ cli_tests = """
 {{complex()}} -ot complex -co imag
 {{complex()}} -ot complex -co mag
 {{complex()}} -ot complex -co phase
-"""
 
+# overlay type should actually be set
+# automatically to "complex", so we
+# don't need to specify it on the
+# command-line.
+{{complex()}}             -co phase
+"""
 
 
 def test_overlay_complex():

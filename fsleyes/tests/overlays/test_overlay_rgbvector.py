@@ -38,6 +38,12 @@ dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
 {{mul('dti/dti_V1', 0.5)}} -ot rgbvector
 {{mul('dti/dti_V1', 2.0)}} -ot rgbvector -u
 {{mul('dti/dti_V1', 2.0)}} -ot rgbvector
+
+# Images with intent code 2003 should be
+# automaticallt shown as RGB vectors, so
+# there shouldn't be any need to specify
+# The overlay type at the command-line.
+{{mul('dti/dti_V1', 3.0)}} -in spline -u
 """
 
 extras = {
