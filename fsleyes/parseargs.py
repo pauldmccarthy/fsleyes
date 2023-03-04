@@ -2072,8 +2072,9 @@ def parseArgs(mainParser,
     # look like overlay file names, and
     # indices corresponding to starting/
     # ending arguments for each overlay.
-    ovlIdxs  = []
-    ovlTypes = []
+    ovlIdxs   = []
+    ovlDtypes = []
+    ovlOtypes = []
 
     for i in range(len(argv)):
 
@@ -2091,7 +2092,7 @@ def parseArgs(mainParser,
             continue
 
         # See if the current argument looks like a data source
-        dtype, fname = dutils.guessType(argv[i])
+        dtype, otype, fname = dutils.guessType(argv[i])
 
         # If the file name refers to a file that
         # does not exist, assume it is an argument
@@ -2110,8 +2111,9 @@ def parseArgs(mainParser,
 
         # Otherwise, it's an overlay
         # file that needs to be loaded
-        ovlIdxs .append(i)
-        ovlTypes.append(dtype)
+        ovlIdxs  .append(i)
+        ovlDtypes.append(dtype)
+        ovlOtypes.append(otype)
 
     # Index of end argument for last overlay
     ovlIdxs.append(len(argv))
@@ -2174,10 +2176,11 @@ def parseArgs(mainParser,
 
     for i in range(len(ovlIdxs) - 1):
 
-        ovlArgv = argv[ovlIdxs[i]:ovlIdxs[i + 1]]
-        ovlFile = ovlArgv[ 0]
-        ovlType = ovlTypes[i]
-        ovlArgv = ovlArgv[ 1:]
+        ovlArgv  = argv[ovlIdxs[i]:ovlIdxs[i + 1]]
+        ovlFile  = ovlArgv[  0]
+        ovlDtype = ovlDtypes[i]
+        ovlOtype = ovlOtypes[i]
+        ovlArgv  = ovlArgv[  1:]
 
         # First use the overlay type parser
         # to see if the user has explicitly
@@ -2201,20 +2204,22 @@ def parseArgs(mainParser,
         # specified for a nifti image that
         # doesn't have 6 volumes.
         if overlayTypeSet:
-            if otArgs.overlayType not in fsldisplay.OVERLAY_TYPES[ovlType]:
+            if otArgs.overlayType not in fsldisplay.OVERLAY_TYPES[ovlDtype]:
                 raise RuntimeError('Invalid overlay type "{}" '
                                    'for data type "{}"'.format(
-                                       otArgs.overlayType, ovlType.__name__))
+                                       otArgs.overlayType, ovlDtype.__name__))
 
-        # If the user did not specify an overlay type
-        # for this overlay, use its default (see the
-        # display.OVERLAY_TYPES) dictionary).
+        # If the user did not specify an overlay
+        # type for this overlay, use its default
+        # (see the display.OVERLAY_TYPES
+        # dictionary and fsleyes.data.guessType
+        # function).
         else:
-            otArgs.overlayType = fsldisplay.OVERLAY_TYPES[ovlType][0]
+            otArgs.overlayType = ovlOtype
 
         # Now parse the Display/DisplayOpts
         # with the appropriate parser
-        optType   = fsldisplay.DISPLAY_OPTS_MAP[ovlType, otArgs.overlayType]
+        optType   = fsldisplay.DISPLAY_OPTS_MAP[ovlDtype, otArgs.overlayType]
         optParser = optParsers[optType]
 
         try: optArgs = optParser.parse_args(remaining)

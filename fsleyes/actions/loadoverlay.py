@@ -214,7 +214,7 @@ def loadOverlays(paths,
 
         loadFunc(path)
 
-        dtype, path = dutils.guessType(path)
+        dtype, _, path = dutils.guessType(path)
 
         if dtype is None:
             errorFunc(path, strings.messages['loadOverlays.unknownType'])
