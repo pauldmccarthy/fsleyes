@@ -151,7 +151,7 @@ cli_tests = """
 def gen_indices(infile):
     basename = fslimage.removeExt(op.basename(infile))
     outfile  = '{}_indices.nii.gz'.format(basename)
-    img      = fslimage.Image(infile, loadData=False)
+    img      = fslimage.Image(infile)
     shape    = img.shape
     data     = np.arange(np.prod(shape)).reshape(shape).astype(np.int32)
 

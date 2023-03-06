@@ -19,7 +19,7 @@ pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """
--xh -yh {{splash()}}
+-xh -yh {{splash()}} -ot volume
 -xh -yh {{splash()}} -ot rgb
 """
 
