@@ -10,6 +10,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.7.0 (Under development)
+-------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with parsing command line arguments for RGB vector and
+  complex images (!363).
+
+
+
 1.6.1 (Thursday 23rd February 2023)
 -----------------------------------
 

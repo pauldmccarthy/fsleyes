@@ -31,9 +31,9 @@ cli_tests = """
 
 # dti/4D
 # planes
-{{roi('dti/dti_V1', (0, 8, 0, 8, 4, 5))}}
-{{roi('dti/dti_V1', (0, 8, 4, 5, 0, 8))}}
-{{roi('dti/dti_V1', (4, 5, 0, 8, 0, 8))}}
+{{roi('dti/dti_V1', (0, 8, 0, 8, 4, 5))}} -ot volume
+{{roi('dti/dti_V1', (0, 8, 4, 5, 0, 8))}} -ot volume
+{{roi('dti/dti_V1', (4, 5, 0, 8, 0, 8))}} -ot volume
 {{roi('dti/dti_V1', (0, 8, 0, 8, 4, 5))}} -ot rgbvector
 {{roi('dti/dti_V1', (0, 8, 4, 5, 0, 8))}} -ot rgbvector
 {{roi('dti/dti_V1', (4, 5, 0, 8, 0, 8))}} -ot rgbvector
@@ -42,9 +42,9 @@ cli_tests = """
 {{roi('dti/dti_V1', (4, 5, 0, 8, 0, 8))}} -ot linevector
 
 # vectors
-{{roi('dti/dti_V1', (0, 8, 4, 5, 4, 5))}}
-{{roi('dti/dti_V1', (4, 5, 0, 8, 4, 5))}}
-{{roi('dti/dti_V1', (4, 5, 4, 5, 0, 8))}}
+{{roi('dti/dti_V1', (0, 8, 4, 5, 4, 5))}} -ot volume
+{{roi('dti/dti_V1', (4, 5, 0, 8, 4, 5))}} -ot volume
+{{roi('dti/dti_V1', (4, 5, 4, 5, 0, 8))}} -ot volume
 {{roi('dti/dti_V1', (0, 8, 4, 5, 4, 5))}} -ot rgbvector
 {{roi('dti/dti_V1', (4, 5, 0, 8, 4, 5))}} -ot rgbvector
 {{roi('dti/dti_V1', (4, 5, 4, 5, 0, 8))}} -ot rgbvector
@@ -53,15 +53,15 @@ cli_tests = """
 {{roi('dti/dti_V1', (4, 5, 4, 5, 0, 8))}} -ot linevector
 
 # onevox
-{{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -or -1 0
+{{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -ot volume -or -1 0
 {{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -ot rgbvector
 {{roi('dti/dti_V1', (4, 5, 4, 5, 4, 5))}} -ot linevector
 
 # rgb image
 # planes
-{{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}}
-{{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}}
-{{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}}
+{{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}} -ot volume
+{{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}} -ot volume
+{{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}} -ot volume
 {{asrgb(roi('dti/dti_V1', (0, 8, 0, 8, 4, 5)))}} -ot rgb
 {{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 0, 8)))}} -ot rgb
 {{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}} -ot rgb
@@ -73,9 +73,9 @@ cli_tests = """
 {{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 0, 8)))}} -ot linevector
 
 # vectors
-{{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 4, 5)))}}
-{{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 4, 5)))}}
-{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 0, 8)))}}
+{{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 4, 5)))}} -ot volume
+{{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 4, 5)))}} -ot volume
+{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 0, 8)))}} -ot volume
 {{asrgb(roi('dti/dti_V1', (0, 8, 4, 5, 4, 5)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (4, 5, 0, 8, 4, 5)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 0, 8)))}} -ot rgbvector
@@ -84,7 +84,7 @@ cli_tests = """
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 0, 8)))}} -ot linevector
 
 # onevox
-{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -or 0 20
+{{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -ot volume -or 0 20
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -ot rgbvector
 {{asrgb(roi('dti/dti_V1', (4, 5, 4, 5, 4, 5)))}} -ot linevector
 """

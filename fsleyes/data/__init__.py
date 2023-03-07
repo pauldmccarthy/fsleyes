@@ -20,8 +20,11 @@ FSLeyes:
 
 import os.path as op
 
-import fsl.utils.path as fslpath
-import fsl.data.utils as dutils
+import fsl.utils.path          as fslpath
+import fsl.data.utils          as dutils
+import fsl.data.image          as fslimage
+import fsleyes.data.tractogram as tractogram
+import fsleyes.displaycontext  as fsldisplay
 
 
 def guessType(path):
@@ -34,18 +37,29 @@ def guessType(path):
 
                - A data type which can be used to load the file, or ``None``
                  if the file is not recognised.
+               - A suitable value for the :meth:`.Display.overlayType` for
+                 the file, or ``None`` if the file type is not recognised.
                - The file path, possibly modified (e.g. made absolute).
     """
 
-    import fsleyes.data.tractogram as tractogram
-
-    dtype, path = dutils.guessType(path)
-
-    if dtype is not None:
-        return dtype, path
+    path  = op.abspath(path)
+    dtype = None
+    otype = None
 
     if op.isfile(path):
         if fslpath.hasExt(path.lower(), tractogram.ALLOWED_EXTENSIONS):
-            return tractogram.Tractogram, path
+            dtype = tractogram.Tractogram
 
-    return dtype, path
+    if dtype is None:
+        dtype, path = dutils.guessType(path)
+
+    # We need to peek at some images in order
+    # to determine a suitable overlay type
+    # (e.g. complex images -> "complex")
+    if dtype is fslimage.Image:
+        img   = fslimage.Image(path)
+        otype = fsldisplay.getOverlayTypes(img)[0]
+    elif dtype is not None:
+        otype = fsldisplay.OVERLAY_TYPES[dtype][0]
+
+    return dtype, otype, path

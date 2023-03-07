@@ -146,6 +146,7 @@ define *scene* options:
 import itertools as it
 
 import fsleyes_widgets.utils.typedict as td
+import fsl.utils.path                 as fslpath
 import fsl.data.constants             as constants
 
 from .               import display
@@ -182,6 +183,7 @@ from .displaycontext import InvalidOverlayError
 
 OVERLAY_TYPES = td.TypeDict({
 
+    'Bitmap'         : ['rgb', 'volume'],
     'Image'          : ['volume',     'mask',  'rgbvector',
                         'linevector', 'label', 'sh',
                         'tensor',     'mip',   'rgb',
@@ -235,8 +237,9 @@ def getOverlayTypes(overlay):
     might adjust the returned list based on properties of the overlay.
     """
 
-    import fsl.data.image as fslimage
-    from . import            shopts
+    import fsl.data.image  as fslimage
+    import fsl.data.bitmap as fslbmp
+    from . import             shopts
 
     possibleTypes = list(OVERLAY_TYPES[overlay])
 
@@ -261,11 +264,21 @@ def getOverlayTypes(overlay):
 
     # Special cases
 
-    # If the image is complex, make complex the
-    # default overlay type
+    # If the image is complex, make complex
+    # the default overlay type
     possibleTypes.remove('complex')
     if iscomplex:
         possibleTypes.insert(0, 'complex')
+
+    # If the overlay looks like a 2D image
+    # (jpg, etc), make rgb the default type
+    if couldBeRGB:
+        if fslpath.hasExt(overlay.dataSource, fslbmp.BITMAP_EXTENSIONS):
+            # bitmaps are loaded as Images, so
+            # the OVERLAY_TYPES lookup above
+            # would have returned the types for
+            # Image overlays
+            possibleTypes = list(OVERLAY_TYPES['Bitmap'])
 
     # If the overlay looks like a vector image,
     # and its nifti intent code is set as such,
