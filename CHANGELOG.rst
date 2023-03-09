@@ -18,8 +18,8 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with parsing command line arguments for RGB vector and
-  complex images (!363).
+* Fixed some issues with parsing command line arguments for RGB vector and
+  complex images (!363, !364).
 
 
 
