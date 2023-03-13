@@ -20,7 +20,8 @@ Fixed
 
 * Fixed some issues with parsing command line arguments for RGB vector and
   complex images (!363, !364).
-
+* Fixed an issue with plotting the MELODIC power spectrum for data with an
+  odd number of timepoints (!365).
 
 
 1.6.1 (Thursday 23rd February 2023)
