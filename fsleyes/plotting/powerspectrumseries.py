@@ -485,9 +485,17 @@ class MelodicPowerSpectrumSeries(dataseries.DataSeries,
         opts      = self.displayCtx.getOpts(overlay)
         component = opts.volume
 
-        ydata     = overlay.getComponentPowerSpectrum(component)
-        nsamples  = len(overlay.getComponentTimeSeries(component))
-        xdata     = calcFrequencies(nsamples, overlay.tr, np.float32)
+        ydata    = overlay.getComponentPowerSpectrum(component)
+        nsamples = len(overlay.getComponentTimeSeries(component))
+
+        # Melodic always outputs an even number of frequency
+        # values, regardless of whether the input was odd or
+        # even. calcFrequencies produces floor(nsamples / 2)
+        # values, so we add one to odd nsamples to compensate.
+        if nsamples % 2:
+            nsamples += 1
+
+        xdata = calcFrequencies(nsamples, overlay.tr, np.float32)
 
         return xdata, ydata
 
