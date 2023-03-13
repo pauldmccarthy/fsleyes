@@ -178,14 +178,21 @@ def _test_MelodicPowerSpectrumSeries(panel, overlayList, displayCtx):
 
     class MockMelodicImage(Image):
         tr = 1
+        # assuming that image has an odd number of
+        # time points (which testdata/4d.nii.gz does)
+        def __init__(self, *args, oddnpts=False, **kwargs):
+            Image.__init__(self, *args, **kwargs)
+            self.oddnpts = oddnpts
         def getComponentPowerSpectrum(self, comp):
             x, y, z = self.shape[0] // 2, self.shape[1] // 2, self.shape[2] // 2
-            return self[x, y, z, :] * comp
+            data    = self[x, y, z, :] * comp
+            if self.oddnpts: return data[:(len(data) // 2) + 1]
+            else:            return data
         def getComponentTimeSeries(self, comp):
             x, y, z = self.shape[0] // 2, self.shape[1] // 2, self.shape[2] // 2
-            ts = self[x, y, z, :] * comp
-            return np.concatenate((ts, ts))
-
+            ts      = self[x, y, z, :] * comp
+            if self.oddnpts: return ts
+            else:            return np.concatenate((ts, ts))
 
     with tempdir(), mock.patch('fsl.data.melodicimage.MelodicImage',
                                MockMelodicImage):
@@ -207,6 +214,29 @@ def _test_MelodicPowerSpectrumSeries(panel, overlayList, displayCtx):
         opts.volume = 2
         realYield()
         assert np.all(ps.getData()[1] == expbase * 2)
+
+        # See fsl/fsleyes/fsleyes!365
+        # 4d test image has 45 timepoints
+        overlayList.clear()
+        panel.plotFrequencies = True
+        img = MockMelodicImage(op.join(datadir, '4d'), oddnpts=True)
+        overlayList.append(img)
+        realYield()
+        ps       = panel.getDataSeries(img)
+        px,  py  = panel.prepareDataSeries(ps)
+        psx, psy = ps.getData()
+        assert all((len(px)  == len(py),
+                    len(py)  == len(psx),
+                    len(psx) == len(psy)))
+
+        panel.plotFrequencies = False
+        realYield()
+        ps       = panel.getDataSeries(img)
+        px,  py  = panel.prepareDataSeries(ps)
+        psx, psy = ps.getData()
+        assert all((len(px)  == len(py),
+                    len(py)  == len(psx),
+                    len(psx) == len(psy)))
 
 
 def test_MeshPowerSpectrumSeries():
