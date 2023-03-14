@@ -10,8 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.7.0 (Under development)
+2.0.0 (Under development)
 -------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Changed the ``--initialDisplayRange`` command-line option to have the same
+  behaviour as the ``--displayRange`` option - by default, the values will
+  now be interpreted as raw intensities. Values can be specified as percentiles
+  by appending a ``%`` to the high value (!366).
 
 
 Fixed

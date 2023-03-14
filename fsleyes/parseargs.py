@@ -1048,8 +1048,8 @@ HELP = td.TypeDict({
 
     'Main.initialDisplayRange' :
     'Initial display range to use for volume overlays, expressed as '
-    '(low, high) percentiles of the image data range (calculated on '
-    'all non-zero voxels).',
+    '(low, high) intensity values. The values can be expresseed as '
+    'percentiles by appending a "%%" to the high value.',
 
     'Main.bigmem' :
     'Load all images into memory, regardless of size.',
@@ -1723,7 +1723,6 @@ def _configMainParser(mainParser, exclude=None):
         'standard1mm'         : {'action'  : 'store_true'},
         'standard1mm_brain'   : {'action'  : 'store_true'},
         'initialDisplayRange' : {'metavar' : ('LO', 'HI'),
-                                 'type'    : int,
                                  'nargs'   : 2},
         'bigmem'              : {'action'  : 'store_true'},
         'fontSize'            : {'type'    : int},
@@ -2565,7 +2564,10 @@ def applyMainArgs(args, overlayList, displayCtx):
 
     from fsleyes.displaycontext.volumeopts   import VolumeOpts
     from fsleyes.displaycontext.volume3dopts import Volume3DOpts
-    VolumeOpts.setInitialDisplayRange(args.initialDisplayRange)
+
+    if args.initialDisplayRange is not None:
+        idr, percentiles = _parseDisplayRange(args.initialDisplayRange)
+        VolumeOpts.setInitialDisplayRange(idr, percentiles)
 
     Volume3DOpts.enableInterpolation = not args.no3DInterp
 
@@ -3749,21 +3751,38 @@ def _applySpecial_VolumeOpts_displayRange(
 def _applyVolumeOptsRange(arange, target, auximage=None):
     """This function is used to parse display/clipping range arguments. """
 
-    arange = list(arange)
+    arange, percentiles = _parseDisplayRange(arange)
 
     if auximage is None: overlay = target.overlay
     else:                overlay = auximage
 
-    if arange[1][-1] == '%':
+    if percentiles:
+        arange = np.nanpercentile(overlay[:], arange)
 
+    return arange
+
+
+def _parseDisplayRange(arange):
+    """Parses values given to a display range command-line option. Used
+    for ``--displayRange``, ``--clippingRange`` ``--modulateRange``, and
+    ``--initialDisplayRange``.
+
+    Returns a tuple containing:
+       - the ``(low, high)`` range values as floats.
+       - ``True`` if the values should be interpreted as percentiles, ``False``
+         if they should be interpreted as raw intensities.
+    """
+    arange      = list(arange)
+    percentiles = arange[1][-1] == '%'
+
+    if percentiles:
         arange[1] = arange[1][:-1]
         arange    = [float(r) for r in arange]
-        arange    = np.nanpercentile(overlay[:], arange)
 
     else:
         arange = [float(r) for r in arange]
 
-    return arange
+    return arange, percentiles
 
 
 def _applySpecial_ColourMapOpts_cmap(

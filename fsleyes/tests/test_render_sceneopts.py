@@ -53,7 +53,8 @@ cli_tests = """
 -cb tractogram/spirals.trk -co vdata -cm hsv
 
 # default display/clipping range as percentiles
--idr 50 100 3d.nii.gz
+-idr 50   100% 3d.nii.gz
+-idr 1993 5000 3d.nii.gz
 
 -vl  3   3  3  3d.nii.gz -cr 4000 5000
 -wl 10 -26 16  3d.nii.gz -cr 4000 5000
@@ -61,10 +62,11 @@ cli_tests = """
 
 
 fsl_cli_tests = """
--idr 50 100 -std
--idr 50 100 -stdb
--idr 50 100 -std1mm
--idr 50 100 -std1mmb
+-idr 2500 7500 -std
+-idr 50   100% -std
+-idr 50   100% -stdb
+-idr 50   100% -std1mm
+-idr 50   100% -std1mmb
 """
 
 

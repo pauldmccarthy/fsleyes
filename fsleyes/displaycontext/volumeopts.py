@@ -65,11 +65,16 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
     @classmethod
     def getInitialDisplayRange(cls):
-        """This class method returns a tuple containing ``(low, high)``
-        percentile values which are used to set the initial values for the
-        :attr:`.ColourMapOpts.displayRange` and
-        :attr:`.ColourMapOpts.clippingRange` properties. If the initial
-        display range has not yet been set (via the
+        """This class method returns a tuple containing values which are used
+        to set the initial values for the :attr:`.ColourMapOpts.displayRange`
+        and :attr:`.ColourMapOpts.clippingRange` properties.
+
+        The returned tuple contains:
+         - The low and high display range values (as a tuple)
+         - ``True`` if the values should be interpreted as percentiles,
+           or ``False`` if they should be interpreted as raw intensities.
+
+        If the initial display range has not yet been set (via the
         :meth:`setInitialDisplayRange` method), ``None`` is returned.
         """
         try:
@@ -79,26 +84,21 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
 
     @classmethod
-    def setInitialDisplayRange(cls, drange):
+    def setInitialDisplayRange(cls, drange, percentiles=False):
         """Sets the initial values for the :attr:`.ColourMapOpts.displayRange`
         and :attr:`.ColourMapOpts.clippingRange` to be used for new
         :class:`VolumeOpts` instances.
 
-        :arg drange: A tuple containing ``(low, high)`` display range values
-                     as percentiles of the image data range. May be ``None``,
-                     in which case the initial display range will be set to the
-                     image data range.
-        """
+        :arg drange:      A tuple containing ``(low, high)`` display range
+                          values. May be ``None``, in which case the initial
+                          display range will be set to the image data range.
 
+        :arg percentiles: If ``True``, interpret ``drange``as percentiles of
+                          the data range of each image, rather than raw
+                          intensities.
+        """
         if drange is not None:
-            low, high = drange
-            if not all((low < high,
-                        low >= 0,
-                        low <= 100,
-                        high >= 0,
-                        high <= 100)):
-                raise ValueError('Invalid initial display '
-                                 'range: {}'.format(drange))
+            drange = (drange, percentiles)
 
         cls.__initialDisplayRange = drange
 
@@ -198,15 +198,17 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
         if self.__registered and drange is not None:
 
-            if   overlay.ndim == 3: sample = overlay[:]
-            elif overlay.ndim == 4: sample = overlay[..., 0]
+            drange, percentiles = drange
 
-            drange = np.percentile(sample[sample != 0], drange)
-            crange = [drange[0], overlay.dataRange[1]]
+            if percentiles:
+                if   overlay.ndim == 3: sample = overlay[:]
+                elif overlay.ndim == 4: sample = overlay[..., 0]
+                drange = np.clip(drange, 0, 100)
+                drange = np.percentile(sample[sample != 0], drange)
 
             self.displayRange  = drange
             self.modulateRange = drange
-            self.clippingRange = crange
+            self.clippingRange = [drange[0], overlay.dataRange[1]]
 
         # If this is not a RGB(A) image, disable
         # the channel property. If it's a RGB

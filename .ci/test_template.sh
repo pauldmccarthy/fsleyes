@@ -94,11 +94,15 @@ fi
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
-# test overlay types for different GL profiles - gl14 first
-export FSLEYES_TEST_GL=1.4
-((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
-status=`cat status`
-failed=`echo "$status + $failed" | bc`
+# Test overlay types for different GL profiles -
+# gl14 first Support for GL14 is flaky in new
+# mesa+macOS versions - regular segfaults.
+if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
+  export FSLEYES_TEST_GL=1.4
+  ((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+  status=`cat status`
+  failed=`echo "$status + $failed" | bc`
+fi
 
 # gl21 compatibility
 export FSLEYES_TEST_GL=2.1
