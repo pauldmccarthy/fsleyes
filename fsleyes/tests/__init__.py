@@ -13,6 +13,7 @@ import            sys
 import            time
 import            shlex
 import            shutil
+import            string
 import            logging
 import            tempfile
 import            traceback
@@ -463,12 +464,16 @@ def run_cli_tests(
 
         for test in tests:
 
+            # reset state in between tests
+            dc.VolumeOpts.setInitialDisplayRange(None)
+
             if any([exc in test for exc in exclude]):
                 print('CLI test skipped [{}] {}'.format(prefix, test))
                 continue
 
             test      = fill_test(test)
-            fname     = test.replace(' ', '_').replace('/', '_')
+            allowed   = string.ascii_letters + string.digits + '_-.,'
+            fname     = ''.join([c if (c in allowed) else '_' for c in test])
             fname     = '{}_{}.png'.format(prefix, fname)
             benchmark = op.join(benchdir, fname)
             testfile  = op.join(td, fname)
