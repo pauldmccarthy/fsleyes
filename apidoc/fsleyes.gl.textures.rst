@@ -8,6 +8,7 @@
    fsleyes.gl.textures.data
    fsleyes.gl.textures.imagetexture
    fsleyes.gl.textures.lookuptabletexture
+   fsleyes.gl.textures.manager
    fsleyes.gl.textures.rendertexture
    fsleyes.gl.textures.selectiontexture
    fsleyes.gl.textures.texture
