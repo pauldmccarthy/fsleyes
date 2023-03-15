@@ -51,8 +51,12 @@ class GLTractogram(globject.GLObject):
             'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
             'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
             'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
-        self.cmapTexture    = textures.ColourMapTexture(self.name)
-        self.negCmapTexture = textures.ColourMapTexture(self.name)
+
+        # Scale alpha exponentially in the
+        # colour maps (see inline comments in
+        # updateShaderState)
+        self.cmapmgr        = textures.ColourMapTextureManager(
+            self, expalpha=True)
         self.imageTextures  = textures.AuxImageTextureManager(
             self, colour=None, clip=None)
 
@@ -60,7 +64,6 @@ class GLTractogram(globject.GLObject):
         self.updateStreamlineData()
         self.refreshImageTexture('clip')
         self.refreshImageTexture('colour')
-        self.refreshCmapTextures()
         self.updateColourData(refresh=False)
         self.updateClipData(refresh=False)
         self.addListeners()
@@ -95,7 +98,6 @@ class GLTractogram(globject.GLObject):
             self.notify()
 
         def cmaps(*_):
-            self.refreshCmapTextures()
             self.updateShaderState()
             self.notify()
 
@@ -174,11 +176,8 @@ class GLTractogram(globject.GLObject):
     def destroy(self):
         """Removes listeners and destroys textures and shader programs. """
 
-        if self.cmapTexture is not None:
-            self.cmapTexture.destroy()
-
-        if self.negCmapTexture is not None:
-            self.negCmapTexture.destroy()
+        if self.cmapmgr is not None:
+            self.cmapmgr.destroy()
 
         if self.imageTextures is not None:
             self.imageTextures.destroy()
@@ -187,8 +186,7 @@ class GLTractogram(globject.GLObject):
             for shader in self.iterShaders():
                 shader.destroy()
 
-        self.cmapTexture    = None
-        self.negCmapTexture = None
+        self.cmapmgr        = None
         self.imageTextures  = None
         self.shaders        = None
 
@@ -269,6 +267,22 @@ class GLTractogram(globject.GLObject):
             lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
 
         return lineWidth
+
+
+    @property
+    def cmapTexture(self):
+        """Return the :class:`.ColourMapTexture` associated with
+        :attr:`.TractogramOpts.cmap`.
+        """
+        return self.cmapmgr.cmapTexture
+
+
+    @property
+    def negCmapTexture(self):
+        """Return the :class:`.ColourMapTexture` associated with
+        :attr:`.TractogramOpts.negativeCmap`.
+        """
+        return self.cmapmgr.negCmapTexture
 
 
     @property
@@ -562,53 +576,6 @@ class GLTractogram(globject.GLObject):
                     shader.set('clipTexCoordXform', w2tXform)
                     shader.set('clipValScale',      voxScale)
                     shader.set('clipValOffset',     voxOffset)
-
-
-    def refreshCmapTextures(self):
-        """Called when various :class:`.Display` or :class:`.TractogramOpts``
-        properties change. Refreshes the :class:`.ColourMapTexture` instances
-        corresponding to the :attr:`.TractogramOpts.cmap` and
-        :attr:`.TractogramOpts.negativeCmap` properties.
-        """
-
-        display  = self.display
-        opts     = self.opts
-        alpha    = display.alpha / 100.0
-        cmap     = opts.cmap
-        interp   = opts.interpolateCmaps
-        res      = opts.cmapResolution
-        negCmap  = opts.negativeCmap
-        gamma    = opts.realGamma(opts.gamma)
-        logScale = opts.logScale
-        invert   = opts.invert
-        dmin     = opts.displayRange[0]
-        dmax     = opts.displayRange[1]
-
-        if interp: interp = gl.GL_LINEAR
-        else:      interp = gl.GL_NEAREST
-
-        # Scale alpha exponentially (see inline
-        # comments in updateShaderState)
-        if alpha < 1:
-            alpha = alpha ** 2
-
-        self.cmapTexture.set(cmap=cmap,
-                             invert=invert,
-                             alpha=alpha,
-                             resolution=res,
-                             gamma=gamma,
-                             logScale=logScale,
-                             interp=interp,
-                             displayRange=(dmin, dmax))
-
-        self.negCmapTexture.set(cmap=negCmap,
-                                invert=invert,
-                                alpha=alpha,
-                                resolution=res,
-                                gamma=gamma,
-                                logScale=logScale,
-                                interp=interp,
-                                displayRange=(dmin, dmax))
 
 
     def preDraw(self):
