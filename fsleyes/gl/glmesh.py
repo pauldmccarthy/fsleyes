@@ -137,17 +137,15 @@ class GLMesh(globject.GLObject):
         #
         #  - with a lookup table (opts.useLut == True and
         #    opts.vertexData is not None)
-        self.cmapTexture    = textures.ColourMapTexture(  self.name)
-        self.negCmapTexture = textures.ColourMapTexture(  self.name)
-        self.lutTexture     = textures.LookupTableTexture(self.name)
+        self.cmapmgr    = textures.ColourMapTextureManager(self)
+        self.lutTexture = textures.LookupTableTexture(self.name)
 
         self.lut = None
 
         self.registerLut()
+        self.refreshLutTexture()
         self.addListeners()
         self.updateVertices()
-        self.refreshCmapTextures(notify=False)
-
         self.compileShaders()
         self.updateShaderState()
 
@@ -159,9 +157,8 @@ class GLMesh(globject.GLObject):
         """
 
         self.renderTexture .destroy()
-        self.cmapTexture   .destroy()
-        self.negCmapTexture.destroy()
         self.lutTexture    .destroy()
+        self.cmapmgr       .destroy()
 
         self.removeListeners()
         self.deregisterLut()
@@ -177,12 +174,10 @@ class GLMesh(globject.GLObject):
         self.flatShader    = None
         self.xsectcpShader = None
         self.xsectblShader = None
-
-        self.lut            = None
-        self.renderTexture  = None
-        self.cmapTexture    = None
-        self.negCmapTexture = None
-        self.lutTexture     = None
+        self.cmapmgr       = None
+        self.lut           = None
+        self.renderTexture = None
+        self.lutTexture    = None
 
 
     def ready(self):
@@ -210,14 +205,13 @@ class GLMesh(globject.GLObject):
             self.notify()
 
         def cmap(*a):
-            self.refreshCmapTextures(notify=False)
             self.updateShaderState()
             self.notify()
 
         def lut(*a):
             self.deregisterLut()
             self.registerLut()
-            self.refreshCmapTextures()
+            self.refreshLutTexture()
 
         def refresh(*a):
             self.notify()
@@ -310,7 +304,7 @@ class GLMesh(globject.GLObject):
 
         if self.lut is not None:
             for topic in ['label', 'added', 'removed']:
-                self.lut.register(self.name, self.refreshCmapTextures, topic)
+                self.lut.register(self.name, self.refreshLutTexture, topic)
 
 
     def deregisterLut(self):
@@ -424,8 +418,8 @@ class GLMesh(globject.GLObject):
             if self.opts.useLut:
                 self.lutTexture.bindTexture(gl.GL_TEXTURE0)
             else:
-                self.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
-                self.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
+                self.cmapmgr.cmapTexture   .bindTexture(gl.GL_TEXTURE0)
+                self.cmapmgr.negCmapTexture.bindTexture(gl.GL_TEXTURE1)
 
 
     def draw2D(self, canvas, zpos, axes, xform=None):
@@ -518,8 +512,8 @@ class GLMesh(globject.GLObject):
             if self.opts.useLut:
                 self.lutTexture.unbindTexture()
             else:
-                self.cmapTexture   .unbindTexture()
-                self.negCmapTexture.unbindTexture()
+                self.cmapmgr.cmapTexture   .unbindTexture()
+                self.cmapmgr.negCmapTexture.unbindTexture()
 
 
     def drawOutline(self, canvas, zpos, axes, xform=None):
@@ -929,59 +923,21 @@ class GLMesh(globject.GLObject):
         return np.ascontiguousarray(vdata, np.float32)
 
 
-    def refreshCmapTextures(self, *a, **kwa):
+    def refreshLutTexture(self):
         """Called when various :class:`.Display` or :class:`.MeshOpts``
-        properties change. Refreshes the :class:`.ColourMapTexture` instances
-        corresponding to the :attr:`.MeshOpts.cmap` and
-        :attr:`.MeshOpts.negativeCmap` properties, and the
-        :class:`.LookupTableTexture` corresponding to the :attr:`.MeshOpts.lut`
-        property.
-
-        :arg notify: Must be passed as a keyword argument. If ``True`` (the
-                     default) :meth:`.GLObject.notify` is called after the
-                     textures have been updated.
+        properties change. Refreshes the :class:`.LookupTableTexture`
+        corresponding to the :attr:`.MeshOpts.lut` property.
         """
-
-        notify = kwa.pop('notify', True)
 
         display = self.display
         opts    = self.opts
-        alpha   = display.alpha / 100.0
-        cmap    = opts.cmap
-        interp  = opts.interpolateCmaps
-        res     = opts.cmapResolution
-        negCmap = opts.negativeCmap
-        gamma   = opts.realGamma(opts.gamma)
-        invert  = opts.invert
-        dmin    = opts.displayRange[0]
-        dmax    = opts.displayRange[1]
-
-        if interp: interp = gl.GL_LINEAR
-        else:      interp = gl.GL_NEAREST
-
-        self.cmapTexture.set(cmap=cmap,
-                             invert=invert,
-                             alpha=alpha,
-                             resolution=res,
-                             gamma=gamma,
-                             interp=interp,
-                             displayRange=(dmin, dmax))
-
-        self.negCmapTexture.set(cmap=negCmap,
-                                invert=invert,
-                                alpha=alpha,
-                                resolution=res,
-                                gamma=gamma,
-                                interp=interp,
-                                displayRange=(dmin, dmax))
 
         self.lutTexture.set(alpha=display.alpha           / 100.0,
                             brightness=display.brightness / 100.0,
                             contrast=display.contrast     / 100.0,
                             lut=opts.lut)
 
-        if notify:
-            self.notify()
+        self.notify()
 
 
     def compileShaders(self):
@@ -1009,7 +965,7 @@ class GLMesh(globject.GLObject):
             delta     = 1.0 / (dopts.lut.max() + 1)
             cmapXform = affine.scaleOffsetXform(delta, 0.5 * delta)
         else:
-            cmapXform = self.cmapTexture.getCoordinateTransform()
+            cmapXform = self.cmapmgr.cmapTexture.getCoordinateTransform()
 
         modScale, modOffset = dopts.modulateScaleOffset()
 
