@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 #
-# cmaptexturemgr.py -
+# manager.py - Utility classes for managing textures.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
+"""This module provides the :class:`ColourMapTextureManager` and
+:class:`AuxImageTextureManager` classes, which are utilities used used by
+various :class:`.GLObject` classes for managing texture resources.
+"""
+
 
 import numpy     as np
 import OpenGL.GL as gl
@@ -17,7 +22,13 @@ import fsleyes.gl.resources             as glresources
 
 
 class ColourMapTextureManager:
-    """
+    """Class which manages :class:`.ColourMapTexture` instances associated with
+    a :class:`.ColourMapOpts` instance.
+
+    This class manages creation and configuration of two
+    :class:`.ColourMapTexture` instances which are associated with the
+    :attr:`.ColourMapOpts.cmap` and :attr:`.ColourMapOpts.negativeCmap`
+    properties.
     """
 
     def __init__(self, globj, expalpha=False):
