@@ -109,7 +109,7 @@ def updateShaderState(self):
     # to voxel values, and scales said voxel
     # values to colour map texture coordinates.
     img2CmapXform = affine.concat(
-        self.colourTexture.getCoordinateTransform(),
+        self.cmapTexture.getCoordinateTransform(),
         self.imageTexture.voxValXform)
 
     shader.load()

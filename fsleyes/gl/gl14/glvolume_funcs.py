@@ -105,7 +105,7 @@ def updateShaderState(self):
     # into a value between 0 and 1, suitable
     # for looking up an appropriate colour
     # in the 1D colour map texture.
-    voxValXform = affine.concat(self.colourTexture.getCoordinateTransform(),
+    voxValXform = affine.concat(self.cmapTexture.getCoordinateTransform(),
                                 self.imageTexture.voxValXform)
     voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
 

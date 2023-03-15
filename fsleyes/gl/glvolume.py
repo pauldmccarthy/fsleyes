@@ -172,17 +172,15 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                          image data.
     ``modulateTexture``  The :class:`.ImageTexture` which stores the
                          modulate image data.
-    ``colourTexture``    The :class:`.ColourMapTexture` used to store the
+    ``cmapTexture``      The :class:`.ColourMapTexture` used to store the
                          colour map.
-    ``negColourTexture`` The :class:`.ColourMapTexture` used to store the
+    ``negCmapTexture``   The :class:`.ColourMapTexture` used to store the
                          negative colour map.
     ``renderTexture1``   The first :class:`.RenderTexture` used for 3D
                          rendering.
     ``renderTexture2``   The first :class:`.RenderTexture` used for 3D
                          rendering.
-    ``texName``          A name used for the ``imageTexture``,
-                         ``colourTexture``, and ``negColourTexture`. The
-                         name for the latter is suffixed with ``'_neg'``.
+    ``texName``          A name used for the ``imageTexture``.
     ==================== ==================================================
     """
 
@@ -228,11 +226,13 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         self.auxmgr.registerAuxImage('clip',     self.opts.clipImage)
         self.auxmgr.registerAuxImage('modulate', self.opts.modulateImage)
 
-        # Refs to all of the texture objects.
-        self.imageTexture     = None
-        self.colourTexture    = textures.ColourMapTexture(self.texName)
-        self.negColourTexture = textures.ColourMapTexture(
-            '{}_neg'.format(self.texName))
+        # cmap manager takes care
+        # of cmap/negcmap textures
+        self.cmapmgr = textures.ColourMapTextureManager(self)
+
+        # we take care of the
+        # main image texture
+        self.imageTexture = None
 
         if self.threedee:
 
@@ -251,7 +251,6 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         # See that method for details.
         self.__alwaysNotify = False
 
-        self.refreshColourTextures()
         self.refreshImageTexture()
 
         # Add listeners to this image so the view can be
@@ -284,14 +283,12 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         self.imageTexture.deregister(self.name)
         glresources.delete(self.imageTexture.name)
 
-        self.colourTexture   .destroy()
-        self.negColourTexture.destroy()
-        self.auxmgr          .destroy()
+        self.auxmgr .destroy()
+        self.cmapmgr.destroy()
 
-        self.auxmgr           = None
-        self.imageTexture     = None
-        self.colourTexture    = None
-        self.negColourTexture = None
+        self.auxmgr       = None
+        self.cmapmgr      = None
+        self.imageTexture = None
 
         if self.threedee:
             self.renderTexture1.destroy()
@@ -321,6 +318,22 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         imageTexReady = (self.imageTexture is not None and
                          self.imageTexture.ready())
         return imageTexReady and self.auxmgr.texturesReady()
+
+
+    @property
+    def cmapTexture(self):
+        """Returns the :class:`.ColourMapTexture` associated with the
+        :attr:`.VolumeOpts.cmap`.
+        """
+        return self.cmapmgr.cmapTexture
+
+
+    @property
+    def negCmapTexture(self):
+        """Returns the :class:`.ColourMapTexture` associated with the
+        :attr:`.VolumeOpts.negativeCmap`.
+        """
+        return self.cmapmgr.negCmapTexture
 
 
     @property
@@ -370,15 +383,15 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                              self._modulateImageChanged)
         opts    .addListener('invertClipping',   name,
                              self._invertClippingChanged)
-        opts    .addListener('cmap',             name, self._cmapChanged)
-        opts    .addListener('gamma',            name, self._cmapChanged)
-        opts    .addListener('logScale',         name, self._cmapChanged)
-        opts    .addListener('interpolateCmaps', name, self._cmapChanged)
-        opts    .addListener('negativeCmap',     name, self._cmapChanged)
-        opts    .addListener('cmapResolution',   name, self._cmapChanged)
+        opts    .addListener('cmap',             name, self.notify)
+        opts    .addListener('gamma',            name, self.notify)
+        opts    .addListener('logScale',         name, self.notify)
+        opts    .addListener('interpolateCmaps', name, self.notify)
+        opts    .addListener('negativeCmap',     name, self.notify)
+        opts    .addListener('cmapResolution',   name, self.notify)
+        opts    .addListener('invert',           name, self.notify)
         opts    .addListener('useNegativeCmap',  name,
                              self._useNegativeCmapChanged)
-        opts    .addListener('invert',           name, self._invertChanged)
         opts    .addListener('modulateAlpha',    name,
                              self._modulateAlphaChanged)
         opts    .addListener('invertModulateAlpha', name,
@@ -630,45 +643,6 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             idle.idleWhen(onReady, self.auxmgr.texturesReady)
 
 
-    def refreshColourTextures(self):
-        """Refreshes the :class:`.ColourMapTexture` instances used to colour
-        image voxels.
-        """
-
-        display  = self.display
-        opts     = self.opts
-        alpha    = display.alpha / 100.0
-        cmap     = opts.cmap
-        interp   = opts.interpolateCmaps
-        res      = opts.cmapResolution
-        logScale = opts.logScale
-        gamma    = opts.realGamma(opts.gamma)
-        negCmap  = opts.negativeCmap
-        invert   = opts.invert
-        dmin     = opts.displayRange[0]
-        dmax     = opts.displayRange[1]
-
-        if interp: interp = gl.GL_LINEAR
-        else:      interp = gl.GL_NEAREST
-
-        self.colourTexture.set(cmap=cmap,
-                               invert=invert,
-                               alpha=alpha,
-                               resolution=res,
-                               gamma=gamma,
-                               logScale=logScale,
-                               interp=interp,
-                               displayRange=(dmin, dmax))
-
-        self.negColourTexture.set(cmap=negCmap,
-                                  invert=invert,
-                                  alpha=alpha,
-                                  resolution=res,
-                                  gamma=gamma,
-                                  interp=interp,
-                                  displayRange=(dmin, dmax))
-
-
     def preDraw(self):
         """Binds the :class:`.ImageTexture` to ``GL_TEXTURE0`` and the
         :class:`.ColourMapTexture` to ``GL_TEXTURE1, and calls the
@@ -677,8 +651,8 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
         # Set up the image and colour textures
         self.imageTexture    .bindTexture(gl.GL_TEXTURE0)
-        self.colourTexture   .bindTexture(gl.GL_TEXTURE1)
-        self.negColourTexture.bindTexture(gl.GL_TEXTURE2)
+        self.cmapTexture     .bindTexture(gl.GL_TEXTURE1)
+        self.negCmapTexture  .bindTexture(gl.GL_TEXTURE2)
         self.clipTexture     .bindTexture(gl.GL_TEXTURE3)
         self.modulateTexture .bindTexture(gl.GL_TEXTURE4)
 
@@ -782,8 +756,8 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         """
 
         self.imageTexture    .unbindTexture()
-        self.colourTexture   .unbindTexture()
-        self.negColourTexture.unbindTexture()
+        self.cmapTexture     .unbindTexture()
+        self.negCmapTexture  .unbindTexture()
         self.clipTexture     .unbindTexture()
         self.modulateTexture .unbindTexture()
 
@@ -865,8 +839,6 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
     def _alphaChanged(self, *a):
         """Called when the :attr:`.Display.alpha` property changes. """
-
-        self.refreshColourTextures()
         if self.threedee:
             self.updateShaderState(alwaysNotify=True)
         else:
@@ -876,7 +848,6 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
     def _displayRangeChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.displayRange` property changes.
         """
-        self.refreshColourTextures()
         self.updateShaderState()
 
 
@@ -927,25 +898,11 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         self.updateShaderState()
 
 
-    def _cmapChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.cmap` or
-        :attr:`.VolumeOpts.negativeCmap` properties change.
-        """
-        self.refreshColourTextures()
-        self.notify()
-
-
     def _useNegativeCmapChanged(self, *a):
         """Called when the :attr:`.VolumeOpts.useNegativeCmap` property
         changes.
         """
         self.updateShaderState()
-
-
-    def _invertChanged(self, *a):
-        """Called when the :attr:`.VolumeOpts.invert` property changes. """
-        self.refreshColourTextures()
-        self.notify()
 
 
     def _modulateAlphaChanged(self, *a):
