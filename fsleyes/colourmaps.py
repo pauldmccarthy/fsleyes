@@ -311,7 +311,8 @@ def scanBuiltInLuts():
 def scanUserAddedCmaps():
     """Returns a list of IDs for all user-added colour maps. """
 
-    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap')
+    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap') + \
+                fslsettings.listFiles('colourmaps/*.txt')
     cmapFiles = [op.basename(f)    for f in cmapFiles]
     cmapIDs   = [op.splitext(f)[0] for f in cmapFiles]
     cmapIDs   = [m.lower()         for m in cmapIDs]
@@ -322,7 +323,8 @@ def scanUserAddedCmaps():
 def scanUserAddedLuts():
     """Returns a list of IDs for all user-added lookup tables. """
 
-    lutFiles = fslsettings.listFiles('luts/*.lut')
+    lutFiles = fslsettings.listFiles('luts/*.lut') + \
+               fslsettings.listFiles('luts/*.txt')
     lutFiles = [op.basename(f)    for f in lutFiles]
     lutIDs   = [op.splitext(f)[0] for f in lutFiles]
     lutIDs   = [m.lower()         for m in lutIDs]
