@@ -3319,29 +3319,30 @@ def _generateSpecial_NiftiOpts_index(
 def _applySpecialNegativeCmap(args, overlayList, displayCtx, target):
     """Used by the functions below. """
 
-    target.negativeCmap    = args.negativeCmap
     target.useNegativeCmap = True
+    return _applySpecial_ColourMapOpts_negativeCmap(
+        args, overlayList, displayCtx, target)
 
 
 def _applySpecial_VolumeOpts_negativeCmap(*args, **kwargs):
     """Applies the ``VolumeOpts.negativeCmap`` option. Automatically
     enables the ``VolumeOpts.useNegativeCmap`` option.
     """
-    _applySpecialNegativeCmap(*args, **kwargs)
+    return _applySpecialNegativeCmap(*args, **kwargs)
 
 
 def _applySpecial_MeshOpts_negativeCmap(*args, **kwargs):
     """Applies the ``MeshOpts.negativeCmap`` option. Automatically
     enables the ``MeshOpts.useNegativeCmap`` option.
     """
-    _applySpecialNegativeCmap(*args, **kwargs)
+    return _applySpecialNegativeCmap(*args, **kwargs)
 
 
 def _applySpecial_TractogramOpts_negativeCmap(*args, **kwargs):
     """Applies the ``TractogramOpts.negativeCmap`` option. Automatically
     enables the ``TractogramOpts.useNegativeCmap`` option.
     """
-    _applySpecialNegativeCmap(*args, **kwargs)
+    return _applySpecialNegativeCmap(*args, **kwargs)
 
 
 
@@ -3824,12 +3825,11 @@ def _applyColourMap(cmap, overlayList, displayCtx):
         return cmap
 
     # cmap file name
-    if op.exists(cmap):
-        if not colourmaps.isColourMapRegistered(filename=cmap):
-            cmap = colourmaps.registerColourMap(
-                cmap, overlayList, displayCtx)
-        else:
-            cmap = colourmaps.getColourMapKey(cmap)
+    if not colourmaps.isColourMapRegistered(filename=cmap):
+        cmap = colourmaps.registerColourMap(
+            cmap, overlayList, displayCtx)
+    else:
+        cmap = colourmaps.getColourMapKey(cmap)
 
     return cmap
 
