@@ -10,6 +10,8 @@ import os.path as op
 import pytest
 
 import nibabel as nib
+import numpy   as np
+
 import fsl.data.image      as fslimage
 import fsl.data.freesurfer as fslfs
 
@@ -42,8 +44,9 @@ freesurfer/lh.pial -mc 1 0 0 -o -w 10 -cm hot -vd freesurfer/lh.curv
 
 def asgifti(infile):
     mesh = fslfs.FreesurferMesh(infile)
-    verts = nib.gifti.GiftiDataArray(mesh.vertices,
-                                     intent='NIFTI_INTENT_POINTSET')
+    verts = nib.gifti.GiftiDataArray(
+        np.asanyarray(mesh.vertices, dtype=np.float32),
+        intent='NIFTI_INTENT_POINTSET')
     tris  = nib.gifti.GiftiDataArray(mesh.indices,
                                      intent='NIFTI_INTENT_TRIANGLE')
     gmesh = nib.gifti.GiftiImage(darrays=[verts, tris])

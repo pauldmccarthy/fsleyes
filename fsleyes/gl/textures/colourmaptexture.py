@@ -15,6 +15,8 @@ import collections.abc as abc
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
+
 from . import texture
 
 
@@ -132,8 +134,11 @@ class ColourMapTexture(texture.Texture):
 
 
     def setInterp(self, interp):
-        """Set the interpolation used by this ``ColourMapTexture`` - either
-        ``GL_NEAREST`` or ``GL_LINEAR``.
+        """Enable/disable interpolation for this ``ColourMapTexture``.
+        Pass in ``True`` to enable interpolation, ``False`` to disable.
+
+        GL texture interpolation is not used - interpolation is performed
+        by the ``fsleyes_widgets.utils.colourbarbitmap.genColours``function.
         """
         self.set(interp=interp)
 
@@ -228,7 +233,7 @@ class ColourMapTexture(texture.Texture):
 
         if drange   is None: drange   = [0.0, 1.0]
         if invert   is None: invert   = False
-        if interp   is None: interp   = gl.GL_NEAREST
+        if interp   is None: interp   = False
         if cmap     is None: cmap     = np.zeros((4, 4), dtype =np.float32)
         if res      is None: res      = 256
         if gamma    is None: gamma    = 1
@@ -236,10 +241,11 @@ class ColourMapTexture(texture.Texture):
 
         # The fsleyes.colourmaps module creates
         # ListedColormap instances. If the given
-        # cmap is one of these, there's no point
-        # in using a resolution greater than the
-        # number of colours in the cmap.
-        if isinstance(cmap, colors.ListedColormap):
+        # cmap is one of these and interpolation
+        # is disabled, there's no point in using
+        # a resolution greater than the number
+        # of colours in the cmap.
+        if isinstance(cmap, colors.ListedColormap) and (not interp):
             res = min(res, len(cmap.colors))
 
         # If cmap is a function, assume that it
@@ -249,29 +255,11 @@ class ColourMapTexture(texture.Texture):
         # RGB/RGBA colours.
         if isinstance(cmap, abc.Callable):
 
-            # Map display range to colour
-            # map logarithmically
-            if logScale:
-                idxs   = np.linspace(drange[0], drange[1], res)
-                idxs   = np.log(idxs)
-                finite = np.isfinite(idxs)
-                imax   = idxs[finite].max()
-                imin   = idxs[finite].min()
-                idxs   = (idxs - imin) / (imax - imin)
-                idxs[~finite] = 0
+            if logScale: logScale = drange
+            else:        logScale = None
 
-            # Map display range to colour map linearly
-            else:
-                idxs = np.linspace(0.0, 1.0, res)
-
-            # Transform display range to
-            # colours, applying gamma scaling to
-            # weight towards one end of the
-            # colour map Discard the alpha
-            # component from the colour map,
-            # colours, as global alpha takes
-            # precedence.
-            cmap = cmap(idxs ** gamma)[:, :3]
+            cmap = cbarbmp.genColours(
+                cmap, res, invert, alpha, gamma, interp, logScale)
 
         # If RGB, turn into RGBA. If an RGBA cmap
         # has been provided, their alpha values take
@@ -285,10 +273,6 @@ class ColourMapTexture(texture.Texture):
             if alpha is not None:
                 cmap[:, 3] = alpha
 
-        # Reverse the colours if necessray
-        if invert:
-            cmap = cmap[::-1, :]
-
         # If border is provided and is
         # RGB, convert it to RGBA
         if border is not None and len(border) == 3:
@@ -299,7 +283,7 @@ class ColourMapTexture(texture.Texture):
 
             border = newBorder
 
-        return cmap, drange, interp, border
+        return cmap, drange, border
 
 
     def __refresh(self):
@@ -307,7 +291,7 @@ class ColourMapTexture(texture.Texture):
         Re-configures the texture.
         """
 
-        cmap, drange, interp, border = self.__prepareTextureSettings()
+        cmap, drange, border = self.__prepareTextureSettings()
 
         imin, imax = drange
 
@@ -350,10 +334,10 @@ class ColourMapTexture(texture.Texture):
 
         gl.glTexParameteri(gl.GL_TEXTURE_1D,
                            gl.GL_TEXTURE_MAG_FILTER,
-                           interp)
+                           gl.GL_NEAREST)
         gl.glTexParameteri(gl.GL_TEXTURE_1D,
                            gl.GL_TEXTURE_MIN_FILTER,
-                           interp)
+                           gl.GL_NEAREST)
 
         gl.glTexImage1D(gl.GL_TEXTURE_1D,
                         0,

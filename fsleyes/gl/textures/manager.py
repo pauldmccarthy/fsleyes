@@ -86,14 +86,15 @@ class ColourMapTextureManager:
         opts    = self.__globj.opts
         display = self.__globj.display
         refresh = self.__refreshCmapTextures
-        display .addListener('alpha',          name, refresh)
-        opts    .addListener('displayRange',   name, refresh)
-        opts    .addListener('cmap',           name, refresh)
-        opts    .addListener('negativeCmap',   name, refresh)
-        opts    .addListener('gamma',          name, refresh)
-        opts    .addListener('logScale',       name, refresh)
-        opts    .addListener('cmapResolution', name, refresh)
-        opts    .addListener('invert',         name, refresh)
+        display .addListener('alpha',            name, refresh)
+        opts    .addListener('displayRange',     name, refresh)
+        opts    .addListener('cmap',             name, refresh)
+        opts    .addListener('negativeCmap',     name, refresh)
+        opts    .addListener('gamma',            name, refresh)
+        opts    .addListener('logScale',         name, refresh)
+        opts    .addListener('cmapResolution',   name, refresh)
+        opts    .addListener('interpolateCmaps', name, refresh)
+        opts    .addListener('invert',           name, refresh)
 
 
     def __removeListeners(self):
@@ -103,14 +104,15 @@ class ColourMapTextureManager:
         name    = self.__name
         opts    = self.__globj.opts
         display = self.__globj.display
-        display .removeListener('alpha',          name)
-        opts    .removeListener('displayRange',   name)
-        opts    .removeListener('cmap',           name)
-        opts    .removeListener('negativeCmap',   name)
-        opts    .removeListener('gamma',          name)
-        opts    .removeListener('logScale',       name)
-        opts    .removeListener('cmapResolution', name)
-        opts    .removeListener('invert',         name)
+        display .removeListener('alpha',            name)
+        opts    .removeListener('displayRange',     name)
+        opts    .removeListener('cmap',             name)
+        opts    .removeListener('negativeCmap',     name)
+        opts    .removeListener('gamma',            name)
+        opts    .removeListener('logScale',         name)
+        opts    .removeListener('cmapResolution',   name)
+        opts    .removeListener('interpolateCmaps', name)
+        opts    .removeListener('invert',           name)
 
 
     def __refreshCmapTextures(self):
@@ -122,17 +124,14 @@ class ColourMapTextureManager:
         opts     = self.__globj.opts
         alpha    = display.alpha / 100.0
         cmap     = opts.cmap
-        interp   = opts.interpolateCmaps
         res      = opts.cmapResolution
         logScale = opts.logScale
         gamma    = opts.realGamma(opts.gamma)
         negCmap  = opts.negativeCmap
         invert   = opts.invert
+        interp   = opts.interpolateCmaps
         dmin     = opts.displayRange[0]
         dmax     = opts.displayRange[1]
-
-        if interp: interp = gl.GL_LINEAR
-        else:      interp = gl.GL_NEAREST
 
         if self.__expalpha and alpha < 1:
             alpha = alpha ** 2

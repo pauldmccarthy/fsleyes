@@ -42,16 +42,16 @@ def gen_multiple_vertexSets():
         [0, 0, 0],
         [1, 0, 0],
         [0, 1, 0],
-        [0, 0, 1]])
-    verts2 = np.array(verts1 + 0.25)
+        [0, 0, 1]], dtype=np.float32)
+    verts2 = np.array(verts1 + 0.25, dtype=np.float32)
     verts2[3, :] = [0.5, 0.5, 1.0]
     idxs = np.array([
         [0, 1, 2],
         [0, 3, 1],
         [0, 2, 3],
-        [1, 3, 2]])
-    vdata = np.array([1, 2, 3, 4])
-    xdata = np.array([1, 2, 3, 4])
+        [1, 3, 2]], dtype=np.int32)
+    vdata = np.array([1, 2, 3, 4], dtype=np.float32)
+    xdata = np.array([1, 2, 3, 4], dtype=np.float32)
 
     verts1 = nib.gifti.GiftiDataArray(verts1, intent='NIFTI_INTENT_POINTSET')
     verts2 = nib.gifti.GiftiDataArray(verts2, intent='NIFTI_INTENT_POINTSET')

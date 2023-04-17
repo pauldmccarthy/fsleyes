@@ -284,50 +284,47 @@ def _find(mapid, dirname):
     raise ValueError(f'Cannot find {mapid} in {dirname}')
 
 
+def _scanMaps(basedir, mapFiles):
+    """Used by the ``scan<X>`` functions. Converts a sequence of colourmap or
+    lookup table file paths into IDs. Returns a dictionary containing
+    ``{mapID : mapFile}`` mappings
+    """
+    mapFiles = [f for f in mapFiles if op.basename(f) != 'order.txt']
+    mapIDs   = [op.relpath(f, basedir) for f in mapFiles]
+    mapIDs   = [m.replace(op.sep, '_') for m in mapIDs]
+    mapIDs   = [op.splitext(m)[0]      for m in mapIDs]
+    mapIDs   = [m.lower()              for m in mapIDs]
+    return dict(sorted(zip(mapIDs, mapFiles)))
+
+
 def scanBuiltInCmaps():
     """Returns a list of IDs for all built-in colour maps. """
-
-    basedir = getCmapDir()
-    cmapIDs = _walk(basedir, '.cmap')
-    cmapIDs = [op.splitext(i)[0]      for i in cmapIDs]
-    cmapIDs = [op.relpath(i, basedir) for i in cmapIDs]
-    cmapIDs = [i.replace(op.sep, '_') for i in cmapIDs]
-
-    return list(sorted(cmapIDs))
+    basedir   = getCmapDir()
+    cmapFiles = _walk(basedir, '.cmap')  + _walk(basedir, '.txt')
+    return _scanMaps(basedir, cmapFiles)
 
 
 def scanBuiltInLuts():
     """Returns a list of IDs for all built-in lookup tables. """
-
-    basedir = getLutDir()
-    lutIDs  = _walk(basedir, '.lut')
-    lutIDs  = [op.splitext(i)[0]      for i in lutIDs]
-    lutIDs  = [op.relpath(i, basedir) for i in lutIDs]
-    lutIDs  = [i.replace(op.sep, '_') for i in lutIDs]
-
-    return list(sorted(lutIDs))
+    basedir  = getLutDir()
+    lutFiles = _walk(basedir, '.lut') + _walk(basedir, '.txt')
+    return _scanMaps(basedir, lutFiles)
 
 
 def scanUserAddedCmaps():
     """Returns a list of IDs for all user-added colour maps. """
-
-    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap')
-    cmapFiles = [op.basename(f)    for f in cmapFiles]
-    cmapIDs   = [op.splitext(f)[0] for f in cmapFiles]
-    cmapIDs   = [m.lower()         for m in cmapIDs]
-
-    return list(sorted(cmapIDs))
+    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap') + \
+                fslsettings.listFiles('colourmaps/*.txt')
+    cmaps = _scanMaps('colourmaps', cmapFiles)
+    return {m : fslsettings.filePath(f) for m, f in cmaps.items()}
 
 
 def scanUserAddedLuts():
     """Returns a list of IDs for all user-added lookup tables. """
-
-    lutFiles = fslsettings.listFiles('luts/*.lut')
-    lutFiles = [op.basename(f)    for f in lutFiles]
-    lutIDs   = [op.splitext(f)[0] for f in lutFiles]
-    lutIDs   = [m.lower()         for m in lutIDs]
-
-    return list(sorted(lutIDs))
+    lutFiles = fslsettings.listFiles('luts/*.lut') + \
+               fslsettings.listFiles('luts/*.txt')
+    luts = _scanMaps('luts', lutFiles)
+    return {m : fslsettings.filePath(f) for m, f in luts.items()}
 
 
 def makeValidMapKey(name):
@@ -357,7 +354,7 @@ def scanColourMaps():
     names of all colour maps contained within. This function may be called
     before :func:`init`.
     """
-    return scanBuiltInCmaps() + scanUserAddedCmaps()
+    return list(scanBuiltInCmaps().keys()) + list(scanUserAddedCmaps().keys())
 
 
 def scanLookupTables():
@@ -365,7 +362,7 @@ def scanLookupTables():
     names of all lookup tables contained within. This function may be called
     before :func:`init`.
     """
-    return scanBuiltInLuts() + scanUserAddedLuts()
+    return list(scanBuiltInLuts().keys()) +  list(scanUserAddedLuts().keys())
 
 
 _cmaps = None
@@ -449,14 +446,13 @@ def init(force=False):
     allUsers    = [scanUserAddedCmaps(), scanUserAddedLuts()]
     registers   = [_cmaps,               _luts]
 
-    for mapType, builtinDir, userDir, builtinIDs, userIDs, register in zip(
+    for mapType, builtinDir, userDir, builtins, users, register in zip(
             mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
 
-        builtinFiles = [f'{m}.{mapType}'        for m in builtinIDs]
-        builtinFiles = [_find(m, builtinDir)    for m in builtinFiles]
-        userFiles    = [f'{m}.{mapType}'        for m in userIDs]
-        userFiles    = [op.join(userDir, m)     for m in userFiles]
-        userFiles    = [fslsettings.filePath(m) for m in userFiles]
+        builtinIDs   = list(builtins.keys())
+        builtinFiles = list(builtins.values())
+        userIDs      = list(users   .keys())
+        userFiles    = list(users   .values())
 
         allIDs   = builtinIDs   + userIDs
         allFiles = builtinFiles + userFiles
