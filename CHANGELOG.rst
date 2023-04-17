@@ -22,6 +22,10 @@ Changed
   behaviour as the ``--displayRange`` option - by default, the values will
   now be interpreted as raw intensities. Values can be specified as percentiles
   by appending a ``%`` to the high value (!366).
+* Colour map and lookup table files may now have a ``.txt`` suffix instead of
+  ``.cmap`` / ``.lut`` (!368)..
+* Colour map interpolation will now be applied to the colour bar shown in the
+  ortho/lightbox/3D views (!368).
 
 
 Fixed
@@ -32,6 +36,8 @@ Fixed
   complex images (!363, !364).
 * Fixed an issue with plotting the MELODIC power spectrum for data with an
   odd number of timepoints (!365).
+* Fixed an issue when passing a colour map file path to the ``--negativeCmap``
+  option (!368).
 
 
 1.6.1 (Thursday 23rd February 2023)
