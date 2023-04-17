@@ -9,6 +9,7 @@ import os.path as op
 
 import pytest
 
+import numpy   as np
 import nibabel as nib
 
 import fsl.data.image as fslimage
@@ -45,8 +46,16 @@ cli_tests = """
 
 -cb {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue
 -cb {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -i
+
 -cb {{zero_centre('3d.nii.gz')}} -cm hot -cmr 4
 -cb {{zero_centre('3d.nii.gz')}} -cm hot -cmr 4 -inc
+
+# cmap has res 5
+# default res is 256
+-cb 3d.nii.gz -cm {{gen_cmap()}}
+-cb 3d.nii.gz -cm {{gen_cmap()}} -cmr 16
+-cb 3d.nii.gz -cm {{gen_cmap()}}         -inc
+-cb 3d.nii.gz -cm {{gen_cmap()}} -cmr 16 -inc
 
 # Colour bar for other overlay types
 -cb gifti/white.surf.gii -vd gifti/data3d.txt -cm hot
@@ -70,9 +79,20 @@ fsl_cli_tests = """
 """
 
 
+def gen_cmap():
+    cmap = np.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 1, 1]])
+    np.savetxt('custom.cmap', cmap)
+    return 'custom.cmap'
+
 
 extras = {
-    'zero_centre' : zero_centre
+    'zero_centre' : zero_centre,
+    'gen_cmap'    : gen_cmap,
 }
 
 

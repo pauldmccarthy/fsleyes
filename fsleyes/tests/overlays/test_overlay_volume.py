@@ -46,8 +46,11 @@ cli_tests = """
 3d.nii.gz -dr 20 80%
 3d.nii.gz -cr 20 80%
 
-3d.nii.gz -cm {{gen_cmap(custom_cmap)}}
-3d.nii.gz -cm {{gen_cmap(custom_cmap)}} -inc
+# specify colour map as file
+3d.nii.gz                    -cm {{gen_cmap(custom_cmap)}}
+3d.nii.gz                    -cm {{gen_cmap(custom_cmap)}} -inc
+{{zero_centre('3d.nii.gz')}} -nc {{gen_cmap(custom_cmap)}}
+{{zero_centre('3d.nii.gz')}} -nc {{gen_cmap(custom_cmap)}} -inc
 
 {{zero_centre('3d.nii.gz')}} -cm hot
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be auto-applied

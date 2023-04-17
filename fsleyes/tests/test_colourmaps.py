@@ -115,14 +115,20 @@ def test_scanDirs():
         # builtins
         bifiles = [op.join('luts',              'lut1_builtin.lut'),
                    op.join('luts',       'sub', 'lut2_builtin.lut'),
+                   op.join('luts',              'lut3_builtin.txt'),
                    op.join('colourmaps',        'cmap1_builtin.cmap'),
-                   op.join('colourmaps', 'sub', 'cmap2_builtin.cmap')]
+                   op.join('colourmaps', 'sub', 'cmap2_builtin.cmap'),
+                   op.join('colourmaps',        'cmap3_builtin.txt'),
+                   ]
 
         # user added
         uafiles = [op.join('luts',       'lut1_added.lut'),
                    op.join('luts',       'lut2_added.lut'),
+                   op.join('luts',       'lut3_added.txt'),
                    op.join('colourmaps', 'cmap1_added.cmap'),
-                   op.join('colourmaps', 'cmap2_added.cmap')]
+                   op.join('colourmaps', 'cmap2_added.cmap'),
+                   op.join('colourmaps', 'cmap3_added.txt'),
+                   ]
 
         for f in bifiles:
             with open(op.join(assetDir, f), 'wt'):
@@ -131,20 +137,46 @@ def test_scanDirs():
             with open(op.join(sdir, f), 'wt'):
                 pass
 
-        assert fslcm.getCmapDir() == op.join(assetDir, 'colourmaps')
-        assert fslcm.getLutDir()  == op.join(assetDir, 'luts')
+        cmapdir = op.join(assetDir, 'colourmaps')
+        lutdir  = op.join(assetDir, 'luts')
 
-        cmapsbuiltin = ['cmap1_builtin', 'sub_cmap2_builtin']
-        lutsbuiltin  = ['lut1_builtin',  'sub_lut2_builtin']
-        cmapsadded   = ['cmap1_added',   'cmap2_added']
-        lutsadded    = ['lut1_added',    'lut2_added']
+        assert fslcm.getCmapDir() == cmapdir
+        assert fslcm.getLutDir()  == lutdir
 
-        assert fslcm.scanBuiltInCmaps()   == cmapsbuiltin
-        assert fslcm.scanBuiltInLuts()    == lutsbuiltin
-        assert fslcm.scanUserAddedCmaps() == cmapsadded
-        assert fslcm.scanUserAddedLuts()  == lutsadded
-        assert fslcm.scanColourMaps()     == cmapsbuiltin + cmapsadded
-        assert fslcm.scanLookupTables()   == lutsbuiltin  + lutsadded
+        cmapsbuiltin = {
+            'cmap1_builtin'     : op.join(cmapdir,        'cmap1_builtin.cmap'),
+            'sub_cmap2_builtin' : op.join(cmapdir, 'sub', 'cmap2_builtin.cmap'),
+            'cmap3_builtin'     : op.join(cmapdir,        'cmap3_builtin.txt'),
+        }
+        lutsbuiltin  = {
+            'lut1_builtin'     : op.join(lutdir,        'lut1_builtin.lut'),
+            'sub_lut2_builtin' : op.join(lutdir, 'sub', 'lut2_builtin.lut'),
+            'lut3_builtin'     : op.join(lutdir,        'lut3_builtin.txt'),
+        }
+
+        cmapdir = op.join(sdir, 'colourmaps')
+        lutdir  = op.join(sdir, 'luts')
+
+        cmapsadded   = {
+            'cmap1_added' : op.join(cmapdir, 'cmap1_added.cmap'),
+            'cmap2_added' : op.join(cmapdir, 'cmap2_added.cmap'),
+            'cmap3_added' : op.join(cmapdir, 'cmap3_added.txt'),
+        }
+        lutsadded    = {
+            'lut1_added'  : op.join(lutdir, 'lut1_added.lut'),
+            'lut2_added'  : op.join(lutdir, 'lut2_added.lut'),
+            'lut3_added'  : op.join(lutdir, 'lut3_added.txt'),
+        }
+
+        cmapsall = list(it.chain(cmapsbuiltin, cmapsadded))
+        lutsall  = list(it.chain(lutsbuiltin,  lutsadded))
+
+        assert fslcm.scanBuiltInCmaps()         == cmapsbuiltin
+        assert fslcm.scanBuiltInLuts()          == lutsbuiltin
+        assert fslcm.scanUserAddedCmaps()       == cmapsadded
+        assert fslcm.scanUserAddedLuts()        == lutsadded
+        assert sorted(fslcm.scanColourMaps())   == sorted(cmapsall)
+        assert sorted(fslcm.scanLookupTables()) == sorted(lutsall)
 
 
 @clearCmaps
