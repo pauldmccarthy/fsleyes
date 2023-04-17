@@ -93,14 +93,14 @@ class ColourBar(props.HasProperties, notifier.Notifier):
 
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name        = f'{type(self).__name__}_{id(self)}'
 
-        overlayList.addListener('overlays',
-                                self.name,
-                                self.__selectedOverlayChanged)
-        displayCtx .addListener('selectedOverlay',
-                                self.name,
-                                self.__selectedOverlayChanged)
+        overlayList.listen('overlays',
+                           self.name,
+                           self.__selectedOverlayChanged)
+        displayCtx .listen('selectedOverlay',
+                           self.name,
+                           self.__selectedOverlayChanged)
 
         self.addGlobalListener(self.name, self.__clearColourBar)
 
@@ -157,17 +157,20 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             return
 
         try:
+            name    = self.name
             opts    = self.__opts
             display = self.__display
 
-            opts   .removeListener('displayRange',    self.name)
-            opts   .removeListener('cmap',            self.name)
-            opts   .removeListener('negativeCmap',    self.name)
-            opts   .removeListener('useNegativeCmap', self.name)
-            opts   .removeListener('invert',          self.name)
-            opts   .removeListener('gamma',           self.name)
-            opts   .removeListener('cmapResolution',  self.name)
-            display.removeListener('name',            self.name)
+            opts   .remove('displayRange',     name)
+            opts   .remove('cmap',             name)
+            opts   .remove('negativeCmap',     name)
+            opts   .remove('useNegativeCmap',  name)
+            opts   .remove('invert',           name)
+            opts   .remove('gamma',            name)
+            opts   .remove('logScale',         name)
+            opts   .remove('cmapResolution',   name)
+            opts   .remove('interpolateCmaps', name)
+            display.remove('name',             name)
 
         except fsldc.InvalidOverlayError:
             pass
@@ -196,30 +199,19 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         self.__opts    = opts
         self.__display = display
 
-        opts   .addListener('displayRange',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('cmap',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('negativeCmap',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('useNegativeCmap',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('invert',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('cmapResolution',
-                            self.name,
-                            self.__clearColourBar)
-        opts   .addListener('gamma',
-                            self.name,
-                            self.__clearColourBar)
-        display.addListener('name',
-                            self.name,
-                            self.__clearColourBar)
+        name  = self.name
+        clear = self.__clearColourBar
+
+        opts   .listen('displayRange',     name, clear)
+        opts   .listen('cmap',             name, clear)
+        opts   .listen('negativeCmap',     name, clear)
+        opts   .listen('useNegativeCmap',  name, clear)
+        opts   .listen('invert',           name, clear)
+        opts   .listen('cmapResolution',   name, clear)
+        opts   .listen('interpolateCmaps', name, clear)
+        opts   .listen('gamma',            name, clear)
+        opts   .listen('logScale',         name, clear)
+        display.listen('name',             name, clear)
 
         return True
 
@@ -254,6 +246,7 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         negCmap        = opts.negativeCmap
         useNegCmap     = opts.useNegativeCmap
         cmapResolution = opts.cmapResolution
+        interp         = opts.interpolateCmaps
         gamma          = opts.realGamma(opts.gamma)
         logScale       = opts.logScale
         invert         = opts.invert
@@ -312,6 +305,9 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         if negCmap is not None:
             negCmap = fslcm.getColourMapMplKey(negCmap.name)
 
+        if logScale: logScale = dmin, dmax
+        else:        logScale = None
+
         bitmap = cbarbmp.colourBarBitmap(
             cmap=cmap,
             negCmap=negCmap,
@@ -329,7 +325,9 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             textColour=self.textColour,
             fontsize=self.fontSize,
             bgColour=self.bgColour,
-            cmapResolution=cmapResolution)
+            cmapResolution=cmapResolution,
+            interp=interp,
+            logScaleRange=logScale)
 
         self.__size      = (w, h, scale)
         self.__colourBar = bitmap
