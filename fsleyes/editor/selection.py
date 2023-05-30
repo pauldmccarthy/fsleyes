@@ -919,25 +919,34 @@ def selectLine(shape,
                  full image. If the
     """
 
-    from_   = np.array(from_)
-    to      = np.array(to)
+    from_ = np.array(from_)
+    to    = np.array(to)
+
+    if not isinstance(boxSize, abc.Sequence):
+        boxSize = [boxSize] * 3
 
     # The boxSize is specified in scaled
-    # voxels, so we need to calculate the
-    # distance between the two voxels,
-    # and the required number of points,
-    # in scaled voxels as well.
+    # voxels, and may either be a scalar or
+    # a sequence. We start by adjusting the
+    # box size so that it is an integer
+    # multiple of the voxel dimensions, so
+    # that all voxels between from_ and to
+    # will be covered by our interpolated
+    # points, below.
+    boxSize = np.array(boxSize)
+    dims    = np.array(dims)
+    boxSize = dims * np.floor(boxSize / dims)
+
+    # Now we need to calculate the distance
+    # between the to/from voxels, and the
+    # required number of points, in scaled
+    # voxels as well.
     length  = np.sqrt(np.sum((from_ * dims - to * dims) ** 2))
 
-    # box size can either be
-    # a scalar or a sequence.
-    # We add 2 to the number
-    # of points for the from_
-    # and to locations.
-    if isinstance(boxSize, abc.Sequence):
-        npoints = int(np.ceil(length / min(boxSize))) + 2
-    else:
-        npoints = int(np.ceil(length / boxSize)) + 2
+    # We add 2 to the number of points
+    # to account for the from_ and to
+    # locations.
+    npoints = int(np.ceil(length / min(boxSize))) + 2
 
     # Create a bunch of interpolated
     # points between from_ and to
