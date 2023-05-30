@@ -11,11 +11,11 @@ selection of voxels in a 3D :class:`.Image`.
 import logging
 import collections.abc as abc
 
-import numpy                       as np
-import scipy.ndimage.measurements  as ndimeas
+import numpy          as np
+import scipy.ndimage  as ndimage
 
-import fsl.utils.notifier          as notifier
-import fsleyes.gl.routines         as glroutines
+import fsl.utils.notifier  as notifier
+import fsleyes.gl.routines as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -123,13 +123,13 @@ class Selection(notifier.Notifier):
 
         self.__selection = selection
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init (%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
 
 
     @property
@@ -313,7 +313,7 @@ class Selection(notifier.Notifier):
         fRestrict = fixSlices(restrict)
         offset    = [r.start if r.start is not None else 0 for r in fRestrict]
 
-        log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
+        log.debug('Clearing selection (%s): %s', id(self), fRestrict)
 
         block                       = np.array(self.__selection[fRestrict])
         self.__selection[fRestrict] = False
@@ -393,11 +393,11 @@ class Selection(notifier.Notifier):
 
             if log.getEffectiveLevel() == logging.DEBUG:
                 log.debug('Replacing previously stored change with: '
-                          '[({}, {}), ({}, {}), ({}, {})] ({} selected)'
-                          .format(offset[0], offset[0] + old.shape[0],
-                                  offset[1], offset[1] + old.shape[1],
-                                  offset[2], offset[2] + old.shape[2],
-                                  new.sum()))
+                          '[(%s, %s), (%s, %s), (%s, %s)] (%s selected)',
+                          offset[0], offset[0] + old.shape[0],
+                          offset[1], offset[1] + old.shape[1],
+                          offset[2], offset[2] + old.shape[2],
+                          new.sum())
 
             self.__lastChangeOldBlock = old
             self.__lastChangeNewBlock = new
@@ -465,21 +465,21 @@ class Selection(notifier.Notifier):
 
         if log.getEffectiveLevel() == logging.DEBUG:
             log.debug('Combining changes: '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) + '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) = '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected)'.format(
-                          lastIdxs[0][0], lastIdxs[0][1],
-                          lastIdxs[1][0], lastIdxs[1][1],
-                          lastIdxs[2][0], lastIdxs[2][1],
-                          lcNew.sum(),
-                          currIdxs[0][0], currIdxs[0][1],
-                          currIdxs[1][0], currIdxs[1][1],
-                          currIdxs[2][0], currIdxs[2][1],
-                          new.sum(),
-                          cmbIdxs[0][0], cmbIdxs[0][1],
-                          cmbIdxs[1][0], cmbIdxs[1][1],
-                          cmbIdxs[2][0], cmbIdxs[2][1],
-                          cmbNew.sum()))
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected) + '
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected) = '
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected)',
+                      lastIdxs[0][0], lastIdxs[0][1],
+                      lastIdxs[1][0], lastIdxs[1][1],
+                      lastIdxs[2][0], lastIdxs[2][1],
+                      lcNew.sum(),
+                      currIdxs[0][0], currIdxs[0][1],
+                      currIdxs[1][0], currIdxs[1][1],
+                      currIdxs[2][0], currIdxs[2][1],
+                      new.sum(),
+                      cmbIdxs[0][0], cmbIdxs[0][1],
+                      cmbIdxs[1][0], cmbIdxs[1][1],
+                      cmbIdxs[2][0], cmbIdxs[2][1],
+                      cmbNew.sum())
 
         self.__lastChangeOldBlock = cmbOld
         self.__lastChangeNewBlock = cmbNew
@@ -884,7 +884,7 @@ def selectByValue(data,
     # If local is not True, any same or similar
     # values are part of the selection
     if local:
-        hits, _   = ndimeas.label(hits)
+        hits, _   = ndimage.label(hits)
         seedLabel = hits[seedLoc[0], seedLoc[1], seedLoc[2]]
         hits      = hits == seedLabel
 
