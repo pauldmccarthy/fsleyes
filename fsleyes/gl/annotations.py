@@ -1179,7 +1179,7 @@ class VoxelSelection(AnnotationObject):
     def __init__(self,
                  annot,
                  selection,
-                 opts,
+                 overlay,
                  offsets=None,
                  **kwargs):
         """Create a ``VoxelSelection`` annotation.
@@ -1190,8 +1190,8 @@ class VoxelSelection(AnnotationObject):
         :arg selection: A :class:`.selection.Selection` instance which defines
                         the voxels to be highlighted.
 
-        :arg opts:      A :class:`.NiftiOpts` instance which is used
-                        for its voxel-to-display transformation matrices.
+        :arg overlay:   A :class:`.Nifti` instance which is used for its
+                        voxel-to-display transformation matrices.
 
         :arg offsets:   If ``None`` (the default), the ``selection`` must have
                         the same shape as the image data being
@@ -1208,9 +1208,10 @@ class VoxelSelection(AnnotationObject):
             offsets = [0, 0, 0]
 
         self.__selection = selection
-        self.__opts      = opts
+        self.__overlay   = overlay
         self.__offsets   = offsets
-        texName = '{}_{}'.format(type(self).__name__, id(selection))
+
+        texName = f'{type(self).__name__}_{id(selection)}'
 
         ndims = texdata.numTextureDims(selection.shape)
 
@@ -1254,11 +1255,12 @@ class VoxelSelection(AnnotationObject):
             glresources.delete(self.__texture.name)
 
         if self.__shader is not None:
+
             self.__shader.destroy()
 
+        self.__overlay = None
         self.__shader  = None
         self.__texture = None
-        self.__opts    = None
 
 
     @property
@@ -1275,7 +1277,7 @@ class VoxelSelection(AnnotationObject):
         """
 
         xax, yax, zax = axes
-        opts          = self.__opts
+        opts          = self.annot.canvas.displayCtx.getOpts(self.__overlay)
         texture       = self.__texture
         shape         = self.__selection.getSelection().shape
         displayToVox  = opts.getTransform('display', 'voxel')

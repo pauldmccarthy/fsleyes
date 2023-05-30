@@ -100,7 +100,6 @@ class Selection(notifier.Notifier):
 
         self.__image              = image
         self.__display            = display
-        self.__opts               = display.opts
         self.__clear              = True
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None
@@ -530,7 +529,8 @@ class Selection(notifier.Notifier):
                   and offset of this array into the full selection image.
         """
 
-        data = self.__image[self.__opts.index()]
+        opts = self.__display.opts
+        data = self.__image[opts.index()]
         block, offset = selectByValue(data,
                                       seedLoc,
                                       precision,

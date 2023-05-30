@@ -1214,14 +1214,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                         'filled'  : False,
                         'enabled' : False}
 
-        opts = self.displayCtx.getOpts(overlay)
-
         for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
 
             sels.append(annotations.VoxelSelection(
                 c.getAnnotations(),
                 editor.getSelection(),
-                opts,
+                overlay,
                 alpha=self.selectionOverlayColour[3] * 100,
                 colour=self.selectionOverlayColour))
 
