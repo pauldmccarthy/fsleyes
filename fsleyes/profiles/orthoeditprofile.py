@@ -1129,8 +1129,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         if oldOverlay is not None:
             editor = self.__editors[oldOverlay]
 
-            log.debug('De-registering listeners from Editor {} ({})'.format(
-                id(editor), oldOverlay.name))
+            log.debug('De-registering listeners from Editor %s (%s)',
+                      id(editor), oldOverlay.name)
             self.undo.unbindProps('enabled', editor.undo)
             self.redo.unbindProps('enabled', editor.redo)
 
@@ -1178,9 +1178,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
             # with the same dimensions/space
             if oldOverlay.sameSpace(overlay):
 
-                log.debug('Transferring selection from {} to {}'.format(
-                    oldOverlay.name,
-                    overlay.name))
+                log.debug('Transferring selection from %s to %s',
+                          oldOverlay.name, overlay.name)
 
                 newSel = editor.getSelection()
                 newSel.setSelection(oldSel.getSelection(), (0, 0, 0))
@@ -1198,9 +1197,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
 
         # Register property listeners with the
         # new Editor and Selection instances.
-        log.debug('Registering listeners with Editor {} ({})'.format(
-            id(editor),
-            self.__currentOverlay.name))
+        log.debug('Registering listeners with Editor %s (%s)',
+                  id(editor), self.__currentOverlay.name)
 
         # Bind undo/redo action enabled states
         self.undo.bindProps('enabled', editor.undo)
@@ -1216,14 +1214,12 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
                         'filled'  : False,
                         'enabled' : False}
 
-        opts = self.displayCtx.getOpts(overlay)
-
         for c in [self.__xcanvas, self.__ycanvas, self.__zcanvas]:
 
             sels.append(annotations.VoxelSelection(
                 c.getAnnotations(),
                 editor.getSelection(),
-                opts,
+                overlay,
                 alpha=self.selectionOverlayColour[3] * 100,
                 colour=self.selectionOverlayColour))
 

@@ -205,8 +205,9 @@ import            logging
 import            warnings
 
 import fsl.utils.settings as fslsettings
-import fsleyes_widgets    as fwidgets
+import fsl.version        as fslversion
 import fsleyes.version    as version
+import fsleyes_widgets    as fwidgets
 
 
 # The logger is assigned in
@@ -271,17 +272,18 @@ def _hacksAndWorkarounds():
     # before a wx.App has been created
     import wx.html  # noqa
 
-    # nibabel rejects NIfTI images where the
-    # quaternion vector has a length greater
-    # than 1. This is fine, as it is mandated
-    # by the NIfTI spec. But FSL is much more
-    # lenient than nibabel, and nibabel can
-    # also reject some qforms due to float32
-    # imprecision. So here we're increasing
-    # the tolerance of nibabel to strange
-    # qforms.
+    # nibabel < 5.1.0 rejects NIfTI images
+    # where the quaternion vector has a length
+    # greater than 1. This is fine, as it is
+    # mandated by the NIfTI spec. But FSL is
+    # much more lenient than nibabel, and
+    # nibabel can also reject some qforms due
+    # to float32 imprecision. So here we're
+    # increasing the tolerance of nibabel to
+    # strange qforms.
     import nibabel as nib
-    nib.Nifti1Header.quaternion_threshold = -1e5
+    if fslversion.compareVersions(nib.__version__, '5.1.0') < 0:
+        nib.Nifti1Header.quaternion_threshold = -1e5
 
     # OSX sometimes sets the local environment
     # variables to non-standard values, which

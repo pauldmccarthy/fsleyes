@@ -11,11 +11,11 @@ selection of voxels in a 3D :class:`.Image`.
 import logging
 import collections.abc as abc
 
-import numpy                       as np
-import scipy.ndimage.measurements  as ndimeas
+import numpy          as np
+import scipy.ndimage  as ndimage
 
-import fsl.utils.notifier          as notifier
-import fsleyes.gl.routines         as glroutines
+import fsl.utils.notifier  as notifier
+import fsleyes.gl.routines as glroutines
 
 
 log = logging.getLogger(__name__)
@@ -100,7 +100,6 @@ class Selection(notifier.Notifier):
 
         self.__image              = image
         self.__display            = display
-        self.__opts               = display.opts
         self.__clear              = True
         self.__lastChangeOffset   = None
         self.__lastChangeOldBlock = None
@@ -123,13 +122,13 @@ class Selection(notifier.Notifier):
 
         self.__selection = selection
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init (%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
 
 
     @property
@@ -313,7 +312,7 @@ class Selection(notifier.Notifier):
         fRestrict = fixSlices(restrict)
         offset    = [r.start if r.start is not None else 0 for r in fRestrict]
 
-        log.debug('Clearing selection ({}): {}'.format(id(self), fRestrict))
+        log.debug('Clearing selection (%s): %s', id(self), fRestrict)
 
         block                       = np.array(self.__selection[fRestrict])
         self.__selection[fRestrict] = False
@@ -393,11 +392,11 @@ class Selection(notifier.Notifier):
 
             if log.getEffectiveLevel() == logging.DEBUG:
                 log.debug('Replacing previously stored change with: '
-                          '[({}, {}), ({}, {}), ({}, {})] ({} selected)'
-                          .format(offset[0], offset[0] + old.shape[0],
-                                  offset[1], offset[1] + old.shape[1],
-                                  offset[2], offset[2] + old.shape[2],
-                                  new.sum()))
+                          '[(%s, %s), (%s, %s), (%s, %s)] (%s selected)',
+                          offset[0], offset[0] + old.shape[0],
+                          offset[1], offset[1] + old.shape[1],
+                          offset[2], offset[2] + old.shape[2],
+                          new.sum())
 
             self.__lastChangeOldBlock = old
             self.__lastChangeNewBlock = new
@@ -465,21 +464,21 @@ class Selection(notifier.Notifier):
 
         if log.getEffectiveLevel() == logging.DEBUG:
             log.debug('Combining changes: '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) + '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected) = '
-                      '[({}, {}), ({}, {}), ({}, {})] ({} selected)'.format(
-                          lastIdxs[0][0], lastIdxs[0][1],
-                          lastIdxs[1][0], lastIdxs[1][1],
-                          lastIdxs[2][0], lastIdxs[2][1],
-                          lcNew.sum(),
-                          currIdxs[0][0], currIdxs[0][1],
-                          currIdxs[1][0], currIdxs[1][1],
-                          currIdxs[2][0], currIdxs[2][1],
-                          new.sum(),
-                          cmbIdxs[0][0], cmbIdxs[0][1],
-                          cmbIdxs[1][0], cmbIdxs[1][1],
-                          cmbIdxs[2][0], cmbIdxs[2][1],
-                          cmbNew.sum()))
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected) + '
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected) = '
+                      '[(%s, %s), (%s, %s), (%s, %s)] (%s selected)',
+                      lastIdxs[0][0], lastIdxs[0][1],
+                      lastIdxs[1][0], lastIdxs[1][1],
+                      lastIdxs[2][0], lastIdxs[2][1],
+                      lcNew.sum(),
+                      currIdxs[0][0], currIdxs[0][1],
+                      currIdxs[1][0], currIdxs[1][1],
+                      currIdxs[2][0], currIdxs[2][1],
+                      new.sum(),
+                      cmbIdxs[0][0], cmbIdxs[0][1],
+                      cmbIdxs[1][0], cmbIdxs[1][1],
+                      cmbIdxs[2][0], cmbIdxs[2][1],
+                      cmbNew.sum())
 
         self.__lastChangeOldBlock = cmbOld
         self.__lastChangeNewBlock = cmbNew
@@ -530,7 +529,8 @@ class Selection(notifier.Notifier):
                   and offset of this array into the full selection image.
         """
 
-        data = self.__image[self.__opts.index()]
+        opts = self.__display.opts
+        data = self.__image[opts.index()]
         block, offset = selectByValue(data,
                                       seedLoc,
                                       precision,
@@ -884,7 +884,7 @@ def selectByValue(data,
     # If local is not True, any same or similar
     # values are part of the selection
     if local:
-        hits, _   = ndimeas.label(hits)
+        hits, _   = ndimage.label(hits)
         seedLabel = hits[seedLoc[0], seedLoc[1], seedLoc[2]]
         hits      = hits == seedLabel
 
@@ -919,25 +919,34 @@ def selectLine(shape,
                  full image. If the
     """
 
-    from_   = np.array(from_)
-    to      = np.array(to)
+    from_ = np.array(from_)
+    to    = np.array(to)
+
+    if not isinstance(boxSize, abc.Sequence):
+        boxSize = [boxSize] * 3
 
     # The boxSize is specified in scaled
-    # voxels, so we need to calculate the
-    # distance between the two voxels,
-    # and the required number of points,
-    # in scaled voxels as well.
+    # voxels, and may either be a scalar or
+    # a sequence. We start by adjusting the
+    # box size so that it is an integer
+    # multiple of the voxel dimensions, so
+    # that all voxels between from_ and to
+    # will be covered by our interpolated
+    # points, below.
+    boxSize = np.array(boxSize)
+    dims    = np.array(dims)
+    boxSize = dims * np.floor(boxSize / dims)
+
+    # Now we need to calculate the distance
+    # between the to/from voxels, and the
+    # required number of points, in scaled
+    # voxels as well.
     length  = np.sqrt(np.sum((from_ * dims - to * dims) ** 2))
 
-    # box size can either be
-    # a scalar or a sequence.
-    # We add 2 to the number
-    # of points for the from_
-    # and to locations.
-    if isinstance(boxSize, abc.Sequence):
-        npoints = int(np.ceil(length / min(boxSize))) + 2
-    else:
-        npoints = int(np.ceil(length / boxSize)) + 2
+    # We add 2 to the number of points
+    # to account for the from_ and to
+    # locations.
+    npoints = int(np.ceil(length / min(boxSize))) + 2
 
     # Create a bunch of interpolated
     # points between from_ and to

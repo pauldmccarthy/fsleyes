@@ -23,7 +23,7 @@ Changed
   now be interpreted as raw intensities. Values can be specified as percentiles
   by appending a ``%`` to the high value (!366).
 * Colour map and lookup table files may now have a ``.txt`` suffix instead of
-  ``.cmap`` / ``.lut`` (!368)..
+  ``.cmap`` / ``.lut`` (!368).
 * Colour map interpolation will now be applied to the colour bar shown in the
   ortho/lightbox/3D views (!368).
 
@@ -38,6 +38,11 @@ Fixed
   odd number of timepoints (!365).
 * Fixed an issue when passing a colour map file path to the ``--negativeCmap``
   option (!368).
+* Fixed an issue related to loading NIfTI ``qform`` matrices which arose
+  with ``nibabel >= 5.1.0`` (!369).
+* Fixed an edit mode issue where a drawn line would have gaps in it (!369).
+* Some minor fixes which allow the overlay type of a NIfTI image to be changed
+  whilst it is being edited (!369).
 
 
 1.6.1 (Thursday 23rd February 2023)
