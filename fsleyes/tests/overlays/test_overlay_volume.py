@@ -33,6 +33,7 @@ pytestmark = pytest.mark.overlayclitest
 
 
 cli_tests = """
+# display/clipping ranges
 3d.nii.gz -dr 2000 7500
 3d.nii.gz -dr 2000 7500 -i
 3d.nii.gz -dr 2000 7500 -b 1 -c 5 # -dr should override -b/-c
@@ -43,6 +44,7 @@ cli_tests = """
 3d.nii.gz -dr 2000 7500 -cr 4000 6000 -ll -lh  # high ranges are linked - -cr overrides -dr
 3d.nii.gz -dr 5000 7500 -cr 4000 6000 -ll -lh -ic
 
+# display/clipping as percentiles
 3d.nii.gz -dr 20 80%
 3d.nii.gz -cr 20 80%
 
@@ -52,6 +54,7 @@ cli_tests = """
 {{zero_centre('3d.nii.gz')}} -nc {{gen_cmap(custom_cmap)}}
 {{zero_centre('3d.nii.gz')}} -nc {{gen_cmap(custom_cmap)}} -inc
 
+# negative cmap
 {{zero_centre('3d.nii.gz')}} -cm hot
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool # -nc should be auto-applied
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un
@@ -64,16 +67,19 @@ cli_tests = """
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500 -lh
 {{zero_centre('3d.nii.gz')}} -cm hot -nc cool -un -dr  1000 2000 -cr 500 1500 -ll -lh
 
+# interpolation
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in none
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in linear
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in spline
 
+# 4D volume
 4d.nii.gz -v 0 -b 40 -c 90
 4d.nii.gz -v 1 -b 40 -c 90
 4d.nii.gz -v 2 -b 40 -c 90
 4d.nii.gz -v 3 -b 40 -c 90
 4d.nii.gz -v 4 -b 40 -c 90
 
+# clip by image
 3d.nii.gz                              -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000
 3d.nii.gz                              -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000 -ic
 {{zero_centre('3d.nii.gz')}}           -cl {{gen_indices('3d.nii.gz')}} -cr 1600 4000 -cm hot -nc cool -un
@@ -85,6 +91,7 @@ cli_tests = """
 {{zero_centre('3d.nii.gz')}} -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot -nc cool -un
 {{zero_centre('3d.nii.gz')}} -cl {{translate('3d.nii.gz', 10, 10, 10)}} -cr 1600 4000   -cm hot -nc cool -un -ic
 
+# cmap resolution + interp cmap
 3d.nii.gz -cm hot -cmr 256
 3d.nii.gz -cm hot -cmr 128
 3d.nii.gz -cm hot -cmr 64
@@ -103,26 +110,32 @@ cli_tests = """
 3d.nii.gz -cm hot -cmr 8   -inc
 3d.nii.gz -cm hot -cmr 4   -inc
 
+# cmap resolution + interp cmap with neg cmap
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -i
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc
 {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -cmr 6 -inc -i
 
+# gamma correction
 3d.nii.gz -cm hot -g -0.909
 3d.nii.gz -cm hot -g 0
 3d.nii.gz -cm hot -g 0.1111
 3d.nii.gz -cm hot -g 0.2222
 3d.nii.gz -cm hot -g 0.4444
 
+# multi-channel (RGB) image
 {{asrgb('dti/dti_V1.nii.gz')}}
 {{asrgb('dti/dti_V1.nii.gz')}} -ch R
 {{asrgb('dti/dti_V1.nii.gz')}} -ch G
 {{asrgb('dti/dti_V1.nii.gz')}} -ch B
 
+# 2D images
 -vl 0 0 0 -xc 0 0 -yc 0 0 -zc 0 0 {{roi('3d.nii.gz', (0, 17, 0, 14, 6,  7))}} {{roi('3d.nii.gz', (0, 17, 6,  7, 0, 14))}} {{roi('3d.nii.gz', (8,  9, 0, 14, 0, 14))}}
 
+# complex image
 {{complex()}}  -ot volume # real component should be displayed
 
+# modulate alpha by intensity
 -bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow
 -bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow
 -bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow
@@ -131,23 +144,34 @@ cli_tests = """
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 0    1500 -cm red-yellow -nc blue-lightblue -un
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un
 
+# modulate alpha by secondary image
 -bg 1 1 1 3d.nii.gz                    -ma               -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 1993 5000 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 5000 7641 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -mr 10   90%  -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 
+# invert modulate alpha
 -bg 1 1 1 3d.nii.gz                    -ma -ima               -cm red-yellow
 -bg 1 1 1 3d.nii.gz                    -ma -ima -mr 1993 5000 -cm red-yellow
 -bg 1 1 1 3d.nii.gz                    -ma -ima -mr 5000 7641 -cm red-yellow
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -ima               -cm red-yellow -nc blue-lightblue -un
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -ma -ima -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un
 
+# invert modulate alpha by secondary image
 -bg 1 1 1 3d.nii.gz                    -ma -ima               -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 -bg 1 1 1 3d.nii.gz                    -ma -ima -mr 1993 5000 -cm red-yellow -mi {{invert('3d.nii.gz')}} {{invert('3d.nii.gz')}} -d
 
 # logarithmic scaling
 {{logdata()}}
 {{logdata()}} -ls
+
+# clip/modulate by secondary image with negative cmap enabled
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -ma               -cm red-yellow -nc blue-lightblue -un -mi copy
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -ma -mr 0    1500 -cm red-yellow -nc blue-lightblue -un -mi copy
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -ma -mr 1500 3688 -cm red-yellow -nc blue-lightblue -un -mi copy
+
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -cr 0    1500 -cm red-yellow -nc blue-lightblue -un -cl copy
+-bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -cr 1500 3688 -cm red-yellow -nc blue-lightblue -un -cl copy
 """  # noqa
 
 
