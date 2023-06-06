@@ -541,6 +541,7 @@ OPTIONS = td.TypeDict({
                          'suppressMode'],
     'NiftiVectorOpts' : ['cmap',
                          'colourImage',
+                         'colourRange',
                          'modulateImage',
                          'modulateRange',
                          'modulateMode',
@@ -909,6 +910,7 @@ ARGUMENTS = td.TypeDict({
     'VectorOpts.suppressMode'    : ('sm', 'suppressMode',  True),
     'VectorOpts.cmap'            : ('cm', 'cmap',          True),
     'VectorOpts.colourImage'     : ('co', 'colourImage',   True),
+    'VectorOpts.colourRange'     : ('or', 'colourRange',   True),
     'VectorOpts.modulateImage'   : ('mo', 'modulateImage', True),
     'VectorOpts.modulateRange'   : ('mr', 'modulateRange', True),
     'VectorOpts.modulateMode'    : ('mm', 'modulateMode',  True),
@@ -1244,6 +1246,8 @@ HELP = td.TypeDict({
     'VectorOpts.cmap'            : 'Colour map (only used if a '
                                    'colour image is provided)',
     'VectorOpts.colourImage'     : 'Image to colour vectors with',
+    'VectorOpts.colourRange'     : 'Colour-by range (only used if a '
+                                   'colour image is provided)',
     'VectorOpts.modulateImage'   : 'Image to modulate vector brightness/alpha '
                                    'with',
     'VectorOpts.modulateRange'   : 'Modulation range (only used if a '

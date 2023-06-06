@@ -167,7 +167,7 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
 
 
     modulateMode = props.Choice(('brightness', 'alpha'))
-    """Modulate either the brightness or transparency bu the modulation image.
+    """Modulate either the brightness or transparency by the modulation image.
     """
 
 
@@ -189,6 +189,11 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
     modulateRange = props.Bounds(ndims=1, clamped=False)
     """Data range used in brightness/transparency modulation, when a
     :attr:`modulateImage` is in use.
+    """
+
+
+    colourRange = props.Bounds(ndims=1, clamped=False)
+    """Data range used for colouring, when a :attr:`colourImage` is in use.
     """
 
 
@@ -218,6 +223,9 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
             self            .addListener('clipImage',
                                          self.name,
                                          self.__clipImageChanged)
+            self            .addListener('colourImage',
+                                         self.name,
+                                         self.__colourImageChanged)
             self            .addListener('modulateImage',
                                          self.name,
                                          self.__modulateImageChanged)
@@ -233,6 +241,7 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
             self.__overlayListChanged()
             self.__clipImageChanged()
             self.__modulateImageChanged()
+            self.__colourImageChanged()
 
 
     def destroy(self):
@@ -243,6 +252,7 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
             self.overlayList.removeListener('overlays',      self.name)
             self            .removeListener('clipImage',     self.name)
             self            .removeListener('modulateImage', self.name)
+            self            .removeListener('colourImage',   self.name)
 
         niftiopts.NiftiOpts.destroy(self)
 
@@ -251,26 +261,7 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
         """Called when the :attr:`clipImage` property changes. Updates
         the range of the :attr:`clippingRange` property.
         """
-
-        image = self.clipImage
-
-        if image is None:
-            self.clippingRange.xmin = 0
-            self.clippingRange.xmax = 1
-            self.clippingRange.x    = [0, 1]
-            return
-
-        minval, maxval = image.dataRange
-
-        # Clipping works with <= and >=, so
-        # we add an offset allowing the user
-        # to configure the overlay such that
-        # no voxels are clipped.
-        distance = (maxval - minval) / 100.0
-
-        self.clippingRange.xmin =  minval - distance
-        self.clippingRange.xmax =  maxval + distance
-        self.clippingRange.x    = [minval, maxval + distance]
+        self.__updateRange(self.clipImage, self.clippingRange, pad=True)
 
 
     def __modulateImageChanged(self, *a):
@@ -278,14 +269,37 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
         the range of the :attr:`modulateRange` property.
         """
 
-        image = self.modulateImage
+        self.__updateRange(self.modulateImage, self.modulateRange)
+
+
+    def __colourImageChanged(self, *a):
+        """Called when the :attr:`colourImage` property changes. Updates
+        the range of the :attr:`coluorRange` property.
+        """
+
+        self.__updateRange(self.colourImage, self.colourRange)
+
+
+    def __updateRange(self, image, rangeobj, pad=False):
+        """Used whenever :attr:`clipImage`, :attr:`modulateImage`, or
+        :attr:`colourImage` change. Updates the :attr:`clippingRange`,
+        :attr:`modulateRange`, or :attr:`colourRange` respectively.
+        """
 
         if image is None: minval, maxval = 0, 1
         else:             minval, maxval = image.dataRange
 
-        self.modulateRange.xmin = minval
-        self.modulateRange.xmax = maxval
-        self.modulateRange.x    = [minval, maxval]
+
+        # Clipping works with <= and >=, so
+        # we add an offset allowing the user
+        # to configure the overlay such that
+        # no voxels are clipped.
+        if pad: pad = (maxval - minval) / 100.0
+        else:   pad = 0
+
+        rangeobj.xmin = minval - pad
+        rangeobj.xmax = maxval + pad
+        rangeobj.x    = [minval, maxval + pad]
 
 
     def __overlayListChanged(self, *a):

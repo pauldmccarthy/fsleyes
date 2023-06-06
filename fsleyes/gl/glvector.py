@@ -59,8 +59,8 @@ class GLVectorBase(glimageobject.GLImageObject, globject.GLObject):
        :attr:`.VectorOpts.colourImage` and :attr:`.VectorOpts.cmap` properties.
 
 
-    In either case, the brightness or transparency of each vector colour may
-    be modulated by another image, specified by the
+    When coloured by orientation, the brightness or transparency of each
+    vector colour may be modulated by another image, specified by the
     :attr:`.VectorOpts.modulateImage` and :attr:`.VectorOpts.modulateMode`
     properties.  This modulation image is stored as a 3D single-channel
     :class:`.ImageTexture`.
@@ -241,6 +241,7 @@ class GLVectorBase(glimageobject.GLImageObject, globject.GLObject):
         opts   .addListener('colourImage',   name, self.__colourImageChanged)
         opts   .addListener('clippingRange', name, self.asyncUpdateShaderState)
         opts   .addListener('modulateRange', name, self.asyncUpdateShaderState)
+        opts   .addListener('colourRange',   name, self.__cmapPropChanged)
         opts   .addListener('transform',     name, self.notify)
 
 
@@ -322,11 +323,8 @@ class GLVectorBase(glimageobject.GLImageObject, globject.GLObject):
         display = self.display
         opts    = self.opts
 
-        if opts.colourImage is not None:
-            dmin, dmax = opts.colourImage.dataRange
-
-        else:
-            dmin, dmax = 0.0, 1.0
+        if opts.colourImage is not None: dmin, dmax = opts.colourRange
+        else:                            dmin, dmax = 0.0, 1.0
 
         dmin, dmax = fslcm.briconToDisplayRange(
             (dmin, dmax),

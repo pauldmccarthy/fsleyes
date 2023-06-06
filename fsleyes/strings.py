@@ -1214,6 +1214,7 @@ properties = TypeDict({
     'VectorOpts.clipImage'       : 'Clip by',
     'VectorOpts.clippingRange'   : 'Clipping range',
     'VectorOpts.modulateRange'   : 'Modulation range',
+    'VectorOpts.colourRange'     : 'Colour by range',
     'VectorOpts.modulateMode'    : 'Modulation mode',
     'VectorOpts.orientFlip'      : 'L/R orientation flip',
 
@@ -1348,11 +1349,12 @@ choices = TypeDict({
     'VectorOpts.modulateImage.none' : 'No modulation',
     'VectorOpts.clipImage.none'     : 'No clipping',
 
-    'VectorOpts.clippingRange.min' : 'Clip min.',
-    'VectorOpts.clippingRange.max' : 'Clip max.',
-
-    'VectorOpts.modulateRange.min' : 'Mod min.',
-    'VectorOpts.modulateRange.max' : 'Mod max.',
+    'VectorOpts.clippingRange.min' : 'Min.',
+    'VectorOpts.clippingRange.max' : 'Max.',
+    'VectorOpts.modulateRange.min' : 'Min.',
+    'VectorOpts.modulateRange.max' : 'Max.',
+    'VectorOpts.colourRange.min'   : 'Min.',
+    'VectorOpts.colourRange.max'   : 'Max.',
 
     'VectorOpts.suppressMode' : {'white'       : 'White',
                                  'black'       : 'Black',
