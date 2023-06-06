@@ -112,7 +112,16 @@ bool sample_volume(vec3      texCoord,
     // Invert the clip/mod values as well, if the
     // image and clip/mod textures are the same
     if (imageIsClip) { clipValue = texZero + (texZero - clipValue); }
-    if (imageIsMod)  { modValue  = texZero + (texZero - modValue); }
+
+  }
+
+  /*
+   * Similarly, if we are using a negative colour
+   * map, we apply modulation according to the
+   * absolute value of the modulation image.
+   */
+  if (useNegCmap && modValue <= modZero) {
+    modValue = modZero + (modZero - modValue);
   }
 
   /*

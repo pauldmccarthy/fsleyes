@@ -780,7 +780,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
 
     def getModulateValueXform(self):
-        """Returns an affine transform to normalise alpha modulation values.
+        """Returns affine transforms to normalise alpha modulation values.
 
         The GL volume shaders need to normalise the modulate value by the
         modulation range to generate an opacity value. We calculate a suitable
@@ -789,6 +789,12 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         corresponds to the low modulate range bound, and 1 to the high
         modulate range bound. The resulting scale/offset can be used by the
         shader to convert a modulate value directly into an opacity value.
+
+        This method returns:
+          - An affine that can be used to transform modulation texture values
+            into the range 0, 1.
+          - An affine that can be used to transform modulate texture values
+            into the original modulation image data range.
         """
 
         opts = self.opts
@@ -797,11 +803,11 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         else:
             modXform = self.modulateTexture.voxValXform
 
-        modXform = affine.concat(
+        fullXform = affine.concat(
             opts.modulateScaleOffset(xform=True),
             modXform)
 
-        return modXform
+        return fullXform, modXform
 
 
     def generateVertices2D(self, zpos, axes, bbox=None):

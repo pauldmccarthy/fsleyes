@@ -344,10 +344,23 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         returns ``None``.
         """
 
+        # No modulation image set - defer to
+        # cmap opts behaviour, which is to
+        # use the main data range
         if self.modulateImage is None:
             return cmapopts.ColourMapOpts.getModulateRange(self)
-        else:
-            return self.modulateImage.dataRange
+
+        dmin, dmax = self.modulateImage.dataRange
+
+        # If negcmap is enabled, we modulate according
+        # to the absolute value of the modulation image.
+        # This will make sense in the vast majority of
+        # cases (e.g. modulating by a stats image)
+        if self.useNegativeCmap:
+            dmin = min((0,         abs(dmin)))
+            dmax = max((abs(dmin), abs(dmax)))
+
+        return dmin, dmax
 
 
     def __dataRangeChanged(self, *a):
