@@ -80,6 +80,8 @@ uniform bool  invertClip;
  * is true).
  */
 uniform float texZero;
+uniform float clipZero;
+uniform float modZero;
 
 /*
  * Clipping planes - see the is_clipped function below.
