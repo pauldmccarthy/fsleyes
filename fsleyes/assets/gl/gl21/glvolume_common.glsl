@@ -59,7 +59,9 @@ bool sample_volume(vec3      texCoord,
   /*
    * Look up the clip value
    */
-  if (imageIsClip) { clipValue = voxValue; }
+  if (imageIsClip) {
+    clipValue = voxValue;
+  }
   /*
 
   * Out of bounds of the clipping texture
@@ -108,20 +110,19 @@ bool sample_volume(vec3      texCoord,
 
     negCmap  = true;
     voxValue = texZero + (texZero - voxValue);
-
-    // Invert the clip/mod values as well, if the
-    // image and clip/mod textures are the same
-    if (imageIsClip) { clipValue = texZero + (texZero - clipValue); }
-
   }
 
   /*
    * Similarly, if we are using a negative colour
-   * map, we apply modulation according to the
-   * absolute value of the modulation image.
+   * map, we apply clipping/modulation according to the
+   * absolute value of the clipping/modulation images.
    */
   if (useNegCmap && modValue <= modZero) {
     modValue = modZero + (modZero - modValue);
+  }
+
+  if (useNegCmap && clipValue <= clipZero) {
+    clipValue = clipZero + (clipZero - clipValue);
   }
 
   /*
