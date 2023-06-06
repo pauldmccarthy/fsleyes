@@ -26,6 +26,10 @@ Changed
   ``.cmap`` / ``.lut`` (!368).
 * Colour map interpolation will now be applied to the colour bar shown in the
   ortho/lightbox/3D views (!368).
+* Changed the behaviour of the *Clip by* and *Modulate by* settings for volume
+  overlays - when clipping/modulating by a secondary image, and a negative
+  colour map is in use, the *absolute* values of the secondary image are now
+  used for clipping/modulation (!370).
 
 
 Fixed
