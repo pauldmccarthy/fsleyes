@@ -209,8 +209,7 @@ SUB {{ negValues }}.z, {{ negValues }}.z, {{ modValue }}.x;
 # value with the inverted one.
 CMP {{ voxValue }}.x, {{ useNegCmap }}.x, {{ negValues }}.x, {{ voxValue }}.x;
 
-# And do the same to the clip/mod values if
-# the image texture is the clip/mod texture.
+# And do the same to the clip/mod values
 CMP {{ clipValue }}.x, {{ useNegCmap }}.y, {{ negValues }}.y, {{ clipValue }}.x;
 CMP {{ modValue  }}.x, {{ useNegCmap }}.z, {{ negValues }}.z, {{ modValue  }}.x;
 
