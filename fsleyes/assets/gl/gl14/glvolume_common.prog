@@ -19,18 +19,22 @@
 #      image texture value range.
 #
 #   {{ modulate }} - Vector containing modulation settings. The (x) and (y)
-#     components contain a scale and offset that can bw used to transform a
-#     modulation value read from the image/modulate texture into an opacity
-#     value. The (z) component is a boolean flag which, if >=0, causes
-#     fragment opacity to be modulated by voxel intensity. The (w) component
-#     contains a boolean flag which indicates whether the image texture is to
-#     be used as the modulate texture.
+#      components contain a scale and offset that can bw used to transform a
+#      modulation value read from the image/modulate texture into an opacity
+#      value. The (z) component is a boolean flag which, if >=0, causes
+#      fragment opacity to be modulated by voxel intensity. The (w) component
+#      contains a boolean flag which indicates whether the image texture is to
+#      be used as the modulate texture.
 #
 #   {{ negCmap }} - Negative colour map control. The (x) component is a
 #      boolean flag controlling whether the negative colour map is used. The
 #      (y) component is the display range centre (the value above which the
 #      regular colour map is used, and below which the negative colour map is
 #      used), as a voxel value, normalised to the image texture value range.
+#      The (z) component is the same as the (y) component, but for the
+#      clipping image (this will be equal to y if a separate clipping
+#      image is not set). And the (w) component is the same as the (y/z)
+#      component, but for the modulation image.
 #
 #   {{ voxValXform }}  - Vector with x component defining a scale, and y
 #      component defining an offset, with which image texture values can be
@@ -169,6 +173,19 @@ MUL {{ useNegCmap }}.x, {{ useNegCmap }}.x, {{ negCmap }}.x;
 SUB {{ useNegCmap }}.x, {{ useNegCmap }}.x,    0.5;
 MUL {{ useNegCmap }}.x, {{ useNegCmap }}.x,   -1;
 
+# Perform the same test for the clip
+# and mod values (storing them in
+# useNegCmap.y/z repsectively)
+SLT {{ useNegCmap }}.y, {{ clipValue  }}.x, {{ negCmap }}.z;
+MUL {{ useNegCmap }}.y, {{ useNegCmap }}.y, {{ negCmap }}.x;
+SUB {{ useNegCmap }}.y, {{ useNegCmap }}.y,    0.5;
+MUL {{ useNegCmap }}.y, {{ useNegCmap }}.y,   -1;
+
+SLT {{ useNegCmap }}.z, {{ modValue   }}.x, {{ negCmap }}.w;
+MUL {{ useNegCmap }}.z, {{ useNegCmap }}.z, {{ negCmap }}.x;
+SUB {{ useNegCmap }}.z, {{ useNegCmap }}.z,    0.5;
+MUL {{ useNegCmap }}.z, {{ useNegCmap }}.z,   -1;
+
 # If using the negative colour map,
 # we need to flip the voxel value about
 # the display range centre.
@@ -180,11 +197,11 @@ SUB {{ negValues }}.x, {{ negValues }}.x, {{ voxValue }}.x;
 # And do the same for the clip value -
 # this is necessary if the image texture
 # is the clipping texture.
-ADD {{ negValues }}.y, {{ negCmap   }}.y, {{ negCmap   }}.y;
+ADD {{ negValues }}.y, {{ negCmap   }}.z, {{ negCmap   }}.z;
 SUB {{ negValues }}.y, {{ negValues }}.y, {{ clipValue }}.x;
 
 # And again for the mod value
-ADD {{ negValues }}.z, {{ negCmap   }}.y, {{ negCmap  }}.y;
+ADD {{ negValues }}.z, {{ negCmap   }}.w, {{ negCmap  }}.w;
 SUB {{ negValues }}.z, {{ negValues }}.z, {{ modValue }}.x;
 
 # If we're using the negative colour
@@ -194,10 +211,8 @@ CMP {{ voxValue }}.x, {{ useNegCmap }}.x, {{ negValues }}.x, {{ voxValue }}.x;
 
 # And do the same to the clip/mod values if
 # the image texture is the clip/mod texture.
-CMP {{ negValues }}.y, {{ useNegCmap }}.x, {{ negValues }}.y, {{ clipValue }}.x;
-CMP {{ clipValue }}.x, {{ clipping   }}.w, {{ clipValue }}.x, {{ negValues }}.y;
-CMP {{ negValues }}.z, {{ useNegCmap }}.x, {{ negValues }}.z, {{ modValue  }}.x;
-CMP {{ modValue  }}.x, {{ modulate   }}.w, {{ modValue  }}.x, {{ negValues }}.z;
+CMP {{ clipValue }}.x, {{ useNegCmap }}.y, {{ negValues }}.y, {{ clipValue }}.x;
+CMP {{ modValue  }}.x, {{ useNegCmap }}.z, {{ negValues }}.z, {{ modValue  }}.x;
 
 # Test the low clipping range
 SUB {{ voxClip }}.x, {{ clipValue }}.x, {{ clipping }}.x;
