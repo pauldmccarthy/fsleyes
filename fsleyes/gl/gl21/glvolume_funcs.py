@@ -84,11 +84,13 @@ def updateShaderState(self):
     imgXform = self.imageTexture.invVoxValXform
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
+    if imageIsMod:  modXform  = imgXform
+    else:           modXform  = self.modulateTexture.invVoxValXform
 
-    modAlpha          = opts.modulateAlpha
-    modFull, modXform = self.getModulateValueXform()
-    modScale          = modFull[0, 0]
-    modOffset         = modFull[0, 3]
+    modAlpha      = opts.modulateAlpha
+    fullModXform  = self.getModulateValueXform()
+    modScale      = fullModXform[0, 0]
+    modOffset     = fullModXform[0, 3]
 
     clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]

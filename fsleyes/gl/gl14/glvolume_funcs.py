@@ -116,13 +116,15 @@ def updateShaderState(self):
     imageIsClip = 1 if opts.clipImage is None else -1
 
     # modalpha not applied in 3D
-    modAlpha          = 1 if opts.modulateAlpha         else -1
-    imageIsMod        = 1 if opts.modulateImage is None else -1
-    modFull, modXform = self.getModulateValueXform()
+    modAlpha     = 1 if opts.modulateAlpha         else -1
+    imageIsMod   = 1 if opts.modulateImage is None else -1
+    fullModXform = self.getModulateValueXform()
 
     imgXform = self.imageTexture.invVoxValXform
-    if opts.clipImage is None: clipXform = imgXform
-    else:                      clipXform = self.clipTexture.invVoxValXform
+    if imageIsClip: clipXform = imgXform
+    else:           clipXform = self.clipTexture.invVoxValXform
+    if imageIsMod:  modXform  = imgXform
+    else:           modXform  = self.modulateTexture.invVoxValXform
 
     clipLo   = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHi   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
@@ -131,7 +133,7 @@ def updateShaderState(self):
     clipZero = 0.0                   * clipXform[0, 0] + clipXform[0, 3]
 
     clipping = [clipLo, clipHi, invClip, imageIsClip]
-    modulate = [modFull[0, 0], modFull[0, 3], modAlpha, imageIsMod]
+    modulate = [fullModXform[0, 0], fullModXform[0, 3], modAlpha, imageIsMod]
     negCmap  = [useNegCmap, texZero, modZero, clipZero]
 
     # disable clip image/modalpha for 3D

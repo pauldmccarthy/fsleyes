@@ -63,8 +63,8 @@ bool sample_volume(vec3      texCoord,
     clipValue = voxValue;
   }
   /*
-
-  * Out of bounds of the clipping texture
+   * Out of bounds of the clipping texture - set
+   * clipValue to something which will have no effect
    */
   else if (any(lessThan(   clipTexCoord, vec3(0))) ||
            any(greaterThan(clipTexCoord, vec3(1)))) {
