@@ -3272,6 +3272,27 @@ def _applySpecial_LightBoxOpts_numSlices(args, overlayList, displayCtx, target):
     # OPTIONS dict)
     target.sliceSpacing = target.zrange.xlen / args.numSlices
 
+def _generateSpecial_LightBoxOpts_numSlices(
+        overlayList, displayCtx, source, longArg):
+    """Suppress the ``--numSlices`` option. It is an (inverted) alias for
+    :attr:`.LightBoxOpts.sliceSpacing`.
+    """
+    return []
+
+def _generateSpecial_LightBoxOpts_nrows(
+        overlayList, displayCtx, source, longArg):
+    """Suppress the ``--nrows`` option. This option is only applicable to
+    off-screen rendering.
+    """
+    return []
+
+def _generateSpecial_LightBoxOpts_ncols(
+        overlayList, displayCtx, source, longArg):
+    """Suppress the ``--ncols`` option. This option is only applicable to
+    off-screen rendering.
+    """
+    return []
+
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
         args, overlayList, displayCtx, target):
