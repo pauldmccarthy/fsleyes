@@ -14,6 +14,15 @@ chronological order.
 -------------------------
 
 
+Added
+^^^^^
+
+* New *colour range* option (available via the ``--colourRange`` command-line
+  option) which can be used on vector overlays when colouring them by a
+  secondary image, to specify the mapping between the voxel intensities and
+  the colour map (!371).
+
+
 Changed
 ^^^^^^^
 
