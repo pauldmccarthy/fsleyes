@@ -417,18 +417,21 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
             'displayRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']]),
         'clippingRange'  : props.Widget(
             'clippingRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']]),
         'modulateRange'  : props.Widget(
             'modulateRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             dependencies=['modulateAlpha'],
             enabledWhen=lambda i, ma : ma,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
@@ -536,7 +539,7 @@ def _initWidgetSpec_MaskOpts(displayCtx, threedee):
             labels=strings.choices['VolumeOpts.interpolation']),
         'colour'       : props.Widget('colour'),
         'invert'       : props.Widget('invert'),
-        'threshold'    : props.Widget('threshold', showLimits=False),
+        'threshold'    : props.Widget('threshold', showLimits=False, spinWidth=8),
         'outline'      : props.Widget('outline'),
         'outlineWidth' : props.Widget('outlineWidth', showLimits=False),
     }
@@ -586,6 +589,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
             'clippingRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['VectorOpts.clippingRange.min'],
                     strings.choices['VectorOpts.clippingRange.max']],
             dependencies=['clipImage'],
@@ -594,6 +598,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
             'modulateRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['VectorOpts.modulateRange.min'],
                     strings.choices['VectorOpts.modulateRange.max']],
             dependencies=['colourImage', 'modulateImage'],
@@ -602,6 +607,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
             'colourRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['VectorOpts.colourRange.min'],
                     strings.choices['VectorOpts.colourRange.max']],
             dependencies=['colourImage'],
@@ -669,13 +675,13 @@ def _initWidgetSpec_TensorOpts(displayCtx, threedee):
         'tensorResolution' : props.Widget(
             'tensorResolution',
             showLimits=False,
-            spin=False,
+            spin=True,
             labels=[strings.choices['TensorOpts.tensorResolution.min'],
                     strings.choices['TensorOpts.tensorResolution.max']]),
         'tensorScale'      : props.Widget(
             'tensorScale',
             showLimits=False,
-            spin=False),
+            spin=True),
     }
 
 def _initWidgetSpec_SHOpts(displayCtx, threedee):
@@ -851,6 +857,7 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
             'displayRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']],
             **colourKwargs),
@@ -858,6 +865,7 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
             'clippingRange',
             showLimits=False,
             slider=True,
+            spinWidth=8,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']],
             dependencies=['vertexData'],
@@ -905,7 +913,8 @@ def _initWidgetSpec_MIPOpts(displayCtx, threedee):
         'window' : props.Widget(
             'window',
             showLimits=False,
-            slider=True),
+            slider=True,
+            spinWidth=8),
         'minimum'  : props.Widget('minimum'),
         'absolute' : props.Widget('absolute'),
     }
