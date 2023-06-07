@@ -289,6 +289,9 @@ properties = TypeDict({
                                     'selected colour map. The colour image '
                                     'must have the same voxel dimensions as '
                                     'the vector image. ',
+    'VectorOpts.colourRange'      : 'The data range that is used when '
+                                    'colouring vectors by a separate '
+                                    'colour-by image.',
     'VectorOpts.clippingRange'    : 'Vector values which have a corresponding '
                                     'clipping image value that is outside of '
                                     'this range are not displayed. ',

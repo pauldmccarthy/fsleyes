@@ -40,6 +40,8 @@ dti/dti_FA -d dti/dti_V1 -ot rgbvector -cl dti_FA     -cr 0.5 1.0
 # Colouring
               dti/dti_V1 -ot rgbvector -co dti/dti_FA -b 70 -c 90
 dti/dti_FA -d dti/dti_V1 -ot rgbvector -co dti_FA     -b 70 -c 90
+              dti/dti_V1 -ot rgbvector -co dti/dti_FA -or 0 0.5
+dti/dti_FA -d dti/dti_V1 -ot rgbvector -co dti_FA     -or 0.5 1
 
 # Modulation
            dti/dti_V1 -ot rgbvector -mo dti/dti_FA -mr 0 0.5
@@ -76,6 +78,8 @@ dti/dti_FA -d dti/dti_V1 -ot linevector -cl dti_FA     -cr 0.5 1.0
 # Colouring
               dti/dti_V1 -ot linevector -co dti/dti_FA -b 70 -c 90
 dti/dti_FA -d dti/dti_V1 -ot linevector -co dti_FA     -b 70 -c 90
+              dti/dti_V1 -ot linevector -co dti/dti_FA -or 0 0.5
+dti/dti_FA -d dti/dti_V1 -ot linevector -co dti_FA     -or 0.5 1
 
 # Modulation
            dti/dti_V1 -ot linevector -mo dti/dti_FA -mr 0 0.5
@@ -111,6 +115,8 @@ dti/dti_FA -d dti -ot tensor -cl dti_FA     -cr 0.5 1.0
 # Colouring
               dti -ot tensor -co dti/dti_FA -b 70 -c 90
 dti/dti_FA -d dti -ot tensor -co dti_FA     -b 70 -c 90
+              dti -ot tensor -co dti/dti_FA -or 0 0.5
+dti/dti_FA -d dti -ot tensor -co dti_FA     -or 0.5 1
 
 # Modulation
            dti -ot tensor -mo dti/dti_FA -mr 0 0.5
@@ -145,6 +151,8 @@ sh_sym_FA -d sh_sym -ot sh -cl sh_sym_FA -cr 0.5 1.0
 # Colouring
              sh_sym -ot sh -co sh_sym_FA -b 70 -c 90
 sh_sym_FA -d sh_sym -ot sh -co sh_sym_FA -b 70 -c 90
+             sh_sym -ot sh -co sh_sym_FA -or 0 0.5
+sh_sym_FA -d sh_sym -ot sh -co sh_sym_FA -or 0.5 1
 
 # Modulation
           sh_sym -ot sh -mo sh_sym_FA -mr 0 0.5

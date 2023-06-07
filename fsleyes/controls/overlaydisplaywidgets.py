@@ -206,6 +206,7 @@ def _initPropertyList_NiftiVectorOpts(threedee):
             'modulateImage',
             'clipImage',
             'cmap',
+            'colourRange',
             'clippingRange',
             'modulateRange',
             'modulateMode',
@@ -597,6 +598,14 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
                     strings.choices['VectorOpts.modulateRange.max']],
             dependencies=['colourImage', 'modulateImage'],
             enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
+        'colourRange' : props.Widget(
+            'colourRange',
+            showLimits=False,
+            slider=True,
+            labels=[strings.choices['VectorOpts.colourRange.min'],
+                    strings.choices['VectorOpts.colourRange.max']],
+            dependencies=['colourImage'],
+            enabledWhen=lambda o, ci: ci is not None),
         'modulateMode' : props.Widget(
             'modulateMode',
             labels=strings.choices['VectorOpts.modulateMode'],
