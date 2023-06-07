@@ -102,10 +102,15 @@ class ImageTextureBase:
 
         self.validateShape(image, nvals, ndims)
 
+        # set volume/channel to dummy values,
+        # so that the first call to set() will
+        # trigger a refresh (as the first
+        # call may pass in None for the volume/
+        # channel)
+        self.__volume  = 'dummy'
+        self.__channel = 'dummy'
         self.__name    = 'ImageTextureBase_{}'.format(id(self))
         self.__image   = image
-        self.__volume  = None
-        self.__channel = None
 
         self.__image.register(self.__name,
                               self.__imageDataChanged,
@@ -211,16 +216,20 @@ class ImageTextureBase:
                 raise ValueError('Invalid volume indices for {} '
                                  'dims: {}'.format(ndims, volume))
 
-        if (not volRefresh)           and \
-           (volume  == self.__volume) and \
-           (channel == self.__channel):
+        volchanged = not (self.__volume  == volume and
+                          self.__channel == channel)
+
+        if not (volRefresh or volchanged):
             return kwargs
 
         self.__volume  = volume
         self.__channel = channel
 
-        data = self.__getData(volume, channel)
-        data = self.shapeData(data)
+        if volchanged:
+            data = self.__getData(volume, channel)
+            data = self.shapeData(data)
+        else:
+            data = None
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange

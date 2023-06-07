@@ -221,10 +221,14 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
         # aux texture manager takes care
         # of clip+modulate textures
+        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
+        else:                                 interp = gl.GL_LINEAR
+        settings = {'interp' : interp}
+
         self.auxmgr = textures.AuxImageTextureManager(
-            self, clip=None, modulate=None)
-        self.auxmgr.registerAuxImage('clip',     self.opts.clipImage)
-        self.auxmgr.registerAuxImage('modulate', self.opts.modulateImage)
+            self,
+            clip=(self.opts.clipImage, settings),
+            modulate=(self.opts.modulateImage, settings))
 
         # cmap manager takes care
         # of cmap/negcmap textures
@@ -948,8 +952,8 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                               volRefresh=volRefresh,
                               normaliseRange=normRange)
 
-        self.clipTexture    .set(interp=interp)
-        self.modulateTexture.set(interp=interp)
+        self.clipTexture    .set(interp=interp, volRefresh=False)
+        self.modulateTexture.set(interp=interp, volRefresh=False)
 
 
     def _channelChanged(self, *a, **kwa):
