@@ -332,10 +332,22 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         returns ``None``.
         """
 
+        # No clipping image set - defer to
+        # cmap opts behaviour, which is to
+        # use the main data range
         if self.clipImage is None:
             return cmapopts.ColourMapOpts.getClippingRange(self)
-        else:
-            return self.clipImage.dataRange
+
+        dmin, dmax = self.clipImage.dataRange
+
+        # If negcmap is enabled, we modulate according
+        # to the absolute value of the clip image.
+        # This will make sense in the vast majority of
+        # cases (e.g. clipping by a stats image)
+        if self.useNegativeCmap:
+            dmin, dmax = 0, np.max(np.abs((dmin, dmax)))
+
+        return dmin, dmax
 
 
     def getModulateRange(self):
@@ -343,11 +355,17 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         If a :attr:`.modulateImage` is set, returns its data range. Otherwise
         returns ``None``.
         """
+        # see inline comments in getClippingRange
 
         if self.modulateImage is None:
             return cmapopts.ColourMapOpts.getModulateRange(self)
-        else:
-            return self.modulateImage.dataRange
+
+        dmin, dmax = self.modulateImage.dataRange
+
+        if self.useNegativeCmap:
+            dmin, dmax = 0, np.max(np.abs((dmin, dmax)))
+
+        return dmin, dmax
 
 
     def __dataRangeChanged(self, *a):

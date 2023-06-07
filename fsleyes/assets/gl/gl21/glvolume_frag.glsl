@@ -120,12 +120,14 @@ uniform float modScale;
 uniform float modOffset;
 
 /*
- * Value in the image texture data range which corresponds
- * to zero - this is used to determine whether to use the
- * regular, or the negative colour texture (if useNegCmap
- * is true).
+ * Value in the image/modulation/clip texture data ranges
+ * which correspond to zero - this is used to determine
+ * whether to invert the values, and to use the regular,
+ * or the negative colour texture (if useNegCmap is true).
  */
 uniform float texZero;
+uniform float modZero;
+uniform float clipZero;
 
 /*
  * Invert clipping behaviour - clip voxels

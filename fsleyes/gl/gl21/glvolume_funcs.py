@@ -84,15 +84,19 @@ def updateShaderState(self):
     imgXform = self.imageTexture.invVoxValXform
     if imageIsClip: clipXform = imgXform
     else:           clipXform = self.clipTexture.invVoxValXform
+    if imageIsMod:  modXform  = imgXform
+    else:           modXform  = self.modulateTexture.invVoxValXform
 
-    modAlpha  = opts.modulateAlpha
-    modXform  = self.getModulateValueXform()
-    modScale  = modXform[0, 0]
-    modOffset = modXform[0, 3]
+    modAlpha      = opts.modulateAlpha
+    fullModXform  = self.getModulateValueXform()
+    modScale      = fullModXform[0, 0]
+    modOffset     = fullModXform[0, 3]
 
     clipLow    = opts.clippingRange[0] * clipXform[0, 0] + clipXform[0, 3]
     clipHigh   = opts.clippingRange[1] * clipXform[0, 0] + clipXform[0, 3]
     texZero    = 0.0                   * imgXform[ 0, 0] + imgXform[ 0, 3]
+    modZero    = 0.0                   * modXform[ 0, 0] + modXform[ 0, 3]
+    clipZero   = 0.0                   * clipXform[0, 0] + clipXform[0, 3]
     imageShape = self.image.shape[:3]
     texShape   = self.imageTexture.shape[:3]
 
@@ -130,6 +134,8 @@ def updateShaderState(self):
     changed |= shader.set('modScale',         modScale)
     changed |= shader.set('modOffset',        modOffset)
     changed |= shader.set('texZero',          texZero)
+    changed |= shader.set('modZero',          modZero)
+    changed |= shader.set('clipZero',         clipZero)
     changed |= shader.set('invertClip',       opts.invertClipping)
     changed |= shader.set('useNegCmap',       opts.useNegativeCmap)
     changed |= shader.set('imageIsClip',      imageIsClip)
