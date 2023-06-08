@@ -56,6 +56,8 @@ Fixed
 * Fixed an edit mode issue where a drawn line would have gaps in it (!369).
 * Some minor fixes which allow the overlay type of a NIfTI image to be changed
   whilst it is being edited (!369).
+* Fixed a small issue with ``volume`` overlays sometimes not being refreshed
+  (!372).
 
 
 1.6.1 (Thursday 23rd February 2023)

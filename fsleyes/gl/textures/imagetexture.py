@@ -18,10 +18,8 @@ import numpy as np
 
 import fsl.transform.affine             as affine
 import fsl.data.imagewrapper            as imagewrapper
-import fsl.data.image                   as fslimage
 import fsleyes_widgets                  as fwidgets
 import fsleyes.displaycontext.niftiopts as niftiopts
-import fsleyes.gl.resources             as glresources
 import fsleyes.gl.textures.data         as texdata
 import fsleyes.gl.textures.texture2d    as texture2d
 import fsleyes.gl.textures.texture3d    as texture3d
@@ -211,16 +209,21 @@ class ImageTextureBase:
                 raise ValueError('Invalid volume indices for {} '
                                  'dims: {}'.format(ndims, volume))
 
-        if (not volRefresh)           and \
-           (volume  == self.__volume) and \
-           (channel == self.__channel):
+        volRefresh = (volRefresh               or
+                      self.__volume  != volume or
+                      self.__channel != channel)
+
+        if not volRefresh:
             return kwargs
 
         self.__volume  = volume
         self.__channel = channel
 
-        data = self.__getData(volume, channel)
-        data = self.shapeData(data)
+        if volRefresh:
+            data = self.__getData(volume, channel)
+            data = self.shapeData(data)
+        else:
+            data = None
 
         kwargs['data']           = data
         kwargs['normaliseRange'] = normRange
