@@ -18,9 +18,9 @@ other situations throughout FSLeyes. See also the
 import logging
 import contextlib
 
-import numpy                             as np
-import OpenGL.GL                         as gl
-import OpenGL.raw.GL._types              as gltypes
+import numpy                as np
+import OpenGL.GL            as gl
+import OpenGL.raw.GL._types as gltypes
 
 import fsl.transform.affine   as affine
 import fsleyes.gl             as fslgl
