@@ -753,6 +753,8 @@ class CanvasPanel(viewpanel.ViewPanel):
                 frame = opts.volume
 
             else:
+                # voxel location may not be an integer,
+                # so use mod limit when wrapping around.
                 voxel = opts.getVoxel(vround=False)
                 if voxel[axis] >= limit: voxel[axis]  = voxel[axis] % limit
                 else:                    voxel[axis] += 1
