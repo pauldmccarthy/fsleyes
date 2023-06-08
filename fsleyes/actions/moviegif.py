@@ -150,7 +150,7 @@ def makeGif(overlayList,
     current movie mode settings.
 
     .. note:: This function will return immediately, as the animated GIF is
-              generated on the ``wx`` :mod:`.idle` loop
+              generated on the ``wx`` :mod:`.idle` loop.
 
     :arg overlayList: The :class:`.OverlayList`
     :arg displayCtx:  The :class:`.DisplayContext`
@@ -172,14 +172,7 @@ def makeGif(overlayList,
     tempdir = tempfile.mkdtemp()
     is3d    = isinstance(panel, scene3dpanel.Scene3DPanel) and \
               panel.movieAxis != 3
-
-    class Context(object):
-        pass
-
-    ctx           = Context()
-    ctx.cancelled = False
-    ctx.images    = []
-    ctx.frames    = []
+    ctx     = MovieContext(is3d)
 
     class Finished(Exception):
         pass
@@ -208,6 +201,9 @@ def makeGif(overlayList,
         return all([g.ready() for g in globjs])
 
     def captureFrame(ctx):
+        """Capture one frame, update the view to the next frame, and
+        schedule the next frame capture.
+        """
         try:
             panel.movieSync()
             realCaptureFrame(ctx)
@@ -222,30 +218,73 @@ def makeGif(overlayList,
             finalise(ctx)
 
     def realCaptureFrame(ctx):
+        """Capture a movie frame. Raise Cancelled() if the user cancels,
+        or Finished() when the movie capture is complete.
+        """
 
         # individual frames don't
         # need to be saved as gif
         idx   = len(ctx.frames)
         fname = op.join(tempdir, '{}.png'.format(idx))
-
         frame = panel.getMovieFrame(overlay, opts)
 
         if not progfunc(idx):
             raise Cancelled()
 
-        # The 3D X/Y/Z movie mode performs
-        # rotations, rather than moving the
-        # display location through the X/Y/Z
-        # axes. The "frame" returned by
-        # getMovieFrame is a rotation matrix.
-        # We convert these rotation matrices
-        # into rms-deviations (average
-        # deviation of the current frame from
-        # the starting frame), which has an
-        # inverted "V"-shaped wave form as the
-        # scene is rotated 360 degrees. So
-        # we continue capturing frames until
-        # the rmsdev of the current frame is:
+        frame, finished = ctx.processFrame(frame)
+
+        if finished:
+            raise Finished()
+
+        screenshot.screenshot(panel, fname)
+        ctx.addFrame(frame, PIL.Image.open(fname))
+
+    idle.idleWhen(captureFrame, ready, ctx, after=0.1)
+
+
+class MovieContext:
+    """Used by :func:`makeGif`. Stores references to captured frames,
+    and contains logic to detect when enough frames have been captured.
+    """
+
+    def __init__(self, is3d):
+        """Create a ``MovieContext``.
+
+        If ``is3d is True``, it is assumed that we are capturing a movie
+        from a :class:`.Scene3DPanel` along the X/Y/Z axes (i.e. the scene
+        is rotating around).
+
+        Otherwise is is assumed that we are capturing a movie through time,
+        or along the X/Y/Z axes in 2D (i.e. scrolling through slices in
+        an :class:`.OrthoView`).
+        """
+        self.is3d       = is3d
+        self.looped     = False
+        self.cancelled  = False
+        self.startFrame = None
+        self.images     = []
+        self.frames     = []
+
+    def addFrame(self, frame, image):
+        """Save refs to a movie frame and associated screenshot. """
+        self.images.append(image)
+        self.frames.append(frame)
+
+    def processFrame(self, frame):
+        """Return true if the movie has completed. The provided ``frame``
+        is the value of the next frame that would be captured.
+        """
+        # The 3D X/Y/Z movie mode performs rotations,
+        # rather than moving the display location
+        # through the X/Y/Z axes. The "frame" returned
+        # by getMovieFrame is a rotation matrix.  We
+        # convert these rotation matrices into
+        # rms-deviations (average deviation of the
+        # current frame from the starting frame), which
+        # has an inverted "V"-shaped wave form as the
+        # scene is rotated 360 degrees. So we continue
+        # capturing frames until the rmsdev of the
+        # current frame is:
         #
         #   - close to 0 (i.e. very similar to
         #     the rotation matrix of the starting
@@ -255,35 +294,40 @@ def makeGif(overlayList,
         #     has rotated past 180 degrees, and is
         #     rotating back twoards the starting
         #     point)
-        if is3d:
 
-            if len(ctx.frames) == 0:
-                ctx.startFrame = frame
+        if self.is3d:
+
+            # save a ref to the starting rotation matrix
+            if len(self.frames) == 0:
+                self.startFrame = frame
 
             # normalise the rotmat for this
             # frame to the rms difference
             # from the starting rotmat
-            frame = affine.rmsdev(ctx.startFrame, frame)
+            frame = affine.rmsdev(self.startFrame, frame)
 
             # Keep capturing frames until we
             # have performed a full 360 degree
             # rotation (rmsdev of current
             # frame is decreasing towards 0)
-            if len(ctx.frames) > 1    and \
-               frame < ctx.frames[-1] and \
+            if len(self.frames) > 1    and \
+               frame < self.frames[-1] and \
                abs(frame) < 0.1:
-                raise Finished()
+                return frame, True
 
         # All other movie frames have a range
         # (fmin, fmax) and start at some arbitrary
         # point within this range. We capture frames
         # until a full loop through this range has
         # been completed.
-        elif len(ctx.frames) > 1 and np.isclose(frame, ctx.frames[0]):
-            raise Finished()
+        else:
+            # detect when frame has wrapped around
+            # back to the beginning of the range
+            if not self.looped:
+                self.looped = (len(self.frames) > 1) and \
+                              (frame <= self.frames[-1])
 
-        screenshot.screenshot(panel, fname)
-        ctx.images.append(PIL.Image.open(fname))
-        ctx.frames.append(frame)
+            if self.looped and frame >= self.frames[0]:
+                return frame, True
 
-    idle.idleWhen(captureFrame, ready, ctx, after=0.1)
+        return frame, False

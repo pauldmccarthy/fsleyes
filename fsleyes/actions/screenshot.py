@@ -215,16 +215,13 @@ def canvasPanelScreenshot(panel, filename):
 
     data[:, :, :3] = rgb.reshape(height, width, 3)
 
-    # On some platforms/in some environments, the Blit
-    # call above will not capture the contents of
-    # GL canavses, resulting in an all-black screenshot.
-    # In this case, we have to use alternate means to
-    # capture the contents of the GL canvases. This
-    # is required on macOS, and over SSH/X11 (but not
-    # mobaxterm for some reason).
-    if np.all(data[:, :, :3] == 0):
-        data = _patchInCanvases(cpanel, panel, data, bgColour)
-
+    # Blitting is rarely sufficient to capture
+    # the content of OpenGL canvases - e.g. if
+    # another window is obscuring the canvas,
+    # the obscured region will be black. So we
+    # use OpenGL calls to patch the contents of
+    # each GL canvas into the blitted bitmap.
+    data = _patchInCanvases(cpanel, panel, data, bgColour)
     data[:, :,  3] = 255
 
     try:              fmt = op.splitext(filename)[1][1:]

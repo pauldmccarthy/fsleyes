@@ -1192,6 +1192,7 @@ class WXGLCanvasTarget:
         """Create a ``WXGLCanvasTarget``. """
 
         import wx
+        import fsleyes.gl.textures.rendertexture as rendertexture
 
         context = getGLContext()
 
@@ -1213,6 +1214,12 @@ class WXGLCanvasTarget:
         self.__freezeSwapBuffers = False
         self.__context           = context
 
+        # All renders are directed to an off-screen
+        # frame buffer, which is then drawn to the
+        # main frame buffer. This makes screenshots
+        # much more reliable.
+        self.__fbo = rendertexture.RenderTexture(f'fbo_{id(self)}', 'c')
+
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)
 
@@ -1221,8 +1228,12 @@ class WXGLCanvasTarget:
         """Must be called when this WXGLCanvasTarget is no longer in use.
         Clears the GL rendering context target.
         """
+        self.__fbo.destroy()
         self.__context.setTarget(None)
+
         self.__context = None
+        self.__fbo     = None
+
 
 
     @property
@@ -1324,8 +1335,23 @@ class WXGLCanvasTarget:
             if self.destroyed:
                 return
 
+            # Bail out of premature draw calls
+            width, height = self.GetScaledSize()
+            if width == 0 or height == 0:
+                return
+
             if not self.__freezeDraw:
-                subClassDraw(*a, **kwa)
+
+                # Set the offscreen fbo size to the
+                # canvas window size and draw to it
+                self.__fbo.shape = width, height
+                with self.__fbo.target(0, 1, (0, 0, 0), (1, 1, 1)):
+                    subClassDraw(*a, **kwa)
+
+                # Draw the fbo contents to the main
+                # frame buffer
+                gl.glViewport(0, 0, width, height)
+                self.__fbo.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
             if not self.__freezeSwapBuffers:
 
@@ -1448,25 +1474,4 @@ class WXGLCanvasTarget:
         """Return a (width*height*4) shaped numpy array containing the
         rendered scene as an RGBA bitmap.
         """
-        import OpenGL.GL as gl
-        import numpy     as np
-
-        self._setGLContext()
-
-        width, height = self.GetScaledSize()
-
-        # Make sure we're reading
-        # from the front buffer
-        gl.glReadBuffer(gl.GL_FRONT_LEFT)
-
-        bmp = gl.glReadPixels(
-            0, 0,
-            width, height,
-            gl.GL_RGBA,
-            gl.GL_UNSIGNED_BYTE)
-
-        bmp = np.frombuffer(bmp, dtype=np.uint8)
-        bmp = bmp.reshape((height, width, 4))
-        bmp = np.flipud(bmp)
-
-        return bmp
+        return self.__fbo.getBitmap()

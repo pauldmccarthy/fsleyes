@@ -732,7 +732,7 @@ class CanvasPanel(viewpanel.ViewPanel):
 
         def nifti():
 
-            limit = overlay.shape[axis]
+            limit = overlay.shape[axis] - 1
 
             # This method has been called off the props
             # event queue (see __movieModeChanged).
@@ -747,15 +747,17 @@ class CanvasPanel(viewpanel.ViewPanel):
             # assignment, all affected GLObjects should
             # return ready() == False.
             if axis == 3:
-                if opts.volume >= limit - 1: opts.volume  = 0
-                else:                        opts.volume += 1
+                if opts.volume >= limit: opts.volume  = 0
+                else:                    opts.volume += 1
 
                 frame = opts.volume
 
             else:
-                voxel = opts.getVoxel()
-                if voxel[axis] >= limit - 1: voxel[axis]  = 0
-                else:                        voxel[axis] += 1
+                # voxel location may not be an integer,
+                # so use mod limit when wrapping around.
+                voxel = opts.getVoxel(vround=False)
+                if voxel[axis] >= limit: voxel[axis]  = voxel[axis] % limit
+                else:                    voxel[axis] += 1
 
                 self.displayCtx.location = opts.transformCoords(
                     voxel, 'voxel', 'display')
@@ -766,11 +768,11 @@ class CanvasPanel(viewpanel.ViewPanel):
         def mesh():
 
             if axis == 3:
-                limit = opts.vertexDataLen()
+                limit = opts.vertexDataLen() - 1
                 val   = opts.vertexDataIndex
 
-                if val >= limit - 1: val  = 0
-                else:                val += 1
+                if val >= limit: val  = val % limit
+                else:            val += 1
 
                 opts.vertexDataIndex = val
 
@@ -783,11 +785,10 @@ class CanvasPanel(viewpanel.ViewPanel):
 
             bmin, bmax = opts.bounds.getRange(axis)
             delta      = (bmax - bmin) / 75.0
+            pos        = self.displayCtx.location.getPos(axis)
 
-            pos = self.displayCtx.location.getPos(axis)
-
-            if pos >= bmax: pos = bmin
-            else:           pos = pos + delta
+            if pos >= bmax: pos = bmin + (pos % bmax)
+            else:           pos = pos  + delta
 
             self.displayCtx.location.setPos(axis, pos)
             return pos

@@ -39,6 +39,8 @@ Changed
   overlays - when clipping/modulating by a secondary image, and a negative
   colour map is in use, the *absolute* values of the secondary image are now
   used for clipping/modulation (!370).
+* Changes to the mechanism used to save screenshots/movies, which should make
+  the process more robust (!371).
 
 
 Fixed
