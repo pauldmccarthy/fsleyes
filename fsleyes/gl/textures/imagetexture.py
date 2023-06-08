@@ -18,10 +18,8 @@ import numpy as np
 
 import fsl.transform.affine             as affine
 import fsl.data.imagewrapper            as imagewrapper
-import fsl.data.image                   as fslimage
 import fsleyes_widgets                  as fwidgets
 import fsleyes.displaycontext.niftiopts as niftiopts
-import fsleyes.gl.resources             as glresources
 import fsleyes.gl.textures.data         as texdata
 import fsleyes.gl.textures.texture2d    as texture2d
 import fsleyes.gl.textures.texture3d    as texture3d
@@ -102,15 +100,10 @@ class ImageTextureBase:
 
         self.validateShape(image, nvals, ndims)
 
-        # set volume/channel to dummy values,
-        # so that the first call to set() will
-        # trigger a refresh (as the first
-        # call may pass in None for the volume/
-        # channel)
-        self.__volume  = 'dummy'
-        self.__channel = 'dummy'
         self.__name    = 'ImageTextureBase_{}'.format(id(self))
         self.__image   = image
+        self.__volume  = None
+        self.__channel = None
 
         self.__image.register(self.__name,
                               self.__imageDataChanged,
@@ -216,16 +209,17 @@ class ImageTextureBase:
                 raise ValueError('Invalid volume indices for {} '
                                  'dims: {}'.format(ndims, volume))
 
-        volchanged = not (self.__volume  == volume and
-                          self.__channel == channel)
+        volRefresh = (volRefresh               or
+                      self.__volume  != volume or
+                      self.__channel != channel)
 
-        if not (volRefresh or volchanged):
+        if not volRefresh:
             return kwargs
 
         self.__volume  = volume
         self.__channel = channel
 
-        if volchanged:
+        if volRefresh:
             data = self.__getData(volume, channel)
             data = self.shapeData(data)
         else:
