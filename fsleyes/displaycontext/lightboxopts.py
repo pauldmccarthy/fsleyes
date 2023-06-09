@@ -37,7 +37,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     ncols          = copy.copy(canvasopts.LightBoxCanvasOpts.ncols)
     showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
     highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
-    showLocation   = copy.copy(canvasopts.LightBoxCanvasOpts.showLocation)
+    labelSpace     = copy.copy(canvasopts.LightBoxCanvasOpts.labelSpace)
 
     # SliceCanvas has (prerender, offscreen, onscreen)
     # performance settings, but LightBoxCanvas only has

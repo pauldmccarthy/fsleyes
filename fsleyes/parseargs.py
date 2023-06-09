@@ -463,7 +463,8 @@ OPTIONS = td.TypeDict({
                        'nrows',
                        'showGridLines',
                        'highlightSlice',
-                       'showLocation'],
+                       'showLocation',
+                       'labelSpace'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
                        'light',
@@ -844,6 +845,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.showLocation'   : ('ll', 'sliceLocation',  False),
+    'LightBoxOpts.labelSpace'     : ('sp', 'labelSpace',     True),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
@@ -1138,7 +1140,11 @@ HELP = td.TypeDict({
     'LightBoxOpts.zrange'         : 'Slice range',
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
-    'LightBoxOpts.showLocation'   : 'Show location on each slice',
+    'LightBoxOpts.showLocation'   : 'Show location in world coordinates on '
+                                    'each slice. Ignored if --labelSpace is '
+                                    'specified',
+    'LightBoxOpts.labelSpace'     : 'Show slice locations in this coordinate '
+                                    'system.',
     'LightBoxOpts.zax'            : 'Z axis',
 
     'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
@@ -3286,6 +3292,30 @@ def _generateSpecial_LightBoxOpts_numSlices(
     """
     return []
 
+
+def _configSpecial_LightBoxOpts_showLocation(
+        target, parser, shortArg, longArg, helpText):
+    """Configures the ``--showLocation`` option for the ``LightBoxOpts`` class.
+    This is a simplified alias for the :attr:`.LightBoxOpts.labelSpace``
+    property.
+    """
+    parser.add_argument(
+        shortArg, longArg, action='store_true', help=helpText)
+
+def _applySpecial_LightBoxOpts_showLocation(
+        args, overlayList, displayCtx, target):
+    """Applies the ``--showLocation`` option to the ``LightBoxOpts.labelSpace``
+    property. """
+    if args.labelSpace is None:
+        target.labelSpace = 'world'
+
+def _generateSpecial_LightBoxOpts_showLocation(
+        overlayList, displayCtx, source, longArg):
+    """Suppress the ``--showLocation`` option. It is a simplified alias for
+    :attr:`.LightBoxOpts.labelSpace`.
+    """
+    return []
+
 def _generateSpecial_LightBoxOpts_nrows(
         overlayList, displayCtx, source, longArg):
     """Suppress the ``--nrows`` option. This option is only applicable to
@@ -3299,7 +3329,6 @@ def _generateSpecial_LightBoxOpts_ncols(
     off-screen rendering.
     """
     return []
-
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
         args, overlayList, displayCtx, target):

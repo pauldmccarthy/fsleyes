@@ -903,7 +903,5 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if opts.showGridLines:  self._drawGridLines()
             if opts.highlightSlice: self._drawSliceHighlight()
 
-        if opts.showLocation:
-            self.__labelMgr.refreshLabels()
-
+        self.__labelMgr.refreshLabels()
         self.getAnnotations().draw2D(opts.pos[opts.zax], axes)

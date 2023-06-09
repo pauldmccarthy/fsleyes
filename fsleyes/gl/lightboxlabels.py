@@ -10,19 +10,15 @@ location labels for a :class :`.LightBoxCanvas`.
 
 
 import fsl.utils.cache as cache
-import fsleyes_props   as props
 
 
-class LightBoxLabels(props.Props):
+class LightBoxLabels:
     """The ``LightBoxLabels`` class manages text labels on a
     :class:`.LightBoxCanvas`.
 
     :class:`.LightBoxCanvas` objects create a :class:`LightBoxLabels` instance,
     and call the :meth:`refreshLabels` method directly.
     """
-
-
-    labelSpace = props.Choice(('voxel', 'world'))
 
 
     def __init__(self, canvas):
@@ -76,14 +72,13 @@ class LightBoxLabels(props.Props):
         return fmt
 
 
-    def getZAxis(self, overlay):
+    def getZAxis(self, space, overlay):
         """Identify the Z axis in the label space coordinate system, with
         respect to the given overlay, which most closelyt matches the Z axis
         in the :class:`.LightBoxCanvas` display coordinate system.
         """
 
         canvas = self.__canvas
-        space  = self.labelSpace
         zax    = canvas.opts.zax
         dctx   = canvas.displayCtx
         ref    = dctx.getReferenceImage(overlay)
@@ -104,14 +99,13 @@ class LightBoxLabels(props.Props):
         return zax, axlbl
 
 
-    def getZLocation(self, overlay, slc):
+    def getZLocation(self, space, overlay, slc):
         """Calculate the Z location in the label space coordinate system, with
         respect to the given overlay, which corresponds to the given
         :class:`.LightBoxCanvas` slice.
         """
 
         canvas = self.__canvas
-        space  = self.labelSpace
         copts  = canvas.opts
         dctx   = canvas.displayCtx
         bounds = dctx.bounds
@@ -149,28 +143,30 @@ class LightBoxLabels(props.Props):
         return wpos, (cx, cy)
 
 
-
     def refreshLabels(self):
         """Updates slice labels on the :class:`.LightBoxCanvas`. """
 
         canvas  = self.__canvas
-        space   = self.labelSpace
+        space   = canvas.opts.labelSpace
         nslices = len(canvas.zposes)
         dctx    = canvas.displayCtx
         ovl     = dctx.getSelectedOverlay()
+
+        if space == 'none':
+            return
 
         if ovl is None:
             return
 
         fmt        = self.getZFormat(space, ovl)
-        zax, axlbl = self.getZAxis(ovl)
+        zax, axlbl = self.getZAxis(  space, ovl)
 
         for text in self.__labels.values():
             text.enabled = False
 
         for i in range(nslices):
 
-            wpos, cpos = self.getZLocation(ovl, i)
+            wpos, cpos = self.getZLocation(space, ovl, i)
 
             if wpos is None:
                 continue

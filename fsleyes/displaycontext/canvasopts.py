@@ -250,9 +250,11 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     location.
     """
 
-    showLocation = props.Boolean(default=False)
-    """If ``True``, the current location along the depth axis is shown on
-    each slice.
+
+    labelSpace = props.Choice(('none', 'voxel', 'world'))
+    """If not ``'none'`` the current location along the depth axis is shown on
+    each slice, in either the ``'voxel'`` or ``'world'`` coordinate system,
+    with respect to the currently selected overlay.
     """
 
 
