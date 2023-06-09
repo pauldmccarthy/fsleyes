@@ -472,6 +472,7 @@ def createLightBoxCanvas(namespace,
     opts.zrange         = sceneOpts.zrange
     opts.showGridLines  = sceneOpts.showGridLines
     opts.highlightSlice = sceneOpts.highlightSlice
+    opts.labelSpace     = sceneOpts.labelSpace
 
     return canvas
 
