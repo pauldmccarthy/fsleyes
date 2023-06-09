@@ -21,6 +21,8 @@ Added
   option) which can be used on vector overlays when colouring them by a
   secondary image, to specify the mapping between the voxel intensities and
   the colour map (!371).
+* New *Show slice location* option, allowing the location of each slice to be
+  displayed in the lightbox view (!375).
 
 
 Changed
