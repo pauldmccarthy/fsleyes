@@ -15,12 +15,11 @@ import numpy     as np
 import OpenGL.GL as gl
 
 import fsleyes_props                     as props
-import fsl.data.image                    as fslimage
-
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.textures               as textures
+import fsleyes.gl.lightboxlabels         as lblabels
 
 
 log = logging.getLogger(__name__)
@@ -112,6 +111,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
+        self.__labelMgr = lblabels.LightBoxLabels(self)
+
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
@@ -145,6 +146,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         if self._offscreenRenderTexture is not None:
             self._offscreenRenderTexture.destroy()
+
+        self.__labelMgr.destroy()
+        self.__labelMgr = None
 
         slicecanvas.SliceCanvas.destroy(self)
 
@@ -898,5 +902,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if opts.showCursor:     self._drawCursor()
             if opts.showGridLines:  self._drawGridLines()
             if opts.highlightSlice: self._drawSliceHighlight()
+
+        if opts.showLocation:
+            self.__labelMgr.refreshLabels()
 
         self.getAnnotations().draw2D(opts.pos[opts.zax], axes)
