@@ -93,7 +93,7 @@ class LightBoxLabels:
         # which most closely matches the canvas depth axis.
         opts  = dctx.getOpts(ref)
         axmap = ref.axisMapping(opts.getTransform('display', space))
-        zax   = axmap[abs(zax)] - 1
+        zax   = abs(axmap[zax]) - 1
         axlbl = 'XYZ'[zax]
 
         return zax, axlbl
@@ -135,6 +135,9 @@ class LightBoxLabels:
         # as we need it in relative proportions for label
         # positioning.
         cpos   = canvas.worldToCanvas(dpos)
+        if cpos is None:
+            return None, None
+
         cx, cy = cpos
         cy     = cy + 0.5 * bounds.getLen(copts.yax)
         cx     = (cx - copts.displayBounds.xlo) / copts.displayBounds.xlen
@@ -168,7 +171,7 @@ class LightBoxLabels:
 
             wpos, cpos = self.getZLocation(space, ovl, i)
 
-            if wpos is None:
+            if wpos is None or cpos is None:
                 continue
 
             label         = self.__getLabel(fmt.format(axlbl, wpos[zax]))
