@@ -1037,6 +1037,7 @@ properties = TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.zrange'         : 'Z range',
+    'LightBoxOpts.labelSpace'     : 'Show slice location',
 
     'OrthoOpts.showXCanvas'  : 'Show X canvas',
     'OrthoOpts.showYCanvas'  : 'Show Y canvas',
@@ -1336,6 +1337,11 @@ choices = TypeDict({
 
     'LightBoxOpts.zrange.min' : 'Min.',
     'LightBoxOpts.zrange.max' : 'Max.',
+
+    'LightBoxOpts.labelSpace' : {'none'  : 'No labels',
+                                 'voxel' : 'Voxel coordinates',
+                                 'world' : 'World coordinates'},
+
 
     'ColourMapOpts.displayRange.min' : 'Min.',
     'ColourMapOpts.displayRange.max' : 'Max.',

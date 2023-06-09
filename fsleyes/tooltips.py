@@ -531,6 +531,10 @@ properties = TypeDict({
     'If checked, lines will be shown between each slice.',
     'LightBoxOpts.highlightSlice' :
     'If checked, a box will be drawn around the currently selected slice.',
+    'LightBoxOpts.labelSpace' :
+    'Whether or not to display the depth axis location on each slice. If a '
+    'non-NIfTI overlay is selected, the displayed location will always be '
+    'in world coordinates.',
 
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '

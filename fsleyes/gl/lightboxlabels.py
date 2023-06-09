@@ -34,7 +34,7 @@ class LightBoxLabels:
         needed. Destroys all of the :class:`.TextAnnotation` objects used
         for displaying slice locations.
         """
-        for text in self.labels.values():
+        for text in self.__labels.values():
             text.destroy()
         self.__labels = None
         self.__canvas = None
@@ -152,6 +152,9 @@ class LightBoxLabels:
         dctx    = canvas.displayCtx
         ovl     = dctx.getSelectedOverlay()
 
+        for text in self.__labels.values():
+            text.enabled = False
+
         if space == 'none':
             return
 
@@ -160,9 +163,6 @@ class LightBoxLabels:
 
         fmt        = self.getZFormat(space, ovl)
         zax, axlbl = self.getZAxis(  space, ovl)
-
-        for text in self.__labels.values():
-            text.enabled = False
 
         for i in range(nslices):
 

@@ -123,6 +123,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                      overwrite=True)
         opts. listen('showGridLines',  self.name, self.Refresh)
         opts. listen('highlightSlice', self.name, self.Refresh)
+        opts. listen('labelSpace',     self.name, self.Refresh)
 
 
     def destroy(self):
@@ -143,6 +144,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts.remove('ncols',          name)
         opts.remove('showGridLines',  name)
         opts.remove('highlightSlice', name)
+        opts.remove('labelSpace',     name)
 
         if self._offscreenRenderTexture is not None:
             self._offscreenRenderTexture.destroy()
