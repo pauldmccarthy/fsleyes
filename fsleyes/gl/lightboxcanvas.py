@@ -220,6 +220,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         return int(np.floor(self.opts.startslice / self.ncols))
 
 
+    @property
+    def zposes(self):
+        """Return the Z coordinate of all current slices. The coordinates are
+        in terms of the display coordinate system.
+        """
+        return self.__zposes
+
+
     def resetDisplay(self):
         """Overrides :meth:`.SliceCanvas.resetDisplay`.
 
@@ -319,6 +327,47 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         pos[opts.zax] = zpos
 
         return tuple(pos)
+
+
+    def sliceToWorld(self, slc):
+        """Convert a slice index, or row/column indices, into a location in the
+        display coordinate system.
+
+        :arg slc: Slice index, or (row, column) tuple.
+
+        :returns: A ``[x, y, z]`` position in the display coordinate system or
+                  ``None`` if the slice is outside the bounds of the display
+                  coordinate system.
+        """
+
+        opts    = self.opts
+        bounds  = self.displayCtx.bounds
+        nrows   = self.nrows
+        ncols   = self.ncols
+        nslices = len(self.zposes)
+        xmin    = bounds.getLo( opts.xax)
+        ymin    = bounds.getLo( opts.yax)
+        xlen    = bounds.getLen(opts.xax)
+        ylen    = bounds.getLen(opts.yax)
+
+        if isinstance(slc, (list, tuple)):
+            row, col = slc
+            slc      = row * ncols + col
+        else:
+            row      = slc // ncols
+            col      = slc %  ncols
+
+        if slc >= nslices or row >= nrows or col >= ncols:
+            return None
+
+        # We position the x/y coordinates
+        # at the slice centre
+        pos           = [0] * 3
+        pos[opts.xax] = xmin + 0.5 * xlen
+        pos[opts.yax] = ymin + 0.5 * ylen
+        pos[opts.zax] = self.zposes[slc]
+
+        return pos
 
 
     def calcSliceSpacing(self, overlay):
