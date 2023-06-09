@@ -250,6 +250,11 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     location.
     """
 
+    showLocation = props.Boolean(default=False)
+    """If ``True``, the current location along the depth axis is shown on
+    each slice.
+    """
+
 
     renderMode = props.Choice(('onscreen', 'offscreen'))
     """How the :class:`.GLObject` instances are rendered to the canvas.

@@ -462,7 +462,8 @@ OPTIONS = td.TypeDict({
                        'ncols',
                        'nrows',
                        'showGridLines',
-                       'highlightSlice'],
+                       'highlightSlice',
+                       'showLocation'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
                        'light',
@@ -842,6 +843,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
+    'LightBoxOpts.showLocation'   : ('ll', 'sliceLocation',  False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
@@ -1136,6 +1138,7 @@ HELP = td.TypeDict({
     'LightBoxOpts.zrange'         : 'Slice range',
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
+    'LightBoxOpts.showLocation'   : 'Show location on each slice',
     'LightBoxOpts.zax'            : 'Z axis',
 
     'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
