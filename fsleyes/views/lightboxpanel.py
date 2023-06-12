@@ -111,6 +111,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         lbopts.bind('showGridLines',   sceneOpts)
         lbopts.bind('highlightSlice',  sceneOpts)
         lbopts.bind('labelSpace',      sceneOpts)
+        lbopts.bind('labelSize',       sceneOpts)
         lbopts.bind('renderMode',      sceneOpts)
 
         # Bind these properties the other way around,

@@ -150,7 +150,8 @@ class LightBoxLabels:
         """Updates slice labels on the :class:`.LightBoxCanvas`. """
 
         canvas  = self.__canvas
-        space   = canvas.opts.labelSpace
+        copts   = canvas.opts
+        space   = copts.labelSpace
         nslices = len(canvas.zposes)
         dctx    = canvas.displayCtx
         ovl     = dctx.getSelectedOverlay()
@@ -174,11 +175,12 @@ class LightBoxLabels:
             if wpos is None or cpos is None:
                 continue
 
-            text          = fmt.format(axlbl, wpos[zax])
-            label         = self.getLabel(wpos[zax], text)
-            label.enabled = True
-            label.x       = cpos[0]
-            label.y       = cpos[1]
-            label.off     = (0, -5)
-            label.halign  = 'centre'
-            label.valign  = 'top'
+            text           = fmt.format(axlbl, wpos[zax])
+            label          = self.getLabel(wpos[zax], text)
+            label.fontSize = copts.labelSize
+            label.enabled  = True
+            label.x        = cpos[0]
+            label.y        = cpos[1]
+            label.off      = (0, -5)
+            label.halign   = 'centre'
+            label.valign   = 'top'
