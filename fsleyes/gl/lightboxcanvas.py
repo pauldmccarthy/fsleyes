@@ -532,6 +532,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._regenGrid()
 
 
+    def _displaySpaceChanged(self):
+        """Overrides :meth:`.SliceCanvas._displaySpaceChanged`. Update slice
+        spacing properties, and calls the super implementation.
+        """
+        self._adjustSliceProps(True, True)
+        super()._displaySpaceChanged()
+
+
     def _updateRenderTextures(self):
         """Overrides :meth:`.SliceCanvas._updateRenderTextures`. Does nothing.
         """
@@ -566,7 +574,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         different FOVs / voxel resolutions along different axes. Therefore,
         the ``sliceSpacing`` property is also adjusted to remain consistent.
         """
-        if len(self._overlayList) == 0:
+        if len(self.overlayList) == 0:
             return
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]

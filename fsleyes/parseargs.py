@@ -463,7 +463,7 @@ OPTIONS = td.TypeDict({
                        'nrows',
                        'showGridLines',
                        'highlightSlice',
-                       'showLocation',
+                       'sliceLocation',
                        'labelSpace'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
@@ -844,7 +844,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
-    'LightBoxOpts.showLocation'   : ('ll', 'sliceLocation',  False),
+    'LightBoxOpts.sliceLocation'  : ('ll', 'sliceLocation',  False),
     'LightBoxOpts.labelSpace'     : ('sp', 'labelSpace',     True),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
@@ -1140,7 +1140,7 @@ HELP = td.TypeDict({
     'LightBoxOpts.zrange'         : 'Slice range',
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.highlightSlice' : 'Highlight current slice',
-    'LightBoxOpts.showLocation'   : 'Show location in world coordinates on '
+    'LightBoxOpts.sliceLocation'  : 'Show location in world coordinates on '
                                     'each slice. Ignored if --labelSpace is '
                                     'specified',
     'LightBoxOpts.labelSpace'     : 'Show slice locations in this coordinate '
@@ -3293,25 +3293,25 @@ def _generateSpecial_LightBoxOpts_numSlices(
     return []
 
 
-def _configSpecial_LightBoxOpts_showLocation(
+def _configSpecial_LightBoxOpts_sliceLocation(
         target, parser, shortArg, longArg, helpText):
-    """Configures the ``--showLocation`` option for the ``LightBoxOpts`` class.
+    """Configures the ``--sliceLocation`` option for the ``LightBoxOpts`` class.
     This is a simplified alias for the :attr:`.LightBoxOpts.labelSpace``
     property.
     """
     parser.add_argument(
         shortArg, longArg, action='store_true', help=helpText)
 
-def _applySpecial_LightBoxOpts_showLocation(
+def _applySpecial_LightBoxOpts_sliceLocation(
         args, overlayList, displayCtx, target):
-    """Applies the ``--showLocation`` option to the ``LightBoxOpts.labelSpace``
+    """Applies the ``--sliceLocation`` option to the ``LightBoxOpts.labelSpace``
     property. """
-    if args.showLocation and args.labelSpace is None:
+    if args.sliceLocation and args.labelSpace is None:
         target.labelSpace = 'world'
 
-def _generateSpecial_LightBoxOpts_showLocation(
+def _generateSpecial_LightBoxOpts_sliceLocation(
         overlayList, displayCtx, source, longArg):
-    """Suppress the ``--showLocation`` option. It is a simplified alias for
+    """Suppress the ``--sliceLocation`` option. It is a simplified alias for
     :attr:`.LightBoxOpts.labelSpace`.
     """
     return []
