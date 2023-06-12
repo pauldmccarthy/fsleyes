@@ -182,7 +182,11 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('sliceSpacing',   props.Widget('sliceSpacing', showLimits=False)),
             ('zrange',         props.Widget('zrange',       showLimits=False)),
             ('highlightSlice', props.Widget('highlightSlice')),
-            ('showGridLines',  props.Widget('showGridLines'))))
+            ('showGridLines',  props.Widget('showGridLines')),
+            ('labelSpace',     props.Widget(
+                'labelSpace',
+                labels=strings.choices['LightBoxOpts.labelSpace'])),
+        ))
 
         scene3dOptsProps = collections.OrderedDict((
             ('zoom',          props.Widget('zoom', showLimits=False)),

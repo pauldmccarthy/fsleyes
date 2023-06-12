@@ -1023,7 +1023,7 @@ s
             opts.zoom = self.scaleToZoom(scale)
 
 
-    def _displaySpaceChanged(self, *a):
+    def _displaySpaceChanged(self):
         """Called when the :attr:`.DisplayContext.displaySpace` changes. Resets
         the display bounds and zoom.
         """

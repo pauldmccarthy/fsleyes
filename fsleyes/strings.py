@@ -1037,6 +1037,7 @@ properties = TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.zrange'         : 'Z range',
+    'LightBoxOpts.labelSpace'     : 'Show slice location',
 
     'OrthoOpts.showXCanvas'  : 'Show X canvas',
     'OrthoOpts.showYCanvas'  : 'Show Y canvas',
@@ -1336,6 +1337,11 @@ choices = TypeDict({
 
     'LightBoxOpts.zrange.min' : 'Min.',
     'LightBoxOpts.zrange.max' : 'Max.',
+
+    'LightBoxOpts.labelSpace' : {'none'  : 'No labels',
+                                 'voxel' : 'Voxel coordinates',
+                                 'world' : 'World coordinates'},
+
 
     'ColourMapOpts.displayRange.min' : 'Min.',
     'ColourMapOpts.displayRange.max' : 'Max.',
@@ -1670,12 +1676,14 @@ melodic = TypeDict({
 })
 
 layouts = {
-    'default'  : 'Default layout',
-    'melodic'  : 'MELODIC mode',
-    'feat'     : 'FEAT mode',
-    'ortho'    : 'Plain orthographic',
-    'lightbox' : 'Plain lightbox',
-    '3d'       : 'Plain 3D',
+    'default'   : 'Default layout',
+    'default3d' : 'Default 3D',
+    'defaultlb' : 'Default lightbox',
+    'melodic'   : 'MELODIC mode',
+    'feat'      : 'FEAT mode',
+    'ortho'     : 'Plain orthographic',
+    'lightbox'  : 'Plain lightbox',
+    '3d'        : 'Plain 3D'
 }
 
 

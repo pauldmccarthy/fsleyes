@@ -14,13 +14,13 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsl.transform.affine              as affine
 import fsleyes_props                     as props
-import fsl.data.image                    as fslimage
-
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
 import fsleyes.gl.routines               as glroutines
 import fsleyes.gl.textures               as textures
+import fsleyes.gl.lightboxlabels         as lblabels
 
 
 log = logging.getLogger(__name__)
@@ -112,6 +112,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
+        self.__labelMgr = lblabels.LightBoxLabels(self)
+
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
@@ -122,6 +124,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                      overwrite=True)
         opts. listen('showGridLines',  self.name, self.Refresh)
         opts. listen('highlightSlice', self.name, self.Refresh)
+        opts. listen('labelSpace',     self.name, self.Refresh)
 
 
     def destroy(self):
@@ -142,9 +145,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts.remove('ncols',          name)
         opts.remove('showGridLines',  name)
         opts.remove('highlightSlice', name)
+        opts.remove('labelSpace',     name)
 
         if self._offscreenRenderTexture is not None:
             self._offscreenRenderTexture.destroy()
+
+        self.__labelMgr.destroy()
+        self.__labelMgr = None
 
         slicecanvas.SliceCanvas.destroy(self)
 
@@ -218,6 +225,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.ncols == 0 or self.nrows == 0:
             return 0
         return int(np.floor(self.opts.startslice / self.ncols))
+
+
+    @property
+    def zposes(self):
+        """Return the Z coordinate of all current slices. The coordinates are
+        in terms of the display coordinate system.
+        """
+        return self.__zposes
 
 
     def resetDisplay(self):
@@ -321,6 +336,47 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         return tuple(pos)
 
 
+    def sliceToWorld(self, slc):
+        """Convert a slice index, or row/column indices, into a location in the
+        display coordinate system.
+
+        :arg slc: Slice index, or (row, column) tuple.
+
+        :returns: A ``[x, y, z]`` position in the display coordinate system or
+                  ``None`` if the slice is outside the bounds of the display
+                  coordinate system.
+        """
+
+        opts    = self.opts
+        bounds  = self.displayCtx.bounds
+        nrows   = self.nrows
+        ncols   = self.ncols
+        nslices = len(self.zposes)
+        xmin    = bounds.getLo( opts.xax)
+        ymin    = bounds.getLo( opts.yax)
+        xlen    = bounds.getLen(opts.xax)
+        ylen    = bounds.getLen(opts.yax)
+
+        if isinstance(slc, (list, tuple)):
+            row, col = slc
+            slc      = row * ncols + col
+        else:
+            row      = slc // ncols
+            col      = slc %  ncols
+
+        if slc >= nslices or row >= nrows or col >= ncols:
+            return None
+
+        # We position the x/y coordinates
+        # at the slice centre
+        pos           = [0] * 3
+        pos[opts.xax] = xmin + 0.5 * xlen
+        pos[opts.yax] = ymin + 0.5 * ylen
+        pos[opts.zax] = self.zposes[slc]
+
+        return pos
+
+
     def calcSliceSpacing(self, overlay):
         """Calculates and returns a minimum Z-axis slice spacing value suitable
         for the given overlay. The returned value is a proportion between 0 and
@@ -344,15 +400,26 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Otherwise return a spacing
         # appropriate for the current
         # display space
-        #
-        # display coordinate system
-        # is orthogonal to image data
-        # grid
-        if dopts.transform in  ('id', 'pixdim', 'pixdim-flip'):
-            return 1 / overlay.shape[copts.zax]
+        rots = affine.decompose(dopts.getTransform('voxel', 'display'))[2]
+        rots = np.array(rots)
+
+        # image to display transform comprises
+        # 90 degree rotations, so image data
+        # grid is is orthogonal to display
+        # coord system. Base slice spacing on
+        # z axis voxel spacing.
+        if np.all(np.isclose(rots % (np.pi / 2), 0)):
+
+            # Get the voxel z axis that corresponds
+            # to the display z axis
+            axmap = overlay.axisMapping(dopts.getTransform('display', 'voxel'))
+            zax   = abs(axmap[copts.zax]) - 1
+            return 1 / overlay.shape[zax]
 
         # image may be rotated w.r.t.
-        # display coordinate system
+        # display coordinate system -
+        # return smallest spacing that
+        # will cover all voxel axes
         else:
             return 1 / max(overlay.shape[:3])
 
@@ -465,6 +532,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self._regenGrid()
 
 
+    def _displaySpaceChanged(self):
+        """Overrides :meth:`.SliceCanvas._displaySpaceChanged`. Update slice
+        spacing properties, and calls the super implementation.
+        """
+        self._adjustSliceProps(True, True)
+        super()._displaySpaceChanged()
+
+
     def _updateRenderTextures(self):
         """Overrides :meth:`.SliceCanvas._updateRenderTextures`. Does nothing.
         """
@@ -499,6 +574,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         different FOVs / voxel resolutions along different axes. Therefore,
         the ``sliceSpacing`` property is also adjusted to remain consistent.
         """
+        if len(self.overlayList) == 0:
+            return
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
         spacing  = min(spacings)
@@ -850,4 +927,5 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             if opts.showGridLines:  self._drawGridLines()
             if opts.highlightSlice: self._drawSliceHighlight()
 
+        self.__labelMgr.refreshLabels()
         self.getAnnotations().draw2D(opts.pos[opts.zax], axes)
