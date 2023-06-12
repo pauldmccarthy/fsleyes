@@ -401,13 +401,20 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # appropriate for the current
         # display space
         rots = affine.decompose(dopts.getTransform('voxel', 'display'))[2]
+        rots = np.array(rots)
 
-        # display coordinate system
-        # is orthogonal to image data
-        # grid - return voxel spacing
-        # for the z axis
-        if np.all(np.isclose(rots, 0)):
-            return 1 / overlay.shape[copts.zax]
+        # image to display transform comprises
+        # 90 degree rotations, so image data
+        # grid is is orthogonal to display
+        # coord system. Base slice spacing on
+        # z axis voxel spacing.
+        if np.all(np.isclose(rots % (np.pi / 2), 0)):
+
+            # Get the voxel z axis that corresponds
+            # to the display z axis
+            axmap = overlay.axisMapping(dopts.getTransform('display', 'voxel'))
+            zax   = abs(axmap[copts.zax]) - 1
+            return 1 / overlay.shape[zax]
 
         # image may be rotated w.r.t.
         # display coordinate system -
@@ -559,6 +566,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         different FOVs / voxel resolutions along different axes. Therefore,
         the ``sliceSpacing`` property is also adjusted to remain consistent.
         """
+        if len(self._overlayList) == 0:
+            return
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
         spacing  = min(spacings)
