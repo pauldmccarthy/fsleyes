@@ -14,6 +14,7 @@ import logging
 import numpy     as np
 import OpenGL.GL as gl
 
+import fsl.transform.affine              as affine
 import fsleyes_props                     as props
 import fsleyes.displaycontext.canvasopts as canvasopts
 import fsleyes.gl.slicecanvas            as slicecanvas
@@ -399,15 +400,19 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # Otherwise return a spacing
         # appropriate for the current
         # display space
-        #
+        rots = affine.decompose(dopts.getTransform('voxel', 'display'))[2]
+
         # display coordinate system
         # is orthogonal to image data
-        # grid
-        if dopts.transform in  ('id', 'pixdim', 'pixdim-flip'):
+        # grid - return voxel spacing
+        # for the z axis
+        if np.all(np.isclose(rots, 0)):
             return 1 / overlay.shape[copts.zax]
 
         # image may be rotated w.r.t.
-        # display coordinate system
+        # display coordinate system -
+        # return smallest spacing that
+        # will cover all voxel axes
         else:
             return 1 / max(overlay.shape[:3])
 
