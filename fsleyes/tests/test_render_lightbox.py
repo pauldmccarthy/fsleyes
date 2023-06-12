@@ -11,7 +11,7 @@ import pytest
 
 from fsl.data.image import Image, removeExt
 
-from fsleyes.tests import run_cli_tests, roi
+from fsleyes.tests import run_cli_tests, roi, swapdim
 
 
 
@@ -95,6 +95,24 @@ cli_tests_parametrize_zax = """
 -zx {{zax}} -zr 0 1 -nr 1 -nc 1 -ss 0.143 3d
 -zx {{zax}} -zr 0 1 -nr 1 -nc 2 -ss 0.143 3d
 -zx {{zax}} -zr 0 1 -nr 1 -nc 3 -ss 0.143 3d
+
+# slice labels
+-zx {{zax}}           -ll       -zr 0 1 3d -b 30
+-zx {{zax}}           -sp none  -zr 0 1 3d -b 30
+-zx {{zax}}           -sp voxel -zr 0 1 3d -b 30
+-zx {{zax}}           -sp world -zr 0 1 3d -b 30
+-zx {{zax}} -ds world -sp voxel -zr 0 1 3d -b 30
+-zx {{zax}} -ds world -sp world -zr 0 1 3d -b 30
+
+# slice labels with weird voxel2world affine
+-zx {{zax}}           -sp voxel -zr 0 1 {{swapdim('3d', '-z', 'x',  'y')}} -b 30
+-zx {{zax}}           -sp world -zr 0 1 {{swapdim('3d', '-z', 'x',  'y')}} -b 30
+-zx {{zax}} -ds world -sp voxel -zr 0 1 {{swapdim('3d', '-z', 'x',  'y')}} -b 30
+-zx {{zax}} -ds world -sp world -zr 0 1 {{swapdim('3d', '-z', 'x',  'y')}} -b 30
+-zx {{zax}}           -sp voxel -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
+-zx {{zax}}           -sp world -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
+-zx {{zax}} -ds world -sp voxel -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
+-zx {{zax}} -ds world -sp world -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
 """
 
 
@@ -126,7 +144,9 @@ def test_render_lightbox_2(zax):
     extras = {
         'roi'     : roi,
         'set_zax' : set_zax,
-        'zax'     : zax
+        'zax'     : zax,
+        'swapdim' : swapdim
+
     }
     run_cli_tests('test_render_lightbox_2', cli_tests_parametrize_zax,
                   extras=extras, scene='lightbox', threshold=1)
