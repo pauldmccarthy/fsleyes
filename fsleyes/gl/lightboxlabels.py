@@ -40,16 +40,16 @@ class LightBoxLabels:
         self.__canvas = None
 
 
-    def __getLabel(self, label):
+    def getLabel(self, zpos, label):
         """Return a :class:`.TextAnnotation` object with the given label. If
         one does not exist, it is created.
         """
 
-        text = self.__labels.get(label, None)
+        text = self.__labels.get((zpos, label), None)
 
         if text is None:
             text = self.__canvas.getAnnotations().text(label, hold=True)
-            self.__labels[label] = text
+            self.__labels[zpos, label] = text
 
         return text
 
@@ -174,7 +174,8 @@ class LightBoxLabels:
             if wpos is None or cpos is None:
                 continue
 
-            label         = self.__getLabel(fmt.format(axlbl, wpos[zax]))
+            text          = fmt.format(axlbl, wpos[zax])
+            label         = self.getLabel(wpos[zax], text)
             label.enabled = True
             label.x       = cpos[0]
             label.y       = cpos[1]
