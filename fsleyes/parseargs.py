@@ -3306,7 +3306,7 @@ def _applySpecial_LightBoxOpts_showLocation(
         args, overlayList, displayCtx, target):
     """Applies the ``--showLocation`` option to the ``LightBoxOpts.labelSpace``
     property. """
-    if args.labelSpace is None:
+    if args.showLocation and args.labelSpace is None:
         target.labelSpace = 'world'
 
 def _generateSpecial_LightBoxOpts_showLocation(
