@@ -115,6 +115,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         self.__labelMgr = lblabels.LightBoxLabels(self)
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
+        opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
         opts.ilisten('ncols',          self.name, self._slicePropsChanged)
@@ -140,6 +141,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         name = self.name
 
         opts.remove('sliceSpacing',   name)
+        opts.remove('sliceOverlap',   name)
         opts.remove('zrange',         name)
         opts.remove('nrows',          name)
         opts.remove('ncols',          name)

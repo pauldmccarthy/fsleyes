@@ -271,6 +271,14 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
+    sliceOverlap = props.Percentage(minval=0, maxval=75, default=0,
+                                    clamped=True)
+    """How much the slice rows/columns overlap with each other. Can range
+    from 0 (default, no overlap) to 50 (50% overlap along both horizontal
+    and vertical axes).
+    """
+
+
     def __init__(self):
         super().__init__()
         name = self.name

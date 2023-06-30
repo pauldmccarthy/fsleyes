@@ -31,6 +31,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
     """
 
     sliceSpacing   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
+    sliceOverlap   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceOverlap)
     zax            = copy.copy(canvasopts.LightBoxCanvasOpts.zax)
     zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
     nrows          = copy.copy(canvasopts.LightBoxCanvasOpts.nrows)

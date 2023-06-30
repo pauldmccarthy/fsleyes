@@ -122,6 +122,7 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # LBOpts instance.
         sceneOpts.bind('zax',          lbopts)
         sceneOpts.bind('sliceSpacing', lbopts)
+        sceneOpts.bind('sliceOverlap', lbopts)
         sceneOpts.bind('zrange',       lbopts)
         sceneOpts.bind('nrows',        lbopts)
         sceneOpts.bind('ncols',        lbopts)

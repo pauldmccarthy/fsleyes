@@ -522,6 +522,8 @@ properties = TypeDict({
     'Zoom level - this controls how many slices to display.',
     'LightBoxOpts.sliceSpacing' :
     'The spacing between adjacent slices, specified as a percentage.',
+    'LightBoxOpts.sliceOverlap' :
+    'The overlap between adjacent slices, specified as a percentage.',
     'LightBoxOpts.zrange' :
     'The start/end points of the displayed range of slices, specified as '
     'percentages.',
