@@ -158,6 +158,42 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         slicecanvas.SliceCanvas.destroy(self)
 
 
+    @property
+    def gridParams(self):
+
+        opts     = self.opts
+        bounds   = self.displayCtx.bounds
+        overlap  = opts.sliceOverlap / 100
+        nrows    = self.nrows
+        ncols    = self.ncols
+
+        class Params:
+            def __str__(self):
+                s = 'PARAMS\n'
+                for g in dir(self):
+                    if not g.startswith('_'):
+                        s += f'{g} = {getattr(self, g)}\n'
+                return s
+
+        p           = Params()
+        p.gridxmin  = bounds.getLo( opts.xax)
+        p.gridymin  = bounds.getLo( opts.yax)
+        p.slicexlen = bounds.getLen(opts.xax)
+        p.sliceylen = bounds.getLen(opts.yax)
+        p.xoffset   = p.slicexlen - p.slicexlen * overlap
+        p.yoffset   = p.sliceylen - p.sliceylen * overlap
+        p.gridxlen  = (ncols - 1) * p.xoffset + p.slicexlen
+        p.gridylen  = (nrows - 1) * p.yoffset + p.sliceylen
+        p.gridxmax  = p.gridxmin + p.gridxlen
+        p.gridymax  = p.gridymin + p.gridylen
+
+        print('GRAPA', nrows, ncols)
+        print(p)
+
+
+        return p
+
+
     def gridPosition(self, pos=None):
         """Returns the slice, row, and column index of the current display
         location (from the :attr:`.SliceCanvas.pos` attribute).
@@ -258,11 +294,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         xpos        = pos[opts.xax]
         ypos        = pos[opts.yax]
         nrows       = self.nrows
-        bounds      = self.displayCtx.bounds
-        xlen        = bounds.getLen(opts.xax)
-        ylen        = bounds.getLen(opts.yax)
-        xmin        = bounds.getLo( opts.xax)
-        ymin        = bounds.getLo( opts.yax)
+        grid        = self.gridParams
         _, row, col = self.gridPosition(pos)
 
         if row < 0           or \
@@ -271,11 +303,18 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
            col >= self.ncols:
             return None
 
+        xmin = grid.gridxmin
+        ymin = grid.gridymin
+        xlen = grid.slicexlen
+        ylen = grid.sliceylen
+        xoff = grid.xoffset
+        yoff = grid.yoffset
+
         if opts.invertX: xpos = xmin + xlen - (xpos - xmin)
         if opts.invertY: ypos = ymin + ylen - (ypos - ymin)
 
-        xpos = xpos + xlen * col
-        ypos = ypos + ylen * (nrows - row - 1)
+        xpos = xpos + xoff * col
+        ypos = ypos + yoff * (nrows - row - 1)
 
         return xpos, ypos
 
@@ -291,7 +330,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """
 
         opts    = self.opts
-        bounds  = self.displayCtx.bounds
+        grid    = self.gridParams
         ncols   = self.ncols
         nrows   = self.nrows
 
@@ -301,19 +340,21 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if screenPos is None:
             return None
 
+        xmin      = grid.gridxmin
+        ymin      = grid.gridymin
+        xmax      = grid.gridxmax
+        ymax      = grid.gridymax
+        slicexlen = grid.slicexlen
+        sliceylen = grid.sliceylen
+        gridxlen  = grid.gridxlen
+        gridylen  = grid.gridylen
+
         screenx = screenPos[opts.xax]
         screeny = screenPos[opts.yax]
-
-        xmin = bounds.getLo( opts.xax)
-        ymin = bounds.getLo( opts.yax)
-        xlen = bounds.getLen(opts.xax)
-        ylen = bounds.getLen(opts.yax)
-
-        xmax = xmin + ncols * xlen
-        ymax = ymin + nrows * ylen
-
-        col     =         int(np.floor((screenx - xmin) / xlen))
-        row     = nrows - int(np.floor((screeny - ymin) / ylen)) - 1
+        col     = (screenx - xmin) / gridxlen
+        row     = (screeny - ymin) / gridylen
+        col     =         int(np.floor(ncols * screenx))
+        row     = nrows - int(np.floor(nrows * screeny)) - 1
         sliceno = row * ncols + col
 
         if screenx <  xmin or \
@@ -323,12 +364,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
            sliceno >= len(self.__zposes):
             return None
 
-        xpos = screenx -          col      * xlen
-        ypos = screeny - (nrows - row - 1) * ylen
+        xpos = screenx -          col      * grid.xoffset
+        ypos = screeny - (nrows - row - 1) * grid.yoffset
         zpos = self.__zposes[sliceno]
 
-        if opts.invertX: xpos = xlen - (xpos - xmin) + xmin
-        if opts.invertY: ypos = ylen - (ypos - ymin) + ymin
+        if opts.invertX: xpos = slicexlen - (xpos - xmin) + xmin
+        if opts.invertY: ypos = sliceylen - (ypos - ymin) + ymin
 
         pos           = [0, 0, 0]
         pos[opts.xax] = xpos
@@ -661,6 +702,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # rather than relative proportions, as
         # the _overlayListChanged method may need
         # to restore them.
+        grid           = self.gridParams
         spacing        = zlen * opts.sliceSpacing
         zlo, zhi       = opts.normzrange
         zlo            = zmin + zlo * zlen
@@ -672,8 +714,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             row                = int(np.floor(sliceno / ncols))
             col                = int(np.floor(sliceno % ncols))
             xform              = np.eye(4, dtype=np.float32)
-            xform[opts.xax, 3] = xlen * col
-            xform[opts.yax, 3] = ylen * (nrows - row - 1)
+            xform[opts.xax, 3] = grid.xoffset * col
+            xform[opts.yax, 3] = grid.yoffset * (nrows - row - 1)
             xform[opts.zax, 3] = 0
 
             # apply opts.invertX/Y if necessary
@@ -697,20 +739,17 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if self.destroyed:
             return
 
-        opts   = self.opts
-        bounds = self.displayCtx.bounds
-        ncols  = self.ncols
-        nrows  = self.nrows
-        xmin   = bounds.getLo( opts.xax)
-        ymin   = bounds.getLo( opts.yax)
-        xlen   = bounds.getLen(opts.xax)
-        ylen   = bounds.getLen(opts.yax)
-
-        xmax = xmin + xlen * ncols
-        ymax = ymin + ylen * nrows
+        opts = self.opts
+        grid = self.gridParams
+        xmin = grid.gridxmin
+        ymin = grid.gridymin
+        xmax = grid.gridxmax
+        ymax = grid.gridymax
 
         log.debug('Required lightbox bounds: X: (%s, %s) Y: (%s, %s)',
                   xmin, xmax, ymin, ymax)
+
+        print(f'Required lightbox bounds: X: ({xmin:6.2f}, {xmax:6.2f}) Y: ({ymin:6.2f}, {ymax:6.2f})')
 
         width, height = self.GetSize()
         xmin, xmax, ymin, ymax = glroutines.preserveAspectRatio(
@@ -725,14 +764,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if len(self.__zposes) == 0:
             return
 
-        opts  = self.opts
+        # TODO BROKEN
         nrows = self.nrows
         ncols = self.ncols
-
-        xlen = self.displayCtx.bounds.getLen(opts.xax)
-        ylen = self.displayCtx.bounds.getLen(opts.yax)
-        xmin = self.displayCtx.bounds.getLo( opts.xax)
-        ymin = self.displayCtx.bounds.getLo( opts.yax)
+        grid  = self.gridParams
+        xlen  = grid.xoffset
+        ylen  = grid.yoffset
+        xmin  = grid.gridxmin
+        ymin  = grid.gridymin
 
         rowLines = np.zeros(((nrows - 1) * 2, 2), dtype=np.float32)
         colLines = np.zeros(((ncols - 1) * 2, 2), dtype=np.float32)
@@ -771,12 +810,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if len(self.__zposes) == 0:
             return
 
-        opts              = self.opts
-        bounds            = self.displayCtx.bounds
-        xlen              = bounds.getLen(opts.xax)
-        ylen              = bounds.getLen(opts.yax)
-        xmin              = bounds.getLo( opts.xax)
-        ymin              = bounds.getLo( opts.yax)
+        grid              = self.gridParams
+        xlen              = grid.slicexlen
+        ylen              = grid.sliceylen
+        xoff              = grid.xoffset
+        yoff              = grid.yoffset
+        xmin              = grid.gridxmin
+        ymin              = grid.gridymin
         sliceno, row, col = self.gridPosition()
 
         # don't draw the cursor if it
@@ -787,8 +827,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # in GL space, the top row is actually the bottom row
         row = self.nrows - row - 1
 
-        self.getAnnotations().rect(xmin + xlen * col,
-                                   ymin + ylen * row,
+        self.getAnnotations().rect(xmin + xoff * col,
+                                   ymin + yoff * row,
                                    xlen,
                                    ylen,
                                    filled=False,
@@ -802,12 +842,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         """
 
         opts              = self.opts
+        grid              = self.gridParams
         bounds            = self.displayCtx.bounds
         nrows             = self.nrows
-        xlen              = bounds.getLen(opts.xax)
-        ylen              = bounds.getLen(opts.yax)
-        xmin              = bounds.getLo( opts.xax)
-        ymin              = bounds.getLo( opts.yax)
+        xoff              = grid.xoffset
+        yoff              = grid.yoffset
+        xmin              = grid.gridxmin
+        ymin              = grid.gridymin
         sliceno, row, col = self.gridPosition()
 
         # don't draw the cursor if it
@@ -824,12 +865,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         yverts = np.zeros((2, 2))
 
         xverts[:, 0] = xpos
-        xverts[0, 1] = ymin + (row)     * ylen
-        xverts[1, 1] = ymin + (row + 1) * ylen
+        xverts[0, 1] = ymin + (row)     * yoff
+        xverts[1, 1] = ymin + (row + 1) * yoff
 
         yverts[:, 1] = ypos
-        yverts[0, 0] = xmin + (col)     * xlen
-        yverts[1, 0] = xmin + (col + 1) * xlen
+        yverts[0, 0] = xmin + (col)     * xoff
+        yverts[1, 0] = xmin + (col + 1) * xoff
 
         annot  = self.getAnnotations()
         kwargs = {
