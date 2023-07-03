@@ -872,8 +872,8 @@ labels = TypeDict({
     'EditTransformPanel.cancel'      : 'Close',
 
     'EditTransformPanel.centre.options' : {
-        'volume' : 'Rotate around centre of image volume',
-        'cursor' : 'Rotate around current cursor location'
+        'volume' : 'Rotate/scale around centre of image volume',
+        'cursor' : 'Rotate/scale around current cursor location'
     },
 
     'DisplaySpaceWarning.changeDS'    : 'Change display space',

@@ -526,7 +526,8 @@ class EditTransformPanel(ctrlpanel.ControlPanel):
         else:
             origin = self.displayCtx.worldLocation
 
-        return affine.compose(scales, offsets, rotations, origin)
+        return affine.compose(scales, offsets, rotations, origin,
+                              scaleAtOrigin=True)
 
 
     def __xformChanged(self, ev=None):
