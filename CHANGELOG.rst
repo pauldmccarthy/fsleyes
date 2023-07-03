@@ -10,6 +10,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.8.0 (Under development)
+-------------------------
+
+
+Changed
+^^^^^^^
+
+
+* The _Nudge_ panel now applies scaling parameters such that the
+  centre-of-volume or the current cursor location are preserved. The previous
+  behaviour was such that location (0, 0, 0) was preserved by the scaling
+  parameters (!378).
+
+
+
 1.7.0 (Tuesday 13th June 2023)
 ------------------------------
 
