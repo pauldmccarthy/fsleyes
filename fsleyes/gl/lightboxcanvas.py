@@ -187,10 +187,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         p.gridxmax  = p.gridxmin + p.gridxlen
         p.gridymax  = p.gridymin + p.gridylen
 
-        print('GRAPA', nrows, ncols)
-        print(p)
-
-
         return p
 
 
@@ -353,8 +349,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         screeny = screenPos[opts.yax]
         col     = (screenx - xmin) / gridxlen
         row     = (screeny - ymin) / gridylen
-        col     =         int(np.floor(ncols * screenx))
-        row     = nrows - int(np.floor(nrows * screeny)) - 1
+        col     =         int(np.floor(ncols * col))
+        row     = nrows - int(np.floor(nrows * row)) - 1
         sliceno = row * ncols + col
 
         if screenx <  xmin or \
@@ -843,8 +839,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts              = self.opts
         grid              = self.gridParams
-        bounds            = self.displayCtx.bounds
         nrows             = self.nrows
+        xlen              = grid.slicexlen
+        ylen              = grid.sliceylen
         xoff              = grid.xoffset
         yoff              = grid.yoffset
         xmin              = grid.gridxmin
@@ -865,12 +862,12 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         yverts = np.zeros((2, 2))
 
         xverts[:, 0] = xpos
-        xverts[0, 1] = ymin + (row)     * yoff
-        xverts[1, 1] = ymin + (row + 1) * yoff
+        xverts[0, 1] = ymin + (row) * yoff
+        xverts[1, 1] = xverts[0, 1] + ylen
 
         yverts[:, 1] = ypos
-        yverts[0, 0] = xmin + (col)     * xoff
-        yverts[1, 0] = xmin + (col + 1) * xoff
+        yverts[0, 0] = xmin + (col) * xoff
+        yverts[1, 0] = yverts[0, 0] + xlen
 
         annot  = self.getAnnotations()
         kwargs = {
