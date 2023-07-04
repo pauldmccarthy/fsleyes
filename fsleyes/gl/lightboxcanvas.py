@@ -745,8 +745,6 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         log.debug('Required lightbox bounds: X: (%s, %s) Y: (%s, %s)',
                   xmin, xmax, ymin, ymax)
 
-        print(f'Required lightbox bounds: X: ({xmin:6.2f}, {xmax:6.2f}) Y: ({ymin:6.2f}, {ymax:6.2f})')
-
         width, height = self.GetSize()
         xmin, xmax, ymin, ymax = glroutines.preserveAspectRatio(
             width, height, xmin, xmax, ymin, ymax)
@@ -760,33 +758,48 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if len(self.__zposes) == 0:
             return
 
-        # TODO BROKEN
+        opts  = self.opts
         nrows = self.nrows
         ncols = self.ncols
         grid  = self.gridParams
-        xlen  = grid.xoffset
-        ylen  = grid.yoffset
+        xlen  = grid.slicexlen
+        ylen  = grid.sliceylen
+        xoff  = grid.xoffset
+        yoff  = grid.yoffset
         xmin  = grid.gridxmin
         ymin  = grid.gridymin
+        xmax  = grid.gridxmax
+        ymax  = grid.gridymax
 
-        rowLines = np.zeros(((nrows - 1) * 2, 2), dtype=np.float32)
-        colLines = np.zeros(((ncols - 1) * 2, 2), dtype=np.float32)
+        # no slice overlap
+        if opts.sliceOverlap == 0:
+            rowLines       = np.zeros(((nrows - 1) * 2, 2), dtype=np.float32)
+            colLines       = np.zeros(((ncols - 1) * 2, 2), dtype=np.float32)
+            colLines[:, 0] = np.arange(xmin + xlen, xmax, xlen).repeat(2)
+            rowLines[:, 1] = np.arange(ymin + ylen, ymax, ylen).repeat(2)
+            colLines[:, 1] = np.tile([ymin, ymax], ncols - 1)
+            rowLines[:, 0] = np.tile([xmin, xmax], nrows - 1)
 
-        rowLines[:, 1] = np.arange(
-            ymin + ylen,
-            ymin + ylen * nrows, ylen).repeat(2)
+        else:
+            rowLines = np.zeros(((nrows - 1) * 4, 2), dtype=np.float32)
+            colLines = np.zeros(((ncols - 1) * 4, 2), dtype=np.float32)
 
-        rowLines[:, 0] = np.tile(
-            np.array([xmin, xmin + ncols * xlen]),
-            nrows - 1)
+            nrowpairs = (nrows - 1) * 2
+            ncolpairs = (ncols - 1) * 2
 
-        colLines[:, 0] = np.arange(
-            xmin + xlen,
-            xmin + xlen * ncols, xlen).repeat(2)
+            # Vertices for lines at bottom/left of each slice
+            rowLines[:nrowpairs, 1] = ymin + yoff + \
+                yoff * np.arange(nrowpairs / 2).repeat(2)
+            colLines[:ncolpairs, 0] = xmin + xoff + \
+                xoff * np.arange(ncolpairs / 2).repeat(2)
 
-        colLines[:, 1] = np.tile(
-            np.array([ymin, ymin + ylen * nrows]),
-            ncols - 1)
+            # Vertices for lines at top/right of each slice
+            rowLines[nrowpairs:, 1] = rowLines[:nrowpairs, 1] + (ylen - yoff)
+            colLines[ncolpairs:, 0] = colLines[:ncolpairs, 0] + (xlen - xoff)
+
+            # Row x/col y coords
+            rowLines[:, 0] = np.tile([xmin, xmax], nrowpairs)
+            colLines[:, 1] = np.tile([ymin, ymax], ncolpairs)
 
         colour = (0.3, 0.9, 1.0, 0.8)
 
