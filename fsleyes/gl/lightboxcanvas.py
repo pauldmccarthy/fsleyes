@@ -114,18 +114,19 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         self.__labelMgr = lblabels.LightBoxLabels(self)
 
-        opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
-        opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
-        opts.ilisten('zrange',         self.name, self._slicePropsChanged)
-        opts.ilisten('nrows',          self.name, self._slicePropsChanged)
-        opts.ilisten('ncols',          self.name, self._slicePropsChanged)
-        opts.ilisten('invertX',        self.name, self._slicePropsChanged,
+        opts.ilisten('sliceSpacing',      self.name, self._slicePropsChanged)
+        opts.ilisten('sliceOverlap',      self.name, self._slicePropsChanged)
+        opts.ilisten('zrange',            self.name, self._slicePropsChanged)
+        opts.ilisten('nrows',             self.name, self._slicePropsChanged)
+        opts.ilisten('ncols',             self.name, self._slicePropsChanged)
+        opts.ilisten('invertX',           self.name, self._slicePropsChanged,
                      overwrite=True)
-        opts.ilisten('invertY',        self.name, self._slicePropsChanged,
+        opts.ilisten('invertY',           self.name, self._slicePropsChanged,
                      overwrite=True)
-        opts. listen('showGridLines',  self.name, self.Refresh)
-        opts. listen('highlightSlice', self.name, self.Refresh)
-        opts. listen('labelSpace',     self.name, self.Refresh)
+        opts. listen('showGridLines',     self.name, self.Refresh)
+        opts. listen('highlightSlice',    self.name, self.Refresh)
+        opts. listen('labelSpace',        self.name, self.Refresh)
+        opts. listen('sliceOverlapOrder', self.name, self.Refresh)
 
 
     def destroy(self):
@@ -208,7 +209,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # slice/row/column indices
         zlo     = opts.normzrange[0]
         zpos    = pos[opts.zax]
+
         sliceno = (zpos - zmin) / zlen - zlo
+
         sliceno = int(np.floor(sliceno / opts.sliceSpacing))
         row     = int(np.floor(sliceno / ncols))
         col     = int(np.floor(sliceno % ncols))
@@ -339,6 +342,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ymax      = grid.gridymax
         slicexlen = grid.slicexlen
         sliceylen = grid.sliceylen
+        gridxlen  = grid.gridxlen
         gridylen  = grid.gridylen
 
         # The [ymin, ymax] on the canvas is at [bottom,
@@ -347,13 +351,27 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # an inverted Y coordinate.
         screenx    = screenPos[opts.xax]
         screeny    = screenPos[opts.yax]
+        invscreenx = xmin + gridxlen - screenx + xmin
         invscreeny = ymin + gridylen - screeny + ymin
 
         # Convert coordinates into row/column indices
         # using the x/y offsets - these will be equal
         # to slice x/y lengths when sliceOverlap is 0.
-        col = np.floor((screenx    - xmin) / grid.xoffset)
-        row = np.floor((invscreeny - ymin) / grid.yoffset)
+        #
+        # However, if we are drawing slices in reverse
+        # order (so that lower slices are drawn on top
+        # of higher slices), we calculate the
+        # row/column indices from inverted x/y
+        # coordinates, so that coordinates in overlapping
+        # areas will be assigned to the lower slice.
+        if opts.sliceOverlapOrder == '+':
+            col = np.floor((invscreenx - xmin) / grid.xoffset)
+            row = np.floor((screeny    - ymin) / grid.yoffset)
+            col = ncols - col - 1
+            row = nrows - row - 1
+        else:
+            col = np.floor((screenx    - xmin) / grid.xoffset)
+            row = np.floor((invscreeny - ymin) / grid.yoffset)
 
         # If sliceOverlap > 0, x/y offset will be less
         # than slice x/y lengths, so we need to ensure
@@ -954,6 +972,10 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         zposes = self.__zposes
         xforms = self.__xforms
+
+        if opts.sliceOverlapOrder == '+':
+            zposes = list(reversed(zposes))
+            xforms = list(reversed(xforms))
 
         # Draw all the slices for all the overlays.
         for overlay, globj in zip(overlays, globjs):

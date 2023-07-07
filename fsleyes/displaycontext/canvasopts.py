@@ -278,6 +278,15 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     and vertical axes).
     """
 
+    sliceOverlapOrder = props.Choice(('-', '+'))
+    """When ``sliceOverlap > 0``, adjacent slices will be drawn on top of each
+    other. This property controls the order in which slices are drawn. The
+    default value (``'-'``) will cause slices with a low Z value to be drawn
+    first, with the effect that slices with higher Z values will be drawn on
+    top. When this property is set to ``'+'``, the drawing order is reversed,
+    so slices with a lower Z value will be drawn on top.
+    """
+
 
     def __init__(self):
         super().__init__()
