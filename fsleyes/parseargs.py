@@ -464,7 +464,8 @@ OPTIONS = td.TypeDict({
                        'showGridLines',
                        'highlightSlice',
                        'sliceLocation',
-                       'labelSpace'],
+                       'labelSpace',
+                       'sliceOverlap'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
                        'light',
@@ -846,6 +847,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.sliceLocation'  : ('ll', 'sliceLocation',  False),
     'LightBoxOpts.labelSpace'     : ('sp', 'labelSpace',     True),
+    'LightBoxOpts.sliceOverlap'   : ('so', 'sliceOverlap',   True),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
@@ -1145,6 +1147,8 @@ HELP = td.TypeDict({
                                     'specified',
     'LightBoxOpts.labelSpace'     : 'Show slice locations in this coordinate '
                                     'system.',
+    'LightBoxOpts.sliceOverlap'   : 'Overlap adjacent slices by this much, '
+                                    'specified as a percentage.',
     'LightBoxOpts.zax'            : 'Z axis',
 
     'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
