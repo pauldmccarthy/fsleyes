@@ -160,21 +160,18 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
     @property
     def gridParams(self):
-
-        opts     = self.opts
-        bounds   = self.displayCtx.bounds
-        overlap  = opts.sliceOverlap / 100
-        nrows    = self.nrows
-        ncols    = self.ncols
+        """Return an object which contains properties describing the current
+        slice grid layout.
+        """
 
         class Params:
-            def __str__(self):
-                s = 'PARAMS\n'
-                for g in dir(self):
-                    if not g.startswith('_'):
-                        s += f'{g} = {getattr(self, g)}\n'
-                return s
+            pass
 
+        opts        = self.opts
+        bounds      = self.displayCtx.bounds
+        overlap     = opts.sliceOverlap / 100
+        nrows       = self.nrows
+        ncols       = self.ncols
         p           = Params()
         p.gridxmin  = bounds.getLo( opts.xax)
         p.gridymin  = bounds.getLo( opts.yax)
@@ -342,15 +339,27 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         ymax      = grid.gridymax
         slicexlen = grid.slicexlen
         sliceylen = grid.sliceylen
-        gridxlen  = grid.gridxlen
         gridylen  = grid.gridylen
 
-        screenx = screenPos[opts.xax]
-        screeny = screenPos[opts.yax]
-        col     = (screenx - xmin) / gridxlen
-        row     = (screeny - ymin) / gridylen
-        col     =         int(np.floor(ncols * col))
-        row     = nrows - int(np.floor(nrows * row)) - 1
+        # The [ymin, ymax] on the canvas is at [bottom,
+        # top], but in the slice grid we denote the top
+        # row as 0.  So we calculate the row index from
+        # an inverted Y coordinate.
+        screenx    = screenPos[opts.xax]
+        screeny    = screenPos[opts.yax]
+        invscreeny = ymin + gridylen - screeny + ymin
+
+        # Convert coordinates into row/column indices
+        # using the x/y offsets - these will be equal
+        # to slice x/y lengths when sliceOverlap is 0.
+        col = np.floor((screenx    - xmin) / grid.xoffset)
+        row = np.floor((invscreeny - ymin) / grid.yoffset)
+
+        # If sliceOverlap > 0, x/y offset will be less
+        # than slice x/y lengths, so we need to ensure
+        # that the indices are clamped to the max.
+        col     = int(np.clip(col, 0, ncols - 1))
+        row     = int(np.clip(row, 0, nrows - 1))
         sliceno = row * ncols + col
 
         if screenx <  xmin or \
