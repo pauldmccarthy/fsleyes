@@ -373,7 +373,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # row/column indices from inverted x/y
         # coordinates, so that coordinates in overlapping
         # areas will be assigned to the lower slice.
-        if opts.sliceOverlapOrder == '+':
+        if opts.sliceOverlapOrder == '-':
             col = np.floor((invscreenx - xmin) / grid.xoffset)
             row = np.floor((screeny    - ymin) / grid.yoffset)
             col = ncols - col - 1
@@ -988,7 +988,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zposes = self.__zposes
         xforms = self.__xforms
 
-        if opts.sliceOverlapOrder == '+':
+        if opts.sliceOverlapOrder == '-':
             zposes = list(reversed(zposes))
             xforms = list(reversed(xforms))
 
