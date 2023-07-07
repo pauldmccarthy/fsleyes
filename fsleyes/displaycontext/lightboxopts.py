@@ -9,8 +9,8 @@ by :class:`.LightBoxPanel` instances for managing their display settings.
 """
 
 
-import logging
-import copy
+import           logging
+from copy import copy
 
 import fsleyes_props as props
 
@@ -30,15 +30,17 @@ class LightBoxOpts(sceneopts.SceneOpts):
     details.
     """
 
-    sliceSpacing   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
-    sliceOverlap   = copy.copy(canvasopts.LightBoxCanvasOpts.sliceOverlap)
-    zax            = copy.copy(canvasopts.LightBoxCanvasOpts.zax)
-    zrange         = copy.copy(canvasopts.LightBoxCanvasOpts.zrange)
-    nrows          = copy.copy(canvasopts.LightBoxCanvasOpts.nrows)
-    ncols          = copy.copy(canvasopts.LightBoxCanvasOpts.ncols)
-    showGridLines  = copy.copy(canvasopts.LightBoxCanvasOpts.showGridLines)
-    highlightSlice = copy.copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
-    labelSpace     = copy.copy(canvasopts.LightBoxCanvasOpts.labelSpace)
+    sliceSpacing      = copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
+    sliceOverlap      = copy(canvasopts.LightBoxCanvasOpts.sliceOverlap)
+    sliceOverlapOrder = copy(canvasopts.LightBoxCanvasOpts.sliceOverlapOrder)
+    sliceOrder        = copy(canvasopts.LightBoxCanvasOpts.sliceOrder)
+    zax               = copy(canvasopts.LightBoxCanvasOpts.zax)
+    zrange            = copy(canvasopts.LightBoxCanvasOpts.zrange)
+    nrows             = copy(canvasopts.LightBoxCanvasOpts.nrows)
+    ncols             = copy(canvasopts.LightBoxCanvasOpts.ncols)
+    showGridLines     = copy(canvasopts.LightBoxCanvasOpts.showGridLines)
+    highlightSlice    = copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
+    labelSpace        = copy(canvasopts.LightBoxCanvasOpts.labelSpace)
 
     # SliceCanvas has (prerender, offscreen, onscreen)
     # performance settings, but LightBoxCanvas only has

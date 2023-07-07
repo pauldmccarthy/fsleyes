@@ -120,13 +120,15 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
         # propagated to the LBOpts instance, rather
         # than the non-sensible default values in the
         # LBOpts instance.
-        sceneOpts.bind('zax',          lbopts)
-        sceneOpts.bind('sliceSpacing', lbopts)
-        sceneOpts.bind('sliceOverlap', lbopts)
-        sceneOpts.bind('zrange',       lbopts)
-        sceneOpts.bind('nrows',        lbopts)
-        sceneOpts.bind('ncols',        lbopts)
-        sceneOpts.bind('zoom',         lbopts)
+        sceneOpts.bind('zax',               lbopts)
+        sceneOpts.bind('sliceSpacing',      lbopts)
+        sceneOpts.bind('sliceOverlap',      lbopts)
+        sceneOpts.bind('sliceOverlapOrder', lbopts)
+        sceneOpts.bind('sliceOrder',        lbopts)
+        sceneOpts.bind('zrange',            lbopts)
+        sceneOpts.bind('nrows',             lbopts)
+        sceneOpts.bind('ncols',             lbopts)
+        sceneOpts.bind('zoom',              lbopts)
 
         self.__canvasSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.contentPanel.SetSizer(self.__canvasSizer)

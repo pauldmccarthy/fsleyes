@@ -271,12 +271,19 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
+    sliceOrder = props.Choice(('+', '-'))
+    """Controls whether slices are drawn from low Z value to high Z value
+    (``'-'``, the default) or from high Z value to low Z value (``'+'``).
+    """
+
+
     sliceOverlap = props.Percentage(minval=0, maxval=75, default=0,
                                     clamped=True)
     """How much the slice rows/columns overlap with each other. Can range
     from 0 (default, no overlap) to 50 (50% overlap along both horizontal
     and vertical axes).
     """
+
 
     sliceOverlapOrder = props.Choice(('-', '+'))
     """When ``sliceOverlap > 0``, adjacent slices will be drawn on top of each

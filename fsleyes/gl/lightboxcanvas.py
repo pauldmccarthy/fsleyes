@@ -31,10 +31,13 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     multiple slices from a collection of 3D overlays. The slices are laid
     out on the same canvas along rows and columns, with the slice at the
     minimum Z position translated to the top left of the canvas, and the
-    slice with the maximum Z value translated to the bottom right. A
-    suitable number of rows and columns are automatically calculated
-    whenever the canvas size is changed, or any
-    :class:`.LightBoxCanvasOpts` properties change.
+    slice with the maximum Z value translated to the bottom right (this
+    mapping can be inverted via the :attr:`.LightBoxCanvasOpts.sliceOrder`
+    property).
+
+    A suitable number of rows and columns are automatically calculated
+    whenever the canvas size is changed, or any :class:`.LightBoxCanvasOpts`
+    properties change.
 
     .. note:: The :class:`LightBoxCanvas` class is not intended to be
               instantiated directly - use one of these subclasses, depending
@@ -116,6 +119,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.ilisten('sliceSpacing',      self.name, self._slicePropsChanged)
         opts.ilisten('sliceOverlap',      self.name, self._slicePropsChanged)
+        opts.ilisten('sliceOrder',        self.name, self._slicePropsChanged)
         opts.ilisten('zrange',            self.name, self._slicePropsChanged)
         opts.ilisten('nrows',             self.name, self._slicePropsChanged)
         opts.ilisten('ncols',             self.name, self._slicePropsChanged)
@@ -141,14 +145,16 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts = self.opts
         name = self.name
 
-        opts.remove('sliceSpacing',   name)
-        opts.remove('sliceOverlap',   name)
-        opts.remove('zrange',         name)
-        opts.remove('nrows',          name)
-        opts.remove('ncols',          name)
-        opts.remove('showGridLines',  name)
-        opts.remove('highlightSlice', name)
-        opts.remove('labelSpace',     name)
+        opts.remove('sliceSpacing',      name)
+        opts.remove('sliceOverlap',      name)
+        opts.remove('sliceOverlapOrder', name)
+        opts.remove('sliceOrder',        name)
+        opts.remove('zrange',            name)
+        opts.remove('nrows',             name)
+        opts.remove('ncols',             name)
+        opts.remove('showGridLines',     name)
+        opts.remove('highlightSlice',    name)
+        opts.remove('labelSpace',        name)
 
         if self._offscreenRenderTexture is not None:
             self._offscreenRenderTexture.destroy()
@@ -196,6 +202,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts    = self.opts
         bounds  = self.displayCtx.bounds
         ncols   = self.ncols
+        nslices = len(self.__zposes)
         zmin    = bounds.getLo( opts.zax)
         zlen    = bounds.getLen(opts.zax)
 
@@ -209,12 +216,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # slice/row/column indices
         zlo     = opts.normzrange[0]
         zpos    = pos[opts.zax]
-
         sliceno = (zpos - zmin) / zlen - zlo
-
         sliceno = int(np.floor(sliceno / opts.sliceSpacing))
-        row     = int(np.floor(sliceno / ncols))
-        col     = int(np.floor(sliceno % ncols))
+
+        if opts.sliceOrder == '-':
+            sliceno = nslices - sliceno - 1
+
+        row = int(np.floor(sliceno / ncols))
+        col = int(np.floor(sliceno % ncols))
 
         return sliceno, row, col
 
@@ -713,9 +722,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # of all slices to be displayed on the canvas, and
         # calculate the X/Y transformation for each slice
         # to position it on the canvas
-        start = opts.startslice
-        end   = start + nslices
-        self.__zposes = zmin + opts.slices[start:end] * zlen
+        start  = opts.startslice
+        end    = start + nslices
+        zposes = zmin + opts.slices[start:end] * zlen
+
+        if opts.sliceOrder == '-':
+            zposes = zposes[::-1]
+
+        self.__zposes = zposes
         self.__xforms = []
         self.__nrows  = nrows
         self.__ncols  = ncols
@@ -734,8 +748,9 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         for sliceno in range(len(self.__zposes)):
 
-            row                = int(np.floor(sliceno / ncols))
-            col                = int(np.floor(sliceno % ncols))
+            row = int(np.floor(sliceno / ncols))
+            col = int(np.floor(sliceno % ncols))
+
             xform              = np.eye(4, dtype=np.float32)
             xform[opts.xax, 3] = grid.xoffset * col
             xform[opts.yax, 3] = grid.yoffset * (nrows - row - 1)
