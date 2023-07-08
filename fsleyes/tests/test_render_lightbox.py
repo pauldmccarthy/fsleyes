@@ -113,6 +113,17 @@ cli_tests_parametrize_zax = """
 -zx {{zax}}           -sp world -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
 -zx {{zax}} -ds world -sp voxel -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
 -zx {{zax}} -ds world -sp world -zr 0 1 {{swapdim('3d', '-y', 'z', '-x')}} -b 30
+
+# slice overlap+reverse
+-zx {{zax}} -so 30 -zr 0 1     3d
+-zx {{zax}} -so 30 -zr 0 1 -hs 3d
+-zx {{zax}} -so 30 -zr 0 1 -sg 3d
+-zx {{zax}} -so 30 -zr 0 1 -ro 3d
+
+
+# reverse slices
+-zx {{zax}} -so 30 -zr 0 1 -rs 3d
+-zx {{zax}} -nr 1  -zr 0 1 -rs 3d
 """
 
 
