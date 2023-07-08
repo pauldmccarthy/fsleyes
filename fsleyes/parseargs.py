@@ -465,9 +465,9 @@ OPTIONS = td.TypeDict({
                        'highlightSlice',
                        'sliceLocation',
                        'labelSpace',
-                       'sliceOrder',
+                       'reverseSlices',
                        'sliceOverlap',
-                       'sliceOverlapOrder'],
+                       'reverseOverlap'],
     'Scene3DOpts'   : ['zoom',
                        'showLegend',
                        'light',
@@ -840,19 +840,19 @@ ARGUMENTS = td.TypeDict({
     'OrthoOpts.invertZHorizontal' : ('izh', 'invertZHorizontal', False),
     'OrthoOpts.invertZVertical'   : ('izv', 'invertZVertical',   False),
 
-    'LightBoxOpts.sliceSpacing'      : ('ss',  'sliceSpacing',      True),
-    'LightBoxOpts.numSlices'         : ('ns',  'numSlices',         True),
-    'LightBoxOpts.ncols'             : ('nc',  'ncols',             True),
-    'LightBoxOpts.nrows'             : ('nr',  'nrows',             True),
-    'LightBoxOpts.zrange'            : ('zr',  'zrange',            True),
-    'LightBoxOpts.showGridLines'     : ('sg',  'showGridLines',     False),
-    'LightBoxOpts.highlightSlice'    : ('hs',  'highlightSlice',    False),
-    'LightBoxOpts.sliceLocation'     : ('ll',  'sliceLocation',     False),
-    'LightBoxOpts.labelSpace'        : ('sp',  'labelSpace',        True),
-    'LightBoxOpts.sliceOrder'        : ('so',  'sliceOrder',        True),
-    'LightBoxOpts.sliceOverlap'      : ('sv',  'sliceOverlap',      True),
-    'LightBoxOpts.sliceOverlapOrder' : ('svo', 'sliceOverlapOrder', True),
-    'LightBoxOpts.zax'               : ('zx',  'zaxis',             True),
+    'LightBoxOpts.sliceSpacing'   : ('ss', 'sliceSpacing',   True),
+    'LightBoxOpts.numSlices'      : ('ns', 'numSlices',      True),
+    'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
+    'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
+    'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
+    'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
+    'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
+    'LightBoxOpts.sliceLocation'  : ('ll', 'sliceLocation',  False),
+    'LightBoxOpts.labelSpace'     : ('sp', 'labelSpace',     True),
+    'LightBoxOpts.reverseSlices'  : ('rs', 'reverseSlices',  False),
+    'LightBoxOpts.sliceOverlap'   : ('so', 'sliceOverlap',   True),
+    'LightBoxOpts.reverseOverlap' : ('ro', 'reverseOverlap', False),
+    'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
     'Scene3DOpts.showLegend'     : ('he',  'hideLegend',     False),
@@ -1155,13 +1155,13 @@ HELP = td.TypeDict({
     '--labelSpace is specified',
     'LightBoxOpts.labelSpace' :
     'Show slice locations in this coordinate system.',
-    'LightBoxOpts.sliceOrder' :
-    'Display slices from low to high (-, default), or from high to low (+).',
+    'LightBoxOpts.reverseSlices' :
+    'Display slices from high to low Z value, instead of low to high.',
     'LightBoxOpts.sliceOverlap' :
     'Overlap adjacent slices by this much, specified as a percentage.',
-    'LightBoxOpts.sliceOverlapOrder' :
-    'Draw higher slices on top of lower slices (+, default), or slices lower '
-    'on top of higher slices (-).',
+    'LightBoxOpts.reverseOverlap' :
+    'Draw lower slices on top of higher slices instead of higher on top of '
+    'lower.',
     'LightBoxOpts.zax' :
     'Z axis',
 

@@ -32,7 +32,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     out on the same canvas along rows and columns, with the slice at the
     minimum Z position translated to the top left of the canvas, and the
     slice with the maximum Z value translated to the bottom right (this
-    mapping can be inverted via the :attr:`.LightBoxCanvasOpts.sliceOrder`
+    mapping can be inverted via the :attr:`.LightBoxCanvasOpts.reverseSlices`
     property).
 
     A suitable number of rows and columns are automatically calculated
@@ -117,20 +117,20 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         self.__labelMgr = lblabels.LightBoxLabels(self)
 
-        opts.ilisten('sliceSpacing',      self.name, self._slicePropsChanged)
-        opts.ilisten('sliceOverlap',      self.name, self._slicePropsChanged)
-        opts.ilisten('sliceOrder',        self.name, self._slicePropsChanged)
-        opts.ilisten('zrange',            self.name, self._slicePropsChanged)
-        opts.ilisten('nrows',             self.name, self._slicePropsChanged)
-        opts.ilisten('ncols',             self.name, self._slicePropsChanged)
-        opts.ilisten('invertX',           self.name, self._slicePropsChanged,
+        opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
+        opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
+        opts.ilisten('reverseSlices',  self.name, self._slicePropsChanged)
+        opts.ilisten('zrange',         self.name, self._slicePropsChanged)
+        opts.ilisten('nrows',          self.name, self._slicePropsChanged)
+        opts.ilisten('ncols',          self.name, self._slicePropsChanged)
+        opts.ilisten('invertX',        self.name, self._slicePropsChanged,
                      overwrite=True)
-        opts.ilisten('invertY',           self.name, self._slicePropsChanged,
+        opts.ilisten('invertY',        self.name, self._slicePropsChanged,
                      overwrite=True)
-        opts. listen('showGridLines',     self.name, self.Refresh)
-        opts. listen('highlightSlice',    self.name, self.Refresh)
-        opts. listen('labelSpace',        self.name, self.Refresh)
-        opts. listen('sliceOverlapOrder', self.name, self.Refresh)
+        opts. listen('showGridLines',  self.name, self.Refresh)
+        opts. listen('highlightSlice', self.name, self.Refresh)
+        opts. listen('labelSpace',     self.name, self.Refresh)
+        opts. listen('reverseOverlap', self.name, self.Refresh)
 
 
     def destroy(self):
@@ -145,16 +145,16 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts = self.opts
         name = self.name
 
-        opts.remove('sliceSpacing',      name)
-        opts.remove('sliceOverlap',      name)
-        opts.remove('sliceOverlapOrder', name)
-        opts.remove('sliceOrder',        name)
-        opts.remove('zrange',            name)
-        opts.remove('nrows',             name)
-        opts.remove('ncols',             name)
-        opts.remove('showGridLines',     name)
-        opts.remove('highlightSlice',    name)
-        opts.remove('labelSpace',        name)
+        opts.remove('sliceSpacing',   name)
+        opts.remove('sliceOverlap',   name)
+        opts.remove('reverseOverlap', name)
+        opts.remove('reverseSlices',  name)
+        opts.remove('zrange',         name)
+        opts.remove('nrows',          name)
+        opts.remove('ncols',          name)
+        opts.remove('showGridLines',  name)
+        opts.remove('highlightSlice', name)
+        opts.remove('labelSpace',     name)
 
         if self._offscreenRenderTexture is not None:
             self._offscreenRenderTexture.destroy()
@@ -219,7 +219,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         sliceno = (zpos - zmin) / zlen - zlo
         sliceno = int(np.floor(sliceno / opts.sliceSpacing))
 
-        if opts.sliceOrder == '-':
+        if opts.reverseSlices:
             sliceno = nslices - sliceno - 1
 
         row = int(np.floor(sliceno / ncols))
@@ -373,7 +373,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         # row/column indices from inverted x/y
         # coordinates, so that coordinates in overlapping
         # areas will be assigned to the lower slice.
-        if opts.sliceOverlapOrder == '-':
+        if opts.reverseOverlap:
             col = np.floor((invscreenx - xmin) / grid.xoffset)
             row = np.floor((screeny    - ymin) / grid.yoffset)
             col = ncols - col - 1
@@ -726,7 +726,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         end    = start + nslices
         zposes = zmin + opts.slices[start:end] * zlen
 
-        if opts.sliceOrder == '-':
+        if opts.reverseSlices:
             zposes = zposes[::-1]
 
         self.__zposes = zposes
@@ -988,7 +988,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         zposes = self.__zposes
         xforms = self.__xforms
 
-        if opts.sliceOverlapOrder == '-':
+        if opts.reverseOverlap:
             zposes = list(reversed(zposes))
             xforms = list(reversed(xforms))
 

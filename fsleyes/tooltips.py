@@ -524,6 +524,11 @@ properties = TypeDict({
     'The spacing between adjacent slices, specified as a percentage.',
     'LightBoxOpts.sliceOverlap' :
     'The overlap between adjacent slices, specified as a percentage.',
+    'LightBoxOpts.reverseSlices' :
+    'Draw slices from high Z value to low Z value, instead of low to high.',
+    'LightBoxOpts.reverseOverlap' :
+    'Overlap slices with lower Z value on top of slices with higher Z value, '
+    'instead of the default of overlapping higher on top of lower.',
     'LightBoxOpts.zrange' :
     'The start/end points of the displayed range of slices, specified as '
     'percentages.',

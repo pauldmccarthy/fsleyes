@@ -1037,6 +1037,9 @@ properties = TypeDict({
     'LightBoxOpts.showGridLines'  : 'Show grid lines',
     'LightBoxOpts.sliceSpacing'   : 'Slice spacing',
     'LightBoxOpts.sliceOverlap'   : 'Slice overlap',
+    'LightBoxOpts.reverseSlices'  : 'Reverse slice order',
+    'LightBoxOpts.reverseOverlap' : 'Reverse slice overlap',
+    'LightBoxOpts.sliceOverlap'   : 'Slice overlap',
     'LightBoxOpts.zrange'         : 'Z range',
     'LightBoxOpts.labelSpace'     : 'Show slice location',
 

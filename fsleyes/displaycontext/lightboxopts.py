@@ -30,17 +30,17 @@ class LightBoxOpts(sceneopts.SceneOpts):
     details.
     """
 
-    sliceSpacing      = copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
-    sliceOverlap      = copy(canvasopts.LightBoxCanvasOpts.sliceOverlap)
-    sliceOverlapOrder = copy(canvasopts.LightBoxCanvasOpts.sliceOverlapOrder)
-    sliceOrder        = copy(canvasopts.LightBoxCanvasOpts.sliceOrder)
-    zax               = copy(canvasopts.LightBoxCanvasOpts.zax)
-    zrange            = copy(canvasopts.LightBoxCanvasOpts.zrange)
-    nrows             = copy(canvasopts.LightBoxCanvasOpts.nrows)
-    ncols             = copy(canvasopts.LightBoxCanvasOpts.ncols)
-    showGridLines     = copy(canvasopts.LightBoxCanvasOpts.showGridLines)
-    highlightSlice    = copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
-    labelSpace        = copy(canvasopts.LightBoxCanvasOpts.labelSpace)
+    sliceSpacing   = copy(canvasopts.LightBoxCanvasOpts.sliceSpacing)
+    sliceOverlap   = copy(canvasopts.LightBoxCanvasOpts.sliceOverlap)
+    reverseOverlap = copy(canvasopts.LightBoxCanvasOpts.reverseOverlap)
+    reverseSlices  = copy(canvasopts.LightBoxCanvasOpts.reverseSlices)
+    zax            = copy(canvasopts.LightBoxCanvasOpts.zax)
+    zrange         = copy(canvasopts.LightBoxCanvasOpts.zrange)
+    nrows          = copy(canvasopts.LightBoxCanvasOpts.nrows)
+    ncols          = copy(canvasopts.LightBoxCanvasOpts.ncols)
+    showGridLines  = copy(canvasopts.LightBoxCanvasOpts.showGridLines)
+    highlightSlice = copy(canvasopts.LightBoxCanvasOpts.highlightSlice)
+    labelSpace     = copy(canvasopts.LightBoxCanvasOpts.labelSpace)
 
     # SliceCanvas has (prerender, offscreen, onscreen)
     # performance settings, but LightBoxCanvas only has
