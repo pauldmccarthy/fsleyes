@@ -467,6 +467,9 @@ def createLightBoxCanvas(namespace,
     opts.renderMode     = sceneOpts.renderMode
     opts.zax            = sceneOpts.zax
     opts.sliceSpacing   = sceneOpts.sliceSpacing
+    opts.reverseSlices  = sceneOpts.reverseSlices
+    opts.sliceOverlap   = sceneOpts.sliceOverlap
+    opts.reverseOverlap = sceneOpts.reverseOverlap
     opts.nrows          = sceneOpts.nrows
     opts.ncols          = sceneOpts.ncols
     opts.zrange         = sceneOpts.zrange
