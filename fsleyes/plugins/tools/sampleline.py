@@ -336,10 +336,7 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
         # Controls which allow the user to select
         # interpolation/resolution, line colour, etc
         widgets = widgetlist.WidgetList(self)
-        legend = props.makeWidget(
-            widgets, canvas, 'legend',
-            labels=strings.properties['PlotCanvas.legend'])
-
+        legend = props.makeWidget(widgets, canvas, 'legend')
         interp = props.makeWidget(
             widgets, self, 'interp', labels=strings.choices[self, 'interp'])
         resolution = props.makeWidget(
