@@ -32,7 +32,8 @@ Changed
   centre-of-volume or the current cursor location are preserved. The previous
   behaviour was such that location (0, 0, 0) was preserved by the scaling
   parameters (!378).
-
+* The FEAT cluster panel now remembers which contrast for a FEAT analysis was
+  selected when switching between different analyses (!380).
 
 
 1.7.0 (Tuesday 13th June 2023)
