@@ -271,6 +271,30 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
+    reverseSlices = props.Boolean(default=False)
+    """Controls whether slices are drawn from low Z value to high Z value
+    (``False``, the default) or from high Z value to low Z value (``True``).
+    """
+
+
+    sliceOverlap = props.Percentage(minval=0, maxval=75, default=0,
+                                    clamped=True)
+    """How much the slice rows/columns overlap with each other. Can range
+    from 0 (default, no overlap) to 50 (50% overlap along both horizontal
+    and vertical axes).
+    """
+
+
+    reverseOverlap = props.Boolean(default=False)
+    """When ``sliceOverlap > 0``, adjacent slices will be drawn on top of each
+    other. This property controls the order in which slices are drawn. The
+    default value (``'+'``) will cause slices with a low Z value to be drawn
+    first, with the effect that slices with higher Z values will be drawn on
+    top. When this property is set to ``'-'``, the drawing order is reversed,
+    so slices with a lower Z value will be drawn on top.
+    """
+
+
     def __init__(self):
         super().__init__()
         name = self.name

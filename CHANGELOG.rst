@@ -14,6 +14,16 @@ chronological order.
 -------------------------
 
 
+Added
+^^^^^
+
+
+* New features in the lightbox view, allowing slices to be overlapping, and
+  the order in which slices are displayed to be reversed. These features are
+  available on the command-line via the ``--sliceOverlap`` and
+  ``--reverseSlices`` flags (!379).
+
+
 Changed
 ^^^^^^^
 

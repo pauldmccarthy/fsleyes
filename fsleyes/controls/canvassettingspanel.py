@@ -180,7 +180,10 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('zoom',
              props.Widget('zoom', showLimits=False, spin=False)),
             ('sliceSpacing',   props.Widget('sliceSpacing', showLimits=False)),
+            ('sliceOverlap',   props.Widget('sliceOverlap', showLimits=False)),
             ('zrange',         props.Widget('zrange',       showLimits=False)),
+            ('reverseSlices',  props.Widget('reverseSlices')),
+            ('reverseOverlap', props.Widget('reverseOverlap')),
             ('highlightSlice', props.Widget('highlightSlice')),
             ('showGridLines',  props.Widget('showGridLines')),
             ('labelSpace',     props.Widget(
