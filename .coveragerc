@@ -1,6 +1,0 @@
-[run]
-source = fsleyes
-
-[report]
-omit =
-    fsleyes/tests/*

@@ -1,0 +1,120 @@
+[build-system]
+requires      = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name            = "fsleyes"
+dynamic         = ["version"]
+description     = "FSLeyes, the FSL image viewer"
+readme          = {file = "README.rst", content-type="text/x-rst"}
+license         = {text = "Apache License Version 2.0"}
+requires-python = ">=3.8"
+authors         = [{name = "Paul McCarthy", email = "pauldmccarthy@gmail.com"}]
+
+dependencies = [
+  "jinja2 >=2",
+  "pillow >=3.2.0",
+  "pyopengl >=3.1.0",
+  "fsleyes-props >=1.10",
+  "fsleyes-widgets >=0.14",
+  "fslpy >=3.13.3",
+  "matplotlib >=3.5",
+  "nibabel >=2.3",
+  "numpy >=1.14",
+  "pyparsing >=2",
+  "scipy >=0.18",
+  "wxpython >=4"
+]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Scientific/Engineering :: Visualization"
+]
+
+
+[project.urls]
+"Repository"         = "https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/"
+"User documentation" = "https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/"
+"API documentation"  = "https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/"
+
+
+[project.optional-dependencies]
+darwin = [
+  # appnope required for interactivity
+  # when FSLeyes is being driven from
+  # ipython/jupyter notebook.
+  "appnope ==0.1.*"
+]
+extra = [
+  "file-tree",
+  "file-tree-fsl",
+  "indexed_gzip >=0.7.0",
+  "ipykernel >=4.8",
+  "ipython >=5",
+  "jupyter_client >=5.3.1",
+  "notebook >=6.0.0",
+  "pyzmq >=17.0",
+  "rtree >=0.8.3",
+  "tornado >=5.0",
+  "trimesh >=2.37.29",
+  "wxnatpy >=0.4.0",
+  "xnat >=0.3.3"
+]
+doc = [
+  "sphinx",
+  "sphinx_rtd_theme"
+]
+test = [
+  "pytest",
+  "coverage",
+  "pytest-cov",
+  "tomli; python_version < \"3.11\""
+ ]
+style = [
+  "pylint",
+  "flake8"
+]
+
+
+[project.gui-scripts]
+fsleyes            = "fsleyes.filtermain:main"
+fsleyes_unfiltered = "fsleyes.main:main"
+
+[project.scripts]
+render = "fsleyes.render:main"
+
+
+[tool.setuptools.packages.find]
+include = ["fsleyes*"]
+exclude = ["fsleyes.tests*"]
+
+
+[tool.setuptools.package-data]
+fsleyes = ["assets/*", "tests/*"]
+
+
+[tool.setuptools.dynamic]
+version = {attr = "fsleyes.version.__version__"}
+
+
+[tool.coverage.run]
+include = ["fsleyes/*"]
+omit    = ["fsleyes/tests/*"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["fsleyes/tests"]
+addopts   = "-v --cov=fsleyes --niters=10 --showlocals --import-mode=importlib"
+markers   = [
+  "overlayclitest: Overlay scene test invoked via fsleyes render",
+  "clitest:        Test invoked via fsleyes render",
+  "gl33test:       Test requiring OpenGL 3.3 or newer"]
