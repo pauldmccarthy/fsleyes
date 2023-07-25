@@ -48,6 +48,10 @@ tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . 
 # print environment
 pip freeze
 
+# fsleyes/tests do not get installed into env,
+# so put the local folder on the $PYTHONPATH
+export PYTHONPATH=$(pwd)
+
 if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 
   # style stage
