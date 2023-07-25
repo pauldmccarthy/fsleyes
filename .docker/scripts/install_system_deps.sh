@@ -29,6 +29,7 @@ update-locale
 cat /etc/lsb-release | grep "14.04" && apt-get install -y libspatialindex-c3   || true
 cat /etc/lsb-release | grep "16.04" && apt-get install -y libspatialindex-c4v5 || true
 cat /etc/lsb-release | grep "18.04" && apt-get install -y libspatialindex-c4v5 || true
+cat /etc/lsb-release | grep "20.04" && apt-get install -y libspatialindex-c6   || true
 
 # "pip install rtree" doesn't seem to
 # lookup libspatialindex correctly

@@ -11,10 +11,10 @@ repository. To build/update an image by hand, follow these steps:
 
 
 ```sh
-cd .docker/fsleyes-py37-wxpy4-gtk3
-docker build -t pauldmccarthy/fsleyes-py37-wxpy4-gtk3 -f Dockerfile ..
+cd .docker/fsleyes-py310-wxpy4-gtk3
+docker build -t pauldmccarthy/fsleyes-py310-wxpy4-gtk3 -f Dockerfile ..
 docker login
-docker push pauldmccarthy/fsleyes-py37-wxpy4-gtk3
+docker push pauldmccarthy/fsleyes-py310-wxpy4-gtk3
 ```
 
 
