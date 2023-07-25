@@ -58,9 +58,7 @@ stages:
 #
 # These variables must be explicitly set as "secret" variables:
 #
-#   - SSH_PRIVATE_KEY_GIT            - private key for git login to remote host
-#                                      (UPSTREAM_URL)
-#
+
 #   - SSH_PRIVATE_KEY_FSL_DOWNLOAD   - private key for downloading some FSL
 #                                      files from a remote server (FSL_HOST)
 #
