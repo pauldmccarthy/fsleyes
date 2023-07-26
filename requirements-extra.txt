@@ -1,7 +1,0 @@
-file-tree
-file-tree-fsl
-indexed_gzip>=0.7.0
-rtree>=0.8.3
-trimesh>=2.37.29
-wxnatpy>=0.4.0
-xnat>=0.3.3

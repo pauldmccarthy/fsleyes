@@ -1,5 +1,0 @@
-sphinx>=1.7
-sphinx_rtd_theme
-coverage
-pytest
-pytest-cov

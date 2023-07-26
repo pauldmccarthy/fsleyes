@@ -1,10 +1,10 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 MAINTAINER Paul McCarthy <pauldmccarthy@gmail.com>
 
 ENV PY_VERSION       "python3.11"
 ENV PY_PACKAGES      "python3-pip python3.11-venv"
 ENV PY_VENV          "python3.11 -m venv"
-ENV WXPYTHON_VERSION "wxPython-4.2.0"
+ENV WXPYTHON_VERSION "wxPython-4.2.1"
 ENV DEBIAN_FRONTEND  "noninteractive"
 ENV LANG             "en_GB.UTF-8"
 

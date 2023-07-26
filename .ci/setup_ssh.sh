@@ -44,51 +44,22 @@ if [[ -f /.dockerenv ]]; then
   eval $(ssh-agent -s);
   mkdir -p $HOME/.ssh;
 
-  echo "$SSH_PRIVATE_KEY_GIT"          > $HOME/.ssh/id_git;
   echo "$SSH_PRIVATE_KEY_FSL_DOWNLOAD" > $HOME/.ssh/id_fsl_download;
 
-  if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
-    echo "$SSH_PRIVATE_KEY_APIDOC_DEPLOY"  > $HOME/.ssh/id_apidoc_deploy;
-    echo "$SSH_PRIVATE_KEY_USERDOC_DEPLOY" > $HOME/.ssh/id_userdoc_deploy;
-  fi
-
   chmod go-rwx $HOME/.ssh/id_*;
+  ssh-add $HOME/.ssh/id_fsl_download;
 
-  ssh-add $HOME/.ssh/id_git;
-
-  if [[ "$CI_PROJECT_PATH" == "$UPSTREAM_PROJECT" ]]; then
-    ssh-add $HOME/.ssh/id_apidoc_deploy;
-    ssh-add $HOME/.ssh/id_userdoc_deploy;
-  fi
-
-  ssh-keyscan ${UPSTREAM_URL##*@} >> $HOME/.ssh/known_hosts;
-  ssh-keyscan ${USERDOC_HOST##*@} >> $HOME/.ssh/known_hosts;
-  ssh-keyscan ${APIDOC_HOST##*@}  >> $HOME/.ssh/known_hosts;
-  ssh-keyscan ${FSL_HOST##*@}     >> $HOME/.ssh/known_hosts;
+  ssh-keyscan ${FSL_HOST##*@} >> $HOME/.ssh/known_hosts;
 
   touch $HOME/.ssh/config;
-
-  echo "Host ${UPSTREAM_URL##*@}"                      >> $HOME/.ssh/config;
-  echo "    User ${UPSTREAM_URL%@*}"                   >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_git"            >> $HOME/.ssh/config;
-
-  echo "Host userdocdeploy"                            >> $HOME/.ssh/config;
-  echo "    HostName ${USERDOC_HOST##*@}"              >> $HOME/.ssh/config;
-  echo "    User ${USERDOC_HOST%@*}"                   >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_userdoc_deploy" >> $HOME/.ssh/config;
-
-  echo "Host apidocdeploy"                             >> $HOME/.ssh/config;
-  echo "    HostName ${APIDOC_HOST##*@}"               >> $HOME/.ssh/config;
-  echo "    User ${APIDOC_HOST%@*}"                    >> $HOME/.ssh/config;
-  echo "    IdentityFile $HOME/.ssh/id_apidoc_deploy"  >> $HOME/.ssh/config;
 
   echo "Host fsldownload"                            >> $HOME/.ssh/config;
   echo "    HostName ${FSL_HOST##*@}"                >> $HOME/.ssh/config;
   echo "    User ${FSL_HOST%@*}"                     >> $HOME/.ssh/config;
   echo "    IdentityFile $HOME/.ssh/id_fsl_download" >> $HOME/.ssh/config;
 
-  echo "Host *"                                        >> $HOME/.ssh/config;
-  echo "    IdentitiesOnly yes"                        >> $HOME/.ssh/config;
+  echo "Host *"                                      >> $HOME/.ssh/config;
+  echo "    IdentitiesOnly yes"                      >> $HOME/.ssh/config;
 
   git config --global user.name  "Gitlab CI";
   git config --global user.email "gitlabci@localhost";

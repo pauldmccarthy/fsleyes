@@ -1,4 +1,0 @@
-# appnope required for interactivity
-# when FSLeyes is being driven from
-# ipython/jupyter notebook.
-appnope==0.1.*

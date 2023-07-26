@@ -12,14 +12,11 @@ pip install \
     numpy \
     scipy \
     matplotlib \
-    six \
     sphinx \
     sphinx-rtd-theme \
+    coverage \
     pytest \
     pytest-cov \
-    pytest-runner \
-    mock \
     coverage \
     pylint \
-    flake8 \
-    cython
+    flake8
