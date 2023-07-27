@@ -26,8 +26,9 @@ import               threading
 import               contextlib
 import               webbrowser
 
-import               wx
-import jinja2     as j2
+import                          wx
+import jinja2            as     j2
+from   packaging.version import Version
 
 import fsleyes_widgets.utils.progress as progress
 import fsleyes_widgets.utils.status   as status
@@ -44,6 +45,14 @@ import fsleyes.actions.base           as base
 import fsleyes.actions.runscript      as runscript
 
 try:
+
+    import notebook
+
+    USING_NOTEBOOK7 = Version(notebook.__version__) >= Version('7')
+
+    if USING_NOTEBOOK7: import nbclassic.notebookapp as notebookapp
+    else:               import notebook .notebookapp as notebookapp
+
     import                            zmq
     import                            tornado
 
@@ -54,8 +63,6 @@ try:
     import ipykernel.zmqshell      as zmqshell
     import ipykernel.heartbeat     as heartbeat
 
-    import notebook.notebookapp    as notebookapp
-
     import IPython.display         as display
 
     import jupyter_client          as jc
@@ -65,7 +72,7 @@ try:
 
 except ImportError:
 
-    class mock(object):
+    class mock:
         pass
 
     # so the sub-class defs in
@@ -79,6 +86,17 @@ except ImportError:
 
 
 log = logging.getLogger(__name__)
+
+
+def list_running_servers():
+    """Returns a list of all jupyter/notebook servers that are currently
+    running.
+    """
+    if USING_NOTEBOOK7:
+        from jupyter_server.serverapp import list_running_servers as lrs
+    else:
+        from notebook.notebookapp     import list_running_servers as lrs
+    return lrs()
 
 
 class NotebookAction(base.Action):
@@ -197,8 +215,8 @@ class NotebookAction(base.Action):
         self.__bounce(2, progdlg)
 
         if not kernel.is_alive():
-            raise RuntimeError('Could not start IPython kernel: '
-                               '{}'.format(kernel.error))
+            raise RuntimeError('Could not start IPython '
+                               f'kernel: {kernel.error}')
 
         return kernel
 
@@ -222,8 +240,8 @@ class NotebookAction(base.Action):
             elapsed += 0.5
 
         if elapsed >= 5 or not server.is_alive():
-            raise RuntimeError('Could not start notebook server: '
-                               '{}'.format(server.stderr))
+            raise RuntimeError('Could not start notebook '
+                               f'server: {server.stderr}')
 
         return server
 
@@ -561,7 +579,7 @@ class NotebookServer(threading.Thread):
 
 
     def __readPort(self):
-        for server in notebookapp.list_running_servers():
+        for server in list_running_servers():
             if server['token'] == self.__token:
                 return server['port']
         return None
@@ -586,7 +604,7 @@ class NotebookServer(threading.Thread):
     @property
     def url(self):
         """Returns the URL to use to connect to this server. """
-        return 'http://localhost:{}?token={}'.format(self.port, self.token)
+        return f'http://localhost:{self.port}?token={self.token}'
 
 
     @property
@@ -738,9 +756,6 @@ def nbmain(argv):
 
     argv = argv[2:]
 
-    # run the notebook server
-    from notebook.notebookapp import main as nbmain
-
     # first argument is a path
     # to add to the PYTHONPATH.
     # See NotebookServer.run.
@@ -748,7 +763,7 @@ def nbmain(argv):
 
     # remaining arguments are passed
     # through to notebookapp.main
-    return nbmain(argv=argv[1:])
+    return notebookapp.main(argv=argv[1:])
 
 
 def findPythonExecutable():

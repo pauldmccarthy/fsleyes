@@ -6,7 +6,17 @@
 #
 
 
-from notebook.services.kernels.kernelmanager import MappingKernelManager
+import fsleyes.actions.notebook as notebook
+
+# notebook 7.x / nbclassic
+if notebook.USING_NOTEBOOK7:
+    from jupyter_server.services.kernels.kernelmanager \
+        import MappingKernelManager
+
+# notebook 6.x
+else:
+    from notebook.services.kernels.kernelmanager \
+        import MappingKernelManager
 
 
 class FSLeyesNotebookKernelManager(MappingKernelManager):
@@ -50,4 +60,3 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
 
     def restart_kernel(self, *args, **kwargs):
         """Overrides ``MappingKernelManager.restart_kernel``. Does nothing. """
-        pass

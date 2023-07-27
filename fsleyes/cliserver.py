@@ -185,8 +185,8 @@ def _serverloop(callback, ev=None):
         try:
             conn, addr = sock.accept()
         except socket.timeout:
-            if ev.isSet(): break
-            else:          continue
+            if ev.is_set(): break
+            else:           continue
 
         log.debug('Connection from %s', addr)
 
