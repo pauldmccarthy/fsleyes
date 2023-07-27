@@ -40,6 +40,7 @@ Fixed
 ^^^^^
 
 
+* Updates to the Jupyter Notebook integration to work with Notebook 7.x (!383).
 * Fixed a transparency issue in the ortho panel (!384).
 
 
