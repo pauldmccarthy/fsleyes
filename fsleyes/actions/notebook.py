@@ -26,9 +26,8 @@ import               threading
 import               contextlib
 import               webbrowser
 
-import                          wx
-import jinja2            as     j2
-from   packaging.version import Version
+import               wx
+import jinja2     as j2
 
 import fsleyes_widgets.utils.progress as progress
 import fsleyes_widgets.utils.status   as status
@@ -46,36 +45,22 @@ import fsleyes.actions.runscript      as runscript
 
 try:
 
-    import notebook
+    import                           zmq
+    import                           tornado
+    import jupyter_client         as jc
+    import jupyter_client.session as jcsession
 
-    USING_NOTEBOOK7 = Version(notebook.__version__) >= Version('7')
+    from jupyter_server.services.kernels.kernelmanager \
+        import MappingKernelManager
 
-    if USING_NOTEBOOK7: import nbclassic.notebookapp as notebookapp
-    else:               import notebook .notebookapp as notebookapp
-
-    if USING_NOTEBOOK7:
-        from jupyter_server.services.kernels.kernelmanager \
-            import MappingKernelManager
-
-    # notebook 6.x
-    else:
-        from notebook.services.kernels.kernelmanager \
-            import MappingKernelManager
-
-    import                            zmq
-    import                            tornado
-
-    import zmq.eventloop.zmqstream as zmqstream
-
-    import ipykernel.ipkernel      as ipkernel
-    import ipykernel.iostream      as iostream
-    import ipykernel.zmqshell      as zmqshell
-    import ipykernel.heartbeat     as heartbeat
-
-    import IPython.display         as display
-
-    import jupyter_client          as jc
-    import jupyter_client.session  as jcsession
+    from jupyter_server.serverapp import list_running_servers
+    from nbclassic                import notebookapp
+    from zmq.eventloop            import zmqstream
+    from ipykernel                import ipkernel
+    from ipykernel                import iostream
+    from ipykernel                import zmqshell
+    from ipykernel                import heartbeat
+    from IPython.display          import display
 
     ENABLED = True
 
@@ -95,17 +80,6 @@ except ImportError:
 
 
 log = logging.getLogger(__name__)
-
-
-def list_running_servers():
-    """Returns a list of all jupyter/notebook servers that are currently
-    running.
-    """
-    if USING_NOTEBOOK7:
-        from jupyter_server.serverapp import list_running_servers as lrs
-    else:
-        from notebook.notebookapp     import list_running_servers as lrs
-    return lrs()
 
 
 class NotebookAction(base.Action):
