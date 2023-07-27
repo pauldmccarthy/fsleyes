@@ -53,6 +53,15 @@ try:
     if USING_NOTEBOOK7: import nbclassic.notebookapp as notebookapp
     else:               import notebook .notebookapp as notebookapp
 
+    if USING_NOTEBOOK7:
+        from jupyter_server.services.kernels.kernelmanager \
+            import MappingKernelManager
+
+    # notebook 6.x
+    else:
+        from notebook.services.kernels.kernelmanager \
+            import MappingKernelManager
+
     import                            zmq
     import                            tornado
 
@@ -724,9 +733,12 @@ class NotebookServer(threading.Thread):
 
         # wait forever
         while not self.__shutdown.is_set():
-            out, err       = self.__nbproc.communicate(timeout=0.5)
-            self.__stdout += out
-            self.__stderr += err
+            try:
+                out, err       = self.__nbproc.communicate(timeout=0.5)
+                self.__stdout += out
+                self.__stderr += err
+            except sp.TimeoutExpired:
+                pass
 
         # if we've gotten this far,
         # call our atexit handler
@@ -774,6 +786,49 @@ class NotebookServer(threading.Thread):
         for fn, e in zip(files, envs):
             with open(fn, 'rt') as f: template = j2.Template(f.read())
             with open(fn, 'wt') as f: f.write(template.render(**e))
+
+
+class FSLeyesNotebookKernelManager(MappingKernelManager):
+    """Custom jupter ``MappingKernelManager`` which forces every notebook
+    to connect to the embedded FSLeyes IPython kernel.
+
+    See https://github.com/ebanner/extipy
+    """
+
+
+    connfile = ''
+    """Path to the IPython kernel connection file that all notebooks should
+    connect to.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+    def __patch_connection(self, kernel):
+        """Connects the given kernel to the IPython kernel specified by
+        ``connfile``.
+        """
+        kernel.hb_port      = 0
+        kernel.shell_port   = 0
+        kernel.stdin_port   = 0
+        kernel.iopub_port   = 0
+        kernel.control_port = 0
+        kernel.load_connection_file(self.connfile)
+
+
+    async def start_kernel(self, **kwargs):
+        """Overrides ``MappingKernelManager.start_kernel``. Connects
+        all new kernels to the IPython kernel specified by ``connfile``.
+        """
+        kid    = await super().start_kernel(**kwargs)
+        kernel = self._kernels[kid]
+        self.__patch_connection(kernel)
+        return kid
+
+
+    def restart_kernel(self, *args, **kwargs):
+        """Overrides ``MappingKernelManager.restart_kernel``. Does nothing. """
 
 
 def nbmain(argv):
