@@ -137,6 +137,14 @@ class NotebookAction(base.Action):
         return self.__server
 
 
+    def shutdown(self):
+        """Shut down the notebook server and ipython kernel. """
+        self.__server.shutdown()
+        self.__kernel.stop()
+        self.__server = None
+        self.__kernel = None
+
+
     def __openNotebooks(self, nbfile=None, openBrowser=True):
         """Called when this ``NotebookAction`` is invoked. Starts the
         server and kernel if necessary.
@@ -281,10 +289,11 @@ class BackgroundIPythonKernel:
 
         ip                 = '127.0.0.1'
         transport          = 'tcp'
-        addr               = '{}://{}'.format(transport, ip)
+        addr               = f'{transport}://{ip}'
         self.__connfile    = None
         self.__kernel      = None
         self.__error       = None
+        self.__stopped     = False
         self.__lastIter    = 0
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -438,13 +447,21 @@ class BackgroundIPythonKernel:
         idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
 
 
+    def stop(self):
+        """Stops the kernel loop. """
+        self.__stopped = True
+        self.__kernel.do_shutdown(restart=False)
+
+
     def __eventloop(self):
         """Event loop used for the IPython kernel. Calls :meth:`__kernelDispatch`,
         then schedules a future call to ``__eventloop`` via :func:`.idle.idle`
         loop.
         """
         self.__kernelDispatch()
-        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+        if not self.__stopped:
+            idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
 
 
     async def __do_one_iteration(self):
@@ -562,6 +579,7 @@ class NotebookServer(threading.Thread):
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
+        self.__shutdown    = threading.Event()
         self.__browser     = openBrowser
         self.__token       = binascii.hexlify(os.urandom(24)).decode('ascii')
 
@@ -623,6 +641,13 @@ class NotebookServer(threading.Thread):
         return self.__stderr
 
 
+    def shutdown(self):
+        """Shut down the notebook server. The server should be stopped within
+        a second.
+        """
+        self.__shutdown.set()
+
+
     def run(self):
         """Sets up a server configuration file, and then calls
         ``jupyer-notebook`` via ``subprocess.Popen``. Waits until
@@ -669,12 +694,18 @@ class NotebookServer(threading.Thread):
         self.__nbproc = sp.Popen(cmd,
                                  stdout=sp.PIPE,
                                  stderr=sp.PIPE,
+                                 text=True,
                                  env=env)
+        self.__stdout = ''
+        self.__stderr = ''
 
         def killServer():
             if self.__nbproc is not None:
-                # We need two CTRL+Cs to kill
-                # the notebook server
+                # We need two CTRL+Cs to kill the notebook server - when
+                # starting a server from a terminal, it tells us this:
+                #
+                #     Use Control-C to stop this server and shut down
+                #     all kernels (twice to skip confirmation).
                 self.__nbproc.terminate()
                 self.__nbproc.terminate()
 
@@ -692,10 +723,10 @@ class NotebookServer(threading.Thread):
         atexit.register(killServer)
 
         # wait forever
-        o, e          = self.__nbproc.communicate()
-        self.__stdout = o.decode()
-        self.__stderr = e.decode()
-        self.__nbproc = None
+        while not self.__shutdown.is_set():
+            out, err       = self.__nbproc.communicate(timeout=0.5)
+            self.__stdout += out
+            self.__stderr += err
 
         # if we've gotten this far,
         # call our atexit handler

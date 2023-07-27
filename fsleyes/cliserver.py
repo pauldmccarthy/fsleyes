@@ -94,12 +94,10 @@ class CLIServerAction(argparse.Action):
 
 class AlreadyRunningError(Exception):
     """Raised by :func:`runserver` if a server loop is already running. """
-    pass
 
 
 class NotRunningError(Exception):
     """Raised by :func:`send` if a server loop is not running. """
-    pass
 
 
 def runserver(overlayList, displayCtx, ev=None):
