@@ -739,7 +739,8 @@ class NotebookServer(threading.Thread):
             'fsleyes_nbserver_static_dir'   : cfgdir,
             'fsleyes_nbextension_dir'       : nbextdir,
             'fsleyes_kernel_connfile'       : self.__connfile,
-            'fsleyes_nbserver_open_browser' : self.__browser
+            'fsleyes_nbserver_open_browser' : self.__browser,
+            'os'                            : os,
         }
 
         with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:
