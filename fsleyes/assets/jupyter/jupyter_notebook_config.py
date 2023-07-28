@@ -7,8 +7,8 @@ c.ServerApp.password                  = ''
 c.ServerApp.root_dir                  = '{{ fsleyes_nbserver_dir }}'
 c.ServerApp.extra_static_paths        = ['{{ fsleyes_nbserver_static_dir }}']
 c.ServerApp.answer_yes                = True
-c.NotebookApp.extra_nbextensions_path   = ['{{ fsleyes_nbextension_dir }}']
-c.ServerApp.open_browser              = {{ fsleyes_nbserver_open_browser }}
+c.NotebookApp.extra_nbextensions_path = ['{{ fsleyes_nbextension_dir }}']
+c.NotebookApp.open_browser            = {{ fsleyes_nbserver_open_browser }}
 c.ServerApp.kernel_manager_class      = 'fsleyes.actions.notebook.FSLeyesNotebookKernelManager'
 
 # Allow additional configuration to be injected
