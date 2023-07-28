@@ -51,7 +51,7 @@ try:
     import jupyter_client.session as jcsession
 
     from jupyter_server.services.kernels.kernelmanager \
-        import MappingKernelManager
+        import AsyncMappingKernelManager
 
     from jupyter_server.serverapp import list_running_servers
     from nbclassic                import notebookapp
@@ -763,9 +763,9 @@ class NotebookServer(threading.Thread):
             with open(fn, 'wt') as f: f.write(template.render(**e))
 
 
-class FSLeyesNotebookKernelManager(MappingKernelManager):
-    """Custom jupter ``MappingKernelManager`` which forces every notebook
-    to connect to the embedded FSLeyes IPython kernel.
+class FSLeyesNotebookKernelManager(AsyncMappingKernelManager):
+    """Custom jupyter ``AsyncMappingKernelManager`` which forces every
+    notebook to connect to the embedded FSLeyes IPython kernel.
 
     See https://github.com/ebanner/extipy
     """
@@ -793,7 +793,7 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
 
 
     async def start_kernel(self, **kwargs):
-        """Overrides ``MappingKernelManager.start_kernel``. Connects
+        """Overrides ``AsyncMappingKernelManager.start_kernel``. Connects
         all new kernels to the IPython kernel specified by ``connfile``.
         """
         kid    = await super().start_kernel(**kwargs)
@@ -802,8 +802,9 @@ class FSLeyesNotebookKernelManager(MappingKernelManager):
         return kid
 
 
-    def restart_kernel(self, *args, **kwargs):
-        """Overrides ``MappingKernelManager.restart_kernel``. Does nothing. """
+    async def restart_kernel(self, *args, **kwargs):
+        """Overrides ``AsyncMappingKernelManager.restart_kernel``. Does nothing.
+        """
 
 
 def nbmain(argv):
