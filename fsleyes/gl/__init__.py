@@ -1329,6 +1329,7 @@ class WXGLCanvasTarget:
         subClassDraw = self._draw
 
         import OpenGL.GL as gl
+        import fsleyes.gl.routines as glroutines
 
         def drawWrapper(*a, **kwa):
 
@@ -1351,6 +1352,7 @@ class WXGLCanvasTarget:
                 # Draw the fbo contents to the main
                 # frame buffer
                 gl.glViewport(0, 0, width, height)
+                glroutines.clear((0, 0, 0, 0))
                 self.__fbo.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
             if not self.__freezeSwapBuffers:
