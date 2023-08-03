@@ -36,6 +36,13 @@ Changed
   selected when switching between different analyses (!380).
 
 
+Fixed
+^^^^^
+
+
+* Fixed a transparency issue in the ortho panel (!384).
+
+
 1.7.0 (Tuesday 13th June 2023)
 ------------------------------
 
