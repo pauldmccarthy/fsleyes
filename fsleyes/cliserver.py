@@ -94,12 +94,10 @@ class CLIServerAction(argparse.Action):
 
 class AlreadyRunningError(Exception):
     """Raised by :func:`runserver` if a server loop is already running. """
-    pass
 
 
 class NotRunningError(Exception):
     """Raised by :func:`send` if a server loop is not running. """
-    pass
 
 
 def runserver(overlayList, displayCtx, ev=None):
@@ -185,8 +183,8 @@ def _serverloop(callback, ev=None):
         try:
             conn, addr = sock.accept()
         except socket.timeout:
-            if ev.isSet(): break
-            else:          continue
+            if ev.is_set(): break
+            else:           continue
 
         log.debug('Connection from %s', addr)
 

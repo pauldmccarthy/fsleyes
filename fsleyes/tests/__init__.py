@@ -140,7 +140,7 @@ def exitMainLoopOnError(app):
             app.ExitMainLoop()
             error[0] = value
 
-        oldhook(type_, value, traceback)
+        oldhook(type_, value, tb)
 
     try:
         sys.excepthook = myhook

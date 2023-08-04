@@ -12,8 +12,6 @@ if [[ "$MACOS_OVERLAY_TEST" == "1" ]]; then
   pip install --upgrade pip
 else
 
-  apt-get install -y bc
-
   # We need the FSL atlases for the atlas
   # tests, and need $FSLDIR to be defined
   export FSLDIR=/fsl/
@@ -40,7 +38,6 @@ wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.
 # a subsequent installation.
 pip install $PIPARGS ".[extra,test,style]"
 
-
 tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
 tar xf fslpy-master.tar.bz2   && pushd fslpy-master   && pip install $PIPARGS . && popd
 tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
@@ -51,6 +48,10 @@ pip freeze
 # fsleyes/tests do not get installed into env,
 # so put the local folder on the $PYTHONPATH
 export PYTHONPATH=$(pwd)
+
+# Jupyter notebook will not start when run
+# as root, unless we add another setting.
+export FSLEYES_EXTRA_JUPYTER_CONFIG="c.ServerApp.allow_root = True"
 
 if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 

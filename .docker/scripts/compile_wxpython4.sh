@@ -91,7 +91,7 @@ python ./build.py dox etg --nodoc sip build --release --gtk3
 deactivate
 source /test.venv/bin/activate
 
-python setup.py install --skip-build
+pip install .
 
 # sometimes we get files which are rw-------
 chmod -R a+rx $VIRTUAL_ENV/lib/

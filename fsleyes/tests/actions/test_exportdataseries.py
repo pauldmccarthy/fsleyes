@@ -50,6 +50,8 @@ def _test_ExportDataSeriesAction(panel, overlayList, displayCtx):
 
     ds1 = ds.DataSeries(None, overlayList, displayCtx, panel)
     ds2 = ds.DataSeries(None, overlayList, displayCtx, panel)
+    ds1.label = 'ds1'
+    ds2.label = 'ds2'
     ds1.setData(np.arange(10), np.random.randint(1, 100, 10))
     ds2.setData(np.arange(10), np.random.randint(1, 100, 10))
 

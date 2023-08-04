@@ -44,28 +44,29 @@ import fsleyes.actions.base           as base
 import fsleyes.actions.runscript      as runscript
 
 try:
-    import                            zmq
-    import                            tornado
 
-    import zmq.eventloop.zmqstream as zmqstream
+    import                           zmq
+    import                           tornado
+    import jupyter_client         as jc
+    import jupyter_client.session as jcsession
 
-    import ipykernel.ipkernel      as ipkernel
-    import ipykernel.iostream      as iostream
-    import ipykernel.zmqshell      as zmqshell
-    import ipykernel.heartbeat     as heartbeat
+    from jupyter_server.services.kernels.kernelmanager \
+        import AsyncMappingKernelManager
 
-    import notebook.notebookapp    as notebookapp
-
-    import IPython.display         as display
-
-    import jupyter_client          as jc
-    import jupyter_client.session  as jcsession
+    from jupyter_server.serverapp import list_running_servers
+    from nbclassic                import notebookapp
+    from zmq.eventloop            import zmqstream
+    from ipykernel                import ipkernel
+    from ipykernel                import iostream
+    from ipykernel                import zmqshell
+    from ipykernel                import heartbeat
+    from IPython.display          import display
 
     ENABLED = True
 
 except ImportError:
 
-    class mock(object):
+    class mock:
         pass
 
     # so the sub-class defs in
@@ -117,6 +118,14 @@ class NotebookAction(base.Action):
     def server(self):
         """Return a reference to the :class:`NotebookServer`. """
         return self.__server
+
+
+    def shutdown(self):
+        """Shut down the notebook server and ipython kernel. """
+        self.__server.shutdown()
+        self.__kernel.stop()
+        self.__server = None
+        self.__kernel = None
 
 
     def __openNotebooks(self, nbfile=None, openBrowser=True):
@@ -197,8 +206,8 @@ class NotebookAction(base.Action):
         self.__bounce(2, progdlg)
 
         if not kernel.is_alive():
-            raise RuntimeError('Could not start IPython kernel: '
-                               '{}'.format(kernel.error))
+            raise RuntimeError('Could not start IPython '
+                               f'kernel: {kernel.error}')
 
         return kernel
 
@@ -222,8 +231,8 @@ class NotebookAction(base.Action):
             elapsed += 0.5
 
         if elapsed >= 5 or not server.is_alive():
-            raise RuntimeError('Could not start notebook server: '
-                               '{}'.format(server.stderr))
+            raise RuntimeError('Could not start notebook '
+                               f'server: {server.stderr}')
 
         return server
 
@@ -263,10 +272,11 @@ class BackgroundIPythonKernel:
 
         ip                 = '127.0.0.1'
         transport          = 'tcp'
-        addr               = '{}://{}'.format(transport, ip)
+        addr               = f'{transport}://{ip}'
         self.__connfile    = None
         self.__kernel      = None
         self.__error       = None
+        self.__stopped     = False
         self.__lastIter    = 0
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
@@ -420,13 +430,21 @@ class BackgroundIPythonKernel:
         idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
 
 
+    def stop(self):
+        """Stops the kernel loop. """
+        self.__stopped = True
+        self.__kernel.do_shutdown(restart=False)
+
+
     def __eventloop(self):
         """Event loop used for the IPython kernel. Calls :meth:`__kernelDispatch`,
         then schedules a future call to ``__eventloop`` via :func:`.idle.idle`
         loop.
         """
         self.__kernelDispatch()
-        idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
+
+        if not self.__stopped:
+            idle.idle(self.__eventloop, after=self.__kernel._poll_interval)
 
 
     async def __do_one_iteration(self):
@@ -454,8 +472,14 @@ class BackgroundIPythonKernel:
             self.__lastIter = time.time()
 
         except Exception as e:
-            self.__error = e
-            raise
+
+            # Spurious errors may occur after a shutdown request
+            if self.__stopped:
+                log.debug('Kernel has stopped - ignoring error raised '
+                          'from kernel loop %s', e, exc_info=True)
+            else:
+                self.__error = e
+                raise
 
 
 class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
@@ -544,6 +568,7 @@ class NotebookServer(threading.Thread):
         self.__stdout      = None
         self.__stderr      = None
         self.__port        = None
+        self.__shutdown    = threading.Event()
         self.__browser     = openBrowser
         self.__token       = binascii.hexlify(os.urandom(24)).decode('ascii')
 
@@ -561,7 +586,7 @@ class NotebookServer(threading.Thread):
 
 
     def __readPort(self):
-        for server in notebookapp.list_running_servers():
+        for server in list_running_servers():
             if server['token'] == self.__token:
                 return server['port']
         return None
@@ -586,7 +611,7 @@ class NotebookServer(threading.Thread):
     @property
     def url(self):
         """Returns the URL to use to connect to this server. """
-        return 'http://localhost:{}?token={}'.format(self.port, self.token)
+        return f'http://localhost:{self.port}?token={self.token}'
 
 
     @property
@@ -603,6 +628,13 @@ class NotebookServer(threading.Thread):
         server is still running, returns ``None``.
         """
         return self.__stderr
+
+
+    def shutdown(self):
+        """Shut down the notebook server. The server should be stopped within
+        a second.
+        """
+        self.__shutdown.set()
 
 
     def run(self):
@@ -651,12 +683,18 @@ class NotebookServer(threading.Thread):
         self.__nbproc = sp.Popen(cmd,
                                  stdout=sp.PIPE,
                                  stderr=sp.PIPE,
+                                 text=True,
                                  env=env)
+        self.__stdout = ''
+        self.__stderr = ''
 
         def killServer():
             if self.__nbproc is not None:
-                # We need two CTRL+Cs to kill
-                # the notebook server
+                # We need two CTRL+Cs to kill the notebook server - when
+                # starting a server from a terminal, it tells us this:
+                #
+                #     Use Control-C to stop this server and shut down
+                #     all kernels (twice to skip confirmation).
                 self.__nbproc.terminate()
                 self.__nbproc.terminate()
 
@@ -674,10 +712,13 @@ class NotebookServer(threading.Thread):
         atexit.register(killServer)
 
         # wait forever
-        o, e          = self.__nbproc.communicate()
-        self.__stdout = o.decode()
-        self.__stderr = e.decode()
-        self.__nbproc = None
+        while not self.__shutdown.is_set():
+            try:
+                out, err       = self.__nbproc.communicate(timeout=0.5)
+                self.__stdout += out
+                self.__stderr += err
+            except sp.TimeoutExpired:
+                pass
 
         # if we've gotten this far,
         # call our atexit handler
@@ -704,7 +745,8 @@ class NotebookServer(threading.Thread):
             'fsleyes_nbserver_static_dir'   : cfgdir,
             'fsleyes_nbextension_dir'       : nbextdir,
             'fsleyes_kernel_connfile'       : self.__connfile,
-            'fsleyes_nbserver_open_browser' : self.__browser
+            'fsleyes_nbserver_open_browser' : self.__browser,
+            'os'                            : os,
         }
 
         with open(op.join(nbextdir, 'fsleyes_notebook_intro.md'), 'rt') as f:
@@ -727,6 +769,50 @@ class NotebookServer(threading.Thread):
             with open(fn, 'wt') as f: f.write(template.render(**e))
 
 
+class FSLeyesNotebookKernelManager(AsyncMappingKernelManager):
+    """Custom jupyter ``AsyncMappingKernelManager`` which forces every
+    notebook to connect to the embedded FSLeyes IPython kernel.
+
+    See https://github.com/ebanner/extipy
+    """
+
+
+    connfile = ''
+    """Path to the IPython kernel connection file that all notebooks should
+    connect to.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+    def __patch_connection(self, kernel):
+        """Connects the given kernel to the IPython kernel specified by
+        ``connfile``.
+        """
+        kernel.hb_port      = 0
+        kernel.shell_port   = 0
+        kernel.stdin_port   = 0
+        kernel.iopub_port   = 0
+        kernel.control_port = 0
+        kernel.load_connection_file(self.connfile)
+
+
+    async def start_kernel(self, **kwargs):
+        """Overrides ``AsyncMappingKernelManager.start_kernel``. Connects
+        all new kernels to the IPython kernel specified by ``connfile``.
+        """
+        kid    = await super().start_kernel(**kwargs)
+        kernel = self._kernels[kid]
+        self.__patch_connection(kernel)
+        return kid
+
+
+    async def restart_kernel(self, *args, **kwargs):
+        """Overrides ``AsyncMappingKernelManager.restart_kernel``. Does nothing.
+        """
+
+
 def nbmain(argv):
     """Wrapper around a Jupyter Notebook server entry point. Invoked by the
     :class:`NotebookServer`, via a hook in :func:`fsleyes.main.main`.
@@ -738,9 +824,6 @@ def nbmain(argv):
 
     argv = argv[2:]
 
-    # run the notebook server
-    from notebook.notebookapp import main as nbmain
-
     # first argument is a path
     # to add to the PYTHONPATH.
     # See NotebookServer.run.
@@ -748,7 +831,7 @@ def nbmain(argv):
 
     # remaining arguments are passed
     # through to notebookapp.main
-    return nbmain(argv=argv[1:])
+    return notebookapp.main(argv=argv[1:])
 
 
 def findPythonExecutable():
