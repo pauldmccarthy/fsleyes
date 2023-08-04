@@ -472,8 +472,14 @@ class BackgroundIPythonKernel:
             self.__lastIter = time.time()
 
         except Exception as e:
-            self.__error = e
-            raise
+
+            # Spurious errors may occur after a shutdown request
+            if self.__stopped:
+                log.debug('Kernel has stopped - ignoring error raised '
+                          'from kernel loop %s', e, exc_info=True)
+            else:
+                self.__error = e
+                raise
 
 
 class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
