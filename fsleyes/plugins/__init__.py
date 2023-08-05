@@ -13,7 +13,7 @@ and tools. Plugins can be installed from Python libraries (e.g. as hosted on
 
 
 In both cases, FSLeyes uses `entry points
-<https://docs.python.org/3/library/importlib.metadata.html#entry-points>`__
+<https://packaging.python.org/specifications/entry-points/>`__
 to locate the items provided by plugin library/files.
 
 
@@ -44,8 +44,8 @@ Loading/installing FSLeyes plugins
 FSLeyes plugins are loaded into a running FSLeyes as follows:
 
  - Any Python libraries (e.g. installed from ``PyPi``) which are present the
-   environment that FSLeyes is running in, and which have a name beginning
-   with ``fsleyes-plugin-`` will automatically be detected by FSLeyes.
+   environment that FSLeyes is running in, and which provide any FSLeyes entry
+   points, will automatically be detected by FSLeyes.
 
  - Plugin ``.py`` files, which contain view, control, and/or tool definitions,
    can be passed directly to the :func:`loadPlugin` function.
@@ -59,10 +59,9 @@ FSLeyes plugins are loaded into a running FSLeyes as follows:
 
 A plugin can be installed permanently into FSLeyes as follows:
 
-
  - Any Python libraries (e.g. installed from ``PyPi``) which are present the
-   environment that FSLeyes is running in, and which have a name beginning
-   with ``fsleyes-plugin-`` will automatically be detected by FSLeyes.
+   environment that FSLeyes is running in, and which provide any FSLeyes entry
+   points, will automatically be detected by FSLeyes.
 
  - ``.py`` plugin files can be passed to the :func:`installPlugin`
    function. This file will be saved into the FSLeyes settings directory
@@ -74,7 +73,7 @@ Writing a FSLeyes plugin
 
 
 .. note:: A minimal example of a FSLeyes plugin library can be found in
-          ``tests/testdata/fsleyes_plugin_example/``, and a range of
+          ``fsleyes/tests/testdata/fsleyes_plugin_example/``, and a range of
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
@@ -104,34 +103,32 @@ as a Python library. Minimally, this requires the following:
 
  - Arrange your ``.py`` file(s) into a Python package.
 
- - Give your library a name which begins with ``fsleyes-plugin-``.
-
  - Expose your custom views, controls, and tools as `entry points
    <https://packaging.python.org/specifications/entry-points/>`_.
 
+
 A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this::
 
-[build-system]
-requires      = ["setuptools"]
-build-backend = "setuptools.build_meta"
+    [build-system]
+    requires      = ["setuptools"]
+    build-backend = "setuptools.build_meta"
 
-[project]
-# the name must begin with "fsleyes-plugin-"
-name = "fsleyes-plugin-my-cool-plugin"
+    [project]
+    name = "my-cool-fsleyes-plugin"
 
-# Views, controls, and tools must be exposed
-# as entry points within groups called
-# "fsleyes_views", "fsleyes_controls" and
-# "fsleyes_tools" respectively.
+    # Views, controls, and tools must be exposed
+    # as entry points within groups called
+    # "fsleyes_views", "fsleyes_controls" and
+    # "fsleyes_tools" respectively.
 
-[project.entry-points.fsleyes_views]
-My cool view    = myplugin:MyView
+    [project.entry-points.fsleyes_views]
+    "My cool view" = "myplugin:MyView"
 
-[project.entry-points.fsleyes_controls]
-My cool control = myplugin:MyControl
+    [project.entry-points.fsleyes_controls]
+    "My cool control" = "myplugin:MyControl"
 
-[project.entry-points.fsleyes_tools]
-My cool tool    = myplugin.MyTool
+    [project.entry-points.fsleyes_tools]
+    "My cool tool" = "myplugin.MyTool"
 
 
 See the `Python Packaging guide
@@ -158,7 +155,6 @@ The following functions can be used to access plugins:
 .. autosummary::
    :nosignatures:
 
-   listPlugins
    listViews
    listControls
    listTools
@@ -180,7 +176,7 @@ import importlib.util      as imputil
 import importlib.metadata  as impmeta
 import                        collections
 
-from typing import List, Dict, Union, Type, Optional
+from typing import Dict, Union, Type, Optional
 from types  import ModuleType
 
 import fsl.utils.settings            as fslsettings
@@ -403,19 +399,6 @@ def _loadBuiltIns():
             submod = importlib.import_module(name)
             FSLeyesPluginFinder.instance().addPlugin(
                 submod, submod.__name__, True)
-
-
-
-def listPlugins() -> List[str]:
-    """Returns a list containing the names of all installed FSLeyes plugins.
-    """
-    plugins = []
-
-    for dists in impmeta.packages_distributions().values():
-        for dist in dists:
-            if dist.startswith('fsleyes-plugin-'):
-                plugins.append(dist)
-    return list(sorted(plugins))
 
 
 def _listEntryPoints(group : str) -> Dict[str, Plugin]:
