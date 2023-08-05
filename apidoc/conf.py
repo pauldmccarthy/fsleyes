@@ -62,14 +62,21 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-#
-# make sure fsleyes base dir is on the pythonpath
-sys.path.insert(0, op.join(op.dirname(__file__), '..'))
+def get_fsleyes_version():
+    """Returns the current FSLeyes version number. """
+    version = {}
+    basedir = op.join(op.dirname(__file__), '..')
+    with open(op.join(basedir, "fsleyes", "version.py")) as f:
+        for line in f:
+            if line.startswith('__version__'):
+                exec(line, version)
+                break
 
-import setup
-version = setup.get_fsleyes_version()
+    return version.get('__version__')
+
+
+version = get_fsleyes_version()
 release = version
-
 
 
 # Things which I want to be able to
