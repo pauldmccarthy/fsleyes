@@ -329,6 +329,8 @@ class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
         instance = getattr(FSLeyesPluginFinder, '_instance', None)
         if instance is None:
             instance = FSLeyesPluginFinder()
+            sys.meta_path.append(instance)
+
         return instance
 
     def __init__(self):
@@ -351,8 +353,6 @@ def initialise():
     """
 
     _loadBuiltIns()
-
-    sys.meta_path.append(FSLeyesPluginFinder.instance())
 
     # plugins in fsleyes settings dir
     pluginFiles = list(fslsettings.listFiles('plugins/*.py'))
@@ -424,7 +424,7 @@ def listViews() -> Dict[str, View]:
     for name, cls in list(views.items()):
         if not issubclass(cls, viewpanel.ViewPanel):
             log.debug('Ignoring fsleyes_views entry point '
-                      '{} - not a ViewPanel'.format(name))
+                      '%s - not a ViewPanel', name)
             views.pop(name)
             continue
     return views
@@ -444,8 +444,8 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
     for name, cls in list(ctrls.items()):
         if not issubclass(cls, (ctrlpanel.ControlPanel,
                                 ctrlpanel.ControlToolBar)):
-            log.debug('Ignoring fsleyes_controls entry point {} - '
-                      'not a ControlPanel/ToolBar'.format(name))
+            log.debug('Ignoring fsleyes_controls entry point %s - '
+                      'not a ControlPanel/ToolBar', name)
             ctrls.pop(name)
             continue
 
@@ -485,7 +485,7 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
 
         if not issubclass(cls, actions.Action):
             log.debug('Ignoring fsleyes_tools entry point '
-                      '{} - not an Action'.format(name))
+                      '%s - not an Action', name)
             tools.pop(name)
             continue
 
