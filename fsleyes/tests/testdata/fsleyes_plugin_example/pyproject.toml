@@ -1,0 +1,19 @@
+[build-system]
+requires      = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name    = "fsleyes-plugin-example"
+version = "1.0.0"
+
+[project.entry-points.fsleyes_views]
+"Plugin view" = "fsleyes_plugin_example.plugin:PluginView"
+
+[project.entry-points.fsleyes_controls]
+"Plugin control" = "fsleyes_plugin_example.plugin:PluginControl"
+
+[project.entry-points.fsleyes_tools]
+"Plugin tool" = "fsleyes_plugin_example.plugin:PluginTool"
+
+[tool.setuptools.packages.find]
+include = ["fsleyes_plugin_example*"]
