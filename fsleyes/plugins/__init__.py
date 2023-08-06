@@ -139,6 +139,20 @@ details on packaging Python libraries.
 Module contents
 ---------------
 
+As plugins provided by installed libraries are automatically taken care of by
+``importlib``, most of the logic in this module is for managing single-file
+FSLeyes plugins. When a plugin file is loaded, a custom
+``importlib.metadata.Distribution`` instance is created and registered using a
+custom ``importlib.abvc.MetaPathFinder`` instance. The plugin file is scanned
+to identify the plugins that it provides, and these are exposed as entry
+points of the distribution.
+
+
+At present there are few examples available on how to accomplish the above,
+but there are enough clues in the ``importlib.metadata`` documentation at:
+
+https://docs.python.org/3/library/importlib.metadata.html#extending-the-search-algorithm.
+
 
 The following functions can be used to load/install new plugins:
 
@@ -176,7 +190,7 @@ import importlib.util      as imputil
 import importlib.metadata  as impmeta
 import                        collections
 
-from typing import Dict, Union, Type, Optional
+from typing import Dict, Union, Type, Optional, Iterator
 from types  import ModuleType
 
 import fsl.utils.settings            as fslsettings
@@ -195,7 +209,7 @@ Tool    = Type[actions.Action]
 Plugin  = Union[View, Control, Tool]
 
 
-def class_defines_method(cls, methname):
+def class_defines_method(cls : Type, methname : str) -> bool:
     """Check to see whether ``methname`` is implemented on ``cls``, and not
     on a base-class.
 
@@ -206,106 +220,51 @@ def class_defines_method(cls, methname):
     return methname in cls.__dict__
 
 
-def _moduleName(filename : str) -> str:
-    """Generate a module name for a stand-alone FSLeyes plugin file. """
-    name    = op.splitext(op.basename(filename))[0].strip('_')
-    modname = 'fsleyes_plugin_{}'.format(name)
-    return modname
-
-
-def _importModule(filename : str, modname : str) -> ModuleType:
-    """Used by :func:`loadPlugin`. Imports the given Python file, setting
-    the module name to ``modname``.
-    """
-    log.debug('Importing %s as %s', filename, modname)
-
-    spec = imputil.spec_from_file_location(modname, filename)
-    mod  = imputil.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-
-    sys.modules[modname] = mod
-    return mod
-
-
-def _findEntryPoints(mod            : ModuleType,
-                     ignoreBuiltins : bool) -> Dict[str, Dict[str, Plugin]]:
-    """Finds the FSLeyes entry points (views,
-    controls, or tools) that are defined within the given module.
-
-    :arg mod:            The module to search
-    :arg ignoreBuiltins: If ``True``, all, views, controls and tools which
-                         are built into FSLeyes will be ignored. The
-                         :class:`.ViewPanel`, :class:`.ControlPanel`,
-                         :class:`.ControlToolBar` and :class:`.Action` base
-                         classes are always ignored.
-
-    :returns:            A dictionary
-    """
-
-    entryPoints = collections.defaultdict(dict)
-
-    for name in dir(mod):
-
-        item = getattr(mod, name)
-
-        if not isinstance(item, type):
-            continue
-
-        bases = [viewpanel.ViewPanel,
-                 canvaspanel.CanvasPanel,
-                 ctrlpanel.ControlPanel,
-                 ctrlpanel.ControlToolBar,
-                 ctrlpanel.SettingsPanel,
-                 actions.Action]
-
-        # avoid base-classes and built-ins
-        if item in bases:
-            continue
-        if ignoreBuiltins and str(item.__module__).startswith('fsleyes.'):
-            continue
-
-        # ignoreControl/ignoreTool may be overridden
-        # to tell us to ignore this plugin
-        if issubclass(item, ctrlpanel.ControlMixin)    and \
-           class_defines_method(item, 'ignoreControl') and \
-           item.ignoreControl():
-            continue
-        if issubclass(item, actions.Action)         and \
-           class_defines_method(item, 'ignoreTool') and \
-           item.ignoreTool():
-            continue
-
-        group = _pluginGroup(item)
-        if group is not None:
-            log.debug('Found %s entry point: %s', group, name)
-            entryPoints[f'fsleyes_{group}'][name] = item
-
-    return entryPoints
-
-
 class FSLeyesPlugin(impmeta.Distribution):
     """Custom ``importlib.metadata.Distribution`` used to represent FSLeyes
-    plugins that are loaded from file.
+    plugins that are loaded from a single file.
+
+    A ``FSLeyesPlugin`` is created for each single-file FSLeyes plugin that
+    is registered with the :meth:`FSLeyesPluginFinder.add_plugin` method.
     """
 
-    def __init__(self, module, modname, builtin):
+    def __init__(self,
+                 module  : ModuleType,
+                 modname : str,
+                 builtin : bool):
+        """Create a ``FSLeyesPlugin`` from a single-file plugin file that
+        has already been loaded as a module.
+
+        :arg module:  The loaded module
+        :arg modname: The module name
+        :arg builtin: Whether or not this is a built-in FSLeyes plugin, from
+                      the :mod:`fsleyes.plugins` module.
+        """
         self.__module  = module
         self.__modname = modname
         self.__builtin = builtin
 
+
     @property
-    def version(self):
+    def version(self) -> str:
         return '0.0.0'
 
+
     @property
-    def name(self):
+    def name(self) -> str:
         return self.__modname
 
+
     @property
-    def entry_points(self):
+    def entry_points(self) -> Iterator[impmeta.EntryPoint]:
+        """Return a sequence of ``EntryPoint`` objects provided by the plugin.  The
+        :meth:`FSLeyesPlugin.find_entry_points` function is used to scan the
+        module for entry points.
+        """
 
         modname = self.__modname
-        alleps  = _findEntryPoints(self.__module, not self.__builtin)
+        alleps  = FSLeyesPlugin.find_entry_points(
+            self.__module, not self.__builtin)
 
         for group, eps in alleps.items():
             for name, cls in eps.items():
@@ -318,14 +277,78 @@ class FSLeyesPlugin(impmeta.Distribution):
                     else:
                         label = strings.titles.get(name, name)
 
-                yield impmeta.EntryPoint(label, f'{modname}:{name}',
+                yield impmeta.EntryPoint(label,
+                                         f'{modname}:{name}',
                                          group=group)
 
 
+    @staticmethod
+    def find_entry_points(
+            mod            : ModuleType,
+            ignoreBuiltins : bool
+    ) -> Dict[str, Dict[str, Plugin]]:
+        """Finds the FSLeyes entry points (views,
+        controls, or tools) that are defined within the given module.
+
+        :arg mod:            The module to search
+        :arg ignoreBuiltins: If ``True``, all, views, controls and tools which
+                             are built into FSLeyes will be ignored. The
+                             :class:`.ViewPanel`, :class:`.ControlPanel`,
+                             :class:`.ControlToolBar` and :class:`.Action` base
+                             classes are always ignored.
+
+        :returns:            A dictionary
+        """
+
+        entryPoints = collections.defaultdict(dict)
+
+        for name in dir(mod):
+
+            item = getattr(mod, name)
+
+            if not isinstance(item, type):
+                continue
+
+            bases = [viewpanel.ViewPanel,
+                     canvaspanel.CanvasPanel,
+                     ctrlpanel.ControlPanel,
+                     ctrlpanel.ControlToolBar,
+                     ctrlpanel.SettingsPanel,
+                     actions.Action]
+
+            # avoid base-classes and built-ins
+            if item in bases:
+                continue
+            if ignoreBuiltins and str(item.__module__).startswith('fsleyes.'):
+                continue
+
+            # ignoreControl/ignoreTool may be overridden
+            # to tell us to ignore this plugin
+            if issubclass(item, ctrlpanel.ControlMixin)    and \
+               class_defines_method(item, 'ignoreControl') and \
+               item.ignoreControl():
+                continue
+            if issubclass(item, actions.Action)         and \
+               class_defines_method(item, 'ignoreTool') and \
+               item.ignoreTool():
+                continue
+
+            group = _pluginGroup(item)
+            if group is not None:
+                log.debug('Found %s entry point: %s', group, name)
+                entryPoints[f'fsleyes_{group}'][name] = item
+
+        return entryPoints
+
+
 class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
+    """Custom ``MetaPathFinder`` for single-file FSLeyes plugins.
+    """
 
     @staticmethod
     def instance() -> 'FSLeyesPluginFinder':
+        """Return a singleton ``FSLeyesPluginFinder`` instance. """
+
         instance = getattr(FSLeyesPluginFinder, '_instance', None)
         if instance is None:
             instance = FSLeyesPluginFinder()
@@ -333,16 +356,28 @@ class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
 
         return instance
 
+
     def __init__(self):
+        """Don't create a ``FSLeyesPluginFinder``. Instead, access the
+        singleton instance via the :meth:`instance` method.
+        """
         FSLeyesPluginFinder._instance = self
         self.__plugins = {}
 
 
-    def addPlugin(self, module : ModuleType, modname : str, builtin : bool):
+    def add_plugin(self, module : ModuleType, modname : str, builtin : bool):
+        """Register a FSLeyes plugin module.
+
+        :arg module:  The loaded module
+        :arg modname: The module name
+        :arg builtin: Whether or not this is a built-in FSLeyes plugin, from
+                      the :mod:`fsleyes.plugins` module.
+        """
         self.__plugins[modname] = FSLeyesPlugin(module, modname, builtin)
 
 
     def find_distributions(self, context=None):
+        """Returns all registered :class:`FSLeyesPlugin` distributions. """
         return self.__plugins.values()
 
 
@@ -397,7 +432,7 @@ def _loadBuiltIns():
         for _, name, _ in submods:
             log.debug('Loading built-in plugin module %s', name)
             submod = importlib.import_module(name)
-            FSLeyesPluginFinder.instance().addPlugin(
+            FSLeyesPluginFinder.instance().add_plugin(
                 submod, submod.__name__, True)
 
 
@@ -538,9 +573,19 @@ def pluginTitle(plugin : Plugin) -> Optional[str]:
 
 def loadPlugin(filename : str):
     """Loads the given Python file as a FSLeyes plugin. """
-    modname = _moduleName(  filename)
-    module  = _importModule(filename, modname)
-    FSLeyesPluginFinder.instance().addPlugin(module, modname, False)
+
+    modname = op.splitext(op.basename(filename))[0].strip('_')
+    modname = f'fsleyes_plugin_{modname}'
+
+    log.debug('Importing %s as %s', filename, modname)
+
+    spec   = imputil.spec_from_file_location(modname, filename)
+    module = imputil.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    sys.modules[modname] = module
+
+    FSLeyesPluginFinder.instance().add_plugin(module, modname, False)
 
 
 def installPlugin(filename : str):
