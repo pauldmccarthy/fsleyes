@@ -442,9 +442,9 @@ def _listEntryPoints(group : str) -> Dict[str, Plugin]:
 
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
     """
-    items = collections.OrderedDict()
 
-    eps = impmeta.entry_points()
+    items = collections.OrderedDict()
+    eps   = impmeta.entry_points()
 
     # Python >=3.10 returns an EntryPoints
     # object, older versions return a dict.
