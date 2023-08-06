@@ -53,7 +53,7 @@ class ColourMapTextureManager:
 
     def destroy(self):
         """Must be called when this ``ColourMapTextureManager`` is no longer
-        needed. Destroyes the :class:`.ColourMapTexture`instances, removes
+        needed. Destroyes the :class:`.ColourMapTexture` instances, removes
         property listeners, and clears references.
         """
         self.__removeListeners()

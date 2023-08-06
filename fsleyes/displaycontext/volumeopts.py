@@ -93,7 +93,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
                           values. May be ``None``, in which case the initial
                           display range will be set to the image data range.
 
-        :arg percentiles: If ``True``, interpret ``drange``as percentiles of
+        :arg percentiles: If ``True``, interpret ``drange`` as percentiles of
                           the data range of each image, rather than raw
                           intensities.
         """
