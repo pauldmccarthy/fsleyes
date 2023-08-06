@@ -34,6 +34,9 @@ Changed
   parameters (!378).
 * The FEAT cluster panel now remembers which contrast for a FEAT analysis was
   selected when switching between different analyses (!380).
+* Updated the FSLeyes plugin architecture to use ``importlib`` instead of the
+  deprecated ``pkg_resources``. FSLeyes plugin libraries no longer need to have
+  a name beginning with ``fsleyes-plugin`` (!385).
 
 
 Fixed
