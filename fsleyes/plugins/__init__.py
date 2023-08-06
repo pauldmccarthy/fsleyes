@@ -443,7 +443,15 @@ def _listEntryPoints(group : str) -> Dict[str, Plugin]:
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
     """
     items = collections.OrderedDict()
-    for ep in impmeta.entry_points().select(group=group):
+
+    eps = impmeta.entry_points()
+
+    # Python >=3.10 returns an EntryPoints
+    # object, older versions return a dict.
+    try:              eps = eps.select(group=group)
+    except Exception: eps = eps[group]
+
+    for ep in eps:
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
