@@ -449,7 +449,7 @@ def _listEntryPoints(group : str) -> Dict[str, Plugin]:
     # Python >=3.10 returns an EntryPoints
     # object, older versions return a dict.
     try:              eps = eps.select(group=group)
-    except Exception: eps = eps[group]
+    except Exception: eps = eps.get(group, [])
 
     for ep in eps:
         if ep.name in items:
