@@ -75,6 +75,7 @@ except ImportError:
     zmqshell.ZMQInteractiveShell = mock
     ipkernel                     = mock()
     ipkernel.IPythonKernel       = mock
+    AsyncMappingKernelManager    = mock
 
     ENABLED = False
 

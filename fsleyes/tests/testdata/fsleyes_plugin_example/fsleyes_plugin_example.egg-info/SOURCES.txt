@@ -1,4 +1,4 @@
-setup.py
+pyproject.toml
 fsleyes_plugin_example/__init__.py
 fsleyes_plugin_example/plugin.py
 fsleyes_plugin_example.egg-info/PKG-INFO

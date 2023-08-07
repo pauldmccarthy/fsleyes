@@ -27,7 +27,7 @@ code = """
 import fsleyes.views.viewpanel as vp
 
 class MyViewPanel(vp.ViewPanel):
-    pass
+    someflag = True
 """.strip()
 
 
@@ -96,4 +96,5 @@ def _test_LoadPluginAction(frame, overlayList, displayCtx):
             FileDialog.GetPath_return = op.join(td, 'test_loadpluginaction.py')
             act()
 
-            assert 'fsleyes-plugin-test-loadpluginaction' in plugins.listPlugins()
+            assert 'MyViewPanel' in plugins.listViews()
+            assert plugins.listViews()['MyViewPanel'].someflag

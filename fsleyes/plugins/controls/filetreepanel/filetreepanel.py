@@ -8,8 +8,8 @@
 to browse the contents of structured directories which are described with
 a `FileTree <https://git.fmrib.ox.ac.uk/ndcn0236/file-tree/>`_ specification.
 
-See also the :mod:`.manager` module, which contains the logic for
-generating the file list.
+See also the :mod:`~.filetreepanel.manager` module, which contains the logic
+for generating the file list.
 """
 
 

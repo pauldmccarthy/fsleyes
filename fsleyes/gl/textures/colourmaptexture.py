@@ -138,7 +138,7 @@ class ColourMapTexture(texture.Texture):
         Pass in ``True`` to enable interpolation, ``False`` to disable.
 
         GL texture interpolation is not used - interpolation is performed
-        by the ``fsleyes_widgets.utils.colourbarbitmap.genColours``function.
+        by the ``fsleyes_widgets.utils.colourbarbitmap.genColours`` function.
         """
         self.set(interp=interp)
 

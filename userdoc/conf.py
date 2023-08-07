@@ -62,17 +62,20 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-#
-# The fsleyes setup.py file contains a function called get_fsleyes_version(),
-# so we'll use that instead of importing fsleyes.
-#
+def get_fsleyes_version():
+    """Returns the current FSLeyes version number. """
+    version = {}
+    basedir = op.join(op.dirname(__file__), '..')
+    with open(op.join(basedir, "fsleyes", "version.py")) as f:
+        for line in f:
+            if line.startswith('__version__'):
+                exec(line, version)
+                break
 
-# make sure fsleyes base dir is on the pythonpath
-sys.path.insert(0, op.join(op.dirname(__file__), '..'))
+    return version.get('__version__')
 
-import setup
-version = setup.get_fsleyes_version()
-release = version
+
+version = get_fsleyes_version()
 
 fsleyes_apidoc = 'http://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/'
 

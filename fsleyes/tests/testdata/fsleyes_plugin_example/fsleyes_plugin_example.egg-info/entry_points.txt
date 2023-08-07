@@ -6,4 +6,3 @@ Plugin tool = fsleyes_plugin_example.plugin:PluginTool
 
 [fsleyes_views]
 Plugin view = fsleyes_plugin_example.plugin:PluginView
-

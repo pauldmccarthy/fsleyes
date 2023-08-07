@@ -11,8 +11,6 @@ import textwrap as tw
 
 import os.path as op
 
-import pkg_resources
-
 try:
     from unittest import mock
 except ImportError:
@@ -32,14 +30,10 @@ plugindirs = [op.abspath(d)                                for d in plugindirs]
 
 def setup_module():
     for d in plugindirs:
-        pkg_resources.working_set.add_entry(d)
+        sys.path.append(d)
     import fsleyes_plugin_example      # noqa
     import fsleyes_plugin_bad_example  # noqa
 
-
-def test_listPlugins():
-    for plugin in ['fsleyes-plugin-bad-example', 'fsleyes-plugin-example']:
-        assert plugin in plugins.listPlugins()
 
 
 def test_listViews():
@@ -101,7 +95,6 @@ def test_loadPlugin():
 
         mod = sys.modules['fsleyes_plugin_test_loadplugin']
 
-        assert 'fsleyes-plugin-test-loadplugin' in plugins.listPlugins()
         assert plugins.listTools()[   'LoadTool']    is mod.LoadTool
         assert plugins.listControls()['LoadControl'] is mod.LoadControl
         assert plugins.listViews()[   'LoadView']    is mod.LoadView
@@ -120,7 +113,6 @@ def test_installPlugin():
 
             mod = sys.modules['fsleyes_plugin_test_installplugin']
 
-            assert 'fsleyes-plugin-test-installplugin' in plugins.listPlugins()
             assert plugins.listTools()[   'InstallTool']    is mod.InstallTool
             assert plugins.listControls()['InstallControl'] is mod.InstallControl
             assert plugins.listViews()[   'InstallView']    is mod.InstallView
@@ -141,9 +133,6 @@ def test_initialise():
                 {'FSLEYES_PLUGIN_PATH' : op.pathsep.join((td1, td2))}):
 
             plugins.initialise()
-
-            assert 'fsleyes-plugin-plugin1' in plugins.listPlugins()
-            assert 'fsleyes-plugin-plugin2' in plugins.listPlugins()
 
             p1 = sys.modules['fsleyes_plugin_plugin1']
             p2 = sys.modules['fsleyes_plugin_plugin2']

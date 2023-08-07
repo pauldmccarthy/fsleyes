@@ -5,6 +5,8 @@ import wx
 
 import fsleyes.panel as fslpanel
 
+# None of the things below inherit from the approprate
+# base-class, so will not be detected as FSLeyes plugins.
 
 class PluginView(fslpanel.FSLeyesPanel):
 

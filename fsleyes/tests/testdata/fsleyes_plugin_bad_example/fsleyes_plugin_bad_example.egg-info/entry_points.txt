@@ -6,4 +6,3 @@ Bad plugin tool = fsleyes_plugin_bad_example.plugin:PluginTool
 
 [fsleyes_views]
 Bad plugin view = fsleyes_plugin_bad_example.plugin:PluginView
-
