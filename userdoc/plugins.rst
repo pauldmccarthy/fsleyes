@@ -74,6 +74,24 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    and the :class:`.ResampleAction`.
 
 
+FSLeyes plugin sources
+^^^^^^^^^^^^^^^^^^^^^^
+
+FSLeyes plugins can be loaded from the following locations:
+
+ - Built-in plugins from the :mod:`fsleyes.plugins` module.
+ - Single-file plugins that have been loaded/installed by the user.
+ - Plugins from third-party libraries that have been installed into the
+   running Python environment.
+
+The default behaviour, when FSLeyes starts up, is to only expose plugins from
+the first two locations - plugins from third party libraries are hidden by
+default. However, these third-party plugins can be made visible by starting
+FSLeyes with the ``--showAllPlugins`` command-line option. You can permanently
+apply this option by adding it to your :ref:`default command-line arguments
+<command_line_default_arguments>`.
+
+
 Loading/installing FSLeyes plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
