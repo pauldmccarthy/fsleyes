@@ -230,6 +230,13 @@ Tool    = Type[actions.Action]
 Plugin  = Union[View, Control, Tool]
 
 
+SHOW_THIRD_PARTY_PLUGINS = False
+"""Global toggle which controls whether plugins provided by installed
+third-party libraries are exposed by the :func:`listViews`,
+:func:`listControls`, and :func:`listTools` functions.
+"""
+
+
 def class_defines_method(cls : Type, methname : str) -> bool:
     """Check to see whether ``methname`` is implemented on ``cls``, and not
     on a base-class.
@@ -447,11 +454,19 @@ def _loadBuiltIns():
             FSLeyesPluginFinder.instance().add_plugin(submod, submod.__name__)
 
 
-def _listEntryPoints(group : str) -> Dict[str, Plugin]:
+def _listEntryPoints(
+        group      : str,
+        thirdParty : bool = True
+) -> Dict[str, Plugin]:
     """Returns a dictionary containing ``{name : type}`` entry points for the
     given entry point group.
 
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
+
+    :arg group:      One of ``'fsleyes_views'``, ``'fsleyes_controls``, or
+                     ``'fsleyes_tools'``.
+    :arg thirdParty: If ``True``, plugins from installed third-party packages
+                     will be included. Otherwise they are omitted.
     """
 
     items = collections.OrderedDict()
@@ -463,6 +478,9 @@ def _listEntryPoints(group : str) -> Dict[str, Plugin]:
     except Exception: eps = eps.get(group, [])
 
     for ep in eps:
+        # filter out third-party plugins by module path
+        if (not thirdParty) and (not ep.value.startswith('fsleyes.')):
+            continue
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
@@ -474,7 +492,7 @@ def listViews() -> Dict[str, View]:
     """Returns a dictionary of ``{name : ViewPanel}`` mappings containing
     the custom views provided by all installed FSLeyes plugins.
     """
-    views = _listEntryPoints('fsleyes_views')
+    views = _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
     for name, cls in list(views.items()):
         if not issubclass(cls, viewpanel.ViewPanel):
             log.debug('Ignoring fsleyes_views entry point '
@@ -493,7 +511,7 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
                    returned (as determined by
                    :meth:`.ControlMixin.supportedViews.`).
     """
-    ctrls = _listEntryPoints('fsleyes_controls')
+    ctrls = _listEntryPoints('fsleyes_controls', SHOW_THIRD_PARTY_PLUGINS)
 
     for name, cls in list(ctrls.items()):
         if not issubclass(cls, (ctrlpanel.ControlPanel,
@@ -534,7 +552,7 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
                    returned (as determined by
                    :meth:`.Action.supportedViews.`).
     """
-    tools = _listEntryPoints('fsleyes_tools')
+    tools = _listEntryPoints('fsleyes_tools', SHOW_THIRD_PARTY_PLUGINS)
     for name, cls in list(tools.items()):
 
         if not issubclass(cls, actions.Action):

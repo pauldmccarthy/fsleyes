@@ -266,10 +266,11 @@ import fsleyes_widgets.utils.typedict     as td
 import fsleyes_widgets.utils.status       as status
 
 import                           fsleyes
+import fsleyes.autodisplay    as autodisplay
+import fsleyes.colourmaps     as colourmaps
 import fsleyes.data           as dutils
 import fsleyes.displaycontext as fsldisplay
-import fsleyes.colourmaps     as colourmaps
-import fsleyes.autodisplay    as autodisplay
+import fsleyes.plugins        as plugins
 
 
 log = logging.getLogger(__name__)
@@ -413,7 +414,8 @@ OPTIONS = td.TypeDict({
                        'notebookPort',
                        'noBrowser',
                        'annotations',
-                       'no3DInterp'],
+                       'no3DInterp',
+                       'showAllPlugins'],
 
     # Hidden/advanced/silly options
     'Extras'        : ['nolink',
@@ -802,6 +804,7 @@ ARGUMENTS = td.TypeDict({
     'Main.noBrowser'           : ('nbb',     'noBrowser',           False),
     'Main.annotations'         : ('a',       'annotations',         True),
     'Main.no3DInterp'          : ('ni',      'no3DInterp',          False),
+    'Main.showAllPlugins'      : ('ap',      'showAllPlugins',      False),
 
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
@@ -1072,6 +1075,7 @@ HELP = td.TypeDict({
     'Main.no3DInterp' :
     'Do not automatically enable interpolation for volume overlays '
     'when opening a 3D view',
+    'Main.showAllPlugins' : 'Expose plugins from third party packages',
 
     'Main.notebook' :
     'Start the Jupyter notebook server',
@@ -1764,6 +1768,7 @@ def _configMainParser(mainParser, exclude=None):
         'noBrowser'           : {'action'  : 'store_true'},
         'annotations'         : {'type'    : str},
         'no3DInterp'          : {'action'  : 'store_true'},
+        'showAllPlugins'      : {'action'  : 'store_true'},
     }
 
     if fsleyes.disableLogging:
@@ -2609,6 +2614,8 @@ def applyMainArgs(args, overlayList, displayCtx):
         displayCtx.radioOrientation = not args.neuroOrientation
 
     displayCtx.autoDisplay = args.autoDisplay
+
+    plugins.SHOW_THIRD_PARTY_PLUGINS = args.showAllPlugins
 
     # Apply extra/silly arguments
     if args.bumMode:
