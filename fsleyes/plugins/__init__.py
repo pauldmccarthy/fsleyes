@@ -469,7 +469,7 @@ def _listEntryPoints(
                      will be included. Otherwise they are omitted.
     """
 
-    items = collections.OrderedDict()
+    items = {}
     eps   = impmeta.entry_points()
 
     # Python >=3.10 returns an EntryPoints
@@ -492,14 +492,7 @@ def listViews() -> Dict[str, View]:
     """Returns a dictionary of ``{name : ViewPanel}`` mappings containing
     the custom views provided by all installed FSLeyes plugins.
     """
-    views = _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
-    for name, cls in list(views.items()):
-        if not issubclass(cls, viewpanel.ViewPanel):
-            log.debug('Ignoring fsleyes_views entry point '
-                      '%s - not a ViewPanel', name)
-            views.pop(name)
-            continue
-    return views
+    return _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
 
 
 def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
@@ -514,12 +507,6 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
     ctrls = _listEntryPoints('fsleyes_controls', SHOW_THIRD_PARTY_PLUGINS)
 
     for name, cls in list(ctrls.items()):
-        if not issubclass(cls, (ctrlpanel.ControlPanel,
-                                ctrlpanel.ControlToolBar)):
-            log.debug('Ignoring fsleyes_controls entry point %s - '
-                      'not a ControlPanel/ToolBar', name)
-            ctrls.pop(name)
-            continue
 
         # views that this control supports - might be None,
         # in which case the control is assumed to support
@@ -555,15 +542,9 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
     tools = _listEntryPoints('fsleyes_tools', SHOW_THIRD_PARTY_PLUGINS)
     for name, cls in list(tools.items()):
 
-        if not issubclass(cls, actions.Action):
-            log.debug('Ignoring fsleyes_tools entry point '
-                      '%s - not an Action', name)
-            tools.pop(name)
-            continue
-
-        supported = cls.supportedViews()
-
         if viewType is not None:
+
+            supported = cls.supportedViews()
             # If a viewType is provided, we don't
             # return view-independent views
             if (supported is None) or \
