@@ -22,6 +22,7 @@ Added
   the order in which slices are displayed to be reversed. These features are
   available on the command-line via the ``--sliceOverlap`` and
   ``--reverseSlices`` flags (!379).
+* FSLeyes plugin libraries can now provide custom layouts (!386).
 
 
 Changed
