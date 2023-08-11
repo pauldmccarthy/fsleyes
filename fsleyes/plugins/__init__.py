@@ -37,9 +37,9 @@ FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
    the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`, the
    :class:`.CropImageAction`, and the :class:`.ResampleAction`.
 
- - A *layout* is a string or a tuple which defines a custom layout.  refer to
-   the :mod:`fsleyes.layouts` module for details on the format of a layout
-   string.
+ - A *layout* is a string which specifies the layout of the FSLeyes frame,
+   comprising one or more view panels, and a set of control panels for each
+   view. Refer to the :mod:`fsleyes.layouts` module for more details.
 
 
 FSLeyes plugin sources
@@ -47,16 +47,18 @@ FSLeyes plugin sources
 
 FSLeyes plugins can be loaded from the following locations:
 
- - Built-in plugins from the :mod:`fsleyes.plugins` module.
+ - Built-in plugins from the :mod:`fsleyes.plugins` package.
  - Single-file plugins that have been loaded/installed by the user.
  - Plugins from third-party libraries that are installed into the running Python
    environment.
 
 The default behaviour, when FSLeyes starts up, is to only expose plugins from
 the first two locations - plugins from third party libraries are hidden by
-default. These third-party plugins can be made visible by adding them to the
-module-level :attr:`SHOW_THIRD_PARTY_PLUGINS` set. This set is automatically
-set when FSLeyes is started with the ``--showAllPlugins`` command-line option
+default. However, third-party plugins are automatically made available when a
+layout from the same library is loaded.
+
+Third-party plugins can also be made visible by default if you start FSLeyes
+with the ``--showAllPlugins`` command-line option.
 
 
 Loading/installing FSLeyes plugins
@@ -69,8 +71,8 @@ FSLeyes plugins are loaded into a running FSLeyes as follows:
    environment that FSLeyes is running in, and which provide any FSLeyes entry
    points, will automatically be detected by FSLeyes.
 
- - Plugin ``.py`` files, which contain view, control, and/or tool definitions,
-   can be passed directly to the :func:`loadPlugin` function.
+ - Plugin ``.py`` files, which contain view, control, tool, and/or layout
+   definitions, can be passed directly to the :func:`loadPlugin` function.
 
  - Plugin ``.py`` files which are present in the FSLeyes settings directory,
    or which are found in the ``FSLEYES_PLUGIN_PATH`` environment variable, will
@@ -106,7 +108,7 @@ Writing a FSLeyes plugin
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
-definitions for custom views, controls, and tools.
+definitions for custom views, controls, tools, and layouts.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 

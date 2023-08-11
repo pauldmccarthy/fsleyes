@@ -100,7 +100,7 @@ the first two locations - plugins from third party libraries are hidden by
 default. However, third-party plugins are automatically made available when a
 layout from the same library is loaded.
 
-1Third-party plugins can also be made visible by default if you start FSLeyes
+Third-party plugins can also be made visible by default if you start FSLeyes
 with the ``--showAllPlugins`` command-line option. You can permanently apply
 this option by adding it to your :ref:`default command-line arguments
 <command_line_default_arguments>`.
@@ -146,9 +146,9 @@ Writing a FSLeyes plugin
           range of built-in plugins can be found in ``fsleyes/plugins/``.
 
 
-.. warning:: FSLeyes assumes that all views, controls, and tools have unique
-             class names.  So expect problems if, for example, you define your
-             own FSLeyes control with the name
+.. warning:: FSLeyes assumes that all views, controls, tools, and layouts have
+             unique class names.  So expect problems if, for example, you
+             define your own FSLeyes control with the name
              :class:`~fsleyes.controls.overlaylistpanel.OverlayListPanel`.
 
 
@@ -187,9 +187,9 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this:
 
 .. sidebar:: FSLeyes plugin library naming conventions
 
-             Previous versions of FSLeyes would only recognise plugin
+             Versions of FSLeyes older than 1.8.0 will only recognise plugin
              libraries with a name beginning with ``fsleyes-plugin-``. As of
-             FSLeyes |version|, this restriction no longer exists - you can
+             FSLeyes 1.8.0, this restriction no longer exists - you can
              give your library any name you wish. All you need to do is expose
              the relevant entry points.
 
