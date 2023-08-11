@@ -544,13 +544,8 @@ def _listEntryPoints(
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
-        plugin = ep.load()
-
-        # layout plugins may be either layout strings,
-        # or tuples containing (name, layout string)
-        if isinstance(plugin, tuple):
-            plugin = plugin[1]
         items[ep.name] = ep.load()
+
     return items
 
 
@@ -558,7 +553,14 @@ def listViews() -> Dict[str, View]:
     """Returns a dictionary of ``{name : ViewPanel}`` mappings containing
     the custom views provided by all installed FSLeyes plugins.
     """
-    return _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
+    views = _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
+    for name, cls in list(views.items()):
+        if not issubclass(cls, viewpanel.ViewPanel):
+            log.debug('Ignoring fsleyes_views entry point '
+                      '%s - not a ViewPanel', name)
+            views.pop(name)
+            continue
+    return views
 
 
 def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
@@ -573,6 +575,13 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
     ctrls = _listEntryPoints('fsleyes_controls', SHOW_THIRD_PARTY_PLUGINS)
 
     for name, cls in list(ctrls.items()):
+
+        if not issubclass(cls, (ctrlpanel.ControlPanel,
+                                ctrlpanel.ControlToolBar)):
+            log.debug('Ignoring fsleyes_controls entry point %s - '
+                      'not a ControlPanel/ToolBar', name)
+            ctrls.pop(name)
+            continue
 
         # views that this control supports - might be None,
         # in which case the control is assumed to support
@@ -608,6 +617,12 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
     tools = _listEntryPoints('fsleyes_tools', SHOW_THIRD_PARTY_PLUGINS)
     for name, cls in list(tools.items()):
 
+        if not issubclass(cls, actions.Action):
+            log.debug('Ignoring fsleyes_tools entry point '
+                      '%s - not an Action', name)
+            tools.pop(name)
+            continue
+
         if viewType is not None:
 
             supported = cls.supportedViews()
@@ -624,18 +639,39 @@ def listLayouts() -> Dict[str, Layout]:
     """Returns a dictionary of ``{name : str}`` mappings containing
     the custom layouts provided by all installed FSLeyes plugins.
     """
-    return _listEntryPoints('fsleyes_layouts')
+
+    layouts = _listEntryPoints('fsleyes_layouts')
+
+    for name, layout in list(layouts.items()):
+
+        if not isinstance(layout, (str, tuple)):
+            log.debug('Ignoring fsleyes_layouts entry point '
+                      '%s - not a string or tuple', name)
+            layouts.pop(name)
+            continue
+
+        # layout plugins may be either layout strings,
+        # or tuples containing (name, layout string)
+        if isinstance(layout, tuple):
+            layouts[name] = layout[1]
+
+    return layouts
 
 
 def _lookupPlugin(plgname : str, group : str) -> Optional[Plugin]:
     """Looks up the FSLeyes plugin with the given name. """
     entries = _listEntryPoints(f'fsleyes_{group}')
-    for name, plg in entries.items():
-        if isinstance(plg, str):
+    for name, plugin in entries.items():
+        if isinstance(plugin, (str, tuple)):
+            if isinstance(plugin, tuple):
+                if plugin[0] == plgname:
+                    return plugin[1]
+            elif name == plgname:
+                return plugin
             if name == plgname:
-                return plg
-        elif plg.__name__ == plgname:
-            return plg
+                return plugi
+        elif plugin.__name__ == plgname:
+            return plugin
     return None
 
 
@@ -654,7 +690,7 @@ def lookupTool(clsName : str) -> Tool:
     return _lookupPlugin(clsName, 'tools')
 
 
-def lookupLayout(name : str) -> Layout:
+def lookupLayout(name : str) -> str:
     """Looks up the FSLeyes layout with the given name. """
     return _lookupPlugin(name, 'layouts')
 
