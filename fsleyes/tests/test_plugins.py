@@ -84,6 +84,11 @@ def test_listLayouts():
     assert layouts['Plugin layout'] == PluginLayout
 
 
+def test_layoutModule():
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        assert plugins.layoutModule('Plugin layout') == 'fsleyes_plugin_example'
+
+
 def test_filterThirdParty():
 
     with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
