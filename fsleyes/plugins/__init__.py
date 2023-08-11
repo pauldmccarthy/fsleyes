@@ -54,9 +54,9 @@ FSLeyes plugins can be loaded from the following locations:
 
 The default behaviour, when FSLeyes starts up, is to only expose plugins from
 the first two locations - plugins from third party libraries are hidden by
-default. These third-party plugins can be made visible by setting the
-module-level :attr:`SHOW_THIRD_PARTY_PLUGINS` flag. This flag is automatically
-set when FSLeyes is started with the ``--show_all_plugins`` command-line option
+default. These third-party plugins can be made visible by adding them to the
+module-level :attr:`SHOW_THIRD_PARTY_PLUGINS` set. This set is automatically
+set when FSLeyes is started with the ``--showAllPlugins`` command-line option
 
 
 Loading/installing FSLeyes plugins
@@ -221,6 +221,7 @@ import                        sys
 import                        glob
 import                        random
 import                        string
+import                        fnmatch
 import                        pkgutil
 import                        logging
 import                        importlib
@@ -249,22 +250,29 @@ Layout  = Union[str, tuple]
 Plugin  = Union[View, Control, Tool, Layout]
 
 
-SHOW_THIRD_PARTY_PLUGINS = False
+SHOW_THIRD_PARTY_PLUGINS = set()
 """Global toggle which controls whether plugins provided by installed
 third-party libraries are exposed by the :func:`listViews`,
-:func:`listControls`, and :func:`listTools` functions.
+:func:`listControls`, and :func:`listTools` functions.  Layouts provided
+by plugins are always visible.
+
+This field may either be a set containing the names of specific third-party
+plugins to show, or a boolean which will toggle all third party plugins on or
+off.
 """
 
 
-def class_defines_method(cls : Type, methname : str) -> bool:
-    """Check to see whether ``methname`` is implemented on ``cls``, and not
-    on a base-class.
-
-    :meth:`.Action.ignoreTool`, :meth:`.ControlMixin.ignoreControl`, and
-    :meth:`.ControlMixin.supportSubClasses` need to be implemented on the
-    specific class - inherited base class implementations are not considered.
+def showThirdPartyPlugin(modname : str) -> bool:
+    """Return ``True`` if the given plugin should be visible, ``False``
+    otherwise.
     """
-    return methname in cls.__dict__
+    if SHOW_THIRD_PARTY_PLUGINS in (True, False):
+        return SHOW_THIRD_PARTY_PLUGINS
+
+    for pattern in SHOW_THIRD_PARTY_PLUGINS:
+        if fnmatch.fnmatch(modname, f'{pattern}*'):
+            return True
+    return False
 
 
 class FSLeyesPlugin(impmeta.Distribution):
@@ -390,12 +398,12 @@ class FSLeyesPlugin(impmeta.Distribution):
 
                 # ignoreControl/ignoreTool may be overridden
                 # to tell us to ignore this plugin
-                if ptype == 'control'                          and \
-                   class_defines_method(item, 'ignoreControl') and \
+                if ptype == 'control'               and \
+                   'ignoreControl' in item.__dict__ and \
                    item.ignoreControl():
                     continue
-                if ptype == 'tool'                          and \
-                   class_defines_method(item, 'ignoreTool') and \
+                if ptype == 'tool'               and \
+                   'ignoreTool' in item.__dict__ and \
                    item.ignoreTool():
                     continue
 
@@ -515,18 +523,20 @@ def _loadBuiltIns():
 
 
 def _listEntryPoints(
-        group      : str,
-        thirdParty : bool = True
+        group   : str,
+        showAll : bool = False
 ) -> Dict[str, Plugin]:
     """Returns a dictionary containing ``{name : type}`` entry points for the
     given entry point group.
 
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
 
-    :arg group:      One of ``'fsleyes_views'``, ``'fsleyes_controls``,
-                     ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
-    :arg thirdParty: If ``True``, plugins from installed third-party packages
-                     will be included. Otherwise they are omitted.
+    :arg group:   One of ``'fsleyes_views'``, ``'fsleyes_controls``,
+                  ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
+    :arg showAll: If ``True``, all plugins, including from installed
+                  third-party packages will be included. Otherwise,
+                  plugins from third-party packages which are not in
+                  :attr:`SHOW_THIRD_PARTY_PLUGINS` will be omitted.
     """
 
     items = {}
@@ -539,8 +549,10 @@ def _listEntryPoints(
 
     for ep in eps:
         # filter out third-party plugins by module path
-        if (not thirdParty) and (not ep.value.startswith('fsleyes.')):
-            continue
+        if (not showAll) and (not ep.value.startswith('fsleyes.')):
+            if not showThirdPartyPlugin(ep.value.split(':')[0]):
+                log.debug('Filtering third party plugin: %s', ep.value)
+                continue
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
@@ -553,7 +565,7 @@ def listViews() -> Dict[str, View]:
     """Returns a dictionary of ``{name : ViewPanel}`` mappings containing
     the custom views provided by all installed FSLeyes plugins.
     """
-    views = _listEntryPoints('fsleyes_views', SHOW_THIRD_PARTY_PLUGINS)
+    views = _listEntryPoints('fsleyes_views')
     for name, cls in list(views.items()):
         if not issubclass(cls, viewpanel.ViewPanel):
             log.debug('Ignoring fsleyes_views entry point '
@@ -572,7 +584,7 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
                    returned (as determined by
                    :meth:`.ControlMixin.supportedViews.`).
     """
-    ctrls = _listEntryPoints('fsleyes_controls', SHOW_THIRD_PARTY_PLUGINS)
+    ctrls = _listEntryPoints('fsleyes_controls')
 
     for name, cls in list(ctrls.items()):
 
@@ -592,7 +604,7 @@ def listControls(viewType : Optional[View] = None) -> Dict[str, Control]:
         # views that it supports, or only the specific
         # view classes returned by supportedViews?
         subclassok = True
-        if class_defines_method(cls, 'supportSubClasses'):
+        if 'supportSubClasses' in cls.__dict__:
             subclassok = cls.supportSubClasses()
 
         if viewType  is not None and \
@@ -614,7 +626,7 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
                    returned (as determined by
                    :meth:`.Action.supportedViews.`).
     """
-    tools = _listEntryPoints('fsleyes_tools', SHOW_THIRD_PARTY_PLUGINS)
+    tools = _listEntryPoints('fsleyes_tools')
     for name, cls in list(tools.items()):
 
         if not issubclass(cls, actions.Action):
@@ -640,7 +652,7 @@ def listLayouts() -> Dict[str, Layout]:
     the custom layouts provided by all installed FSLeyes plugins.
     """
 
-    layouts = _listEntryPoints('fsleyes_layouts')
+    layouts = _listEntryPoints('fsleyes_layouts', True)
 
     for name, layout in list(layouts.items()):
 
@@ -660,7 +672,7 @@ def listLayouts() -> Dict[str, Layout]:
 
 def _lookupPlugin(plgname : str, group : str) -> Optional[Plugin]:
     """Looks up the FSLeyes plugin with the given name. """
-    entries = _listEntryPoints(f'fsleyes_{group}')
+    entries = _listEntryPoints(f'fsleyes_{group}', True)
     for name, plugin in entries.items():
         if isinstance(plugin, (str, tuple)):
             if isinstance(plugin, tuple):
@@ -700,7 +712,7 @@ def pluginTitle(plugin : Plugin) -> Optional[str]:
     registered.
     """
     group   = _pluginGroup(plugin)
-    entries = _listEntryPoints(f'fsleyes_{group}')
+    entries = _listEntryPoints(f'fsleyes_{group}', True)
     for title, cls in entries.items():
         if cls is plugin:
             return title
