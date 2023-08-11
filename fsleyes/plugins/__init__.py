@@ -99,10 +99,10 @@ Writing a FSLeyes plugin
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
-.. warning:: FSLeyes assumes that **all** views, controls, and tools have
-             unique class names.  So expect problems if, for example, you
-             define your own FSLeyes control with a name that is already
-             used by a built-in control, e.g. ``OverlayListPanel``.
+.. warning:: FSLeyes assumes that **all** views, controls, tools, and layouts
+             have unique names.  So expect problems if, for example, you
+             define your own FSLeyes control with a name that is already used
+             by a built-in control, e.g. ``OverlayListPanel``.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
@@ -115,10 +115,16 @@ definitions for custom views, controls, and tools.
 
  - Tools must be sub-classes of the :class:`.Action` class.
 
+ - Layouts must be strings or tuples. For single-file plugins, layout variables
+   must have a name that begins with ``FSLEYES_LAYOUT_``. If a layout is a
+   string, it is given a name based on the name of the variable. If a layout
+   is a tuple, the first value in the tuple is used as the name, and the second
+   value is assumed to be the layout string.
 
-To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply
-define your views, controls, and tools in the file. The file path can then
-be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
+
+To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define
+your views, controls, tools, and layouts in the file. The file path can then be
+passed to the :func:`loadPlugin` or :func:`installPlugin` function.
 
 
 To release a FSLeyes plugin as a library, you need to organise your code
@@ -126,7 +132,7 @@ as a Python library. Minimally, this requires the following:
 
  - Arrange your ``.py`` file(s) into a Python package.
 
- - Expose your custom views, controls, and tools as `entry points
+ - Expose your custom views, controls, tools, and layouts as `entry points
    <https://packaging.python.org/specifications/entry-points/>`_.
 
 
@@ -139,10 +145,11 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this::
     [project]
     name = "my-cool-fsleyes-plugin"
 
-    # Views, controls, and tools must be exposed
-    # as entry points within groups called
-    # "fsleyes_views", "fsleyes_controls" and
-    # "fsleyes_tools" respectively.
+    # Views, controls, tools, and layouts
+    # must be exposed as entry points
+    # within groups called "fsleyes_views",
+    # "fsleyes_controls", "fsleyes_tools"
+    # and "fsleyes_layouts" respectively.
 
     [project.entry-points.fsleyes_views]
     "My cool view" = "myplugin:MyView"
@@ -152,6 +159,9 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this::
 
     [project.entry-points.fsleyes_tools]
     "My cool tool" = "myplugin.MyTool"
+
+    [project.entry-points.fsleyes_layouts]
+    "My cool layout" = "myplugin.MyLayout"
 
 
 See the `Python Packaging guide
@@ -195,13 +205,16 @@ The following functions can be used to access plugins:
    listViews
    listControls
    listTools
+   listLayouts
    lookupView
    lookupControl
    lookupTool
+   lookupLayout
    pluginTitle
 """
 
 
+import functools           as ft
 import os.path             as op
 import                        os
 import                        sys
@@ -216,7 +229,7 @@ import importlib.metadata  as impmeta
 import                        collections
 
 
-from typing import Dict, Union, Type, Optional, Iterator
+from typing import Dict, Union, Type, Optional, Sequence
 from types  import ModuleType
 
 import fsl.utils.settings            as fslsettings
@@ -230,9 +243,10 @@ import fsleyes.controls.controlpanel as ctrlpanel
 log = logging.getLogger(__name__)
 
 View    = Type[viewpanel.ViewPanel]
-Control = Type[ctrlpanel.ControlPanel]
+Control = Union[Type[ctrlpanel.ControlMixin], Type[ctrlpanel.ControlToolBar]]
 Tool    = Type[actions.Action]
-Plugin  = Union[View, Control, Tool]
+Layout  = Union[str, tuple]
+Plugin  = Union[View, Control, Tool, Layout]
 
 
 SHOW_THIRD_PARTY_PLUGINS = False
@@ -284,36 +298,52 @@ class FSLeyesPlugin(impmeta.Distribution):
 
 
     @property
-    def entry_points(self) -> Iterator[impmeta.EntryPoint]:
+    @ft.lru_cache
+    def entry_points(self) -> Sequence[impmeta.EntryPoint]:
         """Return a sequence of ``EntryPoint`` objects provided by the plugin.  The
         :meth:`FSLeyesPlugin.find_entry_points` function is used to scan the
         module for entry points.
         """
 
         modname = self.__modname
-
         alleps  = FSLeyesPlugin.find_entry_points(self.__module)
+        epobjs  = []
 
         for group, eps in alleps.items():
-            for name, cls in eps.items():
+            for name, plugin in eps.items():
 
-                label = cls.title()
-                # Look up label for built-in plugins
-                if label is None:
-                    if group == 'fsleyes_tools':
-                        label = strings.actions.get(name, name)
+                # layouts can be either strings with
+                # variable name FSLEYES_LAYOUT_<label>
+                # or tuples containing (label, layout)
+                if isinstance(plugin, (tuple, str)):
+                    if isinstance(plugin, tuple):
+                        label  = plugin[0]
+                        plugin = plugin[1]
                     else:
-                        label = strings.titles.get(name, name)
+                        label = name[15:]
 
-                yield impmeta.EntryPoint(label,
-                                         f'{modname}:{name}',
-                                         group=group)
+                # View/Control/Tool plugins can implement
+                # a title() staticmethod to specify their
+                # title/label
+                else:
+                    label = plugin.title()
+                    # Look up label for built-in plugins
+                    if label is None:
+                        if group == 'fsleyes_tools':
+                            label = strings.actions.get(name, name)
+                        else:
+                            label = strings.titles.get(name, name)
+
+                epobjs.append(impmeta.EntryPoint(label,
+                                                 f'{modname}:{name}',
+                                                 group=group))
+        return epobjs
 
 
     @staticmethod
     def find_entry_points(mod : ModuleType) -> Dict[str, Dict[str, Plugin]]:
         """Finds the FSLeyes entry points (views,
-        controls, or tools) that are defined within the given module.
+        controls, tools, or layouts) that are defined within the given module.
 
         :arg mod: The module to search
         :returns: A dictionary
@@ -323,10 +353,17 @@ class FSLeyesPlugin(impmeta.Distribution):
 
         for name in dir(mod):
 
-            item = getattr(mod, name)
+            item  = getattr(mod, name)
+            ptype = _pluginType(item)
 
-            if not isinstance(item, type):
+            if not ptype:
                 continue
+
+            if ptype == 'layout':
+                # Layouts from single-file plugins must have
+                # a variable name starting with FSLEYES_LAYOUT_
+                if not name.startswith('FSLEYES_LAYOUT_'):
+                    continue
 
             bases = [viewpanel.ViewPanel,
                      canvaspanel.CanvasPanel,
@@ -338,6 +375,7 @@ class FSLeyesPlugin(impmeta.Distribution):
             # avoid base-classes
             if item in bases:
                 continue
+
             # ignore imported classes - e.g. a module
             # might import an existing plugin like so,
             # for the sake of being sub-classed - in
@@ -345,20 +383,21 @@ class FSLeyesPlugin(impmeta.Distribution):
             # MyView:
             #     from blah import SomeView:
             #     class MyView(SomeView):
-            #         ...
-            if item.__module__ != mod.__name__:
-                continue
+            #         ..
+            if ptype in ('view', 'control', 'tool'):
+                if item.__module__ != mod.__name__:
+                    continue
 
-            # ignoreControl/ignoreTool may be overridden
-            # to tell us to ignore this plugin
-            if issubclass(item, ctrlpanel.ControlMixin)    and \
-               class_defines_method(item, 'ignoreControl') and \
-               item.ignoreControl():
-                continue
-            if issubclass(item, actions.Action)         and \
-               class_defines_method(item, 'ignoreTool') and \
-               item.ignoreTool():
-                continue
+                # ignoreControl/ignoreTool may be overridden
+                # to tell us to ignore this plugin
+                if ptype == 'control'                          and \
+                   class_defines_method(item, 'ignoreControl') and \
+                   item.ignoreControl():
+                    continue
+                if ptype == 'tool'                          and \
+                   class_defines_method(item, 'ignoreTool') and \
+                   item.ignoreTool():
+                    continue
 
             group = _pluginGroup(item)
             if group is not None:
@@ -430,14 +469,30 @@ def initialise():
             log.warning('Failed to load plugin file %s: %s', fname, e)
 
 
-def _pluginGroup(cls : Plugin) -> Optional[str]:
-    """Returns the type/group of the given plugin, one of ``'views'``,
-    ``'controls'``, or ``'tools'``.
+
+def _pluginType(item) -> Union[str, bool]:
+    """Return the plugin type of the given object - one of ``'view'``,
+    ``'control'``, ``'tool'`` or ``'layout'``.
     """
-    if   issubclass(cls, viewpanel.ViewPanel):      return 'views'
-    elif issubclass(cls, ctrlpanel.ControlPanel):   return 'controls'
-    elif issubclass(cls, ctrlpanel.ControlToolBar): return 'controls'
-    elif issubclass(cls, actions.Action):           return 'tools'
+
+    if isinstance(item, type):
+        if   issubclass(item, ctrlpanel.ControlMixin): return 'control'
+        elif issubclass(item, viewpanel.ViewPanel):    return 'view'
+        elif issubclass(item, actions.Action):         return 'tool'
+    elif isinstance(item, (str, tuple)):               return 'layout'
+
+    return False
+
+
+def _pluginGroup(plg : Plugin) -> Optional[str]:
+    """Returns the type/group of the given plugin, one of ``'views'``,
+    ``'controls'``, ``'tools'``, or ``'layouts'``.
+    """
+    ptype = _pluginType(plg)
+    if   ptype == 'view':    return 'views'
+    elif ptype == 'control': return 'controls'
+    elif ptype == 'tool':    return 'tools'
+    elif ptype == 'layout':  return 'layouts'
     return None
 
 
@@ -468,8 +523,8 @@ def _listEntryPoints(
 
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
 
-    :arg group:      One of ``'fsleyes_views'``, ``'fsleyes_controls``, or
-                     ``'fsleyes_tools'``.
+    :arg group:      One of ``'fsleyes_views'``, ``'fsleyes_controls``,
+                     ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
     :arg thirdParty: If ``True``, plugins from installed third-party packages
                      will be included. Otherwise they are omitted.
     """
@@ -489,6 +544,12 @@ def _listEntryPoints(
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
+        plugin = ep.load()
+
+        # layout plugins may be either layout strings,
+        # or tuples containing (name, layout string)
+        if isinstance(plugin, tuple):
+            plugin = plugin[1]
         items[ep.name] = ep.load()
     return items
 
@@ -559,12 +620,22 @@ def listTools(viewType : Optional[View] = None) -> Dict[str, Tool]:
     return tools
 
 
-def _lookupPlugin(clsname : str, group : str) -> Optional[Plugin]:
-    """Looks up the FSLeyes plugin with the given class name. """
+def listLayouts() -> Dict[str, Layout]:
+    """Returns a dictionary of ``{name : str}`` mappings containing
+    the custom layouts provided by all installed FSLeyes plugins.
+    """
+    return _listEntryPoints('fsleyes_layouts')
+
+
+def _lookupPlugin(plgname : str, group : str) -> Optional[Plugin]:
+    """Looks up the FSLeyes plugin with the given name. """
     entries = _listEntryPoints(f'fsleyes_{group}')
-    for cls in entries.values():
-        if cls.__name__ == clsname:
-            return cls
+    for name, plg in entries.items():
+        if isinstance(plg, str):
+            if name == plgname:
+                return plg
+        elif plg.__name__ == plgname:
+            return plg
     return None
 
 
@@ -581,6 +652,11 @@ def lookupControl(clsName : str) -> Control:
 def lookupTool(clsName : str) -> Tool:
     """Looks up the FSLeyes tool with the given class name. """
     return _lookupPlugin(clsName, 'tools')
+
+
+def lookupLayout(name : str) -> Layout:
+    """Looks up the FSLeyes layout with the given name. """
+    return _lookupPlugin(name, 'layouts')
 
 
 def pluginTitle(plugin : Plugin) -> Optional[str]:
