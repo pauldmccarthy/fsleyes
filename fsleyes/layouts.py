@@ -97,7 +97,20 @@ def loadLayout(frame, name, **kwargs):
 
     elif name in pluginLayouts:
         log.debug('Loading layout from plugin %s', name)
+
+        # When the user opens a layout from
+        # an external library, all plugins
+        # from that library are displayed.
+        #
+        # Tell the frame to reload its view
+        # menu.  Other plugin-affected menus
+        # will be naturally re-generated when
+        # the new views from the layout are
+        # opened.
         layout = pluginLayouts[name]
+        module = plugins.layoutModule(name)
+        plugins.showThirdPartyPlugin(module)
+        frame.refreshViewMenu()
 
     else:
         log.debug('Loading saved layout %s', name)
@@ -166,7 +179,7 @@ def applyLayout(frame, name, layout, message=None):
 
         for child in children:
             log.debug('Adding control panel %s to %s',
-                child.__name__, type(vp).__name__)
+                      child.__name__, type(vp).__name__)
             _addControlPanel(vp, child)
 
         vp.auiManager.LoadPerspective(vpLayout)
@@ -175,7 +188,7 @@ def applyLayout(frame, name, layout, message=None):
         # to the view panel.
         for name, val in panelProps.items():
             log.debug('Setting %s.%s = %s',
-                type(vp).__name__, name, val)
+                      type(vp).__name__, name, val)
             vp.deserialise(name, val)
 
         # And to its SceneOpts instance if
@@ -186,7 +199,7 @@ def applyLayout(frame, name, layout, message=None):
 
         for name, val in sceneProps.items():
             log.debug('Setting %s.%s = %s',
-                type(aux).__name__, name, val)
+                      type(aux).__name__, name, val)
             aux.deserialise(name, val)
 
 

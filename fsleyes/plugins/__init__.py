@@ -262,7 +262,17 @@ off.
 """
 
 
-def showThirdPartyPlugin(modname : str) -> bool:
+def showThirdPartyPlugin(modname : str):
+    """Show plugins from the given third party module. """
+    global SHOW_THIRD_PARTY_PLUGINS
+    if SHOW_THIRD_PARTY_PLUGINS is True:
+        return
+    if SHOW_THIRD_PARTY_PLUGINS is False:
+        SHOW_THIRD_PARTY_PLUGINS = set()
+    SHOW_THIRD_PARTY_PLUGINS.add(modname)
+
+
+def shouldShowThirdPartyPlugin(modname : str) -> bool:
     """Return ``True`` if the given plugin should be visible, ``False``
     otherwise.
     """
@@ -477,7 +487,6 @@ def initialise():
             log.warning('Failed to load plugin file %s: %s', fname, e)
 
 
-
 def _pluginType(item) -> Union[str, bool]:
     """Return the plugin type of the given object - one of ``'view'``,
     ``'control'``, ``'tool'`` or ``'layout'``.
@@ -524,19 +533,27 @@ def _loadBuiltIns():
 
 def _listEntryPoints(
         group   : str,
-        showAll : bool = False
+        showAll : bool = False,
+        load    : bool = True
 ) -> Dict[str, Plugin]:
-    """Returns a dictionary containing ``{name : type}`` entry points for the
+    """Returns a dictionary containing ``{name : object}`` entry points for the
     given entry point group.
 
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
 
     :arg group:   One of ``'fsleyes_views'``, ``'fsleyes_controls``,
                   ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
+
     :arg showAll: If ``True``, all plugins, including from installed
-                  third-party packages will be included. Otherwise,
-                  plugins from third-party packages which are not in
-                  :attr:`SHOW_THIRD_PARTY_PLUGINS` will be omitted.
+                  third-party packages will be included. Otherwise (the
+                  default) plugins from third-party packages which are not in
+                  :attr:`SHOW_THIRD_PARTY_PLUGINS` will be omitted.  :arg
+                  load:
+
+    :arg load:    If ``True`` (the default), the returned dictionary will
+                  contain loaded entry point objects. If ``False``, the entry
+                  points will not be loaded, and the returned dictionary will
+                  instead contain ``importlib.metadata.EntryPoint`` objects.
     """
 
     items = {}
@@ -549,14 +566,16 @@ def _listEntryPoints(
 
     for ep in eps:
         # filter out third-party plugins by module path
-        if (not showAll) and (not ep.value.startswith('fsleyes.')):
-            if not showThirdPartyPlugin(ep.value.split(':')[0]):
+        if not (showAll or ep.value.startswith('fsleyes.')):
+            if not shouldShowThirdPartyPlugin(ep.value.split(':')[0]):
                 log.debug('Filtering third party plugin: %s', ep.value)
                 continue
         if ep.name in items:
             log.debug('Overriding entry point %s [%s] with entry '
                       'point of the same name from', ep.name, group)
-        items[ep.name] = ep.load()
+
+        if load: items[ep.name] = ep.load()
+        else:    items[ep.name] = ep
 
     return items
 
@@ -652,7 +671,7 @@ def listLayouts() -> Dict[str, Layout]:
     the custom layouts provided by all installed FSLeyes plugins.
     """
 
-    layouts = _listEntryPoints('fsleyes_layouts', True)
+    layouts = _listEntryPoints('fsleyes_layouts', showAll=True)
 
     for name, layout in list(layouts.items()):
 
@@ -680,16 +699,9 @@ def _lookupPlugin(plgname : str, group : str) -> Optional[Plugin]:
                     return plugin[1]
             elif name == plgname:
                 return plugin
-            if name == plgname:
-                return plugi
         elif plugin.__name__ == plgname:
             return plugin
     return None
-
-
-def lookupView(clsName : str) -> View:
-    """Looks up the FSLeyes view with the given class name. """
-    return _lookupPlugin(clsName, 'views')
 
 
 def lookupControl(clsName : str) -> Control:
@@ -702,9 +714,15 @@ def lookupTool(clsName : str) -> Tool:
     return _lookupPlugin(clsName, 'tools')
 
 
-def lookupLayout(name : str) -> str:
-    """Looks up the FSLeyes layout with the given name. """
-    return _lookupPlugin(name, 'layouts')
+def layoutModule(name : str) -> str:
+    """Return the module that a given layout is defined iwthin. """
+    layouts = _listEntryPoints('fsleyes_layouts', showAll=True, load=False)
+
+    for ep in layouts.values():
+        if ep.name == name:
+            return ep.value.split(':')[0].split('.')[0]
+
+    raise ValueError(f'Could not find layout with name {name}')
 
 
 def pluginTitle(plugin : Plugin) -> Optional[str]:
