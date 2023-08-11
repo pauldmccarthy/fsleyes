@@ -22,6 +22,7 @@ Added
   the order in which slices are displayed to be reversed. These features are
   available on the command-line via the ``--sliceOverlap`` and
   ``--reverseSlices`` flags (!379).
+* FSLeyes plugin libraries can now provide custom layouts (!386).
 
 
 Changed
@@ -37,6 +38,11 @@ Changed
 * Updated the FSLeyes plugin architecture to use ``importlib`` instead of the
   deprecated ``pkg_resources``. FSLeyes plugin libraries no longer need to have
   a name beginning with ``fsleyes-plugin`` (!385).
+* FSLeyes plugins provided by third-party libraries are now hidden by default,
+  but are shown when a custom layout defined in the library is applied.  All
+  plugins can be shown via the ``--showAllPlugins`` command-line option (which
+  can be saved as a :ref:`default argument <command_line_default_arguments>`
+  to be permanently applied) (!386).
 
 
 Fixed

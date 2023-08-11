@@ -34,6 +34,7 @@ date = datetime.date.today()
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx.ext.graphviz',
@@ -77,7 +78,11 @@ def get_fsleyes_version():
 
 version = get_fsleyes_version()
 
-fsleyes_apidoc = 'http://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/'
+fsleyes_apidoc = 'https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/apidoc/'
+
+intersphinx_mapping = {
+ 'fsleyes' : (fsleyes_apidoc, None)
+}
 
 
 # Things which I want to be able to
@@ -88,6 +93,10 @@ rst_epilog = """
 
 .. |fsleyes_homepage| replace:: FSLeyes
 .. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes
+
+
+.. |fsleyes_repository| replace:: FSLeyes
+.. _fsleyes_repository: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/
 
 .. |fsleyes_apidoc_url| replace:: {apidoc}
 .. |fsleyes_apidoc| replace:: ``fsleyes``

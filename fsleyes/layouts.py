@@ -6,8 +6,9 @@
 #
 """This module provides functions for managing *layouts* - stored view and
 control panel layouts for *FSLeyes*. Layouts may be persisted using the
-:mod:`.settings` module. A few layouts are also *built in*, and are
-defined in the :attr:`BUILT_IN_LAYOUTS` dictionary.
+:mod:`.settings` module. A few layouts are also *built in*, and are defined in
+the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be provided by
+FSLeyes :mod:`.plugins`.
 
 
 .. note:: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*.
@@ -36,8 +37,83 @@ in the :mod:`fsleyes.controls` module). See the :mod:`fsleyes` documentation
 for an overview of views and controls.
 
 
-All of this information is stored as a string - see the
-:func:`serialiseLayout` function for details on its storage format.
+FSLeyes layout format
+^^^^^^^^^^^^^^^^^^^^^
+
+.. note:: The serialisation format was written against
+          ``wx.lib.agw.aui.AuiManager`` as it exists in wxPython 3.0.2.0.
+
+
+FSLeyes encodes layouts as strings.  FSLeyes layout specification strings are
+not intended to be written by hand.  If you need to create a layout string
+(e.g. for inclusion in a FSLeyes plugin library), a much easier approach to
+generating a layout string is to open FSLeyes, set the layout up by hand, and
+then use the :func:`serialiseLayout` function to generate the layout string -
+this function can be called from the FSLeyes python shell, or an attached
+Jupyter Notebook / IPython shell.
+
+FSLeyes uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
+its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
+:class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
+own ``AuiManager`` to lay out control panels.
+
+The layout for a single ``AuiManager`` can be serialised to a string via
+the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
+methods. One of these strings consists of:
+
+  - A name, ``'layout1'`` or ``'layout2'``, specifying the AUI version
+    (this will always be at least ``'layout2'`` for FSLeyes).
+
+  - A set of key-value set of key-value pairs defining the top level
+    panel layout.
+
+  - A set of key-value pairs for each pane, defining its layout. the
+    ``AuiManager.SavePaneInfo`` method returns this for a single pane.
+
+These are all encoded in a single string, with the above components separated
+with ``'|'`` characters, and the pane-level key-value pairs separated with a
+``';'`` character. For example::
+
+    layout2|key1=value1|name=Pane1;caption=Pane 1|name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
+
+The :func:`serialiseLayout` function queries each of the ``AuiManager``
+instances, and generates the following:
+
+   1. A string containing a comma-separated list of :class:`.ViewPanel`
+      class names, in the same order as they are specified in the frame
+      layout string.
+
+   2. An ``AuiManager`` layout string for the :class:`.FSLeyesFrame`.
+
+   3.  For each ``ViewPanel``:
+
+        - A string containing a comma-separated list of control panel class
+          names, in the same order as specified in the ``ViewPanel`` layout
+          string. This is followed by a ``';'`` character, and then a
+          comma-separated list of values to be applied to properties of the
+          ``ViewPanel`` and its :class:`.SceneOpts` instance (if the view
+          is a :class:`.CanvasPanel`) or its :class:`.PlotCanvas` (if the
+          view is a :class:`.PlotPanel`).
+
+        - An ``AuiManager`` layout string for the ``ViewPanel``
+
+
+Each of these pieces of information are then concatenated into a single newline
+separated string - these strings can then be used to specify the complete
+layout for the ``FSLeyesFrame``. As an example, the layout string for the
+default FSLeyes ortho view layout) is::
+
+    fsleyes.views.orthopanel.OrthoPanel
+    layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+    fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
+    layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+
+
+.. note:: In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel``
+          class names was changed from containing just the class names
+          (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
+          (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
+          :func:`deserialiseLayout` function is compatible with both formats.
 """
 
 
@@ -70,7 +146,8 @@ def getAllLayouts():
     """
 
     layouts = fslsettings.read('fsleyes.layouts',      []) + \
-              fslsettings.read('fsleyes.perspectives', [])
+              fslsettings.read('fsleyes.perspectives', []) + \
+              list(plugins.listLayouts().keys())
 
     uniq = []
     for l in layouts:
@@ -86,21 +163,40 @@ def loadLayout(frame, name, **kwargs):
     :func:`applyLayout` function.
     """
 
+    pluginLayouts = plugins.listLayouts()
+
     if name in BUILT_IN_LAYOUTS.keys():
 
-        log.debug('Loading built-in layout {}'.format(name))
+        log.debug('Loading built-in layout %s', name)
         layout = BUILT_IN_LAYOUTS[name]
 
+    elif name in pluginLayouts:
+        log.debug('Loading layout from plugin %s', name)
+
+        # When the user opens a layout from
+        # an external library, all plugins
+        # from that library are displayed.
+        #
+        # Tell the frame to reload its view
+        # menu.  Other plugin-affected menus
+        # will be naturally re-generated when
+        # the new views from the layout are
+        # opened.
+        layout = pluginLayouts[name]
+        module = plugins.layoutModule(name)
+        plugins.showThirdPartyPlugin(module)
+        frame.refreshViewMenu()
+
     else:
-        log.debug('Loading saved layout {}'.format(name))
-        layout = fslsettings.read('fsleyes.layouts.{}'.format(name), None)
+        log.debug('Loading saved layout %s', name)
+        layout = fslsettings.read(f'fsleyes.layouts.{name}', None)
         if layout is None:
-            fslsettings.read('fsleyes.perspectives.{}'.format(name), None)
+            fslsettings.read(f'fsleyes.perspectives.{name}', None)
 
     if layout is None:
-        raise ValueError('No layout named "{}" exists'.format(name))
+        raise ValueError(f'No layout named "{name}" exists')
 
-    log.debug('Applying layout:\n{}'.format(layout))
+    log.debug('Applying layout:\n%s', layout)
     applyLayout(frame, name, layout, **kwargs)
 
 
@@ -139,7 +235,7 @@ def applyLayout(frame, name, layout, message=None):
     # Add all of the view panels
     # specified in the layout
     for vp in frameChildren:
-        log.debug('Adding view panel {} to frame'.format(vp.__name__))
+        log.debug('Adding view panel %s to frame', vp.__name__)
         frame.addViewPanel(vp, defaultLayout=False)
 
     # Apply the layout to those view panels
@@ -157,8 +253,8 @@ def applyLayout(frame, name, layout, message=None):
         sceneProps = vpSceneProps[i]
 
         for child in children:
-            log.debug('Adding control panel {} to {}'.format(
-                child.__name__, type(vp).__name__))
+            log.debug('Adding control panel %s to %s',
+                      child.__name__, type(vp).__name__)
             _addControlPanel(vp, child)
 
         vp.auiManager.LoadPerspective(vpLayout)
@@ -166,8 +262,8 @@ def applyLayout(frame, name, layout, message=None):
         # Apply saved property values
         # to the view panel.
         for name, val in panelProps.items():
-            log.debug('Setting {}.{} = {}'.format(
-                type(vp).__name__, name, val))
+            log.debug('Setting %s.%s = %s',
+                      type(vp).__name__, name, val)
             vp.deserialise(name, val)
 
         # And to its SceneOpts instance if
@@ -177,8 +273,8 @@ def applyLayout(frame, name, layout, message=None):
         elif isinstance(vp, plotpanel.PlotPanel):     aux = vp.canvas
 
         for name, val in sceneProps.items():
-            log.debug('Setting {}.{} = {}'.format(
-                type(aux).__name__, name, val))
+            log.debug('Setting %s.%s = %s',
+                      type(aux).__name__, name, val)
             aux.deserialise(name, val)
 
 
@@ -188,13 +284,13 @@ def saveLayout(frame, name):
     """
 
     if name in BUILT_IN_LAYOUTS.keys():
-        raise ValueError('A built-in layout named "{}" '
-                         'already exists'.format(name))
+        raise ValueError(f'A built-in layout named "{name}" '
+                         'already exists')
 
-    log.debug('Saving current layout with name {}'.format(name))
+    log.debug('Saving current layout with name %s', name)
 
     layout = serialiseLayout(frame)
-    fslsettings.write('fsleyes.layouts.{}'.format(name), layout)
+    fslsettings.write(f'fsleyes.layouts.{name}', layout)
 
     _addToLayoutList(name)
 
@@ -204,68 +300,15 @@ def saveLayout(frame, name):
 def removeLayout(name):
     """Deletes the named layout. """
 
-    log.debug('Deleting layout with name {}'.format(name))
-    fslsettings.delete('fsleyes.layouts.{}'     .format(name))
-    fslsettings.delete('fsleyes.perspectives.{}'.format(name))
+    log.debug('Deleting layout with name %s', name)
+    fslsettings.delete(f'fsleyes.layouts.{name}')
+    fslsettings.delete(f'fsleyes.perspectives.{name}')
     _removeFromLayoutList(name)
 
 
 def serialiseLayout(frame):
     """Serialises the layout of the given :class:`.FSLeyesFrame`, and returns
     it as a string.
-
-    .. note:: This function was written against wx.lib.agw.aui.AuiManager as
-              it exists in wxPython 3.0.2.0.
-
-     *FSLeyes* uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
-     its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
-     :class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
-     own ``AuiManager`` to lay out control panels.
-
-     The layout for a single ``AuiManager`` can be serialised to a string via
-     the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
-     methods. One of these strings consists of:
-
-       - A name, `'layout1'` or `'layout2'`, specifying the AUI version
-         (this will always be at least `'layout2'` for *FSLeyes*).
-
-       - A set of key-value set of key-value pairs defining the top level
-         panel layout.
-
-       - A set of key-value pairs for each pane, defining its layout. the
-         ``AuiManager.SavePaneInfo`` method returns this for a single pane.
-
-     These are all encoded in a single string, with the above components
-     separated with '|' characters, and the pane-level key-value pairs
-     separated with a ';' character. For example:
-
-     layout2|key1=value1|name=Pane1;caption=Pane 1|\
-     name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
-
-     This function queries each of the AuiManagers, and extracts the following:
-
-        1. A layout string for the :class:`.FSLeyesFrame`.
-
-        2. A string containing a comma-separated list of :class:`.ViewPanel`
-           class names, in the same order as they are specified in the frame
-           layout string.
-
-        3.  For each ``ViewPanel``:
-
-             - A layout string for the ``ViewPanel``
-
-             - A string containing a comma-separated list of control panel
-               class names, in the same order as specified in the
-               ``ViewPanel`` layout string.
-
-    Each of these pieces of information are then concatenated into a single
-    newline separated string.
-
-    In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel`` class
-    names was changed from containing just the class names
-    (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
-    (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
-    :func:`deserialiseLayout` function is compatible with both formats.
     """
 
     # We'll start by defining this silly function, which
@@ -353,8 +396,8 @@ def serialiseLayout(frame):
         caption = ' '.join(caption.split()[:-1])
 
         # Patch in the new index
-        name    = '{} {}'.format(name,    index)
-        caption = '{} {}'.format(caption, index)
+        name    = f'{name} {index}'
+        caption = f'{caption} {index}'
 
         kvps['name']    = name
         kvps['caption'] = caption
@@ -408,8 +451,8 @@ def serialiseLayout(frame):
         panelProps, sceneProps = _getPanelProps(vp)
 
         # And turn them into comma-separated key-value pairs.
-        panelProps = ['{}={}'.format(k, v) for k, v in panelProps.items()]
-        sceneProps = ['{}={}'.format(k, v) for k, v in sceneProps.items()]
+        panelProps = [f'{k}={v}' for k, v in panelProps.items()]
+        sceneProps = [f'{k}={v}' for k, v in sceneProps.items()]
 
         panelProps = ','.join(panelProps)
         sceneProps = ','.join(sceneProps)
@@ -508,7 +551,7 @@ def deserialiseLayout(layout):
             if panel.__name__ == panelname:
                 return panel
 
-        raise ValueError('Unknown FSLeyes panel type: {}'.format(panelname))
+        raise ValueError(f'Unknown FSLeyes panel type: {panelname}')
 
     findView    = ft.partial(findViewOrControl, paneltype='view')
     findControl = ft.partial(findViewOrControl, paneltype='control')
@@ -592,7 +635,7 @@ def _addToLayoutList(layout):
     if layout not in layouts:
         layouts.append(layout)
 
-    log.debug('Updating stored layout list: {}'.format(layout))
+    log.debug('Updating stored layout list: %s', layout)
     fslsettings.write('fsleyes.layouts', layouts)
 
 
@@ -605,7 +648,7 @@ def _removeFromLayoutList(layout):
     try:               layouts.remove(layout)
     except ValueError: return
 
-    log.debug('Updating stored layout list: {}'.format(layouts))
+    log.debug('Updating stored layout list: %s', layouts)
     fslsettings.write('fsleyes.layouts', layouts)
 
 

@@ -15,5 +15,8 @@ version = "1.0.0"
 [project.entry-points.fsleyes_tools]
 "Bad plugin tool" = "fsleyes_plugin_bad_example.plugin:PluginTool"
 
+[project.entry-points.fsleyes_layouts]
+"Plugin layout" = "fsleyes_plugin_example.plugin:PluginLayout"
+
 [tool.setuptools.packages.find]
 include = ["fsleyes_plugin_bad_example*"]

@@ -35,23 +35,31 @@ def setup_module():
     import fsleyes_plugin_bad_example  # noqa
 
 
+def lookup_plugin_module(prefix):
+    for modname, mod in sys.modules.items():
+        if modname.startswith(f'fsleyes.plugins.{prefix}'):
+            return mod
+
 
 def test_listViews():
     from fsleyes_plugin_example.plugin import PluginView
 
-    views = dict(plugins.listViews())
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        views = dict(plugins.listViews())
 
     assert views['Plugin view'] is PluginView
 
 
 def test_listControls():
+
     from fsleyes_plugin_example.plugin import PluginControl
     from fsleyes.views.timeseriespanel import TimeSeriesPanel
     from fsleyes.views.orthopanel      import OrthoPanel
 
-    ctrls      = dict(plugins.listControls())
-    ctrlsortho = dict(plugins.listControls(OrthoPanel))
-    ctrlsts    = dict(plugins.listControls(TimeSeriesPanel))
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        ctrls      = dict(plugins.listControls())
+        ctrlsortho = dict(plugins.listControls(OrthoPanel))
+        ctrlsts    = dict(plugins.listControls(TimeSeriesPanel))
 
     assert ctrls['Plugin control']      is PluginControl
     assert ctrlsortho['Plugin control'] is PluginControl
@@ -61,15 +69,50 @@ def test_listControls():
 def test_listTools():
     from fsleyes_plugin_example.plugin import PluginTool
 
-    tools = dict(plugins.listTools())
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        tools = dict(plugins.listTools())
 
     assert tools['Plugin tool'] is PluginTool
+
+
+def test_listLayouts():
+    from fsleyes_plugin_example.plugin import PluginLayout
+
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        layouts = dict(plugins.listLayouts())
+
+    assert layouts['Plugin layout'] == PluginLayout
+
+
+def test_layoutModule():
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        assert plugins.layoutModule('Plugin layout') == 'fsleyes_plugin_example'
+
+
+def test_filterThirdParty():
+
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', False):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' not in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', {'fsleyes_plugin'}):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', {}):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' not in tools
 
 
 code = tw.dedent("""
 from fsleyes.views.viewpanel       import ViewPanel
 from fsleyes.controls.controlpanel import ControlPanel
 from fsleyes.actions               import Action
+
+FSLEYES_LAYOUT_{prefix}_layout1 = '{prefix} layout 1'
+
+FSLEYES_LAYOUT_{prefix}_layout2 = ('{prefix} layout 2','{prefix} layout 2')
 
 class {prefix}View(ViewPanel):
     pass
@@ -93,11 +136,13 @@ def test_loadPlugin():
 
         plugins.loadPlugin(op.join(td, 'test_loadplugin.py'))
 
-        mod = sys.modules['fsleyes_plugin_test_loadplugin']
+        mod = lookup_plugin_module('test_loadplugin')
 
-        assert plugins.listTools()[   'LoadTool']    is mod.LoadTool
-        assert plugins.listControls()['LoadControl'] is mod.LoadControl
-        assert plugins.listViews()[   'LoadView']    is mod.LoadView
+        assert plugins.listTools()[   'LoadTool']      is mod.LoadTool
+        assert plugins.listControls()['LoadControl']   is mod.LoadControl
+        assert plugins.listViews()[   'LoadView']      is mod.LoadView
+        assert plugins.listLayouts()[ 'Load_layout1']  == mod.FSLEYES_LAYOUT_Load_layout1
+        assert plugins.listLayouts()[ 'Load layout 2'] == mod.FSLEYES_LAYOUT_Load_layout2[1]
 
 
 def test_installPlugin():
@@ -111,11 +156,13 @@ def test_installPlugin():
 
             plugins.installPlugin('test_installplugin.py')
 
-            mod = sys.modules['fsleyes_plugin_test_installplugin']
+            mod = lookup_plugin_module('test_installplugin')
 
-            assert plugins.listTools()[   'InstallTool']    is mod.InstallTool
-            assert plugins.listControls()['InstallControl'] is mod.InstallControl
-            assert plugins.listViews()[   'InstallView']    is mod.InstallView
+            assert plugins.listTools()[   'InstallTool']      is mod.InstallTool
+            assert plugins.listControls()['InstallControl']   is mod.InstallControl
+            assert plugins.listViews()[   'InstallView']      is mod.InstallView
+            assert plugins.listLayouts()[ 'Install_layout1']  == mod.FSLEYES_LAYOUT_Install_layout1
+            assert plugins.listLayouts()[ 'Install layout 2'] == mod.FSLEYES_LAYOUT_Install_layout2[1]
             assert op.exists(op.join(td, 'plugins', 'test_installplugin.py'))
 
 
@@ -134,8 +181,8 @@ def test_initialise():
 
             plugins.initialise()
 
-            p1 = sys.modules['fsleyes_plugin_plugin1']
-            p2 = sys.modules['fsleyes_plugin_plugin2']
+            p1 = lookup_plugin_module('plugin1')
+            p2 = lookup_plugin_module('plugin2')
 
             views = plugins.listViews()
             ctrls = plugins.listControls()
@@ -147,6 +194,10 @@ def test_initialise():
             assert ctrls['Plugin2Control'] is p2.Plugin2Control
             assert tools['Plugin1Tool']    is p1.Plugin1Tool
             assert tools['Plugin2Tool']    is p2.Plugin2Tool
+            assert plugins.listLayouts()[ 'Plugin1_layout1']  == p1.FSLEYES_LAYOUT_Plugin1_layout1
+            assert plugins.listLayouts()[ 'Plugin1 layout 2'] == p1.FSLEYES_LAYOUT_Plugin1_layout2[1]
+            assert plugins.listLayouts()[ 'Plugin2_layout1']  == p2.FSLEYES_LAYOUT_Plugin2_layout1
+            assert plugins.listLayouts()[ 'Plugin2 layout 2'] == p2.FSLEYES_LAYOUT_Plugin2_layout2[1]
 
 
 
@@ -163,7 +214,7 @@ def _test_runPlugin(frame, overlayList, displayCtx):
 
         plugins.loadPlugin(op.join(td, 'test_runplugin.py'))
 
-        mod  = sys.modules['fsleyes_plugin_test_runplugin']
+        mod  = lookup_plugin_module('test_runplugin')
         view = frame.addViewPanel(mod.RunView, title='View')
         realYield()
         ctrl = view.togglePanel(mod.RunControl)

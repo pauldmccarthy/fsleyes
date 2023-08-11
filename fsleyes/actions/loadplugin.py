@@ -88,6 +88,7 @@ class LoadPluginAction(base.Action):
         for panel in self.__frame.viewPanels:
             panel.reloadPlugins()
 
+        self.__frame.refreshLayoutMenu()
         self.__frame.refreshViewMenu()
         self.__frame.refreshToolsMenu()
         self.__frame.refreshSettingsMenu()

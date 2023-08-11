@@ -7,6 +7,8 @@ import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions               as actions
 
+PluginLayout = 'For a real plugin, this must be a valid FSLeyes layout string'
+
 
 class PluginView(viewpanel.ViewPanel):
 
