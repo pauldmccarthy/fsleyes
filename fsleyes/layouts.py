@@ -6,8 +6,9 @@
 #
 """This module provides functions for managing *layouts* - stored view and
 control panel layouts for *FSLeyes*. Layouts may be persisted using the
-:mod:`.settings` module. A few layouts are also *built in*, and are
-defined in the :attr:`BUILT_IN_LAYOUTS` dictionary.
+:mod:`.settings` module. A few layouts are also *built in*, and are defined in
+the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be provided by
+FSLeyes :mod:`.plugins`.
 
 
 .. note:: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*.
@@ -70,7 +71,8 @@ def getAllLayouts():
     """
 
     layouts = fslsettings.read('fsleyes.layouts',      []) + \
-              fslsettings.read('fsleyes.perspectives', [])
+              fslsettings.read('fsleyes.perspectives', []) + \
+              list(plugins.listLayouts().keys())
 
     uniq = []
     for l in layouts:
@@ -86,10 +88,16 @@ def loadLayout(frame, name, **kwargs):
     :func:`applyLayout` function.
     """
 
+    pluginLayouts = plugins.listLayouts()
+
     if name in BUILT_IN_LAYOUTS.keys():
 
         log.debug('Loading built-in layout %s', name)
         layout = BUILT_IN_LAYOUTS[name]
+
+    elif name in pluginLayouts:
+        log.debug('Loading layout from plugin %s', name)
+        layout = pluginLayouts[name]
 
     else:
         log.debug('Loading saved layout %s', name)
