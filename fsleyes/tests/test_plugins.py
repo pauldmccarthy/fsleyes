@@ -84,8 +84,20 @@ def test_listLayouts():
     assert layouts['Plugin layout'] == PluginLayout
 
 
+def test_filterThirdParty():
 
-
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', False):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' not in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', {'fsleyes_plugin'}):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' in tools
+    with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', {}):
+        tools = dict(plugins.listTools())
+        assert 'Plugin tool' not in tools
 
 
 code = tw.dedent("""
