@@ -37,8 +37,83 @@ in the :mod:`fsleyes.controls` module). See the :mod:`fsleyes` documentation
 for an overview of views and controls.
 
 
-All of this information is stored as a string - see the
-:func:`serialiseLayout` function for details on its storage format.
+FSLeyes layout format
+^^^^^^^^^^^^^^^^^^^^^
+
+.. note:: The serialisation format was written against
+          ``wx.lib.agw.aui.AuiManager`` as it exists in wxPython 3.0.2.0.
+
+
+FSLeyes encodes layouts as strings.  FSLeyes layout specification strings are
+not intended to be written by hand.  If you need to create a layout string
+(e.g. for inclusion in a FSLeyes plugin library), a much easier approach to
+generating a layout string is to open FSLeyes, set the layout up by hand, and
+then use the :func:`serialiseLayout` function to generate the layout string -
+this function can be called from the FSLeyes python shell, or an attached
+Jupyter Notebook / IPython shell.
+
+FSLeyes uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
+its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
+:class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
+own ``AuiManager`` to lay out control panels.
+
+The layout for a single ``AuiManager`` can be serialised to a string via
+the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
+methods. One of these strings consists of:
+
+  - A name, ``'layout1'`` or ``'layout2'``, specifying the AUI version
+    (this will always be at least ``'layout2'`` for FSLeyes).
+
+  - A set of key-value set of key-value pairs defining the top level
+    panel layout.
+
+  - A set of key-value pairs for each pane, defining its layout. the
+    ``AuiManager.SavePaneInfo`` method returns this for a single pane.
+
+These are all encoded in a single string, with the above components separated
+with ``'|'`` characters, and the pane-level key-value pairs separated with a
+``';'`` character. For example::
+
+    layout2|key1=value1|name=Pane1;caption=Pane 1|name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
+
+The :func:`serialiseLayout` function queries each of the ``AuiManager``
+instances, and generates the following:
+
+   1. A string containing a comma-separated list of :class:`.ViewPanel`
+      class names, in the same order as they are specified in the frame
+      layout string.
+
+   2. An ``AuiManager`` layout string for the :class:`.FSLeyesFrame`.
+
+   3.  For each ``ViewPanel``:
+
+        - A string containing a comma-separated list of control panel class
+          names, in the same order as specified in the ``ViewPanel`` layout
+          string. This is followed by a ``';'`` character, and then a
+          comma-separated list of values to be applied to properties of the
+          ``ViewPanel`` and its :class:`.SceneOpts` instance (if the view
+          is a :class:`.CanvasPanel`) or its :class:`.PlotCanvas` (if the
+          view is a :class:`.PlotPanel`).
+
+        - An ``AuiManager`` layout string for the ``ViewPanel``
+
+
+Each of these pieces of information are then concatenated into a single newline
+separated string - these strings can then be used to specify the complete
+layout for the ``FSLeyesFrame``. As an example, the layout string for the
+default FSLeyes ortho view layout) is::
+
+    fsleyes.views.orthopanel.OrthoPanel
+    layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+    fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
+    layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+
+
+.. note:: In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel``
+          class names was changed from containing just the class names
+          (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
+          (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
+          :func:`deserialiseLayout` function is compatible with both formats.
 """
 
 
@@ -234,59 +309,6 @@ def removeLayout(name):
 def serialiseLayout(frame):
     """Serialises the layout of the given :class:`.FSLeyesFrame`, and returns
     it as a string.
-
-    .. note:: This function was written against wx.lib.agw.aui.AuiManager as
-              it exists in wxPython 3.0.2.0.
-
-     *FSLeyes* uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
-     its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
-     :class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
-     own ``AuiManager`` to lay out control panels.
-
-     The layout for a single ``AuiManager`` can be serialised to a string via
-     the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
-     methods. One of these strings consists of:
-
-       - A name, `'layout1'` or `'layout2'`, specifying the AUI version
-         (this will always be at least `'layout2'` for *FSLeyes*).
-
-       - A set of key-value set of key-value pairs defining the top level
-         panel layout.
-
-       - A set of key-value pairs for each pane, defining its layout. the
-         ``AuiManager.SavePaneInfo`` method returns this for a single pane.
-
-     These are all encoded in a single string, with the above components
-     separated with '|' characters, and the pane-level key-value pairs
-     separated with a ';' character. For example:
-
-     layout2|key1=value1|name=Pane1;caption=Pane 1|\
-     name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
-
-     This function queries each of the AuiManagers, and extracts the following:
-
-        1. A layout string for the :class:`.FSLeyesFrame`.
-
-        2. A string containing a comma-separated list of :class:`.ViewPanel`
-           class names, in the same order as they are specified in the frame
-           layout string.
-
-        3.  For each ``ViewPanel``:
-
-             - A layout string for the ``ViewPanel``
-
-             - A string containing a comma-separated list of control panel
-               class names, in the same order as specified in the
-               ``ViewPanel`` layout string.
-
-    Each of these pieces of information are then concatenated into a single
-    newline separated string.
-
-    In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel`` class
-    names was changed from containing just the class names
-    (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
-    (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
-    :func:`deserialiseLayout` function is compatible with both formats.
     """
 
     # We'll start by defining this silly function, which

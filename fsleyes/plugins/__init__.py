@@ -206,10 +206,9 @@ The following functions can be used to access plugins:
    listControls
    listTools
    listLayouts
-   lookupView
    lookupControl
    lookupTool
-   lookupLayout
+   layoutModule
    pluginTitle
 """
 
