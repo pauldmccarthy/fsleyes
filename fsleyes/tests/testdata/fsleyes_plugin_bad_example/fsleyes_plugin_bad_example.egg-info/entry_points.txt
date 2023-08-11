@@ -1,6 +1,9 @@
 [fsleyes_controls]
 Bad plugin control = fsleyes_plugin_bad_example.plugin:PluginControl
 
+[fsleyes_layouts]
+Plugin layout = fsleyes_plugin_example.plugin:PluginLayout
+
 [fsleyes_tools]
 Bad plugin tool = fsleyes_plugin_bad_example.plugin:PluginTool
 
