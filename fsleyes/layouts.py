@@ -88,19 +88,19 @@ def loadLayout(frame, name, **kwargs):
 
     if name in BUILT_IN_LAYOUTS.keys():
 
-        log.debug('Loading built-in layout {}'.format(name))
+        log.debug('Loading built-in layout %s', name)
         layout = BUILT_IN_LAYOUTS[name]
 
     else:
-        log.debug('Loading saved layout {}'.format(name))
-        layout = fslsettings.read('fsleyes.layouts.{}'.format(name), None)
+        log.debug('Loading saved layout %s', name)
+        layout = fslsettings.read(f'fsleyes.layouts.{name}', None)
         if layout is None:
-            fslsettings.read('fsleyes.perspectives.{}'.format(name), None)
+            fslsettings.read(f'fsleyes.perspectives.{name}', None)
 
     if layout is None:
-        raise ValueError('No layout named "{}" exists'.format(name))
+        raise ValueError(f'No layout named "{name}" exists')
 
-    log.debug('Applying layout:\n{}'.format(layout))
+    log.debug('Applying layout:\n%s', layout)
     applyLayout(frame, name, layout, **kwargs)
 
 
@@ -139,7 +139,7 @@ def applyLayout(frame, name, layout, message=None):
     # Add all of the view panels
     # specified in the layout
     for vp in frameChildren:
-        log.debug('Adding view panel {} to frame'.format(vp.__name__))
+        log.debug('Adding view panel %s to frame', vp.__name__)
         frame.addViewPanel(vp, defaultLayout=False)
 
     # Apply the layout to those view panels
@@ -157,8 +157,8 @@ def applyLayout(frame, name, layout, message=None):
         sceneProps = vpSceneProps[i]
 
         for child in children:
-            log.debug('Adding control panel {} to {}'.format(
-                child.__name__, type(vp).__name__))
+            log.debug('Adding control panel %s to %s',
+                child.__name__, type(vp).__name__)
             _addControlPanel(vp, child)
 
         vp.auiManager.LoadPerspective(vpLayout)
@@ -166,8 +166,8 @@ def applyLayout(frame, name, layout, message=None):
         # Apply saved property values
         # to the view panel.
         for name, val in panelProps.items():
-            log.debug('Setting {}.{} = {}'.format(
-                type(vp).__name__, name, val))
+            log.debug('Setting %s.%s = %s',
+                type(vp).__name__, name, val)
             vp.deserialise(name, val)
 
         # And to its SceneOpts instance if
@@ -177,8 +177,8 @@ def applyLayout(frame, name, layout, message=None):
         elif isinstance(vp, plotpanel.PlotPanel):     aux = vp.canvas
 
         for name, val in sceneProps.items():
-            log.debug('Setting {}.{} = {}'.format(
-                type(aux).__name__, name, val))
+            log.debug('Setting %s.%s = %s',
+                type(aux).__name__, name, val)
             aux.deserialise(name, val)
 
 
@@ -188,13 +188,13 @@ def saveLayout(frame, name):
     """
 
     if name in BUILT_IN_LAYOUTS.keys():
-        raise ValueError('A built-in layout named "{}" '
-                         'already exists'.format(name))
+        raise ValueError(f'A built-in layout named "{name}" '
+                         'already exists')
 
-    log.debug('Saving current layout with name {}'.format(name))
+    log.debug('Saving current layout with name %s', name)
 
     layout = serialiseLayout(frame)
-    fslsettings.write('fsleyes.layouts.{}'.format(name), layout)
+    fslsettings.write(f'fsleyes.layouts.{name}', layout)
 
     _addToLayoutList(name)
 
@@ -204,9 +204,9 @@ def saveLayout(frame, name):
 def removeLayout(name):
     """Deletes the named layout. """
 
-    log.debug('Deleting layout with name {}'.format(name))
-    fslsettings.delete('fsleyes.layouts.{}'     .format(name))
-    fslsettings.delete('fsleyes.perspectives.{}'.format(name))
+    log.debug('Deleting layout with name %s', name)
+    fslsettings.delete(f'fsleyes.layouts.{name}')
+    fslsettings.delete(f'fsleyes.perspectives.{name}')
     _removeFromLayoutList(name)
 
 
@@ -353,8 +353,8 @@ def serialiseLayout(frame):
         caption = ' '.join(caption.split()[:-1])
 
         # Patch in the new index
-        name    = '{} {}'.format(name,    index)
-        caption = '{} {}'.format(caption, index)
+        name    = f'{name} {index}'
+        caption = f'{caption} {index}'
 
         kvps['name']    = name
         kvps['caption'] = caption
@@ -408,8 +408,8 @@ def serialiseLayout(frame):
         panelProps, sceneProps = _getPanelProps(vp)
 
         # And turn them into comma-separated key-value pairs.
-        panelProps = ['{}={}'.format(k, v) for k, v in panelProps.items()]
-        sceneProps = ['{}={}'.format(k, v) for k, v in sceneProps.items()]
+        panelProps = [f'{k}={v}' for k, v in panelProps.items()]
+        sceneProps = [f'{k}={v}' for k, v in sceneProps.items()]
 
         panelProps = ','.join(panelProps)
         sceneProps = ','.join(sceneProps)
@@ -508,7 +508,7 @@ def deserialiseLayout(layout):
             if panel.__name__ == panelname:
                 return panel
 
-        raise ValueError('Unknown FSLeyes panel type: {}'.format(panelname))
+        raise ValueError(f'Unknown FSLeyes panel type: {panelname}')
 
     findView    = ft.partial(findViewOrControl, paneltype='view')
     findControl = ft.partial(findViewOrControl, paneltype='control')
@@ -592,7 +592,7 @@ def _addToLayoutList(layout):
     if layout not in layouts:
         layouts.append(layout)
 
-    log.debug('Updating stored layout list: {}'.format(layout))
+    log.debug('Updating stored layout list: %s', layout)
     fslsettings.write('fsleyes.layouts', layouts)
 
 
@@ -605,7 +605,7 @@ def _removeFromLayoutList(layout):
     try:               layouts.remove(layout)
     except ValueError: return
 
-    log.debug('Updating stored layout list: {}'.format(layouts))
+    log.debug('Updating stored layout list: %s', layouts)
     fslsettings.write('fsleyes.layouts', layouts)
 
 

@@ -8,8 +8,9 @@
 
 
 FSLeyes uses a simple plugin architecture for loading custom views, controls,
-and tools. Plugins can be installed from Python libraries (e.g. as hosted on
-`PyPi <https://pypi.org/>`_), or installed directly from a ``.py`` file.
+tools, and layouts. Plugins can be installed from Python libraries (e.g. as
+hosted on `PyPi <https://pypi.org/>`_), or installed directly from a ``.py``
+file.
 
 
 In both cases, FSLeyes uses `entry points
@@ -21,7 +22,7 @@ Things plugins can provide
 --------------------------
 
 
-FSLeyes plugins can provide custom *views*, *controls* and *tools*:
+FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
 
  - A *view* is a top level panel, such as an :class:`.OrthoPanel`,
    :class:`.Scene3DPanel`, or :class:`.TimeSeriesPanel`. Views provided
@@ -36,6 +37,9 @@ FSLeyes plugins can provide custom *views*, *controls* and *tools*:
    the top-level *Tools* menu, such as the :class:`.ApplyFlirtXfmAction`, the
    :class:`.CropImageAction`, and the :class:`.ResampleAction`.
 
+ - A *layout* is a string or a tuple which defines a custom layout.  refer to
+   the :mod:`fsleyes.layouts` module for details on the format of a layout
+   string.
 
 
 FSLeyes plugin sources
@@ -95,9 +99,10 @@ Writing a FSLeyes plugin
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
-.. warning:: FSLeyes assumes that all views, controls, and tools have unique
-             class names.  So expect problems if, for example, you define your
-             own FSLeyes control with the name ``OverlayListPanel``.
+.. warning:: FSLeyes assumes that **all** views, controls, and tools have
+             unique class names.  So expect problems if, for example, you
+             define your own FSLeyes control with a name that is already
+             used by a built-in control, e.g. ``OverlayListPanel``.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
