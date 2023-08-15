@@ -62,7 +62,7 @@ if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 
   # Run the tests. First batch requires
   # a GUI, so we run via xvfb-run
-  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS} --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
   status=`cat status`
   failed=$status
   sleep 5
@@ -70,9 +70,11 @@ else
   failed=0
 fi
 
+PYTEST_EXTRA_ARGS=($PYTEST_EXTRA_ARGS)
+
 # Remaining tests are all off-screen,
 # so we don't need xvfb
-((pytest --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
+((pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "clitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
@@ -81,14 +83,14 @@ failed=`echo "$status + $failed" | bc`
 # mesa+macOS versions - regular segfaults.
 if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
   export FSLEYES_TEST_GL=1.4
-  ((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+  ((pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
   status=`cat status`
   failed=`echo "$status + $failed" | bc`
 fi
 
 # gl21 compatibility
 export FSLEYES_TEST_GL=2.1
-((pytest --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
+((pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
@@ -96,7 +98,7 @@ failed=`echo "$status + $failed" | bc`
 export MESA_GL_VERSION_OVERRIDE=3.3
 export FSLEYES_TEST_GL=3.3
 export LOCAL_TEST_FSLEYES=1
-((pytest --cov-report= --cov-append -m "overlayclitest and gl33test" && echo "0" > status) || echo "1" > status) || true
+((pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "overlayclitest and gl33test" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`
 failed=`echo "$status + $failed" | bc`
 
