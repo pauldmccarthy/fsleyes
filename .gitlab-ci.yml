@@ -205,6 +205,8 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
       when: never
     - if:   '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
+    - if:   '$CI_PIPELINE_SOURCE == "web"'
+      when: on_success
 
 .test: &test_template
   <<: *setup_ssh
