@@ -80,6 +80,14 @@ except ImportError:
     ENABLED = False
 
 
+FORWARD_SERVER_STDOUT = False
+"""If ``True``, standard output/error from the Jupyter notebook server will be
+forwarded to the standard output/error streams of the calling
+process. Otherwise, they will be suppressed, and only printed if the server
+crashes. This flag is only intended to be used for testing/debugging.
+"""
+
+
 log = logging.getLogger(__name__)
 
 
@@ -681,9 +689,13 @@ class NotebookServer(threading.Thread):
             cmd.append(self.__nbfile)
 
         log.debug('Running notebook server via %s notebook', cmd[0])
+
+        if FORWARD_SERVER_STDOUT: streams = None
+        else:                     streams = sp.PIPE
+
         self.__nbproc = sp.Popen(cmd,
-                                 stdout=sp.PIPE,
-                                 stderr=sp.PIPE,
+                                 stdout=streams,
+                                 stderr=streams,
                                  text=True,
                                  env=env)
         self.__stdout = ''
