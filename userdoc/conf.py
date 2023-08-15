@@ -95,7 +95,7 @@ rst_epilog = """
 .. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes
 
 
-.. |fsleyes_repository| replace:: FSLeyes
+.. |fsleyes_repository| replace:: FSLeyes source code
 .. _fsleyes_repository: https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/
 
 .. |fsleyes_apidoc_url| replace:: {apidoc}

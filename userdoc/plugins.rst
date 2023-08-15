@@ -141,7 +141,7 @@ Writing a FSLeyes plugin
 
 
 .. note:: A minimal example of a FSLeyes plugin library can be found in the
-          |fsleyes_repository|, in the
+          |fsleyes_repository|_, in the
           ``fsleyes/tests/testdata/fsleyes_plugin_example/`` directory, and a
           range of built-in plugins can be found in ``fsleyes/plugins/``.
 
