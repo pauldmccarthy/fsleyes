@@ -6,6 +6,8 @@ import asyncio
 import time
 import textwrap as tw
 
+from unittest import mock
+
 import fsleyes.actions.notebook as notebook
 
 import fsl.utils.idle as idle
@@ -33,7 +35,9 @@ def _submit_code(code, connfile):
 
 
 def test_notebook():
-    run_with_orthopanel(_test_notebook)
+    with mock.patch('fsleyes.actions.notebook.FORWARD_SERVER_STDOUT', True):
+        run_with_orthopanel(_test_notebook)
+
 def _test_notebook(panel, overlayList, displayCtx):
 
     imgfile = op.join(datadir, '3d')

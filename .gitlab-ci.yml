@@ -187,6 +187,8 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
       when: never
     - if:   '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
+    - if:   '$CI_PIPELINE_SOURCE == "web"'
+      when: on_success
 
 # some test jobs are only run on the upstream repo
 .test_rules_upstream: &test_rules_upstream
@@ -202,6 +204,8 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
     - if:   '$CI_PROJECT_PATH != $UPSTREAM_PROJECT'
       when: never
     - if:   '$CI_PIPELINE_SOURCE == "push"'
+      when: on_success
+    - if:   '$CI_PIPELINE_SOURCE == "web"'
       when: on_success
 
 .test: &test_template
