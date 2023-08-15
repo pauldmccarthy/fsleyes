@@ -53,6 +53,8 @@ export PYTHONPATH=$(pwd)
 # as root, unless we add another setting.
 export FSLEYES_EXTRA_JUPYTER_CONFIG="c.ServerApp.allow_root = True"
 
+PYTEST_EXTRA_ARGS=($PYTEST_EXTRA_ARGS)
+
 if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 
   # style stage
@@ -62,15 +64,13 @@ if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 
   # Run the tests. First batch requires
   # a GUI, so we run via xvfb-run
-  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS} --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
   status=`cat status`
   failed=$status
   sleep 5
 else
   failed=0
 fi
-
-PYTEST_EXTRA_ARGS=($PYTEST_EXTRA_ARGS)
 
 # Remaining tests are all off-screen,
 # so we don't need xvfb
