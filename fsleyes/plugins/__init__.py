@@ -460,7 +460,7 @@ class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
 
     def find_distributions(self, context=None):
         """Returns all registered :class:`FSLeyesPlugin` distributions. """
-        return list(self.__plugins.values())
+        return iter(self.__plugins.values())
 
 
 def initialise():
