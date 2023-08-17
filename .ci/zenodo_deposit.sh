@@ -10,7 +10,7 @@ zenodo_url=$2
 zenodo_tkn=$3
 zenodo_depid=$4
 
-version=`python setup.py -V`
+version=$(cat fsleyes/version.py | grep "__version__ =" | tr -d " '" | cut -d '=' -f 2)
 upfile=`pwd`/dist/"$name"-"$version".tar.gz
 metafile=`pwd`/.ci/zenodo_meta.json.jinja2
 date=`date +"%Y-%m-%d"`
