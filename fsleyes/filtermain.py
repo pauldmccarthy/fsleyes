@@ -37,6 +37,7 @@ FILTERS = [
     r'Class FIFinderSyncExtensionHost',
     r'ClientToScreen',
     r'CoreText note: Client requested name',
+    (r'Debugger warning: It seems that frozen modules are being used', 4),
     r'Failed to connect to session manager',
     r'FinderKit',
     r'FutureWarning',
@@ -65,6 +66,7 @@ FILTERS = [
     r'is not a valid allowedFileType',
     r'libGL error',
     r'wx.NewId',
+    r'CCS for 3D textures is disabled',
 ]
 
 
