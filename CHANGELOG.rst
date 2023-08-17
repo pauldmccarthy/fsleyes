@@ -10,6 +10,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.8.1 (Thursday 17th August 2023)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Filtered some irrelevant warning messages from underlying libraries (!395).
+
+
 1.8.0 (Wednesday 16th August 2023)
 ----------------------------------
 
