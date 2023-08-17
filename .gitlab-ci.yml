@@ -297,7 +297,7 @@ pages:
     - docker
 
   stage: doc
-  image: python:3.9
+  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
 
   script:
     - bash ./.ci/build_userdoc.sh
