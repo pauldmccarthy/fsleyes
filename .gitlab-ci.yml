@@ -185,6 +185,9 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
       when: never
+    # Set FSLEYES_SKIP_TESTS to skip tests
+    - if:   '$FSLEYES_SKIP_TESTS != null'
+      when: never
     - if:   '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
     - if:   '$CI_PIPELINE_SOURCE == "web"'
@@ -200,6 +203,9 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
     # Don't test if  "[skip-tests]"
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
+      when: never
+    # Set FSLEYES_SKIP_TESTS to skip tests
+    - if:   '$FSLEYES_SKIP_TESTS != null'
       when: never
     - if:   '$CI_PROJECT_PATH != $UPSTREAM_PROJECT'
       when: never
