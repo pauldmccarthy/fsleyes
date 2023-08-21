@@ -234,6 +234,30 @@ the :ref:`overlay display panel <overlays_overlay_display_panel>`, in order to
 display the data correctly.
 
 
+The values reported in the atlas panel are different from those in the atlas image!
+-----------------------------------------------------------------------------------
+
+.. image:: images/troubleshooting_atlas_different_values.png
+   :width: 90%
+   :align: center
+
+
+Sometimes when you are using the atlas panel to inspect different brain
+regions, the reported values may differ from the values you see in the atlas
+image. This is because there are often different versions of each FSL atlas,
+sampled at different resolutions (e.g. 1mm\ :sup:`3` and 2mm\ :sup:`3`).
+
+For example, in the screenshot above the atlas panel reports that the voxel
+under the cursor has a 53% probability of being in the Frontal Pole (as
+defined by the Harvard-Oxford Cortical Structural Atlas). However, in the
+location panel, the value at the current voxel is reported as being 49.
+
+This discrepancy is due to the fact that the FSLeyes atlas panel will always
+report regions and region probabilities values from the atlas version with the
+highest resolution; if you are viewing a different version of the atlas, the
+values that you see in the image (reported in the location panel) may not be
+identical to those reported in the atlas panel.
+
 
 .. _troubleshooting_keyboard_navigation_doesnt_work_in_the_ic_classification_panel:
 

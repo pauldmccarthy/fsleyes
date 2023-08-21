@@ -10,6 +10,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.8.2 (Tuesday 22nd August 2023)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with loading built-in plugins - the atlas panel (amongst
+  others) was not being loaded (!400).
+
+
 1.8.1 (Thursday 17th August 2023)
 ---------------------------------
 
