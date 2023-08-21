@@ -245,7 +245,7 @@ The values reported in the atlas panel are different from those in the atlas ima
 Sometimes when you are using the atlas panel to inspect different brain
 regions, the reported values may differ from the values you see in the atlas
 image. This is because there are often different versions of each FSL atlas,
-sampled at different resolutions (e.g. 1mm:sup:`3` and 2mm:sup:`3`).
+sampled at different resolutions (e.g. 1mm\ :sup:`3` and 2mm\ :sup:`3`).
 
 For example, in the screenshot above the atlas panel reports that the voxel
 under the cursor has a 53% probability of being in the Frontal Pole (as
