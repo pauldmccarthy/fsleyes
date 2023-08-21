@@ -220,3 +220,21 @@ def _test_runPlugin(frame, overlayList, displayCtx):
         ctrl = view.togglePanel(mod.RunControl)
         realYield()
         mod.RunTool(overlayList, displayCtx, frame)()
+
+
+#fsl/fsleyes/fsleyes!400
+def test_builtins_get_loaded():
+
+    from fsleyes.plugins.controls.atlaspanel   import  AtlasPanel
+    from fsleyes.plugins.controls.clusterpanel import  ClusterPanel
+    from fsleyes.plugins.tools.cropimage       import (CropImageAction,
+                                                       CropImagePanel)
+    plugins.initialise()
+
+    controls = list(plugins.listControls().values())
+    tools    = list(plugins.listTools().values())
+
+    assert AtlasPanel         in controls
+    assert ClusterPanel       in controls
+    assert CropImagePanel not in controls
+    assert CropImageAction    in tools
