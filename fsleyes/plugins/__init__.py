@@ -527,6 +527,7 @@ def _loadBuiltIns():
     def load_all_submodules(mod):
         submods = pkgutil.iter_modules(mod.__path__, mod.__name__ + '.')
         for _, name, ispkg in submods:
+            log.debug('Loading built-in plugin module %s', name)
             submod = importlib.import_module(name)
             FSLeyesPluginFinder.instance().add_plugin(submod, submod.__name__)
             if ispkg:
