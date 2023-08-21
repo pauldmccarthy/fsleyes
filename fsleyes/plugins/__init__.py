@@ -524,12 +524,16 @@ def _loadBuiltIns():
     import fsleyes.plugins.controls as pcontrols
     import fsleyes.plugins.tools    as tools
 
-    for mod in (views, controls, pcontrols, tools):
+    def load_all_submodules(mod):
         submods = pkgutil.iter_modules(mod.__path__, mod.__name__ + '.')
-        for _, name, _ in submods:
-            log.debug('Loading built-in plugin module %s', name)
+        for _, name, ispkg in submods:
             submod = importlib.import_module(name)
             FSLeyesPluginFinder.instance().add_plugin(submod, submod.__name__)
+            if ispkg:
+                load_all_submodules(submod)
+
+    for mod in (views, controls, pcontrols, tools):
+        load_all_submodules(mod)
 
 
 def _listEntryPoints(
