@@ -93,9 +93,9 @@ variables:
 ####################################
 
 
-.only_master: &only_master
+.only_main: &only_main
   only:
-    - master@fsl/fsleyes/fsleyes
+    - main@fsl/fsleyes/fsleyes
 
 
 .only_release_branches: &only_release_branches
@@ -133,7 +133,7 @@ variables:
     - docker:dind
   when: manual
   allow_failure: true
-  <<: *only_master
+  <<: *only_main
 
   script:
     - mkdir -p $HOME/.docker/
