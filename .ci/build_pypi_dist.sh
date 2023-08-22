@@ -15,12 +15,12 @@ PIPARGS="--retries 10 --timeout 30"
 # install dev versions of core
 # dependencies, unless we're
 # on a release branch or tag
-if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT"  || "$CI_COMMIT_REF_NAME" == "master" ]]; then
-  wget https://git.fmrib.ox.ac.uk/fsl/fslpy/-/archive/master/fslpy-master.tar.bz2
+if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT"  || "$CI_COMMIT_REF_NAME" == "main" ]]; then
+  wget https://git.fmrib.ox.ac.uk/fsl/fslpy/-/archive/main/fslpy-main.tar.bz2
   wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets/-/archive/master/widgets-master.tar.bz2
   wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.tar.bz2
   tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
-  tar xf fslpy-master.tar.bz2   && pushd fslpy-master   && pip install $PIPARGS . && popd
+  tar xf fslpy-main.tar.bz2     && pushd fslpy-main     && pip install $PIPARGS . && popd
   tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
 fi
 

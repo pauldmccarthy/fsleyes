@@ -10,6 +10,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.9.0 (Under development)
+-------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--cmapCycle`` command-line option, which automatically assigns a
+  different colour map to each ``volume`` overlay (!402).
+
+
 1.8.2 (Tuesday 22nd August 2023)
 --------------------------------
 

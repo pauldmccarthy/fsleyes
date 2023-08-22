@@ -67,6 +67,9 @@ cli_tests = """
 
 -vl  3   3  3  3d.nii.gz -cr 4000 5000
 -wl 10 -26 16  3d.nii.gz -cr 4000 5000
+
+# cmapCycle
+-cy 3d.nii.gz 3d.nii.gz -cr 3400 8000 3d.nii.gz -cr 5000 8000
 """
 
 
