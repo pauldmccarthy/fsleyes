@@ -276,6 +276,14 @@ import fsleyes.plugins        as plugins
 log = logging.getLogger(__name__)
 
 
+CMAP_CYCLE = ['greyscale', 'red-yellow', 'blue-lightblue', 'green', 'yellow',
+              'hot',       'cool',       'copper',         'pink',  'red',
+              'blue',      'yellow']
+"""Default colour map cycle applied to ``volume`` overlays when the
+``--cmapCycle`` option is used.
+"""
+
+
 def _get_option_tuples(self, option_string):
     """By default, the ``argparse`` module uses a *prefix matching* strategy,
     which allows the user to (unambiguously) specify only part of an argument.
@@ -407,6 +415,7 @@ OPTIONS = td.TypeDict({
                        'standard1mm',
                        'standard1mm_brain',
                        'initialDisplayRange',
+                       'cmapCycle',
                        'bigmem',
                        'fontSize',
                        'notebook',
@@ -796,6 +805,7 @@ ARGUMENTS = td.TypeDict({
     'Main.standard1mm'         : ('std1mm',  'standard1mm',         False),
     'Main.standard1mm_brain'   : ('std1mmb', 'standard1mm_brain',   False),
     'Main.initialDisplayRange' : ('idr',     'initialDisplayRange', True),
+    'Main.cmapCycle'           : ('cy',      'cmapCycle',           False),
     'Main.bigmem'              : ('b',       'bigmem',              False),
     'Main.fontSize'            : ('fs',      'fontSize',            True),
     'Main.notebook'            : ('nb',      'notebook',            False),
@@ -805,7 +815,6 @@ ARGUMENTS = td.TypeDict({
     'Main.annotations'         : ('a',       'annotations',         True),
     'Main.no3DInterp'          : ('ni',      'no3DInterp',          False),
     'Main.showAllPlugins'      : ('ap',      'showAllPlugins',      False),
-
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
     'Extras.bumMode' : ('bums', 'bumMode', False),
@@ -1065,6 +1074,9 @@ HELP = td.TypeDict({
     'Initial display range to use for volume overlays, expressed as '
     '(low, high) intensity values. The values can be expresseed as '
     'percentiles by appending a "%%" to the high value.',
+    'Main.cmapCycle' :
+    'Automatically assign a different colour map to each volume overlay '
+    '(unless one is explicitly specified).',
 
     'Main.bigmem' :
     'Load all images into memory, regardless of size.',
@@ -1656,7 +1668,7 @@ def _setupMainParser(mainParser, exclude):
     s3dgrp = mainParser.add_argument_group(GROUPNAMES[    'Scene3DOpts'],
                                            GROUPDESCS.get('Scene3DOpts'))
 
-    _configMainParser(mainParser,                  exclude.get('Main'))
+    _configMainParser(  mainParser,                exclude.get('Main'))
     _configExtraOptions(mainParser,                exclude.get('Extras'))
     _configParser(fsldisplay.SceneOpts,    sgrp,   exclude.get('SceneOpts'))
     _configParser(fsldisplay.OrthoOpts,    ogrp,   exclude.get('OrthoOpts'))
@@ -1759,6 +1771,7 @@ def _configMainParser(mainParser, exclude=None):
         'standard1mm_brain'   : {'action'  : 'store_true'},
         'initialDisplayRange' : {'metavar' : ('LO', 'HI'),
                                  'nargs'   : 2},
+        'cmapCycle'           : {'action'  : 'store_true'},
         'bigmem'              : {'action'  : 'store_true'},
         'fontSize'            : {'type'    : int},
         'notebook'            : {'action'  : 'store_true'},
@@ -2857,10 +2870,12 @@ def applyOverlayArgs(args,
         if loadOverlays:
             overlayList.extend(overlays, overlayType=overlayTypes)
 
+        # Used if --cycleCmaps is active
+        cmapIdx = 0
+
         for idx, overlay in zip(pathIdxs, overlays):
 
-            status.update('Applying display settings '
-                          'to {}...'.format(overlay.name))
+            status.update(f'Applying display settings to {overlay.name}...')
 
             optArgs = overlayArgs[idx]
             display = displayCtx.getDisplay(overlay)
@@ -2903,6 +2918,14 @@ def applyOverlayArgs(args,
                        opts,
                        gen=False,
                        overlay=overlay)
+
+            # assign a different colour
+            # map to each volume overlay
+            if args.cmapCycle               and \
+               opts.overlayType == 'volume' and \
+               optArgs.cmap is None:
+                opts.cmap = CMAP_CYCLE[cmapIdx % len(CMAP_CYCLE)]
+                cmapIdx  += 1
 
         # Select the last image in the list,
         # or whatever was specified by
