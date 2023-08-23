@@ -120,6 +120,8 @@ cli_tests_parametrize_zax = """
 -zx {{zax}} -so 30 -zr 0 1 -sg 3d
 -zx {{zax}} -so 30 -zr 0 1 -ro 3d
 
+# overlap regression test (see fsl/fsleyes/fsleyes!403)
+-zx {{zax}} -so 50 -zr 0 1 3d 3d -cm red-yellow -cr 5000 10000
 
 # reverse slices
 -zx {{zax}} -so 30 -zr 0 1 -rs 3d
