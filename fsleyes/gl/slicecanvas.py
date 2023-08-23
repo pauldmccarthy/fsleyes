@@ -1493,7 +1493,7 @@ s
             # rendered directly to the screen canvas
             if copts.renderMode == 'onscreen':
                 log.debug('Drawing %s slice for overlay %s directly '
-                          'to canvas', copts.zax, display.name)
+                          'to canvas', copts.zax, overlay)
 
                 globj.preDraw()
                 globj.draw2D(self, zpos, axes)
