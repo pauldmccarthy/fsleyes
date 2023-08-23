@@ -9,7 +9,8 @@ independently of FSL.
 
 .. note:: The terminal commands in these instructions may require
           administrative privileges, depending on where you have installed
-          FSL.
+          FSL.  If you encounter permission errors, try repeating the
+          command, but prefixing it with `sudo`.
 
 
 Install as part of FSL (recommended)
@@ -21,9 +22,32 @@ have FSL, you already have FSLeyes. The FSLeyes version which comes bundled
 with FSL may be slightly out of date, but it is straightforward to update
 using ``conda``.
 
+If you have an older version of FSL, it is recommended to update to the latest
+available version - you can do this by downloading and running the
+`fslinstaller.py` script, available on the `FSL website
+<https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_.
 
-FSL 6.0.2 and newer
-^^^^^^^^^^^^^^^^^^^
+
+FSL 6.0.7 or newer
+^^^^^^^^^^^^^^^^^^
+
+If you have FSL 6.0.7 or newer, you can update to the latest version of FSLeyes
+by running the following command::
+
+    update_fsl_package -u fsleyes
+
+
+FSL 6.0.6 or newer
+^^^^^^^^^^^^^^^^^^
+
+If you have FSL 6.0.6 or newer, you can update to the latest version by running
+the following command::
+
+    ${FSLDIR}/bin/conda update -p ${FSLDIR} fsleyes
+
+
+FSL 6.0.2 or newer
+^^^^^^^^^^^^^^^^^^
 
 
 From FSL 6.0.2 onwards, FSLeyes is installed into the ``fslpython`` conda
@@ -33,29 +57,29 @@ latest version of FSLeyes by running the following command::
     $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-all fsleyes
 
 
-FSL 6.0.1 and older
-^^^^^^^^^^^^^^^^^^^
+FSL 6.0.1 or older
+^^^^^^^^^^^^^^^^^^
 
 
 Versions of FSL prior to 6.0.2 come with a standalone version of
 FSLeyes. Before updating, you should remove the old standalone version of
 FSLeyes. If you are using macOS::
 
-    rm $FSLDIR/bin/fsleyes
-    rm -r $FSLDIR/bin/FSLeyes.app
+    rm ${FSLDIR}/bin/fsleyes
+    rm -r ${FSLDIR}/bin/FSLeyes.app
 
 Or, if you are using Linux::
 
-    rm $FSLDIR/bin/fsleyes
-    rm -r $FSLDIR/bin/FSLeyes
+    rm ${FSLDIR}/bin/fsleyes
+    rm -r ${FSLDIR}/bin/FSLeyes
 
 Now you can install FSLeyes with the following command::
 
-    $FSLDIR/fslpython/bin/conda install -n fslpython -c conda-forge --update-all fsleyes
+    ${FSLDIR}/fslpython/bin/conda install -n fslpython -c conda-forge --update-all fsleyes
 
 When you want to update FSLeyes again in the future, use this command instead::
 
-    $FSLDIR/fslpython/bin/conda update -n fslpython -c conda-forge --update-all fsleyes
+    ${FSLDIR}/fslpython/bin/conda update -n fslpython -c conda-forge --update-all fsleyes
 
 
 Install from ``conda-forge`` (recommended)
@@ -69,6 +93,14 @@ install FSLeyes into it like so::
 
     conda install -c conda-forge fsleyes
 
+.. note::
+
+    If you are using Linux and are using a X11 (as opposed to Wayland) desktop
+    environment, you may need to install an older version of wxPython, for
+    example::
+
+        conda create -c conda-forge -p path/to/fsleyes/environment fsleyes "wxpython=4.0.*"
+
 
 Install from PyPi (advanced)
 ----------------------------
@@ -76,7 +108,9 @@ Install from PyPi (advanced)
 
 .. warning:: This is an advanced option, recommended only if you are
              comfortable working with Python environments, and installing
-             packages using your OS package manager.
+             packages using your OS package manager. he commands below are
+             **suggestions** - you will probably need to adapt them to suit
+             your OS and environment.
 
 
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
@@ -141,7 +175,7 @@ Install into a Singularity image
 
 FSLeyes can be executed from `Docker <https://docs.docker.com/>`_ or
 `Singularity <https://sylabs.io/docs/>`_ containers. Here is an example
-Singularity definition file which installs a standalone version of FSLeyes::
+Singularity definition file which contains FSLeyes::
 
     Bootstrap: docker
     From: centos:7
