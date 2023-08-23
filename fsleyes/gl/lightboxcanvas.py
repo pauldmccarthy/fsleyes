@@ -993,18 +993,28 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
             xforms = list(reversed(xforms))
 
         # Draw all the slices for all the overlays.
-        for overlay, globj in zip(overlays, globjs):
+        # If there is no overlap (or there is only
+        # one overlay), we can draw all the slices
+        # for each overlay in a single call.
+        if not ((opts.sliceOverlap > 0) and (len(overlays) > 1)):
+            for overlay, globj in zip(overlays, globjs):
+                log.debug('Drawing %s slices for overlay %s',
+                          len(zposes), overlay)
+                globj.preDraw()
+                globj.drawAll(renderTarget, axes, zposes, xforms)
+                globj.postDraw()
 
-            display = self.displayCtx.getDisplay(overlay)
-            globj   = self._glObjects.get(overlay, None)
-
-            if not display.enabled:
-                continue
-
-            log.debug('Drawing %s slices for overlay %s', len(zposes), overlay)
-            globj.preDraw()
-            globj.drawAll(renderTarget, axes, zposes, xforms)
-            globj.postDraw()
+        # Otherwise, we have to draw all overlays
+        # one slice at a time, to ensure that the
+        # slices overlap properly.
+        else:
+            for zpos, xform in zip(zposes, xforms):
+                for overlay, globj in zip(overlays, globjs):
+                    log.debug('Drawing slice at %s for overlay %s',
+                              zpos, overlay)
+                    globj.preDraw()
+                    globj.draw2D(renderTarget, zpos, axes, xform)
+                    globj.postDraw()
 
         # draw off-screen texture to screen
         if opts.renderMode == 'offscreen':
