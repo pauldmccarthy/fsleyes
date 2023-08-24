@@ -904,7 +904,10 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
         for i in images[1:]:
             if not i.sameSpace(images[0]):
-                return strings.messages[self, 'displaySpaceWarning']
+                if not self.displayCtx.hideOrientationWarnings and (self.displayCtx.displaySpace == 'scaledVoxels' or self.displayCtx.displaySpace == 'fslview'):
+                    return strings.messages[self, 'displaySpaceWarningPixdim']
+                else:
+                    return strings.messages[self, 'displaySpaceWarning']
 
         return None
 

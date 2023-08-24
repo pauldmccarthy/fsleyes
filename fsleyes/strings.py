@@ -84,6 +84,8 @@ messages = TypeDict({
 
     'LocationInfoPanel.displaySpaceWarning' :
     'Displaying images with different orientations/fields of view!',
+    'LocationInfoPanel.displaySpaceWarningPixdim' :
+    'Warning: anatomical labels may not be correct!',
 
     'LoadColourMapAction.loadcmap'    : 'Open colour map file',
     'LoadColourMapAction.namecmap'    : 'Enter a name for the colour map.',
@@ -1298,6 +1300,7 @@ choices = TypeDict({
 
     'DisplayContext.displaySpace' : {'world'       : 'World coordinates',
                                      'scaledVoxel' : 'Scaled voxel coordinates',
+                                     'fslview'     : 'fslview-compatible (pixdim-flip)'
                                      },
 
     'SceneOpts.colourBarLocation'  : {'top'          : 'Top',

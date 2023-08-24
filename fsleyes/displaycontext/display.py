@@ -572,7 +572,7 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         # orientation labels, as there's no guarantee
         # that all of the loaded overlays are in the
         # same orientation, and it can get confusing.
-        if opts.transform in ('id', 'pixdim', 'pixdim-flip') and \
+        if opts.transform in ('id') and \
            self.displayCtx.displaySpace != refImage:
             xlo = 'Xmin'
             xhi = 'Xmax'

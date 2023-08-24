@@ -410,6 +410,7 @@ OPTIONS = td.TypeDict({
                        'autoDisplay',
                        'displaySpace',
                        'neuroOrientation',
+                       'hideOrientationWarnings',
                        'standard',
                        'standard_brain',
                        'standard1mm',
@@ -800,6 +801,7 @@ ARGUMENTS = td.TypeDict({
     'Main.autoDisplay'         : ('ad',      'autoDisplay',         False),
     'Main.displaySpace'        : ('ds',      'displaySpace',        True),
     'Main.neuroOrientation'    : ('no',      'neuroOrientation',    False),
+    'Main.hideOrientationWarnings' : ('now',      'hideOrientationWarnings',    False),
     'Main.standard'            : ('std',     'standard',            False),
     'Main.standard_brain'      : ('stdb',    'standard_brain',      False),
     'Main.standard1mm'         : ('std1mm',  'standard1mm',         False),
@@ -1053,7 +1055,12 @@ HELP = td.TypeDict({
                               'settings (unless any display settings are '
                               'specified)',
     'Main.displaySpace'     : 'Space in which all overlays are displayed - '
-                              'can be "world", or a NIFTI image.',
+                              'can be "world","scaledVoxels",'
+                              '"fslview" (fslview-compatible approach), '
+                              'or a NIFTI image.',
+    'Main.hideOrientationWarnings' : 'Hides warnings in situations where '
+                              'displayed anatomical orientation may be be '
+                              'incorrect',
     'Main.neuroOrientation' : 'Display images in neurological orientation '
                               '(default: radiological)',
 
@@ -1765,6 +1772,7 @@ def _configMainParser(mainParser, exclude=None):
                                  'type'    : int},
         'neuroOrientation'    : {'action'  : 'store_true'},
         'displaySpace'        : {'type'    : str},
+        'hideOrientationWarnings' : {'action'  : 'store_true'},
         'standard'            : {'action'  : 'store_true'},
         'standard_brain'      : {'action'  : 'store_true'},
         'standard1mm'         : {'action'  : 'store_true'},
@@ -2623,6 +2631,9 @@ def applyMainArgs(args, overlayList, displayCtx):
     if args.bigmem is not None:
         displayCtx.loadInMemory = args.bigmem
 
+    if args.hideOrientationWarnings is not None:
+        displayCtx.hideOrientationWarnings = args.hideOrientationWarnings
+
     if args.neuroOrientation is not None:
         displayCtx.radioOrientation = not args.neuroOrientation
 
@@ -2699,6 +2710,8 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             displaySpace = 'world'
         elif args.displaySpace == 'scaledVoxel':
             displaySpace = 'scaledVoxel'
+        elif args.displaySpace == 'fslview':
+            displaySpace = 'fslview'
 
         elif args.displaySpace is not None:
             try:
