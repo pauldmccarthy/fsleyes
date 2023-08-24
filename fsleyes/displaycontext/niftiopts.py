@@ -447,6 +447,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             voxToRefMat = voxToWorldMat
         elif ds == 'scaledVoxel':
             voxToRefMat = voxToPixdimMat
+        elif ds == 'fslview':
+            voxToRefMat = voxToPixFlipMat
         elif ds is self.overlay:
             voxToRefMat = voxToPixFlipMat
         else:
