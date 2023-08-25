@@ -559,6 +559,7 @@ actions = TypeDict({
     'FSLeyesFrame.selectNextOverlay'       : 'Next',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Previous',
     'FSLeyesFrame.toggleOverlayVisibility' : 'Show/hide',
+    'FSLeyesFrame.toggleOverlaysVisibility' : 'Show/hide all but first image',
 
     'ViewPanel.removeAllPanels'             : 'Remove all panels',
     'ViewPanel.removeFromFrame'             : 'Close',

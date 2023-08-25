@@ -38,6 +38,7 @@ actions = td.TypeDict({
     'FSLeyesFrame.selectNextOverlay'       : 'Ctrl-Up',
     'FSLeyesFrame.selectPreviousOverlay'   : 'Ctrl-Down',
     'FSLeyesFrame.toggleOverlayVisibility' : 'Ctrl-F',
+    'FSLeyesFrame.toggleOverlaysVisibility' : 'Ctrl-Shift+F',
 
     # Shortcuts for next/prev volume
 
