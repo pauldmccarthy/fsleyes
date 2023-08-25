@@ -1873,7 +1873,8 @@ class FSLeyesFrame(wx.Frame):
                        SaveOverlayAction,
                        ReloadOverlayAction,
                        RemoveOverlayAction,
-                       'toggleOverlayVisibility']
+                       'toggleOverlayVisibility',
+                       'toggleOverlaysVisibility']
 
         for action in fileActions:
 
@@ -2076,9 +2077,10 @@ class FSLeyesFrame(wx.Frame):
 
         haveOverlays = overlay is not None
 
-        self.selectNextOverlay      .enabled = haveOverlays
-        self.selectPreviousOverlay  .enabled = haveOverlays
-        self.toggleOverlayVisibility.enabled = haveOverlays
+        self.selectNextOverlay       .enabled = haveOverlays
+        self.selectPreviousOverlay   .enabled = haveOverlays
+        self.toggleOverlayVisibility .enabled = haveOverlays
+        self.toggleOverlaysVisibility.enabled = haveOverlays
 
         if not self.__haveMenu:
             return
