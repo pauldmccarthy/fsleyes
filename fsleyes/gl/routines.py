@@ -867,21 +867,25 @@ def voxelBox(voxel,
     scaledLo    = scaledVoxel - boxSize / 2.0
     scaledHi    = scaledVoxel + boxSize / 2.0
 
+    # Convert to voxels, and round to
+    # a sensible precision to avoid
+    # floating point errors
+    lo = np.round(scaledLo / dims, decimals=4)
+    hi = np.round(scaledHi / dims, decimals=4)
+
     # Scale the low/high bounds back
     # into voxel coordinates, and
     # round them up or down according
     # to the bias setting.
     if bias == 'low':
-        lo = np.floor(scaledLo / dims)
-        hi = np.floor(scaledHi / dims)
-
+        lo = np.floor(lo)
+        hi = np.floor(hi)
     elif bias == 'high':
-        lo = np.ceil(scaledLo / dims)
-        hi = np.ceil(scaledHi / dims)
-
+        lo = np.ceil(lo)
+        hi = np.ceil(hi)
     else:
-        lo = np.floor(scaledLo / dims)
-        hi = np.ceil( scaledHi / dims)
+        lo = np.floor(lo)
+        hi = np.ceil( hi)
 
     # Crop the box to the
     # image space if necessary

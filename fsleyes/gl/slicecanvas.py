@@ -961,7 +961,8 @@ s
         globjs   = []
         for ovl in self.displayCtx.getOrderedOverlays():
 
-            globj = self._glObjects.get(ovl, None)
+            globj   = self._glObjects.get(ovl, None)
+            display = self.displayCtx.getDisplay(ovl)
 
             # If an overlay does not yet have a corresponding
             # GLObject, we presume that it hasn't been created
@@ -974,7 +975,7 @@ s
             # the globjects dictionary, but it evaluates
             # to False, then GLObject creation has been
             # scheduled for the overlay - see genGLObject.
-            elif globj:
+            elif globj and display.enabled:
                 overlays.append(ovl)
                 globjs  .append(globj)
 
@@ -1486,16 +1487,13 @@ s
 
         for overlay, globj in zip(overlays, globjs):
 
-            display = self.displayCtx.getDisplay(overlay)
-            dopts   = display.opts
-            if not display.enabled:
-                continue
+            dopts = self.displayCtx.getOpts(overlay)
 
             # On-screen rendering - the globject is
             # rendered directly to the screen canvas
             if copts.renderMode == 'onscreen':
                 log.debug('Drawing %s slice for overlay %s directly '
-                          'to canvas', copts.zax, display.name)
+                          'to canvas', copts.zax, overlay)
 
                 globj.preDraw()
                 globj.draw2D(self, zpos, axes)
@@ -1541,7 +1539,7 @@ s
 
                 log.debug('Drawing %s slice for overlay %s '
                           'from pre-rendered texture',
-                          copts.zax, display.name)
+                          copts.zax, overlay)
 
                 rt.draw(zpos, self.mvpMatrix)
 
