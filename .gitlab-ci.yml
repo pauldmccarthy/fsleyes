@@ -83,8 +83,8 @@ stages:
 
 
 variables:
-  UPSTREAM_PROJECT:     "fsl/fsleyes/fsleyes"
-  UPSTREAM_URL:         "git@git.fmrib.ox.ac.uk"
+  UPSTREAM_PROJECT: "fsl/fsleyes/fsleyes"
+  UPSTREAM_URL:     "git@git.fmrib.ox.ac.uk"
 
 
 ####################################
@@ -93,24 +93,13 @@ variables:
 ####################################
 
 
-.only_main: &only_main
-  only:
-    - main@fsl/fsleyes/fsleyes
-
-
 .only_release_branches: &only_release_branches
   only:
     - /^v.+$/@fsl/fsleyes/fsleyes
 
-
 .only_releases: &only_releases
   only:
     - tags@fsl/fsleyes/fsleyes
-
-
-.except_releases: &except_releases
-  except:
-    - tags
 
 
 .setup_ssh: &setup_ssh
@@ -133,7 +122,8 @@ variables:
     - docker:dind
   when: manual
   allow_failure: true
-  <<: *only_main
+  only:
+    - main@fsl/fsleyes/fsleyes
 
   script:
     - mkdir -p $HOME/.docker/
@@ -177,18 +167,14 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
 
 .test_rules: &test_rules
   rules:
-    # Releases are just tags on a release
-    # branch, so we don't need to test them.
-    - if:   '$CI_COMMIT_TAG != null'
+    # Set FSLEYES_SKIP_TESTS to skip tests
+    - if:   '$FSLEYES_SKIP_TESTS != null'
       when: never
     # Don't test if  "[skip-tests]"
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
       when: never
-    # Set FSLEYES_SKIP_TESTS to skip tests
-    - if:   '$FSLEYES_SKIP_TESTS != null'
-      when: never
-    - if:   '$CI_PIPELINE_SOURCE == "push"'
+    - if:   '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: on_success
     - if:   '$CI_PIPELINE_SOURCE == "web"'
       when: on_success
@@ -209,7 +195,7 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
       when: never
     - if:   '$CI_PROJECT_PATH != $UPSTREAM_PROJECT'
       when: never
-    - if:   '$CI_PIPELINE_SOURCE == "push"'
+    - if:   $CI_PROJECT_PATH == $UPSTREAM_PROJECT && $CI_COMMIT_BRANCH =~ /^v.+$/
       when: on_success
     - if:   '$CI_PIPELINE_SOURCE == "web"'
       when: on_success
@@ -249,13 +235,14 @@ test:3.9:
   stage: test
   image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
   <<: *test_template
+  <<: *test_rules_upstream
 
 
 test:3.10:
   stage: test
   image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
   <<: *test_template
-  <<: *test_rules_upstream
+  <<: *test_rules
 
 
 test:3.11:
@@ -268,7 +255,7 @@ test:3.11:
 test:build-pypi-dist:
   stage: test
   image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
-  <<: *except_releases
+  <<: *test_rules
 
   tags:
     - docker
