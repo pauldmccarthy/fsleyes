@@ -929,13 +929,15 @@ def selectLine(shape,
     # voxels, and may either be a scalar or
     # a sequence. We start by adjusting the
     # box size so that it is an integer
-    # multiple of the voxel dimensions, so
-    # that all voxels between from_ and to
-    # will be covered by our interpolated
-    # points, below.
+    # multiple of the voxel dimensions (of
+    # at least length 1), so that all voxels
+    # between from_ and to will be covered
+    # by our interpolated points, below.
     boxSize = np.array(boxSize)
     dims    = np.array(dims)
-    boxSize = dims * np.floor(boxSize / dims)
+    boxSize = np.floor(boxSize / dims)
+    boxSize = np.clip(boxSize, 1, None)
+    boxSize = dims * boxSize
 
     # Now we need to calculate the distance
     # between the to/from voxels, and the
