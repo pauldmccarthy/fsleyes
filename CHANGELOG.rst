@@ -11,8 +11,8 @@ chronological order.
 
 
 
-1.9.0 (Under development)
--------------------------
+1.8.3 (Thursday 31st August 2023)
+---------------------------------
 
 
 Added
@@ -21,6 +21,17 @@ Added
 
 * New ``--cmapCycle`` command-line option, which automatically assigns a
   different colour map to each ``volume`` overlay (!402).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with overlays being interleaved when overlapping slices in
+  the lightbox view (!403).
+* Fixed some bugs in edit mode - crashes could occur when drawing/selecting
+  voxels in highly anisotropic images, and the cursor size could vary for
+  images with floating point imprecision in their pixdims (!404).
 
 
 1.8.2 (Tuesday 22nd August 2023)
