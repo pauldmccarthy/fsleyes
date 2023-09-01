@@ -21,6 +21,13 @@ Added
   visibility of all overlays except for the first/bottom one, by
   Christopher G. Schwarz (@CGSchwarzMayo) (!406, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/118>`_).
+* New *FSLView mode* for the *Display space* setting, which emulates the
+  behaviour of FSLView, by Christopher G. Schwarz (@CGSchwarzMayo) (!407,
+  `GitHub PR <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
+* New ``--hideOrientationWarnings`` command-line option, which hides the
+  location panel warning regarding different orientations / fields-of-view, by
+  Christopher G. Schwarz (@CGSchwarzMayo) (!407, `GitHub PR
+  <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
 
 
 1.8.3 (Thursday 31st August 2023)
@@ -1278,8 +1285,11 @@ Added
 ^^^^^
 
 
-* Added metadata to allow better integration with Linux desktop environments.
-* Added ability to drag-and-drop files onto the FSLeyes window to open them.
+* Added metadata to allow better integration with Linux desktop environments,
+  by Ankur Sinha (@sanjayankur31, [GitHub
+  PR](https://github.com/pauldmccarthy/fsleyes/pull/13)).
+* Added ability to drag-and-drop files onto the FSLeyes window to open them, by
+  Taylor Hanayik (!99, !100).
 * The ``--vertexSet`` and ``--vertexData`` command-line options now cause the
   last vertex set/data to be selected, and also support GIFTI surface files
   which contain multiple vertex sets and vertex data.

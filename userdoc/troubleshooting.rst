@@ -136,6 +136,19 @@ Open the :ref:`view settings panel <ortho_lightbox_views_view_settings>` (the
 oriented.
 
 
+There are weird striping artifacts in my image!
+-----------------------------------------------
+
+.. image:: images/troubleshooting_striping.png
+   :width: 10%
+   :align: right
+
+Those are slice boundaries - your image is being displayed obliquely to the
+display, and FSLeyes is using nearest-neighbour interpolation to draw the
+image to the screen. Change the interpolation (in the :ref:`overlay display
+panel <overlays_overlay_display_panel>`) to *linear* or *spline*.
+
+
 My images are aligned in FSLeyes, but other FSL tools complain about orientation!
 ---------------------------------------------------------------------------------
 
@@ -164,19 +177,6 @@ options.
 
 You can read more about the different coordinate systems used by FSLeyes
 :ref:`here <display_space>`.
-
-
-There are weird striping artifacts in my image!
------------------------------------------------
-
-.. image:: images/troubleshooting_striping.png
-   :width: 10%
-   :align: right
-
-Those are slice boundaries - your image is being displayed obliquely to the
-display, and FSLeyes is using nearest-neighbour interpolation to draw the
-image to the screen. Change the interpolation (in the :ref:`overlay display
-panel <overlays_overlay_display_panel>`) to *linear* or *spline*.
 
 
 Movie mode gives me a black/flickering screen
@@ -367,8 +367,22 @@ If you are having trouble running FSLeyes on a remote server, there are
 several things you may need to check.
 
 
+**SSH/X11 - wxPython version**
+
+
+If you are using ``ssh -X`` or ``ssh -Y`` to connect to a remote server, be
+aware that recent versions of `wxPython <https://www.wxpython.org/>`_ (the GUI
+toolkit upon which FSLeyes is based) no longer support the GLX protocol (OpenGL
+over SSH/X11). In this case, you will need to use an alternative method of
+connecting to your server (e.g. VNC), or to install an older version of
+wxPython (``4.0.*``) before FSLeyes will work.
+
+
+**SSH/X11 - indirect rendering via GLX**
+
+
 If you are using ``ssh -X`` or ``ssh -Y`` to connect to a remote server, you
-you should make sure that the X server on your local machine allows indirect
+must make sure that the X server on your **local** machine allows indirect
 rendering via GLX. The way to go about doing this depends on your operating
 system - see below if you are using a mac with XQuartz. If your local machine
 is using Linux, you may find a solution on one of these web pages:

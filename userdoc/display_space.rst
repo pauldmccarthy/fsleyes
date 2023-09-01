@@ -161,6 +161,19 @@ are viewing.
 
 .. _display_space_scaled_voxel_space:
 
+
+FSLView mode
+^^^^^^^^^^^^
+
+
+FSLeyes can be made to display images in the same manner as FSLView by setting
+the **Display space** to *FSLView mode*. This causes all images to be
+displayed in a scaled voxel coordinate system, positioned relative to an
+origin at the centre of voxel ``(0, 0, 0)``. Some images will additionally be
+flipped along the first voxel axis, which is assmed to correspond to
+left-right.
+
+
 Scaled voxel space
 ^^^^^^^^^^^^^^^^^^
 

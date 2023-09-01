@@ -96,8 +96,8 @@ install FSLeyes into it like so::
 .. note::
 
     If you are using Linux and are using a X11 (as opposed to Wayland) desktop
-    environment, you may need to install an older version of wxPython, for
-    example::
+    environment, or you want to run FSLeyes on a remote server over SSH/X11,
+    you will need to install an older version of wxPython, for example::
 
         conda create -c conda-forge -p path/to/fsleyes/environment fsleyes "wxpython=4.0.*"
 
@@ -108,7 +108,7 @@ Install from PyPi (advanced)
 
 .. warning:: This is an advanced option, recommended only if you are
              comfortable working with Python environments, and installing
-             packages using your OS package manager. he commands below are
+             packages using your OS package manager. The commands below are
              **suggestions** - you will probably need to adapt them to suit
              your OS and environment.
 
