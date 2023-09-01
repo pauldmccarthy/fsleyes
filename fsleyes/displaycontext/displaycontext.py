@@ -242,10 +242,12 @@ class DisplayContext(props.SyncableHasProperties):
               or less memory-intensive manner.
     """
 
-    hideOrientationWarnings = props.Boolean(default=False)
-    """If ``True``, do not display warnings when displayed anatomical
-    labels may be incorrect
+
+    showOrientationWarnings = props.Boolean(default=True)
+    """If ``False``, do not display warnings when displayed anatomical
+    labels may be incorrect.
     """
+
 
     def __init__(self,
                  overlayList,
