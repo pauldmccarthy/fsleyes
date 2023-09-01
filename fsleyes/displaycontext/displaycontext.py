@@ -189,7 +189,7 @@ class DisplayContext(props.SyncableHasProperties):
 
        Equivalent to ``'scaledVoxel'``, but with a L/R flip applied to all
        ``Nifti`` overlays which have a voxel-to-world transformation with
-       a negative determinant. The flip is applied to the first voxel axis,
+       a positive determinant. The flip is applied to the first voxel axis,
        which is assumed to correspond to left-right. This is accomplished by
        setting the :attr:`.NiftiOpts.transform` property for every ``Nifti``
        overlay to ``pixdim-flip``.

@@ -169,9 +169,14 @@ FSLView mode
 FSLeyes can be made to display images in the same manner as FSLView by setting
 the **Display space** to *FSLView mode*. This causes all images to be
 displayed in a scaled voxel coordinate system, positioned relative to an
-origin at the centre of voxel ``(0, 0, 0)``. Some images will additionally be
-flipped along the first voxel axis, which is assmed to correspond to
-left-right.
+origin at the centre of voxel ``(0, 0, 0)``. Additionally, any images with a
+voxel-to-world transformation that has a postive determinant will be flipped
+along the first voxel axis, which is assumed to correspond to left-right.
+
+.. note:: This mode displays images so that their *voxel coordinate systems*,
+          and not their *world coordinate systems*, are aligned. If you are
+          viewing images with different voxel storage orders, there is no
+          guarantee of any form of anatomical alignment across images.
 
 
 Scaled voxel space
