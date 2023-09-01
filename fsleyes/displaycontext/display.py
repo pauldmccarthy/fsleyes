@@ -557,23 +557,19 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
         refImage = self.referenceImage
 
+        # No reference image (e.g. an unassociated mesh)
         if refImage is None:
             return ('??????', [constants.ORIENT_UNKNOWN] * 3)
 
-        opts = self.displayCtx.getOpts(refImage)
-
+        dctx    = self.displayCtx
+        opts    = dctx.getOpts(refImage)
         xorient = None
         yorient = None
         zorient = None
 
-        # If we are displaying in voxels/scaled voxels,
-        # and this image is not the current display
-        # image, then we do not show anatomical
-        # orientation labels, as there's no guarantee
-        # that all of the loaded overlays are in the
-        # same orientation, and it can get confusing.
-        if opts.transform in ('id') and \
-           self.displayCtx.displaySpace != refImage:
+        # Scaled voxels - display data orientation
+        # labels instead of anatomical labels
+        if dctx.displaySpace == 'scaledVoxel':
             xlo = 'Xmin'
             xhi = 'Xmax'
             ylo = 'Ymin'
@@ -581,12 +577,12 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
             zlo = 'Zmin'
             zhi = 'Zmax'
 
-        # Otherwise we assume that all images
-        # are aligned to each other, so we
-        # estimate the current image's orientation
-        # in the display coordinate system
+        # Otherwise we display anatomical orientation
+        # labels for the currently selected overlay
+        # in the current display coordinate system
         else:
-
+            # Estimate a mapping between each axis of
+            # the display and world coordinate systems
             xform   = opts.getTransform('display', 'world')
             xorient = refImage.getOrientation(0, xform)
             yorient = refImage.getOrientation(1, xform)
