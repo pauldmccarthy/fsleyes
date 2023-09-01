@@ -34,6 +34,11 @@ tests = """
 -ds 3d_swapdim_-x_y_z_resampled_0.5 3d {{resampled(swapdim('3d', '-x', 'y', 'z'), 0.5)}} -cm red-yellow -a 50
 -ds scaledVoxel                     3d {{resampled(swapdim('3d', '-x', 'y', 'z'), 0.5)}} -cm red-yellow -a 50
 -ds world                           3d {{resampled(swapdim('3d', '-x', 'y', 'z'), 0.5)}} -cm red-yellow -a 50
+
+-ds fslview 3d           {{swapdim('3d', '-x',  'y', 'z')}}       -cm red-yellow -a 50
+-ds fslview 3d           {{swapdim('3d',  'x', '-y', 'z')}}       -cm red-yellow -a 50
+-ds fslview 3d {{resampled(swapdim('3d', '-x',  'y', 'z'), 0.5)}} -cm red-yellow -a 50
+-ds fslview 3d {{resampled(swapdim('3d',  'x', '-y', 'z'), 0.5)}} -cm red-yellow -a 50
 """
 
 
