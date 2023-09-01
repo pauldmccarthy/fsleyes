@@ -1035,35 +1035,32 @@ or more arguments, ``False`` otherwise.
 # Help text for all of the options
 HELP = td.TypeDict({
 
-    'Main.help'            : 'Display basic FSLeyes options and exit',
-    'Main.fullhelp'        : 'Display all FSLeyes options and exit',
-    'Main.verbose'         : 'Verbose output (can be used up to 3 times)',
-    'Main.version'         : 'Print the current version and exit',
-    'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
-    'Main.updatecheck'     : 'Check for FSLeyes updates on startup',
-    'Main.noisy'           : 'Make the specified module noisy',
-    'Main.glversion'       : 'Desired (major, minor) OpenGL compatibility '
-                             'version',
-    'Main.scene'           : 'Scene to show',
-
-    'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
-                              'first overlay)',
-    'Main.worldLoc'         : 'Location to show (world coordinates, takes '
-                              'precedence over --voxelLoc)',
+    'Main.help'         : 'Display basic FSLeyes options and exit',
+    'Main.fullhelp'     : 'Display all FSLeyes options and exit',
+    'Main.verbose'      : 'Verbose output (can be used up to 3 times)',
+    'Main.version'      : 'Print the current version and exit',
+    'Main.skipfslcheck' : 'Skip $FSLDIR check/warning',
+    'Main.updatecheck'  : 'Check for FSLeyes updates on startup',
+    'Main.noisy'        : 'Make the specified module noisy',
+    'Main.glversion'    : 'Desired (major, minor) OpenGL compatibility '
+                          'version',
+    'Main.scene'        : 'Scene to show',
+    'Main.voxelLoc' :
+    'Location to show (voxel coordinates of first overlay)',
+    'Main.worldLoc' :
+    'Location to show (world coordinates, takes precedence over --voxelLoc)',
     'Main.selectedOverlay'  : 'Selected overlay (index, starting from 0)',
-    'Main.autoDisplay'      : 'Automatically configure overlay display '
-                              'settings (unless any display settings are '
-                              'specified)',
-    'Main.displaySpace'     : 'Space in which all overlays are displayed - '
-                              'can be "world","scaledVoxels",'
-                              '"fslview" (fslview-compatible approach), '
-                              'or a NIFTI image.',
-    'Main.hideOrientationWarnings' : 'Hides warnings in situations where '
-                              'displayed anatomical orientation may be be '
-                              'incorrect',
-    'Main.neuroOrientation' : 'Display images in neurological orientation '
-                              '(default: radiological)',
-
+    'Main.autoDisplay' :
+    'Automatically configure overlay display settings (unless any display '
+    'settings are specified)',
+    'Main.displaySpace' :
+    'Space in which all overlays are displayed - can be "world", '
+    '"scaledVoxels", "fslview", or a NIFTI image.',
+    'Main.hideOrientationWarnings' :
+    'Hides location panel warnings when displaying images of different '
+    'FOVs or orientations.',
+    'Main.neuroOrientation' :
+    'Display images in neurological orientation (default: radiological)',
     'Main.standard' :
     'Add the MNI152 2mm standard image as an underlay (only if $FSLDIR is '
     'set).',

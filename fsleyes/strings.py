@@ -1300,7 +1300,7 @@ choices = TypeDict({
 
     'DisplayContext.displaySpace' : {'world'       : 'World coordinates',
                                      'scaledVoxel' : 'Scaled voxel coordinates',
-                                     'fslview'     : 'fslview-compatible (pixdim-flip)'
+                                     'fslview'     : 'FSLView mode'
                                      },
 
     'SceneOpts.colourBarLocation'  : {'top'          : 'Top',
