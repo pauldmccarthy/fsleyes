@@ -1205,10 +1205,11 @@ class WXGLCanvasTarget:
            'software' in GL_RENDERER.lower():
 
             log.debug('Creating separate GL context for '
-                      'WXGLCanvasTarget {}'.format(id(self)))
+                      'WXGLCanvasTarget {id(self)}')
 
             context = GLContext(other=context, target=self)
 
+        self.__name              = f'{type(self).__name__}.{id(self)}'
         self.__glReady           = False
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
@@ -1235,13 +1236,28 @@ class WXGLCanvasTarget:
         self.__fbo     = None
 
 
-
     @property
     def destroyed(self):
         """Returns ``True`` if :meth:`destroy` has been called, ``False``
         otherwise.
         """
         return self.__context is None
+
+
+    def __scheduleRefresh(self):
+        """Called internally whenever a request is made to refresh the canvas.
+
+        Schedules the refresh on the ``wx`` idle loop, in a way that minimises
+        redundant refreshes.
+        """
+        def doRefresh():
+            # The canvas may have been destroyed between the
+            # refresh being scheduled, and it being executed
+            if fwidgets.isalive(self):
+                self.__realDraw()
+
+        if not self.__freezeDraw:
+            idle.idle(doRefresh, name=self.__name, skipIfQueued=True)
 
 
     def __onEraseBackground(self, ev):
@@ -1253,16 +1269,10 @@ class WXGLCanvasTarget:
         """Called on ``wx.EVT_PAINT`` events. Schedules :meth:`Refresh`
         to be called on the idle loop.
         """
-
-        def doRefresh():
-            if fwidgets.isalive(self):
-                self.Refresh()
-
         # GL canvases do need to be refreshed
         # on EVT_PAINT events. If they are not,
         # the canvas will be corrupted.
-        if not self.__freezeDraw:
-            idle.idle(doRefresh)
+        self.__scheduleRefresh()
 
 
     def _initGL(self):
@@ -1436,7 +1446,7 @@ class WXGLCanvasTarget:
 
     def Refresh(self, *a):
         """Triggers a redraw via the :meth:`_draw` method. """
-        self.__realDraw()
+        self.__scheduleRefresh()
 
 
     def FreezeDraw(self):
