@@ -227,17 +227,19 @@ def fsleyesScriptEnvironment(frame, overlayList, displayCtx):
     def scaledVoxels():
         """Display all NIFTI images in true scaled voxels (but
         with a radiological/neurological flip). """
-        for o in overlayList:
-            if isinstance(o, fslimage.Nifti):
-                displayCtx.getOpts(o).transform = 'pixdim-flip'
+        print('This function will be removed in a future version of '
+              'FSLeyes. You can achieve the same result by setting '
+              'displayCtx.displaySpace = "fslview".')
+        displayCtx.displaySpace = 'fslview'
 
 
     def trueScaledVoxels():
         """Display all NIFTI images in true scaled voxels (without
         any radiological/neurological flip). """
-        for o in overlayList:
-            if isinstance(o, fslimage.Nifti):
-                displayCtx.getOpts(o).transform = 'pixdim'
+        print('This function will be removed in a future version of '
+              'FSLeyes. You can achieve the same result by setting '
+              'displayCtx.displaySpace = "scaledVoxel".')
+        displayCtx.displaySpace = 'scaledVoxel'
 
     def rawVoxels():
         """Display all NIFTI images in raw voxels. """
