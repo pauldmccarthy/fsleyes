@@ -320,11 +320,13 @@ def run_with_fsleyes(func, *args, **kwargs):
 
         try:
             if func is not None:
-                state.result = func(state.frame,
-                                    overlayList,
-                                    displayCtx,
-                                    *args,
-                                    **kwargs)
+                with mock.patch('fsleyes_widgets.utils.status.reportError',
+                                return_value=None):
+                    state.result = func(state.frame,
+                                        overlayList,
+                                        displayCtx,
+                                        *args,
+                                        **kwargs)
 
         except Exception as e:
             traceback.print_exc()
