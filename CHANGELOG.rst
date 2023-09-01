@@ -9,6 +9,18 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
+1.9.0 (Under development)
+-------------------------
+
+
+Added
+^^^^^
+
+
+* New keyboard shortcut (|control_key| + |shift_key| + ``f``) to toggle
+  visibility of all overlays except for the first/bottom one, by
+  Christopher G. Schwarz (@CGSchwarzMayo) (!406, `GitHub PR
+  <https://github.com/pauldmccarthy/fsleyes/pull/118>`_).
 
 
 1.8.3 (Thursday 31st August 2023)

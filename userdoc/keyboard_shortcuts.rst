@@ -85,6 +85,8 @@ Shortcut                            Action
                                     (within the focused view)
 |command_key| + ``f``               Show/hide selected overlay (within
                                     the focused view)
+|command_key| + |shift_key| + ``f`` Show/hide all overlays exept the
+                                    bottom one (within the focused view)
 |command_key| + |shift_key| + ``n`` Create new image
 |command_key| + |shift_key| + ``c`` Copy selected image
 |command_key| + |shift_key| + ``s`` Save selected image
