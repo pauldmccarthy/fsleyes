@@ -84,8 +84,6 @@ messages = TypeDict({
 
     'LocationInfoPanel.displaySpaceWarning' :
     'Displaying images with different orientations/fields of view!',
-    'LocationInfoPanel.displaySpaceWarningPixdim' :
-    'Warning: anatomical labels may not be correct!',
 
     'LoadColourMapAction.loadcmap'    : 'Open colour map file',
     'LoadColourMapAction.namecmap'    : 'Enter a name for the colour map.',
