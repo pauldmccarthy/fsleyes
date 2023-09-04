@@ -167,8 +167,8 @@ class DisplayContext(props.SyncableHasProperties):
     """The *space* in which overlays are displayed. This property defines the
     display coordinate system for this ``DisplayContext``. When it is changed,
     the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti` overlays
-    in the :class:`.OverlayList` is updated. It has two settings, described
-    below. The options for this property are dynamically added by
+    in the :class:`.OverlayList` is updated. It can be set to one of the values
+    described below. The options for this property are dynamically added by
     :meth:`__updateDisplaySpaceOptions`.
 
     1. **World** space (a.k.a. ``'world'``)
@@ -212,6 +212,15 @@ class DisplayContext(props.SyncableHasProperties):
 
     The :meth:`defaultDisplaySpace` can be used to control how the
     ``displaySpace`` is initialised.
+
+
+    ..note:: This setting updates the :attr:`.NiftiOpts.transform` property for
+             every :class:`.Nifti` overlay in the :class:`.OverlayList`.  It is
+             possible to modify the ``NiftiOpts.transform`` property for
+             individual overlays independently of the ``displaySpace``, but
+             doing so is likely to break assumptions regarding image
+             orientation (e.g. radiological vs neurological display, and
+             anatomical labels in the ortho view).
     """
 
 
