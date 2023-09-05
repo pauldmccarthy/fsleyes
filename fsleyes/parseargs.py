@@ -410,6 +410,7 @@ OPTIONS = td.TypeDict({
                        'autoDisplay',
                        'displaySpace',
                        'neuroOrientation',
+                       'hideOrientationWarnings',
                        'standard',
                        'standard_brain',
                        'standard1mm',
@@ -785,36 +786,37 @@ def groupEpilog(target):
 # Short/long arguments for all of those options
 ARGUMENTS = td.TypeDict({
 
-    'Main.help'                : ('h',       'help',                False),
-    'Main.fullhelp'            : ('fh',      'fullhelp',            False),
-    'Main.verbose'             : ('v',       'verbose',             False),
-    'Main.version'             : ('V',       'version',             False),
-    'Main.skipfslcheck'        : ('S',       'skipfslcheck',        False),
-    'Main.updatecheck'         : ('U',       'updatecheck',         False),
-    'Main.noisy'               : ('n',       'noisy',               False),
-    'Main.glversion'           : ('gl',      'glversion',           True),
-    'Main.scene'               : ('s',       'scene',               True),
-    'Main.voxelLoc'            : ('vl',      'voxelLoc',            True),
-    'Main.worldLoc'            : ('wl',      'worldLoc',            True),
-    'Main.selectedOverlay'     : ('o',       'selectedOverlay',     True),
-    'Main.autoDisplay'         : ('ad',      'autoDisplay',         False),
-    'Main.displaySpace'        : ('ds',      'displaySpace',        True),
-    'Main.neuroOrientation'    : ('no',      'neuroOrientation',    False),
-    'Main.standard'            : ('std',     'standard',            False),
-    'Main.standard_brain'      : ('stdb',    'standard_brain',      False),
-    'Main.standard1mm'         : ('std1mm',  'standard1mm',         False),
-    'Main.standard1mm_brain'   : ('std1mmb', 'standard1mm_brain',   False),
-    'Main.initialDisplayRange' : ('idr',     'initialDisplayRange', True),
-    'Main.cmapCycle'           : ('cy',      'cmapCycle',           False),
-    'Main.bigmem'              : ('b',       'bigmem',              False),
-    'Main.fontSize'            : ('fs',      'fontSize',            True),
-    'Main.notebook'            : ('nb',      'notebook',            False),
-    'Main.notebookFile'        : ('nbf',     'notebookFile',        True),
-    'Main.notebookPort'        : ('nbp',     'notebookPort',        True),
-    'Main.noBrowser'           : ('nbb',     'noBrowser',           False),
-    'Main.annotations'         : ('a',       'annotations',         True),
-    'Main.no3DInterp'          : ('ni',      'no3DInterp',          False),
-    'Main.showAllPlugins'      : ('ap',      'showAllPlugins',      False),
+    'Main.help'                    : ('h',       'help',                    False),
+    'Main.fullhelp'                : ('fh',      'fullhelp',                False),
+    'Main.verbose'                 : ('v',       'verbose',                 False),
+    'Main.version'                 : ('V',       'version',                 False),
+    'Main.skipfslcheck'            : ('S',       'skipfslcheck',            False),
+    'Main.updatecheck'             : ('U',       'updatecheck',             False),
+    'Main.noisy'                   : ('n',       'noisy',                   False),
+    'Main.glversion'               : ('gl',      'glversion',               True),
+    'Main.scene'                   : ('s',       'scene',                   True),
+    'Main.voxelLoc'                : ('vl',      'voxelLoc',                True),
+    'Main.worldLoc'                : ('wl',      'worldLoc',                True),
+    'Main.selectedOverlay'         : ('o',       'selectedOverlay',         True),
+    'Main.autoDisplay'             : ('ad',      'autoDisplay',             False),
+    'Main.displaySpace'            : ('ds',      'displaySpace',            True),
+    'Main.neuroOrientation'        : ('no',      'neuroOrientation',        False),
+    'Main.hideOrientationWarnings' : ('how',     'hideOrientationWarnings', False),
+    'Main.standard'                : ('std',     'standard',                False),
+    'Main.standard_brain'          : ('stdb',    'standard_brain',          False),
+    'Main.standard1mm'             : ('std1mm',  'standard1mm',             False),
+    'Main.standard1mm_brain'       : ('std1mmb', 'standard1mm_brain',       False),
+    'Main.initialDisplayRange'     : ('idr',     'initialDisplayRange',     True),
+    'Main.cmapCycle'               : ('cy',      'cmapCycle',               False),
+    'Main.bigmem'                  : ('b',       'bigmem',                  False),
+    'Main.fontSize'                : ('fs',      'fontSize',                True),
+    'Main.notebook'                : ('nb',      'notebook',                False),
+    'Main.notebookFile'            : ('nbf',     'notebookFile',            True),
+    'Main.notebookPort'            : ('nbp',     'notebookPort',            True),
+    'Main.noBrowser'               : ('nbb',     'noBrowser',               False),
+    'Main.annotations'             : ('a',       'annotations',             True),
+    'Main.no3DInterp'              : ('ni',      'no3DInterp',              False),
+    'Main.showAllPlugins'          : ('ap',      'showAllPlugins',          False),
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
     'Extras.bumMode' : ('bums', 'bumMode', False),
@@ -1033,30 +1035,32 @@ or more arguments, ``False`` otherwise.
 # Help text for all of the options
 HELP = td.TypeDict({
 
-    'Main.help'            : 'Display basic FSLeyes options and exit',
-    'Main.fullhelp'        : 'Display all FSLeyes options and exit',
-    'Main.verbose'         : 'Verbose output (can be used up to 3 times)',
-    'Main.version'         : 'Print the current version and exit',
-    'Main.skipfslcheck'    : 'Skip $FSLDIR check/warning',
-    'Main.updatecheck'     : 'Check for FSLeyes updates on startup',
-    'Main.noisy'           : 'Make the specified module noisy',
-    'Main.glversion'       : 'Desired (major, minor) OpenGL compatibility '
-                             'version',
-    'Main.scene'           : 'Scene to show',
-
-    'Main.voxelLoc'         : 'Location to show (voxel coordinates of '
-                              'first overlay)',
-    'Main.worldLoc'         : 'Location to show (world coordinates, takes '
-                              'precedence over --voxelLoc)',
+    'Main.help'         : 'Display basic FSLeyes options and exit',
+    'Main.fullhelp'     : 'Display all FSLeyes options and exit',
+    'Main.verbose'      : 'Verbose output (can be used up to 3 times)',
+    'Main.version'      : 'Print the current version and exit',
+    'Main.skipfslcheck' : 'Skip $FSLDIR check/warning',
+    'Main.updatecheck'  : 'Check for FSLeyes updates on startup',
+    'Main.noisy'        : 'Make the specified module noisy',
+    'Main.glversion'    : 'Desired (major, minor) OpenGL compatibility '
+                          'version',
+    'Main.scene'        : 'Scene to show',
+    'Main.voxelLoc' :
+    'Location to show (voxel coordinates of first overlay)',
+    'Main.worldLoc' :
+    'Location to show (world coordinates, takes precedence over --voxelLoc)',
     'Main.selectedOverlay'  : 'Selected overlay (index, starting from 0)',
-    'Main.autoDisplay'      : 'Automatically configure overlay display '
-                              'settings (unless any display settings are '
-                              'specified)',
-    'Main.displaySpace'     : 'Space in which all overlays are displayed - '
-                              'can be "world", or a NIFTI image.',
-    'Main.neuroOrientation' : 'Display images in neurological orientation '
-                              '(default: radiological)',
-
+    'Main.autoDisplay' :
+    'Automatically configure overlay display settings (unless any display '
+    'settings are specified)',
+    'Main.displaySpace' :
+    'Space in which all overlays are displayed - can be "world", '
+    '"scaledVoxels", "fslview", or a NIFTI image.',
+    'Main.hideOrientationWarnings' :
+    'Hides location panel warnings when displaying images of different '
+    'FOVs or orientations.',
+    'Main.neuroOrientation' :
+    'Display images in neurological orientation (default: radiological)',
     'Main.standard' :
     'Add the MNI152 2mm standard image as an underlay (only if $FSLDIR is '
     'set).',
@@ -1742,46 +1746,47 @@ def _configMainParser(mainParser, exclude=None):
         mainArgs[name] = ('-{}'.format(shortArg), '--{}'.format(longArg))
 
     kwargs = {
-        'help'                : {'action'  : 'store_true'},
-        'fullhelp'            : {'action'  : 'store_true'},
-        'version'             : {'action'  : 'store_true'},
-        'skipfslcheck'        : {'action'  : 'store_true'},
-        'updatecheck'         : {'action'  : 'store_true'},
-        'verbose'             : {'action'  : 'count'},
-        'noisy'               : {'metavar' : 'MODULE',
-                                 'action'  : 'append'},
-        'glversion'           : {'metavar' : ('MAJOR', 'MINOR'),
-                                 'type'    : int,
-                                 'nargs'   : 2},
-        'scene'               : {},
-        'voxelLoc'            : {'metavar' : ('X', 'Y', 'Z'),
-                                 'type'    : int,
-                                 'nargs'   : 3},
-        'worldLoc'            : {'metavar' : ('X', 'Y', 'Z'),
-                                 'type'    : float,
-                                 'nargs'   : 3},
-        'autoDisplay'         : {'action'  : 'store_true'},
-        'selectedOverlay'     : {'metavar' : 'INDEX',
-                                 'type'    : int},
-        'neuroOrientation'    : {'action'  : 'store_true'},
-        'displaySpace'        : {'type'    : str},
-        'standard'            : {'action'  : 'store_true'},
-        'standard_brain'      : {'action'  : 'store_true'},
-        'standard1mm'         : {'action'  : 'store_true'},
-        'standard1mm_brain'   : {'action'  : 'store_true'},
-        'initialDisplayRange' : {'metavar' : ('LO', 'HI'),
-                                 'nargs'   : 2},
-        'cmapCycle'           : {'action'  : 'store_true'},
-        'bigmem'              : {'action'  : 'store_true'},
-        'fontSize'            : {'type'    : int},
-        'notebook'            : {'action'  : 'store_true'},
-        'notebookFile'        : {'type'    : str},
-        'notebookPort'        : {'type'    : int,
-                                 'default' : 8888},
-        'noBrowser'           : {'action'  : 'store_true'},
-        'annotations'         : {'type'    : str},
-        'no3DInterp'          : {'action'  : 'store_true'},
-        'showAllPlugins'      : {'action'  : 'store_true'},
+        'help'                    : {'action'  : 'store_true'},
+        'fullhelp'                : {'action'  : 'store_true'},
+        'version'                 : {'action'  : 'store_true'},
+        'skipfslcheck'            : {'action'  : 'store_true'},
+        'updatecheck'             : {'action'  : 'store_true'},
+        'verbose'                 : {'action'  : 'count'},
+        'noisy'                   : {'metavar' : 'MODULE',
+                                     'action'  : 'append'},
+        'glversion'               : {'metavar' : ('MAJOR', 'MINOR'),
+                                     'type'    : int,
+                                     'nargs'   : 2},
+        'scene'                   : {},
+        'voxelLoc'                : {'metavar' : ('X', 'Y', 'Z'),
+                                     'type'    : int,
+                                     'nargs'   : 3},
+        'worldLoc'                : {'metavar' : ('X', 'Y', 'Z'),
+                                     'type'    : float,
+                                     'nargs'   : 3},
+        'autoDisplay'             : {'action'  : 'store_true'},
+        'selectedOverlay'         : {'metavar' : 'INDEX',
+                                     'type'    : int},
+        'neuroOrientation'        : {'action'  : 'store_true'},
+        'displaySpace'            : {'type'    : str},
+        'hideOrientationWarnings' : {'action'  : 'store_true'},
+        'standard'                : {'action'  : 'store_true'},
+        'standard_brain'          : {'action'  : 'store_true'},
+        'standard1mm'             : {'action'  : 'store_true'},
+        'standard1mm_brain'       : {'action'  : 'store_true'},
+        'initialDisplayRange'     : {'metavar' : ('LO', 'HI'),
+                                     'nargs'   : 2},
+        'cmapCycle'               : {'action'  : 'store_true'},
+        'bigmem'                  : {'action'  : 'store_true'},
+        'fontSize'                : {'type'    : int},
+        'notebook'                : {'action'  : 'store_true'},
+        'notebookFile'            : {'type'    : str},
+        'notebookPort'            : {'type'    : int,
+                                     'default' : 8888},
+        'noBrowser'               : {'action'  : 'store_true'},
+        'annotations'             : {'type'    : str},
+        'no3DInterp'              : {'action'  : 'store_true'},
+        'showAllPlugins'          : {'action'  : 'store_true'},
     }
 
     if fsleyes.disableLogging:
@@ -2623,6 +2628,9 @@ def applyMainArgs(args, overlayList, displayCtx):
     if args.bigmem is not None:
         displayCtx.loadInMemory = args.bigmem
 
+    if args.hideOrientationWarnings is not None:
+        displayCtx.showOrientationWarnings = not args.hideOrientationWarnings
+
     if args.neuroOrientation is not None:
         displayCtx.radioOrientation = not args.neuroOrientation
 
@@ -2699,6 +2707,8 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
             displaySpace = 'world'
         elif args.displaySpace == 'scaledVoxel':
             displaySpace = 'scaledVoxel'
+        elif args.displaySpace == 'fslview':
+            displaySpace = 'fslview'
 
         elif args.displaySpace is not None:
             try:

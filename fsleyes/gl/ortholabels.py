@@ -347,3 +347,6 @@ class OrthoLabels:
             if vertOrient:
                 cannots['left'] .angle = 90
                 cannots['right'].angle = 90
+
+        for canvas in canvases:
+            canvas.Refresh()

@@ -83,7 +83,8 @@ messages = TypeDict({
     'loadOverlays.unknownType' : 'Unknown data type',
 
     'LocationInfoPanel.displaySpaceWarning' :
-    'Displaying images with different orientations/fields of view!',
+    'Images have different orientations/fields of view - '
+    'alignment/orientation labels may be incorrect!',
 
     'LoadColourMapAction.loadcmap'    : 'Open colour map file',
     'LoadColourMapAction.namecmap'    : 'Enter a name for the colour map.',
@@ -1298,6 +1299,7 @@ choices = TypeDict({
 
     'DisplayContext.displaySpace' : {'world'       : 'World coordinates',
                                      'scaledVoxel' : 'Scaled voxel coordinates',
+                                     'fslview'     : 'FSLView mode'
                                      },
 
     'SceneOpts.colourBarLocation'  : {'top'          : 'Top',

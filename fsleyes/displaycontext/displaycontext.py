@@ -163,12 +163,12 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    displaySpace = props.Choice(('world', 'scaledVoxel'))
+    displaySpace = props.Choice(('world', 'scaledVoxel', 'fslview'))
     """The *space* in which overlays are displayed. This property defines the
     display coordinate system for this ``DisplayContext``. When it is changed,
     the :attr:`.NiftiOpts.transform` property of all :class:`.Nifti` overlays
-    in the :class:`.OverlayList` is updated. It has two settings, described
-    below. The options for this property are dynamically added by
+    in the :class:`.OverlayList` is updated. It can be set to one of the values
+    described below. The options for this property are dynamically added by
     :meth:`__updateDisplaySpaceOptions`.
 
     1. **World** space (a.k.a. ``'world'``)
@@ -185,7 +185,16 @@ class DisplayContext(props.SyncableHasProperties):
        :attr:`.NiftiOpts.transform` property for every ``Nifti`` overlay to
        ``pixdim``.
 
-    3. **Reference image** space
+    3. **FSLView** space (a.k.a. ``'fslview'``)
+
+       Equivalent to ``'scaledVoxel'``, but with a L/R flip applied to all
+       ``Nifti`` overlays which have a voxel-to-world transformation with
+       a positive determinant. The flip is applied to the first voxel axis,
+       which is assumed to correspond to left-right. This is accomplished by
+       setting the :attr:`.NiftiOpts.transform` property for every ``Nifti``
+       overlay to ``pixdim-flip``.
+
+    4. **Reference image** space
 
        A single :class:`.Nifti` overlay is selected as a *reference* image,
        and is displayed in scaled voxel space (with a potential L/R flip for
@@ -203,6 +212,15 @@ class DisplayContext(props.SyncableHasProperties):
 
     The :meth:`defaultDisplaySpace` can be used to control how the
     ``displaySpace`` is initialised.
+
+
+    ..note:: This setting updates the :attr:`.NiftiOpts.transform` property for
+             every :class:`.Nifti` overlay in the :class:`.OverlayList`.  It is
+             possible to modify the ``NiftiOpts.transform`` property for
+             individual overlays independently of the ``displaySpace``, but
+             doing so is likely to break assumptions regarding image
+             orientation (e.g. radiological vs neurological display, and
+             anatomical labels in the ortho view).
     """
 
 
@@ -240,6 +258,12 @@ class DisplayContext(props.SyncableHasProperties):
     .. note:: This property may end up being used in a more general sense by
               any code which needs to decide whether to do things in a more
               or less memory-intensive manner.
+    """
+
+
+    showOrientationWarnings = props.Boolean(default=True)
+    """If ``False``, do not display warnings when displayed anatomical
+    labels may be incorrect.
     """
 
 
@@ -541,22 +565,25 @@ class DisplayContext(props.SyncableHasProperties):
         opts  = None
         space = self.displaySpace
 
-        # Display space is either 'world', or an image.
-        # We assume that 'world' is an RAS coordinate
-        # system which, if transferred directly to a
-        # display coordinate system, would result in a
-        # neurological view (left on left, right on
-        # right).
+        # Display space is one of 'world', 'scaledVoxel',
+        # 'fslview', or a reference image.  We assume
+        # that 'world' is an RAS coordinate system which,
+        # if transferred directly to a display coordinate
+        # system, would result in a neurological view
+        # (left on left, right on right).
         if space == 'world':
             return False
 
-        # If space == scaledVoxel, we decide based on
-        # the currently selected overlay.  Otherwise
-        # (reference image), we decide based on the ref
-        # image.
+        # If space == scaledVoxel or fslview, we decide
+        # based on the currently selected overlay.
+        # Otherwise (reference image), we decide based on
+        # the ref image.
         elif space == 'scaledVoxel':
             space    = self.getSelectedOverlay()
             srcSpace = 'pixdim'
+        elif space == 'fslview':
+            space    = self.getSelectedOverlay()
+            srcSpace = 'pixdim-flip'
         else:
             srcSpace = 'pixdim-flip'
 
@@ -696,10 +723,11 @@ class DisplayContext(props.SyncableHasProperties):
     def defaultDisplaySpace(self, ds):
         """Sets the :meth:`defaultDisplaySpace`.
 
-        :arg ds: Either ``'ref'``, ``'scaledVoxel'``, or ``'world'``.
+        :arg ds: Either ``'ref'``, ``'scaledVoxel'``, ``'fslview'`` or
+        ``'world'``.
         """
-        if ds not in ('world', 'scaledVoxel', 'ref'):
-            raise ValueError('Invalid default display space: {}'.format(ds))
+        if ds not in ('world', 'scaledVoxel', 'ref', 'fslview'):
+            raise ValueError(f'Invalid default display space: {ds}')
         self.__defaultDisplaySpace = ds
 
 
@@ -898,7 +926,7 @@ class DisplayContext(props.SyncableHasProperties):
             if isinstance(overlay, fslimage.Nifti):
                 choices.append(overlay)
 
-        choices.extend(('world', 'scaledVoxel'))
+        choices.extend(('world', 'scaledVoxel', 'fslview'))
 
         choiceProp.setChoices(choices, instance=self)
 
@@ -927,6 +955,7 @@ class DisplayContext(props.SyncableHasProperties):
         with props.skip(opts, 'bounds', self.__name, ignoreInvalid=True):
             if   space == 'world':       opts.transform = 'affine'
             elif space == 'scaledVoxel': opts.transform = 'pixdim'
+            elif space == 'fslview':     opts.transform = 'pixdim-flip'
             elif image is space:         opts.transform = 'pixdim-flip'
             else:                        opts.transform = 'reference'
 
@@ -1194,6 +1223,9 @@ class DisplayContext(props.SyncableHasProperties):
         if self.displaySpace == 'scaledVoxel':
             ref      = self.getSelectedOverlay()
             srcSpace = 'pixdim'
+        elif self.displaySpace == 'fslview':
+            ref      = self.getSelectedOverlay()
+            srcSpace = 'pixdim-flip'
         else:
             ref      = self.displaySpace
             srcSpace = 'display'

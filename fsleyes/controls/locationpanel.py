@@ -899,8 +899,11 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         """Generate a warning if images with different orientations and/or
         fields-of-view are loaded.
         """
-        images  = [o for o in self.overlayList
-                   if isinstance(o, fslimage.Image)]
+        images = [o for o in self.overlayList
+                  if isinstance(o, fslimage.Image)]
+
+        if not self.displayCtx.showOrientationWarnings:
+            return None
 
         for i in images[1:]:
             if not i.sameSpace(images[0]):
