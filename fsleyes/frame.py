@@ -690,6 +690,7 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
+            action.destroy()
 
         # all items from self.__toolMenuActions
         # will also be returned by GetMenuItems,
