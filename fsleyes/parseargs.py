@@ -3177,8 +3177,13 @@ def _applySpecial_FileOption(
     ``False`` otherwise.
     """
 
+
     try:
-        img = _findOrLoad(overlayList, value, fslimage.Image, target.overlay)
+        if value.lower() == 'none':
+            img = None
+        else:
+            img = _findOrLoad(overlayList, value, fslimage.Image,
+                              target.overlay)
         setattr(target, propName, img)
         return True
     except Exception as e:
