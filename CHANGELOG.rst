@@ -31,6 +31,14 @@ Added
   <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
 
 
+Changed
+^^^^^^^
+
+
+* FSLeyes now attempts to detect FreeSurfer-generated GIfTI surfaces, and will
+  set the coordinate space accordingly (!407).
+
+
 Fixed
 ^^^^^
 
