@@ -725,7 +725,7 @@ class NotebookServer(threading.Thread):
         atexit.register(killServer)
 
         # wait forever
-        while not self.__shutdown.is_set():
+        while (self.__nbproc is not None) and (not self.__shutdown.is_set()):
             try:
                 out, err       = self.__nbproc.communicate(timeout=0.5)
                 self.__stdout += out
