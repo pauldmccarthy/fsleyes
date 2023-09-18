@@ -30,7 +30,7 @@ PIPARGS="--retries 10 --timeout 30"
 # core dependencies
 wget https://git.fmrib.ox.ac.uk/fsl/fslpy/-/archive/main/fslpy-main.tar.bz2
 wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets/-/archive/master/widgets-master.tar.bz2
-wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.tar.bz2
+wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/main/props-main.tar.bz2
 
 # Install back to front - if we install
 # our master versions of the core packages
@@ -38,7 +38,7 @@ wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.
 # a subsequent installation.
 pip install $PIPARGS ".[extra,test,style]"
 
-tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
+tar xf props-main.tar.bz2     && pushd props-main     && pip install $PIPARGS . && popd
 tar xf fslpy-main.tar.bz2     && pushd fslpy-main     && pip install $PIPARGS . && popd
 tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
 
