@@ -9,6 +9,7 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
+
 1.9.0 (Under development)
 -------------------------
 
@@ -28,6 +29,13 @@ Added
   location panel warning regarding different orientations / fields-of-view, by
   Christopher G. Schwarz (@CGSchwarzMayo) (!407, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with colour maps caused by changes in matplotlib 3.8 (!409).
 
 
 1.8.3 (Thursday 31st August 2023)
