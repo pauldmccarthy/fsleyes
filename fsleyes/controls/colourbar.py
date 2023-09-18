@@ -292,19 +292,6 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             ticks      = None
             ticklabels = None
 
-        # FSLeyes colour maps are potentially registered
-        # under different keys with the fsleyes.colourmaps
-        # and the matplotlib.colormaps registries. Colour
-        # map instances registered by fsleyes.colourmaps
-        # have their "name" attribute set as the fsleyes
-        # key, so we can use their name to retrieve the
-        # matplotlib key (which is needed by the cbarbmp
-        # module).
-        if cmap is not None:
-            cmap = fslcm.getColourMapMplKey(cmap.name)
-        if negCmap is not None:
-            negCmap = fslcm.getColourMapMplKey(negCmap.name)
-
         if logScale: logScale = dmin, dmax
         else:        logScale = None
 

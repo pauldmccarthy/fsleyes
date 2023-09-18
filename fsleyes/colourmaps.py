@@ -73,7 +73,6 @@ The following functions are available for managing and accessing colour maps:
    getColourMapLabel
    getColourMapFile
    getColourMapKey
-   getColourMapMplKey
    loadColourMapFile
    registerColourMap
    installColourMap
@@ -501,8 +500,10 @@ def init(force=False):
             try:
                 kwargs = {'key' : mapID, 'name' : mapName}
 
-                if   mapType == 'cmap': registerColourMap(  mapFile, **kwargs)
-                elif mapType == 'lut':  registerLookupTable(mapFile, **kwargs)
+                if   mapType == 'cmap':
+                    mapID = registerColourMap(mapFile, **kwargs)
+                elif mapType == 'lut':
+                    registerLookupTable(mapFile, **kwargs)
 
                 register[mapID].installed    = True
                 register[mapID].mapObj.saved = True
@@ -555,19 +556,9 @@ def registerColourMap(cmapFile,
 
     # We cannot override built-in mpl colourmaps.
     # If a FSLeyes colourmap clashes with a built-in,
-    # we:
-    #  - register it internally with the original key
-    #  - register it under a different key with mpl
-    #  - set the "name" of the ListedColormap instance
-    #    to the original key
-    #
-    # The fsleyes_props.ColourMap property type allows
-    # us to choose colour maps either by the registered
-    # key, or by the ListedColormap.name, which has the
-    # effect that the FSLeyes colour map will effectively
-    # override the built-in mpl colour map.
-    if key in mpl.colormaps: mplkey = f'fsleyes_{key}'
-    else:                    mplkey = key
+    # we register it as "fsleyes_{key}"
+    if key in mpl.colormaps:
+        key = f'fsleyes_{key}'
 
     data = loadColourMapFile(cmapFile)
     cmap = colors.ListedColormap(data, name=key)
@@ -575,9 +566,8 @@ def registerColourMap(cmapFile,
     log.debug('Loading and registering custom '
               'colour map: %s', cmapFile)
 
-    mpl.colormaps.register(cmap, name=mplkey, force=True)
-
-    _cmaps[key] = _Map(key, name, cmap, cmapFile, False, mplkey)
+    mpl.colormaps.register(cmap, name=key, force=True)
+    _cmaps[key] = _Map(key, name, cmap, cmapFile, False)
 
     log.debug('Patching DisplayOpts instances and class '
               'to support new colour map %s', key)
@@ -604,13 +594,13 @@ def registerColourMap(cmapFile,
         for cls, propName in cmapProps:
             if isinstance(opts, cls):
                 prop = opts.getProp(propName)
-                prop.addColourMap(mplkey, opts)
+                prop.addColourMap(key, opts)
 
     # and for all future overlays
     for cls, propName in cmapProps:
 
         prop = cls.getProp(propName)
-        prop.addColourMap(mplkey)
+        prop.addColourMap(key)
 
     return key
 
@@ -730,14 +720,6 @@ def getColourMaps():
 def getColourMap(key):
     """Returns the colour map instance of the specified key."""
     return _caseInsensitiveLookup(_cmaps, key).mapObj
-
-
-def getColourMapMplKey(key):
-    """Returns the key under which the specified colour map is registered
-    with ``matplotlib.colormaps``. This may not be the same as the ``key``
-    under which the colour map is registered with this module.
-    """
-    return _caseInsensitiveLookup(_cmaps, key).mplkey
 
 
 def getColourMapLabel(key):
@@ -1273,7 +1255,7 @@ class _Map:
     """
 
 
-    def __init__(self, key, name, mapObj, mapFile, installed, mplkey=None):
+    def __init__(self, key, name, mapObj, mapFile, installed):
         """Create a ``_Map``.
 
         :arg key:         The identifier name of the colour map/lookup table,
@@ -1296,15 +1278,8 @@ class _Map:
                           colourmap or is installed in the
                           ``fsleyes/colourmaps/`` or ``fsleyes/luts/``
                           directory, ``False`` otherwise.
-
-        :arg mplkey:      Key under which the map is registered with
-                          ``matplotlib``, if different from ``key``. Only
-                          used for colour maps, not lookup tables.
         """
-        if mplkey is None:
-            mplkey = key
         self.key       = key
-        self.mplkey    = mplkey
         self.name      = name
         self.mapObj    = mapObj
         self.mapFile   = mapFile

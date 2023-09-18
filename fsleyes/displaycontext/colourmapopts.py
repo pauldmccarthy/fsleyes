@@ -107,7 +107,7 @@ class ColourMapOpts:
     """
 
 
-    cmap = props.ColourMap()
+    cmap = props.ColourMap(prefix='fsleyes_')
     """The colour map, a :class:`matplotlib.colors.Colourmap` instance."""
 
 
@@ -147,7 +147,7 @@ class ColourMapOpts:
     """
 
 
-    negativeCmap = props.ColourMap()
+    negativeCmap = props.ColourMap(prefix='fsleyes_')
     """A second colour map, used if :attr:`useNegativeCmap` is ``True``.
     When active, the :attr:`cmap` is used to colour positive values, and
     the :attr:`negativeCmap` is used to colour negative values.
