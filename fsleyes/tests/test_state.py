@@ -33,7 +33,7 @@ def _test_state(frame, overlayList, displayCtx):
     ropts     = displayCtx.getOpts(ref)
     mopts     = displayCtx.getOpts(mesh)
 
-    ropts.cmap     = 'hot'
+    ropts.cmap     = 'fsleyes_hot'
     mopts.refImage = ref
     mopts.outline  = True
 
@@ -73,7 +73,7 @@ def _test_state(frame, overlayList, displayCtx):
     ropts = displayCtx.getOpts(ref)
     mopts = displayCtx.getOpts(mesh)
 
-    assert ropts.cmap.name == 'hot'
+    assert ropts.cmap.name == 'fsleyes_hot'
     assert mopts.refImage is ref
     assert mopts.outline
 

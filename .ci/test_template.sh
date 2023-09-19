@@ -23,24 +23,23 @@ else
   pip install --upgrade pip
 fi
 
+PIPARGS="--pre --retries 10 --timeout 30"
 
-PIPARGS="--retries 10 --timeout 30"
+# Make sure we have latest (possibly development)
+# versions of the core dependencies
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
 
-# Make sure we have master branches of the
-# core dependencies
-wget https://git.fmrib.ox.ac.uk/fsl/fslpy/-/archive/main/fslpy-main.tar.bz2
-wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets/-/archive/master/widgets-master.tar.bz2
-wget https://git.fmrib.ox.ac.uk/fsl/fsleyes/props/-/archive/master/props-master.tar.bz2
+# modify pyproject.toml so that pip accepts the above
+cat pyproject.toml                                  | \
+  sed 's/"fslpy .*",/"fslpy",/g'                    | \
+  sed 's/"fsleyes-widgets .*",/"fsleyes-widgets",/g'| \
+  sed 's/"fsleyes-props .*",/"fsleyes-props",/g' > tmp
+mv tmp pyproject.toml
 
-# Install back to front - if we install
-# our master versions of the core packages
-# first, they might get downgraded during
-# a subsequent installation.
+# install fsleyes
 pip install $PIPARGS ".[extra,test,style]"
-
-tar xf props-master.tar.bz2   && pushd props-master   && pip install $PIPARGS . && popd
-tar xf fslpy-main.tar.bz2     && pushd fslpy-main     && pip install $PIPARGS . && popd
-tar xf widgets-master.tar.bz2 && pushd widgets-master && pip install $PIPARGS . && popd
 
 # print environment
 pip freeze

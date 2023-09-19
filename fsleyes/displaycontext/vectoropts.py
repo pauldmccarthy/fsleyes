@@ -143,7 +143,7 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
     """
 
 
-    cmap = props.ColourMap()
+    cmap = props.ColourMap(prefix='fsleyes_')
     """If an image is selected as the :attr:`colourImage`, this colour map
     is used to colour the vector voxels.
     """

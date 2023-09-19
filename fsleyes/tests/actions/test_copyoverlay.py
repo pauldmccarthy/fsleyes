@@ -441,7 +441,7 @@ def _test_copyDisplayProperties(panel, overlayList, displayCtx):
 
     disp1.name   = 'walla walla'
     opts1.gamma      = 0.6
-    opts1.cmap       = 'hot'
+    opts1.cmap       = 'fsleyes_hot'
 
     copyoverlay.copyDisplayProperties(
         displayCtx,
@@ -452,7 +452,7 @@ def _test_copyDisplayProperties(panel, overlayList, displayCtx):
 
     assert disp2.name == 'herp derp'
     assert np.isclose(opts2.gamma,      0.2)
-    assert opts2.cmap.name  == 'hot'
+    assert opts2.cmap.name  == 'fsleyes_hot'
 
 
 def test_copyOverlay_pixdims_preserved():
