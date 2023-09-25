@@ -281,6 +281,13 @@ def _hacksAndWorkarounds():
     # to float32 imprecision. So here we're
     # increasing the tolerance of nibabel to
     # strange qforms.
+    #
+    # This is not necessary in nibabel >= 5.1.0,
+    # as the quaternion check was improved. In
+    # fact, setting the quaternion_threshold in
+    # this way in nibabel 5.1.0 makes it much
+    # stricter
+    # (https://github.com/nipy/nibabel/pull/1182).
     import nibabel as nib
     if fslversion.compareVersions(nib.__version__, '5.1.0') < 0:
         nib.Nifti1Header.quaternion_threshold = -1e5

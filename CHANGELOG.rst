@@ -10,8 +10,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.9.0 (Under development)
--------------------------
+1.9.0 (Monday 25th September 2023)
+----------------------------------
 
 
 Added
@@ -29,6 +29,14 @@ Added
   location panel warning regarding different orientations / fields-of-view, by
   Christopher G. Schwarz (@CGSchwarzMayo) (!407, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes now attempts to detect FreeSurfer-generated GIfTI surfaces, and will
+  set the coordinate space accordingly (!407).
 
 
 Fixed

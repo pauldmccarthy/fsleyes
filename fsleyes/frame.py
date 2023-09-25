@@ -176,7 +176,7 @@ class FSLeyesFrame(wx.Frame):
 
         self.__overlayList   = overlayList
         self.__displayCtx    = displayCtx
-        self.__name          = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name          = f'{type(self).__name__}_{id(self)}'
         self.__mainPanel     = wx.Panel(self)
         self.__statusBar     = wx.StaticText(self)
         self.__closeHandlers = closeHandlers
@@ -499,8 +499,8 @@ class FSLeyesFrame(wx.Frame):
         # The PaneInfo Name contains the panel
         # class name - this is used for saving
         # and restoring layouts .
-        name  = '{} {}'.format(panelCls.__name__, panelId)
-        title = '{} {}'.format(title,             panelId)
+        name  = f'{panelCls.__name__} {panelId}'
+        title = f'{title} {panelId}'
 
         childDC = displaycontext.DisplayContext(
             self.__overlayList,
@@ -510,10 +510,8 @@ class FSLeyesFrame(wx.Frame):
 
         panel = panelCls(self.__mainPanel, self.__overlayList, childDC, self)
 
-        log.debug('Created new {} ({}) with DisplayContext {}'.format(
-            panelCls.__name__,
-            id(panel),
-            id(childDC)))
+        log.debug('Created new %s (%s) with DisplayContext %s',
+                  panelCls.__name__, id(panel), id(childDC))
 
         paneInfo = (aui.AuiPaneInfo()
                     .Name(name)
@@ -692,6 +690,7 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
+            action.destroy()
 
         # all items from self.__toolMenuActions
         # will also be returned by GetMenuItems,
@@ -758,7 +757,7 @@ class FSLeyesFrame(wx.Frame):
             shortcut = shortcuts.actions.get((target, actionName))
 
             if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
+                title = f'{title}\t{shortcut}'
 
             if isinstance(actionObj, actions.ToggleAction):
                 itemType = wx.ITEM_CHECK
@@ -1050,11 +1049,8 @@ class FSLeyesFrame(wx.Frame):
                 if key is panel:
                     shortcutList.pop(key)
 
-        log.debug('Destroying {} ({}) and '
-                  'associated DisplayContext ({})'.format(
-                      type(panel).__name__,
-                      id(panel),
-                      id(dctx)))
+        log.debug('Destroying %s (%s) and associated DisplayContext (%s)',
+                  type(panel).__name__, id(panel), id(dctx))
 
         # Remove the view panel menu,
         # and make sure that the tools
@@ -1285,9 +1281,9 @@ class FSLeyesFrame(wx.Frame):
                 size     = self.GetSize().Get()
                 position = self.GetScreenPosition().Get()
 
-                log.debug('Saving size: {}'    .format(size))
-                log.debug('Saving position: {}'.format(position))
-                log.debug('Saving layout: {}'  .format(layout))
+                log.debug('Saving size: %s',     size)
+                log.debug('Saving position: %s', position)
+                log.debug('Saving layout: %s',   layout)
 
                 fslsettings.write('fsleyes.frame.size',     size)
                 fslsettings.write('fsleyes.frame.position', position)
@@ -1418,14 +1414,14 @@ class FSLeyesFrame(wx.Frame):
             if ratio < 0.9:
 
                 log.debug('Intersection of saved frame area with available '
-                          'display area is too small ({}) - reverting to '
-                          'default frame size/position'.format(ratio))
+                          'display area is too small (%s) - reverting to '
+                          'default frame size/position', ratio)
 
                 size     = None
                 position = None
 
         if size is not None:
-            log.debug('Restoring previous size: {}'.format(size))
+            log.debug('Restoring previous size: %s', size)
             self.SetSize(size)
 
         else:
@@ -1435,18 +1431,18 @@ class FSLeyesFrame(wx.Frame):
             size    = list(wx.Display(0).GetGeometry().GetSize())
             size[0] = round(size[0] * 0.9)
             size[1] = round(size[1] * 0.9)
-            log.debug('Setting default frame size: {}'.format(size))
+            log.debug('Setting default frame size: %s', size)
             self.SetSize(size)
 
         if position is not None:
-            log.debug('Restoring previous position: {}'.format(position))
+            log.debug('Restoring previous position: %s', position)
             self.SetPosition(position)
         else:
             self.Centre()
 
         if restore:
             if layout is not None:
-                log.debug('Restoring previous layout: {}'.format(layout))
+                log.debug('Restoring previous layout: %s', layout)
 
                 try:
                     layouts.applyLayout(
@@ -1608,9 +1604,9 @@ class FSLeyesFrame(wx.Frame):
         for action, title, shortcut, wxid in fsleyesActions:
 
             if shortcut is None: shortcut = ''
-            else:                shortcut = '\t{}'.format(shortcut)
+            else:                shortcut = f'\t{shortcut}'
 
-            title = '{}{}'.format(title, shortcut)
+            title = f'{title}{shortcut}'
 
             item = menu.Append(wxid, title)
             action.bindToWidget(self, wx.EVT_MENU, item)
@@ -1655,7 +1651,7 @@ class FSLeyesFrame(wx.Frame):
             shortcut = shortcuts.actions.get(action)
 
             if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
+                title = f'{title}\t{shortcut}'
 
             menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = action(self.__overlayList, self.__displayCtx, self)
@@ -1754,10 +1750,10 @@ class FSLeyesFrame(wx.Frame):
             shortcut = shortcuts.actions.get((self, action.__name__))
 
             if shortcut is None: shortcut = ''
-            else:                shortcut = '\t{}'.format(shortcut)
+            else:                shortcut = f'\t{shortcut}'
 
-            title = '{}{}'.format(strings.actions[self, action.__name__],
-                                  shortcut)
+            title = strings.actions[self, action.__name__]
+            title = f'{title}{shortcut}'
 
             item = menu.Append(wx.ID_ANY, title)
             action.bindToWidget(self, wx.EVT_MENU, item)
@@ -1807,7 +1803,7 @@ class FSLeyesFrame(wx.Frame):
                                              None)
 
             if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
+                title = f'{title}\t{shortcut}'
 
             menuItem = menu.Append(wx.ID_ANY, title)
 
@@ -1904,7 +1900,7 @@ class FSLeyesFrame(wx.Frame):
                 actionObj = action(self.__overlayList, self.__displayCtx, self)
 
             if shortcut is not None:
-                title = '{}\t{}'.format(title, shortcut)
+                title = f'{title}\t{shortcut}'
 
             menuItem = menu.Append(wx.ID_ANY, title)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)
@@ -1959,7 +1955,7 @@ class FSLeyesFrame(wx.Frame):
             shortcut = shortcuts.actions.get(cls)
 
             if shortcut is not None:
-                name = '{}\t{}'.format(name, shortcut)
+                name = f'{name}\t{shortcut}'
 
             menuItem = menu.Append(wx.ID_ANY, name)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)

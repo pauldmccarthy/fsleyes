@@ -255,6 +255,7 @@ def testdir(contents=None, suffix=""):
             shutil.rmtree(self.testdir)
 
     return ctx(contents)
+testdir.__test__ = False
 
 
 def run_with_fsleyes(func, *args, **kwargs):
@@ -671,6 +672,12 @@ def simtext(sim, target, text, enter=True):
             sim.KeyDown(wx.WXK_RETURN)
 
     realYield()
+
+
+def random_image(filename, shape=(20, 20, 20)):
+    data = np.random.random(shape).astype(np.float32)
+    img  = fslimage.Image(data)
+    img.save(filename)
 
 
 def fliporient(filename):
