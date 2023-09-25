@@ -372,10 +372,12 @@ several things you may need to check.
 
 If you are using ``ssh -X`` or ``ssh -Y`` to connect to a remote server, be
 aware that recent versions of `wxPython <https://www.wxpython.org/>`_ (the GUI
-toolkit upon which FSLeyes is based) no longer support the GLX protocol (OpenGL
-over SSH/X11). In this case, you will need to use an alternative method of
-connecting to your server (e.g. VNC), or to install an older version of
-wxPython (``4.0.*``) before FSLeyes will work.
+toolkit upon which FSLeyes is based) no longer support the GLX protocol
+(OpenGL over SSH/X11). In this case, you will need to use an alternative
+method of connecting to your server (e.g. VNC), or to install an older version
+of wxPython (``4.0.*``) before FSLeyes will work. Alternatively, you can force
+software-based rendering by setting the ``LIBGL_ALWAYS_SOFTWARE=1``
+environment variable.
 
 
 **SSH/X11 - indirect rendering via GLX**
