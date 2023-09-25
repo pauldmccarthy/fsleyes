@@ -75,4 +75,4 @@ def _test_notebook(panel, overlayList, displayCtx):
     display = panel.displayCtx.getDisplay(img)
     opts    = display.opts
     assert display.name   == 'added_from_client'
-    assert opts.cmap.name == 'hot'
+    assert opts.cmap.name == 'fsleyes_hot'
