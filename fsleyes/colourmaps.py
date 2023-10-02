@@ -236,16 +236,16 @@ import fsleyes.displaycontext as fsldisplay
 log = logging.getLogger(__name__)
 
 
-def getCmapDir():
+def getCmapDir(assetDir=fsleyes.assetDir):
     """Returns the directory in which all built-in colour map files are stored.
     """
-    return op.join(fsleyes.assetDir, 'colourmaps')
+    return op.join(assetDir, 'colourmaps')
 
 
-def getLutDir():
+def getLutDir(assetDir=fsleyes.assetDir):
     """Returns the directory in which all built-in lookup table files are stored.
     """
-    return op.join(fsleyes.assetDir, 'luts')
+    return op.join(assetDir, 'luts')
 
 
 def _walk(dirname, suffix):
@@ -310,6 +310,34 @@ def scanBuiltInLuts():
     return _scanMaps(basedir, lutFiles)
 
 
+def getSiteConfigDir(envvar="FSL_SITE_CONFIG_DIR"):   # -> str, bool
+    """Return $envvar + whether or not it is a directory."""
+    scd = os.environ.get(envvar, '')
+    return scd, op.isdir(scd)
+
+
+def fetchFromSiteConfigDir(kind, dirfinder, envvar="FSL_SITE_CONFIG_DIR"):   # -> dict
+    """Returns a dict which is _scanMaps($FSL_SITE_CONFIG_DIR/kind), if it is defined."""
+    rv = {}
+    scd, have_scd = getSiteConfigDir(envvar)
+    if have_scd:
+        basedir = dirfinder(scd)
+        if op.isdir(basedir):
+            files = _walk(basedir, "." + kind) + _walk(basedir, '.txt')
+            rv = _scanMaps(basedir, files)
+    return rv
+
+
+def scanSiteAddedCmaps():
+    """Returns a list of IDs for all site-added colour maps. """
+    return fetchFromSiteConfigDir("cmap", getCmapDir)
+
+
+def scanSiteAddedLuts():
+    """Returns a list of IDs for all site-added lookup tables. """
+    return fetchFromSiteConfigDir("lut", getLutDir)
+
+
 def scanUserAddedCmaps():
     """Returns a list of IDs for all user-added colour maps. """
     cmapFiles = fslsettings.listFiles('colourmaps/*.cmap') + \
@@ -348,20 +376,23 @@ def isValidMapKey(key):
     return all(c in valid for c in key)
 
 
-def scanColourMaps():
-    """Scans the colour maps directories, and returns a list containing the
-    names of all colour maps contained within. This function may be called
-    before :func:`init`.
+def scanColourMaps(scanfuncs=[scanBuiltInCmaps, scanSiteAddedCmaps, scanUserAddedCmaps]):
+    """Scans the colour maps directories returned by scanfuncs, and returns a
+    list containing the names of all colour maps contained within. This
+    function may be called before :func:`init`.
     """
-    return list(scanBuiltInCmaps().keys()) + list(scanUserAddedCmaps().keys())
+    rv = []
+    for f in scanfuncs:
+        rv += list(f().keys())
+    return rv
 
 
-def scanLookupTables():
-    """Scans the lookup tables directories, and returns a list containing the
-    names of all lookup tables contained within. This function may be called
-    before :func:`init`.
+def scanLookupTables(scanfuncs=[scanBuiltInLuts, scanSiteAddedLuts, scanUserAddedLuts]):
+    """Scans the lookup tables directories returned by scanfuncs, and returns a
+    list containing the names of all lookup tables contained within. This
+    function may be called before :func:`init`.
     """
-    return list(scanBuiltInLuts().keys()) +  list(scanUserAddedLuts().keys())
+    return scanColourMaps(scanfuncs)
 
 
 _cmaps = None
@@ -440,37 +471,46 @@ def init(force=False):
     # first, then luts second.
     mapTypes    = ['cmap',               'lut']
     builtinDirs = [getCmapDir(),         getLutDir()]
+
+    site_config_dir, have_scd = getSiteConfigDir()
+    siteDirs    = [getCmapDir(site_config_dir), getLutDir(site_config_dir)]
+
     userDirs    = ['colourmaps',         'luts']
+
     allBuiltins = [scanBuiltInCmaps(),   scanBuiltInLuts()]
+    allSites    = [scanSiteAddedCmaps(), scanSiteAddedLuts()]
     allUsers    = [scanUserAddedCmaps(), scanUserAddedLuts()]
     registers   = [_cmaps,               _luts]
 
-    for mapType, builtinDir, userDir, builtins, users, register in zip(
-            mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
+    for mapType, builtinDir, siteDir, userDir, builtins, sites, users, register in zip(
+            mapTypes, builtinDirs, siteDirs, userDirs, allBuiltins, allSites, allUsers, registers):
 
         builtinIDs   = list(builtins.keys())
         builtinFiles = list(builtins.values())
+        siteIDs      = list(sites   .keys())
+        siteFiles    = list(sites   .values())
         userIDs      = list(users   .keys())
         userFiles    = list(users   .values())
 
-        allIDs   = builtinIDs   + userIDs
-        allFiles = builtinFiles + userFiles
+        allIDs   = builtinIDs   + siteIDs   + userIDs
+        allFiles = builtinFiles + siteFiles + userFiles
         allFiles = dict(zip(allIDs, allFiles))
 
         # Read order/display names from order.txt -
         # if an order.txt file exists in the user
-        # dir, it takes precednece over built-in
-        # order/display names.
+        # dir, it takes precedence over built-in
+        # or site order/display names.
         #
         # User-added display names may also be in
         # fslsettings. Any user-added maps with
-        # the same ID as a builtin will override
-        # the builtin.
-        builtinOrder = op.join(builtinDir, 'order.txt')
-        userOrder    = op.join(userDir,    'order.txt')
-
-        if op.exists(userOrder): names = readOrderTxt(userOrder)
-        else:                    names = readOrderTxt(builtinOrder)
+        # the same ID as a builtin or site will override
+        # the builtin or site ones.
+        orderDirs = [userDir, siteDir, builtinDir]    # builtinDir is guaranteed to be present
+        for orderDir in orderDirs:
+            ot = op.join(orderDir, 'order.txt')
+            if op.exists(ot):
+                names = readOrderTxt(ot)
+                break
 
         names.update(readDisplayNames(mapType))
 
