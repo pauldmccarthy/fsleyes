@@ -800,7 +800,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
                 showLimits=False,
                 spin=False,
                 tooltip=_TOOLTIPS['MeshOpts.outlineWidth'],
-                enabledWhen=lambda i: i.outline),
+                dependencies=['outline', 'vertexData'],
+                enabledWhen=lambda i, o, vd: o or (vd is not None)),
             'MeshOpts.vertexSet' : props.Widget(
                 'vertexSet',
                 labels=_pathLabel,
