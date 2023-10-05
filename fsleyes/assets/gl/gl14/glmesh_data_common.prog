@@ -141,19 +141,50 @@ MAD vertexData, vertexData, {{ cmapXform }}[0].x, {{ cmapXform }}[0].w;
 TEX colour,    vertexData, {{ cmap    }}, 1D;
 TEX negColour, vertexData, {{ negCmap }}, 1D;
 
-# Store the final (pos or neg) colour
-# in the "colour" variable.
+# Store the final (pos or neg) colour (prior
+# to alpha modulation) in the "colour" variable.
 CMP colour, useNegCmap.x, negColour, colour;
 
-# Clamp data intensity to 0-1, and blend
-# colour with flatcolour according to
-# intensity - we use the blend if modulateAlpha
-# is set (using negColour as a temporary).
+# If modulating alpha by intensity *and* discarding
+# clipped regions,  we set alpha to the mod value.
+#
+# If modalpha and *not* discarding clipped regions,
+# we set the colour to a blend of the data colour
+# and the flat colour.
+
+# Calculate blended data+flat colour, store in
+# negColour.rgb. Using vertexData.x as a temporary
+# to store the scaled modulation value.
 MAD_SAT vertexData.x, {{ modulateData }}.x, {{ modulate }}.y, {{ modulate }}.z;
 LRP negColour.rgb, vertexData.x, colour, {{ flatColour }};
-CMP colour.xyz, {{ modulate }}.x, colour, negColour;
 
-# If the value has been clipped but
-# not killed, overwrite the final
-# colour with the flat colour.
-CMP {{ out_colour }}, clip.x, {{ flatColour }}, colour;
+# If modulating by alpha and using the flat
+# colour for clipped regions, use this blended
+# colour instead of the data colour. We can
+# calculate ({{modulate}}.x - {{settings}}.z -
+# 1) - the result will be +ve if modalpha and
+# not clipping, -ve otherwise.
+SUB negColour.a, {{ modulate }}.x, {{ settings }}.z;
+SUB negColour.a, negColour.a, 1;
+CMP colour.xyz, negColour.a, colour, negColour;
+
+# Use negColour.a to store +1 if modulating by
+# alpha and *not* discarding clipped regions.
+ADD negColour.a, {{ settings }}.z, {{ modulate }}.x;
+SUB negColour.a, negColour.a, 1;
+
+# If modulating by alpha and discarding clipped
+# regions, use the modulate value for alpha.
+CMP colour.a, negColour.a, colour.a, vertexData.x;
+
+# Finally, if the value has been clipped but not
+# killed, and not modulating by alpha, overwrite
+# the final colour with the flat colour.
+#
+# clip.x will be negative if the fragment is to be
+# clipped, and modulate.x will be negative if not
+# modulating by alpha.
+ADD clip.x, clip.x, {{ modulate }}.x;
+CMP colour.xyz, clip.x, {{ flatColour }}, colour;
+
+MOV {{ out_colour }}, colour;
