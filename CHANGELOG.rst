@@ -10,6 +10,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.10.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Changed the behaviour of the _Modulate alpha by intensity_ setting for mesh
+  overlays. Now, if the _Hide clipped areas_ setting is enabled, the mesh
+  transparency is modulated by intensity. But the _Hide clipped areas_ setting
+  is disabled, the mesh data colour is blended with its background colour
+  (!411).
+
+
 1.9.0 (Monday 25th September 2023)
 ----------------------------------
 
