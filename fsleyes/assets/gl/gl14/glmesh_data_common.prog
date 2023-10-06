@@ -181,10 +181,10 @@ CMP colour.a, negColour.a, colour.a, vertexData.x;
 # killed, and not modulating by alpha, overwrite
 # the final colour with the flat colour.
 #
-# clip.x will be negative if the fragment is to be
+# clip.y will be negative if the fragment is to be
 # clipped, and modulate.x will be negative if not
 # modulating by alpha.
-ADD clip.x, clip.x, {{ modulate }}.x;
-CMP colour.xyz, clip.x, {{ flatColour }}, colour;
+ADD clip.y, clip.y, {{ modulate }}.x;
+CMP colour.xyz, clip.y, {{ flatColour }}, colour;
 
 MOV {{ out_colour }}, colour;
