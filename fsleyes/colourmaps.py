@@ -310,14 +310,14 @@ def scanBuiltInLuts():
     return _scanMaps(basedir, lutFiles)
 
 
-def getSiteConfigDir(envvar="FSL_SITE_CONFIG_DIR"):   # -> str, bool
+def getSiteConfigDir(envvar="FSLEYES_SITE_CONFIG_DIR"):   # -> str, bool
     """Return $envvar + whether or not it is a directory."""
     scd = os.environ.get(envvar, '')
     return scd, op.isdir(scd)
 
 
-def fetchFromSiteConfigDir(kind, dirfinder, envvar="FSL_SITE_CONFIG_DIR"):   # -> dict
-    """Returns a dict which is _scanMaps($FSL_SITE_CONFIG_DIR/kind), if it is defined."""
+def fetchFromSiteConfigDir(kind, dirfinder, envvar="FSLEYES_SITE_CONFIG_DIR"):   # -> dict
+    """Returns a dict which is _scanMaps($FSLEYES_SITE_CONFIG_DIR/kind), if it is defined."""
     rv = {}
     scd, have_scd = getSiteConfigDir(envvar)
     if have_scd:
