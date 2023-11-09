@@ -238,8 +238,10 @@ only *overlay* arguments will be applied on subsequent calls - all arguments
 pertaining to the FSLeyes layout or displayed scene will be ignored.
 
 
-If you would like FSLeyes to behave this way permanently, add an alias to
-your shell startup file (e.g. ``~/.bash_profile`` if you are using macOS)::
+If you would like FSLeyes to behave this way permanently, you can add it as a
+`default argument <command_line_default_arguments>`. Alternatively, you could
+an alias to your shell startup file (e.g. ``~/.bash_profile`` or
+``~/.zprofile``)::
 
     alias fsleyes="fsleyes --cliserver"
 
