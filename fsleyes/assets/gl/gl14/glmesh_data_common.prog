@@ -111,15 +111,16 @@ MUL clip.x, clip.x, clip.y;
 # of the above clip tests.
 MUL clip.x, clip.x, {{ settings }}.y;
 
+# Combine the nan test (evaluated above),
+# as nan fragments are treated the same
+# as clipped fragments.
+CMP clip.x, clip.z, clip.z, clip.x;
+
 # Copy the clipping value over
 # to clip.y - we'll use clip.y
 # to determine whether the fragment
-# should be killed or not. We
-# also combine the nan test (evaluated
-# above), as nan fragments are
-# treated the same as clipped fragments.
+# should be killed or not.
 MOV clip.y, clip.x;
-CMP clip.y, clip.z, clip.z, clip.y;
 
 # If discardClipped is not active
 # (settings.z == -1), override
@@ -184,7 +185,7 @@ CMP colour.a, negColour.a, colour.a, vertexData.x;
 # clip.y will be negative if the fragment is to be
 # clipped, and modulate.x will be negative if not
 # modulating by alpha.
-ADD clip.y, clip.y, {{ modulate }}.x;
-CMP colour.xyz, clip.y, {{ flatColour }}, colour;
+ADD clip.y, clip.x, {{ modulate }}.x;
+CMP colour.xyz, clip.x, {{ flatColour }}, colour;
 
 MOV {{ out_colour }}, colour;
