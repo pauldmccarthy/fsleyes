@@ -75,13 +75,22 @@ mesh_l_thal.vtk -mc 1 0 0 -o -w 10 -vd mesh_l_thal_data3d.txt -cm hot -in neares
 -ds world {{oblique('mesh_ref.nii.gz')}} mesh_l_thal.vtk -mc 0.5 0.5 1 -r mesh_ref_oblique
 
 # modulate alpha options
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr  1 50
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr 50 99
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma -mr  1 50
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma -mr 50 99
 
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma           -md {{invert('mesh_l_thal_data3d.txt')}}
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr  1 50 -md {{invert('mesh_l_thal_data3d.txt')}}
-mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0.7 0.7 0.7 -cm hot -o -w 10 -ma -mr 50 99 -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma           -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma -mr  1 50 -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -ma -mr 50 99 -md {{invert('mesh_l_thal_data3d.txt')}}
+
+# modulate alpha + discard clipped
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma -mr  1 50
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma -mr 50 99
+
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma           -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma -mr  1 50 -md {{invert('mesh_l_thal_data3d.txt')}}
+mesh_l_thal.vtk -vd mesh_l_thal_data3d.txt -mc 0 0.7 0 -cm hot -o -w 10 -dc -ma -mr 50 99 -md {{invert('mesh_l_thal_data3d.txt')}}
 
 # 2D meshes
 mesh_2d_x.vtk -mc 1 0 0 mesh_2d_y.vtk -mc 0 1 0 mesh_2d_z.vtk -mc 0 0 1

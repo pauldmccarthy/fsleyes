@@ -1219,7 +1219,7 @@ class WXGLCanvasTarget:
         # frame buffer, which is then drawn to the
         # main frame buffer. This makes screenshots
         # much more reliable.
-        self.__fbo = rendertexture.RenderTexture(f'fbo_{id(self)}', 'c')
+        self.__fbo = rendertexture.RenderTexture(f'fbo_{id(self)}', 'cd')
 
         self.Bind(wx.EVT_PAINT,            self.__onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.__onEraseBackground)

@@ -209,6 +209,11 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
 
   script:
     - bash ./.ci/test_template.sh
+  artifacts:
+    when: on_failure
+    expire_in: 1 day
+    paths:
+      - failures/
 
 
 # offscreen tests only on macos
@@ -222,6 +227,11 @@ test:macos:
     MACOS_OVERLAY_TEST: 1
   script:
     - bash ./.ci/test_template.sh
+  artifacts:
+    when: on_failure
+    expire_in: 1 day
+    paths:
+      - failures/
 
 
 test:3.8:

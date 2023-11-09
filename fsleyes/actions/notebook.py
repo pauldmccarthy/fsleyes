@@ -727,9 +727,14 @@ class NotebookServer(threading.Thread):
         # wait forever
         while (self.__nbproc is not None) and (not self.__shutdown.is_set()):
             try:
-                out, err       = self.__nbproc.communicate(timeout=0.5)
+                out, err = self.__nbproc.communicate(timeout=0.5)
+
+                if out is None: out = ''
+                if err is None: err = ''
+
                 self.__stdout += out
                 self.__stderr += err
+
             except sp.TimeoutExpired:
                 pass
 

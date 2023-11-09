@@ -96,15 +96,25 @@ vec4 glmesh_data_colour() {
     }
   }
 
-  /*
-   * Rather than modulating the opacity, we
-   * interpolate between the data colour and
-   * the flat colour according to the modalpha
-   * value
-   */
   if (modulateAlpha) {
-    modValue   = clamp(fragModulateData * modScale + modOffset, 0, 1);
-    result.rgb = mix(flatColour.rgb, result.rgb, modValue);
+    modValue = clamp(fragModulateData * modScale + modOffset, 0, 1);
+
+    /*
+     * if hiding clipped areas, we modulate alpha
+     * directly
+     */
+    if (discardClipped) {
+      result.a = modValue;
+    }
+
+    /*
+     * Otherwise, rather than modulating the opacity,
+     * we interpolate between the data colour and the
+     * flat colour according to the modalpha value.
+     */
+    else {
+      result.rgb = mix(flatColour.rgb, result.rgb, modValue);
+    }
   }
 
   return result;
