@@ -34,14 +34,23 @@ def mockAssetDir():
 
 
 @contextmanager
-def mockSettings():
-    with tempdir() as td:
+def mockSettingsDir():
+    with tempdir(changeto=False) as td:
         fakesettings = fslsettings.Settings('fsleyes',
                                             cfgdir=td,
                                             writeOnExit=False)
         os.makedirs(op.join(td, 'colourmaps'))
         os.makedirs(op.join(td, 'luts'))
         with fslsettings.use(fakesettings):
+            yield td
+
+
+@contextmanager
+def mockSiteDir():
+    with tempdir(changeto=False) as td:
+        os.makedirs(op.join(td, 'colourmaps'))
+        os.makedirs(op.join(td, 'luts'))
+        with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
             yield td
 
 
@@ -59,17 +68,22 @@ def mockCmaps():
     """).strip()
 
 
-    with mockSettings() as sdir, \
-         mockAssetDir() as assetDir:
+    with mockSettingsDir() as userDir, \
+         mockAssetDir()    as assetDir, \
+         mockSiteDir()     as siteDir:
         cmap1 = op.join(assetDir, 'colourmaps', 'cmap1.cmap')
-        cmap2 = op.join(sdir,     'colourmaps', 'cmap2.cmap')
+        cmap2 = op.join(userDir,  'colourmaps', 'cmap2.cmap')
+        cmap3 = op.join(siteDir,  'colourmaps', 'cmap3.cmap')
         lut1  = op.join(assetDir, 'luts',       'lut1.lut')
-        lut2  = op.join(sdir,     'luts',       'lut2.lut')
+        lut2  = op.join(userDir,  'luts',       'lut2.lut')
+        lut3  = op.join(siteDir,  'luts',       'lut3.lut')
         with open(cmap1, 'wt') as f: f.write(cmap)
         with open(cmap2, 'wt') as f: f.write(cmap)
+        with open(cmap3, 'wt') as f: f.write(cmap)
         with open(lut1,  'wt') as f: f.write(lut)
         with open(lut2,  'wt') as f: f.write(lut)
-        yield (assetDir, sdir)
+        with open(lut3,  'wt') as f: f.write(lut)
+        yield (assetDir, userDir, siteDir)
 
 
 def clearCmaps(func):
@@ -98,17 +112,11 @@ def clearCmaps(func):
     return wrapper
 
 
-def test_validMapKey():
-    for i in range(100):
-        instr = random.choice(string.ascii_letters) + \
-            ''.join([random.choice(string.printable) for i in range(50)])
-        key   = fslcm.makeValidMapKey(instr)
-        assert fslcm.isValidMapKey(key)
-
-
 @clearCmaps
 def test_scanDirs():
-    with mockSettings() as sdir, mockAssetDir() as assetDir:
+    with mockSettingsDir() as userDir, \
+         mockAssetDir()    as assetDir, \
+         mockSiteDir()     as siteDir:
         os.mkdir(op.join(assetDir, 'colourmaps', 'sub'))
         os.mkdir(op.join(assetDir, 'luts',       'sub'))
 
@@ -130,101 +138,121 @@ def test_scanDirs():
                    op.join('colourmaps', 'cmap3_added.txt'),
                    ]
 
+        # site added
+        safiles = [op.join('luts',       'lut1_site.lut'),
+                   op.join('luts',       'lut2_site.lut'),
+                   op.join('luts',       'lut3_site.txt'),
+                   op.join('colourmaps', 'cmap1_site.cmap'),
+                   op.join('colourmaps', 'cmap2_site.cmap'),
+                   op.join('colourmaps', 'cmap3_site.txt'),
+                   ]
+
+
         for f in bifiles:
             with open(op.join(assetDir, f), 'wt'):
                 pass
         for f in uafiles:
-            with open(op.join(sdir, f), 'wt'):
+            with open(op.join(userDir, f), 'wt'):
+                pass
+        for f in safiles:
+            with open(op.join(siteDir, f), 'wt'):
                 pass
 
-        cmapdir = op.join(assetDir, 'colourmaps')
-        lutdir  = op.join(assetDir, 'luts')
+        acmapdir = op.join(assetDir, 'colourmaps')
+        scmapdir = op.join(siteDir,  'colourmaps')
+        ucmapdir = op.join(userDir,  'colourmaps')
+        alutdir  = op.join(assetDir, 'luts')
+        slutdir  = op.join(siteDir,  'luts')
+        ulutdir  = op.join(userDir,  'luts')
 
-        assert fslcm.getCmapDir() == cmapdir
-        assert fslcm.getLutDir()  == lutdir
+        assert fslcm.getCmapDirs() == [ucmapdir, scmapdir, acmapdir]
+        assert fslcm.getLutDirs()  == [ulutdir,  slutdir,  alutdir]
 
-        cmapsbuiltin = {
-            'cmap1_builtin'     : op.join(cmapdir,        'cmap1_builtin.cmap'),
-            'sub_cmap2_builtin' : op.join(cmapdir, 'sub', 'cmap2_builtin.cmap'),
-            'cmap3_builtin'     : op.join(cmapdir,        'cmap3_builtin.txt'),
+        expcmaps = {
+            'cmap1_builtin'     : op.join(acmapdir,        'cmap1_builtin.cmap'),
+            'sub_cmap2_builtin' : op.join(acmapdir, 'sub', 'cmap2_builtin.cmap'),
+            'cmap3_builtin'     : op.join(acmapdir,        'cmap3_builtin.txt'),
+            'cmap1_added'       : op.join(ucmapdir,        'cmap1_added.cmap'),
+            'cmap2_added'       : op.join(ucmapdir,        'cmap2_added.cmap'),
+            'cmap3_added'       : op.join(ucmapdir,        'cmap3_added.txt'),
+            'cmap1_site'        : op.join(scmapdir,        'cmap1_site.cmap'),
+            'cmap2_site'        : op.join(scmapdir,        'cmap2_site.cmap'),
+            'cmap3_site'        : op.join(scmapdir,        'cmap3_site.txt'),
         }
-        lutsbuiltin  = {
-            'lut1_builtin'     : op.join(lutdir,        'lut1_builtin.lut'),
-            'sub_lut2_builtin' : op.join(lutdir, 'sub', 'lut2_builtin.lut'),
-            'lut3_builtin'     : op.join(lutdir,        'lut3_builtin.txt'),
+        expluts  = {
+            'lut1_builtin'     : op.join(alutdir,        'lut1_builtin.lut'),
+            'sub_lut2_builtin' : op.join(alutdir, 'sub', 'lut2_builtin.lut'),
+            'lut3_builtin'     : op.join(alutdir,        'lut3_builtin.txt'),
+            'lut1_added'       : op.join(ulutdir,        'lut1_added.lut'),
+            'lut2_added'       : op.join(ulutdir,        'lut2_added.lut'),
+            'lut3_added'       : op.join(ulutdir,        'lut3_added.txt'),
+            'lut1_site'        : op.join(slutdir,        'lut1_site.lut'),
+            'lut2_site'        : op.join(slutdir,        'lut2_site.lut'),
+            'lut3_site'        : op.join(slutdir,        'lut3_site.txt'),
         }
 
-        cmapdir = op.join(sdir, 'colourmaps')
-        lutdir  = op.join(sdir, 'luts')
-
-        cmapsadded   = {
-            'cmap1_added' : op.join(cmapdir, 'cmap1_added.cmap'),
-            'cmap2_added' : op.join(cmapdir, 'cmap2_added.cmap'),
-            'cmap3_added' : op.join(cmapdir, 'cmap3_added.txt'),
-        }
-        lutsadded    = {
-            'lut1_added'  : op.join(lutdir, 'lut1_added.lut'),
-            'lut2_added'  : op.join(lutdir, 'lut2_added.lut'),
-            'lut3_added'  : op.join(lutdir, 'lut3_added.txt'),
-        }
-
-        cmapsall = list(it.chain(cmapsbuiltin, cmapsadded))
-        lutsall  = list(it.chain(lutsbuiltin,  lutsadded))
-
-        assert fslcm.scanBuiltInCmaps()         == cmapsbuiltin
-        assert fslcm.scanBuiltInLuts()          == lutsbuiltin
-        assert fslcm.scanUserAddedCmaps()       == cmapsadded
-        assert fslcm.scanUserAddedLuts()        == lutsadded
-        assert sorted(fslcm.scanColourMaps())   == sorted(cmapsall)
-        assert sorted(fslcm.scanLookupTables()) == sorted(lutsall)
+        assert fslcm.scanColourMaps()   == expcmaps
+        assert fslcm.scanLookupTables() == expluts
 
 
 @clearCmaps
 def test_init():
 
-    with mockCmaps() as (assetDir, sdir):
+    with mockCmaps() as (assetDir, userDir, siteDir):
         fslcm.init()
 
         cmap1 = op.join(assetDir, 'colourmaps', 'cmap1.cmap')
-        cmap2 = op.join(sdir,     'colourmaps', 'cmap2.cmap')
+        cmap2 = op.join(userDir,  'colourmaps', 'cmap2.cmap')
+        cmap3 = op.join(siteDir,  'colourmaps', 'cmap3.cmap')
         lut1  = op.join(assetDir, 'luts',       'lut1.lut')
-        lut2  = op.join(sdir,     'luts',       'lut2.lut')
+        lut2  = op.join(userDir,  'luts',       'lut2.lut')
+        lut3  = op.join(siteDir,  'luts',       'lut3.lut')
 
-        assert fslcm.getColourMaps() == ['cmap1', 'cmap2']
+        assert fslcm.getColourMaps() == ['cmap1', 'cmap3', 'cmap2']
         assert fslcm.getColourMapLabel( 'cmap1') == 'cmap1'
         assert fslcm.getColourMapLabel( 'cmap2') == 'cmap2'
+        assert fslcm.getColourMapLabel( 'cmap3') == 'cmap3'
         assert fslcm.getColourMapFile(  'cmap1') == cmap1
         assert fslcm.getColourMapFile(  'cmap2') == cmap2
+        assert fslcm.getColourMapFile(  'cmap3') == cmap3
         assert fslcm.getColourMapKey(cmap1)      == 'cmap1'
         assert fslcm.getColourMapKey(cmap2)      == 'cmap2'
+        assert fslcm.getColourMapKey(cmap3)      == 'cmap3'
         assert fslcm.getLookupTableFile('lut1')  == lut1
         assert fslcm.getLookupTableFile('lut2')  == lut2
+        assert fslcm.getLookupTableFile('lut3')  == lut3
         assert fslcm.getLookupTableKey(lut1)     == 'lut1'
         assert fslcm.getLookupTableKey(lut2)     == 'lut2'
+        assert fslcm.getLookupTableKey(lut3)     == 'lut3'
 
         assert     fslcm.isColourMapInstalled(   'cmap1')
         assert     fslcm.isColourMapInstalled(   'cmap2')
+        assert     fslcm.isColourMapInstalled(   'cmap3')
         assert     fslcm.isColourMapRegistered(  'cmap1')
         assert     fslcm.isColourMapRegistered(  'cmap2')
+        assert     fslcm.isColourMapRegistered(  'cmap3')
         assert not fslcm.isColourMapRegistered(  'lut1')
         assert     fslcm.isColourMapRegistered(filename=cmap1)
         assert     fslcm.isColourMapRegistered(filename=cmap2)
-        assert     fslcm.isColourMapRegistered(filename=cmap1)
-        assert     fslcm.isColourMapRegistered(filename=cmap2)
+        assert     fslcm.isColourMapRegistered(filename=cmap3)
         assert not fslcm.isColourMapRegistered(filename=lut1)
         assert     fslcm.isLookupTableInstalled( 'lut1')
         assert     fslcm.isLookupTableInstalled( 'lut2')
+        assert     fslcm.isLookupTableInstalled( 'lut3')
         assert     fslcm.isLookupTableRegistered('lut1')
         assert     fslcm.isLookupTableRegistered('lut2')
+        assert     fslcm.isLookupTableRegistered('lut3')
         assert not fslcm.isLookupTableRegistered('cmap1')
         assert     fslcm.isLookupTableRegistered(filename=lut1)
         assert     fslcm.isLookupTableRegistered(filename=lut2)
+        assert     fslcm.isLookupTableRegistered(filename=lut3)
         assert not fslcm.isLookupTableRegistered(filename=cmap1)
 
         luts = fslcm.getLookupTables()
-        assert len(luts)              == 2
+        assert len(luts)              == 3
         assert luts[0].key            == 'lut1'
-        assert luts[1].key            == 'lut2'
+        assert luts[1].key            == 'lut3'
+        assert luts[2].key            == 'lut2'
 
 
 @clearCmaps
@@ -244,7 +272,7 @@ def test_register():
     4 1 1 1 label 4
     """).strip()
 
-    with mockCmaps() as (assetDir, sdir):
+    with mockCmaps() as (assetDir, userDir, siteDir):
         fslcm.init()
 
         with open('cmap.txt', 'wt') as f: f.write(cmap)

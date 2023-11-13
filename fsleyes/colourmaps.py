@@ -19,14 +19,20 @@ FSLeyes colour maps and lookup tables are stored in the following locations:
    - ``[assetsbase]/luts/``
    - ``[settingsbase]/colourmaps/``
    - ``[settingsbase]/luts/``
+   - ``[sitebase]/colourmaps/``
+   - ``[sitebase]/luts/``
 
+where:
 
-where ``[assetsbase]`` is the location of the FSLeyes assets directory (see
-the :attr:`fsleyes.assetDir` attribute), and ``[settingsbase]`` is the base
-directory use by the :mod:`fsl.utils.settings` module for storing FSLeyes
-application settings and data. "Built-in" colour maps and lookup tables are
-stored underneath ``[assetsbase]``, and user-added ones are stored under
-``[settingsbase]``.
+ - ``[assetsbase]`` is the location of the FSLeyes assets directory, containing
+   built-in colourmaps and lookup tables (see the :attr:`fsleyes.assetDir`
+   attribute)
+ - ``[settingsbase]`` is the base directory use by the
+   :mod:`fsl.utils.settings` module for storing FSLeyes application settings
+   and data, and user-added colourmaps and lookup tables.
+ - ``[sitebase]`` is a site-specific configuration directory, specified by
+   the ``$FSLEYES_SITE_CONFIG_DIR`` environment variable, which may contain
+   site-specific colourmaps and lookup tables.
 
 
 When :func:`init` is called, it searches in the above locations, and attempts
@@ -83,17 +89,17 @@ The following functions are available for managing and accessing colour maps:
 Display name and ordering
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+FSLeyes comes with a file at ``[assetsbase]/colourmaps/order.txt``, which
+contains a list of colour map names and identifiers, defining the order in
+which the colour maps should be displayed to the user. Any colour maps which
+are present in ``[assetsbase]/colourmaps/``, but are not listed in the
+``order.txt``, file will be appended to the end of the list, and their name
+will be derived from the file name.
 
-For built-in colour maps, a file named ``[assetsbase]/colourmaps/order.txt``
-is assumed to contain a list of colour map names, and colour map identifiers,
-defining the order in which the colour maps should be displayed to the
-user. Any colour maps which are present in ``[assetsbase]/colourmaps/``, but
-are not listed in the ``order.txt``, file will be appended to the end of the
-list, and their name will be derived from the file name.
-
-
-If a file ``[settingsbase]/colourmaps/order.txt`` exists, then it will be used
-in place of the ``order.txt`` file in ``[assetsbase]``.
+If a file called ``[settingsbase]/colourmaps/order.txt`` or
+``[sitebase]/colourmaps/order.txt`` exists in the user or site configuration
+directory, then it will be used in place of the built-in
+``[assetsbase]/colourmaps/order.txt`` file.
 
 
 User-added colour maps
@@ -105,14 +111,11 @@ persistent setting called ``fsleyes.colourmaps``, which is a dictionary of ``{
 cmapid : displayName }`` mappings. The ``cmapid`` is typically the display
 name, converted to lower case, with spaces replaced with underscores. A
 user-added colour map with id ``cmapid`` will be saved as
-``[settingsbase]/colourmaps/cmapid.cmap``.  All user-added colour maps wll be
-displayed after all built-in colour maps, and their order cannot be
-customised. Any user-added colour map files which are not present in the
-``fsleyes.colourmaps`` dictionary will be given a display name the same as
-the colour map ID (which is taken from the file name).
+``[settingsbase]/colourmaps/cmapid.cmap``.
 
 
-Installing a user-added colour map is a two-step process:
+Installing a user-added colour map is a two-step process - this is implemented
+in the :class:`.LoadColourMapAction` class:
 
  1. First, the colour map must be *registered*, via the
     :func:`registerColourMap` function. This adds the colour map to the
@@ -121,6 +124,12 @@ Installing a user-added colour map is a two-step process:
 
  2. Calling the :func:`installColourMap` function will add the colour map
     permanently.
+
+
+Alternatively, colour map files can be copied directly into
+``[settingsbase]/colourmaps/``, and their name specified in
+``[settingsbase]/colourmaps/order.txt`` as outlined above. In this case, the
+colour maps will be loaded automatically via :func:`init`.
 
 
 -------------
@@ -146,13 +155,12 @@ This list of label, colour, and name mappings is used to create a
 :class:`LookupTable` instance, which can be used to access the colours and
 names associated with each label value.
 
-
 Once created, ``LookupTable`` instances may be modified - labels can be
 added/removed, and the name/colour of existing labels can be modified.  The
 :func:`.installLookupTable` method will install a new lookup table, or save
 any changes made to an existing one.
 
-Built-in and user-added lookup tables are managed in the same manner as
+Built-in user- and site-added lookup tables are managed in the same manner as
 described for colour maps above.  The following functions are available to
 access and manage :class:`LookupTable` instances:
 
@@ -183,14 +191,8 @@ for querying installed colour maps and lookup tables,
    :nosignatures:
 
    fileType
-   getCmapDir
-   getLutDir
-   scanBuiltInCmaps
-   scanBuiltInLuts
-   scanUserAddedCmaps
-   scanUserAddedLuts
-   makeValidMapKey
-   isValidMapKey
+   getCmapDirs
+   getLutDirs
 
 The following functions may be used for calculating the relationship between a
 data display range and brightness/contrast scales, and generating/manipulating
@@ -211,8 +213,8 @@ colours:
 """
 
 
-import itertools as it
 import functools as ft
+import operator  as ops
 import os.path   as op
 import              os
 import              bisect
@@ -224,28 +226,47 @@ import numpy             as np
 import matplotlib        as mpl
 import matplotlib.colors as colors
 
-import fsl.version            as fslversion
 import fsl.utils.settings     as fslsettings
 import fsl.utils.notifier     as notifier
 import fsl.data.vest          as vest
 import fsleyes_props          as props
 import                           fsleyes
 import fsleyes.displaycontext as fsldisplay
+import fsleyes.utils          as utils
 
 
 log = logging.getLogger(__name__)
 
 
-def getCmapDir():
-    """Returns the directory in which all built-in colour map files are stored.
+def _getMapDirs(subDir):
+    """Used by the :func:`getCmapDirs` and :func:`getLutDirs` functions.
+    Returns a list of all base directories within which colourmap/lookup table
+    files might be found, in the order of precedence (i.e. files in the first
+    directory should take precedence over subsequent directories).
     """
-    return op.join(fsleyes.assetDir, 'colourmaps')
+    # cmaps/luts can be stored in the following locations:
+    #   - The FSLeyes assets directory (built-ins)
+    #   - The FSLEYES_SITE_CONFIG_DIR (site-added)
+    #   - The FSLeyes settings directory (user-added)
+    mapDirs = [fslsettings.settings.configDir,
+               os.environ.get('FSLEYES_SITE_CONFIG_DIR', ''),
+               fsleyes.assetDir]
+    mapDirs = [op.join(d, subDir) for d in mapDirs]
+    return [d for d in mapDirs if op.isdir(d)]
 
 
-def getLutDir():
-    """Returns the directory in which all built-in lookup table files are stored.
+def getCmapDirs():
+    """Returns a list of directories within which all colour map files can be
+    found.
     """
-    return op.join(fsleyes.assetDir, 'luts')
+    return _getMapDirs('colourmaps')
+
+
+def getLutDirs():
+    """Returns a list of directories within which all lookup table files can be
+    found.
+    """
+    return _getMapDirs('luts')
 
 
 def _walk(dirname, suffix):
@@ -253,115 +274,59 @@ def _walk(dirname, suffix):
     specified ``suffix``.
     """
     matches = []
-    for dirpath, dirnames, filenames in os.walk(dirname):
+    for dirpath, _, filenames in os.walk(dirname):
         for filename in filenames:
             if filename.endswith(suffix):
                 matches.append(op.join(dirpath, filename))
     return matches
 
 
-def _find(mapid, dirname):
-    """Finds the file associated with the given (built-in) colour map or lookup
-    table ID.
-    """
-
-    divs     = [i for i, c in enumerate(mapid) if c == '_']
-    pathopts = it.chain(*[it.combinations(divs, n)
-                          for n in range(len(divs) + 1)])
-
-    for pathidxs in pathopts:
-
-        path = mapid
-        for i in pathidxs:
-            path = path[:i] + op.sep + path[i + 1:]
-
-        path = op.join(dirname, path)
-
-        if op.exists(path):
-            return path
-
-    raise ValueError(f'Cannot find {mapid} in {dirname}')
-
-
-def _scanMaps(basedir, mapFiles):
-    """Used by the ``scan<X>`` functions. Converts a sequence of colourmap or
-    lookup table file paths into IDs. Returns a dictionary containing
-    ``{mapID : mapFile}`` mappings
+def _scanMaps(mapDir, mapFiles):
+    """Used by the :func:`scanColourMaps` and :func:`scanLookupTables`
+    functions. Converts a sequence of colourmap or lookup table file paths
+    into IDs. Returns a dictionary containing ``{mapID : mapFile}`` mappings
     """
     mapFiles = [f for f in mapFiles if op.basename(f) != 'order.txt']
-    mapIDs   = [op.relpath(f, basedir) for f in mapFiles]
+    mapIDs   = [op.relpath(f, mapDir)  for f in mapFiles]
     mapIDs   = [m.replace(op.sep, '_') for m in mapIDs]
     mapIDs   = [op.splitext(m)[0]      for m in mapIDs]
     mapIDs   = [m.lower()              for m in mapIDs]
     return dict(sorted(zip(mapIDs, mapFiles)))
 
 
-def scanBuiltInCmaps():
-    """Returns a list of IDs for all built-in colour maps. """
-    basedir   = getCmapDir()
-    cmapFiles = _walk(basedir, '.cmap')  + _walk(basedir, '.txt')
-    return _scanMaps(basedir, cmapFiles)
-
-
-def scanBuiltInLuts():
-    """Returns a list of IDs for all built-in lookup tables. """
-    basedir  = getLutDir()
-    lutFiles = _walk(basedir, '.lut') + _walk(basedir, '.txt')
-    return _scanMaps(basedir, lutFiles)
-
-
-def scanUserAddedCmaps():
-    """Returns a list of IDs for all user-added colour maps. """
-    cmapFiles = fslsettings.listFiles('colourmaps/*.cmap') + \
-                fslsettings.listFiles('colourmaps/*.txt')
-    cmaps = _scanMaps('colourmaps', cmapFiles)
-    return {m : fslsettings.filePath(f) for m, f in cmaps.items()}
-
-
-def scanUserAddedLuts():
-    """Returns a list of IDs for all user-added lookup tables. """
-    lutFiles = fslsettings.listFiles('luts/*.lut') + \
-               fslsettings.listFiles('luts/*.txt')
-    luts = _scanMaps('luts', lutFiles)
-    return {m : fslsettings.filePath(f) for m, f in luts.items()}
-
-
-def makeValidMapKey(name):
-    """Turns the given string into a valid key for use as a colour map
-    or lookup table identifier.
+def _scanMapDirs(mapDirs, suffixes):
+    """Used by the :func:`scanColourMaps` and :func:`scanLookupTables`
+    functions. Searches the given ``mapDir`` for all files with any of the
+    given ``suffixes``.
     """
 
-    valid = string.ascii_lowercase + string.digits + '_-'
-    key   = name.lower().replace(' ', '_')
-    key   = ''.join([c for c in key if c in valid])
+    maps = {}
 
-    return key
+    # loop through dirs in reverse so
+    # that files in the first dir will
+    # override files in latter dirs
+    for mapDir in reversed(mapDirs):
+        mapFiles = [_walk(mapDir, s) for s in suffixes]
+        mapFiles = ft.reduce(ops.add, mapFiles)
+        maps.update(_scanMaps(mapDir, mapFiles))
 
-
-def isValidMapKey(key):
-    """Returns ``True`` if the given string is a valid key for use as a colour
-    map or lookup table identifier, ``False`` otherwise. A valid key comprises
-    lower case letters, numbers, underscores and hyphens.
-    """
-
-    valid = string.ascii_lowercase + string.digits + '_-'
-    return all(c in valid for c in key)
+    return maps
 
 
 def scanColourMaps():
-    """Scans the colour maps directories, and returns a list containing the
-    names of all colour maps contained within. This function may be called
-    before :func:`init`.
+    """Scans the colour maps directories, and returns a dictionary of ``{id :
+    filepath}`` containing the IDs and files of all colour maps contained
+    within. This function may be called before :func:`init`.
     """
-    return list(scanBuiltInCmaps().keys()) + list(scanUserAddedCmaps().keys())
+    return _scanMapDirs(getCmapDirs(), ['.cmap', '.txt'])
 
 
 def scanLookupTables():
-    """Scans the lookup tables directories, and returns a list containing the
-    names of all lookup tables contained within. This function may be called
-    before :func:`init`.
+    """Scans the lookup table directories, and returns a dictionary of ``{id :
+    filepath}`` containing the IDs and files of all lookup tables contained
+    within. This function may be called before :func:`init`.
     """
-    return list(scanBuiltInLuts().keys()) +  list(scanUserAddedLuts().keys())
+    return _scanMapDirs(getLutDirs(), ['.lut', '.txt'])
 
 
 _cmaps = None
@@ -438,39 +403,29 @@ def init(force=False):
     # way, so we loop over all of
     # these lists, doing colour maps
     # first, then luts second.
-    mapTypes    = ['cmap',               'lut']
-    builtinDirs = [getCmapDir(),         getLutDir()]
-    userDirs    = ['colourmaps',         'luts']
-    allBuiltins = [scanBuiltInCmaps(),   scanBuiltInLuts()]
-    allUsers    = [scanUserAddedCmaps(), scanUserAddedLuts()]
-    registers   = [_cmaps,               _luts]
+    registers  = [_cmaps,           _luts]
+    mapTypes   = ['cmap',           'lut']
+    allMapDirs = [getCmapDirs(),    getLutDirs()]
+    allMaps    = [scanColourMaps(), scanLookupTables()]
 
-    for mapType, builtinDir, userDir, builtins, users, register in zip(
-            mapTypes, builtinDirs, userDirs, allBuiltins, allUsers, registers):
-
-        builtinIDs   = list(builtins.keys())
-        builtinFiles = list(builtins.values())
-        userIDs      = list(users   .keys())
-        userFiles    = list(users   .values())
-
-        allIDs   = builtinIDs   + userIDs
-        allFiles = builtinFiles + userFiles
-        allFiles = dict(zip(allIDs, allFiles))
+    for mapType, mapDirs, maps, register in zip(
+            mapTypes, allMapDirs, allMaps, registers):
 
         # Read order/display names from order.txt -
-        # if an order.txt file exists in the user
-        # dir, it takes precednece over built-in
-        # order/display names.
-        #
-        # User-added display names may also be in
-        # fslsettings. Any user-added maps with
-        # the same ID as a builtin will override
-        # the builtin.
-        builtinOrder = op.join(builtinDir, 'order.txt')
-        userOrder    = op.join(userDir,    'order.txt')
+        # an order.txt file may exist in any of the
+        # map directories - the first that is found
+        # takes precedence (see _getMapDirs).
+        names = None
+        for mapDir in mapDirs:
+            ot = op.join(mapDir, 'order.txt')
+            if op.exists(ot):
+                names = readOrderTxt(ot)
+                break
 
-        if op.exists(userOrder): names = readOrderTxt(userOrder)
-        else:                    names = readOrderTxt(builtinOrder)
+        # This should never happen, unless the built-
+        # in order.txt is deleted for some reason
+        if names is None:
+            names = {}
 
         names.update(readDisplayNames(mapType))
 
@@ -481,7 +436,7 @@ def init(force=False):
         # and their name is just set to the
         # ID (which is equal to the file name
         # prefix).
-        for mid in allIDs:
+        for mid in maps.keys():
             if mid not in names:
                 names[mid] = mid
 
@@ -493,7 +448,7 @@ def init(force=False):
             # might contain obsolete/invalid
             # names, so we ignore keyerrors
             try:
-                mapFile = allFiles[mapID]
+                mapFile = maps[mapID]
             except KeyError:
                 continue
 
@@ -509,8 +464,8 @@ def init(force=False):
                 register[mapID].mapObj.saved = True
 
             except Exception as e:
-                log.warn(f'Error processing custom {mapType} '
-                         f'file {mapFile}: {e}', exc_info=True)
+                log.warning('Error processing custom %s file {mapFile}: %s',
+                            mapType, e, exc_info=True)
 
 
 def registerColourMap(cmapFile,
@@ -544,12 +499,12 @@ def registerColourMap(cmapFile,
     :returns:         The key that the ``ColourMap`` was registered under.
     """
 
-    if key is not None and not isValidMapKey(key):
+    if key is not None and not utils.isValidMapKey(key):
         raise ValueError(f'{key} is not a valid colour map identifier')
 
     if key is None:
         key = op.splitext(op.basename(cmapFile))[0]
-        key = makeValidMapKey(key)
+        key = utils.makeValidMapKey(key)
 
     if name        is None: name        = key
     if overlayList is None: overlayList = []
@@ -648,7 +603,7 @@ def registerLookupTable(lut,
 
         if key is None:
             key = op.splitext(op.basename(lutFile))[0]
-            key = makeValidMapKey(key)
+            key = utils.makeValidMapKey(key)
 
         if name is None:
             name = key
@@ -1444,7 +1399,7 @@ class LookupTable(notifier.Notifier):
         """Create a ``LookupTable``.
 
         :arg key:     The identifier for this ``LookupTable``. Must be
-                      a valid key (see :func:`isValidMapKey`).
+                      a valid key (see :func:`.isValidMapKey`).
 
         :arg name:    The display name for this ``LookupTable``.
 
@@ -1454,7 +1409,7 @@ class LookupTable(notifier.Notifier):
                       :meth:`insert` methods.
         """
 
-        if not isValidMapKey(key):
+        if not utils.isValidMapKey(key):
             raise ValueError(f'{key} is not a valid lut identifier')
 
         self.key      = key

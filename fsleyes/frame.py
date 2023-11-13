@@ -1798,7 +1798,7 @@ class FSLeyesFrame(wx.Frame):
         # Add a menu item to load each built-in layouts
         for layout in builtIns:
 
-            title    = strings.layouts.get(layout, layout)
+            title    = layouts.getLayoutTitle(layout)
             shortcut = shortcuts.actions.get((self, 'layouts', layout),
                                              None)
 
@@ -1818,8 +1818,8 @@ class FSLeyesFrame(wx.Frame):
         # Add a menu item to load each saved layout
         for layout in saved:
 
-            menuItem  = menu.Append(
-                wx.ID_ANY, strings.layouts.get(layout, layout))
+            title     = layouts.getLayoutTitle(layout)
+            menuItem  = menu.Append(wx.ID_ANY, title)
             actionObj = LoadLayoutAction(
                 self.overlayList, self.displayCtx, self, layout)
             actionObj.bindToWidget(self, wx.EVT_MENU, menuItem)

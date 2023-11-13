@@ -8,7 +8,8 @@
 control panel layouts for *FSLeyes*. Layouts may be persisted using the
 :mod:`.settings` module. A few layouts are also *built in*, and are defined in
 the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be provided by
-FSLeyes :mod:`.plugins`.
+FSLeyes :mod:`.plugins`, saved via the FSLeyes interface, or stored in files
+in the FSLeyes settings directory.
 
 
 .. note:: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*.
@@ -21,6 +22,7 @@ for use by the :class:`.FSLeyesFrame`, but can be used in other ways too:
 .. autosummary::
    :nosignatures:
 
+   getLayoutTitle
    getAllLayouts
    loadLayout
    applyLayout
@@ -114,29 +116,121 @@ default FSLeyes ortho view layout) is::
           (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
           (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
           :func:`deserialiseLayout` function is compatible with both formats.
+
+
+Storage of custom layouts
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Custom layouts which are saved through the FSLeyes interface (e.g.  the *View*
+-> *Layouts* -> *Save current layout* menu option) are stored as plain-text
+files in the FSLeyes settings directory, within a subdirectory called
+``layouts``.
+
+FSLeyes will load any files with a name ending in ``.txt`` from any of the
+following locations:
+
+  - ``[settings]/layouts/``, where ``[settings]`` is the FSLeyes settings
+    directory.
+  - ``[site]/layouts/``, where ``[site]`` is the FSLeyes site configuration
+    directory.
+  - ``[assets]/layouts/``, where ``[assets]`` is the built-in FSLeyes assets
+    directory.
+
+A layout file comprises the layout display name on the first line, followed
+by the serialised layout string. For example::
+
+    My custom layout
+    fsleyes.views.orthopanel.OrthoPanel
+    layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+    fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
+    layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+
+
+.. note:: Prior to FSLeyes version 1.10.0, layouts which were saved with the
+          :func:`saveLayout` function were saved via the
+          :mod:`fsl.utils.settings` module, and were ultimately stored in a
+          pickle file called ``config.pkl`` in the FSLeyes settings directory.
+          Layouts are no longer saved in this manner, however FSLeyes will
+          still read layouts stored in ``config.pkl`` and make them available
+          for selection in the interface.
 """
 
 
+import              collections
 import functools as ft
+import              glob
+import              importlib
 import              logging
+import os.path   as op
+import              os
 import              pkgutil
 import              textwrap
-import              importlib
-import              collections
 
 import fsl.utils.settings            as fslsettings
 import fsleyes_widgets.utils.status  as status
-import fsleyes.strings               as strings
-import fsleyes.plugins               as plugins
+import                                  fsleyes
 import fsleyes.controls              as controls
+import fsleyes.controls.controlpanel as controlpanel
+import fsleyes.plugins               as plugins
+import fsleyes.strings               as strings
+import fsleyes.utils                 as utils
 import fsleyes.views                 as views
-import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.views.plotpanel       as plotpanel
-import fsleyes.controls.controlpanel as controlpanel
+import fsleyes.views.viewpanel       as viewpanel
 
 
 log = logging.getLogger(__name__)
+
+
+def _getLayoutDirs():
+    """Returns a list of directories within layout files may be found. """
+    baseDirs = [fsleyes.assetDir,
+                os.environ.get('FSLEYES_SITE_CONFIG_DIR', ''),
+                fslsettings.settings.configDir]
+    baseDirs = [op.join(d, 'layouts') for d in baseDirs]
+    baseDirs = [d for d in baseDirs if op.isdir(d)]
+    return baseDirs
+
+
+def _scanLayoutDirs():
+    """Scans all layout directories, and returns a dictionary of
+    ``{id : file}`` mappings, with one entry for each layout file that is
+    found.
+    """
+
+    layouts = {}
+
+    for baseDir in _getLayoutDirs():
+        files = glob.glob(op.join(baseDir, '*.txt'))
+
+        for f in files:
+            lid          = op.splitext(op.basename(f))[0]
+            layouts[lid] = f
+
+    return layouts
+
+
+@ft.lru_cache
+def getLayoutTitle(layout):
+    """Looks up and returns the display title for the given layout. """
+
+    # built-in titles are stored in the strings module
+    title = strings.layouts.get(layout, None)
+    if title is not None:
+        return title
+
+    # for file-based layouts, the title is stored in the file
+    fileLayouts = _scanLayoutDirs()
+    layoutFile  = fileLayouts.get(layout, None)
+
+    if layoutFile is not None:
+        with open(layoutFile, 'rt') as f:
+            title = f.readline().strip()
+        return title
+
+    # fall back to the layout name
+    return layout
 
 
 def getAllLayouts():
@@ -147,6 +241,7 @@ def getAllLayouts():
 
     layouts = fslsettings.read('fsleyes.layouts',      []) + \
               fslsettings.read('fsleyes.perspectives', []) + \
+              list(_scanLayoutDirs().keys())               + \
               list(plugins.listLayouts().keys())
 
     uniq = []
@@ -164,6 +259,7 @@ def loadLayout(frame, name, **kwargs):
     """
 
     pluginLayouts = plugins.listLayouts()
+    fileLayouts   = _scanLayoutDirs()
 
     if name in BUILT_IN_LAYOUTS.keys():
 
@@ -187,6 +283,16 @@ def loadLayout(frame, name, **kwargs):
         plugins.showThirdPartyPlugin(module)
         frame.refreshViewMenu()
 
+    # load layout from file
+    elif name in fileLayouts:
+        log.debug('Loading layout file %s', fileLayouts[name])
+        with open(fileLayouts[name], 'rt') as f:
+            # first line is display title,
+            # which we don't need here
+            f.readline()
+            layout = f.read()
+
+    # legacy pickle-based layout
     else:
         log.debug('Loading saved layout %s', name)
         layout = fslsettings.read(f'fsleyes.layouts.{name}', None)
@@ -223,8 +329,7 @@ def applyLayout(frame, name, layout, message=None):
     # Show a message while re-configuring the frame
     if message is None:
         message = strings.messages[
-            'layout.applyingLayout'].format(
-                strings.layouts.get(name, name))
+            'layout.applyingLayout'].format(getLayoutTitle(name))
 
     status.update(message)
 
@@ -278,31 +383,38 @@ def applyLayout(frame, name, layout, message=None):
             aux.deserialise(name, val)
 
 
-def saveLayout(frame, name):
+def saveLayout(frame, title):
     """Serialises the layout of the given :class:`.FSLeyesFrame` and saves
-    it as a layout with the given name.
+    it as a layout with the given title.
     """
 
-    if name in BUILT_IN_LAYOUTS.keys():
+    if title in BUILT_IN_LAYOUTS.keys():
         raise ValueError(f'A built-in layout named "{name}" '
                          'already exists')
 
-    log.debug('Saving current layout with name %s', name)
+    log.debug('Saving current layout with name %s', title)
 
-    layout = serialiseLayout(frame)
-    fslsettings.write(f'fsleyes.layouts.{name}', layout)
+    layout   = serialiseLayout(frame)
+    layoutId = utils.makeValidMapKey(title)
+    destFile = op.join('layouts', f'{layoutId}.txt')
+    with fslsettings.writeFile(destFile) as f:
+        f.write(f'{title}\n')
+        f.write(layout)
 
-    _addToLayoutList(name)
-
-    log.debug('Serialised layout:\n{}'.format(layout))
+    log.debug('Serialised layout:\n%s', layout)
 
 
 def removeLayout(name):
     """Deletes the named layout. """
 
     log.debug('Deleting layout with name %s', name)
+
+    # settings.delete and settings.deleteFile
+    # fail silently on invalid keys/paths
     fslsettings.delete(f'fsleyes.layouts.{name}')
     fslsettings.delete(f'fsleyes.perspectives.{name}')
+    fslsettings.deleteFile(op.join('layouts', f'{name}.txt'))
+
     _removeFromLayoutList(name)
 
 

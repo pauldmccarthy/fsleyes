@@ -770,15 +770,15 @@ def groupEpilog(target):
 
         elif issubclass(target, fsldisplay.LabelOpts):
             epilog = epilog.format(', '.join(
-                sorted(colourmaps.scanLookupTables())))
+                sorted(colourmaps.scanLookupTables().keys())))
 
         elif issubclass(target, fsldisplay.VolumeOpts):
             epilog = epilog.format(', '.join(
-                sorted(colourmaps.scanColourMaps())))
+                sorted(colourmaps.scanColourMaps().keys())))
 
         elif issubclass(target, fsldisplay.SHOpts):
             epilog = epilog.format(', '.join(
-                sorted(colourmaps.scanColourMaps())))
+                sorted(colourmaps.scanColourMaps().keys())))
 
     return epilog
 
