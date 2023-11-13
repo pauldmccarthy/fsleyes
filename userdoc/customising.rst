@@ -55,9 +55,10 @@ lookup tables, and/or layouts available to all users.
 
 FSLeyes will automatically load colour maps, lookup tables and layouts that
 are respectively located in these directories:
-  - ``${FSLEYES_SITE_CONFIG_DIR}/colourmaps/``
-  - ``${FSLEYES_SITE_CONFIG_DIR}/luts/``
-  - ``${FSLEYES_SITE_CONFIG_DIR}/layouts/``
+
+ - ``${FSLEYES_SITE_CONFIG_DIR}/colourmaps/``
+ - ``${FSLEYES_SITE_CONFIG_DIR}/luts/``
+ - ``${FSLEYES_SITE_CONFIG_DIR}/layouts/``
 
 The expected file formats are outlined in the sections below.
 
@@ -277,7 +278,8 @@ _layout_. You can save and load your custom layouts from the *Views*
 in the :ref:`FSLeyes settings directory
 <customising_fsleyes_settings_directory>`, in a sub-directory called
 ``layouts/``. FSLeyes will also read any layout files that are stored in
- ``${FSLEYES_SITE_CONFIG_DIR}/layouts/``.
+
+``${FSLEYES_SITE_CONFIG_DIR}/layouts/``.
 
 FSLeyes layout files are stored as plain-text, and must end with a suffix of
 ``.txt``.  These files have the format::

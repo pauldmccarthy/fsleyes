@@ -193,10 +193,6 @@ for querying installed colour maps and lookup tables,
    fileType
    getCmapDirs
    getLutDirs
-   scanBuiltInCmaps
-   scanBuiltInLuts
-   scanUserAddedCmaps
-   scanUserAddedLuts
 
 The following functions may be used for calculating the relationship between a
 data display range and brightness/contrast scales, and generating/manipulating

@@ -121,8 +121,8 @@ default FSLeyes ortho view layout) is::
 Storage of custom layouts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Custom layouts which are saved through the FSLeyes interface (e.g.  the _View_
--> _Layouts_ -> _Save current layout_ menu option) are stored as plain-text
+Custom layouts which are saved through the FSLeyes interface (e.g.  the *View*
+-> *Layouts* -> *Save current layout* menu option) are stored as plain-text
 files in the FSLeyes settings directory, within a subdirectory called
 ``layouts``.
 

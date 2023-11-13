@@ -10,17 +10,24 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.10.0 (Under development)
---------------------------
+1.10.0 (Tuesday 14th November 2023)
+-----------------------------------
 
 
 Changed
 ^^^^^^^
 
 
-* Changed the behaviour of the _Modulate alpha by intensity_ setting for mesh
-  overlays. Now, if the _Hide clipped areas_ setting is enabled, the mesh
-  transparency is modulated by intensity. But the _Hide clipped areas_ setting
+* FSLeyes colour map and lookup table files can now be stored in a site-specific
+  configuration directory, which can be set by a ``$FSLEYES_SITE_CONFIG_DIR``
+  environment variable, by
+  Rob Reid (@captainnova) (!412, `GitHub PR
+  <https://github.com/pauldmccarthy/fsleyes/pull/121>`__).
+* FSLeyes layouts can now be stored as plain-text files, in the FSLeyes settings
+  directory, or in ``$FSLEYES_SITE_CONFIG_DIR`` (!412).
+* Changed the behaviour of the *Modulate alpha by intensity* setting for mesh
+  overlays. Now, if the *Hide clipped areas* setting is enabled, the mesh
+  transparency is modulated by intensity. But the *Hide clipped areas* setting
   is disabled, the mesh data colour is blended with its background colour
   (!411).
 
@@ -43,14 +50,14 @@ Added
 * New keyboard shortcut (|control_key| + |shift_key| + ``f``) to toggle
   visibility of all overlays except for the first/bottom one, by
   Christopher G. Schwarz (@CGSchwarzMayo) (!406, `GitHub PR
-  <https://github.com/pauldmccarthy/fsleyes/pull/118>`_).
+  <https://github.com/pauldmccarthy/fsleyes/pull/118>`__).
 * New *FSLView mode* for the *Display space* setting, which emulates the
   behaviour of FSLView, by Christopher G. Schwarz (@CGSchwarzMayo) (!407,
   `GitHub PR <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
 * New ``--hideOrientationWarnings`` command-line option, which hides the
   location panel warning regarding different orientations / fields-of-view, by
   Christopher G. Schwarz (@CGSchwarzMayo) (!407, `GitHub PR
-  <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
+  <https://github.com/pauldmccarthy/fsleyes/pull/117>`__).
 
 
 Changed
