@@ -230,7 +230,6 @@ import numpy             as np
 import matplotlib        as mpl
 import matplotlib.colors as colors
 
-import fsl.utils.deprecated   as deprecated
 import fsl.utils.settings     as fslsettings
 import fsl.utils.notifier     as notifier
 import fsl.data.vest          as vest
@@ -272,16 +271,6 @@ def getLutDirs():
     found.
     """
     return _getMapDirs('luts')
-
-
-@deprecated.deprecated('1.10.0', '2.0.0', 'Use getCmapDirs instead')
-def getCmapDir():
-    return getCmapDirs()[-1]
-
-
-@deprecated.deprecated('1.10.0', '2.0.0', 'Use getCmapDirs instead')
-def getLutDir():
-    return getLutDir()[-1]
 
 
 def _walk(dirname, suffix):
