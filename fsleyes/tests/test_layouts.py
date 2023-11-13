@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-#
-# test_layouts.py -
-#
-# Author: Paul McCarthy <pauldmccarthy@gmail.com>
-#
 
 
+from contextlib import contextmanager
+import            os
 import os.path as op
+from unittest import mock
+
 
 import fsl.data.image as fslimage
+
+from   fsl.utils.tempdir  import tempdir
+import fsl.utils.settings as     fslsettings
 
 import fsleyes.layouts as layouts
 
@@ -57,50 +59,90 @@ def test_feat():
     run_with_fsleyes(_test_layout, 'feat')
 
 
+@contextmanager
+def mockSettingsDir():
+    with tempdir(changeto=False) as td:
+        fakesettings = fslsettings.Settings('fsleyes',
+                                            cfgdir=td,
+                                            writeOnExit=False)
+        ldir = op.join(td, 'layouts')
+        os.makedirs(ldir)
+        with fslsettings.use(fakesettings):
+            yield ldir
+
+
+@contextmanager
+def mockSiteDir():
+    with tempdir(changeto=False) as td:
+        ldir = op.join(td, 'layouts')
+        os.makedirs(ldir)
+        with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
+            yield ldir
 
 
 def _test_custom(frame, overlayList, displayCtx):
 
-    ortho = frame.addViewPanel(OrthoPanel,         defaultLayout=False)
-    ps    = frame.addViewPanel(PowerSpectrumPanel, defaultLayout=False)
+    with mockSettingsDir() as userDir:
 
-    ortho.togglePanel(AtlasPanel)
-    ortho.togglePanel(LookupTablePanel)
-    ortho.sceneOpts.showColourBar = True
+        ortho = frame.addViewPanel(OrthoPanel,         defaultLayout=False)
+        ps    = frame.addViewPanel(PowerSpectrumPanel, defaultLayout=False)
 
-    ps.togglePanel(PlotListPanel)
-    ps.togglePanel(PowerSpectrumControlPanel)
+        ortho.togglePanel(AtlasPanel)
+        ortho.togglePanel(LookupTablePanel)
+        ortho.sceneOpts.showColourBar = True
 
-    realYield(50)
-    layouts.saveLayout(frame, 'custom_custom')
-    frame.removeAllViewPanels()
-    realYield(50)
+        ps.togglePanel(PlotListPanel)
+        ps.togglePanel(PowerSpectrumControlPanel)
 
-    layouts.loadLayout(frame, 'custom_custom')
+        realYield(50)
+        layouts.saveLayout(frame, 'custom_custom')
+        frame.removeAllViewPanels()
+        realYield(50)
 
-    overlayList.append(fslimage.Image(op.join(datadir, '3d')))
+        layouts.loadLayout(frame, 'custom_custom')
 
-    realYield(50)
+        overlayList.append(fslimage.Image(op.join(datadir, '3d')))
 
-    ortho, ps = frame.viewPanels
+        realYield(50)
 
-    assert isinstance(ortho, OrthoPanel)
-    assert isinstance(ps,    PowerSpectrumPanel)
+        ortho, ps = frame.viewPanels
 
-    orthoctrls = ortho.getPanels()
-    psctrls    = ps   .getPanels()
+        assert isinstance(ortho, OrthoPanel)
+        assert isinstance(ps,    PowerSpectrumPanel)
 
-    assert len(orthoctrls) == 2
-    assert len(psctrls)    == 2
+        orthoctrls = ortho.getPanels()
+        psctrls    = ps   .getPanels()
 
-    assert AtlasPanel                in [type(p) for p in orthoctrls]
-    assert LookupTablePanel          in [type(p) for p in orthoctrls]
-    assert PlotListPanel             in [type(p) for p in psctrls]
-    assert PowerSpectrumControlPanel in [type(p) for p in psctrls]
+        assert len(orthoctrls) == 2
+        assert len(psctrls)    == 2
 
-    assert ortho.sceneOpts.showColourBar
-    assert ortho.colourBarCanvas is not None
+        assert AtlasPanel                in [type(p) for p in orthoctrls]
+        assert LookupTablePanel          in [type(p) for p in orthoctrls]
+        assert PlotListPanel             in [type(p) for p in psctrls]
+        assert PowerSpectrumControlPanel in [type(p) for p in psctrls]
+
+        assert ortho.sceneOpts.showColourBar
+        assert ortho.colourBarCanvas is not None
 
 
 def test_custom():
     run_with_fsleyes(_test_custom)
+
+
+
+def test_user_site_dir():
+    with mockSettingsDir() as userDir, mockSiteDir() as siteDir:
+        with open(op.join(userDir, 'user_layout.txt'), 'wt') as f:
+            f.write('User added layout\n')
+            f.write('Layout junk 1')
+        with open(op.join(siteDir, 'site_layout.txt'), 'wt') as f:
+            f.write('Site added layout\n')
+            f.write('Layout junk 2')
+
+        assert layouts.getLayoutTitle('user_layout') == 'User added layout'
+        assert layouts.getLayoutTitle('site_layout') == 'Site added layout'
+
+        allLayouts = layouts.getAllLayouts()
+
+        assert 'user_layout' in allLayouts
+        assert 'site_layout' in allLayouts
