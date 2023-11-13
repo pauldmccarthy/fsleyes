@@ -255,11 +255,12 @@ Default command-line arguments
 If you would like some command-line arguments to always be applied when you
 start FSLeyes, you can store them in a file called ``default_arguments.txt``,
 located in the :ref:`FSLeyes settings directory
-<customising_fsleyes_settings_directory>`. This file may contain "global"
-command-line arguments (referred to as ``[options]`` :ref:`above
-<command_line_overview>`), such as ``--autoDisplay``, ``--cliserver``,
-etc. Empty lines, and lines beginning with ``#`` in this file are ignored. An
-example ``default_arguments.txt`` file may look like this::
+<customising_fsleyes_settings_directory>` or the :ref:`FSLeyes site
+configuration directory <customising_fsleyes_site_directory>`.  This file may
+contain "global" command-line arguments (referred to as ``[options]``
+:ref:`above <command_line_overview>`), such as ``--autoDisplay``,
+``--cliserver``, etc. Empty lines, and lines beginning with ``#`` in this file
+are ignored. An example ``default_arguments.txt`` file may look like this::
 
     # Increase the default font size
     --fontSize 18
