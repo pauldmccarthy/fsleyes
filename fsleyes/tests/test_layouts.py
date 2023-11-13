@@ -22,7 +22,10 @@ from fsleyes.views.powerspectrumpanel           import PowerSpectrumPanel
 from fsleyes.controls.plotlistpanel             import PlotListPanel
 from fsleyes.controls.powerspectrumcontrolpanel import PowerSpectrumControlPanel  # noqa
 
-from fsleyes.tests import run_with_fsleyes, realYield
+from fsleyes.tests import (run_with_fsleyes,
+                           realYield,
+                           mockSettingsDir,
+                           mockSiteDir)
 
 
 datadir = op.join(op.dirname(__file__), 'testdata')
@@ -59,30 +62,9 @@ def test_feat():
     run_with_fsleyes(_test_layout, 'feat')
 
 
-@contextmanager
-def mockSettingsDir():
-    with tempdir(changeto=False) as td:
-        fakesettings = fslsettings.Settings('fsleyes',
-                                            cfgdir=td,
-                                            writeOnExit=False)
-        ldir = op.join(td, 'layouts')
-        os.makedirs(ldir)
-        with fslsettings.use(fakesettings):
-            yield ldir
-
-
-@contextmanager
-def mockSiteDir():
-    with tempdir(changeto=False) as td:
-        ldir = op.join(td, 'layouts')
-        os.makedirs(ldir)
-        with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
-            yield ldir
-
-
 def _test_custom(frame, overlayList, displayCtx):
 
-    with mockSettingsDir() as userDir:
+    with mockSettingsDir():
 
         ortho = frame.addViewPanel(OrthoPanel,         defaultLayout=False)
         ps    = frame.addViewPanel(PowerSpectrumPanel, defaultLayout=False)
@@ -132,10 +114,10 @@ def test_custom():
 
 def test_user_site_dir():
     with mockSettingsDir() as userDir, mockSiteDir() as siteDir:
-        with open(op.join(userDir, 'user_layout.txt'), 'wt') as f:
+        with open(op.join(userDir, 'layouts', 'user_layout.txt'), 'wt') as f:
             f.write('User added layout\n')
             f.write('Layout junk 1')
-        with open(op.join(siteDir, 'site_layout.txt'), 'wt') as f:
+        with open(op.join(siteDir, 'layouts', 'site_layout.txt'), 'wt') as f:
             f.write('Site added layout\n')
             f.write('Layout junk 2')
 
