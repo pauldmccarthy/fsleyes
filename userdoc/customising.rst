@@ -2,9 +2,9 @@
 
 .. _customising:
 
-=====================
+====================
  Customising FSLeyes
-=====================
+====================
 
 
 This page contains details on customising various aspects of FSLeyes.
@@ -20,8 +20,9 @@ FSLeyes settings directory
 ==========================
 
 
-FSLeyes stores all of its user-specific settings, and user-added colour maps
-and lookup tables in a directory which, under macOS, will be located at::
+FSLeyes stores all of its user-specific settings, and user-added colour maps,
+lookup tables, and layouts in a directory which, under macOS, will be located
+at::
 
   $HOME/.fsleyes/
 
@@ -39,7 +40,26 @@ Most FSLeyes settings are stored in a Python `pickle
 <https://docs.python.org/3/library/pickle.html>`_ file called ``config.pkl``.
 The *FSLeyes* |right_arrow| *Clear FSLeyes settings* menu option simply
 deletes this directory, which causes FSLeyes to forget all settings (and
-user-added colour maps and lookup tables).
+user-added colour maps, lookup tables, and layouts).
+
+
+FSLeyes site configuration directory
+====================================
+
+
+FSLeyes can load colour maps, lookup tables, and layouts from a site-specific
+directory which can be specified via an environment variable called
+``${FSLEYES_SITE_CONFIG_DIR}``. This may be useful if you are managing a
+multi-user installation and would like to make a set of custom colour maps,
+lookup tables, and/or layouts available to all users.
+
+FSLeyes will automatically load colour maps, lookup tables and layouts that
+are respectively located in these directories:
+  - ``${FSLEYES_SITE_CONFIG_DIR}/colourmaps/``
+  - ``${FSLEYES_SITE_CONFIG_DIR}/luts/``
+  - ``${FSLEYES_SITE_CONFIG_DIR}/layouts/``
+
+The expected file formats are outlined in the sections below.
 
 
 .. _customising_default_arguments:
@@ -128,8 +148,8 @@ will be added after all of the colour maps listed in ``order.txt``.
              (covered :ref:`below <customising_lookup_tables>`).
 
 
-User-added colour maps
-----------------------
+User- and site-added colour maps
+--------------------------------
 
 
 When you load a custom colour map through the :ref:`overlay display panel
@@ -146,6 +166,8 @@ You can also create your own ``order.txt`` file and store it alongside the
 user-added colour map files - it will be used in place of the built-in
 ``order.txt`` file.
 
+FSLeyes will also automatically load any colour maps stored in
+``${FSLEYES_SITE_CONFIG_DIR}/colourmaps/``.
 
 .. _customising_rgb_colour_map_files:
 
@@ -239,7 +261,58 @@ be located under the FSLeyes ``assets/luts/`` directory. A file called
 lookup tables.  Custom lookup tables which are added via the :ref:`lookup
 table panel <overlays_the_lookup_table_panel>` are saved into the
 :ref:`FSLeyes settings directory <customising_fsleyes_settings_directory>`, in
-a sub-directory called ``luts``.
+a sub-directory called ``luts``. FSLeyes will also automatically load any
+lookup tables stored in ``${FSLEYES_SITE_CONFIG_DIR}/luts/``.
+
+
+.. _customising_layouts:
+
+Layouts
+=======
+
+
+FSLeyes allows you to save your view and control panel configuration as a
+_layout_. You can save and load your custom layouts from the *Views*
+|right_arrow| *Layouts* menu. FSLeyes layouts are stored as plain-text files
+in the :ref:`FSLeyes settings directory
+<customising_fsleyes_settings_directory>`, in a sub-directory called
+``layouts/``. FSLeyes will also read any layout files that are stored in
+ ``${FSLEYES_SITE_CONFIG_DIR}/layouts/``.
+
+FSLeyes layout files are stored as plain-text, and must end with a suffix of
+``.txt``.  These files have the format::
+
+  <layout-title>
+  <layout-specification>
+
+where:
+ - ``<layout-title>`` is the display title for the layout (i.e. how it will
+appear in the *Views* |right_arrow| *Layouts* menu); and
+ - ``<layout-specification>`` is a FSLeyes layout specification, as described
+   in the :mod:`fsleyes.layouts` module documentation.
+
+If you need to manually create a FSLeyes layout file, the easiest option is to
+follow these instructions:
+
+1. Open FSLeyes, and set up your layout by hand (i.e. opening the views and
+   controls that you wish to have included in your layout).
+
+2. Start a Jupyter Notebook session via the *File* |right_arrow| *Open
+   notebooks* menu option. Alternatively, you could start FSLeyes with the
+   ``-nb`` or ``-nbb`` options - see the page on :ref:`FSLeyes and Jupyter
+   notebook <fsleyes_notebook>` for more details.
+
+3. Enter the following code into a notebook or attached Python terminal::
+
+     from fsleyes import layouts
+     with open('my_layout.txt', 'wt') as f:
+         f.write('My layout title\n')
+         f.write(layouts.serialiseLayout(frame))
+
+The file ``my_layout.txt`` will contain the FSLeyes layout specification -
+in order to use this file, you can copy it into the FSLeyes settings
+directory (within the ``layouts/`` sub-directory) or
+``${FSLEYES_SITE_CONFIG_DIR}/layouts/``.
 
 
 .. _customising_atlases:

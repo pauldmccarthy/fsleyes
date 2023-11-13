@@ -80,9 +80,9 @@ FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
 
  - A *layout* is a string which specifies the layout of the FSLeyes frame,
    comprising one or more view panels, and a set of control panels for each
-   view. Refer to the :mod:`fsleyes.layouts` module for more details.
-
-
+   view. Refer to the page on :ref:`customising FSLeyes
+   <customising_layouts>`, and the :mod:`fsleyes.layouts` module for more
+   details.
 
 
 FSLeyes plugin sources
