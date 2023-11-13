@@ -121,24 +121,38 @@ default FSLeyes ortho view layout) is::
 Storage of custom layouts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Custom layouts can be stored with one of two methods:
+Custom layouts which are saved through the FSLeyes interface (e.g.  the _View_
+-> _Layouts_ -> _Save current layout_ menu option) are stored as plain-text
+files in the FSLeyes settings directory, within a subdirectory called
+``layouts``.
 
- - Layouts which are saved with the :func:`saveLayout` function are saved via
-   the :mod:`fsl.utils.settings` module, and are ultimately stored in a Pickle
-   file called ``config.pkl`` in the FSLeyes settings directory (probably
-   ``~/.fsleyes/config.pkl`` on macOS or ``~/.config/fsleyes/config.pkl`` on
-   Linux). This method is used for layouts which are saved through the FSLeyes
-   interface (e.g.  the _View_ -> _Layouts_ -> _Save current layout_ menu
-   option).
+FSLeyes will load any files with a name ending in ``.txt`` from any of the
+following locations:
 
- - Layouts can be saved as plain-text files. FSLeyes will load any files with
-   a name ending in ``.txt`` from any of the following locations:
-    - ``[settings]/layouts/``, where ``[settings]`` is the FSLeyes settings
-      directory.
-    - ``[site]/layouts/``, where ``[site]`` is the FSLeyes site configuration
-      directory.
-    - ``[assets]/layouts/``, where ``[assets]`` is the built-in FSLeyes assets
-      directory.
+  - ``[settings]/layouts/``, where ``[settings]`` is the FSLeyes settings
+    directory.
+  - ``[site]/layouts/``, where ``[site]`` is the FSLeyes site configuration
+    directory.
+  - ``[assets]/layouts/``, where ``[assets]`` is the built-in FSLeyes assets
+    directory.
+
+A layout file comprises the layout display name on the first line, followed
+by the serialised layout string. For example::
+
+    My custom layout
+    fsleyes.views.orthopanel.OrthoPanel
+    layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+    fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
+    layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+
+
+.. note:: Prior to FSLeyes version 1.10.0, layouts which were saved with the
+          :func:`saveLayout` function were saved via the
+          :mod:`fsl.utils.settings` module, and were ultimately stored in a
+          pickle file called ``config.pkl`` in the FSLeyes settings directory.
+          Layouts are no longer saved in this manner, however FSLeyes will
+          still read layouts stored in ``config.pkl`` and make them available
+          for selection in the interface.
 """
 
 
