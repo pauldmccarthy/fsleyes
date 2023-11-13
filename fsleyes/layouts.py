@@ -388,17 +388,17 @@ def saveLayout(frame, title):
     it as a layout with the given title.
     """
 
-    if name in BUILT_IN_LAYOUTS.keys():
+    if title in BUILT_IN_LAYOUTS.keys():
         raise ValueError(f'A built-in layout named "{name}" '
                          'already exists')
 
-    log.debug('Saving current layout with name %s', name)
+    log.debug('Saving current layout with name %s', title)
 
     layout   = serialiseLayout(frame)
-    layoutId = utils.makeValidMapKey(name)
+    layoutId = utils.makeValidMapKey(title)
     destFile = op.join('layouts', f'{layoutId}.txt')
     with fslsettings.writeFile(destFile) as f:
-        f.write(f'{name}\n')
+        f.write(f'{title}\n')
         f.write(layout)
 
     log.debug('Serialised layout:\n%s', layout)
