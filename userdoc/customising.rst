@@ -292,7 +292,7 @@ FSLeyes layout files are stored as plain-text, and must end with a suffix of
 
 where:
  - ``<layout-title>`` is the display title for the layout (i.e. how it will
-appear in the *Views* |right_arrow| *Layouts* menu); and
+   appear in the *Views* |right_arrow| *Layouts* menu); and
  - ``<layout-specification>`` is a FSLeyes layout specification, as described
    in the :mod:`fsleyes.layouts` module documentation.
 

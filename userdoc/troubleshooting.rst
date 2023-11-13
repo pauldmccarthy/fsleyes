@@ -112,12 +112,12 @@ low-performance mode from the command-line with the ``-p`` option, e.g.::
   # Faster -> 2
   fsleyes -p 2 image.nii.gz
 
-  # Best looking -> 2
-  fsleyes -p 2 image.nii.gz
+  # Best looking -> 3
+  fsleyes -p 3 image.nii.gz
 
 
-On some systems, the _Faster_ setting may give better performance than the
-_Fastest_ setting, so try them both, and use the one which works best for your
+On some systems, the *Faster* setting may give better performance than the
+*Fastest* setting, so try them both, and use the one which works best for your
 set-up.
 
 
