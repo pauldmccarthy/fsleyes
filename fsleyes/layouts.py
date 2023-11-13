@@ -22,6 +22,7 @@ for use by the :class:`.FSLeyesFrame`, but can be used in other ways too:
 .. autosummary::
    :nosignatures:
 
+   getLayoutTitle
    getAllLayouts
    loadLayout
    applyLayout
@@ -154,20 +155,21 @@ import              textwrap
 import fsl.utils.settings            as fslsettings
 import fsleyes_widgets.utils.status  as status
 import                                  fsleyes
-import fsleyes.strings               as strings
-import fsleyes.plugins               as plugins
 import fsleyes.controls              as controls
+import fsleyes.controls.controlpanel as controlpanel
+import fsleyes.plugins               as plugins
+import fsleyes.strings               as strings
+import fsleyes.utils                 as utils
 import fsleyes.views                 as views
-import fsleyes.views.viewpanel       as viewpanel
 import fsleyes.views.canvaspanel     as canvaspanel
 import fsleyes.views.plotpanel       as plotpanel
-import fsleyes.controls.controlpanel as controlpanel
+import fsleyes.views.viewpanel       as viewpanel
 
 
 log = logging.getLogger(__name__)
 
 
-def _getFileBasedLayoutDirs():
+def _getLayoutDirs():
     """Returns a list of directories within layout files may be found. """
     baseDirs = [fsleyes.assetDir,
                 os.environ.get('FSLEYES_SITE_CONFIG_DIR', ''),
@@ -177,8 +179,7 @@ def _getFileBasedLayoutDirs():
     return baseDirs
 
 
-@ft.lru_cache
-def _scanFileBasedLayouts():
+def _scanLayoutDirs():
     """Scans all layout directories, and returns a dictionary of
     ``{id : file}`` mappings, with one entry for each layout file that is
     found.
@@ -186,14 +187,36 @@ def _scanFileBasedLayouts():
 
     layouts = {}
 
-    for baseDir in _getFileBasedLayoutDirs():
+    for baseDir in _getLayoutDirs():
         files = glob.glob(op.join(baseDir, '*.txt'))
 
         for f in files:
-            layoutID          = op.splitext(op.basename(f))[0]
-            layouts[layoutID] = f
+            lid          = op.splitext(op.basename(f))[0]
+            layouts[lid] = f
 
     return layouts
+
+
+@ft.lru_cache
+def getLayoutTitle(layout):
+    """Looks up and returns the display title for the given layout. """
+
+    # built-in titles are stored in the strings module
+    title = strings.layouts.get(layout, None)
+    if title is not None:
+        return title
+
+    # for file-based layouts, the title is stored in the file
+    fileLayouts = _scanLayoutDirs()
+    layoutFile  = fileLayouts.get(layout, None)
+
+    if layoutFile is not None:
+        with open(layoutFile, 'rt') as f:
+            title = f.readline().strip()
+        return title
+
+    # fall back to the layout name
+    return layout
 
 
 def getAllLayouts():
@@ -204,7 +227,7 @@ def getAllLayouts():
 
     layouts = fslsettings.read('fsleyes.layouts',      []) + \
               fslsettings.read('fsleyes.perspectives', []) + \
-              list(_scanFileBasedLayouts().keys())         + \
+              list(_scanLayoutDirs().keys())               + \
               list(plugins.listLayouts().keys())
 
     uniq = []
@@ -222,7 +245,7 @@ def loadLayout(frame, name, **kwargs):
     """
 
     pluginLayouts = plugins.listLayouts()
-    fileLayouts   = _scanFileBasedLayouts()
+    fileLayouts   = _scanLayoutDirs()
 
     if name in BUILT_IN_LAYOUTS.keys():
 
@@ -246,10 +269,16 @@ def loadLayout(frame, name, **kwargs):
         plugins.showThirdPartyPlugin(module)
         frame.refreshViewMenu()
 
+    # load layout from file
     elif name in fileLayouts:
+        log.debug('Loading layout file %s', fileLayouts[name])
         with open(fileLayouts[name], 'rt') as f:
+            # first line is display title,
+            # which we don't need here
+            f.readline()
             layout = f.read()
 
+    # legacy pickle-based layout
     else:
         log.debug('Loading saved layout %s', name)
         layout = fslsettings.read(f'fsleyes.layouts.{name}', None)
@@ -286,8 +315,7 @@ def applyLayout(frame, name, layout, message=None):
     # Show a message while re-configuring the frame
     if message is None:
         message = strings.messages[
-            'layout.applyingLayout'].format(
-                strings.layouts.get(name, name))
+            'layout.applyingLayout'].format(getLayoutTitle(name))
 
     status.update(message)
 
@@ -341,9 +369,9 @@ def applyLayout(frame, name, layout, message=None):
             aux.deserialise(name, val)
 
 
-def saveLayout(frame, name):
+def saveLayout(frame, title):
     """Serialises the layout of the given :class:`.FSLeyesFrame` and saves
-    it as a layout with the given name.
+    it as a layout with the given title.
     """
 
     if name in BUILT_IN_LAYOUTS.keys():
@@ -352,20 +380,27 @@ def saveLayout(frame, name):
 
     log.debug('Saving current layout with name %s', name)
 
-    layout = serialiseLayout(frame)
-    fslsettings.write(f'fsleyes.layouts.{name}', layout)
+    layout   = serialiseLayout(frame)
+    layoutId = utils.makeValidMapKey(name)
+    destFile = op.join('layouts', f'{layoutId}.txt')
+    with fslsettings.writeFile(destFile) as f:
+        f.write(f'{name}\n')
+        f.write(layout)
 
-    _addToLayoutList(name)
-
-    log.debug('Serialised layout:\n{}'.format(layout))
+    log.debug('Serialised layout:\n%s', layout)
 
 
 def removeLayout(name):
     """Deletes the named layout. """
 
     log.debug('Deleting layout with name %s', name)
+
+    # settings.delete and settings.deleteFile
+    # fail silently on invalid keys/paths
     fslsettings.delete(f'fsleyes.layouts.{name}')
     fslsettings.delete(f'fsleyes.perspectives.{name}')
+    fslsettings.deleteFile(op.join('layouts', f'{name}.txt'))
+
     _removeFromLayoutList(name)
 
 
