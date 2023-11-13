@@ -8,7 +8,8 @@
 control panel layouts for *FSLeyes*. Layouts may be persisted using the
 :mod:`.settings` module. A few layouts are also *built in*, and are defined in
 the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be provided by
-FSLeyes :mod:`.plugins`.
+FSLeyes :mod:`.plugins`, saved via the FSLeyes interface, or stored in files
+in the FSLeyes settings directory.
 
 
 .. note:: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*.
@@ -114,18 +115,45 @@ default FSLeyes ortho view layout) is::
           (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
           (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
           :func:`deserialiseLayout` function is compatible with both formats.
+
+
+Storage of custom layouts
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Custom layouts can be stored with one of two methods:
+
+ - Layouts which are saved with the :func:`saveLayout` function are saved via
+   the :mod:`fsl.utils.settings` module, and are ultimately stored in a Pickle
+   file called ``config.pkl`` in the FSLeyes settings directory (probably
+   ``~/.fsleyes/config.pkl`` on macOS or ``~/.config/fsleyes/config.pkl`` on
+   Linux). This method is used for layouts which are saved through the FSLeyes
+   interface (e.g.  the _View_ -> _Layouts_ -> _Save current layout_ menu
+   option).
+
+ - Layouts can be saved as plain-text files. FSLeyes will load any files with
+   a name ending in ``.txt`` from any of the following locations:
+    - ``[settings]/layouts/``, where ``[settings]`` is the FSLeyes settings
+      directory.
+    - ``[site]/layouts/``, where ``[site]`` is the FSLeyes site configuration
+      directory.
+    - ``[assets]/layouts/``, where ``[assets]`` is the built-in FSLeyes assets
+      directory.
 """
 
 
+import              collections
 import functools as ft
+import              glob
+import              importlib
 import              logging
+import os.path   as op
+import              os
 import              pkgutil
 import              textwrap
-import              importlib
-import              collections
 
 import fsl.utils.settings            as fslsettings
 import fsleyes_widgets.utils.status  as status
+import                                  fsleyes
 import fsleyes.strings               as strings
 import fsleyes.plugins               as plugins
 import fsleyes.controls              as controls
@@ -139,6 +167,35 @@ import fsleyes.controls.controlpanel as controlpanel
 log = logging.getLogger(__name__)
 
 
+def _getFileBasedLayoutDirs():
+    """Returns a list of directories within layout files may be found. """
+    baseDirs = [fsleyes.assetDir,
+                os.environ.get('FSLEYES_SITE_CONFIG_DIR', ''),
+                fslsettings.settings.configDir]
+    baseDirs = [op.join(d, 'layouts') for d in baseDirs]
+    baseDirs = [d for d in baseDirs if op.isdir(d)]
+    return baseDirs
+
+
+@ft.lru_cache
+def _scanFileBasedLayouts():
+    """Scans all layout directories, and returns a dictionary of
+    ``{id : file}`` mappings, with one entry for each layout file that is
+    found.
+    """
+
+    layouts = {}
+
+    for baseDir in _getFileBasedLayoutDirs():
+        files = glob.glob(op.join(baseDir, '*.txt'))
+
+        for f in files:
+            layoutID          = op.splitext(op.basename(f))[0]
+            layouts[layoutID] = f
+
+    return layouts
+
+
 def getAllLayouts():
     """Returns a list containing the names of all saved layouts. The
     returned list does not include built-in layouts - these are
@@ -147,6 +204,7 @@ def getAllLayouts():
 
     layouts = fslsettings.read('fsleyes.layouts',      []) + \
               fslsettings.read('fsleyes.perspectives', []) + \
+              list(_scanFileBasedLayouts().keys())         + \
               list(plugins.listLayouts().keys())
 
     uniq = []
@@ -164,6 +222,7 @@ def loadLayout(frame, name, **kwargs):
     """
 
     pluginLayouts = plugins.listLayouts()
+    fileLayouts   = _scanFileBasedLayouts()
 
     if name in BUILT_IN_LAYOUTS.keys():
 
@@ -186,6 +245,10 @@ def loadLayout(frame, name, **kwargs):
         module = plugins.layoutModule(name)
         plugins.showThirdPartyPlugin(module)
         frame.refreshViewMenu()
+
+    elif name in fileLayouts:
+        with open(fileLayouts[name], 'rt') as f:
+            layout = f.read()
 
     else:
         log.debug('Loading saved layout %s', name)
