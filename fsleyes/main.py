@@ -626,6 +626,16 @@ def parseArgs(argv):
 
     # Apply user-defaults, stored in <fsleyes-config-dir>/default_arguments.txt
     userArgs = fslsettings.readFile('default_arguments.txt')
+
+    # Apply site-defaults (if user defaults don't exist)
+    if userArgs is None:
+        siteDir = os.environ.get('FSLEYES_SITE_CONFIG_DIR', None)
+        if siteDir is not None:
+            userArgs = op.join(siteDir, 'default_arguments.txt')
+            if op.exists(userArgs):
+                with open(userArgs, 'rt') as f:
+                    userArgs = f.read()
+
     if userArgs is not None:
         userArgs = [line.strip() for line in userArgs.split('\n')]
         userArgs = [line         for line in userArgs if line != '']
