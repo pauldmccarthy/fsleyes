@@ -631,9 +631,9 @@ def parseArgs(argv):
     if userArgs is None:
         siteDir = os.environ.get('FSLEYES_SITE_CONFIG_DIR', None)
         if siteDir is not None:
-            userArgs = op.join(siteDir, 'default_arguments.txt')
-            if op.exists(userArgs):
-                with open(userArgs, 'rt') as f:
+            siteArgs = op.join(siteDir, 'default_arguments.txt')
+            if op.exists(siteArgs):
+                with open(siteArgs, 'rt') as f:
                     userArgs = f.read()
 
     if userArgs is not None:

@@ -33,6 +33,7 @@ import matplotlib.image as mplimg
 import fsleyes_props                as props
 from   fsl.utils.tempdir        import tempdir
 import fsl.utils.idle               as idle
+import fsl.utils.settings           as fslsettings
 import fsl.utils.image.resample     as resample
 import fsl.transform.affine         as affine
 import fsl.data.image               as fslimage
@@ -201,24 +202,6 @@ class CaptureStdout(object):
     def stderr(self):
         self.__mock_stderr.seek(0)
         return self.__mock_stderr.read()
-
-
-@contextlib.contextmanager
-def tempdir():
-    """Returnsa context manager which creates and returns a temporary
-    directory, and then deletes it on exit.
-    """
-
-    testdir = tempfile.mkdtemp()
-    prevdir = os.getcwd()
-    try:
-
-        os.chdir(testdir)
-        yield testdir
-
-    finally:
-        os.chdir(prevdir)
-        shutil.rmtree(testdir)
 
 
 def testdir(contents=None, suffix=""):
@@ -927,3 +910,36 @@ def mockMouseEvent(profile, canvas, evType, canvasLoc):
             return x, h - y
 
     profile.handleEvent(MockEvent())
+
+
+@contextlib.contextmanager
+def mockAssetDir():
+    with tempdir(changeto=False) as td:
+        os.makedirs(op.join(td, 'layouts'))
+        os.makedirs(op.join(td, 'colourmaps'))
+        os.makedirs(op.join(td, 'luts'))
+        with mock.patch('fsleyes.assetDir', td):
+            yield td
+
+
+@contextlib.contextmanager
+def mockSettingsDir():
+    with tempdir(changeto=False) as td:
+        fakesettings = fslsettings.Settings('fsleyes',
+                                            cfgdir=td,
+                                            writeOnExit=False)
+        os.makedirs(op.join(td, 'layouts'))
+        os.makedirs(op.join(td, 'colourmaps'))
+        os.makedirs(op.join(td, 'luts'))
+        with fslsettings.use(fakesettings):
+            yield td
+
+
+@contextlib.contextmanager
+def mockSiteDir():
+    with tempdir(changeto=False) as td:
+        os.makedirs(op.join(td, 'layouts'))
+        os.makedirs(op.join(td, 'colourmaps'))
+        os.makedirs(op.join(td, 'luts'))
+        with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
+            yield td
