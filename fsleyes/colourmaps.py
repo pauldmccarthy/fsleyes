@@ -89,17 +89,17 @@ The following functions are available for managing and accessing colour maps:
 Display name and ordering
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+FSLeyes comes with a file at ``[assetsbase]/colourmaps/order.txt``, which
+contains a list of colour map names and identifiers, defining the order in
+which the colour maps should be displayed to the user. Any colour maps which
+are present in ``[assetsbase]/colourmaps/``, but are not listed in the
+``order.txt``, file will be appended to the end of the list, and their name
+will be derived from the file name.
 
-For built-in colour maps, a file named ``[assetsbase]/colourmaps/order.txt``
-is assumed to contain a list of colour map names, and colour map identifiers,
-defining the order in which the colour maps should be displayed to the
-user. Any colour maps which are present in ``[assetsbase]/colourmaps/``, but
-are not listed in the ``order.txt``, file will be appended to the end of the
-list, and their name will be derived from the file name.
-
-
-If a file ``[settingsbase]/colourmaps/order.txt`` exists, then it will be used
-in place of the ``order.txt`` file in ``[assetsbase]``.
+If a file called ``[settingsbase]/colourmaps/order.txt`` or
+``[sitebase]/colourmaps/order.txt`` exists in the user or site configuration
+directory, then it will be used in place of the built-in
+``[assetsbase]/colourmaps/order.txt`` file.
 
 
 User-added colour maps
@@ -111,14 +111,11 @@ persistent setting called ``fsleyes.colourmaps``, which is a dictionary of ``{
 cmapid : displayName }`` mappings. The ``cmapid`` is typically the display
 name, converted to lower case, with spaces replaced with underscores. A
 user-added colour map with id ``cmapid`` will be saved as
-``[settingsbase]/colourmaps/cmapid.cmap``.  All user-added colour maps wll be
-displayed after all built-in colour maps, and their order cannot be
-customised. Any user-added colour map files which are not present in the
-``fsleyes.colourmaps`` dictionary will be given a display name the same as
-the colour map ID (which is taken from the file name).
+``[settingsbase]/colourmaps/cmapid.cmap``.
 
 
-Installing a user-added colour map is a two-step process:
+Installing a user-added colour map is a two-step process - this is implemented
+in the :class:`.LoadColourMapAction` class:
 
  1. First, the colour map must be *registered*, via the
     :func:`registerColourMap` function. This adds the colour map to the
@@ -127,6 +124,12 @@ Installing a user-added colour map is a two-step process:
 
  2. Calling the :func:`installColourMap` function will add the colour map
     permanently.
+
+
+Alternatively, colour map files can be copied directly into
+``[settingsbase]/colourmaps/``, and their name specified in
+``[settingsbase]/colourmaps/order.txt`` as outlined above. In this case, the
+colour maps will be loaded automatically via :func:`init`.
 
 
 -------------
@@ -152,13 +155,12 @@ This list of label, colour, and name mappings is used to create a
 :class:`LookupTable` instance, which can be used to access the colours and
 names associated with each label value.
 
-
 Once created, ``LookupTable`` instances may be modified - labels can be
 added/removed, and the name/colour of existing labels can be modified.  The
 :func:`.installLookupTable` method will install a new lookup table, or save
 any changes made to an existing one.
 
-Built-in and user-added lookup tables are managed in the same manner as
+Built-in user- and site-added lookup tables are managed in the same manner as
 described for colour maps above.  The following functions are available to
 access and manage :class:`LookupTable` instances:
 
@@ -214,7 +216,6 @@ colours:
    randomBrightColour
    randomDarkColour
    complementaryColour
-
 """
 
 
