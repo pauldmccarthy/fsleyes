@@ -197,8 +197,6 @@ for querying installed colour maps and lookup tables,
    scanBuiltInLuts
    scanUserAddedCmaps
    scanUserAddedLuts
-   makeValidMapKey
-   isValidMapKey
 
 The following functions may be used for calculating the relationship between a
 data display range and brightness/contrast scales, and generating/manipulating
@@ -239,6 +237,7 @@ import fsl.data.vest          as vest
 import fsleyes_props          as props
 import                           fsleyes
 import fsleyes.displaycontext as fsldisplay
+import fsleyes.utils          as utils
 
 
 log = logging.getLogger(__name__)
@@ -327,28 +326,6 @@ def _scanMapDirs(mapDirs, suffixes):
         maps.update(_scanMaps(mapDir, mapFiles))
 
     return maps
-
-
-def makeValidMapKey(name):
-    """Turns the given string into a valid key for use as a colour map
-    or lookup table identifier.
-    """
-
-    valid = string.ascii_lowercase + string.digits + '_-'
-    key   = name.lower().replace(' ', '_')
-    key   = ''.join([c for c in key if c in valid])
-
-    return key
-
-
-def isValidMapKey(key):
-    """Returns ``True`` if the given string is a valid key for use as a colour
-    map or lookup table identifier, ``False`` otherwise. A valid key comprises
-    lower case letters, numbers, underscores and hyphens.
-    """
-
-    valid = string.ascii_lowercase + string.digits + '_-'
-    return all(c in valid for c in key)
 
 
 def scanColourMaps():
@@ -537,12 +514,12 @@ def registerColourMap(cmapFile,
     :returns:         The key that the ``ColourMap`` was registered under.
     """
 
-    if key is not None and not isValidMapKey(key):
+    if key is not None and not utils.isValidMapKey(key):
         raise ValueError(f'{key} is not a valid colour map identifier')
 
     if key is None:
         key = op.splitext(op.basename(cmapFile))[0]
-        key = makeValidMapKey(key)
+        key = utils.makeValidMapKey(key)
 
     if name        is None: name        = key
     if overlayList is None: overlayList = []
@@ -641,7 +618,7 @@ def registerLookupTable(lut,
 
         if key is None:
             key = op.splitext(op.basename(lutFile))[0]
-            key = makeValidMapKey(key)
+            key = utils.makeValidMapKey(key)
 
         if name is None:
             name = key
@@ -1437,7 +1414,7 @@ class LookupTable(notifier.Notifier):
         """Create a ``LookupTable``.
 
         :arg key:     The identifier for this ``LookupTable``. Must be
-                      a valid key (see :func:`isValidMapKey`).
+                      a valid key (see :func:`.isValidMapKey`).
 
         :arg name:    The display name for this ``LookupTable``.
 
@@ -1447,7 +1424,7 @@ class LookupTable(notifier.Notifier):
                       :meth:`insert` methods.
         """
 
-        if not isValidMapKey(key):
+        if not utils.isValidMapKey(key):
             raise ValueError(f'{key} is not a valid lut identifier')
 
         self.key      = key
