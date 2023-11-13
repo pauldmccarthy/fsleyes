@@ -18,40 +18,12 @@ import fsl.utils.settings as fslsettings
 from   fsl.utils.tempdir import tempdir
 import fsleyes.colourmaps as fslcm
 
+from fsleyes.tests import mockSettingsDir, mockSiteDir, mockAssetDir
+
 
 ############
 # Management
 ############
-
-
-@contextmanager
-def mockAssetDir():
-    with tempdir(changeto=False) as td:
-        with mock.patch('fsleyes.assetDir', td):
-            os.makedirs(op.join(td, 'colourmaps'))
-            os.makedirs(op.join(td, 'luts'))
-            yield op.join(td)
-
-
-@contextmanager
-def mockSettingsDir():
-    with tempdir(changeto=False) as td:
-        fakesettings = fslsettings.Settings('fsleyes',
-                                            cfgdir=td,
-                                            writeOnExit=False)
-        os.makedirs(op.join(td, 'colourmaps'))
-        os.makedirs(op.join(td, 'luts'))
-        with fslsettings.use(fakesettings):
-            yield td
-
-
-@contextmanager
-def mockSiteDir():
-    with tempdir(changeto=False) as td:
-        os.makedirs(op.join(td, 'colourmaps'))
-        os.makedirs(op.join(td, 'luts'))
-        with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
-            yield td
 
 
 @contextmanager
@@ -66,7 +38,6 @@ def mockCmaps():
     1 0.3 0.4 0.5 label 1
     2 0.6 0.7 0.8 label 2
     """).strip()
-
 
     with mockSettingsDir() as userDir, \
          mockAssetDir()    as assetDir, \
