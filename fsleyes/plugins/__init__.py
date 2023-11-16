@@ -577,15 +577,15 @@ def _listEntryPoints(
                 log.debug('Filtering third party plugin: %s', ep.value)
                 continue
         if ep.name in items:
-            log.debug('Overriding entry point %s [%s] with entry '
-                      'point of the same name from', ep.name, group)
+            log.debug('Overriding entry point %s [%s] with entry point of '
+                      'the same name from %s', ep.name, group, ep.value)
 
         try:
             if load: items[ep.name] = ep.load()
             else:    items[ep.name] = ep
         except Exception as e:
-            log.warning('Could not load FSLeyes entry point %s [%s]: %s',
-                        ep.name, ep.value, e)
+            log.warning('Could not load FSLeyes entry point %s ("%s"): %s',
+                        ep.value, ep.name, e)
             continue
 
     return items
