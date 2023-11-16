@@ -10,6 +10,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.10.1 (Thursday 16th November 2023)
+------------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Adjust initialisation logic to prevent FSLeyes from crashing due to a
+  corrupt third-party plugin (!416).
+
+
 1.10.0 (Tuesday 14th November 2023)
 -----------------------------------
 
