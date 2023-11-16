@@ -346,6 +346,8 @@ def main(args=None):
         # telling the wx.App to exit gracefully.
         except (SystemExit, Exception) as e:
             app.ExitMainLoop()
+            if not isinstance(e, SystemExit):
+                log.error(e, exc_info=True)
             exitCode[0] = getattr(e, 'code', 1)
             return
 
