@@ -19,6 +19,7 @@ from fsl.data.vtk    import VTKMesh
 
 from fsleyes.profiles.orthoviewprofile import OrthoViewProfile
 from fsleyes.profiles.orthoeditprofile import OrthoEditProfile
+from fsleyes.views.orthopanel          import OrthoPanel
 
 from fsleyes.tests import run_with_orthopanel, realYield
 
@@ -473,3 +474,34 @@ def _test_applySelection_small_pixdim4(ortho, overlayList, displayCtx):
     assert np.all(sel == exp)
 
     overlayList[:] = []
+
+
+# fsl/fsleyes/fsleyes!418
+def test_edit_mode_two_views():
+    run_with_orthopanel(_test_edit_mode_two_views)
+
+def _test_edit_mode_two_views(ortho, overlayList, displayCtx):
+
+    frame  = ortho.frame
+    ortho1 = ortho
+    data   = np.random.random((10, 10, 10, 10))
+    img    = nib.Nifti1Image(data, np.eye(4))
+    img    = Image(img)
+
+    overlayList.append(img)
+    realYield()
+
+    # all normal with a single view
+    ortho1.toggleEditMode()
+    realYield()
+    ortho1.toggleEditMode()
+    realYield()
+
+    ortho2 = frame.addViewPanel(OrthoPanel)
+    realYield()
+
+    # should still be good with a second view
+    ortho1.toggleEditMode()
+    realYield()
+    ortho1.toggleEditMode()
+    realYield()
