@@ -149,14 +149,13 @@ def parseArgs(argv):
         ('ortho'), lightbox ('lightbox'), or 3D ('3d') views.
         """)
 
-    exclude = {'Main'      : ['skipfslcheck',
-                              'updatecheck',
-                              'fontSize',
-                              'notebook',
-                              'notebookFile',
-                              'notebookPort',
-                              'noBrowser'],
-               'SceneOpts' : ['movieSyncRefresh']}
+    exclude = {'Main' : ['skipfslcheck',
+                         'updatecheck',
+                         'fontSize',
+                         'notebook',
+                         'notebookFile',
+                         'notebookPort',
+                         'noBrowser']}
 
     namespace = parseargs.parseArgs(
         mainParser,
