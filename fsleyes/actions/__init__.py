@@ -391,6 +391,7 @@ class ActionFactory:
                 *args,
                 *self.__args,
                 func=func,
+                instance=instance,
                 **self.__kwargs)
 
             # and replace this ActionFactory
