@@ -10,6 +10,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.11.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed a bug which made edit mode inaccessible when more than one view was
+  open (!418).
+
 
 1.10.1 (Thursday 16th November 2023)
 ------------------------------------

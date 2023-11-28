@@ -690,7 +690,13 @@ class FSLeyesFrame(wx.Frame):
 
         for action, item in items:
             action.unbindWidget(item)
-            action.destroy()
+
+            # Some actions here are bound to instance
+            # methods, and so cannot be re-created -
+            # we don't destroy actions which invoke a
+            # function that is owned by something else.
+            if action.instance is action:
+                action.destroy()
 
         # all items from self.__toolMenuActions
         # will also be returned by GetMenuItems,
