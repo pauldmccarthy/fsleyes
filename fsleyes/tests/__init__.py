@@ -574,6 +574,35 @@ def MockFileDialog(dirdlg=False):
         yield MockDlg
 
 
+@contextlib.contextmanager
+def MockTextEntryDialog():
+    class MockDlg(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        def ShowModal(self):
+            return MockDlg.ShowModal_retval
+        def GetValue(self):
+            return MockDlg.GetValue_retval
+        ShowModal_retval = wx.ID_OK
+        GetValue_retval  = ''
+
+    with mock.patch('wx.TextEntryDialog', MockDlg):
+        yield MockDlg
+
+
+@contextlib.contextmanager
+def MockMessageDialog():
+    class MockDlg(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        def ShowModal(self):
+            return MockDlg.ShowModal_retval
+        ShowModal_retval = wx.ID_OK
+
+    with mock.patch('wx.MessageDialog', MockDlg):
+        yield MockDlg
+
+
 # stype:
 #   0 for single click
 #   1 for double click
@@ -943,3 +972,36 @@ def mockSiteDir():
         os.makedirs(op.join(td, 'luts'))
         with mock.patch.dict(os.environ, FSLEYES_SITE_CONFIG_DIR=td):
             yield td
+
+
+
+def clearCmapsDecorator(func):
+    def wrapper(*args, **kwargs):
+        with clearCmaps():
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
+@contextlib.contextmanager
+def clearCmaps():
+
+    def regcmap(*a, **kwa):
+        pass
+
+    mo = mock.MagicMock()
+
+    with mock.patch('matplotlib.colormaps.register',     regcmap), \
+         mock.patch('fsleyes.displaycontext.VolumeOpts', mo), \
+         mock.patch('fsleyes.displaycontext.VectorOpts', mo), \
+         mock.patch('fsleyes.displaycontext.MeshOpts',   mo), \
+         mock.patch('fsleyes.displaycontext.LabelOpts',  mo):
+        cmaps             = colourmaps._cmaps
+        luts              = colourmaps._luts
+        colourmaps._cmaps = None
+        colourmaps._luts  = None
+        try:
+            yield
+        finally:
+            colourmaps._cmaps = cmaps
+            colourmaps._luts  = luts
