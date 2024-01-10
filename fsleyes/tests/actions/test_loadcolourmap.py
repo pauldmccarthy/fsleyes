@@ -82,10 +82,6 @@ def _test_LoadColourMapAction(panel, overlayList, displayCtx):
             tdlg.GetValue_retval  = 'mycmap'
             mdlg.ShowModal_retval = wx.ID_YES
             act()
-            print()
-            for c in fslcm.getColourMaps():
-                print(c)
-            print()
 
             assert fslcm.isColourMapRegistered('mycmap')
             assert fslcm.isColourMapInstalled( 'mycmap')

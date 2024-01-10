@@ -991,11 +991,11 @@ def clearCmaps():
 
     mo = mock.MagicMock()
 
-    with mock.patch('matplotlib.colormaps.register',     regcmap), \
-         mock.patch('fsleyes.displaycontext.VolumeOpts', mo), \
-         mock.patch('fsleyes.displaycontext.VectorOpts', mo), \
-         mock.patch('fsleyes.displaycontext.MeshOpts',   mo), \
-         mock.patch('fsleyes.displaycontext.LabelOpts',  mo):
+    with mock.patch('matplotlib.colormaps.register',          regcmap), \
+         mock.patch('fsleyes.displaycontext.VolumeOpts',      mo), \
+         mock.patch('fsleyes.displaycontext.NiftiVectorOpts', mo), \
+         mock.patch('fsleyes.displaycontext.MeshOpts',        mo), \
+         mock.patch('fsleyes.displaycontext.LabelOpts',       mo):
         cmaps             = colourmaps._cmaps
         luts              = colourmaps._luts
         colourmaps._cmaps = None
