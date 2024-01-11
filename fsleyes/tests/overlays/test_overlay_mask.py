@@ -69,6 +69,9 @@ cli_tests = """
 {{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask         -in spline
 {{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o      -in spline
 {{binarise('3d.nii.gz', 3200, 6100, 255)}} -ot mask -o -w 5 -in spline
+
+# fsl/fsleyes/fsleyes!419
+3d.nii.gz -ot mask -a 50 -mc 1 0 0
 """
 
 
