@@ -61,9 +61,14 @@ if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
   if [ "$TEST_STYLE"x != "x" ]; then pylint --output-format=colorized fsleyes || true; fi;
   if [ "$TEST_STYLE"x != "x" ]; then exit 0; fi
 
-  # Run the tests. First batch requires
-  # a GUI, so we run via xvfb-run
-  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+  # Run the tests. First batch requires a
+  # GUI, so we run via xvfb-run The jupyter
+  # notebook tests are flaky, and fail
+  # non-deterministically under docker for
+  # unknown reasons, so we run them
+  # separately.
+  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -k "not test_notebook" -m "not (clitest or overlayclitest)" && echo "0" > status) || echo "1" > status) || true
+  ((xvfb-run -a -s "-screen 0 1920x1200x24" pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append fsleyes/tests/actions/test_notebook.py && echo "0" > status) || echo "1" > status) || true
   status=`cat status`
   failed=$status
   sleep 5
