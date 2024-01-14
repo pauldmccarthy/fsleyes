@@ -19,6 +19,10 @@ Fixed
 
 * Fixed a bug which made edit mode inaccessible when more than one view was
   open (!418).
+* Fixed a bug affecting the lookup table panel, and _Load colour map_ option
+  (!419).
+* Fixed a mask overlay bug where, when specifying both `--alpha` and
+  `--maskColour` would cause the `--alpha` value to be ignored (!419).
 
 
 1.10.1 (Thursday 16th November 2023)
