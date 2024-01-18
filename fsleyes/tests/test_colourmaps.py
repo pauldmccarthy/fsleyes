@@ -18,7 +18,10 @@ import fsl.utils.settings as fslsettings
 from   fsl.utils.tempdir import tempdir
 import fsleyes.colourmaps as fslcm
 
-from fsleyes.tests import mockSettingsDir, mockSiteDir, mockAssetDir
+from fsleyes.tests import (mockSettingsDir,
+                           mockSiteDir,
+                           mockAssetDir,
+                           clearCmapsDecorator)
 
 
 ############
@@ -57,33 +60,7 @@ def mockCmaps():
         yield (assetDir, userDir, siteDir)
 
 
-def clearCmaps(func):
-
-    def regcmap(*a, **kwa):
-        pass
-
-    mo = mock.MagicMock()
-
-    def wrapper(*args, **kwargs):
-        with mock.patch('matplotlib.cm.register_cmap',       regcmap), \
-             mock.patch('fsleyes.displaycontext.VolumeOpts', mo), \
-             mock.patch('fsleyes.displaycontext.VectorOpts', mo), \
-             mock.patch('fsleyes.displaycontext.MeshOpts',   mo), \
-             mock.patch('fsleyes.displaycontext.LabelOpts',  mo):
-            cmaps        = fslcm._cmaps
-            luts         = fslcm._luts
-            fslcm._cmaps = None
-            fslcm._luts  = None
-            try:
-                func(*args, **kwargs)
-            finally:
-                fslcm._cmaps = cmaps
-                fslcm._luts  = luts
-
-    return wrapper
-
-
-@clearCmaps
+@clearCmapsDecorator
 def test_scanDirs():
     with mockSettingsDir() as userDir, \
          mockAssetDir()    as assetDir, \
@@ -166,7 +143,7 @@ def test_scanDirs():
         assert fslcm.scanLookupTables() == expluts
 
 
-@clearCmaps
+@clearCmapsDecorator
 def test_init():
 
     with mockCmaps() as (assetDir, userDir, siteDir):
@@ -226,7 +203,7 @@ def test_init():
         assert luts[2].key            == 'lut2'
 
 
-@clearCmaps
+@clearCmapsDecorator
 def test_register():
 
     cmap = tw.dedent("""

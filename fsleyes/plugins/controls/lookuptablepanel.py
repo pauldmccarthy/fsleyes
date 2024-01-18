@@ -39,6 +39,7 @@ import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.displaycontext        as displayctx
 import fsleyes.colourmaps            as fslcmaps
 import fsleyes.strings               as strings
+import fsleyes.utils                 as utils
 
 
 
@@ -710,7 +711,7 @@ def promptForLutName(initial=None):
             return None, None
 
         lutName = dlg.GetValue()
-        lutKey  = fslcmaps.makeValidMapKey(lutName)
+        lutKey  = utils.makeValidMapKey(lutName)
 
         # a lut with the specified name already exists
         if fslcmaps.isLookupTableRegistered(lutKey):

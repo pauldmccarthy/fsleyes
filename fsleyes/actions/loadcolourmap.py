@@ -16,6 +16,7 @@ import fsl.utils.settings           as fslsettings
 import fsleyes_widgets.utils.status as status
 import fsleyes.strings              as strings
 import fsleyes.colourmaps           as fslcmap
+import fsleyes.utils                as utils
 from . import                          base
 
 
@@ -94,7 +95,7 @@ class LoadColourMapAction(base.Action):
                 return
 
             cmapName = dlg.GetValue()
-            cmapKey  = fslcmap.makeValidMapKey(cmapName)
+            cmapKey  = utils.makeValidMapKey(cmapName)
 
             # a colour map with the specified name already exists
             if fslcmap.isColourMapRegistered(cmapKey):

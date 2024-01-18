@@ -17,7 +17,7 @@ import collections.abc as abc
 import numpy as np
 
 import fsl.transform.affine             as affine
-import fsl.data.imagewrapper            as imagewrapper
+import fsleyes.data.imagewrapper        as imagewrapper
 import fsleyes_widgets                  as fwidgets
 import fsleyes.displaycontext.niftiopts as niftiopts
 import fsleyes.gl.textures.data         as texdata
