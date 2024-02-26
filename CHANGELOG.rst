@@ -10,6 +10,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.10.3 (Tuesday 27t] February 2024)
+-----------------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed an issue with overlay depth-sorting in the 3D view (!422).
+
+
 1.10.2 (Thursdy 18th January 2024)
 ----------------------------------
 
