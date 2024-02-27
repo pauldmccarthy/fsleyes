@@ -24,36 +24,54 @@ varying vec2 fragTexCoord;
 
 
 /*
- * Sort both the values and indices arrays according to the values.
- * Entries with an index value of -1 are ignored.
- * https://stackoverflow.com/a/749206
+ * Insertion sort - sorts both the values and indices arrays according
+ * to the values. Entries with an index value of -1 are ignored.
+ * Insertion sort is stable, which means that the order of equal
+ * entries is preserved.
  */
 void isort(inout float values[ {{noverlays}}],
            inout int   indices[{{noverlays}}]) {
 
+  int   i, j;
   int   itmp;
-  float ftmp;
+  float vtmp;
 
-  for (int i = {{noverlays}} - 1; i >= 0; i--) {
-
+  /*
+   * Move all invalid values (which  have
+   * an index of -1) to the end of the list
+   */
+  for (i = 0, j = 0; i < {{noverlays}}; i++) {
     if (indices[i] == -1) {
       continue;
     }
-    for (int j = 0; j < i; j++) {
+    values[j]  = values[ i];
+    indices[j] = indices[i];
+    j          = j + 1;
+  }
+  while (j < {{noverlays}}) {
+    values[ j] = -1;
+    indices[j] = -1;
+    j          = j + 1;
+  }
 
-      if (indices[j] == -1) {
-        continue;
-      }
+  for (i = 0; i < {{noverlays}}; i++) {
 
-      if (values[i] <= values[j]) {
-        ftmp       = values[i];
-        values[i]  = values[j];
-        values[j]  = ftmp;
-        itmp       = indices[i];
-        indices[i] = indices[j];
-        indices[j] = itmp;
-      }
+    /* end of the list */
+    if (indices[i] == -1) {
+      break;
     }
+
+    vtmp = values[ i];
+    itmp = indices[i];
+    j    = i - 1;
+
+    while (j >= 0 && values[j] > vtmp) {
+      values[ j + 1] = values[ j];
+      indices[j + 1] = indices[j];
+      j              = j - 1;
+    }
+    values[ j + 1] = vtmp;
+    indices[j + 1] = itmp;
   }
 }
 
@@ -64,7 +82,6 @@ void main(void) {
   int   indices[{{noverlays}}];
   vec4  rgbas[  {{noverlays}}];
   float depths[ {{noverlays}}];
-  float depth;
 
   /* Retrieve RGBA and depth values for every overlay */
   {% for i in range(noverlays) %}
@@ -75,13 +92,13 @@ void main(void) {
   /*
    * Initialise indices - entries with alpha == 0
    * are ignored, and their index is set to -1,
-   * which causes the sort routine to ignore them.
+   * which causes the sort routine to shift them
+   * to the back.
    */
   for (int i = 0; i < {{noverlays}}; i++) {
     if (rgbas[i].a == 0) { indices[i] = -1; }
     else                 { indices[i] =  i; }
   }
-
 
   /* Sort by depth */
   isort(depths, indices);
@@ -93,6 +110,7 @@ void main(void) {
   rgba = bgColour;
   for (int i = {{noverlays}} - 1; i >= 0; i--) {
 
+    /* Skip transparent values */
     if (indices[i] == -1) {
       continue;
     }
@@ -101,16 +119,10 @@ void main(void) {
             (rgba              * (1 - rgbas[indices[i]].a)));
   }
 
-  // Set the depth of this fragment to that of the
-  // first (non-transparent) sorted input depth
-  depth = 1;
-  for (int i = 0; i < {{noverlays}}; i++) {
-    if (indices[i] != -1) {
-      depth = depths[i];
-      break;
-    }
-  }
-
+  /*
+   * Set the depth of this fragment to
+   * that of the first sorted input depth
+   */
   gl_FragColor = rgba;
-  gl_FragDepth = depth;
+  gl_FragDepth = depths[0];
 }
