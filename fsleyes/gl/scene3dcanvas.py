@@ -95,6 +95,8 @@ class Scene3DCanvas:
                                self.__name,
                                self.__displayBoundsChanged)
 
+        displayCtx.addListener('overlayOrder', self.__name, self.Refresh)
+
         opts = self.opts
         opts.addListener('pos',           self.__name, self.Refresh)
         opts.addListener('showCursor',    self.__name, self.Refresh)
