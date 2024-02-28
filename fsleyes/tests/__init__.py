@@ -421,6 +421,11 @@ def run_cli_tests(
     glver = os.environ.get('FSLEYES_TEST_GL', '2.1')
     glver = [int(v) for v in glver.split('.')]
 
+    # only run tests matching these patterns
+    testpat = os.environ.get('FSLEYES_TEST_PATTERN', None)
+    if testpat is not None:
+        testpat = testpat.split(';')
+
     if tuple(glver) < (2, 1):
         exclude = ['tensor', ' sh', '_sh', 'spline', 'mip']
     else:
@@ -456,6 +461,11 @@ def run_cli_tests(
             if any([exc in test for exc in exclude]):
                 print('CLI test skipped [{}] {}'.format(prefix, test))
                 continue
+
+            if testpat is not None:
+                if not any(p in test for p in testpat):
+                    print('CLI test skipped [{}] {}'.format(prefix, test))
+                    continue
 
             test      = fill_test(test)
             allowed   = string.ascii_letters + string.digits + '_-.,'
