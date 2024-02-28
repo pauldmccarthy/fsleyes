@@ -69,7 +69,11 @@ cli_tests = """
 -wl 10 -26 16  3d.nii.gz -cr 4000 5000
 
 # cmapCycle
--cy 3d.nii.gz 3d.nii.gz -cr 3400 8000 3d.nii.gz -cr 5000 8000
+-cy 3d.nii.gz 3d.nii.gz -cr 4500 8000 3d.nii.gz -cr 6000 8000
+
+# ungroup overlays
+   -ni 3d.nii.gz -in linear 3d.nii.gz -cm red-yellow -cr 5000 8000
+-u -ni 3d.nii.gz -in linear 3d.nii.gz -cm red-yellow -cr 5000 8000
 """
 
 

@@ -126,8 +126,15 @@ class DisplayContext(props.SyncableHasProperties):
     a group of overlays which share display properties.
 
     By default there is one overlay group, to which all new overlays are
-    initially added. The :class:`.OverlayListPanel` allows the user to
-    add/remove overlays from this default group.
+    initially added (unless :attr:`groupOverlays.` is ``False``). The
+    :class:`.OverlayListPanel` allows the user to add/remove overlays from
+    this default group.
+    """
+
+
+    groupOverlays = props.Boolean(default=True)
+    """Boolean which controls whether all newly added overlays are added
+    to the deafult :attr:`overlayGroup`.
     """
 
 
@@ -213,7 +220,6 @@ class DisplayContext(props.SyncableHasProperties):
     The :meth:`defaultDisplaySpace` can be used to control how the
     ``displaySpace`` is initialised.
 
-
     ..note:: This setting updates the :attr:`.NiftiOpts.transform` property for
              every :class:`.Nifti` overlay in the :class:`.OverlayList`.  It is
              possible to modify the ``NiftiOpts.transform`` property for
@@ -298,9 +304,9 @@ class DisplayContext(props.SyncableHasProperties):
         constructor, in addition to the following:
 
          - The ``syncOverlayDisplay``,, ``syncOverlayVolume``, ``location``,
-           and ``bounds`` properties are added to the ``nobind`` argument
-         - The ``overlayGroups``, ``autoDisplay`` and ``loadInMemory``
-           properties are added to the ``nounbind`` argument.
+           and ``bounds`` properties are added to the ``nobind`` argument -
+           The ``overlayGroups``, ``groupOverlays``, ``autoDisplay`` and
+           ``loadInMemory`` properties are added to the ``nounbind`` argument.
         """
 
         kwargs = dict(kwargs)
@@ -313,6 +319,7 @@ class DisplayContext(props.SyncableHasProperties):
                          'location',
                          'bounds'])
         nounbind.extend(['overlayGroups',
+                         'groupOverlays',
                          'autoDisplay',
                          'loadInMemory'])
 
@@ -355,9 +362,12 @@ class DisplayContext(props.SyncableHasProperties):
         # multiple overlay groups, we are currently
         # using just one, allowing the user to specify
         # a set of overlays for which their display
-        # properties are 'locked'.
+        # properties are 'linked'. See the
+        # fsleyes.displaycontext.group module.
         if not self.__child:
-            lockGroup = dcgroup.OverlayGroup(self, overlayList)
+            if self.groupOverlays: group = overlayList
+            else:                  group = []
+            lockGroup = dcgroup.OverlayGroup(self, group)
             self.overlayGroups.append(lockGroup)
 
         # This dict contains the Display
@@ -395,7 +405,7 @@ class DisplayContext(props.SyncableHasProperties):
         # is important - check it out
         self.__overlayListChanged()
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init (%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
@@ -826,11 +836,16 @@ class DisplayContext(props.SyncableHasProperties):
                         opts.detachFromParent('transform')
 
             # All new overlays are initially
-            # added to the default overlay group.
+            # added to the default overlay group
+            # (unless the groupOverlays property
+            # is False).
             # This only needs to be done on the
             # master DC, as the overlayGroups are
             # the same across all DCs.
-            if new and not self.__child and len(self.overlayGroups) > 0:
+            if new                and \
+               not self.__child   and \
+               self.groupOverlays and \
+               len(self.overlayGroups) > 0:
                 self.overlayGroups[0].addOverlay(overlay)
 
         # Ensure that the displaySpace

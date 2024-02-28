@@ -95,6 +95,8 @@ class Scene3DCanvas:
                                self.__name,
                                self.__displayBoundsChanged)
 
+        displayCtx.addListener('overlayOrder', self.__name, self.Refresh)
+
         opts = self.opts
         opts.addListener('pos',           self.__name, self.Refresh)
         opts.addListener('showCursor',    self.__name, self.Refresh)
@@ -835,7 +837,12 @@ class Scene3DCanvas:
         shader = self.__shaders.get(len(rtexs), None)
         if shader is not None:
 
-            for i, rtex in enumerate(rtexs):
+            # For fragments of equal depth, the blending shader
+            # will give precedence to the first one. This would
+            # correspond to an overlay which is earlier in the
+            # overlay list, whcih should be drawn on the bottom.
+            # So here we flip the overlay order.
+            for i, rtex in enumerate(reversed(rtexs)):
                 rtex             .bindTexture(int(gl.GL_TEXTURE0) + i * 2)
                 rtex.depthTexture.bindTexture(int(gl.GL_TEXTURE0) + i * 2 + 1)
 
