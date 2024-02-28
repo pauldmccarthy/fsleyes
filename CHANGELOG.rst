@@ -3,6 +3,7 @@
 .. |shift_key|    unicode:: U+21E7
 .. |control_key|  unicode:: U+2303
 .. |eye_icon|     image::   images/eye_icon.png
+.. |chain_icon|   image::   images/chainlink_icon.png
 .. |spanner_icon| image::   images/spanner_icon.png
 
 
@@ -10,12 +11,24 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.10.3 (Tuesday 27t] February 2024)
------------------------------------
+1.10.3 (Thursday 29th February 2024)
+------------------------------------
+
+
+Added
+^^^^^
+
+
+* New ``-u`` / ``--ungroupOverlays`` command-line option, which causes all
+  overlays to be unlinked by default (via the overlay list chain-link
+  |chain_icon| button). This has the effect that properties such as
+  interpolation, which are normally linked across all overlays, can be set
+  independently for each overlay (!422).
 
 
 Fixed
 ^^^^^
+
 
 * Fixed an issue with overlay depth-sorting in the 3D view (!422).
 
