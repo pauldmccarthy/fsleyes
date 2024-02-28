@@ -759,7 +759,7 @@ def roi(fname, roi):
     base    = fslimage.removeExt(op.basename(fname))
     outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
 
-    img = fslimage.Image(fname, loadData=True)
+    img = fslimage.Image(fname)
     xs, xe, ys, ye, zs, ze = roi
     data = img.data[xs:xe, ys:ye, zs:ze, ...]
 
