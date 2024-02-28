@@ -749,9 +749,9 @@ def roi(fname, roi):
     base    = fslimage.removeExt(op.basename(fname))
     outfile = '{}_roi_{}_{}_{}_{}_{}_{}'.format(base, *roi)
 
-    img = fslimage.Image(fname)
+    img = fslimage.Image(fname, loadData=True)
     xs, xe, ys, ye, zs, ze = roi
-    data = img[xs:xe, ys:ye, zs:ze, ...]
+    data = img.data[xs:xe, ys:ye, zs:ze, ...]
 
     xform  = img.voxToWorldMat
     offset = [lo for lo in roi[::2]]

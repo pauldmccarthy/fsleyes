@@ -10,7 +10,7 @@ from unittest import mock
 
 import pytest
 
-from fsleyes.tests import run_cli_tests, haveGL21
+from fsleyes.tests import run_cli_tests, haveGL21, roi
 
 
 pytestmark = pytest.mark.clitest
@@ -65,6 +65,18 @@ cli_blend_tests = """
 -dl -rot   0 -45   0 3d.nii.gz -in linear  3d.nii.gz -in linear -cr 6300 8000 -cm red-yellow
 -dl -rot   0   0  45 3d.nii.gz -in linear  3d.nii.gz -in linear -cr 6300 8000 -cm red-yellow
 -dl -rot   0   0 -45 3d.nii.gz -in linear  3d.nii.gz -in linear -cr 6300 8000 -cm red-yellow
+
+# blue should be on top
+-dl -u -rot -25 -15 -5 \
+3d                              -bi -in linear                    -a 90 -cp 50 90 -90 \
+{{roi('3d', [1,-1,1,-1,1,-1])}} -bi -in linear -cm blue-lightblue -a 95               \
+{{roi('3d', [1,-1,1,-1,1,-1])}} -bi -in linear -cm red-yellow     -a 95
+
+# red-yellow should be on top
+-dl -u -rot -25 -15 -5 \
+3d                              -bi -in linear                    -a 90 -cp 50 90 -90 \
+{{roi('3d', [1,-1,1,-1,1,-1])}} -bi -in linear -cm red-yellow     -a 95               \
+{{roi('3d', [1,-1,1,-1,1,-1])}} -bi -in linear -cm blue-lightblue -a 95
 """
 
 
@@ -78,6 +90,7 @@ def test_render_3d():
 @pytest.mark.skipif('not haveGL21()')
 def test_render_3d_blending():
     extras = {
+        'roi' : roi
     }
     run_cli_tests('test_render_3d_blending',
                   cli_blend_tests, extras=extras, scene='3d')
