@@ -229,7 +229,8 @@ overlay.
    axis, of the first and last slices which are displayed on the lightbox view.
 
 
-6. **Zoom** This slider allows you to zoom in and out of the lightbox view.
+6. **Zoom** This slider allows you to zoom in and out of the lightbox view
+   (shrinking/enlarging the current slice
 
 
 7. **Slice spacing** This slider allows you to adjust the distance, along the
@@ -243,12 +244,34 @@ Lightbox view settings
 
 
 The :ref:`view settings panel <ortho_lightbox_views_view_settings>` for a
-lightbox view contains some additional settings, allowing you to turn on a
-grid, and to highlight the current slice.
+lightbox view contains the same settings that are available on the ligthbox
+toolbar, along with some additional settings.
 
 
 .. image:: images/ortho_lightbox_views_lightbox_view_settings.png
    :width: 50%
+   :align: center
+
+The additional settings that are available are:
+
+ - **Slice overlap** Overlap adjacent slices horizontally and vertically.
+
+ - **Reverse slice order** Reverse the order in which slices are displayed,
+   so that the last slice is displayed at top-left.
+
+ - **Reverse slice overlap** Reverse the order in which slices overlap each
+   other - by default, later slices are drawn on top of earlier slices.
+
+ - **Highlight slice** Draw a rectangle around the current slice.
+
+ - **Show grid lines** Draw a grid of lines between rows and columns.
+
+ - **Show slice location** Show the slice location, in voxel or
+   world coordinates, at the top of each slice.
+
+
+.. image:: images/ortho_lightbox_views_lightbox_view_settings_example.png
+   :width: 70%
    :align: center
 
 
