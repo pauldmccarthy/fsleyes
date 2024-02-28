@@ -29,7 +29,7 @@ Fixed
 
 * Fixed a bug which made edit mode inaccessible when more than one view was
   open (!418).
-* Fixed a bug affecting the lookup table panel, and _Load colour map_ option
+* Fixed a bug affecting the lookup table panel, and *Load colour map* option
   (!419).
 * Fixed a mask overlay bug where, when specifying both `--alpha` and
   `--maskColour` would cause the `--alpha` value to be ignored (!419).
