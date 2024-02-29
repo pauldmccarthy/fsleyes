@@ -130,6 +130,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts. listen('showGridLines',  self.name, self.Refresh)
         opts. listen('highlightSlice', self.name, self.Refresh)
         opts. listen('labelSpace',     self.name, self.Refresh)
+        opts. listen('labelSize',      self.name, self.Refresh)
+        opts. listen('fgColour',       self.name, self.Refresh)
         opts. listen('reverseOverlap', self.name, self.Refresh)
 
 

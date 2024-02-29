@@ -407,6 +407,7 @@ OPTIONS = td.TypeDict({
                        'voxelLoc',
                        'worldLoc',
                        'selectedOverlay',
+                       'ungroupOverlays',
                        'autoDisplay',
                        'displaySpace',
                        'neuroOrientation',
@@ -798,6 +799,7 @@ ARGUMENTS = td.TypeDict({
     'Main.voxelLoc'                : ('vl',      'voxelLoc',                True),
     'Main.worldLoc'                : ('wl',      'worldLoc',                True),
     'Main.selectedOverlay'         : ('o',       'selectedOverlay',         True),
+    'Main.ungroupOverlays'         : ('u',       'ungroupOverlays',         False),
     'Main.autoDisplay'             : ('ad',      'autoDisplay',             False),
     'Main.displaySpace'            : ('ds',      'displaySpace',            True),
     'Main.neuroOrientation'        : ('no',      'neuroOrientation',        False),
@@ -1050,6 +1052,8 @@ HELP = td.TypeDict({
     'Main.worldLoc' :
     'Location to show (world coordinates, takes precedence over --voxelLoc)',
     'Main.selectedOverlay'  : 'Selected overlay (index, starting from 0)',
+    'Main.ungroupOverlays'   :
+    'Do not group overlays via the chainlink button',
     'Main.autoDisplay' :
     'Automatically configure overlay display settings (unless any display '
     'settings are specified)',
@@ -1767,6 +1771,7 @@ def _configMainParser(mainParser, exclude=None):
         'autoDisplay'             : {'action'  : 'store_true'},
         'selectedOverlay'         : {'metavar' : 'INDEX',
                                      'type'    : int},
+        'ungroupOverlays'         : {'action'  : 'store_true'},
         'neuroOrientation'        : {'action'  : 'store_true'},
         'displaySpace'            : {'type'    : str},
         'hideOrientationWarnings' : {'action'  : 'store_true'},
@@ -2634,7 +2639,8 @@ def applyMainArgs(args, overlayList, displayCtx):
     if args.neuroOrientation is not None:
         displayCtx.radioOrientation = not args.neuroOrientation
 
-    displayCtx.autoDisplay = args.autoDisplay
+    displayCtx.autoDisplay   = args.autoDisplay
+    displayCtx.groupOverlays = not args.ungroupOverlays
 
     plugins.SHOW_THIRD_PARTY_PLUGINS = args.showAllPlugins
 

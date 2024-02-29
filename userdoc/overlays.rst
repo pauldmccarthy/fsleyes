@@ -957,8 +957,23 @@ display settings:
   <overlays_mesh_reference_image>`).
 
 - **Mesh coordinate space** This is an advanced setting which allows you to
-  specify how the VTK model coordinates are defined, relative to its reference
-  image.
+  specify how the mesh vertex coordinates are defined, relative to its
+  reference image. FSLeyes will try to guess the correct coordinate system when
+  it can, but you can explicitly change this setting if needed. The options
+  are:
+
+    - *World coordinates* - The mesh coordinates are defined in the reference
+      image world coordinate system (as defined by its ``sform`` / ``qform``).
+    - *Scaled voxels* - The mesh coordinates are defined in the reference image
+      voxel coordinate system, scaled by the voxel ``pixdims``.
+    - *Scaled voxels forced to radiological convention* - The mesh coordinates
+      are defined in the reference image voxel coordinate system, scaled by the
+      voxel pixdims. If the reference image transformation matrix (``sform`` /
+      ``qform``) has a positive determinant, the X axis is flipped.
+    - *Voxels* - The mesh coordinates are defined in the reference image
+      voxel coordinate system.
+    - *Freesurfer coordinates* - The mesh coordinates are defined in the
+      Freesurfer *Torig* / *vox2ras-tkr* coordinate system.
 
 - **Show outline only** You can choose between showing the filled mesh, or
   showing just its outline.

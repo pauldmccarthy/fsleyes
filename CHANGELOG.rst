@@ -3,11 +3,46 @@
 .. |shift_key|    unicode:: U+21E7
 .. |control_key|  unicode:: U+2303
 .. |eye_icon|     image::   images/eye_icon.png
+.. |chain_icon|   image::   images/chainlink_icon.png
 .. |spanner_icon| image::   images/spanner_icon.png
 
 
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
+
+
+1.10.3 (Thursday 29th February 2024)
+------------------------------------
+
+
+Added
+^^^^^
+
+
+* New ``-u`` / ``--ungroupOverlays`` command-line option, which causes all
+  overlays to be unlinked by default (via the overlay list chain-link
+  |chain_icon| button). This has the effect that properties such as
+  interpolation, which are normally linked across all overlays, can be set
+  independently for each overlay (!422).
+
+
+Changed
+^^^^^^^
+
+
+* Some additional display properties are now linked by default across
+  overlays, including mesh outline and outline width and line vector width and
+  L/R orientation flip. These properties can be unlinked for a specific overlay
+  via the overlay list chain-link |chain_icon| button (!424).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with overlay depth-sorting in the 3D view (!422).
+* Fixed an issue in the lightbox view when displaying label and mask overlays and
+  overlapping lightbox slices (!424).
 
 
 1.10.2 (Thursdy 18th January 2024)
@@ -19,7 +54,7 @@ Fixed
 
 * Fixed a bug which made edit mode inaccessible when more than one view was
   open (!418).
-* Fixed a bug affecting the lookup table panel, and _Load colour map_ option
+* Fixed a bug affecting the lookup table panel, and *Load colour map* option
   (!419).
 * Fixed a mask overlay bug where, when specifying both `--alpha` and
   `--maskColour` would cause the `--alpha` value to be ignored (!419).

@@ -301,8 +301,7 @@ class GLLabel(glimageobject.GLImageObject, globject.GLObject):
         # run the offscreen texture through the
         # edge filter, drawing the result to
         # the canvas
-        if xform is None: xform = affine.concat(projmat, viewmat)
-        else:             xform = affine.concat(projmat, viewmat, xform)
+        xform = affine.concat(projmat, viewmat)
 
         self.edgeFilter.set(offsets=offsets, outline=outline)
         self.edgeFilter.apply(rtex, zpos, xmin, xmax,
