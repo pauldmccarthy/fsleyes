@@ -26,6 +26,16 @@ Added
   independently for each overlay (!422).
 
 
+Changed
+^^^^^^^
+
+
+* Some additional display properties are now linked by default across
+  overlays, including mesh outline and outline width and line vector width and
+  L/R orientation flip. These properties can be unlinked for a specific overlay
+  via the overlay list chain-link |chain_icon| button (!424).
+
+
 Fixed
 ^^^^^
 
