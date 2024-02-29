@@ -317,8 +317,7 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             fslgl.glmask_funcs.draw2D(self, rtex, zpos, axes, xform)
 
-        if xform is None: xform = affine.concat(projmat, viewmat)
-        else:             xform = affine.concat(projmat, viewmat, xform)
+        xform = affine.concat(projmat, viewmat)
 
         # Run the texture through an edge detection
         # filter, drawing the result to screen
