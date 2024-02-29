@@ -262,6 +262,10 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """Font size used for slice location labels. """
 
 
+    fgColour = props.Colour(default=(1, 1, 1))
+    """Colour to use for slice location labels."""
+
+
     renderMode = props.Choice(('onscreen', 'offscreen'))
     """How the :class:`.GLObject` instances are rendered to the canvas.
 

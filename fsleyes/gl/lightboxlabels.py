@@ -178,6 +178,7 @@ class LightBoxLabels:
             text           = fmt.format(axlbl, wpos[zax])
             label          = self.getLabel(wpos[zax], text)
             label.fontSize = copts.labelSize
+            label.colour   = copts.fgColour
             label.enabled  = True
             label.x        = cpos[0]
             label.y        = cpos[1]
