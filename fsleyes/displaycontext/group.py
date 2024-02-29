@@ -81,13 +81,13 @@ class OverlayGroup(props.HasProperties):
                              'outline',
                              'outlineWidth',
                              'wireframe'],
+        'NiftiVectorOpts' : ['orientFlip'],
+        'LineVectorOpts'  : ['lineWidth'],
+        'RGBVectorOpts'   : ['interpolation'],
         'VectorOpts'      : ['suppressX',
                              'suppressY',
                              'suppressZ',
                              'suppressMode'],
-        'NiftiVectorOpts' : ['orientFlip'],
-        'LineVectorOpts'  : ['lineWidth'],
-        'RGBVectorOpts'   : ['interpolation'],
         'TensorOpts'      : ['lighting',
                              'tensorResolution'],
         'TractogramOpts'  : ['lineWidth',
@@ -115,13 +115,15 @@ class OverlayGroup(props.HasProperties):
             NiftiOpts,
             VolumeOpts,
             Volume3DOpts,
-            MaskOpts,
-            VectorOpts,
-            RGBVectorOpts,
-            LineVectorOpts,
-            MeshOpts,
             LabelOpts,
-            TensorOpts)
+            MeshOpts,
+            MaskOpts,
+            LineVectorOpts,
+            NiftiVectorOpts,
+            RGBVectorOpts,
+            VectorOpts,
+            TensorOpts,
+            TractogramOpts)
 
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList
