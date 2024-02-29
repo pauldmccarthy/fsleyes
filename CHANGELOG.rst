@@ -41,6 +41,8 @@ Fixed
 
 
 * Fixed an issue with overlay depth-sorting in the 3D view (!422).
+* Fixed an issue in the lightbox view when displaying label and mask overlays and
+  overlapping lightbox slices (!424).
 
 
 1.10.2 (Thursdy 18th January 2024)
