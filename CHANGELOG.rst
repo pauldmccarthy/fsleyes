@@ -26,11 +26,23 @@ Added
   independently for each overlay (!422).
 
 
+Changed
+^^^^^^^
+
+
+* Some additional display properties are now linked by default across
+  overlays, including mesh outline and outline width and line vector width and
+  L/R orientation flip. These properties can be unlinked for a specific overlay
+  via the overlay list chain-link |chain_icon| button (!424).
+
+
 Fixed
 ^^^^^
 
 
 * Fixed an issue with overlay depth-sorting in the 3D view (!422).
+* Fixed an issue in the lightbox view when displaying label and mask overlays and
+  overlapping lightbox slices (!424).
 
 
 1.10.2 (Thursdy 18th January 2024)

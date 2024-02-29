@@ -39,14 +39,14 @@ cli_tests = """
 -no -ds {{fliporient('3d.nii.gz')}} {{fliporient('3d.nii.gz')}} -cm red 3d.nii.gz -cm blue -a 75 # Should display in neurological orientation
 -no -ds 3d.nii.gz                   {{fliporient('3d.nii.gz')}} -cm red 3d.nii.gz -cm blue -a 75 # Should display in neurological orientation
 
--xz 1500 -yz 1500 -zz 1500                                             {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
--xz 1500 -yz 1500 -zz 1500     -ds world                               {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
--xz 1500 -yz 1500 -zz 1500     -ds {{fliporient('dti/dti_V1.nii.gz')}} {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
--xz 1500 -yz 1500 -zz 1500     -ds dti/dti_V1.nii.gz                   {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
--xz 1500 -yz 1500 -zz 1500 -no                                         {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
--xz 1500 -yz 1500 -zz 1500 -no -ds world                               {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
--xz 1500 -yz 1500 -zz 1500 -no -ds {{fliporient('dti/dti_V1.nii.gz')}} {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
--xz 1500 -yz 1500 -zz 1500 -no -ds dti/dti_V1.nii.gz                   {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
+-u -xz 1500 -yz 1500 -zz 1500                                             {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
+-u -xz 1500 -yz 1500 -zz 1500     -ds world                               {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
+-u -xz 1500 -yz 1500 -zz 1500     -ds {{fliporient('dti/dti_V1.nii.gz')}} {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
+-u -xz 1500 -yz 1500 -zz 1500     -ds dti/dti_V1.nii.gz                   {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in radiological orientation
+-u -xz 1500 -yz 1500 -zz 1500 -no                                         {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
+-u -xz 1500 -yz 1500 -zz 1500 -no -ds world                               {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
+-u -xz 1500 -yz 1500 -zz 1500 -no -ds {{fliporient('dti/dti_V1.nii.gz')}} {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
+-u -xz 1500 -yz 1500 -zz 1500 -no -ds dti/dti_V1.nii.gz                   {{fliporient('dti/dti_V1.nii.gz')}} -ot linevector dti/dti_V1.nii.gz -ot linevector # Should display in neurological orientation
 
 {{sqformcodes('3d.nii.gz', 4, 0)}}  # Labels should be displayed
 {{sqformcodes('3d.nii.gz', 0, 4)}}  # Labels should be displayed
