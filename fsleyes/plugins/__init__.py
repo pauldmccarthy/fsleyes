@@ -463,6 +463,13 @@ class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
         return iter(self.__plugins.values())
 
 
+    def find_spec(self, fullname, path, target=None):
+        """May be called by importlib when attempting to import a module.
+        Returns ``None``.
+        """
+        return None
+
+
 def initialise():
     """Loads all plugins, including built-ins, plugin files in the FSLeyes
     settings directory, and those found on the ``FSLEYES_PLUGIN_PATH``
