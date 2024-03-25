@@ -167,6 +167,12 @@ setting, and you can display data on the surface via the **Vertex data**
 setting.
 
 
+If you have an image with data that you would like to display on the mesh, you
+can use the *Tools* |right_arrow| *Project image data onto surface* option -
+this will sample data from the image at every mesh vertex, and then add that
+data to the mesh as a **Vertex data** option.
+
+
 The default behaviour, when you are colouring a mesh with some vertex data, is
 for the colours to be interpolated (smoothed) across the mesh
 surface. However, if you are viewing discrete data (e.g. anatomical labels),
