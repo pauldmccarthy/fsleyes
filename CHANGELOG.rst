@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.10.4 (Monday 25th March 2024)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Added a work-around to avoid send2trash-related crashes on old versions of
+  macOS (!426, see https://github.com/arsenetar/send2trash/issues/83).
+
+
 1.10.3 (Thursday 29th February 2024)
 ------------------------------------
 
