@@ -5,6 +5,9 @@ This directory contains a set of Dockerfiles which define Docker images that
 are used for FSLeyes testing. These images are available on the Docker hub at
 https://hub.docker.com/u/pauldmccarthy/
 
+These images are no longer in use:
+ - `fsleyes-py37-wxpy4-gtk3`
+ - `fsleyes-py38-wxpy4-gtk3`
 
 These images can be re-built via CI jobs on the fsl/fsleyes/fsleyes GitLab
 repository. To build/update an image by hand, follow these steps:

@@ -17,7 +17,8 @@ apt-get install -y dpkg-dev \
                    libsm-dev \
                    libtiff-dev \
                    libwebkit2gtk-4.0-dev \
-                   libxtst-dev
+                   libxtst-dev \
+                   patchelf
 
 $PY_VENV /wxpy-build.env
 source /wxpy-build.env/bin/activate
@@ -27,11 +28,12 @@ pip install --upgrade pip setuptools wheel
 mkdir $VIRTUAL_ENV/wx-build
 pushd $VIRTUAL_ENV/wx-build > /dev/null
 
-git clone https://github.com/wxWidgets/Phoenix.git
-pushd Phoenix > /dev/null
-git checkout $WXPYTHON_VERSION
-git submodule update --init --recursive
+wget https://pypi.io/packages/source/w/wxPython/wxPython-${WXPYTHON_VERSION}.tar.gz
+tar xf wxPython-${WXPYTHON_VERSION}.tar.gz
+pushd wxPython-${WXPYTHON_VERSION} > /dev/null
 
+# need newer sip for py312 compat
+sed -i "s/sip == 6.7.9/sip == 6.7.11/g" requirements/devel.txt
 pip install -r requirements/devel.txt
 pip install -r requirements/install.txt
 
@@ -66,37 +68,34 @@ mv tmp buildtools/build_wxwidgets.py
 # being compiled.
 sed -ie "s/^\(.*html2.*\)$/#\1/g" wscript
 
-# As of wxPython 4.0.0, build.py forces the
-# use of C++11, even though none of the
-# wxwidgets/phoenix uses any C++ features.
-sed -ie "s/'-std=c++11'/''/g" build.py
-
-# python setup.py install will attempt
-# to re-run the build we are about to
-# do manually, so we need to patch
-# setup.py
-sed -ie "s/'install' *: wx_install/'install' : orig_install/g" setup.py
-
-
-# wxpython 4.2.0 has an unnecessary
-# "from attrdict import AttrDict"
-# statement (only used on windows).
-# And attrdict is not compatible
-# with py311, so best to just remove it.
-sed -ie "s/^ *from attrdict import.*$//g" buildtools/config.py
+BUILD_ARGS=("--no_magic" "--release" "--gtk3" "--prefix=/test.venv/" "--jobs=$(nproc)")
 
 # do the build
-python ./build.py dox etg --nodoc sip build --release --gtk3
+python ./build.py sip       "${BUILD_ARGS[@]}"
+python ./build.py build_wx  "${BUILD_ARGS[@]}"
+python ./build.py build_py  "${BUILD_ARGS[@]}"
 
+# install into test venv
 deactivate
 source /test.venv/bin/activate
 
-pip install .
+python ./build.py install_wx "${BUILD_ARGS[@]}"
+python ./build.py install_py "${BUILD_ARGS[@]}"
 
 # sometimes we get files which are rw-------
 chmod -R a+rx $VIRTUAL_ENV/lib/
 
+# .so files seem to have trouble finding each other
+wxdir=$(cd $VIRTUAL_ENV/lib/python*/site-packages/wx/ && pwd)
+for f in $wxdir/*.so; do
+  patchelf $f --set-rpath  "$VIRTUAL_ENV/lib/"
+done
+
 popd > /dev/null
 popd > /dev/null
+
+# sanity check (do this outside of the build dir so python
+# doesn't try to import the local <build-dir>/wx/ directory)
+python -c "import wx"
 
 rm -rf /wxpy-build.env

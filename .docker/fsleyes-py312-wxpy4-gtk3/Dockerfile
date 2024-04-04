@@ -4,7 +4,7 @@ MAINTAINER Paul McCarthy <pauldmccarthy@gmail.com>
 ENV PY_VERSION       "python3.12"
 ENV PY_PACKAGES      "python3-pip python3.12-venv"
 ENV PY_VENV          "python3.12 -m venv"
-ENV WXPYTHON_VERSION "wxPython-4.2.1"
+ENV WXPYTHON_VERSION "4.2.1"
 ENV DEBIAN_FRONTEND  "noninteractive"
 ENV LANG             "en_GB.UTF-8"
 
