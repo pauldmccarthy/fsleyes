@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.11.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes will now attempt to automatically set ``$FSLDIR`` if it is not set
+  (e.g. when started from a desktop launcher) (!428).
+
+
 1.10.4 (Monday 25th March 2024)
 -------------------------------
 
