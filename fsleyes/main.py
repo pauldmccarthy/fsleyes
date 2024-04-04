@@ -902,7 +902,8 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
 def fslDirWarning(parent):
     """Checks to see if the ``$FSLDIR`` environment variable is set, or
     if a FSL installation directory has been saved previously. If not,
-    displays a warning via a :class:`.FSLDirDialog`.
+    attempts to locate ``$FSLDIR`` or, failing that, displays a warning
+    via a :class:`.FSLDirDialog`.
 
     :arg parent: A ``wx`` parent object.
     """
@@ -911,26 +912,31 @@ def fslDirWarning(parent):
         return
 
     import fsl.utils.settings as fslsettings
+    from fsleyes_widgets.dialog import FSLDirDialog
 
-    # Check settings before
-    # prompting the user
+    # Check saved settings
     fsldir = fslsettings.read('fsldir')
 
     if fsldir is not None:
         fslplatform.fsldir = fsldir
         return
 
-    from fsleyes_widgets.dialog import FSLDirDialog
+    # try to derive $FSLDIR from the python
+    # interpreter being used to run FSLeyes
+    fsldir  = None
+    basedir = op.join(op.dirname(sys.executable), '..')
 
-    dlg = FSLDirDialog(parent, 'FSLeyes', fslplatform.os == 'Darwin')
+    if op.exists(op.join(basedir, 'etc', 'fslversion')):
+        fsldir = basedir
 
-    if dlg.ShowModal() == wx.ID_OK:
+    # otherwise ask the user
+    else:
+        dlg = FSLDirDialog(parent, 'FSLeyes', fslplatform.os == 'Darwin')
+        if dlg.ShowModal() == wx.ID_OK:
+            fsldir = dlg.GetFSLDir()
 
-        fsldir = dlg.GetFSLDir()
-
-        log.debug('Setting $FSLDIR to {} (specified '
-                  'by user)'.format(fsldir))
-
+    if fsldir is not None:
+        log.debug('Setting $FSLDIR to %s', fsldir)
         fslplatform.fsldir        = fsldir
         fslsettings.write('fsldir', fsldir)
 
