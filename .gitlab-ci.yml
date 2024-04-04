@@ -160,6 +160,11 @@ build-docker-image-fsleyes-py311-wxpy4-gtk3:
   variables:
     BUILDDIR: .docker/fsleyes-py311-wxpy4-gtk3
 
+build-docker-image-fsleyes-py312-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py312-wxpy4-gtk3
+
 
 ############
 # Test stage
@@ -234,13 +239,6 @@ test:macos:
       - failures/
 
 
-test:3.8:
-  stage: test
-  image: pauldmccarthy/fsleyes-py38-wxpy4-gtk3
-  <<: *test_template
-  <<: *test_rules_upstream
-
-
 test:3.9:
   stage: test
   image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
@@ -262,9 +260,16 @@ test:3.11:
   <<: *test_rules_upstream
 
 
+test:3.12:
+  stage: test
+  image: pauldmccarthy/fsleyes-py312-wxpy4-gtk3
+  <<: *test_template
+  <<: *test_rules_upstream
+
+
 test:build-pypi-dist:
   stage: test
-  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
   <<: *test_rules
 
   tags:
@@ -282,7 +287,7 @@ test:build-pypi-dist:
 
 style:
   stage: style
-  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
   <<: *test_template
   variables:
     TEST_STYLE: "true"
@@ -320,7 +325,7 @@ build-pypi-dist:
   <<: *only_releases
 
   stage: build
-  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
 
   tags:
     - docker
@@ -350,7 +355,7 @@ deploy-pypi:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.9
+  image: python:3.10
 
   tags:
     - docker
@@ -367,7 +372,7 @@ deploy-zenodo:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.9
+  image: python:3.10
 
   tags:
     - docker
