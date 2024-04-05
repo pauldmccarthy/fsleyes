@@ -131,12 +131,12 @@ class {prefix}Tool(Action):
 
 def test_loadPlugin():
     with tempdir.tempdir(changeto=False) as td:
-        with open(op.join(td, 'test_loadplugin.py'), 'wt') as f:
+        with open(op.join(td, 'test_plugins_loadplugin.py'), 'wt') as f:
             f.write(code.format(prefix='Load'))
 
-        plugins.loadPlugin(op.join(td, 'test_loadplugin.py'))
+        plugins.loadPlugin(op.join(td, 'test_plugins_loadplugin.py'))
 
-        mod = lookup_plugin_module('test_loadplugin')
+        mod = lookup_plugin_module('test_plugins_loadplugin')
 
         assert plugins.listTools()[   'LoadTool']      is mod.LoadTool
         assert plugins.listControls()['LoadControl']   is mod.LoadControl
@@ -148,22 +148,22 @@ def test_loadPlugin():
 def test_installPlugin():
     with tempdir.tempdir() as td:
 
-        with open('test_installplugin.py', 'wt') as f:
+        with open('test_plugins_installplugin.py', 'wt') as f:
             f.write(code.format(prefix='Install'))
 
         s = fslsettings.Settings('test_plugins', cfgdir=td, writeOnExit=False)
         with fslsettings.use(s):
 
-            plugins.installPlugin('test_installplugin.py')
+            plugins.installPlugin('test_plugins_installplugin.py')
 
-            mod = lookup_plugin_module('test_installplugin')
+            mod = lookup_plugin_module('test_plugins_installplugin')
 
             assert plugins.listTools()[   'InstallTool']      is mod.InstallTool
             assert plugins.listControls()['InstallControl']   is mod.InstallControl
             assert plugins.listViews()[   'InstallView']      is mod.InstallView
             assert plugins.listLayouts()[ 'Install_layout1']  == mod.FSLEYES_LAYOUT_Install_layout1
             assert plugins.listLayouts()[ 'Install layout 2'] == mod.FSLEYES_LAYOUT_Install_layout2[1]
-            assert op.exists(op.join(td, 'plugins', 'test_installplugin.py'))
+            assert op.exists(op.join(td, 'plugins', 'test_plugins_installplugin.py'))
 
 
 def test_initialise():
@@ -209,12 +209,12 @@ def test_runPlugin():
 
 def _test_runPlugin(frame, overlayList, displayCtx):
     with tempdir.tempdir(changeto=False) as td:
-        with open(op.join(td, 'test_runplugin.py'), 'wt') as f:
+        with open(op.join(td, 'test_plugins_runplugin.py'), 'wt') as f:
             f.write(code.format(prefix='Run'))
 
-        plugins.loadPlugin(op.join(td, 'test_runplugin.py'))
+        plugins.loadPlugin(op.join(td, 'test_plugins_runplugin.py'))
 
-        mod  = lookup_plugin_module('test_runplugin')
+        mod  = lookup_plugin_module('test_plugins_runplugin')
         view = frame.addViewPanel(mod.RunView, title='View')
         realYield()
         ctrl = view.togglePanel(mod.RunControl)
