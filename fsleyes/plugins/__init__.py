@@ -244,6 +244,7 @@ import fsleyes.controls.controlpanel as ctrlpanel
 
 log = logging.getLogger(__name__)
 
+
 View    = Type[viewpanel.ViewPanel]
 Control = Union[Type[ctrlpanel.ControlMixin], Type[ctrlpanel.ControlToolBar]]
 Tool    = Type[actions.Action]
@@ -314,6 +315,14 @@ class FSLeyesPlugin(impmeta.Distribution):
     @property
     def name(self) -> str:
         return self.__modname
+
+
+    def read_text(self, filename):
+        return None
+
+
+    def locate_file(self, path):
+        raise NotImplementedError()
 
 
     @property
