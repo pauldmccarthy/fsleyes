@@ -52,10 +52,14 @@ def _test_notebook(panel, overlayList, displayCtx):
     opts.cmap    = "hot"
     """).strip().split('\n')
 
-    action = notebook.NotebookAction(overlayList, displayCtx, panel.frame)
+    # Give the kernel/server a bit more time to startup under test conditions
+    with mock.patch('fsleyes.actions.notebook.SERVER_STARTUP_DELAY', 10), \
+         mock.patch('fsleyes.actions.notebook.KERNEL_STARTUP_DELAY', 5):
 
-    # start the server/kernel
-    action(openBrowser=False)
+        action = notebook.NotebookAction(overlayList, displayCtx, panel.frame)
+
+        # start the server/kernel
+        action(openBrowser=False)
 
     # submit code via the notebook server
     proc = mp.Process(target=_submit_code, args=(code, action.kernel.connfile))
