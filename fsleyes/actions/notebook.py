@@ -88,6 +88,20 @@ crashes. This flag is only intended to be used for testing/debugging.
 """
 
 
+SERVER_STARTUP_DELAY = 6.0
+"""Amount of time in seconds to give the Jupyter server to start up. If the
+server has not started after this time, an error is assumed to have
+occurred. See the :meth:`NotebookAction.__startServer` method.
+"""
+
+
+KERNEL_STARTUP_DELAY = 2.0
+"""Amount of time in seconds to give the IPython kernel to start up. If the
+server has not started after this time, an error is assumed to have
+occurred. See the :meth:`NotebookAction.__startKernel` method.
+"""
+
+
 log = logging.getLogger(__name__)
 
 
@@ -212,7 +226,7 @@ class NotebookAction(base.Action):
             self.displayCtx,
             self.__frame)
         kernel.start()
-        self.__bounce(2, progdlg)
+        self.__bounce(KERNEL_STARTUP_DELAY, progdlg)
 
         if not kernel.is_alive():
             raise RuntimeError('Could not start IPython '
@@ -235,11 +249,12 @@ class NotebookAction(base.Action):
 
         elapsed = 0
 
-        while elapsed < 5 and not server.ready:
-            self.__bounce(0.5, progdlg)
-            elapsed += 0.5
+        while elapsed < SERVER_STARTUP_DELAY and not server.ready:
+            start = time.time()
+            self.__bounce(1.0, progdlg)
+            elapsed += (time.time() - start)
 
-        if elapsed >= 5 or not server.is_alive():
+        if elapsed >= SERVER_STARTUP_DELAY or not server.is_alive():
             raise RuntimeError('Could not start notebook '
                                f'server: {server.stderr}')
 

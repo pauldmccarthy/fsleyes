@@ -434,10 +434,10 @@ def prepareData(data,
         data = np.array(data, dtype=np.uint16)
 
     elif dtype == np.uint8:  pass
-    elif dtype == np.int8:   data = np.array(data + 128,   dtype=np.uint8)
+    elif dtype == np.int8:   data = data.astype(np.uint8) + 128
     elif dtype == np.uint16: pass
-    elif dtype == np.int16:  data = np.array(data + 32768, dtype=np.uint16)
+    elif dtype == np.int16:  data = data.astype(np.uint16) + 32768
     elif floatTextures and data.dtype != np.float32:
-        data = np.array(data, dtype=np.float32)
+        data = data.astype(np.float32)
 
     return data, voxValXform, invVoxValXform
