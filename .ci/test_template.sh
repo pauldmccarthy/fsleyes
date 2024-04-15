@@ -23,23 +23,16 @@ else
   pip install --upgrade pip
 fi
 
-PIPARGS="--pre --retries 10 --timeout 30"
+PIPARGS="--retries 10 --timeout 30"
+
+# install fsleyes+dependencies
+pip install $PIPARGS ".[extra,test,style]"
 
 # Make sure we have latest (possibly development)
 # versions of the core dependencies
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
-
-# modify pyproject.toml so that pip accepts the above
-cat pyproject.toml                                  | \
-  sed 's/"fslpy .*",/"fslpy",/g'                    | \
-  sed 's/"fsleyes-widgets .*",/"fsleyes-widgets",/g'| \
-  sed 's/"fsleyes-props .*",/"fsleyes-props",/g' > tmp
-mv tmp pyproject.toml
-
-# install fsleyes
-pip install $PIPARGS ".[extra,test,style]"
+pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
+pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
 
 # print environment
 pip freeze
