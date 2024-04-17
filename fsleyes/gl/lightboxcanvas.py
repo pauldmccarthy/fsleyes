@@ -119,6 +119,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
+        opts.ilisten('sampleSlices',   self.name, self._slicePropsChanged)
         opts.ilisten('reverseSlices',  self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
@@ -149,6 +150,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.remove('sliceSpacing',   name)
         opts.remove('sliceOverlap',   name)
+        opts.remove('sampleSlices',   name)
         opts.remove('reverseOverlap', name)
         opts.remove('reverseSlices',  name)
         opts.remove('zrange',         name)

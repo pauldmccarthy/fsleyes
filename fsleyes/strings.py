@@ -1043,6 +1043,7 @@ properties = TypeDict({
     'LightBoxOpts.sliceOverlap'   : 'Slice overlap',
     'LightBoxOpts.zrange'         : 'Z range',
     'LightBoxOpts.labelSpace'     : 'Show slice location',
+    'LightBoxOpts.sampleSlices'   : 'Sample slices at',
 
     'OrthoOpts.showXCanvas'  : 'Show X canvas',
     'OrthoOpts.showYCanvas'  : 'Show Y canvas',
@@ -1348,6 +1349,8 @@ choices = TypeDict({
                                  'voxel' : 'Voxel coordinates',
                                  'world' : 'World coordinates'},
 
+    'LightBoxOpts.sampleSlices' : {'centre' : 'Slice centres',
+                                   'start'  : 'Slice starts'},
 
     'ColourMapOpts.displayRange.min' : 'Min.',
     'ColourMapOpts.displayRange.max' : 'Max.',

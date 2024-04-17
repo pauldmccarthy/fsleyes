@@ -542,6 +542,10 @@ properties = TypeDict({
     'Whether or not to display the depth axis location on each slice. If a '
     'non-NIfTI overlay is selected, the displayed location will always be '
     'in world coordinates.',
+    'LightBoxOpts.sampleSlices' :
+    'Whether to sample image slices from the centre or the start of each '
+    'slice region. This is useful when you have a custom slice spacing, and '
+    'want to select a specific starting slice.',
 
     'Scene3DOpts.showLegend' :
     'When selected, a legend will be displayed in the bottom right, showing '

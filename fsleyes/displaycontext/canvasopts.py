@@ -180,8 +180,11 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
                       |-------|
                        spacing
 
-    where ``*`` denotes the slice centres - these correspond to the
-    Z positions returned by the :meth:`slices` property.
+    where ``*`` denotes the slice centres - these correspond to the Z
+    positions returned by the :meth:`slices` property. The
+    :attr:`sampleSlices` property (which defaults to ``'centre'``) can
+    also be toggled to ``'start'``, which causes the Z positions returned
+    by :meth:`slices` correspond to the start of each slice.
     """
 
 
@@ -299,6 +302,12 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     """
 
 
+    sampleSlices = props.Choice(('centre', 'start'))
+    """Controls whether the slice positions returned by :meth:`slices`
+    correspond to slice centres or to slice starts.
+    """
+
+
     def __init__(self):
         super().__init__()
         name = self.name
@@ -375,10 +384,10 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     @property
     def nslices(self):
-        """Returns the total number of slices that should currently be displayed,
-        i.e. that fit within the current :attr:`zrange`. This is automatically
-        calculated from the current :attr:`zrange` and :attr:`sliceSpacing`
-        settings.
+        """Returns the total number of slices that should currently be
+        displayed, i.e. that fit within the current :attr:`zrange`. This is
+        automatically calculated from the current :attr:`zrange` and
+        :attr:`sliceSpacing` settings.
 
         Note that this may be different to the :meth:`.LightBoxCanvas.nslices`,
         which returns the total number of slices that can be displayed on the
@@ -405,8 +414,13 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         the :meth:`startslice` to identify the index of the starting slice to
         be displayed. The locations correspond to slice centres.
         """
-        sliceSpacing = self.sliceSpacing
-        return np.arange(sliceSpacing / 2, 1, sliceSpacing)
+        ssp = self.sliceSpacing
+
+        # ssp / 2 -> sampling from slice centres
+        if self.sampleSlices == 'centre': start = ssp / 2
+        else:                             start = 0
+
+        return np.arange(start, 1, ssp)
 
 
     @property
