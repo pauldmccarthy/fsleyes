@@ -11,8 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.11.0 (Under development)
---------------------------
+1.10.5 (Wednesday 17th April 2024)
+----------------------------------
 
 
 Changed
@@ -21,6 +21,14 @@ Changed
 
 * FSLeyes will now attempt to automatically set ``$FSLDIR`` if it is not set
   (e.g. when started from a desktop launcher) (!428).
+
+
+Fixed
+^^^^^
+
+
+* Voxels with high values are no longer clipped when loading a probabilistic
+  atlas overlay from the atlas panel (!431).
 
 
 1.10.4 (Monday 25th March 2024)
