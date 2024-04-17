@@ -493,13 +493,17 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
                 # regional statistic/probability image
                 else:
+                    # Add a small offset to the upper clipping
+                    # range, as the clipping range is inclusive
+                    # and we don't want max values to be clipped
+                    croff   = (atlasDesc.upper - atlasDesc.lower) * 0.01
                     overlay = atlas.get(index=labelIdx)
                     initprops['overlayType']   = 'volume'
                     initprops['cmap']          = 'hot'
                     initprops['displayRange']  = (atlasDesc.lower,
                                                   atlasDesc.upper)
                     initprops['clippingRange'] = (atlasDesc.lower,
-                                                  atlasDesc.upper)
+                                                  atlasDesc.upper + croff)
 
             overlay.name = overlayName
 
