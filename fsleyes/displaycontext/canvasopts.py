@@ -417,8 +417,17 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         ssp = self.sliceSpacing
 
         # ssp / 2 -> sampling from slice centres
-        if self.sampleSlices == 'centre': start = ssp / 2
-        else:                             start = 0
+        if self.sampleSlices == 'centre':
+            start = ssp / 2
+
+        # Sample from slice beginning. Add a small
+        # fixed offset to ensure that we're within
+        # the region corresponding to each slice,
+        # as otherwise e.g. the first two slices
+        # [0.0, <sliceSpacing>] may resolve to the
+        # same slice.
+        else:
+            start = 0.00001
 
         return np.arange(start, 1, ssp)
 

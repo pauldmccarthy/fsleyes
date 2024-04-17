@@ -182,6 +182,9 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('sliceSpacing',   props.Widget('sliceSpacing', showLimits=False)),
             ('sliceOverlap',   props.Widget('sliceOverlap', showLimits=False)),
             ('zrange',         props.Widget('zrange',       showLimits=False)),
+            ('sampleSlices',   props.Widget(
+                'sampleSlices',
+                labels=strings.choices['LightBoxOpts.sampleSlices'])),
             ('reverseSlices',  props.Widget('reverseSlices')),
             ('reverseOverlap', props.Widget('reverseOverlap')),
             ('highlightSlice', props.Widget('highlightSlice')),
