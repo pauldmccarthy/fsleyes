@@ -304,7 +304,9 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
 
     sampleSlices = props.Choice(('centre', 'start'))
     """Controls whether the slice positions returned by :meth:`slices`
-    correspond to slice centres or to slice starts.
+    correspond to slice centres or to slice starts. This is used by the
+    :class:`.LightBoxSampleDialog`, which allows the user to select slices
+    in terms of voxel coordinates.
     """
 
 
@@ -427,7 +429,7 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         # [0.0, <sliceSpacing>] may resolve to the
         # same slice.
         else:
-            start = 0.00001
+            start = 0.0001
 
         return np.arange(start, 1, ssp)
 

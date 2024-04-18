@@ -76,6 +76,14 @@ class LightBoxPanel(canvaspanel.CanvasPanel):
                 'FileTreePanel']
 
 
+    @staticmethod
+    def toolOrder():
+        """Returns a list of tool names, specifying the order in which they
+        should appear in the FSLeyes lightbox panel settings menu.
+        """
+        return ['LightBoxSampleAction']
+
+
     def __init__(self, parent, overlayList, displayCtx, frame):
         """Create a ``LightBoxPanel``.
 
