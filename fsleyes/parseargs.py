@@ -304,7 +304,13 @@ def _get_option_tuples(self, option_string):
     See http://stackoverflow.com/questions/33900846/\
     disable-unique-prefix-matches-for-argparse-and-optparse
     """
+
     result = []
+
+    # Internal changes were made to
+    # _get_option_tuples in 3.12.3
+    # https://github.com/python/cpython/pull/114180
+    py3123 = sys.version_info[:3] >= (3, 12, 3)
 
     # option strings starting with two prefix characters are only
     # split at the '='
@@ -312,13 +318,18 @@ def _get_option_tuples(self, option_string):
     if option_string[0] in chars and option_string[1] in chars:
         if '=' in option_string:
             option_prefix, explicit_arg = option_string.split('=', 1)
+            sep                         = '='
         else:
             option_prefix = option_string
-            explicit_arg = None
+            sep           = None
+            explicit_arg  = None
         for option_string in self._option_string_actions:
+            # official version uses prefix matching
+            # a'la "option_string.startswith(option_prefix)"
             if option_string == option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
+                if py3123: tup = action, option_string, sep, explicit_arg
+                else:      tup = action, option_string, explicit_arg
                 result.append(tup)
 
     # single character options can be concatenated with their arguments
@@ -333,11 +344,15 @@ def _get_option_tuples(self, option_string):
         for option_string in self._option_string_actions:
             if option_string == short_option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, short_explicit_arg
+
+                if py3123: tup = action, option_string, '', short_explicit_arg
+                else:      tup = action, option_string, short_explicit_arg
                 result.append(tup)
             elif option_string == option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
+
+                if py3123: tup = action, option_string, None, None
+                else:      tup = action, option_string, explicit_arg
                 result.append(tup)
 
     # shouldn't ever get here
