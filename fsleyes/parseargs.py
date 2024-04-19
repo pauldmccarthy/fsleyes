@@ -471,6 +471,7 @@ OPTIONS = td.TypeDict({
     'LightBoxOpts'  : ['zrange',
                        'zax',
                        'sliceSpacing',
+                       'sampleSlices',
                        'numSlices',
                        'ncols',
                        'nrows',
@@ -861,6 +862,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
     'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
+    'LightBoxOpts.sampleSlices'   : ('sa', 'sampleSlices',   True),
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.sliceLocation'  : ('ll', 'sliceLocation',  False),
@@ -1159,7 +1161,7 @@ HELP = td.TypeDict({
     'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing' :
-    'Slice spacing',
+    'Slice spacing, specified as a proportion between 0 and 1.',
     'LightBoxOpts.numSlices' :
     'Number of slices. Ignored if --sliceSpacing is specified.',
     'LightBoxOpts.ncols' :
@@ -1169,7 +1171,9 @@ HELP = td.TypeDict({
     '--nrows are specified, nrows may be adjusted to honour the --zrange and '
     '--sliceSpacing settings.',
     'LightBoxOpts.zrange' :
-    'Slice range',
+    'Slice range, specified as proportions between 0 and 1',
+    'LightBoxOpts.sampleSlices' :
+    'Control how slices are sampled (either "centre" or "start").',
     'LightBoxOpts.showGridLines' :
     'Show grid lines',
     'LightBoxOpts.highlightSlice' :
