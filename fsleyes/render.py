@@ -461,7 +461,8 @@ def createLightBoxCanvas(namespace,
         displayCtx,
         zax=sceneOpts.zax,
         width=width,
-        height=height)
+        height=height,
+        freezeOpts=True)
 
     opts                = canvas.opts
     opts.showCursor     = sceneOpts.showCursor
@@ -471,6 +472,7 @@ def createLightBoxCanvas(namespace,
     opts.renderMode     = sceneOpts.renderMode
     opts.zax            = sceneOpts.zax
     opts.sliceSpacing   = sceneOpts.sliceSpacing
+    opts.sampleSlices   = sceneOpts.sampleSlices
     opts.reverseSlices  = sceneOpts.reverseSlices
     opts.sliceOverlap   = sceneOpts.sliceOverlap
     opts.reverseOverlap = sceneOpts.reverseOverlap

@@ -78,7 +78,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=None):
+    def __init__(self, overlayList, displayCtx, zax=None, freezeOpts=False):
         """Create a ``LightBoxCanvas`` object.
 
         :arg overlayList: An :class:`.OverlayList` object which contains a
@@ -90,6 +90,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :arg zax:        Display coordinate system axis to be used as the
                          'depth' axis. Can be changed via the
                          :attr:`.SliceCanvas.zax` property.
+
+        :arg freezeOpts: Defaults to ``False``. If ``True``, the properties
+                         of the internal :class:`.LightBoxCanvasOpts` instance
+                         will not be adjusted. This is used in off-screen
+                         rendering
         """
 
         # These attributes store the number of
@@ -115,7 +120,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
-        self.__labelMgr = lblabels.LightBoxLabels(self)
+        self.__freezeOpts = freezeOpts
+        self.__labelMgr   = lblabels.LightBoxLabels(self)
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
@@ -654,6 +660,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         the ``sliceSpacing`` property is also adjusted to remain consistent.
         """
         if len(self.overlayList) == 0:
+            return
+        if self.__freezeOpts:
             return
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]
