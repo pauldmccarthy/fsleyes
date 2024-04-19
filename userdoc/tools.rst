@@ -255,6 +255,85 @@ correlation map will then be updated with the correlation values for the new
 location.
 
 
+
+.. _tools_lightbox:
+
+Lightbox view tools
+-------------------
+
+
+.. _tools_choose_lightbox_slices:
+
+Choose lightbox slices
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+The default method for controlling the slices that are displayed in a lightbox
+view involves setting the **Z range** and **slice spacing** as proportions,
+between 0 and 1, of the full image range. The *Choose lightbox slices* tool
+gives you another option, to control the displayed slices according to the
+voxel coordinates of an image.
+
+
+.. image:: images/tools_choose_lightbox_slices.png
+   :width: 40%
+   :align: center
+
+
+
+The dialog allows you to choose the image and Z axis, and to specify the start
+and end slices, and slice spacing, all in terms of voxels, rather than
+proportions.
+
+
+When you select an image in the *Choose lightbox slices* dialog, it will
+automatically select that image, and set it as the :ref:`display space
+<display_space>`, which ensures that the displayed slices are parallel to the
+image voxel Z axis.  The dialog will also set the **Sample slices at** setting
+to `Start`, which ensures that the starting slice you have chosen will stay
+the same, regardless of the slice spacing.
+
+
+
+.. note:: What does the **Sample slices at** setting do?
+
+          Internally, the FSLeyes lightbox view divides the Z axis of the
+          display coordinate system into equally sized slices, which are
+          defined in a "slice coordinate system", having range 0 to 1 where 0
+          corresponds to the minimum Z value, and 1 corresponds to the
+          maximum.
+
+          The number of lightbox slices, and size of each slice, is controlled
+          by the **slice spacing** setting, and the slices which are actually
+          displayed are controlled by the **Z range** setting.
+
+          By default, the data that is displayed on each slice is taken from
+          the *centre* of that slice - this is depicted in the diagram below
+          (click to see a larger version):
+
+          .. image:: images/tools_choose_lightbox_slices_sample_centre.png
+             :width: 60%
+             :align: center
+
+          Changing the the **Sample slices at** setting is to *start* has
+          two effects:
+
+            - The slice coordinate system is divided up in such a way that the
+              low Z range will be lined up with the beginning of a slice.
+            - The data that is displayed on each slice is taken from the
+              *start* of that slice.
+
+          This is depicted below (click for a larger version):
+
+          .. image:: images/tools_choose_lightbox_slices_sample_start.png
+             :width: 60%
+             :align: center
+
+          Settting **Sample slices at** to *start* has the effect that the
+          starting slice (the low Z range) will always display the same data,
+          regardless of the current slice spacing.
+
+
 .. _tools_timeseries:
 
 Time series view tools
