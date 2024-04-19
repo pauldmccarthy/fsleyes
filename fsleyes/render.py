@@ -249,11 +249,16 @@ def makeDisplayContext(namespace):
     # real canvases later on, in the render
     # function below.
     if namespace.scene == 'ortho':
-        sceneOpts = orthoopts.OrthoOpts(MockCanvasPanel(3))
+        ncanvases = 3
+        optsCls   = orthoopts.OrthoOpts
     elif namespace.scene == 'lightbox':
-        sceneOpts = lightboxopts.LightBoxOpts(MockCanvasPanel(1))
+        ncanvases = 1
+        optsCls   = lightboxopts.LightBoxOpts
     elif namespace.scene == '3d':
-        sceneOpts = scene3dopts.Scene3DOpts(MockCanvasPanel(1))
+        ncanvases = 1
+        optsCls   = scene3dopts.Scene3DOpts
+
+    sceneOpts = optsCls(MockCanvasPanel(ncanvases, childDisplayCtx))
 
     # 3D views default to
     # world display space
@@ -859,8 +864,9 @@ class MockCanvasPanel:
     """Used in place of a :class:`.CanvasPanel`. This is used as a container
     for :class:`MockSliceCanvas` instances.
     """
-    def __init__(self, ncanvases):
-        self.canvases = [MockSliceCanvas() for i in range(ncanvases)]
+    def __init__(self, ncanvases, displayCtx):
+        self.canvases   = [MockSliceCanvas() for i in range(ncanvases)]
+        self.displayCtx = displayCtx
     def getGLCanvases(self):
         return self.canvases
 
