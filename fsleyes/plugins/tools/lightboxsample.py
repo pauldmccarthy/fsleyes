@@ -173,49 +173,12 @@ class SliceProperties(props.Props):
         properties in the :class:`.LightBoxCanvasOpts` instance.
         """
 
-        dctx       = self.lbpanel.displayCtx
-        image      = self.image
-        zax        = self.zax
         lbopts     = self.lbpanel.sceneOpts
-        opts       = dctx.getOpts(image)
-
-        # Transform start/end slice indices
-        # into display coordinate system.
-        # We force the display space to the
-        # image, so the voxel Z axis will
-        # correspond to the display Z axis.
-        start           = [0] * 3
-        end             = [0] * 3
-        start[self.zax] = self.sliceStart
-        end[  self.zax] = self.sliceEnd + 1
-        start, end      = opts.transformCoords([start, end],
-                                               'voxel', 'display')
-        start           = start[zax]
-        end             = end[  zax]
-
-        # Just in case there is a L/R flip
-        start, end = sorted((start, end))
-
-        # Calculate slice spacing - the
-        # display space should be the image,
-        # so we can just use pixdims to
-        # normalise the spacing value w.r.t.
-        # the display coordinate system
-        spacing = self.sliceSpacing * image.pixdim[zax]
-
-        # Normalise start/end locations to
-        # [0, 1], with respect to the display
-        # coordinate system bounding box
-        zmin    = dctx.bounds.getLo(zax)
-        zlen    = dctx.bounds.getLen(zax)
-        start   = (start - zmin) / zlen
-        end     = (end   - zmin) / zlen
-        spacing = spacing        / zlen
-
-        # Update lightbox settings
-        lbopts.zax          = zax
-        lbopts.zrange       = [start, end]
-        lbopts.sliceSpacing = spacing
+        lbopts.zax = self.zax
+        lbopts.setSlicesFromVoxels(self.image,
+                                   self.sliceStart,
+                                   self.sliceEnd,
+                                   self.sliceSpacing)
 
 
 class LightBoxSamplePanel(ctrlpanel.ControlPanel):

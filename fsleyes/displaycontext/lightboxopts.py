@@ -50,6 +50,69 @@ class LightBoxOpts(sceneopts.SceneOpts):
                                alternates=[[1, '1'], []])
 
 
+    def setSlicesFromVoxels(self, image, sliceStart, sliceEnd, sliceSpacing):
+        """Sets the :attr:`zrange` and :attr:`sliceSpacing` properties
+        in terms of voxel coordinates with respect to the given ``image``.
+
+        This method assumes that:
+          - the :attr:`.DisplayContext.displaySpace` is set to the ``image``
+            (or to a compatible image)
+          - The :attr:`sampleSlices` property is set to ``'start'``.
+
+        :arg displayCtx:   The :class:`.DisplayContext` managing the
+                           :class:`.LightBoxCanvas`.
+
+        :arg image:        The :class:`.Nifti` instance for which the
+                           ``start``/``end``/`spacing`` values are defined
+
+        :arg sliceStart:   Start voxel
+
+        :arg sliceEnd:     End voxel
+
+        :arg sliceSpacing: Spacing in voxels
+        """
+
+        dctx = self.panel.displayCtx
+        zax  = self.zax
+        opts = dctx.getOpts(image)
+
+        # Transform start/end slice indices
+        # into display coordinate system.
+        # We force the display space to the
+        # image, so the voxel Z axis will
+        # correspond to the display Z axis.
+        start      = [0] * 3
+        end        = [0] * 3
+        start[zax] = sliceStart
+        end[  zax] = sliceEnd + 1
+        start, end = opts.transformCoords([start, end], 'voxel', 'display')
+        start      = start[zax]
+        end        = end[  zax]
+
+        # Just in case there is a L/R flip
+        start, end = sorted((start, end))
+
+        # Calculate slice spacing - the
+        # display space should be the image,
+        # so we can just use pixdims to
+        # normalise the spacing value w.r.t.
+        # the display coordinate system
+        spacing = sliceSpacing * image.pixdim[zax]
+
+        # Normalise start/end locations to
+        # [0, 1], with respect to the display
+        # coordinate system bounding box
+        zmin    = dctx.bounds.getLo(zax)
+        zlen    = dctx.bounds.getLen(zax)
+        start   = (start - zmin) / zlen
+        end     = (end   - zmin) / zlen
+        spacing = spacing        / zlen
+
+        # Update lightbox settings
+        self.zrange       = [start, end]
+        self.sliceSpacing = spacing
+
+
     def _onPerformanceChange(self, *a):
         """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the value
         of the :attr:`renderMode` property according to the performance setting.
