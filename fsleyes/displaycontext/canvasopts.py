@@ -171,20 +171,42 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
     The Z axis of the display coordinate system (controlled by the
     :attr:`zax` property) is divided up into slices, which are defined
     in a "slice coordinate system" having range 0 to 1, according to the
-    :attr:`zrange` and :attr:`sliceSpacing` properties::
+    :attr:`zrange` and :attr:`sliceSpacing` properties.
 
-                     zlo                                     zhi
+    Two sampling regimes are supported, controlled by the :attr:`sampleSlices`
+    property.  In the first regime (``sampleSlices = 'centre'``), the entire
+    0-1 range is divided into N slices, and each slice is sampled at its
+    centre. The slices within which the low and high ``zrange`` bound are
+    located determine the first and last slices to be displayed::
+
+                           zlo                     zhi
+                            |                       |
                       0                                       1
         slice centre  |   *       *       *       *       *   |
         slice index   |   0   |   1   |   2   |   3   |   4   |
                       |-------|
                        spacing
 
-    where ``*`` denotes the slice centres - these correspond to the Z
-    positions returned by the :meth:`slices` property. The
-    :attr:`sampleSlices` property (which defaults to ``'centre'``) can
-    also be toggled to ``'start'``, which causes the Z positions returned
-    by :meth:`slices` correspond to the start of each slice.
+    where ``*`` denotes the slice sampling points - these correspond to the Z
+    positions returned by the :meth:`slices` property.
+
+    In the second regime (``sampleSlices = 'start'``), the 0-1 range is
+    divided into N slices such that the low ``zrange`` bound falls at the
+    beginning of a slice. Each slice is sampled at its beginning::
+
+                          zlo                        zhi
+                           |                          |
+                      0                                       1
+        slice start   |    |*      |*      |*      |*      |* |
+        slice index   |  0 |   1   |   2   |   3   |   4   |  |
+                           |-------|
+                            spacing
+
+    The first ``'centre'`` regime is the default, and is useful when viewing
+    overlays with different dimensions, where the specific slices being
+    displayed are not important. The second ``'start'`` regime is useful when a
+    specific starting slice is desired. See the :class:`.LightBoxSamplePanel`
+    for an example using the :attr:`sampleSlices` property.
     """
 
 
@@ -422,14 +444,19 @@ class LightBoxCanvasOpts(SliceCanvasOpts):
         if self.sampleSlices == 'centre':
             start = ssp / 2
 
-        # Sample from slice beginning. Add a small
-        # fixed offset to ensure that we're within
-        # the region corresponding to each slice,
-        # as otherwise e.g. the first two slices
-        # [0.0, <sliceSpacing>] may resolve to the
-        # same slice.
+        # Sample from slice beginning. Start slices
+        # at a location such that zlo is located
+        # at the beginning of a slice.
+
+        # Add a small fixed offset to ensure that
+        # we're within the region corresponding to
+        # each slice, as otherwise e.g. the first
+        # two slices [0.0, <sliceSpacing>] may
+        # resolve to the same slice.
         else:
-            start = 0.0001
+            zlo    = self.zrange.xlo
+            start  = zlo - ssp * np.floor(zlo / ssp)
+            start += 0.0001
 
         return np.arange(start, 1, ssp)
 
