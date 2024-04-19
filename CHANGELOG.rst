@@ -11,8 +11,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.10.5 (Wednesday 17th April 2024)
-----------------------------------
+1.11.0 (Friday 19th April 2024)
+-------------------------------
+
+
+Added
+^^^^^
+
+
+* New *Choose lightbox slices* option, available under the *Tools* menu, which
+  allows lightbox slices to be specified via voxel indices, rather than
+  proportions (!432).
 
 
 Changed
