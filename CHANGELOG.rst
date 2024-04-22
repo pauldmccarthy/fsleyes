@@ -23,7 +23,7 @@ Added
   allows lightbox slices to be specified via voxel coordinates instead of
   proportions (!432).
 * New ``--asVoxels`` command-line option for use with lightbox views, which
-  causese the ``--zrange`` and ``--sliceSpacing`` options to be interpreted
+  causes the ``--zrange`` and ``--sliceSpacing`` options to be interpreted
   as voxel coordinates instead of proportions (!432).
 
 
