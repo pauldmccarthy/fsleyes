@@ -3442,6 +3442,9 @@ def _applySpecial_LightBoxOpts_asVoxels(
     :meth:`.LightBoxOpts.setSlicesFromVoxels`.
     """
 
+    if not args.asVoxels:
+        return
+
     img = displayCtx.getSelectedOverlay()
 
     if img is None                         or \
