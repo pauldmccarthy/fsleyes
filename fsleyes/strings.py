@@ -506,6 +506,8 @@ titles = TypeDict({
     'SampleLinePanel.savefile' : 'Select file to save sampled data to',
     'SampleLinePanel.exportError'  : 'Error saving file',
     'ExportSampledDataDialog'  : 'Export sampled data to file',
+
+    'LightBoxSamplePanel' : 'Choose lightbox slices',
 })
 
 
@@ -546,6 +548,7 @@ actions = TypeDict({
     'SampleLineAction'            : 'Sample along line',
     'AddMaskDataSeriesAction'     : 'Add time series from ROI',
     'AddROIHistogramAction'       : 'Add histogram from ROI',
+    'LightBoxSampleAction'        : 'Choose lightbox slices',
 
     'FSLeyesFrame.addOrthoPanel'           : 'Ortho View',
     'FSLeyesFrame.addLightBoxPanel'        : 'Lightbox View',
@@ -735,10 +738,11 @@ labels = TypeDict({
 
     'OverlayDisplayPanel.clipPlane#'     : 'Clip plane #{}',
 
-    'CanvasSettingsPanel.scene'    : 'Scene settings',
-    'CanvasSettingsPanel.ortho'    : 'Ortho view settings',
-    'CanvasSettingsPanel.lightbox' : 'Lightbox settings',
-    'CanvasSettingsPanel.3d'       : '3D view settings',
+    'CanvasSettingsPanel.scene'          : 'Scene settings',
+    'CanvasSettingsPanel.ortho'          : 'Ortho view settings',
+    'CanvasSettingsPanel.lightbox'       : 'Lightbox settings',
+    'CanvasSettingsPanel.3d'             : '3D view settings',
+    'CanvasSettingsPanel.lightboxsample' : 'Choose slices',
 
     'OverlayInfoPanel.general'             : 'General information',
     'OverlayInfoPanel.overlayType'         : 'Displayed as',
@@ -1002,6 +1006,16 @@ labels = TypeDict({
     'Which line do you want to export data for?',
     'ExportSampledDataDialog.coords' :
     'Do you want to save the sample point\ncoordinates?',
+
+    'LightBoxSamplePanel.image'     : 'Image',
+    'LightBoxSamplePanel.zax'       : 'Z axis',
+    'LightBoxSamplePanel.ok'        : 'Ok',
+    'LightBoxSamplePanel.start'     : 'Start slice',
+    'LightBoxSamplePanel.end'       : 'End slice',
+    'LightBoxSamplePanel.spacing'   : 'Slice spacing',
+    'LightBoxSamplePanel.overview'  :
+    'Configure lightbox slices in terms\n'
+    'of image voxel dimensions',
 })
 
 
@@ -1043,6 +1057,7 @@ properties = TypeDict({
     'LightBoxOpts.sliceOverlap'   : 'Slice overlap',
     'LightBoxOpts.zrange'         : 'Z range',
     'LightBoxOpts.labelSpace'     : 'Show slice location',
+    'LightBoxOpts.sampleSlices'   : 'Sample slices at',
 
     'OrthoOpts.showXCanvas'  : 'Show X canvas',
     'OrthoOpts.showYCanvas'  : 'Show Y canvas',
@@ -1348,6 +1363,8 @@ choices = TypeDict({
                                  'voxel' : 'Voxel coordinates',
                                  'world' : 'World coordinates'},
 
+    'LightBoxOpts.sampleSlices' : {'centre' : 'Slice centres',
+                                   'start'  : 'Slice starts'},
 
     'ColourMapOpts.displayRange.min' : 'Min.',
     'ColourMapOpts.displayRange.max' : 'Max.',
@@ -1473,6 +1490,10 @@ choices = TypeDict({
         'voxel' : 'Save voxel coordinates',
         'world' : 'Save world coordinates',
     },
+
+    'LightBoxSamplePanel.zax' : {0 : 'X axis',
+                                 1 : 'Y axis',
+                                 2 : 'Z axis'},
 })
 
 

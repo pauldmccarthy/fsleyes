@@ -32,11 +32,13 @@ class OffScreenLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
         classes for details on the other arguments.
         """
 
+        freezeOpts = kwargs.pop('freezeOpts', False)
         fslgl.OffScreenCanvasTarget  .__init__(self, *args, **kwargs)
         lightboxcanvas.LightBoxCanvas.__init__(self,
                                                overlayList,
                                                displayCtx,
-                                               zax)
+                                               zax,
+                                               freezeOpts)
 
         # LightBoxCanvas only updates itself
         # when a slice property changes. So

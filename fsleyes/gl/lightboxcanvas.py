@@ -78,7 +78,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
     """
 
 
-    def __init__(self, overlayList, displayCtx, zax=None):
+    def __init__(self, overlayList, displayCtx, zax=None, freezeOpts=False):
         """Create a ``LightBoxCanvas`` object.
 
         :arg overlayList: An :class:`.OverlayList` object which contains a
@@ -90,6 +90,11 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         :arg zax:        Display coordinate system axis to be used as the
                          'depth' axis. Can be changed via the
                          :attr:`.SliceCanvas.zax` property.
+
+        :arg freezeOpts: Defaults to ``False``. If ``True``, the properties
+                         of the internal :class:`.LightBoxCanvasOpts` instance
+                         will not be adjusted. This is used in off-screen
+                         rendering
         """
 
         # These attributes store the number of
@@ -119,6 +124,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
+        opts.ilisten('sampleSlices',   self.name, self._slicePropsChanged)
         opts.ilisten('reverseSlices',  self.name, self._slicePropsChanged)
         opts.ilisten('zrange',         self.name, self._slicePropsChanged)
         opts.ilisten('nrows',          self.name, self._slicePropsChanged)
@@ -133,6 +139,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts. listen('labelSize',      self.name, self.Refresh)
         opts. listen('fgColour',       self.name, self.Refresh)
         opts. listen('reverseOverlap', self.name, self.Refresh)
+
+        # Make sure that slice settings are initialised
+        # to sensible values. If freezeOpts is true, they
+        # will not be re-initialised when e.g. overlays
+        # are added.
+        self.__freezeOpts = False
+        self._adjustSliceProps(True, True)
+        self.__freezeOpts = freezeOpts
 
 
     def destroy(self):
@@ -149,6 +163,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
         opts.remove('sliceSpacing',   name)
         opts.remove('sliceOverlap',   name)
+        opts.remove('sampleSlices',   name)
         opts.remove('reverseOverlap', name)
         opts.remove('reverseSlices',  name)
         opts.remove('zrange',         name)
@@ -652,6 +667,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         the ``sliceSpacing`` property is also adjusted to remain consistent.
         """
         if len(self.overlayList) == 0:
+            return
+        if self.__freezeOpts:
             return
         opts     = self.opts
         spacings = [self.calcSliceSpacing(o) for o in self.overlayList]

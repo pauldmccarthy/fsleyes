@@ -304,7 +304,13 @@ def _get_option_tuples(self, option_string):
     See http://stackoverflow.com/questions/33900846/\
     disable-unique-prefix-matches-for-argparse-and-optparse
     """
+
     result = []
+
+    # Internal changes were made to
+    # _get_option_tuples in 3.12.3
+    # https://github.com/python/cpython/pull/114180
+    py3123 = sys.version_info[:3] >= (3, 12, 3)
 
     # option strings starting with two prefix characters are only
     # split at the '='
@@ -312,13 +318,18 @@ def _get_option_tuples(self, option_string):
     if option_string[0] in chars and option_string[1] in chars:
         if '=' in option_string:
             option_prefix, explicit_arg = option_string.split('=', 1)
+            sep                         = '='
         else:
             option_prefix = option_string
-            explicit_arg = None
+            sep           = None
+            explicit_arg  = None
         for option_string in self._option_string_actions:
+            # official version uses prefix matching
+            # a'la "option_string.startswith(option_prefix)"
             if option_string == option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
+                if py3123: tup = action, option_string, sep, explicit_arg
+                else:      tup = action, option_string, explicit_arg
                 result.append(tup)
 
     # single character options can be concatenated with their arguments
@@ -333,11 +344,15 @@ def _get_option_tuples(self, option_string):
         for option_string in self._option_string_actions:
             if option_string == short_option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, short_explicit_arg
+
+                if py3123: tup = action, option_string, '', short_explicit_arg
+                else:      tup = action, option_string, short_explicit_arg
                 result.append(tup)
             elif option_string == option_prefix:
                 action = self._option_string_actions[option_string]
-                tup = action, option_string, explicit_arg
+
+                if py3123: tup = action, option_string, None, None
+                else:      tup = action, option_string, explicit_arg
                 result.append(tup)
 
     # shouldn't ever get here
@@ -468,9 +483,11 @@ OPTIONS = td.TypeDict({
                        'invertYHorizontal',
                        'invertZVertical',
                        'invertZHorizontal'],
-    'LightBoxOpts'  : ['zrange',
-                       'zax',
+    'LightBoxOpts'  : ['zax',
+                       'asVoxels',
+                       'zrange',
                        'sliceSpacing',
+                       'sampleSlices',
                        'numSlices',
                        'ncols',
                        'nrows',
@@ -861,6 +878,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.ncols'          : ('nc', 'ncols',          True),
     'LightBoxOpts.nrows'          : ('nr', 'nrows',          True),
     'LightBoxOpts.zrange'         : ('zr', 'zrange',         True),
+    'LightBoxOpts.sampleSlices'   : ('sa', 'sampleSlices',   True),
     'LightBoxOpts.showGridLines'  : ('sg', 'showGridLines',  False),
     'LightBoxOpts.highlightSlice' : ('hs', 'highlightSlice', False),
     'LightBoxOpts.sliceLocation'  : ('ll', 'sliceLocation',  False),
@@ -869,6 +887,7 @@ ARGUMENTS = td.TypeDict({
     'LightBoxOpts.sliceOverlap'   : ('so', 'sliceOverlap',   True),
     'LightBoxOpts.reverseOverlap' : ('ro', 'reverseOverlap', False),
     'LightBoxOpts.zax'            : ('zx', 'zaxis',          True),
+    'LightBoxOpts.asVoxels'       : ('av', 'asVoxels',       False),
 
     'Scene3DOpts.zoom'           : ('z',   'zoom',           True),
     'Scene3DOpts.showLegend'     : ('he',  'hideLegend',     False),
@@ -1159,7 +1178,8 @@ HELP = td.TypeDict({
     'OrthoOpts.zcentre'     : 'Z canvas centre ([-1, 1])',
 
     'LightBoxOpts.sliceSpacing' :
-    'Slice spacing',
+    'Slice spacing, specified as a proportion between 0 and 1, or as voxel '
+    'coordinates if --asVoxels is provided.',
     'LightBoxOpts.numSlices' :
     'Number of slices. Ignored if --sliceSpacing is specified.',
     'LightBoxOpts.ncols' :
@@ -1169,7 +1189,10 @@ HELP = td.TypeDict({
     '--nrows are specified, nrows may be adjusted to honour the --zrange and '
     '--sliceSpacing settings.',
     'LightBoxOpts.zrange' :
-    'Slice range',
+    'Slice range, specified as proportions between 0 and 1, or as voxel '
+    'coordinates if --asVoxels is provided.',
+    'LightBoxOpts.sampleSlices' :
+    'Control how slices are sampled (either "centre" or "start").',
     'LightBoxOpts.showGridLines' :
     'Show grid lines',
     'LightBoxOpts.highlightSlice' :
@@ -1188,6 +1211,9 @@ HELP = td.TypeDict({
     'lower.',
     'LightBoxOpts.zax' :
     'Z axis',
+    'LightBoxOpts.asVoxels' :
+    'Causes the --zrange and --sliceSpacing settings to be interpreted as '
+    'voxel coordinates. Has no effect if --zrange is not provided.',
 
     'Scene3DOpts.zoom'          : 'Zoom (1-5000, default: 100)',
     'Scene3DOpts.showLegend'    : 'Hide the orientation legend',
@@ -3398,6 +3424,60 @@ def _generateSpecial_LightBoxOpts_ncols(
     off-screen rendering.
     """
     return []
+
+
+def _configSpecial_LightBoxOpts_asVoxels(
+        target, parser, shortArg, longArg, helpText):
+    """Adds an argument for the ``--asVoxels`` option. """
+    parser.add_argument(shortArg,
+                        longArg,
+                        action='store_true',
+                        help=helpText)
+
+
+def _applySpecial_LightBoxOpts_asVoxels(
+        args, overlayList, displayCtx, target):
+    """Handler for the ``--asVoxels`` option. Interprets ``--zrange`` and
+    ``--sliceSpacing`` as voxel coordinates, and pass them to
+    :meth:`.LightBoxOpts.setSlicesFromVoxels`.
+    """
+
+    if not args.asVoxels:
+        return
+
+    img = displayCtx.getSelectedOverlay()
+
+    if img is None                         or \
+       not isinstance(img, fslimage.Nifti) or \
+       args.zrange is None:
+        args.asVoxels = False
+        return
+
+    start, end = args.zrange
+    spacing    = args.sliceSpacing
+
+    if spacing is None:
+        spacing = 1
+
+    target.sampleSlices = 'start'
+    target.setSlicesFromVoxels(img, start, end, spacing)
+
+
+def _applySpecial_LightBoxOpts_zrange(
+        args, overlayList, displayCtx, target):
+    """Handler for the ``--zrange`` option. If ``--asVoxels`` is active,
+    normal (``fsleyes_props``-based) argument handling is inhibited.
+    """
+    return not args.asVoxels
+
+
+def _applySpecial_LightBoxOpts_sliceSpacing(
+        args, overlayList, displayCtx, target):
+    """Handler for the ``--sliceSpacing`` option. If ``--asVoxels`` is active,
+    normal (``fsleyes_props``-based) argument handling is inhibited.
+    """
+    return not args.asVoxels
+
 
 def _applySpecial_SceneOpts_movieSyncRefresh(
         args, overlayList, displayCtx, target):

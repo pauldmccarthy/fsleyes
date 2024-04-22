@@ -9,6 +9,8 @@ location labels for a :class :`.LightBoxCanvas`.
 """
 
 
+import numpy as np
+
 import fsl.utils.cache as cache
 
 
@@ -175,8 +177,15 @@ class LightBoxLabels:
             if wpos is None or cpos is None:
                 continue
 
-            text           = fmt.format(axlbl, wpos[zax])
-            label          = self.getLabel(wpos[zax], text)
+            wpos = wpos[zax]
+
+            # Try and prevent near-0 values
+            # being formatted as "-0.00"
+            if np.isclose(wpos, 0, atol=1e-3):
+                wpos = 0
+
+            text           = fmt.format(axlbl, wpos)
+            label          = self.getLabel(wpos, text)
             label.fontSize = copts.labelSize
             label.colour   = copts.fgColour
             label.enabled  = True

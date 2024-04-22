@@ -269,6 +269,14 @@ The additional settings that are available are:
  - **Show slice location** Show the slice location, in voxel or
    world coordinates, at the top of each slice.
 
+ - **Sample slices at** Control whether the displayed images are sampled in
+   the centre, or at the beginning, of each lightbox slice. You can read more
+   about this setting :ref:`here <tools_choose_lightbox_slices>`.
+
+ - **Choose slices** This button opens the :ref:`lightbox slices
+   <tools_choose_lightbox_slices>` panel which allows you to configure the displayed
+   slices according to the voxel coordinates of an image, rather than as
+   proportions.
 
 .. image:: images/ortho_lightbox_views_lightbox_view_settings_example.png
    :width: 70%

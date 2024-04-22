@@ -14,13 +14,14 @@ import collections
 
 import wx
 
-import fsl.data.image                as fslimage
-import fsleyes_props                 as props
-import fsleyes.controls.controlpanel as ctrlpanel
-import fsleyes.views.canvaspanel     as canvaspanel
-import fsleyes.gl                    as fslgl
-import fsleyes.tooltips              as fsltooltips
-import fsleyes.strings               as strings
+import fsl.data.image                        as fslimage
+import fsleyes_props                         as props
+import fsleyes.controls.controlpanel         as ctrlpanel
+import fsleyes.views.canvaspanel             as canvaspanel
+import fsleyes.gl                            as fslgl
+import fsleyes.plugins                       as plugins
+import fsleyes.tooltips                      as fsltooltips
+import fsleyes.strings                       as strings
 
 
 class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
@@ -182,6 +183,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
             ('sliceSpacing',   props.Widget('sliceSpacing', showLimits=False)),
             ('sliceOverlap',   props.Widget('sliceOverlap', showLimits=False)),
             ('zrange',         props.Widget('zrange',       showLimits=False)),
+            ('sampleSlices',   _genLightboxSampleWidget),
             ('reverseSlices',  props.Widget('reverseSlices')),
             ('reverseOverlap', props.Widget('reverseOverlap')),
             ('highlightSlice', props.Widget('highlightSlice')),
@@ -271,7 +273,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         for propName, dispProp in panelProps.items():
 
             if callable(dispProp):
-                widget = dispProp(widgets, opts)
+                widget = dispProp(canvasPanel, widgets, opts)
             else:
                 widget = props.buildGUI(widgets, opts, dispProp)
 
@@ -288,7 +290,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         widgets.Expand(panelGroup)
 
 
-def _genLightPosWidget(parent, opts):
+def _genLightPosWidget(canvasPanel, parent, opts):
     """Generates a widget for the :attr:`.Scene3DOpts.lightPos` property.
     """
     px, py, pz = props.makeListWidgets(
@@ -303,4 +305,34 @@ def _genLightPosWidget(parent, opts):
     sizer.Add(px, flag=wx.EXPAND)
     sizer.Add(py, flag=wx.EXPAND)
     sizer.Add(pz, flag=wx.EXPAND)
+    return sizer
+
+
+def _genLightboxSampleWidget(canvasPanel, parent, opts):
+    """Generates a widget for the :attr:`.LightBoxCanvasOpts.sampleSlices`
+    property, and a button that opens a :class:`.LightboxSampleDiaglog`.
+    """
+
+    # sampleSlices dropdown
+    sample = props.makeWidget(
+        parent,
+        opts,
+        'sampleSlices',
+        labels=strings.choices['LightBoxOpts.sampleSlices'])
+
+    # button which opens the lightbox sample dialog
+    btn = wx.Button(parent)
+    btn.SetLabel(strings.labels[CanvasSettingsPanel, 'lightboxsample'])
+
+    LightBoxSampleAction = plugins.lookupTool('LightBoxSampleAction')
+    action = LightBoxSampleAction(canvasPanel.overlayList,
+                                  canvasPanel.displayCtx,
+                                  canvasPanel)
+
+    action.bindToWidget(parent, wx.EVT_BUTTON, btn)
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    sizer.Add(sample, flag=wx.EXPAND, proportion=1)
+    sizer.Add(btn,    flag=wx.EXPAND)
+
     return sizer

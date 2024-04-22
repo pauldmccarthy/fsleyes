@@ -11,8 +11,20 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.10.5 (Wednesday 17th April 2024)
-----------------------------------
+1.11.0 (Monday 22nd April 2024)
+-------------------------------
+
+
+Added
+^^^^^
+
+
+* New *Choose lightbox slices* option, available under the *Tools* menu, which
+  allows lightbox slices to be specified via voxel coordinates instead of
+  proportions (!432).
+* New ``--asVoxels`` command-line option for use with lightbox views, which
+  causes the ``--zrange`` and ``--sliceSpacing`` options to be interpreted
+  as voxel coordinates instead of proportions (!432).
 
 
 Changed
@@ -29,6 +41,7 @@ Fixed
 
 * Voxels with high values are no longer clipped when loading a probabilistic
   atlas overlay from the atlas panel (!431).
+* Fixed an issue with argument parsing under Python 3.12 (!432).
 
 
 1.10.4 (Monday 25th March 2024)
