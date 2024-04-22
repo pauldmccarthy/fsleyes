@@ -120,8 +120,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
                                          zax,
                                          opts)
 
-        self.__freezeOpts = freezeOpts
-        self.__labelMgr   = lblabels.LightBoxLabels(self)
+        self.__labelMgr = lblabels.LightBoxLabels(self)
 
         opts.ilisten('sliceSpacing',   self.name, self._slicePropsChanged)
         opts.ilisten('sliceOverlap',   self.name, self._slicePropsChanged)
@@ -140,6 +139,14 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         opts. listen('labelSize',      self.name, self.Refresh)
         opts. listen('fgColour',       self.name, self.Refresh)
         opts. listen('reverseOverlap', self.name, self.Refresh)
+
+        # Make sure that slice settings are initialised
+        # to sensible values. If freezeOpts is true, they
+        # will not be re-initialised when e.g. overlays
+        # are added.
+        self.__freezeOpts = False
+        self._adjustSliceProps(True, True)
+        self.__freezeOpts = freezeOpts
 
 
     def destroy(self):
