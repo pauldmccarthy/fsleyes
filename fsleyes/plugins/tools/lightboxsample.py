@@ -40,6 +40,7 @@ class LightBoxSampleAction(actions.ToggleControlPanelAction):
         """Create a ``LightBoxSampleAction``. """
         super().__init__(overlayList, displayCtx, lbpanel, LightBoxSamplePanel)
         overlayList.listen('overlays', self.name, self.__overlayListChanged)
+        self.__overlayListChanged()
 
 
     def destroy(self):
@@ -53,7 +54,7 @@ class LightBoxSampleAction(actions.ToggleControlPanelAction):
         super().destroy()
 
 
-    def __overlayListChanged(self, *a):
+    def __overlayListChanged(self):
         """Called when the selected overlay changes. Enables/disables this
         action (and hence the bound Tools menu item) depending on whether there
         are any images loaded.
@@ -297,6 +298,6 @@ class LightBoxSamplePanel(ctrlpanel.ControlPanel):
         self.sprops = None
 
 
-    def onOk(self, ev):
+    def onOk(self, ev=None):
         """Called when the "OK" button is pushed. Closes the panel. """
         idle.idle(self.lbpanel.togglePanel, type(self))
