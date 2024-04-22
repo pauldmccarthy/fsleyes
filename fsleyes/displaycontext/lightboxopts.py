@@ -59,9 +59,6 @@ class LightBoxOpts(sceneopts.SceneOpts):
             (or to a compatible image)
           - The :attr:`sampleSlices` property is set to ``'start'``.
 
-        :arg displayCtx:   The :class:`.DisplayContext` managing the
-                           :class:`.LightBoxCanvas`.
-
         :arg image:        The :class:`.Nifti` instance for which the
                            ``start``/``end``/`spacing`` values are defined
 
@@ -78,7 +75,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
 
         # Transform start/end slice indices
         # into display coordinate system.
-        # We force the display space to the
+        # We assume the display space is the
         # image, so the voxel Z axis will
         # correspond to the display Z axis.
         start      = [0] * 3
