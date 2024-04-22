@@ -61,6 +61,11 @@ cli_tests = """
 -nr 1 -ss 0.1 -zr 0 1 -vl 50 50  37 -cw 10 numbers
 -nr 1 -ss 0.1 -zr 0 1 -vl 50 50  42 -cw 10 numbers
 -nr 1 -ss 0.1 -zr 0 1 -vl 50 50  47 -cw 10 numbers
+
+# sampleSlices. Unlikely to be used directly,
+# but is internally/indirectly used via --asVoxels
+-zx 2 -zr 0 1 -ss 0.08 -sa centre numbers
+-zx 2 -zr 0 1 -ss 0.08 -sa start  numbers
 """
 
 cli_tests_parametrize_zax = """
@@ -128,8 +133,19 @@ cli_tests_parametrize_zax = """
 # reverse slices
 -zx {{zax}} -so 30 -zr 0 1 -rs 3d
 -zx {{zax}} -nr 1  -zr 0 1 -rs 3d
-"""
 
+-zx {{zax}} -av -zr  0 25       {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 10 30       {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 25 49       {{set_zax('numbers.nii.gz', zax)}}
+
+-zx {{zax}} -av -zr  0 25 -ss 2 {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 10 30 -ss 2 {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 25 49 -ss 2 {{set_zax('numbers.nii.gz', zax)}}
+
+-zx {{zax}} -av -zr  0 25 -ss 3 {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 10 30 -ss 3 {{set_zax('numbers.nii.gz', zax)}}
+-zx {{zax}} -av -zr 25 49 -ss 3 {{set_zax('numbers.nii.gz', zax)}}
+"""
 
 def set_zax(fname, zax):
 
