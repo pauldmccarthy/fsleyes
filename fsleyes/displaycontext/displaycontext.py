@@ -10,16 +10,20 @@ general display settings for displaying the overlays in a
 """
 
 
+import os.path as op
 import sys
 import logging
 import contextlib
+from collections import defaultdict
 
 import numpy        as np
 import numpy.linalg as npla
 
-import        fsl.data.image as fslimage
-import        fsleyes_props  as props
-from . import group          as dcgroup
+import fsl.data.image               as fslimage
+import fsl.utils.path               as fslpath
+import fsleyes_props                as props
+import fsleyes.data                 as dsutils
+import fsleyes.displaycontext.group as dcgroup
 
 
 log = logging.getLogger(__name__)
@@ -277,6 +281,9 @@ class DisplayContext(props.SyncableHasProperties):
     """Defaults to ``False``. If ``True``, overlays may be automatically
     renamed (their :attr:`.Display.name` property changed) to prevent
     duplicates.
+
+    Only on-disk overlays are renamed. Note that the names of manually
+    renamed overlays will be  overwritten when this setting is enabled.
     """
 
 
@@ -860,6 +867,10 @@ class DisplayContext(props.SyncableHasProperties):
         # with the overlay list.
         self.__updateDisplaySpaceOptions()
 
+        # Make sure each overlay has a unique name
+        if self.autoNameOverlays:
+            self.__renameOverlays()
+
         # The rest of the stuff only
         # needs to be done on child DCs
         if not self.__child:
@@ -951,6 +962,40 @@ class DisplayContext(props.SyncableHasProperties):
         choices.extend(('world', 'scaledVoxel', 'fslview'))
 
         choiceProp.setChoices(choices, instance=self)
+
+
+    def __renameOverlays(self):
+        """Called by :meth:`__overlayListChanged` if :attr:`autoNameOverlays`
+        is ``True``. Makes sure that all on-disk overlays have a unique name.
+        In-memory overlay (e.g. mask images created in the editor) are not
+        renamed.
+        """
+
+        # Only rename on-disk overlays
+        ondisk = [o for o in self.overlayList if o.dataSource is not None]
+
+        # Group overlays by name
+        groups = defaultdict(list)
+        for o in ondisk:
+            display = self.getDisplay(o)
+            groups[dsutils.overlayName(o)].append(o)
+
+        # Identify groups of overlays with the same name
+        groups = {n : g for n, g in groups.items() if len(g) > 1}
+
+        # Rename each overlay according to its
+        # unique location in the file system
+        for groupname, group in groups.items():
+
+            ondiskpaths = [op.abspath(o.dataSource) for o in ondisk]
+            ondiskbase  = fslpath.commonBase(ondiskpaths)
+
+            for ovl in group:
+                ovldir       = op.dirname(op.abspath(ovl.dataSource))
+                ovlname      = op.join(ovldir, groupname)
+                ovlname      = op.relpath(ovlname, ondiskbase)
+                display      = self.getDisplay(ovl)
+                display.name = ovlname
 
 
     def __setTransform(self, image):
