@@ -441,7 +441,8 @@ OPTIONS = td.TypeDict({
                        'noBrowser',
                        'annotations',
                        'no3DInterp',
-                       'showAllPlugins'],
+                       'showAllPlugins',
+                       'autoName'],
 
     # Hidden/advanced/silly options
     'Extras'        : ['nolink',
@@ -836,6 +837,7 @@ ARGUMENTS = td.TypeDict({
     'Main.annotations'             : ('a',       'annotations',             True),
     'Main.no3DInterp'              : ('ni',      'no3DInterp',              False),
     'Main.showAllPlugins'          : ('ap',      'showAllPlugins',          False),
+    'Main.autoName'                : ('an',      'autoName',                False),
 
     'Extras.nolink'  : ('nl',   'nolink',  False),
     'Extras.bumMode' : ('bums', 'bumMode', False),
@@ -1115,6 +1117,8 @@ HELP = td.TypeDict({
     'Do not automatically enable interpolation for volume overlays '
     'when opening a 3D view',
     'Main.showAllPlugins' : 'Expose plugins from third party packages',
+    'Main.autoName'       : 'Automatically give each overlay a unique '
+                            'name based on its file path',
 
     'Main.notebook' :
     'Start the Jupyter notebook server',
@@ -1818,6 +1822,7 @@ def _configMainParser(mainParser, exclude=None):
         'annotations'             : {'type'    : str},
         'no3DInterp'              : {'action'  : 'store_true'},
         'showAllPlugins'          : {'action'  : 'store_true'},
+        'autoName'                : {'action'  : 'store_true'},
     }
 
     if fsleyes.disableLogging:
@@ -2647,8 +2652,7 @@ def applyMainArgs(args, overlayList, displayCtx):
     :arg displayCtx:  A :class:`.DisplayContext` instance.
     """
 
-    from fsleyes.displaycontext.volumeopts   import VolumeOpts
-    from fsleyes.displaycontext.volume3dopts import Volume3DOpts
+    from fsleyes.displaycontext import (VolumeOpts, Volume3DOpts)
 
     if args.initialDisplayRange is not None:
         idr, percentiles = _parseDisplayRange(args.initialDisplayRange)
@@ -2665,8 +2669,9 @@ def applyMainArgs(args, overlayList, displayCtx):
     if args.neuroOrientation is not None:
         displayCtx.radioOrientation = not args.neuroOrientation
 
-    displayCtx.autoDisplay   = args.autoDisplay
-    displayCtx.groupOverlays = not args.ungroupOverlays
+    displayCtx.autoDisplay      = args.autoDisplay
+    displayCtx.groupOverlays    = not args.ungroupOverlays
+    displayCtx.autoNameOverlays = args.autoName
 
     plugins.SHOW_THIRD_PARTY_PLUGINS = args.showAllPlugins
 

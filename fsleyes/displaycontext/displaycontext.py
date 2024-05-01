@@ -273,6 +273,13 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    autoNameOverlays = props.Boolean(default=False)
+    """Defaults to ``False``. If ``True``, overlays may be automatically
+    renamed (their :attr:`.Display.name` property changed) to prevent
+    duplicates.
+    """
+
+
     def __init__(self,
                  overlayList,
                  parent=None,
