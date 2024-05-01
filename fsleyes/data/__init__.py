@@ -23,6 +23,10 @@ import os.path as op
 import fsl.utils.path          as fslpath
 import fsl.data.utils          as dutils
 import fsl.data.image          as fslimage
+import fsl.data.gifti          as fslgifti
+import fsl.data.vtk            as fslvtk
+import fsl.data.freesurfer     as fslfs
+import fsl.data.bitmap         as fslbmp
 import fsleyes.data.tractogram as tractogram
 import fsleyes.displaycontext  as fsldisplay
 
@@ -63,3 +67,33 @@ def guessType(path):
         otype = fsldisplay.OVERLAY_TYPES[dtype][0]
 
     return dtype, otype, path
+
+
+def overlayName(overlay):
+    """Returns a default name for the given overlay. """
+
+    path = overlay.dataSource
+    base = op.basename(path)
+
+    if path is not None:
+        if isinstance(overlay, fslimage.Nifti):
+            return fslimage.removeExt(base)
+        elif isinstance(overlay, fslgifti.GiftiMesh):
+            return fslpath.removeExt(base, fslgifti.ALLOWED_EXTENSIONS)
+        else:
+            return base
+
+    if isinstance(overlay, fslimage.Nifti):
+        return 'NIfTI image'
+    elif isinstance(overlay, fslgifti.GiftiMesh):
+        return 'GIfTI surface'
+    elif isinstance(overlay, fslfs.FreesurferMesh):
+        return 'FreeSurfer surface'
+    elif isinstance(overlay, fslvtk.VTKMesh):
+        return 'VTK surface'
+    elif isinstance(overlay, fslbmp.Bitmap):
+        return 'Bitmap'
+    elif isinstance(overlay, tractogram.Tractogram):
+        return 'Tractogram'
+    else:
+        return 'Overlay'

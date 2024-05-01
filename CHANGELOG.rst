@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--autoName`` / ``-an`` command-line option, which causes overlays that
+  would otherwise have the same name to be automatically renamed.
+
+
 1.11.0 (Monday 22nd April 2024)
 -------------------------------
 
