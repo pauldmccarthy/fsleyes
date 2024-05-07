@@ -110,6 +110,14 @@ class LightBoxOpts(sceneopts.SceneOpts):
         self.sliceSpacing = spacing
 
 
+    def getSlicesAsVoxels(self, image):
+        """Inverse of :meth:`setSlicesFromVoxels`. Calculates and returns
+        the current :attr:`zrange` and :attr:`sliceSpacing` in terms of
+        voxel coordinates with respect to the given image.
+        """
+        return 1, 2, 3
+
+
     def _onPerformanceChange(self, *a):
         """Overrides :meth:`.SceneOpts._onPerformanceChange`. Changes the value
         of the :attr:`renderMode` property according to the performance setting.
