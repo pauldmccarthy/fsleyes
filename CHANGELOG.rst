@@ -23,6 +23,14 @@ Added
   would otherwise have the same name to be automatically renamed.
 
 
+Fixed
+^^^^^
+
+
+* Updated the *Show command-line for scene* menu item to support the
+  ``--asVoxels`` flag for lightbox views (!435).
+
+
 1.11.0 (Monday 22nd April 2024)
 -------------------------------
 
