@@ -12,6 +12,8 @@ by :class:`.LightBoxPanel` instances for managing their display settings.
 import           logging
 from copy import copy
 
+import numpy as np
+
 import fsleyes_props as props
 
 from . import sceneopts
@@ -115,7 +117,45 @@ class LightBoxOpts(sceneopts.SceneOpts):
         the current :attr:`zrange` and :attr:`sliceSpacing` in terms of
         voxel coordinates with respect to the given image.
         """
-        return 1, 2, 3
+
+        dctx     = self.panel.displayCtx
+        opts     = dctx.getOpts(image)
+        zax      = self.zax
+        zlo, zhi = self.zrange
+        spacing  = self.sliceSpacing
+
+        # zhi may have been clipped at 1.0, so
+        # round it to be the nearest greater
+        # multiple of slice spacing
+        if zhi == 1:
+            zhi = zhi * spacing * np.ceil((zhi / spacing))
+
+        # Transform zrange and sliceSpacing from
+        # [0, 1] into coordinates relative to the
+        # display coordinate system bounding box
+        zmin     = dctx.bounds.getLo(zax)
+        zlen     = dctx.bounds.getLen(zax)
+        spacing  = spacing    * zlen
+        zlo      = zmin + zlo * zlen
+        zhi      = zmin + zhi * zlen + spacing
+
+        # Transform zrange/sliceSpacing into voxel
+        # coordinates w.r.t. the given image. We
+        # assume here that the display space is
+        # set to this image.
+        start      = [0] * 3
+        end        = [0] * 3
+        start[zax] = zlo
+        end[  zax] = zhi
+        start, end = opts.transformCoords([start, end], 'display', 'voxel')
+        start, end = sorted((start[zax], end[zax]))
+        spacing    = spacing / image.pixdim[zax]
+
+        start   = max((round(start),   0))
+        end     = min((round(end - 1), image.shape[zax]))
+        spacing = max((round(spacing), 1))
+
+        return start, end, spacing
 
 
     def _onPerformanceChange(self, *a):

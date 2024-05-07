@@ -3485,7 +3485,9 @@ def _LightBoxOptsAsVoxelsReference(overlayList, displayCtx, opts):
 
     img = displayCtx.getSelectedOverlay()
 
-    if img is None or (not isinstance(img, fslimage.Nifti)):
+    if img is None                           or \
+       (not isinstance(img, fslimage.Nifti)) or \
+       (displayCtx.displaySpace is not img):
         return None
 
     return img
@@ -3503,13 +3505,13 @@ def _generateSpecial_LightBoxOpts_asVoxels(
     if img is None:
         return []
 
-    zlo, zhi, ssp = source.getSlicesAsVoxels(img)
+    zlo, zhi, space = source.getSlicesAsVoxels(img)
 
     spaceflag  = ARGUMENTS[source, 'sliceSpacing'][1]
     zrangeflag = ARGUMENTS[source, 'zrange'][1]
 
     return [longArg,
-            f'--{spaceflag}', f'{ssp}',
+            f'--{spaceflag}', f'{space}',
             f'--{zrangeflag}', f'{zlo}', f'{zhi}']
 
 
