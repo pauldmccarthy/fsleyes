@@ -134,6 +134,7 @@ cli_tests_parametrize_zax = """
 -zx {{zax}} -so 30 -zr 0 1 -rs 3d
 -zx {{zax}} -nr 1  -zr 0 1 -rs 3d
 
+# zrange/spacing as voxels (--asVoxels / -av)
 -zx {{zax}} -av -zr  0 25       {{set_zax('numbers.nii.gz', zax)}}
 -zx {{zax}} -av -zr 10 30       {{set_zax('numbers.nii.gz', zax)}}
 -zx {{zax}} -av -zr 25 49       {{set_zax('numbers.nii.gz', zax)}}
