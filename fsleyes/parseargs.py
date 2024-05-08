@@ -3134,12 +3134,12 @@ def _generateSpecialOption(overlayList, displayCtx, source, optName, longArg):
     """
     cls     = type(source)
     genFunc = _getSpecialFunction(cls, optName, '_generateSpecial')
-    longArg = '--{}'.format(longArg)
+    longArg = f'--{longArg}'
 
     if genFunc is None:
         raise ArgumentError(
             'Could not find generate function for special '
-            'argument {} to {}'.format(optName, cls.__name__))
+            f'argument {optName} to {cls.__name__}')
 
     log.debug('Generate special argument %s to %s',
               optName, cls.__name__)
@@ -3466,6 +3466,75 @@ def _applySpecial_LightBoxOpts_asVoxels(
 
     target.sampleSlices = 'start'
     target.setSlicesFromVoxels(img, start, end, spacing)
+
+
+def _LightBoxOptsAsVoxelsReference(overlayList, displayCtx, opts):
+    """Used by the following functions, which handle generating light box
+    slice options in terms of voxel coordinates.
+
+    If :attr:`.LightBoxOpts.sampleSlices` is set to ``'start'``, it is assumed
+    that the user has configured the ``zrange`` and ``sliceSpacing`` properties
+    in terms of voxel coordinates with respect to the currently selected image.
+
+    If this is the case, a reference to the currently selected image is
+    returned. Otherwise, ``None`` is returned.
+    """
+
+    if opts.sampleSlices != 'start':
+        return None
+
+    img = displayCtx.getSelectedOverlay()
+
+    if img is None                           or \
+       (not isinstance(img, fslimage.Nifti)) or \
+       (displayCtx.displaySpace is not img):
+        return None
+
+    return img
+
+
+def _generateSpecial_LightBoxOpts_asVoxels(
+        overlayList, displayCtx, source, longArg):
+    """Conditionally adds ``--asVoxels``, and command-line flags for
+    :attr:`.LightBoxOpts.zrange` and :attr:`.LightBoxOpts.sliceSpacing`,
+    if it looks like the user has specified them in terms of voxel
+    coordinates.
+    """
+
+    img = _LightBoxOptsAsVoxelsReference(overlayList, displayCtx, source)
+    if img is None:
+        return []
+
+    zlo, zhi, space = source.getSlicesAsVoxels(img)
+
+    spaceflag  = ARGUMENTS[source, 'sliceSpacing'][1]
+    zrangeflag = ARGUMENTS[source, 'zrange'][1]
+
+    return [longArg,
+            f'--{spaceflag}', f'{space}',
+            f'--{zrangeflag}', f'{zlo}', f'{zhi}']
+
+
+def _generateSpecial_LightBoxOpts_zrange(
+        overlayList, displayCtx, source, longArg):
+    """Conditionally enables or suppresses default generation of command-line
+    options for the :attr:`.LightBoxOpts.zrange` property, depending on whether
+    ``--asVoxels`` is active (see above).
+    """
+    img = _LightBoxOptsAsVoxelsReference(overlayList, displayCtx, source)
+    if img is not None: return []
+    else:               return False
+
+
+def _generateSpecial_LightBoxOpts_sliceSpacing(
+        overlayList, displayCtx, source, longArg):
+    """Conditionally enables or suppresses default generation of command-line
+    options for the :attr:`.LightBoxOpts.sliceSpacing` property, depending on
+    whether ``--asVoxels`` is active (see above).
+    """
+    img = _LightBoxOptsAsVoxelsReference(overlayList, displayCtx, source)
+    if img is not None: return []
+    else:               return False
 
 
 def _applySpecial_LightBoxOpts_zrange(

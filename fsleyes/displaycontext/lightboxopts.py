@@ -12,6 +12,8 @@ by :class:`.LightBoxPanel` instances for managing their display settings.
 import           logging
 from copy import copy
 
+import numpy as np
+
 import fsleyes_props as props
 
 from . import sceneopts
@@ -78,6 +80,8 @@ class LightBoxOpts(sceneopts.SceneOpts):
         # We assume the display space is the
         # image, so the voxel Z axis will
         # correspond to the display Z axis.
+        # The transformed start/end locations
+        # should correspond to voxel centres.
         start      = [0] * 3
         end        = [0] * 3
         start[zax] = sliceStart
@@ -108,6 +112,53 @@ class LightBoxOpts(sceneopts.SceneOpts):
         # Update lightbox settings
         self.zrange       = [start, end]
         self.sliceSpacing = spacing
+
+
+    def getSlicesAsVoxels(self, image):
+        """Inverse of :meth:`setSlicesFromVoxels`. Calculates and returns
+        the current :attr:`zrange` and :attr:`sliceSpacing` in terms of
+        voxel coordinates with respect to the given image.
+        """
+
+        dctx     = self.panel.displayCtx
+        opts     = dctx.getOpts(image)
+        zax      = self.zax
+        zlo, zhi = self.zrange
+        spacing  = self.sliceSpacing
+
+        # zhi may have been clipped at 1.0, so
+        # round it up to the centre of the last
+        # slice (we are working in the [0, 1]
+        # slice coordinate system here)
+        if zhi >= 1:
+            zhi = 1 + 0.5 / image.shape[zax]
+
+        # Transform zrange and sliceSpacing from
+        # [0, 1] into coordinates relative to the
+        # display coordinate system bounding box
+        zmin     = dctx.bounds.getLo(zax)
+        zlen     = dctx.bounds.getLen(zax)
+        spacing  = spacing    * zlen
+        zlo      = zmin + zlo * zlen
+        zhi      = zmin + zhi * zlen
+
+        # Transform zrange/sliceSpacing into voxel
+        # coordinates w.r.t. the given image. We
+        # assume here that the display space is
+        # set to this image.
+        start      = [0] * 3
+        end        = [0] * 3
+        start[zax] = zlo
+        end[  zax] = zhi
+        start, end = opts.transformCoords([start, end], 'display', 'voxel')
+        start, end = sorted((start[zax], end[zax]))
+        spacing    = spacing / image.pixdim[zax]
+
+        start   = max((round(start),   0))
+        end     = min((round(end - 1), image.shape[zax]))
+        spacing = max((round(spacing), 1))
+
+        return start, end, spacing
 
 
     def _onPerformanceChange(self, *a):
