@@ -80,6 +80,8 @@ class LightBoxOpts(sceneopts.SceneOpts):
         # We assume the display space is the
         # image, so the voxel Z axis will
         # correspond to the display Z axis.
+        # The transformed start/end locations
+        # should correspond to voxel centres.
         start      = [0] * 3
         end        = [0] * 3
         start[zax] = sliceStart
@@ -125,10 +127,11 @@ class LightBoxOpts(sceneopts.SceneOpts):
         spacing  = self.sliceSpacing
 
         # zhi may have been clipped at 1.0, so
-        # round it to be the nearest greater
-        # multiple of slice spacing
-        if zhi == 1:
-            zhi = zhi * spacing * np.ceil((zhi / spacing))
+        # round it up to the centre of the last
+        # slice (we are working in the [0, 1]
+        # slice coordinate system here)
+        if zhi >= 1:
+            zhi = 1 + 0.5 / image.shape[zax]
 
         # Transform zrange and sliceSpacing from
         # [0, 1] into coordinates relative to the
@@ -137,7 +140,7 @@ class LightBoxOpts(sceneopts.SceneOpts):
         zlen     = dctx.bounds.getLen(zax)
         spacing  = spacing    * zlen
         zlo      = zmin + zlo * zlen
-        zhi      = zmin + zhi * zlen + spacing
+        zhi      = zmin + zhi * zlen
 
         # Transform zrange/sliceSpacing into voxel
         # coordinates w.r.t. the given image. We
