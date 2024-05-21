@@ -10,9 +10,9 @@ import                   string
 import textwrap       as tw
 from   unittest   import mock
 
-from   fsl.utils.tempdir    import tempdir
-import fsleyes.utils            as utils
-import fsleyes.utils.lazyimport as lazyimport
+from   fsl.utils.tempdir      import tempdir
+import fsleyes.utils              as utils
+import fsleyes.utils.lazyimporter as lazyimporter
 
 from fsleyes.tests import touch
 
@@ -35,12 +35,12 @@ def test_lazyimport():
     modb_file    = f'{testpkg_name}/moduleb.py'
 
     moda_contents = tw.dedent("""
-    from fsleyes.utils.lazyimport import lazyimport
+    from fsleyes.utils import lazyimport
     sys = lazyimport('sys')
     """).strip()
 
     modb_contents = tw.dedent(f"""
-    from fsleyes.utils.lazyimport import lazyimport
+    from fsleyes.utils import lazyimport
     sys = lazyimport('sys', '{testpkg_name}.moduleb.sys')
     """).strip()
 
@@ -68,8 +68,8 @@ def test_lazyimport():
         sys.modules[modb_name]    = modb
 
         try:
-            assert isinstance(moda.sys, lazyimport.LazyImporter)
-            assert isinstance(modb.sys, lazyimport.LazyImporter)
+            assert isinstance(moda.sys, lazyimporter.LazyImporter)
+            assert isinstance(modb.sys, lazyimporter.LazyImporter)
 
             assert not moda.sys.hasBeenImported
             assert not modb.sys.hasBeenImported
@@ -77,7 +77,7 @@ def test_lazyimport():
             moda.sys.version
             modb.sys.version
 
-            assert isinstance(moda.sys, lazyimport.LazyImporter)
+            assert isinstance(moda.sys, lazyimporter.LazyImporter)
             assert moda.sys.hasBeenImported
 
             # reference should have been
