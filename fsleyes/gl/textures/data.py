@@ -36,43 +36,6 @@ gl    = lazyimport('OpenGL.GL',                   f'{__name__}.gl')
 arbtf = lazyimport('OpenGL.GL.ARB.texture_float', f'{__name__}.arbtf')
 
 
-# Used for log messages
-GL_TYPE_NAMES = {
-
-    gl.GL_UNSIGNED_BYTE       : 'GL_UNSIGNED_BYTE',
-    gl.GL_UNSIGNED_SHORT      : 'GL_UNSIGNED_SHORT',
-    gl.GL_FLOAT               : 'GL_FLOAT',
-
-    gl.GL_ALPHA               : 'GL_ALPHA',
-    gl.GL_RED                 : 'GL_RED',
-    gl.GL_LUMINANCE           : 'GL_LUMINANCE',
-    gl.GL_RGB                 : 'GL_RGB',
-    gl.GL_RGBA                : 'GL_RGBA',
-
-    gl.GL_LUMINANCE8          : 'GL_LUMINANCE8',
-    gl.GL_LUMINANCE16         : 'GL_LUMINANCE16',
-
-    # These non-standard types are only
-    # used when OpenGL <= 2.1 is in use,
-    arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
-    arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
-
-    gl.GL_R32F                : 'GL_R32F',
-
-    gl.GL_ALPHA8              : 'GL_ALPHA8',
-
-    gl.GL_R8                  : 'GL_R8',
-    gl.GL_R16                 : 'GL_R16',
-
-    gl.GL_RGB8                : 'GL_RGB8',
-    gl.GL_RGB16               : 'GL_RGB16',
-    gl.GL_RGB32F              : 'GL_RGB32F',
-
-    gl.GL_RGBA8               : 'GL_RGBA8',
-    gl.GL_RGBA16              : 'GL_RGBA16',
-    gl.GL_RGBA32F             : 'GL_RGBA32F',
-}
-
 
 def _makeInstance(dtype):
     """Used by :func:`oneChannelFormat` and :func:`getTextureType`.  If a

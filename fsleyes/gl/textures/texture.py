@@ -21,6 +21,8 @@ from   fsl.utils             import notifier
 from   fsl.transform         import affine
 from   fsleyes_widgets.utils import status
 from   fsleyes               import strings
+
+import fsleyes.gl                as fslgl
 import fsleyes.gl.textures.data  as texdata
 from   fsleyes.utils         import lazyimport
 
@@ -1045,9 +1047,9 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         log.debug('Texture (%s) is to be stored as %s/%s/%s '
                   '(normalised: %s)',
                   self.name,
-                  texdata.GL_TYPE_NAMES[texDtype],
-                  texdata.GL_TYPE_NAMES[texFmt],
-                  texdata.GL_TYPE_NAMES[intFmt],
+                  fslgl.glTypeName(texDtype),
+                  fslgl.glTypeName(texFmt),
+                  fslgl.glTypeName(intFmt),
                   normalise)
 
         self.__texFmt    = texFmt

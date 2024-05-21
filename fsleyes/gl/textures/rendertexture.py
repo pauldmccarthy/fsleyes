@@ -18,8 +18,7 @@ other situations throughout FSLeyes. See also the
 import logging
 import contextlib
 
-import numpy                as np
-import OpenGL.raw.GL._types as gltypes
+import numpy as np
 
 from   fsl.transform       import affine
 import fsleyes.gl              as fslgl
@@ -33,7 +32,8 @@ from   fsleyes.utils       import lazyimport
 log = logging.getLogger(__name__)
 
 
-gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
+gl      = lazyimport('OpenGL.GL',            f'{__name__}.gl')
+gltypes = lazyimport('OpenGL.raw.GL._types', f'{__name__}.gltypes')
 
 
 class RenderTexture(texture2d.Texture2D):
