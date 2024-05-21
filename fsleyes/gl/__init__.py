@@ -190,16 +190,28 @@ import sys
 import logging
 import platform
 
-import fsl.utils.idle                     as idle
-import fsl.version                        as fslversion
-from   fsl.utils.platform import platform as fslplatform
-import fsleyes_widgets                    as fwidgets
+import fsl.utils.idle                           as idle
+import fsl.version                              as fslversion
+from   fsl.utils.platform       import platform as fslplatform
+import fsleyes_widgets                          as fwidgets
+from   fsleyes.utils.lazyimport import             lazyimport
+
+import OpenGL  # noqa
 
 
 log = logging.getLogger(__name__)
 
 
-import OpenGL  # noqa
+GL = lazyimport('OpenGL.GL', 'fsleyes.gl.GL')
+"""This attribute contains a reference to the ``OpenGL.GL`` module. It is
+available to other parts of the code base as an alternative to importing
+the ``OpenGL.GL`` module directly.
+
+This module is lazily imported, because importing the ``OpenGL.GL`` module
+causes the GL backend (GLX, EGL, etc) to be selected and frozen (i.e. once
+selected, it cannot be changed). This is because we need an open window
+before we know which back end needs to be selected.
+"""
 
 
 # Make PyOpenGL throw an error, instead of implicitly
@@ -237,9 +249,10 @@ GL_RENDERER = None
 
 
 def _selectPyOpenGLPlatform():
-    """Pyopengl sometimes doesn't select a suitable platform, so in some
-    circumstances we need to force things (but not if ``PYOPENGL_PLATFORM``
-    is already set in the environment).
+    """Called by the :func:`bootstrap` function.  PyOpenGL sometimes doesn't
+    select a suitable platform, so in some circumstances we need to force
+    things (but not if ``PYOPENGL_PLATFORM`` is already set in the
+    environment).
     """
     if 'PYOPENGL_PLATFORM' in os.environ:
         return
@@ -386,7 +399,6 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import OpenGL.GL             as gl
     import fsleyes.gl.gl14       as gl14
     import fsleyes.gl.gl21       as gl21
     import fsleyes.gl.gl33       as gl33
@@ -398,7 +410,7 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glver = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
+        glver = GL.glGetString(GL.GL_VERSION).decode('latin1').split()[0]
         major, minor = [int(v) for v in glver.split('.')][:2]
     else:
         major, minor = glVersion
@@ -466,7 +478,7 @@ def bootstrap(glVersion=None):
         dc.OVERLAY_TYPES['Image']       .remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('mip')
 
-    renderer = gl.glGetString(gl.GL_RENDERER).decode('latin1')
+    renderer = GL.glGetString(GL.GL_RENDERER).decode('latin1')
     log.debug('Using OpenGL {} implementation with renderer {}'.format(
         verstr, renderer))
 
@@ -904,10 +916,7 @@ class GLContext:
         #  2. In 4.1.1, the GLContext interface changed
         #     so that we have to create and pass a
         #     GLContextAttrs object
-        #  3. Step 2 works on macOS, but on linux only
-        #     seems to work with GTK3/wayland/EGL builds
-        #     of wxpython.
-        #  4. In order to find out whether we can use
+        #  3. In order to find out whether we can use
         #     OpenGL 3.3, we have to create a GLContext,
         #     and check whether it isOK().
         #
@@ -946,7 +955,7 @@ class GLContext:
 
         log.debug('Creating wx.GLContext')
 
-        for  candidate in candidates:
+        for candidate in candidates:
             if other is not None:
                 ctx = wxgl.GLContext(target, other=other, **candidate)
             else:
@@ -956,6 +965,7 @@ class GLContext:
                 break
             if ctx.IsOK():
                 break
+
         else:
             raise RuntimeError('Cannot create GL context')
 
@@ -975,7 +985,6 @@ class GLContext:
         ``__context``.
         """
 
-        import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
 
@@ -985,10 +994,10 @@ class GLContext:
         # for the off-screen context.
         buffer  = glarrays.GLubyteArray.zeros((640, 480, 4))
         context = osmesa.OSMesaCreateContextExt(
-            gl.GL_RGBA, 8, 4, 0, None)
+            GL.GL_RGBA, 8, 4, 0, None)
         osmesa.OSMesaMakeCurrent(context,
                                  buffer,
-                                 gl.GL_UNSIGNED_BYTE,
+                                 GL.GL_UNSIGNED_BYTE,
                                  640,
                                  480)
 
@@ -1341,7 +1350,6 @@ class WXGLCanvasTarget:
         # honours FreezeDraw and FreezeSwapBuffers.
         subClassDraw = self._draw
 
-        import OpenGL.GL as gl
         import fsleyes.gl.routines as glroutines
 
         def drawWrapper(*a, **kwa):
@@ -1364,7 +1372,7 @@ class WXGLCanvasTarget:
 
                 # Draw the fbo contents to the main
                 # frame buffer
-                gl.glViewport(0, 0, width, height)
+                GL.glViewport(0, 0, width, height)
                 glroutines.clear((0, 0, 0, 0))
                 self.__fbo.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
@@ -1384,7 +1392,7 @@ class WXGLCanvasTarget:
             # operations, otherwise we may lose
             # them.
             elif not self.__freezeDraw:
-                gl.glFlush()
+                GL.glFlush()
 
         def doInit(*a):
 
