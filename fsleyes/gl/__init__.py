@@ -927,12 +927,15 @@ class GLContext:
                 coreAttrs = wxgl.GLContextAttrs()
                 coreAttrs.OGLVersion(3, 3)
                 coreAttrs.CoreProfile()
+                coreAttrs.PlatformDefaults()
                 coreAttrs.EndList()
                 candidates.append({'ctxAttrs' : coreAttrs})
+
             # Request compat profile if we
             # can't request a core profile.
             compatAttrs = wxgl.GLContextAttrs()
             compatAttrs.CompatibilityProfile()
+            coreAttrs.PlatformDefaults()
             compatAttrs.EndList()
             candidates.append({'ctxAttrs' : compatAttrs})
 
