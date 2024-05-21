@@ -1498,3 +1498,51 @@ class WXGLCanvasTarget:
         rendered scene as an RGBA bitmap.
         """
         return self.__fbo.getBitmap()
+
+
+
+def glTypeName(gltype):
+    """Returns the name of a GL type.
+
+    Given an OpenGL type identifier, e.g. ``OpenGL.GL.GL_FLOAT``, returns
+    the type name as a string, e.g. ``'GL_FLOAT'``.
+
+    This function is only intended to be used for log messages and debugging.
+    """
+
+    import OpenGL.GL.ARB.texture_float as arbtf
+
+    return {
+        GL.GL_UNSIGNED_BYTE       : 'GL_UNSIGNED_BYTE',
+        GL.GL_UNSIGNED_SHORT      : 'GL_UNSIGNED_SHORT',
+        GL.GL_FLOAT               : 'GL_FLOAT',
+
+        GL.GL_ALPHA               : 'GL_ALPHA',
+        GL.GL_RED                 : 'GL_RED',
+        GL.GL_LUMINANCE           : 'GL_LUMINANCE',
+        GL.GL_RGB                 : 'GL_RGB',
+        GL.GL_RGBA                : 'GL_RGBA',
+
+        GL.GL_LUMINANCE8          : 'GL_LUMINANCE8',
+        GL.GL_LUMINANCE16         : 'GL_LUMINANCE16',
+
+        # These non-standard types are only
+        # used when OpenGL <= 2.1 is in use,
+        arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
+        arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
+
+        GL.GL_R32F                : 'GL_R32F',
+
+        GL.GL_ALPHA8              : 'GL_ALPHA8',
+
+        GL.GL_R8                  : 'GL_R8',
+        GL.GL_R16                 : 'GL_R16',
+
+        GL.GL_RGB8                : 'GL_RGB8',
+        GL.GL_RGB16               : 'GL_RGB16',
+        GL.GL_RGB32F              : 'GL_RGB32F',
+
+        GL.GL_RGBA8               : 'GL_RGBA8',
+        GL.GL_RGBA16              : 'GL_RGBA16',
+        GL.GL_RGBA32F             : 'GL_RGBA32F',
+    }[gltype]
