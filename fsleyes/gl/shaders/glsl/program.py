@@ -15,17 +15,20 @@ import contextlib
 
 import jinja2                as j2
 import numpy                 as np
-import OpenGL.GL             as gl
 import OpenGL.raw.GL._types  as gltypes
 
-import fsleyes.gl.extensions as glexts
-import fsleyes.gl.resources  as glresources
-import fsleyes.gl            as fslgl
-import fsl.utils.memoize     as memoize
-from . import                   parse
+from   fsl.utils               import memoize
+import fsleyes.gl.extensions       as glexts
+import fsleyes.gl.resources        as glresources
+import fsleyes.gl                  as fslgl
+from   fsleyes.gl.shaders.glsl import parse
+from   fsleyes.utils           import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 GLSL_ATTRIBUTE_TYPES = {
@@ -489,8 +492,6 @@ class GLSLShader:
 
         :returns:  A dictionary of ``{name : position}`` mappings.
         """
-
-        import OpenGL.GL as gl
 
         shaderVars = {}
 

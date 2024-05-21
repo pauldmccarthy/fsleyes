@@ -19,24 +19,27 @@ according to the current overlay order.
 
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsl.data.mesh        as fslmesh
-import fsl.data.image       as fslimage
-import fsl.utils.idle       as idle
-import fsl.transform.affine as affine
+import fsl.data.mesh     as fslmesh
+import fsl.data.image    as fslimage
+from   fsl.utils     import idle
+from   fsl.transform import affine
 
-import fsleyes.data.tractogram           as fsltractogram
-import fsleyes.gl                        as fslgl
-import fsleyes.gl.routines               as glroutines
-import fsleyes.gl.globject               as globject
-import fsleyes.gl.annotations            as annotations
-import fsleyes.gl.shaders                as shaders
-import fsleyes.gl.text                   as gltext
-import fsleyes.gl.textures               as textures
-import fsleyes.displaycontext            as fsldisplay
-import fsleyes.displaycontext.canvasopts as canvasopts
+import fsleyes.data.tractogram    as fsltractogram
+import fsleyes.gl                 as fslgl
+import fsleyes.gl.routines        as glroutines
+from   fsleyes.gl             import globject
+from   fsleyes.gl             import annotations
+from   fsleyes.gl             import shaders
+from   fsleyes.gl             import textures
+import fsleyes.gl.text            as gltext
+import fsleyes.displaycontext     as fsldisplay
+from   fsleyes.displaycontext import canvasopts
+from   fsleyes.utils          import lazyimport
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 log = logging.getLogger(__name__)

@@ -11,19 +11,22 @@ from a collection of 3D overlays.
 
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsl.transform.affine              as affine
-import fsleyes_props                     as props
-import fsleyes.displaycontext.canvasopts as canvasopts
-import fsleyes.gl.slicecanvas            as slicecanvas
-import fsleyes.gl.routines               as glroutines
-import fsleyes.gl.textures               as textures
-import fsleyes.gl.lightboxlabels         as lblabels
+from   fsl.transform          import affine
+import fsleyes_props              as props
+from   fsleyes.displaycontext import canvasopts
+import fsleyes.gl.routines        as glroutines
+import fsleyes.gl.lightboxlabels  as lblabels
+from   fsleyes.gl             import slicecanvas
+from   fsleyes.gl             import textures
+from   fsleyes.utils          import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class LightBoxCanvas(slicecanvas.SliceCanvas):

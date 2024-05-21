@@ -35,11 +35,12 @@ following annotation types are defined:
 import time
 import logging
 
-import numpy       as np
-import OpenGL.GL   as gl
+import numpy as np
 
 import fsl.transform.affine     as affine
+
 import fsleyes_props            as props
+from   fsleyes.utils        import lazyimport
 import fsleyes.gl               as fslgl
 import fsleyes.gl.globject      as globject
 import fsleyes.gl.shaders       as shaders
@@ -48,6 +49,9 @@ import fsleyes.gl.resources     as glresources
 import fsleyes.gl.textures      as textures
 import fsleyes.gl.text          as gltext
 import fsleyes.gl.textures.data as texdata
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 log = logging.getLogger(__name__)

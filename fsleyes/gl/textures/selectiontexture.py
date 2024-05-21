@@ -15,15 +15,18 @@ annotation to display the contents of a ``Selection`` instance.
 
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsl.transform.affine as affine
-from . import                  texture2d
-from . import                  texture3d
+from fsl.transform       import affine
+from fsleyes.gl.textures import texture2d
+from fsleyes.gl.textures import texture3d
+from fsleyes.utils       import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class SelectionTextureBase:

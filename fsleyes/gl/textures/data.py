@@ -20,17 +20,20 @@
 import logging
 import inspect
 
-import numpy                       as np
-import OpenGL.GL                   as gl
-import OpenGL.GL.ARB.texture_float as arbtf
+import numpy as np
 
-import fsl.utils.memoize           as memoize
-import fsl.transform.affine        as affine
-import fsleyes.gl                  as fslgl
-import fsleyes.gl.routines         as glroutines
+from   fsl.utils       import memoize
+from   fsl.transform   import affine
+import fsleyes.gl          as fslgl
+import fsleyes.gl.routines as glroutines
+from   fsleyes.utils   import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl    = lazyimport('OpenGL.GL',                   f'{__name__}.gl')
+arbtf = lazyimport('OpenGL.GL.ARB.texture_float', f'{__name__}.arbtf')
 
 
 # Used for log messages

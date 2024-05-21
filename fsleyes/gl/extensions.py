@@ -12,14 +12,15 @@ through ``ARB`` or ``EXT`` extensions.
 
 import              sys
 import functools as ft
-import OpenGL.GL as gl
 
-import OpenGL.GL.EXT.framebuffer_object as glfbo
-import OpenGL.GL.ARB.instanced_arrays   as arbia
-import OpenGL.GL.ARB.draw_instanced     as arbdi
+from   fsleyes.utils import lazyimport
+import fsleyes.gl    as     fslgl
 
 
-import fsleyes.gl as fslgl
+gl    = lazyimport('OpenGL.GL',                        f'{__name__}.gl')
+glfbo = lazyimport('OpenGL.GL.EXT.framebuffer_object', f'{__name__}.glfbo')
+arbia = lazyimport('OpenGL.GL.ARB.instanced_arrays',   f'{__name__}.arbia')
+arbdi = lazyimport('OpenGL.GL.ARB.draw_instanced',     f'{__name__}.arbdi')
 
 
 class GLSymbolResolver:
