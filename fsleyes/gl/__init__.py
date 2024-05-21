@@ -190,11 +190,11 @@ import sys
 import logging
 import platform
 
-import fsl.utils.idle                           as idle
-import fsl.version                              as fslversion
-from   fsl.utils.platform       import platform as fslplatform
-import fsleyes_widgets                          as fwidgets
-from   fsleyes.utils.lazyimport import             lazyimport
+import fsl.utils.idle                     as idle
+import fsl.version                        as fslversion
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets                    as fwidgets
+from   fsleyes.utils                  import lazyimport
 
 import OpenGL  # noqa
 
