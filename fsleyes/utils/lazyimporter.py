@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# lazyimport.py - Mechanism to lazily import a module.
+# lazyimporter.py - Mechanism to lazily import a module.
 #
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #

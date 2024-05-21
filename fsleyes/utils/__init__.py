@@ -10,6 +10,9 @@ used throughout FSLeyes.
 
 import string
 
+# Made available at the package level
+from fsleyes.utils.lazyimporter import lazyimport  # noqa
+
 
 def makeValidMapKey(name):
     """Turns the given string into a valid key for use as a file-based
