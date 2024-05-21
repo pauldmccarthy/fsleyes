@@ -11,26 +11,28 @@ functionality to display a 2D slice from a collection of 3D overlays.
 
 import logging
 
-import OpenGL.GL as gl
-
 import numpy as np
 
-import fsl.data.image                     as fslimage
-import fsl.utils.idle                     as idle
-import fsl.transform.affine               as affine
-import fsleyes_widgets.utils.status       as status
-import fsleyes_props                      as props
+import fsl.data.image             as fslimage
+from   fsl.utils              import idle
+from   fsl.transform          import affine
+from   fsleyes_widgets.utils  import status
+import fsleyes_props              as props
 
-import fsleyes.strings                    as strings
-import fsleyes.displaycontext.canvasopts  as canvasopts
-import fsleyes.gl.routines                as glroutines
-import fsleyes.gl.resources               as glresources
-import fsleyes.gl.globject                as globject
-import fsleyes.gl.textures                as textures
-import fsleyes.gl.annotations             as annotations
+from   fsleyes                import strings
+from   fsleyes.displaycontext import canvasopts
+import fsleyes.gl.routines        as glroutines
+import fsleyes.gl.resources       as glresources
+from   fsleyes.gl             import globject
+from   fsleyes.gl             import textures
+from   fsleyes.gl             import annotations
+from   fsleyes.utils          import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class SliceCanvas:

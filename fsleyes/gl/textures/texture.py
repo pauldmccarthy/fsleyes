@@ -14,19 +14,21 @@ import              logging
 import              contextlib
 import functools as ft
 
-import numpy                        as np
-import OpenGL.GL                    as gl
+import numpy as np
 
-import fsl.utils.idle               as idle
-
-import fsl.utils.notifier           as notifier
-import fsl.transform.affine         as affine
-import fsleyes_widgets.utils.status as status
-import fsleyes.strings              as strings
-from . import data                  as texdata
+from   fsl.utils             import idle
+from   fsl.utils             import notifier
+from   fsl.transform         import affine
+from   fsleyes_widgets.utils import status
+from   fsleyes               import strings
+import fsleyes.gl.textures.data  as texdata
+from   fsleyes.utils         import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class TextureBase:

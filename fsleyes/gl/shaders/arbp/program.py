@@ -16,18 +16,20 @@ import re
 import logging
 import contextlib
 
-import numpy                          as np
+import numpy                as np
+import OpenGL.raw.GL._types as gltypes
 
-import OpenGL.GL                      as gl
-import OpenGL.raw.GL._types           as gltypes
-import OpenGL.GL.ARB.fragment_program as arbfp
-import OpenGL.GL.ARB.vertex_program   as arbvp
-
-import fsl.utils.memoize              as memoize
-from . import                            parse
+from fsl.utils               import memoize
+from fsleyes.gl.shaders.arbp import parse
+from fsleyes.utils           import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl    = lazyimport('OpenGL.GL',                      f'{__name__}.gl')
+arbfp = lazyimport('OpenGL.GL.ARB.fragment_program', f'{__name__}.arbfp')
+arbvp = lazyimport('OpenGL.GL.ARB.vertex_program',   f'{__name__}.arbvp')
 
 
 class ARBPShader:

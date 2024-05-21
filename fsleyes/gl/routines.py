@@ -16,13 +16,16 @@ import                    contextlib
 import collections.abc as abc
 import itertools       as it
 
-import OpenGL.GL       as gl
 import numpy           as np
 
-import fsl.transform.affine as affine
+from fsl.transform import affine
+from fsleyes.utils import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 def clear(bgColour):
