@@ -190,9 +190,9 @@ import sys
 import logging
 import platform
 
-import fsl.utils.idle                     as idle
-import fsl.version                        as fslversion
+from   fsl.utils                      import idle
 from   fsl.utils.platform import platform as fslplatform
+import fsl.version                        as fslversion
 import fsleyes_widgets                    as fwidgets
 from   fsleyes.utils                  import lazyimport
 
@@ -248,17 +248,53 @@ GL_RENDERER = None
 """
 
 
-def _selectPyOpenGLPlatform():
-    """Called by the :func:`bootstrap` function.  PyOpenGL sometimes doesn't
-    select a suitable platform, so in some circumstances we need to force
-    things (but not if ``PYOPENGL_PLATFORM`` is already set in the
-    environment).
+def selectPyOpenGLPlatform(offscreen=False):
+    """Set the ``PYOPENGL_PLATFORM`` environment variable. Called by the
+    :class:`GLContext` class during initialisation.  Not intended to be called
+    from any other location.
+
+    1. If ``PYOPENGL_PLATFORM`` is already set, this function does nothing.
+    2. If ``offscreen=True``, or we appear to be running on a headless system,
+       ``PYOPENGL_PLATFORM`` is set to ``'osmesa'``.
+    3. If running on a system other than Linux, this function does nothing.
+
+    When running on Linux/Wayland, PyOpenGL will select EGL as its backend
+    platform, which is not always the correct choice, as this depends on which
+    backend wxPython/wxWidgets has been compiled to use.  So in some
+    circumstances we need to force PyOpenGL to select a different platform, by
+    setting the ``PYOPENGL_PLATFORM`` environment variable.
+
+    Identifying the correct value is annoyingly complicated, and involves
+    determining whether wxPython/wxWidgets was compiled to use EGL or GLX for
+    its ``GLCanvas``.
+
+    For certain wxPython builds, this is easy:
+      - All GTK2 versions of wxPython/wxWidgets use GLX.
+      - All versions of wxPython older than 4.1.1 (wxWidgets ~= 3.1.4) use GLX.
+
+    Versions of wxPython 4.1.1 or newer may have been compiled to use either
+    GLX or EGL, and there is no direct means of knowing which. This function
+    uses a heuristic - testing whether the ``GLX_ARB_multisample`` extension
+    is available - it should be available when GLX has been initialised, but
+    not for systems using EGL.
+
+    Note that this function must be called after a wxPython frame and GL
+    context have been created (via :func:`fsleyes.gl.getGLContext`), but
+    before import of any PyOpenGL modules (with the exception of the top-level
+    ``OpenGL`` package). The ``PYOPENGL_PLATFORM`` variable must be set before
+    any ``OpenGL`` sub-modules are imported, and the selected platform cannot
+    be changed after import.
     """
+
+    offscreen = offscreen or fwidgets.canHaveGui()
+
+    # Do nothing if PYOPENGL_PLATFORM is already set
     if 'PYOPENGL_PLATFORM' in os.environ:
         return
 
     # If no display, osmesa on all platforms
-    if not fwidgets.canHaveGui():
+    if offscreen:
+        log.debug('Setting PYOPENGL_PLATFORM to osmesa')
         os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
         return
 
@@ -266,28 +302,14 @@ def _selectPyOpenGLPlatform():
     if not fslplatform.os.lower() == 'linux':
         return
 
-    wxver  = fwidgets.wxVersion()
-    wxplat = fwidgets.wxPlatform()
+    # Test whether GLX_ARB_multisample is available -
+    # if it is, we assume that GLX has been initialised
+    ctx = getGLContext()
+    if ctx.canvas.IsExtensionSupported(b'GLX_ARB_multisample'): plat = 'x11'
+    else:                                                       plat = 'egl'
 
-    # Don't know what version of wxpython
-    # we have - don't do anything
-    if wxver is None:
-        return
-
-    # GTK3 versions of wxpython>=4.1.1 use EGL
-    # for GL initialisation. All older wxpython
-    # versions, and all GTK2 versions, use GLX.
-    #
-    # PyOpenGL>=3.1.6 will use EGL if it detects
-    # that it is running under Wayland.  But this
-    # breaks things if we have a GTK2 wxpython.
-    if wxplat == fwidgets.WX_GTK2:
-        os.environ['PYOPENGL_PLATFORM'] = 'x11'
-    elif fslversion.compareVersions(wxver, '4.1.1') >= 0:
-        os.environ['PYOPENGL_PLATFORM'] = 'egl'
-
-
-_selectPyOpenGLPlatform()
+    log.debug('Setting PYOPENGL_PLATFORM to %s', plat)
+    os.environ['PYOPENGL_PLATFORM'] = plat
 
 
 def glIsSoftwareRenderer():
@@ -688,6 +710,10 @@ class GLContext:
         # dictated by PYOPENGL_PLATFORM.
         # Otherewise we use wx if possible.
         if offscreen and (osmesa or (not canHaveGui)):
+            # Make sure PyOpenGL is set to use
+            # osmesa as its backend before
+            # creating an osmesa GL context
+            selectPyOpenGLPlatform(offscreen=True)
             self.__createOSMesaContext()
             ready()
             return
@@ -728,6 +754,11 @@ class GLContext:
 
             self.__createWXGLContext(requestVersion=requestVersion)
 
+            # Once a GL context has been created, we
+            # can determine whether PyOpenGL should
+            # be using EGL or GLX
+            selectPyOpenGLPlatform()
+
             # If we've created and started
             # our own loop, kill it
             if self.__ownApp:
@@ -767,6 +798,14 @@ class GLContext:
         if self.__ownApp:
             log.debug('Starting temporary wx.MainLoop')
             self.__app.MainLoop()
+
+
+    @property
+    def canvas(self):
+        """Return a reference to the ``wx.glcanvas.GLCanvas`` that was used
+        to create the GL context.
+        """
+        return self.__canvas
 
 
     def destroy(self):
