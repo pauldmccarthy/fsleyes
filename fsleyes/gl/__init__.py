@@ -286,20 +286,25 @@ def selectPyOpenGLPlatform(offscreen=False):
     be changed after import.
     """
 
-    offscreen = offscreen or fwidgets.canHaveGui()
+    offscreen = offscreen or (not fwidgets.canHaveGui())
+    plat      = fslplatform.os.lower()
 
     # Do nothing if PYOPENGL_PLATFORM is already set
     if 'PYOPENGL_PLATFORM' in os.environ:
         return
 
-    # If no display, osmesa on all platforms
+    # Do nothing on windows
+    if plat == 'windows':
+        return
+
+    # If no display, osmesa on macOS/linux
     if offscreen:
         log.debug('Setting PYOPENGL_PLATFORM to osmesa')
         os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
         return
 
     # We only need special handling on linux
-    if not fslplatform.os.lower() == 'linux':
+    if plat != 'linux':
         return
 
     # Test whether GLX_ARB_multisample is available -
@@ -466,9 +471,9 @@ def bootstrap(glVersion=None):
 
         if not all(hasExtension(e, 2.1) for e in exts):
             log.warning('One of these OpenGL extensions is '
-                        'not available: [{}]. Falling back '
-                        'to an older OpenGL implementation.'
-                        .format(', '.join(exts)))
+                        'not available: [%s]. Falling back '
+                        'to an older OpenGL implementation.',
+                        ', '.join(exts))
             verstr = '1.4'
             glpkg  = gl14
 
@@ -501,8 +506,8 @@ def bootstrap(glVersion=None):
         dc.OVERLAY_TYPES['Image']       .remove('mip')
 
     renderer = GL.glGetString(GL.GL_RENDERER).decode('latin1')
-    log.debug('Using OpenGL {} implementation with renderer {}'.format(
-        verstr, renderer))
+    log.debug('Using OpenGL %s implementation with renderer %s',
+              verstr, renderer)
 
     # Import GL version-specific sub-modules
     globjects = ['glvolume', 'glrgbvolume', 'glrgbvector', 'gllinevector',
@@ -510,7 +515,7 @@ def bootstrap(glVersion=None):
                  'gltractogram']
 
     for globj in globjects:
-        modname = '{}_funcs'.format(globj)
+        modname = f'{globj}_funcs'
         setattr(thismod, modname, getattr(glpkg, modname, None))
 
     thismod.GL_VERSION       = str(glVersion)
@@ -771,10 +776,8 @@ class GLContext:
                     ready()
 
                 except Exception as e:
-                    log.warning('GLContext callback function raised '
-                                '{}: {}'.format(type(e).__name__,
-                                                str(e)),
-                                                exc_info=True)
+                    log.warning('GLContext callback function raised %s: %s',
+                                type(e).__name__, str(e), exc_info=True)
                     if raiseErrors:
                         raise e
 
@@ -1256,7 +1259,7 @@ class WXGLCanvasTarget:
            'software' in GL_RENDERER.lower():
 
             log.debug('Creating separate GL context for '
-                      'WXGLCanvasTarget {id(self)}')
+                      'WXGLCanvasTarget %s', id(self))
 
             context = GLContext(other=context, target=self)
 
@@ -1468,8 +1471,8 @@ class WXGLCanvasTarget:
         if not (fwidgets.isalive(self) and self.IsShownOnScreen()):
             return False
 
-        log.debug('Setting context target to {} ({})'.format(
-            type(self).__name__, id(self)))
+        log.debug('Setting context target to %s (%s)',
+                  type(self).__name__, id(self))
 
         return self.__context.setTarget(self)
 
